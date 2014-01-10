@@ -113,10 +113,6 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
                     os.remove(model+'.test_op2.f06')
                 except:
                     pass
-                try:
-                    os.remove(model+'.f06')
-                except:
-                    pass
 
         if write_matlab:
             (model, ext) = os.path.splitext(op2FileName)

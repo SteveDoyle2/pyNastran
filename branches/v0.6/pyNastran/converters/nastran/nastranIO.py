@@ -31,6 +31,7 @@ from pyNastran.bdf.bdf import (BDF, CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
                                CONM2,
                                ShellElement, LineElement, SpringElement)
 from pyNastran.op2.op2 import OP2
+from pyNastran.f06.f06 import F06
 
 
 class NastranIO(object):
@@ -411,13 +412,15 @@ class NastranIO(object):
         self.iSubcaseNameMap = {1: ['Nastran', '']}
 
         # subcaseID, resultType, vectorSize, location, dataFormat
-        cases[(0, 'Pid', 1, 'centroid', '%.0f')] = pids
-        if min(nxs) == max(nxs) and min(nxs) != 0.0:
+        if 1:
+                cases[(0, 'Pid', 1, 'centroid', '%.0f')] = pids
 
-            # subcaseID, resultType, vectorSize, location, dataFormat
-            cases[(0, 'Normal_x', 1, 'centroid', '%.1f')] = nxs
-            cases[(0, 'Normal_y', 1, 'centroid', '%.1f')] = nys
-            cases[(0, 'Normal_z', 1, 'centroid', '%.1f')] = nzs
+            # if not a flat plate???
+            #if min(nxs) == max(nxs) and min(nxs) != 0.0:
+                # subcaseID, resultType, vectorSize, location, dataFormat
+                cases[(0, 'Normal_x', 1, 'centroid', '%.1f')] = nxs
+                cases[(0, 'Normal_y', 1, 'centroid', '%.1f')] = nys
+                cases[(0, 'Normal_z', 1, 'centroid', '%.1f')] = nzs
         self.log.info(cases.keys())
         self.finish_io(cases)
 
@@ -426,20 +429,29 @@ class NastranIO(object):
         self.TurnTextOn()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
+        
+        print("tring to read...", op2FileName)
+        if '.op2' in op2FileName:
+            model = OP2(op2FileName, log=self.log, debug=True)
+            model.read_op2()
+        elif '.f06' in op2FileName:
+            model = F06(op2FileName, log=self.log, debug=True)
+            model.read_f06()
+        else:
+            print("error...")
+            raise NotImplementedError(op2FileName)
 
-        op2 = OP2(op2FileName, log=self.log, debug=True)
-        op2.read_op2()
-        #print op2.print_results()
+        #print model.print_results()
 
-        #case = op2.displacements[1]
+        #case = model.displacements[1]
         #print "case = ",case
         #for nodeID,translation in sorted(case.translations.iteritems()):
             #print "nodeID=%s t=%s" %(nodeID,translation)
         #self.iSubcaseNameMap[self.isubcase] = [Subtitle,Label]
 
         cases = {}
-        subcaseIDs = op2.iSubcaseNameMap.keys()
-        self.iSubcaseNameMap = op2.iSubcaseNameMap
+        subcaseIDs = model.iSubcaseNameMap.keys()
+        self.iSubcaseNameMap = model.iSubcaseNameMap
 
         nElements = len(self.eidMap)
         print "nElements = ", nElements
@@ -468,13 +480,13 @@ class NastranIO(object):
 
         for subcaseID in subcaseIDs:
             if False: # nodal results don't work
-                if subcaseID in op2.displacements:  # not correct?
-                    case = op2.displacements[subcaseID]
+                if subcaseID in model.displacements:  # not correct?
+                    case = model.displacements[subcaseID]
                     key = (subcaseID, 'DisplacementX', 3, 'node', '%g')
                     #cases[key] = case.translations
 
-                if subcaseID in op2.temperatures:
-                    case = op2.temperatures[subcaseID]
+                if subcaseID in model.temperatures:
+                    case = model.temperatures[subcaseID]
                     #print case
                     temps = zeros(self.nNodes)
                     key = (subcaseID, 'Temperature', 1, 'node', '%g')
@@ -484,10 +496,10 @@ class NastranIO(object):
                         temps[nid2] = T
                     #cases[key] = temps
 
-            cases = self.fill_stress_case(cases, op2, subcaseID, eKey, nElements)
+            cases = self.fill_stress_case(cases, model, subcaseID, eKey, nElements)
 
         #self.resultCases = cases
-        #self.finish_io(cases)
+        self.finish_io(cases)
         #return
         #self.caseKeys = sorted(cases.keys())
         #print "caseKeys = ",self.caseKeys
@@ -513,7 +525,7 @@ class NastranIO(object):
         self.cycleResults()  # start at nCase=0
         self.log.info('end of finish io')
 
-    def fill_stress_case(self, cases, op2, subcaseID, eKey, nElements):
+    def fill_stress_case(self, cases, model, subcaseID, eKey, nElements):
         print "fill_stress_case"
         oxx = zeros(nElements)
         oyy = zeros(nElements)
@@ -525,8 +537,8 @@ class NastranIO(object):
         ovm = zeros(nElements)
 
         vmWord = 'N/A'
-        if subcaseID in op2.rodStress:
-            case = op2.rodStress[subcaseID]
+        if subcaseID in model.rodStress:
+            case = model.rodStress[subcaseID]
             for eid in case.axial:
                 eid2 = self.eidMap[eid]
                 cases[eKey][eid2] = 1.
@@ -543,12 +555,12 @@ class NastranIO(object):
                 #o2[eid2] = 0.  #(o1i+o3i)/2.
                 o3[eid2] = min(axial, torsion)
 
-        if subcaseID in op2.barStress:
+        if subcaseID in model.barStress:
             #self.s1    = {}
             #self.s2    = {}
             #self.s3    = {}
             #self.s4    = {}
-            case = op2.barStress[subcaseID]
+            case = model.barStress[subcaseID]
             for eid in case.axial:
                 eid2 = self.eidMap[eid]
                 cases[eKey][eid2] = 1.
@@ -567,9 +579,9 @@ class NastranIO(object):
                 o3[eid2] = o3i
                 #ovm[eid2] = ovmi
 
-        if subcaseID in op2.plateStress:
+        if subcaseID in model.plateStress:
             #self.txy    = {}
-            case = op2.plateStress[subcaseID]
+            case = model.plateStress[subcaseID]
             if case.isVonMises():
                 vmWord = 'vonMises'
             else:
@@ -600,8 +612,8 @@ class NastranIO(object):
                 o3[eid2] = o3i
                 ovm[eid2] = ovmi
 
-        if subcaseID in op2.solidStress:
-            case = op2.solidStress[subcaseID]
+        if subcaseID in model.solidStress:
+            case = model.solidStress[subcaseID]
             if case.isVonMises():
                 vmWord = 'vonMises'
             else:

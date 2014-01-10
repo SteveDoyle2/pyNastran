@@ -93,9 +93,12 @@ def main():
         pass
 
     print("nFiles = %s" % len(files))
-    print files
+    #print files
+    import time
+    t0 = time.time()
     run_lots_of_files(files, debug, saveCases, skipFiles,
                       stopOnFailure, nStart, nStop)
+    print("dt = %f" %(time.time() - t0))
     sys.exit('final stop...')
 
 if __name__ == '__main__':

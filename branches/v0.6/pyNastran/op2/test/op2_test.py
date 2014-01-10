@@ -90,9 +90,12 @@ def main():
         pass
 
     print("nFiles = %s" % len(files))
+    import time
+    t0 = time.time()
     run_lots_of_files(files,make_geom,write_bdf,write_f06,write_matlab,delete_f06,
                    print_results,debug,saveCases,skipFiles,stopOnFailure,
                    nStart,nStop)
+    print("dt = %f" %(time.time() - t0))
     sys.exit('final stop...')
 
 if __name__=='__main__':
