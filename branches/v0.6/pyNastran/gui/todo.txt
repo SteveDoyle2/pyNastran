@@ -5,7 +5,7 @@ both
  - nastran input/output
  - panair input
  - lawgs input (broken???)
- - fun3d/usm3d volume (postgrid) and results (.flo)
+ - usm3d volume (postgrid) and results (.flo)
  - tetgen input
  - edges
  - nodal or centroidal
@@ -35,7 +35,7 @@ both
  - plot3d input/output
  - tecplot structured input/output
  - tecplot unstructured input/output
- - fun3d/usm3d surface/boundary layer/incomplete volume
+ - usm3d surface/boundary layer/incomplete volume
 
 --------------------------------------------
 wx

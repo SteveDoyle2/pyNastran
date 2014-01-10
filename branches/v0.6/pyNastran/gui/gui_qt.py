@@ -325,8 +325,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
           ('surface', 'Surface Model', os.path.join(icon_path, 'tsolid.png'), 's', 'Show Model as a Surface Model', self.on_surface),
           ('edges', 'Show/Hide Edges', os.path.join(icon_path, 'tedges.png'), 'e', 'Show/Hide Model Edges', self.onFlipEdges),
 
-          ('magnify', 'Magnify', os.path.join(icon_path, '+zoom.png'), 'M', 'Increase Magnfication', self.on_increase_magnification),
-          ('shrink', 'Shrink', os.path.join(icon_path, '-zoom.png'), 'm', 'Decrease Magnfication', self.on_decrease_magnification),
+          ('magnify', 'Magnify', os.path.join(icon_path, 'plus_zoom.png'), 'M', 'Increase Magnfication', self.on_increase_magnification),
+          ('shrink', 'Shrink', os.path.join(icon_path, 'minus_zoom.png'), 'm', 'Decrease Magnfication', self.on_decrease_magnification),
 
           ('cell_pick', 'Cell Pick', '', 'CTRL+K', 'PickTip', self.on_cell_picker),
 
@@ -341,13 +341,13 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
 
           ('cycle_res', 'Cycle Results', os.path.join(icon_path, 'cycle_results.png'), 'CTRL+L', 'Changes the result case', self.cycleResults),
 
-          ('x', 'Flips to +X Axis', os.path.join(icon_path, '+x.png'), 'x', 'Flips to +X Axis', lambda: self.update_camera('+x')),
-          ('y', 'Flips to +Y Axis', os.path.join(icon_path, '+y.png'), 'y', 'Flips to +Y Axis', lambda: self.update_camera('+y')),
-          ('z', 'Flips to +Z Axis', os.path.join(icon_path, '+z.png'), 'z', 'Flips to +Z Axis', lambda: self.update_camera('+z')),
+          ('x', 'Flips to +X Axis', os.path.join(icon_path, 'plus_x.png'), 'x', 'Flips to +X Axis', lambda: self.update_camera('+x')),
+          ('y', 'Flips to +Y Axis', os.path.join(icon_path, 'plus_y.png'), 'y', 'Flips to +Y Axis', lambda: self.update_camera('+y')),
+          ('z', 'Flips to +Z Axis', os.path.join(icon_path, 'plus_z.png'), 'z', 'Flips to +Z Axis', lambda: self.update_camera('+z')),
 
-          ('X', 'Flips to -X Axis', os.path.join(icon_path, '-x.png'), 'X', 'Flips to -X Axis', lambda: self.update_camera('-x')),
-          ('Y', 'Flips to -Y Axis', os.path.join(icon_path, '-y.png'), 'Y', 'Flips to -Y Axis', lambda: self.update_camera('-y')),
-          ('Z', 'Flips to -Z Axis', os.path.join(icon_path, '-z.png'), 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')), ]:
+          ('X', 'Flips to -X Axis', os.path.join(icon_path, 'minus_x.png'), 'X', 'Flips to -X Axis', lambda: self.update_camera('-x')),
+          ('Y', 'Flips to -Y Axis', os.path.join(icon_path, 'minus_y.png'), 'Y', 'Flips to -Y Axis', lambda: self.update_camera('-y')),
+          ('Z', 'Flips to -Z Axis', os.path.join(icon_path, 'minus_z.png'), 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')), ]:
             #print "name=%s txt=%s icon=%s short=%s tip=%s func=%s" % (nam, txt, icon, short, tip, func)
             #if icon is None:
                 #print "missing_icon = %r!!!" % nam
