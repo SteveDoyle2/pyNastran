@@ -5,6 +5,17 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.f06.f06 import F06, FatalError
 from pyNastran.op2.op2 import OP2
 
+def update_bdf(model):
+    cc = model.caseControlDeck
+    #for isubcase, subcase in sorted(cc.subcases.iteritems()):
+        #for param, values in subcase.params.iteritems():
+            #if param in ['SPCFORCES', 'STRESS', 'DISPLACEMENT', 'STRAIN', 'MPCFORCES', 'GPFORCE', 'GPSTRESS', 'VELOCITY', 'ACCELERATION']:
+                #print('values =', values)
+    if 'POST' in sorted(model3.params):
+        model.params['POST'].update_values(value1=-1)
+    else:
+        model.rejects.append(['PARAM,POST,-1'])
+
 def main(bdf_name, run_first_nastran=True, debug=True):
     base, ext = os.path.splitext(bdf_name)
 
@@ -29,10 +40,7 @@ def main(bdf_name, run_first_nastran=True, debug=True):
     out_bdf_16 = base + '_16.bdf'
     model3 = BDF()
     model3.read_bdf(bdf_name)
-    if 'POST' in model3.params:
-        model3.params['POST'].update_values(value1=-1)
-    else:
-        model3.rejects.append(['PARAM,POST,-1'])
+    update_bdf(model3)
 
     model3.write_bdf(out_bdf_8, size=8, precision='single')
     model3.write_bdf(out_bdf_16, size=16, precision='double')

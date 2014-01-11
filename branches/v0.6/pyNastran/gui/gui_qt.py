@@ -84,11 +84,19 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             shots = []
 
         #-------------
+        # file
         self.format = None
         self.infile_name = None
         self.out_filename = None
         self.dirname = ''
         self.last_dir = '' # last visited directory while opening file
+
+        #-------------
+        # internal params
+        self.show_info = True
+        self.show_debug = True
+        self.show_gui = True
+        self.show_command = True
 
         self.nCases = 0
         self.iCase = 0
@@ -178,6 +186,15 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         _fr =  sys._getframe(4)  # jump to get out of the logger code
         n = _fr.f_lineno
         fn = os.path.basename(_fr.f_globals['__file__'])
+
+        if typ == 'DEBUG' and not self.show_debug:
+            return
+        elif typ == 'INFO' and not self.show_info:
+            return
+        elif typ == 'GUI' and not self.show_gui:
+            return
+        elif typ == 'COMMAND' and not self.show_command:
+            return
 
         msg = '   fname=%-25s lineNo=%-4s   %s\n' % (fn, n, msg)
 
@@ -315,7 +332,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         #print sys.platform
         #quit_key = 'Alt+F4' if sys.platform in ['win32', 'cygwin'] else 'Ctrl+Q'
 
-        for nam, txt, icon, shortcut, tip, func in [
+        checkables = ['show_info', 'show_debug', 'show_gui', 'show_command']
+        for (nam, txt, icon, shortcut, tip, func) in [
           ('exit', '&Exit', os.path.join(icon_path, 'texit.png'), 'Ctrl+Q', 'Exit application', QtGui.qApp.quit),
           ('load_geometry', 'Load &Geometry', os.path.join(icon_path, 'load_geometry.png'), 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),  ## @todo no picture...
           ('load_results', 'Load &Results',   os.path.join(icon_path, 'load_results.png'), 'Ctrl+R', 'Loads a results file', self.on_load_results),  ## @todo no picture...
@@ -324,6 +342,11 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
           ('wireframe', 'Wireframe Model', os.path.join(icon_path, 'twireframe.png'), 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
           ('surface', 'Surface Model', os.path.join(icon_path, 'tsolid.png'), 's', 'Show Model as a Surface Model', self.on_surface),
           ('edges', 'Show/Hide Edges', os.path.join(icon_path, 'tedges.png'), 'e', 'Show/Hide Model Edges', self.onFlipEdges),
+
+          ('show_info', 'Show INFO', os.path.join(icon_path, 'show_info.png'), None, 'Show "INFO" messages', self.on_show_info),
+          ('show_debug', 'Show DEBUG', os.path.join(icon_path, 'show_debug.png'), None, 'Show "DEBUG" messages', self.on_show_debug),
+          ('show_gui', 'Show GUI', os.path.join(icon_path, 'show_gui.png'), None, 'Show "GUI" messages', self.on_show_gui),
+          ('show_command', 'Show COMMAND', os.path.join(icon_path, 'show_command.png'), None, 'Show "COMMAND" messages', self.on_show_command),
 
           ('magnify', 'Magnify', os.path.join(icon_path, 'plus_zoom.png'), 'M', 'Increase Magnfication', self.on_increase_magnification),
           ('shrink', 'Shrink', os.path.join(icon_path, 'minus_zoom.png'), 'm', 'Decrease Magnfication', self.on_decrease_magnification),
@@ -361,7 +384,12 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             else:
                 ico = QtGui.QIcon()
                 ico.addPixmap(QtGui.QPixmap(icon), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-            actions[nam] = QtGui.QAction(ico, txt, self)
+
+            if nam in checkables:
+                actions[nam] = QtGui.QAction(ico, txt, self, checkable=True)
+                actions[nam].setChecked(True)
+            else:
+                actions[nam] = QtGui.QAction(ico, txt, self)
 
             if shortcut:
                 actions[nam].setShortcut(shortcut)
@@ -382,8 +410,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
 
         # populate menus and toolbar
         for menu, items in [(self.menu_file, ('load_geometry', 'load_results', '', 'exit')),
-                           (self.menu_view,  ('scshot', '', 'wireframe', 'surface', 'creset', '', 'back_col')),
-                           (self.menu_window,('toolbar', 'reswidget', 'logwidget')),
+                           (self.menu_view,  ('scshot', '', 'wireframe', 'surface', 'creset', '', 'back_col', '', 'show_info', 'show_debug', 'show_gui', 'show_command')),
+                           (self.menu_window,('toolbar', 'reswidget', 'logwidget' )),
                            (self.menu_help,  ('about',)),
                            (self.toolbar, ('cell_pick', 'reload', 'load_geometry', 'load_results', 'cycle_res',
                                            'x', 'y', 'z', 'X', 'Y', 'Z',
@@ -439,6 +467,18 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         else:
             prop = self.edgeActor.GetProperty()
             prop.EdgeVisibilityOff()
+
+    def on_show_info(self):
+        self.show_info = not(self.show_info)
+
+    def on_show_debug(self):
+        self.show_debug = not(self.show_debug)
+
+    def on_show_gui(self):
+        self.show_gui = not(self.show_gui)
+
+    def on_show_command(self):
+        self.show_command = not(self.show_command)
 
     def on_reset_camera(self):
         self.log_command('on_reset_camera()')
@@ -830,6 +870,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                     self.log_error(msg)
                     raise RuntimeError(msg)
 
+            if out_filename == '':
+                return
             if not os.path.exists(out_filename):
                 msg = 'result file=%r does not exist' % out_filename
                 self.log_error(msg)
@@ -961,7 +1003,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             self.scalarBar.SetVisibility(False)
             return
 
-        self.log_info('cycling...')
+        print('cycling...')
         print("is_nodal=%s is_centroidal=%s" % (self.is_nodal,self.is_centroidal))
 
         foundCases = self.incrementCycle()

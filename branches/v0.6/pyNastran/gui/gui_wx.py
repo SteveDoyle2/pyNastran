@@ -81,6 +81,11 @@ class AppFrame(wx.Frame):
         if shots is None:
             shots = []
 
+        #self.show_info = True
+        #self.show_debug = True
+        #self.show_gui = True
+        #self.show_command = True
+
         self.log = SimpleLogger('debug')
         self.infile_name = None
         self.is_edges = inputs['is_edges']
@@ -321,9 +326,11 @@ class AppFrame(wx.Frame):
     #end __init__
 
     def log_info(self, msg):
+        #if self.log_info:
         print msg
 
     def log_debug(self, msg):
+        #if self.log_debug:
         print msg
 
     def buildTree(self, panel1):
@@ -425,7 +432,7 @@ class AppFrame(wx.Frame):
         self.Bind(wx.EVT_TOOL, events.onLoadSTL, id=ID_STL)
         self.Bind(wx.EVT_TOOL, events.onLoadTetgen, id=ID_TETGEN)
         self.Bind(wx.EVT_TOOL, events.onLoadUsm3d, id=ID_USM3D)
-        
+
         self.Bind(wx.EVT_TOOL, events.onLoadGeometry, id=ID_GEOMETRY)
         self.Bind(wx.EVT_TOOL, events.onLoadResults, id=ID_RESULTS)
         #self.Bind(wx.EVT_TOOL, events.onExport, id=ID_EXPORT)
@@ -467,7 +474,7 @@ class AppFrame(wx.Frame):
         fileMenu.AppendSeparator()
         geometry = fileMenu.Append(ID_GEOMETRY,'Load &Geometry...', 'Load the Geometry...')
         results = fileMenu.Append(ID_RESULTS,'Load &Results...', 'Load the Results...')
-        
+
         #export     = fileMenu.Append(ID_EXPORT,'Export to...', 'Export the Model to Another Format')
         #print "topen = ",os.path.join(iconPath,'topen.png')
         sys.stdout.flush()
@@ -613,7 +620,7 @@ class EventsHandler(object):
         wildcard = ''
         if is_nastran:
             wildcard += "Nastran BDF (*.bdf; *.dat; *.nas)|*.bdf;*.dat;*.nas|"
-        
+
         wildcard += "Cart3d (*.i.tri; *.a.tri; *.triq)|*.i.tri;*.a.tri;*.triq|"
         wildcard += "Panair (*.inp)|*.inp|"
         wildcard += "Plot3d (*.p3d)|*.p3d|"
@@ -788,7 +795,7 @@ class EventsHandler(object):
                 "All files (*.*)|*.*"
             load_function = self.parent.frmPanel.load_usm3d_results
             self.createLoadFileDialog(wildcard, Title, load_function, updateWindowName=True)
-        else:   
+        else:
             self.log.error('Format=%r is not supported.' % Format)
             return
         print("loaded the results...")
