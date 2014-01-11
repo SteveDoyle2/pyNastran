@@ -13,7 +13,9 @@ from scipy.integrate import quad
 
 from math import sqrt
 
-from numpy.linalg import norm as norm_axis
+from numpy.linalg import norm as norm
+
+import numpy
 
 if sys.version_info < (3, 0):
     """
@@ -30,10 +32,13 @@ if sys.version_info < (3, 0):
     """
     import scipy.weave
 
-import numpy
-ver = numpy.__version__.split('.')
-numpy_version = tuple([int(i) for i in ver])
-if numpy.__version__ < (1, 8):
+def get_numpy_version(version):
+    version_base = version.split('.dev')[0]
+    sversion = version_base.split('.')
+    numpy_version = tuple([int(i) for i in sversion])
+    return numpy_version
+
+if get_numpy_version(numpy.__version__) < (1, 8):
     def norm_axis(x, ord=None, axis=None):
         """A modified form of numpy.norm to work in numpy <= 1.8.0
 
