@@ -1,6 +1,6 @@
 import os
 from collections import defaultdict
-from numpy import savetxt
+from numpy import savetxt, arange
 
 from pyNastran.converters.usm3d.usm3d_reader import Usm3dReader
 
@@ -76,10 +76,11 @@ def main():
     #print "loads.keys() = ", sorted(loads.keys())
     f = open('usm3d.csv', 'wb')
     dt = 1.0
-    t = arange(len(Cp[node_id]) * dt
-    f.write('t' % node_id);  savetxt(f, t, delimiter='', newline=',')
+    t = arange(len(Cp[node_id])) * dt
+    f.write('time\t');  savetxt(f, t, delimiter='', newline=',')
+    f.write('\n')
     for node_id, Cpi in sorted(Cp.iteritems()):
-        f.write("node_id=%i\n" % node_id)
+        f.write("\nnode_id=%i\n" % node_id)
         f.write('Cp[%s],' % node_id);  savetxt(f, Cpi,        delimiter='', newline=',')
         f.write('\np[%s],' % node_id); savetxt(f, p[node_id], delimiter='', newline=',')
         f.write('\n\n')
