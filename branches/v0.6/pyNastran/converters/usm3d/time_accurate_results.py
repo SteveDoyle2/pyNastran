@@ -75,6 +75,9 @@ def main():
 
     #print "loads.keys() = ", sorted(loads.keys())
     f = open('usm3d.csv', 'wb')
+    dt = 1.0
+    t = arange(len(Cp[node_id]) * dt
+    f.write('t' % node_id);  savetxt(f, t, delimiter='', newline=',')
     for node_id, Cpi in sorted(Cp.iteritems()):
         f.write("node_id=%i\n" % node_id)
         f.write('Cp[%s],' % node_id);  savetxt(f, Cpi,        delimiter='', newline=',')
