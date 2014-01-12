@@ -1,10 +1,9 @@
-DONE...
+---DONE---
 
 both
  - cart3d input/output
  - nastran input/output
  - panair input
- - lawgs input (broken???)
  - usm3d volume (postgrid) and results (.flo)
  - tetgen input
  - edges
@@ -15,36 +14,80 @@ both
 
 wx unique
  - hotkeys
+ - lawgs input (broken for qt???)
 
 PySide/PyQt4 unique
  - logger
- - reload button.  Useful for:
+ - auto-reload button.  Useful for:
     - modifying Panair file
     - dynamically updating files
-    - incrementing files for Usm3d
+    - incrementing files for Usm3d (e.g. running a job and want to watch the
+      flow develop without having to click load_results)
  - zoom/rotate/snap buttons
 
---------------------------------------------
-NOT DONE...
+----------------------------------------------------
+---NOT DONE---
 
 both
  - make both nodal/centroidal work regardless of flag
  - make vector results work
+ - marker plots (arrows) & scale
+ - displacement plots & scale
  - cell picker to get element/node info
  - panair results
  - plot3d input/output
  - tecplot structured input/output
  - tecplot unstructured input/output
  - usm3d surface/boundary layer/incomplete volume
+ - scalar bar flipping
+ - scalar bar limit setting
 
---------------------------------------------
+--------------
 wx
  - zoom/rotate/snap buttons
  - reload button
  - logging
  - plot3d hooks
 
---------------------------------------------
+--------------
 qt
  - zoom/rotate/snap hotkeys
  - unbreak hotkeys (p, r, ???)
+
+----------------------------------------------------
+---Format Specific---
+
+Nastran
+ - SOL 101 stress
+ - load geometry -> .bdf/nas/dat
+ - load results -> op2/f06
+
+Usm3d
+ - load geometry -> cogsg/front
+ - load results -> flo
+ - supports auto-reload
+
+ - dynamic mapbc/bc file loading when input file loaded (if available)
+ - dynamic flo output file loading on input
+   - model_%i.flo will be found on load_geometry; where %i is the biggest number
+     - supports autoreload
+   - specific results file can be loaded with load results
+
+Cart3d
+ - load geometry -> tri/triq
+
+Panair
+ - load geometry -> inp
+ - supports auto-reload
+
+LaWGS
+ - load geometry -> wgs
+
+Plot3d
+ - ???
+
+Tetgen
+ - load geometry -> smesh
+
+STL
+ - load geometry -> STL
