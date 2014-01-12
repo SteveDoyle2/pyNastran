@@ -364,7 +364,7 @@ class AppFrame(wx.Frame):
         tree.AppendItem(tk, 'wxPython')
         tree.AppendItem(tk, 'GTK+')
         tree.AppendItem(tk, 'Swing')
-        #self.Bind(wx.EVT_MENU, self.frmPanel.SetToWireframe, id=ID_WIREFRAME)
+        #self.Bind(wx.EVT_MENU, self.frmPanel.onSetToWireframe, id=ID_WIREFRAME)
         #tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelChanged, id=1)
         return tree
 
@@ -425,6 +425,10 @@ class AppFrame(wx.Frame):
         self.toolbar1 = toolbar1
 
         # Bind File Menu
+        self.Bind(wx.EVT_TOOL, self.frmPanel.onSetToSurface, id=ID_SURFACE)
+        self.Bind(wx.EVT_TOOL, self.frmPanel.onSetToWireframe, id=ID_WIREFRAME)
+        self.Bind(wx.EVT_TOOL, self.frmPanel.onFlipEdges, id=ID_EDGES)
+
         self.Bind(wx.EVT_TOOL, events.onLoadGeometry, id=ID_GEOMETRY)
         self.Bind(wx.EVT_TOOL, events.onLoadResults, id=ID_RESULTS)
         #self.Bind(wx.EVT_TOOL, events.onExport, id=ID_EXPORT)
@@ -473,7 +477,7 @@ class AppFrame(wx.Frame):
             
             # ---View---
             'screenshot' : [ID_CAMERA,    None,           os.path.join(iconPath, 'tcamera.png'),    'Take a Screenshot', 'Take a Screenshot', self.frmPanel.widget.onTakePicture],
-            'wireframe'  : [ID_WIREFRAME, None,           os.path.join(iconPath, 'twireframe.png'), 'Wireframe Model', 'Show Model as a Wireframe Model', self.frmPanel.onSetToSurface],
+            'wireframe'  : [ID_WIREFRAME, None,           os.path.join(iconPath, 'twireframe.png'), 'Wireframe Model', 'Show Model as a Wireframe Model', self.frmPanel.onSetToWireframe],
             'edges'      : [ID_EDGES,     None,           os.path.join(iconPath, 'tedges.png'),     'Show/Hide Edges', 'Show/Hide Edges', self.frmPanel.onFlipEdges],
             'surface'    : [ID_SURFACE,   None,           os.path.join(iconPath, 'tsolid.png'),     'Surface Model', 'Show Model as a Surface Model', self.frmPanel.onSetToSurface],
             'color'      : [wx.ID_ANY,    'bkgColorView', os.path.join(iconPath, 'tcolorpick.png'), 'Change Background Color', 'Change Background Color', events.onBackgroundColor],
@@ -616,6 +620,7 @@ class EventsHandler(object):
             wildcard += "Nastran BDF (*.bdf; *.dat; *.nas)|*.bdf;*.dat;*.nas|"
 
         wildcard += "Cart3d (*.i.tri; *.a.tri; *.triq)|*.i.tri;*.a.tri;*.triq|"
+        wildcard += "LaWGS (*.wgs)|*.wgs|"
         wildcard += "Panair (*.inp)|*.inp|"
         wildcard += "Plot3d (*.p3d; *.p3da; *.xyz)|*.p3d;*.p3da;*.xyz|"
         wildcard += "STL (*.STL)|*.STL|"
@@ -623,10 +628,42 @@ class EventsHandler(object):
         wildcard += "Usm3D (*.cogsg; *.front)|*.cogsg;*.front|"
 
         Title = 'Choose an Input File to Load'
-        loadFunction = self.parent.frmPanel.load_nastran_geometry
+        loadFunction = self._load_geometry
         is_loaded = self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
-        if is_loaded:
-            self.parent.format = 'nastran'
+
+    def _load_geometry(self, fname, dirname):
+        basename, ext = os.path.splitext(fname)
+        ext = ext.lower()
+        
+        Format_to_load = {
+            '.tri' : (self.parent.frmPanel.load_cart3d_geometry, 'cart3d'),
+            '.triq' : (self.parent.frmPanel.load_cart3d_geometry, 'cart3d'),
+
+            '.bdf' : (self.parent.frmPanel.load_nastran_geometry, 'nastran'),
+            '.nas' : (self.parent.frmPanel.load_nastran_geometry, 'nastran'),
+            '.dat' : (self.parent.frmPanel.load_nastran_geometry, 'nastran'),
+
+            '.inp' : (self.parent.frmPanel.load_panair_geometry, 'panair'),
+
+            '.p3d' : (self.parent.frmPanel.load_plot3d_geometry, 'plot3d'),
+            '.p3da' : (self.parent.frmPanel.load_plot3d_geometry, 'plot3d'),
+            '.xyz' : (self.parent.frmPanel.load_plot3d_geometry, 'plot3d'),
+
+            '.wgs' : (self.parent.frmPanel.load_LaWGS_geometry, 'lawgs'),
+            '.stl' : (self.parent.frmPanel.load_stl_geometry, 'stl'),
+            '.smesh' : (self.parent.frmPanel.load_tetgen_geometry, 'tetgen'),
+
+            '.cogsg' : (self.parent.frmPanel.load_usm3d_geometry, 'usm3d'),
+            '.front' : (self.parent.frmPanel.load_usm3d_geometry, 'usm3d'),
+        }
+        if ext not in Format_to_load:
+            self.Error('Cannot load %r because it has an invalid extension.' % str(fname), 'Error Loading Geometry')
+            return False
+        load_function, Format = Format_to_load[ext]
+        load_function(fname, dirname)
+        self.parent.format = Format
+        #print("geo format =", Format)
+        return True
 
     def onLoadBDF(self, event):
         """ Open a file"""
@@ -800,6 +837,7 @@ class EventsHandler(object):
             self.Error('You must load an input file first.', 'No Input File Selected')
             return
 
+        #print('res format', Format)
         Title = 'Choose a %s Output File to Load' % Format.title()
         if Format == 'nastran' and is_nastran:
             wildcard = "Nastran Results (*.op2; *.f06)|*.op2;*.f06|" \
@@ -810,9 +848,9 @@ class EventsHandler(object):
                 "All files (*.*)|*.*"
             load_function = self.parent.frmPanel.load_usm3d_results
         else:
-            msg = 'Format=%r is not supported.' % Format
-            self.log.error(msg)
-            self.Error(msg, 'Invalid Format Error')
+            msg = 'Results for format=%r is not supported.' % Format
+            #self.log.error(msg)
+            self.Error(msg, 'Invalid Results Format Error')
             return
 
         is_loaded = self.createLoadFileDialog(wildcard, Title, load_function, updateWindowName=True)
@@ -881,7 +919,9 @@ class EventsHandler(object):
     def onAbout(self, event):
         about = [
             'pyNastran v%s' % pyNastran.__version__,
-            'Copyright %s; Steven Doyle 2011-2013\n' % pyNastran.__license__,
+            '%s' % pyNastran.__copyright__,
+            '%s\n' % pyNastran.__author__,
+
             '%s' % pyNastran.__website__,
             '',
             'Mouse',

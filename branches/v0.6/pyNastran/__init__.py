@@ -21,8 +21,8 @@ elif dev == 2:
 __author__  = 'Steven Doyle, Al Danials, Marcin Gasiorek'
 __email__   = 'mesheb82@gmail.com'
 __desc__    = 'Nastran BDF/F06/OP2/OP4 File reader/editor/writer/viewer'
-__copyright__   = 'Copyright 2011-2013, pyNastran; %s' % __author__
 __license__     = 'LGPLv3'
+__copyright__   = 'Copyright %s; 2011-2014' % __license__
 __releaseDate__ = '2014/6/xx'
 __releaseDate2__ = 'JUNE xx, 2014'
 __version__     = '0.6.2'
