@@ -12,25 +12,16 @@ except ImportError:
 import sys
 #from vtk.wx.wxVTKRenderWindowInteractor import wxVTKRenderWindowInteractor
 
-#import pyNastran
 import pyNastran.gui
 from pyNastran.gui.pan import Pan
 from pyNastran.gui.arg_handling import get_inputs
 from pyNastran.utils.log import SimpleLogger
 
-ID_SAVEAS = 803
-ID_ABOUT = 3
+# === File ===
+#ID_SAVEAS = 803
 
-ID_PLOT = 200
 ID_GEOMETRY = 201
 ID_RESULTS = 202
-
-ID_SURFACE = 901
-ID_WIREFRAME = 902
-ID_HIDDEN = 903
-ID_EDGES = 904
-
-ID_CAMERA = 910
 
 ID_BDF = 920
 ID_OP2 = 921
@@ -45,21 +36,38 @@ ID_PLOT3D = 929
 
 ID_EXPORT = 930
 
+# === View ===
+ID_SURFACE = 901
+ID_WIREFRAME = 902
+ID_HIDDEN = 903
 
-pkgPath = pyNastran.gui.__path__[0]
-#print "pkgPath = %r" % pkgPath
+ID_EDGES = 904
+ID_CAMERA = 910
+
+# === Help ===
+ID_ABOUT = 3
+#ID_PLOT = 200  # 2D grid
+
+
+
 
 from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, Plot3d_io,
     is_nastran, is_cart3d, is_panair, is_lawgs, is_stl, is_tetgen, is_usm3d, is_plot3d)
-valid_formats = ['panair', 'cart3d', 'lawgs', 'nastran', 'stl', 'tetgen', 'usm3d', 'plot3d']
+valid_formats = [
+    'cart3d', 'lawgs', 'nastran', 'panair', 'plot3d', 'stl', 'tetgen', 'usm3d'
+]
+
 assert is_nastran == True, is_nastran
 print('is_nastran = %r' % is_nastran)
+
+pkgPath = pyNastran.gui.__path__[0]
+#print "pkgPath = %r" % pkgPath
 
 if '?' in pkgPath:
     iconPath = 'icons'
 else:
     iconPath = os.path.join(pkgPath, 'icons')
-#print "iconPath = %r" % iconPath
+#print("iconPath = %r" % iconPath)
 
 #------------------------------------------------------------------------------
 # kills the program when you hit Cntl+C from the command line
@@ -106,6 +114,7 @@ class AppFrame(wx.Frame):
         #for shot in shots:
             self.frmPanel.widget.onTakePicture(ID_CAMERA, shots)
             sys.exit('took screenshot %r' % shots)
+        #print("*format =", self.format)
 
     def load_batch_inputs(self, inputs):
         format = inputs['format']
@@ -308,16 +317,10 @@ class AppFrame(wx.Frame):
         #self.Bind(wx.EVT_RIGHT_DOWN, events.OnRightDown)
 
         # Bind View Menu
-        self.Bind(wx.EVT_MENU, self.frmPanel.widget.onTakePicture, id=ID_CAMERA)
-        self.Bind(wx.EVT_MENU, self.frmPanel.onSetToWireframe, id=ID_WIREFRAME)
-        self.Bind(wx.EVT_MENU, self.frmPanel.onSetToSurface, id=ID_SURFACE)
-        self.Bind(wx.EVT_MENU, self.frmPanel.onFlipEdges, id=ID_EDGES)
-
         #self.Bind(wx.EVT_MENU, self.frmPanel.onSetToFlatShading,    self.flatShading)
         #self.Bind(wx.EVT_MENU, self.frmPanel.onSetToGouraudShading, self.gouraudShading)
         #self.Bind(wx.EVT_MENU, self.frmPanel.onSetToPhongShading,   self.phongShading)
 
-        self.Bind(wx.EVT_MENU, events.onBackgroundColor, self.bkgColorView)
         #self.Bind(wx.EVT_MENU, events.onToggleStatusBar, self.showStatusBar)
         #self.Bind(wx.EVT_MENU, events.onToggleToolBar, self.showToolBar)
 
@@ -422,27 +425,10 @@ class AppFrame(wx.Frame):
         self.toolbar1 = toolbar1
 
         # Bind File Menu
-        if is_nastran:
-            self.Bind(wx.EVT_TOOL, events.onLoadBDF, id=ID_BDF)
-            #self.Bind(wx.EVT_TOOL, events.onLoadOP2, id=ID_OP2)
-        self.Bind(wx.EVT_TOOL, events.onLoadCart3d, id=ID_CART3D)
-        self.Bind(wx.EVT_TOOL, events.onLoadLaWGS, id=ID_LAWGS)
-        self.Bind(wx.EVT_TOOL, events.onLoadPanair, id=ID_PANAIR)
-        self.Bind(wx.EVT_TOOL, events.onLoadPlot3d, id=ID_PLOT3D)
-        self.Bind(wx.EVT_TOOL, events.onLoadSTL, id=ID_STL)
-        self.Bind(wx.EVT_TOOL, events.onLoadTetgen, id=ID_TETGEN)
-        self.Bind(wx.EVT_TOOL, events.onLoadUsm3d, id=ID_USM3D)
-
         self.Bind(wx.EVT_TOOL, events.onLoadGeometry, id=ID_GEOMETRY)
         self.Bind(wx.EVT_TOOL, events.onLoadResults, id=ID_RESULTS)
         #self.Bind(wx.EVT_TOOL, events.onExport, id=ID_EXPORT)
 
-        self.Bind(wx.EVT_MENU, events.onExit, id=wx.ID_EXIT)
-       #self.Bind(wx.EVT_TOOL, events.onExit, id=wx.ID_EXIT)
-
-        self.Bind(wx.EVT_MENU, self.frmPanel.onSetToWireframe, id=ID_WIREFRAME)
-        self.Bind(wx.EVT_MENU, self.frmPanel.onSetToSurface, id=ID_SURFACE)
-        self.Bind(wx.EVT_MENU, self.frmPanel.onSetToSurface, id=ID_CAMERA)
 
         #self.Bind(wx.EVT_TOOL, events.onSaveAsFile, id=ID_SAVEAS)
         #self.Bind(wx.EVT_TOOL, events.onUndo, tundo)
@@ -453,77 +439,99 @@ class AppFrame(wx.Frame):
 
         menubar = wx.MenuBar()
         # --------- File Menu -------------------------------------------------
-        assert os.path.exists(os.path.join(iconPath, 'topen.png'))
 
-        fileMenu = wx.Menu()
-        #fileMenu.Append(wx.ID_NEW,  '&New','does nothing')
-        if is_nastran:
-            loadBDF = fileMenu.Append(ID_BDF, 'Load &BDF', 'Loads a BDF Input File')
-            #loadOP2 = fileMenu.Append(ID_OP2, 'Load O&P2', 'Loads an OP2 Results File')
-            #png = wx.Image(os.path.join(iconPath, 'topen.png'), wx.BITMAP_TYPE_PNG)
-            #loadBDF.SetBitmap(png.ConvertToBitmap())
+        formats = []
+        if is_nastran: formats.append('nastran')
+        if is_cart3d: formats.append('cart3d')
+        if is_lawgs:  formats.append('lawgs')
+        if is_panair: formats.append('panair')
+        if is_plot3d: formats.append('plot3d')
+        if is_stl:    formats.append('stl')
+        if is_tetgen: formats.append('tetgen')
+        if is_usm3d:  formats.append('usm3d')
+        if formats: formats.append('')
 
-        if is_cart3d: loadCart3d = fileMenu.Append(ID_CART3D, 'Load &Cart3D', 'Loads a Cart3D Input/Results File')
-        if is_lawgs:  loadLaWGS  = fileMenu.Append(ID_LAWGS, 'Load &LaWGS', 'Loads an LaWGS File')
-        if is_panair: loadPanair = fileMenu.Append(ID_PANAIR, 'Load &Panair', 'Loads a Panair Input File')
-        if is_plot3d: loadPlot3d = fileMenu.Append(ID_PLOT3D, 'Load Pl&ot3d', 'Loads a Plot3d Input File')
-        if is_stl:    loadSTL    = fileMenu.Append(ID_STL, 'Load &STL', 'Loads a STL Input File')
-        if is_usm3d:  loadUsm3d  = fileMenu.Append(ID_USM3D, 'Load &Usm3d', 'Loads a Usm3d Input File')
-        if is_tetgen: loadTetgen = fileMenu.Append(ID_TETGEN, 'Load &Tetgen', 'Loads a Tetgen Input File')
+        buttons = {
+            # ---File---
+            #button_name    : [ID,      selfattr, icon_path,  menu_name, tip, event]
+            'load_geometry' : [ID_GEOMETRY, None, os.path.join(iconPath, 'topen.png'), 'Load &Geometry', 'Load the Geometry...', None],
+            'load_results'  : [ID_RESULTS,  None, None, 'Load &Results', 'Load the Results...', None],
 
-        fileMenu.AppendSeparator()
-        geometry = fileMenu.Append(ID_GEOMETRY,'Load &Geometry...', 'Load the Geometry...')
-        results = fileMenu.Append(ID_RESULTS,'Load &Results...', 'Load the Results...')
+            'nastran'    : [ID_BDF,     None, None, 'Load &Nastran', 'Loads a Nasran Input File',    events.onLoadBDF],
+            'cart3d'     : [ID_CART3D,  None, None, 'Load &Cart3D',  'Loads a Cart3D Input/Results', events.onLoadCart3d],
+            'lawgs'      : [ID_LAWGS,   None, None, 'Load &LaWGS',   'Loads an LaWGS File',          events.onLoadLaWGS],
+            'panair'     : [ID_PANAIR,  None, None, 'Load &Panair',  'Loads a Panair Input File',    events.onLoadPanair],
+            'plot3d'     : [ID_PLOT3D,  None, None, 'Load Pl&ot3d',  'Loads a Plot3d Input File',    events.onLoadPlot3d],
+            'stl'        : [ID_STL,     None, None, 'Load &STL',     'Loads a STL Input File',       events.onLoadSTL],
+            'usm3d'      : [ID_USM3D,   None, None, 'Load &Usm3d',   'Loads a Usm3d Input File',     events.onLoadUsm3d],
+            'tetgen'     : [ID_TETGEN,  None, None, 'Load &Tetgen',  'Loads a Tetgen Input File',    events.onLoadTetgen],
 
-        #export     = fileMenu.Append(ID_EXPORT,'Export to...', 'Export the Model to Another Format')
-        #print "topen = ",os.path.join(iconPath,'topen.png')
-        sys.stdout.flush()
+            'exit'       : [wx.ID_EXIT, None, os.path.join(iconPath, 'texit.png'),'Exit', 'Exits pyNastran', events.onExit],
 
-        #fileMenu.Append(wx.ID_RES, 'Load OP2 &Results','Loads a OP2 - does nothing')
-        #fileMenu.Append(wx.ID_SAVE, '&Save','does nothing')
-        fileMenu.AppendSeparator()
+            'export'    : [ID_EXPORT,  None, None,  'Export to...' 'Export the Model to Another Format'],
+            'Save'      : [wx.ID_SAVE, None, None, '&Save', 'does nothing'],
+            
+            # ---View---
+            'screenshot' : [ID_CAMERA,    None,           os.path.join(iconPath, 'tcamera.png'),    'Take a Screenshot', 'Take a Screenshot', self.frmPanel.widget.onTakePicture],
+            'wireframe'  : [ID_WIREFRAME, None,           os.path.join(iconPath, 'twireframe.png'), 'Wireframe Model', 'Show Model as a Wireframe Model', self.frmPanel.onSetToSurface],
+            'edges'      : [ID_EDGES,     None,           os.path.join(iconPath, 'tedges.png'),     'Show/Hide Edges', 'Show/Hide Edges', self.frmPanel.onFlipEdges],
+            'surface'    : [ID_SURFACE,   None,           os.path.join(iconPath, 'tsolid.png'),     'Surface Model', 'Show Model as a Surface Model', self.frmPanel.onSetToSurface],
+            'color'      : [wx.ID_ANY,    'bkgColorView', os.path.join(iconPath, 'tcolorpick.png'), 'Change Background Color', 'Change Background Color', events.onBackgroundColor],
+            
+            # ---Help---
+            'about' : [ID_ABOUT, None, os.path.join(iconPath, 'tabout.png'), '&About', 'About pyNastran', events.onAbout],
+        }
+        
+        menu_order = ['&File', '&View', '&Help']
+        menus = {
+            '&File' : formats + ['load_geometry', 'load_results', '', 'exit'],
+            '&View' : ['screenshot', '', 'wireframe', 'surface', 'edges', '', 'color'],
+            '&Help' : ['about'],
+        }
 
-        # dummy import submenu
-        #imp = wx.Menu()
-        #imp.Append(wx.ID_ANY, 'Import newsfeed list...')
-        #imp.Append(wx.ID_ANY, 'Import bookmarks...')
-        #imp.Append(wx.ID_ANY, 'Import mail...')
-        #fileMenu.AppendMenu(wx.ID_ANY, 'I&mport', imp)
-        exitButton = wx.MenuItem(fileMenu,
-                                 wx.ID_EXIT, 'Exit', 'Exits pyNastran')
-        exitButton.SetBitmap(wx.Image(os.path.join(iconPath, 'texit.png'),
-                                      wx.BITMAP_TYPE_PNG).ConvertToBitmap())
-        fileMenu.AppendItem(exitButton)
+        print('---building button menu---')
+        for menu_name in menu_order:
+            button_names = menus[menu_name]
+
+            menu = wx.Menu()
+            for button_name in button_names:
+                if button_name == '':
+                    menu.AppendSeparator()
+                elif button_name in button_names:
+                    button = None
+                    try:
+                        button_args = buttons[button_name]
+                    except KeyError:
+                        raise RuntimeError('menu_name=%r has not been defined.' % button_name)
+
+                    (ID, selfattr, icon_pth, desc, tip, event) = button_args
+                    if icon_pth is None:  # no icon
+                        button = menu.Append(ID, desc, tip)
+                    elif os.path.exists(icon_pth):
+                        button = wx.MenuItem(menu, ID, desc, tip)
+                        button.SetBitmap(wx.Image(icon_pth,
+                                                  wx.BITMAP_TYPE_PNG).ConvertToBitmap())
+                        menu.AppendItem(button)
+                    else:
+                        print('***cannot find icon_pth=%r' % icon_pth)
+
+                    if selfattr is not None:
+                        print("button_name=%r; setting self.%s" % (button_name, selfattr))
+                        setattr(self, selfattr, button)
+                        attr = getattr(self, selfattr)
+                        self.Bind(wx.EVT_MENU, event, attr)
+                    else:
+                        self.Bind(wx.EVT_MENU, event, id=ID)
+                else:
+                    print('***cannot find button=%r' % button_name)
+            menubar.Append(menu, menu_name)
+        print('---built button menu---')
 
         # --------- View Menu -------------------------------------------------
-        # status bar at bottom - toggles
-        viewMenu = wx.Menu()
-        camera = viewMenu.Append(ID_CAMERA, 'Take a Screenshot', 'Take a Screenshot')
-        viewMenu.AppendSeparator()
-        wireframe = viewMenu.Append(ID_WIREFRAME, 'Wireframe Model', 'Show Model as a Wireframe Model')
-        surface = viewMenu.Append(ID_SURFACE, 'Surface Model', 'Show Model as a Surface Model')
-        #viewMenu.AppendSeparator()
-
         #self.flatShading    = viewMenu.Append(wx.ID_ANY, 'Flat Shading',           'Flat Shading')
         #self.gouraudShading = viewMenu.Append(wx.ID_ANY, 'Mid (Gouraud) Shading',  'Mid (Gouraud) Shading')
         #self.phongShading   = viewMenu.Append(wx.ID_ANY, 'Smooth (Phong) Shading', 'Smooth (Phong) Shading')
 
-        # view images
-        wireframe.SetBitmap(wx.Image(os.path.join(iconPath, 'twireframe.png'),
-                                     wx.BITMAP_TYPE_PNG).ConvertToBitmap())
-        surface.SetBitmap(wx.Image(os.path.join(iconPath, 'tsolid.png'),
-                                   wx.BITMAP_TYPE_PNG).ConvertToBitmap())
-        camera.SetBitmap(wx.Image(os.path.join(iconPath, 'tcamera.png'),
-                                  wx.BITMAP_TYPE_PNG).ConvertToBitmap())
-
-        #wireframe = toolbar1.AddLabelTool(ID_WIREFRAME, 'Set to Wireframe Model', wx.Bitmap(os.path.join(iconPath,'twireframe.png')))
-        #surface   = toolbar1.AddLabelTool(ID_SURFACE,   'Set to Surface Model',   wx.Bitmap(os.path.join(iconPath,'tsolid.png')))
-        #camera    = toolbar1.AddLabelTool(ID_CAMERA,    'Take a Screenshot',      wx.Bitmap(os.path.join(iconPath,'tcamera.png')))
-
-        viewMenu.AppendSeparator()
-        self.bkgColorView = viewMenu.Append(wx.ID_ANY,
-                                            'Change Background Color',
-                                            'Change Background Color')
         #self.showStatusBar = viewMenu.Append(wx.ID_ANY, 'Show statusbar', 'Show Statusbar', kind=wx.ITEM_CHECK)
         #self.showToolBar   = viewMenu.Append(wx.ID_ANY, 'Show toolbar',   'Show Toolbar',   kind=wx.ITEM_CHECK)
         #viewMenu.Check(self.showStatusBar.GetId(), True)
@@ -534,16 +542,6 @@ class AppFrame(wx.Frame):
         #plot = plotMenu.Append(ID_PLOT, '&Plot Data','Plot Data')
         #self.Bind(wx.EVT_MENU, self.onPlot, id=ID_PLOT)
 
-        # --------- Help / About Menu -----------------------------------------
-        # help/about menu
-        helpMenu = wx.Menu()
-        helpMenu.Append(ID_ABOUT, '&About', 'About pyNastran')
-
-        # menu bar
-        menubar.Append(fileMenu, '&File')
-        #menubar.Append(plotMenu, '&Plot')
-        menubar.Append(viewMenu, '&View')
-        menubar.Append(helpMenu, '&Help')
         self.menubar = menubar
 
     def onPlot(self, event):
@@ -587,11 +585,7 @@ class Example(wx.Frame):
         self.InitUI()
 
     def InitUI(self):
-
         menubar = wx.MenuBar()
-        fileMenu = wx.Menu()
-        fitem = fileMenu.Append(wx.ID_EXIT, 'Quit', 'Quit application')
-        menubar.Append(fileMenu, '&File')
         self.SetMenuBar(menubar)
 
         self.Bind(wx.EVT_MENU, self.OnQuit, fitem)
@@ -623,15 +617,16 @@ class EventsHandler(object):
 
         wildcard += "Cart3d (*.i.tri; *.a.tri; *.triq)|*.i.tri;*.a.tri;*.triq|"
         wildcard += "Panair (*.inp)|*.inp|"
-        wildcard += "Plot3d (*.p3d)|*.p3d|"
+        wildcard += "Plot3d (*.p3d; *.p3da; *.xyz)|*.p3d;*.p3da;*.xyz|"
         wildcard += "STL (*.STL)|*.STL|"
         wildcard += "Tetgen (*.smesh)|*.smesh|"
-        wildcard += "Usm3D (*.cogsg)|*.cogsg|"
+        wildcard += "Usm3D (*.cogsg; *.front)|*.cogsg;*.front|"
 
         Title = 'Choose an Input File to Load'
         loadFunction = self.parent.frmPanel.load_nastran_geometry
-        self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
-        self.parent.format = 'nastran'
+        is_loaded = self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
+        if is_loaded:
+            self.parent.format = 'nastran'
 
     def onLoadBDF(self, event):
         """ Open a file"""
@@ -642,8 +637,9 @@ class EventsHandler(object):
 
         Title = 'Choose a Nastran Input Deck to Load'
         loadFunction = self.parent.frmPanel.load_nastran_geometry
-        self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
-        self.parent.format = 'nastran'
+        is_loaded = self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
+        if is_loaded:
+            self.parent.format = 'nastran'
 
     def onLoadOP2(self, event):
         """ Open a file"""
@@ -667,27 +663,23 @@ class EventsHandler(object):
 
         Title = 'Choose a Nastran Output File to Load (OP2 only)'
         loadFunction = self.parent.frmPanel.load_nastran_results
-        self.createLoadFileDialog(wildcard, Title, loadFunction)
+        is_loaded = self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
+        if is_loaded:
+            pass
 
     def onLoadCart3d(self, event):
         """ Open a file"""
-        #print "OnOpen..."
-
-        #wildcard = "Cart3d (*.i.tri;*.a.tri)|(*.i.triq;*.a.triq)|" \
-        # "All files (*.*)|*.*"
-
         wildcard = "Cart3d (*.i.tri; *.a.tri; *.triq)|*.i.tri;*.a.tri;*.triq|" \
             "All files (*.*)|*.*"
-        #wildcard = "Cart3d (*.tri;)|(*.triq;)|" \
-        # "All files (*.*)|*.*"
 
         Title = 'Choose a Cart3d Input File to Load'
         loadFunction = self.parent.frmPanel.load_cart3d_geometry
         #fname = r'C:\Users\steve\Desktop\pyNastran\pyNastran\converters\cart3d\Cart3d_35000_0.825_10_0_0_0_0.i.triq'
         #dirname = ''
         #loadFunction(fname,dirname)
-        self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
-        self.parent.format = 'cart3d'
+        is_loaded = self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
+        if is_loaded:
+            self.parent.format = 'cart3d'
 
     def onLoadLaWGS(self, event):
         """ Open a file"""
@@ -699,8 +691,9 @@ class EventsHandler(object):
         #fname = r'C:\Users\steve\Desktop\pyNastran\pyNastran\converters\cart3d\Cart3d_35000_0.825_10_0_0_0_0.i.triq'
         #dirname = ''
         #loadFunction(fname,dirname)
-        self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
-        self.parent.format = 'lawgs'
+        is_loaded = self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
+        if is_loaded:
+            self.parent.format = 'lawgs'
 
     def onLoadPanair(self, event):
         """ Open a file"""
@@ -712,8 +705,9 @@ class EventsHandler(object):
         #fname = r'C:\Users\steve\Desktop\pyNastran\pyNastran\converters\cart3d\Cart3d_35000_0.825_10_0_0_0_0.i.triq'
         #dirname = ''
         #loadFunction(fname,dirname)
-        self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
-        self.parent.format = 'panair'
+        is_loaded = self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
+        if is_loaded:
+            self.parent.format = 'panair'
 
     def onLoadSTL(self, event):
         """ Open a file"""
@@ -725,8 +719,9 @@ class EventsHandler(object):
         #fname = r'C:\Users\steve\Desktop\pyNastran\pyNastran\converters\cart3d\Cart3d_35000_0.825_10_0_0_0_0.i.triq'
         #dirname = ''
         #loadFunction(fname,dirname)
-        self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
-        self.parent.format = 'stl'
+        is_loaded = self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
+        if is_loaded:
+            self.parent.format = 'stl'
 
     def onLoadTetgen(self, event):
         """ Open a file"""
@@ -738,34 +733,37 @@ class EventsHandler(object):
         #fname = r'C:\Users\steve\Desktop\pyNastran\pyNastran\converters\cart3d\Cart3d_35000_0.825_10_0_0_0_0.i.triq'
         #dirname = ''
         #loadFunction(fname,dirname)
-        self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
-        self.parent.format = 'tetgen'
+        is_loaded = self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
+        if is_loaded:
+            self.parent.format = 'tetgen'
 
     def onLoadUsm3d(self, event):
         """ Open a file"""
-        wildcard = "Usm3D (*.cogsg)|*.cogsg|" \
+        wildcard = "Usm3D (*.cogsg; *.front)|*.cogsg;*.front|" \
             "All files (*.*)|*.*"
 
-        Title = 'Choose a Usm3D (cogsg) File to Load'
+        Title = 'Choose a Usm3D (cogsg/front) Input File to Load'
         loadFunction = self.parent.frmPanel.load_usm3d_geometry
         #fname = r'C:\Users\steve\Desktop\pyNastran\pyNastran\converters\cart3d\Cart3d_35000_0.825_10_0_0_0_0.i.triq'
         #dirname = ''
         #loadFunction(fname,dirname)
-        self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
-        self.parent.format = 'usm3d'
+        is_loaded = self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
+        if is_loaded:
+            self.parent.format = 'usm3d'
 
     def onLoadPlot3d(self, event):
         """ Open a file"""
-        wildcard = "Plot3d (*.p3d)|*.p3d|" \
+        wildcard = "Plot3d (*.p3d; *.p3da; *.xyz)|*.p3d;*.p3da;*.xyz|" \
             "All files (*.*)|*.*"
 
-        Title = 'Choose a Plot3D File to Load'
+        Title = 'Choose a Plot3D Input File to Load'
         loadFunction = self.parent.frmPanel.load_usm3d_geometry
         #fname = r'C:\Users\steve\Desktop\pyNastran\pyNastran\converters\cart3d\Cart3d_35000_0.825_10_0_0_0_0.i.triq'
         #dirname = ''
         #loadFunction(fname,dirname)
-        self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
-        self.parent.format = 'plot3d'
+        is_loaded = self.createLoadFileDialog(wildcard, Title, loadFunction, updateWindowName=True)
+        if is_loaded:
+            self.parent.format = 'plot3d'
 
     def createLoadFileDialog(self, wildcard, Title, loadFunction, updateWindowName=False):
         dlg = wx.FileDialog(None, Title, self.parent.dirname, "",
@@ -780,25 +778,47 @@ class EventsHandler(object):
             #self.parent.frmPanel.loadCart3dGeometry(fname,self.parent.dirname)
             loadFunction(fname, self.parent.dirname)
             self.parent.frmPanel.Update()
+            is_loaded = True
+        else:
+            is_loaded = False
+        dlg.Destroy()
+        return is_loaded
+
+    def Warn(self, message, caption='Warning!'):
+        dlg = wx.MessageDialog(self.parent.frmPanel, message, caption, wx.OK | wx.ICON_WARNING)
+        dlg.ShowModal()
+        dlg.Destroy()
+
+    def Error(self, message, caption='Error!'):
+        dlg = wx.MessageDialog(self.parent.frmPanel, message, caption, wx.OK | wx.ICON_ERROR)
+        dlg.ShowModal()
         dlg.Destroy()
 
     def onLoadResults(self, event):
         Format = self.parent.format
+        if Format is None:
+            self.Error('You must load an input file first.', 'No Input File Selected')
+            return
+
         Title = 'Choose a %s Output File to Load' % Format.title()
         if Format == 'nastran' and is_nastran:
             wildcard = "Nastran Results (*.op2; *.f06)|*.op2;*.f06|" \
                 "All files (*.*)|*.*"
             load_function = self.parent.frmPanel.load_nastran_results
-            self.createLoadFileDialog(wildcard, Title, load_function, updateWindowName=True)
         elif Format == 'usm3d':
             wildcard = "Usm3d flow (*.flo)|*.flo|" \
                 "All files (*.*)|*.*"
             load_function = self.parent.frmPanel.load_usm3d_results
-            self.createLoadFileDialog(wildcard, Title, load_function, updateWindowName=True)
         else:
-            self.log.error('Format=%r is not supported.' % Format)
+            msg = 'Format=%r is not supported.' % Format
+            self.log.error(msg)
+            self.Error(msg, 'Invalid Format Error')
             return
+
+        is_loaded = self.createLoadFileDialog(wildcard, Title, load_function, updateWindowName=True)
         print("loaded the results...")
+        #print("format =", Format)
+
     #==============================================
     def onExport(self):
         if self.modelType == 'nastran':
@@ -811,7 +831,7 @@ class EventsHandler(object):
 
         Title = 'Choose a Nastran Output File to Load (OP2 only)'
         loadFunction = self.parent.frmPanel.load_nastran_results
-        self.createLoadFileDialog(wildcard, Title, loadFunction)
+        is_loaded = self.createLoadFileDialog(wildcard, Title, loadFunction)
 
     def onExit(self, event):
         self.parent.Destroy()
