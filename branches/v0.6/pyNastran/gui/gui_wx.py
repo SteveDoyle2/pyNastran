@@ -234,7 +234,7 @@ class AppFrame(wx.Frame):
                             size=(100, 200))
 
         self.buildMenuBar()
-        self.buildToolBar()
+        #self.buildToolBar()
         self.buildStatusBar()
 
         self.SetMenuBar(self.menubar)
@@ -384,9 +384,8 @@ class AppFrame(wx.Frame):
 
     def buildToolBar(self):
         events = self.eventsHandler
+        return
 
-        #toolbar1.AddSeparator()
-        #toolbar1.AddSeparator()
         #tnew  = toolbar1.AddLabelTool(wx.ID_ANY,  '', wx.Bitmap(os.path.join(iconPath,'new.png')))
         #tsave = toolbar1.AddLabelTool(ID_SAVEAS,  '', wx.Bitmap(os.path.join(iconPath,'tsave.png')))
         #tundo = toolbar1.AddLabelTool(wx.ID_UNDO, '', wx.Bitmap(os.path.join(iconPath,'tundo.png')))
@@ -398,42 +397,16 @@ class AppFrame(wx.Frame):
         #                     shortHelp=wx.MenuItem.GetLabelFromText(self.menuText),
         #             longHelp=self.helpText)
 
-        topen = os.path.join(iconPath, 'topen.png')
-        assert os.path.exists(topen), 'topen=%r' % topen
-
-        topen = wx.Image(topen, wx.BITMAP_TYPE_ANY)
-        #topen = toolbar1.AddLabelTool(ID_BDF, '', wx.BitmapFromImage(topen), longHelp='Loads a BDF')
-        topen = toolbar1.AddLabelTool(ID_GEOMETRY, '', wx.BitmapFromImage(topen), longHelp='Loads Geometry')
-
-        twireframe = wx.Image(os.path.join(iconPath, 'twireframe.png'), wx.BITMAP_TYPE_ANY)
+        topen     = toolbar1.AddLabelTool(ID_GEOMETRY,  '', wx.BitmapFromImage(topen),      longHelp='Loads Geometry')
         wireframe = toolbar1.AddLabelTool(ID_WIREFRAME, '', wx.BitmapFromImage(twireframe), longHelp='Set to Wireframe Model')
-
-        tsolid = wx.Image(os.path.join(iconPath, 'tsolid.png'), wx.BITMAP_TYPE_ANY)
-        surface = toolbar1.AddLabelTool(ID_SURFACE, '', wx.BitmapFromImage(tsolid), longHelp='Set to Surface/Solid Model')
-
-        tedges = wx.Image(os.path.join(iconPath, 'tedges.png'), wx.BITMAP_TYPE_ANY)
-        edges = toolbar1.AddLabelTool(ID_EDGES, '', wx.BitmapFromImage(tedges), longHelp='Show/Hide the edges')
-
-        tcamera = wx.Image(os.path.join(iconPath, 'tcamera.png'), wx.BITMAP_TYPE_ANY)
-        camera = toolbar1.AddLabelTool(ID_CAMERA, '', wx.BitmapFromImage(tcamera), longHelp='Take a Screenshot')
-
-        texit = wx.Image(os.path.join(iconPath, 'texit.png'), wx.BITMAP_TYPE_ANY)
-        etool = toolbar1.AddLabelTool(wx.ID_EXIT, '', wx.BitmapFromImage(texit), longHelp='Exit pyNastran GUI')
+        surface   = toolbar1.AddLabelTool(ID_SURFACE,   '', wx.BitmapFromImage(tsolid),     longHelp='Set to Surface/Solid Model')
+        edges     = toolbar1.AddLabelTool(ID_EDGES,     '', wx.BitmapFromImage(tedges),     longHelp='Show/Hide the edges')
+        camera    = toolbar1.AddLabelTool(ID_CAMERA,    '', wx.BitmapFromImage(tcamera),    longHelp='Take a Screenshot')
+        etool     = toolbar1.AddLabelTool(wx.ID_EXIT,   '', wx.BitmapFromImage(texit),      longHelp='Exit pyNastran GUI')
         #toolbar1.EnableTool(wx.ID_REDO, False)
-        toolbar1.Realize()
 
-        self.toolbar1 = toolbar1
-
-        # Bind File Menu
-        self.Bind(wx.EVT_TOOL, self.frmPanel.onSetToSurface, id=ID_SURFACE)
-        self.Bind(wx.EVT_TOOL, self.frmPanel.onSetToWireframe, id=ID_WIREFRAME)
-        self.Bind(wx.EVT_TOOL, self.frmPanel.onFlipEdges, id=ID_EDGES)
-
-        self.Bind(wx.EVT_TOOL, events.onLoadGeometry, id=ID_GEOMETRY)
-        self.Bind(wx.EVT_TOOL, events.onLoadResults, id=ID_RESULTS)
+        # Bindings
         #self.Bind(wx.EVT_TOOL, events.onExport, id=ID_EXPORT)
-
-
         #self.Bind(wx.EVT_TOOL, events.onSaveAsFile, id=ID_SAVEAS)
         #self.Bind(wx.EVT_TOOL, events.onUndo, tundo)
         #self.Bind(wx.EVT_TOOL, events.onRedo, tredo)
@@ -458,7 +431,7 @@ class AppFrame(wx.Frame):
         buttons = {
             # ---File---
             #button_name    : [ID,      selfattr, icon_path,  menu_name, tip, event]
-            'load_geometry' : [ID_GEOMETRY, None, os.path.join(iconPath, 'topen.png'), 'Load &Geometry', 'Load the Geometry...', None],
+            'load_geometry' : [ID_GEOMETRY, None, os.path.join(iconPath, 'topen.png'), 'Load &Geometry', 'Load the Geometry...', events.onLoadGeometry],
             'load_results'  : [ID_RESULTS,  None, None, 'Load &Results', 'Load the Results...', None],
 
             'nastran'    : [ID_BDF,     None, None, 'Load &Nastran', 'Loads a Nasran Input File',    events.onLoadBDF],
@@ -476,7 +449,7 @@ class AppFrame(wx.Frame):
             'Save'      : [wx.ID_SAVE, None, None, '&Save', 'does nothing'],
             
             # ---View---
-            'screenshot' : [ID_CAMERA,    None,           os.path.join(iconPath, 'tcamera.png'),    'Take a Screenshot', 'Take a Screenshot', self.frmPanel.widget.onTakePicture],
+            'camera'     : [ID_CAMERA,    None,           os.path.join(iconPath, 'tcamera.png'),    'Take a Screenshot', 'Take a Screenshot', self.frmPanel.widget.onTakePicture],
             'wireframe'  : [ID_WIREFRAME, None,           os.path.join(iconPath, 'twireframe.png'), 'Wireframe Model', 'Show Model as a Wireframe Model', self.frmPanel.onSetToWireframe],
             'edges'      : [ID_EDGES,     None,           os.path.join(iconPath, 'tedges.png'),     'Show/Hide Edges', 'Show/Hide Edges', self.frmPanel.onFlipEdges],
             'surface'    : [ID_SURFACE,   None,           os.path.join(iconPath, 'tsolid.png'),     'Surface Model', 'Show Model as a Surface Model', self.frmPanel.onSetToSurface],
@@ -486,12 +459,30 @@ class AppFrame(wx.Frame):
             'about' : [ID_ABOUT, None, os.path.join(iconPath, 'tabout.png'), '&About', 'About pyNastran', events.onAbout],
         }
         
+        toolbar_buttons = ['load_geometry', 'camera', 'wireframe', 'surface', 'edges', '', 'exit']
         menu_order = ['&File', '&View', '&Help']
         menus = {
             '&File' : formats + ['load_geometry', 'load_results', '', 'exit'],
-            '&View' : ['screenshot', '', 'wireframe', 'surface', 'edges', '', 'color'],
+            '&View' : ['camera', '', 'wireframe', 'surface', 'edges', '', 'color'],
             '&Help' : ['about'],
         }
+        
+        self.toolbar1 = self.CreateToolBar()
+        for button_name in toolbar_buttons:
+            if button_name == '':
+                self.toolbar1.AddSeparator()
+            elif button_name is not None:
+                button_args = buttons[button_name]
+                (ID, selfattr, icon_pth, desc, tip, event) = button_args
+                if os.path.exists(icon_pth):
+                    timage = wx.Image(icon_pth, wx.BITMAP_TYPE_ANY)
+                    button = self.toolbar1.AddLabelTool(ID, '', wx.BitmapFromImage(timage), longHelp=tip)
+                    self.Bind(wx.EVT_TOOL, event, id=ID)
+                else:
+                    print "canot add %s" % desc
+            else:
+                print "canot add %s" % desc
+        self.toolbar1.Realize()
 
         print('---building button menu---')
         for menu_name in menu_order:
