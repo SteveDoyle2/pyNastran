@@ -34,9 +34,9 @@ class CONM2(object):
         """
         cards = self._cards
         ncards = len(cards)
-        assert ncards > 0, cards
+        #assert ncards > 0, cards
         self.n = ncards
-        assert self.n > 0
+        #assert self.n > 0
         print('CONM2 self.n=%s' % self.n)
         if ncards:
             print "CONM2", self.n

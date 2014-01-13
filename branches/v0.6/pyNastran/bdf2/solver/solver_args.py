@@ -29,8 +29,8 @@ def run_arg_parse(mode=''):
     data = docopt(msg, version=ver)
 
     print data
-    
-    
+
+
     bdf_filename = data['BDFNAME']
     bdf_filename = os.path.abspath(bdf_filename)
     if data['--out']:
@@ -39,18 +39,18 @@ def run_arg_parse(mode=''):
         bdf_base, ext = os.path.splitext(bdf_filename)
     data['BDFBASE'] = bdf_base
 
-    
+
     old = data['--old'].lower()
     if old not in ['no', 'yes']:
         raise RuntimeError('Use "old=no" or "old=yes".')
-    
+
     try:
         m = float(data['--m'])
     except ValueError:
         raise ValueError('--m must be a float; m=%r' % data['--m'])
     if m < 1.0:
         raise ValueError('--m must be >= 1.0; m=%r' % m)
-    
+
     try:
         f = float(data['--f'])
     except ValueError:
@@ -67,7 +67,6 @@ def run_arg_parse(mode=''):
     data['--m'] = m
     data['--f'] = f
     data['--k'] = k
-
 
     #old = data['--old']
     #out = data['--out']

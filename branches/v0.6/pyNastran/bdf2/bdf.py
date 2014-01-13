@@ -102,7 +102,7 @@ from .cards.loads.moment import MOMENT
 # RLOAD2
 # RANDPS
 
-
+# loads
 from .cards.loads.pload  import PLOAD
 from .cards.loads.pload1 import PLOAD1
 from .cards.loads.pload2 import PLOAD2
@@ -130,8 +130,13 @@ from .cards.nonlinear.nlparm import NLPARM
 from .cards.constraints.spc import SPC, get_spc_constraint
 from .cards.constraints.spcd import SPCD
 
+# spc
 from .cards.constraints.spc1 import SPC1, get_spc1_constraint
 from .cards.constraints.spcadd import SPCADD, get_spcadd_constraint
+
+# mpc
+from .cards.constraints.mpc import MPC, get_mpc_constraint
+#from .cards.constraints.mpcax import MPCAX
 from .cards.constraints.mpcadd import MPCADD
 
 #from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
@@ -2113,8 +2118,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             mpcadd = self.mpcadd.setdefault(constraint_id, MPCADD(self))
             mpcadd.add(constraint_id, node_ids, comment=comment)
         elif name == 'MPC':
-            #self.mpc.add(card_obj, comment=comment)
-            pass
+            constraint_id, constraint = get_mpc_constraint(card_obj)
+            mpc = self.mpc.setdefault(constraint_id, MPC(self))
+            mpc.add(constraint_id, constraint, comment=comment)
         #========================
         # spc
         elif name == 'SPCADD':
@@ -2312,16 +2318,37 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             spc_ids.extend(spc.keys())
         return unique(spc_ids)
 
-    def SPC(self, spc_id, used_ids=[]):
+    def SPC(self, spc_id, resolve=True, used_ids=[]):
+        """
+        Gets all the MPCs that are in:
+          - SPCADD
+          - SPC
+          - SPC1
+          - SPCD
+
+        Doesn't get:
+          - SPCAX
+
+        :param mpc_id:  the ID to get
+        :param resolve: removes the SPCADDs by turning them into the cards they point to
+        :param used_ids: an internal parameter
+        """
+        spc_out = []
         used_ids.append(spc_id)
         spcs = {
-            'SPCADD' : self.spcadd,
-            'SPC': self.spc,
-            'SPC1': self.spc1,
-            #'SPCAX': self.spcax,
-            'SPCD': self.spcd,
+             'SPCADD' : self.spcadd,
+             'SPC': self.spc,
+             'SPC1': self.spc1,
+             #'SPCAX': self.spcax,
+             'SPCD': self.spcd,
         }
-        spc_out = []
+
+        if not resolve:
+            for spc_type, spc in spcs.iteritems():
+                if spc_id in spc:
+                    spc_out.append(out)
+            return spc_out
+
         for spc_type, spc in spcs.iteritems():
             if spc_id in spc:
                 out = spc[spc_id]
@@ -2329,34 +2356,54 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
                     for spci in out.spc_ids:
                         if spci in used_ids:
                             raise RuntimeError('duplicate SPC id=%i' % spci)
-                        spc_outi = self.SPC(spci, used_ids)
+                        spc_outi = self.SPC(spci, resolve, used_ids)
                         for spcii in spc_outi:
                             spc_out.append(spcii)
                 else:
                     spc_out.append(out)
-        print("spc_out =", spc_out)
         return spc_out
 
-    def MPC(self, mpc_id, used_ids=[]):
-        used_ids.append(mpc_id)
+    def MPC(self, mpc_id, resolve=True, used_ids=[]):
+        """
+        Gets all the MPCs that are in:
+          - MPCADD
+          - MPC
+
+        Doesn't get:
+          - MPCAX
+
+        :param mpc_id:  the ID to get
+        :param resolve: removes the MPCADDs by turning them into the cards they point to
+        :param used_ids: an internal parameter
+        """
+        mpc_out = []
         mpcs = {
             'MPCADD' : self.mpcadd,
             'MPC': self.mpc,
+            #'MPCAX'  : self.mpcax,
         }
-        mpc_out = []
+        used_ids.append(mpc_id)
+
+        if not resolve:
+            for mpc_type, mpc in mpcs.iteritems():
+                if mpc_id in mpc:
+                    mpc_out.append(out)
+            return mpc_out
+
         for mpc_type, mpc in mpcs.iteritems():
             if mpc_id in mpc:
                 out = mpc[mpc_id]
                 if mpc_type == 'MPCADD':
-                    for spci in out.mpc_ids:
+                    for mpci in out.mpc_ids:
                         if mpci in used_ids:
                             raise RuntimeError('duplicate MPC id=%i' % mpci)
-                        mpc_outi = self.MPC(mpci, used_ids)
+                        mpc_outi = self.MPC(mpci, resolve, used_ids)
                         for mpcii in mpc_outi:
                             mpc_out.append(mpcii)
+                elif mpc_type in 'MPC':
+                    mpc_out.append(out)
                 else:
                     mpc_out.append(out)
-        print("mpc_out =", mpc_out)
         return mpc_out
 
     def _get_mass_types(self):

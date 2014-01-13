@@ -84,14 +84,14 @@ class CTRIA3(object):
     def mass(self, element_ids=None, total=False, node_ids=None, grids_cid0=None):
         """
         Gets the mass of the CTRIA3s on a total or per element basis.
-        
+
         :param self: the CTRIA3 object
         :param element_ids: the elements to consider (default=None -> all)
         :param total: should the mass be summed (default=False)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
         :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
-        
+
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
@@ -104,18 +104,18 @@ class CTRIA3(object):
             return mass.sum()
         else:
             return mass
-    
+
     def area(self, element_ids=None, total=False, node_ids=None, grids_cid0=None):
         """
         Gets the area of the CTRIA3s on a total or per element basis.
-        
+
         :param self: the CTRIA3 object
         :param element_ids: the elements to consider (default=None -> all)
         :param total: should the area be summed (default=False)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
         :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
-        
+
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
@@ -132,13 +132,13 @@ class CTRIA3(object):
     def normal(self, element_ids=None, node_ids=None, grids_cid0=None):
         """
         Gets the normals of the CTRIA3s on per element basis.
-        
+
         :param self: the CTRIA3 object
         :param element_ids: the elements to consider (default=None -> all)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
         :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
-        
+
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
@@ -158,7 +158,7 @@ class CTRIA3(object):
         """
         Gets the mass, area, and normals of the CTRIA3s on a per
         element basis.
-        
+
         :param self: the CTRIA3 object
         :param element_ids: the elements to consider (default=None -> all)
 
@@ -168,7 +168,7 @@ class CTRIA3(object):
         :param calculate_mass: should the mass be calculated (default=True)
         :param calculate_area: should the area be calculated (default=True)
         :param calculate_normal: should the normals be calculated (default=True)
-        
+
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
@@ -179,11 +179,11 @@ class CTRIA3(object):
         p1 = self._positions(grids_cid0, self.node_ids[:, 0])
         p2 = self._positions(grids_cid0, self.node_ids[:, 1])
         p3 = self._positions(grids_cid0, self.node_ids[:, 2])
-        
+
         v12 = p2 - p1
         v13 = p3 - p1
         v123 = cross(v12, v13)
-        
+
         normal = v123 / n
         A = None
         massi = None
@@ -193,18 +193,53 @@ class CTRIA3(object):
             t = self.model.properties_shell.get_thickness(self.property_id)
             massi = A * t
         return massi, A, normal
-    
+
     def _positions(self, nids_to_get, node_ids, grids_cid0):
         """
         Gets the positions of a list of nodes
-        
+
         :param nids_to_get:  the node IDs to get as an NDARRAY
         :param node_ids:     the node IDs that contains all the nids_to_get
                              as an NDARRAY
         :param grids_cid_0:  the GRIDs as an (N, )  NDARRAY
-        
+
         :returns grids2_cid_0 : the corresponding positins of the requested
                                 GRIDs
         """
         grids2_cid_0 = grids_cid0[searchsorted(nids_to_get, node_ids), :]
         return grids2_cid_0
+
+    def displacement_stress(self):
+        pass
+
+    def stiffness(self, positions):
+        # Mindlin-Reissner (thick plate)
+
+        # Kirchoff-Love (thin plate)
+
+        eid = self.element_id[i]
+        pid = self.property_id[i]
+        prop = self.get_property_by_index(i)
+        n1, n2, n3 = self.node_ids[i, :]
+        mat = prop.get_material(pid)
+        E = mat.E()
+        nu = mat.Nu()
+        t = prop.get_thickness(pid)
+
+
+        #====
+        # bending
+        Cb = [
+            [1., nu, 0.],
+            [nu, 1., 0.],
+            [0., 0., (1.-nu)/2.],
+        ]
+        Cb *= E * h**3 / (12*(1-nu**2))
+
+        #====
+        # shear
+        Cs = [
+            [1., 0.],
+            [0., 1.],
+        ]
+        Cs *= E * h * k / (2.*(1+nu))

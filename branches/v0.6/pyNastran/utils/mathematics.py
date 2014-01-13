@@ -189,6 +189,7 @@ def print_annotated_matrix(A, row_names=None, col_names=None, tol=1e-8):
         #print("col_fmt = ", col_fmt)
         header = row_fmt % '' + '   ' + col_fmt * len(col_names) % tuple(col_name_list) + '\n'
         float_fmt = '%%-%i.2f' % cwidth
+        print('float_fmt = %r' % float_fmt)
 
     c= header + ''.join([row_fmt % (str(row_names[i])) + ' ' + list_print(B[i, :], tol, float_fmt=float_fmt)
                               + '\n' for i in xrange(B.shape[0])])
@@ -200,7 +201,7 @@ def print_matrix(A, tol=1e-8):
     return ''.join([list_print(B[i, :], tol) + '\n' for i in xrange(B.shape[0])])
 
 
-def list_print(listA, tol=1e-8, float_fmt='-%3.2g', zero_fmt='    0'):
+def list_print(listA, tol=1e-8, float_fmt='%-3.2g', zero_fmt='    0'):
     if len(listA) == 0:
         return '[]'
 

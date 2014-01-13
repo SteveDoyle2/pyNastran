@@ -1,3 +1,4 @@
+import StringIO
 from itertools import izip
 
 from numpy import zeros, searchsorted, unique
@@ -80,7 +81,7 @@ class MOMENT(object):
                        double_or_blank(card, 7, 'X3', 0.0)]
                 self.xyz[i] = xyz
                 assert len(card) <= 8, 'len(MOMENT card) = %i' % len(card)
-            
+
             i = self.load_id.argsort()
             self.load_id = self.load_id[i]
             self.node_id = self.node_id[i]
@@ -89,7 +90,7 @@ class MOMENT(object):
             self.xyz = self.xyz[i]
             self._cards = []
             self._comments = []
-        
+
     def get_stats(self):
         msg = []
         if self.n:
@@ -103,3 +104,8 @@ class MOMENT(object):
 
                 card = ['MOMENT', lid, nid, cid, mag, xyz[0], xyz[1], xyz[2] ]
                 f.write(print_card(card))
+
+    def __repr__(self):
+        f = StringIO.StringIO()
+        self.write_bdf(f)
+        return f.getvalue().rstrip()

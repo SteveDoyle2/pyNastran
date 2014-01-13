@@ -61,6 +61,10 @@ def getDOF_Set(nAll, dofs):
     dofs = list(dofsAll.difference(set(dofs)))
     return dofs
 
+def remove_dofs(dofsAll, dofs_remove):
+    dofs = list(dofsAll.difference(set(dofs)))
+    return dofs
+
 
 def partition_dense_symmetric(A, dofs_in):
     nAll = A.shape[0]
@@ -242,8 +246,8 @@ class Solver(F06, OP2):
         #==============================
         #: displacements
         self.U = None
-        
-        
+
+
         #==============================
         #: Degrees-of-freedom eliminated by single-point constraints that are
         #: included in boundary condition changes and by the AUTOSPC feature.
@@ -260,28 +264,31 @@ class Solver(F06, OP2):
         self.Us = None
         self.iUs = None
         #==============================
-        
+
         #==============================
-        
-        
+
+
         #==============================
         #: Degrees-of-freedom eliminated by multipoint constraints.
         self.Ump = []
         self.iUmp = []
-    
+        self.jUmp = []
+
         #: Degrees-of-freedom eliminated by multipoint constraints created by the
         #: rigid elements using the LGELIM method on the Case Control command
         #: RIGID.
         self.Umr = []
         self.iUmr = []
+        self.jUmr = []
 
         # m = mp + mr
         # all degrees-of-freedom eliminated by multiple constraints
         self.iUm = None
+        self.jUm = None
         self.Um = None
 
         #==============================
-        
+
         self.Ub = []
         self.iUb = []
         self.Uc = []
@@ -538,7 +545,7 @@ class Solver(F06, OP2):
                 raise NotImplementedError('Set cd=0; cd=%s is not supported.')
 
         for ni in xrange(model.grid.n):  # GRIDs
-            nid = model.grid.nid[ni]
+            nid = model.grid.node_id[ni]
             ps = model.grid.ps[ni]
 
             while ps > 0:
@@ -562,6 +569,10 @@ class Solver(F06, OP2):
                 nidComponentToID[(nid, 1)] = i
                 i += 1
         assert i > 0, 'no DOFs'
+
+        #: starting index for MPC cards
+        self.mp_index = model.grid.n + spoint.n
+
         return(nidComponentToID, i)
 
     def run_sol_101(self, model, case):
@@ -611,17 +622,21 @@ class Solver(F06, OP2):
             print("Ua = ", Ua)
             print("Us = ", self.Us)
 
-            dofsA = getDOF_Set(n, self.iUs)
+            dofsAll = set([i for i in xrange(n)])
+            #dofsA = remove_dofs(remove_dofs(dofsAll, self.iUs), self.iUm))
+            dofsA = remove_dofs(dofsAll, self.iUs)
             dofsA.sort()
             U = zeros(n, 'float64')
-            print("U = ", U)
-            print("iUs   = ", self.iUs)
+            print("U   = ", U)
+            print("iUs = ", self.iUs)
+            #print("iUm = ", self.iUm)
 
             # TODO handle MPCs
             for (i, iu) in enumerate(self.iUs):
                 U[iu] = self.Us[i]
             for (i, iu) in enumerate(dofsA):
                 U[iu] = Ua[i]
+
             print("*U = ", U)
             print("dofsA = ", dofsA)
 
@@ -1289,6 +1304,10 @@ class Solver(F06, OP2):
         return Kgg, Fg, i
 
     def solve_sol_101(self, Kgg, Fg):
+        for (i, j, a) in zip(self.iUm, self.jUm, self.Um):
+            print("Kgg[%s, %s] = %s" % (i, j, a))
+            Kgg[i, j] = a
+
         (self.IDtoNidComponents) = reverse_dict(self.nidComponentToID)
         print("IDtoNidComponents = ", self.IDtoNidComponents)
         print("Kgg =\n" + print_annotated_matrix(Kgg, self.IDtoNidComponents, self.IDtoNidComponents))
@@ -1390,7 +1409,7 @@ class Solver(F06, OP2):
         #ndofs = 6 * nnodes + nspoints
 
         i = 0
-        nids = model.grid.nid
+        nids = model.grid.node_id
         #nids.sort()
         print('nids =', nids, i)
         #dof_ids = arange(0, 6*nnodes, 6)
@@ -1403,7 +1422,7 @@ class Solver(F06, OP2):
         self.positions = {}
         index0s = {}
         for i in xrange(model.grid.n):
-            nid = model.grid.nid[i]
+            nid = model.grid.node_id[i]
             self.positions[nid] = model.grid.xyz[i]
             index0s[nid] = 6 * i
 
@@ -1495,29 +1514,33 @@ class Solver(F06, OP2):
 
     def apply_MPCs(self, model, case, nidComponentToID):
         isMPC = False
+        mp_index = self.mp_index
         if case.has_parameter('MPC'):
-            isMPC = True
-            mpcs = model.mpcObject2.constraints
             # get the value, 1 is the options (MPC has no options)
-            mpcID = case.get_parameter('MPC')[0]
-            print("******")
-            print(model.mpcObject2.constraints)
-            print("mpcID = ", mpcID)
-            mpcset = mpcs[mpcID]
+            mpc_id = case.get_parameter('MPC')[0]
+            mpcs = model.MPC(mpc_id)
 
-            for mpc in mpcset:
-                print(mpc, type(mpc))
-                self.Ump.append(0.0)
-                self.iUmp.append(i)
+            iconstraint = mp_index
+            for mpc in mpcs:
+                if mpc.type == 'MPC':
+                    for constraints in mpc.constraints:
+                        i = mp_index + iconstraint
+                        for (G, C, A) in constraints:
+                            key = (G, C)
+                            j = nidComponentToID[key]
+                            iconstraint += 1
 
-            msg = 'MPCs are not supported...stopping in apply_MPCs'
-            raise NotImplementedError(msg)
+                            self.Ump.append(A)
+                            self.iUmp.append(i)
+                            self.jUmp.append(j)
+                else:
+                    raise NotImplementedError(mpc.type)
 
     def build_dof_sets(self):
         # s = sb + sg
         self.Us  = self.Usb  + self.Usg
         self.iUs = self.iUsb + self.iUsg
-        
+
         # l = b + c + lm
         self.Ul  = self.Uc  + self.Ulm
         self.iUl = self.iUc + self.iUlm
@@ -1553,15 +1576,16 @@ class Solver(F06, OP2):
         # m = mp + mr
         self.Um  = self.Ump  + self.Umr
         self.iUm = self.iUmp + self.iUmr
-        
+        self.jUm = self.jUmp + self.jUmr
+
         # g = n + m
         self.Ug  = self.Un  + self.Um
         self.iUg = self.iUn + self.iUm
-        
+
         # p = g + e
         self.Up  = self.Ug  + self.Ue
         self.iUp = self.iUg + self.iUe
-        
+
         # ks = k + sa
         self.Uks  = self.Uk  + self.Usa
         self.iUks = self.iUk + self.iUsa
@@ -1712,7 +1736,7 @@ class Solver(F06, OP2):
 
                     result = SPCForcesObject(data_code, transient)
                     result.add_f06_data()
-                
+
                     flag = 0
                     if 'PRINT' in options:
                         f06.write(result.write_f06(header, pageStamp, pageNum))
@@ -1804,7 +1828,7 @@ def get_cards():
 
                       # spc/mpc constraints
                       'SPC', 'SPC1', 'SPCADD',
-                      #'MPC','MPCADD',
+                      'MPC','MPCADD',
 
                       # loads
                       'LOAD',
