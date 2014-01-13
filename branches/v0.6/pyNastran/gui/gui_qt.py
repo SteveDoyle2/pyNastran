@@ -153,6 +153,11 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         #self.on_load_results('solid_bending.op2')
         #self.vtk_interactor.Modified()
 
+        if shots:
+        #for shot in shots:
+            self.on_take_screenshot(shots)
+            sys.exit('took screenshot %r' % shots)
+
     def on_cell_picker(self):
         worldPosition = self.cell_picker.GetPickPosition()
         cell_id = self.cell_picker.GetCellId()
@@ -912,19 +917,26 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
 
     def take_screenshot(self):
         """ Take a screenshot of a current view and save as a file"""
-        renderLarge = vtk.vtkRenderLargeImage()
-        renderLarge.SetInput(self.rend)
-        renderLarge.SetMagnification(4)
+        self.on_take_screenshot(None)
 
-        filt = QtCore.QString()
-        fname = str(QtGui.QFileDialog.getSaveFileName(self, ('Choose a file name'
-                    'and type'), '', ('PNG Image *.png (*.png);; JPEG Image '
-                    '*.jpg *.jpeg (*.jpg, *.jpeg);; TIFF Image *.tif *.tiff '
-                    '(*.tif, *.tiff);; BMP Image *.bmp (*.bmp);; PostScript '
-                    'Document *.ps (*.ps)'), filt))
+    def on_take_screenshot(self, fname):
+        """ Take a screenshot of a current view and save as a file"""
+        if fname is None:
+            filt = QtCore.QString()
+            fname = str(QtGui.QFileDialog.getSaveFileName(self, ('Choose a file name'
+                        'and type'), '', ('PNG Image *.png (*.png);; JPEG Image '
+                        '*.jpg *.jpeg (*.jpg, *.jpeg);; TIFF Image *.tif *.tiff '
+                        '(*.tif, *.tiff);; BMP Image *.bmp (*.bmp);; PostScript '
+                        'Document *.ps (*.ps)'), filt))
+            flt = str(filt).split()[0]
+        else:
+            flt = 'png'
 
         if fname:
-            flt = str(filt).split()[0]
+            renderLarge = vtk.vtkRenderLargeImage()
+            renderLarge.SetInput(self.rend)
+            renderLarge.SetMagnification(self.magnify)
+
             nam, ext = os.path.splitext(fname)
             ext = ext.lower()
             for nam, exts, ob in (('PostScript', ['.ps'], vtk.vtkPostScriptWriter),

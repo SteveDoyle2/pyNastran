@@ -221,6 +221,10 @@ class CTRIA3(object):
         pid = self.property_id[i]
         prop = self.get_property_by_index(i)
         n1, n2, n3 = self.node_ids[i, :]
+        p1 = positions[n1]
+        p2 = positions[n2]
+        p3 = positions[n3]
+
         mat = prop.get_material(pid)
         E = mat.E()
         nu = mat.Nu()
