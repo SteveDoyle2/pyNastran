@@ -34,12 +34,12 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
         data = self.get_data(4)
         buffer_size, = unpack('i', data)
         if self.make_op2_debug:
-            self.op2Debug.write('buffer_size=|%s|\n' % str(buffer_size))
+            self.op2_debug.write('buffer_size=|%s|\n' % str(buffer_size))
 
         data = self.get_data(4 * 50)
         #self.print_block(data)
         if self.make_op2_debug:
-            self.op2Debug.write('block3header\n')
+            self.op2_debug.write('block3header\n')
 
         self.parse_approach_code(data)  # 3
         ## element type
@@ -136,7 +136,7 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
         buffer_words, = unpack('i', data[4:8])
         #print "buffer_words = ",buffer_words
         if self.make_op2_debug:
-            self.op2Debug.write('buffer_words=|%s|\n' % (str(buffer_words)))
+            self.op2_debug.write('buffer_words=|%s|\n' % (str(buffer_words)))
 
         #print "*********************"
         #buffer_words = self.get_marker() # 87 - buffer
@@ -172,7 +172,7 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
         #print "len(self.data) = ",len(self.data)
 
         if self.make_op2_debug:
-            self.op2Debug.write('reading big data block\n')
+            self.op2_debug.write('reading big data block\n')
         #print self.print_block(self.data)
 
         #msg = 'element_type=%s -> %s' %(self.element_type,self.get_element_type(self.element_type))

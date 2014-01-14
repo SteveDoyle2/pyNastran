@@ -48,7 +48,7 @@ class RealElementsStressStrain(object):
                 #raise NotImplementedError('freqTime is not supported')
             else:
                 raise NotImplementedError('invalid SORT2 analysis_code=%s' %
-                                          (self.analysis_code))
+                                          self.analysis_code)
         else:
             raise NotImplementedError('invalid SORTx code')
 
@@ -66,8 +66,10 @@ class RealElementsStressStrain(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
-            (eid, sideID, hbdyID, cnvCoeff, fApplied, fConv,
-                fRad, fTotal) = out
+            if self.make_op2_debug:
+                self.op2_debug.write('Thermal - %s\n' % (str(out)))
+
+            (eid, sideID, hbdyID, cnvCoeff, fApplied, fConv, fRad, fTotal) = out
             eid = extract(eid, dt)
             #print('eid=%s sideID=%s hbdyID=%s coeff=%s fApplied=%s fConv=%s '
             #      'fRad=%s fTotal=%s' % (eid,sideID,hbdyID,cnvCoeff,fApplied,
@@ -96,7 +98,8 @@ class RealElementsStressStrain(object):
         for i in xrange(nelements):
             eData = self.data[n:n + nTotal]
             out = unpack(dataFormat, eData)
-            #print "out = ",out
+            if self.make_op2_debug:
+                self.op2_debug.write('basicElement - %s\n' % (str(out)))
             eid = extract(out[0], dt)
             self.obj.add_new_eid(dt, eid, out[1:])
             n += nTotal
@@ -120,7 +123,8 @@ class RealElementsStressStrain(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
-            #print "outA = ",out
+            if self.make_op2_debug:
+                self.op2_debug.write('CBEAM-2 - %s\n' % (str(out)))
             eid2 = extract(out[0], dt)
             self.obj.add_new_eid(dt, eid2, out[1:])
 
@@ -144,14 +148,7 @@ class RealElementsStressStrain(object):
         format1 = bytes(format1)
 
         nNodes = 0  # centroid + 4 corner points
-        #self.print_section(20)
-        #term = data[0:4] CEN/
-        #data = data[4:]
-        #print "*****"
-        #self.print_block(self.data)
-
-        assert self.num_wide == 17, ('invalid num_wide...num_wide=%s'
-                                    % self.num_wide)
+        assert self.num_wide == 17, ('invalid num_wide...num_wide=%s' % self.num_wide)
 
         while len(self.data) >= 68:  # 2+17*5 = 87 -> 87*4 = 348
             #print self.print_block(self.data[0:100])
@@ -160,6 +157,9 @@ class RealElementsStressStrain(object):
             eData = self.data[0:68]  # 4*17
             self.data = self.data[68:]
             out = unpack(format1, eData)  # 17
+            if self.make_op2_debug:
+                self.op2_debug.write('CQUAD4-33A - %s\n' % (str(out)))
+
             (eid, fd1, sx1, sy1, txy1, angle1, major1, minor1, maxShear1,
              fd2, sx2, sy2, txy2, angle2, major2, minor2, maxShear2) = out
 
@@ -177,6 +177,8 @@ class RealElementsStressStrain(object):
                 eData = self.data[0:68]  # 4*17
                 self.data = self.data[68:]
                 out = unpack(b'i16f', eData[0:68])
+                if self.make_op2_debug:
+                    self.op2_debug.write('CQUAD4-33B - %s\n' % (str(out)))
                 (grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
                  fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
 
@@ -197,29 +199,27 @@ class RealElementsStressStrain(object):
 
     def OES_CBAR_34(self):
         dt = self.nonlinear_factor
-        #print "len(data) = ",len(self.data)
-        assert self.num_wide == 16, ('invalid num_wide...num_wide=%s'
-                                    % self.num_wide)
+        assert self.num_wide == 16, ('invalid num_wide...num_wide=%s' % self.num_wide)
 
         (format1, extract) = self.getOUG_FormatStart()
         format1 += '15f'
         format1 = bytes(format1)
 
         while len(self.data) >= 64:
-            #self.print_block(self.data)
             eData = self.data[0:64]
             self.data = self.data[64:]
-            #print "len(data) = ",len(eData)
 
+            out = unpack(format1, eData)
+            if self.make_op2_debug:
+                self.op2_debug.write('CBAR-34 - %s\n' % (str(out)))
             (eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
-             s1b, s2b, s3b, s4b, smaxb, sminb, MSc) = unpack(format1, eData)
+                         s1b, s2b, s3b, s4b, smaxb, sminb, MSc) = out
             eid2 = extract(eid, dt)
             self.obj.add_new_eid('CBAR', dt, eid2, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                                s1b, s2b, s3b, s4b, smaxb, sminb, MSc)
 
             #print "eid=%i s1=%i s2=%i s3=%i s4=%i axial=%-5i smax=%i smin=%i MSt=%i MSc=%i" % (eid,s1a,s2a,s3a,s4a,axial,smaxa,smina,MSt,MSc)
             #print "         s1=%i s2=%i s3=%i s4=%i          smax=%i smin=%i" % (s1b,s2b,s3b,s4b,smaxb,sminb)
-            #print "len(data) = ",len(self.data)
 
     def OES_CBUSH1D_40(self):
         dt = self.nonlinear_factor
@@ -236,6 +236,8 @@ class RealElementsStressStrain(object):
             eData = self.data[n:n + nTotal]
 
             out = unpack(format1, eData)  # num_wide=25
+            if self.make_op2_debug:
+                self.op2_debug.write('CBUSH1D-40 - %s\n' % (str(out)))
             (eid, fe, ue, ve, ao, ae, ep, fail) = out
             eid = extract(eid, dt)
 
@@ -255,13 +257,19 @@ class RealElementsStressStrain(object):
         nelements = len(self.data) // 132  # (1+8*4)*4 = 33*4 = 132
         ibase = 0
         for i in xrange(nelements):
-            (eid, loc, rs, azs, As, ss, maxp, tmax, octs) = unpack(format1, self.data[ibase:ibase + 36])
+            out = unpack(format1, self.data[ibase:ibase + 36])
+            (eid, loc, rs, azs, As, ss, maxp, tmax, octs) = out
+            if self.make_op2_debug:
+                self.op2_debugop2_debug.write('CTRIAX6-53A - %s\n' % (str(out)))
             eid = extract(eid, dt)
             #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs)
             self.obj.add_new_eid(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
 
             for i in xrange(3):
-                (loc, rs, azs, As, ss, maxp, tmax, octs) = unpack(b'i7f', self.data[ibase:ibase + 32])
+                out = unpack(b'i7f', self.data[ibase:ibase + 32])
+                (loc, rs, azs, As, ss, maxp, tmax, octs) = out
+                if self.make_op2_debug:
+                    self.op2_debugop2_debug.write('CTRIAX6-53B - %s\n' % (str(out)))
                 #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs)
                 self.obj.add(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
                 ibase += 32  # 4*8
@@ -282,13 +290,10 @@ class RealElementsStressStrain(object):
         format1 = bytes(format1)
 
         #nNodes = 5 # 1 centroid + 4 corner points
-        #self.print_section(20)
-        #term      = self.data[0:4] CEN/
-        #self.data = self.data[4:]
-        #print "*****"
         element_type = self.get_element_type(self.element_type)
         nNodes = 1  # this is a minimum, it will be reset later
         nnodes_expected = 1
+
         #assert self.num_wide in [109,151,193],'invalid num_wide...num_wide=%s' % self.num_wide
 
         # overly complicated way to get the element type
@@ -311,9 +316,11 @@ class RealElementsStressStrain(object):
         ibase = 0
         for i in xrange(nelements):
             out = unpack(format1, self.data[ibase:ibase+16])
+            if self.make_op2_debug:
+                self.op2_debug.write('%s-%sA - %s\n' % (element_type, self.element_type, str(out)))
             (eid, cid, abcd, nNodes) = out
             eid2 = extract(eid, dt)
-            #print "abcd = |%s|" % (abcd)
+            #print "abcd = %r" % abcd
             #print "eid=%s cid=%s nNodes=%s nNodesExpected=%s" % (eid,cid,nNodes,nNodesExpected)
 
             assert nNodes < 21,  self.print_block(self.data[ibase:ibase+16])
@@ -321,6 +328,8 @@ class RealElementsStressStrain(object):
             ibase += 16
             for nodeID in xrange(nnodes_expected):  # nodes pts, +1 for centroid (???)
                 out = unpack(b'i20f',self.data[ibase:ibase + 84]) # 4*21 = 84
+                if self.make_op2_debug:
+                    self.op2_debug.write('%s-%sB - %s\n' % (element_type, self.element_type, str(out)))
                 (grid_device, sxx, sxy, s1, a1, a2, a3, pressure, svm,
                               syy, syz, s2, b1, b2, b3,
                               szz, sxz, s3, c1, c2, c3) = out
@@ -369,6 +378,8 @@ class RealElementsStressStrain(object):
         for i in xrange(nelements):
             eData = self.data[n:n + ntotal]
             out = unpack(format1, eData)
+            if self.make_op2_debug:
+                self.op2_debug.write('CTRIA3-74 - %s\n' % (str(out)))
 
             (eid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
              fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
@@ -406,6 +417,8 @@ class RealElementsStressStrain(object):
             eData = self.data[0:68]  # 4*17
             self.data = self.data[68:]
             out = unpack(format1, eData)  # len=17*4
+            if self.make_op2_debug:
+                self.op2_debug.write('CQUADR-82A - %s\n' % str(out))
             (grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
              fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
             grid = 'C'
@@ -418,6 +431,8 @@ class RealElementsStressStrain(object):
                 eData = self.data[0:68]
                 self.data = self.data[68:]
                 out = unpack(b'i16f', eData)
+                if self.make_op2_debug:
+                    self.op2_debug.write('CQUADR-82B - %s\n' % str(out))
                 (grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
                  fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
 
@@ -445,6 +460,8 @@ class RealElementsStressStrain(object):
             eData = self.data[n:n + ntotal]
 
             out = unpack(format1, eData)  # num_wide=25
+            if self.make_op2_debug:
+                self.op2_debug.write('CGAPNL-86 - %s\n' % str(out))
             (eid, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2) = out
             eid = extract(eid, dt)
 
@@ -465,6 +482,8 @@ class RealElementsStressStrain(object):
             eData = self.data[0:28]
             self.data = self.data[28:]
             out = unpack(format1, eData)
+            if self.make_op2_debug:
+                self.op2_debug.write('CRODNL-%s - %s\n' % (self.element_type, str(out)))
 
             (eid, axial, equivStress, totalStrain, effPlasticCreepStrain,
                 effCreepStrain, linearTorsionalStresss) = out
@@ -489,6 +508,8 @@ class RealElementsStressStrain(object):
         for i in xrange(nelements):
             eData = self.data[n:n + ntotal]
             out = unpack(format1, eData)  # num_wide=13
+            if self.make_op2_debug:
+                self.op2_debug.write('CQUADNL-90 - %s\n' % str(out))
 
             (eid, fd1, sx1, sy1, sz1, txy1, es1, eps1, ecs1,
                 ex1, ey1, ez1, exy1) = out
@@ -536,13 +557,19 @@ class RealElementsStressStrain(object):
         for i in xrange(nelements):  # 2+16*9 = 146 -> 146*4 = 584
             eData = self.data[0:8]
             self.data = self.data[8:]
-            (eid, cType) = unpack(format1, eData)
+            out = unpack(format1, eData)
+            if self.make_op2_debug:
+                self.op2_debug.write('%s-%s - %s\n' % (eType, self.element_type, str(out)))
+            (eid, cType) = out
             eid = extract(eid, dt)
 
             for i in xrange(nNodes):
                 eData = self.data[0:64]
                 self.data = self.data[64:]
                 out = unpack(b'i15f', eData)
+                if self.make_op2_debug:
+                    self.op2_debug.write('%s-%sB - %s\n' % (eType, self.element_type, str(out)))
+
                 assert len(out) == 16
                 (grid, sx, sy, sz, sxy, syz, sxz, se, eps,
                   ecs, ex, ey, ez, exy, eyz, exz) = out
@@ -590,6 +617,8 @@ class RealElementsStressStrain(object):
                 eData = self.data[0:48]
                 self.data = self.data[48:]
                 out = unpack(b'i11f', eData)
+                if self.make_op2_debug:
+                    self.op2_debug.write('%s-%s - %s\n' % (eType, self.element_type, str(out)))
                 assert len(out) == 12
                 (grid, xnorm, ynorm, znorm, txy, tyz, txz,
                  prin1, prin2, prin3, mean, vonoRoct) = out
@@ -615,7 +644,10 @@ class RealElementsStressStrain(object):
         for i in xrange(nelements):
             eData = self.data[0:8]
             self.data = self.data[8:]
-            (eid, gridA) = unpack(b'2i', eData)
+            out = unpack(b'2i', eData)
+            (eid, gridA) = out
+            if self.make_op2_debug:
+                self.op2_debug.write('CBEAM-94A - %s\n' % (str(out)))
             #print "eid=%s gridA=%s" % (eid,gridA)
 
             for i in xrange(1):
@@ -623,6 +655,8 @@ class RealElementsStressStrain(object):
                     eData = self.data[0:n1]
                     self.data = self.data[n1:]
                     out = unpack(format1, eData)
+                    if self.make_op2_debug:
+                        self.op2_debug.write('CBEAM-94B - %s\n' % (str(out)))
                     (loc, nsx, nse, te, epe, ece) = out
                     #print "loc=%s nsx=%s nse=%s te=%s epe=%s ece=%s" % (loc,nsx,nse,te,epe,ece)
                 #self.obj.add(eid,out)
@@ -655,7 +689,10 @@ class RealElementsStressStrain(object):
         for i in xrange(nelements):
         #while len(self.data) <= 44:
             eData = self.data[ibase:ibase+44]  # 4*11
-            (eid, iLayer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm) = unpack(format1, eData)
+            out = unpack(format1, eData)
+            if self.make_op2_debug:
+                self.op2_debug.write('CQUAD4-95 - %s\n' % (str(out)))
+            (eid, iLayer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm) = out
             eid = extract(eid, dt)
 
             if eid != self.eid2:  # originally initialized to None, the buffer doesnt reset it, so it is the old value
@@ -687,6 +724,8 @@ class RealElementsStressStrain(object):
             eData = self.data[0:36]  # 4*9
             self.data = self.data[36:]
             out = unpack(format1, eData)
+            if self.make_op2_debug:
+                self.op2_debug.write('CQUAD4FD-139A - %s\n' % (str(out)))
 
             (eid, Type, ID, sx, sy, sxy, angle, smj, smi) = out
             eid = extract(eid, dt)
@@ -696,6 +735,8 @@ class RealElementsStressStrain(object):
                 eData = self.data[0:28]  # 4*7
                 self.data = self.data[28:]
                 out = unpack(b'i6f', eData)
+                if self.make_op2_debug:
+                    self.op2_debug.write('CQUAD4FD-139B - %s\n' % (str(out)))
                 #(ID,sx,sy,sxy,angle,smj,smi) = out
                 self.obj.add(dt, eid, out)
                 #print "***ID=%s sx=%s sy=%s sxy=%s angle=%s major=%s minor=%s" % (ID,sx,sy,sxy,angle,smj,smi)
@@ -718,6 +759,8 @@ class RealElementsStressStrain(object):
         for i in xrange(nelements):
             eData = self.data[n:n + ntotal]
             out = unpack(format1, eData)  # num_wide=7
+            if self.make_op2_debug:
+                self.op2_debug.write('CBUSH-102 - %s\n' % str(out))
 
             (eid, tx, ty, tz, rx, ry, rz) = out
             eid = extract(eid, dt)
@@ -779,8 +822,11 @@ class RealElementsStressStrain(object):
         for i in xrange(nelements):
             eData = self.data[ibase:ibase + 76]  # 8 + 68
 
+            out = unpack(cformat, eData)  # len=17*4
+            if self.make_op2_debug:
+                self.op2_debug.write('%s-%sA - %s\n' % (eType, self.element_type, str(out)))
             (eid, _, grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-                           fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = unpack(cformat, eData)  # len=17*4
+                           fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
             #gridC = 'C'
             eid = extract(eid, dt)
             self.obj.add_new_eid(eType, dt, eid, gridC, fd1, sx1, sy1,
@@ -791,6 +837,8 @@ class RealElementsStressStrain(object):
             ibase += 76
             for nodeID in xrange(nNodes):  # nodes pts
                 out = unpack(nformat, self.data[ibase:ibase + 68])
+                if self.make_op2_debug:
+                    self.op2_debug.write('%s-%sB - %s\n' % (eType, self.element_type, str(out)))
                 (grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
                  fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
 
@@ -842,7 +890,12 @@ class RealElementsStressStrain(object):
             eid = extract(eid, dt)
             eData = self.data[0:68]
             self.data = self.data[68:]
+
+            ### todo...this is never unpacked...
             out = unpack(format1, eData)  # len=17*4
+            if self.make_op2_debug:
+                self.op2_debug.write('VU%s-%s - %s\n' % (eType, self.element_type, str(out)))
+
             self.obj.addNewNode(dt, eid, parent, coord, icord, theta, itype)
 
             self.obj.add_new_eid(eType, dt, eid, parent, coord, icord, theta, itype)
@@ -850,6 +903,9 @@ class RealElementsStressStrain(object):
                 eData = self.data[0:68]
                 self.data = self.data[68:]
                 out = unpack(b'i16f', eData)
+                if self.make_op2_debug:
+                    self.op2_debug.write('%s\n' % (str(out)))
+
                 (vuid, dummy, dummy2, msx, msy, mxy, dummy3, dummy4, dummy5,
                  bcx, bcy, bcxy,tyz,tzx,dummy6,dummy7,dummy8) = out
                 self.obj.add(vuid, dummy, dummy2, msx, msy, mxy,
@@ -875,6 +931,8 @@ class RealElementsStressStrain(object):
             self.data = self.data[ntotal:]
 
             out = unpack(format1, eData)  # num_wide=3
+            if self.make_op2_debug:
+                self.op2_debug.write('%s-%s - %s\n' % (element_name, self.element_type, str(out)))
             (eid, force, stress) = out
             eid = extract(eid, dt)
             self.obj.add_new_eid(element_name, dt, eid, force, stress)
@@ -896,6 +954,8 @@ class RealElementsStressStrain(object):
         for i in xrange(nelements):
             eData = self.data[n:n + nTotal]
             out = unpack(format1, eData)  # num_wide=9
+            if self.make_op2_debug:
+                self.op2_debug.write('CQUAD4-95 - %s\n' % str(out))
             #print(self.print_block(eData[-4:]))
             #asfd
             #eid,failure, ply, failureIndexPly, failureIndexBonding, failureIndexMax, flag

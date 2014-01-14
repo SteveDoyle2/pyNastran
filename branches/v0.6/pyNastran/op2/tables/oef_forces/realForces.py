@@ -86,6 +86,8 @@ class RealForces(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
+            if self.make_op2_debug:
+                self.op2_debug.write('OEF_Rod - %s\n' % (str(out)))
             (eid, axial, torque) = out
             eid2 = extract(eid, dt)
             #print "eType=%s" %(eType)
@@ -109,6 +111,8 @@ class RealForces(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
+            if self.make_op2_debug:
+                self.op2_debug.write('OEF_CVisc - %s\n' % (str(out)))
             (eid, axial, torque) = out
             eid2 = extract(eid, dt)
             #print "eType=%s" %(eType)
@@ -142,6 +146,8 @@ class RealForces(object):
                 #print "len(data) = ",len(eData)
 
                 out = unpack(formatAll, eData)
+                if self.make_op2_debug:
+                    self.op2_debug.write('OEF_Beam - %s\n' % (str(out)))
                 (nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq) = out
                 #print "eidTemp = ",eidTemp
                 #print "nid = ",nid
@@ -169,9 +175,10 @@ class RealForces(object):
         while len(self.data) >= 68:  # 17*4
             eData = self.data[0:68]
             self.data = self.data[68:]
-            #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
+            if self.make_op2_debug:
+                self.op2_debug.write('OEF_Shear - %s\n' % (str(out)))
             (eid, f41, f21, f12, f32, f23, f43, f34, f14, kf1,
                 s12, kf2, s23, kf3, s34, kf4, s41) = out
             eid2 = extract(eid, dt)
@@ -197,6 +204,8 @@ class RealForces(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
+            if self.make_op2_debug:
+                self.op2_debug.write('OEF_Spring - %s\n' % (str(out)))
             (eid, force) = out
             eid2 = extract(eid, dt)
             #print "eType=%s" %(eType)
@@ -220,6 +229,8 @@ class RealForces(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
+            if self.make_op2_debug:
+                self.op2_debug.write('OEF_CBar - %s\n' % (str(out)))
             (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq) = out
             eid2 = extract(eid, dt)
             #print "eType=%s" %(eType)
@@ -243,6 +254,8 @@ class RealForces(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
+            if self.make_op2_debug:
+                self.op2_debug.write('OEF_CBar100 - %s\n' % (str(out)))
             (eid, sd, bm1, bm2, ts1, ts2, af, trq) = out
             eid2 = extract(eid, dt)
             #print "eType=%s" %(eType)
@@ -266,6 +279,8 @@ class RealForces(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
+            if self.make_op2_debug:
+                self.op2_debug.write('OEF_Plate-%s - %s\n' % (self.element_type, str(out)))
             (eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
             eid2 = extract(eid, dt)
             #print "eType=%s" %(eType)
@@ -301,6 +316,8 @@ class RealForces(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1 + allFormat, eData)
+            if self.make_op2_debug:
+                self.op2_debug.write('OEF_Plate2-%s - %s\n' % (self.element_type, str(out)))
             (eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
             #term= 'CEN\'
             #print "eType=%s" %(eType)
@@ -314,12 +331,14 @@ class RealForces(object):
             for i in xrange(nNodes - 1):
                 eData = self.data[0:36]
                 self.data = self.data[36:]
-                dataIn = unpack(allFormat, eData)
+                out = unpack(allFormat, eData)
+                if self.make_op2_debug:
+                    self.op2_debug.write('%s\n' % (str(out)))
                 #(nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty) = out
                 #dataIn = [nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty]
                 #print "***%s    " %(self.get_element_type(self.element_type)),dataIn
 
-                self.obj.add(eid2, dt, dataIn)
+                self.obj.add(eid2, dt, out)
                 #print "len(data) = ",len(self.data)
 
         #print self.plateForces2
@@ -336,6 +355,8 @@ class RealForces(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
+            if self.make_op2_debug:
+                self.op2_debug.write('OEF_CONEAX-35 - %s\n' % (str(out)))
             (eid, hopa, bmu, bmv, tm, su, sv) = out
             eid2 = extract(eid, dt)
             #print "eType=%s" %(eType)
@@ -359,6 +380,8 @@ class RealForces(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
+            if self.make_op2_debug:
+                self.op2_debug.write('OEF_CGAP-38 - %s\n' % (str(out)))
             (eid, fx, sfy, sfz, u, v, w, sv, sw) = out
             eid2 = extract(eid, dt)
             #print "eType=%s" %(eType)
@@ -382,6 +405,8 @@ class RealForces(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
+            if self.make_op2_debug:
+                self.op2_debug.write('OEF_BEND-69 - %s\n' % (str(out)))
             (eid, nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
              nidB, bm1B, bm2B, ts1B, ts2B, afB, trqB) = out
             eid2 = extract(eid, dt)
@@ -407,6 +432,8 @@ class RealForces(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
+            if self.make_op2_debug:
+                self.op2_debug.write('OEF_PentaPressure-%s %s\n' % (self.element_type, str(out)))
             (eid, eName, ax, ay, az, vx, vy, vz, pressure) = out
             eid2 = extract(eid, dt)
             #print "eType=%s" %(eType)
@@ -430,6 +457,8 @@ class RealForces(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
+            if self.make_op2_debug:
+                self.op2_debug.write('OEF_CBUSH-102 - %s\n' % (str(out)))
             (eid, fx, fy, fz, mx, my, mz) = out
             eid2 = extract(eid, dt)
             #print "eType=%s" %(eType)
@@ -463,6 +492,8 @@ class RealForces(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
+            if self.make_op2_debug:
+                self.op2_debug.write('OEF_Force_VU-191 - %s\n' % (str(out)))
             (eid, parent, coord, icord) = out
 
             eid2 = extract(eid, dt)
@@ -474,6 +505,8 @@ class RealForces(object):
                 self.data = self.data[32:]
                 #print "i=%s len(data)=%s" %(i,len(eData))
                 out = unpack(formatAll, eData)
+                if self.make_op2_debug:
+                    self.op2_debug.write('%s\n' % (str(out)))
                 forces.append(out)
             dataIn.append(forces)
             #eType = a+b+c+d+e+f+g+h
@@ -491,8 +524,10 @@ class RealForces(object):
         format1 += 'ii4sii'
 
         if self.element_type in [189]:  # VUQUAD
+            eType = 'VUQUAD'
             nNodes = 4
         elif self.element_type in [190]:  # VUTRIA
+            eType = 'VUTRIA'
             nNodes = 3
         else:
             raise NotImplementedError(self.code_information())
@@ -507,6 +542,8 @@ class RealForces(object):
             #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
+            if self.make_op2_debug:
+                self.op2_debug.write('OEF_Force_%s-%s - %s\n' % (eType, self.element_type, str(out)))
             (eid, parent, coord, icord, theta, _) = out
 
             eid2 = extract(eid, dt)
@@ -518,6 +555,8 @@ class RealForces(object):
                 self.data = self.data[52:]
                 #print "i=%s len(data)=%s" %(i,len(eData))
                 out = unpack(formatAll, eData)
+                if self.make_op2_debug:
+                    self.op2_debug.write('%s\n' % (str(out)))
                 (vugrid, mfx, mfy, mfxy, a, b, c, bmx, bmy,
                     bmxy, syz, szx, d) = out
                 out2 = (vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx)

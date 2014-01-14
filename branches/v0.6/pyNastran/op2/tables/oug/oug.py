@@ -45,7 +45,7 @@ class OUG(object):
     def read_table_OUG2_3(self, iTable):  # iTable=-3
         buffer_words = self.get_marker()
         if self.make_op2_debug:
-            self.op2Debug.write('buffer_words=%s\n' % str(buffer_words))
+            self.op2_debug.write('buffer_words=%s\n' % str(buffer_words))
         #print "2-buffer_words = ",buffer_words,buffer_words*4,'\n'
 
         data = self.get_data(4)
@@ -89,7 +89,7 @@ class OUG(object):
         elif self.analysis_code == 6:  # transient dt
             # time step
             self.add_data_parameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)
-                                  
+
             self.apply_data_code_value('dataNames', ['nodeID'])
         elif self.analysis_code == 10:  # freq/time step fqts
             self.add_data_parameter(data, 'nodeID', 'i', 5, fixDeviceCode=True)  # frequency / time step
@@ -125,7 +125,7 @@ class OUG(object):
     def read_table_OUG_3(self, iTable):  # iTable=-3
         buffer_words = self.get_marker()
         if self.make_op2_debug:
-            self.op2Debug.write('buffer_words=%s\n' % str(buffer_words))
+            self.op2_debug.write('buffer_words=%s\n' % str(buffer_words))
         #print "2-buffer_words = ",buffer_words,buffer_words*4,'\n'
 
         data = self.get_data(4)
@@ -491,6 +491,8 @@ class OUG(object):
         for inode in xrange(nnodes):
             eData = self.data[istart:iend]
             out = unpack(format1, eData)
+            if self.make_op2_debug:
+                self.op2_debug.write('RealTable - %s\n' % str(out))
             (eid, gridType, tx, ty, tz, rx, ry, rz) = out
             eid2 = extract(eid, dt)
             #print "eType=%s" %(eType)
@@ -512,7 +514,6 @@ class OUG(object):
         is_magnitude_phase = self.is_magnitude_phase()
 
         nnodes = len(self.data) // 56
-        #print('nnodes =', nnodes)
         istart = 0
         iend = 56  # 14 * 4
 
@@ -520,6 +521,8 @@ class OUG(object):
             eData = self.data[istart:iend]
 
             out = unpack(format1, eData)
+            if self.make_op2_debug:
+                self.op2_debug.write('RealTable - %s\n' % str(out))
             (eid, gridType, txr, tyr, tzr, rxr, ryr, rzr,
              txi, tyi, tzi, rxi, ryi, rzi) = out
 

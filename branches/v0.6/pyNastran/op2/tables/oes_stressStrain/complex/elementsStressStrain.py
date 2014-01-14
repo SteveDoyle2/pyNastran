@@ -157,7 +157,7 @@ class ComplexElementsStressStrain(object):
             self.data = self.data[60:]
             out = unpack(format1, eData)  # 15
             if self.make_op2_debug:
-                self.op2Debug.write('%s\n' % (str(out)))
+                self.op2_debug.write('%s\n' % (str(out)))
             (eid, fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
              fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
 
@@ -189,7 +189,7 @@ class ComplexElementsStressStrain(object):
                 self.data = self.data[60:]
                 out = unpack(b'i14f', eData[0:60])
                 if self.make_op2_debug:
-                    self.op2Debug.write('%s\n' % (str(out)))
+                    self.op2_debug.write('%s\n' % (str(out)))
                 (grid, fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
                  fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
 
@@ -250,7 +250,7 @@ class ComplexElementsStressStrain(object):
             #print "eid=%s axial=%s equivStress=%s totalStrain=%s effPlasticCreepStrain=%s effCreepStrain=%s linearTorsionalStresss=%s" %(eid,axial,equivStress,totalStrain,effPlasticCreepStrain,effCreepStrain,linearTorsionalStresss)
 
             if self.make_op2_debug:
-                self.op2Debug.write('%s\n' % (str(out)))
+                self.op2_debug.write('%s\n' % (str(out)))
 
     def OES_CBUSH1D_40_alt(self):
         dt = self.nonlinear_factor
@@ -326,7 +326,7 @@ class ComplexElementsStressStrain(object):
         GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
         """
         if self.make_op2_debug:
-            self.op2Debug.write('---CQUAD4_144---\n')
+            self.op2_debug.write('---CQUAD4_144---\n')
 
         #self.print_section(20)
         #term = data[0:4] CEN/
@@ -376,7 +376,7 @@ class ComplexElementsStressStrain(object):
             self.data = self.data[60:]
             out = unpack(format1, eData)  # len=15*4
             if self.make_op2_debug:
-                self.op2Debug.write('%s\n' % (str(out)))
+                self.op2_debug.write('%s\n' % (str(out)))
             (grid, fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
              fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
             grid = 'C'
@@ -407,7 +407,7 @@ class ComplexElementsStressStrain(object):
                 self.data = self.data[60:]
                 out = unpack(b'i14f', eData)
                 if self.make_op2_debug:
-                    self.op2Debug.write('%s\n' % (str(out)))
+                    self.op2_debug.write('%s\n' % (str(out)))
                 (grid, fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
                  fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
 
@@ -480,4 +480,4 @@ class ComplexElementsStressStrain(object):
             self.obj.add_new_eid('CTRIA3', dt, eid, 'C', fd1, sx1, sy1, txy1)
             self.obj.add(dt, eid, 'C', fd2, sx2, sy2, txy2)
             if self.make_op2_debug:
-                self.op2Debug.write('%s\n' % str(out))
+                self.op2_debug.write('%s\n' % str(out))

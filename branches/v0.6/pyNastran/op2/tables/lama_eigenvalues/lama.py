@@ -67,7 +67,7 @@ class LAMA(object):
     def readTable_LAMA_3(self, iTable):  # iTable=-3
         buffer_words = self.get_marker()
         if self.make_op2_debug:
-            self.op2Debug.write('buffer_words=%s\n' % (str(buffer_words)))
+            self.op2_debug.write('buffer_words=%s\n' % (str(buffer_words)))
         #print "2-buffer_words = ",buffer_words,buffer_words*4,'\n'
 
         data = self.get_data(4)
@@ -99,7 +99,7 @@ class LAMA(object):
     def readTable_LAMA_4(self, iTable):  # iTable=-4
         buffer_words = self.get_marker()  # 70*4=280
         if self.make_op2_debug:
-            self.op2Debug.write('buffer_words=%s\n' % (str(buffer_words)))
+            self.op2_debug.write('buffer_words=%s\n' % (str(buffer_words)))
         #print "2-buffer_words = ",buffer_words,buffer_words*4,'\n'
 
         data = self.get_data(4)  # dummy - 70*4=280

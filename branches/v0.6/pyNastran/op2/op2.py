@@ -408,7 +408,7 @@ class OP2(BDF,
         #print(self.print_section(20))
         ints = self.read_int_block()
         if self.make_op2_debug:
-            self.op2Debug.write('%s\n' % str(ints))
+            self.op2_debug.write('%s\n' % str(ints))
         #print "*ints = ",ints
         self.read_markers([7])
 
@@ -587,7 +587,7 @@ class OP2(BDF,
         try:
             if self.make_op2_debug:
                 #: a developer debug file (largely unsupported)
-                self.op2Debug = open('debug.out', 'wb')
+                self.op2_debug = open('debug.out', 'wb')
             #: the byte position in the OP2
             self.n = self.op2.tell()
 
@@ -914,6 +914,10 @@ class OP2(BDF,
             #self.log.info('The op2 may be inconsistent...')
             #self.log.info('  print and plot can cause bad results...'
             #              'if there's a crash, try plot only')
+
+        if self.make_op2_debug:
+            self.op2_debug.write('parse_approach_code - aCode=%s tCode=%s int3=%s isubcase=%s\n' % (aCode, tCode, int3, isubcase))
+            self.op2_debug.write('                 so - analysis_code=%s device_code=%s table_code=%s sort_code=%s\n' % (self.analysis_code, self.device_code, self.table_code, self.sort_code))
 
         #: data_code stores the active variables; these pass important
         #: self variables into the result object

@@ -16,7 +16,7 @@ class FortranFile(object):
         self.table_name = None
         self.op2 = None
         self.make_op2_debug = True
-        self.op2Debug = None
+        self.op2_debug = None
         self.log = None
         self.n = 0
 
@@ -52,7 +52,7 @@ class FortranFile(object):
             self.hasBuffer = True
             ints = self.read_full_int_block()
             if debug and self.make_op2_debug:
-                self.op2Debug.write('bufferBlock = |%s|\n' % str(ints))
+                self.op2_debug.write('bufferBlock = |%s|\n' % str(ints))
 
         elif len(ints) == 0:
             return None
@@ -74,7 +74,7 @@ class FortranFile(object):
         #    print("bufferInts2=%s" % (ints))
         #print("marker=%s" % (ints[1]))
         if debug and self.make_op2_debug:
-            self.op2Debug.write('[4,%s,4]\n' % ints[1])
+            self.op2_debug.write('[4,%s,4]\n' % ints[1])
         return ints[1]
 
     def read_string(self, nData):
@@ -84,7 +84,7 @@ class FortranFile(object):
         data = self.op2.read(nData)
         string = self.get_strings(data)
         if self.make_op2_debug:
-            self.op2Debug.write('|%s|\n' % str(string))
+            self.op2_debug.write('|%s|\n' % str(string))
         self.n += nData
         return string
 
@@ -109,7 +109,7 @@ class FortranFile(object):
         iFormat = bytes(iFormat)
         ints = unpack(iFormat, data)
         if debug and self.make_op2_debug:
-            self.op2Debug.write('|%s|\n' % str(ints))
+            self.op2_debug.write('|%s|\n' % str(ints))
         self.n += nData
         return ints
 
@@ -125,7 +125,7 @@ class FortranFile(object):
         self.n += nData
         doubles = self.get_doubles(data)
         if debug and self.make_op2_debug:
-            self.op2Debug.write('|%s|\n' % str(doubles))
+            self.op2_debug.write('|%s|\n' % str(doubles))
         return doubles
 
     def read_floats(self, nData, debug=True):
@@ -136,7 +136,7 @@ class FortranFile(object):
         self.n += nData
         floats = self.get_floats(data)
         if debug and self.make_op2_debug:
-            self.op2Debug.write('|%s|\n' % str(floats))
+            self.op2_debug.write('|%s|\n' % str(floats))
         return floats
 
     def get_strings(self, data):
@@ -406,7 +406,7 @@ class FortranFile(object):
         for i in markers:
             msg += '[4,' + str(i) + ',4] + '
         if self.make_op2_debug:
-            self.op2Debug.write(msg[:-3] + '\n')
+            self.op2_debug.write(msg[:-3] + '\n')
         if debug:
             self.log.debug("@markers = %s" % (markers))
             self.log.debug("")
@@ -527,7 +527,7 @@ class FortranFile(object):
         #print "word = |%s|" % (word)
         #print "nLetters=%s word=|%s|" % (nLetters,word)
         if debug and self.make_op2_debug:
-            self.op2Debug.write('%r\n' % str(word))
+            self.op2_debug.write('%r\n' % str(word))
         return word
 
     def read_int_block(self):

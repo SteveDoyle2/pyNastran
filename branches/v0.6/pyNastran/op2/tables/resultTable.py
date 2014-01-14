@@ -82,11 +82,13 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
                to self.nonlinear_factor; default=True (only 1 per nonlinear subcase)
         :param  fixDeviceCode: removes the device_code from the parameter
                         (e.g. eid = 201 -> 20); default=False
-        
+
         >>> self.mode = self.get_values(data,'i',5) ## mode number
         >>>
         """
         value = self.get_values(data, Type, field_num)
+        if self.make_op2_debug:
+            self.op2_debug.write('add_data_parameter - %s=%r\n' % (name, value))
         if fixDeviceCode:
             value = (value - self.device_code) // 10
         setattr(self, name, value)
@@ -167,6 +169,8 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         self.dtMap = {}
         table_name = self.read_table_name(rewind=False)  # OEF
         self.table_init(table_name)
+        if self.make_op2_debug:
+            self.op2_debug.write("***start of %s table***\n" % table_name)
         #print("table_name = |%r|" % table_name)
 
         self.read_markers([-1, 7], table_name)
@@ -252,7 +256,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
 
         #print str(self.obj)
         if self.make_op2_debug:
-            self.op2Debug.write("***end of %s table***\n" % table_name)
+            self.op2_debug.write("***end of %s table***\n" % table_name)
         del self.dtMap
 
     def readTable4(self, table4Data, flag, iTable):
@@ -427,7 +431,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
           for this end shift.  An extra marker value is read, but no big deal.
           Beyond that it's just appending some data to the binary string and
           calling the function that's passed in.
-          
+
           We append the data since we read the first 10.5 blocks of data into
           memory, but could only extract the first 10.0 blocks.  We take the
           0.5 block and combine it with the next set of blocks until we have
@@ -441,7 +445,10 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
 
         #stopBuffer = False
         i = 0
-        #print self.code_information()
+        if self.make_op2_debug:
+            self.op2_debug.write("***start of %s results***\n" % resultName)
+            self.op2_debug.write(self.code_information())
+
         while not self.isBufferDone:
             #print "n=%s len(data)=%s" %(self.n,len(self.data))
             #sys.stdout.flush()
@@ -458,8 +465,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             else:
                 data = self.read_block()
                 if type(data) != type(self.data):
-                    msg = 'The function f=%s has a unicode error\n' % (
-                        f.__name__)
+                    msg = 'The function f=%s has a unicode error\n' % f.__name__
                     msg += ("type(self.data)=%s type(data)=%s"
                             % (type(self.data), type(data)))
                 sys.stdout.flush()
@@ -468,6 +474,10 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             if i == 2000:
                 raise RuntimeError('Infinite Loop or a really big model...')
             #print "isBufferDone=%s" %(self.isBufferDone)
+        if self.make_op2_debug:
+            self.op2_debug.write("***end of %s results***\n" % resultName)
+
+
 
 
 def get_close_num(v1, v2, closePoint):

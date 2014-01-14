@@ -55,7 +55,7 @@ class ThermalElements(object):
 
     def OEF_CHBDYx(self):  # [107,108,109]  CHBDYE, CHBDYG, CHBDYP
         if self.make_op2_debug:
-            self.op2Debug.write('---OEF_CHBDYx---\n')
+            self.op2_debug.write('---OEF_CHBDYx---\n')
         #device_code = self.device_code
 
         dt = self.nonlinear_factor
@@ -93,7 +93,7 @@ class ThermalElements(object):
 
     def OEF_CONV(self):  # [110]  CONV
         if self.make_op2_debug:
-            self.op2Debug.write('---OEF_CONV---\n')
+            self.op2_debug.write('---OEF_CONV---\n')
         #device_code = self.device_code
 
         dt = self.nonlinear_factor
