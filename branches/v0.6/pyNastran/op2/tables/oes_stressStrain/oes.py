@@ -42,11 +42,120 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             10 : ['CONROD', self.rodStress, self.OES_Rod1_alt, ComplexRodStressObject, 'rodStress'],
             # CTUBE
             # CONROD
+
+            # beam
+            #2 : ['CBEAM', self.beamStress, self.OES_CBEAM_2_alt, ComplexBeamStressObject, 'beamStress'],
+
+            # shear
+            #4 : ['CSHEAR', self.shearStress, self.OES_shear4_alt, ComplexShearStressObject, 'shearStress'],
+
+            # springs
+            11 : ['CELAS1', self.celasStress, self.OES_Elas1_alt, ComplexCelasStressObject, 'celasStress'],
+            12 : ['CELAS2', self.celasStress, self.OES_Elas1_alt, ComplexCelasStressObject, 'celasStress'],
+            13 : ['CELAS3', self.celasStress, self.OES_Elas1_alt, ComplexCelasStressObject, 'celasStress'],
+
+            # dampers
+
+            # bar
+            34 : ['CBAR', self.barStress, self.OES_CBAR_34_alt, ComplexBarStressObject, 'barStress'],
+
+            # triax
+            #53 : ['CTRIAX6', self.ctriaxStress, self.OES_CTRIAX6_53_alt, ComplexTriaxStressObject, 'ctriaxStress',],
+
+            # plate
+            33 : ['CQUAD4', self.plateStress, self.OES_CQUAD4_33_alt, ComplexPlateStressObject, 'plateStress'],
+            74 : ['CTRIA3', self.plateStress, self.OES_CTRIA3_74_alt, ComplexPlateStressObject, 'plateStress'],
+
+            # plate bilinear
+            64  : ['CQUAD8', self.plateStress, self.OES_CQUAD4_144_alt, ComplexPlateStressObject, 'plateStress'],
+            144 : ['CQUAD4', self.plateStress, self.OES_CQUAD4_144_alt, ComplexPlateStressObject, 'plateStress'],
+            70  : ['CTRIAR', self.plateStress, self.OES_CQUAD4_144_alt, ComplexPlateStressObject, 'plateStress'],
+            75  : ['CTRIA6', self.plateStress, self.OES_CQUAD4_144_alt, ComplexPlateStressObject, 'plateStress'],
+            82  : ['CQUADR', self.plateStress, self.OES_CQUAD4_144_alt, ComplexPlateStressObject, 'plateStress'],
+
+            # composite plate
+            #95 :  ['CQUAD4', self.compositePlateStress, self.OES_CQUAD4_95_alt, CompositePlateStressObject, 'compositePlateStress'],
+            #96 :  ['CQUAD8', self.compositePlateStress, self.OES_CQUAD4_95_alt, CompositePlateStressObject, 'compositePlateStress'],
+            #97 :  ['CTRIA3', self.compositePlateStress, self.OES_CQUAD4_95_alt, CompositePlateStressObject, 'compositePlateStress'],
+            #98 :  ['CTRIA6', self.compositePlateStress, self.OES_CQUAD4_95_alt, CompositePlateStressObject, 'compositePlateStress'],
+
+            # bush
+            40 : ['CBUSH1D', self.bush1dStressStrain, self.OES_CBUSH1D_40, ComplexBush1DStressObject, 'bush1dStressStrain'],
+
+            # solid
+            #39 : ['CTETRA', self.solidStress, self.OES_CSOLID_39_67_68_alt, ComplexSolidStressObject, 'solidStress',],
+            #67 : ['CHEXA',  self.solidStress, self.OES_CSOLID_39_67_68_alt, ComplexSolidStressObject, 'solidStress',],
+            #68 : ['CPENTA', self.solidStress, self.OES_CSOLID_39_67_68_alt, ComplexSolidStressObject, 'solidStress',],
+
+            # gap
+            #86 : ['CGAPNL', self.nonlinearGapStress, self.OES_CGAPNL_86_alt, ComplexNonlinearGapStressObject, 'nonlinearGapStress',],
+
+            #88 : ['CTRIA3NL', self.nonlinearPlateStress, self.OES_CQUAD4NL_90_alt, ComplexNonlinearQuadObject, 'nonlinearPlateStress',],
+            #90 : ['CQUAD4NL', self.nonlinearPlateStress, self.OES_CQUAD4NL_90_alt, ComplexNonlinearQuadObject, 'nonlinearPlateStress',],
+
+            # solid nonlinear
+            #85 : ['CTETRANL', self.solidStress, self.OES_TETRANL_85_PENTANL_91_CHEXANL_93_alt, ComplexSolidStressObject, 'solidStress',],
+            #91 : ['CPENTANL', self.solidStress, self.OES_TETRANL_85_PENTANL_91_CHEXANL_93_alt, ComplexSolidStressObject, 'solidStress',],
+            #93 : ['CHEXANL', self.solidStress, self.OES_TETRANL_85_PENTANL_91_CHEXANL_93_alt, ComplexSolidStressObject, 'solidStress',],
         }
         self._oes_complex_strain_map = {
             1 : ['CROD', self.rodStrain, self.OES_Rod1_alt, ComplexRodStrainObject, 'rodStrain'],
             3 : ['CTUBE', self.rodStrain, self.OES_Rod1_alt, ComplexRodStrainObject, 'rodStrain'],
             10 : ['CONROD', self.rodStrain, self.OES_Rod1_alt, ComplexRodStrainObject, 'rodStrain'],
+
+            # beam
+            #2 : ['CBEAM', self.beamStrain, self.OES_CBEAM_2_alt, ComplexBeamStrainObject, 'beamStrain'],
+
+            # shear
+            #4 : ['CSHEAR', self.shearStrain, self.OES_shear4_alt, ComplexShearStrainObject, 'shearStrain'],
+
+            # springs
+            11 : ['CELAS1', self.celasStrain, self.OES_Elas1_alt, ComplexCelasStrainObject, 'celasStrain'],
+            12 : ['CELAS2', self.celasStrain, self.OES_Elas1_alt, ComplexCelasStrainObject, 'celasStrain'],
+            13 : ['CELAS3', self.celasStrain, self.OES_Elas1_alt, ComplexCelasStrainObject, 'celasStrain'],
+            # dampers
+
+            # bar
+            34 : ['CBAR', self.barStress, self.OES_CBAR_34_alt, ComplexBarStressObject, 'barStress'],
+
+            # triax
+            #53 : ['CTRIAX6', self.ctriaxStrain, self.OES_CTRIAX6_53_alt, ComplexTriaxStrainObject, 'ctriaxStrain',],
+
+            # plate
+            33 : ['CQUAD4', self.plateStress, self.OES_CQUAD4_33_alt, ComplexPlateStressObject, 'plateStrain'],
+            74 : ['CTRIA3', self.plateStrain, self.OES_CTRIA3_74_alt, ComplexPlateStrainObject, 'plateStrain'],
+
+            # plate bilinear
+            64  : ['CQUAD8', self.plateStrain, self.OES_CQUAD4_144_alt, ComplexPlateStrainObject, 'plateStrain'],
+            144 : ['CQUAD4', self.plateStrain, self.OES_CQUAD4_144_alt, ComplexPlateStrainObject, 'plateStrain'],
+            70  : ['CTRIAR', self.plateStrain, self.OES_CQUAD4_144_alt, ComplexPlateStrainObject, 'plateStrain'],
+            75  : ['CTRIA6', self.plateStrain, self.OES_CQUAD4_144_alt, ComplexPlateStrainObject, 'plateStrain'],
+            82  : ['CQUADR', self.plateStrain, self.OES_CQUAD4_144_alt, ComplexPlateStrainObject, 'plateStrain'],
+
+            # composite plate
+            #95 :  ['CQUAD4', self.compositePlateStrain, self.OES_CQUAD4_95_alt, ComplexCompositePlateStrainObject, 'compositePlateStrain'],
+            #96 :  ['CQUAD8', self.compositePlateStrain, self.OES_CQUAD4_95_alt, ComplexCompositePlateStrainObject, 'compositePlateStrain'],
+            #97 :  ['CTRIA3', self.compositePlateStrain, self.OES_CQUAD4_95_alt, ComplexCompositePlateStrainObject, 'compositePlateStrain'],
+            #98 :  ['CTRIA6', self.compositePlateStrain, self.OES_CQUAD4_95_alt, ComplexCompositePlateStrainObject, 'compositePlateStrain'],
+
+            # bush
+            #40 : ['CBUSH1D', self.bush1dStressStrain, self.OES_CBUSH1D_40_alt, Bush1DStressObject, 'bush1dStressStrain'],
+
+            # solid
+            #39 : ['CTETRA', self.solidStrain, self.OES_CSOLID_39_67_68_alt, ComplexSolidStrainObject, 'solidStrain',],
+            #67 : ['CHEXA',  self.solidStrain, self.OES_CSOLID_39_67_68_alt, ComplexSolidStrainObject, 'solidStrain',],
+            #68 : ['CPENTA', self.solidStrain, self.OES_CSOLID_39_67_68_alt, ComplexSolidStrainObject, 'solidStrain',],
+
+            # gap
+            #86 : ['CGAPNL', self.nonlinearGapStress, self.OES_CGAPNL_86_alt, ComplexNonlinearGapStressObject, 'nonlinearGapStress',],
+
+            #88 : ['CTRIA3NL', self.nonlinearPlateStrain, self.OES_CQUAD4NL_90_alt, ComplexNonlinearQuadObject, 'nonlinearPlateStrain',],
+            #90 : ['CQUAD4NL', self.nonlinearPlateStrain, self.OES_CQUAD4NL_90_alt, ComplexNonlinearQuadObject, 'nonlinearPlateStrain',],
+
+            # solid nonlinear
+            #85 : ['CTETRANL', self.solidStrain, self.OES_TETRANL_85_PENTANL_91_CHEXANL_93_alt, ComplexSolidStrainObject, 'solidStrain',],
+            #91 : ['CPENTANL', self.solidStrain, self.OES_TETRANL_85_PENTANL_91_CHEXANL_93_alt, ComplexSolidStrainObject, 'solidStrain',],
+            #93 : ['CHEXANL', self.solidStrain, self.OES_TETRANL_85_PENTANL_91_CHEXANL_93_alt, ComplexSolidStrainObject, 'solidStrain',],
         }
 
         self._oes_real_stress_map = {
@@ -89,6 +198,13 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             75  : ['CTRIA6', self.plateStress, self.OES_CQUAD4_144, PlateStressObject, 'plateStress'],
             82  : ['CQUADR', self.plateStress, self.OES_CQUAD4_144, PlateStressObject, 'plateStress'],
 
+
+            # composite plate
+            95 :  ['CQUAD4', self.compositePlateStress, self.OES_CQUAD4_95, CompositePlateStressObject, 'compositePlateStress'],
+            96 :  ['CQUAD8', self.compositePlateStress, self.OES_CQUAD4_95, CompositePlateStressObject, 'compositePlateStress'],
+            97 :  ['CTRIA3', self.compositePlateStress, self.OES_CQUAD4_95, CompositePlateStressObject, 'compositePlateStress'],
+            98 :  ['CTRIA6', self.compositePlateStress, self.OES_CQUAD4_95, CompositePlateStressObject, 'compositePlateStress'],
+
             # bush
             40 : ['CBUSH1D', self.bush1dStressStrain, self.OES_CBUSH1D_40, Bush1DStressObject, 'bush1dStressStrain'],
 
@@ -100,13 +216,32 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             # gap
             86 : ['CGAPNL', self.nonlinearGapStress, self.OES_CGAPNL_86, NonlinearGapStressObject, 'nonlinearGapStress',],
 
+            # plate nonlinear
             88 : ['CTRIA3NL', self.nonlinearPlateStress, self.OES_CQUAD4NL_90, NonlinearQuadObject, 'nonlinearPlateStress',],
             90 : ['CQUAD4NL', self.nonlinearPlateStress, self.OES_CQUAD4NL_90, NonlinearQuadObject, 'nonlinearPlateStress',],
+
+            # composite plate nonlinear
 
             # solid nonlinear
             85 : ['CTETRANL', self.solidStress, self.OES_TETRANL_85_PENTANL_91_CHEXANL_93, SolidStressObject, 'solidStress',],
             91 : ['CPENTANL', self.solidStress, self.OES_TETRANL_85_PENTANL_91_CHEXANL_93, SolidStressObject, 'solidStress',],
-            93 : ['CHEXANL', self.solidStress, self.OES_TETRANL_85_PENTANL_91_CHEXANL_93, SolidStressObject, 'solidStress',],
+            93 : ['CHEXANL',  self.solidStress, self.OES_TETRANL_85_PENTANL_91_CHEXANL_93, SolidStressObject, 'solidStress',],
+
+            # nonlinear rod
+            87 : ['CTUBENL',  self.nonlinearRodStress, self.OES_RODNL_89_92, NonlinearRodObject, 'nonlinearRodStress',],
+            89 : ['RODNL',    self.nonlinearRodStress, self.OES_RODNL_89_92, NonlinearRodObject, 'nonlinearRodStress',],
+            92 : ['CONRODNL', self.nonlinearRodStress, self.OES_RODNL_89_92, NonlinearRodObject, 'nonlinearRodStress',],
+
+            # VU
+            145 : ['VUHEXA',  self.solidStress, self.OES_VUHEXA_145_VUPENTA_146_VUTETRA_147, SolidStressObject, 'solidStress'],
+            146 : ['VUPENTA', self.solidStress, self.OES_VUHEXA_145_VUPENTA_146_VUTETRA_147, SolidStressObject, 'solidStress'],
+            147 : ['VUTETRA', self.solidStress, self.OES_VUHEXA_145_VUPENTA_146_VUTETRA_147, SolidStressObject, 'solidStress'],
+
+            # hyperelastic
+            139 : ['QUAD4FD', self.hyperelasticPlateStress, self.OES_QUAD4FD_139, HyperelasticQuadObject, 'hyperelasticPlateStress'],
+
+            224 :  ['CELAS1', self.nonlinearSpringStress, self.OES_CELAS_224_225, NonlinearSpringStressObject, 'nonlinearSpringStress'],
+            225 :  ['CELAS2', self.nonlinearSpringStress, self.OES_CELAS_224_225, NonlinearSpringStressObject, 'nonlinearSpringStress'],
         }
 
         self._oes_real_strain_map = {
@@ -753,11 +888,13 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             if self.isStress():
                 if self.element_type in self._oes_real_stress_map:
                     element_name, slot, extract_method, class_obj, resultName = self._oes_real_stress_map[self.element_type]
-
                     self.create_transient_object(slot, class_obj)
                     self.log.debug('stress %s' % resultName)
                     name = resultName + ': Subcase %s' % self.isubcase
+
+                    self.eid2 = None  # stores the previous elementID
                     self.handle_results_buffer(extract_method, resultName, name)
+                    del self.eid2
                     return
                 else:
                     msg = 'need to add element_type=%s-%s to the stress_mapper' % (
@@ -770,7 +907,10 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
                     self.log.debug('strain %s' % resultName)
                     self.create_transient_object(slot, class_obj)
                     name = resultName + ': Subcase %s' % self.isubcase
+
+                    self.eid2 = None  # stores the previous elementID
                     self.handle_results_buffer(extract_method, resultName, name)
+                    del self.eid2
                     return
                 else:
                     msg = 'need to add element_type=%s-%s to the real_strain_mapper' % (
@@ -1023,6 +1163,7 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
                                              self.solidStrain, SolidStrainObject, 'solidStrain')
             name = resultName + ': Subcase %s' % self.isubcase
             self.handle_results_buffer(self.OES_TETRANL_85_PENTANL_91_CHEXANL_93, resultName, name)
+
         elif self.element_type in [145, 146, 147]: # VUHEXA 145 / VUPENTA 146 / VUTETRA 147
             if isRelease:
                 self.not_implemented_or_skip()

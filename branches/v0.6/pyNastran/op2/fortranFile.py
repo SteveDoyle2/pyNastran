@@ -503,9 +503,9 @@ class FortranFile(object):
         if len(data) == 0:
             self.log.debug("found the end of the file...")
             return []
-        iFormat = 'i'
-        iFormat = bytes(iFormat)
-        nValues, = unpack(iFormat, data)
+        four, = unpack(b'i', data)
+        #assert four == 4, 'four=%s failed with a poorly formatted OP2' % four
+        nValues, = unpack(b'i', data)
         self.n += 4
         data = self.op2.read(nValues)
         self.n += nValues + 4
