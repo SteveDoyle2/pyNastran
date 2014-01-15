@@ -141,7 +141,6 @@ class WriteMesh(WriteMeshDeprecated):
         :param precision:  'single', 'double'
         :param debug: developer debug
         """
-        print("precision =", precision)
         if size == 8:
             assert precision == 'single', 'precision=%r' % precision
             card_writer = print_card_8
