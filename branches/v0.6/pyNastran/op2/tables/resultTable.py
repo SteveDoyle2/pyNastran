@@ -23,7 +23,7 @@ from pyNastran.op2.tables.lama_eigenvalues.lama import LAMA
 class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OESNLXR,OESNLXD,
 
     def __init__(self):
-        pass
+        OES.__init__(self)
 
     def readTableA_DUMMY(self):
         """reads a dummy geometry table"""
@@ -272,8 +272,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             if flag:
                 isTable4Done, isBlockDone = table4Data(iTable)
             else:
-                isTable4Done, isBlockDone = self.readTable4DataSetup(
-                    table4Data, iTable)
+                isTable4Done, isBlockDone = self.readTable4DataSetup(table4Data, iTable)
             if isTable4Done:
                 #print "done with OEF4"
                 self.n = self.markerStart
@@ -315,7 +314,6 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             return isTable4Done, isBlockDone
 
         isBlockDone = not(buffer_words)
-
         if self.is_valid_subcase():  # lets the user skip a certain subcase
             table4Data()
         else:
@@ -466,8 +464,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
                 data = self.read_block()
                 if type(data) != type(self.data):
                     msg = 'The function f=%s has a unicode error\n' % f.__name__
-                    msg += ("type(self.data)=%s type(data)=%s"
-                            % (type(self.data), type(data)))
+                    msg += ("type(self.data)=%s type(data)=%s" % (type(self.data), type(data)))
                 sys.stdout.flush()
                 self.data += data
             i += 1
@@ -476,8 +473,6 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             #print "isBufferDone=%s" %(self.isBufferDone)
         if self.make_op2_debug:
             self.op2_debug.write("***end of %s results***\n" % resultName)
-
-
 
 
 def get_close_num(v1, v2, closePoint):

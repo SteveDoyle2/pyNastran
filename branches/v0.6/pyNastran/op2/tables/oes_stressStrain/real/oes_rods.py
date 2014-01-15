@@ -47,7 +47,7 @@ class RodStressObject(StressObject):
         ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
           ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = 'CROD'
 
@@ -272,35 +272,6 @@ class RodStressObject(StressObject):
         return pageNum - 1
 
 
-class ConrodStressObject(RodStressObject):
-    eType = 'CONROD'
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        RodStressObject.__init__(self, data_code, isubcase, dt)
-
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
-        if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f)
-
-        words = header + ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C O N R O D )\n',
-                        '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
-                        '         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN\n']
-        return self._write_f06(words, pageStamp, pageNum, f)
-
-class CtubeStressObject(RodStressObject):
-    eType = 'CTUBE'
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        RodStressObject.__init__(self, data_code, isubcase, dt)
-
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
-        if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f)
-
-        words = header + ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C T U B E )\n',
-                        '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
-                        '         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN\n']
-        return self._write_f06(words, pageStamp, pageNum, f)
-
-
 class RodStrainObject(StrainObject):
     """
     ::
@@ -510,6 +481,36 @@ class RodStrainObject(StrainObject):
             f.write(''.join(msg))
             pageNum += 1
         return pageNum - 1
+
+
+class ConrodStressObject(RodStressObject):
+    eType = 'CONROD'
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RodStressObject.__init__(self, data_code, isubcase, dt)
+
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
+
+        words = header + ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C O N R O D )\n',
+                        '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
+                        '         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN\n']
+        return self._write_f06(words, pageStamp, pageNum, f)
+
+
+class CtubeStressObject(RodStressObject):
+    eType = 'CTUBE'
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RodStressObject.__init__(self, data_code, isubcase, dt)
+
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
+
+        words = header + ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C T U B E )\n',
+                        '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
+                        '         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN\n']
+        return self._write_f06(words, pageStamp, pageNum, f)
 
 
 class ConrodStrainObject(RodStrainObject):

@@ -111,6 +111,14 @@ class OP2(BDF,
         """
         BDF.__init__(self, debug=debug, log=log)
         F06Writer.__init__(self)
+
+        # OP2
+        OP2Deprecated.__init__(self)
+        FortranFile.__init__(self)
+        Op2Codes.__init__(self)
+        GeometryTables.__init__(self)
+        ResultTable.__init__(self)
+
         self.set_subcases()  # initializes the variables
 
         if op2FileName is None:
@@ -454,10 +462,10 @@ class OP2(BDF,
             block = self.read_new_block()
             #print("len(block) = %s" % len(block))
             table_name, = unpack(b'8s', block)
-            self.log.debug("table_name=%r self.n=%s" % (table_name, self.n))
+            self.log.debug("read_tape_code_post2 - table_name=%r self.n=%s" % (table_name, self.n))
 
             marker = self.read_marker()
-            print('marker = %s' % marker)
+            print('read_tape_code_post2 - marker = %s' % marker)
             #self.read_markers([-1])
             block = self.read_new_block()
             print(self.print_block(block))
@@ -540,7 +548,7 @@ class OP2(BDF,
 
         self.op2.seek(self.n)
         table_name, = unpack(b'8s', data)
-        self.log.debug("table_name = %r\n" % table_name)
+        self.log.debug("read_new_table - table_name = %r\n" % table_name)
 
         self.read_markers([-1])
         block = self.read_new_block()
@@ -610,11 +618,17 @@ class OP2(BDF,
                 raise
 
             isAnotherTable = True
+            if self.make_op2_debug:
+                self.op2_debug.write('-'*80 + '\n')
+
             while isAnotherTable:
+                if self.make_op2_debug:
+                    self.op2_debug.write('-'*80 + '\n')
+                    self.op2_debug.write('read_op2 - op2.tell() = %s\n' % self.op2.tell())
                 self.log.debug('-' * 80)
                 try:
                     table_name = self.read_table_name(rewind=True, stopOnFailure=False)
-                    self.log.debug("table_name = %r" % table_name)
+                    self.log.debug("read_op2 - table_name = %r" % table_name)
                 except EOFError:  # the isAnotherTable method sucks...
                     isAnotherTable = False
                     self.log.debug("***ok exit, but it could be better...")
@@ -626,7 +640,7 @@ class OP2(BDF,
                     break
                 except:
                     raise
-                self.log.debug("table_name = %r" % table_name)
+                self.log.debug("read_op2 - table_name = %r" % table_name)
                 #print("table_name = |%r|" % table_name)
 
                 if table_name is None:
@@ -634,6 +648,9 @@ class OP2(BDF,
                 else:
                     isAnotherTable = self.read_table(table_name)
 
+            if self.make_op2_debug:
+                self.op2_debug.write("---end of all tables---\n")
+                self.op2_debug.write('op2.tell() = %s\n' % self.op2.tell())
             self.log.debug("---end of all tables---")
         except:
             self.op2.close()
@@ -798,6 +815,9 @@ class OP2(BDF,
             (is_another_table) = self.skip_next_table()
             #return isAnotherTable
         #print(self.print_section(140))
+        if self.make_op2_debug:
+            self.op2_debug.write("*** finished table_name = %r\n" % table_name)
+            self.op2_debug.write("op2.tell() = %i\n" % self.op2.tell())
         self.log.debug("*** finished table_name = %r" % table_name)
         return is_another_table
 
@@ -970,6 +990,10 @@ class OP2(BDF,
             #self.log.info('  print and plot can cause bad results...'
             #              'if there's a crash, try plot only')
 
+        if self.make_op2_debug:
+            self.op2_debug.write('parse_approach_code2 - aCode=%s tCode=%s int3=%s isubcase=%s\n' % (aCode, tCode, int3, isubcase))
+            self.op2_debug.write('                  so - analysis_code=%s device_code=%s table_code=%s sort_code=%s\n' % (self.analysis_code, self.device_code, self.table_code, self.sort_code))
+
         #: data_code stores the active variables; these pass important
         #: self variables into the result object
         self.data_code = {'analysis_code': self.analysis_code,
@@ -1051,6 +1075,11 @@ class OP2(BDF,
         self.subtitle = word[128:256].strip()
         #: the label of the subcase
         self.label = word[256:328].strip()
+        if self.make_op2_debug:
+            self.op2_debug.write('read_title - word=%r\n' % word)
+            self.op2_debug.write('           - Title=%r\n' % self.Title)
+            self.op2_debug.write('           - subtitle=%r\n' % self.subtitle)
+            self.op2_debug.write('           - label=%r\n' % self.label)
 
         # not really a hollerith, just the end of the block (so buffer_words*4)
         self.read_hollerith()
@@ -1058,7 +1087,7 @@ class OP2(BDF,
         self.data_code['subtitle'] = self.subtitle
         self.data_code['label'] = self.label
 
-        if hasattr(self,'isubcase'):
+        if hasattr(self, 'isubcase'):
             if self.isubcase not in self.iSubcaseNameMap:
                 self.iSubcaseNameMap[self.isubcase] = [self.subtitle, self.label]
         else:

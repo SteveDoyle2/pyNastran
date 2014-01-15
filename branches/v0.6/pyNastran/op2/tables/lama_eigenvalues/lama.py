@@ -112,6 +112,8 @@ class LAMA(object):
         for i in xrange(nModes):
             data = self.get_data(28)  # 4*7
             out = unpack('iifffff', data)
+            if self.make_op2_debug:
+                self.op2_debug.write('readTable_LAMA_4 - %s\n' % str(out))
             #(iMode,order,eigen,omega,freq,mass,stiff) = out
             #(modeNum,extractOrder,eigenvalue,radian,cycle,genM,genK) = line
             #print out

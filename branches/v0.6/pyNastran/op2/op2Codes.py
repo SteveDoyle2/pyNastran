@@ -476,22 +476,22 @@ class Op2Codes(object):
             DispTemp = 'Displacement'
         elif thermal == 1:
             DispTemp = 'Temperature'
-        elif thermal is None:
-            raise RuntimeError('thermal_code is not specified; thermal_code=None')
+        #elif thermal is None:
+            #raise RuntimeError('thermal_code is not specified; thermal_code=None')
         else:
             DispTemp = 'Displacement/Temperature; thermal=%r' % thermal
 
         table = '???'
         if self.table_code == 1:
-            table = "OUG - %s vector/scalar" % (DispTemp)
+            table = "OUG - %s vector/scalar" % DispTemp
         elif self.table_code == 2:
             table = "OPG - Load vector"
         elif self.table_code == 3:
             table = "OQG - SPC Force vector"
         elif self.table_code == 4:
-            table = "OEF - Element %s" % (ForceFlux)
+            table = "OEF - Element %s" % ForceFlux
         elif self.table_code == 5:
-            table = "OES - Element %s" % (stressWord)
+            table = "OES - Element %s" % stressWord
         elif self.table_code == 6:
             table = "LAMA - Eigenvalue summary"
         elif self.table_code == 7:
@@ -566,8 +566,7 @@ class Op2Codes(object):
         msg = '--Table3Data--\n\n'
         msg += "  device_code   = %-3s %s\n" % (self.device_code, device)
         msg += "  analysis_code = %-3s %s\n" % (self.analysis_code, analysis)
-        msg += "  table_code    = %-3s %s-%s\n" % (
-            self.table_code, self.table_name, table)
+        msg += "  table_code    = %-3s %s-%s\n" % (self.table_code, self.table_name, table)
         msg += "  format_code   = %-3s %s\n" % (format_code, formatWord)
 
         msg += "  sortType      = %-3s %s\n" % (self.sort_bits[0], sortWord1)

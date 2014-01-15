@@ -31,6 +31,7 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
 
         table_name = self.read_table_name(rewind=False)  # GEOM1
         self.table_init(table_name)
+
         #print "*table_name = |%r|" %(table_name)
 
         self.read_markers([-1, 7])

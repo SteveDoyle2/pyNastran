@@ -11,13 +11,13 @@ class FortranFile(object):
         #:                              '>' for old HPCs)
         #: currently does nothing
         self.endian = '<'
-        ## currently does nothing
+        #: currently does nothing
         self.buffer_size = 65535
         self.table_name = None
         self.op2 = None
         self.make_op2_debug = True
         self.op2_debug = None
-        self.log = None
+        #self.log = None
         self.n = 0
 
     def set_endian(self, endian='<'):
@@ -34,7 +34,13 @@ class FortranFile(object):
         of value=528 which corresponds to the length of
         iTable=3
         """
-        self.skip(4)
+        if self.make_op2_debug:
+            data = self.op2.read(4)
+            n, = unpack('i', data)
+            self.op2_debug.write('end of table3 - %r\n' % n)
+            self.n += 4
+        else:
+            self.skip(4)
 
     def read_header(self, expected=None, debug=True):
         """
@@ -64,7 +70,7 @@ class FortranFile(object):
                    "PARAM,POST,-1 first) the code should work.\n"
                    "header ints=(%s) expected=%s\n" % (str(ints[0:5]),
                                  expected))
-            msg += 'table_name=|%s|' % self.table_name
+            msg += 'table_name=%r' % self.table_name
             raise SyntaxError("Invalid Marker: %s" % msg)
 
         #if ints[1]==2:  # buffer???
@@ -74,7 +80,7 @@ class FortranFile(object):
         #    print("bufferInts2=%s" % (ints))
         #print("marker=%s" % (ints[1]))
         if debug and self.make_op2_debug:
-            self.op2_debug.write('[4,%s,4]\n' % ints[1])
+            self.op2_debug.write('read_header - [4,%s,4]\n' % ints[1])
         return ints[1]
 
     def read_string(self, nData):
@@ -364,7 +370,7 @@ class FortranFile(object):
         return self.get_marker(expected)
 
     def read_markers(self, markers, table_name=None, debug=False,
-                     printErrorOnFailure=True):
+                     printErrorOnFailure=True, rewind_flag=False):
         """
         Reads a set of predefined markers e.g. [-3,1,0] and makes sure it is
         correct.
@@ -404,8 +410,8 @@ class FortranFile(object):
 
         msg = ''
         for i in markers:
-            msg += '[4,' + str(i) + ',4] + '
-        if self.make_op2_debug:
+            msg += '[4,%i,4] + ' % i
+        if self.make_op2_debug and not rewind_flag:
             self.op2_debug.write(msg[:-3] + '\n')
         if debug:
             self.log.debug("@markers = %s" % (markers))
@@ -421,7 +427,6 @@ class FortranFile(object):
         if rewind:
             self.n -= 12 * nMarkers
             self.op2.seek(self.n)
-
         return markers
 
     def is_table_done(self, expectedMarkers):
@@ -510,7 +515,11 @@ class FortranFile(object):
         iFormat = str(nInts) + 'i'
         iFormat = bytes(iFormat)
         ints = unpack(iFormat, data)
-        return [nValues] + list(ints) + [nValues]
+
+        data = [nValues] + list(ints) + [nValues]
+        if self.make_op2_debug:
+            self.op2_debug.write('read_full_int_block - %s\n' % data)
+        return data
 
     def read_string_block(self, debug=True):
         """
@@ -524,10 +533,10 @@ class FortranFile(object):
         iFormat = bytes(iFormat)
         word, = unpack(iFormat, data)
 
-        #print "word = |%s|" % (word)
-        #print "nLetters=%s word=|%s|" % (nLetters,word)
-        if debug and self.make_op2_debug:
-            self.op2_debug.write('%r\n' % str(word))
+        #print("word = %r" % word)
+        #print "nLetters=%s word=|%s|" % (nLetters, word)
+        #if debug and self.make_op2_debug:
+            #self.op2_debug.write('%r\n' % str(word))
         return word
 
     def read_int_block(self):
@@ -588,7 +597,7 @@ class FortranFile(object):
         n = self.n
         try:
             #print ""
-            self.read_markers([0, 2], debug)
+            self.read_markers([0, 2], debug, rewind_flag=rewind)
             word = self.read_string_block(debug)
             #print("*word = |%r|" % word)
 
@@ -599,6 +608,8 @@ class FortranFile(object):
             if rewind:
                 self.n = n
                 self.op2.seek(n)
+            elif self.make_op2_debug:
+                self.op2_debug.write('read_table_name - table_name=%r\n' % word)
             #print "n      = ",n
             #print "self.n = ",self.n
             #print "op2.tell = ",self.op2.tell()
@@ -623,6 +634,9 @@ class FortranFile(object):
         self.log.debug("self.n = %s" % self.n)
 
         self.read_markers([-1, 7], table_name)
+        if self.make_op2_debug:
+            self.op2_debug.write('**[-1, 7]\n')
+            self.op2_debug.write('word=%r\n' % word)
 
         dataPack = (4, 1, 4, 4, 0, 4, 4, 0, 4)  # marks the end of the table
         binaryData = pack('9i', *dataPack)
