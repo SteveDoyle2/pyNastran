@@ -924,6 +924,28 @@ class RealPlateForce(scalarObject):  # 33-CQUAD4, 74-CTRIA3
         self.tx[dt][eid] = tx
         self.ty[dt][eid] = ty
 
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        words = [
+            '                          F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )'
+            ' '
+            '    ELEMENT                - MEMBRANE  FORCES -                        - BENDING  MOMENTS -              - TRANSVERSE SHEAR FORCES -'
+            '      ID              FX            FY            FXY             MX            MY            MXY             QX            QY'
+        ]
+        f.write('      ID      FX                            FY                            FXY                           MX                            MY                            MXY                           QX                            QY\n')
+        for eid in self.mx:
+            mx = self.mx[eid]
+            my = self.my[eid]
+            mxy = self.mxy[eid]
+
+            bmx = self.bmx[eid]
+            bmy = self.bmy[eid]
+            bmxy = self.bmxy[eid]
+
+            tx = self.tx[eid]
+            ty = self.ty[eid]
+            Fmt = '% 8i   ' + '%27.20E   ' * 8 + '\n'
+            f.write(Fmt % (eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty))
+        return pageNum
 
 class RealPlate2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
     def __init__(self, data_code, is_sort1, isubcase, dt):
