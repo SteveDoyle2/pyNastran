@@ -159,7 +159,7 @@ class RealElementsStressStrain(object):
                 self.op2_debug.write('CQUAD4-33A - %s\n' % (str(out)))
 
             (eid, fd1, sx1, sy1, txy1, angle1, major1, minor1, maxShear1,
-             fd2, sx2, sy2, txy2, angle2, major2, minor2, maxShear2) = out
+                  fd2, sx2, sy2, txy2, angle2, major2, minor2, maxShear2) = out
 
             eid = extract(eid, dt)
 
@@ -178,7 +178,7 @@ class RealElementsStressStrain(object):
                 if self.make_op2_debug:
                     self.op2_debug.write('CQUAD4-33B - %s\n' % (str(out)))
                 (grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-                 fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
+                       fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
 
                 #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
                 #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"          % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
@@ -818,6 +818,7 @@ class RealElementsStressStrain(object):
             raise NotImplementedError(msg)
         ntotal2 = 4 * (2 + 17 * (nnodes + 1) )
         assert ntotal == ntotal2
+        print("ntotal", ntotal)
 
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()

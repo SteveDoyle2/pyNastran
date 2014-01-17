@@ -1123,10 +1123,11 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
                                                  self.solidStrain, SolidStrainObject, 'solidStrain')
                 name = resultName + ': Subcase %s' % self.isubcase
                 self.handle_results_buffer(self.OES_CSOLID_39_67_68, resultName, name)
-            #elif self.num_wide==numWideImag:
-            #    resultName = self.makeOES_Object(self.solidStress,ComplexSolidStressObject,'solidStress',
-            #                                     self.solidStrain,ComplexSolidStrainObject,'solidStrain')
-            #    self.handle_results_buffer(self.OES_CSOLID_67_alt,resultName)
+            elif self.num_wide==numWideImag:
+                resultName = self.makeOES_Object(self.solidStress, ComplexSolidStressObject, 'solidStress',
+                                                 self.solidStrain, ComplexSolidStrainObject, 'solidStrain')
+                name = resultName + ': Subcase %s' % self.isubcase
+                self.handle_results_buffer(self.OES_CSOLID_67_alt, resultName)
             else:
                 self.not_implemented_or_skip()
 
