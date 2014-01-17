@@ -606,6 +606,9 @@ class F06Writer(object):
                     # cshear,
                     self.shearForces,
 
+                    # quad
+                    self.plateForces,
+
                     #------------------------------------------
                     # OES - strain
 
