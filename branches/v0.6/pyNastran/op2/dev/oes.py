@@ -2,272 +2,48 @@ from struct import unpack
 
 class OES(object):
     def __init__(self):
-        self.oes_mapper = {
+        self.element_mapper = {
+            # rods
             1: 'ROD',
-            2 : 'CBEAM',
+            3 : 'CTUBE',
             10: 'CONROD',
+
+            # beam
+            2 : 'CBEAM',
+
+            # springs
             11: 'CELAS1',
             12: 'CELAS2',
             13: 'CELAS3',
-            33: 'QUAD4', # 1 node
+            
+            # bar
             34 : 'CBAR',
+            
+            # solids
             39: 'TETRA',
             67: 'HEXA',
             68: 'PENTA',
+            
+            # triax
+            53 : 'CTRIAX6',
+
+            # centroidal plate
+            33: 'QUAD4', # 1 node
             74: 'TRIA3', # 1 node
+
+            # bilinear plate
             144: 'QUAD144', # 5 nodes
+
+            # composite plates
+            95 : 'CQUAD4',
+            96 : 'CQUAD8',
+            97 : 'CTRIA3',
+            98 : 'CTRIA6',
+
         }
         pass
 
-    def read_oes1x1_4(self, data):
-        #assert self.isubtable == -4, self.isubtable
-        self.element_name = self.oes_mapper[self.element_type]
-
-        if self.debug:
-            self.binary_debug.write('  Table3\n')
-            self.binary_debug.write('  element_name = %r\n' % self.element_name)
-
-        if self.is_sort1():
-            self.read_oes1x1_4_sort1(data)
-        else:
-            raise NotImplementedError('sort2 Type=%s num=%s' % (self.element_name, self.element_type))
-        print "element_name =", self.element_name
-
-        if self.debug:
-            self.binary_debug.write('\n')
-
-        print "----------------"
-        #sys.exit('stopping...')
-
-    def read_oes1x1_4_sort1(self, data):
-        print "element_name =", self.element_name
-        n = 0
-        if self.element_type in [1, 10]: # CROD
-            ntotal = 5 * 4
-            nelements = len(data) // ntotal
-            if self.debug:
-                self.binary_debug.write('[cap, element1, element2, ..., cap]\n')
-                self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
-                self.binary_debug.write('  #elementi = [eid_device, axial, axial_margin, torsion, torsion_margin]\n')
-                self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
-            for i in xrange(nelements):
-                edata = data[n:n+ntotal]
-                out = unpack('i4f', edata)
-                (eid_device, axial, axial_margin, torsion, torsion_margin) = out
-                eid = (eid_device - self.device_code) // 10
-                if self.debug:
-                    self.binary_debug.write('  ----------\n')
-                    self.binary_debug.write('  eid = %i\n' % eid)
-                    self.binary_debug.write('  C = [%s]\n' % ', '.join(['%r' % di for di in out]) )
-
-                print "eid =", eid
-                n += ntotal
-
-        elif self.element_type == 2: # CBEAM
-            ntotal = 444 # 44 + 10*40  (11 nodes)
-            #def getLengthTotal(self):
-                #return 444  # 44+10*40   (11 nodes)
-
-            #def getLength1(self):
-                #return (44, 'ifffffffff')
-
-            #def getLength2(self):
-                #return (40, 'ifffffffff')
-
-            nelements = len(data) // ntotal
-            for i in xrange(nelements):
-                edata = data[n:n+4]
-                eid, = unpack('i', edata)
-                n += ntotal
-
-        elif self.element_type == 34: # CBAR
-            ntotal = 16 * 4
-            nelements = len(data) // ntotal
-            if self.debug:
-                self.binary_debug.write('[cap, element1, element2, ..., cap]\n')
-                #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
-                self.binary_debug.write('  #elementi = [eid_device, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,\n')
-                self.binary_debug.write('                           s1b, s2b, s3b, s4b, smaxb, sminb,        MSc]\n')
-                self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
-            for i in xrange(nelements):
-                edata = data[n:n+ntotal]
-                out = unpack('i15f', edata)
-                (eid_device, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
-                             s1b, s2b, s3b, s4b, smaxb, sminb, MSc) = out
-                eid = (eid_device - self.device_code) // 10
-                if self.debug:
-                    self.binary_debug.write('  ----------\n')
-                    self.binary_debug.write('  eid = %i\n' % eid)
-                    self.binary_debug.write('  C%i = [%s]\n' % (i, ', '.join(['%r' % di for di in out]) ))
-                n += ntotal
-                print "eid =", eid
-        elif self.element_type in [39, 67, 68]: # TETRA, HEXA, PENTA
-            if self.element_type == 39: # CTETRA
-                nnodes_expected = 5  # 1 centroid + 4 corner points
-            elif self.element_type == 67:
-                nnodes_expected = 9
-            elif self.element_type == 68:
-                nnodes_expected = 7
-            else:
-                raise NotImplementedError('sort1 Type=%s num=%s' % (self.element_name, self.element_type))
-
-            ntotal = 16 + 84 * nnodes_expected
-            #self.show_data(data[:ntotal])
-            nelements = len(data) // ntotal
-            print "nelements =", nelements
-            for i in xrange(nelements):
-                edata = data[n:n+ntotal]
-                eid_device, = unpack('i', data[n:n+4])
-                eid = (eid_device - self.device_code) // 10
-
-                if self.debug:
-                    self.binary_debug.write('  ----------\n')
-                    self.binary_debug.write('  eid = %i\n' % eid)
-                    #self.binary_debug.write('  C = [%s]\n' % ', '.join(['%r' % di for di in out]) )
-                #out = unpack('ii4si', edata)
-                n += ntotal
-                print "eid =", eid
-
-        #=========================
-        elif self.element_type in [33]: # QUAD4-centroidal
-            ntotal = 68  # 4*17
-            format1 = 'i16f'
-            nelements = len(data) // ntotal
-            for i in xrange(nelements):
-                edata = data[n:n+ntotal]
-                out = unpack(format1, edata)
-                #if self.make_op2_debug:
-                    #self.op2_debug.write('CQUAD4-33A - %s\n' % (str(out)))
-
-                (eid_device, fd1, sx1, sy1, txy1, angle1, major1, minor1, maxShear1,
-                             fd2, sx2, sy2, txy2, angle2, major2, minor2, maxShear2) = out
-
-                eid = (eid_device - self.device_code) // 10
-                if self.debug:
-                    self.binary_debug.write('  ----------\n')
-                    self.binary_debug.write('  eid = %i\n' % eid)
-                    self.binary_debug.write('  C = [%s]\n' % ', '.join(['%r' % di for di in out]) )
-
-                #print "eid=%i grid=%s fd1=%-3.1f sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,'C',fd1,sx1,sy1,txy1,angle1,major1,minor1,maxShear1)
-                #print   "             fd2=%-3.1f sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"       % (fd2,sx2,sy2,txy2,angle2,major2,minor2,maxShear2)
-                #print "nNodes = ",nNodes
-                #self.obj.add_new_eid('CQUAD4', dt, eid, 'C', fd1, sx1, sy1,
-                #                   txy1, angle1, major1, minor1, maxShear1)
-                #self.obj.add(dt, eid, 'C', fd2, sx2, sy2, txy2,
-                #             angle2, major2, minor2, maxShear2)
-                #print "eid =", eid
-                n += ntotal
-
-        elif self.element_type in [74]: # TRIA3
-            ntotal = 68  # 4*17
-            format1 = 'i16f'
-            nelements = len(data) // ntotal
-            if self.debug:
-                self.binary_debug.write('[cap, element1, element2, ..., cap]\n')
-                self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
-                self.binary_debug.write('  #elementi = [eid_device, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
-                self.binary_debug.write('                           fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,]\n')
-                self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % (nelements))
-
-            for i in xrange(nelements):
-                edata = data[n:n + ntotal]
-                out = unpack(format1, edata)
-                #if self.make_op2_debug:
-                    #self.op2_debug.write('CTRIA3-74 - %s\n' % (str(out)))
-
-                (eid_device, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-                             fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
-                eid = (eid_device - self.device_code) // 10
-
-                if self.debug:
-                    #d = [eid_device, j, grid,
-                         #fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-                         #fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2]
-                    #print "d =", d
-                    self.binary_debug.write('  ----------\n')
-                    self.binary_debug.write('  eid = %i\n' % eid)
-                    self.binary_debug.write('  centroid = [%s]\n' % ', '.join(['%r' % di for di in out]) )
-
-                print "eid =", eid
-                n += ntotal
-        elif self.element_type in [144]: # CQUAD4-bilinear
-            if self.element_type == 144:
-                nnodes = 4 # + 1 centroid
-            else:
-                raise NotImplementedError('sort1 Type=%s num=%s' % (self.element_name, self.element_type))
-            #ntotal = 16 + 84 * nnodes_expected
-            ntotal = 4 * (2 + 17 * (nnodes + 1))
-            assert ntotal == 348, ntotal
-            nelements = len(data) // ntotal
-            center_format = 'i4si16f'
-            node_format = 'i16f'
-            if self.debug:
-                self.binary_debug.write('[cap, element1, element2, ..., cap]\n')
-                self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
-                self.binary_debug.write('  #elementi = [centeri, node1i, node2i, node3i, node4i]\n')
-                self.binary_debug.write('  #centeri = [eid_device, j, grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
-                self.binary_debug.write('  #                                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
-                self.binary_debug.write('  #nodeji = [grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
-                self.binary_debug.write('  #                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
-                self.binary_debug.write('  nelements=%i; nnodes=%i # +1 centroid\n' % (nelements, nnodes))
-
-            for i in xrange(nelements):
-                edata = data[n:n+76]
-                #eid_device, = unpack('i', data[n:n+4])
-
-                out = unpack(center_format, edata)  # len=17*4
-                ## j is the number of nodes, so CQUAD4 -> 4, but we don't need to save it...
-                (eid_device, j, grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-                                      fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
-                eid = (eid_device - self.device_code) // 10
-
-                if self.debug:
-                    d = [eid_device, j, grid,
-                         fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-                         fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2]
-                    print "d =", d
-                    self.binary_debug.write('  ----------\n')
-                    self.binary_debug.write('  eid = %i\n' % eid)
-                    self.binary_debug.write('  C = [%s]\n' % ', '.join(['%r' % di for di in d]) )
-
-                #print "eid=%i grid=%s fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
-                #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"        % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
-                n += 76
-                for inode in range(nnodes):
-                    out = unpack(node_format, data[n:n + 68])
-                    if self.debug:
-                        d = tuple([grid,
-                                  fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-                                  fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2])
-                        self.binary_debug.write('  node%i = [%s]\n' % (inode+1, ', '.join(['%r' % di for di in d])))
-                    (grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-                           fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
-                    assert isinstance(grid, int), grid
-                    assert grid > 0, grid
-
-                    #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
-                    #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"        % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
-                    n += 68
-        else:
-            raise NotImplementedError('sort1 Type=%s num=%s' % (self.element_name, self.element_type))
-        assert nelements > 0, nelements
-        assert len(data) % ntotal == 0, '%s n=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data), ntotal)
-
-
-    def apply_data_code_value(self, name, value):
-        pass
-    def setNullNonlinearFactor(self):
-        pass
-
-    def is_sort1(self):
-        if self.sort_bits[0] == 0:
-            return True
-        return False
-
-    def is_sort2(self):
-        return not(self.is_sort1())
-
-    def read_oes1x1_3(self, data):
+    def read_oes1_3(self, data):
         self.words = ['aCode',       'tCode',    'element_type', 'isubcase',
                  '???',         '???',      '???',          'load_set'
                  'format_code', 'num_wide', 's_code',       '???',
@@ -353,31 +129,336 @@ class OES(object):
         #if self.analysis_code==2: # sort2
         #    self.lsdvmn = self.get_values(data,'i',5)
 
-        if not self.is_sort1() and not isRelease:
-            raise NotImplementedError('sort2...')
-
+        self.element_name = self.element_mapper[self.element_type]
         if self.debug:
-            self.binary_debug.write('  element_name = %r\n' % self.oes_mapper[self.element_type])
+            self.binary_debug.write('  element_name = %r\n' % self.element_name)
             self.binary_debug.write('  aCode    = %r\n' % self.aCode)
             self.binary_debug.write('  tCode    = %r\n' % self.tCode)
             self.binary_debug.write('  isubcase = %r\n' % self.isubcase)
 
-        #self.show_data(data[200:])
         self.read_title(data)
-        if self.element_type not in self.oes_mapper:
+        if self.element_type not in self.element_mapper:
             raise NotImplementedError(self.element_type)
 
-        if self.debug:
-            msg = ''
-            for i, param in enumerate(self.words):
-                if param == '???':
-                    param = 0
-                msg += '%s, ' % param
-                if i % 5 == 4:
-                    msg += '\n             '
+        self.write_debug_bits()
 
-            self.binary_debug.write('  recordi = [%s]\n\n' % msg)
-        #sys.exit()
+    def read_oes1_4(self, data):
+        #assert self.isubtable == -4, self.isubtable
+        #if self.debug:
+            #self.binary_debug.write('  element_name = %r\n' % self.element_name)
+        print "element_name =", self.element_name
+
+        if self.is_sort1():
+            self.read_oes1_4_sort1(data)
+        else:
+            raise NotImplementedError('sort2 Type=%s num=%s' % (self.element_name, self.element_type))
+
+        if self.debug:
+            self.binary_debug.write('*'* 20 + '\n\n')
+
+        print "----------------"
+        #sys.exit('stopping...')
+
+    def read_oes1_4_sort1(self, data):
+        n = 0
+        if self.element_type in [1, 3, 10]: # CROD, CTUBE, CONROD
+            ntotal = 5 * 4
+            nelements = len(data) // ntotal
+            if self.debug:
+                self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
+                self.binary_debug.write('  #elementi = [eid_device, axial, axial_margin, torsion, torsion_margin]\n')
+                self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+            for i in xrange(nelements):
+                edata = data[n:n+ntotal]
+                out = unpack('i4f', edata)
+                (eid_device, axial, axial_margin, torsion, torsion_margin) = out
+                eid = (eid_device - self.device_code) // 10
+                if self.debug4():
+                    self.binary_debug.write('  ----------\n')
+                    self.binary_debug.write('  eid = %i\n' % eid)
+                    self.binary_debug.write('  C = [%s]\n' % ', '.join(['%r' % di for di in out]) )
+
+                #print "eid =", eid
+                n += ntotal
+
+        elif self.element_type == 2: # CBEAM
+            ntotal = 444 # 44 + 10*40  (11 nodes)
+            #def getLengthTotal(self):
+                #return 444  # 44+10*40   (11 nodes)
+
+            #def getLength1(self):
+                #return (44, 'ifffffffff')
+
+            #def getLength2(self):
+                #return (40, 'ifffffffff')
+
+            nelements = len(data) // ntotal
+            for i in xrange(nelements):
+                edata = data[n:n+4]
+                eid, = unpack('i', edata)
+                n += ntotal
+
+        elif self.element_type == 34: # CBAR
+            ntotal = 16 * 4
+            nelements = len(data) // ntotal
+            if self.debug:
+                self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
+                self.binary_debug.write('  #elementi = [eid_device, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,\n')
+                self.binary_debug.write('                           s1b, s2b, s3b, s4b, smaxb, sminb,        MSc]\n')
+                self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+            for i in xrange(nelements):
+                edata = data[n:n+ntotal]
+                out = unpack('i15f', edata)
+                (eid_device, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
+                             s1b, s2b, s3b, s4b, smaxb, sminb, MSc) = out
+                eid = (eid_device - self.device_code) // 10
+                if self.debug4():
+                    self.binary_debug.write('  ----------\n')
+                    self.binary_debug.write('  eid = %i\n' % eid)
+                    self.binary_debug.write('  C%i = [%s]\n' % (i, ', '.join(['%r' % di for di in out]) ))
+                n += ntotal
+                #print "eid =", eid
+
+        elif self.element_type in [11, 12, 13]: # CELAS1, CELAS2, CELAS3
+            ntotal = 2 * 4
+            nelements = len(data) // ntotal
+            for i in xrange(nelements):
+                edata = data[n:n+ntotal]
+                out = unpack('if', edata)
+                (eid_device, ox) = out
+                eid = (eid_device - self.device_code) // 10
+                if self.debug4():
+                    self.binary_debug.write('  ----------\n')
+                    self.binary_debug.write('  eid = %i\n' % eid)
+                    self.binary_debug.write('  result%i = [%i, %f]\n' % (i, eid_device, ox) )
+                n += ntotal
+                #print "eid =", eid
+
+        elif self.element_type in [39, 67, 68]: # TETRA, HEXA, PENTA
+            if self.element_type == 39: # CTETRA
+                nnodes_expected = 5  # 1 centroid + 4 corner points
+            elif self.element_type == 67:
+                nnodes_expected = 9
+            elif self.element_type == 68:
+                nnodes_expected = 7
+            else:
+                raise NotImplementedError('sort1 Type=%s num=%s' % (self.element_name, self.element_type))
+
+            ntotal = 16 + 84 * nnodes_expected
+            #self.show_data(data[:ntotal])
+            nelements = len(data) // ntotal
+            #print "nelements =", nelements
+            for i in xrange(nelements):
+                edata = data[n:n+ntotal]
+                eid_device, = unpack('i', data[n:n+4])
+                eid = (eid_device - self.device_code) // 10
+
+                if self.debug4():
+                    self.binary_debug.write('  ----------\n')
+                    self.binary_debug.write('  eid = %i\n' % eid)
+                    #self.binary_debug.write('  C = [%s]\n' % ', '.join(['%r' % di for di in out]) )
+                #out = unpack('ii4si', edata)
+                n += ntotal
+                #print "eid =", eid
+
+        #=========================
+        # plates
+        elif self.element_type in [33]: # QUAD4-centroidal
+            ntotal = 68  # 4*17
+            format1 = 'i16f'
+            nelements = len(data) // ntotal
+            for i in xrange(nelements):
+                edata = data[n:n+ntotal]
+                out = unpack(format1, edata)
+                #if self.make_op2_debug:
+                    #self.op2_debug.write('CQUAD4-33A - %s\n' % (str(out)))
+
+                (eid_device, fd1, sx1, sy1, txy1, angle1, major1, minor1, maxShear1,
+                             fd2, sx2, sy2, txy2, angle2, major2, minor2, maxShear2) = out
+
+                eid = (eid_device - self.device_code) // 10
+                if self.debug4():
+                    self.binary_debug.write('  ----------\n')
+                    self.binary_debug.write('  eid = %i\n' % eid)
+                    self.binary_debug.write('  C = [%s]\n' % ', '.join(['%r' % di for di in out]) )
+
+                #print "eid=%i grid=%s fd1=%-3.1f sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,'C',fd1,sx1,sy1,txy1,angle1,major1,minor1,maxShear1)
+                #print   "             fd2=%-3.1f sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"       % (fd2,sx2,sy2,txy2,angle2,major2,minor2,maxShear2)
+                #print "nNodes = ",nNodes
+                #self.obj.add_new_eid('CQUAD4', dt, eid, 'C', fd1, sx1, sy1,
+                #                   txy1, angle1, major1, minor1, maxShear1)
+                #self.obj.add(dt, eid, 'C', fd2, sx2, sy2, txy2,
+                #             angle2, major2, minor2, maxShear2)
+                #print "eid =", eid
+                n += ntotal
+
+        elif self.element_type in [74]: # TRIA3
+            ntotal = 68  # 4*17
+            format1 = 'i16f'
+            nelements = len(data) // ntotal
+            if self.debug:
+                self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
+                self.binary_debug.write('  #elementi = [eid_device, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
+                self.binary_debug.write('  #                        fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,]\n')
+                self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+
+            for i in xrange(nelements):
+                edata = data[n:n + ntotal]
+                out = unpack(format1, edata)
+                #if self.make_op2_debug:
+                    #self.op2_debug.write('CTRIA3-74 - %s\n' % (str(out)))
+
+                (eid_device, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
+                             fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
+                eid = (eid_device - self.device_code) // 10
+
+                if self.debug4():
+                    self.binary_debug.write('  ----------\n')
+                    self.binary_debug.write('  eid = %i\n' % eid)
+                    self.binary_debug.write('  centroid = [%s]\n' % ', '.join(['%r' % di for di in out]) )
+
+                #print "eid =", eid
+                n += ntotal
+        elif self.element_type in [144]: # CQUAD4-bilinear
+            if self.element_type == 144:
+                nnodes = 4 # + 1 centroid
+            else:
+                raise NotImplementedError('sort1 Type=%s num=%s' % (self.element_name, self.element_type))
+            ntotal = 4 * (2 + 17 * (nnodes + 1))
+            assert ntotal == 348, ntotal
+            nelements = len(data) // ntotal
+            center_format = 'i4si16f'
+            node_format = 'i16f'
+            if self.debug:
+                self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
+                self.binary_debug.write('  #elementi = [centeri, node1i, node2i, node3i, node4i]\n')
+                self.binary_debug.write('  #centeri = [eid_device, j, grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
+                self.binary_debug.write('  #                                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
+                self.binary_debug.write('  #nodeji = [grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
+                self.binary_debug.write('  #                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
+                self.binary_debug.write('  nelements=%i; nnodes=%i # +1 centroid\n' % (nelements, nnodes))
+
+            for i in xrange(nelements):
+                edata = data[n:n+76]
+                #eid_device, = unpack('i', data[n:n+4])
+
+                out = unpack(center_format, edata)  # len=17*4
+                ## j is the number of nodes, so CQUAD4 -> 4, but we don't need to save it...
+                (eid_device, j, grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
+                                      fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
+                eid = (eid_device - self.device_code) // 10
+
+                if self.debug4():
+                    d = [eid_device, j, grid,
+                         fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
+                         fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2]
+                    #print "d =", d
+                    self.binary_debug.write('  ----------\n')
+                    self.binary_debug.write('  eid = %i\n' % eid)
+                    self.binary_debug.write('  C = [%s]\n' % ', '.join(['%r' % di for di in d]) )
+
+                #print "eid=%i grid=%s fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
+                #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"        % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
+                n += 76
+                for inode in range(nnodes):
+                    out = unpack(node_format, data[n:n + 68])
+                    if self.debug4():
+                        d = tuple([grid,
+                                  fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
+                                  fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2])
+                        self.binary_debug.write('  node%i = [%s]\n' % (inode+1, ', '.join(['%r' % di for di in d])))
+                    (grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
+                           fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
+                    assert isinstance(grid, int), grid
+                    assert grid > 0, grid
+
+                    #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
+                    #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"        % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
+                    n += 68
+        elif self.element_type in [95, 96, 97, 98]: # composite shell
+             # 95 - CQUAD4
+             # 96 - CQUAD8
+             # 97 - CTRIA3
+             # 98 - CTRIA6 (composite)
+
+            ntotal = 44
+            nelements = len(data) // ntotal
+            format1 = 'ii9f'
+            if self.debug:
+                self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
+                self.binary_debug.write('  #centeri = [eid_device, j, grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
+                self.binary_debug.write('  #                                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
+                self.binary_debug.write('  #nodeji = [eid, iLayer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)]\n')
+                self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+            return
+
+            eid_old = 0
+            for i in xrange(nelements):
+                if i % 10000 == 0:
+                    print 'i = ', i
+                edata = data[n:n+44]  # 4*11
+                out = unpack(format1, edata)
+                (eid_device, iLayer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm) = out
+                eid = (eid_device - self.device_code) // 10
+
+                if self.debug4():
+                    self.binary_debug.write('  ----------\n')
+                    self.binary_debug.write('  eid = %i\n' % eid)
+                    self.binary_debug.write('  C = [%s]\n' % ', '.join(['%r' % di for di in out]) )
+
+                if eid != eid_old:  # originally initialized to None, the buffer doesnt reset it, so it is the old value
+                    #print "1 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
+                    #self.obj.add_new_eid(eType, dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+                    pass
+                else:
+                    pass
+                    #print "2 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
+                    #self.obj.add(dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+                eid_old = eid
+                n += 44
+
+        #=========================
+        # axial plates
+        elif self.element_type in [53]: # triax
+            # 53 - CTRIAX6
+            format1 = b'2i7f'  # 36
+
+            ntotal = 132  # (1+8*4)*4 = 33*4 = 132
+            nelements = len(data) // ntotal
+            n = 0
+            for i in xrange(nelements):
+                out = unpack(format1, data[n:n + 36])
+                (eid_device, loc, rs, azs, As, ss, maxp, tmax, octs) = out
+                if self.debug4():
+                    self.binary_debug.write('CTRIAX6-53A - %s\n' % (str(out)))
+                eid = (eid_device - self.device_code) // 10
+                #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs)
+                #self.obj.add_new_eid(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
+                n += 36
+                for i in xrange(3):
+                    out = unpack(b'i7f', data[n:n + 32])
+                    (loc, rs, azs, As, ss, maxp, tmax, octs) = out
+                    if self.debug4():
+                        self.binary_debug.write('CTRIAX6-53B - %s\n' % (str(out)))
+                    #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs)
+                    #self.obj.add(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
+                    n += 32  # 4*8
+        else:
+            raise NotImplementedError('sort1 Type=%s num=%s' % (self.element_name, self.element_type))
+        #=========================
+        assert nelements > 0, nelements
+        assert len(data) % ntotal == 0, '%s n=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data), ntotal)
+
+
+    def apply_data_code_value(self, name, value):
+        pass
+    def setNullNonlinearFactor(self):
+        pass
 
     def read_title(self, data):
         assert len(data) == 584, len(data)

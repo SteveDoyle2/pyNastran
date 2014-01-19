@@ -1,18 +1,54 @@
 from struct import unpack
 from struct import error as StructError
 from pyNastran.f06.f06 import FatalError
+
+from pyNastran.op2.dev.oef import OEF
 from pyNastran.op2.dev.oes import OES
 
-class OP2(OES):
+from pyNastran.op2.dev.opg import OPG
+from pyNastran.op2.dev.oqg import OQG
+from pyNastran.op2.dev.oug import OUG
+
+class OP2(OEF, OES, OPG, OQG, OUG):
     def __init__(self):
         #self.tables_to_read = []
+        OEF.__init__(self)
         OES.__init__(self)
+        
+        OPG.__init__(self)
+        OQG.__init__(self)
+        OUG.__init__(self)
+
         self.debug = True
-        self.binary_debug = open('debug.out', 'wb')
+        if self.debug:
+            self.binary_debug = open('debug.out', 'wb')
+
+        self.show_table3_map = [
+            #'OUGV1',
+            #'OEF1X',
+            #'OES1X1',
+        ]
+        self.show_table4_map = [
+            #'OUGV1',
+            #'OEF1X',
+            #'OES1X1',
+        ]
+
+    def debug3(self):
+        return True
+        if self.debug and self.table_name in self.show_table3_map:
+            return True
+        return False
+
+    def debug4(self):
+        return True
+        if self.debug and self.table_name in self.show_table4_map:
+            return True
+        return False
 
     def show(self, n):
         assert self.n == self.f.tell()
-        nints = n//4
+        nints = n // 4
         data = self.f.read(n)
         self.show_data(data)
         self.f.seek(self.n)
@@ -25,7 +61,7 @@ class OP2(OES):
         floats  = unpack('%if' % nints, data)
         print "strings =", strings
         print "ints    =", ints
-        #print "floats  =", floats
+        print "floats  =", floats
 
     def skip_block(self):
         data = self.f.read(4)
@@ -111,9 +147,26 @@ class OP2(OES):
                     self.read_dit()
                 elif table_name in ['PCOMPTS']: # blade
                     self.read_pcompts()
-                elif table_name in ['OQMG1', 'OSTR1X', 'OESNLXR', 'OQG1', 'OUGV1',
-                                    'OEF1X', 'OES1X1', 'OPG1', 'OES1C', 'OSTR1C',
-                                    'OEFIT', 'BOUGV1', 'OES1', 'OEF1', 'ONRGY1']:
+                elif table_name in [
+                                    # stress
+                                    'OES1X1', 'OES1', 'OES1C', 'OESNLXR',
+                                    # strain
+                                    'OSTR1X', 'OSTR1C',
+                                    # forces
+                                    'OEFIT', 'OEF1X', 'OEF1', 'OEF1X',
+                                    # spc forces
+                                    'OQG1',
+                                    # mpc forces
+                                    'OQMG1',
+                                    # displacement/velocity/acceleration/eigenvector
+                                    'OUGV1', 'BOUGV1',
+                                    # strain energy
+                                    'ONRGY1',
+                                    
+                                    # applied loads
+                                    'OPG1','OPG2',
+                                    # other
+                                    ]:
                     self.read_results_table()
                 else:
                     raise NotImplementedError('%r' % table_name)
@@ -247,8 +300,6 @@ class OP2(OES):
             self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
         self.print_month(month, day, year, zero, one)
         self.read_subtables()
-        #if self.table_name == 'OES1X1':
-            #asdfa
 
     def print_month(self, month, day, year, zero, one):
         self.date = (month, day, 2000 + year)
@@ -259,12 +310,83 @@ class OP2(OES):
         assert one == 1
 
     def parse_results_table3(self, data):
-        if self.table_name in ['OES1X1', 'OES1']:
-            self.read_oes1x1_3(data)
+        if self.debug:
+            self.binary_debug.write('  Table3\n')
+        if self.table_name in [# stress
+                               'OES1X1', 'OES1', 'OES1C', 'OESNLXR',
+                               # strain
+                               'OSTR1X', 'OSTR1C',]:
+            self.read_oes1_3(data)
+
+        elif self.table_name in ['OQG1', 'OQGV1', 'OQP1', 'OQMG1']:
+            self.read_oqg1_3(data)
+        elif self.table_name in ['OUGV1']:
+            self.read_oug1_3(data)
+        elif self.table_name in ['OPG1']:
+            self.read_opg1_3(data)
+        elif self.table_name in ['OEFIT', 'OEF1X']:
+            self.read_oef1_3(data)
+        elif self.table_name in ['OGPWG',]:
+            self.read_ogpwg_3(data)
+        elif self.table_name in ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4',
+                                  'EPT', 'MPT', 'MPTS', 'PVT0', 'CASECC',
+                                  'EDOM', 'BGPDT', 'EQEXINS', 'OGPFB1',
+                                  'DYNAMICS', 'DESTAB', 'R1TABRG', 'HISADD', 'GPL',
+                                  'GPDT', 'LAMA', 'EQEXIN']:
+            pass
+        else:
+            raise NotImplementedError(self.table_name)
 
     def parse_results_table4(self, data):
-        if self.table_name in ['OES1X1', 'OES1']:
-            self.read_oes1x1_4(data)
+        if self.debug:
+            self.binary_debug.write('  Table4\n')
+        if self.table_name in [# stress
+                               'OES1X1', 'OES1', 'OES1C', 'OESNLXR',
+                               # strain
+                               'OSTR1X', 'OSTR1C',]:
+            self.read_oes1_4(data)
+
+        elif self.table_name in ['OQG1', 'OQGV1', 'OQP1', 'OQMG1']:
+            self.read_oqg1_4(data)
+        elif self.table_name in ['OUGV1']:
+            self.read_oug1_4(data)
+        elif self.table_name in ['OPG1']:
+            self.read_opg1_4(data)
+        elif self.table_name in ['OEFIT', 'OEF1X']:
+            self.read_oef1_4(data)
+        elif self.table_name in ['OGPWG',]:
+            self.read_ogpwg_4(data)
+        elif self.table_name in ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4',
+                                  'EPT', 'MPT', 'MPTS', 'PVT0', 'CASECC',
+                                  'EDOM', 'BGPDT', 'EQEXINS', 'OGPFB1',
+                                  'DYNAMICS', 'DESTAB', 'R1TABRG', 'HISADD', 'GPL',
+                                  'GPDT', 'LAMA', 'EQEXIN']:
+            pass
+        else:
+            raise NotImplementedError(self.table_name)
+
+    def read_ogpwg_3(self, data):
+        self.words = [
+                 'aCode',       'tCode',    '???',     'isubcase',
+                 '???',         '???',      '???',          '???',
+                 '???',         'num_wide', '???',          '???',
+                 '???',         '???',      '???',          '???',
+                 '???',         '???',      '???',          '???',
+                 '???',         '???',      '???',          '???',
+                 '???', 'Title', 'subtitle', 'label']
+
+        self.parse_approach_code(data)
+        if self.debug3():
+            self.binary_debug.write('  aCode    = %r\n' % self.aCode)
+            self.binary_debug.write('  tCode    = %r\n' % self.tCode)
+            self.binary_debug.write('  isubcase = %r\n' % self.isubcase)
+
+        self.read_title(data)
+        self.write_debug_bits()
+
+    def read_ogpwg_4(self, data):
+        self.show_data(data)
+        sys.exit()
 
     def skip_subtables(self):
         self.isubtable = -3
@@ -309,11 +431,8 @@ class OP2(OES):
         if self.table_name == 'OES1X1':
             self.finish_oes()
 
-    def read_ougv1(self):
-        pass
-
     def parse_approach_code(self, data):
-        (aCode, tCode, int3, isubcase) = unpack(b'iiii', data[:16])
+        (aCode, tCode, int3, isubcase) = unpack(b'4i', data[:16])
         self.aCode = aCode
         self.tCode = tCode
         self.int3 = int3
@@ -348,16 +467,19 @@ class OP2(OES):
         #print('                 so - analysis_code=%s device_code=%s table_code=%s sort_code=%s\n' % (self.analysis_code, self.device_code, self.table_code, self.sort_code))
         self._parse_sort_code()
 
-    def add_data_parameter(self, data, var_name, Type, slot, debug=False):
-        datai = data[4*(slot-1) : 4*(slot)]
+    def add_data_parameter(self, data, var_name, Type, field_num,
+            applyNonlinearFactor=True, fixDeviceCode=False):
+
+        datai = data[4*(field_num-1) : 4*(field_num)]
         assert len(datai) == 4, len(datai)
         value, = unpack(Type, datai)
         #print "%-12s = %r" % (var_name, value)
         if self.debug:
             self.binary_debug.write('  %-12s = %r\n' % (var_name, value))
         setattr(self, var_name, value)
-        self.words[slot-1] = var_name
+        self.words[field_num-1] = var_name
 
+    #===================================
     def _parse_sort_code(self):
         """
         sort_code = 0 -> sort_bits = [0,0,0]
@@ -381,10 +503,34 @@ class OP2(OES):
             i -= 1
         #: the bytes describe the SORT information
         self.sort_bits = bits
-        print "sort_bits =", bits
-
+        #print "sort_bits =", bits
         #self.data_code['sort_bits'] = self.sort_bits
 
+    def is_sort1(self):
+        if self.sort_bits[0] == 0:
+            return True
+        return False
+
+    def is_sort2(self):
+        return not(self.is_sort1())
+
+    def is_real(self):
+        return not(self.is_complex())
+
+    def is_complex(self):
+        if self.sort_bits[1] == 1:
+            return True
+        return False
+
+    def is_random(self):
+        if self.sort_bits[1] == 1:
+            return True
+        return False
+
+    def is_mag_phase(self):
+        assert self.format_code in [0, 1], self.format_code
+        return bool(self.format_code)
+    #===================================
     def goto(self, n):
         self.n = n
         self.f.seek(n)
@@ -403,27 +549,23 @@ class OP2(OES):
                 markers1 = self.get_nmarkers(1, rewind=False)
                 record = self.read_block()
                 markers1 = self.get_nmarkers(1, rewind=True)
-
                 nloop += 1
             if nloop > 0:
-                print "nloop = %s" % nloop
+                #print "nloop = %s" % nloop
+                pass
         return record
 
     def read_record(self, debug=True):
         markers0 = self.get_nmarkers(1, rewind=False)
         if self.debug and debug:
             self.binary_debug.write('marker = [4, %i, 4]\n' % markers0[0])
-        #print "markers =", markers0
         record = self.read_block()
         if self.debug and debug:
             nrecord = len(record)
             self.binary_debug.write('record = [%i, recordi, %i]\n' % (nrecord, nrecord))
-        #if self.table_name == 'OES1X1':
-            #self.show_data(record)
         assert (markers0[0]*4) == len(record), 'markers0=%s*4 len(record)=%s' % (markers0[0]*4, len(record))
 
         markers1 = self.get_nmarkers(1, rewind=True)
-        #print "markers1 =", markers1
 
         # handling continuation blocks
         if markers1[0] > 0:
@@ -437,7 +579,7 @@ class OP2(OES):
                 records.append(record)
                 nloop += 1
             if nloop > 0:
-                print "nloop = %s" % nloop
+                #print "nloop = %s" % nloop
                 record = ''.join(records)
         return record
 
