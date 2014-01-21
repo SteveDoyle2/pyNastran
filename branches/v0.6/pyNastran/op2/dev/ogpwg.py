@@ -24,6 +24,8 @@ class OGPWG(object):
                  '???', 'Title', 'subtitle', 'label']
 
         self.parse_approach_code(data)
+        self.add_data_parameter(data, 'reference_point', 'i', 3, add_to_dict=False)
+
         if self.debug3():
             self.binary_debug.write('  aCode    = %r\n' % self.aCode)
             self.binary_debug.write('  tCode    = %r\n' % self.tCode)
@@ -38,7 +40,7 @@ class OGPWG(object):
         """
         MO = array(unpack('36f', data[:4*36]))
         MO = MO.reshape(6,6)
-        
+
         S = array(unpack('9f', data[4*36:4*(36+9)]))
         S = S.reshape(3,3)
 
@@ -46,7 +48,7 @@ class OGPWG(object):
         mxyz = mxyz.reshape(3,4)
         mass = mxyz[:, 0]
         cg = mxyz[:, 1:]
-        
+
         IS = array(unpack('9f', data[4*(36+9+12):4*(36+9+12+9)]))
         IS = IS.reshape(3,3)
 
@@ -55,6 +57,6 @@ class OGPWG(object):
         Q = array(unpack('9f', data[4*(36+9+12+9+3):4*(36+9+12+9+3+9)]))
         Q = Q.reshape(3,3)
 
-        reference_point = None ## I'm assuming this is set in subtable3
-        self.grid_point_weight.set_grid_point_weight(reference_point,
+        self.grid_point_weight.set_grid_point_weight(self.reference_point,
             MO, S, mass, cg, IS, IQ, Q)
+        del self.reference_point

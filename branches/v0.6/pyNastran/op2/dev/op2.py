@@ -445,18 +445,6 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
         #print('                 so - analysis_code=%s device_code=%s table_code=%s sort_code=%s\n' % (self.analysis_code, self.device_code, self.table_code, self.sort_code))
         self._parse_sort_code()
 
-    def add_data_parameter(self, data, var_name, Type, field_num,
-            applyNonlinearFactor=True, fixDeviceCode=False):
-
-        datai = data[4*(field_num-1) : 4*(field_num)]
-        assert len(datai) == 4, len(datai)
-        value, = unpack(Type, datai)
-        #print "%-12s = %r" % (var_name, value)
-        if self.debug:
-            self.binary_debug.write('  %-12s = %r\n' % (var_name, value))
-        setattr(self, var_name, value)
-        self.words[field_num-1] = var_name
-
     #===================================
     def _parse_sort_code(self):
         """

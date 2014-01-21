@@ -287,6 +287,18 @@ class Results(object):
         }
         pass
 
+    def add_data_parameter(self, data, var_name, Type, field_num,
+            applyNonlinearFactor=True, fixDeviceCode=False, add_to_dict=True):
+
+        datai = data[4*(field_num-1) : 4*(field_num)]
+        assert len(datai) == 4, len(datai)
+        value, = unpack(Type, datai)
+        #print "%-12s = %r" % (var_name, value)
+        if self.debug:
+            self.binary_debug.write('  %-12s = %r\n' % (var_name, value))
+        setattr(self, var_name, value)
+        self.words[field_num-1] = var_name
+
     def apply_data_code_value(self, name, value):
         pass
     def setNullNonlinearFactor(self):
