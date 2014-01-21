@@ -61,6 +61,16 @@ class GridPointWeight(object):
         # same as I(s) except that the signs of the offdiagonal terms are reversed.
         self.Q = None
 
+    def set_grid_point_weight(self, reference_point, MO, S, mass, cg, IS, IQ, Q):
+        self.reference_point = reference_point
+        self.MO = MO
+        self.S = S
+        self.mass = mass
+        self.cg = cg
+        self.IS = IS
+        self.IQ = IQ
+        self.Q = Q
+
     def read_grid_point_weight(self, lines):
         """
          0-                                 REFERENCE POINT =        0
