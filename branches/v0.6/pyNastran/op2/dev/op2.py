@@ -25,8 +25,12 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
         pass
     def write_f06(self, *args, **kwargs):
         pass
-    def __init__(self, make_geom=False, debug=False):
+    def __init__(self, make_geom=False, debug=False, log=None):
         #self.tables_to_read = []
+
+        #BDF.__init__(self, debug=debug, log=log)
+        #F06Writer.__init__(self)
+
         OEF.__init__(self)
         OES.__init__(self)
         
