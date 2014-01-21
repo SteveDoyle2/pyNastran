@@ -1,6 +1,10 @@
 from struct import unpack
 from struct import error as StructError
+
+from numpy import array
+
 from pyNastran.f06.f06 import FatalError
+from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 
 from pyNastran.op2.dev.oef import OEF
 from pyNastran.op2.dev.oes import OES
@@ -9,8 +13,17 @@ from pyNastran.op2.dev.opg import OPG
 from pyNastran.op2.dev.oqg import OQG
 from pyNastran.op2.dev.oug import OUG
 
+
 class OP2(OEF, OES, OPG, OQG, OUG):
-    def __init__(self):
+    def set_subcases(self, isubcases):
+        pass
+    def get_op2_stats(self):
+        pass
+    def write_bdf(self, *args, **kwargs):
+        pass
+    def write_f06(self, *args, **kwargs):
+        pass
+    def __init__(self, make_geom=False, debug=False):
         #self.tables_to_read = []
         OEF.__init__(self)
         OES.__init__(self)
@@ -19,6 +32,7 @@ class OP2(OEF, OES, OPG, OQG, OUG):
         OQG.__init__(self)
         OUG.__init__(self)
 
+        self.grid_point_weight = GridPointWeight()
         self.debug = True
         if self.debug:
             self.binary_debug = open('debug.out', 'wb')
@@ -60,7 +74,7 @@ class OP2(OEF, OES, OPG, OQG, OUG):
         ints    = unpack('%ii' % nints, data)
         floats  = unpack('%if' % nints, data)
         print "strings =", strings
-        print "ints    =", ints
+        print "ints    =", ints, '\n'
         print "floats  =", floats
 
     def skip_block(self):
@@ -91,7 +105,6 @@ class OP2(OEF, OES, OPG, OQG, OUG):
         for i in xrange(n):
             data = self.read_block()
             marker, = unpack('i', data)
-            #print "marker=%s" % marker
             markers.append(marker)
         if rewind:
             self.n = ni
@@ -114,7 +127,7 @@ class OP2(OEF, OES, OPG, OQG, OUG):
             data = self.read_block()
             #self.show(100)
 
-            data = self.read_record()
+            data = self._read_record()
 
             self.read_markers([-1, 0])
 
@@ -134,19 +147,29 @@ class OP2(OEF, OES, OPG, OQG, OUG):
             #if table_name in self.tables_to_read:
             if 0:
                 self.table_name = table_name
-                self._skip_table()
+                if table_name in ['DIT']:
+                    self._read_dit()
+                elif table_name in ['PCOMPTS']:
+                    self._read_pcompts()
+                else:
+                    self._skip_table()
             else:
                 self.table_name = table_name
                 if table_name in ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4',
                                   'EPT', 'MPT', 'MPTS', 'PVT0', 'CASECC',
                                   'EDOM', 'BGPDT', 'EQEXINS', 'OGPWG', 'OGPFB1',
                                   'DYNAMICS', 'DESTAB', 'R1TABRG', 'HISADD', 'GPL',
-                                  'GPDT', 'LAMA', 'EQEXIN']:
-                    self.read_geom_table()  # DIT (agard)
+                                  'GPDT', 'LAMA', 'EQEXIN',
+                                  'CONTACT',
+
+                                    # strain energy
+                                    'ONRGY1',
+                                  ]:
+                    self._read_geom_table()  # DIT (agard)
                 elif table_name in ['DIT']:
-                    self.read_dit()
+                    self._read_dit()
                 elif table_name in ['PCOMPTS']: # blade
-                    self.read_pcompts()
+                    self._read_pcompts()
                 elif table_name in [
                                     # stress
                                     'OES1X1', 'OES1', 'OES1C', 'OESNLXR',
@@ -159,15 +182,12 @@ class OP2(OEF, OES, OPG, OQG, OUG):
                                     # mpc forces
                                     'OQMG1',
                                     # displacement/velocity/acceleration/eigenvector
-                                    'OUGV1', 'BOUGV1',
-                                    # strain energy
-                                    'ONRGY1',
-                                    
+                                    'OUG1', 'OUGV1', 'BOUGV1',
                                     # applied loads
                                     'OPG1','OPG2',
                                     # other
                                     ]:
-                    self.read_results_table()
+                    self._read_results_table()
                 else:
                     raise NotImplementedError('%r' % table_name)
 
@@ -184,45 +204,41 @@ class OP2(OEF, OES, OPG, OQG, OUG):
         print "done..."
         return table_names
 
-    def read_dit(self):
+    def _read_dit(self):
         table_name = self.read_table_name(rewind=False)
         self.read_markers([-1])
-        data = self.read_record()
+        data = self._read_record()
 
         self.read_markers([-2, 1, 0])
-        data = self.read_record()
+        data = self._read_record()
         table_name, = unpack('8s', data)
-        #print "table_name = %r" % table_name
 
         self.read_markers([-3, 1, 0])
-        data = self.read_record()
+        data = self._read_record()
 
         self.read_markers([-4, 1, 0])
-        data = self.read_record()
+        data = self._read_record()
 
         self.read_markers([-5, 1, 0])
         self.read_markers([0])
 
-        #self.show(100)
-        #sys.exit()
-
-    def read_pcompts(self):
+    def _read_pcompts(self):
         table_name = self.read_table_name(rewind=False)
 
         self.read_markers([-1])
-        data = self.read_record()
+        data = self._read_record()
 
         self.read_markers([-2, 1, 0])
-        data = self.read_record()
+        data = self._read_record()
         table_name, = unpack('8s', data)
         #print "table_name = %r" % table_name
 
         self.read_markers([-3, 1, 0])
         self.read_markers([-4, 1, 0])
-        data = self.read_record()
+        data = self._read_record()
 
         self.read_markers([-5, 1, 0])
-        data = self.read_record()
+        data = self._read_record()
         self.read_markers([-6, 1, 0])
         self.read_markers([0])
         #self.show(100)
@@ -230,7 +246,7 @@ class OP2(OEF, OES, OPG, OQG, OUG):
     def read_table_name(self, rewind=False, stop_on_failure=True):
         ni = self.n
         if stop_on_failure:
-            data = self.read_record(debug=False)
+            data = self._read_record(debug=False)
             table_name, = unpack('8s', data)
             if self.debug:
                 self.binary_debug.write('marker = [4, 2, 4]\n')
@@ -238,7 +254,7 @@ class OP2(OEF, OES, OPG, OQG, OUG):
             table_name = table_name.strip()
         else:
             try:
-                data = self.read_record()
+                data = self._read_record()
                 table_name, = unpack('8s', data)
                 table_name = table_name.strip()
             except:
@@ -266,42 +282,42 @@ class OP2(OEF, OES, OPG, OQG, OUG):
             self.binary_debug.write('skipping table...\n')
         self.table_name = self.read_table_name(rewind=False)
         self.read_markers([-1])
-        data = self.skip_record()
+        data = self._skip_record()
 
         self.read_markers([-2, 1, 0])
-        data = self.skip_record()
-        self.skip_subtables()
+        data = self._skip_record()
+        self._skip_subtables()
 
-    def read_geom_table(self):
+    def _read_geom_table(self):
         self.table_name = self.read_table_name(rewind=False)
         self.read_markers([-1])
-        data = self.read_record()
+        data = self._read_record()
         #self.show_data(data)
 
         self.read_markers([-2, 1, 0])
-        data = self.read_record()
+        data = self._read_record()
         table_name, = unpack('8s', data)
-        self.read_subtables()
+        self._read_subtables()
 
-    def read_results_table(self):
+    def _read_results_table(self):
         if self.debug:
             self.binary_debug.write('read_results_table\n')
         self.table_name = self.read_table_name(rewind=False)
         self.read_markers([-1])
-        data = self.read_record()
+        data = self._read_record()
 
         self.read_markers([-2, 1, 0])
-        data = self.read_record()
+        data = self._read_record()
 
         subtable_name, month, day, year, zero, one = unpack('8s5i', data)
 
         if self.debug:
             self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (subtable_name, month, day, year, zero, one))
             self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
-        self.print_month(month, day, year, zero, one)
-        self.read_subtables()
+        self._print_month(month, day, year, zero, one)
+        self._read_subtables()
 
-    def print_month(self, month, day, year, zero, one):
+    def _print_month(self, month, day, year, zero, one):
         self.date = (month, day, 2000 + year)
         #print "%s/%s/%4i" % self.date
         if self.debug:
@@ -309,7 +325,7 @@ class OP2(OEF, OES, OPG, OQG, OUG):
         assert zero == 0
         assert one == 1
 
-    def parse_results_table3(self, data):
+    def _parse_results_table3(self, data):
         if self.debug:
             self.binary_debug.write('  Table3\n')
         if self.table_name in [# stress
@@ -320,24 +336,26 @@ class OP2(OEF, OES, OPG, OQG, OUG):
 
         elif self.table_name in ['OQG1', 'OQGV1', 'OQP1', 'OQMG1']:
             self.read_oqg1_3(data)
-        elif self.table_name in ['OUGV1']:
+        elif self.table_name in ['OUG1', 'OUGV1']:
             self.read_oug1_3(data)
         elif self.table_name in ['OPG1']:
             self.read_opg1_3(data)
-        elif self.table_name in ['OEFIT', 'OEF1X']:
+        elif self.table_name in ['OEF1', 'OEFIT', 'OEF1X']:
             self.read_oef1_3(data)
         elif self.table_name in ['OGPWG',]:
-            self.read_ogpwg_3(data)
+            self._read_ogpwg_3(data)
         elif self.table_name in ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4',
                                   'EPT', 'MPT', 'MPTS', 'PVT0', 'CASECC',
                                   'EDOM', 'BGPDT', 'EQEXINS', 'OGPFB1',
                                   'DYNAMICS', 'DESTAB', 'R1TABRG', 'HISADD', 'GPL',
-                                  'GPDT', 'LAMA', 'EQEXIN']:
+                                  'GPDT', 'LAMA', 'EQEXIN',
+                                  'CONTACT','ONRGY1',
+                                  ]:
             pass
         else:
             raise NotImplementedError(self.table_name)
 
-    def parse_results_table4(self, data):
+    def _parse_results_table4(self, data):
         if self.debug:
             self.binary_debug.write('  Table4\n')
         if self.table_name in [# stress
@@ -348,24 +366,31 @@ class OP2(OEF, OES, OPG, OQG, OUG):
 
         elif self.table_name in ['OQG1', 'OQGV1', 'OQP1', 'OQMG1']:
             self.read_oqg1_4(data)
-        elif self.table_name in ['OUGV1']:
+        elif self.table_name in ['OUG1', 'OUGV1']:
             self.read_oug1_4(data)
         elif self.table_name in ['OPG1']:
             self.read_opg1_4(data)
-        elif self.table_name in ['OEFIT', 'OEF1X']:
+        elif self.table_name in ['OEF1', 'OEFIT', 'OEF1X']:
             self.read_oef1_4(data)
         elif self.table_name in ['OGPWG',]:
-            self.read_ogpwg_4(data)
+            self._read_ogpwg_4(data)
         elif self.table_name in ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4',
                                   'EPT', 'MPT', 'MPTS', 'PVT0', 'CASECC',
                                   'EDOM', 'BGPDT', 'EQEXINS', 'OGPFB1',
                                   'DYNAMICS', 'DESTAB', 'R1TABRG', 'HISADD', 'GPL',
-                                  'GPDT', 'LAMA', 'EQEXIN']:
+                                  'GPDT', 'LAMA', 'EQEXIN',
+                                  'CONTACT','ONRGY1',
+                                  ]:
             pass
         else:
             raise NotImplementedError(self.table_name)
 
-    def read_ogpwg_3(self, data):
+    def _read_ogpwg_3(self, data):
+        """
+        Grid Point Weight Generator
+        ..todo:: find the reference_point...
+        """
+        #self.show_data(data)
         self.words = [
                  'aCode',       'tCode',    '???',     'isubcase',
                  '???',         '???',      '???',          '???',
@@ -384,42 +409,65 @@ class OP2(OEF, OES, OPG, OQG, OUG):
         self.read_title(data)
         self.write_debug_bits()
 
-    def read_ogpwg_4(self, data):
-        self.show_data(data)
-        sys.exit()
+    def _read_ogpwg_4(self, data):
+        """
+        Grid Point Weight Generator
+        """
+        MO = array(unpack('36f', data[:4*36]))
+        MO = MO.reshape(6,6)
+        
+        S = array(unpack('9f', data[4*36:4*(36+9)]))
+        S = S.reshape(3,3)
 
-    def skip_subtables(self):
+        mxyz = array(unpack('12f', data[4*(36+9):4*(36+9+12)]))
+        mxyz = mxyz.reshape(3,4)
+        mass = mxyz[:, 0]
+        cg = mxyz[:, 1:]
+        
+        IS = array(unpack('9f', data[4*(36+9+12):4*(36+9+12+9)]))
+        IS = IS.reshape(3,3)
+
+        IQ = array(unpack('3f', data[4*(36+9+12+9):4*(36+9+12+9+3)]))
+
+        Q = array(unpack('9f', data[4*(36+9+12+9+3):4*(36+9+12+9+3+9)]))
+        Q = Q.reshape(3,3)
+
+        reference_point = None ## I'm assuming this is set in subtable3
+        self.grid_point_weight.set_grid_point_weight(reference_point,
+            MO, S, mass, cg, IS, IQ, Q)
+
+    def _skip_subtables(self):
         self.isubtable = -3
         self.read_markers([-3, 1, 0])
 
         markers = self.get_nmarkers(1, rewind=True)
         while markers[0] != 0:
-            data = self.skip_record()
+            data = self._skip_record()
             #if len(data) == 584:
-                #self.parse_results_table3(data)
+                #self._parse_results_table3(data)
             #else:
-                #data = self.parse_results_table4(data)
+                #data = self._parse_results_table4(data)
 
             self.isubtable -= 1
             self.read_markers([self.isubtable, 1, 0])
             markers = self.get_nmarkers(1, rewind=True)
         self.read_markers([0])
 
-    def read_subtables(self):
+    def _read_subtables(self):
         self.isubtable = -3
         self.read_markers([-3, 1, 0])
-        #data = self.read_record()
-        #self.parse_results_table3(data)
+        #data = self._read_record()
+        #self._parse_results_table3(data)
 
         #self.isubtable -= 1 # -4
         #self.read_markers([self.isubtable, 1, 0])
         markers = self.get_nmarkers(1, rewind=True)
         while markers[0] != 0:
-            data = self.read_record()
+            data = self._read_record()
             if len(data) == 584:
-                self.parse_results_table3(data)
+                self._parse_results_table3(data)
             else:
-                data = self.parse_results_table4(data)
+                data = self._parse_results_table4(data)
 
             self.isubtable -= 1
             self.read_markers([self.isubtable, 1, 0])
@@ -530,15 +578,19 @@ class OP2(OEF, OES, OPG, OQG, OUG):
     def is_mag_phase(self):
         assert self.format_code in [0, 1], self.format_code
         return bool(self.format_code)
+
+    def is_magnitude_phase(self):
+        if self.format_code == 3:
+            return True
+        return False
     #===================================
     def goto(self, n):
         self.n = n
         self.f.seek(n)
 
-    def skip_record(self):
+    def _skip_record(self):
         markers0 = self.get_nmarkers(1, rewind=False)
 
-        #record = self.read_block()
         record = self.skip_block()
 
         markers1 = self.get_nmarkers(1, rewind=True)
@@ -550,12 +602,9 @@ class OP2(OEF, OES, OPG, OQG, OUG):
                 record = self.read_block()
                 markers1 = self.get_nmarkers(1, rewind=True)
                 nloop += 1
-            if nloop > 0:
-                #print "nloop = %s" % nloop
-                pass
         return record
 
-    def read_record(self, debug=True):
+    def _read_record(self, debug=True):
         markers0 = self.get_nmarkers(1, rewind=False)
         if self.debug and debug:
             self.binary_debug.write('marker = [4, %i, 4]\n' % markers0[0])
@@ -579,7 +628,6 @@ class OP2(OEF, OES, OPG, OQG, OUG):
                 records.append(record)
                 nloop += 1
             if nloop > 0:
-                #print "nloop = %s" % nloop
                 record = ''.join(records)
         return record
 

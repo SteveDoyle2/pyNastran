@@ -98,10 +98,9 @@ class OUG(object):
         self.read_title(data)
         self.write_debug_bits()
 
-
     def read_oug1_4(self, data):
         if self.table_code == 1:   # Displacements
-            assert self.table_name in ['OUGV1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            assert self.table_name in ['OUG1', 'OUGV1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             self.read_displacement(data)
         elif self.table_code == 7:
             self.read_eigenvector(data)

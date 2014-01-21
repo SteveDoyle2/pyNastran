@@ -40,6 +40,7 @@ class OES(object):
             97 : 'CTRIA3',
             98 : 'CTRIA6',
 
+            102: 'CBUSH',
         }
         pass
 
@@ -448,6 +449,26 @@ class OES(object):
                     #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs)
                     #self.obj.add(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
                     n += 32  # 4*8
+        elif self.element_type in [102]:
+            # 102-CBUSH
+            assert self.num_wide == 7, "num_wide=%s not 7" % self.num_wide
+            ntotal = 28  # 4*7
+            format1 = b'i6f'
+
+            n = 0
+            nelements = len(data) // ntotal
+            for i in xrange(nelements):
+                edata = data[n:n + ntotal]
+                out = unpack(format1, edata)  # num_wide=7
+                if self.debug4():
+                    self.binary_debug.write('CBUSH-102 - %s\n' % str(out))
+
+                (eid_device, tx, ty, tz, rx, ry, rz) = out
+                eid = (eid_device - self.device_code) // 10
+
+                #self.obj.add_new_eid(self.element_type, dt, eid, tx, ty, tz, rx, ry, rz)
+                n += ntotal
+
         else:
             raise NotImplementedError('sort1 Type=%s num=%s' % (self.element_name, self.element_type))
         #=========================

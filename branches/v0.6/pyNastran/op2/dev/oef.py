@@ -225,6 +225,43 @@ class OEF(object):
         n = 0
         if self.element_type in []:
             pass
+        elif self.element_type in [2]:
+            #2-CBEAM
+            format1 = b'i'
+            formatAll = b'i8f'  # 36
+            
+            ntotal = 400  # 1+(10-1)*11=100 ->100*4 = 400
+            nelements = len(data) // ntotal
+            for i in xrange(nelements):
+                edata = data[n:n+4]
+                eid_device, = unpack(format1, edata)
+                eid = (eid_device - self.device_code) // 10
+                n += 4
+
+                for i in xrange(11):
+                    edata = data[n:n+36]
+                    out = unpack(formatAll, edata)
+                    if self.debug4():
+                        self.binary_debug.write('OEF_Beam - %s\n' % (str(out)))
+                    (nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq) = out
+                    #print "eidTemp = ",eidTemp
+                    #print "nid = ",nid
+                    #print "sd = ",sd
+
+                    dataIn = [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
+                    #print "%s        " %(self.get_element_type(self.element_type)),dataIn
+                    #eid = self.obj.add_new_eid(out)
+                    #if i == 0:  # isNewElement:
+                        #self.obj.addNewElement(dt, dataIn)
+                        #print
+                    #elif sd > 0.:
+                        #self.obj.add(dt, dataIn)
+                    #print
+                    n += 36
+                    #else: pass
+                #print "len(data) = ",len(self.data)
+            #print self.beamForces
+
         elif self.element_type in [34]:  # bars
             # 34-CBAR
             format1 = b'i8f'  # 9

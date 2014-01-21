@@ -1,5 +1,8 @@
 from struct import unpack
 
+from pyNastran.op2.op2_helper import polar_to_real_imag
+
+
 class OQG(object):
     def __init__(self):
         pass
@@ -174,6 +177,45 @@ class OQG(object):
             #self.obj.add(dt, dataIn)
             n += ntotal
 
-    def read_complex_table(self, data, result_name):
-        pass
-    
+    def read_complex_table(self, data, result_name, flag):
+        if self.debug:
+            self.binary_debug.write('  read_real_table\n')
+        assert flag in ['node', 'elem'], flag
+
+        format1 = '2i12f'
+        is_magnitude_phase = self.is_magnitude_phase()
+
+        n = 0
+        ntotal = 56  # 14 * 4
+        nnodes = len(data) // ntotal
+        for inode in xrange(nnodes):
+            edata = data[n:n+ntotal]
+
+            out = unpack(format1, edata)
+            if self.debug:
+                self.binary_debug.write('read_complex_table - %s\n' % str(out))
+            (eid_device, gridType, txr, tyr, tzr, rxr, ryr, rzr,
+                                   txi, tyi, tzi, rxi, ryi, rzi) = out
+
+            if is_magnitude_phase:
+                tx = polar_to_real_imag(txr, txi)
+                rx = polar_to_real_imag(rxr, rxi)
+                ty = polar_to_real_imag(tyr, tyi)
+                ry = polar_to_real_imag(ryr, ryi)
+                tz = polar_to_real_imag(tzr, tzi)
+                rz = polar_to_real_imag(rzr, rzi)
+            else:
+                tx = complex(txr, txi)
+                rx = complex(rxr, rxi)
+                ty = complex(tyr, tyi)
+                ry = complex(ryr, ryi)
+                tz = complex(tzr, tzi)
+                rz = complex(rzr, rzi)
+
+            eid = (eid_device - self.device_code) // 10
+
+            dataIn = [eid, gridType, tx, ty, tz, rx, ry, rz]
+            #print "%s" %(self.get_element_type(self.element_type)),dataIn
+            #eid = self.obj.add_new_eid(out)
+            #self.obj.add(dt, dataIn)
+            n += ntotal
