@@ -1,12 +1,3 @@
-mapper = {
-    's' : 1,
-    'i' : 4,
-    'f' : 4,
-
-    'l' : 8,
-    'd' : 8,
-}
-
 from struct import calcsize
 
 def iformat(Format, precision=2):
