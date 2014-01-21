@@ -32,7 +32,7 @@ class OQG(object):
         data = self.get_data(4 * 50)
         #print self.print_block(data)
 
-        (three) = self.parse_approach_code(data)
+        three = self.parse_approach_code(data)
 
         ## random code
         self.add_data_parameter( data, 'randomCode', 'i', 8, False)
@@ -149,26 +149,23 @@ class OQG(object):
         if magPhase or self.num_wide == 14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 resultName = 'spcForces'
-                self.create_transient_object(self.spcForces,
-                                           ComplexSPCForcesObject)
+                self.create_transient_object(self.spcForces, ComplexSPCForcesObject)
                 self.handle_results_buffer(self.OUG_ComplexTable, resultName)
             else:
                 self.not_implemented_or_skip()
         elif self.num_wide == 8:  # real/random
             if self.thermal == 0:
                 resultName = 'spcForces'
-                self.create_transient_object(
-                    self.spcForces, SPCForcesObject)
+                self.create_transient_object(self.spcForces, SPCForcesObject)
                 self.handle_results_buffer(self.OUG_RealTable, resultName)
             elif self.thermal == 1:
                 resultName = 'thermalGradientAndFlux' #'finite element temperature gradients and fluxes'
-                self.create_transient_object(
-                    self.thermalGradientAndFlux, TemperatureGradientAndFluxObject)
+                self.create_transient_object(self.thermalGradientAndFlux, TemperatureGradientAndFluxObject)
                 self.handle_results_buffer(self.OUG_RealTable, resultName)
             else:
                 self.not_implemented_or_skip()
         else:
-            self.not_implemented_or_skip('only num_wide=8 or 14 is allowed  num_wide=%s' % (self.num_wide))
+            self.not_implemented_or_skip('only num_wide=8 or 14 is allowed  num_wide=%s' % self.num_wide)
 
         #if self.thermal not in [0,1]:
             #print self.obj
@@ -179,16 +176,14 @@ class OQG(object):
         if self.num_wide == 8:  # real/random
             if self.thermal == 0:
                 resultName = 'mpcForces'
-                self.create_transient_object(
-                    self.mpcForces, MPCForcesObject)
+                self.create_transient_object(self.mpcForces, MPCForcesObject)
                 self.handle_results_buffer(self.OUG_RealTable, resultName)
             else:
                 self.not_implemented_or_skip()
         elif self.num_wide == 14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 resultName = 'mpcForces'
-                self.create_transient_object(self.mpcForces,
-                                           ComplexMPCForcesObject)
+                self.create_transient_object(self.mpcForces, ComplexMPCForcesObject)
                 self.handle_results_buffer(self.OUG_ComplexTable, resultName)
             else:
                 self.not_implemented_or_skip()

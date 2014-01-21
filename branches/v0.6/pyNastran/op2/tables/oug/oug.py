@@ -53,7 +53,7 @@ class OUG(object):
         data = self.get_data(4 * 50)
         #print self.print_block(data)
 
-        (three) = self.parse_approach_code2(data)
+        three = self.parse_approach_code2(data)
 
         ## random code
         self.add_data_parameter(data, 'randomCode', 'i', 8, False)
@@ -133,16 +133,20 @@ class OUG(object):
         data = self.get_data(4 * 50)
         #print self.print_block(data)
 
-        (three) = self.parse_approach_code(data)
+        three = self.parse_approach_code(data)
 
         ## random code
         self.add_data_parameter(data, 'randomCode', 'i', 8, False)
+
         ## format code
         self.add_data_parameter(data, 'format_code', 'i', 9, False)
+
         ## number of words per entry in record; .. note:: is this needed for this table ???
         self.add_data_parameter(data, 'num_wide', 'i', 10, False)
+
         ## acoustic pressure flag
         self.add_data_parameter(data, 'acousticFlag', 'f', 13, False)
+
         ## thermal flag; 1 for heat transfer, 0 otherwise
         self.add_data_parameter(data, 'thermal', 'i', 23, False)
         self.isFlipped = False
@@ -522,7 +526,7 @@ class OUG(object):
 
             out = unpack(format1, eData)
             if self.make_op2_debug:
-                self.op2_debug.write('RealTable - %s\n' % str(out))
+                self.op2_debug.write('ComplexTable - %s\n' % str(out))
             (eid, gridType, txr, tyr, tzr, rxr, ryr, rzr,
              txi, tyi, tzi, rxi, ryi, rzi) = out
 

@@ -400,7 +400,8 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             self.add_data_parameter(data, 'mode', 'i', 5)
             ## real eigenvalue
             self.add_data_parameter(data, 'eigr', 'f', 6, False)
-            ## imaginary eigenvalue            self.add_data_parameter(data, 'eigi', 'f', 7, False)
+            ## imaginary eigenvalue
+            self.add_data_parameter(data, 'eigi', 'f', 7, False)
             self.apply_data_code_value('dataNames', ['mode', 'eigr', 'eigi'])
         elif self.analysis_code == 10:  # nonlinear statics
             ## load step

@@ -261,16 +261,17 @@ class RealElementsStressStrain(object):
             out = unpack(format1, self.data[n:n + 36])
             (eid, loc, rs, azs, As, ss, maxp, tmax, octs) = out
             if self.make_op2_debug:
-                self.op2_debugop2_debug.write('CTRIAX6-53A - %s\n' % (str(out)))
+                self.op2_debug.write('CTRIAX6-53A - %s\n' % (str(out)))
             eid = extract(eid, dt)
             #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs)
             self.obj.add_new_eid(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
 
+            n += 36
             for i in xrange(3):
                 out = unpack(b'i7f', self.data[n:n + 32])
                 (loc, rs, azs, As, ss, maxp, tmax, octs) = out
                 if self.make_op2_debug:
-                    self.op2_debugop2_debug.write('CTRIAX6-53B - %s\n' % (str(out)))
+                    self.op2_debug.write('CTRIAX6-53B - %s\n' % (str(out)))
                 #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs)
                 self.obj.add(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
                 n += 32  # 4*8

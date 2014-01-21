@@ -191,8 +191,7 @@ class OPG(object):
         if self.num_wide == 8:  # real/random
             if self.thermal == 0:
                 resultName = 'loadVectors'
-                self.create_transient_object(
-                    self.loadVectors, LoadVectorObject)
+                self.create_transient_object(self.loadVectors, LoadVectorObject)
                 self.handle_results_buffer(self.OUG_RealTable, resultName)
             elif self.thermal == 1:
                 resultName = 'thermalLoadVectors'
@@ -204,8 +203,7 @@ class OPG(object):
         elif self.num_wide == 14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 resultName = 'loadVectors'
-                self.create_transient_object(self.loadVectors,
-                                           ComplexLoadVectorObject)
+                self.create_transient_object(self.loadVectors, ComplexLoadVectorObject)
                 self.handle_results_buffer(self.OUG_ComplexTable, resultName)
             else:
                 self.not_implemented_or_skip()
@@ -218,16 +216,14 @@ class OPG(object):
         if self.num_wide == 8:  # real/random
             if self.thermal == 0:
                 resultName = 'forceVectors'
-                self.create_transient_object(self.forceVectors,
-                                           ForceVectorObject)
+                self.create_transient_object(self.forceVectors, ForceVectorObject)
                 self.handle_results_buffer(self.OUG_RealTable, resultName)
             else:
                 self.not_implemented_or_skip()
         elif self.num_wide == 14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 resultName = 'forceVectors'
-                self.create_transient_object(self.forceVectors,
-                                           ComplexForceVectorObject)
+                self.create_transient_object(self.forceVectors, ComplexForceVectorObject)
                 self.handle_results_buffer(self.OUG_ComplexTable, resultName)
             else:
                 self.not_implemented_or_skip()

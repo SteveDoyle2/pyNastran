@@ -222,24 +222,24 @@ class RealForces(object):
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'ffffffff'
         format1 = bytes(format1)
+        
+        ntotal = 36  # 9*4
+        n = 0
+        nelements = len(self.data) // ntotal
+        for i in xrange(nelements):
+            edata = self.data[n:n+36]
 
-        while len(self.data) >= 36:  # 9*4
-            eData = self.data[0:36]
-            self.data = self.data[36:]
-            #print "len(data) = ",len(eData)
-
-            out = unpack(format1, eData)
+            out = unpack(format1, edata)
             if self.make_op2_debug:
                 self.op2_debug.write('OEF_CBar - %s\n' % (str(out)))
             (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq) = out
             eid2 = extract(eid, dt)
-            #print "eType=%s" %(eType)
 
             dataIn = [eid2, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
+            n += ntotal
         #print self.barForces
 
     def OEF_CBar100(self):  # 100-CBAR
@@ -270,15 +270,15 @@ class RealForces(object):
     def OEF_Plate(self):  # 33-CQUAD4,74-CTRIA3
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
-        format1 += 'ffffffff'
+        format1 += '8f'
         format1 = bytes(format1)
+        
+        ntotal = 36 # 9*4
+        nelements = len(self.data) // ntotal
+        for i in xrange(nelements):
+            edata = self.data[n:n+36]
 
-        while len(self.data) >= 36:  # 9*4
-            eData = self.data[0:36]
-            self.data = self.data[36:]
-            #print "len(data) = ",len(eData)
-
-            out = unpack(format1, eData)
+            out = unpack(format1, edata)
             if self.make_op2_debug:
                 self.op2_debug.write('OEF_Plate-%s - %s\n' % (self.element_type, str(out)))
             (eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
@@ -289,8 +289,9 @@ class RealForces(object):
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
+            n += ntotal
         #print self.plateForces
+        self.data = self.data[n:]
 
     def OEF_Plate2(self):  # 64-CQUAD8,70-CTRIAR,75-CTRIA6,82-CQUAD8,144-CQUAD4-bilinear
         dt = self.nonlinear_factor
@@ -298,50 +299,48 @@ class RealForces(object):
         format1 += '4s'
 
         if self.element_type in [70, 75]:  # CTRIAR,CTRIA6
-            nNodes = 4
+            nnodes = 3
         elif self.element_type in [64, 82, 144]:  # CQUAD8,CQUADR,CQUAD4-bilinear
-            nNodes = 5
+            nnodes = 4
         else:
             raise NotImplementedError(self.code_information())
 
-        allFormat = 'fffffffff'
+        allFormat = 'i8f'
         format1 = bytes(format1)
         allFormat = bytes(allFormat)
 
-        nTotal = 44 + nNodes * 36
-        while len(self.data) >= nTotal:
-            eData = self.data[0:44]
-            self.data = self.data[44:]
-            #print self.print_block(eData)
-            #print "len(data) = ",len(eData)
+        n = 0
+        ntotal = 44 + nNodes * 36
+        nelements = len(self.data) // ntotal
+        for i in xrange(nelements):
+            edata = self.data[n:n+44]
 
-            out = unpack(format1 + allFormat, eData)
+            out = unpack(format1 + allFormat, edata)
             if self.make_op2_debug:
                 self.op2_debug.write('OEF_Plate2-%s - %s\n' % (self.element_type, str(out)))
             (eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
             #term= 'CEN\'
             #print "eType=%s" %(eType)
-
             eid2 = extract(eid, dt)
-
             dataIn = [term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             self.obj.addNewElement(eid2, dt, dataIn)
-
-            for i in xrange(nNodes - 1):
-                eData = self.data[0:36]
-                self.data = self.data[36:]
-                out = unpack(allFormat, eData)
+            n += 44
+            for i in xrange(nnodes):
+                edata = self.data[n:n+36]
+                out = unpack(allFormat, edata)
                 if self.make_op2_debug:
                     self.op2_debug.write('%s\n' % (str(out)))
                 #(nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty) = out
                 #dataIn = [nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty]
                 #print "***%s    " %(self.get_element_type(self.element_type)),dataIn
-
                 self.obj.add(eid2, dt, out)
-                #print "len(data) = ",len(self.data)
-
+                n += 36
+        self.data = self.data[n:]
         #print self.plateForces2
+
+    def OEF_CompositePlate_95_96(self):
+        pass
 
     def OEF_ConeAx(self):  # 35-CCONEAX
         dt = self.nonlinear_factor
