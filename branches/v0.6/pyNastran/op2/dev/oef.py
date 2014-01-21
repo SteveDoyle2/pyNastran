@@ -1,4 +1,4 @@
-from struct import unpack
+from struct import Struct, unpack
 
 class OEF(object):
     def __init__(self):
@@ -220,7 +220,7 @@ class OEF(object):
         if self.debug4():
             self.binary_debug.write('  num_wide_real = %r\n' % num_wide_real)
             self.binary_debug.write('  num_wide_imag = %r\n' % num_wide_imag)
-        
+
 
         n = 0
         if self.element_type in []:
@@ -232,9 +232,10 @@ class OEF(object):
             format1 = b'iff' # 3
             ntotal = 12 # 3 * 4
             nelements = len(data) // ntotal
+            s = Struct(format1)
             for i in xrange(nelements):
                 edata = data[n:n+ntotal]
-                out = unpack(format1, edata)
+                out = s.unpack(edata)
                 (eid_device, axial, torque) = out
                 eid = (eid_device - self.device_code) // 10
                 if self.debug4():
@@ -251,7 +252,7 @@ class OEF(object):
             #2-CBEAM
             format1 = b'i'
             formatAll = b'i8f'  # 36
-            
+
             ntotal = 400  # 1+(10-1)*11=100 ->100*4 = 400
             nelements = len(data) // ntotal
             for i in xrange(nelements):
@@ -288,14 +289,14 @@ class OEF(object):
             # 12-CELAS2
             # 13-CELAS3
             format1 = b'if' # 2
-
+            s = Struct(format1)
             n = 0
             ntotal = 8  # 2*4
             nelements = len(data) // ntotal
             for i in xrange(nelements):
                 edata = data[n:n+8]
 
-                out = unpack(format1, edata)
+                out = s.unpack(edata)
                 if self.debug4():
                     self.binary_debug.write('OEF_Spring - %s\n' % (str(out)))
                 (eid_device, force) = out
@@ -310,18 +311,19 @@ class OEF(object):
         elif self.element_type in [34]:  # bars
             # 34-CBAR
             format1 = b'i8f'  # 9
+            s = Struct(format1)
             ntotal = 36  # 9*4
             n = 0
             nelements = len(data) // ntotal
             for i in xrange(nelements):
                 edata = data[n:n+36]
-            
-                out = unpack(format1, edata)
+
+                out = s.unpack(edata)
                 if self.debug4():
                     self.binary_debug.write('OEF_CBar - %s\n' % (str(out)))
                 (eid_device, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq) = out
                 eid = (eid_device - self.device_code) // 10
-            
+
                 dataIn = [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
                 #print "%s" %(self.get_element_type(self.element_type)),dataIn
                 #eid = self.obj.add_new_eid(out)
@@ -332,12 +334,13 @@ class OEF(object):
             # 33-CQUAD4
             # 74-CTRIA3
             format1 = b'i8f'
+            s = Struct(format1)
             ntotal = 36 # 9*4
             nelements = len(data) // ntotal
             for i in xrange(nelements):
                 edata = data[n:n+36]
 
-                out = unpack(format1, edata)
+                out = s.unpack(edata)
                 if self.debug4():
                     self.binary_debug.write('OEF_Plate-%s - %s\n' % (self.element_type, str(out)))
                 (eid_device, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
@@ -421,11 +424,12 @@ class OEF(object):
 
             eid_old = 0
             format1 = 'i8si4f4s' # 9
+            s = Struct(format1)
             for i in xrange(nelements):
                 if i % 10000 == 0:
                    print 'i = ', i
                 edata = data[n:n+ntotal]  # 4*9
-                out = unpack(format1, edata)
+                out = s.unpack(edata)
                 (eid_device, theory, lamid, failure_index_direct_stress, failure_mode_max_shear,
                          failure_index_interlaminar_shear, fmax, failure_flag) = out
                 eid = (eid_device - self.device_code) // 10
@@ -434,7 +438,7 @@ class OEF(object):
                         self.binary_debug.write('  ----------\n')
                         self.binary_debug.write('  eid = %i\n' % eid)
                     self.binary_debug.write('  C = [%s]\n' % ', '.join(['%r' % di for di in out]) )
-               
+
                 if eid > 0:
                     #print "eid =", eid
                     #self.obj.add_new_eid(eType, dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
@@ -448,8 +452,7 @@ class OEF(object):
             raise NotImplementedError('sort1 Type=%s num=%s' % (self.element_name, self.element_type))
         assert len(data) % ntotal == 0, '%s n=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data), ntotal)
         assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
-        
-        
+
+
     def read_oef2_4(self, data):
         pass
-        

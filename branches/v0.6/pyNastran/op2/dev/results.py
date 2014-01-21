@@ -1,4 +1,4 @@
-from struct import unpack
+from struct import Struct, unpack
 
 
 from pyNastran.op2.op2_helper import polar_to_real_imag
@@ -8,7 +8,7 @@ class Results(object):
     def __init__(self):
         self.element_mapper = {
             # rods
-            1: 'ROD',
+            1 : 'CROD',
             3 : 'CTUBE',
             10: 'CONROD',
 
@@ -19,48 +19,49 @@ class Results(object):
             11: 'CELAS1',
             12: 'CELAS2',
             13: 'CELAS3',
-            
+            14: 'CELAS4',
+
             # bar
             34 : 'CBAR',
-            
+
             # solids
-            39: 'TETRA',
-            67: 'HEXA',
-            68: 'PENTA',
-            
+            39: 'CTETRA',
+            67: 'CHEXA',
+            68: 'CPENTA',
+
             # triax
             53 : 'CTRIAX6',
 
             # centroidal plate
-            33: 'QUAD4', # 1 node
-            74: 'TRIA3', # 1 node
+            33: 'CQUAD4-centroidal', # 1 node
+            74: 'CTRIA3-centroidal', # 1 node
 
             # bilinear plate
-            144: 'QUAD144', # 5 nodes
+            144: 'CQUAD4-bilinear', # 5 nodes
 
             # composite plates
-            95 : 'CQUAD4',
-            96 : 'CQUAD8',
-            97 : 'CTRIA3',
-            98 : 'CTRIA6',
+            95 : 'CQUAD4-composite',
+            96 : 'CQUAD8-composite',
+            97 : 'CTRIA3-composite',
+            98 : 'CTRIA6-composite',
 
             # unorganized
             None: '',
             0: 'GRID',
-            1: 'ROD',
-            2: 'BEAM',
-            3: 'TUBE',
+            #1: 'ROD',
+            #2: 'BEAM',
+            #3: 'TUBE',
             4: 'SHEAR',
             5: 'FORMON12',
             6: 'FORCE',
             7: 'PLOAD4',
             8: 'PLOADX1',
             9: 'PLOAD/PLOAD2',
-            10: 'CONROD',
-            11: 'ELAS1',
-            12: 'ELAS2',
-            13: 'ELAS3',
-            14: 'ELAS4',
+            #10: 'CONROD',
+            #11: 'ELAS1',
+            #12: 'ELAS2',
+            #13: 'ELAS3',
+            #14: 'ELAS4',
             15: 'AEROT3',
             16: 'AEROBEAM',
             17: None,
@@ -79,13 +80,13 @@ class Results(object):
             30: 'CONM2',
             31: 'PLOTEL',
             32: None,
-            33: 'QUAD4',
-            34: 'BAR',
+            #33: 'QUAD4',
+            #34: 'BAR',
             35: 'CON',
             36: None,
             37: None,
             38: 'GAP',
-            39: 'TETRA',
+            #39: 'TETRA',
             40: 'BUS1D',
             41: None,
             42: None,
@@ -99,7 +100,7 @@ class Results(object):
             50: 'SLOT3',
             51: 'SLOT4',
             52: 'HBDY',
-            53: 'TRIAX6',
+            #53: 'TRIAX6',
             54: None,
             55: 'DUM3',
             56: 'DUM4',
@@ -113,14 +114,14 @@ class Results(object):
             64: 'QUAD8',
             65: None,
             66: None,
-            67: 'HEXA',
-            68: 'PENTA',
+            #67: 'HEXA',
+            #68: 'PENTA',
             69: 'BEND',
             70: 'TRIAR',
             71: None,
             72: 'AEROQ4',
             73: None,
-            74: 'TRIA3',
+            #74: 'TRIA3',
             75: 'TRIA6',
             76: 'HEXPR',
             77: 'PENPR',
@@ -141,10 +142,10 @@ class Results(object):
             92: 'CONRODNL',
             93: 'HEXANL',
             94: 'BEAMNL',
-            95: 'QUAD4LC',
-            96: 'QUAD8LC',
-            97: 'TRIA3LC',
-            98: 'TRIA6LC',
+            #95: 'QUAD4LC',
+            #96: 'QUAD8LC',
+            #97: 'TRIA3LC',
+            #98: 'TRIA6LC',
             99: None,
             100: 'BARS',
             101: 'AABSF',
@@ -190,7 +191,7 @@ class Results(object):
             141: 'HEXAP',
             142: 'PENTAP',
             143: 'TETRAP',
-            144: 'QUAD144',
+            #144: 'QUAD144',
             145: 'VUHEXA',
             146: 'VUPENTA',
             147: 'VUTETRA',
@@ -293,7 +294,7 @@ class Results(object):
 
     def read_title(self, data):
         assert len(data) == 584, len(data)
-        Title, subtitle, label = unpack('128s128s128s', data[200:])  # titleSubtitleLabel
+        Title, subtitle, label = unpack(b'128s128s128s', data[200:])  # titleSubtitleLabel
 
         self.Title = Title.strip()
         #: the subtitle of the subcase
@@ -335,7 +336,7 @@ class Results(object):
         else:
             raise NotImplementedError()
 
-    def read_oug_table(self, data, result_name, real_obj, complex_obj, 
+    def read_oug_table(self, data, result_name, real_obj, complex_obj,
                        thermal_real_obj, node_elem):
         assert real_obj is None
         assert complex_obj is None
@@ -358,7 +359,7 @@ class Results(object):
             self.not_implemented_or_skip(msg)
 
     def read_real_table(self, data, result_name, flag):
-        return
+        #return
         if self.debug:
             self.binary_debug.write('  read_real_table\n')
         assert flag in ['node', 'elem'], flag
@@ -369,9 +370,10 @@ class Results(object):
         assert len(data) % ntotal == 0
 
         n = 0
+        s = Struct(format1)
         for inode in xrange(nnodes):
-            eData = data[n:n+32]
-            out = unpack(format1, eData)
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
             (eid_device, gridType, tx, ty, tz, rx, ry, rz) = out
             eid = (eid_device - self.device_code) // 10
             #print "eType=%s" %(eType)
@@ -381,7 +383,7 @@ class Results(object):
             n += ntotal
 
     def read_complex_table(self, data, result_name, flag):
-        return
+        #return
         if self.debug:
             self.binary_debug.write('  read_real_table\n')
         assert flag in ['node', 'elem'], flag
@@ -392,10 +394,11 @@ class Results(object):
         n = 0
         ntotal = 56  # 14 * 4
         nnodes = len(data) // ntotal
+        s = Struct(format1)
         for inode in xrange(nnodes):
             edata = data[n:n+ntotal]
 
-            out = unpack(format1, edata)
+            out = s.unpack(edata)
             if self.debug:
                 self.binary_debug.write('read_complex_table - %s\n' % str(out))
             (eid_device, gridType, txr, tyr, tzr, rxr, ryr, rzr,

@@ -34,7 +34,7 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
 
         OEF.__init__(self)
         OES.__init__(self)
-        
+
         OPG.__init__(self)
         OQG.__init__(self)
         OUG.__init__(self)
@@ -122,16 +122,16 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
                                   'GEOM1N',
                                   'GEOM1OLD',
 
-                                  'EPT', 
+                                  'EPT',
                                   'MPT', 'MPTS',
 
                                   'PVT0', 'CASECC',
                                   'EDOM', 'BGPDT', 'OGPFB1',
-                                  'DYNAMIC', 'DYNAMICS', 
-                                  'EQEXIN', 'EQEXINS', 
+                                  'DYNAMIC', 'DYNAMICS',
+                                  'EQEXIN', 'EQEXINS',
                                   'GPDT', 'ERRORN',
                                   'DESTAB', 'R1TABRG', 'HISADD', 'GPL',
-                                    
+
                                    # eigenvalues
                                    'BLAMA', 'LAMA',
                                    # strain energy
@@ -139,7 +139,7 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
                                    # other
                                    'CONTACT', 'VIEWTB', 'OMM2',
                                    # grid point weight
-                                   'OGPWG', 
+                                   'OGPWG',
                                   ]:
                     self._read_geom_table()  # DIT (agard)
                 elif table_name in ['DIT']:
@@ -148,7 +148,7 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
                     self._read_pcompts()
                 elif table_name in [
                                     # stress
-                                    'OES1X1', 'OES1', 'OES1X', 'OES1C', 'OESCP', 
+                                    'OES1X1', 'OES1', 'OES1X', 'OES1C', 'OESCP',
                                     'OESNLXR','OESNLXD','OESNLBR','OESTRCP',
                                     'OESNL1X','OESRT',
                                     # strain
@@ -163,7 +163,7 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
                                     'OUG1', 'OUGV1', 'BOUGV1',
                                     # applied loads
                                     'OPG1',#'OPG2',
-                                    
+
                                     'OUPV1', 'OGS1','OPNL1',
                                     # other
                                     ]:
@@ -191,7 +191,7 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
 
         self.read_markers([-2, 1, 0])
         data = self._read_record()
-        table_name, = unpack('8s', data)
+        table_name, = unpack(b'8s', data)
 
         self.read_markers([-3, 1, 0])
         data = self._read_record()
@@ -210,7 +210,7 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
 
         self.read_markers([-2, 1, 0])
         data = self._read_record()
-        table_name, = unpack('8s', data)
+        table_name, = unpack(b'8s', data)
         #print "table_name = %r" % table_name
 
         self.read_markers([-3, 1, 0])
@@ -227,7 +227,7 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
         ni = self.n
         if stop_on_failure:
             data = self._read_record(debug=False)
-            table_name, = unpack('8s', data)
+            table_name, = unpack(b'8s', data)
             if self.debug:
                 self.binary_debug.write('marker = [4, 2, 4]\n')
                 self.binary_debug.write('table_header = [8, %r, 8]\n\n' % table_name)
@@ -235,7 +235,7 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
         else:
             try:
                 data = self._read_record()
-                table_name, = unpack('8s', data)
+                table_name, = unpack(b'8s', data)
                 table_name = table_name.strip()
             except:
                 # we're done reading
@@ -276,7 +276,7 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
 
         self.read_markers([-2, 1, 0])
         data = self._read_record()
-        table_name, = unpack('8s', data)
+        table_name, = unpack(b'8s', data)
         self._read_subtables()
 
     def _read_results_table(self):
@@ -289,12 +289,12 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         if len(data) == 8:
-            subtable_name = unpack('8s', data)
+            subtable_name = unpack(b'8s', data)
             if self.debug:
                 self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
         elif len(data) == 28:
-            subtable_name, month, day, year, zero, one = unpack('8s5i', data)
+            subtable_name, month, day, year, zero, one = unpack(b'8s5i', data)
             if self.debug:
                 self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (subtable_name, month, day, year, zero, one))
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
@@ -316,7 +316,7 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
         if self.debug:
             self.binary_debug.write('  Table3\n')
         if self.table_name in [# stress
-                               'OES1X1', 'OES1', 'OES1X', 'OES1C', 'OESCP', 
+                               'OES1X1', 'OES1', 'OES1X', 'OES1C', 'OESCP',
                                'OESNLXR','OESNLXD','OESNLBR','OESTRCP',
                                'OESNL1X','OESRT',
                                # strain
@@ -334,19 +334,19 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
         elif self.table_name in ['OGPWG',]:
             self._read_ogpwg_3(data)
         elif self.table_name in  ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4',
-                                  'GEOM1S', 
+                                  'GEOM1S',
                                   'GEOM1OLD',
 
-                                  'EPT', 
-                                  'MPT', 'MPTS', 
+                                  'EPT',
+                                  'MPT', 'MPTS',
 
                                   'PVT0', 'CASECC',
                                   'EDOM', 'BGPDT', 'OGPFB1',
-                                  'DYNAMIC', 'DYNAMICS', 
-                                  'EQEXIN', 'EQEXINS', 
+                                  'DYNAMIC', 'DYNAMICS',
+                                  'EQEXIN', 'EQEXINS',
                                   'GPDT', 'ERRORN',
                                   'DESTAB', 'R1TABRG', 'HISADD', 'GPL',
-                                   
+
                                    # eigenvalues
                                    'BLAMA', 'LAMA',
                                    # strain energy
@@ -363,7 +363,7 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
             self.binary_debug.write('  Table4\n')
         assert len(data) > 0
         if self.table_name in [# stress
-                               'OES1X1', 'OES1', 'OES1X', 'OES1C', 'OESCP', 
+                               'OES1X1', 'OES1', 'OES1X', 'OES1C', 'OESCP',
                                'OESNLXR','OESNLXD','OESNLBR','OESTRCP',
                                'OESNL1X','OESRT',
                                # strain
@@ -389,11 +389,11 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
 
                                   'PVT0', 'CASECC',
                                   'EDOM', 'BGPDT', 'OGPFB1',
-                                  'DYNAMIC', 'DYNAMICS', 
-                                  'EQEXIN', 'EQEXINS', 
+                                  'DYNAMIC', 'DYNAMICS',
+                                  'EQEXIN', 'EQEXINS',
                                   'GPDT', 'ERRORN',
                                   'DESTAB', 'R1TABRG', 'HISADD', 'GPL',
- 
+
                                    # eigenvalues
                                    'BLAMA', 'LAMA',
                                    # strain energy

@@ -1,4 +1,4 @@
-from struct import unpack
+from struct import Struct, unpack
 
 
 class OES(object):
@@ -137,9 +137,11 @@ class OES(object):
                 self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
                 self.binary_debug.write('  #elementi = [eid_device, axial, axial_margin, torsion, torsion_margin]\n')
                 self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+            format1 = b'i4f'
+            s = Struct(format1)
             for i in xrange(nelements):
                 edata = data[n:n+ntotal]
-                out = unpack('i4f', edata)
+                out = s.unpack(edata)
                 (eid_device, axial, axial_margin, torsion, torsion_margin) = out
                 eid = (eid_device - self.device_code) // 10
                 if self.debug4():
@@ -162,9 +164,10 @@ class OES(object):
                 #return (40, 'ifffffffff')
 
             nelements = len(data) // ntotal
+            s = Struct(b'i')
             for i in xrange(nelements):
                 edata = data[n:n+4]
-                eid, = unpack('i', edata)
+                eid, = s.unpack(edata)
                 n += ntotal
 
         elif self.element_type == 34: # CBAR
@@ -176,9 +179,11 @@ class OES(object):
                 self.binary_debug.write('  #elementi = [eid_device, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,\n')
                 self.binary_debug.write('                           s1b, s2b, s3b, s4b, smaxb, sminb,        MSc]\n')
                 self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+
+            s = Struct(b'i15f')
             for i in xrange(nelements):
                 edata = data[n:n+ntotal]
-                out = unpack('i15f', edata)
+                out = s.unpack(edata)
                 (eid_device, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                              s1b, s2b, s3b, s4b, smaxb, sminb, MSc) = out
                 eid = (eid_device - self.device_code) // 10
@@ -192,9 +197,10 @@ class OES(object):
         elif self.element_type in [11, 12, 13]: # CELAS1, CELAS2, CELAS3
             ntotal = 2 * 4
             nelements = len(data) // ntotal
+            s = Struct(b'if')
             for i in xrange(nelements):
                 edata = data[n:n+ntotal]
-                out = unpack('if', edata)
+                out = s.unpack(edata)
                 (eid_device, ox) = out
                 eid = (eid_device - self.device_code) // 10
                 if self.debug4():
@@ -219,16 +225,17 @@ class OES(object):
             #self.show_data(data[:ntotal])
             nelements = len(data) // ntotal
             #print "nelements =", nelements
+            s = Struct(b'i')
             for i in xrange(nelements):
                 edata = data[n:n+ntotal]
-                eid_device, = unpack('i', data[n:n+4])
+                eid_device, = s.unpack(data[n:n+4])
                 eid = (eid_device - self.device_code) // 10
 
                 if self.debug4():
                     self.binary_debug.write('  ----------\n')
                     self.binary_debug.write('  eid = %i\n' % eid)
                     #self.binary_debug.write('  C = [%s]\n' % ', '.join(['%r' % di for di in out]) )
-                #out = unpack('ii4si', edata)
+                #out = unpack(b'ii4si', edata)
                 n += ntotal
                 #print "eid =", eid
 
@@ -237,11 +244,12 @@ class OES(object):
         elif self.element_type in [33]: # QUAD4-centroidal
             return
             ntotal = 68  # 4*17
-            format1 = 'i16f'
+            format1 = b'i16f'
+            s = Struct(format1)
             nelements = len(data) // ntotal
             for i in xrange(nelements):
                 edata = data[n:n+ntotal]
-                out = unpack(format1, edata)
+                out = s.unpack(edata)
                 #if self.make_op2_debug:
                     #self.op2_debug.write('CQUAD4-33A - %s\n' % (str(out)))
 
@@ -267,8 +275,9 @@ class OES(object):
         elif self.element_type in [74]: # TRIA3
             return
             ntotal = 68  # 4*17
-            format1 = 'i16f'
+            #format1 = 'i16f'
             nelements = len(data) // ntotal
+            s = Struct(b'i16f')
             if self.debug:
                 self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
                 self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
@@ -278,7 +287,7 @@ class OES(object):
 
             for i in xrange(nelements):
                 edata = data[n:n + ntotal]
-                out = unpack(format1, edata)
+                out = s.unpack(edata)
                 #if self.make_op2_debug:
                     #self.op2_debug.write('CTRIA3-74 - %s\n' % (str(out)))
 
@@ -300,9 +309,12 @@ class OES(object):
                 raise NotImplementedError('sort1 Type=%s num=%s' % (self.element_name, self.element_type))
             ntotal = 4 * (2 + 17 * (nnodes + 1))
             assert ntotal == 348, ntotal
-            nelements = len(data) // ntotal
             center_format = 'i4si16f'
             node_format = 'i16f'
+            cs = Struct(center_format)
+            ns = Struct(node_format)
+
+            nelements = len(data) // ntotal
             if self.debug:
                 self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
                 self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
@@ -315,9 +327,8 @@ class OES(object):
 
             for i in xrange(nelements):
                 edata = data[n:n+76]
-                #eid_device, = unpack('i', data[n:n+4])
 
-                out = unpack(center_format, edata)  # len=17*4
+                out = cs.unpack(edata)  # len=17*4
                 ## j is the number of nodes, so CQUAD4 -> 4, but we don't need to save it...
                 (eid_device, j, grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
                                       fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
@@ -335,7 +346,7 @@ class OES(object):
                 #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"        % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
                 n += 76
                 for inode in range(nnodes):
-                    out = unpack(node_format, data[n:n + 68])
+                    out = ns.unpack(data[n:n + 68])
                     if self.debug4():
                         d = tuple([grid,
                                   fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
@@ -358,6 +369,7 @@ class OES(object):
             ntotal = 44
             nelements = len(data) // ntotal
             format1 = 'ii9f'
+            s = Struct(format1)
             if self.debug:
                 self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
                 self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
@@ -372,7 +384,7 @@ class OES(object):
                 if i % 10000 == 0:
                     print 'i = ', i
                 edata = data[n:n+44]  # 4*11
-                out = unpack(format1, edata)
+                out = s.unpack(edata)
                 (eid_device, iLayer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm) = out
                 eid = (eid_device - self.device_code) // 10
 
@@ -401,8 +413,10 @@ class OES(object):
             ntotal = 132  # (1+8*4)*4 = 33*4 = 132
             nelements = len(data) // ntotal
             n = 0
+            s = Struct(format1)
+            ns = Struct(b'i7f')
             for i in xrange(nelements):
-                out = unpack(format1, data[n:n + 36])
+                out = s.unpack(data[n:n + 36])
                 (eid_device, loc, rs, azs, As, ss, maxp, tmax, octs) = out
                 if self.debug4():
                     self.binary_debug.write('CTRIAX6-53A - %s\n' % (str(out)))
@@ -411,7 +425,7 @@ class OES(object):
                 #self.obj.add_new_eid(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
                 n += 36
                 for i in xrange(3):
-                    out = unpack(b'i7f', data[n:n + 32])
+                    out = ns.unpack(data[n:n + 32])
                     (loc, rs, azs, As, ss, maxp, tmax, octs) = out
                     if self.debug4():
                         self.binary_debug.write('CTRIAX6-53B - %s\n' % (str(out)))
@@ -427,9 +441,10 @@ class OES(object):
 
             n = 0
             nelements = len(data) // ntotal
+            s = Struct(format1)
             for i in xrange(nelements):
                 edata = data[n:n + ntotal]
-                out = unpack(format1, edata)  # num_wide=7
+                out = s.unpack(edata)  # num_wide=7
                 if self.debug4():
                     self.binary_debug.write('CBUSH-102 - %s\n' % str(out))
 
@@ -451,6 +466,7 @@ class OES(object):
                                    % (self.element_type))
 
             format1 = b'i16f'  # 1+16 = 17 * 4 = 68
+            s = Struct(format1)
             n = 0
             nelements = len(data) // ntotal
             for i in xrange(nelements):
@@ -461,11 +477,11 @@ class OES(object):
 
                 edata = data[n:n+68]  # 4*17
                 n += 68
-                out = unpack(format1, edata)  # len=17*4
+                out = s.unpack(edata)  # len=17*4
                 if self.debug4():
                     self.binary_debug.write('CQUADR-82A - %s\n' % str(out))
                 (grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-                 fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
+                       fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
                 grid = 'C'
                 #self.obj.add_new_eid(eType, eid, grid, fd1, sx1, sy1,
                 #                   txy1, angle1, major1, minor1, vm1)
@@ -474,11 +490,11 @@ class OES(object):
 
                 for nodeID in xrange(nNodes):  # nodes pts
                     edata = data[n:n+68]
-                    out = unpack(format1, edata)
+                    out = s.unpack(edata)
                     if self.debug4():
                         self.binary_debug.write('CQUADR-82B - %s\n' % str(out))
                     (grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-                     fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
+                           fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
 
                     #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
                     #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"          % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
@@ -496,9 +512,10 @@ class OES(object):
             n = 0
             ntotal = 28
             nelements = len(data) // ntotal  # len(format1)*4 = 7*4 = 28
+            s = Struct(format1)
             for i in xrange(nelements):
                 edata = data[n:n+ntotal]
-                out = unpack(format1, edata)
+                out = s.unpack(edata)
 
                 (eid_device, axial, equivStress, totalStrain, effPlasticCreepStrain,
                     effCreepStrain, linearTorsionalStresss) = out
@@ -518,9 +535,10 @@ class OES(object):
             ntotal = 12  # 4*3
             format1 = b'i2f'
             nelements = len(data) // ntotal
+            s = Struct(format1)
             for i in xrange(nelements):
                 edata = data[0:ntotal]
-                out = unpack(format1, edata)  # num_wide=3
+                out = s.unpack(edata)  # num_wide=3
                 (eid_device, force, stress) = out
                 eid = (eid_device - self.device_code) // 10
                 if self.debug4():

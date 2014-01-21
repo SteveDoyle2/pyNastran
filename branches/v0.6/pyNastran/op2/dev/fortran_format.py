@@ -4,7 +4,7 @@ class FortranFormat(object):
     def __init__(self):
         self.n = 0
         self.f = None
-        
+
     def show(self, n):
         assert self.n == self.f.tell()
         nints = n // 4
@@ -15,23 +15,23 @@ class FortranFormat(object):
     def show_data(self, data):
         n = len(data)
         nints = n // 4
-        strings = unpack('%is' % n, data)
-        ints    = unpack('%ii' % nints, data)
-        floats  = unpack('%if' % nints, data)
+        strings = unpack(b'%is' % n, data)
+        ints    = unpack(b'%ii' % nints, data)
+        floats  = unpack(b'%if' % nints, data)
         print "strings =", strings
         print "ints    =", ints, '\n'
         print "floats  =", floats
 
     def skip_block(self):
         data = self.f.read(4)
-        ndata, = unpack('i', data)
+        ndata, = unpack(b'i', data)
         self.n += 8 + ndata
         self.goto(self.n)
         return None
 
     def read_block(self):
         data = self.f.read(4)
-        ndata, = unpack('i', data)
+        ndata, = unpack(b'i', data)
 
         data_out = self.f.read(ndata)
         data = self.f.read(4)
@@ -41,7 +41,7 @@ class FortranFormat(object):
     def read_markers(self, markers):
         for i, marker in enumerate(markers):
             data = self.read_block()
-            imarker, = unpack('i', data)
+            imarker, = unpack(b'i', data)
             assert marker == imarker, 'marker=%r imarker=%r; markers=%s i=%s' % (marker, imarker, markers, i)
 
     def get_nmarkers(self, n, rewind=True):
@@ -49,7 +49,7 @@ class FortranFormat(object):
         markers = []
         for i in xrange(n):
             data = self.read_block()
-            marker, = unpack('i', data)
+            marker, = unpack(b'i', data)
             markers.append(marker)
         if rewind:
             self.n = ni
