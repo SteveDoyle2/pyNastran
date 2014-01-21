@@ -1,8 +1,6 @@
 from struct import unpack
 from struct import error as StructError
 
-from numpy import array
-
 from pyNastran.f06.f06 import FatalError
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 
@@ -25,7 +23,10 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
         pass
     def write_f06(self, *args, **kwargs):
         pass
-    def __init__(self, make_geom=False, debug=False, log=None):
+    def __init__(self, op2_filename, make_geom=False, debug=False, log=None):
+        if op2_filename:
+            self.op2_filename = op2_filename
+
         #self.tables_to_read = []
 
         #BDF.__init__(self, debug=debug, log=log)
@@ -69,11 +70,12 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
             return True
         return False
 
-    def read_op2(self, op2_filename):
-        self.op2_filename = op2_filename
+    def read_op2(self, op2_filename=None):
+        if op2_filename:
+            self.op2_filename = op2_filename
         self.n = 0
         self.table_name = None
-        self.f = open(op2_filename, 'rb')
+        self.f = open(self.op2_filename, 'rb')
 
         markers = self.get_nmarkers(1, rewind=True)
         if markers == [3,]:  # PARAM, POST, -2
@@ -97,8 +99,8 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
         keep_going = True
         table_names = []
         while table_name is not None:
-            print "----------------------------------"
-            print "**", table_name
+            #print "----------------------------------"
+            #print "**", table_name
             table_names.append(table_name)
 
             if self.debug:
@@ -117,14 +119,27 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
             else:
                 self.table_name = table_name
                 if table_name in ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4',
-                                  'EPT', 'MPT', 'MPTS', 'PVT0', 'CASECC',
-                                  'EDOM', 'BGPDT', 'EQEXINS', 'OGPWG', 'OGPFB1',
-                                  'DYNAMICS', 'DESTAB', 'R1TABRG', 'HISADD', 'GPL',
-                                  'GPDT', 'LAMA', 'EQEXIN',
-                                  'CONTACT',
+                                  'GEOM1N',
+                                  'GEOM1OLD',
 
-                                    # strain energy
-                                    'ONRGY1',
+                                  'EPT', 
+                                  'MPT', 'MPTS',
+
+                                  'PVT0', 'CASECC',
+                                  'EDOM', 'BGPDT', 'OGPFB1',
+                                  'DYNAMIC', 'DYNAMICS', 
+                                  'EQEXIN', 'EQEXINS', 
+                                  'GPDT', 'ERRORN',
+                                  'DESTAB', 'R1TABRG', 'HISADD', 'GPL',
+                                    
+                                   # eigenvalues
+                                   'BLAMA', 'LAMA',
+                                   # strain energy
+                                   'ONRGY1',
+                                   # other
+                                   'CONTACT', 'VIEWTB', 'OMM2',
+                                   # grid point weight
+                                   'OGPWG', 
                                   ]:
                     self._read_geom_table()  # DIT (agard)
                 elif table_name in ['DIT']:
@@ -133,7 +148,9 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
                     self._read_pcompts()
                 elif table_name in [
                                     # stress
-                                    'OES1X1', 'OES1', 'OES1C', 'OESNLXR',
+                                    'OES1X1', 'OES1', 'OES1X', 'OES1C', 'OESCP', 
+                                    'OESNLXR','OESNLXD','OESNLBR','OESTRCP',
+                                    'OESNL1X','OESRT',
                                     # strain
                                     'OSTR1X', 'OSTR1C',
                                     # forces
@@ -145,7 +162,9 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
                                     # displacement/velocity/acceleration/eigenvector
                                     'OUG1', 'OUGV1', 'BOUGV1',
                                     # applied loads
-                                    'OPG1','OPG2',
+                                    'OPG1',#'OPG2',
+                                    
+                                    'OUPV1', 'OGS1','OPNL1',
                                     # other
                                     ]:
                     self._read_results_table()
@@ -153,16 +172,16 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
                     raise NotImplementedError('%r' % table_name)
 
             table_name = self.read_table_name(rewind=True, stop_on_failure=False)
-            if table_name is None:
-                self.show(100)
+            #if table_name is None:
+                #self.show(100)
 
         if self.debug:
             self.binary_debug.write('-' * 80 + '\n')
             self.binary_debug.write('f.tell()=%s\ndone...\n' % self.f.tell())
 
         #self.show_data(data)
-        print "----------------"
-        print "done..."
+        #print "----------------"
+        #print "done..."
         return table_names
 
     def _read_dit(self):
@@ -269,13 +288,20 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
 
         self.read_markers([-2, 1, 0])
         data = self._read_record()
+        if len(data) == 8:
+            subtable_name = unpack('8s', data)
+            if self.debug:
+                self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
+                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+        elif len(data) == 28:
+            subtable_name, month, day, year, zero, one = unpack('8s5i', data)
+            if self.debug:
+                self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (subtable_name, month, day, year, zero, one))
+                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+            self._print_month(month, day, year, zero, one)
+        else:
+            raise NotImplementedError(self.show_data(data))
 
-        subtable_name, month, day, year, zero, one = unpack('8s5i', data)
-
-        if self.debug:
-            self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (subtable_name, month, day, year, zero, one))
-            self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
-        self._print_month(month, day, year, zero, one)
         self._read_subtables()
 
     def _print_month(self, month, day, year, zero, one):
@@ -290,7 +316,9 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
         if self.debug:
             self.binary_debug.write('  Table3\n')
         if self.table_name in [# stress
-                               'OES1X1', 'OES1', 'OES1C', 'OESNLXR',
+                               'OES1X1', 'OES1', 'OES1X', 'OES1C', 'OESCP', 
+                               'OESNLXR','OESNLXD','OESNLBR','OESTRCP',
+                               'OESNL1X','OESRT',
                                # strain
                                'OSTR1X', 'OSTR1C',]:
             self.read_oes1_3(data)
@@ -305,13 +333,27 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
             self.read_oef1_3(data)
         elif self.table_name in ['OGPWG',]:
             self._read_ogpwg_3(data)
-        elif self.table_name in ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4',
-                                  'EPT', 'MPT', 'MPTS', 'PVT0', 'CASECC',
-                                  'EDOM', 'BGPDT', 'EQEXINS', 'OGPFB1',
-                                  'DYNAMICS', 'DESTAB', 'R1TABRG', 'HISADD', 'GPL',
-                                  'GPDT', 'LAMA', 'EQEXIN',
-                                  'CONTACT','ONRGY1',
-                                  ]:
+        elif self.table_name in  ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4',
+                                  'GEOM1S', 
+                                  'GEOM1OLD',
+
+                                  'EPT', 
+                                  'MPT', 'MPTS', 
+
+                                  'PVT0', 'CASECC',
+                                  'EDOM', 'BGPDT', 'OGPFB1',
+                                  'DYNAMIC', 'DYNAMICS', 
+                                  'EQEXIN', 'EQEXINS', 
+                                  'GPDT', 'ERRORN',
+                                  'DESTAB', 'R1TABRG', 'HISADD', 'GPL',
+                                   
+                                   # eigenvalues
+                                   'BLAMA', 'LAMA',
+                                   # strain energy
+                                   'ONRGY1',
+                                   # other
+                                   'CONTACT', 'VIEWTB', 'OMM2',
+                                 ]:
             pass
         else:
             raise NotImplementedError(self.table_name)
@@ -319,8 +361,11 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
     def _parse_results_table4(self, data):
         if self.debug:
             self.binary_debug.write('  Table4\n')
+        assert len(data) > 0
         if self.table_name in [# stress
-                               'OES1X1', 'OES1', 'OES1C', 'OESNLXR',
+                               'OES1X1', 'OES1', 'OES1X', 'OES1C', 'OESCP', 
+                               'OESNLXR','OESNLXD','OESNLBR','OESTRCP',
+                               'OESNL1X','OESRT',
                                # strain
                                'OSTR1X', 'OSTR1C',]:
             self.read_oes1_4(data)
@@ -335,13 +380,27 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
             self.read_oef1_4(data)
         elif self.table_name in ['OGPWG',]:
             self._read_ogpwg_4(data)
-        elif self.table_name in ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4',
-                                  'EPT', 'MPT', 'MPTS', 'PVT0', 'CASECC',
-                                  'EDOM', 'BGPDT', 'EQEXINS', 'OGPFB1',
-                                  'DYNAMICS', 'DESTAB', 'R1TABRG', 'HISADD', 'GPL',
-                                  'GPDT', 'LAMA', 'EQEXIN',
-                                  'CONTACT','ONRGY1',
-                                  ]:
+        elif self.table_name in  ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4',
+                                  'GEOM1S'
+                                  'GEOM1OLD',
+
+                                  'EPT',
+                                  'MPT', 'MPTS',
+
+                                  'PVT0', 'CASECC',
+                                  'EDOM', 'BGPDT', 'OGPFB1',
+                                  'DYNAMIC', 'DYNAMICS', 
+                                  'EQEXIN', 'EQEXINS', 
+                                  'GPDT', 'ERRORN',
+                                  'DESTAB', 'R1TABRG', 'HISADD', 'GPL',
+ 
+                                   # eigenvalues
+                                   'BLAMA', 'LAMA',
+                                   # strain energy
+                                   'ONRGY1',
+                                   # other
+                                   'CONTACT', 'VIEWTB', 'OMM2',
+                                 ]:
             pass
         else:
             raise NotImplementedError(self.table_name)
@@ -457,9 +516,9 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
 
 
 if __name__ == '__main__':
-    o = OP2()
     import sys
-    print o.read_op2(sys.argv[1])
+    o = OP2(sys.argv[1])
+    o.read_op2(sys.argv[1])
 
 
 

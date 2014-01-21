@@ -1,6 +1,9 @@
 from struct import unpack
 
 
+from numpy import array
+
+
 class OGPWG(object):
     def __init__(self):
         pass

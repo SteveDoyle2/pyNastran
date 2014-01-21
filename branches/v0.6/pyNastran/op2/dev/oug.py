@@ -104,6 +104,10 @@ class OUG(object):
             self.read_displacement(data)
         elif self.table_code == 7:
             self.read_eigenvector(data)
+        elif self.table_code == 10:
+            self.read_velocity(data)
+        elif self.table_code == 11:
+            self.read_acceleration(data)
         else:
             self.not_implemented_or_skip('bad OUG table')
 
@@ -111,9 +115,11 @@ class OUG(object):
         result_name = 'displacements'
         #real_obj = DisplacementObject
         #complex_obj = ComplexDisplacementObject
+        #thermal_real_obj = TemperatureObject
         real_obj = None
         complex_obj = None
-        self.read_oug_table(data, result_name, real_obj, complex_obj, 'node')
+        thermal_real_obj = None
+        self.read_oug_table(data, result_name, real_obj, complex_obj, thermal_real_obj, 'node')
 
     def read_velocity(self, data):
         result_name = 'velocity'
@@ -121,7 +127,8 @@ class OUG(object):
         #complex_obj = ComplexVelocityObject
         real_obj = None
         complex_obj = None
-        self.read_oug_table(data, result_name, real_obj, complex_obj, 'node')
+        thermal_real_obj = None
+        self.read_oug_table(data, result_name, real_obj, complex_obj, thermal_real_obj, 'node')
 
     def read_acceleration(self, data):
         result_name = 'acceleration'
@@ -129,7 +136,8 @@ class OUG(object):
         #complex_obj = ComplexAccelerationObject
         real_obj = None
         complex_obj = None
-        self.read_oug_table(data, result_name, real_obj, complex_obj, 'node')
+        thermal_real_obj = None
+        self.read_oug_table(data, result_name, real_obj, complex_obj, thermal_real_obj, 'node')
 
     def read_eigenvector(self, data):
         result_name = 'eigenvectors'
@@ -137,4 +145,5 @@ class OUG(object):
         #complex_obj = ComplexEigenVectorObject
         real_obj = None
         complex_obj = None
-        self.read_oug_table(data, result_name, real_obj, complex_obj, 'node')
+        thermal_real_obj = None
+        self.read_oug_table(data, result_name, real_obj, complex_obj, thermal_real_obj, 'node')

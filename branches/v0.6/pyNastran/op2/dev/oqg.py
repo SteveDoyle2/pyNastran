@@ -1,7 +1,5 @@
 from struct import unpack
 
-from pyNastran.op2.op2_helper import polar_to_real_imag
-
 
 class OQG(object):
     def __init__(self):
@@ -124,9 +122,8 @@ class OQG(object):
         #complex_obj = ComplexSPCForcesObject
         real_obj = None
         complex_obj = None
-        self.read_table(data, result_name, 'node')
-        self.read_oug_table(data, result_name, real_obj, complex_obj, 'node')
-        aaa
+        thermal_real_obj = None
+        self.read_oug_table(data, result_name, real_obj, complex_obj, thermal_real_obj, 'node')
 
     def read_mpc_forces(self, data):
         result_name = 'MPC_forces'
@@ -134,6 +131,5 @@ class OQG(object):
         #complex_obj = ComplexMPCForcesObject
         real_obj = None
         complex_obj = None
-        self.read_table(data, result_name, 'node')
-        self.read_oug_table(data, result_name, real_obj, complex_obj, 'node')
-        bbb
+        thermal_real_obj = None
+        self.read_oug_table(data, result_name, real_obj, complex_obj, thermal_real_obj, 'node')

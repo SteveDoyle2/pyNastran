@@ -129,4 +129,5 @@ class OPG(object):
         #complex_obj = ComplexLoadVectorObject
         real_obj = None
         complex_obj = None
-        self.read_oug_table(data, result_name, real_obj, complex_obj, 'node')
+        thermal_real_obj = None
+        self.read_oug_table(data, result_name, real_obj, complex_obj, thermal_real_obj, 'node')

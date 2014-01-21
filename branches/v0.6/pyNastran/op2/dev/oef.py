@@ -225,6 +225,28 @@ class OEF(object):
         n = 0
         if self.element_type in []:
             pass
+        elif self.element_type in [1, 3, 10]:
+            #1-CROD
+            #3-CTUBE
+            #10-CONROD
+            format1 = b'iff' # 3
+            ntotal = 12 # 3 * 4
+            nelements = len(data) // ntotal
+            for i in xrange(nelements):
+                edata = data[n:n+ntotal]
+                out = unpack(format1, edata)
+                (eid_device, axial, torque) = out
+                eid = (eid_device - self.device_code) // 10
+                if self.debug4():
+                    self.binary_debug.write('OEF_Rod - %s\n' % (str(out)))
+
+                dataIn = [eid, axial, torque]
+                #print "%s" %(self.get_element_type(self.element_type)),dataIn
+                #eid = self.obj.add_new_eid(out)
+                #self.obj.add(dt, dataIn)
+                n += ntotal
+            #print self.rodForces
+
         elif self.element_type in [2]:
             #2-CBEAM
             format1 = b'i'
@@ -259,8 +281,31 @@ class OEF(object):
                     #print
                     n += 36
                     #else: pass
-                #print "len(data) = ",len(self.data)
             #print self.beamForces
+
+        elif self.element_type in [12]:  # springs
+            # 11-CELAS1
+            # 12-CELAS2
+            # 13-CELAS3
+            format1 = b'if' # 2
+
+            n = 0
+            ntotal = 8  # 2*4
+            nelements = len(data) // ntotal
+            for i in xrange(nelements):
+                edata = data[n:n+8]
+
+                out = unpack(format1, edata)
+                if self.debug4():
+                    self.binary_debug.write('OEF_Spring - %s\n' % (str(out)))
+                (eid_device, force) = out
+                eid = (eid_device - self.device_code) // 10
+                #print("eType=%s" % eType)
+
+                dataIn = [eid, force]
+                #print "%s" %(self.get_element_type(self.element_type)),dataIn
+                #self.obj.add(dt, dataIn)
+            #print self.springForces
 
         elif self.element_type in [34]:  # bars
             # 34-CBAR
@@ -283,7 +328,7 @@ class OEF(object):
                 #self.obj.add(dt, dataIn)
                 n += ntotal
 
-        elif self.element_type in [74]: # centroidal shells
+        elif self.element_type in [33, 74]: # centroidal shells
             # 33-CQUAD4
             # 74-CTRIA3
             format1 = b'i8f'
@@ -297,7 +342,7 @@ class OEF(object):
                     self.binary_debug.write('OEF_Plate-%s - %s\n' % (self.element_type, str(out)))
                 (eid_device, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
                 eid = (eid_device - self.device_code) // 10
-                assert eid > 0
+                assert eid > 0, 'eid_device=%s eid=%s table_name-%r' % (eid_device, eid, self.table_name)
                 #print("eType=%s" % eType)
 
                 dataIn = [eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty]
@@ -401,8 +446,8 @@ class OEF(object):
                 n += ntotal
         else:
             raise NotImplementedError('sort1 Type=%s num=%s' % (self.element_name, self.element_type))
-        assert nelements > 0, nelements
         assert len(data) % ntotal == 0, '%s n=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data), ntotal)
+        assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
         
         
     def read_oef2_4(self, data):

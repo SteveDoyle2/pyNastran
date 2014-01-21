@@ -114,7 +114,7 @@ class OES(object):
         #assert self.isubtable == -4, self.isubtable
         #if self.debug:
             #self.binary_debug.write('  element_name = %r\n' % self.element_name)
-        print "element_name =", self.element_name
+        #print "element_name =", self.element_name
 
         if self.is_sort1():
             self.read_oes1_4_sort1(data)
@@ -124,7 +124,7 @@ class OES(object):
         if self.debug:
             self.binary_debug.write('*'* 20 + '\n\n')
 
-        print "----------------"
+        #print "----------------"
         #sys.exit('stopping...')
 
     def read_oes1_4_sort1(self, data):
@@ -438,7 +438,94 @@ class OES(object):
 
                 #self.obj.add_new_eid(self.element_type, dt, eid, tx, ty, tz, rx, ry, rz)
                 n += ntotal
+        elif self.element_type in [82]:
+            # 82-CQUADR
+            #GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
 
+            if self.element_type == 82:  # CQUADR
+                ntotal = 348  # 2+17*5 = 87 -> 87*4 = 348
+                nNodes = 4    # centroid + 4 corner points
+                eType = 'CQUADR'
+            else:
+                raise RuntimeError('element_type=%s ntotal not defined...'
+                                   % (self.element_type))
+
+            format1 = b'i16f'  # 1+16 = 17 * 4 = 68
+            n = 0
+            nelements = len(data) // ntotal
+            for i in xrange(nelements):
+                hdata = data[n:n+8]
+                n += 8
+                (eid_device, _) = unpack(b'i4s', hdata)
+                eid = (eid_device - self.device_code) // 10
+
+                edata = data[n:n+68]  # 4*17
+                n += 68
+                out = unpack(format1, edata)  # len=17*4
+                if self.debug4():
+                    self.binary_debug.write('CQUADR-82A - %s\n' % str(out))
+                (grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
+                 fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
+                grid = 'C'
+                #self.obj.add_new_eid(eType, eid, grid, fd1, sx1, sy1,
+                #                   txy1, angle1, major1, minor1, vm1)
+                #self.obj.add(eid, grid, fd2, sx2, sy2, txy2,
+                #             angle2, major2, minor2, vm2)
+
+                for nodeID in xrange(nNodes):  # nodes pts
+                    edata = data[n:n+68]
+                    out = unpack(format1, edata)
+                    if self.debug4():
+                        self.binary_debug.write('CQUADR-82B - %s\n' % str(out))
+                    (grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
+                     fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
+
+                    #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
+                    #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"          % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
+                    #self.obj.addNewNode(eid, grid, fd1, sx1,
+                    #                    sy1, txy1, angle1, major1, minor1, vm1)
+                    #self.obj.add(eid, grid, fd2, sx2, sy2,
+                    #             txy2, angle2, major2, minor2, vm2)
+                    n+= 68
+
+        elif self.element_type in [92]:
+            #92-CONRODNL
+            #def OES_RODNL_89_92(self):
+            format1 = b'i6f'  # 1+6=7
+
+            n = 0
+            ntotal = 28
+            nelements = len(data) // ntotal  # len(format1)*4 = 7*4 = 28
+            for i in xrange(nelements):
+                edata = data[n:n+ntotal]
+                out = unpack(format1, edata)
+
+                (eid_device, axial, equivStress, totalStrain, effPlasticCreepStrain,
+                    effCreepStrain, linearTorsionalStresss) = out
+                eid = (eid_device - self.device_code) // 10
+                if self.debug4():
+                    self.binary_debug.write('CRODNL-%s - %s\n' % (self.element_type, str(out)))
+                indata = (eid, axial, equivStress, totalStrain, effPlasticCreepStrain, effCreepStrain, linearTorsionalStresss)
+                #print "eid=%s axial=%s equivStress=%s totalStrain=%s effPlasticCreepStrain=%s effCreepStrain=%s linearTorsionalStresss=%s" % (eid,axial,equivStress,totalStrain,effPlasticCreepStrain,effCreepStrain,linearTorsionalStresss)
+                #self.obj.add(self.element_type, dt, indata)
+                n += ntotal
+
+        elif self.element_type in [224, 225]:
+            # 224-CELAS1
+            # 225-CELAS3
+            # nonlinearSpringStress
+            assert self.num_wide == 3, "num_wide=%s not 3" % self.num_wide
+            ntotal = 12  # 4*3
+            format1 = b'i2f'
+            nelements = len(data) // ntotal
+            for i in xrange(nelements):
+                edata = data[0:ntotal]
+                out = unpack(format1, edata)  # num_wide=3
+                (eid_device, force, stress) = out
+                eid = (eid_device - self.device_code) // 10
+                if self.debug4():
+                    self.binary_debug.write('%s-%s - %s\n' % (self.element_name, self.element_type, str(out)))
+                #self.obj.add_new_eid(element_name, dt, eid, force, stress)
         else:
             raise NotImplementedError('sort1 Type=%s num=%s' % (self.element_name, self.element_type))
         #=========================
