@@ -1,47 +1,8 @@
 from struct import unpack
 
+
 class OES(object):
     def __init__(self):
-        self.element_mapper = {
-            # rods
-            1: 'ROD',
-            3 : 'CTUBE',
-            10: 'CONROD',
-
-            # beam
-            2 : 'CBEAM',
-
-            # springs
-            11: 'CELAS1',
-            12: 'CELAS2',
-            13: 'CELAS3',
-            
-            # bar
-            34 : 'CBAR',
-            
-            # solids
-            39: 'TETRA',
-            67: 'HEXA',
-            68: 'PENTA',
-            
-            # triax
-            53 : 'CTRIAX6',
-
-            # centroidal plate
-            33: 'QUAD4', # 1 node
-            74: 'TRIA3', # 1 node
-
-            # bilinear plate
-            144: 'QUAD144', # 5 nodes
-
-            # composite plates
-            95 : 'CQUAD4',
-            96 : 'CQUAD8',
-            97 : 'CTRIA3',
-            98 : 'CTRIA6',
-
-            102: 'CBUSH',
-        }
         pass
 
     def read_oes1_3(self, data):
@@ -53,19 +14,24 @@ class OES(object):
                  '???',         '???',      '???',          '???',
                  '???', 'Title', 'subtitle', 'label']
 
-        #self.show_data(data)
         self.parse_approach_code(data)  # 3
+
         ## element type
         self.add_data_parameter(data, 'element_type', 'i', 3, False)
+
         ## load set ID
         self.add_data_parameter(data, 'load_set', 'i', 8, False)
+
         ## format code
         self.add_data_parameter(data, 'format_code', 'i', 9, False)
+
         ## number of words per entry in record
         ## .. note:: is this needed for this table ???
         self.add_data_parameter(data, 'num_wide', 'i', 10, False)
+
         ## stress/strain codes
         self.add_data_parameter(data, 's_code', 'i', 11, False)
+
         ## thermal flag; 1 for heat ransfer, 0 otherwise
         self.add_data_parameter(data, 'thermal', 'i', 23, False)
 
@@ -109,7 +75,8 @@ class OES(object):
             self.add_data_parameter(data, 'mode', 'i', 5)
             ## real eigenvalue
             self.add_data_parameter(data, 'eigr', 'f', 6, False)
-            ## imaginary eigenvalue            self.add_data_parameter(data, 'eigi', 'f', 7, False)
+            ## imaginary eigenvalue
+            self.add_data_parameter(data, 'eigi', 'f', 7, False)
             self.apply_data_code_value('dataNames', ['mode', 'eigr', 'eigi'])
         elif self.analysis_code == 10:  # nonlinear statics
             ## load step
@@ -238,6 +205,7 @@ class OES(object):
                 #print "eid =", eid
 
         elif self.element_type in [39, 67, 68]: # TETRA, HEXA, PENTA
+            return
             if self.element_type == 39: # CTETRA
                 nnodes_expected = 5  # 1 centroid + 4 corner points
             elif self.element_type == 67:
@@ -267,6 +235,7 @@ class OES(object):
         #=========================
         # plates
         elif self.element_type in [33]: # QUAD4-centroidal
+            return
             ntotal = 68  # 4*17
             format1 = 'i16f'
             nelements = len(data) // ntotal
@@ -296,6 +265,7 @@ class OES(object):
                 n += ntotal
 
         elif self.element_type in [74]: # TRIA3
+            return
             ntotal = 68  # 4*17
             format1 = 'i16f'
             nelements = len(data) // ntotal
@@ -357,7 +327,6 @@ class OES(object):
                     d = [eid_device, j, grid,
                          fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
                          fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2]
-                    #print "d =", d
                     self.binary_debug.write('  ----------\n')
                     self.binary_debug.write('  eid = %i\n' % eid)
                     self.binary_debug.write('  C = [%s]\n' % ', '.join(['%r' % di for di in d]) )
@@ -450,6 +419,7 @@ class OES(object):
                     #self.obj.add(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
                     n += 32  # 4*8
         elif self.element_type in [102]:
+            return
             # 102-CBUSH
             assert self.num_wide == 7, "num_wide=%s not 7" % self.num_wide
             ntotal = 28  # 4*7
@@ -474,26 +444,6 @@ class OES(object):
         #=========================
         assert nelements > 0, nelements
         assert len(data) % ntotal == 0, '%s n=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data), ntotal)
-
-
-    def apply_data_code_value(self, name, value):
-        pass
-    def setNullNonlinearFactor(self):
-        pass
-
-    def read_title(self, data):
-        assert len(data) == 584, len(data)
-        Title, subtitle, label = unpack('128s128s128s', data[200:])  # titleSubtitleLabel
-
-        self.Title = Title.strip()
-        #: the subtitle of the subcase
-        self.subtitle = subtitle.strip()
-        #: the label of the subcase
-        self.label = label.strip()
-        if self.debug:
-            self.binary_debug.write('  Title    = %r\n' % self.Title)
-            self.binary_debug.write('  subtitle = %r\n' % self.subtitle)
-            self.binary_debug.write('  label    = %r\n' % self.label)
 
     def finish_oes(self):
         del self.element_type

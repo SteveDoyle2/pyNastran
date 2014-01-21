@@ -107,12 +107,6 @@ class OUG(object):
         else:
             self.not_implemented_or_skip('bad OUG table')
 
-    def not_implemented_or_skip(self, msg):
-        if 1:
-            raise NotImplementedError('table_name=%s table_code=%s' % (self.table_name, self.table_code))
-        else:
-            pass
-
     def read_displacement(self, data):
         result_name = 'displacements'
         #real_obj = DisplacementObject
@@ -120,24 +114,6 @@ class OUG(object):
         real_obj = None
         complex_obj = None
         self.read_oug_table(data, result_name, real_obj, complex_obj, 'node')
-
-    def read_oug_table(self, data, result_name, real_obj, complex_obj, node_elem):
-        assert real_obj is None
-        assert complex_obj is None
-
-        if self.num_wide == 8:  # real/random
-            if self.thermal == 0:
-                self.read_real_table(data, result_name, node_elem)
-            else:
-                self.not_implemented_or_skip()
-        elif self.num_wide == 14:  # real/imaginary or mag/phase
-            if self.thermal == 0:
-                self.read_complex_table(data, result_name, node_elem)
-            else:
-                self.not_implemented_or_skip()
-        else:
-            msg = 'only num_wide=8 or 14 is allowed  num_wide=%s' % self.num_wide
-            self.not_implemented_or_skip(msg)
 
     def read_velocity(self, data):
         result_name = 'velocity'
