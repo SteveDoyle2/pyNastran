@@ -73,6 +73,9 @@ class FortranFormat(object):
             markers = self.get_nmarkers(1, rewind=True)
         self.read_markers([0])
 
+    def passer(self, data):
+        pass
+
     def _read_subtables(self):
         self.isubtable = -3
         self.read_markers([-3, 1, 0])
@@ -81,13 +84,20 @@ class FortranFormat(object):
 
         #self.isubtable -= 1 # -4
         #self.read_markers([self.isubtable, 1, 0])
+
+        if self.table_name in self._table_mapper:
+            table3_parser, table4_parser = self._table_mapper[self.table_name]
+        else:
+            table3_parser = self.passer
+            table4_parser = self.passer
+
         markers = self.get_nmarkers(1, rewind=True)
         while markers[0] != 0:
             data = self._read_record()
             if len(data) == 584:
-                self._parse_results_table3(data)
+                table3_parser(data)
             else:
-                data = self._parse_results_table4(data)
+                table4_parser(data)
 
             self.isubtable -= 1
             self.read_markers([self.isubtable, 1, 0])

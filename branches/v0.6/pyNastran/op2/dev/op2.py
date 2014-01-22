@@ -48,6 +48,67 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
         if self.debug:
             self.binary_debug = open('debug.out', 'wb')
 
+        self._table_mapper = {
+            #'DIT': self.read_dit,
+            #=======================
+            # OEF
+            # internal forces
+            'OEFIT' : [self.read_oef1_3, self.read_oef1_4],
+            'OEF1X' : [self.read_oef1_3, self.read_oef1_4],
+            'OEF1'  : [self.read_oef1_3, self.read_oef1_4],
+            'DOEF1' : [self.read_oef1_3, self.read_oef1_4],
+            #=======================
+            # OQG
+            # spc forces
+            'OQG1'  : [self.read_oqg1_3, self.read_oqg1_4],
+            # mpc forces
+            'OQMG1' : [self.read_oqg1_3, self.read_oqg1_4],
+            #=======================
+            # OPG
+            # applied loads
+            'OPG1'  : [self.read_opg1_3, self.read_opg1_4],
+            'OPNL1' : [self.read_opg1_3, self.read_opg1_4],
+
+            #=======================
+            # OES
+            # stress
+            'OES1X1'  : [self.read_oes1_3, self.read_oes1_4],
+            'OES1'    : [self.read_oes1_3, self.read_oes1_4],
+            'OES1X'   : [self.read_oes1_3, self.read_oes1_4],
+            'OES1C'   : [self.read_oes1_3, self.read_oes1_4],
+            'OESCP'   : [self.read_oes1_3, self.read_oes1_4],
+            'OESNLXR' : [self.read_oes1_3, self.read_oes1_4],
+            'OESNLXD' : [self.read_oes1_3, self.read_oes1_4],
+            'OESNLBR' : [self.read_oes1_3, self.read_oes1_4],
+            'OESTRCP' : [self.read_oes1_3, self.read_oes1_4],
+            'OESNL1X' : [self.read_oes1_3, self.read_oes1_4],
+            'OESRT'   : [self.read_oes1_3, self.read_oes1_4],
+            # strain
+            'OSTR1X'  : [self.read_oes1_3, self.read_oes1_4],
+            'OSTR1C'  : [self.read_oes1_3, self.read_oes1_4],
+
+            #=======================
+            # OUG
+            # displacement/velocity/acceleration/eigenvector
+            'OUG1'   : [self.read_oug1_3, self.read_oug1_4],
+            'OUGV1'  : [self.read_oug1_3, self.read_oug1_4],
+            'BOUGV1' : [self.read_oug1_3, self.read_oug1_4],
+            'OUPV1'  : [self.read_oug1_3, self.read_oug1_4],
+
+            #=======================
+            # OGPWG
+            # grid point weight
+            'OGPWG' : [self._read_ogpwg_3, self._read_ogpwg_4],
+
+            #=======================
+            # OGS
+            # grid point stresses
+            'OGS1' : [self._read_ogs1_3, self._read_ogs1_4],
+            #=======================
+            # OEE
+            #'ONRGY1' : [self._read_oee1_3, self._read_oee1_4],
+        }
+
     def read_op2(self, op2_filename=None):
         if op2_filename:
             self.op2_filename = op2_filename
@@ -304,123 +365,6 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
             self.binary_debug.write('  [subtable_name, month=%i, day=%i, year=%i, zero=%i, one=%i]\n\n' % (month, day, year, zero, one))
         assert zero == 0
         assert one == 1
-
-    def _parse_results_table3(self, data):
-        if self.debug:
-            self.binary_debug.write('  Table3\n')
-        if self.table_name in [# stress
-                               'OES1X1', 'OES1', 'OES1X',
-                               # composite stresses
-                               'OES1C', 'OESCP',
-                               # ??? stresses
-                               'OESNLXR','OESNLXD','OESNLBR','OESTRCP', 'OESNL1X','OESRT',
-                               # strain
-                               'OSTR1X', 'OSTR1C',]:
-            self.read_oes1_3(data)
-
-        elif self.table_name in ['OQG1', 'OQGV1',  # spc forces
-                                 'OQMG1',          # mpc forces
-                                 'OQP1',]:         # ??? forces
-            self.read_oqg1_3(data)
-        elif self.table_name in ['OUG1', 'OUGV1', 'BOUGV1', 'OUPV1', ]:  # displacement/acceleration/velocity/eigenvector
-            self.read_oug1_3(data)
-        elif self.table_name in ['OPG1', 'OPNL1', ]:  # applied forces
-            self.read_opg1_3(data)
-        elif self.table_name in ['OEF1', 'OEFIT', 'OEF1X', 'DOEF1']:  # interal forces
-            self.read_oef1_3(data)
-        elif self.table_name in ['OGPWG',]:  # grid point weight
-            self._read_ogpwg_3(data)
-        elif self.table_name in ['OGS1',]:  # grid point stresses
-            self._read_ogs1_3(data)
-
-        # these tables are just skipped
-        elif self.table_name in  ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4', # regular
-                                  'GEOM1S', 'GEOM2S', 'GEOM3S', 'GEOM4S', # superelements
-                                  'GEOM1N',
-                                  'GEOM1OLD', 'GEOM2OLD', 'GEOM4OLD',
-
-                                  'EPT', 'EPTS', 'EPTOLD',
-                                  'MPT', 'MPTS',
-
-                                  'PVT0', 'CASECC',
-                                  'EDOM', 'OGPFB1',
-                                  'BGPDT', 'BGPDTOLD',
-                                  'DYNAMIC', 'DYNAMICS',
-                                  'EQEXIN', 'EQEXINS',
-                                  'GPDT', 'ERRORN',
-                                  'DESTAB', 'R1TABRG', 'HISADD', 'GPL',
-
-                                   # eigenvalues
-                                   'BLAMA', 'LAMA',
-                                   # strain energy
-                                   'ONRGY1',
-                                   # other
-                                   'CONTACT', 'VIEWTB', 'OMM2',
-                                   'OFMPF2M', 'OSMPF2M', 'OPMPF2M', 'OLMPF2M',
-                                 ]:
-            pass
-        else:
-            raise NotImplementedError(self.table_name)
-
-    def _parse_results_table4(self, data):
-        if self.debug:
-            self.binary_debug.write('  Table4\n')
-        assert len(data) > 0
-        if self.table_name in [# stress
-                               'OES1X1', 'OES1', 'OES1X',
-                               # composite stresses
-                               'OES1C', 'OESCP',
-                               # ??? stresses
-                               'OESNLXR','OESNLXD','OESNLBR','OESTRCP', 'OESNL1X','OESRT',
-                               # strain
-                               'OSTR1X', 'OSTR1C',]:
-            self.read_oes1_4(data)
-
-        elif self.table_name in ['OQG1', 'OQGV1',  # spc forces
-                                 'OQMG1',          # mpc forces
-                                 'OQP1', ]:        # ??? forces
-            self.read_oqg1_4(data)
-        elif self.table_name in ['OUG1', 'OUGV1', 'BOUGV1', 'OUPV1', ]:  # displacement/acceleration/velocity/eigenvector
-            self.read_oug1_4(data)
-        elif self.table_name in ['OPG1', 'OPNL1', ]:  # applied forces
-            self.read_opg1_4(data)
-        elif self.table_name in ['OEF1', 'OEFIT', 'OEF1X', 'DOEF1']:  # internal forces
-            self.read_oef1_4(data)
-        elif self.table_name in ['OGPWG',]:  # grid point weight
-            self._read_ogpwg_4(data)
-        elif self.table_name in ['OGS1',]:  # grid point stresses
-            self._read_ogs1_4(data)
-
-        # these tables are just skipped
-        elif self.table_name in  ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4', # regular
-                                  'GEOM1S', 'GEOM2S', 'GEOM3S', 'GEOM4S', # superelements
-                                  'GEOM1N',
-                                  'GEOM1OLD', 'GEOM2OLD', 'GEOM4OLD',
-
-                                  'EPT', 'EPTS', 'EPTOLD',
-                                  'MPT', 'MPTS',
-
-                                  'PVT0', 'CASECC',
-                                  'EDOM', 'OGPFB1',
-                                  'BGPDT', 'BGPDTOLD',
-                                  'DYNAMIC', 'DYNAMICS',
-                                  'EQEXIN', 'EQEXINS',
-                                  'GPDT', 'ERRORN',
-                                  'DESTAB', 'R1TABRG', 'HISADD', 'GPL',
-
-                                   # eigenvalues
-                                   'BLAMA', 'LAMA',
-                                   # strain energy
-                                   'ONRGY1',
-                                   # other
-                                   'CONTACT', 'VIEWTB', 'OMM2',
-                                   'OFMPF2M', 'OSMPF2M', 'OPMPF2M', 'OLMPF2M',
-                                 ]:
-            pass
-        else:
-            raise NotImplementedError(self.table_name)
-        #if hasattr(self, 'thermal'):
-            #assert self.thermal in [0, 1], self.thermal
 
     def finish(self):
         for word in self.words:
