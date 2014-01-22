@@ -109,9 +109,9 @@ class OQG(object):
     def read_oqg1_4(self, data):
         if self.table_code == 3:   # SPC Forces
             assert self.table_name in ['OQG1', 'OQGV1', 'OQP1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            self.read_spc_forces(data)
         elif self.table_code == 39:  # MPC Forces
-            assert self.table_name in ['OQMG1'], 'table_name=%s table_code=%s' % (
-                self.table_name, self.table_code)
+            assert self.table_name in ['OQMG1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             self.read_mpc_forces(data)
         else:
             self.not_implemented_or_skip('bad OQG table')

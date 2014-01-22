@@ -6,6 +6,7 @@ from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 
 from pyNastran.op2.dev.oef import OEF
 from pyNastran.op2.dev.oes import OES
+from pyNastran.op2.dev.ogs import OGS
 
 from pyNastran.op2.dev.opg import OPG
 from pyNastran.op2.dev.oqg import OQG
@@ -14,7 +15,7 @@ from pyNastran.op2.dev.ogpwg import OGPWG
 from pyNastran.op2.dev.results import Results
 from pyNastran.op2.dev.fortran_format import FortranFormat
 
-class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
+class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
     def set_subcases(self, isubcases):
         pass
     def get_op2_stats(self):
@@ -34,6 +35,7 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
 
         OEF.__init__(self)
         OES.__init__(self)
+        OGS.__init__(self)
 
         OPG.__init__(self)
         OQG.__init__(self)
@@ -43,6 +45,7 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
         Results.__init__(self)
 
         self.grid_point_weight = GridPointWeight()
+        self.words = []
         self.debug = True
         if self.debug:
             self.binary_debug = open('debug.out', 'wb')
@@ -406,8 +409,9 @@ class OP2(OEF, OES, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
             raise NotImplementedError(self.table_name)
 
     def finish(self):
-        if self.table_name == 'OES1X1':
-            self.finish_oes()
+        for word in self.words:
+            if word != '???' and hasattr(self, word):
+                delattr(self, word)
 
     def parse_approach_code(self, data):
         (aCode, tCode, int3, isubcase) = unpack(b'4i', data[:16])

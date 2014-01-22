@@ -508,11 +508,10 @@ class OES(object):
             #92-CONRODNL
             #def OES_RODNL_89_92(self):
             format1 = b'i6f'  # 1+6=7
-
+            s = Struct(format1)
             n = 0
             ntotal = 28
             nelements = len(data) // ntotal  # len(format1)*4 = 7*4 = 28
-            s = Struct(format1)
             for i in xrange(nelements):
                 edata = data[n:n+ntotal]
                 out = s.unpack(edata)
@@ -532,8 +531,8 @@ class OES(object):
             # 225-CELAS3
             # nonlinearSpringStress
             assert self.num_wide == 3, "num_wide=%s not 3" % self.num_wide
-            ntotal = 12  # 4*3
             format1 = b'i2f'
+            ntotal = 12  # 4*3
             nelements = len(data) // ntotal
             s = Struct(format1)
             for i in xrange(nelements):
@@ -549,11 +548,3 @@ class OES(object):
         #=========================
         assert nelements > 0, nelements
         assert len(data) % ntotal == 0, '%s n=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data), ntotal)
-
-    def finish_oes(self):
-        del self.element_type
-        del self.load_set
-        del self.format_code
-        del self.num_wide
-        del self.s_code
-        del self.thermal

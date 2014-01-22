@@ -298,6 +298,7 @@ class Results(object):
             self.binary_debug.write('  %-12s = %r\n' % (var_name, value))
         setattr(self, var_name, value)
         self.words[field_num-1] = var_name
+        return value
 
     def apply_data_code_value(self, name, value):
         pass
@@ -372,7 +373,7 @@ class Results(object):
 
     def read_real_table(self, data, result_name, flag):
         #return
-        if self.debug:
+        if self.debug4():
             self.binary_debug.write('  read_real_table\n')
         assert flag in ['node', 'elem'], flag
         format1 = '2i6f' # 8
@@ -387,6 +388,9 @@ class Results(object):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
             (eid_device, gridType, tx, ty, tz, rx, ry, rz) = out
+
+            if self.debug4():
+                self.binary_debug.write('  %s\n' % str(out))
             eid = (eid_device - self.device_code) // 10
             #print "eType=%s" %(eType)
 
@@ -396,8 +400,8 @@ class Results(object):
 
     def read_complex_table(self, data, result_name, flag):
         #return
-        if self.debug:
-            self.binary_debug.write('  read_real_table\n')
+        if self.debug4():
+            self.binary_debug.write('  read_complex_table\n')
         assert flag in ['node', 'elem'], flag
 
         format1 = '2i12f'
@@ -411,8 +415,8 @@ class Results(object):
             edata = data[n:n+ntotal]
 
             out = s.unpack(edata)
-            if self.debug:
-                self.binary_debug.write('read_complex_table - %s\n' % str(out))
+            if self.debug4():
+                self.binary_debug.write('  %s\n' % str(out))
             (eid_device, gridType, txr, tyr, tzr, rxr, ryr, rzr,
                                    txi, tyi, tzi, rxi, ryi, rzi) = out
 

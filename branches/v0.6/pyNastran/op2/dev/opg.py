@@ -21,6 +21,7 @@ class OPG(object):
 
         ## dynamic load set ID/random code
         self.add_data_parameter(data, 'dLoadID', 'i', 8, False)
+
         ## format code
         self.add_data_parameter(data, 'format_code', 'i', 9, False)
 
