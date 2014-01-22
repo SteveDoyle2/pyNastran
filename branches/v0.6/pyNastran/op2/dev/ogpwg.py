@@ -24,7 +24,7 @@ class OGPWG(object):
                  '???', 'Title', 'subtitle', 'label']
 
         self.parse_approach_code(data)
-        self.add_data_parameter(data, 'reference_point', 'i', 3, add_to_dict=False)
+        self.reference_point = self.add_data_parameter(data, 'reference_point', 'i', 3, add_to_dict=False)
 
         if self.debug3():
             self.binary_debug.write('  aCode    = %r\n' % self.aCode)

@@ -20,20 +20,20 @@ class OPG(object):
         #isubcase = self.get_values(data,'i',4)
 
         ## dynamic load set ID/random code
-        self.add_data_parameter(data, 'dLoadID', 'i', 8, False)
+        self.dLoadID = self.add_data_parameter(data, 'dLoadID', 'i', 8, False)
 
         ## format code
-        self.add_data_parameter(data, 'format_code', 'i', 9, False)
+        self.format_code = self.add_data_parameter(data, 'format_code', 'i', 9, False)
 
         ## number of words per entry in record
         ## .. note:: is this needed for this table ???
-        self.add_data_parameter(data, 'num_wide', 'i', 10, False)
+        self.num_wide = self.add_data_parameter(data, 'num_wide', 'i', 10, False)
 
         ## undefined in DMAP...
-        self.add_data_parameter(data, 'oCode', 'i', 11, False)
+        self.oCode = self.add_data_parameter(data, 'oCode', 'i', 11, False)
 
         ## thermal flag; 1 for heat transfer, 0 otherwise
-        self.add_data_parameter(data, 'thermal', 'i', 23, False)
+        self.thermal = self.add_data_parameter(data, 'thermal', 'i', 23, False)
 
         #print "dLoadID(8)=%s format_code(9)=%s num_wide(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.format_code,self.num_wide,self.oCode,self.thermal)
         if not self.is_sort1():
@@ -51,7 +51,8 @@ class OPG(object):
             self.add_data_parameter(data, 'mode', 'i', 5)
             ## real eigenvalue
             self.add_data_parameter(data, 'eign', 'f', 6, False)
-            ## mode or cycle .. todo:: confused on the type - F1???            self.add_data_parameter(data, 'mode_cycle', 'f', 7, False)
+            ## mode or cycle .. todo:: confused on the type - F1???
+            self.add_data_parameter(data, 'mode_cycle', 'f', 7, False)
             self.apply_data_code_value('dataNames', ['mode', 'eign', 'mode_cycle'])
         #elif self.analysis_code == 3: # differential stiffness
         #    ## load set number
@@ -124,7 +125,7 @@ class OPG(object):
         if self.table_code == 12:  # ???
             asdf
         else:
-            self.not_implemented_or_skip('bad OUG table')
+            self.not_implemented_or_skip('bad OPG table')
 
     def read_load_vector(self, data):
         result_name = 'load_vector'

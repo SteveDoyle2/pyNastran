@@ -1,9 +1,9 @@
 from struct import Struct, unpack
+from pyNastran.op2.dev.op2_common import OP2Common
 
-
-class OGS(object):
+class OGS(OP2Common):
     def __init__(self):
-        pass
+        OP2Common.__init__(self)
 
     def _read_ogs1_3(self, data):
         three = self.parse_approach_code(data)
@@ -71,7 +71,7 @@ class OGS(object):
         #elif self.analysis_code == 9:  # complex eigenvalues
         elif self.analysis_code == 10:  # nonlinear statics
             ## load step
-            self.loadstep = self.add_data_parameter(data, 'lftsfq', 'f', 5)
+            self.lftsfq = self.add_data_parameter(data, 'lftsfq', 'f', 5)
             self.apply_data_code_value('dataNames', ['lftsfq'])
         #elif self.analysis_code == 11:  # old geometric nonlinear statics
         #elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...

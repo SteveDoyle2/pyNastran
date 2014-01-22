@@ -12,10 +12,9 @@ from pyNastran.op2.dev.opg import OPG
 from pyNastran.op2.dev.oqg import OQG
 from pyNastran.op2.dev.oug import OUG
 from pyNastran.op2.dev.ogpwg import OGPWG
-from pyNastran.op2.dev.results import Results
 from pyNastran.op2.dev.fortran_format import FortranFormat
 
-class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
+class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
     def set_subcases(self, isubcases):
         pass
     def get_op2_stats(self):
@@ -42,36 +41,12 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
         OUG.__init__(self)
         OGPWG.__init__(self)
         FortranFormat.__init__(self)
-        Results.__init__(self)
 
         self.grid_point_weight = GridPointWeight()
         self.words = []
         self.debug = True
         if self.debug:
             self.binary_debug = open('debug.out', 'wb')
-
-        self.show_table3_map = [
-            #'OUGV1',
-            #'OEF1X',
-            #'OES1X1',
-        ]
-        self.show_table4_map = [
-            #'OUGV1',
-            #'OEF1X',
-            #'OES1X1',
-        ]
-
-    def debug3(self):
-        return True
-        if self.debug and self.table_name in self.show_table3_map:
-            return True
-        return False
-
-    def debug4(self):
-        return True
-        if self.debug and self.table_name in self.show_table4_map:
-            return True
-        return False
 
     def read_op2(self, op2_filename=None):
         if op2_filename:
@@ -165,9 +140,9 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
                                     # mpc forces
                                     'OQMG1',
                                     # ??? forces
-                                    'OQP1', 
+                                    'OQP1',
                                     # displacement/velocity/acceleration/eigenvector
-                                    'OUG1', 'OUGV1', 'BOUGV1', 'OUPV1', 
+                                    'OUG1', 'OUGV1', 'BOUGV1', 'OUPV1',
                                     # applied loads
                                     'OPG1', 'OPNL1', #'OPG2',
 
@@ -316,7 +291,6 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
             self._print_month(month, day, year, zero, one)
         else:
             raise NotImplementedError(self.show_data(data))
-
         self._read_subtables()
 
     def _print_month(self, month, day, year, zero, one):
@@ -438,105 +412,6 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
         for word in self.words:
             if word != '???' and hasattr(self, word):
                 delattr(self, word)
-
-    def parse_approach_code(self, data):
-        (aCode, tCode, int3, isubcase) = unpack(b'4i', data[:16])
-        self.aCode = aCode
-        self.tCode = tCode
-        self.int3 = int3
-
-        #: the local subcase ID
-        self.isubcase = isubcase
-        #print("isubcase = %s" %(isubcase))
-        #self.subcases.add(self.isubcase)  # set notation
-
-        #: the type of result being processed
-        self.table_code = tCode % 1000
-        #: used to create sort_bits
-        self.sort_code = tCode // 1000
-        #: what type of data was saved from the run; used to parse the
-        #: approach_code and grid_device.  device_code defines what options
-        #: inside a result, STRESS(PLOT,PRINT), are used.
-        self.device_code = aCode % 10
-        #: what solution was run (e.g. Static/Transient/Modal)
-        self.analysis_code = (aCode - self.device_code) // 10
-
-        #print('parse_approach_code - aCode=%s tCode=%s int3=%s isubcase=%s' % (aCode, tCode, int3, isubcase))
-        #print('                 so - analysis_code=%s device_code=%s table_code=%s sort_code=%s\n' % (self.analysis_code, self.device_code, self.table_code, self.sort_code))
-        if self.debug3():
-            self.binary_debug.write('  table_code    = %r\n' % self.table_code)
-            self.binary_debug.write('  sort_code     = %r\n' % self.sort_code)
-            self.binary_debug.write('  device_code   = %r\n' % self.device_code)
-            self.binary_debug.write('  analysis_code = %r\n' % self.analysis_code)
-
-        if self.device_code == 3:
-            #sys.stderr.write('The op2 may be inconsistent...\n')
-            #sys.stderr.write("  print and plot can cause bad results..."
-            #                 "if there's a crash, try plot only\n")
-            self.device_code = 1
-
-            #self.log.info('The op2 may be inconsistent...')
-            #self.log.info('  print and plot can cause bad results...'
-            #              'if there's a crash, try plot only')
-
-        self._parse_sort_code()
-
-    #===================================
-    def _parse_sort_code(self):
-        """
-        sort_code = 0 -> sort_bits = [0,0,0]
-        sort_code = 1 -> sort_bits = [0,0,1]
-        sort_code = 2 -> sort_bits = [0,1,0]
-        sort_code = 3 -> sort_bits = [0,1,1]
-        etc.
-        sort_code = 7 -> sort_bits = [1,1,1]
-
-        sort_bits[0] = 0 -> is_sort1=True  isSort2=False
-        sort_bits[1] = 0 -> isReal=True   isReal/Imaginary=False
-        sort_bits[2] = 0 -> isSorted=True isRandom=False
-        """
-        bits = [0, 0, 0]
-        sort_code = self.sort_code
-        i = 2
-        while sort_code > 0:
-            value = sort_code % 2
-            sort_code = (sort_code - value) // 2
-            bits[i] = value
-            i -= 1
-        #: the bytes describe the SORT information
-        self.sort_bits = bits
-        #print "sort_bits =", bits
-        #self.data_code['sort_bits'] = self.sort_bits
-
-    def is_sort1(self):
-        if self.sort_bits[0] == 0:
-            return True
-        return False
-
-    def is_sort2(self):
-        return not(self.is_sort1())
-
-    def is_real(self):
-        return not(self.is_complex())
-
-    def is_complex(self):
-        if self.sort_bits[1] == 1:
-            return True
-        return False
-
-    def is_random(self):
-        if self.sort_bits[1] == 1:
-            return True
-        return False
-
-    def is_mag_phase(self):
-        assert self.format_code in [0, 1], self.format_code
-        return bool(self.format_code)
-
-    def is_magnitude_phase(self):
-        if self.format_code == 3:
-            return True
-        return False
 
 
 if __name__ == '__main__':
