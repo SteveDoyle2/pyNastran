@@ -78,30 +78,24 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
         table_names = []
         while table_name is not None:
             #print "----------------------------------"
-            #print "**", table_name
             table_names.append(table_name)
 
             if self.debug:
+                print "**", table_name
                 self.binary_debug.write('-' * 80 + '\n')
                 self.binary_debug.write('table_name = %r; f.tell()=%s\n' % (table_name, self.f.tell()))
 
+            self.table_name = table_name
             #if table_name in self.tables_to_read:
             if 0:
-                self.table_name = table_name
-                if table_name in ['DIT']:
-                    self._read_dit()
-                elif table_name in ['PCOMPTS']:
-                    self._read_pcompts()
-                else:
-                    self._skip_table()
+                self._skip_table(table_name)
             else:
-                self.table_name = table_name
-                if table_name in ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4',
-                                  'GEOM1S',
+                if table_name in ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4',  # regular
+                                  'GEOM1S', 'GEOM2S', 'GEOM3S', 'GEOM4S', # superelements
                                   'GEOM1N',
                                   'GEOM1OLD', 'GEOM2OLD', 'GEOM4OLD',
 
-                                  'EPT', 'EPTOLD',
+                                  'EPT', 'EPTS', 'EPTOLD',
                                   'MPT', 'MPTS',
 
                                   'PVT0', 'CASECC',
@@ -122,7 +116,7 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
                                    'OGPWG',
                                   ]:
                     self._read_geom_table()  # DIT (agard)
-                elif table_name in ['DIT']:
+                elif table_name in ['DIT']:  # tables
                     self._read_dit()
                 elif table_name in ['PCOMPTS']: # blade
                     self._read_pcompts()
@@ -146,9 +140,11 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
                                     # applied loads
                                     'OPG1', 'OPNL1', #'OPG2',
 
-                                    'OGS1','OPNL1',
+                                    # grid point stresses
+                                    'OGS1',
+
                                     # other
-                                    'OFMPF2M','OSMPF2M','OPMPF2M','OLMPF2M',
+                                    'OPNL1','OFMPF2M','OSMPF2M','OPMPF2M','OLMPF2M',
                                     ]:
                     self._read_results_table()
                 else:
@@ -166,6 +162,14 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
         #print "----------------"
         #print "done..."
         return table_names
+
+    def _skip_table(table_name):
+        if table_name in ['DIT']:  # tables
+            self._read_dit()
+        elif table_name in ['PCOMPTS']:
+            self._read_pcompts()
+        else:
+            self._skip_table_helper()
 
     def _read_dit(self):
         table_name = self.read_table_name(rewind=False)
@@ -209,6 +213,7 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
 
         self.read_markers([-5, 1, 0])
         data = self._read_record()
+
         self.read_markers([-6, 1, 0])
         self.read_markers([0])
         #self.show(100)
@@ -247,7 +252,7 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
             self.f.seek(self.n)
         return table_name
 
-    def _skip_table(self):
+    def _skip_table_helper(self):
         if self.debug:
             self.binary_debug.write('skipping table...\n')
         self.table_name = self.read_table_name(rewind=False)
@@ -262,7 +267,6 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
         self.table_name = self.read_table_name(rewind=False)
         self.read_markers([-1])
         data = self._read_record()
-        #self.show_data(data)
 
         self.read_markers([-2, 1, 0])
         data = self._read_record()
@@ -305,32 +309,37 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
         if self.debug:
             self.binary_debug.write('  Table3\n')
         if self.table_name in [# stress
-                               'OES1X1', 'OES1', 'OES1X', 'OES1C', 'OESCP',
-                               'OESNLXR','OESNLXD','OESNLBR','OESTRCP',
-                               'OESNL1X','OESRT',
+                               'OES1X1', 'OES1', 'OES1X',
+                               # composite stresses
+                               'OES1C', 'OESCP',
+                               # ??? stresses
+                               'OESNLXR','OESNLXD','OESNLBR','OESTRCP', 'OESNL1X','OESRT',
                                # strain
                                'OSTR1X', 'OSTR1C',]:
             self.read_oes1_3(data)
 
-        elif self.table_name in ['OQG1', 'OQGV1', 'OQP1', 'OQMG1', 'OQP1',]:
+        elif self.table_name in ['OQG1', 'OQGV1',  # spc forces
+                                 'OQMG1',          # mpc forces
+                                 'OQP1',]:         # ??? forces
             self.read_oqg1_3(data)
-        elif self.table_name in ['OUG1', 'OUGV1', 'BOUGV1', 'OUPV1', ]:
+        elif self.table_name in ['OUG1', 'OUGV1', 'BOUGV1', 'OUPV1', ]:  # displacement/acceleration/velocity/eigenvector
             self.read_oug1_3(data)
-        elif self.table_name in ['OPG1', 'OPNL1', ]:
+        elif self.table_name in ['OPG1', 'OPNL1', ]:  # applied forces
             self.read_opg1_3(data)
-        elif self.table_name in ['OEF1', 'OEFIT', 'OEF1X', 'DOEF1']:
+        elif self.table_name in ['OEF1', 'OEFIT', 'OEF1X', 'DOEF1']:  # interal forces
             self.read_oef1_3(data)
-        elif self.table_name in ['OGPWG',]:
+        elif self.table_name in ['OGPWG',]:  # grid point weight
             self._read_ogpwg_3(data)
-        elif self.table_name in ['OGS1',]:
+        elif self.table_name in ['OGS1',]:  # grid point stresses
             self._read_ogs1_3(data)
 
-        elif self.table_name in  ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4',
-                                  'GEOM1S',
+        # these tables are just skipped
+        elif self.table_name in  ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4', # regular
+                                  'GEOM1S', 'GEOM2S', 'GEOM3S', 'GEOM4S', # superelements
                                   'GEOM1N',
                                   'GEOM1OLD', 'GEOM2OLD', 'GEOM4OLD',
 
-                                  'EPT', 'EPTOLD',
+                                  'EPT', 'EPTS', 'EPTOLD',
                                   'MPT', 'MPTS',
 
                                   'PVT0', 'CASECC',
@@ -347,7 +356,7 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
                                    'ONRGY1',
                                    # other
                                    'CONTACT', 'VIEWTB', 'OMM2',
-                                   'OFMPF2M', 'OSMPF2M','OPMPF2M','OLMPF2M',
+                                   'OFMPF2M', 'OSMPF2M', 'OPMPF2M', 'OLMPF2M',
                                  ]:
             pass
         else:
@@ -358,32 +367,37 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
             self.binary_debug.write('  Table4\n')
         assert len(data) > 0
         if self.table_name in [# stress
-                               'OES1X1', 'OES1', 'OES1X', 'OES1C', 'OESCP',
-                               'OESNLXR','OESNLXD','OESNLBR','OESTRCP',
-                               'OESNL1X','OESRT',
+                               'OES1X1', 'OES1', 'OES1X',
+                               # composite stresses
+                               'OES1C', 'OESCP',
+                               # ??? stresses
+                               'OESNLXR','OESNLXD','OESNLBR','OESTRCP', 'OESNL1X','OESRT',
                                # strain
                                'OSTR1X', 'OSTR1C',]:
             self.read_oes1_4(data)
 
-        elif self.table_name in ['OQG1', 'OQGV1', 'OQP1', 'OQMG1', 'OQP1', ]:
+        elif self.table_name in ['OQG1', 'OQGV1',  # spc forces
+                                 'OQMG1',          # mpc forces
+                                 'OQP1', ]:        # ??? forces
             self.read_oqg1_4(data)
-        elif self.table_name in ['OUG1', 'OUGV1', 'BOUGV1', 'OUPV1', ]:
+        elif self.table_name in ['OUG1', 'OUGV1', 'BOUGV1', 'OUPV1', ]:  # displacement/acceleration/velocity/eigenvector
             self.read_oug1_4(data)
-        elif self.table_name in ['OPG1', 'OPNL1', ]:
+        elif self.table_name in ['OPG1', 'OPNL1', ]:  # applied forces
             self.read_opg1_4(data)
-        elif self.table_name in ['OEF1', 'OEFIT', 'OEF1X', 'DOEF1']:
+        elif self.table_name in ['OEF1', 'OEFIT', 'OEF1X', 'DOEF1']:  # internal forces
             self.read_oef1_4(data)
-        elif self.table_name in ['OGPWG',]:
+        elif self.table_name in ['OGPWG',]:  # grid point weight
             self._read_ogpwg_4(data)
-        elif self.table_name in ['OGS1',]:
+        elif self.table_name in ['OGS1',]:  # grid point stresses
             self._read_ogs1_4(data)
 
-        elif self.table_name in  ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4',
-                                  'GEOM1S',
+        # these tables are just skipped
+        elif self.table_name in  ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4', # regular
+                                  'GEOM1S', 'GEOM2S', 'GEOM3S', 'GEOM4S', # superelements
                                   'GEOM1N',
                                   'GEOM1OLD', 'GEOM2OLD', 'GEOM4OLD',
 
-                                  'EPT', 'EPTOLD',
+                                  'EPT', 'EPTS', 'EPTOLD',
                                   'MPT', 'MPTS',
 
                                   'PVT0', 'CASECC',
@@ -400,7 +414,7 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
                                    'ONRGY1',
                                    # other
                                    'CONTACT', 'VIEWTB', 'OMM2',
-                                   'OFMPF2M', 'OSMPF2M','OPMPF2M','OLMPF2M',
+                                   'OFMPF2M', 'OSMPF2M', 'OPMPF2M', 'OLMPF2M',
                                  ]:
             pass
         else:
