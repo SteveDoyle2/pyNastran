@@ -350,10 +350,10 @@ class BeamStrainObject(StrainObject):
         return 444  # 44+10*40   (11 nodes)
 
     def getLength1(self):
-        return (44, 'ifffffffff')
+        return (44, 'i9f')
 
     def getLength2(self):
-        return (40, 'ifffffffff')
+        return (40, 'i9f')
 
     def delete_transient(self, dt):
         del self.sxc[dt]

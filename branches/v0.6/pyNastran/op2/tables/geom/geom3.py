@@ -109,7 +109,7 @@ class Geometry3(object):
         nEntries = len(data) // 28  # 7*4
         for i in xrange(nEntries):
             eData = data[n:n + 28]
-            out = unpack('iiffffi', eData)
+            out = unpack('ii4fi', eData)
             (sid, cid, a, n1, n2, n3, mb) = out
             grav = GRAV(None, out)
             self.add_load(grav)

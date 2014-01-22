@@ -3,10 +3,12 @@ from struct import unpack
 
 from numpy import array
 
+from pyNastran.op2.dev.op2_common import OP2Common
 
-class OGPWG(object):
+
+class OGPWG(OP2Common):
     def __init__(self):
-        pass
+        OP2Common.__init__(self)
 
     def _read_ogpwg_3(self, data):
         """

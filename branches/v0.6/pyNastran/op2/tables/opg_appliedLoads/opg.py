@@ -208,8 +208,7 @@ class OPG(object):
             else:
                 self.not_implemented_or_skip()
         else:
-            raise RuntimeError('only num_wide=8 or 14 is allowed  num_wide=%s' %
-                               (self.num_wide))
+            raise RuntimeError('only num_wide=8 or 14 is allowed  num_wide=%s' % self.num_wide)
 
     def readOPG_Data_table12(self):  # Nonlinear Force Vector (in progress)
         #is_sort1 = self.is_sort1()
@@ -257,10 +256,8 @@ class OPG(object):
         #is_sort1 = self.is_sort1()
         resultName = 'gridPointStresses'
         if self.num_wide == 11:  # real/random
-            self.create_transient_object(self.gridPointStresses,
-                                       GridPointStressesObject)
-            self.handle_results_buffer(
-                self.readOGS1_table26_numWide11, resultName)
+            self.create_transient_object(self.gridPointStresses, GridPointStressesObject)
+            self.handle_results_buffer(self.readOGS1_table26_numWide11, resultName)
         else:
             msg = 'only num_wide=11 is allowed  num_wide=%s' % (self.num_wide)
             raise RuntimeError(msg)
@@ -288,12 +285,10 @@ class OPG(object):
         #print(self.code_information())
         if self.num_wide == 9:  # real/random
             resultName = 'gridPointVolumeStresses'
-            self.create_transient_object(self.gridPointVolumeStresses,
-                                       GridPointStressesVolumeObject)
-            self.handle_results_buffer(
-                self.readOGS1_table27_numWide9, resultName)
+            self.create_transient_object(self.gridPointVolumeStresses, GridPointStressesVolumeObject)
+            self.handle_results_buffer( self.readOGS1_table27_numWide9, resultName)
         else:
-            msg = 'only num_wide=9 is allowed  num_wide=%s' % (self.num_wide)
+            msg = 'only num_wide=9 is allowed  num_wide=%s' % self.num_wide
             raise RuntimeError(msg)
 
     def readOGS1_table27_numWide9(self):  # surface stresses

@@ -393,8 +393,7 @@ class OUG(object):
             elif self.thermal == 1:
                 resultName = 'temperatures'
                 name = resultName + ': Subcase %s' % self.isubcase
-                self.create_transient_object(
-                    self.temperatures, TemperatureObject)
+                self.create_transient_object(self.temperatures, TemperatureObject)
                 self.handle_results_buffer(self.OUG_RealTable, resultName)
             #elif self.thermal == 8:
                 #resultName = 'scaledDisplacements'

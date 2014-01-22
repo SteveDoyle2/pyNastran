@@ -50,7 +50,7 @@ class MPT(object):
         #print "reading CREEP"
         while len(data) >= 64:  # 16*4
             data = data[64:]
-            out = unpack(b'iffiiiififffffff', data[:64])
+            out = unpack(b'iffiiiifi7f', data[:64])
             (mid, T0, exp, form, tidkp, tidcp, tidcs, thresh,
                 Type, ag1, ag2, ag3, ag4, ag5, ag6, ag7) = out
             self.add_creep_material(CREEP(None, out), allowOverwrites=True)
@@ -63,7 +63,7 @@ class MPT(object):
         while len(data) >= 48:  # 12*4
             eData = data[:48]
             data = data[48:]
-            out = unpack(b'iffffffffffi', eData)
+            out = unpack(b'i10fi', eData)
             (mid, E, G, nu, rho, A, TRef, ge, St, Sc, Ss, mcsid) = out
             self.addOp2Material(MAT1(None, out))
 
@@ -74,7 +74,7 @@ class MPT(object):
         #print "reading MAT2"
         while len(data) >= 68:  # 17*4
             data = data[68:]
-            out = unpack(b'ifffffffffffffffi', data[:68])
+            out = unpack(b'i15fi', data[:68])
             (mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
                 TRef, ge, St, Sc, Ss, mcsid) = out
             #print "MAT2 = ",out
@@ -92,7 +92,7 @@ class MPT(object):
         #print "reading MAT3"
         while len(data) >= 64:  # 16*4
             data = data[64:]
-            out = unpack(b'iffffffffifffffi', data[:64])
+            out = unpack(b'i8fi5fi', data[:64])
             (mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx,
                 blank, ax, ath, az, TRef, ge, blank) = out
             mat = MAT3(None, [mid, ex, eth, ez, nuxth, nuthz,
@@ -117,7 +117,7 @@ class MPT(object):
         #print "reading MAT5"
         while len(data) >= 40:  # 10*4
             data = data[40:]
-            out = unpack(b'ifffffffff', data[:40])
+            out = unpack(b'i9f', data[:40])
             (mid, k1, k2, k3, k4, k5, k6, cp, rho, hgen) = out
             self.add_thermal_material(MAT5(None, out), allowOverwrites=True)
 
@@ -141,7 +141,7 @@ class MPT(object):
         #print "reading MAT9"
         while len(data) >= 140:  # 35*4
             data = data[140:]
-            out = unpack(b'iiiiiiiiiiiiiiiiiiiiiifffffffffiiii', data[:140])
+            out = unpack(b'22i9f4i', data[:140])
 
             (
                 mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21,
@@ -158,7 +158,7 @@ class MPT(object):
         """
         #print "reading MAT10"
         while len(data) >= 20:  # 5*4
-            out = unpack(b'iffff', data[:20])
+            out = unpack(b'i4f', data[:20])
             data = data[20:]
             (mid, bulk, rho, c, ge) = out
             self.addOp2Material(MAT10(None, out))
@@ -171,7 +171,7 @@ class MPT(object):
         while len(data) >= 140:  # 35*4
             eData = data[:140]
             data = data[140:]
-            out1 = unpack(b'ifffffffiiifffffffffffffffffffffffi', eData)
+            out1 = unpack(b'i7f3i23fi', eData)
             (mid, a10, a01, d1, rho, alpha, tref, ge, sf, na, nd, kp,
              a20, a11, a02, d2,
              a30, a21, a12, a03, d3,
@@ -183,7 +183,7 @@ class MPT(object):
             if continueFlag:
                 eData = data[:32]  # 7*4
                 data = data[32:]
-                out2 = unpack(b'iiiiiiii', eData)
+                out2 = unpack(b'8i', eData)
                 (tab1, tab2, tab3, tab4, x1, x2, x3, tab5) = out2
                 data.append(out2)
             self.addOp2Material(MATHP(None, dataIn))

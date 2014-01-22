@@ -85,7 +85,7 @@ class RodStressObject(StressObject):
         return msg
 
     def getLength(self):
-        return (20, 'ffff')
+        return (20, '4f')
 
     def add_f06_data(self, data, transient):
         if transient is None:
@@ -119,7 +119,7 @@ class RodStressObject(StressObject):
             self.MS_torsion[dt][eid] = MSt
 
     def getLength(self):
-        return (20, 'ffff')
+        return (20, '4f')
 
     def delete_transient(self, dt):
         del self.axial[dt]
@@ -357,7 +357,7 @@ class RodStrainObject(StrainObject):
             self.MS_torsion[dt][eid] = MSt
 
     def getLength(self):
-        return (20, 'ffff')
+        return (20, '4f')
 
     def delete_transient(self, dt):
         del self.axial[dt]

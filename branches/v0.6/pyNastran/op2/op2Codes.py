@@ -470,7 +470,7 @@ class Op2Codes(object):
         elif thermal == 1:
             ForceFlux = 'Flux'
         else:
-            ForceFlux = 'Force (or Flux)'
+            ForceFlux = 'Force (or Flux); thermal=%r' % thermal
 
         if thermal == 0:
             DispTemp = 'Displacement'
@@ -574,14 +574,13 @@ class Op2Codes(object):
         msg += "  isRandom      = %-3s %s\n" % (self.sort_bits[2], sortWord3)
 
         if element_type is not None:
-            msg += "  element_type  = %-3s %s\n" % (
-                element_type, self.get_element_type(element_type))
+            msg += "  element_type  = %-3s %s\n" % (element_type, self.get_element_type(element_type))
         if sWord:  # stress code
             msg += "  s_code        = %-3s %s\n" % (s_code, sWord)
         if thermal is not None:
             msg += "  thermal       = %-3s %s\n" % (thermal, thermalWord)
         msg += "  num_wide      = %-3s\n" % self.num_wide
-        if hasattr(self,'isubcase'):
+        if hasattr(self, 'isubcase'):
             msg += "  isubcase      = %-3s\n" % self.isubcase
         else:
             msg += "  ID            = %-3s\n" % self.ID

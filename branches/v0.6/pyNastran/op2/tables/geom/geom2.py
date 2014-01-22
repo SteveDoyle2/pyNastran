@@ -112,19 +112,19 @@ class Geometry2(object):
             f, = unpack(b'i', eData[28:32])
             #print "len(eData) = %s" %(len(eData))
             if   f == 0:
-                out = unpack(b'iiiifffiiiffffff', eData)
+                out = unpack(b'4i3f3i6f', eData)
                 (eid, pid, ga, gb, x1, x2, x3, f, pa, pb,
                     w1a, w2a, w3a, w1b, w2b, w3b) = out
                 dataIn = [[eid, pid, ga, gb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
                           [f, x1, x2, x3]]
             elif f == 1:
-                out = unpack(b'iiiifffiiiffffff', eData)
+                out = unpack(b'4i3f3i6f', eData)
                 (eid, pid, ga, gb, x1, x2, x3, f, pa, pb,
                     w1a, w2a, w3a, w1b, w2b, w3b) = out
                 dataIn = [[eid, pid, ga, gb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
                           [f, x1, x2, x3]]
             elif f == 2:
-                out = unpack(b'iiiiiiifiiffffff', eData)
+                out = unpack(b'7if2i6f', eData)
                 (eid, pid, ga, gb, g0, junk, junk, f, pa,
                     pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
                 dataIn = [[eid, pid, ga, gb, pa, pb, w1a,
@@ -218,7 +218,7 @@ class Geometry2(object):
         nEntries = len(data) // 24
         for i in xrange(nEntries):
             eData = data[n:n + 24]  # 6*4
-            out = unpack(b'iiiiii', eData)
+            out = unpack(b'6i', eData)
             (eid, pid, g1, g2, c1, c2) = out
             elem = CDAMP1(None, out)
             self.addOp2Element(elem)
@@ -234,7 +234,7 @@ class Geometry2(object):
         nEntries = len(data) // 24
         for i in xrange(nEntries):
             eData = data[n:n + 24]  # 6*4
-            out = unpack(b'ifiiii', eData)
+            out = unpack(b'if4i', eData)
             (eid, b, g1, g2, c1, c2) = out
             elem = CDAMP2(None, out)
             self.addOp2Element(elem)
@@ -250,7 +250,7 @@ class Geometry2(object):
         nEntries = len(data) // 16
         for i in xrange(nEntries):
             eData = data[n:n + 16]  # 4*4
-            out = unpack(b'iiii', eData)
+            out = unpack(b'4i', eData)
             (eid, pid, s1, s2) = out
             elem = CDAMP3(None, out)
             self.addOp2Element(elem)
@@ -282,7 +282,7 @@ class Geometry2(object):
         nEntries = len(data) // 16
         for i in xrange(nEntries):
             eData = data[n:n + 16]  # 4*4
-            out = unpack(b'iiii', eData)
+            out = unpack(b'4i', eData)
             (eid, pid, s1, s2) = out
             elem = CDAMP5(None, out)
             self.addOp2Element(elem)
@@ -306,7 +306,7 @@ class Geometry2(object):
         while len(data) >= 24:  # 6*4
             eData = data[:24]
             data = data[24:]
-            out = unpack(b'iiiiii', eData)
+            out = unpack(b'6i', eData)
             (eid, pid, g1, g2, c1, c2) = out
             elem = CELAS1(None, out)
             self.addOp2Element(elem)
@@ -319,7 +319,7 @@ class Geometry2(object):
         while len(data) >= 32:  # 8*4
             eData = data[:32]
             data = data[32:]
-            out = unpack(b'ifiiiiff', eData)
+            out = unpack(b'if4iff', eData)
             (eid, k, g1, g2, c1, c2, ge, s) = out
             elem = CELAS2(None, out)
             self.addOp2Element(elem)
@@ -332,7 +332,7 @@ class Geometry2(object):
         while len(data) >= 16:  # 4*4
             eData = data[:16]
             data = data[16:]
-            out = unpack(b'iiii', eData)
+            out = unpack(b'4i', eData)
             (eid, pid, s1, s2) = out
             elem = CELAS3(None, out)
             self.addOp2Element(elem)
@@ -532,7 +532,7 @@ class Geometry2(object):
         while len(data) >= 52:  # 13*4
             eData = data[:52]
             data = data[52:]
-            out = unpack(b'iiiffffffffff', eData)
+            out = unpack(b'3i10f', eData)
             (eid, g, cid, m, x1, x2, x3, i1, i2a, i2b, i3a, i3b, i3c) = out
             elem = CONM2(None, out)
             self.addOp2Element(elem)
@@ -545,7 +545,7 @@ class Geometry2(object):
         while len(data) >= 32:  # 8*4
             eData = data[:32]
             data = data[32:]
-            out = unpack(b'iiiiffff', eData)
+            out = unpack(b'4i4f', eData)
             (eid, n1, n2, mid, a, j, c, nsm) = out
             elem = CONROD(None, out)
             self.addOp2Element(elem)
@@ -559,7 +559,7 @@ class Geometry2(object):
         while len(data) >= 80:  # 20*4
             eData = data[:80]
             data = data[80:]
-            out = unpack(b'iiiiiiiiiiiiffffffff', eData)
+            out = unpack(b'12i8f', eData)
             (eid, pconID, flmnd, cntrlnd,
              ta1, ta2, ta3, ta5, ta6, ta7, ta8,
              wt1, wt2, wt3, wt5, wt6, wt7, wt8) = out
@@ -578,7 +578,7 @@ class Geometry2(object):
         while len(data) >= 28:  # 7*4
             eData = data[:28]
             data = data[28:]
-            out = unpack(b'iiiiiii', eData)
+            out = unpack(b'7i', eData)
             (eid, pconID, flmnd, cntrlnd,
              [ta1, ta2, ta3]) = out
             dataIn = [eid, pconID, flmnd, cntrlnd,
@@ -597,7 +597,7 @@ class Geometry2(object):
         nEntries = len(data) // 68
         for i in xrange(nEntries):
             eData = data[n:n + 68]  # 17*4
-            out = unpack(b'iiiiiiiiiiiiiiiii', eData)
+            out = unpack(b'17i', eData)
             (eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
              g11, g12, g13, g14, g15) = out
 
@@ -631,7 +631,7 @@ class Geometry2(object):
         for i in xrange(nEntries):
             eData = data[n:n + 44]
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8,
-                n9) = unpack(b'iiiiiiiiiii', eData)
+                n9) = unpack(b'11i', eData)
             #print "eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4)
             #dataInit = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
             data = [eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9]
@@ -657,7 +657,7 @@ class Geometry2(object):
         for i in xrange(nEntries):
             eData = data[n:n + 56]  # 14*4
             (eid, pid, n1, n2, n3, n4, theta, zoffs, blank, tflag,
-                t1, t2, t3, t4) = unpack(b'iiiiiiffiiffff', eData)
+                t1, t2, t3, t4) = unpack(b'6iffii4f', eData)
             #print "eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s blank=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,blank,tflag,t1,t2,t3,t4)
             dataInit = [eid, pid, n1, n2, n3, n4, theta, zoffs,
                         tflag, t1, t2, t3, t4]
@@ -679,7 +679,7 @@ class Geometry2(object):
         nEntries = len(data) // 64  # 17*4
         for i in xrange(nEntries):
             eData = data[n:n + 64]
-            out = unpack(b'iiiiiiiiiifffffi', eData)
+            out = unpack(b'10i5fi', eData)
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
                 t3, t4, theta, tflag) = out
             #print "eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4)
@@ -719,7 +719,7 @@ class Geometry2(object):
         nEntries = len(data) // 16  # 4*4
         for i in xrange(nEntries):
             eData = data[n:n + 16]
-            out = unpack(b'iiii', eData)
+            out = unpack(b'4i', eData)
             (eid, pid, n1, n2) = out
             elem = CROD(None, out)
             self.addOp2Element(elem)
@@ -833,7 +833,7 @@ class Geometry2(object):
         nEntries = len(data) // 52  # 13*4
         for i in xrange(nEntries):
             eData = data[n:n + 52]
-            out = unpack(b'iiiiiiiiffffi', eData)
+            out = unpack(b'8i4fi', eData)
             #print "eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %(eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3)
             (eid, pid, n1, n2, n3, n4, n5, n6, theta, t1, t2, t3, tflag) = out
             elem = CTRIA6(None, out)
@@ -909,12 +909,14 @@ class Geometry2(object):
         """
         (5551,49,105)    - the marker for Record 118
         """
-        while len(data) >= 4:  # 4*4
-            eData = data[:4]
-            data = data[4:]
-            (nid,) = unpack(b'i', eData)
+        npoints = len(self.data) // 4
+        for i in xrange(npoints):
+            edata = data[n:n+4]
+            (nid,) = unpack(b'i', edata)
             spoint = SPOINTs(None, [nid])
             self.add_SPOINT(spoint)
+            n += 4
+        self.data = self.data[n:]
 
 # VUBEAM
 # VUHEXA

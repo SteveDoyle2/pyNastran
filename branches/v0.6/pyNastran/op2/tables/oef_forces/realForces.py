@@ -128,7 +128,7 @@ class RealForces(object):
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
         #print self.code_information()
-        formatAll = 'iffffffff'
+        formatAll = 'i8f'
         format1 = bytes(format1)
         formatAll = bytes(formatAll)
 
@@ -169,7 +169,7 @@ class RealForces(object):
     def OEF_Shear(self):  # 4-CSHEAR
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
-        format1 += 'ffffffffffffffff'
+        format1 += '16f'
         format1 = bytes(format1)
 
         while len(self.data) >= 68:  # 17*4
@@ -220,9 +220,9 @@ class RealForces(object):
     def OEF_CBar(self):  # 34-CBAR
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
-        format1 += 'ffffffff'
+        format1 += '8f'
         format1 = bytes(format1)
-        
+
         ntotal = 36  # 9*4
         n = 0
         nelements = len(self.data) // ntotal
@@ -245,7 +245,7 @@ class RealForces(object):
     def OEF_CBar100(self):  # 100-CBAR
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
-        format1 += 'fffffff'
+        format1 += '7f'
         format1 = bytes(format1)
 
         while len(self.data) >= 36:  # 9*4
@@ -272,7 +272,7 @@ class RealForces(object):
         (format1, extract) = self.getOEF_FormatStart()
         format1 += '8f'
         format1 = bytes(format1)
-        
+
         ntotal = 36 # 9*4
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):
@@ -370,7 +370,7 @@ class RealForces(object):
     def OEF_CGap(self):  # 38-CGAP
         dt = self.nonlinear_factor
         (format1, extract) = self.getOEF_FormatStart()
-        format1 += 'ffffffff'
+        format1 += '8f'
         format1 = bytes(format1)
 
         while len(self.data) >= 36:  # 9*4
@@ -531,7 +531,7 @@ class RealForces(object):
         else:
             raise NotImplementedError(self.code_information())
 
-        formatAll = 'ifffiiifffffi'
+        formatAll = 'i3f3i5fi'
         format1 = bytes(format1)
         formatAll = bytes(formatAll)
         n = 24 + 52 * nNodes

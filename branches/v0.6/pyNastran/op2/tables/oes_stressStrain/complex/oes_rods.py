@@ -37,7 +37,7 @@ class ComplexRodStressObject(StressObject):
             self.add_new_eid = self.add_new_eid_sort2
 
     def getLength(self):
-        return (20, 'ffff')
+        return (20, '4f')
 
     def add_f06_data(self, data, transient):
         if transient is None:
