@@ -122,14 +122,16 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
             else:
                 self.table_name = table_name
                 if table_name in ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4',
+                                  'GEOM1S',
                                   'GEOM1N',
-                                  'GEOM1OLD',
+                                  'GEOM1OLD', 'GEOM2OLD', 'GEOM4OLD',
 
-                                  'EPT',
+                                  'EPT', 'EPTOLD',
                                   'MPT', 'MPTS',
 
                                   'PVT0', 'CASECC',
-                                  'EDOM', 'BGPDT', 'OGPFB1',
+                                  'EDOM', 'OGPFB1',
+                                  'BGPDT', 'BGPDTOLD',
                                   'DYNAMIC', 'DYNAMICS',
                                   'EQEXIN', 'EQEXINS',
                                   'GPDT', 'ERRORN',
@@ -157,18 +159,21 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
                                     # strain
                                     'OSTR1X', 'OSTR1C',
                                     # forces
-                                    'OEFIT', 'OEF1X', 'OEF1', 'OEF1X',
+                                    'OEFIT', 'OEF1X', 'OEF1', 'DOEF1',
                                     # spc forces
                                     'OQG1',
                                     # mpc forces
                                     'OQMG1',
+                                    # ??? forces
+                                    'OQP1', 
                                     # displacement/velocity/acceleration/eigenvector
-                                    'OUG1', 'OUGV1', 'BOUGV1',
+                                    'OUG1', 'OUGV1', 'BOUGV1', 'OUPV1', 
                                     # applied loads
-                                    'OPG1',#'OPG2',
+                                    'OPG1', 'OPNL1', #'OPG2',
 
-                                    'OUPV1', 'OGS1','OPNL1',
+                                    'OGS1','OPNL1',
                                     # other
+                                    'OFMPF2M','OSMPF2M','OPMPF2M','OLMPF2M',
                                     ]:
                     self._read_results_table()
                 else:
@@ -203,6 +208,13 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
         data = self._read_record()
 
         self.read_markers([-5, 1, 0])
+
+        markers = self.get_nmarkers(1, rewind=True)
+        if markers != [0]:
+            data = self._read_record()
+            self.read_markers([-6, 1, 0])
+
+        #self.show(100)
         self.read_markers([0])
 
     def _read_pcompts(self):
@@ -326,25 +338,30 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
                                'OSTR1X', 'OSTR1C',]:
             self.read_oes1_3(data)
 
-        elif self.table_name in ['OQG1', 'OQGV1', 'OQP1', 'OQMG1']:
+        elif self.table_name in ['OQG1', 'OQGV1', 'OQP1', 'OQMG1', 'OQP1',]:
             self.read_oqg1_3(data)
-        elif self.table_name in ['OUG1', 'OUGV1']:
+        elif self.table_name in ['OUG1', 'OUGV1', 'BOUGV1', 'OUPV1', ]:
             self.read_oug1_3(data)
-        elif self.table_name in ['OPG1']:
+        elif self.table_name in ['OPG1', 'OPNL1', ]:
             self.read_opg1_3(data)
-        elif self.table_name in ['OEF1', 'OEFIT', 'OEF1X']:
+        elif self.table_name in ['OEF1', 'OEFIT', 'OEF1X', 'DOEF1']:
             self.read_oef1_3(data)
         elif self.table_name in ['OGPWG',]:
             self._read_ogpwg_3(data)
+        elif self.table_name in ['OGS1',]:
+            self._read_ogs1_3(data)
+
         elif self.table_name in  ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4',
                                   'GEOM1S',
-                                  'GEOM1OLD',
+                                  'GEOM1N',
+                                  'GEOM1OLD', 'GEOM2OLD', 'GEOM4OLD',
 
-                                  'EPT',
+                                  'EPT', 'EPTOLD',
                                   'MPT', 'MPTS',
 
                                   'PVT0', 'CASECC',
-                                  'EDOM', 'BGPDT', 'OGPFB1',
+                                  'EDOM', 'OGPFB1',
+                                  'BGPDT', 'BGPDTOLD',
                                   'DYNAMIC', 'DYNAMICS',
                                   'EQEXIN', 'EQEXINS',
                                   'GPDT', 'ERRORN',
@@ -356,6 +373,7 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
                                    'ONRGY1',
                                    # other
                                    'CONTACT', 'VIEWTB', 'OMM2',
+                                   'OFMPF2M', 'OSMPF2M','OPMPF2M','OLMPF2M',
                                  ]:
             pass
         else:
@@ -373,25 +391,30 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
                                'OSTR1X', 'OSTR1C',]:
             self.read_oes1_4(data)
 
-        elif self.table_name in ['OQG1', 'OQGV1', 'OQP1', 'OQMG1']:
+        elif self.table_name in ['OQG1', 'OQGV1', 'OQP1', 'OQMG1', 'OQP1', ]:
             self.read_oqg1_4(data)
-        elif self.table_name in ['OUG1', 'OUGV1']:
+        elif self.table_name in ['OUG1', 'OUGV1', 'BOUGV1', 'OUPV1', ]:
             self.read_oug1_4(data)
-        elif self.table_name in ['OPG1']:
+        elif self.table_name in ['OPG1', 'OPNL1', ]:
             self.read_opg1_4(data)
-        elif self.table_name in ['OEF1', 'OEFIT', 'OEF1X']:
+        elif self.table_name in ['OEF1', 'OEFIT', 'OEF1X', 'DOEF1']:
             self.read_oef1_4(data)
         elif self.table_name in ['OGPWG',]:
             self._read_ogpwg_4(data)
-        elif self.table_name in  ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4',
-                                  'GEOM1S'
-                                  'GEOM1OLD',
+        elif self.table_name in ['OGS1',]:
+            self._read_ogs1_4(data)
 
-                                  'EPT',
+        elif self.table_name in  ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4',
+                                  'GEOM1S',
+                                  'GEOM1N',
+                                  'GEOM1OLD', 'GEOM2OLD', 'GEOM4OLD',
+
+                                  'EPT', 'EPTOLD',
                                   'MPT', 'MPTS',
 
                                   'PVT0', 'CASECC',
-                                  'EDOM', 'BGPDT', 'OGPFB1',
+                                  'EDOM', 'OGPFB1',
+                                  'BGPDT', 'BGPDTOLD',
                                   'DYNAMIC', 'DYNAMICS',
                                   'EQEXIN', 'EQEXINS',
                                   'GPDT', 'ERRORN',
@@ -403,10 +426,13 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
                                    'ONRGY1',
                                    # other
                                    'CONTACT', 'VIEWTB', 'OMM2',
+                                   'OFMPF2M', 'OSMPF2M','OPMPF2M','OLMPF2M',
                                  ]:
             pass
         else:
             raise NotImplementedError(self.table_name)
+        #if hasattr(self, 'thermal'):
+            #assert self.thermal in [0, 1], self.thermal
 
     def finish(self):
         for word in self.words:
@@ -435,6 +461,14 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
         #: what solution was run (e.g. Static/Transient/Modal)
         self.analysis_code = (aCode - self.device_code) // 10
 
+        #print('parse_approach_code - aCode=%s tCode=%s int3=%s isubcase=%s' % (aCode, tCode, int3, isubcase))
+        #print('                 so - analysis_code=%s device_code=%s table_code=%s sort_code=%s\n' % (self.analysis_code, self.device_code, self.table_code, self.sort_code))
+        if self.debug3():
+            self.binary_debug.write('  table_code    = %r\n' % self.table_code)
+            self.binary_debug.write('  sort_code     = %r\n' % self.sort_code)
+            self.binary_debug.write('  device_code   = %r\n' % self.device_code)
+            self.binary_debug.write('  analysis_code = %r\n' % self.analysis_code)
+
         if self.device_code == 3:
             #sys.stderr.write('The op2 may be inconsistent...\n')
             #sys.stderr.write("  print and plot can cause bad results..."
@@ -445,8 +479,6 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat, Results):
             #self.log.info('  print and plot can cause bad results...'
             #              'if there's a crash, try plot only')
 
-        #print('parse_approach_code - aCode=%s tCode=%s int3=%s isubcase=%s' % (aCode, tCode, int3, isubcase))
-        #print('                 so - analysis_code=%s device_code=%s table_code=%s sort_code=%s\n' % (self.analysis_code, self.device_code, self.table_code, self.sort_code))
         self._parse_sort_code()
 
     #===================================
