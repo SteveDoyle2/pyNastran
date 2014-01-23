@@ -463,6 +463,7 @@ class OES(OP2Common):
 
         elif self.element_type in [74]: # TRIA3
             numwide_real = 17
+            numwide_imag = 15
             if self.num_wide == numwide_real:
                 return
                 ntotal = 68  # 4*17
@@ -493,6 +494,8 @@ class OES(OP2Common):
 
                     #print "eid =", eid
                     n += ntotal
+            if self.num_wide == numwide_imag:
+                raise NotImplementedError(self.num_wide)
             else:
                 raise NotImplementedError(self.num_wide)
 
@@ -948,6 +951,30 @@ class OES(OP2Common):
             # 4-CSHEAR
             if self.num_wide == 1:
                 asdf
+            elif self.num_wide == 5:
+                ntotal = 20  # 4*5
+                format1 = b'i4f'
+
+                n = 0
+                nelements = len(data) // ntotal
+                s = Struct(format1)
+                for i in xrange(nelements):
+                    edata = data[n:n + ntotal]
+                    out = s.unpack(edata)  # num_wide=5
+                    if self.debug4():
+                        self.binary_debug.write('CSHEAR-4 - %s\n' % str(out))
+
+                    (eid_device, etmaxr, etmaxi, etavgr, etavgi) = out
+                    eid = (eid_device - self.device_code) // 10
+
+                    if is_magnitude_phase:
+                        etmax = polar_to_real_imag(etmaxr, etmaxi)
+                        etavg = polar_to_real_imag(etavgr, etavgi)
+                    else:
+                        etmax = complex(etmaxr, etmaxi)
+                        etavg = complex(etavgr, etavgi)
+                    #self.obj.add_new_eid(self.element_type, dt, eid, etmax, etavg)
+                    n += ntotal
             else:
                 raise NotImplementedError(self.num_wide)
         elif self.element_type in [35]:

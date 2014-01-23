@@ -264,9 +264,10 @@ class OEF(OP2Common):
                 #self.obj.add(dt, dataIn)
                 n += ntotal
             pass
-        elif self.element_type in [33, 39, 64, 67, 68, 74, 75]:
+        elif self.element_type in [33, 39, 53, 64, 67, 68, 74, 75]:
             # 33-CQUAD4-centroidal
             # 39-CTETRA
+            # 53-CTRIAX6
             # 67-CHEXA
             # 64-QUAD8
             # 74-CTRIA3-centroidal
@@ -274,11 +275,18 @@ class OEF(OP2Common):
             # 33-CQUAD4-centroidal
             # 68-CPENTA
             return
-        elif self.element_type in [107, 108, 109, 110, 191, 235]:
+        elif self.element_type in [107, 108, 109, 110, 145, 146,
+                147, 189, 190, 191]:
             # 107-CHBDYE
             # 108-CHBDYG
             # 109-CHBDYP
             # 110-CONV
+            # 145-VUHEXA
+            # 146-VUPENTA
+            # 147-VUTETRA
+            # 189-VUQUAD
+            # 190-VUTRIA
+            # 191-VUBEAM
             return
         else:
             raise NotImplementedError('OEF sort1 thermal Type=%s num=%s' % (self.element_name, self.element_type))
