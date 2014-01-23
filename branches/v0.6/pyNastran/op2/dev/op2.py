@@ -61,12 +61,14 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
             # OQG
             # spc forces
             'OQG1'  : [self.read_oqg1_3, self.read_oqg1_4],
+            'OQGV1' : [self.read_oqg1_3, self.read_oqg1_4],
             # mpc forces
             'OQMG1' : [self.read_oqg1_3, self.read_oqg1_4],
             #=======================
             # OPG
             # applied loads
             'OPG1'  : [self.read_opg1_3, self.read_opg1_4],
+            'OPGV1' : [self.read_opg1_3, self.read_opg1_4],
             'OPNL1' : [self.read_opg1_3, self.read_opg1_4],
 
             #=======================
@@ -134,7 +136,10 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
             raise NotImplementedError(markers)
 
         #=================
-        table_name = self.read_table_name(rewind=True)
+        table_name = self.read_table_name(rewind=True, stop_on_failure=False)
+        if table_name is None:
+            raise FatalError('no tables exists...')
+
         keep_going = True
         table_names = []
         while table_name is not None:
@@ -191,7 +196,7 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
                                     # forces
                                     'OEFIT', 'OEF1X', 'OEF1', 'DOEF1',
                                     # spc forces
-                                    'OQG1',
+                                    'OQG1', 'OQGV1',
                                     # mpc forces
                                     'OQMG1',
                                     # ??? forces
@@ -199,13 +204,27 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
                                     # displacement/velocity/acceleration/eigenvector
                                     'OUG1', 'OUGV1', 'BOUGV1', 'OUPV1',
                                     # applied loads
-                                    'OPG1', 'OPNL1', #'OPG2',
+                                    'OPG1', 'OPGV1', 'OPNL1', #'OPG2',
 
                                     # grid point stresses
                                     'OGS1',
 
                                     # other
-                                    'OPNL1','OFMPF2M','OSMPF2M','OPMPF2M','OLMPF2M',
+                                    'OPNL1','OFMPF2M',
+                                    'OSMPF2M','OPMPF2M','OLMPF2M', 'OGPMPF2M',
+
+                                    'OAGPSD2', 'OAGCRM2', 'OAGRMS2', 'OAGATO2', 'OAGNO2',
+                                    'OESPSD2', 'OESCRM2', 'OESRMS2', 'OESATO2', 'OESNO2',
+                                    'OEFPSD2', 'OEFCRM2', 'OEFRMS2', 'OEFATO2', 'OEFNO2',
+                                    'OPGPSD2', 'OPGCRM2', 'OPGRMS2', 'OPGATO2', 'OPGNO2', 
+                                    'OQGPSD2', 'OQGCRM2', 'OQGRMS2', 'OQGATO2', 'OQGNO2', 
+                                    'OQMPSD2', 'OQMCRM2', 'OQMRMS2', 'OQMATO2', 'OQMNO2',
+                                    'OSTRPSD2','OSTRCRM2','OSTRRMS2','OSTRATO2','OSTRNO2',
+                                    'OUGPSD2', 'OUGCRM2', 'OUGRMS2', 'OUGATO2', 'OUGNO2',
+                                    'OVGPSD2', 'OVGCRM2', 'OVGRMS2', 'OVGATO2', 'OVGNO2',
+                                    'OCRUG',
+                                    'OCRPG', 
+                                    'STDISP', 'FOL',
                                     ]:
                     self._read_results_table()
                 else:
@@ -254,6 +273,21 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
             data = self._read_record()
             self.read_markers([-6, 1, 0])
 
+        markers = self.get_nmarkers(1, rewind=True)
+        if markers != [0]:
+            data = self._read_record()
+            self.read_markers([-7, 1, 0])
+
+        markers = self.get_nmarkers(1, rewind=True)
+        if markers != [0]:
+            data = self._read_record()
+            self.read_markers([-8, 1, 0])
+
+        markers = self.get_nmarkers(1, rewind=True)
+        if markers != [0]:
+            data = self._read_record()
+            self.read_markers([-9, 1, 0])
+
         #self.show(100)
         self.read_markers([0])
 
@@ -269,15 +303,24 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
         #print "table_name = %r" % table_name
 
         self.read_markers([-3, 1, 0])
+        markers = self.get_nmarkers(1, rewind=True)
+        if markers != [-4]:
+            data = self._read_record()
+
         self.read_markers([-4, 1, 0])
-        data = self._read_record()
+        markers = self.get_nmarkers(1, rewind=True)
+        if markers != [0]:
+            data = self._read_record()
+        else:
+            self.read_markers([0])
+            return
+            
 
         self.read_markers([-5, 1, 0])
         data = self._read_record()
 
         self.read_markers([-6, 1, 0])
         self.read_markers([0])
-        #self.show(100)
 
     def read_table_name(self, rewind=False, stop_on_failure=True):
         ni = self.n

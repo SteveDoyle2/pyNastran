@@ -128,6 +128,17 @@ class OES(OP2Common):
             self.binary_debug.write('*'* 20 + '\n\n')
 
     def read_oes1_4_sort1(self, data):
+        if self.thermal == 0:
+            self.read_oes_loads(data)
+        elif self.thermal == 1:
+            self.read_oes_thermal(data)
+        else:
+            raise NotImplementedError(self.thermal)
+
+    def read_oes_thermal(self, data):
+        n = 0
+
+    def read_oes_loads(self, data):
         n = 0
         is_magnitude_phase = self.is_magnitude_phase()
         if self.element_type in [1, 3, 10]: # CROD, CTUBE, CONROD
@@ -184,7 +195,6 @@ class OES(OP2Common):
                     eid = (eid_device - self.device_code) // 10
                     assert eid > 0, eid
                     n += ntotal
-                raise NotImplementedError(self.num_wide)
             else:
                 raise NotImplementedError(self.num_wide)
 
@@ -351,6 +361,7 @@ class OES(OP2Common):
         # plates
         elif self.element_type in [33]: # QUAD4-centroidal
             numwide_real = 17
+            numwide_imag = 15
             if self.num_wide == numwide_real:
                 return
                 ntotal = 68  # 4*17
@@ -381,6 +392,72 @@ class OES(OP2Common):
                     #             angle2, major2, minor2, maxShear2)
                     #print "eid =", eid
                     n += ntotal
+            elif self.num_wide == numwide_imag:
+                format1 = b'i14f'
+                nnodes = 0  # centroid + 4 corner points
+
+                ntotal = 4 * (15 * (nnodes + 1))
+                nelements = len(data) // ntotal
+                for i in xrange(nelements):
+                    edata = data[n:n+60]  # 4*15=60
+                    n += 60
+                    out = unpack(format1, edata)  # 15
+                    if self.debug4():
+                        self.binary_debug.write('  %s\n' % str(out))
+                    (eid_device, fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
+                                 fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
+
+                    if is_magnitude_phase:
+                        sx1 = polar_to_real_imag(sx1r, sx1i)
+                        sx2 = polar_to_real_imag(sx2r, sx2i)
+                        sy1 = polar_to_real_imag(sy1r, sy1i)
+                        sy2 = polar_to_real_imag(sy2r, sy2i)
+                        txy1 = polar_to_real_imag(txy1r, txy1i)
+                        txy2 = polar_to_real_imag(txy2r, txy2i)
+                    else:
+                        sx1 = complex(sx1r, sx1i)
+                        sx2 = complex(sx2r, sx2i)
+                        sy1 = complex(sy1r, sy1i)
+                        sy2 = complex(sy2r, sy2i)
+                        txy1 = complex(txy1r, txy1i)
+                        txy2 = complex(txy2r, txy2i)
+
+                    eid = (eid_device - self.device_code) // 10
+
+                    #print "eid=%i grid=%s fd1=%-3.1f sx1=%s sy1=%s txy1=%s" %(eid,'C',fd1,sx1,sy1,txy1)
+                    #print   "             fd2=%-3.1f sx2=%s sy2=%s txy2=%s\n"       %(fd2,sx2,sy2,txy2)
+                    #self.obj.add_new_eid('CQUAD4', dt, eid, 'C', fd1, sx1, sy1, txy1)
+                    #self.obj.add(dt, eid, 'C', fd2, sx2, sy2, txy2)
+
+                    for nodeID in xrange(nnodes):  # nodes pts
+                        edata = self.data[n:n+60]  # 4*15=60
+                        n += 60
+                        out = unpack(b'i14f', edata)
+                        if self.debug4():
+                            self.binary_debug.write('  %s\n' % str(out))
+                        (grid, fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
+                               fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
+
+                        if is_magnitude_phase:
+                            sx1 = polar_to_real_imag(sx1r, sx1i)
+                            sx2 = polar_to_real_imag(sx2r, sx2i)
+                            sy1 = polar_to_real_imag(sy1r, sy1i)
+                            sy2 = polar_to_real_imag(sy2r, sy2i)
+                            txy1 = polar_to_real_imag(txy1r, txy1i)
+                            txy2 = polar_to_real_imag(txy2r, txy2i)
+                        else:
+                            sx1 = complex(sx1r, sx1i)
+                            sx2 = complex(sx2r, sx2i)
+                            sy1 = complex(sy1r, sy1i)
+                            sy2 = complex(sy2r, sy2i)
+                            txy1 = complex(txy1r, txy1i)
+                            txy2 = complex(txy2r, txy2i)
+
+                        #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i\n" %(eid,grid,fd1,sx1,sy1,txy1)
+                        #print "               fd2=%i sx2=%i sy2=%i txy2=%i\n"          %(fd2,sx2,sy2,txy2)
+                        #self.obj.addNewNode(dt, eid, grid, fd1, sx1, sy1, txy1)
+                        #self.obj.add(dt, eid, grid, fd2, sx2, sy2, txy2)
+
             else:
                 raise NotImplementedError(self.num_wide)
 
@@ -703,6 +780,39 @@ class OES(OP2Common):
 
                     #self.obj.add_new_eid(self.element_type, dt, eid, tx, ty, tz, rx, ry, rz)
                     n += ntotal
+            elif self.num_wide == 13:  # imag
+                ntotal = 52  # 4*13
+                format1 = b'i12f'
+
+                n = 0
+                nelements = len(data) // ntotal
+                s = Struct(format1)
+                for i in xrange(nelements):
+                    edata = data[n:n + ntotal]
+                    out = s.unpack(edata)  # num_wide=7
+                    if self.debug4():
+                        self.binary_debug.write('CBUSH-102 - %s\n' % str(out))
+
+                    (eid_device, txr, tyr, tzr, rxr, ryr, rzr,
+                                 txi, tyi, tzi, rxi ,ryi, rzi) = out
+                    eid = (eid_device - self.device_code) // 10
+
+                    if is_magnitude_phase:
+                        tx = polar_to_real_imag(txr, txi)
+                        ty = polar_to_real_imag(tyr, tyi)
+                        tz = polar_to_real_imag(tzr, tzi)
+                        rx = polar_to_real_imag(rxr, rxi)
+                        ry = polar_to_real_imag(ryr, ryi)
+                        rz = polar_to_real_imag(rzr, rzi)
+                    else:
+                        tx = complex(txr, txi)
+                        ty = complex(tyr, tyi)
+                        tz = complex(tzr, tzi)
+                        rx = complex(rxr, rxi)
+                        ry = complex(ryr, ryi)
+                        rz = complex(rzr, rzi)
+                    #self.obj.add_new_eid(self.element_type, dt, eid, tx, ty, tz, rx, ry, rz)
+                    n += ntotal
             else:
                 raise NotImplementedError(self.num_wide)
 
@@ -888,15 +998,28 @@ class OES(OP2Common):
             # 50-SLOT3
             # 51-SLOT4
             return
-        elif self.element_type in [163, 167, 172, 202, 204, 218, 211, 214, 216, 217,
-                                   219, 220, 221, 223,
-                                   226, 232, 235]:
+        elif self.element_type in [160, 161, 162, 163, 164, 165, 166, 167, 168,
+                                   169, 170, 171, 172, 202,
+                                   204, 218, 211, 213, 214, 
+                                   216, 217, 219, 220, 221, 222, 223,
+                                   226, 232, 233, 235]:
+            # 160-PENTA6FD
+            # 161-TETRA4FD
+            # 162-TRIA3FD
             # 163-HEXAFD
+            # 164-QUADFD
+            # 165-PENTAFD
+            # 166-TETRAFD
             # 167-TRIAFD
+            # 168-TRIAX3FD
+            # 169-TRIAXFD
+            # 170-QUADX4FD
+            # 171-QUADXFD
             # 172-QUADRNL
             # 202-HEXA8FD
             # 204-PENTA6FD
             # 211-TRIAFD
+            # 213-TRIAXFD
             # 214-QUADX4FD
             # 216-TETRA4FD
             # 217-TRIA3FD
@@ -905,13 +1028,17 @@ class OES(OP2Common):
             # 220-PENTAFD
             # 221-TETRAFD
             # 223-QUADXFD
+            # 222-TRIAX3FD
             # 226-BUSH
             # 232-QUADRLC
+            # 233-TRIARLC
             # 235-CQUADR
             return
         else:
             raise NotImplementedError('sort1 Type=%s num=%s' % (self.element_name, self.element_type))
 
+        assert len(data) > 0
         assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
         assert len(data) % ntotal == 0, '%s n=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data), ntotal)
         assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
+        assert self.thermal == 0, self.thermal

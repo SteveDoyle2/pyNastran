@@ -225,6 +225,70 @@ class OEF(OP2Common):
         pass
 
     def read_oef1_4(self, data):
+        if self.thermal == 0:
+            self._read_oef1_loads(data)
+        elif self.thermal == 1:
+            self._read_oef1_thermal(data)
+        else:
+            raise NotImplementedError(self.thermal)
+
+    def _read_oef1_thermal(self, data):
+        n = 0
+        is_magnitude_phase = self.is_magnitude_phase()
+
+        if self.element_type in [1, 2, 3, 10, 34, 69]:
+            # 1-CROD
+            # 2-CBEAM
+            # 3-CTUBE
+            # 10-CONROD
+            # 34-CBAR
+            # 69-CBEND:
+            assert self.num_wide == 9, self.code_information()
+            ntotal = 36
+            format1 = b'i8s6f'  # SORT1
+
+            ntotal = 36  # 10*4
+            s = Struct(format1)
+            nelements = len(data) // ntotal
+            for i in xrange(nelements):
+                edata = data[n:n+ntotal]
+
+                out = s.unpack(edata)
+                (eid_device, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux) = out
+                eid = (eid_device - self.device_code) // 10
+                #print "eType=%s" %(eType)
+
+                dataIn = [eid, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux]
+                #print "heatFlux %s" %(self.get_element_type(self.element_type)),dataIn
+                #eid = self.obj.add_new_eid(out)
+                #self.obj.add(dt, dataIn)
+                n += ntotal
+            pass
+        elif self.element_type in [33, 39, 64, 67, 68, 74, 75]:
+            # 33-CQUAD4-centroidal
+            # 39-CTETRA
+            # 67-CHEXA
+            # 64-QUAD8
+            # 74-CTRIA3-centroidal
+            # 75-TRIA6
+            # 33-CQUAD4-centroidal
+            # 68-CPENTA
+            return
+        elif self.element_type in [107, 108, 109, 110, 191, 235]:
+            # 107-CHBDYE
+            # 108-CHBDYG
+            # 109-CHBDYP
+            # 110-CONV
+            return
+        else:
+            raise NotImplementedError('OEF sort1 thermal Type=%s num=%s' % (self.element_name, self.element_type))
+
+        assert len(data) > 0
+        assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
+        assert len(data) % ntotal == 0, '%s n=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data), ntotal)
+        assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
+
+    def _read_oef1_loads(self, data):
         (num_wide_real, num_wide_imag) = self.OEF_ForceCode()
         if self.debug4():
             self.binary_debug.write('  num_wide_real = %r\n' % num_wide_real)
@@ -257,7 +321,31 @@ class OEF(OP2Common):
                     #eid = self.obj.add_new_eid(out)
                     #self.obj.add(dt, dataIn)
                     n += ntotal
-            #elif self.num_wide == 3: # imag
+            elif self.num_wide == 5: # imag
+                format1 = b'i4f'
+
+                ntotal = 20 # 5*4
+                nelements = len(data) // ntotal
+                for i in xrange(nelements):
+                    edata = data[n:n+20]
+                    out = unpack(format1, edata)
+                    (eid_device, axialReal, torqueReal, axialImag, torqueImag) = out
+
+                    if is_magnitude_phase:
+                        axial = polar_to_real_imag(axialReal, axialImag)
+                        torque = polar_to_real_imag(torqueReal, torqueImag)
+                    else:
+                        axial = complex(axialReal, axialImag)
+                        torque = complex(torqueReal, torqueImag)
+                    eid = (eid_device - self.device_code) // 10
+
+                    dataIn = [eid, axial, torque]
+                    #print "%s" %(self.get_element_type(self.element_type)),dataIn
+                    #eid = self.obj.add_new_eid(out)
+                    #self.obj.add(dt, dataIn)
+                    n += ntotal
+                #print self.rodForces
+                
             else:
                 raise NotImplementedError(self.num_wide)
             #print self.rodForces
@@ -450,7 +538,7 @@ class OEF(OP2Common):
                     #eid = self.obj.add_new_eid(out)
                     self.obj.add(dt, dataIn)
                     n += ntotal
-            elif self.num_wide == 4: # complex
+            elif self.num_wide == 5: # complex
                 format1 = b'i4f'  # 5
                 ntotal = 20  # 5*4
                 nelements = len(data) // ntotal
@@ -471,7 +559,7 @@ class OEF(OP2Common):
                     dataIn = [eid, axial, torque]
                     #print "%s" %(self.get_element_type(self.element_type)),dataIn
                     #eid = self.obj.add_new_eid(out)
-                    self.obj.add(dt, dataIn)
+                    #self.obj.add(dt, dataIn)
                     n += ntotal
             else:
                 raise NotImplementedError(self.num_wide)
@@ -815,17 +903,15 @@ class OEF(OP2Common):
             # 189-VUQUAD
             # 190-VUTRIA
             return
-        elif self.element_type in [107, 108, 109, 110, 191, 235]:
-            # 107-CHBDYE
-            # 108-CHBDYG
-            # 109-CHBDYP
-            # 110-CONV
+        elif self.element_type in [191, 233, 235]:
             # 191-VUBEAM
+            # 233-TRIARLC
             # 235-CQUADR
 
             return
         else:
-            raise NotImplementedError('sort1 Type=%s num=%s' % (self.element_name, self.element_type))
+            raise NotImplementedError('OEF sort1 Type=%s num=%s' % (self.element_name, self.element_type))
+        assert len(data) > 0
         assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
         assert len(data) % ntotal == 0, '%s n=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data), ntotal)
         assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)

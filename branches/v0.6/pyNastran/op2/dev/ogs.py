@@ -131,13 +131,12 @@ class OGS(OP2Common):
                 minor, tmax, ovm) = out
             nid = (ekey - self.device_code) // 10
             #fiber = fiber.decode('utf-8').strip()
-            check_nid
+            assert nid > 0, nid
             #self.obj.add(dt, nid, eid, fiber, nx, ny, txy,
             #             angle, major, minor, tmax, ovm)
 
     def _read_og1s_table27(self, data):  # OGS1 - grid point stresses - volume direct
         #is_sort1 = self.is_sort1()
-        print(self.code_information())
         if self.num_wide == 9:  # real/random
             resultName = 'gridPointVolumeStresses'
             #self.create_transient_object(self.gridPointVolumeStresses, GridPointStressesVolumeObject)

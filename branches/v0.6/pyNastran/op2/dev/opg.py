@@ -123,7 +123,8 @@ class OPG(object):
             assert self.table_name in ['OPG1', 'OPGV1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             self.read_load_vector(data)
         elif self.table_code == 12:  # ???
-            asdf
+            #table_code_12
+            pass
         else:
             self.not_implemented_or_skip('bad OPG table')
 
