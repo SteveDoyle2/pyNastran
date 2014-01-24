@@ -883,69 +883,69 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             return
 
         (numWideReal, numWideImag, numWideRandom) = self.OES_StressStrainCode()
+        if 0:
+            if self.num_wide == numWideReal:
+                if self.isStress():
+                    if self.element_type in self._oes_real_stress_map:
+                        element_name, slot, extract_method, class_obj, resultName = self._oes_real_stress_map[self.element_type]
+                        self.create_transient_object(slot, class_obj)
+                        #self.log.debug('stress %s' % resultName)
+                        name = resultName + ': Subcase %s' % self.isubcase
 
-        if self.num_wide == numWideReal:
-            if self.isStress():
-                if self.element_type in self._oes_real_stress_map:
-                    element_name, slot, extract_method, class_obj, resultName = self._oes_real_stress_map[self.element_type]
-                    self.create_transient_object(slot, class_obj)
-                    #self.log.debug('stress %s' % resultName)
-                    name = resultName + ': Subcase %s' % self.isubcase
+                        self.eid2 = None  # stores the previous elementID
+                        self.handle_results_buffer(extract_method, resultName, name)
+                        del self.eid2
+                        return
+                    else:
+                        msg = 'need to add element_type=%s-%s to the stress_mapper' % (
+                            self.data_code['element_name'], self.element_type)
+                        self.log.debug(msg)
+                        raise NotImplementedError(msg)
+                else: # strain
+                    if self.element_type in self._oes_real_strain_map:
+                        element_name, slot, extract_method, class_obj, resultName = self._oes_real_strain_map[self.element_type]
+                        self.log.debug('strain %s' % resultName)
+                        self.create_transient_object(slot, class_obj)
+                        name = resultName + ': Subcase %s' % self.isubcase
 
-                    self.eid2 = None  # stores the previous elementID
-                    self.handle_results_buffer(extract_method, resultName, name)
-                    del self.eid2
-                    return
-                else:
-                    msg = 'need to add element_type=%s-%s to the stress_mapper' % (
-                        self.data_code['element_name'], self.element_type)
-                    self.log.debug(msg)
-                    raise NotImplementedError(msg)
-            else: # strain
-                if self.element_type in self._oes_real_strain_map:
-                    element_name, slot, extract_method, class_obj, resultName = self._oes_real_strain_map[self.element_type]
-                    self.log.debug('strain %s' % resultName)
-                    self.create_transient_object(slot, class_obj)
-                    name = resultName + ': Subcase %s' % self.isubcase
-
-                    self.eid2 = None  # stores the previous elementID
-                    self.handle_results_buffer(extract_method, resultName, name)
-                    del self.eid2
-                    return
-                else:
-                    msg = 'need to add element_type=%s-%s to the real_strain_mapper' % (
-                        self.data_code['element_name'], self.element_type)
-                    self.log.debug(msg)
-                    raise NotImplementedError(msg)
-        elif self.num_wide == numWideImag:
-            if self.isStress():
-                if self.element_type in self._oes_complex_stress_map:
-                    element_name, slot, extract_method, class_obj, resultName = self._oes_complex_stress_map[self.element_type]
-                    self.log.debug('strain %s' % resultName)
-                    self.create_transient_object(slot, class_obj)
-                    name = resultName + ': Subcase %s' % self.isubcase
-                    self.handle_results_buffer(extract_method, resultName, name)
-                else:
-                    msg = 'need to add element_type=%s-%s to the complex_stress_mapper' % (
-                        self.data_code['element_name'], self.element_type)
-                    self.log.debug(msg)
-                    raise NotImplementedError(msg)
-            else: # strain
-                if self.element_type in self._oes_complex_strain_map:
-                    element_name, slot, extract_method, class_obj, resultName = self._oes_complex_strain_map[self.element_type]
-                    self.log.debug('strain %s' % resultName)
-                    self.create_transient_object(slot, class_obj)
-                    name = resultName + ': Subcase %s' % self.isubcase
-                    self.handle_results_buffer(extract_method, resultName, name)
-                    return
-                else:
-                    msg = 'need to add element_type=%s-%s to the complex_stress_mapper' % (
-                        self.data_code['element_name'], self.element_type)
-                    self.log.debug(msg)
-                    raise NotImplementedError(msg)
-        else:
-            #self.not_implemented_or_skip()
-            pass
+                        self.eid2 = None  # stores the previous elementID
+                        self.handle_results_buffer(extract_method, resultName, name)
+                        del self.eid2
+                        return
+                    else:
+                        msg = 'need to add element_type=%s-%s to the real_strain_mapper' % (
+                            self.data_code['element_name'], self.element_type)
+                        self.log.debug(msg)
+                        raise NotImplementedError(msg)
+            elif self.num_wide == numWideImag:
+                if self.isStress():
+                    if self.element_type in self._oes_complex_stress_map:
+                        element_name, slot, extract_method, class_obj, resultName = self._oes_complex_stress_map[self.element_type]
+                        self.log.debug('strain %s' % resultName)
+                        self.create_transient_object(slot, class_obj)
+                        name = resultName + ': Subcase %s' % self.isubcase
+                        self.handle_results_buffer(extract_method, resultName, name)
+                    else:
+                        msg = 'need to add element_type=%s-%s to the complex_stress_mapper' % (
+                            self.data_code['element_name'], self.element_type)
+                        self.log.debug(msg)
+                        raise NotImplementedError(msg)
+                else: # strain
+                    if self.element_type in self._oes_complex_strain_map:
+                        element_name, slot, extract_method, class_obj, resultName = self._oes_complex_strain_map[self.element_type]
+                        self.log.debug('strain %s' % resultName)
+                        self.create_transient_object(slot, class_obj)
+                        name = resultName + ': Subcase %s' % self.isubcase
+                        self.handle_results_buffer(extract_method, resultName, name)
+                        return
+                    else:
+                        msg = 'need to add element_type=%s-%s to the complex_stress_mapper' % (
+                            self.data_code['element_name'], self.element_type)
+                        self.log.debug(msg)
+                        raise NotImplementedError(msg)
+            else:
+                #self.not_implemented_or_skip()
+                pass
 
 
         if self.element_type in [1, 3, 10]:  # crod/ctube/conrod
