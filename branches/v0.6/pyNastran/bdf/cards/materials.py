@@ -242,7 +242,7 @@ class MAT1(IsotropicMaterial):
         nu = double_or_blank(card, 4, 'nu')
 
         if G is None and E is None:  # no E,G
-            pass
+            raise RuntimeError('G=%s E=%s cannot both be None' % (G, E))
         elif E is not None and G is not None and nu is not None:
             pass
         elif E is not None and nu is not None:
@@ -258,9 +258,8 @@ class MAT1(IsotropicMaterial):
             E = 0.0
             nu = 0.0
         else:
-            E = None
-            G = None
-            nu = None
+            msg = 'G=%s E=%s nu=%s' % (G, E, nu)
+            raise RuntimeError(msg)
         self.e = E
         self.g = G
         self.nu = nu
@@ -292,19 +291,10 @@ class MAT1(IsotropicMaterial):
 
     def cross_reference(self, model):
         msg = ' which is required by MAT1 mid=%s' % self.mid
-        raise_flag = True
         if self.mid in model.MATS1:
             self.mats1 = model.MATS1[self.mid]  # not using a method...
-            raise_flag = False
         if self.mid in model.MATT1:
             self.matt1 = model.MATT1[self.mid]  # not using a method...
-            raise_flag = False
-
-        if raise_flag:
-            if [self.e, self.g, self.nu] == [None, None, None]:
-                msg  = 'E/G and nu must be set\n'
-                msg += 'G=%s E=%s nu=%s' % (self.g, self.e, self.nu)
-                raise RuntimeError(msg)
         #self.Mcsid = model.Coord(self.Mcsid)  # used only for PARAM,CURVPLOT
 
     def rawFields(self):
