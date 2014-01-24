@@ -294,7 +294,7 @@ class OES(OP2Common):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
                     (eid_device, ox) = out
-W                    eid = (eid_device - self.device_code) // 10
+                    eid = (eid_device - self.device_code) // 10
                     if self.debug4():
                         self.binary_debug.write('  ----------\n')
                         self.binary_debug.write('  eid = %i\n' % eid)
@@ -322,9 +322,9 @@ W                    eid = (eid_device - self.device_code) // 10
             else:
                 raise NotImplementedError(self.num_wide)
 
-        elif self.element_type in [39, 67, 68]: # TETRA, HEXA, PENTA
+        elif self.element_type in [39, 67, 68]: # solid stress
             # 67-CHEXA
-            return
+            #return
 
             if self.element_type == 39: # CTETRA
                 nnodes_expected = 5  # 1 centroid + 4 corner points
@@ -336,7 +336,8 @@ W                    eid = (eid_device - self.device_code) // 10
                 raise NotImplementedError('sort1 Type=%s num=%s' % (self.element_name, self.element_type))
 
             numwide_real = 4 + 21 * nnodes_expected
-
+            preline1 = '%s-%s' % (self.element_name, self.element_type)
+            preline2 = ' ' * len(preline1)
             if self.num_wide == numwide_real:
                 ntotal = 16 + 84 * nnodes_expected
                 #self.show_data(data[:ntotal])
@@ -344,16 +345,55 @@ W                    eid = (eid_device - self.device_code) // 10
                 #print "nelements =", nelements
                 s = Struct(b'i')
                 for i in xrange(nelements):
-                    edata = data[n:n+ntotal]
-                    eid_device, = s.unpack(data[n:n+4])
+                    edata = data[n:n+16]
+                    out = unpack(b'ii4si', edata)
+                    (eid_device, cid, abcd, nNodes) = out
                     eid = (eid_device - self.device_code) // 10
 
                     if self.debug4():
-                        self.binary_debug.write('  ----------\n')
-                        self.binary_debug.write('  eid = %i\n' % eid)
-                        #self.binary_debug.write('  C = [%s]\n' % ', '.join(['%r' % di for di in out]) )
-                    #out = unpack(b'ii4si', edata)
-                    n += ntotal
+                        self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
+
+                    #print "abcd = %r" % abcd
+                    #print "eid=%s cid=%s nNodes=%s nNodesExpected=%s" % (eid,cid,nNodes,nNodesExpected)
+
+                    assert nNodes < 21,  self.print_block(self.data[n:n+16])
+
+                    n += 16
+                    for nodeID in xrange(nnodes_expected):  # nodes pts, +1 for centroid (???)
+                        out = unpack(b'i20f', data[n:n + 84]) # 4*21 = 84
+                        if self.debug4():
+                            self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
+                        (grid_device, sxx, sxy, s1, a1, a2, a3, pressure, svm,
+                                      syy, syz, s2, b1, b2, b3,
+                                      szz, sxz, s3, c1, c2, c3) = out
+
+                        #if self.debug4():
+                            #self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (eid, nodeID, ', '.join(['%r' % di for di in out]) ))
+
+                        if grid_device == 0:
+                            grid = 'C'
+                        else:
+                            #grid = (grid_device - device_code) // 10
+                            grid = grid_device
+
+                        #print("%s eid=%s cid=%s grid=%s sxx=%-6i txy=%-5i s1=%-6i a1=%i a2=%i a3=%i press=%i vm=%s" % (element_type,eid,cid,grid,sxx,sxy,s1,a1,a2,a3,pressure,svm))
+                        #print("%s eid=%s cid=%s grid=%s syy=%-6i tyz=%-5i s2=%-6i b1=%i b2=%i b3=%i"                % (element_type,eid,cid,grid,syy,syz,s2,b1,b2,b3))
+                        #print("%s eid=%s cid=%s grid=%s szz=%-6i txz=%-5i s3=%-6i c1=%i c2=%i c3=%i"                % (element_type,eid,cid,grid,szz,sxz,s3,c1,c2,c3))
+                        #print("")
+
+                        #smax = max(s1,s2,s3)
+                        #smin = min(s1,s2,s3)
+
+                        aCos = []
+                        bCos = []
+                        cCos = []
+                        #if nodeID == 0:
+                            #self.obj.add_new_eid(element_type, cid, dt, eid2, grid, sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
+                        #else:
+                            #self.obj.add(dt, eid2, grid, sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
+                        n += 84
+
+                    #n += ntotal
                     #print "eid =", eid
             else:
                 raise NotImplementedError(self.num_wide)
@@ -364,7 +404,7 @@ W                    eid = (eid_device - self.device_code) // 10
             numwide_real = 17
             numwide_imag = 15
             if self.num_wide == numwide_real:
-                return
+                #return
                 ntotal = 68  # 4*17
                 format1 = b'i16f'
                 s = Struct(format1)
@@ -466,7 +506,7 @@ W                    eid = (eid_device - self.device_code) // 10
             #numwide_real = 17
             #numwide_imag = 15
             if self.num_wide == 17:  # real
-                return
+                #return
                 ntotal = 68  # 4*17
                 #format1 = 'i16f'
                 nelements = len(data) // ntotal
@@ -718,7 +758,7 @@ W                    eid = (eid_device - self.device_code) // 10
                     self.binary_debug.write('  #                                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
                     self.binary_debug.write('  #nodeji = [eid, iLayer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)]\n')
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
-                return
+                #return
 
                 eid_old = 0
                 for i in xrange(nelements):
@@ -839,7 +879,7 @@ W                    eid = (eid_device - self.device_code) // 10
             # 102-CBUSH
             numwide_real = 7
             if self.num_wide == numwide_real:
-                return
+                #return
                 assert self.num_wide == 7, "num_wide=%s not 7" % self.num_wide
                 ntotal = 28  # 4*7
                 format1 = b'i6f'
@@ -1029,7 +1069,7 @@ W                    eid = (eid_device - self.device_code) // 10
                 format1 = b'i3f'
                 ntotal = 16  # 4*4
                 s = Struct(format1)
-                
+
                 nelements = len(data) // ntotal
                 s = Struct(format1)
                 for i in xrange(nelements):
@@ -1118,7 +1158,7 @@ W                    eid = (eid_device - self.device_code) // 10
             return
         elif self.element_type in [160, 161, 162, 163, 164, 165, 166, 167, 168,
                                    169, 170, 171, 172, 202,
-                                   204, 218, 211, 213, 214, 
+                                   204, 218, 211, 213, 214,
                                    216, 217, 219, 220, 221, 222, 223,
                                    226, 232, 233, 235]:
             # 160-PENTA6FD
