@@ -128,6 +128,7 @@ class OES(OP2Common):
             self.binary_debug.write('*'* 20 + '\n\n')
 
     def read_oes1_4_sort1(self, data):
+        assert self.is_sort1() == True
         if self.thermal == 0:
             self.read_oes_loads(data)
         elif self.thermal == 1:
@@ -286,14 +287,14 @@ class OES(OP2Common):
 
         elif self.element_type in [11, 12, 13]: # CELAS1, CELAS2, CELAS3
             if self.num_wide == 2:  # real
-                ntotal = 2 * 4
+                ntotal = 8 # 2 * 4
                 nelements = len(data) // ntotal
                 s = Struct(b'if')
                 for i in xrange(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
                     (eid_device, ox) = out
-                    eid = (eid_device - self.device_code) // 10
+W                    eid = (eid_device - self.device_code) // 10
                     if self.debug4():
                         self.binary_debug.write('  ----------\n')
                         self.binary_debug.write('  eid = %i\n' % eid)
@@ -430,7 +431,7 @@ class OES(OP2Common):
                     #self.obj.add(dt, eid, 'C', fd2, sx2, sy2, txy2)
 
                     for nodeID in xrange(nnodes):  # nodes pts
-                        edata = self.data[n:n+60]  # 4*15=60
+                        edata = data[n:n+60]  # 4*15=60
                         n += 60
                         out = unpack(b'i14f', edata)
                         if self.debug4():
@@ -462,9 +463,9 @@ class OES(OP2Common):
                 raise NotImplementedError(self.num_wide)
 
         elif self.element_type in [74]: # TRIA3
-            numwide_real = 17
-            numwide_imag = 15
-            if self.num_wide == numwide_real:
+            #numwide_real = 17
+            #numwide_imag = 15
+            if self.num_wide == 17:  # real
                 return
                 ntotal = 68  # 4*17
                 #format1 = 'i16f'
@@ -494,8 +495,27 @@ class OES(OP2Common):
 
                     #print "eid =", eid
                     n += ntotal
-            if self.num_wide == numwide_imag:
-                raise NotImplementedError(self.num_wide)
+            elif self.num_wide == 15:  # imag
+                format1 = b'i14f'
+                ntotal = 60  # 4*15
+
+                nelements = len(data) // ntotal
+                for i in xrange(nelements):
+                    edata = data[n:n + ntotal]
+                    out = unpack(format1, edata)
+                    if self.debug4():
+                        self.binary_debug.write('CTRIA3-74 - %s\n' % str(out))
+
+                    (eid_device, fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
+                                 fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i,) = out
+                    eid = (eid_device - self.device_code) // 10
+                    #print "eid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
+                    #print  "      fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"   % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
+                    #self.obj.add_new_eid('CTRIA3', dt, eid, 'C', fd1, sx1, sy1,
+                    #                   txy1, angle1, major1, minor1, vm1)
+                    #self.obj.add(dt, eid, 'C', fd2, sx2, sy2, txy2,
+                    #             angle2, major2, minor2, vm2)
+                    n += ntotal
             else:
                 raise NotImplementedError(self.num_wide)
 
@@ -641,7 +661,6 @@ class OES(OP2Common):
         elif self.element_type in [88, 90]: # nonlinear shells
             # 88-CTRIA3NL
             # 90-CQUAD4NL
-
             if self.num_wide == 13:  # real
                 ntotal = 52  # 4*13
                 format1 = b'i12f'  # 1+12=13
@@ -686,8 +705,8 @@ class OES(OP2Common):
              # 96 - CQUAD8
              # 97 - CTRIA3
              # 98 - CTRIA6 (composite)
-            numwide_real = 11
-            if self.num_wide == numwide_real:
+            #numwide_real = 11
+            if self.num_wide == 11:  # real
                 ntotal = 44
                 nelements = len(data) // ntotal
                 format1 = 'ii9f'
@@ -725,6 +744,37 @@ class OES(OP2Common):
                         #self.obj.add(dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
                     eid_old = eid
                     n += 44
+            elif self.num_wide == 9:  # imag?
+                #format1 = b'i8si3fi4s'  # this is an OEF result???
+                #                        # furthermore the actual table is calle dout as
+                #                        # 'i8si4f4s', not 'i8si3fi4s'
+                ntotal = 36
+                nelements = len(data) // ntotal
+                #s = Struct(format1)
+                for i in xrange(nelements):
+                    #out = s.unpack(data[n:n + ntotal])
+                    eid_device, = unpack('i', data[n:n+4])
+                    #t, = unpack('f', data[n:n+4])
+                    #eid = (eid_device - self.device_code) // 10
+
+                    if eid_device > 0:
+                        print ""
+                        print "eid =", eid_device
+                        #print "t =", t
+                        out = unpack(b'8si3fi4s', data[n+4:n+ntotal])
+                    else:
+                        out1 = unpack(b'8si3fi4s', data[n+4:n+ntotal])
+                        print(out1)
+                        out = unpack(b'8si4f4s', data[n+4:n+ntotal])
+                    print(out)
+                    (theory, lamid, fp, fm, fb, fmax, fflag) = out
+
+                    if self.debug4():
+                        self.binary_debug.write('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
+                    #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs)
+                    #self.obj.add_new_eid(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
+                    n += ntotal
+                raise NotImplementedError('this is a really weird case...')
             else:
                 raise NotImplementedError(self.num_wide)
 
@@ -757,7 +807,32 @@ class OES(OP2Common):
                         #self.obj.add(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
                         n += 32  # 4*8
             elif self.num_wide == 37: # imag
-                raise NotImplementedError(self.num_wide)
+                s1 = Struct(b'ii7f')
+                s2 = Struct(b'i7f')
+
+                num_wide = 1 + 4 * 9
+                ntotal = num_wide * 4
+                assert num_wide == self.num_wide, num_wide
+                nelements = len(data) // ntotal  # (1+8*4)*4 = 33*4 = 132
+
+                for i in xrange(nelements):
+                    out = s1.unpack(data[n:n + 36])
+                    (eid_device, loc, rsr, rsi, azsr, azsi, asr, asi, ssr, ssi) = out
+                    if self.debug4():
+                        self.binary_debug.write('CTRIAX6-53A - %s\n' % (str(out)))
+                    eid = (eid_device - self.device_code) // 10
+                    #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs)
+                    #self.obj.add_new_eid(dt, eid, loc, rs, azs, as, ss)
+
+                    n += 36
+                    for i in xrange(3):
+                        out = s2.unpack(data[n:n + 32])
+                        (loc, rsr, rsi, azsr, azsi, asr, asi, ssr, ssi) = out
+                        if self.debug4():
+                            self.binary_debug.write('CTRIAX6-53B - %s\n' % (str(out)))
+                        #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s" % (eid,loc,rs,azs,As,ss)
+                        #self.obj.add(dt, eid, loc, rs, azs, as, ss)
+                        n += 32  # 4*8
             else:
                 raise NotImplementedError(self.num_wide)
         elif self.element_type in [102]: # bush
@@ -937,25 +1012,24 @@ class OES(OP2Common):
                 nelements = len(data) // ntotal
                 s = Struct(format1)
                 for i in xrange(nelements):
-                    edata = data[0:ntotal]
+                    edata = data[n:n+ntotal]
                     out = s.unpack(edata)  # num_wide=3
                     (eid_device, force, stress) = out
                     eid = (eid_device - self.device_code) // 10
                     if self.debug4():
                         self.binary_debug.write('%s-%s - %s\n' % (self.element_name, self.element_type, str(out)))
                     #self.obj.add_new_eid(element_name, dt, eid, force, stress)
+                    n += ntotal
             else:
                 raise NotImplementedError(self.num_wide)
 
         elif self.element_type in [4]: # shear
             # 4-CSHEAR
-            if self.num_wide == 1:
-                asdf
-            elif self.num_wide == 5:
-                ntotal = 20  # 4*5
-                format1 = b'i4f'
-
-                n = 0
+            if self.num_wide == 4:
+                format1 = b'i3f'
+                ntotal = 16  # 4*4
+                s = Struct(format1)
+                
                 nelements = len(data) // ntotal
                 s = Struct(format1)
                 for i in xrange(nelements):
@@ -964,6 +1038,22 @@ class OES(OP2Common):
                     if self.debug4():
                         self.binary_debug.write('CSHEAR-4 - %s\n' % str(out))
 
+                    (eid_device, etmax, etavg, MS) = out
+                    eid = (eid_device - self.device_code) // 10
+                    #self.obj.add_new_eid(self.element_type, dt, eid, etmax, etavg, MS)
+                    n += ntotal
+
+            elif self.num_wide == 5: # imag
+                ntotal = 20  # 4*5
+                format1 = b'i4f'
+
+                nelements = len(data) // ntotal
+                s = Struct(format1)
+                for i in xrange(nelements):
+                    edata = data[n:n + ntotal]
+                    out = s.unpack(edata)  # num_wide=5
+                    if self.debug4():
+                        self.binary_debug.write('CSHEAR-4 - %s\n' % str(out))
                     (eid_device, etmaxr, etmaxi, etavgr, etavgi) = out
                     eid = (eid_device - self.device_code) // 10
 
@@ -977,6 +1067,7 @@ class OES(OP2Common):
                     n += ntotal
             else:
                 raise NotImplementedError(self.num_wide)
+
         elif self.element_type in [35]:
             # 35-CON
             return
@@ -1066,6 +1157,7 @@ class OES(OP2Common):
 
         assert len(data) > 0
         assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
-        assert len(data) % ntotal == 0, '%s n=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data), ntotal)
+        assert len(data) % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data) % self.num_wide, len(data), ntotal)
         assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
         assert self.thermal == 0, self.thermal
+        assert n > 0, n

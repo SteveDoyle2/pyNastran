@@ -117,8 +117,17 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
         self.n = 0
         self.table_name = None
         self.f = open(self.op2_filename, 'rb')
+        try:
+            markers = self.get_nmarkers(1, rewind=True)
+        except:
+            self.goto(0)
+            self.show(100)
+            try:
+                self.read(4)
+            except:
+                raise FatalError('The OP2 is empty.')
+            raise
 
-        markers = self.get_nmarkers(1, rewind=True)
         if markers == [3,]:  # PARAM, POST, -2
             self.read_markers([3])
             data = self.read_block()
@@ -314,7 +323,6 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
         else:
             self.read_markers([0])
             return
-            
 
         self.read_markers([-5, 1, 0])
         data = self._read_record()
@@ -419,6 +427,4 @@ if __name__ == '__main__':
     import sys
     o = OP2(sys.argv[1])
     o.read_op2(sys.argv[1])
-
-
 

@@ -156,5 +156,6 @@ class OGS(OP2Common):
             out = unpack(format1, edata)
             (ekey, nx, ny, nz, txy, tyz, txz, pressure, ovm) = out
             nid = (ekey - self.device_code) // 10
-            check_nid
+            assert nid > 0, nid
+            #check_nid
             #self.obj.add(dt, nid, nx, ny, nz, txy, tyz, txz, pressure, ovm)

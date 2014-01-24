@@ -1,6 +1,6 @@
 from struct import Struct, unpack
 
-
+from pyNastran import isRelease
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
 
@@ -455,10 +455,10 @@ class OP2Common(object):
             n += ntotal
 
     def not_implemented_or_skip(self, msg=''):
-        if 1:
-            raise NotImplementedError('table_name=%s table_code=%s %s' % (self.table_name, self.table_code, msg))
-        else:
+        if isRelease:
             pass
+        else:
+            raise NotImplementedError('table_name=%s table_code=%s %s' % (self.table_name, self.table_code, msg))
 
     def parse_approach_code(self, data):
         (aCode, tCode, int3, isubcase) = unpack(b'4i', data[:16])
@@ -520,6 +520,13 @@ class OP2Common(object):
         """
         bits = [0, 0, 0]
         sort_code = self.sort_code
+
+        # Sort codes can range from 0 to 7, but most of the examples
+        # are covered by these.  The ones that break are incredibly large.
+        if self.sort_code not in [0, 1]:
+            msg = 'Invalid sort_code=%s sort_code2=%s' %(self.sort_code, self.sort_code2)
+            raise RuntimeError(msg)
+
         i = 2
         while sort_code > 0:
             value = sort_code % 2

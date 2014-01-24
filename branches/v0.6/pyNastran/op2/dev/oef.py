@@ -230,7 +230,7 @@ class OEF(OP2Common):
         elif self.thermal == 1:
             self._read_oef1_thermal(data)
         else:
-            raise NotImplementedError(self.thermal)
+            self.not_implemented_or_skip('thermal=%s' % self.thermal)
 
     def _read_oef1_thermal(self, data):
         n = 0
@@ -293,8 +293,9 @@ class OEF(OP2Common):
 
         assert len(data) > 0
         assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
-        assert len(data) % ntotal == 0, '%s n=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data), ntotal)
+        assert len(data) % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data) % self.num_wide, len(data), ntotal)
         assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
+        assert n > 0, n
 
     def _read_oef1_loads(self, data):
         (num_wide_real, num_wide_imag) = self.OEF_ForceCode()
@@ -667,11 +668,11 @@ class OEF(OP2Common):
                 nelements = len(data) // ntotal
                 for i in xrange(nelements):
                     edata = data[n:n+68]
-
                     out = s.unpack(edata)
                     (eid_device, mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
                                  mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
                     eid = (eid_device - self.device_code) // 10
+                    assert eid > 0
                     if self.debug4():
                         self.binary_debug.write('OEF_Plate-%s - %s\n' % (self.element_type, str(out)))
 
@@ -921,8 +922,9 @@ class OEF(OP2Common):
             raise NotImplementedError('OEF sort1 Type=%s num=%s' % (self.element_name, self.element_type))
         assert len(data) > 0
         assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
-        assert len(data) % ntotal == 0, '%s n=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data), ntotal)
+        assert len(data) % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data) % self.num_wide, len(data), ntotal)
         assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
+        assert n > 0, n
 
     def read_oef2_4(self, data):
         pass
