@@ -283,6 +283,13 @@ class TABLEM1(Table):
                   None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        #if size == 8:
+            #return self.comment() + print_card_8(card)
+        #return self.comment() + print_card_16(card)
+        return self.comment() + card_writer(card)
+
 
 class TABLEM2(Table):
     type = 'TABLEM2'
@@ -407,6 +414,13 @@ class TABLEM4(Table):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        #if size == 8:
+            #return self.comment() + print_card_8(card)
+        #return self.comment() + print_card_16(card)
+        return self.comment() + card_writer(card)
 
 
 class TABLES1(Table):

@@ -231,13 +231,28 @@ class AddMethods(object):
             self.thermalMaterials[key] = material
 
     def add_material_dependence(self, material, allowOverwrites=False):
+        Type = material.type
         key = material.mid
-        if key in self.materialDeps and not allowOverwrites:
-            if not material.isSameCard(self.materialDeps[key]):
-                assert key not in self.materialDeps, 'mid=%s\noldMaterialDep=\n%snewMaterialDep=\n%s' % (key, self.materialDeps[key], material)
+        mapper = {
+            'MATS1' : self.MATS1,
+            'MATS3' : self.MATS3,
+            'MATS8' : self.MATS8,
+
+            'MATT1' : self.MATT1,
+            'MATT2' : self.MATT2,
+            'MATT3' : self.MATT3,
+            'MATT4' : self.MATT4,
+            'MATT5' : self.MATT5,
+            'MATT8' : self.MATT8,
+            'MATT9' : self.MATT9,
+        }
+        slot = mapper[Type]
+        if key in slot and not allowOverwrites:
+            if not material.isSameCard(slot[key]):
+                assert key not in slot, 'mid=%s Type=%r\noldMaterialDep=\n%snewMaterialDep=\n%s' % (key, Type, slot[key], material)
         else:
             assert key > 0, 'mid=%s material=\n%s' % (key, material)
-            self.materialDeps[key] = material
+            slot[key] = material
 
     def add_creep_material(self, material, allowOverwrites=False):
         """

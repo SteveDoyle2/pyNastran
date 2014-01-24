@@ -149,6 +149,8 @@ class MAT1(IsotropicMaterial):
 
     def __init__(self, card=None, data=None, comment=''):
         IsotropicMaterial.__init__(self, card, data)
+        self.mats1 = None
+        self.matt1 = None
         if comment:
             self._comment = comment
         if card:
@@ -183,9 +185,11 @@ class MAT1(IsotropicMaterial):
         G = self.G()
         nu = self.Nu()
         assert isinstance(mid, int), 'mid=%r' % mid
-        assert isinstance(E, float), 'E=%r' % E
-        assert isinstance(G, float), 'G=%r' % G
-        assert isinstance(nu, float), 'nu=%r' % nu
+        if xref:
+            if [self.matt1, self.mats1] == [None, None]:
+                assert isinstance(E, float), 'E=%r' % E
+                assert isinstance(G, float), 'G=%r' % G
+                assert isinstance(nu, float), 'nu=%r' % nu
 
     def D(self):
         E11 = self.E()
@@ -215,6 +219,20 @@ class MAT1(IsotropicMaterial):
     def Rho(self):
         return self.rho
 
+    def E_stress(self, stress):
+        if self.mats1 is not None:
+            E = self.matt1.E(self.e, stress)
+        else:
+            E = self.e
+        return E
+
+    def E_temperature(self, temperature):
+        if self.matt1 is not None:
+            E = self.matt1.E(self.e, temperature)
+        else:
+            E = self.e
+        return E
+
     def set_E_G_nu(self, card):
         r"""
         \f[ G = \frac{E}{2 (1+\nu)} \f]
@@ -224,7 +242,7 @@ class MAT1(IsotropicMaterial):
         nu = double_or_blank(card, 4, 'nu')
 
         if G is None and E is None:  # no E,G
-            raise RuntimeError('G=%s E=%s cannot both be None' % (G, E))
+            pass
         elif E is not None and G is not None and nu is not None:
             pass
         elif E is not None and nu is not None:
@@ -240,8 +258,9 @@ class MAT1(IsotropicMaterial):
             E = 0.0
             nu = 0.0
         else:
-            msg = 'G=%s E=%s nu=%s' % (G, E, nu)
-            raise RuntimeError(msg)
+            E = None
+            G = None
+            nu = None
         self.e = E
         self.g = G
         self.nu = nu
@@ -271,10 +290,22 @@ class MAT1(IsotropicMaterial):
         msg += '                       RHO=%g),);\n' % (self.rho)
         return msg
 
-    #def cross_reference(self, model):
-        #msg = ' which is required by MAT1 pid=%s' % self.mid
+    def cross_reference(self, model):
+        msg = ' which is required by MAT1 mid=%s' % self.mid
+        raise_flag = True
+        if self.mid in model.MATS1:
+            self.mats1 = model.MATS1[self.mid]  # not using a method...
+            raise_flag = False
+        if self.mid in model.MATT1:
+            self.matt1 = model.MATT1[self.mid]  # not using a method...
+            raise_flag = False
+
+        if raise_flag:
+            if [self.e, self.g, self.nu] == [None, None, None]:
+                msg  = 'E/G and nu must be set\n'
+                msg += 'G=%s E=%s nu=%s' % (self.g, self.e, self.nu)
+                raise RuntimeError(msg)
         #self.Mcsid = model.Coord(self.Mcsid)  # used only for PARAM,CURVPLOT
-        #pass
 
     def rawFields(self):
         list_fields = ['MAT1', self.mid, self.e, self.g, self.nu, self.rho, self.a,
@@ -286,7 +317,10 @@ class MAT1(IsotropicMaterial):
             G = self.g
         else:
             #G_default = self.e/2./(1+self.nu)
-            G = self.e / 2. / (1 + self.nu)
+            if self.e is None:
+                G = None
+            else:
+                G = self.e / 2. / (1 + self.nu)
         #print("MAT1 - self.e=%s self.nu=%s self.g=%s Gdef=%s G=%s"
         #      % (self.e, self.nu,self.g, G_default, G))
         return G
@@ -340,6 +374,7 @@ class MAT2(AnisotropicMaterial):
 
     def __init__(self, card=None, data=None, comment=''):
         AnisotropicMaterial.__init__(self, card, data)
+        self.matt2 = None
         if comment:
             self._comment = comment
         if card:
@@ -516,6 +551,8 @@ class MAT3(OrthotropicMaterial):
 
     def __init__(self, card=None, data=None, comment=''):
         OrthotropicMaterial.__init__(self, card, data)
+        self.mats3 = None
+        self.matt3 = None
         if comment:
             self._comment = comment
         if card:
@@ -598,6 +635,7 @@ class MAT4(ThermalMaterial):
 
     def __init__(self, card=None, data=None, comment=''):
         ThermalMaterial.__init__(self, card, data)
+        self.matt4 = None
         if comment:
             self._comment = comment
         if card:
@@ -664,6 +702,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
 
     def __init__(self, card=None, data=None, comment=''):
         ThermalMaterial.__init__(self, card, data)
+        self.matt5 = None
         if comment:
             self._comment = comment
         if card:
@@ -750,6 +789,8 @@ class MAT8(OrthotropicMaterial):
 
     def __init__(self, card=None, data=None, comment=''):
         OrthotropicMaterial.__init__(self, card, data)
+        self.mats8 = None
+        self.matt8 = None
         if comment:
             self._comment = comment
         if card:
@@ -902,6 +943,7 @@ class MAT9(AnisotropicMaterial):
 
     def __init__(self, card=None, data=None, comment=''):
         AnisotropicMaterial.__init__(self, card, data)
+        self.matt9 = None
         if comment:
             self._comment = comment
         if card:
@@ -1386,131 +1428,6 @@ class MATHP(HyperelasticMaterial):
         card = self.reprFields()
         return self.comment() + card_writer(card)
 
-
-class MaterialDependence(BaseCard):
-    def __init__(self, card, data):
-        pass
-
-
-class MATS1(MaterialDependence):
-    """
-    Specifies stress-dependent material properties for use in applications
-    involving nonlinear materials. This entry is used if a MAT1, MAT2 or MAT9
-    entry is specified with the same MID in a nonlinear solution sequence
-    (SOLs 106 and 129).
-    """
-    type = 'MATS1'
-
-    def __init__(self, card=None, data=None, comment=''):
-        MaterialDependence.__init__(self, card, data)
-        if comment:
-            self._comment = comment
-
-        if card:
-            #: Identification number of a MAT1, MAT2, or MAT9 entry.
-            self.mid = integer(card, 1, 'mid')
-            #: Identification number of a TABLES1 or TABLEST entry. If H is
-            #: given, then this field must be blank.
-            self.tid = integer_or_blank(card, 2, 'tid')
-            #: Type of material nonlinearity. ('NLELAST' for nonlinear elastic
-            #: or 'PLASTIC' for elastoplastic.)
-            self.Type = string(card, 3, 'Type')
-
-            if self.Type == 'NLELAST':
-                self.h = blank(card, 4, 'h')
-                self.hr = blank(card, 6, 'hr')
-                self.yf = blank(card, 5, 'yf')
-                self.limit1 = blank(card, 7, 'yf')
-                self.limit2 = blank(card, 8, 'yf')
-            else:
-                #: Work hardening slope (slope of stress versus plastic strain) in
-                #: units of stress. For elastic-perfectly plastic cases, H=0.0.
-                #: For more than a single slope in the plastic range, the
-                #: stress-strain data must be supplied on a TABLES1 entry
-                #: referenced by TID, and this field must be blank
-                self.h = double_or_blank(card, 4, 'H')
-
-                #: Yield function criterion, selected by one of the following
-                #: values (1) Von Mises (2) Tresca (3) Mohr-Coulomb
-                #: (4) Drucker-Prager
-                self.yf = integer_or_blank(card, 5, 'yf', 1)
-
-                #: Hardening Rule, selected by one of the following values
-                #: (Integer): (1) Isotropic (Default) (2) Kinematic
-                #: (3) Combined isotropic and kinematic hardening
-                self.hr = integer_or_blank(card, 6, 'hr', 1)
-                #: Initial yield point
-                self.limit1 = double(card, 7, 'limit1')
-
-                if self.yf == 3 or self.yf == 4:
-                    #: Internal friction angle, measured in degrees, for the
-                    #: Mohr-Coulomb and Drucker-Prager yield criteria
-                    self.limit2 = double(card, 8, 'limit2')
-                else:
-                    #self.limit2 = blank(card, 8, 'limit2')
-                    self.limit2 = None
-            assert len(card) <= 9, 'len(MATS1 card) = %i' % len(card)
-        else:
-            (mid, tid, Type, h, yf, hr, limit1, limit2) = data
-            self.mid = mid
-            self.tid = tid
-            if Type == 1:
-                self.Type = 'NLELAST'
-            elif Type == 2:
-                self.Type = 'PLASTIC'
-            else:
-                raise RuntimeError('Invalid Type:  Type=%s; must be 1=NLELAST '
-                                   'or 2=PLASTIC' % (Type))
-            self.h = h
-            self.yf = yf
-            self.hr = hr
-            self.limit1 = limit1
-            self.limit2 = limit2
-
-    def Yf(self):
-        d = {1: 'VonMises', 2: 'Tresca', 3: 'MohrCoulomb', 4: 'Drucker-Prager'}
-        return d[self.yf]
-
-    def Hf(self):
-        d = {1: 'Isotropic', 2: 'Kinematic', 3: 'Combined'}
-        return d[self.hr]
-
-    def E(self, strain=None):
-        """
-        Gets E (Young's Modulus) for a given strain.
-
-        :param self:   the object pointer
-        :param strain: the strain (None -> linear E value)
-        :returns E:    Young's Modulus
-        """
-        msg = "E (Young's Modulus) not implemented for MATS1"
-        raise NotImplementedError(msg)
-        if self.tid:
-            E = self.tid.Value(strain)
-        return E
-
-    def cross_reference(self, model):
-        self.mid = model.Material(self.mid)
-        if self.tid:  # then self.h is used
-            self.tid = model.Table(self.tid)
-
-    def Mid(self):
-        if isinstance(self.mid, int):
-            return self.mid
-        return self.mid.mid
-
-    def Tid(self):
-        if isinstance(self.tid, Table):
-            return self.tid.tid
-        return self.tid
-
-    def rawFields(self):
-        list_fields = ['MATS1', self.Mid(), self.Tid(), self.Type,
-                  self.h, self.yf, self.hr, self.limit1, self.limit2]
-        return list_fields
-
-    def reprFields(self):
-        return self.rawFields()
 
 class EQUIV(Material):
     type = 'EQUIV'
