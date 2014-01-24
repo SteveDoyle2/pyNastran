@@ -3,7 +3,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from struct import unpack
 
 from pyNastran.bdf.cards.materials import (CREEP, MAT1, MAT2, MAT3, MAT4, MAT5,
-                                           MAT8, MAT9, MAT10, MATS1, MATHP)
+                                           MAT8, MAT9, MAT10, MATHP)
+from pyNastran.bdf.cards.material_deps import (MATT1, MATS1)
 from pyNastran.bdf.cards.dynamic import NLPARM, TSTEP, TSTEPNL
 
 
