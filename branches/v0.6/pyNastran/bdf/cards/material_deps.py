@@ -153,8 +153,8 @@ class MATT1(MaterialDependence):
         if card:
             self.mid = integer(card, 1, 'mid')
             self._E_table   = integer_or_blank(card, 2, 'T(E)')
-            self._G_table   = integer_or_blank(card, 3, 'T(E)')
-            self._nu_table  = integer_or_blank(card, 4, 'T(E)')
+            self._G_table   = integer_or_blank(card, 3, 'T(G)')
+            self._nu_table  = integer_or_blank(card, 4, 'T(nu)')
             self._rho_table = integer_or_blank(card, 5, 'T(rho)')
             self._A_table   = integer_or_blank(card, 6, 'T(A)')
             self._ge_table  = integer_or_blank(card, 8, 'T(ge)')
@@ -170,15 +170,14 @@ class MATT1(MaterialDependence):
         """
         Gets E (Young's Modulus) for a given strain.
 
-        :param self:   the object pointer
-        :param strain: the strain (None -> linear E value)
-        :returns E:    Young's Modulus
+        :param self:        the object pointer
+        :param temperature: the temperature (None -> linear E value)
+        :returns E:         Young's Modulus
         """
-        aaa
-        msg = "E (Young's Modulus) not implemented for MATS1"
-        raise NotImplementedError(msg)
-        if self.tid:
-            E = self.tid.Value(strain)
+        #msg = "E (Young's Modulus) not implemented for MATT1"
+        #raise NotImplementedError(msg)
+        if self._E_table:
+            E = self._E_table.Value(strain)
         return E
 
     def cross_reference(self, model):
@@ -192,7 +191,7 @@ class MATT1(MaterialDependence):
         self._xref_table(model, '_st_table')
         self._xref_table(model, '_sc_table')
         self._xref_table(model, '_ss_table')
-    
+
     def _xref_table(self, model, key):
         slot = getattr(self, key)
         if slot is not None:
@@ -208,11 +207,6 @@ class MATT1(MaterialDependence):
         if isinstance(self.mid, int):
             return self.mid
         return self.mid.mid
-
-    #def Tid(self):
-        #if isinstance(self.tid, Table):
-            #return self.tid.tid
-        #return self.tid
 
     def E_table(self):
         return self._get_table('_E_table')
