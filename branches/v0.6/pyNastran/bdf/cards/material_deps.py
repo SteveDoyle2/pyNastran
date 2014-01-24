@@ -140,8 +140,16 @@ class MATS1(MaterialDependence):
 
 class MATT1(MaterialDependence):
     """
-    Specifies temperature-dependent material properties on MAT1 entry
-    fields via TABLEMi entries.
+    Specifies temperature-dependent material properties on MAT1 entry fields
+    via TABLEMi entries.
+
+    +-------+-------+-------+-------+-------+--------+------+------+-------+
+    |   1   |   2   |   3   |   4   |   5   |    6   |  7   |  8   |   9   |
+    +=======+=======+=======+======+=======+========+======+======+=======+
+    | MATT1 |  MID  |  T(E) |  T(G) | T(NU) | T(RHO) | T(A) |      | T(GE) |
+    +-------+-------+-------+-------+-------+--------+------+------+-------+
+    |       | T(ST) | T(SC) | T(SS) |       |        |      |      |       |
+    +-------+-------+-------+-------+-------+--------+------+------+-------+
     """
     type = 'MATT1'
 
