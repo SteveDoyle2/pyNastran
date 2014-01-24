@@ -130,7 +130,7 @@ class GridPointWeight(object):
         self.cg = zeros((6, 6), dtype='float64')
 
         self.IS = zeros((3, 3), dtype='float64')
-        self.IQ = zeros((3, 3), dtype='float64')
+        self.IQ = zeros(3, dtype='float64')
         self.Q  = zeros((3, 3), dtype='float64')
 
         #========================================
@@ -187,7 +187,7 @@ class GridPointWeight(object):
         n += 1
         for i in range(3):
             sline = lines[n + i][1:-1].strip().split()  # get rid of the * characters
-            self.IQ[i, i] = sline[0]
+            self.IQ[i] = sline[0]
         #print "IQ =", self.IQ
         n += i + 1
 
@@ -204,8 +204,8 @@ class GridPointWeight(object):
         n += i
 
     def write_f06(self, f, pageStamp, pageNum):
-        if self.reference_point is None:
-            return pageNum
+        #if self.reference_point is None:
+            #return pageNum
         msg = ['                           O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R']
         msg.append('0                                                     REFERENCE POINT =        %i' % self.reference_point)
 
@@ -229,9 +229,9 @@ class GridPointWeight(object):
             msg.append('                                           * %13.6E %13.6E %13.6E *' % tuple(self.IS[i, :]))
 
         msg.append('                                                                I(Q)')
-        msg.append('                                           * %13.6E %13s %13s *' % (self.IQ[0, 0], '', ''))
-        msg.append('                                           * %13s %13.6E %13s *' % ('', self.IQ[1, 1], ''))
-        msg.append('                                           * %13s %13s %13.6E *' % ('', '', self.IQ[2, 2]))
+        msg.append('                                           * %13.6E %13s %13s *' % (self.IQ[0], '', ''))
+        msg.append('                                           * %13s %13.6E %13s *' % ('', self.IQ[1], ''))
+        msg.append('                                           * %13s %13s %13.6E *' % ('', '', self.IQ[2]))
 
 
         msg.append('                                                                 Q')

@@ -15,6 +15,7 @@ from pyNastran.op2.op2Codes import Op2Codes
 
 from pyNastran.op2.tables.resultTable import ResultTable
 from pyNastran.op2.tables.geom.geometryTables import GeometryTables
+from pyNastran.op2.tables.ogpwg import OGPWG
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.f06.f06Writer import F06Writer
@@ -53,6 +54,7 @@ class OP2Deprecated(object):
 
 class OP2(BDF,
           FortranFile, Op2Codes, GeometryTables, ResultTable, F06Writer,
+          OGPWG,
           OP2Deprecated):
 
     def set_subcases(self, subcases=None):
@@ -697,9 +699,10 @@ class OP2(BDF,
                     self.readTable_DIT()     # TABLED1/TABLEM1/TABLES1/GUST
                 elif table_name in ['LAMA', 'BLAMA']:  # eigenvalue
                     self.readTable_LAMA()
-
+                elif table_name in ['OGPWG']:
+                    self.readTable_OGPWG(table_name)
                 elif table_name in ['VIEWTB', 'EQEXIN', 'EQEXINS', 'OEFIT',
-                                   'GEOM1N', 'OGPWG', 'GEOM1OLD']:
+                                   'GEOM1N', 'GEOM1OLD']:
                     self.readTable_DUMMY_GEOM(table_name)
                 elif table_name in ['OMM2']:
                     self.readTable_OMM2()

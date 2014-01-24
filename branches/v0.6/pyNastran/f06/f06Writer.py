@@ -540,6 +540,9 @@ class F06Writer(object):
             print 'f06OutName =', f06OutName
 
         pageStamp = self.make_stamp(self.Title)
+        if self.grid_point_weight is not None:
+            print("grid_point_weight")
+            self.pageNum = self.grid_point_weight.write_f06(f, pageStamp, self.pageNum)
         #print "pageStamp = %r" % pageStamp
         #print "stamp     = %r" % stamp
 

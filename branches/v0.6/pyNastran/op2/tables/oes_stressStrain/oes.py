@@ -889,7 +889,7 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
                 if self.element_type in self._oes_real_stress_map:
                     element_name, slot, extract_method, class_obj, resultName = self._oes_real_stress_map[self.element_type]
                     self.create_transient_object(slot, class_obj)
-                    self.log.debug('stress %s' % resultName)
+                    #self.log.debug('stress %s' % resultName)
                     name = resultName + ': Subcase %s' % self.isubcase
 
                     self.eid2 = None  # stores the previous elementID

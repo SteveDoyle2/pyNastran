@@ -227,7 +227,7 @@ def main():
 
     for key, value in sorted(data.iteritems()):
         print("%-12s = %r" % (key.strip('--'), value))
-    
+
     if os.path.exists('skippedCards.out'):
         os.remove('skippedCards.out')
 
