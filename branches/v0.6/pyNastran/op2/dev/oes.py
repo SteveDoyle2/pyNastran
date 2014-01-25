@@ -307,14 +307,15 @@ class OES(OP2Common):
                 for i in xrange(nelements):
                     edata = data[n:n + ntotal]
                     (eid_device, axialReal, axialImag) = unpack(format1, edata)
+                    eid = (eid_device - self.device_code) // 10
+
                     if is_magnitude_phase:
                         axial = polar_to_real_imag(axialReal, axialImag)
                     else:
                         axial = complex(axialReal, axialImag)
 
                     if self.debug4():
-                        self.binary_debug.write('  eid=%i result%i=[%i, %f %f]\n' % (eid, i, eid_device, axialReal, axialImag) )
-                    eid = (eid_device - self.device_code) // 10
+                        self.binary_debug.write('  eid=%i result%i=[%i, %f, %f]\n' % (eid, i, eid_device, axialReal, axialImag) )
                     assert eid > 0
                     #self.obj.add_new_eid(dt, eid, axial)
                     n += ntotal
@@ -327,7 +328,7 @@ class OES(OP2Common):
 
             if self.element_type == 39: # CTETRA
                 nnodes_expected = 5  # 1 centroid + 4 corner points
-            elif self.element_type == 67:
+            elif self.element_type == 67:  # CHEXA
                 nnodes_expected = 9
             elif self.element_type == 68:
                 nnodes_expected = 7
@@ -335,6 +336,7 @@ class OES(OP2Common):
                 raise NotImplementedError('sort1 Type=%s num=%s' % (self.element_name, self.element_type))
 
             numwide_real = 4 + 21 * nnodes_expected
+            numwide_imag = 4 + (17 - 4) * nnodes_expected
             preline1 = '%s-%s' % (self.element_name, self.element_type)
             preline2 = ' ' * len(preline1)
             if self.num_wide == numwide_real:
@@ -389,9 +391,24 @@ class OES(OP2Common):
                         #else:
                             #self.obj.add(dt, eid2, grid, sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
                         n += 84
-
                     #n += ntotal
                     #print "eid =", eid
+            elif self.num_wide == numwide_imag:
+                ntotal = numwide_imag * 4
+                nelements = len(data) // ntotal
+                for i in xrange(nelements):
+                    edata = data[n:n+16]
+                    n += 16
+                    out = unpack('2i4si', edata)
+                    (eid, cid, ctype, nodef) = out
+                    for inode in xrange(nnodes_expected):
+                        edata = data[n:n+52]
+                        n += 52
+                        out = unpack('i12i', edata)
+                        (grid, exr, eyr, ezr, etxyr, etyzr, etzxr,
+                               exi, eyi, ezi, etxyi, etyzi, etzxi) = out
+                        #self.obj.add()
+                    #self.obj.add()
             else:
                 raise NotImplementedError(self.num_wide)
 

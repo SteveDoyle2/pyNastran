@@ -389,9 +389,9 @@ class OP2Common(object):
             out = s.unpack(edata)
             (eid_device, gridType, tx, ty, tz, rx, ry, rz) = out
 
-            if self.debug4():
-                self.binary_debug.write('  %s\n' % str(out))
             eid = (eid_device - self.device_code) // 10
+            if self.debug4():
+                self.binary_debug.write('  %s=%i; %s\n' % (flag, eid_device, str(out)))
             #print "eType=%s" %(eType)
 
             dataIn = [eid, gridType, tx, ty, tz, rx, ry, rz]
@@ -420,7 +420,7 @@ class OP2Common(object):
             eid = (eid_device - self.device_code) // 10
 
             if self.debug4():
-                self.binary_debug.write('  %s=%i %s\n' % (flag, nid, str(out)))
+                self.binary_debug.write('  %s=%i %s\n' % (flag, eid, str(out)))
             if is_magnitude_phase:
                 tx = polar_to_real_imag(txr, txi)
                 rx = polar_to_real_imag(rxr, rxi)
