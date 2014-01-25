@@ -296,9 +296,7 @@ class OES(OP2Common):
                     (eid_device, ox) = out
                     eid = (eid_device - self.device_code) // 10
                     if self.debug4():
-                        self.binary_debug.write('  ----------\n')
-                        self.binary_debug.write('  eid = %i\n' % eid)
-                        self.binary_debug.write('  result%i = [%i, %f]\n' % (i, eid_device, ox) )
+                        self.binary_debug.write('  eid=%i result%i=[%i, %f]\n' % (eid, i, eid_device, ox) )
                     n += ntotal
                     #print "eid =", eid
             elif self.num_wide == 3:
@@ -314,7 +312,8 @@ class OES(OP2Common):
                     else:
                         axial = complex(axialReal, axialImag)
 
-                    #print "out = ",out
+                    if self.debug4():
+                        self.binary_debug.write('  eid=%i result%i=[%i, %f %f]\n' % (eid, i, eid_device, axialReal, axialImag) )
                     eid = (eid_device - self.device_code) // 10
                     assert eid > 0
                     #self.obj.add_new_eid(dt, eid, axial)
@@ -340,9 +339,7 @@ class OES(OP2Common):
             preline2 = ' ' * len(preline1)
             if self.num_wide == numwide_real:
                 ntotal = 16 + 84 * nnodes_expected
-                #self.show_data(data[:ntotal])
                 nelements = len(data) // ntotal
-                #print "nelements =", nelements
                 s = Struct(b'i')
                 for i in xrange(nelements):
                     edata = data[n:n+16]
@@ -420,9 +417,7 @@ class OES(OP2Common):
 
                     eid = (eid_device - self.device_code) // 10
                     if self.debug4():
-                        self.binary_debug.write('  ----------\n')
-                        self.binary_debug.write('  eid = %i\n' % eid)
-                        self.binary_debug.write('  C = [%s]\n' % ', '.join(['%r' % di for di in out]) )
+                        self.binary_debug.write('  eid=%i C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out]) ))
 
                     #print "eid=%i grid=%s fd1=%-3.1f sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,'C',fd1,sx1,sy1,txy1,angle1,major1,minor1,maxShear1)
                     #print   "             fd2=%-3.1f sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"       % (fd2,sx2,sy2,txy2,angle2,major2,minor2,maxShear2)
@@ -443,10 +438,12 @@ class OES(OP2Common):
                     edata = data[n:n+60]  # 4*15=60
                     n += 60
                     out = unpack(format1, edata)  # 15
-                    if self.debug4():
-                        self.binary_debug.write('  %s\n' % str(out))
                     (eid_device, fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
                                  fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
+
+                    eid = (eid_device - self.device_code) // 10
+                    if self.debug4():
+                        self.binary_debug.write('  eid=%i %s\n' % (eid, str(out)))
 
                     if is_magnitude_phase:
                         sx1 = polar_to_real_imag(sx1r, sx1i)
@@ -462,8 +459,6 @@ class OES(OP2Common):
                         sy2 = complex(sy2r, sy2i)
                         txy1 = complex(txy1r, txy1i)
                         txy2 = complex(txy2r, txy2i)
-
-                    eid = (eid_device - self.device_code) // 10
 
                     #print "eid=%i grid=%s fd1=%-3.1f sx1=%s sy1=%s txy1=%s" %(eid,'C',fd1,sx1,sy1,txy1)
                     #print   "             fd2=%-3.1f sx2=%s sy2=%s txy2=%s\n"       %(fd2,sx2,sy2,txy2)
@@ -498,13 +493,10 @@ class OES(OP2Common):
                         #print "               fd2=%i sx2=%i sy2=%i txy2=%i\n"          %(fd2,sx2,sy2,txy2)
                         #self.obj.addNewNode(dt, eid, grid, fd1, sx1, sy1, txy1)
                         #self.obj.add(dt, eid, grid, fd2, sx2, sy2, txy2)
-
             else:
                 raise NotImplementedError(self.num_wide)
 
         elif self.element_type in [74]: # TRIA3
-            #numwide_real = 17
-            #numwide_imag = 15
             if self.num_wide == 17:  # real
                 #return
                 ntotal = 68  # 4*17

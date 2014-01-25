@@ -299,7 +299,7 @@ class OP2Common(object):
         pass
 
     def add_data_parameter(self, data, var_name, Type, field_num,
-            applyNonlinearFactor=True, fixDeviceCode=False, add_to_dict=True):
+                           applyNonlinearFactor=True, fixDeviceCode=False, add_to_dict=True):
 
         datai = data[4*(field_num-1) : 4*(field_num)]
         assert len(datai) == 4, len(datai)
@@ -348,17 +348,6 @@ class OP2Common(object):
                 else:
                     self.binary_debug.write('  format_code  = %i\n' % self.format_code)
             self.binary_debug.write('  recordi = [%s]\n\n' % msg)
-
-    def read_table(self, data, result_name, flag):
-        aasf
-        if self.num_wide == 8:  # real/random
-            if self.thermal == 0:
-                #obj = self.create_transient_object(self.spcForces, SPCForcesObject)
-                self.read_real_table(data, result_name, flag)
-            else:
-                raise NotImplementedError()
-        else:
-            raise NotImplementedError()
 
     def read_oug_table(self, data, result_name, real_obj, complex_obj,
                        thermal_real_obj, node_elem):
@@ -424,13 +413,14 @@ class OP2Common(object):
         s = Struct(format1)
         for inode in xrange(nnodes):
             edata = data[n:n+ntotal]
-
             out = s.unpack(edata)
-            if self.debug4():
-                self.binary_debug.write('  %s\n' % str(out))
-            (eid_device, gridType, txr, tyr, tzr, rxr, ryr, rzr,
-                                   txi, tyi, tzi, rxi, ryi, rzi) = out
 
+            (eid_device, grid_type, txr, tyr, tzr, rxr, ryr, rzr,
+             txi, tyi, tzi, rxi, ryi, rzi) = out
+            eid = (eid_device - self.device_code) // 10
+
+            if self.debug4():
+                self.binary_debug.write('  %s=%i %s\n' % (flag, nid, str(out)))
             if is_magnitude_phase:
                 tx = polar_to_real_imag(txr, txi)
                 rx = polar_to_real_imag(rxr, rxi)
@@ -446,9 +436,7 @@ class OP2Common(object):
                 tz = complex(tzr, tzi)
                 rz = complex(rzr, rzi)
 
-            eid = (eid_device - self.device_code) // 10
-
-            dataIn = [eid, gridType, tx, ty, tz, rx, ry, rz]
+            dataIn = [eid, grid_type, tx, ty, tz, rx, ry, rz]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             #self.obj.add(dt, dataIn)
@@ -473,13 +461,16 @@ class OP2Common(object):
 
         #: the type of result being processed
         self.table_code = tCode % 1000
+
         #: used to create sort_bits
         self.sort_code = tCode // 1000
         self.sort_code2 = ((tCode // 1000) + 2) // 2
+
         #: what type of data was saved from the run; used to parse the
         #: approach_code and grid_device.  device_code defines what options
         #: inside a result, STRESS(PLOT,PRINT), are used.
         self.device_code = aCode % 10
+
         #: what solution was run (e.g. Static/Transient/Modal)
         self.analysis_code = (aCode - self.device_code) // 10
 
@@ -507,6 +498,22 @@ class OP2Common(object):
     #===================================
     def _parse_sort_code(self):
         """
+        +-------------------------+
+        | sort_code  | sort_bits  |
+        +=========================+
+        | 0          | [0, 0, 0]  |
+        +------------+------------+
+        | 1          | [0, 0, 1]  |
+        +------------+------------+
+        | 2          | [0, 1, 0]  |
+        +------------+------------+
+        | 3          | [0, 1, 1]  |
+        +------------+------------+
+        | ...        | ...        |
+        +------------+------------+
+        | 7          | [1, 1, 1]  |
+        +------------+------------+
+
         sort_code = 0 -> sort_bits = [0,0,0]
         sort_code = 1 -> sort_bits = [0,0,1]
         sort_code = 2 -> sort_bits = [0,1,0]
