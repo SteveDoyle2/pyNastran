@@ -26,3 +26,15 @@ It's strongly recommended that all integer division in Python be done as:
 because:
 5/3 = 1.666
 in Python 3.
+
+== Recommendations ==
+
+[https://store.continuum.io/cshop/anaconda/ Anaconda] - Python distribution
+
+[http://www.wingware.com/ Wing IDE] - development environment with an amazing debugger
+
+[http://www.wingware.com/ http://wingware.com/images/wingware-logo-180x58.png]
+
+[http://www.numpy.org/ Numpy], [http://scipy.org/ Scipy] - numerical libraries
+
+[http://matplotlib.org/ Matplotlib] - plotting library
