@@ -120,10 +120,9 @@ class TestF06(unittest.TestCase):
 
         IQ = f06.grid_point_weight.IQ
         #print "IQ", IQ
-        IQ_exact = array([[ 0.04790044,  0.,          0.        ],
-                          [ 0.,          0.9197143,   0.        ],
-                          [ 0.,          0.,          0.8740444 ]])
-        self.assertTrue(array_equiv(IQ, IQ_exact))
+        IQ_exact = array([[ 0.04790044, 0.9197143, 0.8740444 ]])
+        msg = 'IQ=%s\nexact=%s' % (str(IQ), str(IQ_exact))
+        self.assertTrue(array_equiv(IQ, IQ_exact), msg=msg)
 
     def test_blade2dv_fatal_3(self):
         f06_name = os.path.join(testpath, 'blade_2dv', 'blade_2dv.f06_fatal')
@@ -185,9 +184,7 @@ class TestF06(unittest.TestCase):
 
         IQ = f06.grid_point_weight.IQ
         #print "IQ", IQ
-        IQ_exact = array([[ 0.04790044,  0.,          0.        ],
-                          [ 0.,          0.9197143,   0.        ],
-                          [ 0.,          0.,          0.8740444 ]])
+        IQ_exact = array([[ 0.04790044, 0.9197143, 0.8740444 ]])
         self.assertTrue(array_equiv(IQ, IQ_exact))
 
     def test_plate_openmdao(self):
