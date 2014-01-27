@@ -143,7 +143,7 @@ class Usm3dReader(object):
 
         nodes, elements = self.read_cogsg(cogsg_filename)
         try:
-            tris, bcs = self.read_bc(bc_filename)
+            header, tris, bcs = self.read_bc(bc_filename)
         except IOError:
             tris = None
             bcs = None
@@ -173,24 +173,46 @@ class Usm3dReader(object):
         #self.read_front(front_file)
         #self.read_face(face_file)
 
-    def read_bc(self, bc_file):
+    def read_bc(self, bc_file, stop_after_header=False, get_lbouf=False):
+        print "bc_file =", bc_file
         f = open(bc_file, 'r')
         lines = f.readlines()
         f.close()
-        (ntris, dunnoA, dunnoB, dunnoC) = lines[0].strip().split()
-        ntris = int(ntris)
-        tris = zeros((ntris, 3), dtype='int32')
-        bcs  = zeros(ntris, dtype='int32')
+        #mbouf,dum1,dum1,igrid
+        header = lines[0].strip().split()
 
-        for i in xrange(ntris):
-            (n, isurf, n1, n2, n3) = lines[i+2].split()
-            tris[i] = [n1, n2, n3]
-            bcs[i] = isurf
-        tris = tris - 1
-        return tris, bcs
-        #self.bcs = [tris, bcs]
+        (nbouf, nbou1, npatch, igrid) = header
+       #(ntris, nbou1, npatch, igrid) = header
+        header[0] = int(nbouf)
+        header[1] = int(nbou1)
+        header[2] = int(npatch)
+        header[3] = int(igrid)
+        ntris = int(nbouf)
 
-    def read_cogsg(self, cogsg_file):
+        if stop_after_header:
+            return header, None, None
+
+        if get_lbouf:
+            lbouf = zeros((ntris, 4), dtype='int32')
+            for i in xrange(ntris):
+                line = lines[i+2].strip()
+                #print '%r' % line
+                (n, isurf, n1, n2, n3) = line.split()
+                lbouf[i, :] = [isurf, n1, n2, n3]
+            return header, lbouf
+        else:
+            tris = zeros((ntris, 3), dtype='int32')
+            bcs  = zeros(ntris, dtype='int32')
+
+            for i in xrange(ntris):
+                (n, isurf, n1, n2, n3) = lines[i+2].split()
+                tris[i] = [n1, n2, n3]
+                bcs[i] = isurf
+            tris = tris - 1
+            #self.bcs = [tris, bcs]
+            return header, tris, bcs
+
+    def read_cogsg(self, cogsg_file, stop_after_header=False):
         f = open(cogsg_file, 'rb')
 
         # nelements * 4 * 4 + 32 ???
@@ -222,6 +244,8 @@ class Usm3dReader(object):
             'tc'       : tc,  # dummy double
                               # nbc
         }
+        if stop_after_header:
+            return self.header
         self.log.info(self.header)
 
         # nbn nodes
@@ -355,7 +379,7 @@ class Usm3dReader(object):
         dummy3 = f.read(4)  # nnodes * 3 * 8
         dummy3_int, = unpack('>i', dummy3)
         #assert dummy3_int == 298560
-        print "dummy3 = ", unpack('>i', dummy3), unpack('>f', dummy3)
+        print "dummy3 = ", unpack('>i', dummy3) #, unpack('>f', dummy3)
 
         nodes = zeros((nnodes, 3), 'float64')
         for i in range(3): #  x, y, z

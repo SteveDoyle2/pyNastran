@@ -860,7 +860,7 @@ class Cart3DReader(object):
         #print self.infile.tell(), 'points'
         #isBuffered = True
         size = npoints * 12  # 12=3*4 all the points
-        Format = '>' + 'f' * 3000  # 3000 floats; 1000 points
+        Format = '>3000f'  # 3000 floats; 1000 points
 
         n = 0
         points = zeros(npoints*3, 'float64')
@@ -876,7 +876,7 @@ class Cart3DReader(object):
 
         if size > 0:
             data = self.infile.read(size)
-            Format = '>' + 'f' * (size // 4)
+            Format = '>%if' % (size // 4)
 
             nodeXYZs = unpack(Format, data)
             points[n:] = nodeXYZs
@@ -902,7 +902,7 @@ class Cart3DReader(object):
         #print self.infile.tell(), 'elements'
         #isBuffered = True
         size = nelements * 12  # 12=3*4 all the elements
-        Format = '>' + 'i' * 3000
+        Format = '>3000i'
 
         elements = zeros(self.nElements*3, 'int32')
 
@@ -917,7 +917,7 @@ class Cart3DReader(object):
         assert size >= 0
         if size > 0:
             data = self.infile.read(size)
-            Format = '>' + 'i' * (size // 4)
+            Format = '>%ii' % (size // 4)
 
             nodes = unpack(Format, data)
             elements[n:] = nodes
@@ -936,7 +936,7 @@ class Cart3DReader(object):
         #print self.infile.tell(), 'regions'
         #isBuffered = True
         size = nelements * 4  # 12=3*4 all the elements
-        Format = '>' + 'i' * 3000
+        Format = '>3000i'
 
         regions = zeros(self.nElementsRead, 'int32')
 
@@ -959,7 +959,7 @@ class Cart3DReader(object):
 
         if size > 0:
             data = self.infile.read(size)
-            Format = '>' + 'i' * (size // 4)
+            Format = '>%ii' % (size // 4)
             try:
                 region_data = unpack(Format, data)
             except:
