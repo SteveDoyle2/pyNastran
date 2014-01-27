@@ -9,15 +9,19 @@ class OneBasedArray(object):
 
     def __getitem__(self, key):
         #print "key_get =", str(key)
-        key0 = self.__update_key(key, 0)
-        key1 = key[1]
-        key = (key0, key1)
+        key2 = []
+        for i in xrange(self.ndim):
+            ikey = self.__update_key(key, i)
+            key2.append(ikey)
+        key2 = tuple(key2)
+
         #print "key_get", key
         #print "---"
-        return self.data[key0, key1]
+        return self.data[key2]
 
     def __update_key(self, key, id):
         if isinstance(key, int):
+            assert key  != 0
             return key - 1
         key_id = key[id]
         if isinstance(key_id, int):
@@ -26,12 +30,12 @@ class OneBasedArray(object):
             key_id = key_id - 1
         else:
             key_id = key_id
+        assert key_id != -1, key
         return key_id
 
     def __setitem__(self, key, value):
-        print "key_set1 =", str(key)
+        #print "key_set1 =", str(key)
         key2 = []
-
         for i in xrange(self.ndim):
             ikey = self.__update_key(key, i)
             key2.append(ikey)
@@ -41,8 +45,16 @@ class OneBasedArray(object):
         #print "---"
         self.data[key2] = value# - 1
 
+    def __len__(self):
+        return len(self.data)
+
     def __repr__(self):
-        return str(self.data)
+        return '<1-based>\n' + str(self.data)
+
+def do(imin, imax, istep=None):
+    if istep is not None:
+        xrange(imin, imax+1, istep)
+    return xrange(imin, imax+1)
 
 if __name__ == '__main__':
     a = OneBasedArray(ones((3, 3), 'i'))
@@ -58,3 +70,8 @@ if __name__ == '__main__':
     print b
     b[3] = 5
     print b
+
+    for i in do(1, 10):
+        print "i = ", i
+
+    assert len(b) == 3
