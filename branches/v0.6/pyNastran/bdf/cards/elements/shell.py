@@ -683,6 +683,12 @@ class CTRIA6(TriShell):
                   [thetaMcid, zOffset, None] + [None, TFlag, T1, T2, T3])
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8 or len(card) == 8: # to last node
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+
 
 class CTRIAR(TriShell):
     type = 'CTRIAR'
@@ -806,6 +812,12 @@ class CTRIAR(TriShell):
                   [thetaMcid, zOffset, None, None, TFlag, T1, T2, T3])
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8 or len(card) == 5: # to last node
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+
 
 class CTRIAX(TriShell):
     type = 'CTRIAX'
@@ -851,6 +863,12 @@ class CTRIAX(TriShell):
         nodeIDs = self.nodeIDs()
         list_fields = ['CTRIAX', self.eid, self.Pid()] + nodeIDs + [thetaMcid]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8 or len(card) == 8: # to last node
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class CTRIAX6(TriShell):
@@ -987,6 +1005,12 @@ class CTRIAX6(TriShell):
         theta = set_default_if_blank(self.theta, 0.0)
         list_fields = ['CTRIAX6', self.eid, self.Mid()] + self.nodeIDs() + [theta]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8 or len(card) == 8: # to last node
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class QuadShell(ShellElement):
@@ -1237,6 +1261,10 @@ class CSHEAR(QuadShell):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card)
 
     def G(self):
         return self.pid.mid.G()
@@ -1688,6 +1716,12 @@ class CQUADR(QuadShell):
                   [thetaMcid, zOffset, None, TFlag, T1, T2, T3, T4])
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8 or len(card) == 7: # to last node
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+
 
 class CQUAD(QuadShell):
     type = 'CQUAD'
@@ -1748,6 +1782,10 @@ class CQUAD(QuadShell):
     def reprFields(self):
         list_fields = ['CQUAD', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card)
 
 
 class CQUAD8(QuadShell):
@@ -1909,6 +1947,12 @@ class CQUAD8(QuadShell):
             T1, T2, T3, T4, thetaMcid, zOffset, TFlag])
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8 or len(card) == 11: # to last node
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+
 
 class CQUADX(QuadShell):
     type = 'CQUADX'
@@ -1971,3 +2015,7 @@ class CQUADX(QuadShell):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card)

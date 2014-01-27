@@ -156,6 +156,10 @@ class CHBDYE(ThermalElement):
                   self.radMidBack]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class CHBDYG(ThermalElement):
     """
@@ -239,6 +243,10 @@ class CHBDYG(ThermalElement):
         list_fields = ['CHBDYG', self.eid, None, self.Type, iViewFront, iViewBack,
                   radMidFront, radMidBack, None, ] + self.grids
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
 
 
 class CHBDYP(ThermalElement):
@@ -342,6 +350,10 @@ class CHBDYP(ThermalElement):
                   self.gmid, ce, self.e1, self.e2, self.e3]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 # Elements
 #-------------------------------------------------------
 # Properties
@@ -420,6 +432,10 @@ class PCONV(ThermalProperty):
                   self.e3]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class PCONVM(ThermalProperty):
     """
@@ -482,6 +498,10 @@ class PCONVM(ThermalProperty):
                   self.coef, expr, exppi, exppo]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class PHBDY(ThermalProperty):
     """
@@ -524,6 +544,10 @@ class PHBDY(ThermalProperty):
         d2 = set_blank_if_default(self.d2, self.d1)
         list_fields = ['PHBDY', self.pid, self.af, self.d1, d2]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
 
 
 # Properties
@@ -600,6 +624,10 @@ class CONV(ThermalBC):
         list_fields = ['CONV', self.eid, self.pconID, flmnd, cntrlnd] + ta
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class CONVM(ThermalBC):
     """
@@ -652,6 +680,10 @@ class CONVM(ThermalBC):
                   self.cntmdot, self.ta1, ta2, mdot]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class RADM(ThermalBC):
     """
@@ -686,6 +718,10 @@ class RADM(ThermalBC):
     def reprFields(self):
         list_fields = ['RADM', self.radmid, self.absorb] + self.emissivity
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
 
 
 class RADBC(ThermalBC):
@@ -752,6 +788,10 @@ class RADBC(ThermalBC):
         eids = collapse_thru_by(self.Eids())
         list_fields = ['RADBC', self.nodamb, self.famb, cntrlnd] + eids
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
 
 # Boundary Conditions
 #-------------------------------------------------------
