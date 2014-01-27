@@ -2,6 +2,30 @@ from struct import unpack
 
 from pyNastran.op2.dev.op2_common import OP2Common
 
+from pyNastran.op2.tables.oug.oug_displacements import (
+    DisplacementObject,              # table_code=1     format_code=1 sort_code=0
+    ComplexDisplacementObject)       # analysis_code=5  format_code=3 sort_code=1
+
+# table_code=10 format_code=1 sort_code=0
+from pyNastran.op2.tables.oug.oug_velocities import (
+    VelocityObject, ComplexVelocityObject)
+
+# table_code=11 format_code=1 sort_code=0
+from pyNastran.op2.tables.oug.oug_accelerations import (
+    AccelerationObject, ComplexAccelerationObject)
+
+# table_code=1 format_code=1 sort_code=0
+from pyNastran.op2.tables.oug.oug_temperatures import (
+    TemperatureObject)
+
+from pyNastran.op2.tables.oug.oug_eigenvectors import (
+     EigenVectorObject,                     # analysis_code=2, sort_code=0 format_code   table_code=7
+     ComplexEigenVectorObject,              # analysis_code=5, sort_code=1 format_code=1 table_code=7
+    #RealEigenVectorObject,                 # analysis_code=9, sort_code=1 format_code=1 table_code=7
+)
+
+from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import ThermalVelocityVectorObject
+
 
 class OUG(OP2Common):
     def __init__(self):
@@ -116,37 +140,41 @@ class OUG(OP2Common):
 
     def read_displacement(self, data):
         result_name = 'displacements'
-        #real_obj = DisplacementObject
-        #complex_obj = ComplexDisplacementObject
-        #thermal_real_obj = TemperatureObject
-        real_obj = None
-        complex_obj = None
-        thermal_real_obj = None
-        self.read_oug_table(data, result_name, real_obj, complex_obj, thermal_real_obj, 'node')
+        real_obj = DisplacementObject
+        complex_obj = ComplexDisplacementObject
+        thermal_real_obj = TemperatureObject
+        storage_obj = self.displacements
+        self.read_oug_table(data, storage_obj, real_obj, complex_obj, thermal_real_obj, 'node')
+
+        #import StringIO
+        #f = StringIO.StringIO()
+        #header = []
+        #pageStamp = '%i'
+        #pageNum = 1
+        #print self.displacements.keys()
+        #self.displacements[1].write_f06(header, pageStamp, pageNum=1, f=f)
+        #print f.getvalue()
 
     def read_velocity(self, data):
         result_name = 'velocity'
-        #real_obj = VelocityObject
-        #complex_obj = ComplexVelocityObject
-        real_obj = None
-        complex_obj = None
-        thermal_real_obj = None
-        self.read_oug_table(data, result_name, real_obj, complex_obj, thermal_real_obj, 'node')
+        real_obj = VelocityObject
+        complex_obj = ComplexVelocityObject
+        thermal_real_obj = ThermalVelocityVectorObject
+        storage_obj = self.velocity
+        self.read_oug_table(data, storage_obj, real_obj, complex_obj, thermal_real_obj, 'node')
 
     def read_acceleration(self, data):
         result_name = 'acceleration'
-        #real_obj = AccelerationObject
-        #complex_obj = ComplexAccelerationObject
-        real_obj = None
-        complex_obj = None
+        real_obj = AccelerationObject
+        complex_obj = ComplexAccelerationObject
         thermal_real_obj = None
-        self.read_oug_table(data, result_name, real_obj, complex_obj, thermal_real_obj, 'node')
+        storage_obj = self.acceleration
+        self.read_oug_table(data, storage_obj, real_obj, complex_obj, thermal_real_obj, 'node')
 
     def read_eigenvector(self, data):
         result_name = 'eigenvectors'
-        #real_obj = EigenVectorObject
-        #complex_obj = ComplexEigenVectorObject
-        real_obj = None
-        complex_obj = None
+        real_obj = EigenVectorObject
+        complex_obj = ComplexEigenVectorObject
         thermal_real_obj = None
-        self.read_oug_table(data, result_name, real_obj, complex_obj, thermal_real_obj, 'node')
+        storage_obj = self.eigenvectors
+        self.read_oug_table(data, storage_obj, real_obj, complex_obj, thermal_real_obj, 'node')

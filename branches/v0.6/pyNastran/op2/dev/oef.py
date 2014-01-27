@@ -354,7 +354,7 @@ class OEF(OP2Common):
                     #self.obj.add(dt, dataIn)
                     n += ntotal
                 #print self.rodForces
-                
+
             else:
                 raise NotImplementedError(self.num_wide)
             #print self.rodForces
@@ -850,7 +850,7 @@ class OEF(OP2Common):
                 s = Struct(format1)
                 for i in xrange(nelements):
                     if i % 10000 == 0:
-                       print 'i = ', i
+                        print 'i = ', i
                     edata = data[n:n+ntotal]  # 4*9
                     out = s.unpack(edata)
                     (eid_device, theory, lamid, failure_index_direct_stress, failure_mode_max_shear,
@@ -858,9 +858,9 @@ class OEF(OP2Common):
                     eid = (eid_device - self.device_code) // 10
                     if self.debug4():
                         if eid > 0:
-                            self.binary_debug.write('  ----------\n')
-                            self.binary_debug.write('  eid = %i\n' % eid)
-                        self.binary_debug.write('  C = [%s]\n' % ', '.join(['%r' % di for di in out]) )
+                            self.binary_debug.write('  eid=%i; C=[%s]\n' % (', '.join(['%r' % di for di in out]) ))
+                        else:
+                            self.binary_debug.write('      %s  C=[%s]\n' % (' ' * len(str(eid)), ', '.join(['%r' % di for di in out]) ))
 
                     if eid > 0:
                         #print "eid =", eid

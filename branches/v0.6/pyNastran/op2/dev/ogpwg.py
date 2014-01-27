@@ -61,4 +61,4 @@ class OGPWG(OP2Common):
 
         self.grid_point_weight.set_grid_point_weight(self.reference_point,
             MO, S, mass, cg, IS, IQ, Q)
-        del self.reference_point
+        #del self.reference_point

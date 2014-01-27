@@ -14,23 +14,29 @@ from pyNastran.op2.dev.oug import OUG
 from pyNastran.op2.dev.ogpwg import OGPWG
 from pyNastran.op2.dev.fortran_format import FortranFormat
 
-class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
+from pyNastran.bdf.bdf import BDF
+from pyNastran.f06.f06Writer import F06Writer
+
+class OP2(BDF,
+          OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat,
+          F06Writer):
+
     def set_subcases(self, isubcases):
         pass
     def get_op2_stats(self):
         pass
-    def write_bdf(self, *args, **kwargs):
-        pass
-    def write_f06(self, *args, **kwargs):
-        pass
+    #def write_bdf(self, *args, **kwargs):
+        #pass
+    #def write_f06(self, *args, **kwargs):
+        #pass
     def __init__(self, op2_filename, make_geom=False, debug=False, log=None):
         if op2_filename:
             self.op2_filename = op2_filename
 
         #self.tables_to_read = []
 
-        #BDF.__init__(self, debug=debug, log=log)
-        #F06Writer.__init__(self)
+        BDF.__init__(self, debug=debug, log=log)
+        F06Writer.__init__(self)
 
         OEF.__init__(self)
         OES.__init__(self)
@@ -225,14 +231,14 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
                                     'OAGPSD2', 'OAGCRM2', 'OAGRMS2', 'OAGATO2', 'OAGNO2',
                                     'OESPSD2', 'OESCRM2', 'OESRMS2', 'OESATO2', 'OESNO2',
                                     'OEFPSD2', 'OEFCRM2', 'OEFRMS2', 'OEFATO2', 'OEFNO2',
-                                    'OPGPSD2', 'OPGCRM2', 'OPGRMS2', 'OPGATO2', 'OPGNO2', 
-                                    'OQGPSD2', 'OQGCRM2', 'OQGRMS2', 'OQGATO2', 'OQGNO2', 
+                                    'OPGPSD2', 'OPGCRM2', 'OPGRMS2', 'OPGATO2', 'OPGNO2',
+                                    'OQGPSD2', 'OQGCRM2', 'OQGRMS2', 'OQGATO2', 'OQGNO2',
                                     'OQMPSD2', 'OQMCRM2', 'OQMRMS2', 'OQMATO2', 'OQMNO2',
                                     'OSTRPSD2','OSTRCRM2','OSTRRMS2','OSTRATO2','OSTRNO2',
                                     'OUGPSD2', 'OUGCRM2', 'OUGRMS2', 'OUGATO2', 'OUGNO2',
                                     'OVGPSD2', 'OVGCRM2', 'OVGRMS2', 'OVGATO2', 'OVGNO2',
                                     'OCRUG',
-                                    'OCRPG', 
+                                    'OCRPG',
                                     'STDISP', 'FOL',
                                     ]:
                     self._read_results_table()
@@ -420,11 +426,16 @@ class OP2(OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
     def finish(self):
         for word in self.words:
             if word != '???' and hasattr(self, word):
-                delattr(self, word)
-
+                if word not in ['Title', 'reference_point']:
+                    delattr(self, word)
+        self.data_code = {'log': self.log,}
+        self.obj = None
 
 if __name__ == '__main__':
     import sys
     o = OP2(sys.argv[1])
     o.read_op2(sys.argv[1])
+
+    f06OutName = 'debug.f06'
+    o.write_f06(f06OutName)
 

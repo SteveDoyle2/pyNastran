@@ -1,8 +1,8 @@
 from struct import unpack
 
-from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import(
+from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import (
     SPCForcesObject, ComplexSPCForcesObject)
-from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import(
+from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import (
     MPCForcesObject, ComplexMPCForcesObject)
 from pyNastran.op2.tables.oqg_constraintForces.oqg_thermalGradientAndFlux import (
     TemperatureGradientAndFluxObject)

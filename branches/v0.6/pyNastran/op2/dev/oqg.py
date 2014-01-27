@@ -2,6 +2,13 @@ from struct import unpack
 
 from pyNastran.op2.dev.op2_common import OP2Common
 
+from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import (
+    SPCForcesObject, ComplexSPCForcesObject)
+from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import (
+    MPCForcesObject, ComplexMPCForcesObject)
+from pyNastran.op2.tables.oqg_constraintForces.oqg_thermalGradientAndFlux import (
+    TemperatureGradientAndFluxObject)
+
 
 class OQG(OP2Common):
     def __init__(self):
@@ -120,18 +127,14 @@ class OQG(OP2Common):
 
     def read_spc_forces(self, data):
         result_name = 'SPC_forces'
-        #real_obj = SPCForcesObject
-        #complex_obj = ComplexSPCForcesObject
-        real_obj = None
-        complex_obj = None
+        real_obj = SPCForcesObject
+        complex_obj = ComplexSPCForcesObject
         thermal_real_obj = None
         self.read_oug_table(data, result_name, real_obj, complex_obj, thermal_real_obj, 'node')
 
     def read_mpc_forces(self, data):
         result_name = 'MPC_forces'
-        #real_obj = MPCForcesObject
-        #complex_obj = ComplexMPCForcesObject
-        real_obj = None
-        complex_obj = None
+        real_obj = MPCForcesObject
+        complex_obj = ComplexMPCForcesObject
         thermal_real_obj = None
         self.read_oug_table(data, result_name, real_obj, complex_obj, thermal_real_obj, 'node')

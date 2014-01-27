@@ -2,10 +2,11 @@ from struct import Struct, unpack
 
 from pyNastran import isRelease
 from pyNastran.op2.op2_helper import polar_to_real_imag
-
+from pyNastran.utils import object_attributes
 
 class OP2Common(object):
     def __init__(self):
+        self.data_code = {'log': self.log,}
         self.show_table3_map = [
             #'OUGV1',
             #'OEF1X',
@@ -308,27 +309,49 @@ class OP2Common(object):
         if self.debug:
             self.binary_debug.write('  %-12s = %r\n' % (var_name, value))
         #setattr(self, var_name, value)  # set the parameter to the local namespace
+
+        if applyNonlinearFactor:
+            self.nonlinear_factor = value
+            self.data_code['nonlinear_factor'] = value
+            self.data_code['name'] = name
+
+        if add_to_dict:
+            self.data_code[var_name] = value
+
         self.words[field_num-1] = var_name
         return value
 
     def apply_data_code_value(self, name, value):
-        pass
+        self.data_code[name] = value
+
     def setNullNonlinearFactor(self):
-        pass
+        self.nonlinear_factor = None
+        self.data_code['nonlinear_factor'] = None
 
     def read_title(self, data):
         assert len(data) == 584, len(data)
         Title, subtitle, label = unpack(b'128s128s128s', data[200:])  # titleSubtitleLabel
 
         self.Title = Title.strip()
+
         #: the subtitle of the subcase
         self.subtitle = subtitle.strip()
+        self.data_code['subtitle'] = self.subtitle
+
         #: the label of the subcase
         self.label = label.strip()
+        self.data_code['label'] = self.label
+
         if self.debug:
             self.binary_debug.write('  Title    = %r\n' % self.Title)
             self.binary_debug.write('  subtitle = %r\n' % self.subtitle)
             self.binary_debug.write('  label    = %r\n' % self.label)
+
+        if hasattr(self, 'isubcase'):
+            if self.isubcase not in self.iSubcaseNameMap:
+                self.iSubcaseNameMap[self.isubcase] = [self.subtitle, self.label]
+        else:
+            raise  RuntimeError('isubcase is not defined')
 
     def write_debug_bits(self):
         if self.debug:
@@ -351,19 +374,23 @@ class OP2Common(object):
 
     def read_oug_table(self, data, result_name, real_obj, complex_obj,
                        thermal_real_obj, node_elem):
-        assert real_obj is None
-        assert complex_obj is None
+        #assert real_obj is None
+        #assert complex_obj is None
+        #assert thermal_real_obj is None
 
         if self.num_wide == 8:  # real/random
             if self.thermal == 0:
                 # real_obj
+                self.create_transient_object(result_name, real_obj)
                 self.read_real_table(data, result_name, node_elem)
             else:
                 # thermal_real_obj
+                self.create_transient_object(result_name, thermal_real_obj)
                 self.read_real_table(data, result_name, node_elem)
         elif self.num_wide == 14:  # real/imaginary or mag/phase
             if self.thermal == 0:
                 # complex_obj
+                self.create_transient_object(result_name, complex_obj)
                 self.read_complex_table(data, result_name, node_elem)
             else:
                 self.not_implemented_or_skip('thermal=%r' % self.thermal)
@@ -376,6 +403,7 @@ class OP2Common(object):
         if self.debug4():
             self.binary_debug.write('  read_real_table\n')
         assert flag in ['node', 'elem'], flag
+        dt = self.nonlinear_factor
         format1 = '2i6f' # 8
 
         ntotal = 32 # 8 * 4
@@ -384,18 +412,18 @@ class OP2Common(object):
 
         n = 0
         s = Struct(format1)
+        assert self.obj is not None
         for inode in xrange(nnodes):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
-            (eid_device, gridType, tx, ty, tz, rx, ry, rz) = out
+            (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
 
             eid = (eid_device - self.device_code) // 10
             if self.debug4():
                 self.binary_debug.write('  %s=%i; %s\n' % (flag, eid_device, str(out)))
-            #print "eType=%s" %(eType)
 
-            dataIn = [eid, gridType, tx, ty, tz, rx, ry, rz]
-            #self.obj.add(dt, dataIn)
+            dataIn = [eid, grid_type, tx, ty, tz, rx, ry, rz]
+            self.obj.add(dt, dataIn)
             n += ntotal
 
     def read_complex_table(self, data, result_name, flag):
@@ -403,6 +431,7 @@ class OP2Common(object):
         if self.debug4():
             self.binary_debug.write('  read_complex_table\n')
         assert flag in ['node', 'elem'], flag
+        dt = self.nonlinear_factor
 
         format1 = '2i12f'
         is_magnitude_phase = self.is_magnitude_phase()
@@ -411,6 +440,7 @@ class OP2Common(object):
         ntotal = 56  # 14 * 4
         nnodes = len(data) // ntotal
         s = Struct(format1)
+        assert self.obj is not None
         for inode in xrange(nnodes):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
@@ -438,9 +468,44 @@ class OP2Common(object):
 
             dataIn = [eid, grid_type, tx, ty, tz, rx, ry, rz]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
-            #eid = self.obj.add_new_eid(out)
-            #self.obj.add(dt, dataIn)
+            #eid = self.obj.add_new_eid(out)  # ???
+            self.obj.add(dt, dataIn)
             n += ntotal
+
+    def create_transient_object(self, storageObj, classObj, debug=False):
+        """
+        Creates a transient object (or None if the subcase should be skippied).
+
+        :param storageName:  the name of the dictionary to store the object in (e.g. 'displacements')
+        :param classObj:    the class object to instantiate
+        :param debug:       developer debug
+
+        .. note:: dt can also be load_step depending on the class
+        """
+        if debug:
+            print("create Transient Object")
+            print("***NF = %s" % self.nonlinear_factor)
+        #if not hasattr(self, storageName):
+            #attrs =  object_attributes(obj, mode="public")
+            #msg = 'storage_obj=%r does not exist.\n' % storageObj
+            #msg += 'Attributes = [%s]' , ', %s'.join(attrs)
+            #raise RuntimeError(msg)
+        #storageObj = getattr(self, storageName)
+        #assert classObj is not None, 'name=%r has no associated classObject' % storageName
+        self.data_code['table_name'] = self.table_name
+
+        if hasattr(self, 'isubcase'):
+            if self.isubcase in storageObj:
+                self.obj = storageObj[self.isubcase]
+                self.obj.update_data_code(self.data_code)
+            else:
+                self.obj = classObj(self.data_code, self.is_sort1(), self.isubcase, self.nonlinear_factor)
+            storageObj[self.isubcase] = self.obj
+        else:
+            if self.ID in storageObj:
+                self.obj = storageObj[self.ID]
+            else:
+                storageObj[self.ID] = self.obj
 
     def not_implemented_or_skip(self, msg=''):
         if isRelease:

@@ -159,9 +159,7 @@ class OES(OP2Common):
                     (eid_device, axial, axial_margin, torsion, torsion_margin) = out
                     eid = (eid_device - self.device_code) // 10
                     if self.debug4():
-                        self.binary_debug.write('  ----------\n')
-                        self.binary_debug.write('  eid = %i\n' % eid)
-                        self.binary_debug.write('  C = [%s]\n' % ', '.join(['%r' % di for di in out]) )
+                        self.binary_debug.write('  eid=%i; C=[%s]\n' % ', '.join(['%r' % di for di in out]) )
 
                     #print "eid =", eid
                     n += ntotal
@@ -236,9 +234,7 @@ class OES(OP2Common):
                                  s1b, s2b, s3b, s4b, smaxb, sminb, MSc) = out
                     eid = (eid_device - self.device_code) // 10
                     if self.debug4():
-                        self.binary_debug.write('  ----------\n')
-                        self.binary_debug.write('  eid = %i\n' % eid)
-                        self.binary_debug.write('  C%i = [%s]\n' % (i, ', '.join(['%r' % di for di in out]) ))
+                        self.binary_debug.write('  eid=%i; C%i=[%s]\n' % (eid, i, ', '.join(['%r' % di for di in out]) ))
                     n += ntotal
                     #print "eid =", eid
             elif self.num_wide == 19:
@@ -538,9 +534,7 @@ class OES(OP2Common):
                     eid = (eid_device - self.device_code) // 10
 
                     if self.debug4():
-                        self.binary_debug.write('  ----------\n')
-                        self.binary_debug.write('  eid = %i\n' % eid)
-                        self.binary_debug.write('  centroid = [%s]\n' % ', '.join(['%r' % di for di in out]) )
+                        self.binary_debug.write('  eid=%i; C=[%s]\n' % ', '.join(['%r' % di for di in out]) )
 
                     #print "eid =", eid
                     n += ntotal
@@ -613,12 +607,7 @@ class OES(OP2Common):
                     eid = (eid_device - self.device_code) // 10
 
                     if self.debug4():
-                        d = [eid_device, j, grid,
-                             fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-                             fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2]
-                        self.binary_debug.write('  ----------\n')
-                        self.binary_debug.write('  eid = %i\n' % eid)
-                        self.binary_debug.write('  C = [%s]\n' % ', '.join(['%r' % di for di in d]) )
+                        self.binary_debug.write('  eid=%i; C=[%s]\n' % ', '.join(['%r' % di for di in out]) )
 
                     #print "eid=%i grid=%s fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
                     #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"        % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
@@ -779,9 +768,7 @@ class OES(OP2Common):
                     eid = (eid_device - self.device_code) // 10
 
                     if self.debug4():
-                        self.binary_debug.write('  ----------\n')
-                        self.binary_debug.write('  eid = %i\n' % eid)
-                        self.binary_debug.write('  C = [%s]\n' % ', '.join(['%r' % di for di in out]) )
+                        self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out]) ))
 
                     if eid != eid_old:  # originally initialized to None, the buffer doesnt reset it, so it is the old value
                         #print "1 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
