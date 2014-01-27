@@ -126,14 +126,14 @@ class OQG(OP2Common):
             self.not_implemented_or_skip('bad OQG table')
 
     def read_spc_forces(self, data):
-        result_name = 'SPC_forces'
+        result_name = self.spcForces
         real_obj = SPCForcesObject
         complex_obj = ComplexSPCForcesObject
         thermal_real_obj = None
         self.read_oug_table(data, result_name, real_obj, complex_obj, thermal_real_obj, 'node')
 
     def read_mpc_forces(self, data):
-        result_name = 'MPC_forces'
+        result_name = self.mpcForces
         real_obj = MPCForcesObject
         complex_obj = ComplexMPCForcesObject
         thermal_real_obj = None

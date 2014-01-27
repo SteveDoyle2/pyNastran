@@ -1,3 +1,4 @@
+import copy
 from struct import Struct, unpack
 
 from pyNastran import isRelease
@@ -313,7 +314,7 @@ class OP2Common(object):
         if applyNonlinearFactor:
             self.nonlinear_factor = value
             self.data_code['nonlinear_factor'] = value
-            self.data_code['name'] = name
+            self.data_code['name'] = var_name
 
         if add_to_dict:
             self.data_code[var_name] = value
@@ -374,6 +375,7 @@ class OP2Common(object):
 
     def read_oug_table(self, data, result_name, real_obj, complex_obj,
                        thermal_real_obj, node_elem):
+        assert isinstance(result_name, dict), 'result_name=%r' % result_name
         #assert real_obj is None
         #assert complex_obj is None
         #assert thermal_real_obj is None
@@ -497,7 +499,7 @@ class OP2Common(object):
         if hasattr(self, 'isubcase'):
             if self.isubcase in storageObj:
                 self.obj = storageObj[self.isubcase]
-                self.obj.update_data_code(self.data_code)
+                self.obj.update_data_code(copy.deepcopy(self.data_code))
             else:
                 self.obj = classObj(self.data_code, self.is_sort1(), self.isubcase, self.nonlinear_factor)
             storageObj[self.isubcase] = self.obj

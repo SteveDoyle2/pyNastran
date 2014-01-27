@@ -95,6 +95,8 @@ class FortranFormat(object):
         while markers[0] != 0:
             data = self._read_record()
             if len(data) == 584:
+                self.data_code = {'log': self.log,}  # resets the logger
+                self.obj = None
                 table3_parser(data)
             else:
                 table4_parser(data)

@@ -428,7 +428,6 @@ class OP2(BDF,
             if word != '???' and hasattr(self, word):
                 if word not in ['Title', 'reference_point']:
                     delattr(self, word)
-        self.data_code = {'log': self.log,}
         self.obj = None
 
 if __name__ == '__main__':

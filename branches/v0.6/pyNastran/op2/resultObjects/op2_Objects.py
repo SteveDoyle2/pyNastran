@@ -131,8 +131,10 @@ class scalarObject(baseScalarObject):
     def update_data_code(self, data_code):
         if not self.data_code or (data_code['nonlinear_factor'] != self.data_code['nonlinear_factor']):
             self.data_code = data_code
-            self.apply_data_code()
-            self.set_data_members()
+            self.apply_data_code()  # take all the parameters in data_code and make them attributes of the class
+            self.set_data_members()  # set the transient variables
+        #else:
+            #print('NF_new=%r NF_old=%r' % (data_code['nonlinear_factor'], self.data_code['nonlinear_factor']))
 
     def print_data_members(self):
         """
