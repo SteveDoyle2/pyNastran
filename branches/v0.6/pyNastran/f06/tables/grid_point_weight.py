@@ -204,8 +204,8 @@ class GridPointWeight(object):
         n += i
 
     def write_f06(self, f, pageStamp, pageNum):
-        #if self.reference_point is None:
-            #return pageNum
+        if self.reference_point is None:
+            return pageNum
         msg = ['                           O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R']
         msg.append('0                                                     REFERENCE POINT =        %i' % self.reference_point)
 
