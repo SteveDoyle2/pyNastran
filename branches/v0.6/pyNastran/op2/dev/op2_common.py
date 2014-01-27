@@ -521,23 +521,28 @@ class OP2Common(object):
 
         #: the local subcase ID
         self.isubcase = isubcase
+        self.data_code['isubcase'] = self.isubcase
         #print("isubcase = %s" %(isubcase))
         #self.subcases.add(self.isubcase)  # set notation
 
         #: the type of result being processed
         self.table_code = tCode % 1000
+        self.data_code['table_code'] = self.table_code
 
         #: used to create sort_bits
         self.sort_code = tCode // 1000
         self.sort_code2 = ((tCode // 1000) + 2) // 2
+        self.data_code['sort_code'] = self.sort_code
 
         #: what type of data was saved from the run; used to parse the
         #: approach_code and grid_device.  device_code defines what options
         #: inside a result, STRESS(PLOT,PRINT), are used.
         self.device_code = aCode % 10
+        self.data_code['device_code'] = self.device_code
 
         #: what solution was run (e.g. Static/Transient/Modal)
         self.analysis_code = (aCode - self.device_code) // 10
+        self.data_code['analysis_code'] = self.analysis_code
 
         #print('parse_approach_code - aCode=%s tCode=%s int3=%s isubcase=%s' % (aCode, tCode, int3, isubcase))
         #print('                 so - analysis_code=%s device_code=%s table_code=%s sort_code=%s\n' % (self.analysis_code, self.device_code, self.table_code, self.sort_code))
@@ -557,6 +562,7 @@ class OP2Common(object):
             #self.log.info('The op2 may be inconsistent...')
             #self.log.info('  print and plot can cause bad results...'
             #              'if there's a crash, try plot only')
+            self.data_code['device_code'] = self.device_code
 
         self._parse_sort_code()
 
@@ -649,5 +655,11 @@ class OP2Common(object):
     def debug4(self):
         return True
         if self.debug and self.table_name in self.show_table4_map:
+            return True
+        return False
+
+    #---------------------
+    def isStress(self):
+        if self.stress_bits[1] == 0:
             return True
         return False

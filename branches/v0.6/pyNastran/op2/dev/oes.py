@@ -3,6 +3,28 @@ from struct import Struct, unpack
 from pyNastran.op2.dev.op2_common import OP2Common
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
+from pyNastran.op2.tables.oes_stressStrain.real.elementsStressStrain import RealElementsStressStrain
+from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import BarStressObject, BarStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import BeamStressObject, BeamStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_bush import BushStressObject #, BushStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_bush1d import Bush1DStressObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates import CompositePlateStressObject, CompositePlateStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_gap import NonlinearGapStressObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import PlateStressObject, PlateStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RodStressObject, RodStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import ShearStressObject, ShearStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import SolidStressObject, SolidStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import CelasStressObject, CelasStrainObject, NonlinearSpringStressObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import TriaxStressObject, TriaxStrainObject
+
+from pyNastran.op2.tables.oes_stressStrain.complex.elementsStressStrain import ComplexElementsStressStrain
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStressObject, ComplexBarStrainObject
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush import ComplexBushStressObject, ComplexBushStrainObject
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexBush1DStressObject
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStressObject, ComplexPlateStrainObject
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import ComplexRodStressObject, ComplexRodStrainObject
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexCelasStressObject, ComplexCelasStrainObject
+
 
 class OES(OP2Common):
     def __init__(self):
@@ -102,6 +124,7 @@ class OES(OP2Common):
         #    self.lsdvmn = self.get_values(data,'i',5)
 
         self.element_name = self.element_mapper[self.element_type]
+        self.data_code['element_name'] = self.element_name
         if self.debug:
             self.binary_debug.write('  element_name = %r\n' % self.element_name)
             self.binary_debug.write('  aCode    = %r\n' % self.aCode)
@@ -113,6 +136,36 @@ class OES(OP2Common):
             raise NotImplementedError(self.element_type)
 
         self.write_debug_bits()
+        self.parse_stress_code()
+
+    def parse_stress_code(self):
+        """
+        s_code =  0 -> stress_bits = [0,0,0,0,0]
+        s_code =  1 -> stress_bits = [0,0,0,0,1]
+        s_code =  2 -> stress_bits = [0,0,0,1,0]
+        s_code =  3 -> stress_bits = [0,0,0,1,1]
+        etc.
+        s_code = 32 -> stress_bits = [1,1,1,1,1]
+
+        stress_bits[0] = 0 -> isMaxShear=True       isVonMises=False
+        stress_bits[0] = 1 -> isMaxShear=False      isVonMises=True
+
+        stress_bits[1] = 0 -> isStress=True         isStrain=False
+        stress_bits[2] = 0 -> isFiberCurvature=True isFiberDistance=False
+        stress_bits[3] = 0 -> duplicate of Bit[1] (stress/strain)
+        stress_bits[4] = 0 -> material coordinate system flag
+        """
+        bits = [0, 0, 0, 0, 0]
+
+        s_code = self.s_code
+        i = 4
+        while s_code > 0:
+            value = s_code % 2
+            s_code = (s_code - value) // 2
+            bits[i] = value
+            i -= 1
+        self.stress_bits = bits
+        self.data_code['stress_bits'] = self.stress_bits
 
     def read_oes1_4(self, data):
         #assert self.isubtable == -4, self.isubtable
@@ -309,7 +362,6 @@ class OES(OP2Common):
                         axial = polar_to_real_imag(axialReal, axialImag)
                     else:
                         axial = complex(axialReal, axialImag)
-
                     if self.debug4():
                         self.binary_debug.write('  eid=%i result%i=[%i, %f, %f]\n' % (eid, i, eid_device, axialReal, axialImag) )
                     assert eid > 0
@@ -739,6 +791,10 @@ class OES(OP2Common):
                 raise NotImplementedError(self.num_wide)
 
         elif self.element_type in [95, 96, 97, 98]: # composite shell
+            if self.isStress():
+                self.create_transient_object(self.compositePlateStress, CompositePlateStressObject)
+            else:
+                self.create_transient_object(self.compositePlateStrain, CompositePlateStrainObject)
              # 95 - CQUAD4
              # 96 - CQUAD8
              # 97 - CTRIA3
