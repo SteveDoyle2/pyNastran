@@ -752,9 +752,7 @@ class OES(OP2Common):
                 if self.debug:
                     self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
                     self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
-                    self.binary_debug.write('  #centeri = [eid_device, j, grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
-                    self.binary_debug.write('  #                                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
-                    self.binary_debug.write('  #nodeji = [eid, iLayer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)]\n')
+                    self.binary_debug.write('  element1 = [eid_device, ilayer_device???, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)]\n')
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
                 #return
 
@@ -764,19 +762,20 @@ class OES(OP2Common):
                         print 'i = ', i
                     edata = data[n:n+44]  # 4*11
                     out = s.unpack(edata)
-                    (eid_device, iLayer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm) = out
+                    (eid_device, ilayer_device, o1, o2, t12, t1z, t2z, angle, major, minor, ovm) = out
                     eid = (eid_device - self.device_code) // 10
+                    ilayer = (ilayer_device - self.device_code) // 10
 
                     if self.debug4():
-                        self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out]) ))
+                        self.binary_debug.write('  eid=%i; layer???=%i; C=[%s]\n' % (eid, ilayer, ', '.join(['%r' % di for di in out]) ))
 
                     if eid != eid_old:  # originally initialized to None, the buffer doesnt reset it, so it is the old value
-                        #print "1 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
+                        #print "1 - eid=%s ilayer=%i o1=%i o2=%i ovm=%i" % (eid,ilayer,o1,o2,ovm)
                         #self.obj.add_new_eid(eType, dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
                         pass
                     else:
                         pass
-                        #print "2 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
+                        #print "2 - eid=%s ilayer=%i o1=%i o2=%i ovm=%i" % (eid,ilayer,o1,o2,ovm)
                         #self.obj.add(dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
                     eid_old = eid
                     n += 44

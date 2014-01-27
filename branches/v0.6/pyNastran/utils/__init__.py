@@ -189,7 +189,7 @@ def object_methods(obj, mode = "public"):
     return __object_attr(obj, mode, lambda x: isinstance(x, MethodType))
 
 
-def object_attributes(obj, mode = "public"):
+def object_attributes(obj, mode="public"):
     """
     List the names of attributes of a class as strings. Returns public attributes
     as default.
