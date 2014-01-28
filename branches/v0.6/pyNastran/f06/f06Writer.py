@@ -72,7 +72,7 @@ def make_f06_header():
         n + '* *%s* *\n' % version.center(33),
         n + '* *                                 * *\n',
         n + '* *                                 * *\n',
-        n + '* *          %15s        * *\n' % (pyNastran.__releaseDate2__),
+        n + '* *          %15s        * *\n' % pyNastran.__releaseDate2__,
         n + '* *                                 * *\n',
         n + '* *            Questions            * *\n',
         n + '* *        mesheb82@gmail.com       * *\n',
@@ -165,9 +165,7 @@ class F06WriterDeprecated(object):
         self.load_op2(isTesting)
 
 class F06Writer(object):
-    def __init__(self, model='tria3'):
-        #self.set_f06_name(model)
-
+    def __init__(self):
         #: BDF Title
         self.Title = None
 
@@ -337,11 +335,6 @@ class F06Writer(object):
         #: OEE - strain energy density
         self.strainEnergy = {}  # tCode=18
 
-
-    def set_f06_name(self, model):
-        self.model = model
-        self.f06OutName = '%s.f06.out' % self.model
-
     def load_op2(self, isTesting=False):
         print("self.class = ",self.__class__.__name__)
         if isTesting == False:  # TODO implement in way that doesnt require a variable (e.g. check parent class)
@@ -425,9 +418,7 @@ class F06Writer(object):
         pageStamp = self.make_stamp(self.Title)
         msg += pageStamp % self.pageNum
         self.pageNum += 1
-
         return msg
-
 
     def write_summary(self, f, card_count=None):
         summary_header = '                                        M O D E L   S U M M A R Y\n\n'
