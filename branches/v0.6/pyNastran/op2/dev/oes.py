@@ -34,12 +34,12 @@ class OES(OP2Common):
 
     def read_oes1_3(self, data):
         self.words = ['aCode',       'tCode',    'element_type', 'isubcase',
-                 '???',         '???',      '???',          'load_set'
-                 'format_code', 'num_wide', 's_code',       '???',
-                 '???',         '???',      '???',          '???',
-                 '???',         '???',      '???',          '???',
-                 '???',         '???',      '???',          '???',
-                 '???', 'Title', 'subtitle', 'label']
+                      '???',         '???',      '???',          'load_set'
+                      'format_code', 'num_wide', 's_code',       '???',
+                      '???',         '???',      '???',          '???',
+                      '???',         '???',      '???',          '???',
+                      '???',         '???',      '???',          '???',
+                      '???', 'Title', 'subtitle', 'label']
 
         self.parse_approach_code(data)  # 3
 
@@ -127,7 +127,7 @@ class OES(OP2Common):
 
         self.element_name = self.element_mapper[self.element_type]
         self.data_code['element_name'] = self.element_name
-        if self.debug:
+        if self.debug3():
             self.binary_debug.write('  element_name = %r\n' % self.element_name)
             self.binary_debug.write('  aCode    = %r\n' % self.aCode)
             self.binary_debug.write('  tCode    = %r\n' % self.tCode)
@@ -179,7 +179,7 @@ class OES(OP2Common):
             self.read_oes1_4_sort1(data)
         else:
             raise NotImplementedError('sort2 Type=%s num=%s' % (self.element_name, self.element_type))
-        if self.debug:
+        if self.debug3():
             self.binary_debug.write('*'* 20 + '\n\n')
 
     def read_oes1_4_sort1(self, data):
@@ -392,15 +392,16 @@ class OES(OP2Common):
                 nelements = len(data) // ntotal
                 for i in xrange(nelements):
                     edata = data[n:n + ntotal]
-                    (eid_device, axialReal, axial_imag) = unpack(format1, edata)
+                    (eid_device, axial_real, axial_imag) = unpack(format1, edata)
                     eid = (eid_device - self.device_code) // 10
 
                     if is_magnitude_phase:
-                        axial = polar_to_real_imag(axialReal, axial_imag)
+                        axial = polar_to_real_imag(axial_real, axial_imag)
                     else:
-                        axial = complex(axialReal, axial_imag)
+                        axial = complex(axial_real, axial_imag)
+
                     if self.debug4():
-                        self.binary_debug.write('  eid=%i result%i=[%i, %f, %f]\n' % (eid, i, eid_device, axialReal, axial_imag) )
+                        self.binary_debug.write('  eid=%i result%i=[%i, %f, %f]\n' % (eid, i, eid_device, axial_real, axial_imag) )
                     assert eid > 0
                     self.obj.add_new_eid(dt, eid, axial)
                     n += ntotal
@@ -429,7 +430,6 @@ class OES(OP2Common):
                     self.create_transient_object(self.solidStress, SolidStressObject)
                 else:
                     self.create_transient_object(self.solidStrain, SolidStrainObject)
-
                 ntotal = 16 + 84 * nnodes_expected
                 nelements = len(data) // ntotal
                 s = Struct(b'i')
@@ -536,6 +536,8 @@ class OES(OP2Common):
                 for i in xrange(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
+                    #if self.debug4():
+                        #self.binary_debug.write('CQUAD4-33A - %s\n' % (str(out)))
 
                     (eid_device, fd1, sx1, sy1, txy1, angle1, major1, minor1, max_shear1,
                                  fd2, sx2, sy2, txy2, angle2, major2, minor2, max_shear2) = out
@@ -558,7 +560,6 @@ class OES(OP2Common):
                     self.create_transient_object(self.plateStress, ComplexPlateStressObject)
                 else:
                     self.create_transient_object(self.plateStress, ComplexPlateStressObject)
-
                 format1 = b'i14f'
                 nnodes = 0  # centroid + 4 corner points
 
@@ -926,7 +927,6 @@ class OES(OP2Common):
                     self.create_transient_object(self.compositePlateStress, ComplexCompositePlateStressObject)  # undefined
                 else:
                     self.create_transient_object(self.compositePlateStrain, ComplexCompositePlateStrainObject)  # undefined
-
                 #format1 = b'i8si3fi4s'  # this is an OEF result???
                 #                        # furthermore the actual table is calle dout as
                 #                        # 'i8si4f4s', not 'i8si3fi4s'
@@ -997,7 +997,6 @@ class OES(OP2Common):
                     self.create_transient_object(self.ctriaxStress, ComplexTriaxStressObject)  # undefined
                 else:
                     self.create_transient_object(self.ctriaxStrain, ComplexTriaxStrainObject)  # undefined
-
                 s1 = Struct(b'ii7f')
                 s2 = Struct(b'i7f')
 
