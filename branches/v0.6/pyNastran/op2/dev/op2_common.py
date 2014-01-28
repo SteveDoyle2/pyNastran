@@ -14,6 +14,7 @@ class OP2Common(F06Writer):
         self.binary_debug = None
         self.debug = False
         self.words = []
+        self.table_name = None
 
         self.show_table3_map = [
             #'OUGV1',

@@ -4,6 +4,15 @@ class FortranFormat(object):
     def __init__(self):
         self.n = 0
         self.f = None
+        self.obj = None
+        self.data_code = None
+        self.table_name = None
+        self.isubcase = None
+        self._table_mapper = {}
+
+        #: stores if the user entered [] for iSubcases
+        self.isAllSubcases = True
+        self.valid_subcases = []
 
     def show(self, n):
         assert self.n == self.f.tell()
@@ -25,6 +34,12 @@ class FortranFormat(object):
         return strings, ints, floats
 
     def skip_block(self):
+        """
+        Skips a block following a pattern of:
+            [nbytes, data, nbytes]
+        :retval data: since data can never be None, a None value
+                      indicates something bad happened.
+        """
         data = self.f.read(4)
         ndata, = unpack(b'i', data)
         self.n += 8 + ndata
@@ -32,6 +47,11 @@ class FortranFormat(object):
         return None
 
     def read_block(self):
+        """
+        Reads a block following a pattern of:
+            [nbytes, data, nbytes]
+        :retval data: the data in binary
+        """
         data = self.f.read(4)
         ndata, = unpack(b'i', data)
 
@@ -41,12 +61,27 @@ class FortranFormat(object):
         return data_out
 
     def read_markers(self, markers):
+        """
+        Gets specified markers, where a marker has the form of [4, value, 4].
+        The "marker" corresponds to the value, so 3 markers takes up 9 integers.
+        These are used to indicate position in the file as well as
+        the number of bytes to read.
+
+        :param markers: markers to get; markers = [-10, 1]
+        """
         for i, marker in enumerate(markers):
             data = self.read_block()
             imarker, = unpack(b'i', data)
             assert marker == imarker, 'marker=%r imarker=%r; markers=%s i=%s' % (marker, imarker, markers, i)
 
     def get_nmarkers(self, n, rewind=True):
+        """
+        Gets n markers, so if n=2, it will get 2 markers.
+
+        :param n: number of markers to get
+        :param rewind: should the file be returned to the starting point
+        :retval markers: list of [1, 2, 3, ...] markers
+        """
         ni = self.n
         markers = []
         for i in xrange(n):
@@ -76,6 +111,9 @@ class FortranFormat(object):
         self.read_markers([0])
 
     def passer(self, data):
+        """
+        dummy function used for unsupported tables
+        """
         pass
 
     def _read_subtables(self):
@@ -101,7 +139,8 @@ class FortranFormat(object):
                 self.obj = None
                 table3_parser(data)
             else:
-                table4_parser(data)
+                if self.is_valid_subcase():
+                    table4_parser(data)
 
             self.isubtable -= 1
             self.read_markers([self.isubtable, 1, 0])
@@ -109,24 +148,42 @@ class FortranFormat(object):
         self.read_markers([0])
         self.finish()
 
+    def is_valid_subcase(self):
+        """
+        Lets the code check whether or not to read a subcase
+
+        :param self: the object pointer
+        :retval is_valid: should this subcase defined by self.isubcase be read?
+        """
+        if not self.isAllSubcases:
+            if self.isubcase in self.valid_subcases:
+                return True
+            return False
+        return True
+
     def goto(self, n):
+        """
+        Jumps to position n in the file
+
+        :param self: the object pointer
+        :param n:    the position to goto
+        """
         self.n = n
         self.f.seek(n)
 
     def _skip_record(self):
         markers0 = self.get_nmarkers(1, rewind=False)
-
         record = self.skip_block()
 
         markers1 = self.get_nmarkers(1, rewind=True)
         # handling continuation blocks
         if markers1[0] > 0:
-            nloop = 0
+            #nloop = 0
             while markers1[0] > 0: #, 'markers0=%s markers1=%s' % (markers0, markers1)
                 markers1 = self.get_nmarkers(1, rewind=False)
                 record = self.read_block()
                 markers1 = self.get_nmarkers(1, rewind=True)
-                nloop += 1
+                #nloop += 1
         return record
 
     def _read_record(self, debug=True):

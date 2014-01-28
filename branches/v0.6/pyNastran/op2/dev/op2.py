@@ -1,6 +1,9 @@
 #pylint: disable=C0301,C0103
+
 from struct import unpack
 from struct import error as StructError
+
+from numpy import array
 
 from pyNastran.f06.f06 import FatalError
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
@@ -22,20 +25,46 @@ from pyNastran.utils import is_binary
 class OP2(BDF,
           OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
 
-    def set_subcases(self, isubcases):
-        pass
-    def get_op2_stats(self):
-        pass
-    #def write_bdf(self, *args, **kwargs):
-        #pass
-    #def write_f06(self, *args, **kwargs):
-        #pass
+    def set_subcases(self, subcases=None):
+        """
+        Allows you to read only the subcases in the list of iSubcases
+        :param subcases: list of [subcase1_ID,subcase2_ID]
+                         (default=None; all subcases)
+        """
+        #: stores the set of all subcases that are in the OP2
+        self.subcases = set()
+        if subcases is None or subcases == []:
+            #: stores if the user entered [] for iSubcases
+            self.isAllSubcases = True
+            self.valid_subcases = []
+        else:
+            #: should all the subcases be read (default=True)
+            self.isAllSubcases = False
+            #: the set of valid subcases -> set([1,2,3])
+            self.valid_subcases = set(subcases)
+        self.log.debug("set_subcases - subcases = %s" % self.valid_subcases)
+
+    def set_transient_times(self, times):  # TODO this name sucks...
+        """
+        Takes a dictionary of list of times in a transient case and
+        gets the output closest to those times.::
+
+          times = {subcaseID_1: [time1, time2],
+                   subcaseID_2: [time3, time4]}
+        """
+        expected_times = {}
+        for (isubcase, eTimes) in times.iteritems():
+            eTimes = list(times)
+            eTimes.sort()
+            expected_times[isubcase] = array(eTimes)
+        self.expected_times = expected_times
+
     def __init__(self, op2_filename, make_geom=False, debug=False, log=None):
         if op2_filename:
             self.op2_filename = op2_filename
+        self.make_geom = make_geom
 
         #self.tables_to_read = []
-
         BDF.__init__(self, debug=debug, log=log)
 
         OEF.__init__(self)
@@ -131,7 +160,7 @@ class OP2(BDF,
             self.goto(0)
             self.show(100)
             try:
-                self.read(4)
+                self.f.read(4)
             except:
                 raise FatalError('The OP2 is empty.')
             raise
@@ -264,7 +293,7 @@ class OP2(BDF,
         #print "done..."
         return table_names
 
-    def _skip_table(table_name):
+    def _skip_table(self, table_name):
         if table_name in ['DIT']:  # tables
             self._read_dit()
         elif table_name in ['PCOMPTS']:
@@ -387,26 +416,26 @@ class OP2(BDF,
         data = self.read_block()
         data = self.read_block()
         while 1:
-            n, = self.get_nmarkers(1, rewind=True)
+            n = self.get_nmarkers(1, rewind=True)[0]
             if n not in [2, 4, 6, 8]:
                 print "n =", n
                 break
-            n, = self.get_nmarkers(1, rewind=False)
+            n = self.get_nmarkers(1, rewind=False)[0]
             print n
             data = self.read_block()
 
 
         i = -9
         while i != -13:
-            n, = self.get_nmarkers(1, rewind=True)
+            n = self.get_nmarkers(1, rewind=True)[0]
 
             self.read_markers([i, 1, 1])
             while 1:
-                n, = self.get_nmarkers(1, rewind=True)
+                n = self.get_nmarkers(1, rewind=True)[0]
                 if n not in [2, 4, 6, 8]:
                     print "n =", n
                     break
-                n, = self.get_nmarkers(1, rewind=False)
+                n = self.get_nmarkers(1, rewind=False)[0]
                 print n
                 data = self.read_block()
             i -= 1
@@ -542,6 +571,176 @@ class OP2(BDF,
                 if word not in ['Title', 'reference_point']:
                     delattr(self, word)
         self.obj = None
+
+    def get_op2_stats(self):
+        """
+        Gets info about the contents of the different attributes of the
+        OP2 class
+        """
+        table_types = [
+            ## OUG - displacement
+            'displacements',
+            'displacementsPSD',
+            'displacementsATO',
+            'displacementsRMS',
+            'displacementsCRM',
+            'displacementsNO',
+            'scaledDisplacements',
+
+            ## OUG - temperatures
+            'temperatures',
+
+            ## OUG - eigenvectors
+            'eigenvectors',
+
+            ## OUG - velocity
+            'velocities',
+
+            ## OUG - acceleration
+            'accelerations',
+
+            # OQG - spc/mpc forces
+            'spcForces',
+            'mpcForces',
+            'thermalGradientAndFlux',
+
+            ## OGF - grid point forces
+            'gridPointForces',
+
+            ## OPG - summation of loads for each element
+            'loadVectors',
+            'thermalLoadVectors',
+            'appliedLoads',
+            'forceVectors',
+
+            # OES - tCode=5 thermal=0 s_code=0,1 (stress/strain)
+            ## OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
+            'celasStress',
+            ## OES - CELAS1/CELAS2/CELAS3/CELAS4 strain
+            'celasStrain',
+
+            ## OES - isotropic CROD/CONROD/CTUBE stress
+            'rodStress',
+            'conrodStress',
+            'ctubeStress',
+
+            ## OES - isotropic CROD/CONROD/CTUBE strain
+            'rodStrain',
+            'conrodStrain',
+            'ctubeStrain',
+
+            ## OES - isotropic CBAR stress
+            'barStress',
+            ## OES - isotropic CBAR strain
+            'barStrain',
+            ## OES - isotropic CBEAM stress
+            'beamStress',
+            ## OES - isotropic CBEAM strain
+            'beamStrain',
+
+            ## OES - isotropic CTRIA3/CQUAD4 stress
+            'plateStress',
+            # OES - isotropic CTRIA3/CQUAD4 strain
+            'plateStrain',
+            ## OES - isotropic CTETRA/CHEXA/CPENTA stress
+            'solidStress',
+            ## OES - isotropic CTETRA/CHEXA/CPENTA strain
+            'solidStrain',
+
+            ## OES - CSHEAR stress
+            'shearStress',
+            ## OES - CSHEAR strain
+            'shearStrain',
+            ## OES - CEALS1 224, CELAS3 225
+            'nonlinearSpringStress',
+            ## OES - GAPNL 86
+            'nonlinearGapStress',
+            ## OES - CBUSH 226
+            'nolinearBushStress',
+
+        ]
+
+        table_types += [
+            # LAMA
+            'eigenvalues',
+
+            # OEF - Forces - tCode=4 thermal=0
+            'rodForces',
+            'conrodForces',
+            'ctubeForces',
+
+            'barForces',
+            'bar100Forces',
+            'beamForces',
+            'bendForces',
+            'bushForces',
+            'coneAxForces',
+            'damperForces',
+            'gapForces',
+            'plateForces',
+            'plateForces2',
+            'shearForces',
+            'solidPressureForces',
+            'springForces',
+            'viscForces',
+
+            'force_VU',
+            'force_VU_2D',
+
+            #OEF - Fluxes - tCode=4 thermal=1
+            'thermalLoad_CONV',
+            'thermalLoad_CHBDY',
+            'thermalLoad_1D',
+            'thermalLoad_2D_3D',
+            'thermalLoad_VU',
+            'thermalLoad_VU_3D',
+            'thermalLoad_VUBeam',
+            #self.temperatureForces
+        ]
+        table_types += [
+            ## OES - CTRIAX6
+            'ctriaxStress',
+            'ctriaxStrain',
+
+            'bushStress',
+            'bushStrain',
+            'bush1dStressStrain',
+
+            ## OES - nonlinear CROD/CONROD/CTUBE stress
+            'nonlinearRodStress',
+            'nonlinearRodStrain',
+
+            ## OESNLXR - CTRIA3/CQUAD4 stress
+            'nonlinearPlateStress',
+            'nonlinearPlateStrain',
+            'hyperelasticPlateStress',
+            'hyperelasticPlateStrain',
+
+            ## OES - composite CTRIA3/CQUAD4 stress
+            'compositePlateStress',
+            'compositePlateStrain',
+
+            ## OGS1 - grid point stresses
+            'gridPointStresses',        # tCode=26
+            'gridPointVolumeStresses',  # tCode=27
+
+            ## OEE - strain energy density
+            'strainEnergy',  # tCode=18
+        ]
+        msg = []
+        for table_type in table_types:
+            table = getattr(self, table_type)
+            for isubcase, subcase in sorted(table.iteritems()):
+                if hasattr(subcase,'get_stats'):
+                    msg.append('op2.%s[%s]\n' % (table_type, isubcase))
+                    msg.extend(subcase.get_stats())
+                    msg.append('\n')
+                else:
+                    msg.append('skipping %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
+                    #raise RuntimeError('skipping %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
+
+        return ''.join(msg)
+
 
 if __name__ == '__main__':
     import sys
