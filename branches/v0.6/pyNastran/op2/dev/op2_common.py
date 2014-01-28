@@ -10,7 +10,6 @@ from pyNastran.f06.f06Writer import F06Writer
 class OP2Common(F06Writer):
     def __init__(self):
         F06Writer.__init__(self)
-        self.log = None
         self.data_code = {'log': self.log,}
         self.binary_debug = None
         self.debug = False
@@ -60,10 +59,10 @@ class OP2Common(F06Writer):
             144: 'CQUAD4-bilinear', # 5 nodes
 
             # composite plates
-            95 : 'CQUAD4-composite',
-            96 : 'CQUAD8-composite',
-            97 : 'CTRIA3-composite',
-            98 : 'CTRIA6-composite',
+            95 : 'CQUAD4',
+            96 : 'CQUAD8',
+            97 : 'CTRIA3',
+            98 : 'CTRIA6',
 
             # unorganized
             None: '',
@@ -380,29 +379,22 @@ class OP2Common(F06Writer):
                     self.binary_debug.write('  format_code  = %i\n' % self.format_code)
             self.binary_debug.write('  recordi = [%s]\n\n' % msg)
 
-    def read_oug_table(self, data, result_name, real_obj, complex_obj,
-                       thermal_real_obj, node_elem):
+    def read_table(self, data, result_name, real_obj, complex_obj, node_elem):
         assert isinstance(result_name, dict), 'result_name=%r' % result_name
         #assert real_obj is None
         #assert complex_obj is None
         #assert thermal_real_obj is None
 
         if self.num_wide == 8:  # real/random
-            if self.thermal == 0:
-                # real_obj
-                self.create_transient_object(result_name, real_obj)
-                self.read_real_table(data, result_name, node_elem)
-            else:
-                # thermal_real_obj
-                self.create_transient_object(result_name, thermal_real_obj)
-                self.read_real_table(data, result_name, node_elem)
+            # real_obj
+            assert real_obj is not None
+            self.create_transient_object(result_name, real_obj)
+            self.read_real_table(data, result_name, node_elem)
         elif self.num_wide == 14:  # real/imaginary or mag/phase
-            if self.thermal == 0:
-                # complex_obj
-                self.create_transient_object(result_name, complex_obj)
-                self.read_complex_table(data, result_name, node_elem)
-            else:
-                self.not_implemented_or_skip('thermal=%r' % self.thermal)
+            # complex_obj
+            assert complex_obj is not None
+            self.create_transient_object(result_name, complex_obj)
+            self.read_complex_table(data, result_name, node_elem)
         else:
             msg = 'only num_wide=8 or 14 is allowed  num_wide=%s' % self.num_wide
             self.not_implemented_or_skip(msg)
@@ -502,6 +494,7 @@ class OP2Common(F06Writer):
         #storageObj = getattr(self, storageName)
         #assert classObj is not None, 'name=%r has no associated classObject' % storageName
         self.data_code['table_name'] = self.table_name
+        assert self.log is not None
 
         if hasattr(self, 'isubcase'):
             if self.isubcase in storageObj:

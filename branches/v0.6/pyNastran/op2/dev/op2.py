@@ -1,3 +1,4 @@
+#pylint: disable=C0301,C0103
 from struct import unpack
 from struct import error as StructError
 

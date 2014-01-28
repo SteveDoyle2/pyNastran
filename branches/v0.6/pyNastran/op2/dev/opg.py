@@ -1,4 +1,9 @@
+#pylint: disable=C0301,C0103
 from struct import unpack
+
+from pyNastran.op2.tables.opg_appliedLoads.opg_Objects import AppliedLoadsObject  # ComplexAppliedLoadsObject
+from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import LoadVectorObject, ComplexLoadVectorObject, ThermalLoadVectorObject
+from pyNastran.op2.tables.opg_appliedLoads.opnl_forceVector import ForceVectorObject, ComplexForceVectorObject
 
 class OPG(object):
     def __init__(self):
@@ -123,16 +128,47 @@ class OPG(object):
             assert self.table_name in ['OPG1', 'OPGV1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             self.read_load_vector(data)
         elif self.table_code == 12:  # ???
-            #table_code_12
+            self.read_force_vector(data)
             pass
+        #else:
+            #self.not_implemented_or_skip('bad OPG table')
         else:
-            self.not_implemented_or_skip('bad OPG table')
+            raise NotImplementedError(self.table_code)
 
     def read_load_vector(self, data):
-        result_name = 'load_vector'
-        #real_obj = LoadVectorObject
-        #complex_obj = ComplexLoadVectorObject
-        real_obj = None
-        complex_obj = None
-        thermal_real_obj = None
-        self.read_oug_table(data, result_name, real_obj, complex_obj, thermal_real_obj, 'node')
+        """
+        table_code = 2
+        """
+        if self.thermal == 0:
+            result_name = 'loadVectors'
+            storage_obj = self.loadVectors
+            real_obj = LoadVectorObject
+            complex_obj = ComplexLoadVectorObject
+            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+        elif self.thermal == 1:
+            result_name = 'thermalLoadVectors'
+            storage_obj = self.thermalLoadVectors
+            real_obj = ThermalLoadVectorObject
+            complex_obj = None
+            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+        else:
+            raise NotImplementedError(self.thermal)
+
+    def read_force_vector(self, data):
+        """
+        table_code = 12
+        """
+        if self.thermal == 0:
+            result_name = 'forceVectors'
+            storage_obj = self.forceVectors
+            real_obj = ForceVectorObject
+            complex_obj = ComplexForceVectorObject
+            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+        #elif self.thermal == 1:
+            #result_name = 'thermalForceVectors'
+            #storage_obj = self.thermalForceVectors
+            #real_obj = ThermalForceVectorObject
+            #complex_obj = None
+            #self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+        else:
+            raise NotImplementedError(self.thermal)

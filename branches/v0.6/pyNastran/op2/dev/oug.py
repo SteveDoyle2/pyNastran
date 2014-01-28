@@ -1,3 +1,4 @@
+#pylint: disable=C0301,C0103
 from struct import unpack
 
 from pyNastran.op2.dev.op2_common import OP2Common
@@ -136,45 +137,75 @@ class OUG(OP2Common):
         elif self.table_code == 11:
             self.read_acceleration(data)
         else:
-            self.not_implemented_or_skip('bad OUG table')
+            raise NotImplementedError(self.table_code)
+        #else:
+            #self.not_implemented_or_skip('bad OUG table')
 
     def read_displacement(self, data):
-        result_name = 'displacements'
-        real_obj = DisplacementObject
-        complex_obj = ComplexDisplacementObject
-        thermal_real_obj = TemperatureObject
-        storage_obj = self.displacements
-        self.read_oug_table(data, storage_obj, real_obj, complex_obj, thermal_real_obj, 'node')
-
-        #import StringIO
-        #f = StringIO.StringIO()
-        #header = []
-        #pageStamp = '%i'
-        #pageNum = 1
-        #print self.displacements.keys()
-        #self.displacements[1].write_f06(header, pageStamp, pageNum=1, f=f)
-        #print f.getvalue()
+        if self.thermal == 0:
+            real_obj = DisplacementObject
+            complex_obj = ComplexDisplacementObject
+            result_name = 'displacements'
+            storage_obj = self.displacements
+            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+        elif self.thermal == 1:
+            real_obj = TemperatureObject
+            complex_obj = None
+            result_name = 'temperatures'
+            storage_obj = self.temperatures
+            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+        else:
+            self.not_implemented_or_skip('bad thermal=%r table' % self.thermal)
+        #else:
+            #raise NotImplementedError(self.thermal)
 
     def read_velocity(self, data):
-        result_name = 'velocity'
-        real_obj = VelocityObject
-        complex_obj = ComplexVelocityObject
-        thermal_real_obj = ThermalVelocityVectorObject
-        storage_obj = self.velocity
-        self.read_oug_table(data, storage_obj, real_obj, complex_obj, thermal_real_obj, 'node')
+        """
+        table_code = 10
+        """
+        result_name = 'velocities'
+        storage_obj = self.velocities
+        if self.thermal == 0:
+            real_obj = VelocityObject
+            complex_obj = ComplexVelocityObject
+            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+        elif self.thermal == 1:
+            real_obj = ThermalVelocityVectorObject
+            complex_obj = None
+            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+        else:
+            raise NotImplementedError(self.thermal)
 
     def read_acceleration(self, data):
-        result_name = 'acceleration'
-        real_obj = AccelerationObject
-        complex_obj = ComplexAccelerationObject
-        thermal_real_obj = None
-        storage_obj = self.acceleration
-        self.read_oug_table(data, storage_obj, real_obj, complex_obj, thermal_real_obj, 'node')
+        """
+        table_code = 11
+        """
+        result_name = 'accelerations'
+        storage_obj = self.accelerations
+        if self.thermal == 0:
+            real_obj = AccelerationObject
+            complex_obj = ComplexAccelerationObject
+            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+        elif self.thermal == 1:
+            real_obj = None
+            complex_obj = None
+            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+        else:
+            raise NotImplementedError(self.thermal)
 
     def read_eigenvector(self, data):
+        """
+        table_code = 7
+        """
         result_name = 'eigenvectors'
-        real_obj = EigenVectorObject
-        complex_obj = ComplexEigenVectorObject
-        thermal_real_obj = None
         storage_obj = self.eigenvectors
-        self.read_oug_table(data, storage_obj, real_obj, complex_obj, thermal_real_obj, 'node')
+        if self.thermal == 0:
+            real_obj = EigenVectorObject
+            complex_obj = ComplexEigenVectorObject
+            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+        elif self.thermal == 1:
+            real_obj = None
+            complex_obj = None
+            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+        else:
+            raise NotImplementedError(self.thermal)

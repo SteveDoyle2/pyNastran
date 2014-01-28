@@ -1,3 +1,4 @@
+#pylint: disable=C0301,C0103
 from struct import Struct, unpack
 
 from pyNastran.op2.dev.op2_common import OP2Common
@@ -23,6 +24,7 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush import ComplexBushSt
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexBush1DStressObject
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStressObject, ComplexPlateStrainObject
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import ComplexRodStressObject, ComplexRodStrainObject
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressObject, ComplexSolidStrainObject
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexCelasStressObject, ComplexCelasStrainObject
 
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import NonlinearRodObject, NonlinearQuadObject, HyperelasticQuadObject
@@ -33,6 +35,9 @@ class OES(OP2Common):
         OP2Common.__init__(self)
 
     def read_oes1_3(self, data):
+        """
+        reads OES1 subtable 3
+        """
         self.words = ['aCode',       'tCode',    'element_type', 'isubcase',
                       '???',         '???',      '???',          'load_set'
                       'format_code', 'num_wide', 's_code',       '???',
@@ -183,6 +188,9 @@ class OES(OP2Common):
             self.binary_debug.write('*'* 20 + '\n\n')
 
     def read_oes1_4_sort1(self, data):
+        """
+        reads OES1 subtable 4
+        """
         assert self.is_sort1() == True
         if self.thermal == 0:
             self.read_oes_loads(data)
@@ -192,9 +200,15 @@ class OES(OP2Common):
             raise NotImplementedError(self.thermal)
 
     def read_oes_thermal(self, data):
+        """
+        reads OES self.thermal=1 tables
+        """
         n = 0
 
     def read_oes_loads(self, data):
+        """
+        reads OES self.thermal=0 stress/strain
+        """
         n = 0
         is_magnitude_phase = self.is_magnitude_phase()
         dt = self.nonlinear_factor
@@ -222,7 +236,7 @@ class OES(OP2Common):
                     eid = (eid_device - self.device_code) // 10
                     data_in = (axial, axial_margin, torsion, torsion_margin)
                     if self.debug4():
-                        self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out]) ))
+                        self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
                     assert eid > 0, eid
                     self.obj.add_new_eid(dt, eid, data_in)
                     n += ntotal
@@ -276,17 +290,46 @@ class OES(OP2Common):
             #def getLength2(self):
                 #return (40, 'ifffffffff')
 
-            if self.num_wide == 0:  # dummy
-                raise NotImplementedError(self.num_wide)
+            if self.num_wide == 111:  # real
+                if self.isStress():
+                    self.create_transient_object(self.beamStress, BeamStressObject)
+                else:
+                    self.create_transient_object(self.beamStrain, BeamStrainObject)
+
+                nelements = len(data) // ntotal
+                s = Struct(b'i')
+
+                nnodes = 10  # 11-1
+                #ntotal = self.obj.getLengthTotal()
+                ntotal = self.num_wide * 4
+                n1 = 44
+                n2 = 40
+                format1 = b'ii9f'
+                format2 = b'i9f'
+
+                nelements = len(data) // ntotal
+                for i in xrange(nelements):
+                    edata = data[n:n+n1]
+                    n += n1
+
+                    out = unpack(format1, edata)
+                    eid_device = out[0]
+                    eid = (eid_device - self.device_code) // 10
+                    if self.debug4():
+                        self.binary_debug.write('CBEAM-2 - eid=%i out=%s\n' % (eid, str(out)))
+
+                    #(grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
+                    self.obj.add_new_eid(dt, eid, out[1:])
+
+                    for iNode in xrange(nnodes):
+                        edata = data[n:n+n2]
+                        n += n2
+                        out = unpack(format2, edata)
+                        # (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
+                        self.obj.add(dt, eid, out)
+                    #print "eid=%i axial=%i torsion=%i" % (eid, axial, torsion)
             else:
                 raise NotImplementedError(self.num_wide)
-
-            nelements = len(data) // ntotal
-            s = Struct(b'i')
-            for i in xrange(nelements):
-                edata = data[n:n+4]
-                eid, = s.unpack(edata)
-                n += ntotal
 
         elif self.element_type == 34: # CBAR
             if self.num_wide == 16:
@@ -311,7 +354,7 @@ class OES(OP2Common):
                                  s1b, s2b, s3b, s4b, smaxb, sminb, MSc) = out
                     eid = (eid_device - self.device_code) // 10
                     if self.debug4():
-                        self.binary_debug.write('  eid=%i; C%i=[%s]\n' % (eid, i, ', '.join(['%r' % di for di in out]) ))
+                        self.binary_debug.write('  eid=%i; C%i=[%s]\n' % (eid, i, ', '.join(['%r' % di for di in out])))
                     n += ntotal
                     #print "eid =", eid
             elif self.num_wide == 19:  # imag
@@ -377,15 +420,15 @@ class OES(OP2Common):
                     (eid_device, ox) = out
                     eid = (eid_device - self.device_code) // 10
                     if self.debug4():
-                        self.binary_debug.write('  eid=%i result%i=[%i, %f]\n' % (eid, i, eid_device, ox) )
-                    self.obj.add_new_eid(dt, eid, (ox,) )
+                        self.binary_debug.write('  eid=%i result%i=[%i, %f]\n' % (eid, i, eid_device, ox))
+                    self.obj.add_new_eid(dt, eid, (ox,))
                     n += ntotal
                     #print "eid =", eid
             elif self.num_wide == 3:
                 if self.isStress():
-                    self.create_transient_object(self.celasStress, ComplexSpringStressObject)  # undefined
+                    self.create_transient_object(self.celasStress, ComplexCelasStressObject)
                 else:
-                    self.create_transient_object(self.celasStrain, ComplexSpringStrainObject)  # undefined
+                    self.create_transient_object(self.celasStrain, ComplexCelasStrainObject)
                 ntotal = 12
                 format1 = b'i2f'
 
@@ -401,7 +444,7 @@ class OES(OP2Common):
                         axial = complex(axial_real, axial_imag)
 
                     if self.debug4():
-                        self.binary_debug.write('  eid=%i result%i=[%i, %f, %f]\n' % (eid, i, eid_device, axial_real, axial_imag) )
+                        self.binary_debug.write('  eid=%i result%i=[%i, %f, %f]\n' % (eid, i, eid_device, axial_real, axial_imag))
                     assert eid > 0
                     self.obj.add_new_eid(dt, eid, axial)
                     n += ntotal
@@ -445,7 +488,7 @@ class OES(OP2Common):
                     #print "abcd = %r" % abcd
                     #print "eid=%s cid=%s nNodes=%s nNodesExpected=%s" % (eid,cid,nNodes,nNodesExpected)
 
-                    assert nnodes < 21,  'print_block(data[n:n+16])'  #self.print_block(data[n:n+16])
+                    assert nnodes < 21, 'print_block(data[n:n+16])'  #self.print_block(data[n:n+16])
 
                     n += 16
                     for node_id in xrange(nnodes_expected):  # nodes pts, +1 for centroid (???)
@@ -487,9 +530,9 @@ class OES(OP2Common):
                     #print "eid =", eid
             elif self.num_wide == numwide_imag:
                 if self.isStress():
-                    self.create_transient_object(self.solidStress, ComplexSolidStressObject)  # undefined
+                    self.create_transient_object(self.solidStress, ComplexSolidStressObject)
                 else:
-                    self.create_transient_object(self.solidStrain, ComplexSolidStrainObject)  # undefined
+                    self.create_transient_object(self.solidStrain, ComplexSolidStrainObject)
 
                 ntotal = numwide_imag * 4
                 nelements = len(data) // ntotal
@@ -498,21 +541,39 @@ class OES(OP2Common):
                     n += 16
                     out = unpack('2i4si', edata)
                     (eid_device, cid, ctype, nodef) = out
-                    if self.debug4():
-                        self.binary_debug.write('  eid=%i C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out]) ))
                     eid = (eid_device - self.device_code) // 10
+                    if self.debug4():
+                        self.binary_debug.write('  eid=%i C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
                     assert eid > 0, eid
 
-                    self.obj.add_new_eid(out)
+                    self.obj.add_new_eid(self.element_name, dt, eid, cid, ctype, nodef)
                     for inode in xrange(nnodes_expected):
                         edata = data[n:n+52]
                         n += 52
                         out = unpack('i12i', edata)
                         (grid, exr, eyr, ezr, etxyr, etyzr, etzxr,
                                exi, eyi, ezi, etxyi, etyzi, etzxi) = out
+                        if grid == 0:
+                            grid = 'C'
+
+                        if is_magnitude_phase:
+                            ex = polar_to_real_imag(exr, exi)
+                            ey = polar_to_real_imag(eyr, eyi)
+                            ez = polar_to_real_imag(ezr, ezi)
+                            etxy = polar_to_real_imag(etxyr, etxyi)
+                            etyz = polar_to_real_imag(etyzr, etyzi)
+                            etzx = polar_to_real_imag(etzxr, etzxi)
+                        else:
+                            ex = complex(exr, exi)
+                            ey = complex(eyr, eyi)
+                            ez = complex(ezr, ezi)
+                            etxy = complex(etxyr, etxyi)
+                            etyz = complex(etyzr, etyzi)
+                            etzx = complex(etzxr, etzxi)
+
                         if self.debug4():
-                            self.binary_debug.write('       node%i=[%s]\n' % (grid, ', '.join(['%r' % di for di in out]) ))
-                        self.obj.add(out)
+                            self.binary_debug.write('       node%s=[%s]\n' % (grid, ', '.join(['%r' % di for di in out])))
+                        self.obj.add(dt, eid, grid, ex, ey, ez, etxy, etyz, etzx)
                     #self.obj.add()
             else:
                 raise NotImplementedError(self.num_wide)
@@ -544,7 +605,7 @@ class OES(OP2Common):
 
                     eid = (eid_device - self.device_code) // 10
                     if self.debug4():
-                        self.binary_debug.write('  eid=%i C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out]) ))
+                        self.binary_debug.write('  eid=%i C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
 
                     #print "eid=%i grid=%s fd1=%-3.1f sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,'C',fd1,sx1,sy1,txy1,angle1,major1,minor1,maxShear1)
                     #print   "             fd2=%-3.1f sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"       % (fd2,sx2,sy2,txy2,angle2,major2,minor2,maxShear2)
@@ -657,7 +718,7 @@ class OES(OP2Common):
                     eid = (eid_device - self.device_code) // 10
 
                     if self.debug4():
-                        self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out]) ))
+                        self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
                     #add_the_obj
                     #print "eid =", eid
                     n += ntotal
@@ -674,18 +735,31 @@ class OES(OP2Common):
                 for i in xrange(nelements):
                     edata = data[n:n + ntotal]
                     out = unpack(format1, edata)
-                    if self.debug4():
-                        self.binary_debug.write('CTRIA3-74 - %s\n' % str(out))
-
                     (eid_device, fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
                                  fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i,) = out
                     eid = (eid_device - self.device_code) // 10
+
+                    if self.debug4():
+                        self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
+
+                    if is_magnitude_phase:
+                        sx1 = polar_to_real_imag(sx1r, sx1i)
+                        sy1 = polar_to_real_imag(sy1r, sy1i)
+                        sx2 = polar_to_real_imag(sx2r, sx2i)
+                        sy2 = polar_to_real_imag(sy2r, sy2i)
+                        txy1 = polar_to_real_imag(txy1r, txy1i)
+                        txy2 = polar_to_real_imag(txy2r, txy2i)
+                    else:
+                        sx1 = complex(sx1r, sx1i)
+                        sy1 = complex(sy1r, sy1i)
+                        sx2 = complex(sx2r, sx2i)
+                        sy2 = complex(sy2r, sy2i)
+                        txy1 = complex(txy1r, txy1i)
+                        txy2 = complex(txy2r, txy2i)
                     #print "eid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
                     #print  "      fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"   % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
-                    self.obj.add_new_eid('CTRIA3', dt, eid, 'C', fd1, sx1, sy1,
-                                       txy1, angle1, major1, minor1, vm1)
-                    self.obj.add(dt, eid, 'C', fd2, sx2, sy2, txy2,
-                                 angle2, major2, minor2, vm2)
+                    self.obj.add_new_eid('CTRIA3', dt, eid, 'C', fd1, sx1, sy1, txy1)
+                    self.obj.add(dt, eid, 'C', fd2, sx2, sy2, txy2)
                     n += ntotal
             else:
                 raise NotImplementedError(self.num_wide)
@@ -735,7 +809,7 @@ class OES(OP2Common):
                     eid = (eid_device - self.device_code) // 10
 
                     if self.debug4():
-                        self.binary_debug.write('  eid=%i; C=[%s]\n' % ', '.join(['%r' % di for di in out]) )
+                        self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
 
                     #print "eid=%i grid=%s fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
                     #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"        % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
@@ -910,7 +984,7 @@ class OES(OP2Common):
                     ilayer = (ilayer_device - self.device_code) // 10
 
                     if self.debug4():
-                        self.binary_debug.write('  eid=%i; layer???=%i; C=[%s]\n' % (eid, ilayer, ', '.join(['%r' % di for di in out]) ))
+                        self.binary_debug.write('  eid=%i; layer???=%i; C=[%s]\n' % (eid, ilayer, ', '.join(['%r' % di for di in out])))
 
                     if eid != eid_old:  # originally initialized to None, the buffer doesnt reset it, so it is the old value
                         #print "1 - eid=%s ilayer=%i o1=%i o2=%i ovm=%i" % (eid,ilayer,o1,o2,ovm)
@@ -923,6 +997,7 @@ class OES(OP2Common):
                     eid_old = eid
                     n += 44
             elif self.num_wide == 9:  # imag? - not done...
+                return
                 if self.isStress():
                     self.create_transient_object(self.compositePlateStress, ComplexCompositePlateStressObject)  # undefined
                 else:
@@ -993,6 +1068,7 @@ class OES(OP2Common):
                         #self.obj.add(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
                         n += 32  # 4*8
             elif self.num_wide == 37: # imag
+                return
                 if self.isStress():
                     self.create_transient_object(self.ctriaxStress, ComplexTriaxStressObject)  # undefined
                 else:
@@ -1055,6 +1131,7 @@ class OES(OP2Common):
                 if self.isStress():
                     self.create_transient_object(self.bushStress, BushStressObject)
                 else:
+                    return
                     self.create_transient_object(self.bushStrain, BushStrainObject)  # undefined
                     raise NotImplementedError('BushStrainObject')
                 assert self.num_wide == 7, "num_wide=%s not 7" % self.num_wide
@@ -1116,6 +1193,7 @@ class OES(OP2Common):
         elif self.element_type in [40]:  # bush
             # 40-CBUSH1D
             if self.num_wide == 8:
+                return
                 if self.isStress():
                     self.create_transient_object(self.bush1dStressStrain, ComplexBush1DStressObject)  # undefined
                 else:
@@ -1290,11 +1368,11 @@ class OES(OP2Common):
                     n += ntotal
 
             elif self.num_wide == 5: # imag
+                return
                 if self.isStress():
                     self.create_transient_object(self.shearStress, ComplexShearStressObject)  # undefined
                 else:
                     self.create_transient_object(self.shearStrain, ComplexShearStrainObject)  # undefined
-
                 ntotal = 20  # 4*5
                 format1 = b'i4f'
 

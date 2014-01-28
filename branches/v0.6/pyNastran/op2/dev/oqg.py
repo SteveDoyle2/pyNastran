@@ -123,18 +123,41 @@ class OQG(OP2Common):
             assert self.table_name in ['OQMG1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             self.read_mpc_forces(data)
         else:
-            self.not_implemented_or_skip('bad OQG table')
+            raise NotImplementedError(self.table_code)
+        #else:
+            #self.not_implemented_or_skip('bad OQG table')
 
     def read_spc_forces(self, data):
-        result_name = self.spcForces
-        real_obj = SPCForcesObject
-        complex_obj = ComplexSPCForcesObject
-        thermal_real_obj = None
-        self.read_oug_table(data, result_name, real_obj, complex_obj, thermal_real_obj, 'node')
+        """
+        table_code = 3
+        """
+        if self.thermal == 0:
+            real_obj = SPCForcesObject
+            complex_obj = ComplexSPCForcesObject
+            storage_obj = self.spcForces
+            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+        elif self.thermal == 1:
+            result_name = 'thermalGradientAndFlux' #'finite element temperature gradients and fluxes'
+            storage_obj =  self.thermalGradientAndFlux
+            real_obj = TemperatureGradientAndFluxObject
+            complex_obj = None
+            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+        else:
+            raise NotImplementedError(self.thermal)
 
     def read_mpc_forces(self, data):
-        result_name = self.mpcForces
-        real_obj = MPCForcesObject
-        complex_obj = ComplexMPCForcesObject
-        thermal_real_obj = None
-        self.read_oug_table(data, result_name, real_obj, complex_obj, thermal_real_obj, 'node')
+        """
+        table_code = 39
+        """
+        result_name = 'mpcForces'
+        storage_obj = self.mpcForces
+        if self.thermal == 0:
+            real_obj = MPCForcesObject
+            complex_obj = ComplexMPCForcesObject
+            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+        elif self.thermal == 1:
+            real_obj = None
+            complex_obj = None
+            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+        else:
+            raise NotImplementedError(self.thermal)

@@ -1,3 +1,4 @@
+#pylint: disable=C0301,C0103
 from struct import Struct, unpack
 
 from pyNastran.op2.op2_helper import polar_to_real_imag
