@@ -273,6 +273,7 @@ class RealForces(object):
         format1 += '8f'
         format1 = bytes(format1)
 
+        n = 0
         ntotal = 36 # 9*4
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):
@@ -310,7 +311,7 @@ class RealForces(object):
         allFormat = bytes(allFormat)
 
         n = 0
-        ntotal = 44 + nNodes * 36
+        ntotal = 44 + nnodes * 36
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):
             edata = self.data[n:n+44]

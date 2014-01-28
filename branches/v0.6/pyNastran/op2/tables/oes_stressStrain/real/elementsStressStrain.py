@@ -819,7 +819,6 @@ class RealElementsStressStrain(object):
             raise NotImplementedError(msg)
         ntotal2 = 4 * (2 + 17 * (nnodes + 1) )
         assert ntotal == ntotal2
-        print("ntotal", ntotal)
 
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
