@@ -1433,6 +1433,10 @@ class PBEAM(IntegratedLineProperty):
             #: Non-structural mass :math:`nsm`
             self.nsm = [double_or_blank(card, 8, 'nsm', 0.0)]
 
+            assert self.i1 > 0, self.i1
+            assert self.i2 > 0, self.i2
+
+
             isCDEF = False
             field9 = double_string_or_blank(card, 9, 'field9')
             field17 = double_string_or_blank(card, 17, 'field17')
@@ -1442,7 +1446,7 @@ class PBEAM(IntegratedLineProperty):
                 isFooter = True
             except SyntaxError:
                 pass
-            print("f9=%s f17=%s" % (field9, field17))
+            #print("f9=%s f17=%s" % (field9, field17))
 
             #nlines = nfields // 8
 
@@ -1548,9 +1552,9 @@ class PBEAM(IntegratedLineProperty):
                 A   = double_or_blank(card,  nStart + 2, 'Area%i' % nRepeated, 0.0)
                 i1  = double_or_blank(card, nStart + 3, 'I1 %i' % nRepeated, 0.0)
                 i2  = double_or_blank(card, nStart + 4, 'I2 %i' % nRepeated, 0.0)
-                i12 = double_or_blank(card, nStart + 3, 'I12 %i' % nRepeated, 0.0)
-                j   = double_or_blank(card, nStart + 5, 'J%i' % nRepeated, 0.0)
-                nsm = double_or_blank(card, nStart + 6, 'nsm%i' % nRepeated, 0.0)
+                i12 = double_or_blank(card, nStart + 5, 'I12 %i' % nRepeated, 0.0)
+                j   = double_or_blank(card, nStart + 6, 'J%i' % nRepeated, 0.0)
+                nsm = double_or_blank(card, nStart + 7, 'nsm%i' % nRepeated, 0.0)
 
                 self.so.append(so)
                 self.xxb.append(xxb)
@@ -1562,14 +1566,14 @@ class PBEAM(IntegratedLineProperty):
                 self.nsm.append(nsm)
 
                 if isCDEF:
-                    c1 = double_or_blank(card, nStart + 7, 'c1 %i' % nRepeated, 0.0)
-                    c2 = double_or_blank(card, nStart + 8, 'c2 %i' % nRepeated, 0.0)
-                    d1 = double_or_blank(card, nStart + 9, 'd1 %i' % nRepeated, 0.0)
-                    d2 = double_or_blank(card, nStart + 10, 'd2 %i' % nRepeated, 0.0)
-                    e1 = double_or_blank(card, nStart + 11, 'e1 %i' % nRepeated, 0.0)
-                    e2 = double_or_blank(card, nStart + 12, 'e2 %i' % nRepeated, 0.0)
-                    f1 = double_or_blank(card, nStart + 13, 'f1 %i' % nRepeated, 0.0)
-                    f2 = double_or_blank(card, nStart + 14, 'f2 %i' % nRepeated, 0.0)
+                    c1 = double_or_blank(card, nStart + 8, 'c1 %i' % nRepeated, 0.0)
+                    c2 = double_or_blank(card, nStart + 9, 'c2 %i' % nRepeated, 0.0)
+                    d1 = double_or_blank(card, nStart + 10, 'd1 %i' % nRepeated, 0.0)
+                    d2 = double_or_blank(card, nStart + 11, 'd2 %i' % nRepeated, 0.0)
+                    e1 = double_or_blank(card, nStart + 12, 'e1 %i' % nRepeated, 0.0)
+                    e2 = double_or_blank(card, nStart + 13, 'e2 %i' % nRepeated, 0.0)
+                    f1 = double_or_blank(card, nStart + 14, 'f1 %i' % nRepeated, 0.0)
+                    f2 = double_or_blank(card, nStart + 15, 'f2 %i' % nRepeated, 0.0)
                     self.c1.append(c1)
                     self.c2.append(c2)
                     self.d1.append(d1)
@@ -1672,6 +1676,9 @@ class PBEAM(IntegratedLineProperty):
 
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)
+        #if model.sol != 600:
+            #assert max(self.j) == 0.0, self.j
+            #assert min(self.j) == 0.0, self.j
 
     def _verify(self, xref=False):
         pid = self.Pid()
@@ -1749,28 +1756,27 @@ class PBEAM(IntegratedLineProperty):
         #print('i1  = %r' % self.i1)
         #print('i2  = %r' % self.i2)
         #print('i12 = %r' % self.i12)
-
         i = 0
         for (so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2, e1, e2, f1,
              f2) in izip(self.so, self.xxb, self.A, self.i1, self.i2, self.i12,
                          self.j, self.nsm, self.c1, self.c2, self.d1, self.d2,
                          self.e1, self.e2, self.f1, self.f2):
 
-            i1 = set_blank_if_default(i1, 0.0)
-            i2 = set_blank_if_default(i2, 0.0)
-            i12 = set_blank_if_default(i12, 0.0)
-            j = set_blank_if_default(j, 0.0)
+            #i1 = set_blank_if_default(i1, 0.0)
+            #i2 = set_blank_if_default(i2, 0.0)
+            #i12 = set_blank_if_default(i12, 0.0)
+            #j = set_blank_if_default(j, 0.0)
 
-            nsm = set_blank_if_default(nsm, 0.0)
-            c1 = set_blank_if_default(c1, 0.0)
-            d1 = set_blank_if_default(d1, 0.0)
-            e1 = set_blank_if_default(e1, 0.0)
-            f1 = set_blank_if_default(f1, 0.0)
+            #nsm = set_blank_if_default(nsm, 0.0)
+            #c1 = set_blank_if_default(c1, 0.0)
+            #d1 = set_blank_if_default(d1, 0.0)
+            #e1 = set_blank_if_default(e1, 0.0)
+            #f1 = set_blank_if_default(f1, 0.0)
 
-            c2 = set_blank_if_default(c2, 0.0)
-            d2 = set_blank_if_default(d2, 0.0)
-            e2 = set_blank_if_default(e2, 0.0)
-            f2 = set_blank_if_default(f2, 0.0)
+            #c2 = set_blank_if_default(c2, 0.0)
+            #d2 = set_blank_if_default(d2, 0.0)
+            #e2 = set_blank_if_default(e2, 0.0)
+            #f2 = set_blank_if_default(f2, 0.0)
 
             if i == 0:  # the first 2 fields aren't written
                 list_fields += [A, i1, i2, i12, j, nsm,
@@ -1779,10 +1785,14 @@ class PBEAM(IntegratedLineProperty):
                 list_fields += [so, xxb, A, i1, i2, i12, j, nsm,
                                 c1, c2, d1, d2, e1, e2, f1, f2]
             i += 1
-        k1 = set_blank_if_default(self.k1, 1.0)
-        k2 = set_blank_if_default(self.k2, 1.0)
-        s1 = set_blank_if_default(self.s1, 0.0)
-        s2 = set_blank_if_default(self.s2, 0.0)
+        #k1 = set_blank_if_default(self.k1, 1.0)
+        #k2 = set_blank_if_default(self.k2, 1.0)
+        #s1 = set_blank_if_default(self.s1, 0.0)
+        #s2 = set_blank_if_default(self.s2, 0.0)
+        k1 = self.k1
+        k2 = self.k2
+        s1 = self.s1
+        s2 = self.s2
 
         nsia = set_blank_if_default(self.nsia, 0.0)
         nsib = set_blank_if_default(self.nsib, self.nsia)
@@ -1790,10 +1800,14 @@ class PBEAM(IntegratedLineProperty):
         cwa = set_blank_if_default(self.cwa, 0.0)
         cwb = set_blank_if_default(self.cwb, self.cwa)
 
-        m1a = set_blank_if_default(self.m1a, 0.0)
-        m2a = set_blank_if_default(self.m2a, self.m1a)
-        m1b = set_blank_if_default(self.m1b, 0.0)
-        m2b = set_blank_if_default(self.m2b, self.m1b)
+        m1a = self.m1a
+        m2a = self.m2a
+        m1b = self.m1b
+        m2b = self.m2b
+        #m1a = set_blank_if_default(self.m1a, 0.0)
+        #m2a = set_blank_if_default(self.m2a, self.m1a)
+        #m1b = set_blank_if_default(self.m1b, 0.0)
+        #m2b = set_blank_if_default(self.m2b, self.m1b)
 
         n1a = set_blank_if_default(self.n1a, 0.0)
         n2a = set_blank_if_default(self.n2a, self.n1a)

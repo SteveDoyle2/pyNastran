@@ -184,11 +184,13 @@ def print_field_16(value):
     return field
 
 
-def print_card_16(fields):
+def print_card_16(fields, wipe_fields=True):
     """
     Prints a nastran-style card with 16-character width fields.
 
     :param fields: all the fields in the BDF card (no blanks)
+    :param wipe_fields:  some cards (e.g. PBEAM) have ending fields
+                         that need to be there, others cannot have them.
 
     .. note:: A large field format follows the  8-16-16-16-16-8 = 80
      format where the first 8 is the card name or blank (continuation).
@@ -196,7 +198,8 @@ def print_card_16(fields):
      but because it's a left-justified unneccessary field,
      print_card doesnt use it.
     """
-    fields = wipe_empty_fields(fields)
+    if wipe_fields:
+        fields = wipe_empty_fields(fields)
     nFieldsMain = len(fields) - 1  # chop off the card name
     nBDFLines = nFieldsMain // 8
     if nFieldsMain % 8 != 0:

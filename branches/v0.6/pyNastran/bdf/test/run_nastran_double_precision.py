@@ -1,6 +1,16 @@
 import os
 import sys
 
+class remove_prints(object):
+    def __init__(self):
+        pass
+    def write(self, msg):
+        if 'ntotal' in msg:
+            raise RuntimeError()
+    def flush(self):
+        pass
+#sys.stdout = remove_prints()
+
 from pyNastran.bdf.bdf import BDF
 from pyNastran.f06.f06 import F06, FatalError
 from pyNastran.op2.op2 import OP2
