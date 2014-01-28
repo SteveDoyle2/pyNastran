@@ -9,15 +9,17 @@ def print_scientific_double(value):
     Double Precision Scientific Notation:  5.0D+1
     """
     if value < 0:
-        format = "%16.9e"
+        Format = "%16.9e"
     else:
-        format = "%16.10e"
+        Format = "%16.10e"
 
-    svalue = format % value
+    svalue = Format % value
     #left, right = svalue.split('e')
     #field = '%16s' % ('%sd%s' % (left.strip('0'), right))
     field = svalue.replace('e', 'D')
 
+    if field == '-0.0000000000D+00':
+        field =  '0.0000000000D+00'
     assert len(field) == 16, ('value=%r field=%r is not 16 characters '
                               'long, its %s' % (value, field, len(field)))
     return field

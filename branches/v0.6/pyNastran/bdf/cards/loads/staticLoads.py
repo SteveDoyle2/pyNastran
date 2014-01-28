@@ -626,7 +626,7 @@ class FORCE(Force):
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
-        #return self.comment() + card_writer(card)
+        #return self.comment() + card_writer(card)  # doesn't work
 
 
 class FORCE1(Force):

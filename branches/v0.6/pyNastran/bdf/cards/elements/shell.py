@@ -32,6 +32,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.bdfInterface.BDF_Card import wipe_empty_fields
 
 def _triangle_area_centroid_normal(nodes):
     """
@@ -515,7 +516,7 @@ class CTRIA3(TriShell):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = wipe_empty_fields(self.reprFields())
         if size == 8 or len(card) == 6: # to last node
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
@@ -684,7 +685,7 @@ class CTRIA6(TriShell):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = wipe_empty_fields(self.reprFields())
         if size == 8 or len(card) == 8: # to last node
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
@@ -813,7 +814,7 @@ class CTRIAR(TriShell):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = wipe_empty_fields(self.reprFields())
         if size == 8 or len(card) == 5: # to last node
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
@@ -865,7 +866,7 @@ class CTRIAX(TriShell):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = wipe_empty_fields(self.reprFields())
         if size == 8 or len(card) == 8: # to last node
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
@@ -1007,7 +1008,7 @@ class CTRIAX6(TriShell):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = wipe_empty_fields(self.reprFields())
         if size == 8 or len(card) == 8: # to last node
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
@@ -1600,7 +1601,7 @@ class CQUAD4(QuadShell):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = wipe_empty_fields(self.reprFields())
         if size == 8 or len(card) == 7: # to last node
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)

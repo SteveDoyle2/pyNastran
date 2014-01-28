@@ -11,7 +11,7 @@ def update_bdf(model):
         #for param, values in subcase.params.iteritems():
             #if param in ['SPCFORCES', 'STRESS', 'DISPLACEMENT', 'STRAIN', 'MPCFORCES', 'GPFORCE', 'GPSTRESS', 'VELOCITY', 'ACCELERATION']:
                 #print('values =', values)
-    if 'POST' in sorted(model3.params):
+    if 'POST' in sorted(model.params):
         model.params['POST'].update_values(value1=-1)
     else:
         model.rejects.append(['PARAM,POST,-1'])
