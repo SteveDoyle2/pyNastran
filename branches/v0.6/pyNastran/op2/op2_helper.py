@@ -17,9 +17,6 @@ def polar_to_real_imag(mag, phase):
     :returns imagValue: the imaginary component b of a+bi
     """
     return rect(mag, radians(phase))
-    #realValue = mag*cos(radians(phase)) # phase in degrees
-    #imagValue = mag*sin(radians(phase))
-    #return complex(realValue, imagValue)
 
 
 def realImagToMagPhase(realImag):

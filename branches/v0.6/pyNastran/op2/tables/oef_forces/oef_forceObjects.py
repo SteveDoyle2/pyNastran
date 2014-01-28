@@ -865,8 +865,8 @@ class RealPlateForce(scalarObject):  # 33-CQUAD4, 74-CTRIA3
                        % (self.__class__.__name__, ntimes, nelements))
         else:
             nelements = len(self.mx)
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
+            msg.append('  type=%s nelements=%s\n'
+                       % (self.__class__.__name__, nelements))
         msg.append('  mx, my, mxy, bmx, bmy, bmxy, tx, ty\n')
         return msg
 

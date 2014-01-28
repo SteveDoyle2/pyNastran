@@ -13,6 +13,7 @@ class OP2Common(F06Writer):
         self.data_code = {'log': self.log,}
         self.binary_debug = None
         self.debug = False
+        self.words = []
 
         self.show_table3_map = [
             #'OUGV1',
@@ -423,8 +424,8 @@ class OP2Common(F06Writer):
             if self.debug4():
                 self.binary_debug.write('  %s=%i; %s\n' % (flag, eid_device, str(out)))
 
-            dataIn = [eid, grid_type, tx, ty, tz, rx, ry, rz]
-            self.obj.add(dt, dataIn)
+            data_in = [eid, grid_type, tx, ty, tz, rx, ry, rz]
+            self.obj.add(dt, data_in)
             n += ntotal
 
     def read_complex_table(self, data, result_name, flag):
@@ -467,10 +468,8 @@ class OP2Common(F06Writer):
                 tz = complex(tzr, tzi)
                 rz = complex(rzr, rzi)
 
-            dataIn = [eid, grid_type, tx, ty, tz, rx, ry, rz]
-            #print "%s" %(self.get_element_type(self.element_type)),dataIn
-            #eid = self.obj.add_new_eid(out)  # ???
-            self.obj.add(dt, dataIn)
+            data_in = [eid, grid_type, tx, ty, tz, rx, ry, rz]
+            self.obj.add(dt, data_in)
             n += ntotal
 
     def create_transient_object(self, storageObj, classObj, debug=False):
@@ -524,7 +523,6 @@ class OP2Common(F06Writer):
         #: the local subcase ID
         self.isubcase = isubcase
         self.data_code['isubcase'] = self.isubcase
-        #print("isubcase = %s" %(isubcase))
         #self.subcases.add(self.isubcase)  # set notation
 
         #: the type of result being processed
@@ -548,13 +546,6 @@ class OP2Common(F06Writer):
 
         #print('parse_approach_code - aCode=%s tCode=%s int3=%s isubcase=%s' % (aCode, tCode, int3, isubcase))
         #print('                 so - analysis_code=%s device_code=%s table_code=%s sort_code=%s\n' % (self.analysis_code, self.device_code, self.table_code, self.sort_code))
-        if self.debug3():
-            self.binary_debug.write('  table_code    = %r\n' % self.table_code)
-            self.binary_debug.write('  sort_code     = %r\n' % self.sort_code)
-            self.binary_debug.write('  sort_code2    = %r\n' % self.sort_code2)
-            self.binary_debug.write('  device_code   = %r\n' % self.device_code)
-            self.binary_debug.write('  analysis_code = %r\n' % self.analysis_code)
-
         if self.device_code == 3:
             #sys.stderr.write('The op2 may be inconsistent...\n')
             #sys.stderr.write("  print and plot can cause bad results..."
@@ -565,6 +556,16 @@ class OP2Common(F06Writer):
             #self.log.info('  print and plot can cause bad results...'
             #              'if there's a crash, try plot only')
             self.data_code['device_code'] = self.device_code
+
+        if self.debug3():
+            self.binary_debug.write('  table_name    = %r\n' % self.table_name)
+            self.binary_debug.write('  aCode         = %r\n' % self.aCode)
+            self.binary_debug.write('  tCode         = %r\n' % self.tCode)
+            self.binary_debug.write('  table_code    = %r\n' % self.table_code)
+            self.binary_debug.write('  sort_code     = %r\n' % self.sort_code)
+            self.binary_debug.write('  sort_code2    = %r\n' % self.sort_code2)
+            self.binary_debug.write('  device_code   = %r\n' % self.device_code)
+            self.binary_debug.write('  analysis_code = %r\n' % self.analysis_code)
 
         self._parse_sort_code()
 
@@ -604,7 +605,7 @@ class OP2Common(F06Writer):
         # Sort codes can range from 0 to 7, but most of the examples
         # are covered by these.  The ones that break are incredibly large.
         if self.sort_code not in [0, 1]:
-            msg = 'Invalid sort_code=%s sort_code2=%s' %(self.sort_code, self.sort_code2)
+            msg = 'Invalid sort_code=%s sort_code2=%s' % (self.sort_code, self.sort_code2)
             raise RuntimeError(msg)
 
         i = 2

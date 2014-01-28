@@ -204,6 +204,7 @@ class OES(OP2Common):
         reads OES self.thermal=1 tables
         """
         n = 0
+        data
 
     def read_oes_loads(self, data):
         """
@@ -240,7 +241,7 @@ class OES(OP2Common):
                     assert eid > 0, eid
                     self.obj.add_new_eid(dt, eid, data_in)
                     n += ntotal
-            elif self.num_wide == 5: # real/imaginary
+            elif self.num_wide == 5: # imag
                 if self.isStress():
                     self.create_transient_object(self.rodStress, ComplexRodStressObject)
                 else:
@@ -280,17 +281,9 @@ class OES(OP2Common):
                 raise NotImplementedError(self.num_wide)
 
         elif self.element_type == 2: # CBEAM
-            ntotal = 444 # 44 + 10*40  (11 nodes)
-            #def getLengthTotal(self):
-                #return 444  # 44+10*40   (11 nodes)
-
-            #def getLength1(self):
-                #return (44, 'ifffffffff')
-
-            #def getLength2(self):
-                #return (40, 'ifffffffff')
-
+            # 2-CBEAM
             if self.num_wide == 111:  # real
+                ntotal = 444 # 44 + 10*40  (11 nodes)
                 if self.isStress():
                     self.create_transient_object(self.beamStress, BeamStressObject)
                 else:
@@ -353,10 +346,13 @@ class OES(OP2Common):
                     (eid_device, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                                  s1b, s2b, s3b, s4b, smaxb, sminb, MSc) = out
                     eid = (eid_device - self.device_code) // 10
+                    assert eid > 0, eid
                     if self.debug4():
                         self.binary_debug.write('  eid=%i; C%i=[%s]\n' % (eid, i, ', '.join(['%r' % di for di in out])))
                     n += ntotal
-                    #print "eid =", eid
+                    self.obj.add_new_eid(self.element_name, dt, eid,
+                                         s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
+                                         s1b, s2b, s3b, s4b,        smaxb, sminb, MSc)
             elif self.num_wide == 19:  # imag
                 if self.isStress():
                     self.create_transient_object(self.barStress, ComplexBarStressObject)
@@ -369,12 +365,14 @@ class OES(OP2Common):
                 for i in xrange(nelements):
                     edata = data[n:n+ntotal]
                     n += ntotal
-
+                    out = unpack(format1, edata)
                     (eid_device, s1ar, s2ar, s3ar, s4ar, axialr,
-                     s1ai, s2ai, s3ai, s4ai, axiali,
-                     s1br, s2br, s3br, s4br,
-                     s1bi, s2bi, s3bi, s4bi) = unpack(format1, edata)
+                                 s1ai, s2ai, s3ai, s4ai, axiali,
+                                 s1br, s2br, s3br, s4br,
+                                 s1bi, s2bi, s3bi, s4bi) = out
 
+                    eid = (eid_device - self.device_code) // 10
+                    assert eid > 0, eid
                     if is_magnitude_phase:
                         s1a = polar_to_real_imag(s1ar, s1ai)
                         s1b = polar_to_real_imag(s1br, s1bi)
@@ -385,7 +383,6 @@ class OES(OP2Common):
                         s4a = polar_to_real_imag(s4ar, s4ai)
                         s4b = polar_to_real_imag(s4br, s4bi)
                         axial = polar_to_real_imag(axialr, axiali)
-
                     else:
                         s1a = complex(s1ar, s1ai)
                         s1b = complex(s1br, s1bi)
@@ -397,11 +394,10 @@ class OES(OP2Common):
                         s4b = complex(s4br, s4bi)
                         axial = complex(axialr, axiali)
 
-                    eid = (eid_device - self.device_code) // 10
-                    #self.obj.add_new_eid('CBAR', dt, eid, s1a, s2a, s3a, s4a, axial,
-                    #                                      s1b, s2b, s3b, s4b)
-                    #print "eid=%i s1=%i s2=%i s3=%i s4=%i axial=%-5i" %(eid,s1a,s2a,s3a,s4a,axial)
-                    #print "         s1=%i s2=%i s3=%i s4=%i"          %(s1b,s2b,s3b,s4b)
+                    self.obj.add_new_eid('CBAR', dt, eid, s1a, s2a, s3a, s4a, axial,
+                                                          s1b, s2b, s3b, s4b)
+                    #print("eid=%i s1=%i s2=%i s3=%i s4=%i axial=%-5i" % (eid,s1a,s2a,s3a,s4a,axial))
+                    #print("         s1=%i s2=%i s3=%i s4=%i"          % (s1b,s2b,s3b,s4b))
             else:
                 raise NotImplementedError(self.num_wide)
 
@@ -424,7 +420,7 @@ class OES(OP2Common):
                     self.obj.add_new_eid(dt, eid, (ox,))
                     n += ntotal
                     #print "eid =", eid
-            elif self.num_wide == 3:
+            elif self.num_wide == 3:  # imag
                 if self.isStress():
                     self.create_transient_object(self.celasStress, ComplexCelasStressObject)
                 else:
@@ -516,9 +512,9 @@ class OES(OP2Common):
                         #smax = max(s1,s2,s3)
                         #smin = min(s1,s2,s3)
 
-                        aCos = []
-                        bCos = []
-                        cCos = []
+                        aCos = [a1, a2, a3]
+                        bCos = [b1, b2, b3]
+                        cCos = [c1, c2, c3]
                         if node_id == 0:
                             self.obj.add_new_eid(self.element_name, cid, dt, eid, grid,
                                                  sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
@@ -989,9 +985,7 @@ class OES(OP2Common):
                     if eid != eid_old:  # originally initialized to None, the buffer doesnt reset it, so it is the old value
                         #print "1 - eid=%s ilayer=%i o1=%i o2=%i ovm=%i" % (eid,ilayer,o1,o2,ovm)
                         self.obj.add_new_eid(eType, dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
-                        pass
                     else:
-                        pass
                         #print "2 - eid=%s ilayer=%i o1=%i o2=%i ovm=%i" % (eid,ilayer,o1,o2,ovm)
                         self.obj.add(dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
                     eid_old = eid
@@ -1029,7 +1023,7 @@ class OES(OP2Common):
                     if self.debug4():
                         self.binary_debug.write('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
                     #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs)
-                    #self.obj.add_new_eid(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
+                    self.obj.add_new_eid(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
                     n += ntotal
                 raise NotImplementedError('this is a really weird case...')
             else:
@@ -1229,7 +1223,6 @@ class OES(OP2Common):
             # 82-CQUADR
             # 144-CQUAD4-bilinear
             #GRID-ID  DISTANCE,NORMAL-X,NORMAL-Y,SHEAR-XY,ANGLE,MAJOR MINOR,VONMISES
-
             if self.element_type in [82, 64, 82, 144]:
                 nnodes = 4
             elif self.element_type in [70, 75]:
@@ -1277,7 +1270,7 @@ class OES(OP2Common):
                                             sy1, txy1, angle1, major1, minor1, vm1)
                         self.obj.add(eid, grid, fd2, sx2, sy2,
                                      txy2, angle2, major2, minor2, vm2)
-                        n+= 68
+                        n += 68
             else:
                 raise NotImplementedError(self.num_wide)
 
@@ -1285,10 +1278,7 @@ class OES(OP2Common):
             # 87-CTUBENL
             # 89-RODNL
             # 92-CONRODNL
-            #resultName = self.makeOES_Object(self.nonlinearRodStress, NonlinearRodObject, 'nonlinearRodStress',
-            #                                 self.nonlinearRodStrain, NonlinearRodObject, 'nonlinearRodStrain')
-            numwide_real = 7
-            if self.num_wide == numwide_real:
+            if self.num_wide == 7:  # real
                 if self.isStress():
                     self.create_transient_object(self.nonlinearRodStress, NonlinearRodObject)
                 else:
@@ -1409,10 +1399,28 @@ class OES(OP2Common):
             return
         elif self.element_type in [86]:
             # 86-GAPNL
-            if self.isStress():
-                self.create_transient_object(self.nonlinearGapStress, NonlinearGapStressObject)
+            if self.num_wide == 11:
+                if self.isStress():
+                    self.create_transient_object(self.nonlinearGapStress, NonlinearGapStressObject)
+                else:
+                    self.create_transient_object(self.nonlinearGapStrain, NonlinearGapStrainObject)  # undefined
+                ntotal = 44  # 4*11
+                format1 = b'i8f4s4s'
+
+                nelements = len(data) // ntotal
+                for i in xrange(nelements):
+                    eData = data[n:n + ntotal]
+
+                    out = unpack(format1, eData)  # num_wide=25
+                    (eid, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2) = out
+                    eid = (eid_device - self.device_code) // 10
+                    if self.debug4():
+                        self.binary_debug.write('CGAPNL-86 - %s\n' % str(out))
+                    self.obj.add_new_eid(dt, eid, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2)
+                    n += ntotal
             else:
-                self.create_transient_object(self.nonlinearGapStrain, NonlinearGapStrainObject)  # undefined
+                raise NotImplementedError(self.num_wide)
+
             return
         elif self.element_type in [94]:
             # 94-BEAMNL
