@@ -235,8 +235,7 @@ class OPG(object):
         if self.num_wide == 8:  # real/random
             resultName = 'appliedLoads'
             if self.thermal == 0:
-                self.create_transient_object(self.appliedLoads,
-                                           AppliedLoadsObject)
+                self.create_transient_object(self.appliedLoads, AppliedLoadsObject)
                 self.handle_results_buffer(self.readOPGForces, resultName)
             else:
                 self.not_implemented_or_skip()
