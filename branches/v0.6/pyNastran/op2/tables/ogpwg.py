@@ -99,7 +99,6 @@ class OGPWG(object):
 
         self.parse_approach_code(data)
         self.add_data_parameter(data, 'reference_point', 'i', 3)
-        print('reference_point', self.reference_point)
 
         #if self.debug3():
             #self.binary_debug.write('  aCode    = %r\n' % self.aCode)
@@ -114,7 +113,6 @@ class OGPWG(object):
         """
         Grid Point Weight Generator
         """
-        print self.print_block(data)
         MO = array(unpack('36f', data[:4*36]))
         MO = MO.reshape(6,6)
 
