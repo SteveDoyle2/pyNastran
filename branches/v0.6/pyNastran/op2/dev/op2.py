@@ -17,6 +17,8 @@ from pyNastran.op2.dev.fortran_format import FortranFormat
 
 from pyNastran.bdf.bdf import BDF
 
+from pyNastran.utils import is_binary
+
 class OP2(BDF,
           OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
 
@@ -120,6 +122,8 @@ class OP2(BDF,
             self.op2_filename = op2_filename
         self.n = 0
         self.table_name = None
+        if not is_binary(self.op2_filename):
+            raise RuntimeError('%r is not a binary OP2.' % self.op2_filename)
         self.f = open(self.op2_filename, 'rb')
         try:
             markers = self.get_nmarkers(1, rewind=True)
@@ -189,14 +193,18 @@ class OP2(BDF,
                                    'BLAMA', 'LAMA',
                                    # strain energy
                                    'ONRGY1',
-                                   # other
-                                   'CONTACT', 'VIEWTB', 'OMM2',
                                    # grid point weight
                                    'OGPWG',
+
+                                   # other
+                                   'CONTACT', 'VIEWTB', 'OMM2',
+                                   'KDICT',
                                   ]:
                     self._read_geom_table()  # DIT (agard)
                 elif table_name in ['DIT']:  # tables
                     self._read_dit()
+                elif table_name in ['KELM']:
+                    self._read_kelm()
                 elif table_name in ['PCOMPTS']: # blade
                     self._read_pcompts()
                 elif table_name in [
@@ -304,6 +312,110 @@ class OP2(BDF,
         #self.show(100)
         self.read_markers([0])
 
+    def _read_kelm(self):
+        """
+        ..todo:: this table follows a totally different pattern...
+        """
+        table_name = self.read_table_name(rewind=False)
+        self.read_markers([-1])
+        data = self._read_record()
+
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        if len(data) == 16:  # KELM
+            table_name, dummyA, dummyB = unpack(b'8sii', data)
+            assert dummyA == 170, dummyA
+            assert dummyB == 170, dummyB
+        else:
+            raise NotImplementedError(self.show_data(data))
+
+        self.read_markers([-3, 1, 1])
+
+        # data = read_record()
+        for i in xrange(170//10):
+            self.read_markers([2])
+            data = self.read_block()
+            print "i=%s n=%s" % (i, self.n)
+
+        self.read_markers([4])
+        data = self.read_block()
+
+        for i in xrange(7):
+            self.read_markers([2])
+            data = self.read_block()
+            print "i=%s n=%s" % (i, self.n)
+
+
+        self.read_markers([-4, 1, 1])
+        for i in xrange(170//10):
+            self.read_markers([2])
+            data = self.read_block()
+            print "i=%s n=%s" % (i, self.n)
+
+        self.read_markers([4])
+        data = self.read_block()
+
+        for i in xrange(7):
+            self.read_markers([2])
+            data = self.read_block()
+            print "i=%s n=%s" % (i, self.n)
+
+        self.read_markers([-5, 1, 1])
+        self.read_markers([600])
+        data = self.read_block()  # 604
+
+        self.read_markers([-6, 1, 1])
+        self.read_markers([188])
+        data = self.read_block()
+
+        self.read_markers([14])
+        data = self.read_block()
+        self.read_markers([16])
+        data = self.read_block()
+        self.read_markers([18])
+        data = self.read_block()
+        self.read_markers([84])
+        data = self.read_block()
+        self.read_markers([6])
+        data = self.read_block()
+
+        self.read_markers([-7, 1, 1])
+        self.read_markers([342])
+        data = self.read_block()
+
+        self.read_markers([-8, 1, 1])
+        data = self.read_block()
+        data = self.read_block()
+        while 1:
+            n, = self.get_nmarkers(1, rewind=True)
+            if n not in [2, 4, 6, 8]:
+                print "n =", n
+                break
+            n, = self.get_nmarkers(1, rewind=False)
+            print n
+            data = self.read_block()
+
+
+        i = -9
+        while i != -13:
+            n, = self.get_nmarkers(1, rewind=True)
+
+            self.read_markers([i, 1, 1])
+            while 1:
+                n, = self.get_nmarkers(1, rewind=True)
+                if n not in [2, 4, 6, 8]:
+                    print "n =", n
+                    break
+                n, = self.get_nmarkers(1, rewind=False)
+                print n
+                data = self.read_block()
+            i -= 1
+
+        print "n=%s" % (self.n)
+        strings, ints, floats = self.show(100)
+
+        pass
+
     def _read_pcompts(self):
         table_name = self.read_table_name(rewind=False)
 
@@ -386,7 +498,10 @@ class OP2(BDF,
 
         self.read_markers([-2, 1, 0])
         data = self._read_record()
-        table_name, = unpack(b'8s', data)
+        if len(data) == 8:
+            table_name, = unpack(b'8s', data)
+        else:
+            raise NotImplementedError(self.show_data(data))
         self._read_subtables()
 
     def _read_results_table(self):

@@ -9,8 +9,9 @@ class FortranFormat(object):
         assert self.n == self.f.tell()
         nints = n // 4
         data = self.f.read(n)
-        self.show_data(data)
+        strings, ints, floats = self.show_data(data)
         self.f.seek(self.n)
+        return strings, ints, floats
 
     def show_data(self, data):
         n = len(data)
@@ -21,6 +22,7 @@ class FortranFormat(object):
         print "strings =", strings
         print "ints    =", ints, '\n'
         print "floats  =", floats
+        return strings, ints, floats
 
     def skip_block(self):
         data = self.f.read(4)
