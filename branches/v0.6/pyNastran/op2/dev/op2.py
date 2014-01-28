@@ -15,11 +15,9 @@ from pyNastran.op2.dev.ogpwg import OGPWG
 from pyNastran.op2.dev.fortran_format import FortranFormat
 
 from pyNastran.bdf.bdf import BDF
-from pyNastran.f06.f06Writer import F06Writer
 
 class OP2(BDF,
-          OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat,
-          F06Writer):
+          OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
 
     def set_subcases(self, isubcases):
         pass
@@ -36,7 +34,6 @@ class OP2(BDF,
         #self.tables_to_read = []
 
         BDF.__init__(self, debug=debug, log=log)
-        F06Writer.__init__(self)
 
         OEF.__init__(self)
         OES.__init__(self)

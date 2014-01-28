@@ -5,9 +5,16 @@ from pyNastran import isRelease
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.utils import object_attributes
 
-class OP2Common(object):
+from pyNastran.f06.f06Writer import F06Writer
+
+class OP2Common(F06Writer):
     def __init__(self):
+        F06Writer.__init__(self)
+        self.log = None
         self.data_code = {'log': self.log,}
+        self.binary_debug = None
+        self.debug = False
+
         self.show_table3_map = [
             #'OUGV1',
             #'OEF1X',
