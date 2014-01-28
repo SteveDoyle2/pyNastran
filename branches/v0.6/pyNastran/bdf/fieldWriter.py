@@ -11,14 +11,6 @@ from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.utils import is_string
 
 
-def printCard(fields, tol=0.):
-    """
-    .. deprecated: will be replaced in version 0.7 with :func: `print_card`
-    """
-    warnings.warn('update printCard to print_card', DeprecationWarning,
-                  stacklevel=2)
-    return print_card_8(fields)
-
 
 def is_same(value1, value2):
     """
