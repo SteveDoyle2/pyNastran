@@ -875,6 +875,7 @@ class OEF(OP2Common):
             # 97 - CTRIA3
             # 98 - CTRIA6 (composite)
             if self.num_wide == 9:  # real
+                print self.code_information()
                 self.create_transient_object(self.compositePlateForce, RealCompositePlateForce)  # undefined
                 #return
                 ntotal = 9 * 4

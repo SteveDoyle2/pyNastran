@@ -6,11 +6,15 @@ from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.utils import object_attributes
 
 from pyNastran.f06.f06Writer import F06Writer
+from pyNastran.op2.op2Codes import Op2Codes
 
-class OP2Common(F06Writer):
+class OP2Common(Op2Codes, F06Writer):
     def __init__(self):
+        Op2Codes.__init__(self)
         F06Writer.__init__(self)
         self.data_code = {'log': self.log,}
+        self.ID = None  # the corresponding piece to isubcase
+        self.isubcase = None
         self.binary_debug = None
         self.debug = False
         self.words = []
@@ -456,17 +460,19 @@ class OP2Common(F06Writer):
                 self.binary_debug.write('  %s=%i %s\n' % (flag, eid, str(out)))
             if is_magnitude_phase:
                 tx = polar_to_real_imag(txr, txi)
-                rx = polar_to_real_imag(rxr, rxi)
                 ty = polar_to_real_imag(tyr, tyi)
-                ry = polar_to_real_imag(ryr, ryi)
                 tz = polar_to_real_imag(tzr, tzi)
+
+                rx = polar_to_real_imag(rxr, rxi)
+                ry = polar_to_real_imag(ryr, ryi)
                 rz = polar_to_real_imag(rzr, rzi)
             else:
                 tx = complex(txr, txi)
-                rx = complex(rxr, rxi)
                 ty = complex(tyr, tyi)
-                ry = complex(ryr, ryi)
                 tz = complex(tzr, tzi)
+
+                rx = complex(rxr, rxi)
+                ry = complex(ryr, ryi)
                 rz = complex(rzr, rzi)
 
             data_in = [eid, grid_type, tx, ty, tz, rx, ry, rz]
