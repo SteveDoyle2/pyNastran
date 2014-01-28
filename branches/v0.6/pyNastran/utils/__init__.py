@@ -23,6 +23,7 @@ def is_binary(filename):
     that file is binary if it contains null.
 
     .. warning:: this may not work for unicode."""
+    assert isinstance(filename, basestring), '%r is not a valid filename' % filename
     assert os.path.exists(filename), '%r does not exist' % filename
     with io.open(filename, mode='rb') as fil:
         for chunk in iter(lambda: fil.read(1024), bytes()):
