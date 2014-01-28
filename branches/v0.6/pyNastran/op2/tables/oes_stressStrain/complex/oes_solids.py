@@ -3,12 +3,12 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from numpy import array, sqrt
 from numpy.linalg import eigh
 
-from .oes_objects import StressObject, StrainObject
+from ..real.oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 
 class ComplexSolidStressObject(StressObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
 
         self.eType = {}
@@ -21,12 +21,8 @@ class ComplexSolidStressObject(StressObject):
         self.txy = {}
         self.tyz = {}
         self.txz = {}
-        self.o1 = {}
-        self.o2 = {}
-        self.o3 = {}
-        self.ovmShear = {}
 
-        self.dt = dt
+        #self.dt = dt
         if is_sort1:
             if dt is not None:
                 self.add = self.add_sort1
@@ -45,10 +41,8 @@ class ComplexSolidStressObject(StressObject):
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
         else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  eType, cid, oxx, oyy, ozz, txy, tyz, txz, '
-                   'o1, o2, o3, ovmShear\n  ')
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__, nelements))
+        msg.append('  eType, cid, oxx, oyy, ozz, txy, tyz, txz\n  ')
         msg.append(', '.join(set(self.eType.values())))
         msg.append('\n')
         return msg
@@ -78,9 +72,6 @@ class ComplexSolidStressObject(StressObject):
         del self.txy[dt]
         del self.tyz[dt]
         del self.txz[dt]
-        del self.o1[dt]
-        del self.o2[dt]
-        del self.o3[dt]
 
     def get_transients(self):
         k = self.oxx.keys()
@@ -97,43 +88,8 @@ class ComplexSolidStressObject(StressObject):
         self.txy[dt] = {}
         self.tyz[dt] = {}
         self.txz[dt] = {}
-        self.o1[dt] = {}
-        self.o2[dt] = {}
-        self.o3[dt] = {}
 
-        #self.aCos[dt] = {}
-        #self.bCos[dt] = {}
-        #self.cCos[dt] = {}
-        #self.pressure[dt] = {}
-        self.ovmShear[dt] = {}
-
-    def add_new_eid(self, eType, cid, dt, eid, nodeID, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
-        #print "Solid Stress add..."
-        #assert eid not in self.oxx
-        assert cid >= 0
-        assert eid >= 0
-        self.eType[eid] = eType
-        self.cid[eid] = cid
-        self.oxx[eid] = {nodeID: oxx}
-        self.oyy[eid] = {nodeID: oyy}
-        self.ozz[eid] = {nodeID: ozz}
-        self.txy[eid] = {nodeID: txy}
-        self.tyz[eid] = {nodeID: tyz}
-        self.txz[eid] = {nodeID: txz}
-        self.o1[eid] = {nodeID: o1}
-        self.o2[eid] = {nodeID: o2}
-        self.o3[eid] = {nodeID: o3}
-        #self.aCos[eid] = {nodeID: aCos}
-        #self.bCos[eid] = {nodeID: bCos}
-        #self.cCos[eid] = {nodeID: cCos}
-        #self.pressure[eid] = {nodeID: pressure}
-        self.ovmShear[eid] = {nodeID: ovm}
-        msg = "*eid=%s nodeID=%s vm=%g" % (eid, nodeID, ovm)
-        #print msg
-        if nodeID == 0:
-            raise ValueError(msg)
-
-    def add_new_eid_sort1(self, eType, cid, dt, eid, nodeID, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
+    def add_new_eid_sort1(self, eType, dt, eid, cid, ctype, nodef):
         #print "Solid Stress add transient..."
         assert cid >= 0
         assert eid >= 0
@@ -145,97 +101,39 @@ class ComplexSolidStressObject(StressObject):
 
         self.eType[eid] = eType
         self.cid[eid] = cid
-        self.oxx[dt][eid] = {nodeID: oxx}
-        self.oyy[dt][eid] = {nodeID: oyy}
-        self.ozz[dt][eid] = {nodeID: ozz}
-        self.txy[dt][eid] = {nodeID: txy}
-        self.tyz[dt][eid] = {nodeID: tyz}
-        self.txz[dt][eid] = {nodeID: txz}
+        self.oxx[dt][eid] = {}
+        self.oyy[dt][eid] = {}
+        self.ozz[dt][eid] = {}
+        self.txy[dt][eid] = {}
+        self.tyz[dt][eid] = {}
+        self.txz[dt][eid] = {}
 
-        self.o1[dt][eid] = {nodeID: o1}
-        self.o2[dt][eid] = {nodeID: o2}
-        self.o3[dt][eid] = {nodeID: o3}
-
-        #self.aCos[dt][eid] = {nodeID: aCos}
-        #self.bCos[dt][eid] = {nodeID: bCos}
-        #self.cCos[dt][eid] = {nodeID: cCos}
-        #self.pressure[dt][eid] = {nodeID: pressure}
-        self.ovmShear[dt][eid] = {nodeID: ovm}
-        msg = "*eid=%s nodeID=%s vm=%g" % (eid, nodeID, ovm)
+        #msg = "*eid=%s nodeID=%s vm=%g" % (eid, nodeID, ovm)
         #print msg
-        if nodeID == 0:
-            raise ValueError(msg)
+        #if nodeID == 0:
+            #raise ValueError(msg)
 
-    def add(self, dt, eid, nodeID, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
+    def add_sort1(self, dt, eid, nodeID, ex, ey, ez, etxy, etyz, etzx):
         #print "***add"
-        msg = "eid=%s nodeID=%s vm=%g" % (eid, nodeID, ovm)
-        #print msg
-        #print self.oxx
-        #print self.fiberDistance
-        self.oxx[eid][nodeID] = oxx
-        self.oyy[eid][nodeID] = oyy
-        self.ozz[eid][nodeID] = ozz
-
-        self.txy[eid][nodeID] = txy
-        self.tyz[eid][nodeID] = tyz
-        self.txz[eid][nodeID] = txz
-
-        self.o1[eid][nodeID] = o1
-        self.o2[eid][nodeID] = o2
-        self.o3[eid][nodeID] = o3
-
-        #self.aCos[eid][nodeID] = aCos
-        #self.bCos[eid][nodeID] = bCos
-        #self.cCos[eid][nodeID] = cCos
-        #self.pressure[eid][nodeID] = pressure
-        self.ovmShear[eid][nodeID] = ovm
-        if nodeID == 0:
-            raise ValueError(msg)
-
-    def add_sort1(self, dt, eid, nodeID, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
-        #print "***add"
-        msg = "eid=%s nodeID=%s vm=%g" % (eid, nodeID, ovm)
+        #msg = "eid=%s nodeID=%s vm=%g" % (eid, nodeID, ovm)
         #print msg
         #print self.oxx
         #print self.fiberDistance
 
         #self.eType[eid] = eType
+        assert eid != 'C'
         #print "eid=%s nid=%s oxx=%s" %(eid,nodeID,oxx)
-        self.oxx[dt][eid][nodeID] = oxx
-        self.oyy[dt][eid][nodeID] = oyy
-        self.ozz[dt][eid][nodeID] = ozz
+        self.oxx[dt][eid][nodeID] = ex
+        self.oyy[dt][eid][nodeID] = ey
+        self.ozz[dt][eid][nodeID] = ez
         #print self.oxx
-        self.txy[dt][eid][nodeID] = txy
-        self.tyz[dt][eid][nodeID] = tyz
-        self.txz[dt][eid][nodeID] = txz
-
-        self.o1[dt][eid][nodeID] = o1
-        self.o2[dt][eid][nodeID] = o2
-        self.o3[dt][eid][nodeID] = o3
-
-        #self.aCos[dt][eid][nodeID] = aCos
-        #self.bCos[dt][eid][nodeID] = bCos
-        #self.cCos[dt][eid][nodeID] = cCos
-        #self.pressure[dt][eid][nodeID] = pressure
-        self.ovmShear[dt][eid][nodeID] = ovm
-        if nodeID == 0:
-            raise ValueError(msg)
+        self.txy[dt][eid][nodeID] = etxy
+        self.tyz[dt][eid][nodeID] = etyz
+        self.txz[dt][eid][nodeID] = etzx
 
     def getHeaders(self):
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz']
-        if self.isVonMises():
-            headers.append('oVonMises')
-        else:
-            headers.append('oMaxShear')
         return headers
-
-    def pressure(self, o1, o2, o3):
-        """
-        returns the hydrostatic pressure
-        (o1+o2+o3)/-3.
-        http://en.wikipedia.org/wiki/Stress_%28mechanics%29
-        """
-        return (o1 + o2 + o3) / -3.
 
     def directionalVectors(self, oxx, oyy, ozz, txy, tyz, txz):
         A = [[oxx, txy, txz],

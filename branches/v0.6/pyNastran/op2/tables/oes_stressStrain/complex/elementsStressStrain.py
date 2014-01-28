@@ -20,17 +20,17 @@ class ComplexElementsStressStrain(object):
         """
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
-        nTotal = 12
+        ntotal = 12
         format1 += '4f'
         format1 = bytes(format1)
         is_magnitude_phase = self.is_magnitude_phase()
 
         n = 0
-        nEntries = len(self.data) // nTotal
+        nelements = len(self.data) // ntotal
         for i in xrange(nEntries):
-            eData = self.data[n:n + nTotal]
+            edata = self.data[n:n + ntotal]
             (eid, axialReal, axialImag, torsionReal,
-                torsionImag) = unpack(format1, eData)
+                torsionImag) = unpack(format1, edata)
 
             if is_magnitude_phase:
                 (axial) = polar_to_real_imag(axialReal, axialImag)
@@ -42,7 +42,7 @@ class ComplexElementsStressStrain(object):
             #print "out = ",out
             eid = extract(eid, dt)
             self.obj.add_new_eid(dt, eid, axial, torsion)
-            n += nTotal
+            n += ntotal
         self.data = self.data[n:]
 
     def OES_Elas1_alt(self):
@@ -78,24 +78,24 @@ class ComplexElementsStressStrain(object):
     def OES_CBAR_34_alt(self):
         dt = self.nonlinear_factor
         #print "len(data) = ",len(self.data)
-        assert self.num_wide == 19, 'invalid num_wide...num_wide=%s' % (
-            self.num_wide)
+        assert self.num_wide == 19, 'invalid num_wide...num_wide=%s' % self.num_wide
 
         (format1, extract) = self.getOUG_FormatStart()
         format1 += '18f'
         format1 = bytes(format1)
         is_magnitude_phase = self.is_magnitude_phase()
 
-        while len(self.data) >= 76:
-            #self.print_block(self.data)
-            eData = self.data[0:76]
-            self.data = self.data[76:]
-            #print "len(data) = ",len(eData)
+        n = 0
+        ntotal = 76
+        nelements = len(self.data) // ntotal
+        for i in xrange(nelements):
+            edata = self.data[n:n+ntotal]
+            n += ntotal
 
-            (eid, s1ar, s2ar, s3ar, s4ar, axialr,
+            (eid_device, s1ar, s2ar, s3ar, s4ar, axialr,
              s1ai, s2ai, s3ai, s4ai, axiali,
              s1br, s2br, s3br, s4br,
-             s1bi, s2bi, s3bi, s4bi) = unpack(format1, eData)
+             s1bi, s2bi, s3bi, s4bi) = unpack(format1, edata)
 
             if is_magnitude_phase:
                 s1a = polar_to_real_imag(s1ar, s1ai)
@@ -119,13 +119,12 @@ class ComplexElementsStressStrain(object):
                 s4b = complex(s4br, s4bi)
                 axial = complex(axialr, axiali)
 
-            eid2 = extract(eid, dt)
-            self.obj.add_new_eid('CBAR', dt, eid2, s1a, s2a, s3a, s4a, axial,
-                               s1b, s2b, s3b, s4b)
-
+            eid = extract(eid_device, dt)
+            self.obj.add_new_eid('CBAR', dt, eid, s1a, s2a, s3a, s4a, axial,
+                                                  s1b, s2b, s3b, s4b)
             #print "eid=%i s1=%i s2=%i s3=%i s4=%i axial=%-5i" %(eid,s1a,s2a,s3a,s4a,axial)
             #print "         s1=%i s2=%i s3=%i s4=%i"          %(s1b,s2b,s3b,s4b)
-            #print "len(data) = ",len(self.data)
+        self.data = self.data[n:]
 
     def OES_CQUAD4_33_alt(self):
         """
@@ -138,28 +137,20 @@ class ComplexElementsStressStrain(object):
         is_magnitude_phase = self.is_magnitude_phase()
 
         nNodes = 0  # centroid + 4 corner points
-        #self.print_section(20)
-        #term = data[0:4] CEN/
-        #data = data[4:]
-        #print "*****"
-        #self.print_block(self.data)
-        #print "self.num_wide = ",self.num_wide
-        #print "len(data) = ",len(self.data)
 
-        assert self.num_wide == 15, 'invalid num_wide...num_wide=%s' % (
-            self.num_wide)
-        while len(self.data) >= 60:  # 2+15*5 = 77 -> 77*4 = 308
-            #print self.print_block(self.data[0:100])
-            #(eid,) = unpack(b'i',self.data[0:4])
-            #print "abcd=",abcd
-            #self.data = self.data[8:]  # 2
-            eData = self.data[0:60]  # 4*15=60
-            self.data = self.data[60:]
-            out = unpack(format1, eData)  # 15
+        assert self.num_wide == 15, 'invalid num_wide...num_wide=%s' % self.num_wide
+        
+        ntotal = 4 * (2 + 15 * 5)
+        nelements = len(self.data) // ntotal
+        n = 0
+        for i in xrange(nelements):
+            edata = self.data[n:n+60]  # 4*15=60
+            n += 60
+            out = unpack(format1, edata)  # 15
             if self.make_op2_debug:
                 self.op2_debug.write('%s\n' % (str(out)))
             (eid, fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
-             fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
+                  fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
 
             if is_magnitude_phase:
                 sx1 = polar_to_real_imag(sx1r, sx1i)
@@ -185,13 +176,13 @@ class ComplexElementsStressStrain(object):
             self.obj.add(dt, eid, 'C', fd2, sx2, sy2, txy2)
 
             for nodeID in xrange(nNodes):  # nodes pts
-                eData = self.data[0:60]  # 4*15=60
-                self.data = self.data[60:]
-                out = unpack(b'i14f', eData[0:60])
+                edata = self.data[n:n+60]  # 4*15=60
+                n += 60
+                out = unpack(b'i14f', edata)
                 if self.make_op2_debug:
                     self.op2_debug.write('%s\n' % (str(out)))
                 (grid, fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
-                 fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
+                       fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
 
                 if is_magnitude_phase:
                     sx1 = polar_to_real_imag(sx1r, sx1i)
@@ -210,17 +201,9 @@ class ComplexElementsStressStrain(object):
 
                 #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i\n" %(eid,grid,fd1,sx1,sy1,txy1)
                 #print "               fd2=%i sx2=%i sy2=%i txy2=%i\n"          %(fd2,sx2,sy2,txy2)
-                #print "len(data) = ",len(self.data)
-                #self.print_block(self.data)
                 self.obj.addNewNode(dt, eid, grid, fd1, sx1, sy1, txy1)
                 self.obj.add(dt, eid, grid, fd2, sx2, sy2, txy2)
-
-            #print '--------------------'
-            #print "len(data) = ",len(self.data)
-            #print "tell = ",self.op2.tell()
-
-            #self.print_section(100)
-            #self.dn += 348
+        self.data = self.data[n:]
 
     def OES_CQUAD4NL_90_alt(self):
         dt = self.nonlinear_factor
@@ -230,7 +213,7 @@ class ComplexElementsStressStrain(object):
         nTotal = 100  # 4*25
         format1 += '24f'
         format1 = bytes(format1)
-
+        
         while len(self.data) >= nTotal:
             eData = self.data[0:nTotal]
             self.data = self.data[nTotal:]
@@ -337,60 +320,58 @@ class ComplexElementsStressStrain(object):
         #if self.num_wide==87: # 2+(17-1)*5 = 87 -> 87*4 = 348
 
         if self.element_type == 144:  # CQUAD4
-            nTotal = 308  # 2+15*5 = 77 -> 87*4 = 308
+            ntotal = 308  # 2+15*5 = 77 -> 87*4 = 308
             nNodes = 4    # centroid + 4 corner points
             eType = 'CQUAD4'
         elif self.element_type == 64:  # CQUAD8 - done
-            nTotal = 308  # 2+15*5 = 77 -> 77*4 = 308
+            ntotal = 308  # 2+15*5 = 77 -> 77*4 = 308
             nNodes = 4    # centroid + 4 corner points
             eType = 'CQUAD8'
         elif self.element_type == 82:  # CQUADR
-            nTotal = 308  # 2+15*5 = 77 -> 87*4 = 308
+            ntotal = 308  # 2+15*5 = 77 -> 87*4 = 308
             nNodes = 4    # centroid + 4 corner points
             eType = 'CQUAD4'  # TODO write the word CQUADR
 
         elif self.element_type == 75:  # CTRIA6
-            nTotal = 248  # 2+15*3 = 62 -> 62*4 = 248
+            ntotal = 248  # 2+15*4 = 62 -> 62*4 = 248
             nNodes = 3    # centroid + 3 corner points
             eType = 'CTRIA6'
         elif self.element_type == 70:  # CTRIAR
-            nTotal = 248  # 2+15*4 = 62 -> 62*4 = 248
+            ntotal = 248  # 2+15*4 = 62 -> 62*4 = 248
             nNodes = 3    # centroid + 3 corner points
             eType = 'CTRIAR'  # TODO write the word CTRIAR
         else:
             raise RuntimeError('element_type=%s nTotal not defined...' %
                             (self.element_type))
 
-        assert nTotal == self.num_wide * 4, 'eType=%s num_wide*4=%s not nTotal=%s' % (self.element_type, self.num_wide * 4, nTotal)
+        assert ntotal == self.num_wide * 4, 'eType=%s num_wide*4=%s not nTotal=%s' % (self.element_type, self.num_wide * 4, nTotal)
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
         format1 += '14f'
         format1 = bytes(format1)
         is_magnitude_phase = self.is_magnitude_phase()
-
-        while len(self.data) >= nTotal:
-            (eid, _) = unpack(b'i4s', self.data[0:8])
-            self.data = self.data[8:]  # 2
+        n = 0
+        nelements = len(self.data) // ntotal
+        for i in xrange(nelements):
+            (eid, _) = unpack(b'i4s', self.data[n:n+8])
+            n += 8
             eid = extract(eid, dt)
-            eData = self.data[0:60]  # 4*15
-            self.data = self.data[60:]
-            out = unpack(format1, eData)  # len=15*4
+            edata = self.data[n:n+60]  # 4*15
+            n += 60
+            out = unpack(format1, edata)  # len=15*4
             if self.make_op2_debug:
                 self.op2_debug.write('%s\n' % (str(out)))
             (grid, fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
-             fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
+                   fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
             grid = 'C'
 
             if is_magnitude_phase:
                 sx1 = polar_to_real_imag(sx1r, sx1i)
-                sy1 = polar_to_real_imag(
-                    sy1r, sy1i)
+                sy1 = polar_to_real_imag(sy1r, sy1i)
                 sx2 = polar_to_real_imag(sx2r, sx2i)
-                sy2 = polar_to_real_imag(
-                    sy2r, sy2i)
+                sy2 = polar_to_real_imag(sy2r, sy2i)
                 txy1 = polar_to_real_imag(txy1r, txy1i)
-                txy2 = polar_to_real_imag(
-                    txy2r, txy2i)
+                txy2 = polar_to_real_imag(txy2r, txy2i)
             else:
                 sx1 = complex(sx1r, sx1i)
                 sy1 = complex(sy1r, sy1i)
@@ -403,9 +384,9 @@ class ComplexElementsStressStrain(object):
             self.obj.add(dt, eid, grid, fd2, sx2, sy2, txy2)
 
             for nodeID in xrange(nNodes):  # nodes pts
-                eData = self.data[0:60]  # 4*15=60
-                self.data = self.data[60:]
-                out = unpack(b'i14f', eData)
+                edata = self.data[n:n+60]  # 4*15=60
+                n += 60
+                out = unpack(b'i14f', edata)
                 if self.make_op2_debug:
                     self.op2_debug.write('%s\n' % (str(out)))
                 (grid, fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
@@ -428,14 +409,11 @@ class ComplexElementsStressStrain(object):
 
                 #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i"   %(eid,grid,fd1,sx1,sy1,txy1)
                 #print "               fd2=%i sx2=%i sy2=%i txy2=%i\n"          %(fd2,sx2,sy2,txy2)
-                #print "len(data) = ",len(self.data)
-                #self.print_block(self.data)
                 self.obj.addNewNode(dt, eid, grid, fd1, sx1, sy1, txy1)
                 self.obj.add(dt, eid, grid, fd2, sx2, sy2, txy2)
 
             #print '--------------------'
-            #print "len(data) = ",len(self.data)
-            #self.dn += 348
+        self.data = self.data[n:]
 
     def OES_CTRIA3_74_alt(self):  # in progress
         """
@@ -457,7 +435,7 @@ class ComplexElementsStressStrain(object):
             out = unpack(format1, eData)
 
             (eid, fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
-             fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
+                  fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
 
             if is_magnitude_phase:
                 sx1 = polar_to_real_imag(sx1r, sx1i)

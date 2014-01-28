@@ -130,25 +130,6 @@ class ComplexPlateStressObject(StressObject):
         self.oyy[dt] = {}
         self.txy[dt] = {}
 
-    def add_new_eid(self, eType, dt, eid, nodeID, fd, oxx, oyy, txy):
-        #print "***add_new_eid..."
-        #if eid in self.oxx:
-            #return self.add(dt,eid,nodeID,fd,oxx,oyy,txy)
-
-        #assert eid not in self.oxx
-        #print self.oxx
-        self.eType[eid] = eType
-        self.fiberCurvature[eid] = {nodeID: [fd]}
-        assert isinstance(eid, int)
-        self.oxx[eid] = {nodeID: [oxx]}
-        self.oyy[eid] = {nodeID: [oyy]}
-        self.txy[eid] = {nodeID: [txy]}
-        msg = "eid=%s nodeID=%s fd=%g oxx=%s oyy=%s txy=%s" % (
-            eid, nodeID, fd, oxx, oyy, txy)
-        #print msg
-        if nodeID == 0:
-            raise ValueError(msg)
-
     def add_new_eid_sort1(self, eType, dt, eid, nodeID, fd, oxx, oyy, txy):
         #print "***add_new_eid_sort1..."
         #msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%s oyy=%s txy=%s" %(dt,eid,nodeID,fd,oxx,oyy,txy)
@@ -175,21 +156,6 @@ class ComplexPlateStressObject(StressObject):
         #print msg
         if nodeID == 0:
             raise ValueError(msg)
-
-    def add(self, dt, eid, nodeID, fd, oxx, oyy, txy):
-        #print "***add"
-        msg = "eid=%s nodeID=%s fd=%g oxx=%s oyy=%s txy=%s" % (
-            eid, nodeID, fd, oxx, oyy, txy)
-        #print msg
-        #print self.oxx
-        #print self.fiberCurvature
-        assert isinstance(eid, int)
-        self.fiberCurvature[eid][nodeID].append(fd)
-        self.oxx[eid][nodeID].append(oxx)
-        self.oyy[eid][nodeID].append(oyy)
-        self.txy[eid][nodeID].append(txy)
-        if nodeID == 0:
-            raise Exception(msg)
 
     def add_sort1(self, dt, eid, nodeID, fd, oxx, oyy, txy):
         #print "***add_sort1"
@@ -242,10 +208,6 @@ class ComplexPlateStressObject(StressObject):
         else:
             headers = ['curvature']
         headers += ['oxx', 'oyy', 'txy']
-        if self.isVonMises():
-            headers.append('oVonMises')
-        else:
-            headers.append('maxShear')
         return headers
 
     def __reprTransient__(self):
@@ -291,13 +253,8 @@ class ComplexPlateStressObject(StressObject):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
 
-        #if self.isVonMises():
-        #    vonMises = 'VON MISES'
-        #else:
-        #    vonMises = 'MAX SHEAR'
-
         if is_mag_phase:
-            pass
+            magReal = ['                                                         (MAGNITUDE/PHASE)\n \n']
         else:
             magReal = ['                                                          (REAL/IMAGINARY)\n', ' \n']
 
@@ -316,7 +273,7 @@ class ComplexPlateStressObject(StressObject):
         quad8Msg = None
         quadrMsg = None
 
-        quadMsg = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )'] + formWord + quadMsgTemp
+        quadMsg  = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )'] + formWord + quadMsgTemp
         quadrMsg = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )'] + formWord + quadMsgTemp
         quad8Msg = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )'] + formWord + quadMsgTemp
 
@@ -385,7 +342,6 @@ class ComplexPlateStressObject(StressObject):
                            '      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
             fiberMsgTemp = ['  ELEMENT       FIBRE                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
                             '    ID.        DISTANCE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
-
         else:
             pass
 
