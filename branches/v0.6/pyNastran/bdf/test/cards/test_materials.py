@@ -21,10 +21,10 @@ class TestMaterials(unittest.TestCase):
             '*   LHIL',
         ]
         lines_expected = [
-            'MAT8*    4700010        2.83+6          1.14+6          .55             *',
-            '*       717000.         285194.         285194.                         *',
-            '*       9.17-6          2.606-5         70.                             *',
-            '*       ',
+            'MAT8*            4700010        2830000.        1140000.             .55',
+            '*                717000.         285194.         285194.',
+            '*              .00000917       .00002606             70.',
+            '*',
         ]
 
         card = bdf.process_card(lines)
@@ -45,6 +45,7 @@ class TestMaterials(unittest.TestCase):
         lines_actual = msg.rstrip().split('\n')
         msg = '\n%s\n\n%s' % ('\n'.join(lines_expected), msg)
         msg += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
+        print msg
         self.assertEqual(len(lines_actual), len(lines_expected), msg)
         for actual, expected in zip(lines_actual, lines_expected):
             msg =  'actual   = %r\n' % actual

@@ -225,16 +225,16 @@ class TestBeams(unittest.TestCase):
         '*    HSG',
         ]
         lines_expected = [
-        'PBEAM*   4570049         4570010        .12             2.56-4          *',
-        '*       .005625                         8.889-4         6.4444-7        *',
-        '*       -.04            -.75            .04             -.75            *',
-        '*       .04             .75             -.04            .75             *',
-        '*        YES            1.              .12             2.56-4          *',
-        '*       .005625                         8.889-4         6.4444-7        *',
-        '*       -.04            -.75            .04             -.75            *',
-        '*       .04             .75             -.04            .75             *',
-        '*       .853433         .849842                                         *',
-        '*       ',
+        'PBEAM*           4570049         4570010             .12         .000256',
+        '*                .005625                        .0008889    .00000064444',
+        '*                   -.04            -.75             .04            -.75',
+        '*                    .04             .75            -.04             .75',
+        '*                    YES              1.             .12         .000256',
+        '*                .005625         .000256                        .0008889',
+        '*           .00000064444            -.04            -.75             .04',
+        '*                   -.75             .04             .75            -.04',
+        '*                .853433         .849842',
+        '*',
         ]
 
         card = bdf.process_card(lines)
@@ -247,6 +247,7 @@ class TestBeams(unittest.TestCase):
         if 1:
             fields = card2.rawFields()
             msg = print_card(fields)
+            print msg
             #f = StringIO.StringIO()
             size = 16
             msg = card2.write_bdf(size, 'dummy')
@@ -258,7 +259,7 @@ class TestBeams(unittest.TestCase):
             msg += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
             self.assertEqual(len(lines_actual), len(lines_expected), msg)
             for actual, expected in zip(lines_actual, lines_expected):
-                msg =  'actual   = %r\n' % actual
+                msg =  '\nactual   = %r\n' % actual
                 msg += 'expected = %r' % expected
                 self.assertEqual(actual, expected, msg)
 
