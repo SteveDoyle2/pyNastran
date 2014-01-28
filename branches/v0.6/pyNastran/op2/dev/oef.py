@@ -274,7 +274,6 @@ class OEF(OP2Common):
                     out = s.unpack(edata)
                     (eid_device, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux) = out
                     eid = (eid_device - self.device_code) // 10
-                    #print "eType=%s" % (eType)
 
                     data_in = [eid, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux]
                     #print "heatFlux %s" % (self.get_element_type(self.element_type)), data_in
@@ -417,24 +416,15 @@ class OEF(OP2Common):
                         if self.debug4():
                             self.binary_debug.write('OEF_Beam - %s\n' % (str(out)))
                         (nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq) = out
-                        #print "eidTemp = ", eidTemp
-                        #print "nid = ", nid
-                        #print "sd = ", sd
 
                         data_in = [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
-                        #print "%s        " % (self.get_element_type(self.element_type)), data_in
-                        eid = self.obj.add_new_eid(out)
-                        if i == 0:  # isNewElement:
+                        if i == 0:  # isNewElement
                             self.obj.addNewElement(dt, data_in)
-                            #print
                         elif sd > 0.:
                             self.obj.add(dt, data_in)
-                        #print
                         n += 36
-                        #else: pass
             elif self.num_wide == 177: # imag
                 self.create_transient_object(self.beamForces, ComplexCBeamForce)
-                #ntotal = 16*11+1
                 formatAll = b'i15f'
                 format1 = b'i'
                 ntotal = 708  # (16*11+1)*4 = 177*4
@@ -469,24 +459,17 @@ class OEF(OP2Common):
                             af = complex(afr, afi)
                             ttrq = complex(ttrqr, ttrqi)
                             wtrq = complex(wtrqr, wtrqi)
-                        #print "eidTemp = ",eidTemp
-                        #print "nid = ",nid
-                        #print "sd = ",sd
-
                         eid = self.obj.add_new_eid(out)
                         if i == 0:  # isNewElement:
                             data_in = [eid, nid, sd, bm1, bm2,
                                        ts1, ts2, af, ttrq, wtrq]
                             #print "%s cNew   " % (self.get_element_type(self.element_type)), data_in
                             self.obj.addNewElement(dt, data_in)
-                            #print
                         elif sd > 0.:
                             data_in = [eid, nid, sd, bm1, bm2,
                                       ts1, ts2, af, ttrq, wtrq]
                             #print "%s cOld   " % (self.get_element_type(self.element_type)), data_in
                             self.obj.add(dt, data_in)
-                            #print
-                        #else: pass
             else:
                 raise NotImplementedError(self.num_wide)
             #print self.beamForces
@@ -522,7 +505,6 @@ class OEF(OP2Common):
                         self.binary_debug.write('OEF_Spring - %s\n' % (str(out)))
                     (eid_device, force) = out
                     eid = (eid_device - self.device_code) // 10
-                    #print("eType=%s" % eType)
 
                     data_in = [eid, force]
                     #print "%s" % (self.get_element_type(self.element_type)), data_in
@@ -545,7 +527,6 @@ class OEF(OP2Common):
                     out = unpack(format1, edata)
                     (eid_device, forceReal, forceImag) = out
                     eid = (eid_device - self.device_code) // 10
-                    #print "eType=%s" % (eType)
 
                     if is_magnitude_phase:
                         force = polar_to_real_imag(forceReal, forceImag)
@@ -575,7 +556,6 @@ class OEF(OP2Common):
                         self.binary_debug.write('OEF_CVisc - %s\n' % (str(out)))
                     (eid_device, axial, torque) = out
                     eid = (eid_device - self.device_code) // 10
-                    #print "eType=%s" % (eType)
 
                     data_in = [eid, axial, torque]
                     #print "%s" % (self.get_element_type(self.element_type)), data_in
@@ -644,7 +624,6 @@ class OEF(OP2Common):
                     (eid_device, bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr,
                                  bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi) = out
                     eid = (eid_device - self.device_code) // 10
-                    #print "eType=%s" % (eType)
 
                     if is_magnitude_phase:
                         bm1a = polar_to_real_imag(bm1ar, bm1ai)
@@ -692,7 +671,6 @@ class OEF(OP2Common):
                     (eid_device, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
                     eid = (eid_device - self.device_code) // 10
                     assert eid > 0, 'eid_device=%s eid=%s table_name-%r' % (eid_device, eid, self.table_name)
-                    #print("eType=%s" % eType)
 
                     data_in = [eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty]
                     #print "%s" % (self.get_element_type(self.element_type)), data_in
@@ -776,11 +754,8 @@ class OEF(OP2Common):
                         self.binary_debug.write('OEF_Plate2-%s - %s\n' % (self.element_type, str(out)))
                     (eid_device, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
                     #term= 'CEN\'
-                    #print "eType=%s" % eType
 
                     eid = (eid_device - self.device_code) // 10
-                    #print "eid_device=", eid_device
-                    #print "eid=", eid
                     assert eid > 0, eid
                     data_in = [term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty]
                     #print "%s" % (self.get_element_type(self.element_type)), data_in
@@ -792,7 +767,6 @@ class OEF(OP2Common):
                         if self.debug4():
                             self.binary_debug.write('%s\n' % (str(out)))
                         (nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
-                        #print "nid=", nid
                         assert nid > 0, 'nid=%s' % nid
                         #data_in = [nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty]
                         #print "***%s    " % (self.get_element_type(self.element_type)), data_in
@@ -812,7 +786,6 @@ class OEF(OP2Common):
                     (eid_device, term, nid, mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
                                             mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
                     #term = 'CEN\'
-                    #print "eType=%s" % (eType)
 
                     eid = (eid_device - self.device_code) // 10
                     if is_magnitude_phase:
@@ -906,7 +879,6 @@ class OEF(OP2Common):
                             self.binary_debug.write('      %s  C=[%s]\n' % (' ' * len(str(eid)), ', '.join(['%r' % di for di in out]) ))
 
                     if eid > 0:
-                        #print "eid =", eid
                         self.obj.add_new_eid(eType, dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
                     else:
                         self.obj.add(dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
