@@ -307,6 +307,7 @@ class TestFieldWriter(unittest.TestCase):
         card_expected += 'MAT8*                  6       17000000.       17000000.             .98\n'
         card_expected += '*                340000.         180000.         180000.        .0001712\n'
         card_expected += '*                                  71.33\n'
+        card_expected += '*\n'
         # bad
         self.assertEqual(card, card_expected)
         #=============================

@@ -1,4 +1,5 @@
 import sys
+from pyNastran.bdf.bdfInterface.BDF_Card import wipe_empty_fields
 
 def print_scientific_16(value):
     """
@@ -198,12 +199,12 @@ def print_card_16(fields):
      but because it's a left-justified unneccessary field,
      print_card doesnt use it.
     """
+    fields = wipe_empty_fields(fields)
     nFieldsMain = len(fields) - 1  # chop off the card name
     nBDFLines = nFieldsMain // 8
     if nFieldsMain % 8 != 0:
         nBDFLines += 1
-    nExtraFields = 8 * nBDFLines -  nFieldsMain
-    if nExtraFields:
+        nExtraFields = 8 * nBDFLines -  nFieldsMain
         fields += [None] * nExtraFields
 
     try:
@@ -225,11 +226,12 @@ def print_card_16(fields):
             if out[-1] == '\n':  # empty line
                 out += '*'
             out += '\n*       '
-    out = out.rstrip(' \n*') + '\n'  # removes blank lines at the end of cards
+    out = out.rstrip(' *')  # removes one continuation star
+    if not out.endswith('\n'):
+        out += '\n'
     return out
 
 if __name__ == '__main__':
     field = print_float_16(-55.1040257079)
     field = print_float_16(-55.1040257078872)
     field = print_float_16(-3.76948125497534)
-    
