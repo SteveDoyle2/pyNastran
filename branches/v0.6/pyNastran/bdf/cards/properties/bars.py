@@ -1676,9 +1676,9 @@ class PBEAM(IntegratedLineProperty):
 
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)
-        if model.sol != 600:
-            assert max(self.j) == 0.0, self.j
-            assert min(self.j) == 0.0, self.j
+        #if model.sol != 600:
+            #assert max(self.j) == 0.0, self.j
+            #assert min(self.j) == 0.0, self.j
 
     def _verify(self, xref=False):
         pid = self.Pid()
