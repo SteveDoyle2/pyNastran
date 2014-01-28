@@ -277,6 +277,52 @@ def print_int_card(fields):
     out = out.rstrip(' \n+') + '\n'  # removes blank lines at the end of cards
     return out
 
+def print_int_card_blocks(fields_blocks):
+    """
+    Prints a nastran-style card with 8-character width fields.
+    All fields other than the card name must be written in "block" format.
+    This is used to speed up SET cards.
+
+    :param fields_blocks: The fields written in "block" notation.
+
+    fields_blocks = [
+        'SET1',
+        [['a', 1.0, 3], False], # these are not all integers
+        [[1, 2, 3], True], # these are all integers
+    ]
+    ..note:: Blanks are allowed in the False block.
+    """
+    card_name = blocks[0]
+    try:
+        out = '%-8s' % card_name
+    except:
+        print("ERROR!  fields=%s" % fields)
+        sys.stdout.flush()
+        raise
+
+    out2 = []
+    i = 1
+    for block in blocks[1:]:
+        (fields, is_all_ints) = block
+        if is_all_ints is True:
+            for field in fields:
+                out += "%8i" % field
+                if i % 8 == 0:  # allow 1+8 fields per line
+                    out = out.rstrip(' ')
+                    out += '\n        '
+                i += 1
+        elif is_all_ints is False:
+            for field in fields:
+                out += print_field(field)
+                if i % 8 == 0:  # allow 1+8 fields per line
+                    out = out.rstrip(' ')
+                    out += '\n        '
+                i += 1
+        else:
+            raise SyntaxError('is_all_ints must be a boolean.  is_all_ints=%r' % is_all_ints)
+    out = out.rstrip(' \n+') + '\n'  # removes blank lines at the end of cards
+    return out
+
 
 if __name__ == '__main__':  # pragma: no cover
     pass
