@@ -580,76 +580,87 @@ class F06Writer(object):
                      '\n', ' \n']
         header = copy.deepcopy(headerOld)
         resTypes = [
-                    self.displacements, self.displacementsPSD, self.displacementsATO, self.displacementsRMS,
-                    self.scaledDisplacements,  # ???
-                    self.velocities, self.accelerations, #self.eigenvectors,
-                    self.temperatures,
-                    self.loadVectors, self.thermalLoadVectors,
-                    self.forceVectors,
+            self.displacements, self.displacementsPSD, self.displacementsATO, self.displacementsRMS,
+            self.scaledDisplacements,  # ???
+            self.velocities, self.accelerations, #self.eigenvectors,
+            self.temperatures,
+            self.loadVectors, self.thermalLoadVectors,
+            self.forceVectors,
 
-                    self.spcForces, self.mpcForces,
+            self.spcForces, self.mpcForces,
 
-                    self.barForces, self.beamForces, self.springForces, self.damperForces,
-                    self.solidPressureForces,
 
-                    #------------------------------------------
-                    # OEF - forces
-                    # rods
-                    self.rodForces, self.conrodForces, self.ctubeForces,
+            #------------------------------------------
+            # OEF - forces
+            # rods
+            self.rodForces, self.conrodForces, self.ctubeForces,
 
-                    # cshear,
-                    self.shearForces,
+            # springs
+            self.springForces,
 
-                    # quad
-                    self.plateForces,
+            # dampers
+            self.damperForces,
 
-                    #------------------------------------------
-                    # OES - strain
+            # cshear,
+            self.shearForces,
 
-                    # springs,
-                    self.celasStrain, self.celasStress,
+            # quad
+            self.plateForces,   # centroidal elements
+            self.plateForces2,  # bilinear elements
 
-                    # rods
-                    self.rodStrain, self.conrodStrain, self.ctubeStrain, self.nonlinearRodStress,
+            # bars
+            self.beamForces, self.barForces, self.bar100Forces, self.bendForces,
 
-                    # bars/beams
-                    self.barStrain, self.beamStrain,
+            # other
+            self.bushForces, self.gapForces, self.solidPressureForces,
 
-                    # bush
-                    self.bushStrain,
+            #------------------------------------------
+            # OES - strain
 
-                    # plates
-                    self.plateStrain, self.compositePlateStrain,
-                    self.nonlinearPlateStrain,
-                    self.ctriaxStrain, self.hyperelasticPlateStress,
+            # springs,
+            self.celasStrain, self.celasStress,
 
-                    # solids
-                    self.solidStrain,
+            # rods
+            self.rodStrain, self.conrodStrain, self.ctubeStrain, self.nonlinearRodStress,
 
-                    #------------------------------------------
-                    # OES - stress
+            # bars/beams
+            self.barStrain, self.beamStrain,
 
-                    # rods
-                    self.rodStress, self.conrodStress, self.ctubeStress, self.nonlinearRodStrain,
+            # bush
+            self.bushStrain,
 
-                    # bars/beams
-                    self.barStress, self.beamStress,
+            # plates
+            self.plateStrain, self.compositePlateStrain,
+            self.nonlinearPlateStrain,
+            self.ctriaxStrain, self.hyperelasticPlateStress,
+            self.shearStrain,
 
-                    # bush
-                    self.bushStress, self.bush1dStressStrain,
+            # solids
+            self.solidStrain,
 
-                    # plates
-                    self.plateStress, self.compositePlateStress,
-                    self.nonlinearPlateStress,
-                    self.ctriaxStress, self.hyperelasticPlateStrain,
-                    #self.shearStrain, self.shearStress,
+            #------------------------------------------
+            # OES - stress
 
-                    # solids
-                    self.solidStress,
-                    #------------------------------------------
+            # rods
+            self.rodStress, self.conrodStress, self.ctubeStress, self.nonlinearRodStrain,
 
-                    self.gridPointStresses, self.gridPointVolumeStresses,
-            #self.gridPointForces,
+            # bars/beams
+            self.barStress, self.beamStress,
+
+            # bush
+            self.bushStress, self.bush1dStressStrain,
+
+            # plates
+            self.plateStress, self.compositePlateStress,
+            self.nonlinearPlateStress,
+            self.ctriaxStress, self.hyperelasticPlateStrain,
+            self.shearStress,
+
+            # solids
+            self.solidStress,
+            #------------------------------------------
+
+            self.gridPointStresses, self.gridPointVolumeStresses, self.gridPointForces,
         ]
 
         if 1:
