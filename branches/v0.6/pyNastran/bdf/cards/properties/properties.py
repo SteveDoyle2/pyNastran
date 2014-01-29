@@ -91,6 +91,13 @@ class PFAST(Property):
                   self.kt3, kr1, kr2, kr3, mass, ge]
         return fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+
 
 class PGAP(Property):
     type = 'PGAP'
@@ -169,6 +176,13 @@ class PGAP(Property):
                   tmax, mar, trmin]
         return fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+
 
 class SolidProperty(Property):
     def __init__(self, card, data):
@@ -218,6 +232,13 @@ class PLSOLID(SolidProperty):
         stressStrain = set_blank_if_default(self.str, 'GRID')
         fields = ['PLSOLID', self.pid, self.Mid(), stressStrain]
         return fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class PSOLID(SolidProperty):
@@ -289,7 +310,10 @@ class PSOLID(SolidProperty):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return self.comment() + card_writer(card)
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 class CrackProperty(Property):
     def __init__(self, card, data):
@@ -299,6 +323,13 @@ class CrackProperty(Property):
         if isinstance(self.mid, int):
             return self.mid
         return self.mid.mid
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class PRAC2D(CrackProperty):
@@ -489,3 +520,10 @@ class PCONEAX(Property):
         list_fields = ['PCONEAX', self.pid, mid1, t1, mid2, i, mid3, t2,
                   nsm, self.z1, self.z2] + self.phi
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)

@@ -617,7 +617,10 @@ class PROD(LineProperty):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return self.comment() + print_card_8(card)
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class PTUBE(LineProperty):
@@ -741,7 +744,10 @@ class PTUBE(LineProperty):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return self.comment() + print_card_8(card)
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class PBAR(LineProperty):
@@ -919,10 +925,10 @@ class PBAR(LineProperty):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
+        #return self.comment() + card_writer(card)  #is this allowed???
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
-        #return self.comment() + card_writer(card)
 
 
 class PBARL(LineProperty):
@@ -1294,10 +1300,10 @@ class PBARL(LineProperty):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
+        #return self.comment() + card_writer(card)  #is this allowed???
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
-        #return self.comment() + card_writer(card)
 
 
 class PBCOMP(LineProperty):
@@ -1393,7 +1399,10 @@ class PBCOMP(LineProperty):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return self.comment() + card_writer(card)
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class PBEAM(IntegratedLineProperty):
@@ -2063,12 +2072,11 @@ class PBEAML(IntegratedLineProperty):
 
     def write_bdf(self, size, card_writer):
         """..todo:: having bug with PBEAML"""
-        #if size == 8:
         card = self.reprFields()
-        return self.comment() + print_card_8(card)
-        #card = self.rawFields()
-        #return self.comment() + print_card_16(card)
-        #return self.comment() + card_writer(card)
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)  #is this allowed???
 
 
 class PBEAM3(LineProperty):  # not done, cleanup
@@ -2231,4 +2239,7 @@ class PBEND(LineProperty):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return self.comment() + card_writer(card)
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
