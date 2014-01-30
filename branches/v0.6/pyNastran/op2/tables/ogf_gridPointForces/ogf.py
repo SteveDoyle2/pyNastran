@@ -14,7 +14,7 @@ class OGF(object):
     def readTable_OGF(self):
         table3 = self.readTable_OGF_3
         table4Data = self.readOGF_Data
-        self.read_results_table(table3, table4Data)
+        self._read_results_table(table3, table4Data)
         self._delete_attributes_OGF()
 
     def _delete_attributes_OGF(self):

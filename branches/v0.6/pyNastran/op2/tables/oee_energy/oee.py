@@ -12,7 +12,7 @@ class OEE(object):
     def readTable_OEE(self):
         table3 = self.readTable_OEE_3
         table4Data = self.readOEE_Data
-        self.read_results_table(table3, table4Data)
+        self._read_results_table(table3, table4Data)
         self._delete_attributes_OEE()
 
     def _delete_attributes_OEE(self):  # no thermal

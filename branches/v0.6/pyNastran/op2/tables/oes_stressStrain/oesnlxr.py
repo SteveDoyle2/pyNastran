@@ -8,7 +8,7 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
     def readTable_OESNLXR(self):
         table3 = self.readTable_OESNLXR_3
         table4Data = self.readTable_OES_4_Data
-        self.read_results_table(
+        self._read_results_table(
             table3, table4Data, flag=1)  # flag=1 defines old style
         self._delete_attributes_OES()
 

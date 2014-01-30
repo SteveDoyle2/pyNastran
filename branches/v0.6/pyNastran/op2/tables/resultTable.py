@@ -35,7 +35,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         self.table_name = 'DUMMY'
         table3 = self.readTable_DUMMY_3
         table4Data = self.readDUMMY_Data
-        self.read_results_table(table3, table4Data)
+        self._read_results_table(table3, table4Data)
         self._delete_attributes_OPG()
 
     def readTable_DUMMY_3(self, iTable):
@@ -165,17 +165,22 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
             #print "creating isubcase result=%s" %(self.isubcase)
         #return self.obj
 
-    def read_results_table(self, table3, table4Data, flag=0):
+    def _read_results_table(self, table3, table4Data, flag=0):
         self.dtMap = {}
         table_name = self.read_table_name(rewind=False)  # OEF
-        self.table_init(table_name)
+        self._table_init(table_name)
         if self.make_op2_debug:
             self.op2_debug.write("***start of %s table***\n" % table_name)
         #print("table_name = |%r|" % table_name)
 
         self.read_markers([-1, 7], table_name)
         ints = self.read_int_block()
-        #print "*ints = ",ints
+        if ints[1] == 63:
+            month, day, year = ints[2], ints[3], ints[4]
+            self._set_op2_date(month, day, year)
+        else:
+            #self.log.debug("date ints = %s" % str(ints))
+            pass
 
         self.read_markers([-2, 1, 0], table_name)  # 7
         buffer_words = self.get_marker()

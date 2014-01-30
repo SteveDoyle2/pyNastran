@@ -536,7 +536,6 @@ class OP2(BDF,
                 self.log.debug('-' * 80)
                 try:
                     table_name = self.read_table_name(rewind=True, stopOnFailure=False)
-                    self.log.debug("read_op2 - table_name = %r" % table_name)
                 except EOFError:  # the isAnotherTable method sucks...
                     isAnotherTable = False
                     self.log.debug("***ok exit, but it could be better...")
@@ -732,7 +731,7 @@ class OP2(BDF,
 
     def read_monitor(self):
         table_name = self.read_table_name(rewind=False)  # LAMA
-        self.table_init(table_name)
+        self._table_init(table_name)
         #print("tablename1 = %r" % table_name)
         #print("tablename2 = %r" % self.table_name)
 
@@ -1002,7 +1001,7 @@ class OP2(BDF,
         else:
             pass
 
-    def table_init(self, word):
+    def _table_init(self, word):
         """
         Starts a new table
         """

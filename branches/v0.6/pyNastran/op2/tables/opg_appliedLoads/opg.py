@@ -16,7 +16,7 @@ class OPG(object):
     def readTable_OPG(self):
         table3 = self.readTable_OPG_3
         table4Data = self.readOPG_Data
-        self.read_results_table(table3, table4Data)
+        self._read_results_table(table3, table4Data)
         self._delete_attributes_OPG()
 
     def _delete_attributes_OPG(self):

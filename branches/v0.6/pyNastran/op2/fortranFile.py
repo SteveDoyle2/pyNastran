@@ -73,10 +73,10 @@ class FortranFile(object):
             raise SyntaxError("Invalid Marker: %s" % msg)
 
         #if ints[1]==2:  # buffer???
-        #    ints = self.read_full_int_block()
-        #    print("bufferInts1=%s" % (ints))
-        #    ints = self.read_full_int_block()
-        #    print("bufferInts2=%s" % (ints))
+            #ints = self.read_full_int_block()
+            #print("bufferInts1=%s" % (ints))
+            #ints = self.read_full_int_block()
+            #print("bufferInts2=%s" % (ints))
         #print("marker=%s" % (ints[1]))
         if debug and self.make_op2_debug:
             self.op2_debug.write('read_header - [4,%s,4]\n' % ints[1])
@@ -628,7 +628,7 @@ class FortranFile(object):
         .. todo:: fix bugs
         """
         table_name = self.read_table_name(rewind=False)  # GEOM1
-        self.table_init(table_name)
+        self._table_init(table_name)
         self.log.debug("skippingTable |%s|" % table_name)
         self.log.debug("self.n = %s" % self.n)
 

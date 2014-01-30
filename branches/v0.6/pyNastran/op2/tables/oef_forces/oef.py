@@ -30,7 +30,7 @@ class OEF(ThermalElements, RealForces, ComplexForces):
     def readTable_OEF(self):
         table3 = self.readTable_OEF_3
         table4Data = self.readOEF_Data
-        self.read_results_table(table3, table4Data)
+        self._read_results_table(table3, table4Data)
         self._delete_attributes_OEF()
 
     def _delete_attributes_OEF(self):

@@ -311,7 +311,7 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
     def readTable_OES(self):
         table3 = self.readTable_OES_3
         table4Data = self.readTable_OES_4_Data
-        self.read_results_table(table3, table4Data, flag=1)  # flag=1 defines old style
+        self._read_results_table(table3, table4Data, flag=1)  # flag=1 defines old style
         self._delete_attributes_OES()
 
     def _delete_attributes_OES(self):

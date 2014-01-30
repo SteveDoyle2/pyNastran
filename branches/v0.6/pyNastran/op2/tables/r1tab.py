@@ -12,7 +12,7 @@ class R1TAB(object):
 
     def readTable_R1TAB(self):
         table_name = self.read_table_name(rewind=False)  # R1TAB
-        self.table_init(table_name)
+        self._table_init(table_name)
         #print "table_name = |%r|" %(table_name)
 
         self.read_markers([-1, 7], 'R1TAB')

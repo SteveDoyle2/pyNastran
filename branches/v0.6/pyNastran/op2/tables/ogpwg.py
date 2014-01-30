@@ -19,7 +19,7 @@ class OGPWG(object):
         .. note:: assumes self.iTableMap has already been set
         """
         table_name = self.read_table_name(rewind=False)  # GEOM1
-        self.table_init(table_name)
+        self._table_init(table_name)
 
         #print "*table_name = |%r|" %(table_name)
 

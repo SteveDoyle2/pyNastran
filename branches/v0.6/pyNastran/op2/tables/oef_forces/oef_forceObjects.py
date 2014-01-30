@@ -193,7 +193,7 @@ class RealCBeamForce(scalarObject):  # 2-CBEAM
 
         for d in data:
             (eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq,) = d
-            print('eid, nid, sd', eid, nid, sd)
+            #print('eid, nid, sd', eid, nid, sd)
             if eid in self.nodes:
                 #if sd in self.nodes[eid]:
                 self.nodes[eid][sd] = nid

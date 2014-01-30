@@ -686,7 +686,8 @@ class OP2(BDF,
         :param zero: a dummy integer (???)
         :param one:  a dummy integer (???)
         """
-        self.date = (month, day, 2000 + year)
+        month, day, year = self._set_op2_date(month, day, year)
+
         #print "%s/%s/%4i" % self.date
         if self.debug:
             self.binary_debug.write('  [subtable_name, month=%i, day=%i, year=%i, zero=%i, one=%i]\n\n' % (month, day, year, zero, one))

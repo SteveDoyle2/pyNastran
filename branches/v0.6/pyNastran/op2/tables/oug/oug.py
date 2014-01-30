@@ -34,7 +34,7 @@ class OUG(object):
         #self.table_name = 'OUG'
         table3 = self.read_table_OUG2_3
         table4_data = self.read_OUG2_data
-        self.read_results_table(table3, table4_data)
+        self._read_results_table(table3, table4_data)
         self._delete_attributes_OUG()
 
         sys.exit('stopping...')
@@ -114,7 +114,7 @@ class OUG(object):
         #self.table_name = 'OUG'
         table3 = self.read_table_OUG_3
         table4_data = self.read_OUG_data
-        self.read_results_table(table3, table4_data)
+        self._read_results_table(table3, table4_data)
         self._delete_attributes_OUG()
 
     def _delete_attributes_OUG(self):

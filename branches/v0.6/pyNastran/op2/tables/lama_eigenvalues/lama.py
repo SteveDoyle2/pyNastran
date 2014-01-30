@@ -11,7 +11,7 @@ class LAMA(object):
 
     def readTable_LAMA(self):
         table_name = self.read_table_name(rewind=False)  # LAMA
-        self.table_init(table_name)
+        self._table_init(table_name)
         #print "tablename1 = |%r|" %(table_name)
         #print "tablename2 = |%r|" %(self.table_name)
 

@@ -30,7 +30,7 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
             self.iTableMap = {}
 
         table_name = self.read_table_name(rewind=False)  # GEOM1
-        self.table_init(table_name)
+        self._table_init(table_name)
 
         #print "*table_name = |%r|" %(table_name)
 
@@ -164,7 +164,7 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
         #self.readRecordTable('PCOMPTS')
 
         table_name = self.read_table_name(rewind=False)  # PCOMP
-        self.table_init(table_name)
+        self._table_init(table_name)
         self.read_markers([-1, 7])
         ints = self.read_int_block()  # ??? ints
         #print(ints)
@@ -207,7 +207,7 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
 
     def readTable_SDF(self):
         table_name = self.read_table_name(rewind=False)  # SDF
-        self.table_init(table_name)
+        self._table_init(table_name)
         self.read_markers([-1, 7])
         ints = self.read_int_block()  # ??? ints
         #print ints
@@ -244,7 +244,7 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
     def readTable_CASECC(self):
         table_name = self.read_table_name(rewind=False)  # CASECC
         #print '*table_name = ',table_name
-        self.table_init(table_name)
+        self._table_init(table_name)
         self.read_markers([-1, 7])
         data = self.get_data(4)
         buffer_size, = unpack('i', data)
@@ -285,7 +285,7 @@ class GeometryTables(Geometry1, Geometry2, Geometry3, Geometry4, EPT, MPT, DIT,
     def readTable_OMM2(self):
         #-------------------------------------------
         table_name = self.read_table_name(rewind=False)  # PCOMP
-        self.table_init(table_name)
+        self._table_init(table_name)
         self.read_markers([-1, 7])
         ints = self.read_int_block()  # ??? ints
         #print ints

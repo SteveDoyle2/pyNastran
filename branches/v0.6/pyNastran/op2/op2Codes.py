@@ -647,3 +647,7 @@ class Op2Codes(object):
         if self.stress_bits[1] == 0:
             return True
         return False
+
+    def _set_op2_date(self, month, day, year):
+        self.date = (month, day, 2000 + year)
+        return self.date

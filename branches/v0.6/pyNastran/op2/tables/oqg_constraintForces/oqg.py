@@ -13,7 +13,7 @@ class OQG(object):
     def readTable_OQG(self):
         table3 = self.readTable_OQG_3
         table4Data = self.readOQG_Data
-        self.read_results_table(table3, table4Data)
+        self._read_results_table(table3, table4Data)
         self._delete_attributes_OQG()
 
     def _delete_attributes_OQG(self):
