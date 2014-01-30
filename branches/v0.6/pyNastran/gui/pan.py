@@ -27,6 +27,7 @@ def getScreenCorner(x, y):
 
 class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO, TetgenIO, Usm3dIO, Plot3d_io):
     def __init__(self, *args, **kwargs):
+
         self.grid = vtk.vtkUnstructuredGrid()
         #gridResult = vtk.vtkFloatArray()
         #self.emptyResult = vtk.vtkFloatArray()
@@ -450,7 +451,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO, TetgenIO, U
             #gridResult.Reset()
             gridResult = vtk.vtkFloatArray()
             emptyResult = vtk.vtkFloatArray()
-        
+
             try:
                 key = self.caseKeys[self.iCase]
             except:

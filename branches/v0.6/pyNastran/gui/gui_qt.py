@@ -37,6 +37,7 @@ from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_
 from pyNastran.gui.arg_handling import get_inputs
 
 pkg_path = pyNastran.__path__[0]
+script_path = os.path.join(pkg_path, 'gui', 'scripts')
 icon_path = os.path.join(pkg_path, 'gui', 'icons')
 
 #### tcolorpick.png and tabout.png trefresh.png icons on LGPL license, see
@@ -64,6 +65,12 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
 
         settings = QtCore.QSettings()
 
+        self.Title = None
+        self.min_value = None
+        self.max_value = None
+        self.blue_to_red = False
+        self.nvalues = 9
+
         #-------------
         # inputs dict
         self.is_edges = inputs['is_edges']
@@ -74,6 +81,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         format = inputs['format']  # the active format loaded into the gui
         input = inputs['input']
         output = inputs['output']
+        script = inputs['script']
 
         #self.format = ''
         debug = inputs['debug']
@@ -157,6 +165,9 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         #for shot in shots:
             self.on_take_screenshot(shots)
             sys.exit('took screenshot %r' % shots)
+
+        if script:
+            self.on_run_script(script)
 
     def on_cell_picker(self):
         worldPosition = self.cell_picker.GetPickPosition()
@@ -337,7 +348,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         #quit_key = 'Alt+F4' if sys.platform in ['win32', 'cygwin'] else 'Ctrl+Q'
 
         checkables = ['show_info', 'show_debug', 'show_gui', 'show_command']
-        for (nam, txt, icon, shortcut, tip, func) in [
+        tools = [
           ('exit', '&Exit', os.path.join(icon_path, 'texit.png'), 'Ctrl+Q', 'Exit application', QtGui.qApp.quit),
           ('load_geometry', 'Load &Geometry', os.path.join(icon_path, 'load_geometry.png'), 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),  ## @todo no picture...
           ('load_results', 'Load &Results',   os.path.join(icon_path, 'load_results.png'), 'Ctrl+R', 'Loads a results file', self.on_load_results),  ## @todo no picture...
@@ -374,7 +385,10 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
 
           ('X', 'Flips to -X Axis', os.path.join(icon_path, 'minus_x.png'), 'X', 'Flips to -X Axis', lambda: self.update_camera('-x')),
           ('Y', 'Flips to -Y Axis', os.path.join(icon_path, 'minus_y.png'), 'Y', 'Flips to -Y Axis', lambda: self.update_camera('-y')),
-          ('Z', 'Flips to -Z Axis', os.path.join(icon_path, 'minus_z.png'), 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')), ]:
+          ('Z', 'Flips to -Z Axis', os.path.join(icon_path, 'minus_z.png'), 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
+          ('script', 'Run Python script', os.path.join(icon_path, 'python.png'), None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
+        ]
+        for (nam, txt, icon, shortcut, tip, func) in tools:
             #print "name=%s txt=%s icon=%s short=%s tip=%s func=%s" % (nam, txt, icon, short, tip, func)
             #if icon is None:
                 #print "missing_icon = %r!!!" % nam
@@ -413,7 +427,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
 
 
         # populate menus and toolbar
-        for menu, items in [(self.menu_file, ('load_geometry', 'load_results', '', 'exit')),
+        for menu, items in [(self.menu_file, ('load_geometry', 'load_results', 'script', '', 'exit')),
                            (self.menu_view,  ('scshot', '', 'wireframe', 'surface', 'creset', '', 'back_col', '', 'show_info', 'show_debug', 'show_gui', 'show_command')),
                            (self.menu_window,('toolbar', 'reswidget', 'logwidget' )),
                            (self.menu_help,  ('about',)),
@@ -471,6 +485,21 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         else:
             prop = self.edgeActor.GetProperty()
             prop.EdgeVisibilityOff()
+
+    def on_run_script(self, python_file=False):
+        if python_file in [None, False]:
+            Title = 'Choose a Python Script to Run'
+            wildcard = "Python (*.py)"
+            wildcard_index, infile_name = self._create_load_file_dialog(wildcard, Title)
+            #print("infile_name = %r" % infile_name)
+            #print("wildcard_index = %r" % wildcard_index)
+            if not script_filename:
+                is_failed = True
+                return is_failed # user clicked cancel
+
+            python_file = os.path.join(script_path, infile_name)
+        execfile(python_file)
+        self.log_command('self.on_run_script(%r)' % python_file)
 
     def on_show_info(self):
         self.show_info = not(self.show_info)
@@ -1193,6 +1222,23 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         #print "next key = ",key
         return foundCases
 
+    def on_update_scalar_bar(Title, min_value, max_value, data_format):
+        self.Title = str(Title)
+        self.min_value = float(min_value)
+        self.max_value = float(max_value)
+        try:
+            data_format % 1
+        except:
+            self.log_error("failed applying the data formatter format=%r and should be of the form: '%i', '%8f', '%.2f', '%e', etc.")
+            return
+        self.data_format = data_format
+        self.log_command('on_update_scalar_bar(%r, %r, %r')
+
+    def _is_int_result(self, data_format):
+        if 'i' in data_format:
+            return True
+        return False
+
     def UpdateScalarBar(self, Title, min_value, max_value, norm_value, data_format):
         """
         :param Title the:   scalar bar title
@@ -1202,6 +1248,16 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         """
         print("UpdateScalarBar min=%s max=%s norm=%s" % (min_value, max_value, norm_value))
         self.colorFunction.RemoveAllPoints()
+
+        if self.Title is not None:
+            Title = self.Title
+        #if self.min_value is not None:
+            #min_value = self.min_value
+        #if self.max_value is not None:
+            #max_value = self.max_value
+        #if not self.blue_to_red:
+            #min_value, max_value = max_value, min_value
+
         self.colorFunction.AddRGBPoint(min_value, 0.0, 0.0, 1.0)  # blue
         self.colorFunction.AddRGBPoint(max_value, 1.0, 0.0, 0.0)  # red
         #self.scalarBar.SetLookupTable(self.colorFunction)
@@ -1213,6 +1269,11 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         if (Title in ['Element_ID', 'Eids', 'Region'] and norm_value < 11):
             nvalues = int(max_value - min_value) + 1
             #print "need to adjust axes...max_value=%s" % max_value
+
+        if self.nvalues is not None:
+            if not self._is_int_result(data_format):  # don't change nvalues for int results
+                nvalues = self.nvalues
+
         #if data_format=='%.0f' and maxValue>
 
         self.scalarBar.SetNumberOfLabels(nvalues)
