@@ -333,9 +333,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         months = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
                   'JULY', 'AUGUST' 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER']
         assert month in months, 'month=%r' % month
-        print("month =", month)
         month = months.index(month) + 1
-        print("imonth =", month)
         day = int(day)
         year = int(year)
         self.date = (month, day, year)
