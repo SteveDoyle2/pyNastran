@@ -141,7 +141,7 @@ class OEF(OP2Common):
             imag = None
         return (real, imag)
 
-    def read_oef1_3(self, data):
+    def _read_oef1_3(self, data):
         self.words = ['aCode',       'tCode',    'element_type', 'isubcase',
                  '???',         '???',      '???',          '???',
                  'format_code', 'num_wide', 'o_code',       '???',
@@ -233,15 +233,15 @@ class OEF(OP2Common):
             self.binary_debug.write('  tCode    = %r\n' % self.tCode)
             self.binary_debug.write('  isubcase = %r\n' % self.isubcase)
 
-        self.read_title(data)
+        self._read_title(data)
         if self.element_type not in self.element_mapper:
             raise NotImplementedError(self.element_type)
-        self.write_debug_bits()
+        self._write_debug_bits()
 
-    def read_oef2_3(self, data):
+    def _read_oef2_3(self, data):
         pass
 
-    def read_oef1_4(self, data):
+    def _read_oef1_4(self, data):
         if self.thermal == 0:
             self._read_oef1_loads(data)
         elif self.thermal == 1:
@@ -678,7 +678,7 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
                     n += ntotal
             elif self.num_wide == 17:
-                self.create_transient_object(self.plateForces, CopmplexPlateForce)  # undefined
+                self.create_transient_object(self.plateForces, ComplexPlateForce)  # undefined
                 format1 = b'i16f'
                 s = Struct(format1)
 
@@ -968,5 +968,5 @@ class OEF(OP2Common):
         assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
         assert n > 0, n
 
-    def read_oef2_4(self, data):
+    def _read_oef2_4(self, data):
         pass

@@ -12,13 +12,46 @@ class OP2Common(Op2Codes, F06Writer):
     def __init__(self):
         Op2Codes.__init__(self)
         F06Writer.__init__(self)
+        #: the storage dictionary that is passed to OP2 objects (e.g. DisplacementObject)
+        #: the key-value pairs are extracted and used to generate dynamic self
+        #: variables for the OP2 objects
         self.data_code = {'log': self.log,}
-        self.ID = None  # the corresponding piece to isubcase
+
+        #: current subcase ID
+        #: non-transient (SOL101) cases have isubcase set to None
+        #: transient (or frequency/modal) cases have isubcase set to a int/float value
         self.isubcase = None
-        self.binary_debug = None
+
+        #: the corresponding piece to isubcase
+        #: used only for SORT2 (not supported)
+        self.ID = None
+
+        #: should the op2 debugging file be written
         self.debug = False
+
+        #: op2 debug file or None (for self.debug=False)
+        self.binary_debug = None
+
+        #: the list of "words" on a subtable 3
         self.words = []
+
+        #: The current table_name (e.g. OES1)
+        #: None indicates no table_name has been read
         self.table_name = None
+
+        # the date stamp used in the F06
+        self.date = (1, 1, 2000)
+
+        #: set of all the subcases that have been found
+        self.subcases = set()
+
+        #: the list/set/tuple of times/modes/frequencies that should be read
+        #: currently unused
+        self.expected_times = None
+
+        #: None -> all tables are read
+        #: list/set/tuple : ['OES1'] -> only the specified tables ar read
+        self.tables_to_read = None
 
         self.show_table3_map = [
             #'OUGV1',
@@ -341,7 +374,7 @@ class OP2Common(Op2Codes, F06Writer):
         self.nonlinear_factor = None
         self.data_code['nonlinear_factor'] = None
 
-    def read_title(self, data):
+    def _read_title(self, data):
         assert len(data) == 584, len(data)
         Title, subtitle, label = unpack(b'128s128s128s', data[200:])  # titleSubtitleLabel
 
@@ -366,7 +399,7 @@ class OP2Common(Op2Codes, F06Writer):
         else:
             raise  RuntimeError('isubcase is not defined')
 
-    def write_debug_bits(self):
+    def _write_debug_bits(self):
         if self.debug:
             msg = ''
             for i, param in enumerate(self.words):
@@ -385,7 +418,7 @@ class OP2Common(Op2Codes, F06Writer):
                     self.binary_debug.write('  format_code  = %i\n' % self.format_code)
             self.binary_debug.write('  recordi = [%s]\n\n' % msg)
 
-    def read_table(self, data, result_name, real_obj, complex_obj, node_elem):
+    def _read_table(self, data, result_name, real_obj, complex_obj, node_elem):
         assert isinstance(result_name, dict), 'result_name=%r' % result_name
         #assert real_obj is None
         #assert complex_obj is None
@@ -395,20 +428,20 @@ class OP2Common(Op2Codes, F06Writer):
             # real_obj
             assert real_obj is not None
             self.create_transient_object(result_name, real_obj)
-            self.read_real_table(data, result_name, node_elem)
+            self._read_real_table(data, result_name, node_elem)
         elif self.num_wide == 14:  # real/imaginary or mag/phase
             # complex_obj
             assert complex_obj is not None
             self.create_transient_object(result_name, complex_obj)
-            self.read_complex_table(data, result_name, node_elem)
+            self._read_complex_table(data, result_name, node_elem)
         else:
             msg = 'only num_wide=8 or 14 is allowed  num_wide=%s' % self.num_wide
             self.not_implemented_or_skip(msg)
 
-    def read_real_table(self, data, result_name, flag):
+    def _read_real_table(self, data, result_name, flag):
         #return
         if self.debug4():
-            self.binary_debug.write('  read_real_table\n')
+            self.binary_debug.write('  _read_real_table\n')
         assert flag in ['node', 'elem'], flag
         dt = self.nonlinear_factor
         format1 = '2i6f' # 8
@@ -435,10 +468,10 @@ class OP2Common(Op2Codes, F06Writer):
             self.obj.add(dt, data_in)
             n += ntotal
 
-    def read_complex_table(self, data, result_name, flag):
+    def _read_complex_table(self, data, result_name, flag):
         #return
         if self.debug4():
-            self.binary_debug.write('  read_complex_table\n')
+            self.binary_debug.write('  _read_complex_table\n')
         assert flag in ['node', 'elem'], flag
         dt = self.nonlinear_factor
 

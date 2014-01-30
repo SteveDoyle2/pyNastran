@@ -33,8 +33,8 @@ class OGPWG(OP2Common):
             self.binary_debug.write('  tCode    = %r\n' % self.tCode)
             self.binary_debug.write('  isubcase = %r\n' % self.isubcase)
 
-        self.read_title(data)
-        self.write_debug_bits()
+        self._read_title(data)
+        self._write_debug_bits()
 
     def _read_ogpwg_4(self, data):
         """

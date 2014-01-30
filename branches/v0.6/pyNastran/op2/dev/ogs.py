@@ -86,18 +86,18 @@ class OGS(OP2Common):
             self.binary_debug.write('  aCode    = %r\n' % self.aCode)
             self.binary_debug.write('  tCode    = %r\n' % self.tCode)
             self.binary_debug.write('  isubcase = %r\n' % self.isubcase)
-        self.read_title(data)
-        self.write_debug_bits()
+        self._read_title(data)
+        self._write_debug_bits()
 
     def _read_ogs1_4(self, data):
         if self.table_code == 26:  # OGS1 - grid point stresses - surface
             assert self.table_name in ['OGS1'], 'table_name=%s table_code=%s' % (
                 self.table_name, self.table_code)
-            self._read_og1s_table26(data)
+            self._read_ogs1_table26(data)
         elif self.table_code == 27:  # OGS1 - grid point stresses - volume direct
             assert self.table_name in ['OGS1'], 'table_name=%s table_code=%s' % (
                 self.table_name, self.table_code)
-            self._read_og1s_table27(data)
+            self._read_ogs1_table27(data)
         #elif self.table_code == 28:  # OGS1- grid point stresses - principal
             #assert self.table_name in ['OGS1'],'table_name=%s table_code=%s' %(self.table_name,self.table_code)
             #self.readOGS1_Data_table28(data)
@@ -108,16 +108,16 @@ class OGS(OP2Common):
         else:
             raise NotImplementedError()
 
-    def _read_og1s_table26(self, data):
+    def _read_ogs1_table26(self, data):
         resultName = 'gridPointStresses'
         if self.num_wide == 11:  # real/random
             #self.create_transient_object(self.gridPointStresses, GridPointStressesObject)
-            self.readOGS1_table26_numWide11(data)
+            self._readOGS1_table26_numWide11(data)
         else:
-            msg = 'only num_wide=11 is allowed  num_wide=%s' % (self.num_wide)
+            msg = 'only num_wide=11 is allowed  num_wide=%s' % self.num_wide
             raise RuntimeError(msg)
 
-    def readOGS1_table26_numWide11(self, data):  # surface stresses
+    def _readOGS1_table26_numWide11(self, data):  # surface stresses
         #dt = self.nonlinear_factor
         format1 = b'2i4s8f'
         s = Struct(format1)
@@ -135,17 +135,17 @@ class OGS(OP2Common):
             #self.obj.add(dt, nid, eid, fiber, nx, ny, txy,
             #             angle, major, minor, tmax, ovm)
 
-    def _read_og1s_table27(self, data):  # OGS1 - grid point stresses - volume direct
+    def _read_ogs1_table27(self, data):  # OGS1 - grid point stresses - volume direct
         #is_sort1 = self.is_sort1()
         if self.num_wide == 9:  # real/random
             resultName = 'gridPointVolumeStresses'
             #self.create_transient_object(self.gridPointVolumeStresses, GridPointStressesVolumeObject)
-            self.readOGS1_table27_numWide9(data)
+            self._readOGS1_table27_numWide9(data)
         else:
             msg = 'only num_wide=9 is allowed  num_wide=%s' % self.num_wide
             raise RuntimeError(msg)
 
-    def readOGS1_table27_numWide9(self, data):  # surface stresses
+    def _readOGS1_table27_numWide9(self, data):  # surface stresses
         format1 = b'2i7f'
         s = Struct(format1)
 

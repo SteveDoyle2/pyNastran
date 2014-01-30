@@ -33,7 +33,7 @@ class OUG(OP2Common):
         OP2Common.__init__(self)
 
 
-    def read_oug1_3(self, data):
+    def _read_oug1_3(self, data):
         three = self.parse_approach_code(data)
         self.words = [
             'aCode',       'tCode',    '???',           'isubcase',
@@ -123,10 +123,10 @@ class OUG(OP2Common):
             self.binary_debug.write('  aCode    = %r\n' % self.aCode)
             self.binary_debug.write('  tCode    = %r\n' % self.tCode)
             self.binary_debug.write('  isubcase = %r\n' % self.isubcase)
-        self.read_title(data)
-        self.write_debug_bits()
+        self._read_title(data)
+        self._write_debug_bits()
 
-    def read_oug1_4(self, data):
+    def _read_oug1_4(self, data):
         if self.table_code == 1:   # Displacements
             assert self.table_name in ['OUG1', 'BOUGV1', 'OUGV1', 'OUPV1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             self.read_displacement(data)
@@ -147,13 +147,13 @@ class OUG(OP2Common):
             complex_obj = ComplexDisplacementObject
             result_name = 'displacements'
             storage_obj = self.displacements
-            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         elif self.thermal == 1:
             real_obj = TemperatureObject
             complex_obj = None
             result_name = 'temperatures'
             storage_obj = self.temperatures
-            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         else:
             self.not_implemented_or_skip('bad thermal=%r table' % self.thermal)
         #else:
@@ -168,11 +168,11 @@ class OUG(OP2Common):
         if self.thermal == 0:
             real_obj = VelocityObject
             complex_obj = ComplexVelocityObject
-            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         elif self.thermal == 1:
             real_obj = ThermalVelocityVectorObject
             complex_obj = None
-            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         else:
             raise NotImplementedError(self.thermal)
 
@@ -185,11 +185,11 @@ class OUG(OP2Common):
         if self.thermal == 0:
             real_obj = AccelerationObject
             complex_obj = ComplexAccelerationObject
-            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         elif self.thermal == 1:
             real_obj = None
             complex_obj = None
-            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         else:
             raise NotImplementedError(self.thermal)
 
@@ -202,10 +202,10 @@ class OUG(OP2Common):
         if self.thermal == 0:
             real_obj = EigenVectorObject
             complex_obj = ComplexEigenVectorObject
-            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         elif self.thermal == 1:
             real_obj = None
             complex_obj = None
-            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         else:
             raise NotImplementedError(self.thermal)

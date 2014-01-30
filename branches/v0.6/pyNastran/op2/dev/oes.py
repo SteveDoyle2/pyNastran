@@ -34,7 +34,7 @@ class OES(OP2Common):
     def __init__(self):
         OP2Common.__init__(self)
 
-    def read_oes1_3(self, data):
+    def _read_oes1_3(self, data):
         """
         reads OES1 subtable 3
         """
@@ -138,14 +138,14 @@ class OES(OP2Common):
             self.binary_debug.write('  tCode    = %r\n' % self.tCode)
             self.binary_debug.write('  isubcase = %r\n' % self.isubcase)
 
-        self.read_title(data)
+        self._read_title(data)
         if self.element_type not in self.element_mapper:
             raise NotImplementedError(self.element_type)
 
-        self.write_debug_bits()
-        self.parse_stress_code()
+        self._write_debug_bits()
+        self._parse_stress_code()
 
-    def parse_stress_code(self):
+    def _parse_stress_code(self):
         """
         s_code =  0 -> stress_bits = [0,0,0,0,0]
         s_code =  1 -> stress_bits = [0,0,0,0,1]
@@ -174,7 +174,7 @@ class OES(OP2Common):
         self.stress_bits = bits
         self.data_code['stress_bits'] = self.stress_bits
 
-    def read_oes1_4(self, data):
+    def _read_oes1_4(self, data):
         #assert self.isubtable == -4, self.isubtable
         #if self.debug:
             #self.binary_debug.write('  element_name = %r\n' % self.element_name)
@@ -193,20 +193,20 @@ class OES(OP2Common):
         """
         assert self.is_sort1() == True
         if self.thermal == 0:
-            self.read_oes_loads(data)
+            self._read_oes_loads(data)
         elif self.thermal == 1:
-            self.read_oes_thermal(data)
+            self._read_oes_thermal(data)
         else:
             raise NotImplementedError(self.thermal)
 
-    def read_oes_thermal(self, data):
+    def _read_oes_thermal(self, data):
         """
         reads OES self.thermal=1 tables
         """
         n = 0
         data
 
-    def read_oes_loads(self, data):
+    def _read_oes_loads(self, data):
         """
         reads OES self.thermal=0 stress/strain
         """
@@ -448,9 +448,10 @@ class OES(OP2Common):
                 raise NotImplementedError(self.num_wide)
 
         elif self.element_type in [39, 67, 68]: # solid stress
+            # 39-CTETRA
             # 67-CHEXA
+            # 68-CPENTA
             #return
-
             if self.element_type == 39: # CTETRA
                 nnodes_expected = 5  # 1 centroid + 4 corner points
             elif self.element_type == 67:  # CHEXA
@@ -499,18 +500,18 @@ class OES(OP2Common):
                             #self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (eid, nodeID, ', '.join(['%r' % di for di in out]) ))
 
                         if grid_device == 0:
-                            grid = 'C'
+                            grid = 'CENTER'
                         else:
                             #grid = (grid_device - device_code) // 10
                             grid = grid_device
 
-                        #print("%s eid=%s cid=%s grid=%s sxx=%-6i txy=%-5i s1=%-6i a1=%i a2=%i a3=%i press=%i vm=%s" % (element_type,eid,cid,grid,sxx,sxy,s1,a1,a2,a3,pressure,svm))
-                        #print("%s eid=%s cid=%s grid=%s syy=%-6i tyz=%-5i s2=%-6i b1=%i b2=%i b3=%i"                % (element_type,eid,cid,grid,syy,syz,s2,b1,b2,b3))
-                        #print("%s eid=%s cid=%s grid=%s szz=%-6i txz=%-5i s3=%-6i c1=%i c2=%i c3=%i"                % (element_type,eid,cid,grid,szz,sxz,s3,c1,c2,c3))
+                        #print("%s eid=%s cid=%s grid=%s sxx=%-6i txy=%-5i s1=%-6i a1=%i a2=%i a3=%i press=%i vm=%s" % (element_type, eid, cid, grid, sxx, sxy, s1, a1, a2, a3, pressure,svm))
+                        #print("%s eid=%s cid=%s grid=%s syy=%-6i tyz=%-5i s2=%-6i b1=%i b2=%i b3=%i"                % (element_type, eid, cid, grid, syy, syz, s2, b1, b2, b3))
+                        #print("%s eid=%s cid=%s grid=%s szz=%-6i txz=%-5i s3=%-6i c1=%i c2=%i c3=%i"                % (element_type, eid, cid, grid, szz, sxz, s3, c1, c2, c3))
                         #print("")
 
-                        #smax = max(s1,s2,s3)
-                        #smin = min(s1,s2,s3)
+                        #smax = max(s1, s2, s3)
+                        #smin = min(s1, s2, s3)
 
                         aCos = [a1, a2, a3]
                         bCos = [b1, b2, b3]
@@ -522,8 +523,7 @@ class OES(OP2Common):
                             self.obj.add(dt, eid, grid,
                                          sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
                         n += 84
-                    #n += ntotal
-                    #print "eid =", eid
+
             elif self.num_wide == numwide_imag:
                 if self.isStress():
                     self.create_transient_object(self.solidStress, ComplexSolidStressObject)
@@ -550,7 +550,7 @@ class OES(OP2Common):
                         (grid, exr, eyr, ezr, etxyr, etyzr, etzxr,
                                exi, eyi, ezi, etxyi, etyzi, etzxi) = out
                         if grid == 0:
-                            grid = 'C'
+                            grid = 'CENTER'
 
                         if is_magnitude_phase:
                             ex = polar_to_real_imag(exr, exi)
@@ -570,7 +570,6 @@ class OES(OP2Common):
                         if self.debug4():
                             self.binary_debug.write('       node%s=[%s]\n' % (grid, ', '.join(['%r' % di for di in out])))
                         self.obj.add(dt, eid, grid, ex, ey, ez, etxy, etyz, etzx)
-                    #self.obj.add()
             else:
                 raise NotImplementedError(self.num_wide)
 
@@ -593,8 +592,6 @@ class OES(OP2Common):
                 for i in xrange(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
-                    #if self.debug4():
-                        #self.binary_debug.write('CQUAD4-33A - %s\n' % (str(out)))
 
                     (eid_device, fd1, sx1, sy1, txy1, angle1, major1, minor1, max_shear1,
                                  fd2, sx2, sy2, txy2, angle2, major2, minor2, max_shear2) = out
@@ -605,7 +602,7 @@ class OES(OP2Common):
 
                     #print "eid=%i grid=%s fd1=%-3.1f sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,'C',fd1,sx1,sy1,txy1,angle1,major1,minor1,maxShear1)
                     #print   "             fd2=%-3.1f sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"       % (fd2,sx2,sy2,txy2,angle2,major2,minor2,maxShear2)
-                    #print "nNodes = ",nNodes
+                    #print "nNodes = ", nNodes
                     self.obj.add_new_eid('CQUAD4', dt, eid, 'CEN/4', fd1, sx1, sy1,
                                        txy1, angle1, major1, minor1, max_shear1)
                     self.obj.add(dt, eid, 'CEN/4', fd2, sx2, sy2, txy2,
@@ -631,7 +628,7 @@ class OES(OP2Common):
 
                     eid = (eid_device - self.device_code) // 10
                     if self.debug4():
-                        self.binary_debug.write('  eid=%i %s\n' % (eid, str(out)))
+                        self.binary_debug.write('  eid=%i C=%s\n' % (eid, str(out)))
 
                     if is_magnitude_phase:
                         sx1 = polar_to_real_imag(sx1r, sx1i)
@@ -651,7 +648,7 @@ class OES(OP2Common):
                     #print "eid=%i grid=%s fd1=%-3.1f sx1=%s sy1=%s txy1=%s" %(eid,'C',fd1,sx1,sy1,txy1)
                     #print   "             fd2=%-3.1f sx2=%s sy2=%s txy2=%s\n"       %(fd2,sx2,sy2,txy2)
                     self.obj.add_new_eid('CQUAD4', dt, eid, 'C', fd1, sx1, sy1, txy1)
-                    self.obj.add(dt, eid, 'C', fd2, sx2, sy2, txy2)
+                    self.obj.add(dt, eid, 'CEN/4', fd2, sx2, sy2, txy2)
 
                     for node_id in xrange(nnodes):  # nodes pts
                         edata = data[n:n+60]  # 4*15=60

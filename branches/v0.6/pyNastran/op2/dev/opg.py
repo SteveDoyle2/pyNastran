@@ -120,7 +120,7 @@ class OPG(object):
             self.binary_debug.write('  tCode    = %r\n' % self.tCode)
             self.binary_debug.write('  isubcase = %r\n' % self.isubcase)
         self.read_title(data)
-        self.write_debug_bits()
+        self._write_debug_bits()
 
 
     def read_opg1_4(self, data):
@@ -144,13 +144,13 @@ class OPG(object):
             storage_obj = self.loadVectors
             real_obj = LoadVectorObject
             complex_obj = ComplexLoadVectorObject
-            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         elif self.thermal == 1:
             result_name = 'thermalLoadVectors'
             storage_obj = self.thermalLoadVectors
             real_obj = ThermalLoadVectorObject
             complex_obj = None
-            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         else:
             raise NotImplementedError(self.thermal)
 
@@ -163,7 +163,7 @@ class OPG(object):
             storage_obj = self.forceVectors
             real_obj = ForceVectorObject
             complex_obj = ComplexForceVectorObject
-            self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         #elif self.thermal == 1:
             #result_name = 'thermalForceVectors'
             #storage_obj = self.thermalForceVectors

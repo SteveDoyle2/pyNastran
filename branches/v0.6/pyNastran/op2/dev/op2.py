@@ -1,5 +1,7 @@
 #pylint: disable=C0301,C0103
-
+"""
+Defines the OP2 class.
+"""
 from struct import unpack
 from struct import error as StructError
 
@@ -24,7 +26,9 @@ from pyNastran.utils import is_binary
 
 class OP2(BDF,
           OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
-
+    """
+    Defines an interface for the Nastran OP2 file.
+    """
     def set_subcases(self, subcases=None):
         """
         Allows you to read only the subcases in the list of iSubcases
@@ -40,6 +44,7 @@ class OP2(BDF,
         else:
             #: should all the subcases be read (default=True)
             self.isAllSubcases = False
+
             #: the set of valid subcases -> set([1,2,3])
             self.valid_subcases = set(subcases)
         self.log.debug("set_subcases - subcases = %s" % self.valid_subcases)
@@ -58,6 +63,79 @@ class OP2(BDF,
             eTimes.sort()
             expected_times[isubcase] = array(eTimes)
         self.expected_times = expected_times
+
+    def set_result_types(self, result_types):
+        """
+        :param result_types: allows a user to reduce the amount of data that's extracted
+
+        Example
+        =======
+        op2 = OP2(op2_filename)
+        op2.set_result_types(['displacements', 'solidStress'])
+        """
+        table_mapper = {  # very incomplete list
+            "geometry" : [],  # includes materials/properties
+            "loads_constraints" : [],
+
+            'displacements' : ['OUG1', 'OUGV1', 'BOUGV1', 'OUPV1', ],
+            'velocities'    : ['OUG1', 'OUGV1', 'BOUGV1', 'OUPV1', ],
+            'accelerations' : ['OUG1', 'OUGV1', 'BOUGV1', 'OUPV1', ],
+            'eigenvectors'  : ['OUG1', 'OUGV1', 'BOUGV1', 'OUPV1', ],
+            'temperatures'  : ['OUG1', 'OUGV1', 'BOUGV1', 'OUPV1', ],
+
+            # applied loads
+            'appliedLoads' : ['OPG1', 'OPGV1', 'OPNL1', ],
+            'loadVectors' : ['OPG1', 'OPGV1', 'OPNL1', ],
+            'thermalLoadVectors' : ['OPG1', 'OPGV1', 'OPNL1', ],
+
+            'barStress'    : ['OES1X1', 'OES1', 'OES1X', 'OESNLXR', 'OESNLXD', 'OESNLBR', 'OESTRCP', 'OESNL1X', 'OESRT', ],
+            'rodStress'    : ['OES1X1', 'OES1', 'OES1X', 'OESNLXR', 'OESNLXD', 'OESNLBR', 'OESTRCP', 'OESNL1X', 'OESRT', ],
+            'beamStress'   : ['OES1X1', 'OES1', 'OES1X', 'OESNLXR', 'OESNLXD', 'OESNLBR', 'OESTRCP', 'OESNL1X', 'OESRT', ],
+            'solidStress'  : ['OES1X1', 'OES1', 'OES1X', 'OESNLXR', 'OESNLXD', 'OESNLBR', 'OESTRCP', 'OESNL1X', 'OESRT', ],
+            'plateStress'  : ['OES1X1', 'OES1', 'OES1X', 'OESNLXR', 'OESNLXD', 'OESNLBR', 'OESTRCP', 'OESNL1X', 'OESRT', ],
+            'shearStress'  : ['OES1X1', 'OES1', 'OES1X', 'OESNLXR', 'OESNLXD', 'OESNLBR', 'OESTRCP', 'OESNL1X', 'OESRT', ],
+            'compositePlateStress': ['OES1C', 'OESCP'],
+
+            'barStrain'    : ['OSTR1X'],
+            'rodStrain'    : ['OSTR1X'],
+            'beamStrain'   : ['OSTR1X'],
+            'solidStrain'  : ['OSTR1X'],
+            'plateStrain'  : ['OSTR1X'],
+            'shearStrain'  : ['OSTR1X'],
+            'compositePlateStrain': ['OSTR1C'],
+
+            'barForces'    : ['OEFIT', 'OEF1X', 'OEF1', 'DOEF1'],
+            'beamForces'   : ['OEFIT', 'OEF1X', 'OEF1', 'DOEF1'],
+            'rodForces'    : ['OEFIT', 'OEF1X', 'OEF1', 'DOEF1'],
+            'plateForces'  : ['OEFIT', 'OEF1X', 'OEF1', 'DOEF1'],
+            'bar100Forces' : ['OEFIT', 'OEF1X', 'OEF1', 'DOEF1'],
+            #'solidForces'  : ['OEFIT', 'OEF1X', 'OEF1', 'DOEF1'],
+
+            'grid_point_stresses' : ['OGS1'],
+
+            'grid_point_weight': ['OGPWG'],
+
+            'spcForces' : ['OQG1', 'OQGV1'],
+            'mpcForces' : ['OQMG1'],
+        }
+
+        table_names_set = set([])
+        for result_type in result_types:
+            if not hasattr(self, result_type):
+                raise RuntimeError('result_type=%r is invalid')
+            if not result_type in table_mapper:
+                raise NotImplementedError('result_type=%r is not supported by set_result_types')
+
+            itables = table_mapper[result_type]
+            for itable in itables:
+                table_names_set.add(itable)
+        self.set_tables_to_read(table_names_set)  # is this the right function name???
+
+    def set_tables_to_read(self, table_names):
+        """
+        :param table_names: list/set of tables as strings
+        """
+        self.tables_to_read = table_names
 
     def __init__(self, op2_filename, make_geom=False, debug=False, log=None):
         if op2_filename:
@@ -88,17 +166,17 @@ class OP2(BDF,
             #=======================
             # OEF
             # internal forces
-            'OEFIT' : [self.read_oef1_3, self.read_oef1_4],
-            'OEF1X' : [self.read_oef1_3, self.read_oef1_4],
-            'OEF1'  : [self.read_oef1_3, self.read_oef1_4],
-            'DOEF1' : [self.read_oef1_3, self.read_oef1_4],
+            'OEFIT' : [self._read_oef1_3, self._read_oef1_4],
+            'OEF1X' : [self._read_oef1_3, self._read_oef1_4],
+            'OEF1'  : [self._read_oef1_3, self._read_oef1_4],
+            'DOEF1' : [self._read_oef1_3, self._read_oef1_4],
             #=======================
             # OQG
             # spc forces
-            'OQG1'  : [self.read_oqg1_3, self.read_oqg1_4],
-            'OQGV1' : [self.read_oqg1_3, self.read_oqg1_4],
+            'OQG1'  : [self._read_oqg1_3, self._read_oqg1_4],
+            'OQGV1' : [self._read_oqg1_3, self._read_oqg1_4],
             # mpc forces
-            'OQMG1' : [self.read_oqg1_3, self.read_oqg1_4],
+            'OQMG1' : [self._read_oqg1_3, self._read_oqg1_4],
             #=======================
             # OPG
             # applied loads
@@ -109,28 +187,28 @@ class OP2(BDF,
             #=======================
             # OES
             # stress
-            'OES1X1'  : [self.read_oes1_3, self.read_oes1_4],
-            'OES1'    : [self.read_oes1_3, self.read_oes1_4],
-            'OES1X'   : [self.read_oes1_3, self.read_oes1_4],
-            'OES1C'   : [self.read_oes1_3, self.read_oes1_4],
-            'OESCP'   : [self.read_oes1_3, self.read_oes1_4],
-            'OESNLXR' : [self.read_oes1_3, self.read_oes1_4],
-            'OESNLXD' : [self.read_oes1_3, self.read_oes1_4],
-            'OESNLBR' : [self.read_oes1_3, self.read_oes1_4],
-            'OESTRCP' : [self.read_oes1_3, self.read_oes1_4],
-            'OESNL1X' : [self.read_oes1_3, self.read_oes1_4],
-            'OESRT'   : [self.read_oes1_3, self.read_oes1_4],
+            'OES1X1'  : [self._read_oes1_3, self._read_oes1_4],
+            'OES1'    : [self._read_oes1_3, self._read_oes1_4],
+            'OES1X'   : [self._read_oes1_3, self._read_oes1_4],
+            'OES1C'   : [self._read_oes1_3, self._read_oes1_4],
+            'OESCP'   : [self._read_oes1_3, self._read_oes1_4],
+            'OESNLXR' : [self._read_oes1_3, self._read_oes1_4],
+            'OESNLXD' : [self._read_oes1_3, self._read_oes1_4],
+            'OESNLBR' : [self._read_oes1_3, self._read_oes1_4],
+            'OESTRCP' : [self._read_oes1_3, self._read_oes1_4],
+            'OESNL1X' : [self._read_oes1_3, self._read_oes1_4],
+            'OESRT'   : [self._read_oes1_3, self._read_oes1_4],
             # strain
-            'OSTR1X'  : [self.read_oes1_3, self.read_oes1_4],
-            'OSTR1C'  : [self.read_oes1_3, self.read_oes1_4],
+            'OSTR1X'  : [self._read_oes1_3, self._read_oes1_4],
+            'OSTR1C'  : [self._read_oes1_3, self._read_oes1_4],
 
             #=======================
             # OUG
             # displacement/velocity/acceleration/eigenvector
-            'OUG1'   : [self.read_oug1_3, self.read_oug1_4],
-            'OUGV1'  : [self.read_oug1_3, self.read_oug1_4],
-            'BOUGV1' : [self.read_oug1_3, self.read_oug1_4],
-            'OUPV1'  : [self.read_oug1_3, self.read_oug1_4],
+            'OUG1'   : [self._read_oug1_3, self._read_oug1_4],
+            'OUGV1'  : [self._read_oug1_3, self._read_oug1_4],
+            'BOUGV1' : [self._read_oug1_3, self._read_oug1_4],
+            'OUPV1'  : [self._read_oug1_3, self._read_oug1_4],
 
             #=======================
             # OGPWG
@@ -147,6 +225,16 @@ class OP2(BDF,
         }
 
     def read_op2(self, op2_filename=None):
+        """
+        Starts the OP2 file reading
+        :param op2_filename: if a string is set, the filename specified in the
+            __init__ is overwritten.
+
+            init=None,  op2_filename=None   -> a dialog is popped up  (not implemented; crash)
+            init=fname, op2_filename=fname  -> fname is used
+            init=fname, op2_filename=fname2 -> fname2 is used
+            init=None,  op2_filename=fname  -> fname is used
+        """
         if op2_filename:
             self.op2_filename = op2_filename
         self.n = 0
@@ -162,7 +250,7 @@ class OP2(BDF,
             try:
                 self.f.read(4)
             except:
-                raise FatalError('The OP2 is empty.')
+                raise FatalError("The OP2 is empty.")
             raise
 
         if markers == [3,]:  # PARAM, POST, -2
@@ -186,14 +274,25 @@ class OP2(BDF,
         if table_name is None:
             raise FatalError('no tables exists...')
 
-        keep_going = True
+        table_names = self._read_tables(table_name)
+        if self.debug:
+            self.binary_debug.write('-' * 80 + '\n')
+            self.binary_debug.write('f.tell()=%s\ndone...\n' % self.f.tell())
+        return table_names
+
+    def _read_tables(self, table_name):
+        """
+        Reads all the geometry/result tables.
+        The OP2 header is not read by this function.
+        :param table_name: the first table's name
+        """
         table_names = []
         while table_name is not None:
             #print "----------------------------------"
             table_names.append(table_name)
 
             if self.debug:
-                print "**", table_name
+                self.log.debug("table_name = %r" % table_name)
                 self.binary_debug.write('-' * 80 + '\n')
                 self.binary_debug.write('table_name = %r; f.tell()=%s\n' % (table_name, self.f.tell()))
 
@@ -239,8 +338,8 @@ class OP2(BDF,
                 elif table_name in [
                                     # stress
                                     'OES1X1', 'OES1', 'OES1X', 'OES1C', 'OESCP',
-                                    'OESNLXR','OESNLXD','OESNLBR','OESTRCP',
-                                    'OESNL1X','OESRT',
+                                    'OESNLXR', 'OESNLXD', 'OESNLBR', 'OESTRCP',
+                                    'OESNL1X', 'OESRT',
                                     # strain
                                     'OSTR1X', 'OSTR1C',
                                     # forces
@@ -260,8 +359,8 @@ class OP2(BDF,
                                     'OGS1',
 
                                     # other
-                                    'OPNL1','OFMPF2M',
-                                    'OSMPF2M','OPMPF2M','OLMPF2M', 'OGPMPF2M',
+                                    'OPNL1', 'OFMPF2M',
+                                    'OSMPF2M', 'OPMPF2M', 'OLMPF2M', 'OGPMPF2M',
 
                                     'OAGPSD2', 'OAGCRM2', 'OAGRMS2', 'OAGATO2', 'OAGNO2',
                                     'OESPSD2', 'OESCRM2', 'OESRMS2', 'OESATO2', 'OESNO2',
@@ -269,9 +368,9 @@ class OP2(BDF,
                                     'OPGPSD2', 'OPGCRM2', 'OPGRMS2', 'OPGATO2', 'OPGNO2',
                                     'OQGPSD2', 'OQGCRM2', 'OQGRMS2', 'OQGATO2', 'OQGNO2',
                                     'OQMPSD2', 'OQMCRM2', 'OQMRMS2', 'OQMATO2', 'OQMNO2',
-                                    'OSTRPSD2','OSTRCRM2','OSTRRMS2','OSTRATO2','OSTRNO2',
                                     'OUGPSD2', 'OUGCRM2', 'OUGRMS2', 'OUGATO2', 'OUGNO2',
                                     'OVGPSD2', 'OVGCRM2', 'OVGRMS2', 'OVGATO2', 'OVGNO2',
+                                    'OSTRPSD2', 'OSTRCRM2', 'OSTRRMS2', 'OSTRATO2', 'OSTRNO2',
                                     'OCRUG',
                                     'OCRPG',
                                     'STDISP', 'FOL',
@@ -284,16 +383,13 @@ class OP2(BDF,
             #if table_name is None:
                 #self.show(100)
 
-        if self.debug:
-            self.binary_debug.write('-' * 80 + '\n')
-            self.binary_debug.write('f.tell()=%s\ndone...\n' % self.f.tell())
-
         #self.show_data(data)
         #print "----------------"
         #print "done..."
         return table_names
 
     def _skip_table(self, table_name):
+        """bypasses the next table as quickly as possible"""
         if table_name in ['DIT']:  # tables
             self._read_dit()
         elif table_name in ['PCOMPTS']:
@@ -302,6 +398,10 @@ class OP2(BDF,
             self._skip_table_helper()
 
     def _read_dit(self):
+        """
+        Reads the DIT table (poorly).
+        The DIT table stores information about table cards (e.g. TABLED1, TABLEM1).
+        """
         table_name = self.read_table_name(rewind=False)
         self.read_markers([-1])
         data = self._read_record()
@@ -344,6 +444,7 @@ class OP2(BDF,
     def _read_kelm(self):
         """
         ..todo:: this table follows a totally different pattern...
+        The KELM table stores information about the K matrix???
         """
         table_name = self.read_table_name(rewind=False)
         self.read_markers([-1])
@@ -446,6 +547,10 @@ class OP2(BDF,
         pass
 
     def _read_pcompts(self):
+        """
+        Reads the PCOMPTS table (poorly).
+        The PCOMPTS table stores information about the PCOMP cards???
+        """
         table_name = self.read_table_name(rewind=False)
 
         self.read_markers([-1])
@@ -476,6 +581,7 @@ class OP2(BDF,
         self.read_markers([0])
 
     def read_table_name(self, rewind=False, stop_on_failure=True):
+        """Reads the next OP2 table name (e.g. OUG1, OES1X1)"""
         ni = self.n
         if stop_on_failure:
             data = self._read_record(debug=False)
@@ -510,6 +616,10 @@ class OP2(BDF,
         return table_name
 
     def _skip_table_helper(self):
+        """
+        Skips the majority of geometry/result tables as they follow a very standard format.
+        Other tables don't follow this format.
+        """
         if self.debug:
             self.binary_debug.write('skipping table...\n')
         self.table_name = self.read_table_name(rewind=False)
@@ -521,6 +631,9 @@ class OP2(BDF,
         self._skip_subtables()
 
     def _read_geom_table(self):
+        """
+        Reads a geometry table
+        """
         self.table_name = self.read_table_name(rewind=False)
         self.read_markers([-1])
         data = self._read_record()
@@ -534,6 +647,9 @@ class OP2(BDF,
         self._read_subtables()
 
     def _read_results_table(self):
+        """
+        Reads a results table
+        """
         if self.debug:
             self.binary_debug.write('read_results_table\n')
         self.table_name = self.read_table_name(rewind=False)
@@ -558,6 +674,14 @@ class OP2(BDF,
         self._read_subtables()
 
     def _print_month(self, month, day, year, zero, one):
+        """
+        Creates the self.date attribute from the 2-digit year.
+        :param month: the month (integer <= 12)
+        :param day:  the day (integer <= 31)
+        :param year: the day (integer <= 99)
+        :param zero: a dummy integer (???)
+        :param one:  a dummy integer (???)
+        """
         self.date = (month, day, 2000 + year)
         #print "%s/%s/%4i" % self.date
         if self.debug:
@@ -566,6 +690,11 @@ class OP2(BDF,
         assert one == 1
 
     def finish(self):
+        """
+        Clears out the data members contained within the self.words variable.
+        This prevents mixups when working on the next table, but otherwise
+        has no effect.
+        """
         for word in self.words:
             if word != '???' and hasattr(self, word):
                 if word not in ['Title', 'reference_point']:
@@ -575,7 +704,7 @@ class OP2(BDF,
     def get_op2_stats(self):
         """
         Gets info about the contents of the different attributes of the
-        OP2 class
+        OP2 class.
         """
         table_types = [
             ## OUG - displacement
@@ -657,7 +786,6 @@ class OP2(BDF,
             'nonlinearGapStress',
             ## OES - CBUSH 226
             'nolinearBushStress',
-
         ]
 
         table_types += [
@@ -731,7 +859,7 @@ class OP2(BDF,
         for table_type in table_types:
             table = getattr(self, table_type)
             for isubcase, subcase in sorted(table.iteritems()):
-                if hasattr(subcase,'get_stats'):
+                if hasattr(subcase, 'get_stats'):
                     msg.append('op2.%s[%s]\n' % (table_type, isubcase))
                     msg.extend(subcase.get_stats())
                     msg.append('\n')
@@ -741,6 +869,62 @@ class OP2(BDF,
 
         return ''.join(msg)
 
+    def print_results(self):
+        """
+        Prints an ASCII summary of the OP2.
+        ..warning:: Will take lots of memory for large OP2 files.
+        """
+        results = [
+            # OUG - Displacements/Velocity/Acceleration/Temperature
+            self.displacements, self.displacementsPSD,
+            self.displacementsATO,
+            self.temperatures,
+            self.eigenvalues,
+            self.eigenvectors,
+            self.velocities,
+            self.accelerations,
+
+            # OEF - Applied Forces/Temperatures - ???
+
+            # OQG1 - SPC/MPC Forces
+            self.spcForces, self.mpcForces,
+
+            # OGF - Grid Point Forces
+            self.gridPointForces,
+
+            # OPG - Applied Force/Moment
+            self.appliedLoads,
+            self.loadVectors, self.thermalLoadVectors,
+            self.forceVectors,
+
+            # OES - Stress/Strain
+            self.celasStress, self.celasStrain,
+            self.rodStress, self.rodStrain,
+            self.conrodStress, self.conrodStrain,
+            self.nonlinearRodStress, self.nonlinearRodStrain,
+
+            self.barStress, self.barStrain,
+            self.beamStress, self.beamStrain,
+            self.plateStress, self.plateStrain,
+            self.solidStress, self.solidStrain,
+            self.compositePlateStress, self.compositePlateStrain,
+            self.ctriaxStress, self.ctriaxStrain,
+
+            # OEE - Strain Energy
+            self.strainEnergy,
+        ]
+
+        msg = '---ALL RESULTS---\n'
+        for result in results:
+            for (isubcase, res) in sorted(result.iteritems()):
+                msg += 'isubcase = %s\n' % isubcase
+                try:
+                    msg += str(res) + '\n'
+                except:
+                    print('failed on %s' % res.__class__.__name__)
+                    raise
+        return msg
+
 
 if __name__ == '__main__':
     import sys
@@ -749,4 +933,3 @@ if __name__ == '__main__':
 
     f06OutName = 'debug.f06'
     o.write_f06(f06OutName)
-
