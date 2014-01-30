@@ -40,25 +40,25 @@ class OES_Object(scalarObject):
         #print 'isMaxShear = False'
         return False
 
-    def getOrderedETypes(self, validTypes):
+    def getOrderedETypes(self, valid_types):
         """
-        :param validTypes: list of valid element types
+        :param valid_types: list of valid element types
                            e.g. ['CTRIA3', 'CTRIA6', 'CQUAD4', 'CQUAD8']
         :returns TypesOut:      the ordered list of types
         :returns orderedETypes: dictionary of Type-IDs to write
         """
         orderedETypes = {}
 
-        #validTypes = ['CTRIA3','CTRIA6','CQUAD4','CQUAD8']
-        for eType in validTypes:
+        #valid_types = ['CTRIA3', 'CTRIA6', 'CQUAD4', 'CQUAD8']
+        for eType in valid_types:
             orderedETypes[eType] = []
         for eid, eType in sorted(self.eType.iteritems()):
             #print "eType = ",eType
-            assert eType in validTypes, 'unsupported eType=%s' % eType
+            assert eType in valid_types, 'unsupported eType=%r; valid_type=%s' % (eType, str(['%r' % str(t) for t in valid_types]))
             orderedETypes[eType].append(eid)
 
         minVals = []
-        for eType in validTypes:
+        for eType in valid_types:
             vals = orderedETypes[eType]
             #print "len(%s) = %s" %(eType,len(vals))
             if len(vals) == 0:
@@ -71,8 +71,8 @@ class OES_Object(scalarObject):
 
         TypesOut = []
         for i in argList:
-            TypesOut.append(validTypes[i])
-        #print "validTypes = %s" %(validTypes)
+            TypesOut.append(valid_types[i])
+        #print "validTypes = %s" %(valid_types)
         #print "minVals    = %s" %(minVals)
         #print "argList    = %s" %(argList)
         #print "TypesOut   = %s" %(TypesOut)

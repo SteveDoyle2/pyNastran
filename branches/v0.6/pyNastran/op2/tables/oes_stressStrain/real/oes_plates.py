@@ -233,11 +233,12 @@ class PlateStressObject(StressObject):
         #if eid in self.ovmShear[dt]:
         #    return self.add(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
 
-        if dt in self.oxx and eid in self.oxx[dt]:  # SOL200, erase the old result
-            #nid = nodeID
-            #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s major=%s vm=%s" %(dt,eid,nodeID,str(self.fiberCurvature[eid][nid]),str(self.oxx[dt][eid][nid]),str(self.majorP[dt][eid][nid]),str(self.ovmShear[dt][eid][nid]))
-            self.delete_transient(dt)
-            self.add_new_transient(dt)
+        if 1:
+            if dt in self.oxx and eid in self.oxx[dt]:  # SOL200, erase the old result
+                #nid = nodeID
+                #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s major=%s vm=%s" %(dt,eid,nodeID,str(self.fiberCurvature[eid][nid]),str(self.oxx[dt][eid][nid]),str(self.majorP[dt][eid][nid]),str(self.ovmShear[dt][eid][nid]))
+                self.delete_transient(dt)
+                self.add_new_transient(dt)
 
         assert isinstance(eid, int)
         self.eType[eid] = eType
@@ -595,16 +596,16 @@ class PlateStressObject(StressObject):
                     for eid in eids:
                         out = self.writeF06_Tri3(eid)
                         msg.append(out)
-                elif eType in ['CQUAD8']:
+                elif eType in ['CQUAD8', 'CQUADR']:
                     for eid in eids:
-                        out = self.writeF06_Quad4_Bilinear(eid, 5)
+                        out = self.writeF06_Quad4_Bilinear(eid, 4)
                         msg.append(out)
                 elif eType in ['CTRIAR', 'CTRIA6']:
                     for eid in eids:
                         out = self.writeF06_Quad4_Bilinear(eid, 3)
                         msg.append(out)
                 else:
-                    raise NotImplementedError('eType = %r' % eType)  # CQUAD8, CTRIA6
+                    raise NotImplementedError('eType = %r' % eType)
 
                 msg.append(pageStamp % pageNum)
                 f.write(''.join(msg))
@@ -1271,16 +1272,16 @@ class PlateStrainObject(StrainObject):
                     for eid in eids:
                         out = self.writeF06_Tri3(eid)
                         msg.append(out)
-                elif eType in ['CQUAD8']:
+                elif eType in ['CQUAD8', 'CQUADR']:
                     for eid in eids:
-                        out = self.writeF06_Quad4_Bilinear(eid, 5)
+                        out = self.writeF06_Quad4_Bilinear(eid, 4)  ## should this be 5 for CQUAD8
                         msg.append(out)
                 elif eType in ['CTRIA6', 'CTRIAR']:
                     for eid in eids:
                         out = self.writeF06_Quad4_Bilinear(eid, 3)
                         msg.append(out)
                 else:
-                    raise NotImplementedError('eType = |%r|' % eType)  # CQUAD8, CTRIA6
+                    raise NotImplementedError('eType = %r' % eType)
                 msg.append(pageStamp % pageNum)
                 f.write(''.join(msg))
                 msg = ['']
