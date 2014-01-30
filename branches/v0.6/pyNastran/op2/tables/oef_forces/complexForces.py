@@ -498,6 +498,7 @@ class ComplexForces(object):
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
+        #self.data = self.data[n:]
         #print self.bendForces
 
     def OEF_CBush_alt(self):  # 102-CBUSH
@@ -507,16 +508,17 @@ class ComplexForces(object):
         format1 = bytes(format1)
         is_magnitude_phase = self.is_magnitude_phase()
 
-        while len(self.data) >= 52:  # 13*4
-            eData = self.data[0:52]
-            self.data = self.data[52:]
-            #print "len(data) = ",len(eData)
+        n = 0
+        ntotal = 52  # 13*4
+        nelements = len(self.data) // ntotal
+        for i in xrange(nelements):
+            edata = self.data[n:n+52]
 
-            out = unpack(format1, eData)
-            (eid, fxr, fyr, fzr, mxr, myr, mzr,
-                  fxi, fyi, fzi, mxi, myi, mzi) = out
-            eid2 = extract(eid, dt)
-            #print "eType=%s" %(eType)
+            out = unpack(format1, edata)
+            (eid_device, fxr, fyr, fzr, mxr, myr, mzr,
+                         fxi, fyi, fzi, mxi, myi, mzi) = out
+            eid = extract(eid_device, dt)
+            #print "eType=%s" % (eType)
 
             if is_magnitude_phase:
                 fx = polar_to_real_imag(fxr, fxi)
@@ -533,11 +535,12 @@ class ComplexForces(object):
                 fz = complex(fzr, fzi)
                 mz = complex(mzr, mzi)
 
-            dataIn = [eid2, fx, fy, fz, mx, my, mz]
-            #print "%s" %(self.get_element_type(self.element_type)),dataIn
+            data_in = [eid, fx, fy, fz, mx, my, mz]
+            #print "%s" %(self.get_element_type(self.element_type)), data_in
             #eid = self.obj.add_new_eid(out)
-            self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
+            self.obj.add(dt, data_in)
+            n += ntotal
+        self.data = self.data[n:]
         #print self.bushForces
 
     def OEF_Force_VU_alt(self):  # 191-VUBEAM

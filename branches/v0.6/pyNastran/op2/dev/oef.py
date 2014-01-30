@@ -3,6 +3,9 @@ from struct import Struct, unpack
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.dev.op2_common import OP2Common
 
+from pyNastran.op2.tables.oef_forces.oef_thermalObjects import (HeatFlux_CHBDYx, HeatFlux_2D_3D, HeatFlux_1D,
+                                 HeatFlux_VU, HeatFlux_VUBEAM, HeatFlux_VU_3D,
+                                 HeatFlux_CONV)
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
     RealRodForce, RealCBeamForce, RealCShearForce,
     RealSpringForce, RealDamperForce, RealViscForce,
@@ -262,7 +265,7 @@ class OEF(OP2Common):
             # 34-CBAR
             # 69-CBEND:
             if self.num_wide == 9:
-                ntotal = 36
+                self.create_transient_object(self.thermalLoad_1D, HeatFlux_1D)
                 format1 = b'i8s6f'  # SORT1
 
                 ntotal = 36  # 10*4
@@ -277,7 +280,7 @@ class OEF(OP2Common):
 
                     data_in = [eid, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux]
                     #print "heatFlux %s" % (self.get_element_type(self.element_type)), data_in
-                    eid = self.obj.add_new_eid(out)
+                    #eid = self.obj.add_new_eid(out)
                     self.obj.add(dt, data_in)
                     n += ntotal
             else:
@@ -372,7 +375,7 @@ class OEF(OP2Common):
 
                     data_in = [eid, axial, torque]
                     #print "%s" % (self.get_element_type(self.element_type)), data_in
-                    eid = self.obj.add_new_eid(out)
+                    #eid = self.obj.add_new_eid(out)
                     self.obj.add(dt, data_in)
                     n += ntotal
                 #print self.rodForces
@@ -653,6 +656,33 @@ class OEF(OP2Common):
                 raise NotImplementedError(self.num_wide)
             #print self.barForces
 
+        elif self.element_type in [100]:
+            #100-BARS
+            if self.num_wide == 8:  # real
+                self.create_transient_object(self.bar100Forces, RealCBar100Force)
+
+                format1 = b'i7f'
+                ntotal = 32  # 8*4
+                nelements = len(data) // ntotal
+                for i in xrange(nelements):
+                    edata = data[n:n+32]
+
+                    out = unpack(format1, edata)
+                    (eid_device, sd, bm1, bm2, ts1, ts2, af, trq) = out
+                    eid = (eid_device - self.device_code) // 10
+
+                    if self.debug4():
+                        self.binary_debug.write('OEF_CBar100 - %s\n' % (str(out)))
+
+                    data_in = [eid, sd, bm1, bm2, ts1, ts2, af, trq]
+                    #print "%s" %(self.get_element_type(self.element_type)), data_in
+                    #eid = self.obj.add_new_eid(out)
+                    self.obj.add(dt, data_in)
+                    n += 32
+                #elif self.num_wide == 14:  # imag
+            else:
+                raise NotImplementedError(self.num_wide)
+
         elif self.element_type in [33, 74]: # centroidal shells
             # 33-CQUAD4
             # 74-CTRIA3
@@ -848,8 +878,9 @@ class OEF(OP2Common):
             # 97 - CTRIA3
             # 98 - CTRIA6 (composite)
             if self.num_wide == 9:  # real
+                return
                 print self.code_information()
-                self.create_transient_object(self.compositePlateForce, RealCompositePlateForce)  # undefined
+                self.create_transient_object(self.compositePlateForces, RealCompositePlateForce)  # undefined
                 #return
                 ntotal = 9 * 4
                 nelements = len(data) // ntotal
@@ -905,8 +936,28 @@ class OEF(OP2Common):
             return
         elif self.element_type in [4]:
             # 4-CSHEAR
-            if self.num_wide == 0:
+            if self.num_wide == 17:  # real
                 self.create_transient_object(self.shearForces, RealCShearForce)
+                format1 = b'i16f'
+                ntotal = 68  # 17*4
+                nelements = len(data) // 68
+                for i in xrange(nelements):
+                    edata = data[n:n+68]
+
+                    out = unpack(format1, edata)
+                    if self.debug4():
+                        self.binary_debug.write('OEF_Shear - %s\n' % (str(out)))
+                    (eid_device, f41, f21, f12, f32, f23, f43, f34, f14, kf1,
+                                 s12, kf2, s23, kf3, s34, kf4, s41) = out
+                    eid = (eid_device - self.device_code) // 10
+
+                    data_in = [eid, f41, f21, f12, f32, f23, f43, f34,
+                               f14, kf1, s12, kf2, s23, kf3, s34, kf4, s41]
+                    #print "%s" % (self.get_element_type(self.element_type)), data_in
+                    self.obj.add(dt, data_in)
+                    n += ntotal
+
+            #elif self.num_wide == 33:  # imag
             else:
                 raise NotImplementedError(self.num_wide)
             return
@@ -915,15 +966,52 @@ class OEF(OP2Common):
             return
         elif self.element_type in [38]:
             # 38-GAP
-            if self.num_wide == 0:
+            if self.num_wide == 9:
                 self.create_transient_object(self.gapForces, RealCGapForce)
+                format1 = b'i8f'
+                ntotal = 36 # 9*4
+                for i in xrange(nelements):
+                    edata = data[n:n+36]
+
+                    out = unpack(format1, edata)
+                    if self.debug4():
+                        self.binary_debug.write('OEF_CGAP-38 - %s\n' % (str(out)))
+                    (eid_device, fx, sfy, sfz, u, v, w, sv, sw) = out
+                    eid = extract(eid_device, dt)
+                    #print "eType=%s" % (eType)
+
+                    data_in = [eid2, fx, sfy, sfz, u, v, w, sv, sw]
+                    #print "%s" %(self.get_element_type(self.element_type)),data_in
+                    #eid = self.obj.add_new_eid(out)
+                    self.obj.add(dt, data_in)
+                    n += ntotal
             else:
                 raise NotImplementedError(self.num_wide)
             return
         elif self.element_type in [69]:
             # 69-CBEND
-            if self.num_wide == 0:
+            if self.num_wide == 15:
                 self.create_transient_object(self.bendForces, RealBendForce)
+                format1 = b'ii13f'
+                ntotal = 60  # 15*4
+                nelements = len(data) // ntotal
+                for i in xrange(nelements):
+                    edata = data[n:n+ntotal]
+
+                    out = unpack(format1, edata)
+                    if self.debug4():
+                        self.binary_debug.write('OEF_BEND-69 - %s\n' % (str(out)))
+                    (eid_device, nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
+                                 nidB, bm1B, bm2B, ts1B, ts2B, afB, trqB) = out
+                    eid = (eid_device - self.device_code) // 10
+                    #print "eType=%s" % (eType)
+
+                    data_in = [eid, nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
+                                    nidB, bm1B, bm2B, ts1B, ts2B, afB, trqB]
+                    #print "%s" %(self.get_element_type(self.element_type)), data_in
+                    #eid = self.obj.add_new_eid(out)
+                    self.obj.add(dt, data_in)
+                    n += ntotal
             else:
                 raise NotImplementedError(self.num_wide)
             return
@@ -941,8 +1029,61 @@ class OEF(OP2Common):
             return
         elif self.element_type in [102]:
             # 102-CBUSH
-            if self.num_wide == 0:
+            if self.num_wide == 7:  # real
                 self.create_transient_object(self.bushForces, RealCBushForce)
+                format1 = b'i6f'
+                ntotal = 28 # 7*4
+                nelements = len(data) // ntotal
+                for i in xrange(nelements):
+                    edata = data[n:n+28]
+                    out = unpack(format1, edata)
+                    if self.debug4():
+                        self.binary_debug.write('OEF_CBUSH-102 - %s\n' % (str(out)))
+                    (eid_device, fx, fy, fz, mx, my, mz) = out
+                    eid = (eid_device - self.device_code) // 10
+
+                    data_in = [eid, fx, fy, fz, mx, my, mz]
+                    #print "%s" % (self.get_element_type(self.element_type)), data_in
+                    #eid = self.obj.add_new_eid(out)
+                    self.obj.add(dt, data_in)
+                    n += ntotal
+            elif self.num_wide == 13:  # imag
+                self.create_transient_object(self.bushForces, ComplexCBushForce)
+                format1 = b'i12f'
+                #is_magnitude_phase = self.is_magnitude_phase()
+
+                ntotal = 52  # 13*4
+                nelements = len(data) // ntotal
+                for i in xrange(nelements):
+                    edata = data[n:n+52]
+
+                    out = unpack(format1, edata)
+                    (eid_device, fxr, fyr, fzr, mxr, myr, mzr,
+                                 fxi, fyi, fzi, mxi, myi, mzi) = out
+                    eid = (eid_device - self.device_code) // 10
+                    assert eid > 0, eid
+                    #print "eType=%s" % (eType)
+
+                    if is_magnitude_phase:
+                        fx = polar_to_real_imag(fxr, fxi)
+                        mx = polar_to_real_imag(mxr, mxi)
+                        fy = polar_to_real_imag(fyr, fyi)
+                        my = polar_to_real_imag(myr, myi)
+                        fz = polar_to_real_imag(fzr, fzi)
+                        mz = polar_to_real_imag(mzr, mzi)
+                    else:
+                        fx = complex(fxr, fxi)
+                        mx = complex(mxr, mxi)
+                        fy = complex(fyr, fyi)
+                        my = complex(myr, myi)
+                        fz = complex(fzr, fzi)
+                        mz = complex(mzr, mzi)
+
+                    data_in = [eid, fx, fy, fz, mx, my, mz]
+                    #print "%s" %(self.get_element_type(self.element_type)), data_in
+                    #eid = self.obj.add_new_eid(out)
+                    self.obj.add(dt, data_in)
+                    n += ntotal
             else:
                 raise NotImplementedError(self.num_wide)
             return

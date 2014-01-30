@@ -91,8 +91,8 @@ class OP2Common(Op2Codes, F06Writer):
             53 : 'CTRIAX6',
 
             # centroidal plate
-            33: 'CQUAD4-centroidal', # 1 node
-            74: 'CTRIA3-centroidal', # 1 node
+            33: 'CQUAD4', # 1 node
+            74: 'CTRIA3', # 1 node
 
             # bilinear plate
             144: 'CQUAD4', # 5 nodes
@@ -169,25 +169,25 @@ class OP2Common(Op2Codes, F06Writer):
             61: 'DUM9',
             62: None,
             63: None,
-            64: 'QUAD8',
+            64: 'CQUAD8',
             65: None,
             66: None,
             #67: 'HEXA',
             #68: 'PENTA',
-            69: 'BEND',
-            70: 'TRIAR',
+            69: 'CBEND',
+            70: 'CTRIAR',
             71: None,
             72: 'AEROQ4',
             73: None,
             #74: 'TRIA3',
-            75: 'TRIA6',
+            75: 'CTRIA6',
             76: 'HEXPR',
             77: 'PENPR',
             78: 'TETPR',
             79: None,
             80: None,
             81: None,
-            82: 'QUADR',
+            82: 'CQUADR',
             83: 'HACAB',
             84: 'HACBR',
             85: 'TETRANL',

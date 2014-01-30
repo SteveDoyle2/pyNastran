@@ -2,6 +2,7 @@
 """
 Defines the OP2 class.
 """
+import os
 from struct import unpack
 from struct import error as StructError
 
@@ -240,7 +241,9 @@ class OP2(BDF,
         self.n = 0
         self.table_name = None
         if not is_binary(self.op2_filename):
-            raise RuntimeError('%r is not a binary OP2.' % self.op2_filename)
+            if os.path.getsize(self.op2_filename) == 0:
+                raise RuntimeError('op2_filename=%r is empty.' % self.op2_filename)
+            raise RuntimeError('op2_filename=%r is not a binary OP2.' % self.op2_filename)
         self.f = open(self.op2_filename, 'rb')
         try:
             markers = self.get_nmarkers(1, rewind=True)

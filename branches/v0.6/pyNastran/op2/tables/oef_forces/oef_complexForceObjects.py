@@ -778,6 +778,7 @@ class ComplexPlate2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         f.write('ComplexPlate _write_f06_transient not implemented...\n')
+        return pageNum
         #raise NotImplementedError()
 
 
