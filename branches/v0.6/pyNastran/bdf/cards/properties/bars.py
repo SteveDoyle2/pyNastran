@@ -1742,6 +1742,7 @@ class PBEAM(IntegratedLineProperty):
                              self.i12, self.j, self.nsm, self.c1, self.c2,
                              self.d1, self.d2, self.e1, self.e2, self.f1,
                              self.f2):
+
             if i == 0:  # the first 2 fields aren't written
                 list_fields += [         A, i1, i2, i12, j, nsm,
                                 c1, c2, d1, d2, e1, e2, f1, f2]
