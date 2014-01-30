@@ -318,7 +318,7 @@ class Solver(F06, OP2):
         self.op2_pack_file = open(self.op2_pack_name, 'w')
 
         self.f06_file.write(self.make_f06_header())
-        pageStamp = self.make_stamp(self.Title)
+        pageStamp = self.make_stamp(self.Title, self.date)
         self.write_summary(self.f06_file, card_count=self.model.card_count)
 
         #print analysisCases

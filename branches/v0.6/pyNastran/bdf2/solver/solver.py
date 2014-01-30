@@ -383,7 +383,7 @@ class Solver(F06, OP2):
 
         self.f06_file.write(self.make_f06_header())
         #self.f06_file.write(sorted_bulk_data_header())
-        pageStamp = self.make_stamp(self.Title)
+        pageStamp = self.make_stamp(self.Title, self.date)
 
         #------------------------------------------
         # start of analysis

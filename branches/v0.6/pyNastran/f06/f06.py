@@ -329,6 +329,17 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             self.fatal_check(line)
         #self.grid_point_weight.read_grid_point_weight(lines)
 
+    def _set_f06_date(self, month, day, year):
+        months = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
+                  'JULY', 'AUGUST' 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER']
+        assert month in months, 'month=%r' % month
+        print("month =", month)
+        month = months.index(month) + 1
+        print("imonth =", month)
+        day = int(day)
+        year = int(year)
+        self.date = (month, day, year)
+
     def readSubcaseNameID(self):
         """
         -4 -> 1                                                     JANUARY   5, 2014  MSC.NASTRAN 11/25/11   PAGE    14
@@ -343,7 +354,12 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             msg += '%i -> %s\n' % (-4 + i, line.rstrip())
 
         if self.Title is None or self.Title == '' and len(self.storedLines) > 4:
-            self.Title = self.storedLines[-4][1:75].strip()
+            title_line = self.storedLines[-4]
+            self.Title = title_line[1:75].strip()
+            date = title_line[75:93]
+            month, day, year = date.split()
+            self._set_f06_date(month, day[:-1], year)  # -1 chops the comma
+            #assert 'PAGE' not in title_line, '%r' % date
             assert 'D I S P L A C' not in self.Title, msg
         #self.Title = subcaseName  # 'no title'
 

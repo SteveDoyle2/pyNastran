@@ -6,17 +6,22 @@ import pyNastran
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 
 
-def make_stamp(Title):
+def make_stamp(Title, today=None):
     if 'Title' is None:
         Title = ''
     #pageStamp = '1    MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23                      NOVEMBER  14, 2011  MSC.NASTRAN  6/17/05   PAGE '
     #Title = 'MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23'
-    t = date.today()
     months = ['January', 'February', 'March', 'April', 'May', 'June',
               'July', 'August', 'September', 'October', 'November', 'December']
-    today = '%-8s %2s, %4s' % (months[t.month - 1].upper(), t.day, t.year)
-    today = today.strip()
-    'September 14, 2013' # 18
+    if today is None:
+        t = date.today()
+        today = '%-8s %2s, %4s' % (months[t.month - 1].upper(), t.day, t.year)
+        today = today.strip()
+        #'September 14, 2013' # 18
+    else:
+        (month, day, year) = today
+        #print "day=%s month=%s year=%s" % (day, month, year)
+        today = '%-8s %2s, %4s' % (months[month - 1].upper(), day, year)
 
     release_date = '02/08/12'  # pyNastran.__releaseDate__
     release_date = ''
@@ -174,6 +179,7 @@ class F06Writer(object):
         self.iSubcaseNameMap = {}
 
         self.pageNum = 1
+        self.date = None
 
         # F06
         self.grid_point_weight = GridPointWeight()
@@ -367,9 +373,9 @@ class F06Writer(object):
         """If this class is inherited, the F06 Header may be overwritten"""
         return make_f06_header()
 
-    def make_stamp(self, Title):
+    def make_stamp(self, Title, today):
         """If this class is inherited, the PAGE stamp may be overwritten"""
-        return make_stamp(Title)
+        return make_stamp(Title, today)
 
     def writeF06(self, f06OutName, is_mag_phase=False, makeFile=True,
                  deleteObjects=True):
@@ -392,7 +398,7 @@ class F06Writer(object):
         else:
             msg += 'No constraints have been applied...\n'
 
-        pageStamp = self.make_stamp(self.Title)
+        pageStamp = self.make_stamp(self.Title, self.date)
         msg += pageStamp % self.pageNum
         self.pageNum += 1
         return msg
@@ -416,7 +422,7 @@ class F06Writer(object):
         msg += '                     MZ       ----          ----          ----          ----          ----       0.000000E+00                             \n'
         msg += '                   TOTALS  3.000000E+03  5.000000E+03  0.000000E+00  1.300000E+04  0.000000E+00  1.400000E+05\n'
 
-        pageStamp = self.make_stamp(self.Title)
+        pageStamp = self.make_stamp(self.Title, self.date)
         msg += pageStamp % self.pageNum
         self.pageNum += 1
         return msg
@@ -503,7 +509,7 @@ class F06Writer(object):
             f.write(summary_header)
             f.write(summary)
 
-            pageStamp = self.make_stamp(self.Title)
+            pageStamp = self.make_stamp(self.Title, self.date)
             f.write(pageStamp % self.pageNum)
             self.pageNum += 1
             print(summary)
@@ -531,7 +537,7 @@ class F06Writer(object):
             f06OutName = f.name
             print 'f06OutName =', f06OutName
 
-        pageStamp = self.make_stamp(self.Title)
+        pageStamp = self.make_stamp(self.Title, self.date)
         if self.grid_point_weight.reference_point is not None:
             print("grid_point_weight")
             self.pageNum = self.grid_point_weight.write_f06(f, pageStamp, self.pageNum)
