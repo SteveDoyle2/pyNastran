@@ -172,8 +172,8 @@ class ComplexElementsStressStrain(object):
             #print "eid=%i grid=%s fd1=%-3.1f sx1=%s sy1=%s txy1=%s" %(eid,'C',fd1,sx1,sy1,txy1)
             #print   "             fd2=%-3.1f sx2=%s sy2=%s txy2=%s\n"       %(fd2,sx2,sy2,txy2)
             #print "nNodes = ",nNodes
-            self.obj.add_new_eid('CQUAD4', dt, eid, 'C', fd1, sx1, sy1, txy1)
-            self.obj.add(dt, eid, 'C', fd2, sx2, sy2, txy2)
+            self.obj.add_new_eid('CQUAD4', dt, eid, 'CEN/4', fd1, sx1, sy1, txy1)
+            self.obj.add(dt, eid, 'CEN/4', fd2, sx2, sy2, txy2)
 
             for nodeID in xrange(nNodes):  # nodes pts
                 edata = self.data[n:n+60]  # 4*15=60
@@ -352,6 +352,7 @@ class ComplexElementsStressStrain(object):
         is_magnitude_phase = self.is_magnitude_phase()
         n = 0
         nelements = len(self.data) // ntotal
+        gridC = 'CEN/' + str(nNodes)
         for i in xrange(nelements):
             (eid, _) = unpack(b'i4s', self.data[n:n+8])
             n += 8
@@ -363,7 +364,6 @@ class ComplexElementsStressStrain(object):
                 self.op2_debug.write('%s\n' % (str(out)))
             (grid, fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
                    fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
-            grid = 'C'
 
             if is_magnitude_phase:
                 sx1 = polar_to_real_imag(sx1r, sx1i)
@@ -380,8 +380,8 @@ class ComplexElementsStressStrain(object):
                 txy1 = complex(txy1r, txy1i)
                 txy2 = complex(txy2r, txy2i)
 
-            self.obj.add_new_eid(eType, dt, eid, grid, fd1, sx1, sy1, txy1)
-            self.obj.add(dt, eid, grid, fd2, sx2, sy2, txy2)
+            self.obj.add_new_eid(eType, dt, eid, gridC, fd1, sx1, sy1, txy1)
+            self.obj.add(dt, eid, gridC, fd2, sx2, sy2, txy2)
 
             for nodeID in xrange(nNodes):  # nodes pts
                 edata = self.data[n:n+60]  # 4*15=60
@@ -455,7 +455,7 @@ class ComplexElementsStressStrain(object):
             eid = extract(eid, dt)
             #print "eid=%i fd1=%i sx1=%i sy1=%i txy1=%i" %(eid,fd1,sx1,sy1,txy1)
             #print  "      fd2=%i sx2=%i sy2=%i txy2=%i\n"   %(fd2,sx2,sy2,txy2)
-            self.obj.add_new_eid('CTRIA3', dt, eid, 'C', fd1, sx1, sy1, txy1)
-            self.obj.add(dt, eid, 'C', fd2, sx2, sy2, txy2)
+            self.obj.add_new_eid('CTRIA3', dt, eid, 'CEN/3', fd1, sx1, sy1, txy1)
+            self.obj.add(dt, eid, 'CEN/3', fd2, sx2, sy2, txy2)
             if self.make_op2_debug:
                 self.op2_debug.write('%s\n' % str(out))

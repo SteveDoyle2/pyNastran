@@ -25,6 +25,7 @@ from pyNastran.bdf.bdf import BDF
 
 from pyNastran.utils import is_binary
 
+
 class OP2(BDF,
           OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
     """

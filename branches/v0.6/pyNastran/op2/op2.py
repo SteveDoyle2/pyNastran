@@ -20,6 +20,7 @@ from pyNastran.op2.tables.ogpwg import OGPWG
 from pyNastran.bdf.bdf import BDF
 from pyNastran.f06.f06Writer import F06Writer
 from pyNastran.utils.gui_io import load_file_dialog
+from pyNastran.utils import is_binary
 
 
 class OP2Deprecated(object):
@@ -141,6 +142,7 @@ class OP2(BDF,
 
         #: the input OP2 filename
         self.op2FileName = op2FileName
+        self.op2_filename = self.op2FileName
 
         #: the expected BDF filename (guessed)
         self.bdfFileName = fname + bdfExtension
@@ -485,9 +487,19 @@ class OP2(BDF,
 
         return data
 
-    def read_op2(self):
+    def read_op2(self, op2_filename=None):
+        if op2_filename:
+            self.op2_filename = op2_filename
+
+        if not is_binary(self.op2_filename):
+            if os.path.getsize(self.op2_filename) == 0:
+                raise RuntimeError('op2_filename=%r is empty.' % self.op2_filename)
+            raise RuntimeError('op2_filename=%r is not a binary OP2.' % self.op2_filename)
+
+        #: file index
+        self.n = 0
         #: the OP2 file object
-        self.op2 = open(self.op2FileName, 'rb')
+        self.op2 = open(self.op2_filename, 'rb')
         try:
             if self.make_op2_debug:
                 #: a developer debug file (largely unsupported)
@@ -721,8 +733,8 @@ class OP2(BDF,
     def read_monitor(self):
         table_name = self.read_table_name(rewind=False)  # LAMA
         self.table_init(table_name)
-        #print("tablename1 = |%r|" % table_name)
-        #print("tablename2 = |%r|" % self.table_name)
+        #print("tablename1 = %r" % table_name)
+        #print("tablename2 = %r" % self.table_name)
 
         self.read_markers([-1, 7], 'MONITOR')
         ints = self.read_int_block()

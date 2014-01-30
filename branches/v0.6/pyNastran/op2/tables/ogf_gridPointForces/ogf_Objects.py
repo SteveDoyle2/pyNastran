@@ -95,7 +95,7 @@ class gridPointForcesObject(scalarObject):
         #self.elemName = self.elemName[k[0]]
         #self.eids = self.eids[k[0]]
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None):
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
 

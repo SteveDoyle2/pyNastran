@@ -134,6 +134,7 @@ class RealForces(object):
         format1 = bytes(format1)
         formatAll = bytes(formatAll)
 
+        n = 0
         nelements = len(self.data) // 400  # 1+(10-1)*11=100 ->100*4 = 400
         for i in xrange(nelements):
             #print "eType=%s" %(eType)
@@ -372,6 +373,7 @@ class RealForces(object):
             #print "%s" % (self.get_element_type(self.element_type)), data_in
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, data_in)
+            n += ntotal
         self.data = self.data[n:]
         #print self.shearForces
 
@@ -383,6 +385,7 @@ class RealForces(object):
 
         n = 0
         ntotal = 36 # 9*4
+        nelements = len(self.data) // ntotal
         for i in xrange(nelements):
             edata = self.data[n:n+36]
 
@@ -393,7 +396,7 @@ class RealForces(object):
             eid = extract(eid_device, dt)
             #print "eType=%s" %(eType)
 
-            data_in = [eid2, fx, sfy, sfz, u, v, w, sv, sw]
+            data_in = [eid, fx, sfy, sfz, u, v, w, sv, sw]
             #print "%s" %(self.get_element_type(self.element_type)),data_in
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, data_in)

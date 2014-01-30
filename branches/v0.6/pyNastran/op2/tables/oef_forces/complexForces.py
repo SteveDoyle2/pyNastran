@@ -16,6 +16,7 @@ class ComplexForces(object):
         format1 = bytes(format1)
         is_magnitude_phase = self.is_magnitude_phase()
 
+        n = 0
         ntotal = 20 # 5*4
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):

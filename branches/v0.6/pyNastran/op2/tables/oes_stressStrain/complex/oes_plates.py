@@ -150,6 +150,8 @@ class ComplexPlateStressObject(StressObject):
                           'CQUAD8', 'CQUADR']
             if eType not in validTypes:
                 raise RuntimeError(eType)
+            if nodeID == 'C':
+                asdf
 
         if dt not in self.oxx:
             self.add_new_transient(dt)
