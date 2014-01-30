@@ -217,17 +217,17 @@ class TestF06(unittest.TestCase):
         self.assertEquals(len(bdf.params), 2, bdf.params)
         self.assertEquals(bdf.sol, 101, bdf.sol)
 
+        cen = 'CEN/4'
         for (loadcase, stress) in f06.plateStress.iteritems():
             #print("%3s %3s %6s %8s" % ('EID', 'NID', 'iLayer', 'VM_Stress'))
-
             # stress is a PlateStressObject
             if stress.isVonMises():
                 #vonMises = 'VON MISES'
                 for eid,ovm in sorted(stress.ovmShear.iteritems()):
                     ovmkeys = ovm.keys()
-                    ovmkeys.remove('C')
+                    ovmkeys.remove(cen)
                     ovmkeys.sort()
-                    ovmkeys = ['C'] + ovmkeys
+                    ovmkeys = [cen] + ovmkeys
                     for nid in ovmkeys:
                         ovmi = ovm[nid]
                         for ilayer, ovmii in enumerate(ovmi):
@@ -237,9 +237,9 @@ class TestF06(unittest.TestCase):
                 #vonMises = 'MAX SHEAR'
                 for eid,ovm in sorted(stress.ovmShear.iteritems()):
                     ovmkeys = ovm.keys()
-                    ovmkeys.remove('C')
+                    ovmkeys.remove(cen)
                     ovmkeys.sort()
-                    ovmkeys = ['C'] + ovmkeys
+                    ovmkeys = [cen] + ovmkeys
                     for nid in ovmkeys:
                         ovmi = ovm[nid]
                         for ilayer, ovmii in enumerate(ovmi):
@@ -249,8 +249,8 @@ class TestF06(unittest.TestCase):
                             ovmii2 = sqrt(o1**2 - o1*o2 + o2**2 + 3*t12**2)
                             self.assertAlmostEqual(ovmii, ovmii2)
                             #print("%3s %3s %6s %8s" % (eid, nid, ilayer, ovmii2))
-        self.assertEquals(op2.plateStress[1].ovmShear[25]['C'][0], 276.8023376464844)
-        self.assertEquals(f06.plateStress[1].ovmShear[25]['C'][0], 276.8023)
+        self.assertEquals(op2.plateStress[1].ovmShear[25][cen][0], 276.8023376464844)
+        self.assertEquals(f06.plateStress[1].ovmShear[25][cen][0], 276.8023)
         #f06.print_stats()
         #op2.print_stats()
 
