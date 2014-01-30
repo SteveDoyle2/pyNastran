@@ -17,7 +17,6 @@ class FortranFile(object):
         self.op2 = None
         self.make_op2_debug = True
         self.op2_debug = None
-        #self.log = None
         self.n = 0
 
     def set_endian(self, endian='<'):

@@ -281,9 +281,9 @@ class BeamStrainObject(StrainObject):
             #self.isImaginary = False
         if is_sort1:
             if dt is not None:
-                self.add_new_transient = self.add_new_transient
+                #self.add_new_transient = self.add_new_transient
                 self.add_new_eid = self.add_new_eid_sort1
-                self.add = self.add_transient
+                self.add = self.add_sort1
                 self.add_new_transient(dt)
             #self.add_new_eid = self.add_new_eid
             #self.add = self.add

@@ -925,6 +925,11 @@ class RealPlateForce(scalarObject):  # 33-CQUAD4, 74-CTRIA3
         self.ty[dt][eid] = ty
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        if self.nonlinear_factor is not None:
+            f.write('%s._write_f06_transient is not implemented\n' % self.__class__.__name__)
+            return pageNum
+            #return self._write_f06_transient(header, pageStamp, pageNum, f)
+
         words = [
             '                          F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )'
             ' '

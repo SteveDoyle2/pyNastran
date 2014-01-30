@@ -430,114 +430,8 @@ class OP2(BDF,
         #print "*ints = ",ints
 
         self.read_markers([-1])
-
         #data = self.get_data(60)
         #self.print_block(data)
-
-    def read_tape_code_post2(self):
-        # PVTO
-        #self.read_markers([2])
-        #ints = self.read_int_block()
-        #print("*ints = ",ints)
-
-        #ints = self.read_block()
-        #print("*ints = ",ints)
-        #print(self.print_section(40))
-
-        block = self.read_new_block()
-        #print("len(block) = %s" %(len(block)))
-        if len(block) == 12:  # post = -1
-            form = -1
-            (month, day, year) = unpack(b'iii', block)
-            print("date = %s/%s/%s" %(month, day, 2000+year))
-
-            block = self.read_new_block()
-            #print("len(block) = %s" % len(block))
-            print(self.print_block(block))
-
-            block = self.read_new_block()
-            #print("len(block) = %s" % len(block))
-            print(self.print_block(block))
-
-            self.read_markers([-1, 0])
-
-            block = self.read_new_block()
-            #print("len(block) = %s" % len(block))
-            table_name, = unpack(b'8s', block)
-            self.log.debug("read_tape_code_post2 - table_name=%r self.n=%s" % (table_name, self.n))
-
-            marker = self.read_marker()
-            print('read_tape_code_post2 - marker = %s' % marker)
-            #self.read_markers([-1])
-            block = self.read_new_block()
-            print(self.print_block(block))
-
-            self.read_markers([-2])
-            block = self.read_new_block()
-            print(self.print_block(block))
-
-            marker = self.read_marker()
-            print('marker = %s' % marker)
-
-            #self.read_markers([-1])
-            #self.readPartOfNewTable()  # PVTO
-
-            #self.readNewTable()
-            #self.readNewTable()
-            print(self.print_section(100))
-
-            sys.exit('stoppingD')
-
-        elif len(block) == 8: # post = -2
-            self.n = 0
-            self.op2.seek(self.n)
-            table_name, = unpack(b'8s', block)
-            self.log.debug("table_name = %r\n" % table_name)
-            #sys.exit('stoppingA')
-
-            block = self.read_new_block()
-            #print(self.print_block(block))
-            self.read_markers([-1])
-            #print("")
-
-            self.read_part_of_new_table()  # PVTO
-
-            block = self.read_new_block()
-            print(self.print_block(block))
-            self.read_part_of_new_table()  # PRTMAXIM=YES AUTOSPC=NO
-
-            #block = self.readNewBlock()
-            #print(self.print_section(200))
-            #return
-
-            self.read_new_table()
-            self.read_new_table()
-            self.read_new_table()
-            #print(self.print_section(40))
-            sys.exit('stoppingB')
-
-            return
-
-
-        sys.exit()
-
-        # -----------------------
-
-        foundMoreTables = True
-        while foundMoreTables and table_name:
-            self.log.debug("table_name=%r self.n=%s" % (table_name, self.n))
-            print("-----------------------------")
-            try:
-                n = self.n
-                table_name = self.read_new_table()
-            except:
-                self.op2.seek(n)
-                foundMoreTables = False
-
-        print("**************")
-        self.op2.seek(n)
-        print(self.print_section(240))
-        sys.exit('stoppingC')
 
     def read_new_table(self):
         self.op2.read(8)
@@ -961,7 +855,7 @@ class OP2(BDF,
         #self.log.debug(self.print_table_code(self.table_code))
         return (int3)
 
-    def parse_approach_code2(self, data):
+    def parse_approach_code_sort2(self, data):
         """
         int3 is the 3rd word in table=-3 and may be
         element_type or something else depending on the table type
@@ -1161,6 +1055,6 @@ class OP2(BDF,
                 try:
                     msg += str(res) + '\n'
                 except:
-                    print('failed on %s' % (res.__class__.__name__))
+                    print('failed on %s' % res.__class__.__name__)
                     raise
         return msg

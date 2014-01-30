@@ -16,7 +16,7 @@ class MPCForcesObject(TableObject):
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum)
+            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase=is_mag_phase)
         msg = header + ['                               F O R C E S   O F   M U L T I - P O I N T   C O N S T R A I N T\n',
                         ' \n',
                         '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
@@ -74,6 +74,7 @@ class ComplexMPCForcesObject(ComplexTableObject):
             return self._write_matlab_transient(name, isubcase, f, is_mag_phase)
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        assert f is not None
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
         msg = header + ['                               F O R C E S   O F   M U L T I - P O I N T   C O N S T R A I N T\n',
@@ -103,6 +104,7 @@ class ComplexMPCForcesObject(ComplexTableObject):
         return pageNum
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        assert f is not None
         words = ['                         C O M P L E X   F O R C E S   O F   M U L T I   P O I N T   C O N S T R A I N T\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',

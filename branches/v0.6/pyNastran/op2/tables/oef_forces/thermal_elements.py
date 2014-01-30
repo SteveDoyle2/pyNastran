@@ -305,26 +305,26 @@ class ThermalElements(object):
         dt = self.nonlinear_factor
         is_sort1 = self.is_sort1()
         #print "num_wide = ",self.num_wide
-        n = 36
+        ntotal = 36
         if is_sort1:
             #print "SORT1 - %s" %(self.get_element_type(self.element_type))
-            format1 = 'i8sffffff'  # SORT1
+            format1 = 'i8s6f'  # SORT1
             extract = self.extractSort1
             #dt = self.nonlinear_factor
         else:
             #print "SORT2 - %s" %(self.get_element_type(self.element_type))
-            format1 = 'f8sffffff'  # SORT2
+            format1 = 'f8s6f'  # SORT2
             extract = self.extractSort2
             #eid = self.nonlinear_factor
         format1 = bytes(format1)
 
-        n = 36
-        while len(self.data) >= n:  # 10*4
-            eData = self.data[0:n]
-            self.data = self.data[n:]
-            #print "len(data) = ",len(eData)
+        n = 0
+        ntotal = 36  # 10*4
+        nelements = len(self.data) // ntotal
+        for i in xrange(nelements):
+            edata = self.data[n:n+ntotal]
 
-            out = unpack(format1, eData)
+            out = unpack(format1, edata)
             (eid, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux) = out
             eid2 = extract(eid, dt)
             #print "eType=%s" %(eType)
@@ -333,9 +333,10 @@ class ThermalElements(object):
             #print "heatFlux %s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
+            n += ntotal
         if self.make_op2_debug:
             print("done with OEF_1D")
+        self.data = self.data[n:]
         #print self.thermalLoad_1D
 
     def OEF_2D_3D(self):  # 33-QUAD4, 39-TETRA, 53-TRIAX6,64-QUAD8, 67-HEXA, 68-PENTA, 74-TRIA3, 75-TRIA6

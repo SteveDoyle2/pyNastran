@@ -83,7 +83,7 @@ class SolidStressObject(StressObject):
             dt = transient[1]
             if not hasattr(self, 'data'):
                 self.data = {}
-            #print(self.data)
+
             if dt not in self.data:
                 self.data[dt] = []
             for line in data:
@@ -134,7 +134,7 @@ class SolidStressObject(StressObject):
                     (blank,blank, y,oyy,yz,tyz,b,o2,ly,d1,d2,d3,blank,blank) = self.data[n+1]
                     (blank,blank, z,ozz,zx,txz,c,o3,lz,d1,d2,d3,blank,blank) = self.data[n+2]
                     if    nodeID.strip() == 'CENTER':
-                        nodeID = 'C'
+                        nodeID = 'CENTER'
                     else:
                         nodeID = int(nodeID)
 
@@ -287,18 +287,15 @@ class SolidStressObject(StressObject):
             raise ValueError(msg)
 
     def add_sort1(self, dt, eid, nodeID, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
-        #print "***add"
         msg = "eid=%s nodeID=%s vm=%g" % (eid, nodeID, ovm)
         #print msg
-        #print self.oxx
-        #print self.fiberDistance
 
         #self.eType[eid] = eType
         #print "eid=%s nid=%s oxx=%s" %(eid,nodeID,oxx)
         self.oxx[dt][eid][nodeID] = oxx
         self.oyy[dt][eid][nodeID] = oyy
         self.ozz[dt][eid][nodeID] = ozz
-        #print self.oxx
+
         self.txy[dt][eid][nodeID] = txy
         self.tyz[dt][eid][nodeID] = tyz
         self.txz[dt][eid][nodeID] = txz
@@ -417,10 +414,11 @@ class SolidStressObject(StressObject):
             #eType = self.eType[eid]
 
             k = self.oxx[eid].keys()
-            k.remove('C')
+            cen = 'CENTER'
+            k.remove(cen)
             k.sort()
             msg.append('0  %8s           0GRID CS  %i GP\n' % (eid, nNodes))
-            for nid in ['C'] + k:
+            for nid in [cen] + k:
                 oxx = self.oxx[eid][nid]
                 oyy = self.oyy[eid][nid]
                 ozz = self.ozz[eid][nid]
@@ -434,9 +432,6 @@ class SolidStressObject(StressObject):
                 ovm = self.ovmShear[eid][nid]
                 p = (o1 + o2 + o3) / -3.
 
-                if nid == 'C':
-                    nid = 'CENTER'
-                #print "nid = |%r|" %(nid)
                 A = [[oxx, txy, txz],
                      [txy, oyy, tyz],
                      [txz, tyz, ozz]]
@@ -452,14 +447,15 @@ class SolidStressObject(StressObject):
         dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
         header[1] = dtLine
         msg = header + tetraMsg
+        cen = 'CENTER'
         for eid in eids:
             #eType = self.eType[eid]
 
             k = self.oxx[dt][eid].keys()
-            k.remove('C')
+            k.remove(cen)
             k.sort()
             msg.append('0  %8s           0GRID CS  %i GP\n' % (eid, nNodes))
-            for nid in ['C'] + k:
+            for nid in [cen] + k:
                 oxx = self.oxx[dt][eid][nid]
                 oyy = self.oyy[dt][eid][nid]
                 ozz = self.ozz[dt][eid][nid]
@@ -473,8 +469,6 @@ class SolidStressObject(StressObject):
                 ovm = self.ovmShear[dt][eid][nid]
                 p = (o1 + o2 + o3) / -3.
 
-                if nid == 'C':
-                    nid = 'CENTER'
                 #print "nid = |%r|" %(nid)
                 A = [[oxx, txy, txz],
                      [txy, oyy, tyz],
@@ -611,7 +605,6 @@ class SolidStrainObject(StrainObject):
                 self.evmShear[eid] = {}
                 n += 1
                 for j in xrange(nNodes):
-                    #print self.data[n]
                     (blank, nodeID, x, exx, xy, exy, a, e1, lx, d1, d2, d3,
                         pressure, evmShear) = self.data[n]
                     (blank, blank, y, eyy, yz, eyz, b, e2, ly, d1, d2, d3,
@@ -619,7 +612,7 @@ class SolidStrainObject(StrainObject):
                     (blank, blank, z, ezz, zx, exz, c, e3, lz, d1, d2, d3,
                         blank, blank) = self.data[n + 2]
                     if    nodeID.strip() == 'CENTER':
-                        nodeID = 'C'
+                        nodeID = 'CENTER'
                     else:
                         nodeID = int(nodeID)
                     self.exx[eid][nodeID] = float(exx)
@@ -685,7 +678,6 @@ class SolidStrainObject(StrainObject):
         self.evmShear[dt] = {}
 
     def add_new_eid(self, eType, cid, dt, eid, nodeID, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
-        #print "Solid Strain add..."
         assert eid not in self.exx
         assert cid >= 0
         assert eid >= 0
@@ -711,7 +703,6 @@ class SolidStrainObject(StrainObject):
             raise Exception(msg)
 
     def add_new_eid_sort1(self, eType, cid, dt, eid, nodeID, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
-        #print "Solid Strain add..."
         assert cid >= 0
         assert eid >= 0
 
@@ -741,11 +732,8 @@ class SolidStrainObject(StrainObject):
             raise Exception(msg)
 
     def add(self, dt, eid, nodeID, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
-        #print "***add"
         msg = "eid=%s nodeID=%s vm=%g" % (eid, nodeID, evm)
         #print msg
-        #print self.exx
-        #print self.fiberDistance
         self.exx[eid][nodeID] = exx
         self.eyy[eid][nodeID] = eyy
         self.ezz[eid][nodeID] = ezz
@@ -767,11 +755,8 @@ class SolidStrainObject(StrainObject):
             raise Exception(msg)
 
     def add_sort1(self, dt, eid, nodeID, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
-        #print "***add"
         msg = "eid=%s nodeID=%s vm=%g" % (eid, nodeID, evm)
         #print msg
-        #print self.exx
-        #print self.fiberDistance
 
         self.exx[dt][eid][nodeID] = exx
         self.eyy[dt][eid][nodeID] = eyy
@@ -916,14 +901,15 @@ class SolidStrainObject(StrainObject):
 
     def writeElement(self, eType, nNodes, eids, header, tetraMsg, f):
         msg = header + tetraMsg
+        cen = 'CENTER'
         for eid in eids:
             #eType = self.eType[eid]
 
             k = self.exx[eid].keys()
-            k.remove('C')
+            k.remove(cen)
             k.sort()
             msg.append('0  %8s           0GRID CS  %i GP\n' % (eid, nNodes))
-            for nid in ['C'] + k:
+            for nid in [cen] + k:
                 exx = self.exx[eid][nid]
                 eyy = self.eyy[eid][nid]
                 ezz = self.ezz[eid][nid]
@@ -937,8 +923,6 @@ class SolidStrainObject(StrainObject):
                 evm = self.evmShear[eid][nid]
                 p = (e1 + e2 + e3) / -3.
 
-                if nid == 'C':
-                    nid = 'CENTER'
                 #print "nid = |%r|" %(nid)
                 A = [[exx, exy, exz],
                      [exy, eyy, eyz],
@@ -955,14 +939,15 @@ class SolidStrainObject(StrainObject):
         dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
         header[1] = dtLine
         msg = header + tetraMsg
+        cen = 'CENTER'
         for eid in eids:
             #eType = self.eType[eid]
 
             k = self.exx[dt][eid].keys()
-            k.remove('C')
+            k.remove(cen)
             k.sort()
             msgA = '0  %8s           0GRID CS  %i GP\n' % (eid, nNodes)
-            for nid in ['C'] + k:
+            for nid in [cen] + k:
                 exx = self.exx[dt][eid][nid]
                 eyy = self.eyy[dt][eid][nid]
                 ezz = self.ezz[dt][eid][nid]
@@ -976,8 +961,6 @@ class SolidStrainObject(StrainObject):
                 evm = self.evmShear[dt][eid][nid]
                 p = (e1 + e2 + e3) / -3.
 
-                if nid == 'C':
-                    nid = 'CENTER'
                 #print "nid = |%r|" %(nid)
                 A = [[exx, exy, exz],
                      [exy, eyy, eyz],

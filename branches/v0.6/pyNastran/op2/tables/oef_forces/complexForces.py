@@ -1,7 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
-from struct import unpack
+from struct import Struct, unpack
 
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
@@ -16,28 +16,27 @@ class ComplexForces(object):
         format1 = bytes(format1)
         is_magnitude_phase = self.is_magnitude_phase()
 
-        while len(self.data) >= 20:  # 5*4
-            eData = self.data[0:20]
-            self.data = self.data[20:]
-            #print "len(data) = ",len(eData)
-
-            out = unpack(format1, eData)
+        ntotal = 20 # 5*4
+        nelements = len(self.data) // ntotal
+        for i in xrange(nelements):
+            edata = self.data[n:n+20]
+            out = unpack(format1, edata)
             (eid, axialReal, torqueReal, axialImag, torqueImag) = out
 
             if is_magnitude_phase:
-                (axial) = polar_to_real_imag(axialReal, axialImag)
-                (torque) = polar_to_real_imag(torqueReal, torqueImag)
+                axial = polar_to_real_imag(axialReal, axialImag)
+                torque = polar_to_real_imag(torqueReal, torqueImag)
             else:
                 axial = complex(axialReal, axialImag)
                 torque = complex(torqueReal, torqueImag)
             eid2 = extract(eid, dt)
-            #print "eType=%s" %(eType)
 
             dataIn = [eid2, axial, torque]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
+            n += ntotal
+        self.data = self.data[n:]
         #print self.rodForces
 
     def OEF_Beam_alt(self):  # 2-CBEAM
@@ -50,20 +49,22 @@ class ComplexForces(object):
         formatAll = 'i15f'
         format1 = bytes(format1)
         formatAll = bytes(formatAll)
-        while len(self.data) >= 708:  # (16*11+1)*4 = 177*4
-            eData = self.data[0:4]
-            self.data = self.data[4:]
-            eidTemp, = unpack(format1, eData)
+        n = 0
+        ntotal = 708  # (16*11+1)*4 = 177*4
+        nelements = len(self.data) // ntotal
+        for i in xrange(nelements):
+            edata = self.data[n:n+4]
+            eidTemp, = unpack(format1, edata)
             eid2 = extract(eidTemp, dt)
 
+            n += 4
             for i in xrange(11):
-                eData = self.data[0:64]
-                self.data = self.data[64:]
-                #print "len(data) = ",len(eData)
+                edata = self.data[n:n+64]
+                n += 64
 
-                out = unpack(formatAll, eData)
+                out = unpack(formatAll, edata)
                 (nid, sd, bm1r, bm2r, ts1r, ts2r, afr, ttrqr, wtrqr,
-                 bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi) = out
+                          bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi) = out
 
                 if is_magnitude_phase:
                     bm1 = polar_to_real_imag(bm1r, bm1i)
@@ -99,8 +100,7 @@ class ComplexForces(object):
                     self.obj.add(dt, dataIn)
                     #print
                 #else: pass
-
-            #print "len(data) = ",len(self.data)
+        self.data = self.data[n:]
         #print self.beamForces
 
     def OEF_Shear_alt(self):  # 4-CSHEAR
@@ -171,14 +171,15 @@ class ComplexForces(object):
         format1 = bytes(format1)
         is_magnitude_phase = self.is_magnitude_phase()
 
-        while len(self.data) >= 12:  # 3*4
-            eData = self.data[0:12]
-            self.data = self.data[12:]
-            #print "len(data) = ",len(eData)
+        n = 0
+        ntotal = 12
+        nelements = len(self.data) // 12  # 3*4
+        for i in xrange(nelements):
+            edata = self.data[n:n+12]
 
-            out = unpack(format1, eData)
-            (eid, forceReal, forceImag) = out
-            eid2 = extract(eid, dt)
+            out = unpack(format1, edata)
+            (eid_device, forceReal, forceImag) = out
+            eid = extract(eid_device, dt)
             #print "eType=%s" %(eType)
 
             if is_magnitude_phase:
@@ -186,11 +187,12 @@ class ComplexForces(object):
             else:
                 force = complex(forceReal, forceImag)
 
-            dataIn = [eid2, force]
+            dataIn = [eid, force]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
+            n += ntotal
+        self.data = self.data[n:]
         #print self.springForces
 
     def OEF_CVisc_alt(self):  # 24-CVISC
@@ -200,14 +202,15 @@ class ComplexForces(object):
         format1 = bytes(format1)
         is_magnitude_phase = self.is_magnitude_phase()
 
-        while len(self.data) >= 20:  # 5*4
-            eData = self.data[0:20]
-            self.data = self.data[20:]
-            #print "len(data) = ",len(eData)
+        n = 0
+        ntotal = 20  # 5*4
+        nelements = len(self.data) // ntotal
+        for i in xrange(nelements):
+            edata = self.data[n:n+20]
 
-            out = unpack(format1, eData)
-            (eid, axialReal, torqueReal, axialImag, torqueImag) = out
-            eid2 = extract(eid, dt)
+            out = unpack(format1, edata)
+            (eid_device, axialReal, torqueReal, axialImag, torqueImag) = out
+            eid = extract(eid_device, dt)
             #print "eType=%s" %(eType)
 
             if is_magnitude_phase:
@@ -217,11 +220,12 @@ class ComplexForces(object):
                 axial = complex(axialReal, axialImag)
                 torque = complex(torqueReal, torqueImag)
 
-            dataIn = [eid2, axial, torque]
+            dataIn = [eid, axial, torque]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
+            n += ntotal
+        self.data = self.data[n:]
         #print self.viscForces
 
     def OEF_CBar_alt(self):  # 34-CBAR
@@ -230,16 +234,16 @@ class ComplexForces(object):
         format1 += '16f'
         format1 = bytes(format1)
         is_magnitude_phase = self.is_magnitude_phase()
+        n = 0
+        ntotal = 68  # 17*4
+        nelements = len(self.data) // ntotal
+        for i in xrange(nelements):
+            edata = self.data[n:n+68]
 
-        while len(self.data) >= 68:  # 17*4
-            eData = self.data[0:68]
-            self.data = self.data[68:]
-            #print "len(data) = ",len(eData)
-
-            out = unpack(format1, eData)
-            (eid, bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr,
-             bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi) = out
-            eid2 = extract(eid, dt)
+            out = unpack(format1, edata)
+            (eid_device, bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr,
+                         bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi) = out
+            eid = extract(eid_device, dt)
             #print "eType=%s" %(eType)
 
             if is_magnitude_phase:
@@ -261,11 +265,12 @@ class ComplexForces(object):
                 af = complex(afr, afi)
                 trq = complex(trqr, trqi)
 
-            dataIn = [eid2, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
+            dataIn = [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
+            n += ntotal
+        self.data = self.data[n:]
         #print self.barForces
 
     def OEF_Plate_alt(self):  # 33-CQUAD4,74-CTRIA3
@@ -273,17 +278,19 @@ class ComplexForces(object):
         (format1, extract) = self.getOEF_FormatStart()
         format1 += '16f'
         format1 = bytes(format1)
+        s = Struct(format1)
         is_magnitude_phase = self.is_magnitude_phase()
 
-        while len(self.data) >= 68:  # 17*4
-            eData = self.data[0:68]
-            self.data = self.data[68:]
-            #print "len(data) = ",len(eData)
+        n = 0
+        ntotal = 68
+        nelements = len(self.data) // 68
+        for i in xrange(nelements):
+            edata = self.data[n:n+68]
 
-            out = unpack(format1, eData)
-            (eid, mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
-             mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
-            eid2 = extract(eid, dt)
+            out = s.unpack(edata)
+            (eid_device, mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
+                         mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
+            eid = extract(eid_device, dt)
             #print "eType=%s" %(eType)
 
             if is_magnitude_phase:
@@ -305,11 +312,12 @@ class ComplexForces(object):
                 tx = complex(txr, txi)
                 ty = complex(tyr, tyi)
 
-            dataIn = [eid2, mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+            dataIn = [eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
+            n += ntotal
+        self.data = self.data[n:]
         #print self.plateForces
 
     def OEF_Plate2_alt(self):  # 64-CQUAD8,70-CTRIAR,75-CTRIA6,82-CQUAD8,144-CQUAD4-bilinear
@@ -319,30 +327,29 @@ class ComplexForces(object):
         is_magnitude_phase = self.is_magnitude_phase()
 
         if self.element_type in [70, 75]:  # CTRIAR,CTRIA6
-            nNodes = 4
+            nNodes = 3
         elif self.element_type in [64, 82, 144]:  # CQUAD8,CQUADR,CQUAD4-bilinear
-            nNodes = 5
+            nNodes = 4
         else:
             raise NotImplementedError(self.code_information())
 
         allFormat = '17f'
         format1 = bytes(format1)
         allFormat = bytes(allFormat)
-        nTotal = 8 + nNodes * 68
-        while len(self.data) >= nTotal:
-            eData = self.data[0:76]
-            self.data = self.data[76:]
-            #print self.print_block(eData)
-            #print "len(data) = ",len(eData)
+        nTotal = 8 + (nNodes+1) * 68
+        n = 0
+        nelements = len(self.data) // nTotal
+        for i in xrange(nelements):
+            edata = self.data[n:n+76]
+            n += 76
 
-            out = unpack(format1 + allFormat, eData)
-            (eid, term, nid, mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
-             mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
+            out = unpack(format1 + allFormat, edata)
+            (eid_device, term, nid, mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
+                                    mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
             #term = 'CEN\'
             #print "eType=%s" %(eType)
 
-            eid2 = extract(eid, dt)
-
+            eid = extract(eid_device, dt)
             if is_magnitude_phase:
                 mx = polar_to_real_imag(mxr, mxi)
                 my = polar_to_real_imag(myr, myi)
@@ -364,15 +371,15 @@ class ComplexForces(object):
 
             dataIn = [term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
-            self.obj.addNewElement(eid2, dt, dataIn)
+            self.obj.addNewElement(eid, dt, dataIn)
 
-            for i in xrange(nNodes - 1):  # .. todo:: fix crash...
-                eData = self.data[0:68]
-                self.data = self.data[68:]
-                out = unpack(allFormat, eData)
+            for i in xrange(nNodes):  # .. todo:: fix crash...
+                edata = self.data[n:n+68]
+                n += 68
+                out = unpack(allFormat, edata)
 
                 (nid, mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
-                 mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
+                      mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
                 if is_magnitude_phase:
                     mx = polar_to_real_imag(mxr, mxi)
                     my = polar_to_real_imag(myr, myi)
@@ -393,9 +400,8 @@ class ComplexForces(object):
                     ty = complex(tyr, tyi)
                 dataIn = [nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty]
                 #print "***%s    " %(self.get_element_type(self.element_type)),dataIn
-
-                self.obj.add(eid2, dt, dataIn)
-                #print "len(data) = ",len(self.data)
+                self.obj.add(eid, dt, dataIn)
+        self.data = self.data[n:]
         #print self.plateForces2
 
     def OEF_Bend_alt(self):  # 69-CBEND
@@ -420,23 +426,17 @@ class ComplexForces(object):
 
             if is_magnitude_phase:
                 bm1A = polar_to_real_imag(bm1Ar, bm1Ai)
-                bm1B = polar_to_real_imag(
-                    bm1Br, bm1Bi)
+                bm1B = polar_to_real_imag(bm1Br, bm1Bi)
                 bm2A = polar_to_real_imag(bm2Ar, bm2Ai)
-                bm2B = polar_to_real_imag(
-                    bm2Br, bm2Bi)
+                bm2B = polar_to_real_imag(bm2Br, bm2Bi)
                 ts1A = polar_to_real_imag(ts1Ar, ts1Ai)
-                ts1B = polar_to_real_imag(
-                    ts1Br, ts1Bi)
+                ts1B = polar_to_real_imag(ts1Br, ts1Bi)
                 ts2A = polar_to_real_imag(ts2Ar, ts2Ai)
-                ts2B = polar_to_real_imag(
-                    ts2Br, ts2Bi)
-                afA = polar_to_real_imag(afAr,
-                                      afAi)
+                ts2B = polar_to_real_imag(ts2Br, ts2Bi)
+                afA = polar_to_real_imag(afAr, afAi)
                 afB = polar_to_real_imag(afBr, afBi)
                 trqA = polar_to_real_imag(trqAr, trqAi)
-                trqB = polar_to_real_imag(
-                    trqBr, trqBi)
+                trqB = polar_to_real_imag(trqBr, trqBi)
             else:
                 bm1A = complex(bm1Ar, bm1Ai)
                 bm1B = complex(bm1Br, bm1Bi)
@@ -514,7 +514,7 @@ class ComplexForces(object):
 
             out = unpack(format1, eData)
             (eid, fxr, fyr, fzr, mxr, myr, mzr,
-             fxi, fyi, fzi, mxi, myi, mzi) = out
+                  fxi, fyi, fzi, mxi, myi, mzi) = out
             eid2 = extract(eid, dt)
             #print "eType=%s" %(eType)
 

@@ -80,12 +80,11 @@ class RealForces(object):
         format1 += 'ff'
         format1 = bytes(format1)
 
-        while len(self.data) >= 12:  # 3*4
-            eData = self.data[0:12]
-            self.data = self.data[12:]
-            #print "len(data) = ",len(eData)
-
-            out = unpack(format1, eData)
+        n = 0
+        nelements = len(self.data) // 12  # 3*4
+        for i in xrange(nelements):
+            edata = self.data[n:n+12]
+            out = unpack(format1, edata)
             if self.make_op2_debug:
                 self.op2_debug.write('OEF_Rod - %s\n' % (str(out)))
             (eid, axial, torque) = out
@@ -96,7 +95,9 @@ class RealForces(object):
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
+            n += 12
             #print "len(data) = ",len(self.data)
+        self.data = self.data[n:]
         #print self.rodForces
 
     def OEF_CVisc(self):  # 24-CVISC
@@ -104,24 +105,25 @@ class RealForces(object):
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'ff'
         format1 = bytes(format1)
+        ntotal = 12  #   # 3*4
+        n = 0
+        nelements = len(self.data) // 12
+        for i in xrange(nelements):
+            edata = self.data[n:n+12]
 
-        while len(self.data) >= 12:  # 3*4
-            eData = self.data[0:12]
-            self.data = self.data[12:]
-            #print "len(data) = ",len(eData)
-
-            out = unpack(format1, eData)
+            out = unpack(format1, edata)
             if self.make_op2_debug:
                 self.op2_debug.write('OEF_CVisc - %s\n' % (str(out)))
-            (eid, axial, torque) = out
-            eid2 = extract(eid, dt)
+            (eid_device, axial, torque) = out
+            eid = extract(eid_device, dt)
             #print "eType=%s" %(eType)
 
-            dataIn = [eid2, axial, torque]
+            dataIn = [eid, axial, torque]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
+            n += ntotal
+        self.data = self.data[n:]
         #print self.viscForces
 
     def OEF_Beam(self):  # 2-CBEAM   # TODO is this correct???
@@ -132,20 +134,20 @@ class RealForces(object):
         format1 = bytes(format1)
         formatAll = bytes(formatAll)
 
-        while len(self.data) >= 400:  # 1+(10-1)*11=100 ->100*4 = 400
+        nelements = len(self.data) // 400  # 1+(10-1)*11=100 ->100*4 = 400
+        for i in xrange(nelements):
             #print "eType=%s" %(eType)
 
-            eData = self.data[0:4]
-            self.data = self.data[4:]
-            eid, = unpack(format1, eData)
+            edata = self.data[n:n+4]
+            eid, = unpack(format1, edata)
             eid2 = extract(eid, dt)
+            n += 4
 
             for i in xrange(11):
-                eData = self.data[0:36]
-                self.data = self.data[36:]
-                #print "len(data) = ",len(eData)
+                edata = self.data[n:n+36]
+                n += 36
 
-                out = unpack(formatAll, eData)
+                out = unpack(formatAll, edata)
                 if self.make_op2_debug:
                     self.op2_debug.write('OEF_Beam - %s\n' % (str(out)))
                 (nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq) = out
@@ -164,6 +166,7 @@ class RealForces(object):
                 #print
             #else: pass
             #print "len(data) = ",len(self.data)
+        self.data = self.data[n:]
         #print self.beamForces
 
     def OEF_Shear(self):  # 4-CSHEAR
@@ -171,12 +174,12 @@ class RealForces(object):
         (format1, extract) = self.getOEF_FormatStart()
         format1 += '16f'
         format1 = bytes(format1)
+        ntotal = 68  # 17*4
+        nelements = len(self.data) // 68
+        for i in xrange(nelements):
+            edata = self.data[n:n+68]
 
-        while len(self.data) >= 68:  # 17*4
-            eData = self.data[0:68]
-            self.data = self.data[68:]
-
-            out = unpack(format1, eData)
+            out = unpack(format1, edata)
             if self.make_op2_debug:
                 self.op2_debug.write('OEF_Shear - %s\n' % (str(out)))
             (eid, f41, f21, f12, f32, f23, f43, f34, f14, kf1,
@@ -189,7 +192,8 @@ class RealForces(object):
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
+            n += ntotal
+        self.data = self.data[n:]
         #print self.shearForces
 
     def OEF_Spring(self):  # 11-CELAS1, 12-CELAS2, 13-CELAS3, 14-CELAS4
@@ -198,12 +202,12 @@ class RealForces(object):
         format1 += 'f'
         format1 = bytes(format1)
 
-        while len(self.data) >= 8:  # 2*4
-            eData = self.data[0:8]
-            self.data = self.data[8:]
-            #print "len(data) = ",len(eData)
+        n = 0
+        nelements = len(self.data) // 8 # 2*4
+        for i in xrange(nelements):
+            edata = self.data[n:n+8]
 
-            out = unpack(format1, eData)
+            out = unpack(format1, edata)
             if self.make_op2_debug:
                 self.op2_debug.write('OEF_Spring - %s\n' % (str(out)))
             (eid, force) = out
@@ -214,7 +218,7 @@ class RealForces(object):
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
+        self.data = self.data[n:]
         #print self.springForces
 
     def OEF_CBar(self):  # 34-CBAR
@@ -240,6 +244,7 @@ class RealForces(object):
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             n += ntotal
+        self.data = self.data[n:]
         #print self.barForces
 
     def OEF_CBar100(self):  # 100-CBAR
@@ -265,6 +270,7 @@ class RealForces(object):
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
+        #self.data = self.data[n:]
         #print self.bar100Forces
 
     def OEF_Plate(self):  # 33-CQUAD4,74-CTRIA3
@@ -291,8 +297,8 @@ class RealForces(object):
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             n += ntotal
-        #print self.plateForces
         self.data = self.data[n:]
+        #print self.plateForces
 
     def OEF_Plate2(self):  # 64-CQUAD8,70-CTRIAR,75-CTRIA6,82-CQUAD8,144-CQUAD4-bilinear
         dt = self.nonlinear_factor
@@ -366,6 +372,7 @@ class RealForces(object):
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
+        #self.data = self.data[n:]
         #print self.shearForces
 
     def OEF_CGap(self):  # 38-CGAP
@@ -391,6 +398,7 @@ class RealForces(object):
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
+        #self.data = self.data[n:]
         #print self.plateForces
 
     def OEF_Bend(self):  # 69-CBEND
@@ -418,6 +426,7 @@ class RealForces(object):
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
+        #self.data = self.data[n:]
         #print self.bendForces
 
     def OEF_PentaPressure(self):  # 77-CPENTA_PR,78-CTETRA_PR
@@ -443,6 +452,7 @@ class RealForces(object):
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
+        #self.data = self.data[n:]
         #print self.pentaPressureForces
 
     def OEF_CBush(self):  # 102-CBUSH
@@ -468,6 +478,7 @@ class RealForces(object):
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
+        #self.data = self.data[n:]
         #print self.bushForces
 
     def OEF_Force_VU(self):  # 191-VUBEAM
@@ -489,7 +500,6 @@ class RealForces(object):
         while len(self.data) >= n:
             eData = self.data[0:16]  # 8*4
             self.data = self.data[16:]
-            #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
             if self.make_op2_debug:
@@ -516,7 +526,7 @@ class RealForces(object):
             #print "force %s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(nNodes, dt, dataIn)
-            #print "len(data) = ",len(self.data)
+        #self.data = self.data[n:]
 
     def OEF_Force_VUTRIA(self):  # 189-VUQUAD,190-VUTRIA
         dt = self.nonlinear_factor
@@ -539,7 +549,6 @@ class RealForces(object):
         while len(self.data) >= n:
             eData = self.data[0:24]  # 6*4
             self.data = self.data[24:]
-            #print "len(data) = ",len(eData)
 
             out = unpack(format1, eData)
             if self.make_op2_debug:
@@ -569,6 +578,6 @@ class RealForces(object):
             #print "force %s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(nNodes, dt, dataIn)
-            #print "len(data) = ",len(self.data)
 
+        #self.data = self.data[n:]
         #print(self.force_VU_2D)

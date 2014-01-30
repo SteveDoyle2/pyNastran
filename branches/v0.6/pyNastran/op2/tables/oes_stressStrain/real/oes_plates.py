@@ -73,21 +73,19 @@ class PlateStressObject(StressObject):
                     (eType, eid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
                      f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
                     self.eType[eid] = eType
-                    self.fiberCurvature[eid] = {'C': [f1, f2]}
-                    self.oxx[eid] = {'C': [ox1, ox2]}
-                    self.oyy[eid] = {'C': [oy1, oy2]}
-                    self.txy[eid] = {'C': [txy1, txy2]}
-                    self.angle[eid] = {'C': [angle1, angle2]}
-                    self.majorP[eid] = {'C': [o11, o12]}
-                    self.minorP[eid] = {'C': [o21, o22]}
-                    self.ovmShear[eid] = {'C': [ovm1, ovm2]}
+                    self.fiberCurvature[eid] = {'CEN/3': [f1, f2]}
+                    self.oxx[eid] = {'CEN/3': [ox1, ox2]}
+                    self.oyy[eid] = {'CEN/3': [oy1, oy2]}
+                    self.txy[eid] = {'CEN/3': [txy1, txy2]}
+                    self.angle[eid] = {'CEN/3': [angle1, angle2]}
+                    self.majorP[eid] = {'CEN/3': [o11, o12]}
+                    self.minorP[eid] = {'CEN/3': [o21, o22]}
+                    self.ovmShear[eid] = {'CEN/3': [ovm1, ovm2]}
                 elif eType == 'CQUAD4':
                     #assert len(line)==19,'len(line)=%s' %(len(line))
                     if len(line) == 19:  # Centroid - bilinear
                         (eType, eid, nid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
                                           f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
-                        #if nid == 'CEN/4':
-                            #nid = 'C'
                         self.eType[eid] = eType
                         self.fiberCurvature[eid] = {nid: [f1, f2]}
                         self.oxx[eid] = {nid: [ox1, ox2]}
@@ -100,7 +98,7 @@ class PlateStressObject(StressObject):
                     elif len(line) == 18:  # Centroid
                         (eType, eid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
                                      f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
-                        nid = 'C'
+                        nid = 'CEN/4'
                         self.eType[eid] = eType
                         self.fiberCurvature[eid] = {nid: [f1, f2]}
                         self.oxx[eid] = {nid: [ox1, ox2]}
@@ -111,7 +109,6 @@ class PlateStressObject(StressObject):
                         self.minorP[eid] = {nid: [o21, o22]}
                         self.ovmShear[eid] = {nid: [ovm1, ovm2]}
                     elif len(line) == 17:  # Bilinear
-                        #print line
                         (nid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
                               f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
                         self.fiberCurvature[eid][nid] = [f1, f2]
@@ -149,19 +146,19 @@ class PlateStressObject(StressObject):
                 (eType, eid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
                  f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
                 self.eType[eid] = eType
-                self.fiberCurvature[eid] = {'C': [f1, f2]}
-                self.oxx[dt][eid] = {'C': [ox1, ox2]}
-                self.oyy[dt][eid] = {'C': [oy1, oy2]}
-                self.txy[dt][eid] = {'C': [txy1, txy2]}
-                self.angle[dt][eid] = {'C': [angle1, angle2]}
-                self.majorP[dt][eid] = {'C': [o11, o12]}
-                self.minorP[dt][eid] = {'C': [o21, o22]}
-                self.ovmShear[dt][eid] = {'C': [ovm1, ovm2]}
+                self.fiberCurvature[eid] = {'CEN/3': [f1, f2]}
+                self.oxx[dt][eid] = {'CEN/3': [ox1, ox2]}
+                self.oyy[dt][eid] = {'CEN/3': [oy1, oy2]}
+                self.txy[dt][eid] = {'CEN/3': [txy1, txy2]}
+                self.angle[dt][eid] = {'CEN/3': [angle1, angle2]}
+                self.majorP[dt][eid] = {'CEN/3': [o11, o12]}
+                self.minorP[dt][eid] = {'CEN/3': [o21, o22]}
+                self.ovmShear[dt][eid] = {'CEN/3': [ovm1, ovm2]}
             elif eType == 'CQUAD4':
                 if len(line) == 18:  # Centroid
                     (eType, eid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
                                  f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
-                    nid = 'C'
+                    nid = 'CEN/4'
                     self.eType[eid] = eType
                     self.fiberCurvature[eid] = {nid: [f1, f2]}
                     self.oxx[dt][eid] = {nid: [ox1, ox2]}
@@ -920,14 +917,14 @@ class PlateStrainObject(StrainObject):
                     (eType, eid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
                      f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
                     self.eType[eid] = eType
-                    self.fiberCurvature[eid] = {'C': [f1, f2]}
-                    self.exx[eid] = {'C': [ex1, ex2]}
-                    self.eyy[eid] = {'C': [ey1, ey2]}
-                    self.exy[eid] = {'C': [exy1, exy2]}
-                    self.angle[eid] = {'C': [angle1, angle2]}
-                    self.majorP[eid] = {'C': [e11, e12]}
-                    self.minorP[eid] = {'C': [e21, e22]}
-                    self.evmShear[eid] = {'C': [evm1, evm2]}
+                    self.fiberCurvature[eid] = {'CEN/3': [f1, f2]}
+                    self.exx[eid] = {'CEN/3': [ex1, ex2]}
+                    self.eyy[eid] = {'CEN/3': [ey1, ey2]}
+                    self.exy[eid] = {'CEN/3': [exy1, exy2]}
+                    self.angle[eid] = {'CEN/3': [angle1, angle2]}
+                    self.majorP[eid] = {'CEN/3': [e11, e12]}
+                    self.minorP[eid] = {'CEN/3': [e21, e22]}
+                    self.evmShear[eid] = {'CEN/3': [evm1, evm2]}
                 elif eType == 'CQUAD4':
                     #assert len(line)==19,'len(line)=%s' %(len(line))
                     #print line
@@ -935,8 +932,6 @@ class PlateStrainObject(StrainObject):
                         (
                             eType, eid, nid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
                             f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
-                        #if nid == 'CEN/4':
-                            #nid = 'C'
                         self.eType[eid] = eType
                         self.fiberCurvature[eid] = {nid: [f1, f2]}
                         self.exx[eid] = {nid: [ex1, ex2]}
@@ -950,7 +945,7 @@ class PlateStrainObject(StrainObject):
                         (
                             eType, eid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
                             f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
-                        nid = 'C'
+                        nid = 'CEN/4'
                         self.eType[eid] = eType
                         self.fiberCurvature[eid] = {nid: [f1, f2]}
                         self.exx[eid] = {nid: [ex1, ex2]}
@@ -961,7 +956,6 @@ class PlateStrainObject(StrainObject):
                         self.minorP[eid] = {nid: [e21, e22]}
                         self.evmShear[eid] = {nid: [evm1, evm2]}
                     elif len(line) == 17:  # Bilinear node
-                        #print line
                         (nid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
                          f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
                         self.fiberCurvature[eid][nid] = [f1, f2]
@@ -999,20 +993,19 @@ class PlateStrainObject(StrainObject):
                 (eType, eid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
                  f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
                 self.eType[eid] = eType
-                self.fiberCurvature[eid] = {'C': [f1, f2]}
-                self.exx[dt][eid] = {'C': [ex1, ex2]}
-                self.eyy[dt][eid] = {'C': [ey1, ey2]}
-                self.exy[dt][eid] = {'C': [exy1, exy2]}
-                self.angle[dt][eid] = {'C': [angle1, angle2]}
-                self.majorP[dt][eid] = {'C': [e11, e12]}
-                self.minorP[dt][eid] = {'C': [e21, e22]}
-                self.evmShear[dt][eid] = {'C': [evm1, evm2]}
+                self.fiberCurvature[eid] = {'CEN/3': [f1, f2]}
+                self.exx[dt][eid] = {'CEN/3': [ex1, ex2]}
+                self.eyy[dt][eid] = {'CEN/3': [ey1, ey2]}
+                self.exy[dt][eid] = {'CEN/3': [exy1, exy2]}
+                self.angle[dt][eid] = {'CEN/3': [angle1, angle2]}
+                self.majorP[dt][eid] = {'CEN/3': [e11, e12]}
+                self.minorP[dt][eid] = {'CEN/3': [e21, e22]}
+                self.evmShear[dt][eid] = {'CEN/3': [evm1, evm2]}
             elif eType == 'CQUAD4':
                 if len(line) == 18:  # Centroid
                     (
                         eType, eid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
                         f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
-                    nid = 'C'
                     self.eType[eid] = eType
                     self.fiberCurvature[eid] = {nid: [f1, f2]}
                     self.exx[dt][eid] = {nid: [ex1, ex2]}
@@ -1134,8 +1127,8 @@ class PlateStrainObject(StrainObject):
         #print msg
         #print self.oxx
         #print self.fiberCurvature
-        if nodeID != 'C':  # centroid
-            assert 0 < nodeID < 1000000000, 'nodeID=%s' % (nodeID)
+        #if nodeID != 'C':  # centroid
+            #assert 0 < nodeID < 1000000000, 'nodeID=%s' % (nodeID)
 
         self.fiberCurvature[eid][nodeID].append(curvature)
         self.exx[dt][eid][nodeID].append(exx)

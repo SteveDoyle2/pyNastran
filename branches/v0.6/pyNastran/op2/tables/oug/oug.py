@@ -53,7 +53,7 @@ class OUG(object):
         data = self.get_data(4 * 50)
         #print self.print_block(data)
 
-        three = self.parse_approach_code2(data)
+        three = self.parse_approach_code_sort2(data)
 
         ## random code
         self.add_data_parameter(data, 'randomCode', 'i', 8, False)
@@ -291,8 +291,8 @@ class OUG(object):
                     format1 = 'f'  # SORT1
                     extract = self.extractSort2
                 else:
-                    raise KeyError('invalid analysis_code...analysis_code=%s' %
-                                   self.analysis_code)
+                    msg =  'invalid analysis_code...analysis_code=%s' % self.analysis_code
+                    raise KeyError(msg)
                 #eid = self.nonlinear_factor
         return (format1, extract)
 
