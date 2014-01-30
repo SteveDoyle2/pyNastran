@@ -86,8 +86,8 @@ class PlateStressObject(StressObject):
                     if len(line) == 19:  # Centroid - bilinear
                         (eType, eid, nid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
                                           f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
-                        if nid == 'CEN/4':
-                            nid = 'C'
+                        #if nid == 'CEN/4':
+                            #nid = 'C'
                         self.eType[eid] = eType
                         self.fiberCurvature[eid] = {nid: [f1, f2]}
                         self.oxx[eid] = {nid: [ox1, ox2]}
@@ -748,9 +748,10 @@ class PlateStressObject(StressObject):
     def writeF06_Quad4_Bilinear(self, eid, n):
         msg = ['']
         k = self.oxx[eid].keys()
-        k.remove('C')
+        cen = 'CEN/' + str(n)
+        k.remove(cen)
         k.sort()
-        for nid in ['C'] + k:
+        for nid in [cen] + k:
             for iLayer in xrange(len(self.oxx[eid][nid])):
                 fd = self.fiberCurvature[eid][nid][iLayer]
                 oxx = self.oxx[eid][nid][iLayer]
@@ -763,8 +764,8 @@ class PlateStressObject(StressObject):
                 ([fd, oxx, oyy, txy, major, minor, ovm], isAllZeros) = writeFloats13E([fd, oxx, oyy, txy, major, minor, ovm])
                 ([angle], isAllZeros) = writeFloats8p4F([angle])
 
-                if nid == 'C' and iLayer == 0:
-                    msg.append('0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, 'CEN/' + str(n), fd, oxx, oyy, txy, angle, major, minor, ovm))
+                if nid == cen and iLayer == 0:
+                    msg.append('0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, cen, fd, oxx, oyy, txy, angle, major, minor, ovm))
                 elif iLayer == 0:
                     msg.append('   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % ('', nid, fd, oxx, oyy, txy, angle, major, minor, ovm))
                 elif iLayer == 1:
@@ -776,9 +777,10 @@ class PlateStressObject(StressObject):
     def writeF06_Quad4_BilinearTransient(self, dt, eid, n):
         msg = ['']
         k = self.oxx[dt][eid].keys()
-        k.remove('C')
+        cen = 'CEN/' + str(n)
+        k.remove(cen)
         k.sort()
-        for nid in ['C'] + k:
+        for nid in [cen] + k:
             for iLayer in xrange(len(self.oxx[dt][eid][nid])):
                 fd = self.fiberCurvature[eid][nid][iLayer]
                 oxx = self.oxx[dt][eid][nid][iLayer]
@@ -791,8 +793,8 @@ class PlateStressObject(StressObject):
                 ([fd, oxx, oyy, txy, major, minor, ovm], isAllZeros) = writeFloats13E([fd, oxx, oyy, txy, major, minor, ovm])
                 ([angle], isAllZeros) = writeFloats8p4F([angle])
 
-                if nid == 'C' and iLayer == 0:
-                    msg.append('0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, 'CEN/' + str(n), fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip()))
+                if nid == cen and iLayer == 0:
+                    msg.append('0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, cen, fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip()))
                 elif iLayer == 0:
                     msg.append('   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % ('', nid, fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip()))
                 elif iLayer == 1:
@@ -933,8 +935,8 @@ class PlateStrainObject(StrainObject):
                         (
                             eType, eid, nid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
                             f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
-                        if nid == 'CEN/4':
-                            nid = 'C'
+                        #if nid == 'CEN/4':
+                            #nid = 'C'
                         self.eType[eid] = eType
                         self.fiberCurvature[eid] = {nid: [f1, f2]}
                         self.exx[eid] = {nid: [ex1, ex2]}
@@ -1059,8 +1061,8 @@ class PlateStrainObject(StrainObject):
         #print "Plate add..."
         msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
 
-        if nodeID != 'C':  # centroid
-            assert 0 < nodeID < 1000000000, 'nodeID=%s %s' % (nodeID, msg)
+        #if nodeID != 'C':  # centroid
+            #assert 0 < nodeID < 1000000000, 'nodeID=%s %s' % (nodeID, msg)
 
         #if eid in self.exx:
             #return self.add(eid,nodeID,curvature,exx,eyy,exy,angle,majorP,minorP,evm)
@@ -1083,8 +1085,8 @@ class PlateStrainObject(StrainObject):
         msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
         #print msg
 
-        if nodeID != 'C':  # centroid
-            assert 0 < nodeID < 1000000000, 'nodeID=%s %s' % (nodeID, msg)
+        #if nodeID != 'C':  # centroid
+            #assert 0 < nodeID < 1000000000, 'nodeID=%s %s' % (nodeID, msg)
 
         if dt not in self.exx:
             self.add_new_transient(dt)
@@ -1113,8 +1115,8 @@ class PlateStrainObject(StrainObject):
         #print msg
         #print self.oxx
         #print self.fiberCurvature
-        if nodeID != 'C':  # centroid
-            assert 0 < nodeID < 1000000000, 'nodeID=%s' % (nodeID)
+        #if nodeID != 'C':  # centroid
+            #assert 0 < nodeID < 1000000000, 'nodeID=%s' % (nodeID)
         self.fiberCurvature[eid][nodeID].append(curvature)
         self.exx[eid][nodeID].append(exx)
         self.eyy[eid][nodeID].append(eyy)
@@ -1422,9 +1424,10 @@ class PlateStrainObject(StrainObject):
     def writeF06_Quad4_Bilinear(self, eid, n):
         msg = ['']
         k = self.exx[eid].keys()
-        k.remove('C')
+        cen = 'CEN/' + str(n)
+        k.remove(cen)
         k.sort()
-        for nid in ['C'] + k:
+        for nid in [cen] + k:
             for iLayer in xrange(len(self.exx[eid][nid])):
                 fd = self.fiberCurvature[eid][nid][iLayer]
                 exx = self.exx[eid][nid][iLayer]
@@ -1437,8 +1440,8 @@ class PlateStrainObject(StrainObject):
                 ([fd, exx, eyy, exy, major, minor, evm], isAllZeros) = writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
                 ([angle], isAllZeros) = writeFloats8p4F([angle])
 
-                if nid == 'C' and iLayer == 0:
-                    msg.append('0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, 'CEN/' + str(n), fd, exx, eyy, exy, angle, major, minor, evm.rstrip()))
+                if nid == cen and iLayer == 0:
+                    msg.append('0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, cen, fd, exx, eyy, exy, angle, major, minor, evm.rstrip()))
                 elif iLayer == 0:
                     msg.append('   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % ('', nid, fd, exx, eyy, exy, angle, major, minor, evm.rstrip()))
                 elif iLayer == 1:
@@ -1450,9 +1453,10 @@ class PlateStrainObject(StrainObject):
     def writeF06_Quad4_BilinearTransient(self, dt, eid, n):
         msg = ['']
         k = self.exx[dt][eid].keys()
-        k.remove('C')
+        cen = 'CEN/' + str(n)
+        k.remove(cen)
         k.sort()
-        for nid in ['C'] + k:
+        for nid in [cen] + k:
             for iLayer in xrange(len(self.exx[dt][eid][nid])):
                 fd = self.fiberCurvature[eid][nid][iLayer]
                 exx = self.exx[dt][eid][nid][iLayer]
@@ -1466,8 +1470,8 @@ class PlateStrainObject(StrainObject):
                 ([fd, exx, eyy, exy, major, minor, evm], isAllZeros) = writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
                 ([angle], isAllZeros) = writeFloats8p4F([angle])
 
-                if nid == 'C' and iLayer == 0:
-                    msg.append('0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, 'CEN/' + str(n), fd, exx, eyy, exy, angle, major, minor, evm.rstrip()))
+                if nid == cen and iLayer == 0:
+                    msg.append('0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, cen, fd, exx, eyy, exy, angle, major, minor, evm.rstrip()))
                 elif iLayer == 0:
                     msg.append('   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % ('', nid, fd, exx, eyy, exy, angle, major, minor, evm.rstrip()))
                 elif iLayer == 1:

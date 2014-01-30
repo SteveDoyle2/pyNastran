@@ -62,7 +62,7 @@ class OP2Common(Op2Codes, F06Writer):
             74: 'CTRIA3-centroidal', # 1 node
 
             # bilinear plate
-            144: 'CQUAD4-bilinear', # 5 nodes
+            144: 'CQUAD4', # 5 nodes
 
             # composite plates
             95 : 'CQUAD4',
@@ -414,12 +414,14 @@ class OP2Common(Op2Codes, F06Writer):
         format1 = '2i6f' # 8
 
         ntotal = 32 # 8 * 4
-        nnodes = len(data) // ntotal > 0
+        nnodes = len(data) // ntotal
+
+        assert self.obj is not None
+        assert nnodes > 0
         assert len(data) % ntotal == 0
 
         n = 0
         s = Struct(format1)
-        assert self.obj is not None
         for inode in xrange(nnodes):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
@@ -447,7 +449,11 @@ class OP2Common(Op2Codes, F06Writer):
         ntotal = 56  # 14 * 4
         nnodes = len(data) // ntotal
         s = Struct(format1)
+
         assert self.obj is not None
+        assert nnodes > 0
+        assert len(data) % ntotal == 0
+
         for inode in xrange(nnodes):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)

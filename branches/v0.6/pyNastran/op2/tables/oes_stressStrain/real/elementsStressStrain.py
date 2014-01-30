@@ -166,9 +166,9 @@ class RealElementsStressStrain(object):
             #print "eid=%i grid=%s fd1=%-3.1f sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,'C',fd1,sx1,sy1,txy1,angle1,major1,minor1,maxShear1)
             #print   "             fd2=%-3.1f sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"       % (fd2,sx2,sy2,txy2,angle2,major2,minor2,maxShear2)
             #print "nNodes = ",nNodes
-            self.obj.add_new_eid('CQUAD4', dt, eid, 'C', fd1, sx1, sy1,
+            self.obj.add_new_eid('CQUAD4', dt, eid, 'CEN/4', fd1, sx1, sy1,
                                txy1, angle1, major1, minor1, maxShear1)
-            self.obj.add(dt, eid, 'C', fd2, sx2, sy2, txy2,
+            self.obj.add(dt, eid, 'CEN/4', fd2, sx2, sy2, txy2,
                          angle2, major2, minor2, maxShear2)
 
             for nodeID in xrange(nNodes):  # nodes pts
@@ -337,6 +337,7 @@ class RealElementsStressStrain(object):
                               szz, sxz, s3, c1, c2, c3) = out
 
                 if grid_device == 0:
+                    #grid = 'CEN/' + str(nnodes_expected-1)
                     grid = 'C'
                 else:
                     #grid = (grid_device - device_code) // 10
@@ -388,9 +389,9 @@ class RealElementsStressStrain(object):
             eid = extract(eid, dt)
             #print "eid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
             #print  "      fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"   % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
-            self.obj.add_new_eid('CTRIA3', dt, eid, 'C', fd1, sx1, sy1,
+            self.obj.add_new_eid('CTRIA3', dt, eid, 'CEN/3', fd1, sx1, sy1,
                                txy1, angle1, major1, minor1, vm1)
-            self.obj.add(dt, eid, 'C', fd2, sx2, sy2, txy2,
+            self.obj.add(dt, eid, 'CEN/3', fd2, sx2, sy2, txy2,
                          angle2, major2, minor2, vm2)
             n += ntotal
         n2 = nelements * ntotal
@@ -427,7 +428,7 @@ class RealElementsStressStrain(object):
                 self.op2_debug.write('CQUADR-82A - %s\n' % str(out))
             (grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
              fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
-            grid = 'C'
+            grid = 'CEN/4'
             self.obj.add_new_eid(eType, eid, grid, fd1, sx1, sy1,
                                txy1, angle1, major1, minor1, vm1)
             self.obj.add(eid, grid, fd2, sx2, sy2, txy2,
@@ -829,7 +830,7 @@ class RealElementsStressStrain(object):
         nrows = (1 + nnodes) * nelements  # centroid + nnodes
 
         n = 0
-        gridC = 'C'
+        gridC = 'CEN/%i' % nnodes
         cformat = b'i4s'+format1  # center format
         nformat = b'i16f'         # node format
         for i in xrange(nelements):
@@ -840,7 +841,6 @@ class RealElementsStressStrain(object):
                 self.op2_debug.write('%s-%sA - %s\n' % (eType, self.element_type, str(out)))
             (eid, _, grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
                            fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
-            #gridC = 'C'
             eid = extract(eid, dt)
             self.obj.add_new_eid(eType, dt, eid, gridC, fd1, sx1, sy1,
                                  txy1, angle1, major1, minor1, vm1)

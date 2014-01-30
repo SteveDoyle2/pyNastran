@@ -606,9 +606,9 @@ class OES(OP2Common):
                     #print "eid=%i grid=%s fd1=%-3.1f sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,'C',fd1,sx1,sy1,txy1,angle1,major1,minor1,maxShear1)
                     #print   "             fd2=%-3.1f sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"       % (fd2,sx2,sy2,txy2,angle2,major2,minor2,maxShear2)
                     #print "nNodes = ",nNodes
-                    self.obj.add_new_eid('CQUAD4', dt, eid, 'C', fd1, sx1, sy1,
+                    self.obj.add_new_eid('CQUAD4', dt, eid, 'CEN/4', fd1, sx1, sy1,
                                        txy1, angle1, major1, minor1, max_shear1)
-                    self.obj.add(dt, eid, 'C', fd2, sx2, sy2, txy2,
+                    self.obj.add(dt, eid, 'CEN/4', fd2, sx2, sy2, txy2,
                                  angle2, major2, minor2, max_shear2)
                     #print "eid =", eid
                     n += ntotal
@@ -754,8 +754,8 @@ class OES(OP2Common):
                         txy2 = complex(txy2r, txy2i)
                     #print "eid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
                     #print  "      fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"   % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
-                    self.obj.add_new_eid('CTRIA3', dt, eid, 'C', fd1, sx1, sy1, txy1)
-                    self.obj.add(dt, eid, 'C', fd2, sx2, sy2, txy2)
+                    self.obj.add_new_eid('CTRIA3', dt, eid, 'CEN/4', fd1, sx1, sy1, txy1)
+                    self.obj.add(dt, eid, 'CEN/4', fd2, sx2, sy2, txy2)
                     n += ntotal
             else:
                 raise NotImplementedError(self.num_wide)
@@ -776,7 +776,13 @@ class OES(OP2Common):
             numwide_real = 2 + 17 * (nnodes + 1)
             numwide_imag = 2 + 15 * (nnodes + 1)
 
+            eType = self.element_name
+
             if self.num_wide == numwide_real:
+                if self.isStress():
+                    self.create_transient_object(self.plateStress, PlateStressObject)
+                else:
+                    self.create_transient_object(self.plateStrain, PlateStrainObject)
                 ntotal = 4 * (2 + 17 * (nnodes + 1))
                 #assert ntotal == 348, ntotal
                 center_format = b'i4si16f'
@@ -795,6 +801,7 @@ class OES(OP2Common):
                     self.binary_debug.write('  #                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
                     self.binary_debug.write('  nelements=%i; nnodes=%i # +1 centroid\n' % (nelements, nnodes))
 
+                gridC = 'CEN/%i' % nnodes
                 for i in xrange(nelements):
                     edata = data[n:n+76]
 
@@ -809,23 +816,36 @@ class OES(OP2Common):
 
                     #print "eid=%i grid=%s fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
                     #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"        % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
+                    self.obj.add_new_eid(eType, dt, eid, gridC, fd1, sx1, sy1,
+                                         txy1, angle1, major1, minor1, vm1)
+                    self.obj.add(dt, eid, gridC, fd2, sx2, sy2, txy2,
+                                 angle2, major2, minor2, vm2)
                     n += 76
                     for inode in range(nnodes):
                         out = ns.unpack(data[n:n + 68])
+                        (grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
+                               fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
+
                         if self.debug4():
                             d = tuple([grid,
                                       fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
                                       fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2])
                             self.binary_debug.write('  node%i = [%s]\n' % (inode+1, ', '.join(['%r' % di for di in d])))
-                        (grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-                               fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
                         assert isinstance(grid, int), grid
                         assert grid > 0, grid
 
                         #print "eid=%i grid=%i fd1=%i sx1=%i sy1=%i txy1=%i angle1=%i major1=%i minor1=%i vm1=%i" % (eid,grid,fd1,sx1,sy1,txy1,angle1,major1,minor1,vm1)
                         #print "               fd2=%i sx2=%i sy2=%i txy2=%i angle2=%i major2=%i minor2=%i vm2=%i\n"        % (fd2,sx2,sy2,txy2,angle2,major2,minor2,vm2)
+                        self.obj.addNewNode(dt, eid, grid, fd1, sx1, sy1,
+                                            txy1, angle1, major1, minor1, vm1)
+                        self.obj.add(dt, eid, grid, fd2, sx2, sy2,
+                                     txy2, angle2, major2, minor2, vm2)
                         n += 68
             elif self.num_wide == numwide_imag:
+                if self.isStress():
+                    self.create_transient_object(self.plateStress, ComplexPlateStressObject)
+                else:
+                    self.create_transient_object(self.plateStrain, ComplexPlateStrainObject)
                 format1 = b'i14f' # 15
                 ntotal = numwide_imag * 4
                 assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
