@@ -216,7 +216,7 @@ class TestBeams(unittest.TestCase):
                 msg += 'expected = %r' % expected
                 self.assertEqual(actual, expected, msg)
 
-    def test_pbeam_09(self):  # should fail...
+    def test_pbeam_09(self):
         #pid=
         fields = [u'PBEAM', 4570049, 4570010, 0.12, 0.000256, 0.005625, None,
             0.0008889, 6.4444e-07, -0.04, -0.75, 0.04, -0.75, 0.04, 0.75,
