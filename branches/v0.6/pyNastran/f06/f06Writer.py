@@ -223,6 +223,7 @@ class F06Writer(object):
         self.gapForces = {}
         self.plateForces = {}
         self.plateForces2 = {}
+        self.compositePlateForces = {}
         self.shearForces = {}
         self.solidPressureForces = {}
         self.springForces = {}
