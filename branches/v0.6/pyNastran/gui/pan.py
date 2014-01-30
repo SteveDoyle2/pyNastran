@@ -450,8 +450,12 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO, TetgenIO, U
             #gridResult.Reset()
             gridResult = vtk.vtkFloatArray()
             emptyResult = vtk.vtkFloatArray()
-
-            key = self.caseKeys[self.iCase]
+        
+            try:
+                key = self.caseKeys[self.iCase]
+            except:
+                print('icase=%s caseKeys=%s' % (self.iCase, str(self.caseKeys)))
+                raise
             case = self.resultCases[key]
             print("len(case) = %i" % len(case))
             (subcaseID, resultType, vectorSize, location, dataFormat) = key
@@ -545,9 +549,8 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO, TetgenIO, U
                     self.grid.Modified()
                 else:
                     print("***nodal vector=%s skipping (centroid/nodal) - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
-                    #pass
-                #    self.grid.GetPointData().SetScalars(gridResult)
-                #print "***nodal skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label)
+                    self.grid.GetPointData().SetVectors(gridResult)
+                    #print("***nodal skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label))
             else:
                 print("***%s skipping (centroid/nodal) - subcaseID=%s resultType=%s subtitle=%s label=%s" % (location, subcaseID, resultType, subtitle, label))
                 self.scalarBar.SetVisibility(False)
