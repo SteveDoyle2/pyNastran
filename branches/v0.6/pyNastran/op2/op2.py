@@ -9,6 +9,7 @@ import sys
 import warnings
 from numpy import array
 from struct import unpack
+import StringIO
 
 from pyNastran.op2.fortranFile import FortranFile
 from pyNastran.op2.op2Codes import Op2Codes
@@ -102,12 +103,14 @@ class OP2(BDF,
             return False
         return True
 
-    def __init__(self, op2FileName=None, make_geom=False, debug=True, log=None):
+    def __init__(self, op2FileName=None, make_geom=False, save_skipped_cards=False,
+                 debug=True, log=None):
         """
         Initializes the OP2 object
 
         :param op2FileName: the file to be parsed (string or None for GUI)
         :param make_geom: reads the BDF tables (default=False)
+        :param save_skipped_cards: creates the skippedCards.out file (default=False)
         :param debug: prints data about how the OP2 was parsed (default=False)
         :param log: a logging object to write debug messages to
          (.. seealso:: import logging)
@@ -159,8 +162,11 @@ class OP2(BDF,
         self.expected_times = {}
         #self.expected_times = {1:array([0.1,0.12])}
 
-        #: file object containing the skipped cards
-        self.skippedCardsFile = open('skippedCards.out', 'a')
+        if save_skipped_cards:
+            #: file object containing the skipped cards
+            self.skippedCardsFile = open('skippedCards.out', 'a')
+        else:
+            self.skippedCardsFile = StringIO.StringIO()
 
         #: the list of supported tables (dont edit this)
         self.tablesToRead = [
