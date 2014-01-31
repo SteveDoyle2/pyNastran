@@ -147,7 +147,7 @@ class Usm3dReader(object):
         except IOError:
             tris = None
             bcs = None
-            self.log.warning('Cannot find %r...skipping' % bc_filename)
+            self.log.error('Cannot find %r...skipping; required for geometry' % bc_filename)
         try:
             mapbc = self.read_mapbc(mapbc_filename)
         except IOError:

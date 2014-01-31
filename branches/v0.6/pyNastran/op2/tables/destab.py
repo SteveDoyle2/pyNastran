@@ -17,7 +17,7 @@ class DESTAB(object):
     def readTable_DesTab(self):
         self.table_name = 'DESTAB'
         table_name = self.read_table_name(rewind=False)  # DESTAB
-        self.table_init(table_name)
+        self._table_init(table_name)
         #print "table_name = |%r|" % (table_name)
 
         self.read_markers([-1, 7], 'DESTAB')

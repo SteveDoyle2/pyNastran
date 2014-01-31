@@ -18,7 +18,7 @@ self.show_command = False
 model_name = 'bay'
 
 dirname = os.getcwd()
-n_list = get_n_list(dirname, model_name)[:5]
+n_list = get_n_list(dirname, model_name)[:20]
 
 #n_list = [65495, 65475]
 flo_filenames = get_flo_files_from_n(dirname, model_name, n_list, include_dirname_in_path=True)

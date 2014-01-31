@@ -327,6 +327,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         self.menu_view = self.menubar.addMenu('&View')
         self.menu_window = self.menubar.addMenu('&Window')
         self.menu_help = self.menubar.addMenu('&Help')
+        self.menu_scripts = self.menubar.addMenu('&Scripts')
 
         ## toolbar
         self.toolbar = self.addToolBar('Show toolbar')
@@ -348,6 +349,11 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         #quit_key = 'Alt+F4' if sys.platform in ['win32', 'cygwin'] else 'Ctrl+Q'
 
         checkables = ['show_info', 'show_debug', 'show_gui', 'show_command']
+        scripts = [script for script in os.listdir(script_path) if '.py' in script ]
+        scripts = tuple(scripts)
+        print('script_path =', script_path)
+        print('scripts =', scripts)
+
         tools = [
           ('exit', '&Exit', os.path.join(icon_path, 'texit.png'), 'Ctrl+Q', 'Exit application', QtGui.qApp.quit),
           ('load_geometry', 'Load &Geometry', os.path.join(icon_path, 'load_geometry.png'), 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),  ## @todo no picture...
@@ -388,6 +394,11 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
           ('Z', 'Flips to -Z Axis', os.path.join(icon_path, 'minus_z.png'), 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
           ('script', 'Run Python script', os.path.join(icon_path, 'python.png'), None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
         ]
+        for script in scripts:
+            fname = os.path.join(script_path, script)
+            tool = (script, script, os.path.join(icon_path, 'python.png'), None, '', self.on_run_script )
+            tools.append(tool)
+
         for (nam, txt, icon, shortcut, tip, func) in tools:
             #print "name=%s txt=%s icon=%s short=%s tip=%s func=%s" % (nam, txt, icon, short, tip, func)
             #if icon is None:
@@ -425,16 +436,17 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         actions['logwidget'] = self.log_dock.toggleViewAction()
         actions['logwidget'].setStatusTip("Show/Hide application log")
 
-
+        menu_items = [(self.menu_file, ('load_geometry', 'load_results', 'script', '', 'exit')),
+                      (self.menu_view,  ('scshot', '', 'wireframe', 'surface', 'creset', '', 'back_col', '', 'show_info', 'show_debug', 'show_gui', 'show_command')),
+                      (self.menu_window,('toolbar', 'reswidget', 'logwidget' )),
+                      (self.menu_help,  ('about',)),
+                      (self.menu_scripts, scripts),
+                      (self.toolbar, ('cell_pick', 'reload', 'load_geometry', 'load_results', 'cycle_res',
+                                      'x', 'y', 'z', 'X', 'Y', 'Z',
+                                      'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
+                                      'wireframe', 'surface', 'edges', 'creset', 'scshot', '', 'exit'))]
         # populate menus and toolbar
-        for menu, items in [(self.menu_file, ('load_geometry', 'load_results', 'script', '', 'exit')),
-                           (self.menu_view,  ('scshot', '', 'wireframe', 'surface', 'creset', '', 'back_col', '', 'show_info', 'show_debug', 'show_gui', 'show_command')),
-                           (self.menu_window,('toolbar', 'reswidget', 'logwidget' )),
-                           (self.menu_help,  ('about',)),
-                           (self.toolbar, ('cell_pick', 'reload', 'load_geometry', 'load_results', 'cycle_res',
-                                           'x', 'y', 'z', 'X', 'Y', 'Z',
-                                           'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
-                                           'wireframe', 'surface', 'edges', 'creset', 'scshot', '', 'exit'))]:
+        for menu, items in menu_items:
             for i in items:
                 if not i:
                     menu.addSeparator()
@@ -486,14 +498,16 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             prop = self.edgeActor.GetProperty()
             prop.EdgeVisibilityOff()
 
+    #def _script_helper(self, python_file=False):
+        #if python_file in [None, False]:
+            #self.on_run_script(python_file)
+
     def on_run_script(self, python_file=False):
         if python_file in [None, False]:
             Title = 'Choose a Python Script to Run'
             wildcard = "Python (*.py)"
             wildcard_index, infile_name = self._create_load_file_dialog(wildcard, Title)
-            #print("infile_name = %r" % infile_name)
-            #print("wildcard_index = %r" % wildcard_index)
-            if not script_filename:
+            if not infile_name:
                 is_failed = True
                 return is_failed # user clicked cancel
 

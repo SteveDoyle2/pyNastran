@@ -24,7 +24,7 @@ class Usm3dIO(object):
         self._fill_usm3d_results(cases, bcs, mapbc, bcmap_to_bc_name, loads)
 
     def load_usm3d_geometry(self, cogsg_filename, dirname):
-        print "load_usm3d_geometry..."
+        #print "load_usm3d_geometry..."
         skipReading = self.removeOldGeometry(cogsg_filename)
         if skipReading:
             return

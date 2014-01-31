@@ -305,7 +305,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             'FREQ', 'FREQ1', 'FREQ2',
 
             # direct matrix input cards
-            'DMIG', 'DMIJ', 'DMIJI', 'DMIK', #'DMI',
+            'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI',
             'DEQATN',
 
             # optimization cards

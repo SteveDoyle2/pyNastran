@@ -129,7 +129,7 @@ class NastranMatrix(BaseCard):
             self.tout = integer_or_blank(card, 5, 'tout', 0)
 
             self.polar = integer_or_blank(card, 6, 'polar')
-            if self.ifo == 9:
+            if self.ifo in [6, 9]:
                 self.ncol = integer(card, 8, 'ncol')
             else:
                 self.ncol = blank(card, 8, 'ncol')
@@ -202,110 +202,6 @@ class NastranMatrix(BaseCard):
         #if self.isComplex():
             #self.Complex(double(card, v, 'complex')
 
-    def getMatrix(self, isSparse=False):
-        """
-        Builds the Matrix
-
-        :param self:     the object pointer
-        :param isSparse: should the matrix be returned as a sparse matrix (default=True).  Slower for dense matrices.
-
-        :returns M:    the matrix
-        :returns rows: dictionary of keys=rowID,    values=(Grid,Component) for the matrix
-        :returns cols: dictionary of keys=columnID, values=(Grid,Component) for the matrix
-        .. warning:: isSparse WILL fail
-        """
-        i = 0
-        rows = {}
-        rowsReversed = {}
-        for GCi in self.GCi:
-            if GCi not in rows:
-                rows[GCi] = i
-                rowsReversed[i] = GCi
-                i += 1
-        #nRows = len(rows2)
-
-        j = 0
-        cols = {}
-        colsReversed = {}
-        for GCj in self.GCj:
-            if GCj not in cols:
-                cols[GCj] = j
-                colsReversed[j] = GCj
-                j += 1
-        #nCols = len(cols2)
-
-        #A = ss.lil_matrix((3,3), dtype='d') # double precision
-
-        #rows=[]; cols=[]; data=[]
-        #for i in xrange(3):
-        #    for j in xrange(3):
-        #        k = float((i+1)*(j+1))
-        #        rows.append(i)
-        #        cols.append(j)
-        #        data.append(k)
-        #        A[i,j] = k
-
-        #isSparse = False
-        if isSparse:
-            data = []
-            rows2 = []
-            cols2 = []
-
-            nrows = 0
-            ncols = 0
-            if self.isComplex():
-                for (GCj, GCi, reali, complexi) in izip(self.GCj, self.GCi, self.Real, self.Complex):
-                    i = rows[GCi]
-                    j = cols[GCj]
-                    nrows = max(i, nrows)
-                    ncols = max(j, ncols)
-                    rows2.append(i)
-                    cols2.append(j)
-                    data.append(complex(reali, complexi))
-            else:
-                for (GCj, GCi) in izip(self.GCj, self.GCi):
-                    i = rows[GCi]
-                    j = cols[GCj]
-                    nrows = max(i, nrows)
-                    ncols = max(j, ncols)
-                    rows2.append(i)
-                    cols2.append(j)
-                data = self.Real
-            #print("i=%s j=%s len(rows2)=%s len(cols2)=%s len(data)=%s"
-            #    % (i, j, len(self.GCi), len(self.GCj), len(data)))
-            # ,dtype=Format
-            #print(rows2)
-
-            #print("nrows=%s ncols=%s" %(nrows, ncols))
-            if self.ifo in [1, 6]:
-                nrows = max(nrows, ncols)
-                ncols = nrows
-            #print("nrows=%s ncols=%s" %(nrows, ncols))
-
-            dType = self.getDType(self.tin)
-            #A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dType) # test
-            M = coo_matrix((data, (self.GCi, self.GCj)),
-                           shape=(nrows, ncols), dtype=dType)
-            #M = coo_matrix( (data,(self.GCi,self.GCj)),shape=(i,j)) # old
-            #M = coo_matrix( (data,(self.GCi,self.GCj)),shape=(nrows,ncols))
-            #print M.todense()
-            #print M
-        else:
-            if self.isComplex():
-                M = zeros((i, j), dtype='complex128')
-                for (GCj, GCi, reali, complexi) in izip(self.GCj, self.GCi, self.Real, self.Complex):
-                    i = rows[GCi]
-                    j = cols[GCj]
-                    M[i, j] = complex(reali, complexi)
-            else:
-                M = zeros((i, j), dtype='float64')
-                for (GCj, GCi, reali) in izip(self.GCj, self.GCi, self.Real):
-                    i = rows[GCi]
-                    j = cols[GCj]
-                    M[i, j] = reali
-        #print(M)
-        return (M, rowsReversed, colsReversed)
-
     def rename(self, newName):
         self.name = newName
 
@@ -356,6 +252,111 @@ class NastranMatrix(BaseCard):
                           None, GCi[0], GCi[1], reali, None]
                 msg += print_card(list_fields)
         return msg
+
+def getMatrix(self, isSparse=False):
+    """
+    Builds the Matrix
+
+    :param self:     the object pointer
+    :param isSparse: should the matrix be returned as a sparse matrix (default=True).  Slower for dense matrices.
+
+    :returns M:    the matrix
+    :returns rows: dictionary of keys=rowID,    values=(Grid,Component) for the matrix
+    :returns cols: dictionary of keys=columnID, values=(Grid,Component) for the matrix
+    .. warning:: isSparse WILL fail
+    """
+    i = 0
+    rows = {}
+    rowsReversed = {}
+    for GCi in self.GCi:
+        if GCi not in rows:
+            rows[GCi] = i
+            rowsReversed[i] = GCi
+            i += 1
+    #nRows = len(rows2)
+
+    j = 0
+    cols = {}
+    colsReversed = {}
+    for GCj in self.GCj:
+        if GCj not in cols:
+            cols[GCj] = j
+            colsReversed[j] = GCj
+            j += 1
+    #nCols = len(cols2)
+
+    #A = ss.lil_matrix((3,3), dtype='d') # double precision
+
+    #rows=[]; cols=[]; data=[]
+    #for i in xrange(3):
+    #    for j in xrange(3):
+    #        k = float((i+1)*(j+1))
+    #        rows.append(i)
+    #        cols.append(j)
+    #        data.append(k)
+    #        A[i,j] = k
+
+    #isSparse = False
+    if isSparse:
+        data = []
+        rows2 = []
+        cols2 = []
+
+        nrows = 0
+        ncols = 0
+        if self.isComplex():
+            for (GCj, GCi, reali, complexi) in izip(self.GCj, self.GCi, self.Real, self.Complex):
+                i = rows[GCi]
+                j = cols[GCj]
+                nrows = max(i, nrows)
+                ncols = max(j, ncols)
+                rows2.append(i)
+                cols2.append(j)
+                data.append(complex(reali, complexi))
+        else:
+            for (GCj, GCi) in izip(self.GCj, self.GCi):
+                i = rows[GCi]
+                j = cols[GCj]
+                nrows = max(i, nrows)
+                ncols = max(j, ncols)
+                rows2.append(i)
+                cols2.append(j)
+            data = self.Real
+        #print("i=%s j=%s len(rows2)=%s len(cols2)=%s len(data)=%s"
+        #    % (i, j, len(self.GCi), len(self.GCj), len(data)))
+        # ,dtype=Format
+        #print(rows2)
+
+        #print("nrows=%s ncols=%s" %(nrows, ncols))
+        if self.ifo in [1, 6]:
+            nrows = max(nrows, ncols)
+            ncols = nrows
+        #print("nrows=%s ncols=%s" %(nrows, ncols))
+
+        dType = self.getDType(self.tin)
+        #A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dType) # test
+        M = coo_matrix((data, (self.GCi, self.GCj)),
+                       shape=(nrows, ncols), dtype=dType)
+        #M = coo_matrix( (data,(self.GCi,self.GCj)),shape=(i,j)) # old
+        #M = coo_matrix( (data,(self.GCi,self.GCj)),shape=(nrows,ncols))
+        #print M.todense()
+        #print M
+    else:
+        if self.isComplex():
+            M = zeros((i, j), dtype='complex128')
+            for (GCj, GCi, reali, complexi) in izip(self.GCj, self.GCi, self.Real, self.Complex):
+                i = rows[GCi]
+                j = cols[GCj]
+                M[i, j] = complex(reali, complexi)
+        else:
+            M = zeros((i, j), dtype='float64')
+            for (GCj, GCi, reali) in izip(self.GCj, self.GCi, self.Real):
+                i = rows[GCi]
+                j = cols[GCj]
+                M[i, j] = reali
+    #print(M)
+    return (M, rowsReversed, colsReversed)
+
 
 
 class DMIG(NastranMatrix):
@@ -444,7 +445,7 @@ class DMIK(NastranMatrix):
             raise NotImplementedError(data)
 
 
-class DMI(BaseCard):
+class DMI(NastranMatrix):
     type = 'DMI'
 
     def __init__(self, card=None, data=None, comment=''):

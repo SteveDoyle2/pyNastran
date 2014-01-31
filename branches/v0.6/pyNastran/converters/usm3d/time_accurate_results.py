@@ -5,12 +5,7 @@ from numpy import savetxt, arange, zeros
 from pyNastran.converters.usm3d.usm3d_reader import Usm3dReader
 import multiprocessing as mp
 
-def get_flo_files(dirname, model_name, include_dirname_in_path=True):
-    """
-    get the flo files in ascending order
-    """
-    if dirname == '':
-        dirname = os.getcwd()
+def get_n_list(dirname, model_name):
     flo_filenames = os.listdir(dirname)
 
     n_list = []
@@ -23,8 +18,30 @@ def get_flo_files(dirname, model_name, include_dirname_in_path=True):
                 continue
             n = int(base.split('_')[-1])
             n_list.append(n)
-
     n_list.sort()
+    return n_list
+
+def get_flo_files(dirname, model_name, include_dirname_in_path=True):
+    """
+    get the flo files in ascending order
+    """
+    if dirname == '':
+        dirname = os.getcwd()
+    n_list = get_n_list(dirname, model_name)
+
+    if include_dirname_in_path:
+        flo_filenames = [os.path.join(dirname, '%s_%i.flo' % (model_name, n)) for n in n_list]
+    else:
+        flo_filenames = ['%s_%i.flo' % (model_name, n) for n in n_list]
+    return flo_filenames
+
+def get_flo_files_from_n(dirname, model_name, n_list, include_dirname_in_path=True):
+    """
+    get the flo files in ascending order
+    """
+    if dirname == '':
+        dirname = os.getcwd()
+
     if include_dirname_in_path:
         flo_filenames = [os.path.join(dirname, '%s_%i.flo' % (model_name, n)) for n in n_list]
     else:
