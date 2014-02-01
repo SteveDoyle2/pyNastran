@@ -1,0 +1,93 @@
+$ Perform Solution 111
+SOL 111 
+CEND
+
+$ Use LSEQ 1
+LOADSET = 1
+
+$ Mode Output Requests
+METHOD = 1
+
+$ Frequency Sweep Request
+FREQUENCY = 1
+
+$ Constraints Request
+SPC = 10
+
+$ Loads
+DLOAD = 2
+
+$ Output Request
+VECTOR(PLOT,PRINT,SORT1,REAL)=ALL
+ESE(PLOT,PRINT,SORT1,REAL)=ALL
+ELFORCE(PLOT,PRINT,SORT1,REAL)=ALL
+GPFORCE(PLOT,PRINT,SORT1,REAL)=ALL
+STRESS(PLOT,PRINT,SORT1,REAL)=ALL
+STRAIN(PLOT,PRINT,SORT1,REAL)=ALL
+
+$ Main Bulk Data
+BEGIN BULK
+
+$ Parameters
+PARAM,POST,-1
+PARAM,PRTMAXIM,YES
+
+$ Frequency Request Card
+FREQ1    1       0.     10.      2
+
+$ Mode Output Request Card
+EIGRL    1                       10      0
+
+$ LSEQ Entry
+LSEQ    1       11      30
+LSEQ    1       13      32
+
+$ Load Card
+DLOAD   2       1.      1.      10      1.      12      
+RLOAD1  10      11              0.      1
+RLOAD1  12      13                      1
+FORCE   30      2154    0       1.      1.      0.      0.      
+MOMENT  32      2154    0       0.      .57735  .57735  .57735
+
+$ RLOAD Card Table
+TABLED1  1
+         0.     1.      1000.   1.       ENDT
+
+$ Material Properties
+PSOLID   1       1       0
+MAT1*    1              1.705+7                         .31
+*       4.14413-4
+
+$ Elements
+CTETRA   1      1       2154    2161    2191    2503    2136    2486
+         2487    2534    2259    2485
+CTETRA   2      1       2191    2161    2551    2503    2486    2260
+         2488    2485    2259    2128
+
+$ CTETRA 1 NODES
+GRID     2154           -.375018-.07100212.025
+$ Force Applied to GRID 2154
+GRID     2136           -.344288.072701312.0375
+GRID     2487           -.33584 -.03370212.0071
+GRID     2534           -.360372.072087411.9835
+
+$ CTETRA 1 AND 2 NODES
+GRID     2191           -.296663.003597211.9893
+GRID     2161           -.313558.216405 12.05
+GRID     2503           -.332027.214316 11.95
+GRID     2486           -.305111.110001 12.0196
+GRID     2485           -.314345.108957 11.9696
+GRID     2259           -.322793.215361 12.
+
+$ CTETRA 2 NODES
+GRID     2128           -.229769.102652 11.95
+GRID     2260           -.220535.103696 12.
+GRID     2488           -.212087-.00270711.9696
+GRID     2551           -.127511-.00901211.95
+
+$ Constraints                               
+SPCADD  10      1
+SPC1    1       123456  2128    2260    2488    2551
+
+$ End
+ENDDATA
