@@ -554,7 +554,7 @@ class OES(OP2Common):
                     for inode in xrange(nnodes_expected):
                         edata = data[n:n+52]
                         n += 52
-                        out = unpack('i12i', edata)
+                        out = unpack('i12f', edata)
                         (grid, exr, eyr, ezr, etxyr, etyzr, etzxr,
                                exi, eyi, ezi, etxyi, etyzi, etzxi) = out
                         if grid == 0:
