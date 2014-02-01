@@ -33,7 +33,7 @@ class DIT(object):
         nEntries = len(data) // 20  # 5*4
         for i in xrange(nEntries):
             eData = data[n:n + 20]
-            out = unpack('iifff', eData)
+            out = unpack('ii3f', eData)
             (sid, dload, wg, x0, V) = out
             gust = GUST(None, out)
             self.add_GUST(gust)

@@ -5,6 +5,7 @@ from numpy.linalg import eigh
 
 from ..real.oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E
+from pyNastran.f06.f06_formatting import writeImagFloats13E
 
 
 class ComplexSolidStressObject(StressObject):
@@ -113,7 +114,7 @@ class ComplexSolidStressObject(StressObject):
         #if nodeID == 0:
             #raise ValueError(msg)
 
-    def add_sort1(self, dt, eid, nodeID, ex, ey, ez, etxy, etyz, etzx):
+    def add_sort1(self, dt, eid, nodeID, oxx, oyy, ozz, txy, tyz, tzx):
         #print "***add"
         #msg = "eid=%s nodeID=%s vm=%g" % (eid, nodeID, ovm)
         #print msg
@@ -122,14 +123,14 @@ class ComplexSolidStressObject(StressObject):
 
         #self.eType[eid] = eType
         assert eid != 'C'
-        #print "eid=%s nid=%s oxx=%s" %(eid,nodeID,oxx)
-        self.oxx[dt][eid][nodeID] = ex
-        self.oyy[dt][eid][nodeID] = ey
-        self.ozz[dt][eid][nodeID] = ez
+        #print("eid=%s nid=%s oyy=%s" %(eid,nodeID, oyy))
+        self.oxx[dt][eid][nodeID] = oxx
+        self.oyy[dt][eid][nodeID] = oyy
+        self.ozz[dt][eid][nodeID] = ozz
         #print self.oxx
-        self.txy[dt][eid][nodeID] = etxy
-        self.tyz[dt][eid][nodeID] = etyz
-        self.txz[dt][eid][nodeID] = etzx
+        self.txy[dt][eid][nodeID] = txy
+        self.tyz[dt][eid][nodeID] = tyz
+        self.txz[dt][eid][nodeID] = tzx
 
     def getHeaders(self):
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz']
@@ -145,6 +146,48 @@ class ComplexSolidStressObject(StressObject):
     def getF06_Header(self):
         raise NotImplementedError()
 
+    def write_f06(self, header, pageStamp, pageNum, f, is_mag_phase=False):
+        """
+        Not perfect, but it's not bad...
+        """
+        if is_mag_phase:
+            asdf
+        else:
+            stamp = [
+                '                 C O M P L E X     S T R A I N S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )',
+                '                                                          (REAL/IMAGINARY)',
+                '0                   CORNER      --------------------------CENTER AND CORNER POINT  STRAINS---------------------------',
+                '     ELEMENT-ID    GRID-ID      NORMAL-X       NORMAL-Y       NORMAL-Z         SHEAR-XY       SHEAR-YZ       SHEAR-ZX',
+            ]
+        for dt, oxx_dt in sorted(self.oxx.iteritems()):
+            f.write('\n'.join(stamp))
+            f.write('FREQ = %r\n' % dt)
+            for elem, oxx_elem in sorted(oxx_dt.iteritems()):
+                node_ids = oxx_elem.keys()
+                node_ids.remove('CENTER')
+                f.write('%8s\n' % elem)
+                for inode in ['CENTER'] + sorted(node_ids):
+                    # cid
+                    cid = 1
+                    oxx = self.oxx[dt][elem][inode]
+                    oyy = self.oyy[dt][elem][inode]
+                    ozz = self.ozz[dt][elem][inode]
+                    txy = self.txy[dt][elem][inode]
+                    tyz = self.tyz[dt][elem][inode]
+                    txz = self.txz[dt][elem][inode]
+                    ([oxxr, oyyr, ozzr, txyr, tyzr, txzr,
+                      oxxi, oyyi, ozzi, txyi, tyzi, txzi,], isAllZeros) = writeImagFloats13E([oxx, oyy, ozz,
+                                                                                              txy, tyz, txz], is_mag_phase)
+
+                    if inode == 'CENTER':
+                        f.write('0   %8s %8s %8s %8s %8s %8s %8s %8s\n' % (inode, cid, oxxr, oyyr, ozzr, txyr, tyzr, txzr))
+                        f.write('    %8s %8s %8s %8s %8s %8s %8s %8s\n' % ('', '',     oxxi, oyyi, ozzi, txyi, tyzi, txzi))
+                    else:
+                        f.write('    %8s %8s %8s %8s %8s %8s %8s %8s\n' % (inode, cid, oxxr, oyyr, ozzr, txyr, tyzr, txzr))
+                        f.write('    %8s %8s %8s %8s %8s %8s %8s %8s\n' % ('', '',     oxxi, oyyi, ozzi, txyi, tyzi, txzi))
+            f.write(pageStamp % pageNum)
+            pageNum += 1
+        return pageNum - 1
 
 class ComplexSolidStrainObject(StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
