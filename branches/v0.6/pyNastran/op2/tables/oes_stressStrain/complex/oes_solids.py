@@ -149,4 +149,137 @@ class ComplexSolidStressObject(StressObject):
 class ComplexSolidStrainObject(StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         StrainObject.__init__(self, data_code, isubcase)
+
+        self.eType = {}
+        self.code = [self.format_code, self.sort_code, self.s_code]
+
+        self.cid = {}  # gridGauss
+        self.exx = {}
+        self.eyy = {}
+        self.ezz = {}
+        self.exy = {}
+        self.eyz = {}
+        self.exz = {}
+
+        #self.dt = dt
+        if is_sort1:
+            if dt is not None:
+                self.add = self.add_sort1
+                self.add_new_eid = self.add_new_eid_sort1
+        else:
+            assert dt is not None
+            self.add = self.addSort2
+            self.add_new_eid = self.add_new_eid_sort2
+
+    def get_stats(self):
+        nelements = len(self.eType)
+
+        msg = self.get_data_code()
+        if self.nonlinear_factor is not None:  # transient
+            ntimes = len(self.exx)
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__, nelements))
+        msg.append('  eType, cid, exx, eyy, ezz, exy, eyz, exz\n  ')
+        msg.append(', '.join(set(self.eType.values())))
+        msg.append('\n')
+        return msg
+
+    def add_f06_data(self, data, transient):
+        if transient is None:
+            if not hasattr(self, 'data'):
+                self.data = []
+            self.data += data
+        else:
+            dt = transient[1]
+            if not hasattr(self, 'data'):
+                self.data = {}
+            #print(self.data)
+            if dt not in self.data:
+                self.data[dt] = []
+            for line in data:
+                self.data[dt] += data
+
+    def processF06Data(self):
+        raise NotImplementedError()
+
+    def delete_transient(self, dt):
+        del self.exx[dt]
+        del self.eyy[dt]
+        del self.ezz[dt]
+        del self.exy[dt]
+        del self.eyz[dt]
+        del self.exz[dt]
+
+    def get_transients(self):
+        k = self.exx.keys()
+        k.sort()
+        return k
+
+    def add_new_transient(self, dt):
+        """
+        initializes the transient variables
+        """
+        self.exx[dt] = {}
+        self.eyy[dt] = {}
+        self.ezz[dt] = {}
+        self.exy[dt] = {}
+        self.eyz[dt] = {}
+        self.exz[dt] = {}
+
+    def add_new_eid_sort1(self, eType, dt, eid, cid, ctype, nodef):
+        #print "Solid Stress add transient..."
+        assert cid >= 0
+        assert eid >= 0
+
+        #print "dt=%s eid=%s eType=%s" %(dt,eid,eType)
+        if dt not in self.exx:
+            self.add_new_transient(dt)
+        assert eid not in self.exx[dt], self.exx[dt]
+
+        self.eType[eid] = eType
+        self.cid[eid] = cid
+        self.exx[dt][eid] = {}
+        self.eyy[dt][eid] = {}
+        self.ezz[dt][eid] = {}
+        self.exy[dt][eid] = {}
+        self.eyz[dt][eid] = {}
+        self.exz[dt][eid] = {}
+
+        #msg = "*eid=%s nodeID=%s vm=%g" % (eid, nodeID, ovm)
+        #print msg
+        #if nodeID == 0:
+            #raise ValueError(msg)
+
+    def add_sort1(self, dt, eid, nodeID, ex, ey, ez, etxy, etyz, etzx):
+        #print "***add"
+        #msg = "eid=%s nodeID=%s vm=%g" % (eid, nodeID, evm)
+        #print msg
+        #print self.oxx
+        #print self.fiberDistance
+
+        #self.eType[eid] = eType
+        assert eid != 'C'
+        #print "eid=%s nid=%s exx=%s" %(eid, nodeID, exx)
+        self.exx[dt][eid][nodeID] = ex
+        self.eyy[dt][eid][nodeID] = ey
+        self.ezz[dt][eid][nodeID] = ez
+        #print self.oxx
+        self.exy[dt][eid][nodeID] = etxy
+        self.eyz[dt][eid][nodeID] = etyz
+        self.exz[dt][eid][nodeID] = etzx
+
+    def getHeaders(self):
+        headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz']
+        return headers
+
+    def directionalVectors(self, exx, eyy, ezz, exy, eyz, exz):
+        A = [[exx, exy, exz],
+             [exy, eyy, eyz],
+             [exz, eyz, ezz]]
+        (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
+        return v
+
+    def getF06_Header(self):
         raise NotImplementedError()
