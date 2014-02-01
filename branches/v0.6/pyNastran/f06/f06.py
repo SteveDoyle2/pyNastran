@@ -1,8 +1,6 @@
+#pylint: disable=C0301,C0111
 import os
-import sys
 from itertools import izip
-
-from numpy import zeros
 
 from pyNastran.utils import print_bad_path
 from pyNastran.utils.log import get_logger
@@ -22,6 +20,11 @@ class FatalError(RuntimeError):
     pass
 
 class F06Deprecated(object):
+    def __init__(self, f06_filename):
+        self.f06FileName = f06_filename
+        self.f06_filename = None
+    def read_f06(self, f06_filename):
+        pass
     def readF06(self):
         """... seealso::: read_f06"""
         self.read_f06(self.f06_filename)
@@ -29,9 +32,9 @@ class F06Deprecated(object):
 
 class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
     def stop_after_reading_grid_point_weight(self, stop=True):
-        self._stop_after_reading_mass = True
+        self._stop_after_reading_mass = stop
 
-    def __init__(self, f06FileName, debug=False, log=None):
+    def __init__(self, f06_filename, debug=False, log=None):
         """
         Initializes the F06 object
 
@@ -42,35 +45,42 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
         .. seealso:: import logging
         """
+        OES.__init__(self)
+        OQG.__init__(self)
+        OUG.__init__(self)
+        F06Deprecated.__init__(self, f06_filename)
+        #F06Writer.__init__(self)
+
         self._subtitle = None
         self.card_count = {}
-        self.f06FileName = f06FileName
-        self.f06_filename = self.f06FileName
+        self.f06_filename = f06_filename
         self._stop_after_reading_mass = False
+        self.stored_lines = []
+        self.i = 0
 
         if not os.path.exists(self.f06_filename):
-            msg = 'cant find f06_filename=%r\n%s' % self.f06FileName, print_bad_path(self.f06_filename)
+            msg = 'cant find f06_filename=%r\n%s' % self.f06_filename, print_bad_path(self.f06_filename)
             raise RuntimeError(msg)
         self.infile = open(self.f06_filename, 'r')
         self.__init_data__(debug, log)
 
-        self.lineMarkerMap = {
-            'R E A L   E I G E N V E C T O R   N O': self._real_eigenvectors,
+        self._line_marker_map = {
+            'R E A L   E I G E N V E C T O R   N O' : self._real_eigenvectors,
             'C O M P L E X   E I G E N V E C T O R   NO' : self._complex_eigenvectors,
             'News file -' : self._executive_control_echo,
         }
-        self.markerMap = {
+        self._marker_map = {
             #====================================================================
             # debug info
             'N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O' : self._nastran_file_and_system_parameter_echo,
-            'N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O':self._executive_control_echo,
+            'N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O' : self._executive_control_echo,
             'C A S E    C O N T R O L    E C H O' : self._case_control_echo,
-            'G R I D   P O I N T   S I N G U L A R I T Y   T A B L E': self._grid_point_singularity_table,
+            'G R I D   P O I N T   S I N G U L A R I T Y   T A B L E' : self._grid_point_singularity_table,
 
             # dummy
-            'E L E M E N T   G E O M E T R Y   T E S T   R E S U L T S   S U M M A R Y': self._executive_control_echo,
-            'M O D E L   S U M M A R Y':self._executive_control_echo,
-            'M O D E L   S U M M A R Y          BULK = 0':self._executive_control_echo,
+            'E L E M E N T   G E O M E T R Y   T E S T   R E S U L T S   S U M M A R Y' : self._executive_control_echo,
+            'M O D E L   S U M M A R Y' : self._executive_control_echo,
+            'M O D E L   S U M M A R Y          BULK = 0' : self._executive_control_echo,
             'F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )' : self._grid_point_singularity_table,
             'G R I D   P O I N T   F O R C E   B A L A N C E' : self._executive_control_echo,
             'N A S T R A N   S O U R C E   P R O G R A M   C O M P I L A T I O N             SUBDMAP  =  SESTATIC' : self._executive_control_echo,
@@ -80,13 +90,13 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R': self._grid_point_weight_generator,
 
             # dummy
-            'MAXIMUM  SPCFORCES':self.getMaxSpcForces,
-            #'OLOAD    RESULTANT':self.getMaxMpcForces,
-            'MAXIMUM  MPCFORCES':self.getMaxMpcForces,
-            'SPCFORCE RESULTANT':self.getMaxMpcForces,
-            'MPCFORCE RESULTANT':self.getMaxMpcForces,
-            'MAXIMUM  DISPLACEMENTS': self.getMaxDisplacements,
-            'MAXIMUM  APPLIED LOADS': self.getMaxAppliedLoads,
+            'MAXIMUM  SPCFORCES' : self._get_max_spc_forces,
+            #'OLOAD    RESULTANT' : self.getMaxMpcForces,
+            'MAXIMUM  MPCFORCES' : self._get_max_mpc_forces,
+            'SPCFORCE RESULTANT' : self._get_max_mpc_forces,
+            'MPCFORCE RESULTANT' : self._get_max_mpc_forces,
+            'MAXIMUM  DISPLACEMENTS' : self._get_max_displacements,
+            'MAXIMUM  APPLIED LOADS' : self._get_max_applied_loads,
 
 
             #====================================================================
@@ -187,7 +197,6 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             'N O N L I N E A R   S T R E S S E S   I N   T E T R A H E D R O N   S O L I D   E L E M E N T S   ( T E T R A )' : self._executive_control_echo,
             'N O N L I N E A R   S T R E S S E S   I N   H Y P E R E L A S T I C   Q U A D R I L A T E R A L   E L E M E N T S  ( QUAD4FD )' : self._executive_control_echo,
             'N O N L I N E A R   S T R E S S E S  IN  H Y P E R E L A S T I C   A X I S Y M M.  Q U A D R I L A T E R A L  ELEMENTS (QUADXFD)' : self._executive_control_echo,
-            'N O N L I N E A R   S T R E S S E S   I N   T E T R A H E D R O N   S O L I D   E L E M E N T S   ( T E T R A )' : self._executive_control_echo,
 
             # FORCE
             'F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )' : self._executive_control_echo,
@@ -202,22 +211,19 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             'L O A D   V E C T O R' : self._executive_control_echo,
             #'* * * END OF JOB * * *': self.end(),
         }
-        self.markers = self.markerMap.keys()
+        self.markers = self._marker_map.keys()
 
     def __init_data__(self, debug=False, log=None):
-        self.i = 0
-        self.storedLines = []
-
         OES.__init__(self)
         OQG.__init__(self)
         OUG.__init__(self)
         F06Writer.__init__(self)
 
-        ## the TITLE in the Case Control Deck
+        #: the TITLE in the Case Control Deck
         self.Title = ''
-        self.start_log(log, debug)
+        self._start_log(log, debug)
 
-    def start_log(self, log=None, debug=False):
+    def _start_log(self, log=None, debug=False):
         """
         Sets up a dummy logger if one is not provided
 
@@ -225,10 +231,9 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         :log:   a python logging object
         :debug: adds debug messages (True/False)
         """
-
         self.log = get_logger(log, 'debug' if debug else 'info')
 
-    def getGridPointSingularities(self):  # .. todo:: not done
+    def _get_grid_point_singularities(self):  # .. todo:: not done
         """
         ::
 
@@ -240,36 +245,36 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         """
         pass
 
-    def getMaxSpcForces(self):  # .. todo:: not done
+    def _get_max_spc_forces(self):  # .. todo:: not done
         headers = self.skip(2)
         #print "headers = %s" %(headers)
-        data = self.readTable([int, float, float, float, float, float, float])
+        data = self._read_f06_table([int, float, float, float, float, float, float])
         #print "max SPC Forces   ",data
         #self.disp[isubcase] = DisplacementObject(isubcase,data)
         #print self.disp[isubcase]
 
-    def getMaxMpcForces(self):  # .. todo:: not done
+    def _get_max_mpc_forces(self):  # .. todo:: not done
         headers = self.skip(2)
         #print "headers = %s" %(headers)
-        data = self.readTable([int, float, float, float, float, float, float])
-        #print "max SPC Forces   ",data
+        data = self._read_f06_table([int, float, float, float, float, float, float])
+        #print "max SPC Forces   ", data
         #self.disp[isubcase] = DisplacementObject(isubcase,data)
         #print self.disp[isubcase]
 
-    def getMaxDisplacements(self):  # .. todo:: not done
+    def _get_max_displacements(self):  # .. todo:: not done
         headers = self.skip(2)
         #print "headers = %s" %(headers)
-        data = self.readTable([int, float, float, float, float, float, float])
+        data = self._read_f06_table([int, float, float, float, float, float, float])
         #print "max Displacements",data
         disp = MaxDisplacement(data)
         #print disp.write_f06()
         #self.disp[isubcase] = DisplacementObject(isubcase,data)
         #print self.disp[isubcase]
 
-    def getMaxAppliedLoads(self):  # .. todo:: not done
+    def _get_max_applied_loads(self):  # .. todo:: not done
         headers = self.skip(2)
         #print "headers = %s" %(headers)
-        data = self.readTable([int, float, float, float, float, float, float])
+        data = self._read_f06_table([int, float, float, float, float, float, float])
         #print "max Applied Loads",data
         #self.disp[isubcase] = DisplacementObject(isubcase,data)
         #print self.disp[isubcase]
@@ -344,15 +349,15 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         -3 -> DEFAULT
         -2 -> xxx             subcase 1
         """
-        subtitle = self.storedLines[-3].strip()
+        subtitle = self.stored_lines[-3].strip()
         #print(''.join(self.storedLines[-3:]))
 
         msg = ''
-        for i, line in enumerate(self.storedLines[-4:]):
+        for i, line in enumerate(self.stored_lines[-4:]):
             msg += '%i -> %s\n' % (-4 + i, line.rstrip())
 
-        if self.Title is None or self.Title == '' and len(self.storedLines) > 4:
-            title_line = self.storedLines[-4]
+        if self.Title is None or self.Title == '' and len(self.stored_lines) > 4:
+            title_line = self.stored_lines[-4]
             self.Title = title_line[1:75].strip()
             date = title_line[75:93]
             month, day, year = date.split()
@@ -361,9 +366,9 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             assert 'D I S P L A C' not in self.Title, msg
         #self.Title = subcaseName  # 'no title'
 
-        subcaseName = ''
+        subcase_name = ''
         #print("subcaseLine = %r" % subcaseName)
-        label, isubcase = _parse_label_isubcase(self.storedLines)
+        label, isubcase = _parse_label_isubcase(self.stored_lines)
 
         #subtitle = 'SUBCASE %s' % isubcase
         #label = 'SUBCASE %s' % isubcase
@@ -382,34 +387,34 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         #assert self.Title == 'MSC.NASTRAN JOB CREATED ON 12-MAR-13 AT 12:52:23', self.Title
         self._subtitle = subtitle
         self.iSubcaseNameMap[isubcase] = [subtitle, subtitle]
-        transient = self.storedLines[-1].strip()
+        transient = self.stored_lines[-1].strip()
         is_sort1 = False
         if transient:
-            transWord, transValue = transient.split('=')
-            transWord = transWord.strip()
-            transValue = float(transValue)
-            transient = [transWord, transValue]
+            trans_word, trans_value = transient.split('=')
+            trans_word = trans_word.strip()
+            trans_value = float(trans_value)
+            transient = [trans_word, trans_value]
 
-            if transWord == 'LOAD STEP':  # nonlinear statics
+            if trans_word == 'LOAD STEP':  # nonlinear statics
                 analysis_code = 10
-            elif transWord == 'TIME STEP':  # TODO check name
+            elif trans_word == 'TIME STEP':  # TODO check name
                 analysis_code = 6
-            elif transWord == 'EIGENVALUE':  # normal modes
+            elif trans_word == 'EIGENVALUE':  # normal modes
                 analysis_code = 2
-            elif transWord == 'FREQ':  # TODO check name
+            elif trans_word == 'FREQ':  # TODO check name
                 analysis_code = 5
-            elif transWord == 'FREQUENCY':
+            elif trans_word == 'FREQUENCY':
                 analysis_code = 5
-            elif transWord == 'POINT-ID':
+            elif trans_word == 'POINT-ID':
                 is_sort1 = True
                 analysis_code = None
-            elif transWord == 'ELEMENT-ID':
+            elif trans_word == 'ELEMENT-ID':
                 is_sort1 = True
                 #is_sort1 = False
                 #is_sort2 = True
                 analysis_code = None
             else:
-                raise NotImplementedError('transientWord=|%r| is not supported...' % (transWord))
+                raise NotImplementedError('transientWord=|%r| is not supported...' % trans_word)
         else:
             transient = None
             analysis_code = 1
@@ -417,7 +422,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         dt = None
         if transient is not None:
             dt = transient[1]
-        return (subcaseName, isubcase, transient, dt, analysis_code, is_sort1)
+        return (subcase_name, isubcase, transient, dt, analysis_code, is_sort1)
 
     def _real_eigenvalues(self):
         """
@@ -428,10 +433,10 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             NO.       ORDER                                                                       MASS              STIFFNESS
                 1         1        6.158494E+07        7.847607E+03        1.248985E+03        1.000000E+00        6.158494E+07
         """
-        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
+        (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
 
         headers = self.skip(2)
-        data = self.readTable([int, int, float, float, float, float, float])
+        data = self._read_f06_table([int, int, float, float, float, float, float])
 
         if isubcase in self.eigenvalues:
             self.eigenvalues[isubcase].add_f06_data(data)
@@ -454,19 +459,19 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         isubcase = 1  # .. todo:: fix this...
 
         headers = self.skip(2)
-        data = self.readTable([int, int, float, float, float, float])
+        data = self._read_f06_table([int, int, float, float, float, float])
 
         if isubcase in self.eigenvalues:
             self.eigenvalues[isubcase].add_f06_data(data)
         else:
-            is_sort1 = True
+            #is_sort1 = True
             self.eigenvalues[isubcase] = ComplexEigenvalues(isubcase)
             self.eigenvalues[isubcase].add_f06_data(data)
         self.iSubcases.append(isubcase)
 
     def _complex_eigenvectors(self, marker):
         headers = self.skip(2)
-        self.readTableDummy()
+        self._read_table_dummy()
 
     def _element_strain_energies(self):
         """
@@ -484,22 +489,22 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
                                                2         -3.301516E-09                -0.0057             -2.641213E-06
         """
         isubcase = 1 # TODO not correct
-        cycles = self.storedLines[-1][1:].strip()
+        cycles = self.stored_lines[-1][1:].strip()
         cycles = float(cycles.split('=')[1])
 
-        eigenvalue = self.storedLines[-2][1:].strip()
+        eigenvalue = self.stored_lines[-2][1:].strip()
         eigenvalue = float(eigenvalue.split('=')[1])
-        #print "eigenvalue=%s cycle=%s" %(eigenvalue,cycles)
+        #print "eigenvalue=%s cycle=%s" % (eigenvalue, cycles)
 
         eTypeLine = self.skip(2)[1:]
         eType = eTypeLine[30:40]
         totalEnergy1 = eTypeLine[99:114]
 
-        modeLine = self.skip(1)[1:]
-        iMode = modeLine[24:40]
-        totalEnergy2 = modeLine[99:114]
-        #print "eType=%s totalEnergy1=|%s|" %(eType,totalEnergy1)
-        #print "iMode=%s totalEnergy2=|%s|" %(iMode,totalEnergy2)
+        mode_line = self.skip(1)[1:]
+        iMode = mode_line[24:40]
+        totalEnergy2 = mode_line[99:114]
+        #print "eType=%r totalEnergy1=%r" % (eType, totalEnergy1)
+        #print "iMode=%r totalEnergy2=%r" % (iMode, totalEnergy2)
         headers = self.skip(2)
 
         data = []
@@ -513,10 +518,10 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
                 break
             #print sline
             eid = int(sline[0])
-            strainEnergy = float(sline[1])
-            percentTotal = float(sline[2])
-            strainEnergyDensity = float(sline[3])
-            out = (eid, strainEnergy, percentTotal, strainEnergyDensity)
+            strain_energy = float(sline[1])
+            percent_total = float(sline[2])
+            strain_energy_density = float(sline[3])
+            out = (eid, strain_energy, percent_total, strain_energy_density)
             data.append(out)
 
         if sline == []:
@@ -528,13 +533,12 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         if isubcase in self.iSubcases:
             self.strainEnergyDensity[isubcase].readF06Data(data, transient)
         else:
-            sed = strainEnergyDensity(data, transient)
+            sed = strain_energy_density(data, transient)
             sed.readF06Data(data, transient)
             self.strainEnergyDensity[isubcase] = sed
 
     def _temperature_gradients_and_fluxes(self):
-        (subcaseName, isubcase, transient, dt, analysis_code,
-            is_sort1) = self.readSubcaseNameID()
+        (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
         #print transient
         headers = self.skip(2)
         #print "headers = %s" %(headers)
@@ -544,8 +548,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         if isubcase in self.temperatureGrad:
             self.temperatureGrad[isubcase].addData(data)
         else:
-            self.temperatureGrad[isubcase] = TemperatureGradientObject(
-                isubcase, data)
+            self.temperatureGrad[isubcase] = TemperatureGradientObject(isubcase, data)
         self.iSubcases.append(isubcase)
 
     def readGradientFluxesTable(self):
@@ -572,7 +575,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
                 out.append(entry2)
         return out
 
-    def readTable(self, Format, debug=False):
+    def _read_f06_table(self, Format, debug=False):
         """
         Reads displacement, spc/mpc forces
 
@@ -594,7 +597,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             data.append(sline)
         return data
 
-    def readTableDummy(self):
+    def _read_table_dummy(self):
         sline = True
         data = []
         while sline:
@@ -618,13 +621,13 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             try:
                 entry2 = iFormat(entry)
             except:
-                #print "sline=|%s|\n entry=|%s| format=%s" %(sline, entry, iFormat)
+                #print "sline=|%s|\n entry=|%s| format=%s" % (sline, entry, iFormat)
                 #raise
                 return None
             out.append(entry2)
         return out
 
-    def parseLineBlanks(self, sline, Format):
+    def _parse_line_blanks(self, sline, Format):
         """allows blanks"""
         out = []
 
@@ -633,11 +636,11 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
                 try:
                     entry2 = iFormat(entry)
                 except:
-                    print("sline=|%s|\n entry=|%s| format=%s" %(sline,entry,Format))
+                    print("sline=%r\n entry=%r format=%s" % (sline, entry, Format))
                     raise
             else:
                 entry2 = None
-                #print "sline=|%s|\n entry=|%s| format=%s" %(sline,entry,iFormat)
+                #print "sline=|%s|\n entry=|%s| format=%s" %(sline, entry, iFormat)
             out.append(entry2)
         return out
 
@@ -650,7 +653,6 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         if f06_filename is None:
             f06_filename = self.f06_filename
 
-        #print "reading..."
         blank = 0
         while 1:
             #if self.i%1000==0:
@@ -682,51 +684,50 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             if marker in self.markers:
                 blank = 0
                 #print("\n1*marker = %r" % marker)
-                self.markerMap[marker]()
+                self._marker_map[marker]()
                 if(self._stop_after_reading_mass and
                    marker in 'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R'):
                     break
-                self.storedLines = []
-                #print("i=%i" % self.i)
+                self.stored_lines = []
             elif 'R E A L   E I G E N V E C T O R   N O' in marker:
                 blank = 0
                 #print("\n2*marker = %r" % marker)
-                self.lineMarkerMap['R E A L   E I G E N V E C T O R   N O'](marker)
-                self.storedLines = []
+                self._line_marker_map['R E A L   E I G E N V E C T O R   N O'](marker)
+                self.stored_lines = []
             elif 'C O M P L E X   E I G E N V E C T O R   NO' in marker:
                 blank = 0
                 #print("\n2*marker = %r" % marker)
-                self.lineMarkerMap['C O M P L E X   E I G E N V E C T O R   NO'](marker)
-                self.storedLines = []
+                self._line_marker_map['C O M P L E X   E I G E N V E C T O R   NO'](marker)
+                self.stored_lines = []
 
             elif 'News file -' in marker:
                 blank = 0
-                self.lineMarkerMap['News file -']()
-                self.storedLines = []
+                self._line_marker_map['News file -']()
+                self.stored_lines = []
             elif marker == '':
                 blank += 1
                 if blank == 20:
                     break
-            elif self.isMarker(marker):  # marker with space in it (e.g. Model Summary)
+            elif self._is_marker(marker):  # marker with space in it (e.g. Model Summary)
                 print("***marker = %r" % marker)
 
             else:
                 blank = 0
 
-            self.storedLines.append(line)
+            self.stored_lines.append(line)
             self.i += 1
         #print "i=%i" %(self.i)
         self.infile.close()
-        self.processF06()
+        self._process_f06()
 
-    def processF06(self):
+    def _process_f06(self):
         #data = [self.disp,self.SpcForces,self.stress,self.isoStress,self.barStress,self.solidStress,self.temperature]
-        dataPack = [self.solidStress]
-        for dataSet in dataPack:
-            for key, data in dataSet.iteritems():
+        data_pack = [self.solidStress]
+        for data_set in data_pack:
+            for key, data in data_set.iteritems():
                 data.processF06Data()
 
-    def isMarker(self, marker):
+    def _is_marker(self, marker):
         """returns True if the word follows the 'N A S T R A N   P A T T E R N'"""
         marker = marker.strip().split('$')[0].strip()
 
@@ -764,9 +765,9 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
                     msg += str(result[isubcase])
         return msg
 
-def _parse_label_isubcase(storedLines):
-    label = storedLines[-2][1:65].strip()
-    isubcase = storedLines[-2][65:].strip()
+def _parse_label_isubcase(stored_lines):
+    label = stored_lines[-2][1:65].strip()
+    isubcase = stored_lines[-2][65:].strip()
     if isubcase:
         isubcase = int(isubcase.split()[-1])
     else:

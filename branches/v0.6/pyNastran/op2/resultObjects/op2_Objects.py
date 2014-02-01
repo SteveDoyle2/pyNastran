@@ -1,23 +1,24 @@
+#pylint: disable=C0301,C0111
 from __future__ import print_function
-#from numpy import array
-from numpy import angle
+import copy
+
 from pyNastran.op2.op2Codes import Op2Codes
 from pyNastran.utils import list_print
 
 
 class baseScalarObject(Op2Codes):
     def __init__(self):
-        pass
+        Op2Codes.__init__(self)
 
     def name(self):
         return self.__class__.__name__
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, pageNum=1, f=None, is_mag_phase=False):
         msg = 'write_f06 is not implemented in %s\n' % self.__class__.__name__
         f.write(msg)
         return pageNum
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, pageNum=1, f=None, is_mag_phase=False):
         msg = '_write_f06_transient is not implemented in %s\n' % self.__class__.__name__
         f.write(msg)
         return pageNum
@@ -30,7 +31,161 @@ class scalarObject(baseScalarObject):
         self.isubcase = isubcase
         self.isTransient = False
         self.dt = None
-        self.data_code = data_code
+        self.data_code = copy.deepcopy(data_code)
+
+        if 'dt' in data_code:
+            self.Title = data_code['dt']
+            del data_code['dt']
+        #else:
+            #raise RuntimeError('dt doesnt exist in data_code=%s' % str(self.data_code))
+
+        if 'Title' in data_code:
+            self.Title = data_code['Title']
+            del data_code['Title']
+        #else:
+            #raise RuntimeError('Title doesnt exist in data_code=%s' % str(self.data_code))
+
+        if 'subtitle' in data_code:
+            self.subtitle = data_code['subtitle']
+            del data_code['subtitle']
+        #else:
+            #raise RuntimeError('subtitle doesnt exist in data_code=%s' % str(self.data_code))
+
+        if 'label' in data_code:
+            self.label = data_code['label']
+            del data_code['label']
+        #else:
+            #raise RuntimeError('label doesnt exist in data_code=%s' % str(self.data_code))
+
+        if 'table_name' in data_code:
+            self.table_name = data_code['table_name']
+            del data_code['table_name']
+        else:
+            raise RuntimeError('table_name doesnt exist in data_code=%s' % str(self.data_code))
+
+        if 'table_code' in data_code:
+            self.table_code = data_code['table_code']
+            del data_code['table_code']
+        else:
+            raise RuntimeError('table_code doesnt exist in data_code=%s' % str(self.data_code))
+
+        if 'aCode' in data_code:
+            self.aCode = data_code['aCode']
+            del data_code['aCode']
+        if 'tCode' in data_code:
+            self.tCode = data_code['tCode']
+            del data_code['tCode']
+        if 's_code' in data_code:
+            self.s_code = data_code['s_code']
+            del data_code['s_code']
+
+        if 'time' in data_code:
+            self.time = data_code['time']
+            self.times = []
+            self.name = 'time'
+            del data_code['time']
+            del data_code['name']
+        elif 'freq' in data_code:
+            self.freq = data_code['freq']
+            self.freqs = []
+            self.name = 'freq'
+            del data_code['freq']
+            del data_code['name']
+        elif 'mode' in data_code:
+            self.mode = data_code['mode']
+            self.modes = []
+            self.name = 'mode'
+            del data_code['mode']
+            del data_code['name']
+        elif 'lsdvmn' in data_code:
+            self.lsdvmn = data_code['lsdvmn']
+            self.lsdvmns = []
+            self.name = 'lsdvmn'
+            del data_code['lsdvmn']
+        else:
+            raise RuntimeError('time/mode/freq/lsdvmn doesnt exist in data_code=%s' % str(self.data_code))
+        #del data_code['log']
+
+        if 'mode_cycle' in data_code:
+            self.mode_cycle = data_code['mode_cycle']
+            del data_code['mode_cycle']
+
+        if 'eigr' in data_code:
+            self.eigr = data_code['eigr']
+            del data_code['eigr']
+        if 'eigi' in data_code:
+            self.eigr = data_code['eigi']
+            del data_code['eigi']
+
+        if 'dataNames' in data_code:
+            self.dataNames = data_code['dataNames']
+            del data_code['dataNames']
+        else:
+            raise RuntimeError('dataNames doesnt exist in data_code=%s' % str(self.data_code))
+
+        if 'nonlinear_factor' in data_code:
+            self.nonlinear_factor = data_code['nonlinear_factor']
+            del data_code['nonlinear_factor']
+        else:
+            raise RuntimeError('nonlinear_factor doesnt exist in data_code=%s' % str(self.data_code))
+
+        if 'acousticFlag' in data_code:
+            self.acousticFlag = data_code['acousticFlag']
+            del data_code['acousticFlag']
+        if 'randomCode' in data_code:
+            self.randomCode = data_code['randomCode']
+            del data_code['randomCode']
+
+        if 'num_wide' in data_code:
+            self.num_wide = data_code['num_wide']
+            del data_code['num_wide']
+        else:
+            raise RuntimeError('num_wide doesnt exist in data_code=%s' % str(self.data_code))
+
+        if 'format_code' in data_code:
+            self.format_code = data_code['format_code']
+            del data_code['format_code']
+        else:
+            raise RuntimeError('format_code doesnt exist in data_code=%s' % str(self.data_code))
+
+        if 'analysis_code' in data_code:
+            self.analysis_code = data_code['analysis_code']
+            del data_code['analysis_code']
+        else:
+            raise RuntimeError('analysis_code doesnt exist in data_code=%s' % str(self.data_code))
+
+        if 'sort_code' in data_code:
+            self.sort_code = data_code['sort_code']
+            del data_code['sort_code']
+
+        if 'sort_bits' in data_code:
+            self.sort_bits = data_code['sort_bits']
+            del data_code['sort_bits']
+
+        if 'device_code' in data_code:
+            self.device_code = data_code['device_code']
+            del data_code['device_code']
+
+        if 'thermal' in data_code:
+            self.thermal = data_code['thermal']
+            del data_code['thermal']
+        if 'stress_bits' in data_code:
+            self.stress_bits = data_code['stress_bits']
+            del data_code['stress_bits']
+
+        if 'element_name' in data_code:
+            self.element_name = data_code['element_name']
+            del data_code['element_name']
+        if 'element_type' in data_code:
+            self.element_type = data_code['element_type']
+            del data_code['element_type']
+
+        self.log = data_code['log']
+        #del data_code['log']
+        if not len(data_code) == 0:
+            #print(data_code)
+            pass
+
         self.apply_data_code()
         self.set_data_members()
         #self.log.debug(self.code_information())
@@ -43,8 +198,7 @@ class scalarObject(baseScalarObject):
             if key is not 'log':
                 if isinstance(value, str):
                     value = "'%s'" % value
-                    msg = 'fem.%s(%i).%s = %s;\n' % (
-                        name, isubcase, key, value)
+                    msg = 'fem.%s(%i).%s = %s;\n' % (name, isubcase, key, value)
                 elif isinstance(value, list) and isinstance(value[0], str):
                     msgTemp = "','".join(value)
                     msg = "fem.%s(%i).%s = {'%s'};\n" % (
@@ -202,8 +356,8 @@ class scalarObject(baseScalarObject):
         """
         self.data_code = data_code
         self.apply_data_code()
-        raise RuntimeError('update_dt not implemented in the %s class'
-                           % self.__class__.__name__)
+        msg = 'update_dt not implemented in the %s class' % self.__class__.__name__
+        raise RuntimeError(msg)
         #assert dt>=0.
         #print "updating dt...dt=%s" %(dt)
         if dt is not None:

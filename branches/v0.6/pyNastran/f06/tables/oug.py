@@ -1,4 +1,4 @@
-#pylint: disable=E1101,W0612,R0201
+#pylint: disable=C0301,C0103,W0612
 from itertools import izip
 
 from pyNastran.op2.tables.oug.oug_displacements import DisplacementObject, ComplexDisplacementObject
@@ -7,9 +7,16 @@ from pyNastran.op2.tables.oug.oug_temperatures import TemperatureObject
 
 
 class OUG(object):
+    def _read_f06_table(self, data_types, debug=False):
+        pass
     def __init__(self):
         self.displacements = {}
         self.temperatures = {}
+        self.eigenvectors = {}
+        self.accelerations = {}
+        self.velocities = {}
+        self.iSubcases = []
+        self.i = 0
 
     def _real_eigenvectors(self, marker):
         """
@@ -48,19 +55,20 @@ class OUG(object):
         eigenvalue_real = transient[1]
         headers = self.skip(2)
 
-        data_code = {'log': self.log, 'analysis_code': analysis_code,
-                    'device_code': 1, 'table_code': 7, 'sort_code': 0,
-                    'sort_bits': [0, 0, 0], 'num_wide': 8, 'format_code': 1,
-                    'mode': iMode, 'eigr': eigenvalue_real, 'mode_cycle': cycle,
-                    'dataNames': ['mode', 'eigr', 'mode_cycle'],
-                    'name': 'mode', 'table_name': 'OUGV1',
-                    'nonlinear_factor': iMode,
-                    #'s_code':0,
-                    #'element_name':'CBAR','element_type':34,'stress_bits':stress_bits,
-                    }
+        data_code = {
+            'log': self.log, 'analysis_code': analysis_code,
+            'device_code': 1, 'table_code': 7, 'sort_code': 0,
+            'sort_bits': [0, 0, 0], 'num_wide': 8, 'format_code': 1,
+            'mode': iMode, 'eigr': eigenvalue_real, 'mode_cycle': cycle,
+            'dataNames': ['mode', 'eigr', 'mode_cycle'],
+            'name': 'mode', 'table_name': 'OUGV1',
+            'nonlinear_factor': iMode,
+            #'s_code':0,
+            #'element_name':'CBAR','element_type':34,'stress_bits':stress_bits,
+        }
 
-        dataTypes = [int, str, float, float, float, float, float, float]
-        data = self.readTable(dataTypes, debug=False)
+        data_types = [int, str, float, float, float, float, float, float]
+        data = self._read_f06_table(data_types, debug=False)
 
         #print("cycle=%-8s eigen=%s" % (cycle, eigenvalue_real))
         #print "isubcase = %s" % isubcase
@@ -96,11 +104,12 @@ class OUG(object):
                     'device_code': 1, 'table_code': 1,
                     'sort_code': 0, 'sort_bits': [0, 0, 0], 'num_wide': 8,
                     'table_name': 'OUG', 'nonlinear_factor': dt,
+                    'lsdvmn': 1, 'format_code': 3,
                     'dataNames':['lsdvmn']}
         #print "headers = %s" %(headers)
         #print "transient =", transient
-        dataTypes = [int, str, float, float, float, float, float, float]
-        data = self.readTable(dataTypes)
+        data_types = [int, str, float, float, float, float, float, float]
+        data = self._read_f06_table(data_types)
 
         if isubcase in self.displacements:
             self.displacements[isubcase].add_f06_data(data, transient)
@@ -146,7 +155,6 @@ class OUG(object):
                     #'mode':iMode,'eigr':transient[1], 'mode_cycle':cycle,
                     'dataNames': data_names,
                     'name': name,
-                    'format_code': 3,
                     #'s_code':0,
                     #'element_name':'CBAR', 'element_type':34, 'stress_bits':stress_bits,
                     }
@@ -158,23 +166,23 @@ class OUG(object):
             line2 = self.infile.readline()[1:].rstrip('\r\n ')
             sline += line2.strip().split()
             #print("sline = ", sline)
-            
+
             freq = float(sline[0])
-            gridType = sline[1].strip()
+            grid_type = sline[1].strip()
             #dxyz_ryz = sline[2:]
-            if gridType == 'G':
+            if grid_type == 'G':
                 dx = float(sline[2]) + float(sline[8])*1j
                 dy = float(sline[3]) + float(sline[9])*1j
                 dz = float(sline[4]) + float(sline[10])*1j
                 rx = float(sline[5]) + float(sline[11])*1j
                 ry = float(sline[6]) + float(sline[12])*1j
                 rz = float(sline[7]) + float(sline[13])*1j
-                out = [freq, gridType, dx, dy, dz, rx, ry, rz]
+                out = [freq, grid_type, dx, dy, dz, rx, ry, rz]
                 data.append(out)
-            elif gridType == 'S':
+            elif grid_type == 'S':
                 out = line[2:]
             else:
-                raise NotImplementedError(gridType)
+                raise NotImplementedError(grid_type)
             self.i += 2
         self.i += 1
 
@@ -210,7 +218,7 @@ class OUG(object):
 
         headers = self.skip(2)
         #print "headers = %s" % headers
-        data = self.readTemperatureTable()
+        data = self._read_temperature_table()
 
         data_code = {
             'log': self.log, 'analysis_code': 1, 'device_code': 1,
@@ -236,7 +244,7 @@ class OUG(object):
             self.temperatures[isubcase] = temp
         self.iSubcases.append(isubcase)
 
-    def readTemperatureTable(self):
+    def _read_temperature_table(self):
         data = []
         Format = [int, str, float, float, float, float, float, float]
         while 1:
@@ -244,16 +252,16 @@ class OUG(object):
             if 'PAGE' in line:
                 return data
             sline = [line[0:15], line[15:22].strip(), line[22:40], line[40:55], line[55:70], line[70:85], line[85:100], line[100:115]]
-            sline = self.parseLineTemperature(sline, Format)
+            sline = self._parse_line_temperature(sline, Format)
             data.append(sline)
         return data
 
-    def parseLineTemperature(self, sline, Format):
+    def _parse_line_temperature(self, sline, Format):
         out = []
         for (entry, iFormat) in izip(sline, Format):
             if entry is '':
                 return out
-            #print "sline=|%r|\n entry=|%r| format=%r" %(sline,entry,iFormat)
+            #print "sline=|%r|\n entry=|%r| format=%r" %(sline, entry, iFormat)
             entry2 = iFormat(entry)
             out.append(entry2)
         return out

@@ -1,6 +1,10 @@
+#pylint: disable=W0201,C0301,C0111
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import sys
 import copy
 from datetime import date
+import warnings
 
 import pyNastran
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
@@ -9,83 +13,80 @@ from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 def make_stamp(Title, today=None):
     if 'Title' is None:
         Title = ''
-    #pageStamp = '1    MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23                      NOVEMBER  14, 2011  MSC.NASTRAN  6/17/05   PAGE '
-    #Title = 'MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23'
     months = ['January', 'February', 'March', 'April', 'May', 'June',
               'July', 'August', 'September', 'October', 'November', 'December']
     if today is None:
-        t = date.today()
-        today = '%-8s %2s, %4s' % (months[t.month - 1].upper(), t.day, t.year)
-        today = today.strip()
-        #'September 14, 2013' # 18
+        today = date.today()
+        str_month = months[today.month - 1].upper()
+        str_today = '%-8s %2s, %4s' % (str_month, today.day, today.year)
     else:
         (month, day, year) = today
         #print "day=%s month=%s year=%s" % (day, month, year)
-        today = '%-8s %2s, %4s' % (months[month - 1].upper(), day, year)
+        str_month = months[month - 1].upper()
+        str_today = '%-8s %2s, %4s' % (str_month, day, year)
+    str_today = str_today.strip()
 
     release_date = '02/08/12'  # pyNastran.__releaseDate__
     release_date = ''
     build = 'pyNastran v%s %s' % (pyNastran.__version__, release_date)
-    out = '1    %-67s    %-18s %-22s PAGE %%5i\n' % (Title, today, build)
+    out = '1    %-67s    %-18s %-22s PAGE %%5i\n' % (Title, str_today, build)
     return out
 
 
 def make_f06_header():
-    n = ''
+    spaces = ''
     lines1 = [
-        n + '/* -------------------------------------------------------------------  */\n',
-        n + '/*                              PYNASTRAN                               */\n',
-        n + '/*                      - NASTRAN FILE INTERFACE -                      */\n',
-        n + '/*                                                                      */\n',
-        n + '/*              A Python reader/editor/writer for the various           */\n',
-        n + '/*                        NASTRAN file formats.                         */\n',
-        n + '/*                       Copyright (C) 2011-2013                        */\n',
-        n + '/*               Steven Doyle, Al Danial, Marcin Garrozik               */\n',
-        n + '/*                                                                      */\n',
-        n + '/*    This program is free software; you can redistribute it and/or     */\n',
-        n + '/*    modify it under the terms of the GNU Lesser General Public        */\n',
-        n + '/*    License as published by the Free Software Foundation;             */\n',
-        n + '/*    version 3 of the License.                                         */\n',
-        n + '/*                                                                      */\n',
-        n + '/*    This program is distributed in the hope that it will be useful,   */\n',
-        n + '/*    but WITHOUT ANY WARRANTY; without even the implied warranty of    */\n',
-        n + '/*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the      */\n',
-        n + '/*    GNU Lesser General Public License for more details.               */\n',
-        n + '/*                                                                      */\n',
-        n + '/*    You should have received a copy of the GNU Lesser General Public  */\n',
-        n + '/*    License along with this program; if not, write to the             */\n',
-        n + '/*    Free Software Foundation, Inc.,                                   */\n',
-        n + '/*    675 Mass Ave, Cambridge, MA 02139, USA.                           */\n',
-        n + '/* -------------------------------------------------------------------  */\n',
+        spaces + '/* -------------------------------------------------------------------  */\n',
+        spaces + '/*                              PYNASTRAN                               */\n',
+        spaces + '/*                      - NASTRAN FILE INTERFACE -                      */\n',
+        spaces + '/*                                                                      */\n',
+        spaces + '/*              A Python reader/editor/writer for the various           */\n',
+        spaces + '/*                        NASTRAN file formats.                         */\n',
+        spaces + '/*                       Copyright (C) 2011-2013                        */\n',
+        spaces + '/*               Steven Doyle, Al Danial, Marcin Garrozik               */\n',
+        spaces + '/*                                                                      */\n',
+        spaces + '/*    This program is free software; you can redistribute it and/or     */\n',
+        spaces + '/*    modify it under the terms of the GNU Lesser General Public        */\n',
+        spaces + '/*    License as published by the Free Software Foundation;             */\n',
+        spaces + '/*    version 3 of the License.                                         */\n',
+        spaces + '/*                                                                      */\n',
+        spaces + '/*    This program is distributed in the hope that it will be useful,   */\n',
+        spaces + '/*    but WITHOUT ANY WARRANTY; without even the implied warranty of    */\n',
+        spaces + '/*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the      */\n',
+        spaces + '/*    GNU Lesser General Public License for more details.               */\n',
+        spaces + '/*                                                                      */\n',
+        spaces + '/*    You should have received a copy of the GNU Lesser General Public  */\n',
+        spaces + '/*    License along with this program; if not, write to the             */\n',
+        spaces + '/*    Free Software Foundation, Inc.,                                   */\n',
+        spaces + '/*    675 Mass Ave, Cambridge, MA 02139, USA.                           */\n',
+        spaces + '/* -------------------------------------------------------------------  */\n',
         '\n']
 
-    n = 46 * ' '
+    spaces = 46 * ' '
     version = 'Version %8s' % pyNastran.__version__
     lines2 = [
-        n + '* * * * * * * * * * * * * * * * * * * *\n',
-        n + '* * * * * * * * * * * * * * * * * * * *\n',
-        n + '* *                                 * *\n',
-
-        n + '* *                                 * *\n',
-        n + '* *                                 * *\n',
-        n + '* *                                 * *\n',
-
-        n + '* *            pyNastran            * *\n',
-        n + '* *                                 * *\n',
-        n + '* *                                 * *\n',
-        n + '* *                                 * *\n',
-        n + '* *%s* *\n' % version.center(33),
-        n + '* *                                 * *\n',
-        n + '* *                                 * *\n',
-        n + '* *          %15s        * *\n' % pyNastran.__releaseDate2__,
-        n + '* *                                 * *\n',
-        n + '* *            Questions            * *\n',
-        n + '* *        mesheb82@gmail.com       * *\n',
-        n + '* *                                 * *\n',
-        n + '* *                                 * *\n',
-        n + '* *                                 * *\n',
-        n + '* * * * * * * * * * * * * * * * * * * *\n',
-        n + '* * * * * * * * * * * * * * * * * * * *\n\n\n']
+        spaces + '* * * * * * * * * * * * * * * * * * * *\n',
+        spaces + '* * * * * * * * * * * * * * * * * * * *\n',
+        spaces + '* *                                 * *\n',
+        spaces + '* *                                 * *\n',
+        spaces + '* *                                 * *\n',
+        spaces + '* *                                 * *\n',
+        spaces + '* *            pyNastran            * *\n',
+        spaces + '* *                                 * *\n',
+        spaces + '* *                                 * *\n',
+        spaces + '* *                                 * *\n',
+        spaces + '* *%s* *\n' % version.center(33),
+        spaces + '* *                                 * *\n',
+        spaces + '* *                                 * *\n',
+        spaces + '* *          %15s        * *\n' % pyNastran.__releaseDate2__,
+        spaces + '* *                                 * *\n',
+        spaces + '* *            Questions            * *\n',
+        spaces + '* *        mesheb82@gmail.com       * *\n',
+        spaces + '* *                                 * *\n',
+        spaces + '* *                                 * *\n',
+        spaces + '* *                                 * *\n',
+        spaces + '* * * * * * * * * * * * * * * * * * * *\n',
+        spaces + '* * * * * * * * * * * * * * * * * * * *\n\n\n']
     return ''.join(lines1 + lines2)
 
 
@@ -99,7 +100,7 @@ def make_end(end_flag=False):
     lines = []
     lines2 = []
     if end_flag:
-        lines = ['','',
+        lines = ['', '',
         '0                                   * * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *',
         '0 SEID  PEID PROJ VERS APRCH      SEMG SEMR SEKR SELG SELR MODES DYNRED SOLLIN PVALID SOLNL LOOPID DESIGN CYCLE SENSITIVITY',
         ' --------------------------------------------------------------------------------------------------------------------------']
@@ -160,17 +161,21 @@ def make_end(end_flag=False):
 
 
 class F06WriterDeprecated(object):
-    def writeF06(self, f06OutName, is_mag_phase=False, makeFile=True,
+    def __init__(self):
+        pass
+    def write_f06(self, f06_outname, is_mag_phase=False, makeFile=True,
+                 deleteObjects=True):
+        raise RuntimeError()
+    def writeF06(self, f06_outname, is_mag_phase=False, makeFile=True,
                  deleteObjects=True):
         """.. seealso:: write_f06"""
-        self.write_f06(f06OutName, is_mag_phase, makeFile, deleteObjects)
+        self.write_f06(f06_outname, is_mag_phase, makeFile, deleteObjects)
 
-    def loadOp2(self, isTesting=False):
-        """.. seealso:: load_op2"""
-        self.load_op2(isTesting)
-
-class F06Writer(object):
+class F06Writer(F06WriterDeprecated):
     def __init__(self):
+        F06WriterDeprecated.__init__(self)
+        self.card_count = {}
+
         #: BDF Title
         self.Title = None
 
@@ -179,16 +184,21 @@ class F06Writer(object):
         self.iSubcaseNameMap = {}
 
         self.pageNum = 1
-        self.date = None
-
-        # F06
-        self.grid_point_weight = GridPointWeight()
 
         self.iSubcases = []
         self.__objects_init__()
 
     def __objects_init__(self):
         """More variable declarations"""
+        #: the date the job was run on
+        self.date = None
+
+        #: Grid Point Weight Table
+        #: create with:
+        #:   PARAM   GRDPNT    0  (required for F06/OP2)
+        #:   PARAM   POSTEXT YES  (required for OP2)
+        self.grid_point_weight = GridPointWeight()
+
         #: ESE
         self.eigenvalues = {}
 
@@ -342,33 +352,6 @@ class F06Writer(object):
         #: OEE - strain energy density
         self.strainEnergy = {}  # tCode=18
 
-    def load_op2(self, isTesting=False):
-        print("self.class = ",self.__class__.__name__)
-        if isTesting == False:  # TODO implement in way that doesnt require a variable (e.g. check parent class)
-            raise RuntimeError("Don't call this method unless you're testing the F06Writer.  It breaks the F06 and OP2 classes.")
-        from pyNastran.op2.op2 import OP2
-        self.op2Name = model + '.op2'
-        op2 = OP2(self.op2Name)
-        op2.readOP2()
-
-        # oug
-        self.eigenvectors = op2.eigenvectors
-        self.displacements = op2.displacements
-        self.temperatures = op2.temperatures
-
-        # oes
-        #CBEAM
-        #CSHEAR
-        #CELASi
-        self.rodStress = op2.rodStress
-        self.rodStrain = op2.rodStrain
-        self.barStress = op2.barStress
-        self.barStrain = op2.barStrain
-        self.plateStress = op2.plateStress
-        self.plateStrain = op2.plateStrain
-        self.compositePlateStress = op2.compositePlateStress
-        self.compositePlateStrain = op2.compositePlateStrain
-
     def make_f06_header(self):
         """If this class is inherited, the F06 Header may be overwritten"""
         return make_f06_header()
@@ -384,7 +367,7 @@ class F06Writer(object):
         """
         warnings.warn('writeF06 has been deprecated; use '
                       'write_f06', DeprecationWarning, stacklevel=2)
-        self.write_f06(self, f06OutName, is_mag_phase=is_mag_phase, make_file=makeFile,
+        self.write_f06(self, f06OutName, is_mag_phase=is_mag_phase,
                  delete_objects=deleteObjects)
 
     def make_grid_point_singularity_table(self, failed):
@@ -398,8 +381,8 @@ class F06Writer(object):
         else:
             msg += 'No constraints have been applied...\n'
 
-        pageStamp = self.make_stamp(self.Title, self.date)
-        msg += pageStamp % self.pageNum
+        page_stamp = self.make_stamp(self.Title, self.date)
+        msg += page_stamp % self.pageNum
         self.pageNum += 1
         return msg
 
@@ -410,7 +393,7 @@ class F06Writer(object):
         msg += '            RESULTANTS ABOUT ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM IN SUPERELEMENT BASIC SYSTEM COORDINATES.\n'
         msg += '       0                                                  OLOAD    RESULTANT       \n'
 
-        nnodes = len(model.nodes)
+        #nnodes = len(model.nodes)
 
         msg += '        SUBCASE/    LOAD\n'
         msg += '        DAREA ID    TYPE       T1            T2            T3            R1            R2            R3\n'
@@ -422,12 +405,12 @@ class F06Writer(object):
         msg += '                     MZ       ----          ----          ----          ----          ----       0.000000E+00                             \n'
         msg += '                   TOTALS  3.000000E+03  5.000000E+03  0.000000E+00  1.300000E+04  0.000000E+00  1.400000E+05\n'
 
-        pageStamp = self.make_stamp(self.Title, self.date)
-        msg += pageStamp % self.pageNum
+        page_stamp = self.make_stamp(self.Title, self.date)
+        msg += page_stamp % self.pageNum
         self.pageNum += 1
         return msg
 
-    def write_summary(self, f, card_count=None):
+    def write_summary(self, f06, card_count=None):
         summary_header = '                                        M O D E L   S U M M A R Y\n\n'
         summary = ''
 
@@ -506,50 +489,53 @@ class F06Writer(object):
                 summary += ' \n'
         #sys.exit(summary)
         if summary:
-            f.write(summary_header)
-            f.write(summary)
+            f06.write(summary_header)
+            f06.write(summary)
 
-            pageStamp = self.make_stamp(self.Title, self.date)
-            f.write(pageStamp % self.pageNum)
+            page_stamp = self.make_stamp(self.Title, self.date)
+            f06.write(page_stamp % self.pageNum)
             self.pageNum += 1
             print(summary)
 
-    def write_f06(self, f06OutName, is_mag_phase=False, make_file=True,
-                 delete_objects=True, end_flag=False):
+    def write_f06(self, f06_outname, is_mag_phase=False,
+                  delete_objects=True, end_flag=False):
         """
         Writes an F06 file based on the data we have stored in the object
 
-        :self:       the F06 object
-        :f06OutName: the name of the F06 file to write
-        :is_mag_phase: should complex data be written using Magnitude/Phase
-                       instead of Real/Imaginary (default=False; Real/Imag)
-                       Real objects don't use this parameter.
-        :make_file:
-           * True  -> makes a file
-           * False -> makes a StringIO object for testing (default=True)
+        :param self:         the F06 object
+        :param f06_outname:  the name of the F06 file to write
+        :param is_mag_phase: should complex data be written using Magnitude/Phase
+                         instead of Real/Imaginary (default=False; Real/Imag)
+                         Real objects don't use this parameter.
+        :param delete_objects: should objects be deleted after they're written
+                         to reduce memory (default=True)
+        :param end_flag: should a dummy Nastran "END" table be made
+                         (default=False)
         """
-        if isinstance(f06OutName, str):
-            f = open(f06OutName, 'wb')
-            self.write_summary(f)
+        if isinstance(f06_outname, str):
+            f06 = open(f06_outname, 'wb')
+            self.write_summary(f06)
         else:
-            assert isinstance(f06OutName, file), 'type(f06OutName)= %s' % f06OutName
-            f = f06OutName
-            f06OutName = f.name
-            print 'f06OutName =', f06OutName
+            assert isinstance(f06_outname, file), 'type(f06_outname)= %s' % f06_outname
+            f06 = f06_outname
+            f06_outname = f06.name
+            print('f06_outname =', f06_outname)
 
-        pageStamp = self.make_stamp(self.Title, self.date)
+        page_stamp = self.make_stamp(self.Title, self.date)
         if self.grid_point_weight.reference_point is not None:
             print("grid_point_weight")
-            self.pageNum = self.grid_point_weight.write_f06(f, pageStamp, self.pageNum)
-        #print "pageStamp = %r" % pageStamp
-        #print "stamp     = %r" % stamp
+            self.pageNum = self.grid_point_weight.write_f06(f06, page_stamp, self.pageNum)
+        #print "page_stamp = %r" % page_stamp
+        #print "stamp      = %r" % stamp
 
-        self.pageNum = self.grid_point_weight.write_f06(f, pageStamp, self.pageNum)
+        self.pageNum = self.grid_point_weight.write_f06(f06, page_stamp, self.pageNum)
 
         #is_mag_phase = False
         header = ['     DEFAULT                                                                                                                        \n',
                   '\n', '']
-        for isubcase, result in sorted(self.eigenvalues.iteritems()):  # goes first
+
+        # eigenvalues are written first
+        for isubcase, result in sorted(self.eigenvalues.iteritems()):
             try:
                 (subtitle, label) = self.iSubcaseNameMap[isubcase]
             except KeyError:  # rarely happens (only eigenvalues were read), but...
@@ -560,13 +546,14 @@ class F06Writer(object):
             header[1] = '0 %-32s                                                                            SUBCASE %i\n \n' % (label, isubcase)
             #header[2] = complex/nonlinear
             print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
-            self.pageNum = result.write_f06(header, pageStamp,
-                                            pageNum=self.pageNum, f=f, is_mag_phase=is_mag_phase)
+            self.pageNum = result.write_f06(header, page_stamp,
+                                            pageNum=self.pageNum, f=f06, is_mag_phase=is_mag_phase)
             assert isinstance(self.pageNum, int), 'pageNum=%r' % str(self.pageNum)
             if delete_objects:
                 del result
             self.pageNum += 1
 
+        # then eigenvectors
         # has a special header
         for isubcase, result in sorted(self.eigenvectors.iteritems()):
             (subtitle, label) = self.iSubcaseNameMap[isubcase]
@@ -575,18 +562,22 @@ class F06Writer(object):
             header[1] = '0                                                                                                            SUBCASE %i\n' % (isubcase)
             #header[2] = complex/nonlinear
             print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
-            self.pageNum = result.write_f06(header, pageStamp,
-                                            pageNum=self.pageNum, f=f, is_mag_phase=is_mag_phase)
+            self.pageNum = result.write_f06(header, page_stamp,
+                                            pageNum=self.pageNum, f=f06, is_mag_phase=is_mag_phase)
             assert isinstance(self.pageNum, int), 'pageNum=%r' % str(self.pageNum)
             if delete_objects:
                 del result
             self.pageNum += 1
 
+        # finally, we writte all the other tables
+        # nastran puts the tables in order of the Case Control deck,
+        # but we're lazy so we just hardcode the order
+
         # subcase name, subcase ID, transient word & value
-        headerOld = ['     DEFAULT                                                                                                                        \n',
+        header_old = ['     DEFAULT                                                                                                                        \n',
                      '\n', ' \n']
-        header = copy.deepcopy(headerOld)
-        resTypes = [
+        header = copy.deepcopy(header_old)
+        res_types = [
             self.displacements, self.displacementsPSD, self.displacementsATO, self.displacementsRMS,
             self.scaledDisplacements,  # ???
             self.velocities, self.accelerations, #self.eigenvectors,
@@ -686,47 +677,35 @@ class F06Writer(object):
 
                 #header[0] = '     %-127s\n' % subtitle
                 #header[1] = '0    %-72s                                SUBCASE %-15i\n' % (label, isubcase)
-                #header[1] = '0    %-72s                                SUBCASE %-15i\n' %('',isubcase)
-                for resType in resTypes:
+                #header[1] = '0    %-72s                                SUBCASE %-15i\n' % ('',isubcase)
+                for res_type in res_types:
                     header = ['', '']
                     #header[0] = '     %s\n' % subtitle
                     header[0] = '      %-126s\n' % subtitle
                     header[1] = '0     %-32s                                                                       SUBCASE %-15i\n \n' % (label, isubcase)
-                    #print "resType = ",resType
-                    if isubcase in resType:
+                    #print "res_type = ", res_type
+                    if isubcase in res_type:
                         #header = copy.deepcopy(headerOld)  # fixes bug in case
-                        result = resType[isubcase]
+                        result = res_type[isubcase]
                         if result.nonlinear_factor is not None:
                             header.append('')
                         try:
                             print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
-                            self.pageNum = result.write_f06(header, pageStamp, pageNum=self.pageNum, f=f, is_mag_phase=False)
+                            self.pageNum = result.write_f06(header, page_stamp, pageNum=self.pageNum, f=f06, is_mag_phase=False)
                             assert isinstance(self.pageNum, int), 'pageNum=%r' % str(self.pageNum)
                         except:
                             #print "result name = %r" % result.name()
                             raise
                         if delete_objects:
                             del result
-                        #f.write('\n')
+                        #f06.write('\n')
                         self.pageNum += 1
         if 0:
-            for res in resTypes:
+            for res in res_types:
                 for isubcase, result in sorted(res.iteritems()):
-                    self.pageNum = result.write_f06(header, pageStamp, pageNum=self.pageNum, f=f, is_mag_phase=False)
+                    self.pageNum = result.write_f06(header, page_stamp, pageNum=self.pageNum, f=f06, is_mag_phase=False)
                     if delete_objects:
                         del result
                     self.pageNum += 1
-        f.write(make_end(end_flag))
-        if not make_file:
-            print(f.getvalue())
-        f.close()
-
-if __name__ == '__main__':
-    #Title = 'MSC.NASTRAN JOB CREATED ON 10-DEC-07 AT 09:21:23'
-    #stamp = make_stamp(Title) # doesnt have pageNum
-    #print "|%s|" %(stamp+'22')
-
-    model = sys.argv[1]
-    f06 = F06Writer(model)
-    f06.load_op2(isTesting=True)
-    f06.write_f06()
+        f06.write(make_end(end_flag))
+        f06.close()

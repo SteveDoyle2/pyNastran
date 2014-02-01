@@ -1,10 +1,9 @@
+#pylint: disable=C0301,C0111,R0921
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from numpy import array, sqrt
-from numpy.linalg import eigh
+from numpy.linalg import eig
 
 from ..real.oes_objects import StressObject, StrainObject
-from pyNastran.f06.f06_formatting import writeFloats13E
 from pyNastran.f06.f06_formatting import writeImagFloats13E
 
 
@@ -23,15 +22,15 @@ class ComplexSolidStressObject(StressObject):
         self.tyz = {}
         self.txz = {}
 
-        #self.dt = dt
         if is_sort1:
             if dt is not None:
                 self.add = self.add_sort1
                 self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
-            self.add_new_eid = self.add_new_eid_sort2
+            raise NotImplementedError('SORT2')
+            #self.add = self.addSort2
+            #self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -91,7 +90,6 @@ class ComplexSolidStressObject(StressObject):
         self.txz[dt] = {}
 
     def add_new_eid_sort1(self, eType, dt, eid, cid, ctype, nodef):
-        #print "Solid Stress add transient..."
         assert cid >= 0
         assert eid >= 0
 
@@ -118,16 +116,13 @@ class ComplexSolidStressObject(StressObject):
         #print "***add"
         #msg = "eid=%s nodeID=%s vm=%g" % (eid, nodeID, ovm)
         #print msg
-        #print self.oxx
-        #print self.fiberDistance
 
-        #self.eType[eid] = eType
         assert eid != 'C'
         #print("eid=%s nid=%s oyy=%s" %(eid,nodeID, oyy))
         self.oxx[dt][eid][nodeID] = oxx
         self.oyy[dt][eid][nodeID] = oyy
         self.ozz[dt][eid][nodeID] = ozz
-        #print self.oxx
+
         self.txy[dt][eid][nodeID] = txy
         self.tyz[dt][eid][nodeID] = tyz
         self.txz[dt][eid][nodeID] = tzx
@@ -140,18 +135,23 @@ class ComplexSolidStressObject(StressObject):
         A = [[oxx, txy, txz],
              [txy, oyy, tyz],
              [txz, tyz, ozz]]
-        (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
+        (Lambda, v) = eig(A)  # we can't use a hermitian matrix
         return v
 
     def getF06_Header(self):
         raise NotImplementedError()
 
-    def write_f06(self, header, pageStamp, pageNum, f, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, pageNum=1, f=None, is_mag_phase=False):
         """
         Not perfect, but it's not bad...
         """
         if is_mag_phase:
-            asdf
+            stamp = [
+                '                 C O M P L E X     S T R A I N S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )',
+                '                                                          (MAGNITUDE/PHASE)',
+                '0                   CORNER      --------------------------CENTER AND CORNER POINT  STRAINS---------------------------',
+                '     ELEMENT-ID    GRID-ID      NORMAL-X       NORMAL-Y       NORMAL-Z         SHEAR-XY       SHEAR-YZ       SHEAR-ZX',
+            ]
         else:
             stamp = [
                 '                 C O M P L E X     S T R A I N S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )',
@@ -185,9 +185,10 @@ class ComplexSolidStressObject(StressObject):
                     else:
                         f.write('    %8s %8s %8s %8s %8s %8s %8s %8s\n' % (inode, cid, oxxr, oyyr, ozzr, txyr, tyzr, txzr))
                         f.write('    %8s %8s %8s %8s %8s %8s %8s %8s\n' % ('', '',     oxxi, oyyi, ozzi, txyi, tyzi, txzi))
-            f.write(pageStamp % pageNum)
+            f.write(page_stamp % pageNum)
             pageNum += 1
         return pageNum - 1
+
 
 class ComplexSolidStrainObject(StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -211,8 +212,9 @@ class ComplexSolidStrainObject(StrainObject):
                 self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
-            self.add_new_eid = self.add_new_eid_sort2
+            raise NotImplementedError('SORT2')
+            #self.add = self.add_sort2
+            #self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -272,11 +274,9 @@ class ComplexSolidStrainObject(StrainObject):
         self.exz[dt] = {}
 
     def add_new_eid_sort1(self, eType, dt, eid, cid, ctype, nodef):
-        #print "Solid Stress add transient..."
         assert cid >= 0
         assert eid >= 0
 
-        #print "dt=%s eid=%s eType=%s" %(dt,eid,eType)
         if dt not in self.exx:
             self.add_new_transient(dt)
         assert eid not in self.exx[dt], self.exx[dt]
@@ -296,19 +296,13 @@ class ComplexSolidStrainObject(StrainObject):
             #raise ValueError(msg)
 
     def add_sort1(self, dt, eid, nodeID, ex, ey, ez, etxy, etyz, etzx):
-        #print "***add"
         #msg = "eid=%s nodeID=%s vm=%g" % (eid, nodeID, evm)
-        #print msg
-        #print self.oxx
-        #print self.fiberDistance
-
-        #self.eType[eid] = eType
         assert eid != 'C'
         #print "eid=%s nid=%s exx=%s" %(eid, nodeID, exx)
         self.exx[dt][eid][nodeID] = ex
         self.eyy[dt][eid][nodeID] = ey
         self.ezz[dt][eid][nodeID] = ez
-        #print self.oxx
+
         self.exy[dt][eid][nodeID] = etxy
         self.eyz[dt][eid][nodeID] = etyz
         self.exz[dt][eid][nodeID] = etzx
@@ -321,7 +315,7 @@ class ComplexSolidStrainObject(StrainObject):
         A = [[exx, exy, exz],
              [exy, eyy, eyz],
              [exz, eyz, ezz]]
-        (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
+        (Lambda, v) = eig(A)  # we can't use a hermitian matrix
         return v
 
     def getF06_Header(self):

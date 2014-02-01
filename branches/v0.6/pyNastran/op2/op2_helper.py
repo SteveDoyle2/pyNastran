@@ -2,7 +2,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from numpy import radians, abs, angle  # ,sin, cos
-#from math import radians
 from cmath import rect  # polar
 
 

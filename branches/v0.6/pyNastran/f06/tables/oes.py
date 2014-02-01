@@ -1,3 +1,4 @@
+#pylint: disable=C0301,C0111,C0103
 from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RodStressObject, RodStrainObject
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import BarStressObject, BarStrainObject
 #from pyNastran.op2.tables.oes_stressStrain.real.oes_beams   import beamStressObject
@@ -10,7 +11,12 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import CelasStressOb
 
 
 class OES(object):
+    def _parse_line_blanks(self, sline, data_types, debug=False):
+        pass
     def __init__(self):
+        self.log = None
+
+        self.iSubcases = []
         self.rodStress = {}  # CROD, CONROD, CTUBE
         self.rodStrain = {}
 
@@ -140,8 +146,8 @@ class OES(object):
             if 'PAGE' in line:
                 break
             #print sline
-            dataTypes = [int, float, float, float, float, int, float, float, float, float]
-            out = self.parseLineBlanks(sline, dataTypes)  # line 1
+            data_types = [int, float, float, float, float, int, float, float, float, float]
+            out = self._parse_line_blanks(sline, data_types)  # line 1
             #print out
             data.append(out[:5])
             if isinstance(out[5], int):
@@ -171,8 +177,8 @@ class OES(object):
             n = len(sline) // 2
             assert len(sline) % 2 == 0, sline
 
-            dataTypes = [int, float] * n
-            out = self.parseLineBlanks(sline, dataTypes)  # line 1
+            data_types = [int, float] * n
+            out = self._parse_line_blanks(sline, data_types)  # line 1
             #print out
 
             while out:
@@ -275,16 +281,16 @@ class OES(object):
             if 'PAGE' in line:
                 break
             sline = [line[0:11], line[11:26], line[26:41], line[41:56], line[56:69], line[69:86], line[86:101], line[101:116], line[116:131]]
-            dataTypes = [int, float, float, float, float, float, float, float, float]
-            out = self.parseLineBlanks(sline, dataTypes)  # line 1
+            data_types = [int, float, float, float, float, float, float, float, float]
+            out = self._parse_line_blanks(sline, data_types)  # line 1
             out = ['CBAR'] + out
             #data.append(sline)
 
             # line 2
             line = self.infile.readline()[1:].rstrip('\r\n ')
             sline = [line[11:26], line[26:41], line[41:56], line[56:69], line[86:101], line[101:116], line[116:131]]
-            dataTypes = [float, float, float, float, float, float, float]
-            out += self.parseLineBlanks(sline, dataTypes)  # line 2
+            data_types = [float, float, float, float, float, float, float]
+            out += self._parse_line_blanks(sline, data_types)  # line 2
             #print "*",out
             data.append(out)
             self.i += 2
@@ -343,9 +349,9 @@ class OES(object):
         (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
-        dataTypes = [int, int, float, float, float, float,
-                     float, float, float, float, float]
-        data = self.readTable(dataTypes)
+        data_types = [int, int, float, float, float, float,
+                         float, float, float, float, float]
+        data = self._read_f06_table(data_types)
 
         isMaxShear = False  # Von Mises/Max Shear
         sHeaders = headers.rstrip()
@@ -362,7 +368,9 @@ class OES(object):
                     'stress_bits': stress_bits, 'format_code': 1,
                     'element_name': element_name, 'element_type': element_type,
                     'table_name': 'OES1X', 'nonlinear_factor': dt,
-                    'dataNames':['lsdvmn']}
+                    'dataNames':['lsdvmn'],
+                    'lsdvmn': 1,
+                    }
 
         if is_strain:
             dictA = self.compositePlateStrain
@@ -477,17 +485,17 @@ class OES(object):
             if 'PAGE' in line or '***' in line:
                 break
             #print line
-            dataTypes = [int, float, float, float, float,
-                         float, float, float, float]
-            sline = self.parseLine(line, dataTypes)  # line 1
+            data_types = [int, float, float, float, float,
+                               float, float, float, float]
+            sline = self.parseLine(line, data_types)  # line 1
             #print 'sline',sline
             sline = eType + sline
             data.append(sline)
             line = self.infile.readline()[1:].strip().split()
             #print '***',line
-            dataTypes = [float, float, float, float,
-                         float, float, float, float]
-            sline += self.parseLine(line, dataTypes)  # line 2
+            data_types = [float, float, float, float,
+                          float, float, float, float]
+            sline += self.parseLine(line, data_types)  # line 2
             data.append(sline)
             self.i += 2
         return data
@@ -498,7 +506,7 @@ class OES(object):
         elementType = 'CQUAD4'
         elementNumber = 33
         is_strain = False
-        (isubcase, transient, data_code) = self.getQuadHeader(2, elementType, elementNumber, is_strain)
+        (isubcase, transient, data_code) = self._get_quad_header(2, elementType, elementNumber, is_strain)
         data_code['table_name'] = 'OES1X'
         data = self.readTriStress(['CQUAD4'])
         if isubcase in self.plateStress:
@@ -514,7 +522,7 @@ class OES(object):
         elementType = 'CQUAD4'
         elementNumber = 33
         is_strain = True
-        (isubcase, transient, data_code) = self.getQuadHeader(2, elementType, elementNumber, is_strain)
+        (isubcase, transient, data_code) = self._get_quad_header(2, elementType, elementNumber, is_strain)
         data_code['table_name'] = 'OSTR1X'
         data = self.readTriStress(['CQUAD4'])
         if isubcase in self.plateStrain:
@@ -527,17 +535,17 @@ class OES(object):
 
     def _strains_in_cquad4_bilinear_elements(self):
         is_strain = True
-        elementType = 'CQUAD4'
-        elementNum = 144
-        self._stress_strain_cquad4_bilinear_helper(elementType, elementNum, is_strain)
+        element_type = 'CQUAD4'
+        element_num = 144
+        self._stress_strain_cquad4_bilinear_helper(element_type, element_num, is_strain)
 
     def _stresses_in_cquad4_bilinear_elements(self):
         is_strain = False
-        elementType = 'CQUAD4'
-        elementNum = 144
-        self._stress_strain_cquad4_bilinear_helper(elementType, elementNum, is_strain)
+        element_type = 'CQUAD4'
+        element_num = 144
+        self._stress_strain_cquad4_bilinear_helper(element_type, element_num, is_strain)
 
-    def _stress_strain_cquad4_bilinear_helper(self, elementType, elementNum, is_strain):
+    def _stress_strain_cquad4_bilinear_helper(self, element_type, element_num, is_strain):
         """
         ::
 
@@ -551,7 +559,7 @@ class OES(object):
                          4  -1.250000E-01  -8.871141E+02  7.576036E+03 -1.550089E+02   -88.9511   7.578874E+03 -8.899523E+02  8.060780E+03
                              1.250000E-01  -8.924081E+01  1.187899E+04 -4.174177E+01   -89.8002   1.187913E+04 -8.938638E+01  1.192408E+04
         """
-        (isubcase, transient, data_code) = self.getQuadHeader(3, elementType, elementNum, is_strain)
+        (isubcase, transient, data_code) = self._get_quad_header(3, element_type, element_num, is_strain)
         #print(self.getQuadHeader(3, False, 144))
         #print("data_code =", data_code)
 
@@ -574,7 +582,7 @@ class OES(object):
             self.plateStress[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
-    def getQuadHeader(self, nHeaderLines, elementType, elementNumber, is_strain):
+    def _get_quad_header(self, nHeaderLines, elementType, elementNumber, is_strain):
         (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
         headers = self.skip(nHeaderLines)
         #print "headers = %s" %(headers)
@@ -602,7 +610,9 @@ class OES(object):
                     'stress_bits': stress_bits, 'format_code': 1,
                     'element_name': 'CQUAD4', 'element_type': elementNumber,
                     'nonlinear_factor': dt,
-                    'dataNames':['lsdvmn']}
+                    'dataNames':['lsdvmn'],
+                    'lsdvmn': 1,
+                    }
         if transient is not None:
             data_code['name'] = transient[0]
         return (isubcase, transient, data_code)
@@ -620,23 +630,23 @@ class OES(object):
                 sline = ['CQUAD4'] + sline
                 #data.append(sline)
                 line = self.infile.readline()[1:].strip().split()
-                dataTypes = [float, float, float, float,
-                             float, float, float, float]
-                sline += self.parseLine(line, dataTypes)  # line 2
+                data_types = [float, float, float, float,
+                              float, float, float, float]
+                sline += self.parseLine(line, data_types)  # line 2
                 data.append(sline)
                 line = self.infile.readline()  # blank line
                 self.i += 3
 
             for i in xrange(4):
                 line = self.infile.readline()[1:].strip().split()
-                dataTypes = [int, float, float, float, float,
-                                  float, float, float, float]
-                sline = self.parseLine(line, dataTypes)  # line 1
+                data_types = [int, float, float, float, float,
+                                   float, float, float, float]
+                sline = self.parseLine(line, data_types)  # line 1
                 #data.append(sline)
                 line = self.infile.readline()[1:].strip().split()
-                dataTypes = [float, float, float, float,
-                             float, float, float, float]
-                sline += self.parseLine(line, dataTypes)  # line 2
+                data_types = [float, float, float, float,
+                              float, float, float, float]
+                sline += self.parseLine(line, data_types)  # line 2
                 data.append(sline)
                 line = self.infile.readline()  # blank line
                 self.i += 3

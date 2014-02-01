@@ -1,25 +1,31 @@
+#pylint: disable=C0301,C0103,C0111
 from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import SPCForcesObject  # ,ComplexSPCForcesObject
 from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import MPCForcesObject  # ,ComplexMPCForcesObject
 
 
 class OQG(object):
+    def _read_f06_table(self, data_types, debug=False):
+        pass
     def __init__(self):
         self.spcForces = {}
         self.mpcForces = {}
+        self.iSubcases = []
+        self.i = 0
 
     def _forces_of_single_point_constraints(self):
-        (subcaseName, isubcase, transient, dt, analysis_code,
+        (subcase_name, isubcase, transient, dt, analysis_code,
             is_sort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
-        dataTypes = [int, str, float, float, float, float, float, float]
-        data = self.readTable(dataTypes)
+        data_types = [int, str, float, float, float, float, float, float]
+        data = self._read_f06_table(data_types)
 
         data_code = {'log': self.log, 'analysis_code': analysis_code,
                     'device_code': 1, 'table_code': 3, 'sort_code': 0,
                     'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OQG',
                     'nonlinear_factor': dt,
+                    'lsdvmn': 1, 'format_code': 3,
                     'dataNames':['lsdvmn']}
 
         if isubcase in self.spcForces:
@@ -32,12 +38,12 @@ class OQG(object):
         self.iSubcases.append(isubcase)
 
     def _forces_of_multi_point_constraints(self):
-        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
+        (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
-        dataTypes = [int, str, float, float, float, float, float, float]
-        data = self.readTable(dataTypes)
+        data_types = [int, str, float, float, float, float, float, float]
+        data = self._read_f06_table(data_types)
 
         data_code = {'log': self.log, 'analysis_code': analysis_code,
                     'device_code': 1, 'table_code': 39,
