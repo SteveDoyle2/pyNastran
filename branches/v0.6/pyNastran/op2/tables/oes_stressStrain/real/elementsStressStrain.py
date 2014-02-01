@@ -736,14 +736,15 @@ class RealElementsStressStrain(object):
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
         format1 += '4si6f'  # 1 + 4+1+6 = 12
-        format1 = bytes(format1)
+        s = Struct(bytes(format1))
 
         n = 0
         ntotal = 120
+        s2 = Struct(b'i6f')
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):
-            eData = self.data[n:n+36]  # 4*9
-            out = unpack(format1, eData)
+            edata = self.data[n:n+36]  # 4*9
+            out = s.unpack(edata)
             if self.make_op2_debug:
                 self.op2_debug.write('CQUAD4FD-139A - %s\n' % (str(out)))
 
@@ -754,8 +755,8 @@ class RealElementsStressStrain(object):
             n += 36
 
             for i in xrange(3):
-                eData = self.data[n:n + 28]  # 4*7
-                out = unpack(b'i6f', eData)
+                edata = self.data[n:n + 28]  # 4*7
+                out = s2.unpack(edata)
                 if self.make_op2_debug:
                     self.op2_debug.write('CQUAD4FD-139B - %s\n' % (str(out)))
                 #(ID,sx,sy,sxy,angle,smj,smi) = out

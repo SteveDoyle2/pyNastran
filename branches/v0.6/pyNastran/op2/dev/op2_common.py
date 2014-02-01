@@ -555,9 +555,9 @@ class OP2Common(Op2Codes, F06Writer):
                 storageObj[self.ID] = self.obj
 
     def not_implemented_or_skip(self, msg=''):
-        if isRelease:
-            pass
-        else:
+        #if isRelease:
+            #pass
+        #else:
             raise NotImplementedError('table_name=%s table_code=%s %s' % (self.table_name, self.table_code, msg))
 
     def parse_approach_code(self, data):

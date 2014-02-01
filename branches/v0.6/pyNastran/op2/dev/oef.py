@@ -807,7 +807,7 @@ class OEF(OP2Common):
                     edata = data[n:n+76]
                     n += 76
 
-                    out = s.unpack(edata)
+                    out = s1.unpack(edata)
                     (eid_device, term, nid, mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
                                             mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
                     #term = 'CEN\'
@@ -965,6 +965,7 @@ class OEF(OP2Common):
                 self.create_transient_object(self.gapForces, RealCGapForce)
                 s = Struct(b'i8f')
                 ntotal = 36 # 9*4
+                nelements = len(data) // ntotal
                 for i in xrange(nelements):
                     edata = data[n:n+36]
 

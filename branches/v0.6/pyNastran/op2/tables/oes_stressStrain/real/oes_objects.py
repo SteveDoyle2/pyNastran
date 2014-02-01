@@ -8,7 +8,7 @@ from pyNastran.op2.resultObjects.op2_Objects import scalarObject
 class OES_Object(scalarObject):
     def __init__(self, data_code, isubcase):
         scalarObject.__init__(self, data_code, isubcase)
-        self.log.debug("starting OES...element_name=%-6s isubcase=%s" % (self.element_name, self.isubcase))
+        #self.log.debug("starting OES...element_name=%-6s isubcase=%s" % (self.element_name, self.isubcase))
         #print self.data_code
 
     def isCurvatureOld(self):

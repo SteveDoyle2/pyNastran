@@ -137,7 +137,7 @@ class BushStrainObject(StrainObject):
     """
     """
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        raise NotImplementedError('is this used?')
+        #raise NotImplementedError('is this used?')
         StrainObject.__init__(self, data_code, isubcase)
         self.eType = {}
 

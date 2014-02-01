@@ -9,7 +9,7 @@ from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import BarStressObject, BarStrainObject
 from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import BeamStressObject, BeamStrainObject
-from pyNastran.op2.tables.oes_stressStrain.real.oes_bush import BushStressObject #, BushStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_bush import BushStressObject, BushStrainObject
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush1d import Bush1DStressObject  # unused
 from pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates import CompositePlateStressObject, CompositePlateStrainObject
 from pyNastran.op2.tables.oes_stressStrain.real.oes_gap import NonlinearGapStressObject
@@ -29,7 +29,7 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShear
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressObject, ComplexSolidStrainObject
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexCelasStressObject, ComplexCelasStrainObject
 
-from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import NonlinearRodObject, NonlinearQuadObject, HyperelasticQuadObject  # unused
+from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import NonlinearRodObject, NonlinearQuadObject, HyperelasticQuadObject
 
 
 class OES(OP2Common):
@@ -137,6 +137,8 @@ class OES(OP2Common):
 
         self.element_name = self.element_mapper[self.element_type]
         self.data_code['element_name'] = self.element_name
+        self.log.debug('  element_name=%s-%i  isubcase=%s' % (self.element_name, self.element_type,
+                                                              self.isubcase))
         if self.debug3():
             self.binary_debug.write('  element_name = %r\n' % self.element_name)
             self.binary_debug.write('  aCode    = %r\n' % self.aCode)
@@ -479,11 +481,11 @@ class OES(OP2Common):
                     self.create_transient_object(self.solidStrain, SolidStrainObject)
                 ntotal = 16 + 84 * nnodes_expected
                 nelements = len(data) // ntotal
-                s1 = Struct(b'ii4si')
-                s2 = Struct(b'i20f')
+                struct1 = Struct(b'ii4si')
+                struct2 = Struct(b'i20f')
                 for i in xrange(nelements):
                     edata = data[n:n+16]
-                    out = s1.unpack(edata)
+                    out = struct1.unpack(edata)
                     (eid_device, cid, abcd, nnodes) = out
                     eid = (eid_device - self.device_code) // 10
 
@@ -497,7 +499,7 @@ class OES(OP2Common):
 
                     n += 16
                     for node_id in xrange(nnodes_expected):  # nodes pts, +1 for centroid (???)
-                        out = s2.unpack(data[n:n + 84]) # 4*21 = 84
+                        out = struct2.unpack(data[n:n + 84]) # 4*21 = 84
                         if self.debug4():
                             self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
                         (grid_device, sxx, sxy, s1, a1, a2, a3, pressure, svm,
@@ -984,8 +986,8 @@ class OES(OP2Common):
 
                 eid_old = 0
                 for i in xrange(nelements):
-                    if i % 10000 == 0:
-                        print 'i = ', i
+                    #if i % 10000 == 0:
+                        #print 'i = ', i
                     edata = data[n:n+44]  # 4*11
                     out = s.unpack(edata)
                     (eid_device, ilayer_device, o1, o2, t12, t1z, t2z, angle, major, minor, ovm) = out
@@ -1017,20 +1019,23 @@ class OES(OP2Common):
                 ntotal = 36
                 nelements = len(data) // ntotal
                 #s = Struct(format1)
+                s = Struct(b'i')
+                s2 = Struct(b'8si3fi4s')
+                s3 = Struct(b'8si4f4s')
                 for i in xrange(nelements):
                     #out = s.unpack(data[n:n + ntotal])
-                    eid_device, = unpack('i', data[n:n+4])
-                    #t, = unpack('f', data[n:n+4])
+                    eid_device, = s.unpack(data[n:n+4])
+                    #t, = s.unpack(data[n:n+4])
                     #eid = (eid_device - self.device_code) // 10
 
                     if eid_device > 0:
                         #print ""
                         #print "eid =", eid_device
                         #print "t =", t
-                        out = unpack(b'8si3fi4s', data[n+4:n+ntotal])
+                        out = s2.unpack(data[n+4:n+ntotal])
                     else:
-                        out1 = unpack(b'8si3fi4s', data[n+4:n+ntotal])
-                        out  = unpack(b'8si4f4s',  data[n+4:n+ntotal])
+                        out1 = s2.unpack(data[n+4:n+ntotal])
+                        out  = s3.unpack(data[n+4:n+ntotal])
                         #print(out1)
                     #print(out)
                     (theory, lamid, fp, fm, fb, fmax, fflag) = out
@@ -1142,8 +1147,7 @@ class OES(OP2Common):
                     self.create_transient_object(self.bushStress, BushStressObject)
                 else:
                     #return
-                    #self.create_transient_object(self.bushStrain, BushStrainObject)  # undefined
-                    raise NotImplementedError('BushStrainObject')
+                    self.create_transient_object(self.bushStrain, BushStrainObject)
                 assert self.num_wide == 7, "num_wide=%s not 7" % self.num_wide
                 ntotal = 28  # 4*7
 
@@ -1453,9 +1457,44 @@ class OES(OP2Common):
             return
         elif self.element_type in [139]:
             # 139-QUAD4FD
-            #resultName = self.makeOES_Object(self.hyperelasticPlateStress, HyperelasticQuadObject, 'hyperelasticPlateStress',
-            #                                 self.hyperelasticPlateStrain, HyperelasticQuadObject, 'hyperelasticPlateStrain')
-            return
+            if self.num_wide == 0:
+                if self.isStress():
+                    self.create_transient_object(self.hyperelasticPlateStrain, HyperelasticQuadObject)
+                else:
+                    raise NotImplementedError('HyperelasticQuadObject???')
+
+
+                n = 0
+                ntotal = 120
+                s1 = Struct(b'i4si6f')  # 1 + 4+1+6 = 12
+                s2 = Struct(b'i6f')
+                nelements = len(data) // ntotal
+                for i in xrange(nelements):
+                    edata = data[n:n+36]  # 4*9
+                    out = s1.unpack(edata)
+                    if self.debug4():
+                        self.binary_debug.write('CQUAD4FD-139A - %s\n' % (str(out)))
+
+                    (eid_device, Type, ID, sx, sy, sxy, angle, smj, smi) = out
+                    eid = (eid_device - self.device_code) // 10
+                    self.obj.add_new_eid(dt, [eid, Type, sx, sy, sxy, angle, smj, smi])
+                    print "eid=%s Type=%s\n***ID=%s sx=%s sy=%s sxy=%s angle=%s major=%s minor=%s" % (eid, Type, ID, sx, sy, sxy,
+                                                                                                      angle, smj, smi)
+                    n += 36
+
+                    for i in xrange(3):
+                        edata = data[n:n + 28]  # 4*7
+                        out = s2.unpack(edata)
+                        if self.debug4():
+                            self.binary_debug.write('CQUAD4FD-139B - %s\n' % (str(out)))
+                        (ID, sx, sy, sxy, angle, smj, smi) = out
+                        self.obj.add(dt, eid, out)
+                        print "***ID=%s sx=%s sy=%s sxy=%s angle=%s major=%s minor=%s" % (ID, sx, sy, sxy, angle, smj, smi)
+                        n += 28
+                    self.obj.add(data)
+                    #x += 1
+                else:
+                    raise NotImplementedError(self.num_wide)
         elif self.element_type in [47, 48, 189, 190]:
             # 47-AXIF2
             # 48-AXIF3

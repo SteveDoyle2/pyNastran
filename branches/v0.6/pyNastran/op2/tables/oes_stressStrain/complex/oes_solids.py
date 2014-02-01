@@ -10,6 +10,7 @@ from pyNastran.f06.f06_formatting import writeImagFloats13E
 class ComplexSolidStressObject(StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
+        raise RuntimeError('asdfsadf')
 
         self.eType = {}
         self.code = [self.format_code, self.sort_code, self.s_code]

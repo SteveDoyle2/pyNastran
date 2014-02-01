@@ -688,7 +688,7 @@ class OP2(BDF,
         """
         month, day, year = self._set_op2_date(month, day, year)
 
-        #print "%s/%s/%4i" % self.date
+        #self.log.debug("%s/%s/%4i zero=%s one=%s" % (month, day, year, zero, one))
         if self.debug:
             self.binary_debug.write('  [subtable_name, month=%i, day=%i, year=%i, zero=%i, one=%i]\n\n' % (month, day, year, zero, one))
         #assert zero == 0  # is this the RTABLE indicator???

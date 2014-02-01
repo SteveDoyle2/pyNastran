@@ -91,22 +91,24 @@ class OGS(OP2Common):
 
     def _read_ogs1_4(self, data):
         if self.table_code == 26:  # OGS1 - grid point stresses - surface
-            assert self.table_name in ['OGS1'], 'table_name=%s table_code=%s' % (
-                self.table_name, self.table_code)
+            assert self.table_name in ['OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             self._read_ogs1_table26(data)
         elif self.table_code == 27:  # OGS1 - grid point stresses - volume direct
-            assert self.table_name in ['OGS1'], 'table_name=%s table_code=%s' % (
-                self.table_name, self.table_code)
+            assert self.table_name in ['OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             self._read_ogs1_table27(data)
-        #elif self.table_code == 28:  # OGS1- grid point stresses - principal
-            #assert self.table_name in ['OGS1'],'table_name=%s table_code=%s' %(self.table_name,self.table_code)
-            #self.readOGS1_Data_table28(data)
-            #self.not_implemented_or_skip()
-
+        elif self.table_code == 28:  # OGS1- grid point stresses - principal
+            assert self.table_name in ['OGS1'],'table_name=%s table_code=%s' % (self.table_name,self.table_code)
+            self._read_ogs1_table28(data)
         #elif self.table_code == 35:  # OGS - Grid point stress discontinuities (plane strain)
             #self.not_implemented_or_skip()
         else:
-            raise NotImplementedError()
+            raise NotImplementedError(self.table_code)
+
+    def _read_ogs1_table28(self, data):
+        if self.num_wide == 15:
+            pass
+        else:
+            raise NotImplementedError(self.num_wide)
 
     def _read_ogs1_table26(self, data):
         resultName = 'gridPointStresses'
