@@ -248,8 +248,8 @@ class CELAS2(SpringElement):
         else:
             self.eid = data[0]
             self.k = data[1]
-            nids = [data[2], data[4]]
-            self.c1 = data[3]
+            nids = [data[2], data[3]]
+            self.c1 = data[4]
             self.c2 = data[5]
             self.ge = data[6]
             self.s = data[7]

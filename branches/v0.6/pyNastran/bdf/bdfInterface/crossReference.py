@@ -25,7 +25,7 @@ class XrefMesh(object):
         warnings.warn('crossReference is deprecated; use cross_reference')
         self.cross_reference(xref)
 
-    def cross_reference(self, xref=True):
+    def cross_reference(self, xref=True, xref_loads=True, xref_constraints=True):
         """
         Links up all the cards to the cards they reference
         """
@@ -42,8 +42,10 @@ class XrefMesh(object):
             self._cross_reference_materials()
 
             self._cross_reference_aero()
-            self._cross_reference_constraints()
-            self._cross_reference_loads()
+            if xref_constraints:
+                self._cross_reference_constraints()
+            if xref_loads:
+                self._cross_reference_loads()
             #self.caseControlDeck.cross_reference(self)
 
     def _cross_reference_constraints(self):

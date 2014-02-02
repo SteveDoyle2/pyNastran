@@ -1,4 +1,4 @@
-# pylint: disable=C0103,C0302,R0901,R0902,R0904,R0912,R0914,R0915,W0201,W0611
+# pylint: disable=C0103,C0302,R0901,R0902,R0904,R0912,R0914,R0915,W0201,W0611,W0212,W0612,C0301,C0111
 """
 Main BDF class
 """
@@ -83,7 +83,7 @@ from .cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
 from .cards.tables import (TABLED1, TABLED2, TABLED3,
                            TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                            TABLES1, TABLEST, TABRND1, TABRNDG, TIC)
-from .cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS
+from .cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA
 from .caseControlDeck import CaseControlDeck
 from .bdf_Methods import BDFMethods
 from .bdfInterface.getCard import GetMethods
@@ -1049,7 +1049,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 Is.append(i)
                 lines.append(line)
             else:
-                while len(line)==0:
+                while len(line) == 0:
                     # you cant have an empty first line
                     (i, line, comment) = self._get_line()
                     if line:
@@ -1087,7 +1087,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             Is2 = []
             lines2 = []
             comments2 = []
-            while len(line)==0 or line[0] in [' ', '*', '+', ',', '\t']:
+            while len(line) == 0 or line[0] in [' ', '*', '+', ',', '\t']:
                 in_loop = True
                 if len(line):
                     if Is2:
@@ -1225,7 +1225,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
 
     def _stream_line(self):
         with open(self.active_filename, 'r') as f:
-            for n,line in enumerate(f):
+            for n, line in enumerate(f):
                 line = line.rstrip('\t\r\n ')
                 comment = ''
                 if self._break_comment and '$' in line:
@@ -1253,7 +1253,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         if self._is_dynamic_syntax:
             fields = [self._parse_dynamic_syntax(field) if '%' in
                       field[0:1] else field for field in fields]
-
         card = wipe_empty_fields(fields)
         card[0] = card_name
         return card
@@ -1316,7 +1315,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             _get_cls = lambda name: globals()[name](card_obj, comment=comment)
         except Exception as e:
             if not e.args:
-                e.args=('',)
+                e.args = ('',)
             e.args = ('%s' % e.args[0] + "\ncard = %s" % card,)+e.args[1:]
             raise
         _cls = lambda name: globals()[name]
@@ -1325,7 +1324,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             # cards that have their own method add_CARDNAME to add them
             if card_name in ['LSEQ', 'PHBDY', 'AERO', 'AEROS', 'AEFACT',
               'AELINK', 'AELIST', 'AEPARM', 'AESTAT', 'AESURF', 'TRIM',
-              'FLUTTER', 'FLFACT', 'GUST', 'NLPARM','NLPCI',  'TSTEP', 'TSTEPNL',
+              'FLUTTER', 'FLFACT', 'GUST', 'NLPARM', 'NLPCI', 'TSTEP', 'TSTEPNL',
               'SESET', 'DCONSTR', 'DESVAR', 'DDVAL', 'DLINK', 'PARAM',
               'PDAMPT', 'PELAST', 'PBUSHT']:
                 try:
@@ -1348,7 +1347,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                              'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
                              'CBAR', 'CBEAM', 'CBEAM3', 'CROD', 'CONROD',
                              'CTUBE', 'CBEND', 'CELAS1', 'CELAS2', 'CELAS3',
-                             'CELAS4', 'CONM1',  'CONM2', 'CMASS1', 'CMASS2',
+                             'CELAS4', 'CONM1', 'CONM2', 'CMASS1', 'CMASS2',
                              'CMASS3', 'CMASS4', 'CVISC', 'CSHEAR', 'CGAP',
                              'CRAC2D', 'CRAC3D'],
              'add_damper_element': ['CBUSH', 'CBUSH1D', 'CFAST', 'CDAMP1',
@@ -1407,7 +1406,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                         getattr(self, func)(_get_cls(card_name))
                     except Exception as e:
                         if not e.args:
-                            e.args=('',)
+                            e.args = ('',)
                         e.args = ('%s' % e.args[0] + "\ncard = %s" % card,)+e.args[1:]
                         raise
                     return card_obj
@@ -1428,7 +1427,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                     self.add_property(_get_cls(card_name))
                 except Exception as e:
                     if not e.args:
-                        e.args=('',)
+                        e.args = ('',)
                     e.args = ('%s' % e.args[0] + "\ncard = %s" % card,)+e.args[1:]
                     raise
                 for i in _dct[card_name]:
@@ -1520,13 +1519,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             elif card_name == 'SPOINT':
                 self.add_SPOINT(SPOINTs(card_obj, comment=comment))
             elif card_name == 'PBEAML':
-                try:
-                    prop = PBEAML(card_obj, comment=comment)
-                except Exception as e:
-                    #self.log.exception(traceback.format_exc())
-                    self.log.exception('rejecting processed PBEAML %s' % card)
-                    self.reject_cards.append(card)
-                    return card_obj
+                #try:
+                prop = PBEAML(card_obj, comment=comment)
+                #except Exception as e:
+                    ##self.log.exception(traceback.format_exc())
+                    #self.log.exception('rejecting processed PBEAML %s' % card)
+                    #self.reject_cards.append(card)
+                    #return card_obj
                 self.add_property(prop)
 
             elif 'ENDDATA' in card_name:
@@ -1540,7 +1539,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         except Exception as e:
             print(str(e))
             self.log.debug("card_name = %r" % card_name)
-            self.log.debug("failed! Unreduced Card=%s\n" % list_print(card) )
+            self.log.debug("failed! Unreduced Card=%s\n" % list_print(card))
             self.log.debug("filename = %r\n" % self.bdf_filename)
             raise
         return card_obj
@@ -1627,7 +1626,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             'rejects', 'reject_cards',
 
             # not cards
-            'debug',  'executive_control_lines',
+            'debug', 'executive_control_lines',
             'case_control_lines', 'cardsToRead', 'card_count',
             'isStructured', 'uniqueBulkDataCards',
             'nCardLinesMax', 'modelType', 'includeDir',
@@ -1680,9 +1679,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             for card_name in sorted(groups):
                 try:
                     ncards = self.card_count[card_name]
-                    group_msg.append('  %-8s %s' % (card_name + ':', ncards))
+                    group_msg.append('  %-8s : %s' % (card_name, ncards))
                 except KeyError:
-                    assert card_name == 'CORD2R'
+                    group_msg.append('  %-8s : ???' % card_name)
+                    #assert card_name == 'CORD2R', self.card_count
             if group_msg:
                 msg.append('bdf.%s' % card_group_name)
                 msg.append('\n'.join(group_msg))
@@ -1737,8 +1737,8 @@ def to_fields(card_lines, card_name):
     # first line
     line = card_lines.pop(0)
     if '=' in line:
-            raise SyntaxError('card_name=%r\nequal signs are not supported...'
-                              'line=%r' % (card_name, line))
+        raise SyntaxError('card_name=%r\nequal signs are not supported...'
+                          'line=%r' % (card_name, line))
 
     if '\t' in line:
         line = line.expandtabs()
