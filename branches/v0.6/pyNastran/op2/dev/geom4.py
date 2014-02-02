@@ -1,43 +1,57 @@
+#pylint: disable=C0301,C0111,C0103,W0613,C0612
+import StringIO
 from struct import unpack, Struct
 
 #from pyNastran.bdf.cards.constraints import SPC,SPCADD
 from pyNastran.bdf.cards.elements.rigid import RBE2
-from pyNastran.bdf.cards.constraints import SUPORT, SPCD, SPC
+from pyNastran.bdf.cards.constraints import SUPORT, SPCD, SPC, SPC1
 
 
 class GEOM4(object):
-    def __init__(self):
-        self._geom4_map = {
-            (5561, 76, 215): self.readASET,    # record 1  - not done
-            (5571, 77, 216): self.readASET1,   # record 2  - not done
-            (10200, 102, 473): self.readBNDGRID,  # record 3  - not done
-            (1510, 15, 328): self.readCYAX,    # record 8  - not done
-            (5210, 52, 257): self.readCYJOIN,  # record 9  - not done
-            (1710, 17, 330): self.readCYSYM,   # record 11 - not done
-            (4901, 49, 17): self.readMPC,     # record 16 - not done
-            (4891, 60, 83): self.readMPCADD,  # record 17 - not done
-            (4951, 63, 92): self.readOMIT1,   # record 19 - not done
-            (610, 6, 316): self.readQSET1,   # record 21 - not done
-            (6601, 66, 292): self.readRBAR,    # record 22 - not done
-            (6801, 68, 294): self.readRBE1,    # record 23 - not done
-            (6901, 69, 295): self.readRBE2,    # record 24 - buggy
-            (7101, 71, 187): self.readRBE3,    # record 25 - not done
-            (6501, 65, 291): self.readRROD,    # record 30 - not done
-            (7001, 70, 186): self.readRSPLINE,  # record 31 - not done
-            (7201, 72, 398): self.readRSSCON,  # record 32 - not done
-            (1210, 12, 322): self.readSEQSET1,  # record 40 - not done
-            (5501, 55, 16): self.readSPC,     # record 44 - buggy
-            (5481, 58, 12): self.readSPC1,    # record 45 - not done
-            (5491, 59, 13): self.readSPCADD,  # record 46 - not done
-            (5110, 51, 256): self.readSPCD,    # record 47 - buggy
-            (5601, 56, 14): self.readSUPORT,  # record 59 - not done
-            (10100, 101, 472): self.readSUPORT1,  # record 60 - not done
-            #(4901,49,420017):self.readFake,    # record
-            #(5561,76,0):     self.readFake,    # record
-            #(5110,51,256):   self.readFake,    # record
-            #(610,6,0):       self.readFake,    # record
-            #(5501,55,620016):self.readFake,    # record
+    def add_constraint_SPC(self, constraint):
+        raise RuntimeError('this should be overwritten')
+    def add_rigid_element(self, constraint):
+        raise RuntimeError('this should be overwritten')
+    def add_suport(self, constraint):
+        raise RuntimeError('this should be overwritten')
 
+    def readFake(self, data, n):
+        return n
+
+    def __init__(self):
+        self.skippedCardsFile = StringIO.StringIO()
+        self.card_count = {}
+        self._geom4_map = {
+            (5561, 76, 215): ['ASET', self.readASET],      # record 1  - not done
+            (5571, 77, 216): ['ASET1', self.readASET1],    # record 2  - not done
+            (10200, 102, 473): ['BNDGRID', self.readBNDGRID],  # record 3  - not done
+            (1510, 15, 328): ['CYAX', self.readCYAX],      # record 8  - not done
+            (5210, 52, 257): ['CYJOIN', self.readCYJOIN],  # record 9  - not done
+            (1710, 17, 330): ['CYSYM', self.readCYSYM],    # record 11 - not done
+            (4901, 49, 17): ['MPC', self.readMPC],         # record 16 - not done
+            (4891, 60, 83): ['MPCADD', self.readMPCADD],   # record 17 - not done
+            (4951, 63, 92): ['OMIT1', self.readOMIT1],   # record 19 - not done
+            (610, 6, 316): ['QSET1', self.readQSET1],    # record 21 - not done
+            (6601, 66, 292): ['RBAR', self.readRBAR],    # record 22 - not done
+            (6801, 68, 294): ['RBE1', self.readRBE1],    # record 23 - not done
+            (6901, 69, 295): ['RBE2', self.readRBE2],    # record 24 - buggy
+            (7101, 71, 187): ['RBE3', self.readRBE3],    # record 25 - not done
+            (6501, 65, 291): ['RROD', self.readRROD],    # record 30 - not done
+            (7001, 70, 186): ['RSPLINE', self.readRSPLINE],  # record 31 - not done
+            (7201, 72, 398): ['RSSCON', self.readRSSCON],    # record 32 - not done
+            (1210, 12, 322): ['SEQSET1', self.readSEQSET1],  # record 40 - not done
+            (5501, 55, 16): ['SPC', self.readSPC],        # record 44 - buggy
+            (5481, 58, 12): ['SPC1', self.readSPC1],      # record 45 - not done
+            (5491, 59, 13): ['SPCADD', self.readSPCADD],  # record 46 - not done
+            (5110, 51, 256): ['SPCD', self.readSPCD],     # record 47 - buggy
+            (5601, 56, 14): ['SUPORT', self.readSUPORT],  # record 59 - not done
+            (10100, 101, 472): ['SUPORT1', self.readSUPORT1],  # record 60 - not done
+
+            (4901, 49, 420017): ['', self.readFake],    # record
+            (5561, 76, 0):     ['', self.readFake],     # record
+            (5110, 51, 256):   ['', self.readFake],     # record
+            (610, 6, 0):       ['', self.readFake],     # record
+            (5501, 55, 620016): ['', self.readFake],    # record
         }
 
     def readASET(self, data, n):

@@ -1,6 +1,8 @@
+#pylint: disable=C0301,W0612,C0111,R0201,C0103,W0613,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from struct import unpack, Struct
+import StringIO
 
 from pyNastran.bdf.bdf import (NSM, PBAR, PBARL, PBEAM,
                                PROD, PSHELL, PSHEAR,
@@ -11,35 +13,43 @@ from pyNastran.bdf.bdf import (NSM, PBAR, PBARL, PBEAM,
 
 
 class EPT(object):
+    def add_property(self, card, allowOverwrites=True):
+        raise RuntimeError('this should be overwritten')
+    def readFake(self, data, n):
+        raise RuntimeError('this should be overwritten')
 
     def __init__(self):
+        self.skippedCardsFile = StringIO.StringIO()
+        self.card_count = {}
         self.bigProperties = {}
         self._ept_map = {
-            #(3201,32,55):    self.readNSM,     # record 2  - needs an object holder (e.g. self.elements/self.properties)
-            (52, 20, 181): self.readPBAR,    # record 11 - buggy
-            (9102, 91, 52): self.readPBARL,   # record 12 - almost there...
-            #(2706,27,287):   self.readPCOMP,   # record 22 - buggy
-            (302, 3, 46): self.readPELAS,   # record 39
-            (2102, 21, 121): self.readPGAP,    # record 42
-            (902, 9, 29): self.readPROD,    # record 49
-            (1002, 10, 42): self.readPSHEAR,  # record 50
-            (2402, 24, 281): self.readPSOLID,  # record 51
-            (2302, 23, 283): self.readPSHELL,  # record 52
-            (1602, 16, 30): self.readPTUBE,   # record 56
+            #(3201,32,55):    ['NSM', self.readNSM],     # record 2  - needs an object holder (e.g. self.elements/self.properties)
+            (52, 20, 181): ['PBAR', self.readPBAR],    # record 11 - buggy
+            (9102, 91, 52): ['PBARL', self.readPBARL],   # record 12 - almost there...
+            #(2706,27,287):   ['PCOMP', self.readPCOMP],   # record 22 - buggy
+            (302, 3, 46): ['PELAS', self.readPELAS],   # record 39
+            (2102, 21, 121): ['PGAP', self.readPGAP],    # record 42
+            (902, 9, 29): ['PROD', self.readPROD],    # record 49
+            (1002, 10, 42): ['PSHEAR', self.readPSHEAR],  # record 50
+            (2402, 24, 281): ['PSOLID', self.readPSOLID],  # record 51
+            (2302, 23, 283): ['PSHELL', self.readPSHELL],  # record 52
+            (1602, 16, 30): ['PTUBE', self.readPTUBE],   # record 56
 
-            #(5402,54,262):   self.readPBEAM,   # record 14 - not done
-            #(9202, 92,  53): self.readPBEAML,  # record 15 - not done
-            (2502, 25, 248): self.readPBEND,   # record 16 - not done
-            (3101, 31, 219): self.readPBUSH1D,  # record 20 - not done
-            #(152,  19, 147): self.readPCONEAX, # record 24 - not done
-            #(11001,110,411): self.readPCONV,   # record 25 - not done
-            (202, 2, 45): self.readPDAMP,   # record 27 - not done
-            #(2802, 28, 236): self.readPHBDY,   # record 43 - not done
-            (402, 4, 44): self.readPMASS,   # record 48
-            (1802, 18, 31): self.readPVISC,   # record 59
-            #(10201,102,400): self.readPVAL,    # record 58 - not done
-            #(2606, 26, 289): self.readVIEW,    # record 62 - not done
-            #(1402, 14, 37):   self.readFake,    # record
+            #(5402,54,262):   ['PBEAM', self.readPBEAM],   # record 14 - not done
+            #(9202, 92,  53): ['PBEAML', self.readPBEAML],  # record 15 - not done
+            (2502, 25, 248): ['PBEND', self.readPBEND],   # record 16 - not done
+            (3101, 31, 219): ['PBUSH1D', self.readPBUSH1D],  # record 20 - not done
+            #(152,  19, 147): ['PCONEAX', self.readPCONEAX], # record 24 - not done
+            #(11001,110,411): ['PCONV', self.readPCONV],   # record 25 - not done
+            (202, 2, 45): ['PDAMP', self.readPDAMP],   # record 27 - not done
+            #(2802, 28, 236): ['PHBDY', self.readPHBDY],   # record 43 - not done
+            (402, 4, 44): ['PMASS', self.readPMASS],   # record 48
+            (1802, 18, 31): ['PVISC', self.readPVISC],   # record 59
+            #(10201,102,400): ['PVAL', self.readPVAL],    # record 58 - not done
+            #(2606, 26, 289): ['VIEW', self.readVIEW],    # record 62 - not done
+
+            (1402, 14, 37):  ['', self.readFake],    # record
+            (2706, 27, 287): ['', self.readFake],    # record
         }
 
     def addOp2Property(self, prop):
@@ -54,7 +64,7 @@ class EPT(object):
         .. todo:: this isnt a property...
         """
         #print "reading NSM"
-        return
+        return n
         while len(data) >= 16:  # 4*4
             eData = data[:16]
             data = data[16:]
@@ -122,8 +132,8 @@ class EPT(object):
 
         #print "reading PBARL"
         ntotal = 28# 7*4 - ROD - shortest entry...could be buggy... # TODO fix this
-        nEntries = (len(data) - n) // ntotal
-        for i in xrange(nEntries):
+        nentries = (len(data) - n) // ntotal
+        for i in xrange(nentries):
             eData = data[n:n+28]
             out = unpack(b'2i8s8sf', eData)
             (pid, mid, group, Type, value) = out
@@ -135,15 +145,15 @@ class EPT(object):
             iFormat = bytes(iFormat)
             dataIn += list(unpack(iFormat, data[:expectedLength * 4]))
 
+            # TODO why do i need the +4???
             data = data[expectedLength * 4 + 4:]
-                # TODO why do i need the +4???
 
             #print "len(out) = ",len(out)
             #print "PBARL = ",dataIn
             prop = PBARL(None, dataIn)
             self.addOp2Property(prop)
             #print self.print_section(20)
-        self.card_count['PBARL'] = nEntries
+        self.card_count['PBARL'] = nentries
         return n
 
 # PBCOMP
@@ -154,24 +164,26 @@ class EPT(object):
         .. todo:: add object
         """
         #print "reading PBEAM"
-        while len(data) >= 1072:  # 44+12*84+20
-            eData = data[:20]
-            data = data[20:]
+        s = Struct(b'16f')
+        ntotal = 1072  # 44+12*84+20
+        nproperties = (len(data) - n) // ntotal
+        for i in xrange(nproperties):
+            eData = data[n:n+20]
+            n += 20
             dataIn = list(unpack(b'4if', eData))
             #print "len(out) = ",len(out)
             #print out
             (pid, mid, nsegs, ccf, x) = dataIn
 
             for i in xrange(12):
-                eData = data[64:]
-                data = data[:64]
-                pack = unpack(b'16f', eData)
+                eData = data[n:n+64]
+                n += 64
+                pack = s.unpack(eData)
                 (so, xxb, a, i1, i2, i12, j, nsm, c1, c2,
                     d1, d2, e1, e2, f1, f2) = pack
                 dataIn.append(pack)
 
-            eData = data[:44]
-            data = data[44:]
+            eData = data[n:n+44]
 
             dataIn = list(unpack(b'11f', eData))
             #(k1,k2,s1,s2,nsia,nsib,cwa,cwb,m1a,m2a,m1b,m2b,n1a,n2a,n1b,n2b) = pack
@@ -179,6 +191,8 @@ class EPT(object):
             prop = PBEAM(None, dataIn)
             self.addOp2Property(prop)
             #sys.exit('ept-PBEAM')
+        self.card_count['PBEAM'] = nproperties
+        return n
 
 # PBEAML
 
@@ -206,18 +220,17 @@ class EPT(object):
         PCOMP(2706,27,287) - the marker for Record 22
         """
         #print "reading PCOMP"
-        while len(data) >= 32:  # 8*4 - dynamic
+        nproperties = 0
+        n2 = n
+        while n2 < n:  #len(data) >= 32:  # 8*4 - dynamic
             #print "len(data) = ",len(data)
             #print self.print_block(data[0:200])
             isSymmetrical = 'NO'
-            eData = data[:32]
-            data = data[32:]
+            eData = data[n:n+32]
             out = unpack(b'2i3fi2f', eData)
             (pid, nLayers, z0, nsm, sb, ft, Tref, ge,) = out
 
-            eData = data[:16 * (nLayers)]
-            data = data[16 * (nLayers):]
-
+            eData = data[n:n+16 * (nLayers)]
             Mid = []
             T = []
             Theta = []
@@ -228,20 +241,23 @@ class EPT(object):
             #print "nLayers = ",nLayers
             assert 0 < nLayers < 100, 'pid=%s nLayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s' % (pid, nLayers, z0, nsm, sb, ft, Tref, ge)
 
-            for n in xrange(nLayers):
-                #print "len(eData) = ",len(eData)
-                (mid, t, theta, sout) = unpack(b'i2fi', eData[0:16])
+            idata = 0
+            for ilayer in xrange(nLayers):
+                (mid, t, theta, sout) = unpack(b'i2fi', eData[idata:idata+16])
                 Mid.append(mid)
                 T.append(t)
                 Theta.append(theta)
                 Sout.append(sout)
-                eData = eData[16:]
+                idata += 16
 
             dataIn = [pid, z0, nsm, sb, ft, Tref, ge,
                       isSymmetrical, Mid, T, Theta, Sout]
-            #print "PCOMP = %s" %(dataIn)
+            #print "PCOMP = %s" % (dataIn)
             prop = PCOMP(None, dataIn)
             self.addOp2Property(prop)
+            nproperties += 1
+        self.card_count['PCOMP'] = nproperties
+        return n
 
 # PCOMPA
 # PCONEAX
@@ -267,13 +283,17 @@ class EPT(object):
     def readPELAS(self, data, n):
         """PELAS(302,3,46) - the marker for Record 39"""
         #print "reading PELAS"
-        while len(data) >= 16:  # 4*4
-            eData = data[:16]
-            data = data[16:]
-            out = unpack(b'i3f', eData)
+        s = Struct(b'i3f')
+        ntotal = 16  # 4*4
+        nproperties = (len(data) - n) // ntotal
+        for i in xrange(nproperties):
+            eData = data[n:n+16]
+            out = s.unpack(eData)
             #(pid,k,ge,s) = out
             prop = PELAS(data=out)
             self.addOp2Property(prop)
+            n += ntotal
+        self.card_count['PELAS'] = nproperties
         return n
 
 # PFAST
@@ -304,7 +324,7 @@ class EPT(object):
         PMASS(402,4,44) - the marker for Record 48
         """
         n = 0
-        nEntries = len(data) // 8  # 2*4
+        nEntries = (len(data) - n) // 8  # 2*4
         for i in xrange(nEntries):
             eData = data[n:n + 8]
             out = unpack(b'ii', eData)

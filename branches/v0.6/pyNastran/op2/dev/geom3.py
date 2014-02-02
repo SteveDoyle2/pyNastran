@@ -1,41 +1,52 @@
+#pylint: disable=C0103,C0111,C0301,W0612,W0613
+import StringIO
 from struct import unpack, Struct
 
 from pyNastran.bdf.cards.loads.staticLoads import (FORCE, FORCE1, FORCE2, GRAV,
-                                                   LOAD, PLOAD1, PLOAD2,
+                                                   MOMENT, MOMENT1, MOMENT2,
+                                                   LOAD, PLOAD1, PLOAD2,  #PLOAD3,
                                                    PLOAD4)  # PLOAD3,
 from pyNastran.bdf.cards.thermal.loads import QBDY1, QBDY2, QBDY3, TEMP, TEMPD
 
 class GEOM3(object):
+    def add_thermal_load(self, load):
+        raise RuntimeError('this should be overwritten')
+
+    def add_load(self, load):
+        raise RuntimeError('this should be overwritten')
+
     def __init__(self):
+        self.skippedCardsFile = StringIO.StringIO()
+        self.card_count = {}
         self._geom3_map = {
-            (4201, 42, 18): self.readFORCE,   # record 3
-            (4001, 40, 20): self.readFORCE1,  # record 4
-            (4101, 41, 22): self.readFORCE2,  # record 5
-            (4401, 44, 26): self.readGRAV,    # record 7 - buggy
-            (4551, 61, 84): self.readLOAD,    # record 8
-            (3709, 37, 331): self.readLOADCYH,  # record 9 - not done
-            (3609, 36, 188): self.readLSEQ,    # record 12 - not done
-            (4801, 48, 19): self.readMOMENT,  # record 13 - not tested
-            (4601, 46, 21): self.readMOMENT1,  # record 14 - not tested
-            (4701, 47, 23): self.readMOMENT2,  # record 15 - not tested
-            (5101, 51, 24): self.readPLOAD,   # record 16 - not done
-            #(6909,69,198): self.readPLOAD1,  # record 17 - buggy
-            #(6802,68,199): self.readPLOAD2,  # record 18 - buggy
-            (7109, 81, 255): self.readPLOAD3,  # record 19 - not done
-            #(7209,72,299): self.readPLOAD4,  # record 20 - buggy - g1/g3/g4
-            (7309, 73, 351): self.readPLOADX1,  # record 22
-            (4509, 45, 239): self.readQBDY1,   # record 24
-            (4909, 49, 240): self.readQBDY2,   # record 25
-            (2109, 21, 414): self.readQBDY3,   # record 26
-            (5509, 55, 190): self.readRFORCE,  # record 30 - not done
-            (5401, 54, 25): self.readSLOAD,   # record 31 - not done
-            (5701, 57, 27): self.readTEMP,    # record 32
-            (5641, 65, 98): self.readTEMPD,   # record 33
-            (8409, 84, 204): self.readTEMPRB,  # record 40 - not done
-            (8109, 81, 201): self.readTEMPP1,  # record 37 - not done
-            (8209, 82, 202): self.readTEMPP2,  # record 38 - not done
-            (8309, 83, 203): self.readTEMPP3,  # record 39 - not done
-            #(8409,84,204): self.readTEMPP4,  # record 40 - not done
+            (4201, 42, 18): ['FORCE', self.readFORCE],   # record 3
+            (4001, 40, 20): ['FORCE1', self.readFORCE1],  # record 4
+            (4101, 41, 22): ['FORCE2', self.readFORCE2],  # record 5
+            (4401, 44, 26): ['GRAV', self.readGRAV],    # record 7 - buggy
+            (4551, 61, 84): ['LOAD', self.readLOAD],    # record 8
+            (3709, 37, 331): ['LOADCYH', self.readLOADCYH],  # record 9 - not done
+            (3609, 36, 188): ['LSEQ', self.readLSEQ],    # record 12 - not done
+            (4801, 48, 19): ['MOMENT', self.readMOMENT],  # record 13 - not tested
+            (4601, 46, 21): ['MOMENT1', self.readMOMENT1],  # record 14 - not tested
+            (4701, 47, 23): ['MOMENT2', self.readMOMENT2],  # record 15 - not tested
+            (5101, 51, 24): ['PLOAD', self.readPLOAD],   # record 16 - not done
+            #(6909,69,198): ['PLOAD1', self.readPLOAD1],  # record 17 - buggy
+            #(6802,68,199): ['PLOAD2', self.readPLOAD2],  # record 18 - buggy
+            (7109, 81, 255): ['PLOAD3', self.readPLOAD3],  # record 19 - not done
+            #(7209,72,299): ['PLOAD4', self.readPLOAD4],  # record 20 - buggy - g1/g3/g4
+            (7309, 73, 351): ['PLOADX1', self.readPLOADX1],  # record 22
+            (4509, 45, 239): ['QBDY1', self.readQBDY1],   # record 24
+            (4909, 49, 240): ['QBDY2', self.readQBDY2],   # record 25
+            (2109, 21, 414): ['QBDY3', self.readQBDY3],   # record 26
+            (5509, 55, 190): ['RFORCE', self.readRFORCE],  # record 30 - not done
+            (5401, 54, 25): ['SLOAD', self.readSLOAD],   # record 31 - not done
+            (5701, 57, 27): ['TEMP', self.readTEMP],    # record 32
+            (5641, 65, 98): ['TEMPD', self.readTEMPD],   # record 33
+            (8409, 84, 204): ['TEMPRB', self.readTEMPRB],  # record 40 - not done
+            (8109, 81, 201): ['TEMPP1', self.readTEMPP1],  # record 37 - not done
+            (8209, 82, 202): ['TEMPP2', self.readTEMPP2],  # record 38 - not done
+            (8309, 83, 203): ['TEMPP3', self.readTEMPP3],  # record 39 - not done
+            #(8409,84,204): ['TEMP4', self.readTEMPP4],  # record 40 - not done
         }
 
 # ACCEL
@@ -63,14 +74,15 @@ class GEOM3(object):
         """
         #print "reading FORCE1"
         ntotal = 20  # 5*4
+        s = Struct('iifii')
         nEntries = (len(data) - n) // ntotal
         for i in xrange(nEntries):
             eData = data[n:n + 20]
-            (sid, g, f, n1, n2) = unpack('iifii', eData)
-
+            (sid, g, f, n1, n2) = s.unpack(eData)
             load = FORCE1(None, [sid, g, f, n1, n2])
             self.add_load(load)
             n += 20
+        self.card_count['FORCE1'] = nEntries
         return n
 
     def readFORCE2(self, data, n):
@@ -79,14 +91,15 @@ class GEOM3(object):
         """
         #print "reading FORCE2"
         ntotal = 28  # 7*4
+        s = Struct(b'iifiiii')
         nEntries = (len(data) - n) // ntotal
         for i in xrange(nEntries):
             eData = data[n:n + 28]
-            (sid, g, f, n1, n2, n3, n4) = unpack('iifiiii', eData)
-
+            (sid, g, f, n1, n2, n3, n4) = unpack(eData)
             load = FORCE2(None, [sid, g, f, n1, n2, n3, n4])
             self.add_load(load)
             n += 28
+        self.card_count['FORCE2'] = nEntries
         return n
 
 # GMLOAD
@@ -97,14 +110,16 @@ class GEOM3(object):
         """
         #print "reading GRAV"
         ntotal = 28  # 7*4
+        s = Struct(b'ii4fi')
         nEntries = (len(data) - n) // ntotal
         for i in xrange(nEntries):
             eData = data[n:n + 28]
-            out = unpack('ii4fi', eData)
+            out = s.unpack(eData)
             (sid, cid, a, n1, n2, n3, mb) = out
             grav = GRAV(None, out)
             self.add_load(grav)
             n += 28
+        self.card_count['GRAV'] = nEntries
         return n
 
     def readLOAD(self, data, n):
@@ -142,7 +157,8 @@ class GEOM3(object):
             self.add_load(load)
             count += 1
             if count > 1000:
-                asdf
+                raise RuntimeError('Iteration limit...probably have a bug.')
+        self.card_count['LOAD'] = nEntries
         return n
 
     def readLOADCYH(self, data, n):
@@ -161,15 +177,17 @@ class GEOM3(object):
         MOMENT(4801,48,19) - the marker for Record 13
         """
         #print "reading MOMENT"
-        nEntries = len(data) // 28  # 7*4
+        ntotal = 28
+        s = Struct(b'iiiffff')
+        nEntries = (len(data) - n) // 28  # 7*4
         for i in xrange(nEntries):
             eData = data[n:n + 28]
-            out = unpack('iiiffff', eData)
+            out = s.unpack(eData)
             (sid, g, cid, m, n1, n2, n3) = out
-
-            load = FORCE1(None, out)
+            load = MOMENT(None, out)
             self.add_load(load)
             n += 28
+        self.card_count['MOMENT'] = nEntries
         return n
 
     def readMOMENT1(self, data, n):
@@ -183,9 +201,10 @@ class GEOM3(object):
             eData = data[n:n + 20]
             out = unpack('iifii', eData)
             (sid, g, m, n1, n2) = out
-            load = FORCE1(None, out)
+            load = MOMENT1(None, out)
             self.add_load(load)
             n += 20
+        self.card_count['MOMENT1'] = nEntries
         return n
 
     def readMOMENT2(self, data, n):
@@ -197,12 +216,13 @@ class GEOM3(object):
         nEntries = (len(data) - n) // ntotal
         for i in xrange(nEntries):
             eData = data[n:n + 28]
-            out = unpack('iifiiii', eData)
+            out = unpack('iif4i', eData)
             (sid, g, m, n1, n2, n3, n4) = out
 
-            load = FORCE1(None, out)
+            load = MOMENT2(None, out)
             self.add_load(load)
             n += 28
+        self.card_count['MOMENT2'] = nEntries
         return n
 
     def readPLOAD(self, data, n):
@@ -214,15 +234,17 @@ class GEOM3(object):
         """
         #print "reading PLOAD1"
         ntotal = 32  # 8*4
+        s = Struct(b'4i4f')
         nEntries = (len(data) - n) // ntotal
         for i in xrange(nEntries):
             eData = data[n:n + 32]
-            out = unpack('iiiiffff', eData)
+            out = s.unpack(eData)
             (sid, eid, Type, scale, x1, p1, x2, p2) = out
             #print "PLOAD1 = ",out
             load = PLOAD1(None, out)
             self.add_load(load)
             n += 32
+        self.card_count['PLOAD1'] = nEntries
         return n
 
     def readPLOAD2(self, data, n):
@@ -239,6 +261,7 @@ class GEOM3(object):
             load = PLOAD2(None, out)
             self.add_load(load)
             n += 12
+        self.card_count['PLOAD2'] = nEntries
         return n
 
     def readPLOAD3(self, data, n):
@@ -255,6 +278,7 @@ class GEOM3(object):
             load = PLOAD3(None, out)
             self.add_load(load)
             n += 20
+        self.card_count['PLOAD3'] = nEntries
         return n
 
     def readPLOAD4(self, data, n):  ## inconsistent with DMAP
@@ -282,6 +306,7 @@ class GEOM3(object):
                                  cid, [n1, n2, n3], sdrlA, sdrlB, ldirA, ldirB])
             self.add_load(load)
             n += 48
+        self.card_count['PLOAD4'] = nEntries
         return n
 
 # PLOADX - obsolete
@@ -305,6 +330,7 @@ class GEOM3(object):
             load = QBDY1(None, out)
             self.add_thermal_load(load)
             n += 12
+        self.card_count['QBDY1'] = nEntries
         return n
 
     def readQBDY2(self, data, n):
@@ -321,6 +347,7 @@ class GEOM3(object):
             load = QBDY2(None, out)
             self.add_thermal_load(load)
             n += 40
+        self.card_count['QBDY2'] = nEntries
         return n
 
     def readQBDY3(self, data, n):
@@ -337,6 +364,7 @@ class GEOM3(object):
             load = QBDY3(None, out)
             self.add_thermal_load(load)
             n += 16
+        self.card_count['QBDY3'] = nEntries
         return n
 
     def readTEMP(self, data, n):
@@ -357,6 +385,7 @@ class GEOM3(object):
             else:
                 self.log.debug('TEMP = %s' % (out))
             n += 12
+        self.card_count['TEMP'] = nEntries
         return n
 
     def readTEMPD(self, data, n):
@@ -374,6 +403,7 @@ class GEOM3(object):
             load = TEMPD(None, out)
             #self.add_thermal_load(load)
             n += 8
+        self.card_count['TEMPD'] = nEntries
         return n
 
 # QHBDY

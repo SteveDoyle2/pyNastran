@@ -1,10 +1,10 @@
-#pylint: disable=C0301,C0103
+#pylint: disable=C0301,C0103,W0613,C0111,W0612,R0913
 """
 Defines the OP2 class.
 """
 import os
 from struct import unpack
-from struct import error as StructError
+#from struct import error as StructError
 
 from numpy import array
 
@@ -148,6 +148,7 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
         self.tables_to_read = table_names
 
     def __init__(self, op2_filename, make_geom=False, save_skipped_cards=False, debug=False, log=None):
+        self.save_skipped_cards = save_skipped_cards
         if op2_filename:
             self.op2_filename = op2_filename
         self.make_geom = make_geom
@@ -252,8 +253,25 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
             'GEOM3': [self._not_available, self._read_geom3_4],
             'GEOM4': [self._not_available, self._read_geom4_4],
 
+            # superelements
+            'GEOM1S': [self._not_available, self._read_geom1_4],
+            'GEOM2S': [self._not_available, self._read_geom2_4],
+            'GEOM3S': [self._not_available, self._read_geom3_4],
+            'GEOM4S': [self._not_available, self._read_geom4_4],
+
+            'GEOM1N': [self._not_available, self._read_geom1_4],
+            #'GEOM2N': [self._not_available, self._read_geom2_4],
+            #'GEOM3N': [self._not_available, self._read_geom3_4],
+            #'GEOM4N': [self._not_available, self._read_geom4_4],
+
+            'GEOM1OLD': [self._not_available, self._read_geom1_4],
+            'GEOM2OLD': [self._not_available, self._read_geom2_4],
+            #'GEOM3OLD': [self._not_available, self._read_geom3_4],
+            'GEOM4OLD': [self._not_available, self._read_geom4_4],
+
             'EPT' : [self._not_available, self._read_ept_4],
             'EPTS': [self._not_available, self._read_ept_4],
+            'EPTOLD' : [self._not_available, self._read_ept_4],
 
             'MPT' : [self._not_available, self._read_mpt_4],
             'MPTS': [self._not_available, self._read_mpt_4],
@@ -305,8 +323,13 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
         if len(data) == 12:
             pass
         elif keys in mapper:
-            print "found keys=%s" % str(keys)
-            n = mapper[keys](data, n)  # gets all the grid/mat cards
+            func = mapper[keys]
+            if isinstance(func, list):
+                name, func = func
+                print "found keys=(%5s, %3s, %3s) name=%s" % (keys[0], keys[1], keys[2], name)
+            else:
+                print "found keys=(%5s, %3s, %3s)" % (keys[0], keys[1], keys[2])
+            n = func(data, n)  # gets all the grid/mat cards
         else:
             raise NotImplementedError('keys=%s not found' % str(keys))
         #assert n == len(data), 'n=%s len(data)=%s' % (n, len(data))
@@ -325,6 +348,8 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
         """
         if op2_filename:
             self.op2_filename = op2_filename
+        if self.save_skipped_cards:
+            self.skippedCardsFile = open('skippedCards.out', 'a')
         self.n = 0
         self.table_name = None
         if not is_binary(self.op2_filename):
@@ -368,6 +393,8 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
         if self.debug:
             self.binary_debug.write('-' * 80 + '\n')
             self.binary_debug.write('f.tell()=%s\ndone...\n' % self.f.tell())
+        if self.save_skipped_cards:
+            self.skippedCardsFile.close()
         return table_names
 
     def _read_tables(self, table_name):
@@ -429,7 +456,7 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
                     self._read_pcompts()
                 elif table_name == 'FOL':
                     self._read_fol()
-                elif table_name in ['SDF',  'PMRF']:  #, 'PERF'
+                elif table_name in ['SDF', 'PMRF']:  #, 'PERF'
                     self._read_sdf()
                 elif table_name in [
                                     # stress
@@ -1100,7 +1127,7 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
                 try:
                     msg += str(res) + '\n'
                 except:
-                    print('failed on %s' % res.__class__.__name__)
+                    print 'failed on %s' % res.__class__.__name__
                     raise
         return msg
 

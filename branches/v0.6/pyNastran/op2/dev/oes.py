@@ -137,8 +137,8 @@ class OES(OP2Common):
 
         self.element_name = self.element_mapper[self.element_type]
         self.data_code['element_name'] = self.element_name
-        self.log.debug('  element_name=%s-%i  isubcase=%s' % (self.element_name, self.element_type,
-                                                              self.isubcase))
+        #self.log.debug('  element_name=%s-%i  isubcase=%s' % (self.element_name, self.element_type,
+        #                                                      self.isubcase))
         if self.debug3():
             self.binary_debug.write('  element_name = %r\n' % self.element_name)
             self.binary_debug.write('  aCode    = %r\n' % self.aCode)

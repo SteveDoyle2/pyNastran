@@ -1,4 +1,5 @@
-# pylint: disable=E1101,C0103,R0902,R0904,R0914
+# pylint: disable=W0612,C0103,C0301,C0302,C0303,W0613,C0111,R0914
+import StringIO
 from struct import unpack, Struct
 
 from pyNastran.bdf.cards.elements.elements import CGAP
@@ -20,71 +21,76 @@ from pyNastran.bdf.cards.nodes import SPOINTs
 
 class GEOM2(object):
     def __init__(self):
+        self.skippedCardsFile = StringIO.StringIO()
+        self.card_count = {}
         self._geom2_map = {
-            (2408, 24, 180): self.readCBAR,    # record 8
-            (4001, 40, 275): self.readCBARAO,  # record 9  - not done
-            (5408, 54, 261): self.readCBEAM,   # record 10
-            (11401, 114, 9016): self.readCBEAMP,  # record 11 - not done
-            (4601, 46, 298): self.readCBEND,   # record 12 - not done
-            (5608, 56, 218): self.readCBUSH1D,  # record 14 - not done
-            (2315, 23, 146): self.readCCONE,   # record 15 - not done
-            (201, 2, 69): self.readCDAMP1,  # record 16
-            (301, 3, 70): self.readCDAMP2,  # record 17
-            (401, 4, 71): self.readCDAMP3,  # record 18
-            (501, 5, 72): self.readCDAMP4,  # record 19
-            (10608, 106, 404): self.readCDAMP5,  # record 20
-            (601, 6, 73): self.readCELAS1,  # record 29
-            (701, 7, 74): self.readCELAS2,  # record 30
-            (801, 8, 75): self.readCELAS3,  # record 31
-            (901, 9, 76): self.readCELAS4,  # record 32
-            #(8515,85,209):    self.readCFLUID2, # record 35 - not done
-            #(8615,86,210):    self.readCFLUID3, # record 36 - not done
-            #(8715,87,211):    self.readCFLUID4, # record 37 - not done
-            (1908, 19, 104): self.readCGAP,    # record 39 - buggy
+            (2408, 24, 180): ['CBAR', self.readCBAR],      # record 8
+            (4001, 40, 275): ['CBARAO', self.readCBARAO],  # record 9  - not done
+            (5408, 54, 261): ['CBEAM', self.readCBEAM],    # record 10
+            (11401, 114, 9016): ['CBEAMP', self.readCBEAMP],  # record 11 - not done
+            (4601, 46, 298): ['CBEND', self.readCBEND],    # record 12 - not done
+            (5608, 56, 218): ['CBUSH1D', self.readCBUSH1D],  # record 14 - not done
+            (2315, 23, 146): ['CCONE', self.readCCONE],   # record 15 - not done
+            (201, 2, 69): ['CDAMP1', self.readCDAMP1],    # record 16
+            (301, 3, 70): ['CDAMP2', self.readCDAMP2],    # record 17
+            (401, 4, 71): ['CDAMP3', self.readCDAMP3],    # record 18
+            (501, 5, 72): ['CDAMP4', self.readCDAMP4],    # record 19
+            (10608, 106, 404): ['CDAMPS', self.readCDAMP5],  # record 20
+            (601, 6, 73): ['CELAS1', self.readCELAS1],  # record 29
+            (701, 7, 74): ['CELAS2', self.readCELAS2],  # record 30
+            (801, 8, 75): ['CELAS3', self.readCELAS3],  # record 31
+            (901, 9, 76): ['CELAS4', self.readCELAS4],  # record 32
+            #(8515,85,209):    ['CFLUID1', self.readCFLUID2], # record 35 - not done
+            #(8615,86,210):    ['CFLUID2', self.readCFLUID3], # record 36 - not done
+            #(8715,87,211):    ['CFLUID3', self.readCFLUID4], # record 37 - not done
+            (1908, 19, 104): ['CGAP', self.readCGAP],    # record 39 - buggy
 
-            (10808, 108, 406): self.readCHBDYG,   # record 43
-            (10908, 109, 407): self.readCHBDYP,   # record 44 - not done
-            (7308, 73, 253): self.readCHEXA,    # record 45
-            (1001, 10, 65): self.readCMASS1,   # record 51
-            (1101, 11, 66): self.readCMASS2,   # record 52
-            (1201, 12, 67): self.readCMASS3,   # record 53
-            (1301, 13, 68): self.readCMASS4,   # record 54
-            (2508, 25, 0): self.readCMFREE,   # record 55 - not done
-            (1401, 14, 63): self.readCONM1,    # record 56 - not done
-            (1501, 15, 64): self.readCONM2,    # record 57
-            (1601, 16, 47): self.readCONROD,   # record 58
-            (12701, 127, 408): self.readCONV,     # record 59 - not tested
-            (8908, 89, 422): self.readCONVM,    # record 60 - not tested
-            (4108, 41, 280): self.readCPENTA,   # record 62
+            (10808, 108, 406): ['CHBDYG', self.readCHBDYG],   # record 43
+            (10908, 109, 407): ['CHBDYP', self.readCHBDYP],   # record 44 - not done
+            (7308, 73, 253): ['CHEXA', self.readCHEXA],    # record 45
+            (1001, 10, 65): ['CMASS1', self.readCMASS1],   # record 51
+            (1101, 11, 66): ['CMASS2', self.readCMASS2],   # record 52
+            (1201, 12, 67): ['CMASS3', self.readCMASS3],   # record 53
+            (1301, 13, 68): ['CMASS4', self.readCMASS4],   # record 54
+            (2508, 25, 0): ['CMFREE', self.readCMFREE],   # record 55 - not done
+            (1401, 14, 63): ['CONM1', self.readCONM1],    # record 56 - not done
+            (1501, 15, 64): ['CONM2', self.readCONM2],    # record 57
+            (1601, 16, 47): ['CONROD', self.readCONROD],   # record 58
+            (12701, 127, 408): ['CONV', self.readCONV],     # record 59 - not tested
+            (8908, 89, 422): ['CONVM', self.readCONVM],    # record 60 - not tested
+            (4108, 41, 280): ['CPENTA', self.readCPENTA],   # record 62
 
-            (9108, 91, 507): self.readCQUAD,    # record 68 - not tested
-            (2958, 51, 177): self.readCQUAD4,   # record 69 - maybe buggy on theta/Mcsid field
-            (13900, 139, 9989): self.readCQUAD4,   # record 70 - maybe buggy on theta/Mcsid field
-            (4701, 47, 326): self.readCQUAD8,   # record 71 - maybe buggy on theta/Mcsid field
-            (8009, 80, 367): self.readCQUADR,   # record 74 - not tested
-            (9008, 90, 508): self.readCQUADX,   # record 75 - not tested
+            (9108, 91, 507): ['CQUAD', self.readCQUAD],    # record 68 - not tested
+            (2958, 51, 177): ['CQUAD4', self.readCQUAD4],   # record 69 - maybe buggy on theta/Mcsid field
+            (13900, 139, 9989): ['CQUAD4', self.readCQUAD4],   # record 70 - maybe buggy on theta/Mcsid field
+            (4701, 47, 326): ['CQUAD8', self.readCQUAD8],   # record 71 - maybe buggy on theta/Mcsid field
+            (8009, 80, 367): ['CQUADR', self.readCQUADR],   # record 74 - not tested
+            (9008, 90, 508): ['CQUADX', self.readCQUADX],   # record 75 - not tested
 
-            (3001, 30, 48): self.readCROD,     # record 80
-            #(12201,122,9013): self.readCTETP,    # record 86 - not done
-            (5508, 55, 217): self.readCTETRA,   # record 87
-            (5959, 59, 282): self.readCTRIA3,   # record 93 - maybe buggy on theta/Mcsid field
-            (4801, 48, 327): self.readCTRIA6,   # record 95 - buggy
-            (9200, 92, 385): self.readCTRIAR,   # record 98  - not done
-            (6108, 61, 107): self.readCTRIAX6,  # record 100 - not done
-            (3701, 37, 49): self.readCTUBE,    # record 103
-            (3901, 39, 50): self.readCVISC,   # record 104 - not done
-            #(5201,52,11):      self.readPLOTEL,  # record 114 - not done
-            (5551, 49, 105): self.readSPOINT,   # record 118
-            #(11601,116,9942):  self.readVUBEAM,  # record 119 - not done
+            (3001, 30, 48): ['CROD', self.readCROD],     # record 80
+            #(12201,122,9013): ['CTETP', self.readCTETP],    # record 86 - not done
+            (5508, 55, 217): ['CTETRA', self.readCTETRA],   # record 87
+            (5959, 59, 282): ['CTRIA4', self.readCTRIA3],   # record 93 - maybe buggy on theta/Mcsid field
+            (4801, 48, 327): ['CTRIA6', self.readCTRIA6],   # record 95 - buggy
+            (9200, 92, 385): ['CTRIAR', self.readCTRIAR],   # record 98  - not done
+            (6108, 61, 107): ['CTRIAX6', self.readCTRIAX6],  # record 100 - not done
+            (3701, 37, 49): ['CTUBE', self.readCTUBE],    # record 103
+            (3901, 39, 50): ['CVISC', self.readCVISC],   # record 104 - not done
+            #(5201,52,11):   ['PLOTEL', self.readPLOTEL],  # record 114 - not done
+            (5551, 49, 105): ['SPOINT', self.readSPOINT],   # record 118
+            #(11601,116,9942): ['VUBEAM', self.readVUBEAM],  # record 119 - not done
             #(2608, 26, 60)
         }
 
     def readFake(self, data, n):
         return n
 
+    def add_element(self, elem, allowOverwrites=True):
+        raise RuntimeError('this should be overwritten')
+
     def addOp2Element(self, elem):
         self.add_element(elem, allowOverwrites=True)
-        print str(elem)[:-1]
+        #print str(elem)[:-1]
 
 # 1-AEROQ4 (???)
 # AEROT3   (???)
@@ -99,11 +105,10 @@ class GEOM2(object):
         CBAR(2408,24,180) - the marker for Record 8
         """
         #print "reading CBAR"
-        nEntries = len(data) // 64
-        for i in xrange(nEntries):
+        nelements = (len(data) - n) // 64
+        for i in xrange(nelements):
             eData = data[n:n + 64]  # 16*4
             f, = unpack(b'i', eData[28:32])
-            #print "len(eData) = %s" %(len(eData))
             if   f == 0:
                 out = unpack(b'4i3f3i6f', eData)
                 (eid, pid, ga, gb, x1, x2, x3, f, pa, pb,
@@ -127,7 +132,7 @@ class GEOM2(object):
             elem = CBAR(None, dataIn)
             self.addOp2Element(elem)
             n += 64
-        self.card_count['CBAR'] = nEntries
+        self.card_count['CBAR'] = nelements
         return n
 
     def readCBARAO(self, data, n):
@@ -142,36 +147,36 @@ class GEOM2(object):
         CBEAM(5408,54,261) - the marker for Record 10
         """
         #print "reading CBEAM"
-        nEntries = len(data) // 72
-        for i in xrange(nEntries):
+        nelements = (len(data) - n) // 72
+        for i in xrange(nelements):
             eData = data[n:n + 72]  # 18*4
             f, = unpack(b'i', eData[40:44])
             #print "f = ",f
             #print "len(eData) = %s" %(len(eData))
             if   f == 0:  # basic cid
-                out = unpack(b'iiiiiifffiiiffffff', eData)
+                out = unpack(b'6i3f3i6f', eData)
                 (eid, pid, ga, gb, sa, sb, x1, x2, x3, f, pa,
                     pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
                 dataIn = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
                           [f, x1, x2, x3]]
             elif f == 1:  # global cid
-                out = unpack(b'iiiiiifffiiiffffff', eData)
+                out = unpack(b'6i3f3i6f', eData)
                 (eid, pid, ga, gb, sa, sb, x1, x2, x3, f, pa,
                     pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
                 dataIn = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
                           [f, x1, x2, x3]]
             elif f == 2:  # grid option
-                out = unpack(b'iiiiiiiiiiiiffffff', eData)
+                out = unpack(b'12i6f', eData)
                 (eid, pid, ga, gb, sa, sb, g0, xx, xx, f, pa,
                     pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
                 dataIn = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
                           [f, g0]]
             else:
-                raise RuntimeError('invalid f value...f=%s' % (f))
+                raise RuntimeError('invalid f value...f=%r' % f)
             elem = CBEAM(None, dataIn)
             self.addOp2Element(elem)
             n += 72
-        self.card_count['CBEAM'] = nEntries
+        self.card_count['CBEAM'] = nelements
         return n
 
     def readCBEAMP(self, data, n):
@@ -214,15 +219,15 @@ class GEOM2(object):
         CDAMP1(201,2,69) - the marker for Record 16
         """
         #print "reading CDAMP1"
-        nEntries = len(data) // 24
-        for i in xrange(nEntries):
+        nelements = (len(data) - n) // 24
+        for i in xrange(nelements):
             eData = data[n:n + 24]  # 6*4
             out = unpack(b'6i', eData)
             (eid, pid, g1, g2, c1, c2) = out
             elem = CDAMP1(None, out)
             self.addOp2Element(elem)
             n += 24
-        self.card_count['CDAMP1'] = nEntries
+        self.card_count['CDAMP1'] = nelements
         return n
 
     def readCDAMP2(self, data, n):
@@ -230,15 +235,15 @@ class GEOM2(object):
         CDAMP2(301,3,70) - the marker for Record 17
         """
         #print "reading CDAMP2"
-        nEntries = len(data) // 24
-        for i in xrange(nEntries):
+        nelements = (len(data) - n) // 24
+        for i in xrange(nelements):
             eData = data[n:n + 24]  # 6*4
             out = unpack(b'if4i', eData)
             (eid, b, g1, g2, c1, c2) = out
             elem = CDAMP2(None, out)
             self.addOp2Element(elem)
             n += 24
-        self.card_count['CDAMP2'] = nEntries
+        self.card_count['CDAMP2'] = nelements
         return n
 
     def readCDAMP3(self, data, n):
@@ -246,15 +251,16 @@ class GEOM2(object):
         CDAMP3(401,4,71) - the marker for Record 18
         """
         #print "reading CDAMP3"
-        nEntries = len(data) // 16
-        for i in xrange(nEntries):
+        s = Struct(b'4i')
+        nelements = (len(data) - n) // 16
+        for i in xrange(nelements):
             eData = data[n:n + 16]  # 4*4
-            out = unpack(b'4i', eData)
+            out = s.unpack(eData)
             (eid, pid, s1, s2) = out
             elem = CDAMP3(None, out)
             self.addOp2Element(elem)
             n += 16
-        self.card_count['CDAMP3'] = nEntries
+        self.card_count['CDAMP3'] = nelements
         return n
 
     def readCDAMP4(self, data, n):
@@ -262,15 +268,16 @@ class GEOM2(object):
         CDAMP4(501,5,72) - the marker for Record 19
         """
         #print "reading CDAMP4"
-        nEntries = len(data) // 16
-        for i in xrange(nEntries):
+        s = Struct(b'ifii')
+        nelements = (len(data) - n) // 16
+        for i in xrange(nelements):
             eData = data[n:n + 16]  # 4*4
-            out = unpack(b'ifii', eData)
+            out = s.unpack(eData)
             (eid, b, s1, s2) = out
             elem = CDAMP4(None, out)
             self.addOp2Element(elem)
             n += 16
-        self.card_count['CDAMP4'] = nEntries
+        self.card_count['CDAMP4'] = nelements
         return n
 
     def readCDAMP5(self, data, n):
@@ -278,15 +285,16 @@ class GEOM2(object):
         CDAMP5(10608,106,404) - the marker for Record 20
         """
         #print "reading CDAMP5"
-        nEntries = len(data) // 16
-        for i in xrange(nEntries):
+        s = Struct(b'4i')
+        nelements = (len(data) - n) // 16
+        for i in xrange(nelements):
             eData = data[n:n + 16]  # 4*4
-            out = unpack(b'4i', eData)
+            out = s.unpack(eData)
             (eid, pid, s1, s2) = out
             elem = CDAMP5(None, out)
             self.addOp2Element(elem)
             n += 16
-        self.card_count['CDAMP5'] = nEntries
+        self.card_count['CDAMP5'] = nelements
         return n
 
 # CDUM2
@@ -313,7 +321,7 @@ class GEOM2(object):
             elem = CELAS1(None, out)
             self.addOp2Element(elem)
             n += ntotal
-        self.card_count['CELAS1'] = nEntries
+        self.card_count['CELAS1'] = nelements
         return n
 
     def readCELAS2(self, data, n):
@@ -321,17 +329,18 @@ class GEOM2(object):
         CELAS2(701,7,74) - the marker for Record 30
         """
         #print "reading CELAS2"
-        s = Struct(b'if4iff')
+        s1 = Struct(b'if4iff')
         ntotal = 32
         nelements = (len(data) - n) // ntotal
         for i in xrange(nelements):
             eData = data[n:n+32]
-            out = s.unpack(eData)
+            out = s1.unpack(eData)
             (eid, k, g1, g2, c1, c2, ge, s) = out
+            #print out
             elem = CELAS2(None, out)
             self.addOp2Element(elem)
             n += ntotal
-        self.card_count['CELAS2'] = nEntries
+        self.card_count['CELAS2'] = nelements
         return n
 
     def readCELAS3(self, data, n):
@@ -349,7 +358,7 @@ class GEOM2(object):
             elem = CELAS3(None, out)
             self.addOp2Element(elem)
             n += ntotal
-        self.card_count['CELAS3'] = nEntries
+        self.card_count['CELAS3'] = nelements
         return n
 
     def readCELAS4(self, data, n):
@@ -357,15 +366,16 @@ class GEOM2(object):
         CELAS4(901,9,76) - the marker for Record 32
         """
         #print "reading CELAS4"
-        nEntries = len(data) // 16
-        for i in xrange(nEntries):
+        s = Struct(b'ifii')
+        nelements = (len(data) - n) // 16
+        for i in xrange(nelements):
             eData = data[n:n + 16]  # 4*4
-            out = unpack(b'ifii', eData)
+            out = s.unpack(eData)
             (eid, k, s1, s2) = out
             elem = CELAS4(None, out)
             self.addOp2Element(elem)
             n += 16
-        self.card_count['CELAS4'] = nEntries
+        self.card_count['CELAS4'] = nelements
         return n
 
 # CFAST
@@ -380,10 +390,11 @@ class GEOM2(object):
         CGAP(1908,19,104) - the marker for Record 39
         """
         #print "reading CGAP"
-        nEntries = len(data) // 36
-        for i in xrange(nEntries):
+        s1 = Struct(b'iiiifffii')
+        nelements = (len(data) - n) // 36
+        for i in xrange(nelements):
             eData = data[n:n + 36]  # 9*4
-            out = unpack(b'iiiifffii', eData)
+            out = s1.unpack(eData)
             (eid, pid, ga, gb, x1, x2, x3, f, cid) = out  # f=0,1
             g0 = None
             f2, = unpack(b'i', eData[28:32])
@@ -398,7 +409,7 @@ class GEOM2(object):
             elem = CGAP(None, dataIn)
             self.addOp2Element(elem)
             n += 36
-        self.card_count['CGAP'] = nEntries
+        self.card_count['CGAP'] = nelements
         return n
 
 # CHACAB
@@ -412,11 +423,12 @@ class GEOM2(object):
         """
         #print "reading CHBDYG"
         ntotal = 64  # 16*4
+        s = Struct(b'16i')
         nelements = (len(data) - n) // ntotal
         for i in xrange(nelements):
             eData = data[n:n+64]
             (eid, blank, Type, iviewf, iviewb, radmidf, radmidb, blank2,
-             g1, g2, g3, g4, g5, g6, g7, g8) = unpack(b'iiiiiiiiiiiiiiii', eData)
+             g1, g2, g3, g4, g5, g6, g7, g8) = s.unpack(eData)
             dataIn = [eid, Type, iviewf, iviewb, radmidf, radmidb,
                       g1, g2, g3, g4, g5, g6, g7, g8]
             elem = CHBDYG(None, dataIn)
@@ -464,15 +476,16 @@ class GEOM2(object):
         CMASS1(1001,10,65) - the marker for Record 51
         """
         #print "reading CMASS1"
-        nEntries = len(data) // 24
-        for i in xrange(nEntries):
+        s = Struct(b'6i')
+        nelements = (len(data) - n) // 24
+        for i in xrange(nelements):
             eData = data[n:n + 24]  # 6*4
-            out = unpack(b'iiiiii', eData)
+            out = s.unpack(eData)
             #(eid,pid,g1,g2,c1,c2) = out
             elem = CMASS1(None, out)
             self.addOp2Element(elem)
             n += 24
-        self.card_count['CMASS1'] = nEntries
+        self.card_count['CMASS1'] = nelements
         return n
 
     def readCMASS2(self, data, n):
@@ -480,15 +493,16 @@ class GEOM2(object):
         CMASS2(1101,11,66) - the marker for Record 52
         """
         #print "reading CMASS2"
-        nEntries = len(data) // 24
-        for i in xrange(nEntries):
+        s = Struct(b'if4i')
+        nelements = (len(data) - n) // 24
+        for i in xrange(nelements):
             eData = data[n:n + 24]  # 6*4
-            out = unpack(b'ifiiii', eData)
-            #(eid,m,g1,g2,c1,c2) = out
+            out = s.unpack(eData)
+            #(eid, m, g1, g2, c1, c2) = out
             elem = CMASS2(None, out)
             self.addOp2Element(elem)
             n += 24
-        self.card_count['CMASS2'] = nEntries
+        self.card_count['CMASS2'] = nelements
         return n
 
     def readCMASS3(self, data, n):
@@ -496,15 +510,16 @@ class GEOM2(object):
         CMASS3(1201,12,67) - the marker for Record 53
         """
         #print "reading CMASS3"
-        nEntries = len(data) // 16
-        for i in xrange(nEntries):
+        s = Struct(b'4i')
+        nelements = (len(data) - n) // 16
+        for i in xrange(nelements):
             eData = data[n:n + 16]  # 4*4
-            out = unpack(b'iiii', eData)
-            #(eid,pid,s1,s2) = out
+            out = s.unpack(eData)
+            #(eid, pid, s1, s2) = out
             elem = CMASS3(None, out)
             self.addOp2Element(elem)
             n += 16
-        self.card_count['CMASS3'] = nEntries
+        self.card_count['CMASS3'] = nelements
         return n
 
     def readCMASS4(self, data, n):
@@ -512,15 +527,16 @@ class GEOM2(object):
         CMASS4(1301,13,68) - the marker for Record 54
         """
         #print "reading CMASS4"
-        nEntries = len(data) // 16
-        for i in xrange(nEntries):
+        nelements = (len(data) - n) // 16
+        s = Struct(b'ifii')
+        for i in xrange(nelements):
             eData = data[n:n + 16]  # 4*4
-            out = unpack(b'ifii', eData)
-            #(eid,m,s1,s2) = out
+            out = s.unpack(eData)
+            #(eid, m,s 1, s2) = out
             elem = CMASS4(None, out)
             self.addOp2Element(elem)
             n += 16
-        self.card_count['CMASS4'] = nEntries
+        self.card_count['CMASS4'] = nelements
         return n
 
     def readCMFREE(self, data, n):
@@ -535,16 +551,17 @@ class GEOM2(object):
         CONM1(1401,14,63) - the marker for Record 56
         """
         #print "reading CONM1"
-        nEntries = len(data) // 96
-        for i in xrange(nEntries):
+        s = Struct(b'3i21f')
+        nelements = (len(data) - n) // 96
+        for i in xrange(nelements):
             eData = data[n:n + 96]  # 24*4
-            out = unpack(b'iii21f', eData)
+            out = s.unpack(eData)
             (eid, g, cid, m1, m2a, m2b, m3a, m3b, m3c, m4a, m4b, m4c, m4d,
              m5a, m5b, m5c, m5d, m5e, m6a, m6b, m6c, m6d, m6e, m6f) = out
             elem = CONM1(None, out)
             self.addOp2Element(elem)
             n += 96
-        self.card_count['CONM1'] = nEntries
+        self.card_count['CONM1'] = nelements
         return n
 
     def readCONM2(self, data, n):
@@ -552,14 +569,17 @@ class GEOM2(object):
         CONM2(1501,15,64) - the marker for Record 57
         """
         #print "reading CONM2"
-        while len(data) >= 52:  # 13*4
-            eData = data[:52]
-            data = data[52:]
-            out = unpack(b'3i10f', eData)
+        ntotal = 52  # 13*4
+        s = Struct(b'3i10f')
+        nelements = (len(data) - n) // ntotal
+        for i in xrange(nelements):
+            eData = data[n:n+52]
+            out = s.unpack(eData)
             (eid, g, cid, m, x1, x2, x3, i1, i2a, i2b, i3a, i3b, i3c) = out
             elem = CONM2(None, out)
             self.addOp2Element(elem)
-        self.card_count['CONM2'] = nEntries
+            n += ntotal
+        self.card_count['CONM2'] = nelements
         return n
 
     def readCONROD(self, data, n):
@@ -567,14 +587,17 @@ class GEOM2(object):
         CONROD(1601,16,47) - the marker for Record 58
         """
         #print "reading CONROD"
-        while len(data) >= 32:  # 8*4
-            eData = data[:32]
-            data = data[32:]
-            out = unpack(b'4i4f', eData)
+        ntotal = 32  # 8*4
+        s = Struct(b'4i4f')
+        nelements = (len(data) - n) // ntotal
+        for i in xrange(nelements):
+            eData = data[n:n+32]
+            out = s.unpack(eData)
             (eid, n1, n2, mid, a, j, c, nsm) = out
             elem = CONROD(None, out)
             self.addOp2Element(elem)
-        self.card_count['CONROD'] = nEntries
+            n += ntotal
+        self.card_count['CONROD'] = nelements
         return n
 
     def readCONV(self, data, n):
@@ -583,10 +606,12 @@ class GEOM2(object):
         """
         #print "reading CONV"
         return
-        while len(data) >= 80:  # 20*4
-            eData = data[:80]
-            data = data[80:]
-            out = unpack(b'12i8f', eData)
+        ntotal = 80  # 20*4
+        s = Struct(b'12i8f')
+        nelements = (len(data) - n) // ntotal
+        for i in xrange(nelements):
+            eData = data[n:n+80]
+            out = s.unpack(eData)
             (eid, pconID, flmnd, cntrlnd,
              ta1, ta2, ta3, ta5, ta6, ta7, ta8,
              wt1, wt2, wt3, wt5, wt6, wt7, wt8) = out
@@ -595,7 +620,8 @@ class GEOM2(object):
                       [wt1, wt2, wt3, wt5, wt6, wt7, wt8]]
             elem = CONV(None, dataIn)
             self.addOp2Element(elem)
-        self.card_count['CONV'] = nEntries
+            n += ntotal
+        self.card_count['CONV'] = nelements
         return n
 
     def readCONVM(self, data, n):
@@ -604,17 +630,20 @@ class GEOM2(object):
         """
         #print "reading CONVM"
         return
-        while len(data) >= 28:  # 7*4
-            eData = data[:28]
-            data = data[28:]
-            out = unpack(b'7i', eData)
+        ntotal = 28  # 7*4
+        s = Struct(b'7i')
+        nelements = (len(data) - n) // ntotal
+        for i in xrange(nelements):
+            eData = data[n:n+28]
+            out = unpack(eData)
             (eid, pconID, flmnd, cntrlnd,
              [ta1, ta2, ta3]) = out
             dataIn = [eid, pconID, flmnd, cntrlnd,
                       [ta1, ta2, ta3]]
             elem = CONVM(None, dataIn)
             self.addOp2Element(elem)
-        self.card_count['CONVM'] = nEntries
+            n += ntotal
+        self.card_count['CONVM'] = nelements
         return n
 
 # CPENP
@@ -624,10 +653,11 @@ class GEOM2(object):
         CPENTA(4108,41,280) - the marker for Record 62
         """
         #print "reading CPENTA"
-        nEntries = len(data) // 68
-        for i in xrange(nEntries):
+        s = Struct(b'17i')
+        nelements = (len(data) - n) // 68
+        for i in xrange(nelements):
             eData = data[n:n + 68]  # 17*4
-            out = unpack(b'17i', eData)
+            out = s.unpack(eData)
             (eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
              g11, g12, g13, g14, g15) = out
 
@@ -639,7 +669,7 @@ class GEOM2(object):
                 elem = CPENTA6(None, dataIn)
             self.addOp2Element(elem)
             n += 68
-        self.card_count['CPENTA'] = nEntries
+        self.card_count['CPENTA'] = nelements
         return n
 
 # CPENPR
@@ -657,18 +687,19 @@ class GEOM2(object):
 
     def runCQUAD(self, data, n, Element):
         """common method for CQUAD, CQUADX"""
-        nEntries = len(data) // 44  # 11*4
-        for i in xrange(nEntries):
+        s = Struct(b'11i')
+        nelements = (len(data) - n) // 44  # 11*4
+        for i in xrange(nelements):
             eData = data[n:n + 44]
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8,
-                n9) = unpack(b'11i', eData)
+                n9) = s.unpack(eData)
             #print "eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4)
             #dataInit = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
             data = [eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9]
             elem = Element(None, data)
             self.addOp2Element(elem)
             n += 44
-        self.card_count[Element.type] = nEntries
+        self.card_count[Element.type] = nelements
         return n
 
     def readCQUAD4(self, data, n):
@@ -683,18 +714,19 @@ class GEOM2(object):
         """
         common method for CQUAD4, CQUADR
         """
-        nEntries = len(data) // 56
-        for i in xrange(nEntries):
+        nelements = (len(data) - n) // 56
+        s = Struct(b'6iffii4f')
+        for i in xrange(nelements):
             eData = data[n:n + 56]  # 14*4
             (eid, pid, n1, n2, n3, n4, theta, zoffs, blank, tflag,
-                t1, t2, t3, t4) = unpack(b'6iffii4f', eData)
+                t1, t2, t3, t4) = s.unpack(eData)
             #print "eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s blank=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,blank,tflag,t1,t2,t3,t4)
             dataInit = [eid, pid, n1, n2, n3, n4, theta, zoffs,
                         tflag, t1, t2, t3, t4]
             elem = Element(None, dataInit)
             self.addOp2Element(elem)
             n += 56
-        self.card_count[Element.type] = nEntries
+        self.card_count[Element.type] = nelements
         return n
 
 # CQUAD4FD
@@ -706,10 +738,11 @@ class GEOM2(object):
         """
         #print "reading CQUAD8"
         return
-        nEntries = len(data) // 64  # 17*4
-        for i in xrange(nEntries):
+        nelements = (len(data) - n) // 64  # 17*4
+        s = Struct(b'10i5fi')
+        for i in xrange(nelements):
             eData = data[n:n + 64]
-            out = unpack(b'10i5fi', eData)
+            out = s.unpack(eData)
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
                 t3, t4, theta, tflag) = out
             #print "eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4)
@@ -717,7 +750,7 @@ class GEOM2(object):
             elem = CQUAD8(None, out)
             self.addOp2Element(elem)
             n += 64
-        self.card_count['CQUAD8'] = nEntries
+        self.card_count['CQUAD8'] = nelements
         return n
 
 # CQUAD9FD
@@ -746,15 +779,16 @@ class GEOM2(object):
         CROD(3001,30,48)    - the marker for Record 80
         """
         #print "reading CROD"
-        nEntries = len(data) // 16  # 4*4
-        for i in xrange(nEntries):
+        s = Struct(b'4i')
+        nelements = (len(data) - n) // 16  # 4*4
+        for i in xrange(nelements):
             eData = data[n:n + 16]
-            out = unpack(b'4i', eData)
+            out = s.unpack(eData)
             (eid, pid, n1, n2) = out
             elem = CROD(None, out)
             self.addOp2Element(elem)
             n += 16
-        self.card_count['CROD'] = nEntries
+        self.card_count['CROD'] = nelements
         return n
 
 # CRROD
@@ -765,15 +799,16 @@ class GEOM2(object):
         CSHEAR(3101,31,61)    - the marker for Record 83
         """
         #print "reading CSHEAR"
-        nEntries = len(data) // 24  # 6*4
-        for i in xrange(nEntries):
+        s = Struct(b'6i')
+        nelements = (len(data) - n) // 24  # 6*4
+        for i in xrange(nelements):
             eData = data[n:n + 24]
-            out = unpack(b'6i', eData)
+            out = s.unpack(eData)
             (eid, pid, n1, n2, n3, n4) = out
             elem = CSHEAR(None, out)
             self.addOp2Element(elem)
             n += 24
-        self.card_count['CSHEAR'] = nEntries
+        self.card_count['CSHEAR'] = nelements
         return n
 
 # CSLOT3
@@ -785,14 +820,14 @@ class GEOM2(object):
         .. todo:: create object
         """
         #print "reading CTETP"
-        raise NotImplementedError('needs work...')
-        while len(data) >= 108:  # 27*4
-            eData = data[:108]
-            data = data[108:]
-            out = unpack(b'27i', eData)
-            (
-                eid, pid, n1, n2, n3, n4, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12,
-                f1, f2, f3, f4, b1, ee1, ee2, ee3, ee4) = out
+        #raise NotImplementedError('needs work...')
+        nelements = (len(data) - n) // 108  # 27*4
+        s = Struct(b'27i')
+        for i in xrange(nelements):
+            eData = data[n:n+108]
+            out = s.unpack(eData)
+            (eid, pid, n1, n2, n3, n4, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12,
+             f1, f2, f3, f4, b1, ee1, ee2, ee3, ee4) = out
             #print "out = ",out
             e = [e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12]
             f = [f1, f2, f3, f4]
@@ -811,10 +846,11 @@ class GEOM2(object):
         CTETRA(5508,55,217)    - the marker for Record 87
         """
         #print "reading CTETRA"
-        nEntries = (len(data) - n)// 48  # 12*4
-        for i in xrange(nEntries):
+        s = Struct(b'12i')
+        nelements = (len(data) - n)// 48  # 12*4
+        for i in xrange(nelements):
             eData = data[n:n + 48]
-            out = unpack(b'iiiiiiiiiiii', eData)
+            out = s.unpack(eData)
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = out
             #print "out = ",out
 
@@ -826,7 +862,7 @@ class GEOM2(object):
                 elem = CTETRA4(None, dataIn)
             self.addOp2Element(elem)
             n += 48
-        self.card_count['CTETRA'] = nEntries
+        self.card_count['CTETRA'] = nelements
         return n
 
 # CTETPR
@@ -841,10 +877,11 @@ class GEOM2(object):
         """
         #print "reading CTRIA3"
         ntotal = 52  # 13*4
+        s = Struct(b'iiiiiffiiifff')
         nelements = (len(data) - n)// 52  # 13*4
         for i in xrange(nelements):
             eData = data[n:n+52]
-            out = unpack(b'iiiiiffiiifff', eData)
+            out = s.unpack(eData)
             #print "eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %(eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3)
             (eid, pid, n1, n2, n3, theta, zoffs, blank1,
                 blank2, tflag, t1, t2, t3) = out
@@ -864,17 +901,18 @@ class GEOM2(object):
         .. warning:: inconsistent with dmap manual
         """
         #print "reading CTRIA6"
-        return
-        nEntries = len(data) // 52  # 13*4
-        for i in xrange(nEntries):
+        #return
+        s = Struct(b'8i4fi')
+        nelements = (len(data) - n) // 52  # 13*4
+        for i in xrange(nelements):
             eData = data[n:n + 52]
-            out = unpack(b'8i4fi', eData)
+            out = s.unpack(eData)
             #print "eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %(eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3)
             (eid, pid, n1, n2, n3, n4, n5, n6, theta, t1, t2, t3, tflag) = out
             elem = CTRIA6(None, out)
             self.addOp2Element(elem)
             n += 52
-        self.card_count['CTRIA6'] = nEntries
+        self.card_count['CTRIA6'] = nelements
         return n
 
 # CTRIA6FD
@@ -898,29 +936,31 @@ class GEOM2(object):
         CTUBE(3701,37,49)    - the marker for Record 103
         """
         #print "reading CTUBE"
-        nEntries = len(data) // 16
-        for i in xrange(nEntries):
+        s = Struct(b'4i')
+        nelements = (len(data) - n) // 16
+        for i in xrange(nelements):
             eData = data[n:n + 16]  # 4*4
-            out = unpack(b'4i', eData)
+            out = s.unpack(eData)
             (eid, pid, n1, n2) = out
             elem = CTUBE(None, out)
             self.addOp2Element(elem)
             n += 16
-        self.card_count['CTUBE'] = nEntries
+        self.card_count['CTUBE'] = nelements
         return n
 
     def readCVISC(self, data, n):
         """CVISC(3901,39, 50) - the marker for Record 104"""
         #print "reading CVISC"
-        nEntries = len(data) // 16
-        for i in xrange(nEntries):
+        s = Struct(b'4i')
+        nelements = (len(data) - n) // 16
+        for i in xrange(nelements):
             eData = data[n:n + 16]  # 4*4
-            out = unpack(b'4i', eData)
+            out = s.unpack(eData)
             #(eid,pid,n1,n2) = out
             elem = CVISC(None, out)
             self.addOp2Element(elem)
             n += 16
-        self.card_count['CVISC'] = nEntries
+        self.card_count['CVISC'] = nelements
         return n
 
     def readCWELD(self, data, n):  # 105
@@ -946,18 +986,27 @@ class GEOM2(object):
 # RADINT
 # SINT
 
+    def add_SPOINT(self, spooint):
+        raise RuntimeError('this should be overwritten')
+
     def readSPOINT(self, data, n):
         """
         (5551,49,105)    - the marker for Record 118
         """
-        npoints = len(self.data) // 4
-        for i in xrange(npoints):
-            edata = data[n:n+4]
-            (nid,) = unpack(b'i', edata)
-            spoint = SPOINTs(None, [nid])
+        npoints = (len(data) - n) // 4
+        if 1:
+            fmt = b'%ii' % npoints
+            nids = unpack(fmt, data[n:])
+            spoint = SPOINTs(None, list(nids))
             self.add_SPOINT(spoint)
-            n += 4
-        self.card_count['SPOINT'] = nEntries
+        if 0:
+            for i in xrange(npoints):
+                edata = data[n:n+4]
+                (nid,) = unpack(b'i', edata)
+                spoint = SPOINTs(None, [nid])
+                self.add_SPOINT(spoint)
+                n += 4
+        self.card_count['SPOINT'] = npoints
         return n
 
 # VUBEAM
