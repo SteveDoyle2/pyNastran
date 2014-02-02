@@ -30,7 +30,7 @@ from pyNastran.bdf.bdf import (BDF, CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
                                CHEXA8, CHEXA20,
                                CONM2,
                                ShellElement, LineElement, SpringElement)
-from pyNastran.op2.op2 import OP2
+from pyNastran.op2.test.test_op2 import OP2
 from pyNastran.f06.f06 import F06
 
 
@@ -80,17 +80,27 @@ class NastranIO(object):
         punch = False
         if ext.lower() in '.pch':
             punch = True
-        model = BDF(log=self.log, debug=True)
-        self.modelType = model.modelType
-        model.readBDF(bdf_filename, includeDir=dirname, punch=punch)
+
+        if bdf_filename.lower().endswith('.op2'):  # read the OP2
+            op2_filename = bdf_filename
+            model = OP2(op2_filename, make_geom=True,
+                       save_skipped_cards=False,
+                       debug=True, log=self.log)
+            model.read_op2(op2_filename)
+            model.crossReference(xref=True)
+        else:  # read the bdf/punch
+            model = BDF(log=self.log, debug=True)
+            self.modelType = model.modelType
+            model.readBDF(bdf_filename, includeDir=dirname, punch=punch)
 
         nNodes = model.nNodes()
+        assert nNodes > 0
         nElements = model.nElements()
         nCAeros = model.nCAeros()
         self.nNodes = nNodes
         self.nElements = nElements
 
-        #print "nNodes = ",self.nNodes
+        print "nNodes = ",self.nNodes
         self.log_info("nElements = %i" % self.nElements)
         msg = model.card_stats(return_type='list')
         #self.log_info(msg)
@@ -429,7 +439,7 @@ class NastranIO(object):
         self.TurnTextOn()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
-        
+
         print("tring to read...", op2FileName)
         if '.op2' in op2FileName:
             model = OP2(op2FileName, log=self.log, debug=True)
@@ -468,7 +478,7 @@ class NastranIO(object):
 
         # set to True to enable elementIDs as a result
         eidsSet = True
-        if eidsSet:
+        if eidsSet and self.is_centroidal:
             eids = zeros(nElements, 'd')
             for (eid, eid2) in self.eidMap.iteritems():
                 eids[eid2] = eid
@@ -477,26 +487,40 @@ class NastranIO(object):
             cases[(subcaseID, 'Element_ID', 1, 'centroid', '%.0f')] = eids
             cases[eKey] = zeros(nElements)  # is the element supported
             eidsSet = True
+        else:
+            eKey = None
 
+        print('is_nodal =', self.is_nodal)
+
+        print('model.displacements.keys()', model.displacements.keys())
         for subcaseID in subcaseIDs:
-            if False: # nodal results don't work
+            if self.is_nodal: # nodal results don't work
                 if subcaseID in model.displacements:  # not correct?
                     case = model.displacements[subcaseID]
+                    nnodes = self.nNodes
+                    displacements = zeros((nnodes, 3), dtype='float32')
+                    for (nid, txyz) in case.translations.iteritems():
+                        nid2 = self.nidMap[nid]
+                        displacements[nid2] = txyz
+                    print("disp =", displacements)
                     key = (subcaseID, 'DisplacementX', 3, 'node', '%g')
-                    #cases[key] = case.translations
+                    print('adding case=%s' % str(key))
+                    cases[key] = displacements
 
+            if 0:
                 if subcaseID in model.temperatures:
                     case = model.temperatures[subcaseID]
                     #print case
-                    temps = zeros(self.nNodes)
-                    key = (subcaseID, 'Temperature', 1, 'node', '%g')
+                    temps = zeros(self.nNodes, dtype='float32')
                     for (nid, T) in case.temperatures.iteritems():
                         #print T
                         nid2 = self.nidMap[nid]
-                        temps[nid2] = T
-                    #cases[key] = temps
+                        temperatures[nid2] = T
 
-            cases = self.fill_stress_case(cases, model, subcaseID, eKey, nElements)
+                    key = (subcaseID, 'Temperature', 1, 'node', '%g')
+                    #cases[key] = temperatures
+
+            cases = self.fill_stress_case(cases, model, subcaseID, eKey)
 
         #self.resultCases = cases
         self.finish_io(cases)
@@ -509,6 +533,27 @@ class NastranIO(object):
         #self.cycleResults()  # start at nCase=0
 
     def finish_io(self, cases):
+        self.resultCases = cases
+        self.caseKeys = sorted(cases.keys())
+        print("caseKeys = ",self.caseKeys)
+        #print "type(caseKeys) = ",type(self.caseKeys)
+
+        if len(self.resultCases) == 0:
+            self.nCases = 1
+            self.iCase = 0
+        elif len(self.resultCases) == 1:
+            self.nCases = 1
+            self.iCase = 0
+        else:
+            self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
+            self.iCase = -1
+        self.cycleResults()  # start at nCase=0
+
+        if self.nCases:
+            self.scalarBar.VisibilityOn()
+            self.scalarBar.Modified()
+
+    def _finish_io(self, cases):
         #self.finish()
         ncases = len(cases)
         self.resultCases = cases
@@ -525,8 +570,20 @@ class NastranIO(object):
         self.cycleResults()  # start at nCase=0
         self.log.info('end of finish io')
 
-    def fill_stress_case(self, cases, model, subcaseID, eKey, nElements):
-        print "fill_stress_case"
+    def fill_stress_case(self, cases, model, subcaseID, eKey):
+        print("fill_stress_case")
+        if self.is_centroidal:
+            cases = self._fill_stress_case_centroidal(cases, model, subcaseID, eKey)
+        else:
+            #cases = self._fill_stress_case_nodal(cases, model, subcaseID, eKey)
+            pass
+        return cases
+
+    def _fill_stress_case_nodal(self, cases, model, subcaseID, eKey):
+        nnodes = self.nNodes
+
+    def _fill_stress_case_centroidal(self, cases, model, subcaseID, eKey):
+        nElements = self.nElements
         oxx = zeros(nElements)
         oyy = zeros(nElements)
         ozz = zeros(nElements)
