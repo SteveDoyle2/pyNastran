@@ -78,11 +78,11 @@ class ComplexCBeamForce(scalarObject):  # 2-CBEAM
         self.dt = dt
         if is_sort1:
             if dt is not None:
-                self.addNewElement = self.addNewElementSort1
+                self.add_new_element = self.addNewElementSort1
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.addNewElement = self.addNewElementSort2
+            self.add_new_element = self.addNewElementSort2
             self.add = self.addSort2
 
     def get_stats(self):
@@ -109,7 +109,7 @@ class ComplexCBeamForce(scalarObject):  # 2-CBEAM
         self.totalTorque[dt] = {}
         self.warpingTorque[dt] = {}
 
-    def addNewElement(self, dt, data):
+    def add_new_element(self, dt, data):
         [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
         #print "CBEAM addnew",data
         #self.eType[eid] = eType
@@ -636,11 +636,11 @@ class ComplexPlate2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.dt = dt
         if is_sort1:
             if dt is not None:
-                self.addNewElement = self.addNewElementSort1
+                self.add_new_element = self.addNewElementSort1
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.addNewElement = self.addNewElementSort2
+            self.add_new_element = self.addNewElementSort2
             self.add = self.addSort2
 
     def get_stats(self):
@@ -669,7 +669,7 @@ class ComplexPlate2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.tx[dt] = {}
         self.ty[dt] = {}
 
-    def addNewElement(self, eid, dt, data):
+    def add_new_element(self, eid, dt, data):
         #print "eid = ",eid
         [term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
 

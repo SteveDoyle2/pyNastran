@@ -92,7 +92,7 @@ class ComplexForces(object):
                     dataIn = [eid2, nid, sd, bm1, bm2,
                               ts1, ts2, af, ttrq, wtrq]
                     #print "%s cNew   " %(self.get_element_type(self.element_type)),dataIn
-                    self.obj.addNewElement(dt, dataIn)
+                    self.obj.add_new_element(dt, dataIn)
                     #print
                 elif sd > 0.:
                     dataIn = [eid2, nid, sd, bm1, bm2,
@@ -111,12 +111,15 @@ class ComplexForces(object):
         format1 = bytes(format1)
         is_magnitude_phase = self.is_magnitude_phase()
 
-        while len(self.data) >= 132:  # 33*4
-            eData = self.data[0:132]
-            self.data = self.data[132:]
-            #print "len(data) = ",len(eData)
+        n = 0
+        ntotal = 132  # 33*4
+        nelements = len(self.data) // ntotal
+        s = Struct(format1)
+        for i in xrange(nelements):
+            edata = self.data[n:n+132]
+            n += ntotal
 
-            out = unpack(format1, eData)
+            out = s.unpack(edata)
             (eid, f41r, f21r, f12r, f32r, f23r, f43r, f34r, f14r, kf1r, s12r, kf2r, s23r, kf3r, s34r, kf4r, s41r,
                   f41i, f21i, f12i, f32i, f23i, f43i, f34i, f14i, kf1i, s12i, kf2i, s23i, kf3i, s34i, kf4i, s41i) = out
             if is_magnitude_phase:
@@ -155,14 +158,13 @@ class ComplexForces(object):
                 s41 = complex(s41r, s41i)
 
             eid2 = extract(eid, dt)
-            #print "eType=%s" %(eType)
+            #print "eType=%s" % (eType)
 
-            dataIn = [eid2, f41, f21, f12, f32, f23, f43, f34, f14,
-                      kf1, s12, kf2, s23, kf3, s34, kf4, s41]
-            #print "%s" %(self.get_element_type(self.element_type)),dataIn
+            data_in = [eid2, f41, f21, f12, f32, f23, f43, f34, f14,
+                             kf1, s12, kf2, s23, kf3, s34, kf4, s41]
+            #print "%s" %(self.get_element_type(self.element_type)), data_in
             #eid = self.obj.add_new_eid(out)
-            self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
+            self.obj.add(dt, data_in)
         #print self.shearForces
 
     def OEF_Spring_alt(self):  # 11-CELAS1, 12-CELAS2, 13-CELAS3, 14-CELAS4
@@ -372,7 +374,7 @@ class ComplexForces(object):
 
             dataIn = [term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
-            self.obj.addNewElement(eid, dt, dataIn)
+            self.obj.add_new_element(eid, dt, dataIn)
 
             for i in xrange(nNodes):  # .. todo:: fix crash...
                 edata = self.data[n:n+68]
@@ -410,20 +412,23 @@ class ComplexForces(object):
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'i25f'
         format1 = bytes(format1)
+        s = Struct(format1)
         is_magnitude_phase = self.is_magnitude_phase()
 
-        while len(self.data) >= 108:  # 27*4
-            eData = self.data[0:108]
-            self.data = self.data[108:]
-            #print "len(data) = ",len(eData)
+        n = 0
+        ntotal = 108  # 27*4
+        nelements = len(self.data) // ntotal
+        for i in xrange(nelements):
+            edata = self.data[n:n+108]
+            n += ntotal
 
-            out = unpack(format1, eData)
+            out = s.unpack(edata)
             (eid, nidA, bm1Ar, bm2Ar, ts1Ar, ts2Ar, afAr, trqAr,
              bm1Ai, bm2Ai, ts1Ai, ts2Ai, afAi, trqAi,
              nidB, bm1Br, bm2Br, ts1Br, ts2Br, afBr, trqBr,
              bm1Bi, bm2Bi, ts1Bi, ts2Bi, afBi, trqBi) = out
             eid2 = extract(eid, dt)
-            #print "eType=%s" %(eType)
+            #print "eType=%s" % (eType)
 
             if is_magnitude_phase:
                 bm1A = polar_to_real_imag(bm1Ar, bm1Ai)
@@ -457,7 +462,6 @@ class ComplexForces(object):
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
         #print self.bendForces
 
     def OEF_PentaPressure_alt(self):  # 76-CHEXA_PR,77-CPENTA_PR,78-CTETRA_PR

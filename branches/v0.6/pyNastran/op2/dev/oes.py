@@ -935,10 +935,11 @@ class OES(OP2Common):
                     eid = (eid_device - self.device_code) // 10
                     indata = (eid, fd1, sx1, sy1, sz1, txy1, es1, eps1, ecs1,
                                         ex1, ey1, ez1, exy1)
-                    #self.obj.add_new_eid(self.element_type, dt, indata)
-                    #print "eid=%s axial=%s equivStress=%s totalStrain=%s effPlasticCreepStrain=%s effCreepStrain=%s linearTorsionalStresss=%s" % (eid,axial,equivStress,totalStrain,effPlasticCreepStrain,effCreepStrain,linearTorsionalStresss)
+                    self.obj.add_new_eid(self.element_type, dt, indata)
+                    #print "eid=%s axial=%s equivStress=%s totalStrain=%s effPlasticCreepStrain=%s effCreepStrain=%s linearTorsionalStresss=%s" % (
+                        #eid, axial, equivStress, totalStrain, effPlasticCreepStrain, effCreepStrain, linearTorsionalStresss)
                     n += ntotal
-            elif self.num_wide == 25:  # complex
+            elif self.num_wide == 25:  # real?
                 if self.isStress():
                     self.create_transient_object(self.nonlinearPlateStress, NonlinearQuadObject)
                 else:
@@ -955,9 +956,12 @@ class OES(OP2Common):
                     (eid_device, fd1, sx1, sy1, undef1, txy1, es1, eps1, ecs1, ex1, ey1, undef2, etxy1,
                                  fd2, sx2, sy2, undef3, txy2, es2, eps2, ecs2, ex2, ey2, undef4, etxy2) = out
                     eid = (eid_device - self.device_code) // 10
-                    indata = (eid, fd1, sx1, sy1, undef1, txy1, es1, eps1, ecs1, ex1, ey1, undef2, etxy1,
-                                   fd2, sx2, sy2, undef3, txy2, es2, eps2, ecs2, ex2, ey2, undef4, etxy2)
-                    #self.obj.add_new_eid(self.element_type, dt, indata)
+                    #in_data = (eid, fd1, sx1, sy1, txy1, es1, eps1, ecs1, ex1, ey1, etxy1,
+                                    #fd2, sx2, sy2, txy2, es2, eps2, ecs2, ex2, ey2, etxy2)
+                    self.obj.add_new_eid(self.element_type, dt, (eid,
+                                                                 fd1, sx1, sy1, undef1, txy1, es1, eps1, ecs1, ex1, ey1, undef2, etxy1))
+                    self.obj.add(dt, (eid,
+                                      fd2, sx2, sy2, undef3, txy2, es2, eps2, ecs2, ex2, ey2, undef4, etxy2))
                     n += ntotal
             else:
                 raise NotImplementedError(self.num_wide)
@@ -998,10 +1002,10 @@ class OES(OP2Common):
                         self.binary_debug.write('  eid=%i; layer???=%i; C=[%s]\n' % (eid, ilayer, ', '.join(['%r' % di for di in out])))
 
                     if eid != eid_old:  # originally initialized to None, the buffer doesnt reset it, so it is the old value
-                        #print "1 - eid=%s ilayer=%i o1=%i o2=%i ovm=%i" % (eid,ilayer,o1,o2,ovm)
+                        #print "1 - eid=%s ilayer=%i o1=%i o2=%i ovm=%i" % (eid, ilayer, o1, o2, ovm)
                         self.obj.add_new_eid(eType, dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
                     else:
-                        #print "2 - eid=%s ilayer=%i o1=%i o2=%i ovm=%i" % (eid,ilayer,o1,o2,ovm)
+                        #print "2 - eid=%s ilayer=%i o1=%i o2=%i ovm=%i" % (eid, ilayer, o1, o2, ovm)
                         self.obj.add(dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
                     eid_old = eid
                     n += 44
@@ -1457,7 +1461,7 @@ class OES(OP2Common):
             return
         elif self.element_type in [139]:
             # 139-QUAD4FD
-            if self.num_wide == 0:
+            if self.num_wide == 30:
                 if self.isStress():
                     self.create_transient_object(self.hyperelasticPlateStrain, HyperelasticQuadObject)
                 else:
@@ -1465,7 +1469,7 @@ class OES(OP2Common):
 
 
                 n = 0
-                ntotal = 120
+                ntotal = 120  # 36+28*3
                 s1 = Struct(b'i4si6f')  # 1 + 4+1+6 = 12
                 s2 = Struct(b'i6f')
                 nelements = len(data) // ntotal
@@ -1473,7 +1477,7 @@ class OES(OP2Common):
                     edata = data[n:n+36]  # 4*9
                     out = s1.unpack(edata)
                     if self.debug4():
-                        self.binary_debug.write('CQUAD4FD-139A - %s\n' % (str(out)))
+                        self.binary_debug.write('CQUAD4FD-139A- %s\n' % (str(out)))
 
                     (eid_device, Type, ID, sx, sy, sxy, angle, smj, smi) = out
                     eid = (eid_device - self.device_code) // 10
@@ -1486,15 +1490,13 @@ class OES(OP2Common):
                         edata = data[n:n + 28]  # 4*7
                         out = s2.unpack(edata)
                         if self.debug4():
-                            self.binary_debug.write('CQUAD4FD-139B - %s\n' % (str(out)))
+                            self.binary_debug.write('               %s\n' % (str(out)))
                         (ID, sx, sy, sxy, angle, smj, smi) = out
                         self.obj.add(dt, eid, out)
-                        print "***ID=%s sx=%s sy=%s sxy=%s angle=%s major=%s minor=%s" % (ID, sx, sy, sxy, angle, smj, smi)
+                        #print "***ID=%s sx=%s sy=%s sxy=%s angle=%s major=%s minor=%s" % (ID, sx, sy, sxy, angle, smj, smi)
                         n += 28
-                    self.obj.add(data)
-                    #x += 1
-                else:
-                    raise NotImplementedError(self.num_wide)
+            else:
+                raise NotImplementedError(self.num_wide)
         elif self.element_type in [47, 48, 189, 190]:
             # 47-AXIF2
             # 48-AXIF3
@@ -1548,7 +1550,7 @@ class OES(OP2Common):
         else:
             raise NotImplementedError('sort1 Type=%s num=%s' % (self.element_name, self.element_type))
 
-        assert len(data) > 0
+        assert len(data) > 0, len(data)
         assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
         assert len(data) % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data) % self.num_wide, len(data), ntotal)
         assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)

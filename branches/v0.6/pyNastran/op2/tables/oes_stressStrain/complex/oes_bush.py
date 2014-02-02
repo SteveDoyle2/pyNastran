@@ -140,7 +140,7 @@ class ComplexBushStressObject(StressObject):
         f.write(''.join(msg))
         return pageNum
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def __write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         raise NotImplementedError('CBUSH')
         words = [
             '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',

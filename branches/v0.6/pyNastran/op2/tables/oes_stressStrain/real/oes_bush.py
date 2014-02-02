@@ -137,7 +137,6 @@ class BushStrainObject(StrainObject):
     """
     """
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        #raise NotImplementedError('is this used?')
         StrainObject.__init__(self, data_code, isubcase)
         self.eType = {}
 
@@ -214,66 +213,13 @@ class BushStrainObject(StrainObject):
         self.translations[dt][eid] = [tx, ty, tz]
         self.rotations[dt][eid] = [rx, ry, rz]
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         raise NotImplementedError('CBUSH')
         return 'BushStress write_f06 not implemented...', pageNum
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
-
-        msg = header + [
-            '                                  S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )\n',
-            '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
-            '    ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C\n',
-        ]
-        for eid, E1s in sorted(self.e1.iteritems()):
-            eType = self.eType[eid]
-            axial = self.axial[eid]
-
-            e1 = self.e1[eid]
-            e2 = self.e2[eid]
-            e3 = self.e3[eid]
-            e4 = self.e4[eid]
-            vals = [e1[0], e2[0], e3[0], e4[0], axial,
-                    e1[1], e2[1], e3[1], e4[1]]
-            (vals2, isAllZeros) = writeFloats13E(vals)
-            [e10, e20, e30, e40, axial,
-             e11, e21, e31, e41] = vals2
-
-            msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % (eid, e10, e20, e30, e40, axial.rstrip()))
-            msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % ('', e11, e21, e31, e41.rstrip()))
-        msg.append(pageStamp % pageNum)
-        f.write(''.join(msg))
         return pageNum
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         raise NotImplementedError('CBUSH')
-        words = [
-            '                                  S T R A I N S    I N   B A R   E L E M E N T S           ( C B A R )\n',
-            '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
-            '    ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C\n',
-        ]
-        msg = []
-        for dt, E1s in sorted(self.e1.iteritems()):
-            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-            msg += header + words
-            for eid, e1s in sorted(E1s.iteritems()):
-                eType = self.eType[eid]
-                axial = self.axial[eid]
-
-                e1 = self.e1[eid]
-                e2 = self.e2[eid]
-                e3 = self.e3[eid]
-                e4 = self.e4[eid]
-                vals = [e1[0], e2[0], e3[0], e4[0], axial,
-                        e1[1], e2[1], e3[1], e4[1]]
-                (vals2, isAllZeros) = writeFloats13E(vals)
-                [e10, e20, e30, e40,
-                 e11, e21, e31, e41] = vals2
-
-                msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % (eid, e10, e20, e30, e40, axial.rstrip()))
-                msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % ('', e11, e21, e31, e41.rstrip()))
-            msg.append(pageStamp % pageNum)
-            f.write(''.join(msg))
-            msg = ['']
-            pageNum += 1
         return pageNum - 1

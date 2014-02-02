@@ -421,7 +421,7 @@ class OEF(OP2Common):
 
                         data_in = [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
                         if i == 0:  # isNewElement
-                            self.obj.addNewElement(dt, data_in)
+                            self.obj.add_new_element(dt, data_in)
                         elif sd > 0.:
                             self.obj.add(dt, data_in)
                         n += 36
@@ -461,12 +461,12 @@ class OEF(OP2Common):
                             af = complex(afr, afi)
                             ttrq = complex(ttrqr, ttrqi)
                             wtrq = complex(wtrqr, wtrqi)
-                        eid = self.obj.add_new_eid(out)
+                        #eid = self.obj.add_new_eid(out)
                         if i == 0:  # isNewElement:
                             data_in = [eid, nid, sd, bm1, bm2,
                                        ts1, ts2, af, ttrq, wtrq]
                             #print "%s cNew   " % (self.get_element_type(self.element_type)), data_in
-                            self.obj.addNewElement(dt, data_in)
+                            self.obj.add_new_element(dt, data_in)
                         elif sd > 0.:
                             data_in = [eid, nid, sd, bm1, bm2,
                                       ts1, ts2, af, ttrq, wtrq]
@@ -784,7 +784,7 @@ class OEF(OP2Common):
                     assert eid > 0, eid
                     data_in = [term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty]
                     #print "%s" % (self.get_element_type(self.element_type)), data_in
-                    self.obj.addNewElement(eid, dt, data_in)
+                    self.obj.add_new_element(eid, dt, data_in)
                     n += 44
                     for i in xrange(nnodes):
                         edata = data[n : n + 36]
@@ -834,7 +834,7 @@ class OEF(OP2Common):
 
                     data_in = [term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty]
                     #print "%s" % (self.get_element_type(self.element_type)), data_in
-                    self.obj.addNewElement(eid, dt, data_in)
+                    self.obj.add_new_element(eid, dt, data_in)
 
                     for i in xrange(nnodes):  # .. todo:: fix crash...
                         edata = data[n:n+68]
@@ -952,7 +952,64 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
                     n += ntotal
 
-            #elif self.num_wide == 33:  # imag
+            elif self.num_wide == 33:  # imag
+                self.create_transient_object(self.shearForces, ComplexCShearForce)
+                s = Struct(b'i32f')
+                ntotal = 132  # 33*4
+                nelements = len(data) // ntotal
+                for i in xrange(nelements):
+                    edata = data[n:n+132]
+                    n += ntotal
+
+                    out = s.unpack(edata)
+                    (eid_device,
+                     f41r, f21r, f12r, f32r, f23r, f43r, f34r, f14r,
+                     kf1r, s12r, kf2r, s23r, kf3r, s34r, kf4r, s41r,
+                     f41i, f21i, f12i, f32i, f23i, f43i, f34i, f14i,
+                     kf1i, s12i, kf2i, s23i, kf3i, s34i, kf4i, s41i) = out
+                    if is_magnitude_phase:
+                        f41r = polar_to_real_imag(f41r, f41i)
+                        kf1 = polar_to_real_imag(kf1r, kf1i)
+                        f21r = polar_to_real_imag(f21r, f21i)
+                        kf2 = polar_to_real_imag(kf2r, kf2i)
+                        f12r = polar_to_real_imag(f12r, f12i)
+                        kf3 = polar_to_real_imag(kf3r, kf3i)
+                        f23r = polar_to_real_imag(f23r, f23i)
+                        kf4 = polar_to_real_imag(kf4r, kf4i)
+                        f32r = polar_to_real_imag(f32r, f32i)
+                        s12 = polar_to_real_imag(s12r, s12i)
+                        f43r = polar_to_real_imag(f43r, f43i)
+                        s23 = polar_to_real_imag(s23r, s23i)
+                        f34r = polar_to_real_imag(f34r, f34i)
+                        s34 = polar_to_real_imag(s34r, s34i)
+                        f14r = polar_to_real_imag(f14r, f14i)
+                        s41 = polar_to_real_imag(s41r, s41i)
+                    else:
+                        f41 = complex(f41r, f41i)
+                        kf1 = complex(kf1r, kf1i)
+                        f21 = complex(f21r, f21i)
+                        kf2 = complex(kf2r, kf2i)
+                        f12 = complex(f12r, f12i)
+                        kf3 = complex(kf3r, kf3i)
+                        f23 = complex(f23r, f23i)
+                        kf4 = complex(kf4r, kf4i)
+                        f32 = complex(f32r, f32i)
+                        s12 = complex(s12r, s12i)
+                        f43 = complex(f43r, f43i)
+                        s23 = complex(s23r, s23i)
+                        f34 = complex(f34r, f34i)
+                        s34 = complex(s34r, s34i)
+                        f14 = complex(f14r, f14i)
+                        s41 = complex(s41r, s41i)
+
+                    eid = (eid_device - self.device_code) // 10
+                    #print "eType=%s" % (eType)
+
+                    data_in = [eid, f41, f21, f12, f32, f23, f43, f34, f14,
+                                    kf1, s12, kf2, s23, kf3, s34, kf4, s41]
+                    #print "%s" %(self.get_element_type(self.element_type)), data_in
+                    #eid = self.obj.add_new_eid(out)
+                    self.obj.add(dt, data_in)
             else:
                 raise NotImplementedError(self.num_wide)
             return
@@ -1009,6 +1066,59 @@ class OEF(OP2Common):
                     #eid = self.obj.add_new_eid(out)
                     self.obj.add(dt, data_in)
                     n += ntotal
+            elif self.num_wide == 27:
+                self.create_transient_object(self.bendForces, ComplexBendForce)
+                s = Struct(b'ii25f')
+
+                ntotal = 108  # 27*4
+                nelements = len(data) // ntotal
+                for i in xrange(nelements):
+                    edata = data[n:n+108]
+                    n += ntotal
+
+                    out = s.unpack(edata)
+                    (eid_device, nidA,
+                     bm1Ar, bm2Ar, ts1Ar, ts2Ar, afAr, trqAr,
+                     bm1Ai, bm2Ai, ts1Ai, ts2Ai, afAi, trqAi,
+                     nidB,
+                     bm1Br, bm2Br, ts1Br, ts2Br, afBr, trqBr,
+                     bm1Bi, bm2Bi, ts1Bi, ts2Bi, afBi, trqBi) = out
+                    eid = (eid_device - self.device_code) // 10
+                    #print "eType=%s" % (eType)
+
+                    if is_magnitude_phase:
+                        bm1A = polar_to_real_imag(bm1Ar, bm1Ai)
+                        bm1B = polar_to_real_imag(bm1Br, bm1Bi)
+                        bm2A = polar_to_real_imag(bm2Ar, bm2Ai)
+                        bm2B = polar_to_real_imag(bm2Br, bm2Bi)
+                        ts1A = polar_to_real_imag(ts1Ar, ts1Ai)
+                        ts1B = polar_to_real_imag(ts1Br, ts1Bi)
+                        ts2A = polar_to_real_imag(ts2Ar, ts2Ai)
+                        ts2B = polar_to_real_imag(ts2Br, ts2Bi)
+                        afA = polar_to_real_imag(afAr, afAi)
+                        afB = polar_to_real_imag(afBr, afBi)
+                        trqA = polar_to_real_imag(trqAr, trqAi)
+                        trqB = polar_to_real_imag(trqBr, trqBi)
+                    else:
+                        bm1A = complex(bm1Ar, bm1Ai)
+                        bm1B = complex(bm1Br, bm1Bi)
+                        bm2A = complex(bm2Ar, bm2Ai)
+                        bm2B = complex(bm2Br, bm2Bi)
+                        ts1A = complex(ts1Ar, ts1Ai)
+                        ts1B = complex(ts1Br, ts1Bi)
+                        ts2A = complex(ts2Ar, ts2Ai)
+                        ts2B = complex(ts2Br, ts2Bi)
+                        afA = complex(afAr, afAi)
+                        afB = complex(afBr, afBi)
+                        trqA = complex(trqAr, trqAi)
+                        trqB = complex(trqBr, trqBi)
+
+                    dataIn = [eid, nidA,
+                              bm1A, bm2A, ts1A, ts2A, afA, trqA,
+                              nidB,
+                              bm1B, bm2B, ts1B, ts2B, afB, trqB]
+                    #print "%s" %(self.get_element_type(self.element_type)), dataIn
+                    self.obj.add(dt, dataIn)
             else:
                 raise NotImplementedError(self.num_wide)
             return

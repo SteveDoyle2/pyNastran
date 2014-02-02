@@ -156,11 +156,11 @@ class RealCBeamForce(scalarObject):  # 2-CBEAM
         self.dt = dt
         if is_sort1:
             if dt is not None:
-                self.addNewElement = self.addNewElementSort1
+                self.add_new_element = self.addNewElementSort1
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.addNewElement = self.addNewElementSort2
+            self.add_new_element = self.addNewElementSort2
             self.add = self.add_sort2
 
     def get_stats(self):
@@ -211,7 +211,7 @@ class RealCBeamForce(scalarObject):  # 2-CBEAM
                 self.warpingTorque[eid] = {sd: wtrq}
             print('nodes', self.nodes)
 
-    def addNewElement(self, dt, data):
+    def add_new_element(self, dt, data):
         [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
         #print "CBEAM addnew",data
         #self.eType[eid] = eType
@@ -970,11 +970,11 @@ class RealPlate2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.dt = dt
         if is_sort1:
             if dt is not None:
-                self.addNewElement = self.addNewElementSort1
+                self.add_new_element = self.addNewElementSort1
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.addNewElement = self.addNewElementSort2
+            self.add_new_element = self.addNewElementSort2
             self.add = self.add_sort2
 
     def get_stats(self):
@@ -1006,7 +1006,7 @@ class RealPlate2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.tx[dt] = {}
         self.ty[dt] = {}
 
-    def addNewElement(self, eid, dt, data):
+    def add_new_element(self, eid, dt, data):
         #print "eid = ",eid
         [term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
 

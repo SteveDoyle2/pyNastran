@@ -160,7 +160,7 @@ class RealForces(object):
                 #print "%s        " %(self.get_element_type(self.element_type)),dataIn
                 #eid = self.obj.add_new_eid(out)
                 if i == 0:  # isNewElement:
-                    self.obj.addNewElement(dt, dataIn)
+                    self.obj.add_new_element(dt, dataIn)
                     #print
                 elif sd > 0.:
                     self.obj.add(dt, dataIn)
@@ -333,7 +333,7 @@ class RealForces(object):
             eid2 = extract(eid, dt)
             dataIn = [term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
-            self.obj.addNewElement(eid2, dt, dataIn)
+            self.obj.add_new_element(eid2, dt, dataIn)
             n += 44
             for i in xrange(nnodes):
                 edata = self.data[n:n+36]
@@ -464,7 +464,7 @@ class RealForces(object):
         (format1, extract) = self.getOEF_FormatStart()
         format1 += '6f'
         format1 = bytes(format1)
-        
+
         n = 0
         ntotal = 28 # 7*4
         nelements = len(self.data) // ntotal

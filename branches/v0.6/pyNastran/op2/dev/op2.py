@@ -11,6 +11,14 @@ from numpy import array
 from pyNastran.f06.f06 import FatalError
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 
+from pyNastran.op2.dev.geom1 import GEOM1
+from pyNastran.op2.dev.geom2 import GEOM2
+from pyNastran.op2.dev.geom3 import GEOM3
+from pyNastran.op2.dev.geom4 import GEOM4
+
+from pyNastran.op2.dev.ept import EPT
+from pyNastran.op2.dev.mpt import MPT
+
 from pyNastran.op2.dev.oef import OEF
 from pyNastran.op2.dev.oes import OES
 from pyNastran.op2.dev.ogs import OGS
@@ -26,7 +34,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.utils import is_binary
 
 
-class OP2(BDF,
+class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
           OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
     """
     Defines an interface for the Nastran OP2 file.
@@ -139,13 +147,21 @@ class OP2(BDF,
         """
         self.tables_to_read = table_names
 
-    def __init__(self, op2_filename, make_geom=False, debug=False, log=None):
+    def __init__(self, op2_filename, make_geom=False, save_skipped_cards=False, debug=False, log=None):
         if op2_filename:
             self.op2_filename = op2_filename
         self.make_geom = make_geom
 
         #self.tables_to_read = []
         BDF.__init__(self, debug=debug, log=log)
+
+        GEOM1.__init__(self)
+        GEOM2.__init__(self)
+        GEOM3.__init__(self)
+        GEOM4.__init__(self)
+
+        EPT.__init__(self)
+        MPT.__init__(self)
 
         OEF.__init__(self)
         OES.__init__(self)
@@ -210,6 +226,7 @@ class OP2(BDF,
             'OUG1'   : [self._read_oug1_3, self._read_oug1_4],
             'OUGV1'  : [self._read_oug1_3, self._read_oug1_4],
             'BOUGV1' : [self._read_oug1_3, self._read_oug1_4],
+
             'OUPV1'  : [self._read_oug1_3, self._read_oug1_4],
 
             #=======================
@@ -224,7 +241,76 @@ class OP2(BDF,
             #=======================
             # OEE
             #'ONRGY1' : [self._read_oee1_3, self._read_oee1_4],
+
+            # eigenvalues
+            'BLAMA': [self._read_complex_eigenvalue_3, self._read_complex_eigenvalue_4],
+            'LAMA': [self._read_real_eigenvalue_3, self._read_real_eigenvalue_4],
+
+            # geometry
+            'GEOM1': [self._not_available, self._read_geom1_4],
+            'GEOM2': [self._not_available, self._read_geom2_4],
+            'GEOM3': [self._not_available, self._read_geom3_4],
+            'GEOM4': [self._not_available, self._read_geom4_4],
+
+            'EPT' : [self._not_available, self._read_ept_4],
+            'EPTS': [self._not_available, self._read_ept_4],
+
+            'MPT' : [self._not_available, self._read_mpt_4],
+            'MPTS': [self._not_available, self._read_mpt_4],
         }
+
+    def _not_available(self, data):
+        raise RuntimeError('this should never be called...')
+
+    def _read_complex_eigenvalue_3(self, data):
+        self.show_data(100)
+        aaa
+
+    def _read_complex_eigenvalue_4(self, data):
+        self.show_data(100)
+        bbb
+
+    def _read_real_eigenvalue_3(self, data):
+        self.show_data(100)
+        ccc
+
+    def _read_real_eigenvalue_4(self, data):
+        self.show_data(100)
+        ddd
+
+    def _read_geom1_4(self, data):
+        self._read_geom_4(self._geom1_map, data)
+
+    def _read_geom2_4(self, data):
+        self._read_geom_4(self._geom2_map, data)
+
+    def _read_geom3_4(self, data):
+        self._read_geom_4(self._geom3_map, data)
+
+    def _read_geom4_4(self, data):
+        self._read_geom_4(self._geom4_map, data)
+
+    def _read_ept_4(self, data):
+        self._read_geom_4(self._ept_map, data)
+    def _read_mpt_4(self, data):
+        self._read_geom_4(self._mpt_map, data)
+
+
+    def _read_geom_4(self, mapper, data):
+        if not self.make_geom:
+            return
+        n = 0
+        keys = unpack('3i', data[n:n+12])
+        n += 12
+        if len(data) == 12:
+            pass
+        elif keys in mapper:
+            print "found keys=%s" % str(keys)
+            n = mapper[keys](data, n)  # gets all the grid/mat cards
+        else:
+            raise NotImplementedError('keys=%s not found' % str(keys))
+        #assert n == len(data), 'n=%s len(data)=%s' % (n, len(data))
+        #self.show_data(data[n:])
 
     def read_op2(self, op2_filename=None):
         """
@@ -243,8 +329,8 @@ class OP2(BDF,
         self.table_name = None
         if not is_binary(self.op2_filename):
             if os.path.getsize(self.op2_filename) == 0:
-                raise RuntimeError('op2_filename=%r is empty.' % self.op2_filename)
-            raise RuntimeError('op2_filename=%r is not a binary OP2.' % self.op2_filename)
+                raise IOError('op2_filename=%r is empty.' % self.op2_filename)
+            raise IOError('op2_filename=%r is not a binary OP2.' % self.op2_filename)
         self.f = open(self.op2_filename, 'rb')
         try:
             markers = self.get_nmarkers(1, rewind=True)
@@ -329,16 +415,22 @@ class OP2(BDF,
                                    'OGPWG',
 
                                    # other
-                                   'CONTACT', 'VIEWTB', 'OMM2',
-                                   'KDICT',
+                                   'CONTACT', 'VIEWTB',
+                                   'KDICT', 'MONITOR',
                                   ]:
                     self._read_geom_table()  # DIT (agard)
+                elif table_name in ['OMM2', ]:
+                    self._read_omm2()
                 elif table_name in ['DIT']:  # tables
                     self._read_dit()
                 elif table_name in ['KELM']:
                     self._read_kelm()
                 elif table_name in ['PCOMPTS']: # blade
                     self._read_pcompts()
+                elif table_name == 'FOL':
+                    self._read_fol()
+                elif table_name in ['SDF',  'PMRF']:  #, 'PERF'
+                    self._read_sdf()
                 elif table_name in [
                                     # stress
                                     'OES1X1', 'OES1', 'OES1X', 'OES1C', 'OESCP',
@@ -377,7 +469,7 @@ class OP2(BDF,
                                     'OSTRPSD2', 'OSTRCRM2', 'OSTRRMS2', 'OSTRATO2', 'OSTRNO2',
                                     'OCRUG',
                                     'OCRPG',
-                                    'STDISP', 'FOL',
+                                    'STDISP',
                                     ]:
                     self._read_results_table()
                 else:
@@ -634,6 +726,44 @@ class OP2(BDF,
         data = self._skip_record()
         self._skip_subtables()
 
+    def _read_omm2(self):
+        self.table_name = self.read_table_name(rewind=False)
+        self.read_markers([-1])
+        data = self._read_record()
+
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        if len(data) == 28:
+            subtable_name, month, day, year, zero, one = unpack(b'8s5i', data)
+            if self.debug:
+                self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (subtable_name, month, day, year, zero, one))
+                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+            self._print_month(month, day, year, zero, one)
+        else:
+            raise NotImplementedError(self.show_data(data))
+        self._read_subtables()
+
+    def _read_fol(self):
+        self.table_name = self.read_table_name(rewind=False)
+        self.read_markers([-1])
+        data = self._read_record()
+
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        if len(data) == 12:
+            subtable_name, double = unpack(b'8sf', data)
+            if self.debug:
+                self.binary_debug.write('  recordi = [%r, %f]\n'  % (subtable_name, double))
+                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+        else:
+            strings, ints, floats = self.show_data(data)
+            msg = 'len(data) = %i\n' % len(data)
+            msg += 'strings  = %r\n' % strings
+            msg += 'ints     = %r\n' % str(ints)
+            msg += 'floats   = %r' % str(floats)
+            raise NotImplementedError(msg)
+        self._read_subtables()
+
     def _read_geom_table(self):
         """
         Reads a geometry table
@@ -647,8 +777,47 @@ class OP2(BDF,
         if len(data) == 8:
             table_name, = unpack(b'8s', data)
         else:
-            raise NotImplementedError(self.show_data(data))
+            strings, ints, floats = self.show_data(data)
+            msg = 'len(data) = %i\n' % len(data)
+            msg += 'strings  = %r\n' % strings
+            msg += 'ints     = %r\n' % str(ints)
+            msg += 'floats   = %r' % str(floats)
+            raise NotImplementedError(msg)
         self._read_subtables()
+
+    def _read_sdf(self):
+        self.table_name = self.read_table_name(rewind=False)
+        self.read_markers([-1])
+        data = self._read_record()
+
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        if len(data) == 16:
+            subtable_name, dummyA, dummyB = unpack(b'8sii', data)
+            if self.debug:
+                self.binary_debug.write('  recordi = [%r, %i, %i]\n'  % (subtable_name, dummyA, dummyB))
+                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+                assert dummyA == 170, dummyA
+                assert dummyB == 170, dummyB
+        else:
+            strings, ints, floats = self.show_data(data)
+            msg = 'len(data) = %i\n' % len(data)
+            msg += 'strings  = %r\n' % strings
+            msg += 'ints     = %r\n' % str(ints)
+            msg += 'floats   = %r' % str(floats)
+            raise NotImplementedError(msg)
+
+        self.read_markers([-3, 1, 1])
+
+        markers0 = self.get_nmarkers(1, rewind=False)
+        record = self.read_block()
+
+        #data = self._read_record()
+        self.read_markers([-4, 1, 0, 0])
+        self.show(100)
+
+        #sys.exit()
+        #self._read_subtables()
 
     def _read_results_table(self):
         """
@@ -674,7 +843,12 @@ class OP2(BDF,
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
             self._print_month(month, day, year, zero, one)
         else:
-            raise NotImplementedError(self.show_data(data))
+            strings, ints, floats = self.show_data(data)
+            msg = 'len(data) = %i\n' % len(data)
+            msg += 'strings  = %r\n' % strings
+            msg += 'ints     = %r\n' % str(ints)
+            msg += 'floats   = %r' % str(floats)
+            raise NotImplementedError(msg)
         self._read_subtables()
 
     def _print_month(self, month, day, year, zero, one):
