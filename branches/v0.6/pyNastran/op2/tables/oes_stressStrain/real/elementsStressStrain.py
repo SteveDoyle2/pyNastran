@@ -321,8 +321,8 @@ class RealElementsStressStrain(object):
             out = unpack(format1, self.data[ibase:ibase+16])
             if self.make_op2_debug:
                 self.op2_debug.write('%s-%sA - %s\n' % (element_type, self.element_type, str(out)))
-            (eid, cid, abcd, nNodes) = out
-            eid2 = extract(eid, dt)
+            (eid_device, cid, abcd, nNodes) = out
+            eid = extract(eid_device, dt)
             #print "abcd = %r" % abcd
             #print "eid=%s cid=%s nNodes=%s nNodesExpected=%s" % (eid,cid,nNodes,nNodesExpected)
 
@@ -355,9 +355,9 @@ class RealElementsStressStrain(object):
                 bCos = []
                 cCos = []
                 if nodeID == 0:
-                    self.obj.add_new_eid(element_type, cid, dt, eid2, grid, sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
+                    self.obj.add_new_eid(element_type+str(nNodes), cid, dt, eid, grid, sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
                 else:
-                    self.obj.add(dt, eid2, grid, sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
+                    self.obj.add(dt, eid, grid, sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
                 ibase += 84
         n = nelements * ntotal
         assert n == ibase, 'n=%s ibase=%s' % (n, ibase)

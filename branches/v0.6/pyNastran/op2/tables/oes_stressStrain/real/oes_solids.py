@@ -354,56 +354,102 @@ class SolidStressObject(StressObject):
                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (vonMises)]
 
         #nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
-        tetraEids = []
-        hexaEids = []
-        pentaEids = []
+        tetra_eids = []
+        hexa_eids = []
+        penta_eids = []
+
+        tetra10_eids = []
+        hexa20_eids = []
+        penta15_eids = []
         for eid, eType in sorted(self.eType.iteritems()):
-            if eType in ['CTETRA', 'TETRA']:
-                tetraEids.append(eid)
-            elif eType in ['CPENTA', 'PENTA']:
-                pentaEids.append(eid)
-            elif eType in ['CHEXA', 'HEXA']:
-                hexaEids.append(eid)
+            if eType in ['CTETRA4']:
+                tetra_eids.append(eid)
+            elif eType in ['CTETRA10']:
+                tetra10_eids.append(eid)
+
+            elif eType in ['CPENTA6']:
+                penta_eids.append(eid)
+            elif eType in ['CPENTA15']:
+                penta_eids.append(eid)
+
+            elif eType in ['CHEXA8']:
+                hexa_eids.append(eid)
+            elif eType in ['CHEXA20']:
+                hexa20_eids.append(eid)
             else:
-                raise NotImplementedError('eType=|%r|' % (eType))
-        return (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids, pentaEids)
+                raise NotImplementedError('eType=%r' % eType)
+
+        return (tetraMsg, pentaMsg, hexaMsg,
+                tetra_eids, hexa_eids, penta_eids,
+                tetra10_eids, hexa20_eids, penta15_eids)
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         assert f is not None
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
 
-        (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids,
-            pentaEids) = self.getF06_Header()
+        (tetraMsg, pentaMsg, hexaMsg,
+         tetra_eids, hexa_eids, penta_eids,
+         tetra10_eids, hexa20_eids, penta15_eids) = self.getF06_Header()
         #nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
-        if tetraEids:
-            self.writeElement('CTETRA', 4, tetraEids, header, tetraMsg, f)
+        if tetra_eids:
+            self.writeElement('CTETRA', 4, tetra_eids, header, tetraMsg, f)
             f.write(pageStamp % pageNum)
             pageNum += 1
-        if hexaEids:
-            self.writeElement('CHEXA',  8,  hexaEids, header,  hexaMsg, f)
+        if tetra10_eids:
+            self.writeElement('CTETRA', 10, tetra10_eids, header, tetraMsg, f)
             f.write(pageStamp % pageNum)
             pageNum += 1
-        if pentaEids:
-            self.writeElement('CPENTA', 6, pentaEids, header, pentaMsg, f)
+
+        if hexa_eids:
+            self.writeElement('CHEXA', 8,  hexa_eids,  header,  hexaMsg, f)
+            f.write(pageStamp % pageNum)
+            pageNum += 1
+        if hexa20_eids:
+            self.writeElement('CHEXA', 20,  hexa20_eids,  header,  hexaMsg, f)
+            f.write(pageStamp % pageNum)
+            pageNum += 1
+
+        if penta_eids:
+            self.writeElement('CPENTA', 6, penta_eids, header, pentaMsg, f)
+            f.write(pageStamp % pageNum)
+            pageNum += 1
+        if penta15_eids:
+            self.writeElement('CPENTA', 15, penta15_eids, header, pentaMsg, f)
             f.write(pageStamp % pageNum)
             pageNum += 1
         return pageNum - 1
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
-        (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids, pentaEids) = self.getF06_Header()
+        (tetraMsg, pentaMsg, hexaMsg,
+         tetra_eids, hexa_eids, penta_eids,
+         tetra10_eids, hexa20_eids, penta15_eids) = self.getF06_Header()
         dts = self.oxx.keys()
         for dt in dts:
-            if tetraEids:
-                self.writeElementTransient('CTETRA', 4, tetraEids, dt, header, tetraMsg, f)
+            if tetra_eids:
+                self.writeElement('CTETRA', 4, tetra_eids, header, tetraMsg, f)
                 f.write(pageStamp % pageNum)
                 pageNum += 1
-            if hexaEids:
-                self.writeElementTransient('CHEXA',  8,  hexaEids, dt, header,  hexaMsg, f)
+            if tetra10_eids:
+                self.writeElement('CTETRA', 10, tetra10_eids, dt, header, tetraMsg, f)
                 f.write(pageStamp % pageNum)
                 pageNum += 1
-            if pentaEids:
-                self.writeElementTransient('CPENTA', 6, pentaEids, dt, header, pentaMsg, f)
+
+            if hexa_eids:
+                self.writeElement('CHEXA', 8,  hexa_eids, dt, header,  hexaMsg, f)
+                f.write(pageStamp % pageNum)
+                pageNum += 1
+            if hexa20_eids:
+                self.writeElement('CHEXA', 20,  hexa20_eids, dt, header,  hexaMsg, f)
+                f.write(pageStamp % pageNum)
+                pageNum += 1
+
+            if penta_eids:
+                self.writeElement('CPENTA', 6, penta_eids, dt, header, pentaMsg, f)
+                f.write(pageStamp % pageNum)
+                pageNum += 1
+            if penta15_eids:
+                self.writeElement('CPENTA', 15, penta15_eids, dt, header, pentaMsg, f)
                 f.write(pageStamp % pageNum)
                 pageNum += 1
         return pageNum - 1
@@ -449,8 +495,6 @@ class SolidStressObject(StressObject):
         msg = header + tetraMsg
         cen = 'CENTER'
         for eid in eids:
-            #eType = self.eType[eid]
-
             k = self.oxx[dt][eid].keys()
             k.remove(cen)
             k.sort()
@@ -839,20 +883,33 @@ class SolidStrainObject(StrainObject):
                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (vonMises)]
 
         #nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
-        tetraEids = []
-        hexaEids = []
-        pentaEids = []
-        for eid, eType in sorted(self.eType.iteritems()):
-            if eType in ['CTETRA', 'TETRA']:
-                tetraEids.append(eid)
-            elif eType in ['CPENTA', 'PENTA']:
-                pentaEids.append(eid)
-            elif eType in ['CHEXA', 'HEXA']:
-                hexaEids.append(eid)
-            else:
-                raise NotImplementedError('eType=|%r|' % eType)
+        tetra_eids = []
+        hexa_eids = []
+        penta_eids = []
 
-        return (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids, pentaEids)
+        tetra10_eids = []
+        hexa20_eids = []
+        penta15_eids = []
+        for eid, eType in sorted(self.eType.iteritems()):
+            if eType in ['CTETRA4']:
+                tetra_eids.append(eid)
+            elif eType in ['CTETRA10']:
+                tetra10_eids.append(eid)
+
+            elif eType in ['CPENTA6']:
+                penta_eids.append(eid)
+            elif eType in ['CPENTA15']:
+                penta_eids.append(eid)
+
+            elif eType in ['CHEXA8']:
+                hexa_eids.append(eid)
+            elif eType in ['CHEXA20']:
+                hexa20_eids.append(eid)
+            else:
+                raise NotImplementedError('eType=%r' % eType)
+
+        return (tetraMsg, pentaMsg, hexaMsg, tetra_eids, hexa_eids, penta_eids,
+                tetra10_eids, hexa20_eids, penta15_eids)
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         assert f is not None
@@ -860,39 +917,70 @@ class SolidStrainObject(StrainObject):
             return self._write_f06_transient(header, pageStamp, pageNum, f)
         msg = []
 
-        (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids,
-            pentaEids) = self.getF06_Header()
+        (tetraMsg, pentaMsg, hexaMsg,
+         tetra_eids, hexa_eids, penta_eids,
+         tetra10_eids, hexa20_eids, penta15_eids) = self.getF06_Header()
         #nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
-        if tetraEids:
-            self.writeElement('CTETRA', 4, tetraEids, header, tetraMsg, f)
+        if tetra_eids:
+            self.writeElement('CTETRA', 4, tetra_eids, header, tetraMsg, f)
             f.write(pageStamp % pageNum)
             pageNum += 1
-        if hexaEids:
-            self.writeElement('CHEXA', 8,  hexaEids,  header,  hexaMsg, f)
+        if tetra10_eids:
+            self.writeElement('CTETRA', 10, tetra10_eids, header, tetraMsg, f)
             f.write(pageStamp % pageNum)
             pageNum += 1
-        if pentaEids:
-            self.writeElement('CPENTA', 6, pentaEids, header, pentaMsg, f)
+
+        if hexa_eids:
+            self.writeElement('CHEXA', 8,  hexa_eids,  header,  hexaMsg, f)
             f.write(pageStamp % pageNum)
             pageNum += 1
+        if hexa20_eids:
+            self.writeElement('CHEXA', 20,  hexa20_eids, header,  hexaMsg, f)
+            f.write(pageStamp % pageNum)
+            pageNum += 1
+
+        if penta_eids:
+            self.writeElement('CPENTA', 6, penta_eids, header, pentaMsg, f)
+            f.write(pageStamp % pageNum)
+            pageNum += 1
+        if penta15_eids:
+            self.writeElement('CPENTA', 15, penta15_eids, header, pentaMsg, f)
+            f.write(pageStamp % pageNum)
+            pageNum += 1
+
         return pageNum - 1
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         msg = []
-        (tetraMsg, pentaMsg, hexaMsg, tetraEids, hexaEids,
-            pentaEids) = self.getF06_Header()
+        (tetraMsg, pentaMsg, hexaMsg,
+         tetra_eids, hexa_eids, penta_eids,
+         tetra10_eids, hexa20_eids, penta15_eids) = self.getF06_Header()
         dts = self.exx.keys()
         for dt in dts:
-            if tetraEids:
-                self.writeElementTransient('CTETRA', 4, tetraEids, dt, header, tetraMsg, f)
+            if tetra_eids:
+                self.writeElement('CTETRA', 4, tetra_eids, header, tetraMsg, f)
                 f.write(pageStamp % pageNum)
                 pageNum += 1
-            if hexaEids:
-                self.writeElementTransient('CHEXA',  8,  hexaEids, dt, header,  hexaMsg, f)
+            if tetra10_eids:
+                self.writeElement('CTETRA', 10, tetra10_eids, dt, header, tetraMsg, f)
                 f.write(pageStamp % pageNum)
                 pageNum += 1
-            if pentaEids:
-                self.writeElementTransient('CPENTA', 6, pentaEids, dt, header, pentaMsg, f)
+
+            if hexa_eids:
+                self.writeElement('CHEXA', 8,  hexa_eids, dt, header,  hexaMsg, f)
+                f.write(pageStamp % pageNum)
+                pageNum += 1
+            if hexa20_eids:
+                self.writeElement('CHEXA', 20,  hexa20_eids, dt, header,  hexaMsg, f)
+                f.write(pageStamp % pageNum)
+                pageNum += 1
+
+            if penta_eids:
+                self.writeElement('CPENTA', 6, penta_eids, dt, header, pentaMsg, f)
+                f.write(pageStamp % pageNum)
+                pageNum += 1
+            if penta15_eids:
+                self.writeElement('CPENTA', 15, penta15_eids, dt, header, pentaMsg, f)
                 f.write(pageStamp % pageNum)
                 pageNum += 1
 

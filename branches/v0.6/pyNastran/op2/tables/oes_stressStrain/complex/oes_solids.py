@@ -10,7 +10,6 @@ from pyNastran.f06.f06_formatting import writeImagFloats13E
 class ComplexSolidStressObject(StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
-        raise RuntimeError('asdfsadf')
 
         self.eType = {}
         self.code = [self.format_code, self.sort_code, self.s_code]
@@ -139,56 +138,115 @@ class ComplexSolidStressObject(StressObject):
         (Lambda, v) = eig(A)  # we can't use a hermitian matrix
         return v
 
-    def getF06_Header(self):
-        raise NotImplementedError()
-
-    def write_f06(self, header, page_stamp, pageNum=1, f=None, is_mag_phase=False):
-        """
-        Not perfect, but it's not bad...
-        """
+    def getF06_Header(self, is_mag_phase):
         if is_mag_phase:
-            stamp = [
-                '                 C O M P L E X     S T R A I N S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )',
+            tetra_msg = [
+                '                 C O M P L E X   S T R E S S E S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )',
                 '                                                          (MAGNITUDE/PHASE)',
-                '0                   CORNER      --------------------------CENTER AND CORNER POINT  STRAINS---------------------------',
+                '0                   CORNER      --------------------------CENTER AND CORNER POINT STRESSES---------------------------',
                 '     ELEMENT-ID    GRID-ID      NORMAL-X       NORMAL-Y       NORMAL-Z         SHEAR-XY       SHEAR-YZ       SHEAR-ZX',
+                '',
             ]
         else:
-            stamp = [
-                '                 C O M P L E X     S T R A I N S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )',
+            tetra_msg = [
+                '                 C O M P L E X   S T R E S S E S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )',
                 '                                                          (REAL/IMAGINARY)',
-                '0                   CORNER      --------------------------CENTER AND CORNER POINT  STRAINS---------------------------',
+                '0                   CORNER      --------------------------CENTER AND CORNER POINT STRESSES---------------------------',
                 '     ELEMENT-ID    GRID-ID      NORMAL-X       NORMAL-Y       NORMAL-Z         SHEAR-XY       SHEAR-YZ       SHEAR-ZX',
+                '',
             ]
-        for dt, oxx_dt in sorted(self.oxx.iteritems()):
-            f.write('\n'.join(stamp))
-            f.write('FREQ = %r\n' % dt)
-            for elem, oxx_elem in sorted(oxx_dt.iteritems()):
-                node_ids = oxx_elem.keys()
-                node_ids.remove('CENTER')
-                f.write('%8s\n' % elem)
-                for inode in ['CENTER'] + sorted(node_ids):
-                    # cid
-                    cid = 1
-                    oxx = self.oxx[dt][elem][inode]
-                    oyy = self.oyy[dt][elem][inode]
-                    ozz = self.ozz[dt][elem][inode]
-                    txy = self.txy[dt][elem][inode]
-                    tyz = self.tyz[dt][elem][inode]
-                    txz = self.txz[dt][elem][inode]
-                    ([oxxr, oyyr, ozzr, txyr, tyzr, txzr,
-                      oxxi, oyyi, ozzi, txyi, tyzi, txzi,], isAllZeros) = writeImagFloats13E([oxx, oyy, ozz,
-                                                                                              txy, tyz, txz], is_mag_phase)
+        penta_msg = tetra_msg
+        hexa_msg = tetra_msg
 
-                    if inode == 'CENTER':
-                        f.write('0   %8s %8s %8s %8s %8s %8s %8s %8s\n' % (inode, cid, oxxr, oyyr, ozzr, txyr, tyzr, txzr))
-                        f.write('    %8s %8s %8s %8s %8s %8s %8s %8s\n' % ('', '',     oxxi, oyyi, ozzi, txyi, tyzi, txzi))
-                    else:
-                        f.write('    %8s %8s %8s %8s %8s %8s %8s %8s\n' % (inode, cid, oxxr, oyyr, ozzr, txyr, tyzr, txzr))
-                        f.write('    %8s %8s %8s %8s %8s %8s %8s %8s\n' % ('', '',     oxxi, oyyi, ozzi, txyi, tyzi, txzi))
-            f.write(page_stamp % pageNum)
-            pageNum += 1
+        tetra_eids = []
+        hexa_eids = []
+        penta_eids = []
+
+        tetra10_eids = []
+        hexa20_eids = []
+        penta15_eids = []
+        for eid, eType in sorted(self.eType.iteritems()):
+            if eType in ['CTETRA4']:
+                tetra_eids.append(eid)
+            elif eType in ['CTETRA10']:
+                tetra10_eids.append(eid)
+
+            elif eType in ['CPENTA']:
+                penta_eids.append(eid)
+            elif eType in ['CPENTA15']:
+                penta_eids.append(eid)
+
+            elif eType in ['CHEXA8']:
+                hexa_eids.append(eid)
+            elif eType in ['CHEXA20']:
+                hexa20_eids.append(eid)
+
+            else:
+                raise NotImplementedError('eType=%r' % eType)
+        return (tetra_msg, hexa_msg, penta_msg,
+                tetra_eids, hexa_eids, penta_eids,
+                tetra10_eids, hexa20_eids, penta15_eids)
+
+    def write_f06(self, header, page_stamp, pageNum=1, f=None, is_mag_phase=False):
+        (tetra_msg, hexa_msg, penta_msg,
+         tetra_eids, hexa_eids, penta_eids,
+         tetra10_eids, hexa20_eids, penta15_eids) = self.getF06_Header(is_mag_phase)
+        dts = self.oxx.keys()
+        for dt in sorted(dts):
+            if tetra_eids:
+                self.write_element_transient('CTETRA', 4, tetra_eids, dt, header, tetra_msg, f, is_mag_phase)
+                f.write(page_stamp % pageNum)
+                pageNum += 1
+            if tetra10_eids:
+                self.write_element_transient('CTETRA', 10, tetra10_eids, dt, header, tetra_msg, f, is_mag_phase)
+                f.write(page_stamp % pageNum)
+                pageNum += 1
+
+            if hexa_eids:
+                self.write_element_transient('CHEXA',  8,  hexa_eids, dt, header, hexa_msg, f, is_mag_phase)
+                f.write(page_stamp % pageNum)
+                pageNum += 1
+            if hexa20_eids:
+                self.write_element_transient('CHEXA',  20,  hexa20_eids, dt, header, hexa_msg, f,is_mag_phase)
+                f.write(page_stamp % pageNum)
+                pageNum += 1
+
+            if penta_eids:
+                self.write_element_transient('CPENTA', 6, penta_eids, dt, header, penta_msg, f, is_mag_phase)
+                f.write(page_stamp % pageNum)
+                pageNum += 1
+            if penta15_eids:
+                self.write_element_transient('CPENTA', 15, penta15_eids, dt, header, penta_msg, f,is_mag_phase)
+                f.write(page_stamp % pageNum)
+                pageNum += 1
+
         return pageNum - 1
+
+    def write_element_transient(self, element_name, nnodes, eids, dt, header, msg, f, is_mag_phase):
+        dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
+        header[1] = dtLine
+        msg = header + msg
+
+        f.write('\n'.join(msg))
+        for eid in eids:
+            node_ids = self.oxx[dt][eid].keys()
+            node_ids.remove('CENTER')
+            cid = 10
+            f.write('0 %12i %11sGRID CS %2i GP\n' % (eid, 0, nnodes))
+            for inode in ['CENTER'] + sorted(node_ids):
+                # cid
+                oxx = self.oxx[dt][eid][inode]
+                oyy = self.oyy[dt][eid][inode]
+                ozz = self.ozz[dt][eid][inode]
+                txy = self.txy[dt][eid][inode]
+                tyz = self.tyz[dt][eid][inode]
+                txz = self.txz[dt][eid][inode]
+                ([oxxr, oyyr, ozzr, txyr, tyzr, txzr,
+                  oxxi, oyyi, ozzi, txyi, tyzi, txzi,], isAllZeros) = writeImagFloats13E([oxx, oyy, ozz,
+                                                                                          txy, tyz, txz], is_mag_phase)
+
+                f.write('0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % (inode, oxxr, oyyr, ozzr, txyr, tyzr, txzr))
+                f.write('    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('',    oxxi, oyyi, ozzi, txyi, tyzi, txzi))
 
 
 class ComplexSolidStrainObject(StrainObject):
@@ -319,5 +377,112 @@ class ComplexSolidStrainObject(StrainObject):
         (Lambda, v) = eig(A)  # we can't use a hermitian matrix
         return v
 
-    def getF06_Header(self):
-        raise NotImplementedError()
+    def getF06_Header(self, is_mag_phase):
+        if is_mag_phase:
+            tetra_msg = [
+                '                 C O M P L E X     S T R A I N S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )',
+                '                                                          (MAGNITUDE/PHASE)',
+                '0                   CORNER      --------------------------CENTER AND CORNER POINT  STRAINS---------------------------',
+                '     ELEMENT-ID    GRID-ID      NORMAL-X       NORMAL-Y       NORMAL-Z         SHEAR-XY       SHEAR-YZ       SHEAR-ZX',
+                '',
+            ]
+        else:
+            tetra_msg = [
+                '                 C O M P L E X     S T R A I N S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )',
+                '                                                          (REAL/IMAGINARY)',
+                '0                   CORNER      --------------------------CENTER AND CORNER POINT  STRAINS---------------------------',
+                '     ELEMENT-ID    GRID-ID      NORMAL-X       NORMAL-Y       NORMAL-Z         SHEAR-XY       SHEAR-YZ       SHEAR-ZX',
+                '',
+            ]
+        penta_msg = tetra_msg
+        hexa_msg = tetra_msg
+
+        tetra_eids = []
+        hexa_eids = []
+        penta_eids = []
+
+        tetra10_eids = []
+        hexa20_eids = []
+        penta15_eids = []
+        for eid, eType in sorted(self.eType.iteritems()):
+            if eType in ['CTETRA4']:
+                tetra_eids.append(eid)
+            elif eType in ['CTETRA10']:
+                tetra10_eids.append(eid)
+
+            elif eType in ['CPENTA']:
+                penta_eids.append(eid)
+            elif eType in ['CPENTA15']:
+                penta_eids.append(eid)
+
+            elif eType in ['CHEXA8']:
+                hexa_eids.append(eid)
+            elif eType in ['CHEXA20']:
+                hexa20_eids.append(eid)
+
+            else:
+                raise NotImplementedError('eType=%r' % eType)
+        return (tetra_msg, hexa_msg, penta_msg,
+                tetra_eids, hexa_eids, penta_eids,
+                tetra10_eids, hexa20_eids, penta15_eids)
+
+    def write_f06(self, header, page_stamp, pageNum=1, f=None, is_mag_phase=False):
+        (tetra_msg, hexa_msg, penta_msg,
+         tetra_eids, hexa_eids, penta_eids,
+         tetra10_eids, hexa20_eids, penta15_eids) = self.getF06_Header(is_mag_phase)
+        dts = self.exx.keys()
+        for dt in sorted(dts):
+            if tetra_eids:
+                self.write_element_transient('CTETRA', 4, tetra_eids, dt, header, tetra_msg, f, is_mag_phase)
+                f.write(page_stamp % pageNum)
+                pageNum += 1
+            if tetra10_eids:
+                self.write_element_transient('CTETRA', 10, tetra10_eids, dt, header, tetra_msg, f, is_mag_phase)
+                f.write(page_stamp % pageNum)
+                pageNum += 1
+
+            if hexa_eids:
+                self.write_element_transient('CHEXA',  8,  hexa_eids, dt, header, hexa_msg, f, is_mag_phase)
+                f.write(page_stamp % pageNum)
+                pageNum += 1
+            if hexa20_eids:
+                self.write_element_transient('CHEXA',  20,  hexa20_eids, dt, header, hexa_msg, f,is_mag_phase)
+                f.write(page_stamp % pageNum)
+                pageNum += 1
+
+            if penta_eids:
+                self.write_element_transient('CPENTA', 6, penta_eids, dt, header, penta_msg, f, is_mag_phase)
+                f.write(page_stamp % pageNum)
+                pageNum += 1
+            if penta15_eids:
+                self.write_element_transient('CPENTA', 15, penta15_eids, dt, header, penta_msg, f,is_mag_phase)
+                f.write(page_stamp % pageNum)
+                pageNum += 1
+
+        return pageNum - 1
+
+    def write_element_transient(self, element_name, nnodes, eids, dt, header, msg, f, is_mag_phase):
+        dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
+        header[1] = dtLine
+        msg = header + msg
+
+        f.write('\n'.join(msg))
+        for eid in eids:
+            node_ids = self.exx[dt][eid].keys()
+            node_ids.remove('CENTER')
+            cid = 10
+            f.write('0 %12i %11sGRID CS %2i GP\n' % (eid, 0, nnodes))
+            for inode in ['CENTER'] + sorted(node_ids):
+                # cid
+                oxx = self.exx[dt][eid][inode]
+                oyy = self.eyy[dt][eid][inode]
+                ozz = self.ezz[dt][eid][inode]
+                txy = self.exy[dt][eid][inode]
+                tyz = self.eyz[dt][eid][inode]
+                txz = self.exz[dt][eid][inode]
+                ([oxxr, oyyr, ozzr, txyr, tyzr, txzr,
+                  oxxi, oyyi, ozzi, txyi, tyzi, txzi,], isAllZeros) = writeImagFloats13E([oxx, oyy, ozz,
+                                                                                          txy, tyz, txz], is_mag_phase)
+
+                f.write('0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % (inode, oxxr, oyyr, ozzr, txyr, tyzr, txzr))
+                f.write('    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('',    oxxi, oyyi, ozzi, txyi, tyzi, txzi))

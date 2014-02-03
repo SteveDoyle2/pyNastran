@@ -465,7 +465,7 @@ class OES(OP2Common):
                 nnodes_expected = 5  # 1 centroid + 4 corner points
             elif self.element_type == 67:  # CHEXA
                 nnodes_expected = 9
-            elif self.element_type == 68:
+            elif self.element_type == 68:  # CPENTA
                 nnodes_expected = 7
             else:
                 raise NotImplementedError('sort1 Type=%s num=%s' % (self.element_name, self.element_type))
@@ -522,7 +522,7 @@ class OES(OP2Common):
                         bCos = [b1, b2, b3]
                         cCos = [c1, c2, c3]
                         if node_id == 0:
-                            self.obj.add_new_eid(self.element_name, cid, dt, eid, grid,
+                            self.obj.add_new_eid(self.element_name+str(nnodes), cid, dt, eid, grid,
                                                  sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
                                                  aCos, bCos, cCos, pressure, svm)
                         else:
@@ -551,7 +551,7 @@ class OES(OP2Common):
                         self.binary_debug.write('  eid=%i C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
                     assert eid > 0, eid
 
-                    self.obj.add_new_eid(self.element_name, dt, eid, cid, ctype, nodef)
+                    self.obj.add_new_eid(self.element_name+str(nodef), dt, eid, cid, ctype, nodef)
                     for inode in xrange(nnodes_expected):
                         edata = data[n:n+52]
                         n += 52

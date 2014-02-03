@@ -1137,8 +1137,10 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
 
 if __name__ == '__main__':
     import sys
-    o = OP2(sys.argv[1])
-    o.read_op2(sys.argv[1])
+    op2_filename = sys.argv[1]
 
-    f06OutName = 'debug.f06'
-    o.write_f06(f06OutName)
+    o = OP2(op2_filename)
+    o.read_op2(op2_filename)
+    (model, ext) = os.path.splitext(op2_filename)
+    f06_outname = model + '.test_op2.f06'
+    o.write_f06(f06_outname)
