@@ -495,7 +495,7 @@ class F06Writer(F06WriterDeprecated):
             page_stamp = self.make_stamp(self.Title, self.date)
             f06.write(page_stamp % self.pageNum)
             self.pageNum += 1
-            print(summary)
+            #print(summary)
 
     def write_f06(self, f06_outname, is_mag_phase=False,
                   delete_objects=True, end_flag=False):

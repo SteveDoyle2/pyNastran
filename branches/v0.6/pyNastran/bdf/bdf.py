@@ -135,6 +135,15 @@ class BDFDeprecated(object):
                       'disable_cards', DeprecationWarning, stacklevel=2)
         self.disable_cards(cards)
 
+    def card_stats(self, return_type='string'):
+        """
+        .. deprecated: will be replaced in version 0.7 with :func: `get_bdf_stats`
+        ..see:: get_bdf_stats
+        """
+        warnings.warn('card_stats has been deprecated; use '
+                      'get_bdf_stats', DeprecationWarning, stacklevel=2)
+        self.get_bdf_stats()  # consistent with get_op2_stats
+
 
 class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated):
     """
@@ -1558,7 +1567,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             return os.path.relpath(filename)
         return filename
 
-    def card_stats(self, return_type='string'):
+    def get_bdf_stats(self, return_type='string'):
         """
         Print statistics for the BDF
 

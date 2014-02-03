@@ -590,7 +590,7 @@ class FORCE(Force):
             self.mag = data[3]
             xyz = data[4:7]
 
-        assert len(xyz) == 3, 'xyz=%s' % (xyz)
+        assert len(xyz) == 3, 'xyz=%s' % str(xyz)
         self.xyz = array(xyz)
 
     def Cid(self):
@@ -802,8 +802,12 @@ class MOMENT(Moment):
                          double_or_blank(card, 7, 'X3', 0.0)])
             assert len(card) <= 8, 'len(MOMENT card) = %i' % len(card)
         else:
-            raise NotImplementedError(data)
-        assert len(xyz) == 3, 'xyz=%s' % xyz
+            self.sid = data[0]
+            self.node = data[1]
+            self.cid = data[2]
+            self.mag = data[3]
+            xyz = data[4:7]
+        assert len(xyz) == 3, 'xyz=%s' % str(xyz)
         self.xyz = xyz
 
     def Cid(self):
@@ -864,7 +868,7 @@ class MOMENT1(Moment):
             xyz = data[7:10]
             raise NotImplementedError('MOMENT1 is probably wrong')
 
-        #assert len(xyz) == 3, 'xyz=%s' % (xyz)
+        #assert len(xyz) == 3, 'xyz=%s' % str(xyz)
         #self.xyz = array(xyz)
         self.xyz = None
 
@@ -938,7 +942,7 @@ class MOMENT2(Moment):
             self.g4 = data[6]
             xyz = data[7:10]
             self.xyz = array(xyz)
-            assert len(xyz) == 3, 'xyz=%s' % xyz
+            assert len(xyz) == 3, 'xyz=%s' % str(xyz)
 
     def cross_reference(self, model):
         """
