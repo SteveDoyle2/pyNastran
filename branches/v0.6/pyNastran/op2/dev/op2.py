@@ -278,7 +278,7 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
         }
 
     def _not_available(self, data):
-        raise RuntimeError('this should never be called...')
+        raise RuntimeError('this should never be called...table_name=%r' % self.table_name)
 
     def _read_complex_eigenvalue_3(self, data):
         self.show_data(100)
@@ -295,6 +295,9 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
     def _read_real_eigenvalue_4(self, data):
         self.show_data(100)
         ddd
+
+    def readFake(self, data, n):
+        return n
 
     def _read_geom1_4(self, data):
         self._read_geom_4(self._geom1_map, data)
@@ -326,9 +329,9 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
             func = mapper[keys]
             if isinstance(func, list):
                 name, func = func
-                print "found keys=(%5s, %3s, %3s) name=%s" % (keys[0], keys[1], keys[2], name)
+                print "found keys=(%5s,%4s,%4s) name=%s" % (keys[0], keys[1], keys[2], name)
             else:
-                print "found keys=(%5s, %3s, %3s)" % (keys[0], keys[1], keys[2])
+                print "found keys=(%5s,%4s,%4s)" % (keys[0], keys[1], keys[2])
             n = func(data, n)  # gets all the grid/mat cards
         else:
             raise NotImplementedError('keys=%s not found' % str(keys))

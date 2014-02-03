@@ -1,4 +1,4 @@
-# pylint: disable=W0612,C0103,C0301,C0302,C0303,W0613,C0111,R0914
+# pylint: disable=W0612,C0103,C0301,C0302,C0303,W0613,C0111,R0914,C0326,R0201
 import StringIO
 from struct import unpack, Struct
 
@@ -24,66 +24,159 @@ class GEOM2(object):
         self.skippedCardsFile = StringIO.StringIO()
         self.card_count = {}
         self._geom2_map = {
-            (2408, 24, 180): ['CBAR', self.readCBAR],      # record 8
-            (4001, 40, 275): ['CBARAO', self.readCBARAO],  # record 9  - not done
-            (5408, 54, 261): ['CBEAM', self.readCBEAM],    # record 10
-            (11401, 114, 9016): ['CBEAMP', self.readCBEAMP],  # record 11 - not done
-            (4601, 46, 298): ['CBEND', self.readCBEND],    # record 12 - not done
-            (5608, 56, 218): ['CBUSH1D', self.readCBUSH1D],  # record 14 - not done
-            (2315, 23, 146): ['CCONE', self.readCCONE],   # record 15 - not done
-            (201, 2, 69): ['CDAMP1', self.readCDAMP1],    # record 16
-            (301, 3, 70): ['CDAMP2', self.readCDAMP2],    # record 17
-            (401, 4, 71): ['CDAMP3', self.readCDAMP3],    # record 18
-            (501, 5, 72): ['CDAMP4', self.readCDAMP4],    # record 19
-            (10608, 106, 404): ['CDAMPS', self.readCDAMP5],  # record 20
-            (601, 6, 73): ['CELAS1', self.readCELAS1],  # record 29
-            (701, 7, 74): ['CELAS2', self.readCELAS2],  # record 30
-            (801, 8, 75): ['CELAS3', self.readCELAS3],  # record 31
-            (901, 9, 76): ['CELAS4', self.readCELAS4],  # record 32
-            #(8515,85,209):    ['CFLUID1', self.readCFLUID2], # record 35 - not done
-            #(8615,86,210):    ['CFLUID2', self.readCFLUID3], # record 36 - not done
-            #(8715,87,211):    ['CFLUID3', self.readCFLUID4], # record 37 - not done
-            (1908, 19, 104): ['CGAP', self.readCGAP],    # record 39 - buggy
+            (2408,   24,  180): ['CBAR', self.readCBAR],       # record 8
+            (4001,   40,  275): ['CBARAO', self.readCBARAO],   # record 9  - not done
+            (5408,   54,  261): ['CBEAM', self.readCBEAM],     # record 10
+            (11401, 114, 9016): ['CBEAMP', self.readCBEAMP],# record 11 - not done
+            (4601,   46,  298): ['CBEND', self.readCBEND],     # record 12 - not done
+            (5608,   56,  218): ['CBUSH1D', self.readCBUSH1D], # record 14 - not done
+            (2315,   23,  146): ['CCONE', self.readCCONE],     # record 15 - not done
+            (201,     2,   69): ['CDAMP1', self.readCDAMP1],      # record 16
+            (301,     3,   70): ['CDAMP2', self.readCDAMP2],      # record 17
+            (401,     4,   71): ['CDAMP3', self.readCDAMP3],      # record 18
+            (501,     5,   72): ['CDAMP4', self.readCDAMP4],      # record 19
+            (10608, 106, 404): ['CDAMPS', self.readCDAMP5], # record 20
 
-            (10808, 108, 406): ['CHBDYG', self.readCHBDYG],   # record 43
-            (10908, 109, 407): ['CHBDYP', self.readCHBDYP],   # record 44 - not done
-            (7308, 73, 253): ['CHEXA', self.readCHEXA],    # record 45
-            (1001, 10, 65): ['CMASS1', self.readCMASS1],   # record 51
-            (1101, 11, 66): ['CMASS2', self.readCMASS2],   # record 52
-            (1201, 12, 67): ['CMASS3', self.readCMASS3],   # record 53
-            (1301, 13, 68): ['CMASS4', self.readCMASS4],   # record 54
-            (2508, 25, 0): ['CMFREE', self.readCMFREE],   # record 55 - not done
-            (1401, 14, 63): ['CONM1', self.readCONM1],    # record 56 - not done
-            (1501, 15, 64): ['CONM2', self.readCONM2],    # record 57
-            (1601, 16, 47): ['CONROD', self.readCONROD],   # record 58
+            (601, 6, 73): ['CELAS1', self.readCELAS1],      # record 29
+            (701, 7, 74): ['CELAS2', self.readCELAS2],      # record 30
+            (801, 8, 75): ['CELAS3', self.readCELAS3],      # record 31
+            (901, 9, 76): ['CELAS4', self.readCELAS4],      # record 32
+            # record 33
+            # record 34
+            # record 35
+            (8515, 85, 209): ['CFLUID2', self.readCFLUID2],   # record 35 - not done
+            (8615, 86, 210): ['CFLUID3', self.readCFLUID3],   # record 36 - not done
+            (8715, 87, 211): ['CFLUID4', self.readCFLUID4],   # record 37 - not done
+            (1908, 19, 104): ['CGAP', self.readCGAP],       # record 39 - buggy
+            # record 40
+            # record 41
+            # record 42
+            (10808, 108, 406): ['CHBDYG', self.readCHBDYG], # record 43
+            (10908, 109, 407): ['CHBDYP', self.readCHBDYP], # record 44 - not done
+            (7308,  73,  253): ['CHEXA', self.readCHEXA],     # record 45
+            (1001,  10,   65): ['CMASS1', self.readCMASS1],    # record 51
+            (1101,  11,   66): ['CMASS2', self.readCMASS2],    # record 52
+            (1201,  12,   67): ['CMASS3', self.readCMASS3],    # record 53
+            (1301,  13,   68): ['CMASS4', self.readCMASS4],    # record 54
+            (2508,  25,    0): ['CMFREE', self.readCMFREE],     # record 55 - not done
+            (1401,  14,   63): ['CONM1', self.readCONM1],      # record 56 - not done
+            (1501,  15,   64): ['CONM2', self.readCONM2],      # record 57
+            (1601,  16,   47): ['CONROD', self.readCONROD],    # record 58
             (12701, 127, 408): ['CONV', self.readCONV],     # record 59 - not tested
-            (8908, 89, 422): ['CONVM', self.readCONVM],    # record 60 - not tested
-            (4108, 41, 280): ['CPENTA', self.readCPENTA],   # record 62
-
-            (9108, 91, 507): ['CQUAD', self.readCQUAD],    # record 68 - not tested
-            (2958, 51, 177): ['CQUAD4', self.readCQUAD4],   # record 69 - maybe buggy on theta/Mcsid field
-            (13900, 139, 9989): ['CQUAD4', self.readCQUAD4],   # record 70 - maybe buggy on theta/Mcsid field
-            (4701, 47, 326): ['CQUAD8', self.readCQUAD8],   # record 71 - maybe buggy on theta/Mcsid field
-            (8009, 80, 367): ['CQUADR', self.readCQUADR],   # record 74 - not tested
-            (9008, 90, 508): ['CQUADX', self.readCQUADX],   # record 75 - not tested
-
-            (3001, 30, 48): ['CROD', self.readCROD],     # record 80
-            #(12201,122,9013): ['CTETP', self.readCTETP],    # record 86 - not done
-            (5508, 55, 217): ['CTETRA', self.readCTETRA],   # record 87
+            (8908,  89, 422): ['CONVM', self.readCONVM],     # record 60 - not tested
+            # record 61
+            (4108,  41, 280): ['CPENTA', self.readCPENTA],   # record 62
+            # record 63
+            # record 64
+            # record 65
+            # record 66
+            # record 67
+            (9108,   91,  507): ['CQUAD', self.readCQUAD],     # record 68 - not tested
+            (2958,   51,  177): ['CQUAD4', self.readCQUAD4],   # record 69 - maybe buggy on theta/Mcsid field
+            (13900, 139, 9989): ['CQUAD4', self.readCQUAD4],# record 70 - maybe buggy on theta/Mcsid field
+            (4701,   47,  326): ['CQUAD8', self.readCQUAD8],   # record 71 - maybe buggy on theta/Mcsid field
+            # record 72
+            # record 73
+            (8009,   80,  367): ['CQUADR', self.readCQUADR],   # record 74 - not tested
+            (9008,   90,  508): ['CQUADX', self.readCQUADX],   # record 75 - not tested
+            # record 76
+            # record 77
+            # record 78
+            # record 79
+            (3001, 30, 48): ['CROD', self.readCROD],        # record 80
+            # record 81
+            # record 82
+            # record 83
+            # record 84
+            # record 85
+            (12201,122,9013): ['CTETP', self.readCTETP],    # record 86 - not done
+            (5508,  55, 217): ['CTETRA', self.readCTETRA],   # record 87
+            # record 88
+            # record 89
+            # record 90
+            # record 91
+            # record 92
             (5959, 59, 282): ['CTRIA4', self.readCTRIA3],   # record 93 - maybe buggy on theta/Mcsid field
+            # record 94
             (4801, 48, 327): ['CTRIA6', self.readCTRIA6],   # record 95 - buggy
+            # record 96
+            # record 97
             (9200, 92, 385): ['CTRIAR', self.readCTRIAR],   # record 98  - not done
-            (6108, 61, 107): ['CTRIAX6', self.readCTRIAX6],  # record 100 - not done
-            (3701, 37, 49): ['CTUBE', self.readCTUBE],    # record 103
-            (3901, 39, 50): ['CVISC', self.readCVISC],   # record 104 - not done
-            #(5201,52,11):   ['PLOTEL', self.readPLOTEL],  # record 114 - not done
-            (5551, 49, 105): ['SPOINT', self.readSPOINT],   # record 118
-            #(11601,116,9942): ['VUBEAM', self.readVUBEAM],  # record 119 - not done
-            #(2608, 26, 60)
+            # record 99
+            (6108, 61, 107): ['CTRIAX6', self.readCTRIAX6], # record 100 - not done
+            # record 101
+            # record 102
+            (3701, 37, 49): ['CTUBE', self.readCTUBE],      # record 103
+            (3901, 39, 50): ['CVISC', self.readCVISC],      # record 104 - not done
+            # record 105
+            # record 106
+            # record 107
+            # record 108
+            # record 109
+            # record 110
+            # record 111
+            # record 112
+            # record 113
+            (5201, 52, 11):   ['PLOTEL', self.readPLOTEL],    # record 114 - not done
+            # record 115
+            # record 116
+            # record 117
+            (5551,  49,  105): ['SPOINT', self.readSPOINT],   # record 118
+            (11601,116, 9942): ['VUBEAM', self.readVUBEAM],  # record 119 - not done
+            (2608,  26,   60): ['', self.readFake],
+            (2108, 21, 224): ['', self.readFake],
+            (3101, 31, 61): ['', self.readFake],
+            (4301, 43, 28): ['', self.readFake],
+            (5601, 56, 296): ['', self.readFake],
+            (6908, 69, 115): ['', self.readFake],
+            (6808, 68, 114): ['', self.readFake],
+            (7409, 74, 9991): ['', self.readFake],
+            (7509, 75, 9992): ['', self.readFake],
+            (7609, 76, 9993): ['', self.readFake],
+            (8100, 81, 381): ['', self.readFake],
+            (8200, 82, 383): ['', self.readFake],
+            (8308, 83, 405): ['', self.readFake],
+            (11201, 112, 9940): ['', self.readFake],
+            (12801, 128, 417): ['', self.readFake],
+            (13900, 139, 9984): ['', self.readFake],
+            (14000, 140, 9990): ['', self.readFake],
+            (16000, 160, 9988): ['', self.readFake],
+            (16100, 161, 9986): ['', self.readFake],
+            (16300, 163, 9989): ['', self.readFake],
+            (16700, 167, 9981): ['', self.readFake],
+            (16800, 168, 9978): ['', self.readFake],
+            (16500, 165, 9987): ['', self.readFake],
+            (2708, 27, 59): ['', self.readFake],
+            (5008, 50, 258): ['', self.readFake],
+            (16400, 164, 9983) : ['', self.readFake],
+            (3201, 32, 478): ['', self.readFake],
+            (11000, 110, 6667): ['', self.readFake],
+            (12301, 123, 9921): ['', self.readFake],
+            (12401, 124, 9922): ['', self.readFake],
+            (12600, 126, 6661): ['', self.readFake],
+            (14700, 147, 6662): ['', self.readFake],
+            (7309, 73, 0): ['', self.readFake],
+            (17200, 172, 6663): ['', self.readFake],
+            (17300, 173, 6664): ['', self.readFake],
+            (11501, 115, 9941): ['', self.readFake],    # record
+            (12501, 125, 9923): ['', self.readFake],    # record
+            (3401, 34, 9600): ['', self.readFake],    # record
+            (2208, 22, 225): ['', self.readFake],  # record
+            (17000, 170, 9980): ['', self.readFake],  # record
+            (7701, 77, 8881): ['', self.readFake],  # record
+            (12901, 129, 482): ['', self.readFake],  # record
+            (7801, 78, 8883): ['', self.readFake],  # record
+            (4408, 44, 227): ['', self.readFake],  # record
+            (17100, 171, 9979): ['', self.readFake],  # record
+            (2901, 29, 9601): ['', self.readFake],  # record
+            (4508, 45, 228): ['', self.readFake],  # record
+            (16600, 166, 9985): ['', self.readFake],  # record
+            (16200, 162, 9982): ['', self.readFake],  # record
+            (16900, 169, 9977): ['', self.readFake],  # record
         }
 
     def readFake(self, data, n):
-        return n
+        raise RuntimeError('this should be overwritten')
 
     def add_element(self, elem, allowOverwrites=True):
         raise RuntimeError('this should be overwritten')
@@ -104,7 +197,6 @@ class GEOM2(object):
         """
         CBAR(2408,24,180) - the marker for Record 8
         """
-        #print "reading CBAR"
         nelements = (len(data) - n) // 64
         for i in xrange(nelements):
             eData = data[n:n + 64]  # 16*4
@@ -146,13 +238,10 @@ class GEOM2(object):
         """
         CBEAM(5408,54,261) - the marker for Record 10
         """
-        #print "reading CBEAM"
         nelements = (len(data) - n) // 72
         for i in xrange(nelements):
             eData = data[n:n + 72]  # 18*4
             f, = unpack(b'i', eData[40:44])
-            #print "f = ",f
-            #print "len(eData) = %s" %(len(eData))
             if   f == 0:  # basic cid
                 out = unpack(b'6i3f3i6f', eData)
                 (eid, pid, ga, gb, sa, sb, x1, x2, x3, f, pa,
@@ -218,7 +307,6 @@ class GEOM2(object):
         """
         CDAMP1(201,2,69) - the marker for Record 16
         """
-        #print "reading CDAMP1"
         nelements = (len(data) - n) // 24
         for i in xrange(nelements):
             eData = data[n:n + 24]  # 6*4
@@ -234,7 +322,6 @@ class GEOM2(object):
         """
         CDAMP2(301,3,70) - the marker for Record 17
         """
-        #print "reading CDAMP2"
         nelements = (len(data) - n) // 24
         for i in xrange(nelements):
             eData = data[n:n + 24]  # 6*4
@@ -250,7 +337,6 @@ class GEOM2(object):
         """
         CDAMP3(401,4,71) - the marker for Record 18
         """
-        #print "reading CDAMP3"
         s = Struct(b'4i')
         nelements = (len(data) - n) // 16
         for i in xrange(nelements):
@@ -267,7 +353,6 @@ class GEOM2(object):
         """
         CDAMP4(501,5,72) - the marker for Record 19
         """
-        #print "reading CDAMP4"
         s = Struct(b'ifii')
         nelements = (len(data) - n) // 16
         for i in xrange(nelements):
@@ -284,7 +369,6 @@ class GEOM2(object):
         """
         CDAMP5(10608,106,404) - the marker for Record 20
         """
-        #print "reading CDAMP5"
         s = Struct(b'4i')
         nelements = (len(data) - n) // 16
         for i in xrange(nelements):
@@ -310,7 +394,6 @@ class GEOM2(object):
         """
         CELAS1(601,6,73) - the marker for Record 29
         """
-        #print "reading CELAS1"
         ntotal = 24  # 6*4
         s = Struct(b'6i')
         nelements = (len(data) - n) // ntotal
@@ -328,7 +411,6 @@ class GEOM2(object):
         """
         CELAS2(701,7,74) - the marker for Record 30
         """
-        #print "reading CELAS2"
         s1 = Struct(b'if4iff')
         ntotal = 32
         nelements = (len(data) - n) // ntotal
@@ -336,7 +418,6 @@ class GEOM2(object):
             eData = data[n:n+32]
             out = s1.unpack(eData)
             (eid, k, g1, g2, c1, c2, ge, s) = out
-            #print out
             elem = CELAS2(None, out)
             self.addOp2Element(elem)
             n += ntotal
@@ -347,7 +428,6 @@ class GEOM2(object):
         """
         CELAS3(801,8,75) - the marker for Record 31
         """
-        #print "reading CELAS3"
         ntotal = 16  # 4*4
         s = Struct(b'4i')
         nelements = (len(data) - n) // ntotal
@@ -365,7 +445,6 @@ class GEOM2(object):
         """
         CELAS4(901,9,76) - the marker for Record 32
         """
-        #print "reading CELAS4"
         s = Struct(b'ifii')
         nelements = (len(data) - n) // 16
         for i in xrange(nelements):
@@ -380,17 +459,30 @@ class GEOM2(object):
 
 # CFAST
 # CFASTP
-# CFLUID2
-# CFLUID3
-# CFLUID4
+
+    def readCFLUID2(self, data, n):
+        """
+        CFLUID2(8515,85,209) - the marker for Record 35
+        """
+        return n
+    def readCFLUID3(self, data, n):
+        """
+        CFLUID3(8615,86,210) - the marker for Record 36
+        """
+        return n
+    def readCFLUID4(self, data, n):
+        """
+        CFLUID4(8715,87,211) - the marker for Record 37
+        """
+        return n
+
 # CINT
 
     def readCGAP(self, data, n):
         """
         CGAP(1908,19,104) - the marker for Record 39
         """
-        #print "reading CGAP"
-        s1 = Struct(b'iiiifffii')
+        s1 = Struct(b'4i3fii')
         nelements = (len(data) - n) // 36
         for i in xrange(nelements):
             eData = data[n:n + 36]  # 9*4
@@ -421,7 +513,6 @@ class GEOM2(object):
         """
         CHBDYG(10808,108,406) - the marker for Record 43
         """
-        #print "reading CHBDYG"
         ntotal = 64  # 16*4
         s = Struct(b'16i')
         nelements = (len(data) - n) // ntotal
@@ -443,7 +534,6 @@ class GEOM2(object):
         """
         CHEXA(7308,73,253) - the marker for Record 45
         """
-        #print "reading CHEXA"
         s = Struct(b'22i')
         ntotal = 88  # 22*4
         nelements = (len(data) - n) // ntotal
@@ -475,7 +565,6 @@ class GEOM2(object):
         """
         CMASS1(1001,10,65) - the marker for Record 51
         """
-        #print "reading CMASS1"
         s = Struct(b'6i')
         nelements = (len(data) - n) // 24
         for i in xrange(nelements):
@@ -492,7 +581,6 @@ class GEOM2(object):
         """
         CMASS2(1101,11,66) - the marker for Record 52
         """
-        #print "reading CMASS2"
         s = Struct(b'if4i')
         nelements = (len(data) - n) // 24
         for i in xrange(nelements):
@@ -509,7 +597,6 @@ class GEOM2(object):
         """
         CMASS3(1201,12,67) - the marker for Record 53
         """
-        #print "reading CMASS3"
         s = Struct(b'4i')
         nelements = (len(data) - n) // 16
         for i in xrange(nelements):
@@ -526,7 +613,6 @@ class GEOM2(object):
         """
         CMASS4(1301,13,68) - the marker for Record 54
         """
-        #print "reading CMASS4"
         nelements = (len(data) - n) // 16
         s = Struct(b'ifii')
         for i in xrange(nelements):
@@ -550,7 +636,6 @@ class GEOM2(object):
         """
         CONM1(1401,14,63) - the marker for Record 56
         """
-        #print "reading CONM1"
         s = Struct(b'3i21f')
         nelements = (len(data) - n) // 96
         for i in xrange(nelements):
@@ -568,7 +653,6 @@ class GEOM2(object):
         """
         CONM2(1501,15,64) - the marker for Record 57
         """
-        #print "reading CONM2"
         ntotal = 52  # 13*4
         s = Struct(b'3i10f')
         nelements = (len(data) - n) // ntotal
@@ -586,7 +670,6 @@ class GEOM2(object):
         """
         CONROD(1601,16,47) - the marker for Record 58
         """
-        #print "reading CONROD"
         ntotal = 32  # 8*4
         s = Struct(b'4i4f')
         nelements = (len(data) - n) // ntotal
@@ -604,8 +687,7 @@ class GEOM2(object):
         """
         CONV(12701,127,408) - the marker for Record 59
         """
-        #print "reading CONV"
-        return
+        #return
         ntotal = 80  # 20*4
         s = Struct(b'12i8f')
         nelements = (len(data) - n) // ntotal
@@ -628,7 +710,6 @@ class GEOM2(object):
         """
         CONVM(8908,89,422) - the marker for Record 60
         """
-        #print "reading CONVM"
         return
         ntotal = 28  # 7*4
         s = Struct(b'7i')
@@ -640,7 +721,7 @@ class GEOM2(object):
              [ta1, ta2, ta3]) = out
             dataIn = [eid, pconID, flmnd, cntrlnd,
                       [ta1, ta2, ta3]]
-            elem = CONVM(None, dataIn)
+            elem = CONVM(None, dataIn)  # undefined
             self.addOp2Element(elem)
             n += ntotal
         self.card_count['CONVM'] = nelements
@@ -652,7 +733,6 @@ class GEOM2(object):
         """
         CPENTA(4108,41,280) - the marker for Record 62
         """
-        #print "reading CPENTA"
         s = Struct(b'17i')
         nelements = (len(data) - n) // 68
         for i in xrange(nelements):
@@ -682,7 +762,6 @@ class GEOM2(object):
         """
         CQUAD(9108,91,507)  - the marker for Record 68
         """
-        #print "reading CQUAD"
         return self.runCQUAD(data, n, CQUAD)
 
     def runCQUAD(self, data, n, Element):
@@ -707,7 +786,6 @@ class GEOM2(object):
         CQUAD4(2958,51,177)    - the marker for Record 69
         CQUAD4(13900,139,9989) - the marker for Record 70
         """
-        #print "reading CQUAD4"
         return self.runCQUAD4(data, n, CQUAD4)
 
     def runCQUAD4(self, data, n, Element):
@@ -736,7 +814,6 @@ class GEOM2(object):
         CQUAD8(4701,47,326)  - the marker for Record 71
         .. warning:: inconsistent with dmap manual
         """
-        #print "reading CQUAD8"
         return
         nelements = (len(data) - n) // 64  # 17*4
         s = Struct(b'10i5fi')
@@ -759,7 +836,6 @@ class GEOM2(object):
         """
         CQUADR(8009,80,367)  - the marker for Record 74
         """
-        #print "reading CQUADR"
         return self.runCQUAD4(data, n, CQUADR)
 
     def readCQUADX(self, data, n):
@@ -778,7 +854,6 @@ class GEOM2(object):
         """
         CROD(3001,30,48)    - the marker for Record 80
         """
-        #print "reading CROD"
         s = Struct(b'4i')
         nelements = (len(data) - n) // 16  # 4*4
         for i in xrange(nelements):
@@ -798,7 +873,6 @@ class GEOM2(object):
         """
         CSHEAR(3101,31,61)    - the marker for Record 83
         """
-        #print "reading CSHEAR"
         s = Struct(b'6i')
         nelements = (len(data) - n) // 24  # 6*4
         for i in xrange(nelements):
@@ -819,7 +893,6 @@ class GEOM2(object):
         CTETP(12201,122,9013)    - the marker for Record 86
         .. todo:: create object
         """
-        #print "reading CTETP"
         #raise NotImplementedError('needs work...')
         nelements = (len(data) - n) // 108  # 27*4
         s = Struct(b'27i')
@@ -845,7 +918,6 @@ class GEOM2(object):
         """
         CTETRA(5508,55,217)    - the marker for Record 87
         """
-        #print "reading CTETRA"
         s = Struct(b'12i')
         nelements = (len(data) - n)// 48  # 12*4
         for i in xrange(nelements):
@@ -875,9 +947,8 @@ class GEOM2(object):
         """
         CTRIA3(5959,59,282)    - the marker for Record 93
         """
-        #print "reading CTRIA3"
         ntotal = 52  # 13*4
-        s = Struct(b'iiiiiffiiifff')
+        s = Struct(b'5iff3i3f')
         nelements = (len(data) - n)// 52  # 13*4
         for i in xrange(nelements):
             eData = data[n:n+52]
@@ -900,8 +971,6 @@ class GEOM2(object):
         CTRIA6(4801,48,327)    - the marker for Record 95
         .. warning:: inconsistent with dmap manual
         """
-        #print "reading CTRIA6"
-        #return
         s = Struct(b'8i4fi')
         nelements = (len(data) - n) // 52  # 13*4
         for i in xrange(nelements):
@@ -935,7 +1004,6 @@ class GEOM2(object):
         """
         CTUBE(3701,37,49)    - the marker for Record 103
         """
-        #print "reading CTUBE"
         s = Struct(b'4i')
         nelements = (len(data) - n) // 16
         for i in xrange(nelements):
@@ -950,7 +1018,6 @@ class GEOM2(object):
 
     def readCVISC(self, data, n):
         """CVISC(3901,39, 50) - the marker for Record 104"""
-        #print "reading CVISC"
         s = Struct(b'4i')
         nelements = (len(data) - n) // 16
         for i in xrange(nelements):
@@ -981,7 +1048,9 @@ class GEOM2(object):
 # GMBNDS
 # GMINTC
 # GMINTS
-# PLOTEL
+    def readPLOTEL(self, data, n):  # 114
+        self.skippedCardsFile.write('skipping PLOTEL in GEOM2\n')
+        return n
 # RADBC
 # RADINT
 # SINT
@@ -994,22 +1063,17 @@ class GEOM2(object):
         (5551,49,105)    - the marker for Record 118
         """
         npoints = (len(data) - n) // 4
-        if 1:
-            fmt = b'%ii' % npoints
-            nids = unpack(fmt, data[n:])
-            spoint = SPOINTs(None, list(nids))
-            self.add_SPOINT(spoint)
-        if 0:
-            for i in xrange(npoints):
-                edata = data[n:n+4]
-                (nid,) = unpack(b'i', edata)
-                spoint = SPOINTs(None, [nid])
-                self.add_SPOINT(spoint)
-                n += 4
+        fmt = b'%ii' % npoints
+        nids = unpack(fmt, data[n:])
+        spoint = SPOINTs(None, list(nids))
+        self.add_SPOINT(spoint)
         self.card_count['SPOINT'] = npoints
         return n
 
-# VUBEAM
+    def readVUBEAM(self, data, n):  # 119
+        self.skippedCardsFile.write('skipping VUBEAM in GEOM2\n')
+        return n
+
 # VUHEXA
 # VUQUAD4
 # VUPENTA

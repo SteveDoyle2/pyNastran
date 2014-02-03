@@ -1,4 +1,4 @@
-#pylint: disable=C0103,C0111,C0301,W0612,W0613
+#pylint: disable=C0103,C0111,C0301,W0612,W0613,R0914,C0326,R0201
 import StringIO
 from struct import unpack, Struct
 
@@ -9,9 +9,10 @@ from pyNastran.bdf.cards.loads.staticLoads import (FORCE, FORCE1, FORCE2, GRAV,
 from pyNastran.bdf.cards.thermal.loads import QBDY1, QBDY2, QBDY3, TEMP, TEMPD
 
 class GEOM3(object):
+    def readFake(self, data, n):
+        raise RuntimeError('this should be overwritten')
     def add_thermal_load(self, load):
         raise RuntimeError('this should be overwritten')
-
     def add_load(self, load):
         raise RuntimeError('this should be overwritten')
 
@@ -19,34 +20,49 @@ class GEOM3(object):
         self.skippedCardsFile = StringIO.StringIO()
         self.card_count = {}
         self._geom3_map = {
-            (4201, 42, 18): ['FORCE', self.readFORCE],   # record 3
-            (4001, 40, 20): ['FORCE1', self.readFORCE1],  # record 4
-            (4101, 41, 22): ['FORCE2', self.readFORCE2],  # record 5
-            (4401, 44, 26): ['GRAV', self.readGRAV],    # record 7 - buggy
-            (4551, 61, 84): ['LOAD', self.readLOAD],    # record 8
-            (3709, 37, 331): ['LOADCYH', self.readLOADCYH],  # record 9 - not done
-            (3609, 36, 188): ['LSEQ', self.readLSEQ],    # record 12 - not done
-            (4801, 48, 19): ['MOMENT', self.readMOMENT],  # record 13 - not tested
-            (4601, 46, 21): ['MOMENT1', self.readMOMENT1],  # record 14 - not tested
-            (4701, 47, 23): ['MOMENT2', self.readMOMENT2],  # record 15 - not tested
-            (5101, 51, 24): ['PLOAD', self.readPLOAD],   # record 16 - not done
-            #(6909,69,198): ['PLOAD1', self.readPLOAD1],  # record 17 - buggy
-            #(6802,68,199): ['PLOAD2', self.readPLOAD2],  # record 18 - buggy
-            (7109, 81, 255): ['PLOAD3', self.readPLOAD3],  # record 19 - not done
-            #(7209,72,299): ['PLOAD4', self.readPLOAD4],  # record 20 - buggy - g1/g3/g4
-            (7309, 73, 351): ['PLOADX1', self.readPLOADX1],  # record 22
-            (4509, 45, 239): ['QBDY1', self.readQBDY1],   # record 24
-            (4909, 49, 240): ['QBDY2', self.readQBDY2],   # record 25
-            (2109, 21, 414): ['QBDY3', self.readQBDY3],   # record 26
-            (5509, 55, 190): ['RFORCE', self.readRFORCE],  # record 30 - not done
-            (5401, 54, 25): ['SLOAD', self.readSLOAD],   # record 31 - not done
-            (5701, 57, 27): ['TEMP', self.readTEMP],    # record 32
-            (5641, 65, 98): ['TEMPD', self.readTEMPD],   # record 33
-            (8409, 84, 204): ['TEMPRB', self.readTEMPRB],  # record 40 - not done
-            (8109, 81, 201): ['TEMPP1', self.readTEMPP1],  # record 37 - not done
-            (8209, 82, 202): ['TEMPP2', self.readTEMPP2],  # record 38 - not done
-            (8309, 83, 203): ['TEMPP3', self.readTEMPP3],  # record 39 - not done
-            #(8409,84,204): ['TEMP4', self.readTEMPP4],  # record 40 - not done
+            (4201, 42,  18): ['FORCE', self.readFORCE],   # record 3
+            (4001, 40,  20): ['FORCE1', self.readFORCE1],  # record 4
+            (4101, 41,  22): ['FORCE2', self.readFORCE2],  # record 5
+            (4401, 44,  26): ['GRAV', self.readGRAV],    # record 7 - buggy
+            (4551, 61,  84): ['LOAD', self.readLOAD],        # record 8
+            (3709, 37, 331): ['LOADCYH', self.readLOADCYH], # record 9 - not done
+            (3609, 36, 188): ['LSEQ', self.readLSEQ],       # record 12 - not done
+            (4801, 48,  19): ['MOMENT', self.readMOMENT],    # record 13 - not tested
+            (4601, 46,  21): ['MOMENT1', self.readMOMENT1],  # record 14 - not tested
+            (4701, 47,  23): ['MOMENT2', self.readMOMENT2],  # record 15 - not tested
+            (5101, 51,  24): ['PLOAD', self.readPLOAD],      # record 16 - not done
+            (6909, 69, 198): ['PLOAD1', self.readPLOAD1],     # record 17 - buggy
+            (6802, 68, 199): ['PLOAD2', self.readPLOAD2],     # record 18 - buggy
+            (7109, 81, 255): ['PLOAD3', self.readPLOAD3],   # record 19 - not done
+            (7209, 72, 299): ['PLOAD4', self.readPLOAD4],     # record 20 - buggy - g1/g3/g4
+            (7309, 73, 351): ['PLOADX1', self.readPLOADX1], # record 22
+            (4509, 45, 239): ['QBDY1', self.readQBDY1],     # record 24
+            (4909, 49, 240): ['QBDY2', self.readQBDY2],     # record 25
+            (2109, 21, 414): ['QBDY3', self.readQBDY3],     # record 26
+            (5509, 55, 190): ['RFORCE', self.readRFORCE],   # record 30 - not done
+            (5401, 54,  25): ['SLOAD', self.readSLOAD],      # record 31 - not done
+            (5701, 57,  27): ['TEMP', self.readTEMP],        # record 32
+            (5641, 65,  98): ['TEMPD', self.readTEMPD],      # record 33
+            (8409, 84, 204): ['TEMPRB', self.readTEMPRB],   # record 40 - not done
+            (8109, 81, 201): ['TEMPP1', self.readTEMPP1],   # record 37 - not done
+            (8209, 82, 202): ['TEMPP2', self.readTEMPP2],   # record 38 - not done
+            (8309, 83, 203): ['TEMPP3', self.readTEMPP3],   # record 39 - not done
+            (8409, 84, 204): ['TEMP4', self.readTEMPP4],     # record 40 - not done
+            (2309, 23, 416): ['', self.readFake],
+            (4309, 43, 233): ['', self.readFake],
+            (6609, 66, 9031): ['', self.readFake],
+            (8100, 81, 381): ['', self.readFake],
+            (11302, 113, 600): ['', self.readFake],
+            (11402, 114, 601): ['', self.readFake],
+            (2209, 22, 241): ['', self.readFake],
+            (6409, 64, 9032): ['', self.readFake],
+            (3809, 38, 332): ['', self.readFake],    # record
+            (6209, 62, 390): ['', self.readFake],    # record
+            (10901, 109, 427): ['', self.readFake],  # record
+            (10801, 108, 428): ['', self.readFake],  # record
+            (11329, 113, 9602): ['', self.readFake],  # record
+            (11429, 114, 9603): ['', self.readFake],  # record
+            (11529, 115, 9604): ['', self.readFake],  # record
         }
 
 # ACCEL
@@ -91,11 +107,11 @@ class GEOM3(object):
         """
         #print "reading FORCE2"
         ntotal = 28  # 7*4
-        s = Struct(b'iifiiii')
+        s = Struct(b'iif4i')
         nEntries = (len(data) - n) // ntotal
         for i in xrange(nEntries):
             eData = data[n:n + 28]
-            (sid, g, f, n1, n2, n3, n4) = unpack(eData)
+            (sid, g, f, n1, n2, n3, n4) = s.unpack(eData)
             load = FORCE2(None, [sid, g, f, n1, n2, n3, n4])
             self.add_load(load)
             n += 28
@@ -275,7 +291,7 @@ class GEOM3(object):
             eData = data[n:n + 20]
             out = unpack('if3i', eData)
             (sid, p, eid, n1, n2) = out
-            load = PLOAD3(None, out)
+            load = PLOAD3(None, out)  # undefined
             self.add_load(load)
             n += 20
         self.card_count['PLOAD3'] = nEntries
@@ -434,6 +450,12 @@ class GEOM3(object):
 
     def readTEMPP3(self, data, n):
         self.skippedCardsFile.write('skipping TEMPP3 in GEOM3\n')
+        return n
+
+    def readTEMPP4(self, data, n):
+        """
+        TEMPP4(4201,42,18) - the marker for Record 40
+        """
         return n
 
     def readTEMPRB(self, data, n):
