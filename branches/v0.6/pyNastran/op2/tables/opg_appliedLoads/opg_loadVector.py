@@ -65,9 +65,6 @@ class LoadVectorObject(TableObject):  # table_code=2, sort_code=0, thermal=0
             pageNum += 1
         return pageNum - 1
 
-    def __reprTransient__(self):
-        return self._write_f06_transient(['', ''], 'PAGE ', 1)[0]
-
 
 class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_code=???
     def __init__(self, data_code, is_sort1, isubcase, dt):

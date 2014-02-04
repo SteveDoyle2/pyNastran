@@ -23,6 +23,13 @@ class baseScalarObject(Op2Codes):
         f.write(msg)
         return pageNum
 
+    def __repr__(self):
+        return self.get_stats()
+
+    def get_stats(self):
+        msg = 'get_stats is not implemented in %s\n' % self.__class__.__name__
+        return msg
+
 
 class scalarObject(baseScalarObject):
     def __init__(self, data_code, isubcase):

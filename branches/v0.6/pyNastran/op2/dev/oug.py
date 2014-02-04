@@ -154,6 +154,8 @@ class OUG(OP2Common):
             result_name = 'temperatures'
             storage_obj = self.temperatures
             self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
+        elif self.thermal == 2:
+            self.not_implemented_or_skip(msg='thermal=2')
         elif self.thermal == 4:
             self.not_implemented_or_skip(msg='thermal=4')
         else:

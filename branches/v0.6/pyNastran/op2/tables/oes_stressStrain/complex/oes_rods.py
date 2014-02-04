@@ -98,32 +98,9 @@ class ComplexRodStressObject(StressObject):
         self.axial[dt][eid] = axial
         self.torsion[dt][eid] = torsion
 
-    def __reprTransient__(self):
-        msg = '---ROD STRESSES---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['axial', 'torsion', 'MS_axial', 'MS_torsion']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for dt, axial in sorted(self.axial.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for eid in sorted(axial):
-                axial = self.axial[dt][eid]
-                torsion = self.torsion[dt][eid]
-                msg += '%-6i %6s ' % (eid, self.eType)
-                vals = [axial, torsion]
-                for val in vals:
-                    if abs(val) < 1e-6:
-                        msg += '%10s ' % '0'
-                    else:
-                        msg += '%10i ' % val
-                msg += '\n'
-                #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
-        return msg
-
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
-        return 'ComplexRodStress write_f06 not implemented...', pageNum
+        f.write('ComplexRodStress write_f06 not implemented...\n')
+        return pageNum
         raise NotImplementedError()
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)

@@ -37,22 +37,5 @@ class FluxObject(scalarObject):  # approach_code=1, table_code=3, thermal=1
         msg = block3
         for nodeID, flux in sorted(self.fluxes.iteritems()):
             grid = nodeID * 10 + device_code
-            msg += pack('iffffff', grid, flux[0], flux[1], flux[2], 0, 0, 0)
-        return msg
-
-    def __repr__(self):
-        if self.isTransient:
-            return self.__reprTransient__()
-
-        msg = '---HEAT FLUX---\n'
-        msg += '%-10s %-8s %-8s %-8s\n' % ('NodeID', 'xFlux', 'yFlux', 'zFlux')
-        for nodeID, flux in sorted(self.fluxes.iteritems()):
-            msg += '%10i ' % nodeID
-
-            for val in flux:
-                if abs(val) < 1e-6:
-                    msg += '%10s' % 0
-                else:
-                    msg += '%10.3e ' % val
-            msg += '\n'
+            msg += pack('i6f', grid, flux[0], flux[1], flux[2], 0, 0, 0)
         return msg

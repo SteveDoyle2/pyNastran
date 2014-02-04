@@ -136,22 +136,6 @@ class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=
         msg += '\n'
         return msg
 
-    def __reprTransient__(self):
-        msg = '---TRANSIENT TEMPERATURE---\n'
-        msg += self.write_header()
-
-        for dt, temperatures in sorted(self.temperatures.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for nodeID, T in sorted(temperatures.iteritems()):
-                gridType = self.gridTypes[nodeID]
-                msg += '%10s %8s ' % (nodeID, gridType)
-
-                if abs(T) < 1e-6:
-                    msg += '%10s\n' % 0
-                else:
-                    msg += '%10g\n' % T
-        return msg
-
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         words = ['                                              T E M P E R A T U R E   V E C T O R\n',
                  ' \n',

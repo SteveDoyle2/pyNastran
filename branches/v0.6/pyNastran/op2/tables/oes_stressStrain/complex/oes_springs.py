@@ -141,25 +141,6 @@ class ComplexCelasStressObject(complexStressObject):
             pageNum += 1
         return pageNum - 1
 
-    def __reprTransient__(self):
-        msg = '---CELASx STRESSES---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['stress']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for dt, stress in sorted(self.stress.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for eid, istress in sorted(stress.iteritems()):
-                msg += '%-6g %6s ' % (eid, self.eType[eid])
-                if abs(istress) < 1e-6:
-                    msg += '%10s ' % '0'
-                else:
-                    msg += '%10g ' % istress
-                msg += '\n'
-        return msg
-
 
 class ComplexCelasStrainObject(complexStrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt=None):

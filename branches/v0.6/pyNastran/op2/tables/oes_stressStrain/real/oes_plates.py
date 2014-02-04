@@ -339,45 +339,6 @@ class PlateStressObject(StressObject):
             headers.append('maxShear')
         return headers
 
-    def __reprTransient__(self):
-        msg = '---ISOTROPIC PLATE STRESS---\n'
-        headers = self.getHeaders()
-        msg += '%-6s %6s %8s %7s ' % ('EID', 'eType', 'nodeID', 'iLayer')
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        #print self.oxx.keys()
-        for dt, oxxs in sorted(self.oxx.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for eid, oxxNodes in sorted(oxxs.iteritems()):
-                eType = self.eType[eid]
-                for nid in sorted(oxxNodes):
-                    for iLayer in xrange(len(self.oxx[dt][eid][nid])):
-                        fd = self.fiberCurvature[eid][nid][iLayer]
-                        oxx = self.oxx[dt][eid][nid][iLayer]
-                        oyy = self.oyy[dt][eid][nid][iLayer]
-                        txy = self.txy[dt][eid][nid][iLayer]
-                       #angle = self.angle[ dt][eid][nid][iLayer]
-                        major = self.majorP[dt][eid][nid][iLayer]
-                        minor = self.minorP[dt][eid][nid][iLayer]
-                        ovm = self.ovmShear[dt][eid][nid][iLayer]
-
-                        msg += '%-6i %6s %8s %7s %10g ' % (eid, eType,
-                                                           nid, iLayer + 1, fd)
-                        vals = [oxx, oyy, txy, major, minor, ovm]
-                        for val in vals:
-                            if abs(val) < 1e-6:
-                                msg += '%10s ' % '0'
-                            else:
-                                try:
-                                    msg += '%10i ' % int(val)
-                                except:
-                                    print("bad val = %s" % val)
-                                    raise
-                        msg += '\n'
-        return msg
-
     def write_matlab(self, name, isubcase, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_matlab_transient(name, isubcase, f, is_mag_phase)

@@ -44,24 +44,3 @@ class nonlinearFluxObject(scalarObject):  # approach_code=10, sort_code=0
         self.fluxes[self.load_step][nodeID] = array([v4, v5, v6])
         self.eTypes[nodeID] = eType
 
-    def __repr__(self):
-        msg = '---NONLINEAR GRADIENTS & HEAT FLUX---\n'
-        msg += 'load_step = %g\n' % (self.load_step)
-
-        for (dt, fluxPack) in sorted(self.fluxes.iteritems()):
-            msg += ('%-10s %-8s %-10s %-10s %-10s %-10s %-10s %-10s\n'
-                    % ('GRID', 'eType', 'xGrad', 'yGrad', 'zGrad',
-                       'xFlux', 'yFlux', 'zFlux'))
-
-            for (nodeID, flux) in sorted(fluxPack.iteritems()):
-                eType = self.eTypes[nodeID]
-                msg += '%-10i %-8s ' % (nodeID, eType)
-                gradients = self.gradients[dt][nodeID]
-
-                for val in list(gradients) + list(flux):
-                    if abs(val) < 1e-6:
-                        msg += '%-10s ' % '0.'
-                    else:
-                        msg += '%-10i ' % val
-                msg += '\n'
-        return msg

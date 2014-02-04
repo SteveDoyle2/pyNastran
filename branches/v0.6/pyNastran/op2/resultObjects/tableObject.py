@@ -216,8 +216,6 @@ class TableObject(scalarObject):  # displacement style table
         translations2 = {}
         rotations2 = {}
         if self.dt is not None:
-            #return self.__reprTransient__()
-
             for dt, translations in sorted(self.translations.iteritems()):
                 nodeIDs = translations.keys()
                 for nodeID in nodeIDs:
