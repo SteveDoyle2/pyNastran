@@ -156,7 +156,6 @@ class OUG(object):
                     'dataNames': data_names,
                     'name': name,
                     #'s_code':0,
-                    #'element_name':'CBAR', 'element_type':34, 'stress_bits':stress_bits,
                     }
         while 1:
             line = self.infile.readline()[1:].rstrip('\r\n ')

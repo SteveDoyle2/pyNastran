@@ -336,7 +336,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
     def _set_f06_date(self, month, day, year):
         months = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
-                  'JULY', 'AUGUST' 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER']
+                  'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER']
         assert month in months, 'month=%r' % month
         month = months.index(month) + 1
         day = int(day)

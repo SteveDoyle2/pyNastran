@@ -18,18 +18,18 @@ def make_stamp(Title, today=None):
     if today is None:
         today = date.today()
         str_month = months[today.month - 1].upper()
-        str_today = '%-8s %2s, %4s' % (str_month, today.day, today.year)
+        str_today = '%-9s %2s, %4s' % (str_month, today.day, today.year)
     else:
         (month, day, year) = today
         #print "day=%s month=%s year=%s" % (day, month, year)
         str_month = months[month - 1].upper()
-        str_today = '%-8s %2s, %4s' % (str_month, day, year)
+        str_today = '%-9s %2s, %4s' % (str_month, day, year)
     str_today = str_today.strip()
 
     release_date = '02/08/12'  # pyNastran.__releaseDate__
     release_date = ''
     build = 'pyNastran v%s %s' % (pyNastran.__version__, release_date)
-    out = '1    %-67s    %-18s %-22s PAGE %%5i\n' % (Title, str_today, build)
+    out = '1    %-67s   %-19s %-22s PAGE %%5i\n' % (Title.strip(), str_today, build)
     return out
 
 
