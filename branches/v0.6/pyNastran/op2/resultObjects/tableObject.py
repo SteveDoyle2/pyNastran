@@ -664,6 +664,7 @@ class ComplexTableObject(scalarObject):
 
     def add_new_transient(self, dt):
         """initializes the transient variables"""
+        self.dt = dt
         self.translations[dt] = {}
         self.rotations[dt] = {}
 
