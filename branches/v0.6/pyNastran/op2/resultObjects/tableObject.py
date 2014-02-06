@@ -637,9 +637,11 @@ class ComplexTableObject(scalarObject):
             except:
                 print('line = %r' % line)
                 raise
+            #print "*dt=%s line=%s" % (self.dt, str(line))
             self.gridTypes[nodeID] = gridType
-            self.translations[self.dt][nodeID] = [v1, v2, v3]  # dx,dy,dz
-            self.rotations[self.dt][nodeID] = [v4, v5, v6]  # rx,ry,rz
+            self.translations[dt][nodeID] = [v1, v2, v3]  # dx,dy,dz
+            self.rotations[dt][nodeID] = [v4, v5, v6]  # rx,ry,rz
+        print("------")
 
     def add_complex_f06_data(self, data, transient):
         raise NotImplementedError()
