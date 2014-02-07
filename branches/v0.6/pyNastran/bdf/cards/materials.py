@@ -1237,6 +1237,12 @@ class MAT11(Material):
                   a2, a3, TRef, ge]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+
 
 class MATHP(HyperelasticMaterial):
     type = 'MATHP'
