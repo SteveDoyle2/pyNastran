@@ -113,6 +113,7 @@ class Usm3dReader(object):
         face_filename = basename + '.face'
         front_filename = basename + '.front'
         mapbc_filename = basename + '.mapbc'
+        flo_filename = None
 
         if 1:
             # pick the highest N value or use "basename.flo"
@@ -169,7 +170,7 @@ class Usm3dReader(object):
             self.log.warning('Cannot find %r...skipping' % flo_filename)
         self.loads = loads
 
-        return nodes, elements, tris, bcs, mapbc, loads
+        return nodes, elements, tris, bcs, mapbc, loads, flo_filename
         #self.read_front(front_file)
         #self.read_face(face_file)
 

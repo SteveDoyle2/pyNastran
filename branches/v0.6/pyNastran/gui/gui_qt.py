@@ -287,13 +287,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         ]
         QtGui.QMessageBox.about(self, "About pyNastran GUI", "\n".join(about))
 
-    def set_window_title(self, fname=None):
-        msg = "pyNastran v%s - "  % pyNastran.__version__
-        if fname:
-            msg += '%s' % os.path.abspath(fname)
-        self.setWindowTitle(msg)
-
-    def set_window_title_msg(self, msg):
+    def set_window_title(self, msg):
         msg2 = "pyNastran v%s - "  % pyNastran.__version__
         msg2 += msg
         self.setWindowTitle(msg)
@@ -306,7 +300,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         # windows title and aplication icon
         self.setWindowTitle('Statusbar')
         self.setWindowIcon(QtGui.QIcon(os.path.join(icon_path, 'logo.png')))
-        self.set_window_title()
+        self.set_window_title('')
 
         ############  Results widget ##################
         self.res_dock = QtGui.QDockWidget("Results", self)
@@ -816,6 +810,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             #self.vtk_panel.Update()
             self.rend.ResetCamera()
 
+        # the model has been loaded, so we enable load_results
         if filter_index >= 0:
             self.format = formats[filter_index].lower()
             if has_results:
@@ -823,12 +818,17 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             else:
                 enable = False
             #self.load_results.Enable(enable)
-
-            self.set_window_title(infile_name)
         else: # no file specified
             return
         print("on_load_geometry(%r)" % infile_name)
         self.infile_name = infile_name
+
+        if self.out_filename is not None:
+            msg = '%s - %s - %s' % (self.format, self.infile_name, self.out_filename)
+        else:
+            msg = '%s - %s - %s' % (self.format, self.infile_name)
+        self.set_window_title(msg)
+
         self.log_command("on_load_geometry(%r, %r)" % (infile_name, self.format))
 
     def _create_load_file_dialog(self, qt_wildcard, Title):
@@ -850,7 +850,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             self.last_dir = os.path.split(fname)[0]
             self.load_nastran_geometry(fname, self.last_dir)
             self.rend.ResetCamera()
-            self.set_window_title(fname)
+            #self.set_window_title_msg(fname)
 
     def on_load_results(self, out_filename=None):
             geometry_format = self.format
@@ -932,6 +932,9 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             self.last_dir = os.path.split(out_filename)[0]
             load_function(out_filename, self.last_dir)
 
+            self.out_filename = out_filename
+            msg = '%s - %s - %s' % (self.format, self.infile_name, out_filename)
+            self.set_window_title(msg)
             print("on_load_results(%r)" % out_filename)
             self.out_filename = out_filename
             self.log_command("on_load_results(%r)" % out_filename)

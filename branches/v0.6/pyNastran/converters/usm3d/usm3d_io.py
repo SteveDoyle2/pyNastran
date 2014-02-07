@@ -40,13 +40,19 @@ class Usm3dIO(object):
             #dimension_flag = 3
         else:
             raise RuntimeError('unsupported extension.  Use "cogsg" or "front".')
-        model.read_usm3d(base_filename, dimension_flag)
+        nodes, tris_tets, tris, bcs, mapbc, loads, flo_filename = model.read_usm3d(base_filename, dimension_flag)
+        del tris_tets
         nodes = model.nodes
         tris = model.tris
         tets = model.tets
         bcs = model.bcs
         mapbc = model.mapbc
         loads = model.loads
+
+        self.out_filename = None
+        if flo_filename is not None:
+            self.out_filename = flo_filename
+
         bcmap_to_bc_name = model.bcmap_to_bc_name
 
         self.nNodes, three = nodes.shape
@@ -93,7 +99,7 @@ class Usm3dIO(object):
         nnodes, three = nodes.shape
 
         nid = 0
-        print "nnodes=%s" % nnodes
+        #print "nnodes=%s" % nnodes
         for i in xrange(nnodes):
             points.InsertPoint(nid, nodes[i, :])
             nid += 1
@@ -121,7 +127,7 @@ class Usm3dIO(object):
                     elem.GetPointIds().SetId(3, n3)
                     self.grid.InsertNextCell(10, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
         else:
-            raise RuntimeError()
+            raise RuntimeError('dimension_flag=%r' % dimension_flag)
 
         self.grid.SetPoints(points)
         self.grid.Modified()
