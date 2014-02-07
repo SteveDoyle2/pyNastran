@@ -54,8 +54,8 @@ def run(dirname, model_name, node_ids, nstart=0, nlimit=None, num_cpus=8):
 
     flo_filenames = get_flo_files(dirname, model_name)
     flo_filenames = flo_filenames[nstart:nlimit]
-    #print "flo_filenames =", flo_filenames
     nlimit = len(flo_filenames)
+    assert nlimit > 0, 'nfiles=%s' % (nlimit)
     #print "nmax =", nlimit
 
     Cp = {}

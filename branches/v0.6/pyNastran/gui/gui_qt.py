@@ -288,9 +288,14 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         QtGui.QMessageBox.about(self, "About pyNastran GUI", "\n".join(about))
 
     def set_window_title(self, fname=None):
-        msg = "pyNastran v%s"  % pyNastran.__version__
+        msg = "pyNastran v%s - "  % pyNastran.__version__
         if fname:
-            msg += ' - %s' % os.path.abspath(fname)
+            msg += '%s' % os.path.abspath(fname)
+        self.setWindowTitle(msg)
+
+    def set_window_title_msg(self, msg):
+        msg2 = "pyNastran v%s - "  % pyNastran.__version__
+        msg2 += msg
         self.setWindowTitle(msg)
 
     def init_ui(self):
@@ -926,6 +931,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 #raise IOError(msg)
             self.last_dir = os.path.split(out_filename)[0]
             load_function(out_filename, self.last_dir)
+
             print("on_load_results(%r)" % out_filename)
             self.out_filename = out_filename
             self.log_command("on_load_results(%r)" % out_filename)
