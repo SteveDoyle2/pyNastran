@@ -19,6 +19,7 @@ class RealEigenvalues(baseScalarObject):
         #self.cycles = {}
         self.generalizedMass = {}
         self.generalizedStiffness = {}
+        self.note = None
 
     def get_stats(self):
         msg = []
@@ -47,7 +48,8 @@ class RealEigenvalues(baseScalarObject):
         self.generalizedMass[modeNum] = genM
         self.generalizedStiffness[modeNum] = genK
 
-    def add_f06_data(self, data):
+    def add_f06_data(self, note, data):
+        self.note = note
         for line in data:
             self.addF06Line(line)
 
@@ -80,7 +82,10 @@ class RealEigenvalues(baseScalarObject):
         f.write(stiffMsg + '];\n')
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
-        msg = header + ['                                              R E A L   E I G E N V A L U E S\n',
+        note = ''
+        if self.note is not None:
+            note = '%s\n' % self.note.center(72)
+        msg = header + ['                                              R E A L   E I G E N V A L U E S\n', note,
                         '   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED\n',
                         '    NO.       ORDER                                                                       MASS              STIFFNESS\n']
         for (iMode, order) in sorted(self.extractionOrder.iteritems()):

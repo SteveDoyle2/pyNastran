@@ -101,8 +101,8 @@ class SolidStressObject(StressObject):
                                  Y  -1.825509E+03  YZ  -1.415218E+03   B  -2.080181E+03  LY-0.12 0.69-0.71
                                  Z   1.000023E+04  ZX  -1.415218E+03   C  -1.906232E+03  LZ 0.99 0.16 0.00
         """
-        eMap = {'CTETRA': 5, 'CPENTA': 7, 'CHEXA': 9, 'HEXA': 9,
-                'PENTA': 7, 'TETRA': 5, }   # +1 for the centroid
+        eMap = {'CTETRA4': 5, 'CPENTA6': 7, 'CHEXA8': 9, 'HEXA20': 9,
+                'PENTA15': 7, 'TETRA10': 5, }   # +1 for the centroid
         if self.nonlinear_factor is None:
             ipack = []
             i = 0

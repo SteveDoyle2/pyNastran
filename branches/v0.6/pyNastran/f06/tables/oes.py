@@ -729,6 +729,7 @@ class OES(object):
 
     def read3DStress(self, eType, n):
         data = []
+        eType2 = eType + str(n)
         while 1:
             line = self.infile.readline().rstrip('\n\r')  # [1:]
                     #              CENTER         X          #          XY             #        A         #
@@ -737,7 +738,7 @@ class OES(object):
             if 'PAGE' in line:
                 break
             elif '' is not sline[0]:
-                sline = [eType] + sline
+                sline = [eType2] + sline
             data.append(sline)
 
         return data

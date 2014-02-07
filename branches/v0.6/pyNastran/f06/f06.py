@@ -59,7 +59,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         self.i = 0
 
         if not os.path.exists(self.f06_filename):
-            msg = 'cant find f06_filename=%r\n%s' % self.f06_filename, print_bad_path(self.f06_filename)
+            msg = 'cant find f06_filename=%r\n%s' % (self.f06_filename, print_bad_path(self.f06_filename))
             raise RuntimeError(msg)
         self.infile = open(self.f06_filename, 'r')
         self.__init_data__(debug, log)
@@ -359,9 +359,13 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         if self.Title is None or self.Title == '' and len(self.stored_lines) > 4:
             title_line = self.stored_lines[-4]
             self.Title = title_line[1:75].strip()
-            date = title_line[75:93]
-            month, day, year = date.split()
-            self._set_f06_date(month, day[:-1], year)  # -1 chops the comma
+            date = title_line[75:93].strip()
+            if date:
+                try:
+                    month, day, year = date.split()
+                except:
+                    raise RuntimeError('Couldnt parse date; line=%r' % title_line.strip())
+                self._set_f06_date(month, day[:-1], year)  # -1 chops the comma
             #assert 'PAGE' not in title_line, '%r' % date
             assert 'D I S P L A C' not in self.Title, msg
         #self.Title = subcaseName  # 'no title'
@@ -434,15 +438,27 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
                 1         1        6.158494E+07        7.847607E+03        1.248985E+03        1.000000E+00        6.158494E+07
         """
         (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
+        note = None
+        line1 = self.infile.readline().strip(); self.i += 1
+        if line1 != 'MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED':
+            note = line1
+            line1 = self.infile.readline().strip(); self.i += 1
+        line2 = self.infile.readline().strip(); self.i += 1
 
-        headers = self.skip(2)
+        #MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED
+        # NO.       ORDER                                                                       MASS              STIFFNESS
+        #     1         1        1.018377E-03        3.191203E-02        5.078956E-03        1.000000E+00        1.018377E-03
+        #print line1
+        #print line2
+        #headers = self.skip(2)
+        #print headers
         data = self._read_f06_table([int, int, float, float, float, float, float])
 
         if isubcase in self.eigenvalues:
-            self.eigenvalues[isubcase].add_f06_data(data)
+            self.eigenvalues[isubcase].add_f06_data(note, data)
         else:
             self.eigenvalues[isubcase] = RealEigenvalues(isubcase)
-            self.eigenvalues[isubcase].add_f06_data(data)
+            self.eigenvalues[isubcase].add_f06_data(note, data)
         self.iSubcases.append(isubcase)
 
     def _complex_eigenvalue_summary(self):
@@ -592,7 +608,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             if 'PAGE' in sline:
                 return data
             sline = self.parseLine(sline, Format)
-            if sline is None:
+            if sline is None or len(sline) == 0:
                 return data
             data.append(sline)
         return data
