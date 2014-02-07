@@ -284,6 +284,9 @@ class PSOLID(SolidProperty):
             if self.fctn == 'SMEC':
                 self.fctn = 'SMECH'
 
+    def materials(self):
+        return [self.mid]
+
     def _verify(self, xref=False):
         pid = self.Pid()
         mid = self.Mid()

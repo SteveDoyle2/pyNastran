@@ -103,7 +103,6 @@ class TestCoords(unittest.TestCase):
                  ]
         self.getNodes(grids, grids_expected, coords)
 
-    #@unittest.skip('skipping test_rid_1')
     def test_rid_1(self):
         #print('test_rid_1')
         grids = [

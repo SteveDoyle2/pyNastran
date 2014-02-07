@@ -65,7 +65,7 @@ from .cards.loads.staticLoads import (LOAD, GRAV, ACCEL1, FORCE,
                                       PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1)
 
 from .cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
-                              MAT8, MAT9, MAT10,
+                              MAT8, MAT9, MAT10, MAT11,
                               MATHP, CREEP, EQUIV)
 from .cards.material_deps import (MATT1, MATS1)
 
@@ -264,7 +264,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             'CREEP',
 
             # materials
-            'MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MATHP',
+            'MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MAT11', 'MATHP',
             'MATT1', #'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
             'MATS1', #'MATS3', 'MATS8',
             # 'MATHE'
@@ -495,13 +495,18 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         #self.massElements = {}
         #: stores LOTS of propeties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
         self.properties = {}
-        #: stores MAT1, MAT2, MAT3,...MAT10 (no MAT4, MAT5)
+
+        #: stores MAT1, MAT2, MAT3, MAT8, MAT10, MAT11
         self.materials = {}
+
+        #: defines the MAT4, MAT5
+        self.thermalMaterials = {}
 
         #: stores MATSx
         self.MATS1 = {}
         self.MATS3 = {}
         self.MATS8 = {}
+
         #: stores MATTx
         self.MATT1 = {}
         self.MATT2 = {}
@@ -643,8 +648,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         # BCs
         #: stores thermal boundary conditions - CONV,RADBC
         self.bcs = {}  # e.g. RADBC
-        #: defines the MAT4, MAT5, MATT4, etc.  .. todo:: verify MATT4
-        self.thermalMaterials = {}
 
         #: stores PHBDY
         self.phbdys = {}
@@ -1371,7 +1374,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
              # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
              'add_creep_material': ['CREEP'],
              'add_structural_material': ['MAT1', 'MAT2', 'MAT3', 'MAT8',
-                                         'MAT9', 'MAT10', 'MATHP', 'MATHE',
+                                         'MAT9', 'MAT10', 'MAT11', 'MATHP', 'MATHE',
                                          'EQUIV'],
              'add_thermal_material': ['MAT4', 'MAT5'],
              'add_material_dependence': ['MATS1', 'MATS3', 'MATS8',

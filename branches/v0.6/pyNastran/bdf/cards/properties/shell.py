@@ -924,6 +924,9 @@ class PSHELL(ShellProperty):
         z = array([self.z1, self.z2])
         return z
 
+    def materials(self):
+        return [self.mid1, self.mid2, self.mid3, self.mid4]
+
     def mid(self):
         if isinstance(self.mid1, Material):
             return self.mid1
