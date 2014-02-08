@@ -495,7 +495,6 @@ class OUG(object):
             self.not_implemented_or_skip(msg)
 
     def OUG_RealTable(self, name):
-        #print('OUG_RealTable')
         dt = self.nonlinear_factor
         (format1, extract) = self.getOUG_FormatStart()
         format1 += 'i6f'
@@ -521,7 +520,6 @@ class OUG(object):
         translations = zeros((nnodes, 6), dtype='float32')
         istart = 0
         iend = 32
-        #dnode = inode_end - inode_start
         for inode in xrange(nnodes):
             eData = self.data[istart : iend]
             out = unpack(format1, eData)
@@ -620,7 +618,6 @@ class OUG(object):
             name = self.data_code['name']
             self.obj.data[name][istart : iend] = ones(inode_end - inode_start) * dt
         #self.obj.grid_type[istart : iend] = gridTypes
-
 
         headers = self.obj._get_headers()
         for iheader, header in enumerate(headers):

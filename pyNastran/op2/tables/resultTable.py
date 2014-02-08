@@ -68,9 +68,6 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         #grid_device, = unpack(b'i', data)
         return timeFreq
 
-    def _apply_data_code_value(self, name, value):
-        self.data_code[name] = value
-
     def _add_data_parameter(self, data, name, Type, field_num, applyNonlinearFactor=True,
                            fixDeviceCode=False):
         """
@@ -93,8 +90,6 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         if fixDeviceCode:
             value = (value - self.device_code) // 10
         #print(self.data_code)
-        #if self.table_name == 'OUGV1':
-            #print("name=%s Type=%s field_num=%s aCode=%s value=%s" % (name, Type, field_num, self.analysis_code, value))
         setattr(self, name, value)
         self.data_code[name] = value
 
@@ -106,6 +101,9 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
     def _set_null_nonlinear_factor(self):
         self.nonlinear_factor = None
         self.data_code['nonlinear_factor'] = None
+
+    def _apply_data_code_value(self, name, value):
+        self.data_code[name] = value
 
     def create_transient_object(self, storageObj, classObj, debug=False):
         """
@@ -415,7 +413,7 @@ class ResultTable(OQG, OUG, OEF, OPG, OES, OEE, OGF, R1TAB, DESTAB, LAMA):  # OE
         is necessary to prevent going past the recursion limit.
 
         Works by knowing that:
-        
+
         * the end of an unbuffered table has a:
           - [4]
         * the end of an table with a buffer has a:

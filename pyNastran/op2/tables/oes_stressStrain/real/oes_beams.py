@@ -206,7 +206,7 @@ class BeamStressObject(BeamResultsObject, StressObject):
                 (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
                 msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc.strip()))
 
-        msg.append(pageStamp + str(pageNum) + '\n')
+        msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
         return pageNum
 
@@ -236,7 +236,7 @@ class BeamStressObject(BeamResultsObject, StressObject):
                     (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
                     msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc.strip()))
 
-            msg.append(pageStamp + str(pageNum) + '\n')
+            msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
             msg = ['']
             pageNum += 1
@@ -280,7 +280,7 @@ class BeamStrainObject(BeamResultsObject, StrainObject):
                 (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
                 msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc.strip()))
 
-        msg.append(pageStamp + str(pageNum) + '\n')
+        msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
         return pageNum
 

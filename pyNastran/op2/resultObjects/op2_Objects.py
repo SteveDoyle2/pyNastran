@@ -41,6 +41,7 @@ class ScalarObject(BaseScalarObject):
         self.isTransient = False
         self.dt = None
         self.data_code = {}
+        self.apply_data_code()
 
     def is_imaginary(self):
         return bool(self.sort_bits[1])
@@ -168,6 +169,20 @@ class ScalarObject(BaseScalarObject):
             Type = 'H'      # SECTOR/HARMONIC/RING POINT
         else:
             raise RuntimeError('grid_type=%s' % grid_type)
+        return Type
+
+    def cast_grid_type(self, gridType):
+        """converts a gridType integer to a string"""
+        if gridType == 'G':
+            Type = 1  # GRID
+        elif gridType == 'S':
+            Type = 2  # SPOINT
+        elif gridType == 'L':
+            Type = 7  # RIGID POINT (e.g. RBE3)
+        elif gridType == 'H':
+            Type = 0      # SECTOR/HARMONIC/RING POINT
+        else:
+            raise RuntimeError('gridType=%s' % gridType)
         return Type
 
     def update_dt(self, data_code, dt):
