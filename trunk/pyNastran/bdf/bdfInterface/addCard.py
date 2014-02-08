@@ -69,7 +69,6 @@ class AddMethods(object):
             self.params[key] = param
 
     def add_node(self, node, allowOverwrites=False):
-        bbbb
         self.nodes.add_grid(node)
         return
         
