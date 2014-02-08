@@ -134,11 +134,11 @@ class pyWidget(wxVTKRenderWindow):
             dlg.Destroy()
         else:
             self.write_picture(magnify, fname)
-            
+
     def set_rotation(self, rotation):
         # self - AppFrame
         # self.frmPanel - Pan
-        
+
         #camera = self.frmPanel.widget.GetCamera()
         camera = self.GetCamera()
         assert camera is not None
