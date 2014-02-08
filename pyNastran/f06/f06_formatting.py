@@ -53,7 +53,7 @@ def writeImagFloats13E(vals, isMagPhase):
             vals2.append(v2)
 
         for v in vals:
-            v3 = '%13.6E' % (angle(v, deg=True))
+            v3 = '%13.6E' % angle(v, deg=True)
             if v3 == ' 0.000000E+00' or v3 == '-0.000000E+00':
                 v3 = ' 0.0         '
             else:
@@ -61,7 +61,7 @@ def writeImagFloats13E(vals, isMagPhase):
             vals2.append(v3)
     else:
         for v in vals:
-            v2 = '%13.6E' % (v.real)
+            v2 = '%13.6E' % v.real
             if v2 == ' 0.000000E+00' or v2 == '-0.000000E+00':
                 v2 = ' 0.0         '
             else:
@@ -69,7 +69,7 @@ def writeImagFloats13E(vals, isMagPhase):
             vals2.append(v2)
 
         for v in vals:
-            v3 = '%13.6E' % (v.imag)
+            v3 = '%13.6E' % v.imag
             if v3 == ' 0.000000E+00' or v3 == '-0.000000E+00':
                 v3 = ' 0.0         '
             else:
@@ -87,5 +87,6 @@ def writeFloats8p4F(vals):
             v2 = '  0.0   '
         else:
             isAllZeros = False
+        assert len(v2) == 8, 'v=%r' % v2
         vals2.append(v2)
     return (vals2, isAllZeros)
