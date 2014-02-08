@@ -69,21 +69,18 @@ class AddMethods(object):
             self.params[key] = param
 
     def add_node(self, node, allowOverwrites=False):
-        self.nodes.add_grid(node)
-        return
-        
-        #key = node.nid
-        #if key in self.nodes and not allowOverwrites:
-            #if not node.isSameCard(self.nodes[key]):
-                #print('nid=%s\noldNode=\n%snewNode=\n%s' %
-                     #(key, self.nodes[key], node))
-                #assert node.nid not in self.nodes, 'nid=%s\noldNode=\n%snewNode=\n%s' % (node.nid, self.nodes[key], node)
-            #else:
+        key = node.nid
+        if key in self.nodes and not allowOverwrites:
+            if not node.isSameCard(self.nodes[key]):
+                print('nid=%s\noldNode=\n%snewNode=\n%s' %
+                     (key, self.nodes[key], node))
+                assert node.nid not in self.nodes, 'nid=%s\noldNode=\n%snewNode=\n%s' % (node.nid, self.nodes[key], node)
+            else:
                 #print 'Node was duplicated...nid=%s\nnode=\n%s' %(key,node)
-                #pass
-        #else:
-            #assert key > 0, 'nid=%s node=%s' % (key, node)
-            #self.nodes[key] = node
+                pass
+        else:
+            assert key > 0, 'nid=%s node=%s' % (key, node)
+            self.nodes[key] = node
 
     def add_SPOINT(self, spoint):
         if self.spoints is None:
@@ -175,6 +172,24 @@ class AddMethods(object):
             assert key > 0, 'pid=%s prop=%s' % (key, prop)
             self.pbusht[key] = prop
 
+    def add_BCRPARA(self, card, allowOverwrites=False):
+        self.bcrparas[card.crid] = card
+
+    def add_BCTADD(self, card, allowOverwrites=False):
+        self.bctadds[card.csid] = card
+
+    def add_BCTPARA(self, card, allowOverwrites=False):
+        self.bctparas[card.csid] = card
+
+    def add_BCTSET(self, card, allowOverwrites=False):
+        self.bctsets[card.csid] = card
+
+    def add_BSURF(self, card, allowOverwrites=False):
+        self.bsurf[card.sid] = card
+
+    def add_BSURFS(self, card, allowOverwrites=False):
+        self.bsurfs[card.id] = card
+
     def add_PDAMPT(self, prop, allowOverwrites=False):
         key = prop.pid
 
@@ -216,18 +231,33 @@ class AddMethods(object):
             self.thermalMaterials[key] = material
 
     def add_material_dependence(self, material, allowOverwrites=False):
+        Type = material.type
         key = material.mid
-        if key in self.materialDeps and not allowOverwrites:
-            if not material.isSameCard(self.materialDeps[key]):
-                assert key not in self.materialDeps, 'mid=%s\noldMaterialDep=\n%snewMaterialDep=\n%s' % (key, self.materialDeps[key], material)
+        mapper = {
+            'MATS1' : self.MATS1,
+            'MATS3' : self.MATS3,
+            'MATS8' : self.MATS8,
+
+            'MATT1' : self.MATT1,
+            'MATT2' : self.MATT2,
+            'MATT3' : self.MATT3,
+            'MATT4' : self.MATT4,
+            'MATT5' : self.MATT5,
+            'MATT8' : self.MATT8,
+            'MATT9' : self.MATT9,
+        }
+        slot = mapper[Type]
+        if key in slot and not allowOverwrites:
+            if not material.isSameCard(slot[key]):
+                assert key not in slot, 'mid=%s Type=%r\noldMaterialDep=\n%snewMaterialDep=\n%s' % (key, Type, slot[key], material)
         else:
             assert key > 0, 'mid=%s material=\n%s' % (key, material)
-            self.materialDeps[key] = material
+            slot[key] = material
 
     def add_creep_material(self, material, allowOverwrites=False):
         """
         Method add_creep_material:
-        ..note:: May be removed in the future.  Are CREEP cards materials? 
+        ..note:: May be removed in the future.  Are CREEP cards materials?
                  They have an MID, but reference structural materials.
         """
         key = material.mid

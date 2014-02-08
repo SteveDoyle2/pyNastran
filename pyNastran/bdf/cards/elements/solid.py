@@ -13,17 +13,19 @@ All solid elements are SolidElement and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from numpy import dot, cross, array, matrix, zeros, float32
+from numpy import dot, cross, array, matrix, zeros
 from numpy.linalg import solve, norm
 
 from pyNastran.bdf.cards.elements.elements import Element
 from pyNastran.utils.mathematics import Area, gauss
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, fields)
+from pyNastran.bdf.fieldWriter import print_card_8
+
 
 def volume4(n1, n2, n3, n4):
     r"""
     Gets the volume, :math:`V`, of the tetrahedron.
-    
+
     .. math:: V = \frac{(a-d) \cdot \left( (b-d) \times (c-d) \right) }{6}
     """
     V = -dot((n1 - n4), cross(n2 - n4, n3 - n4)) / 6.
@@ -32,7 +34,7 @@ def volume4(n1, n2, n3, n4):
 def area_centroid(n1, n2, n3, n4):
     """
     Gets the area, :math:`A`, and centroid of a quad.::
-    
+
       1-----2
       |   / |
       | /   |
@@ -58,12 +60,20 @@ def area_centroid(n1, n2, n3, n4):
     return(area, centroid)
 
 class SolidElement(Element):
+    _field_map = {1: 'nid', 2:'pid'}
+
     def __init__(self, card, data):
         Element.__init__(self, card, data)
 
+    def _update_field_helper(self, n, value):
+        if n - 3 < len(self.nodes):
+            self.nodes[n - 3] = value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+
     def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
-        #self.nodes = model.Nodes(self.nodes, msg=msg)
+        self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
     def Eid(self):
@@ -75,12 +85,12 @@ class SolidElement(Element):
         """
         pass
 
-    def Mass(self, model):
+    def Mass(self):
         """
         Calculates the mass of the solid element
         Mass = Rho * Volume
         """
-        return self.Rho() * self.Volume(model)
+        return self.Rho() * self.Volume()
 
     def Mid(self):
         """
@@ -111,6 +121,10 @@ class SolidElement(Element):
     def rawFields(self):
         list_fields = [self.type, self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
 
 
 class CHEXA8(SolidElement):
@@ -143,7 +157,7 @@ class CHEXA8(SolidElement):
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 8
 
-    def _verify(self, model, xref=False):
+    def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.nodeIDs()
@@ -151,25 +165,25 @@ class CHEXA8(SolidElement):
         assert isinstance(pid, int)
         for i,nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
-        if xref == 1:  # True
-            c = self.Centroid(model)
-            v = self.Volume(model)
+        if xref:
+            c = self.Centroid()
+            v = self.Volume()
             assert isinstance(v, float)
             for i in range(3):
-                assert isinstance(c[i], float32)
+                assert isinstance(c[i], float)
 
-    def Centroid(self, model):
+    def Centroid(self):
         """
         Averages the centroids at the two faces
         """
-        (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodePositions(model)
+        (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodePositions()
         A1, c1 = area_centroid(n1, n2, n3, n4)
         A2, c2 = area_centroid(n5, n6, n7, n8)
         c = (c1 + c2) / 2.
         return c
 
-    def Volume(self, model):
-        (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodePositions(model)
+    def Volume(self):
+        (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodePositions()
         (A1, c1) = area_centroid(n1, n2, n3, n4)
         (A2, c2) = area_centroid(n5, n6, n7, n8)
         V = (A1 + A2) / 2. * norm(c1 - c2)
@@ -226,27 +240,27 @@ class CHEXA20(CHEXA8):
         msg = 'len(nids)=%s nids=%s' % (len(nids), nids)
         assert len(self.nodes) <= 20, msg
 
-    def Centroid(self, model):
+    def Centroid(self):
         """
         .. seealso:: CHEXA8.Centroid
         """
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
          n11, n12, n13, n14, n15,
-         n16, n17, n18, n19, n20) = self.nodePositions(model)
+         n16, n17, n18, n19, n20) = self.nodePositions()
         (A1, c1) = area_centroid(n1, n2, n3, n4)
         (A2, c2) = area_centroid(n5, n6, n7, n8)
         c = (c1 + c2) / 2.
         return c
 
-    def Volume(self, model):
+    def Volume(self):
         """
         .. seealso:: CHEXA8.Volume
         """
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
          n11, n12, n13, n14, n15,
-         n16, n17, n18, n19, n20) = self.nodePositions(model)
+         n16, n17, n18, n19, n20) = self.nodePositions()
         (A1, c1) = area_centroid(n1, n2, n3, n4)
         (A2, c2) = area_centroid(n5, n6, n7, n8)
         V = (A1 + A2) / 2. * norm(c1 - c2)
@@ -259,7 +273,7 @@ class CHEXA20(CHEXA8):
 class CPENTA6(SolidElement):
     """
     ::
-    
+
       CPENTA EID PID G1 G2 G3 G4 G5 G6
         *----------*
        / \        / \
@@ -347,7 +361,7 @@ class CPENTA6(SolidElement):
             A = Area(a, b)
         return [faceNodeIDs, A]
 
-    def _verify(self, model, xref=False):
+    def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.nodeIDs()
@@ -355,22 +369,22 @@ class CPENTA6(SolidElement):
         assert isinstance(pid, int)
         for i,nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
-        if xref == 1:  # True
-            c = self.Centroid(model)
-            v = self.Volume(model)
+        if xref:
+            c = self.Centroid()
+            v = self.Volume()
             assert isinstance(v, float)
             for i in range(3):
-                assert isinstance(c[i], float32)
+                assert isinstance(c[i], float)
 
-    def Centroid(self, model):
-        (n1, n2, n3, n4, n5, n6) = self.nodePositions(model)
+    def Centroid(self):
+        (n1, n2, n3, n4, n5, n6) = self.nodePositions()
         c1 = (n1 + n2 + n3) / 3.
         c2 = (n4 + n5 + n6) / 3.
         c = (c1 + c2) / 2.
         return c
 
-    def Volume(self, model):
-        (n1, n2, n3, n4, n5, n6) = self.nodePositions(model)
+    def Volume(self):
+        (n1, n2, n3, n4, n5, n6) = self.nodePositions()
         A1 = Area(n3 - n1, n2 - n1)
         A2 = Area(n6 - n4, n5 - n4)
         c1 = (n1 + n2 + n3) / 3.
@@ -419,25 +433,25 @@ class CPENTA15(CPENTA6):
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) <= 15
 
-    def Centroid(self, model):
+    def Centroid(self):
         """
         .. seealso:: CPENTA6.Centroid
         """
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
-         n11, n12, n13, n14, n15) = self.nodePositions(model)
+         n11, n12, n13, n14, n15) = self.nodePositions()
         c1 = (n1 + n2 + n3) / 3.
         c2 = (n4 + n5 + n6) / 3.
         c = (c1 - c2) / 2.
         return c
 
-    def Volume(self, model):
+    def Volume(self):
         """
         .. seealso:: CPENTA6.Volume
         """
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
-         n11, n12, n13, n14, n15) = self.nodePositions(model)
+         n11, n12, n13, n14, n15) = self.nodePositions()
         A1 = Area(n3 - n1, n2 - n1)
         A2 = Area(n6 - n4, n5 - n4)
         c1 = (n1 + n2 + n3) / 3.
@@ -479,7 +493,7 @@ class CTETRA4(SolidElement):
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 4
 
-    def _verify(self, model, xref=False):
+    def _verify(self, xref=False):
         eid = self.Eid()
         pid = self.Pid()
         nids = self.nodeIDs()
@@ -487,19 +501,19 @@ class CTETRA4(SolidElement):
         assert isinstance(pid, int)
         for i,nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
-        if xref == 1:  # True
-            c = self.Centroid(model)
-            v = self.Volume(model)
+        if xref:
+            c = self.Centroid()
+            v = self.Volume()
             assert isinstance(v, float)
             for i in range(3):
-                assert isinstance(c[i], float32)
+                assert isinstance(c[i], float)
 
-    def Volume(self, model):
-        (n1, n2, n3, n4) = self.nodePositions(model)
+    def Volume(self):
+        (n1, n2, n3, n4) = self.nodePositions()
         return volume4(n1, n2, n3, n4)
 
-    def Centroid(self, model):
-        (n1, n2, n3, n4) = self.nodePositions(model)
+    def Centroid(self):
+        (n1, n2, n3, n4) = self.nodePositions()
         return (n1 + n2 + n3 + n4) / 4.
 
     def getFaceNodes(self, nid, nidOpposite):
@@ -544,13 +558,13 @@ class CTETRA4(SolidElement):
         Qij = None
         return Qij
 
-    def zeta(self, model, p):
+    def zeta(self, p):
         p2 = array([1, p[0], p[1], p[2]])
-        J = self.Jacobian(model)
+        J = self.Jacobian()
         zeta = solve(J, p2)
         return zeta
 
-    def Jacobian(self, model):
+    def Jacobian(self):
         r"""
         .. math::
               [J] = \left[
@@ -561,11 +575,11 @@ class CTETRA4(SolidElement):
                 x_3 & y_3 & z_3 \\
                 x_4 & y_4 & z_4 \\
               \end{array} \right]
-        
+
          .. warning:: this has got to be wrong
         """
         m = matrix((6, 6), 'd')
-        (n1, n2, n3, n4) = self.nodePositions(model)
+        (n1, n2, n3, n4) = self.nodePositions()
         m[0][0] = m[0][1] = m[0][2] = m[0][2] = 1.
         m[1][0] = n1[0]
         m[2][0] = n1[1]
@@ -629,22 +643,22 @@ class CTETRA10(CTETRA4):
         N10 = 4 * g3 * g4
         return (N1, N2, N3, N4, N5, N6, N7, N8, N9, N10)
 
-    def Volume(self, model):
+    def Volume(self):
         """
         Gets the volume, :math:`V`, of the primary tetrahedron.
 
         .. seealso:: CTETRA4.Volume
         """
-        (n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = self.nodePositions(model)
+        (n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = self.nodePositions()
         return volume4(n1, n2, n3, n4)
 
-    def Centroid(self, model):
+    def Centroid(self):
         """
         Gets the cenroid of the primary tetrahedron.
 
         .. seealso:: CTETRA4.Centroid
         """
-        (n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = self.nodePositions(model)
+        (n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = self.nodePositions()
         return (n1 + n2 + n3 + n4) / 4.
 
     def getFaceNodes(self, nid, nidOpposite):

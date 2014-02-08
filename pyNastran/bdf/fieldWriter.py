@@ -6,18 +6,10 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
 import warnings
-from numpy import allclose, isinf
+from numpy import allclose, isinf, float32
 from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.utils import is_string
 
-
-def printCard(fields, tol=0.):
-    """
-    .. deprecated: will be replaced in version 0.7 with :func: `print_card`
-    """
-    warnings.warn('update printCard to print_card', DeprecationWarning,
-                  stacklevel=2)
-    return print_card_8(fields)
 
 
 def is_same(value1, value2):
@@ -28,8 +20,9 @@ def is_same(value1, value2):
     """
     if is_string(value1) or value1 is None:
         return True if value1 == value2 else False
-    return True if (value1 == value2 or type(value1) == type(value2) and
-                    not isinf(value1) and allclose(value1, value2)) else False
+    if value1 == value2:
+        return True
+    return False
 
 
 def set_blank_if_default(value, default):
@@ -86,6 +79,7 @@ def print_float_8(value):
     Prints a float in nastran 8-character width syntax using the
     highest precision possbile.
     """
+    value = float(value)
     if value == 0.0:
         return '%8s' %('0.')
     elif value > 0.:  # positive, not perfect...
@@ -188,15 +182,14 @@ def print_field(value):
     """
     if isinstance(value, int):
         field = "%8s" % value
-    elif isinstance(value, float):
+    elif isinstance(value, float) or isinstance(value, float32):
         field = print_float_8(value)
     elif value is None:
         field = "        "
     else:
         field = "%8s" % value
     if len(field) != 8:
-        msg = 'field=|%s| is not 8 characters long...rawValue=|%s|' % (field,
-                                                                       value)
+        msg = 'field=|%s| is not 8 characters long...rawValue=|%s|' % (field, value)
         raise RuntimeError(msg)
     return field
 
@@ -281,6 +274,52 @@ def print_int_card(fields):
         if i % 8 == 0:  # allow 1+8 fields per line
             out = out.rstrip(' ')
             out += '\n        '
+    out = out.rstrip(' \n+') + '\n'  # removes blank lines at the end of cards
+    return out
+
+def print_int_card_blocks(fields_blocks):
+    """
+    Prints a nastran-style card with 8-character width fields.
+    All fields other than the card name must be written in "block" format.
+    This is used to speed up SET cards.
+
+    :param fields_blocks: The fields written in "block" notation.
+
+    fields_blocks = [
+        'SET1',
+        [['a', 1.0, 3], False], # these are not all integers
+        [[1, 2, 3], True], # these are all integers
+    ]
+    ..note:: Blanks are allowed in the False block.
+    """
+    card_name = blocks[0]
+    try:
+        out = '%-8s' % card_name
+    except:
+        print("ERROR!  fields=%s" % fields)
+        sys.stdout.flush()
+        raise
+
+    out2 = []
+    i = 1
+    for block in blocks[1:]:
+        (fields, is_all_ints) = block
+        if is_all_ints is True:
+            for field in fields:
+                out += "%8i" % field
+                if i % 8 == 0:  # allow 1+8 fields per line
+                    out = out.rstrip(' ')
+                    out += '\n        '
+                i += 1
+        elif is_all_ints is False:
+            for field in fields:
+                out += print_field(field)
+                if i % 8 == 0:  # allow 1+8 fields per line
+                    out = out.rstrip(' ')
+                    out += '\n        '
+                i += 1
+        else:
+            raise SyntaxError('is_all_ints must be a boolean.  is_all_ints=%r' % is_all_ints)
     out = out.rstrip(' \n+') + '\n'  # removes blank lines at the end of cards
     return out
 

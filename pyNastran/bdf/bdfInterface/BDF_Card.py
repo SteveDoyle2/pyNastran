@@ -20,6 +20,13 @@ class BDFCard(object):
             self.card = None
             self.nfields = None
 
+    def pop(self):
+        """
+        Pops the last value off
+        """
+        self.nfields -= 1
+        return self.card.pop()
+
     def Is(self, cardName):
         """
         Returns True if the card is of type cardName
@@ -34,13 +41,13 @@ class BDFCard(object):
 
     def __setitem__(self, key, value):
         self.card.__setitem__(key, value)
-        
+
     def __getitem__(self, key):
         return self.card.__getitem__(key)
-    
+
     def __getslice__(self, i, j):
         return self.card.__getslice__(i, j)
-    
+
     def __setslice__(self, i, j, sequence):
         self.card.__setslice__(i, j, sequence)
 

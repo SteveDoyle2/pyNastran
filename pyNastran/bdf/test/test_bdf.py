@@ -12,6 +12,7 @@ import traceback
 
 from pyNastran.utils import print_bad_path
 from pyNastran.bdf.bdf import BDF, NastranMatrix
+from pyNastran.bdf.bdf_replacer import BDFReplacer
 from pyNastran.bdf.test.compare_card_content import compare_card_content
 
 import pyNastran.bdf.test
@@ -41,6 +42,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
             filenames2.append(filename)
 
     failedFiles = []
+    n = 1
     for filename in filenames2:
         absFilename = os.path.abspath(os.path.join(folder, filename))
         if folder != '':
@@ -49,7 +51,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
         try:
             (fem1, fem2, diffCards2) = run_bdf(folder, filename, debug=debug,
                                                xref=xref, check=check, punch=punch,
-                                               cid=cid, isFolder=True)
+                                               cid=cid, isFolder=True, dynamic_vars={})
             del fem1
             del fem2
             diffCards += diffCards
@@ -70,8 +72,13 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
             traceback.print_exc(file=sys.stdout)
             #raise
         print('-' * 80)
-        if not isPassed:
+        if isPassed:
+            sys.stderr.write('%i %s' % (n, absFilename))
+            n += 1
+        else:
+            sys.stderr.write('*' + absFilename)
             failedFiles.append(absFilename)
+        sys.stderr.write('\n')
 
     print('*' * 80)
     try:
@@ -83,24 +90,30 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
 
 
 def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False,
-            cid=None, meshForm='combined', isFolder=False):
+            cid=None, meshForm='combined', isFolder=False, print_stats=False,
+            reject=False, dynamic_vars={}):
     bdfModel = str(bdfFilename)
-    print("bdfModel = %s" % (bdfModel))
+    print("bdfModel = %r" % bdfModel)
     if isFolder:
         bdfModel = os.path.join(test_path, folder, bdfFilename)
 
-    assert os.path.exists(bdfModel), '|%s| doesnt exist' % (bdfModel)
+    assert os.path.exists(bdfModel), '%r doesnt exist' % bdfModel
 
-    fem1 = BDF(debug=debug, log=None)
+    if reject:
+        fem1 = BDFReplacer(bdfModel + '.rej', debug=debug, log=None)
+    else:
+        fem1 = BDF(debug=debug, log=None)
+    if dynamic_vars:
+        fem1.set_dynamic_syntax(dynamic_vars)
+
     fem1.log.info('starting fem1')
     sys.stdout.flush()
     fem2 = None
     diffCards = []
     try:
-        #print("xref = ", xref)
         (outModel) = run_fem1(fem1, bdfModel, meshForm, xref, punch, cid)
-        (fem2) = run_fem2(bdfModel, outModel, xref, punch, debug=debug, log=None)
-        (diffCards) = compare(fem1, fem2, xref=xref, check=check)
+        (fem2) = run_fem2(bdfModel, outModel, xref, punch, reject, debug=debug, log=None)
+        (diffCards) = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
 
     except KeyboardInterrupt:
         sys.exit('KeyboardInterrupt...sys.exit()')
@@ -138,30 +151,37 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, cid):
         raise
     #fem1.sumForces()
     #fem1.sumMoments()
-    outModel = bdfModel + '_out'
-    if cid is not None and xref:
-        fem1.nodes.resolve_grids(fem1, cid=cid)
-    if meshForm == 'combined':
-        fem1.write_bdf(outModel, interspersed=True)
-    elif meshForm == 'separate':
-        fem1.write_bdf(outModel, interspersed=False)
+    if fem1._auto_reject:
+        outModel = bdfModel + '.rej'
     else:
-        msg = "meshForm=|%r| allowedForms=['combined','separate']" % (meshForm)
-        raise NotImplementedError(msg)
-    #fem1.writeAsCTRIA3(outModel)
+        outModel = bdfModel + '_out'
+        if cid is not None and xref:
+            fem1.resolveGrids(cid=cid)
+        if meshForm == 'combined':
+            fem1.write_bdf(outModel, interspersed=True)
+        elif meshForm == 'separate':
+            fem1.write_bdf(outModel, interspersed=False)
+        else:
+            msg = "meshForm=%r allowedForms=['combined','separate']" % (meshForm)
+            raise NotImplementedError(msg)
+        #fem1.writeAsCTRIA3(outModel)
     return (outModel)
 
 
-def run_fem2(bdfModel, outModel, xref, punch, debug=False, log=None):
+def run_fem2(bdfModel, outModel, xref, punch, reject, debug=False, log=None):
     assert os.path.exists(bdfModel), bdfModel
     assert os.path.exists(outModel), outModel
-    fem2 = BDF(debug=debug, log=log)
+
+    if reject:
+        fem2 = BDFReplacer(bdfModel + '.rej', debug=debug, log=None)
+    else:
+        fem2 = BDF(debug=debug, log=None)
     fem2.log.info('starting fem2')
     sys.stdout.flush()
     try:
         fem2.read_bdf(outModel, xref=xref, punch=punch)
     except:
-        print("failed reading |%s|" % (outModel))
+        print("failed reading %r" % (outModel))
         raise
 
     #fem2.sumForces()
@@ -289,6 +309,11 @@ def get_element_stats(fem1, fem2):
 
     fem1._verify_bdf()
 
+    mass, cg, I = fem1.mass_properties(reference_point=None, sym_axis=None)
+    print("mass =", mass)
+    print("cg   =", cg)
+    print("I    =", I)
+
    # for (key, e) in sorted(fem1.elements.iteritems()):
    #     try:
    #         e._verify()
@@ -311,7 +336,7 @@ def get_element_stats(fem1, fem2):
    #         print("e=\n",str(e))
    #         #print("*stats - e.type=%s eid=%s  element=\n%s"
    #             #% (e.type, e.eid, str(exp.args)))
-   #             
+   #
    #         #raise
 
 
@@ -329,8 +354,8 @@ def get_matrix_stats(fem1, fem2):
             raise
 
 
-def compare(fem1, fem2, xref=True, check=True):
-    diffCards = compare_card_count(fem1, fem2)
+def compare(fem1, fem2, xref=True, check=True, print_stats=True):
+    diffCards = compare_card_count(fem1, fem2, print_stats=print_stats)
     if xref and check:
         get_element_stats(fem1, fem2)
         get_matrix_stats(fem1, fem2)
@@ -355,36 +380,56 @@ def print_points(fem1, fem2):
 
 
 def main():
-    #print('sys.argv', sys.argv)
-    msg =  'Tests to see if a BDF will work with pyNastran.\n'
-    msg += '<bdf_filename> is the path to the BDF/DAT file\n'
-    msg += '\n'
-    msg += 'Usage:\n'
-    msg += '  test_bdf.py [-q] [-x] [-p] [-c] <bdf_filename>\n'
-    msg += '  test_bdf.py -h | --help\n'
-    msg += '  test_bdf.py -v | --version\n'
-    msg += '\n'
-    msg += 'Options:\n'
-    msg += '  -h, --help     Show this help message and exits\n'
-    msg += '  -q, --quiet    Prints debug messages (default=False)\n'
-    msg += '  -c, --checks   Disables BDF checks.  Checks run the methods on \n'
-    msg += '                 every element/property to test them.  May fails if a \n'
-    msg += '                 card is fully not supported.\n'
-    msg += '  -p, --punch    Disables reading the executive and case control decks in the BDF\n'
-    msg += '  -x, --xref     Disables cross-referencing and checks of the BDF\n'
-    msg += '  -v, --version  Shows pyNastran\'s version number and exits\n'
-    
     from docopt import docopt
+    msg  = "Usage:\n"
+    msg += "  test_bdf [-q] [-x] [-p] [-c] BDF_FILENAME\n" #
+    msg += "  test_bdf [-q] [-p] [-r] BDF_FILENAME\n" #
+    #msg += "  test_bdf [-q] [-p] [-o [<VAR=VAL>]...] BDF_FILENAME\n" #
+    msg += '  test_bdf -h | --help\n'
+    msg += '  test_bdf -v | --version\n'
+    msg += '\n'
+
+    msg += "Positional Arguments:\n"
+    msg += "  BDF_FILENAME   path to BDF/DAT/NAS file\n"
+    msg += '\n'
+
+    msg += 'Options:\n'
+    msg += '  -q, --quiet    prints debug messages (default=False)\n'
+    msg += '  -x, --xref     disables cross-referencing and checks of the BDF.\n'
+    msg += '                  (default=False -> on)\n'
+    msg += '  -p, --punch    disables reading the executive and case control decks in the BDF\n'
+    msg += '                 (default=False -> reads entire deck)\n'
+    msg += '  -c, --check    disables BDF checks.  Checks run the methods on \n'
+    msg += '                 every element/property to test them.  May fails if a \n'
+    msg += '                 card is fully not supported (default=False).\n'
+    msg += '  -r, --reject   rejects all cards with the appropriate values applied (default=False).\n'
+    #msg += '  -o <VAR_VAL>, --openmdao <VAR_VAL>   rejects all cards with the appropriate values applied;\n'
+    #msg += '                 Uses the OpenMDAO %var syntax to replace it with value.\n'
+    #msg += '                 So test_bdf -r var1=val1 var2=val2\n'
+
+    msg += '  -h, --help     show this help message and exit\n'
+    msg += "  -v, --version  show program's version number and exit\n"
+
+    if len(sys.argv) == 1:
+        sys.exit(msg)
+
     ver = str(pyNastran.__version__)
     data = docopt(msg, version=ver)
 
-    debug = not(data['--quiet'])
-    xref = data['--xref']
-    check = data['--checks']
-    punch = data['--punch']
-    bdf_filename = data['<bdf_filename>']
-    
-    run_bdf('.', bdf_filename, debug=debug, xref=xref, check=check, punch=punch)
+    for key, value in sorted(data.iteritems()):
+        print("%-12s = %r" % (key.strip('--'), value))
+
+    import time
+    t0 = time.time()
+    run_bdf('.', data['BDF_FILENAME'],
+                 debug=not(data['--quiet']),
+                 xref =not(data['--xref' ]),
+                 check=not(data['--check']),
+                 punch=data['--punch'],
+                 reject=data['--reject'],
+    )
+    print("total time:  %.2f sec" % (time.time() - t0))
+
 
 if __name__ == '__main__':
     main()

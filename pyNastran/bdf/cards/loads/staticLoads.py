@@ -19,7 +19,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import izip
 
-from numpy import array, cross, allclose
+from numpy import array, cross, allclose, ndarray
 from numpy.linalg import norm
 
 from pyNastran.bdf.cards.loads.loads import Load, LoadCombination
@@ -30,6 +30,9 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     string, string_or_blank,
     integer_or_string, fields,
     integer_string_or_blank)
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
+
 
 class LOAD(LoadCombination):
     type = 'LOAD'
@@ -266,11 +269,19 @@ class LOAD(LoadCombination):
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        else:
+            return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card)
+
 
 class GRAV(BaseCard):
     """
     Defines acceleration vectors for gravity or other acceleration loading.::
-    
+
       GRAV SID CID A     N1  N2 N3    MB
       GRAV 1   3   32.2 0.0 0.0 -1.0
     """
@@ -363,6 +374,12 @@ class GRAV(BaseCard):
         list_fields = ['GRAV', self.sid, self.Cid(), self.scale] + N + [mb]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+
 
 class ACCEL1(BaseCard):
     """
@@ -426,6 +443,10 @@ class ACCEL1(BaseCard):
                   ] + self.nodeIDs()
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + card_writer(card)
+
 
 class Force(Load):
     """Generic class for all Forces"""
@@ -443,7 +464,13 @@ class Force(Load):
             normXYZ = norm(self.xyz)
             #mag = self.mag*normXYZ
             self.mag *= normXYZ
-            self.xyz = self.xyz / normXYZ
+            try:
+                self.xyz = self.xyz / normXYZ
+            except FloatingPointError:
+                msg = 'xyz = %s\n' % self.xyz
+                msg += 'normXYZ = %s\n' % normXYZ
+                msg += 'card =\n%s' % str(self)
+                raise FloatingPointError(msg)
 
     def transformLoad(self):
         #print("self.xyz = ",self.xyz)
@@ -475,6 +502,10 @@ class Force(Load):
         return (typesFound, forceLoads, momentLoads,
                 forceConstraints, momentConstraints,
                 gravityLoads)
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + card_writer(card)
 
 
 class Moment(Load):
@@ -508,7 +539,8 @@ class Moment(Load):
 
     def getReducedLoads(self):
         scaleFactors = [1.]
-        loads = self.F()
+        loads = { self.node: self.M() }
+        print(loads)
         return(scaleFactors, loads)
 
     def organizeLoads(self, model):
@@ -525,6 +557,10 @@ class Moment(Load):
 
     def M(self):
         return self.xyz * self.mag
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + card_writer(card)
 
 
 class FORCE(Force):
@@ -555,7 +591,7 @@ class FORCE(Force):
             self.mag = data[3]
             xyz = data[4:7]
 
-        assert len(xyz) == 3, 'xyz=%s' % (xyz)
+        assert len(xyz) == 3, 'xyz=%s' % str(xyz)
         self.xyz = array(xyz)
 
     def Cid(self):
@@ -586,6 +622,13 @@ class FORCE(Force):
         list_fields = ['FORCE', self.sid, self.node, cid,
                        self.mag] + list(self.xyz)
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card)  # doesn't work
 
 
 class FORCE1(Force):
@@ -646,6 +689,10 @@ class FORCE1(Force):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + card_writer(card)
 
 
 class FORCE2(Force):
@@ -722,12 +769,16 @@ class FORCE2(Force):
         return self.g4.nid
 
     def rawFields(self):
-        (g1, g2, g3, g4) = self.nodeIDs([self.g1, self.g2, self.g3, self.g4])
-        list_fields = ['FORCE2', self.sid, self.NodeID(), self.mag, g1, g2, g3, g4]
+        (node, g1, g2, g3, g4) = self.nodeIDs([self.node, self.g1, self.g2, self.g3, self.g4])
+        list_fields = ['FORCE2', self.sid, node, self.mag, g1, g2, g3, g4]
         return list_fields
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + card_writer(card)
 
 
 class MOMENT(Moment):
@@ -755,8 +806,12 @@ class MOMENT(Moment):
                          double_or_blank(card, 7, 'X3', 0.0)])
             assert len(card) <= 8, 'len(MOMENT card) = %i' % len(card)
         else:
-            raise NotImplementedError(data)
-        assert len(xyz) == 3, 'xyz=%s' % xyz
+            self.sid = data[0]
+            self.node = data[1]
+            self.cid = data[2]
+            self.mag = data[3]
+            xyz = data[4:7]
+        assert len(xyz) == 3, 'xyz=%s' % str(xyz)
         self.xyz = xyz
 
     def Cid(self):
@@ -781,6 +836,10 @@ class MOMENT(Moment):
         list_fields = ['MOMENT', self.sid, self.node, cid,
                   self.mag] + list(self.xyz)
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + card_writer(card)
 
 
 class MOMENT1(Moment):
@@ -814,7 +873,7 @@ class MOMENT1(Moment):
             xyz = data[7:10]
             raise NotImplementedError('MOMENT1 is probably wrong')
 
-        #assert len(xyz) == 3, 'xyz=%s' % (xyz)
+        #assert len(xyz) == 3, 'xyz=%s' % str(xyz)
         #self.xyz = array(xyz)
         self.xyz = None
 
@@ -828,7 +887,7 @@ class MOMENT1(Moment):
         self.g2 = model.Node(self.g2, msg=msg)
         self.xyz = self.g2.Position() - self.g1.Position()
         self.normalize()
-    
+
     def get_node_id(self):
         if isinstance(self.node, int):
             return self.node
@@ -853,6 +912,10 @@ class MOMENT1(Moment):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + card_writer(card)
 
 
 class MOMENT2(Moment):
@@ -889,33 +952,64 @@ class MOMENT2(Moment):
             self.g3 = data[5]
             self.g4 = data[6]
             xyz = data[7:10]
-        assert len(xyz) == 3, 'xyz=%s' % (xyz)
-        self.xyz = array(xyz)
+            self.xyz = array(xyz)
+            assert len(xyz) == 3, 'xyz=%s' % str(xyz)
 
     def cross_reference(self, model):
         """
         .. todo:: cross reference and fix repr function
         """
         msg = ' which is required by MOMENT2 sid=%s' % self.sid
+        self.node = model.Node(self.node, msg=msg)
         self.g1 = model.Node(self.g1, msg=msg)
         self.g2 = model.Node(self.g2, msg=msg)
         self.g3 = model.Node(self.g3, msg=msg)
         self.g4 = model.Node(self.g4, msg=msg)
-        
+
         v12 = self.g2.Position() - self.g1.Position()
         v34 = self.g4.Position() - self.g3.Position()
         v12 = v12 / norm(v12)
         v34 = v34 / norm(v34)
         self.xyz = cross(v12, v34)
 
+    def NodeID(self):
+        if isinstance(self.node, int):
+            return self.node
+        return self.node.nid
+
+    def G1(self):
+        if isinstance(self.g1, int):
+            return self.g1
+        return self.g1.nid
+
+    def G2(self):
+        if isinstance(self.g2, int):
+            return self.g2
+        return self.g2.nid
+
+    def G3(self):
+        if isinstance(self.g3, int):
+            return self.g3
+        return self.g3.nid
+
+    def G4(self):
+        if isinstance(self.g4, int):
+            return self.g4
+        return self.g4.nid
+
     def rawFields(self):
-        (node, g1, g2, g3, g4) = self.nodeIDs([self.node, self.g1, self.g2,
+        (node, g1, g2, g3, g4) = self.nodeIDs(nodes=[self.node, self.g1, self.g2,
                                                self.g3, self.g4])
+        assert isinstance(g1, int), g1
         list_fields = ['MOMENT2', self.sid, node, self.mag, g1, g2, g3, g4]
         return list_fields
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + card_writer(card)
 
 
 class PLOAD(Load):
@@ -960,12 +1054,16 @@ class PLOAD(Load):
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + card_writer(card)
+
 
 class PLOAD1(Load):
     type = 'PLOAD1'
     validTypes = ['FX', 'FY', 'FZ', 'FXE', 'FYE', 'FZE',
                   'MX', 'MY', 'MZ', 'MXE', 'MYE', 'MZE']
-    validScales = ['LE', 'FR', 'LEPR', 'FRPR']
+    validScales = ['LE', 'FR', 'LEPR', 'FRPR'] # LE: length-based; FR: fractional; PR:projected
 
     def __init__(self, card=None, data=None, comment=''):
         if comment:
@@ -973,8 +1071,8 @@ class PLOAD1(Load):
         if card:
             self.sid = integer(card, 1, 'sid')
             self.eid = integer(card, 2, 'eid')
-            self.Type = string(card, 3, 'Type')
-            self.scale = string(card, 4, 'scale')
+            self.Type = string(card, 3,  'Type ("%s")' % '",  "'.join(self.validTypes) )
+            self.scale = string(card, 4, 'scale ("%s")' % '", "'.join(self.validScales) )
             self.x1 = double(card, 5, 'x1')
             self.p1 = double(card, 6, 'p1')
             self.x2 = double_or_blank(card, 7, 'x2', self.x1)
@@ -993,24 +1091,183 @@ class PLOAD1(Load):
         if self.Type not in self.validTypes:
             msg = '%s is an invalid type on the PLOAD1 card' % self.Type
             raise RuntimeError(msg)
+
+        assert 0.0 <= self.x1 <= self.x2
+        if self.scale in ['FR', 'FRPR']:
+            assert self.x1 <= 1.0, 'x1=%r' % self.x1
+            assert self.x2 <= 1.0, 'x2=%r' % self.x2
         assert self.scale in self.validScales, '%s is an invalid scale on the PLOAD1 card' % (self.scale)
+
 
     def cross_reference(self, model):
         """
         .. todo:: cross reference and fix repr function
         """
-        pass
+        self.eid = model.elements[self.eid]
+
+    def transformLoad(self):
+        p1 = self.eid.ga.Position()
+        p2 = self.eid.gb.Position()
+
+        g0 = self.eid.g0_vector
+        #if not isinstance(g0, ndarray):
+        #    g0 = g0.Position()
+
+        x = p2 - p1
+        y = p1 - g0
+        z = cross(x, y)
+        A = [x, y, z]
+        #print("x =", x)
+        #print("y =", y)
+        #print("z =", z)
+        #g = self.GravityVector()
+        return A
+        #(g2, matrix) = self.cid.transformToGlobal(A)
+        #return (g2)
+
+    def getReducedLoads(self):
+        """
+        Get all load objects in a simplified form, which means all
+        scale factors are already applied and only base objects
+        (no LOAD cards) will be returned.
+
+        .. todo:: lots more object types to support
+        """
+        scale_factors = [1.0]
+        loads = [self]
+        return scale_factors, loads
+
+    def organizeLoads(self, model):
+        """
+        Figures out magnitudes of the loads to be applied to the various nodes.
+        This includes figuring out scale factors.
+        """
+        forceLoads = {}  # spc enforced displacement (e.g. FORCE=0)
+        momentLoads = {}
+        forceConstraints = {}
+        momentConstraints = {}
+        gravityLoads = []
+        #print("self.loadIDs = ",self.loadIDs)
+
+        typesFound = set()
+        (scaleFactors, loads) = self.getReducedLoads()
+
+        for (scaleFactor, load) in izip(scaleFactors, loads):
+            #print("*load = ",load)
+            out = load.transformLoad()
+            typesFound.add(load.__class__.__name__)
+
+            if isinstance(load, PLOAD1): # CBAR/CBEAM
+                element = load.eid
+                (ga, gb) = element.nodeIDs()
+                load_type = load.Type
+
+                scale = load.scale
+                eType = element.type
+
+                if load_type in ['FX', 'FY', 'FZ']:
+                    p1 = element.ga.Position()
+                    p2 = element.gb.Position()
+                    r = p2 - p1
+
+                if load_type == 'FX':
+                    Fv = array([1., 0., 0.])
+                elif load_type == 'FY':
+                    Fv = array([0., 0., 1.])
+                elif load_type == 'FZ':
+                    Fv = array([0., 0., 1.])
+
+                elif load_type == 'MX':
+                    Fv = array([0., 0., 0.])
+                    Mv = array([1., 0., 0.])
+                elif load_type == 'MY':
+                    Fv = array([0., 0., 0.])
+                    Mv = array([0., 1., 0.])
+                elif load_type == 'MZ':
+                    Fv = array([0., 0., 0.])
+                    Mv = array([0., 0., 1.])
+                # FXE, FYE, FZE, MXE, MYE, MZE
+                else:
+                    raise NotImplementedError(load_type)
+
+                p1 = load.p1
+                p2 = load.p2
+                if scale == 'FR':
+                    x1 = load.x1
+                    x2 = load.x2
+                elif scale == 'LE':
+                    L = element.Length()
+                    x1 = load.x1 / L
+                    x2 = load.x2 / L
+                else:
+                    raise NotImplementedError('scale=%s is not supported.  Use "FR", "LE".')
+
+                assert x1 <= x2, '---load---\n%sx1=%r must be less than x2=%r' % (repr(self), self.x1, self.x2)
+                if  x1 == x2:
+                    msg = 'Point loads are not supported on...\n%sTry setting x1=%r very close to x2=%r and\n' % (repr(self), self.x1, self.x2)
+                    msg += 'scaling p1=%r and p2=%r by x2-x1 (for "FR") and (x2-x1)/L (for "LE").' % (self.p1, self.p2)
+                    raise NotImplementedError(msg)
+                    if p1 != p2:
+                        msg = 'p1=%r must be equal to p2=%r for x1=x2=%r'  %(self.p1, self.p2, self.x1)
+                        raise RuntimeError(msg)
+
+                dx = x2 - x1
+                m = (p2 - p1) / dx
+                #dx * (x2 + x1) = (x2^2-x1^2)
+                dx2 = x2**2 - x1**2
+                dx3 = x2**3 - x1**3
+                dx4 = x2**4 - x1**4
+                #F = (p1 - m * x1) * dx + m * dx2 / 2.
+                F = p1 * dx + m * (dx2 / 2. - x1 * dx)
+
+                F /= 2.
+
+                if eType in ['CBAR', 'CBEAM']:
+                    if load_type in ['FX', 'FY', 'FZ']:
+                        M = p1 * dx3 / 6. + m * (dx4 / 12. - x1 * dx3 / 6.)
+                        Mv = M * cross(r, Fv) / 2. # divide by 2 for 2 nodes
+
+                        Fv *= F
+                        #Mv = M
+                        forceLoads[ga] = Fv
+                        forceLoads[gb] = Fv
+                        momentLoads[ga] = Mv
+                        momentLoads[gb] = Mv
+                    elif load_type in ['MX', 'MY', 'MZ']:
+                        # these are really moments
+                        Mv *= F
+                        momentLoads[ga] = Mv
+                        momentLoads[gb] = Mv
+                    else:
+                        raise NotImplementedError(load_type)
+                else:
+                    raise NotImplementedError(eType)
+
+            else:
+                msg = '%s not supported' % (load.__class__.__name__)
+                raise NotImplementedError(msg)
+        return (typesFound, forceLoads, momentLoads, forceConstraints,
+                momentConstraints, gravityLoads)
 
     def getLoads(self):
         return [self]
 
+    def Eid(self):
+        if isinstance(self.eid, int):
+            return self.eid
+        return self.eid.eid
+
     def rawFields(self):
-        list_fields = ['PLOAD1', self.sid, self.eid, self.Type, self.scale,
+        list_fields = ['PLOAD1', self.sid, self.Eid(), self.Type, self.scale,
                   self.x1, self.p1, self.x2, self.p2]
         return list_fields
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + card_writer(card)
 
 
 class PLOAD2(Load):
@@ -1057,6 +1314,10 @@ class PLOAD2(Load):
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + card_writer(card)
+
 
 class PLOAD4(Load):
     type = 'PLOAD4'
@@ -1079,8 +1340,8 @@ class PLOAD4(Load):
                 integer_or_blank(card, 8, 'eid2')):  # plates
                 eid2 = integer(card, 8, 'eid2')
                 if eid2:
-                    self.eids = expand_thru([self.eid, 'THRU', eid2])
-
+                    self.eids = expand_thru([self.eid, 'THRU', eid2],
+                                            set_fields=False, sort_fields=False)
                 self.g1 = None
                 self.g34 = None
             else:
@@ -1128,9 +1389,15 @@ class PLOAD4(Load):
         .. warning:: sorl=SURF is supported (not LINE)
         .. warning:: ldir=NORM is supported (not X,Y,Z)
         """
-        assert self.sorl == 'SURF', 'only surface loads are supported.  required_sorl=SURF.  actual=%s' % (self.sorl)
-        assert self.ldir == 'NORM', 'only normal loads are supported.   required_ldir=NORM.  actual=%s' % (self.ldir)
-        assert len(self.eids) == 1, 'only one load may be defined on each PLOAD4.  nLoads=%s\n%s' % (len(self.eids), str(self))
+        if  self.sorl != 'SURF':
+            msg = 'Only surface loads are supported.  required_sorl=SURF.  actual=%s' % self.sorl
+            raise RuntimeError(msg)
+        if self.ldir != 'NORM':
+            msg = 'Only normal loads are supported.   required_ldir=NORM.  actual=%s' % self.ldir
+            raise RuntimeError(msg)
+        if len(self.eids) != 1:
+            msg = 'Only one load may be defined on each PLOAD4.  nLoads=%s\n%s' % (len(self.eids), str(self))
+            raise RuntimeError(msg)
 
         if self.g1 and self.g34:  # solid elements
             nid = self.g1.nid
@@ -1224,6 +1491,13 @@ class PLOAD4(Load):
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card)
+
 
 class PLOADX1(Load):
     type = 'PLOADX1'
@@ -1262,3 +1536,7 @@ class PLOADX1(Load):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + card_writer(card)

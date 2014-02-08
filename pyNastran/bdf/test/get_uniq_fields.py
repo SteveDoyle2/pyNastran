@@ -37,7 +37,7 @@ class BDFuniqCard(BDF):
         card = to_fields(card_lines, card_name)
         card = [interpret_value(val) for val in card]
         card = BDFCard(card)
-        
+
         #if cardName == "LOAD":
         rec = []
         for item in card:
@@ -74,7 +74,7 @@ class BDFuniqCard(BDF):
         for card in self.card_set:
             self.f.write(str(card) + '\n')
         self.f.close()
-        
+
 
 if __name__ == '__main__':
     print("enter list of filenames at the command line...")

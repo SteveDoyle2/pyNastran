@@ -36,7 +36,7 @@ class TestShells(unittest.TestCase):
         T = [.1,.2,.3]
         Sout = [1, 1, 0]  # 0-NO, 1-YES
         data = [pid, z0, nsm, sb, ft, TRef, ge, lam, Mid, T, Theta, Sout]
-        
+
         p = PCOMP(data=data)
         self.assertFalse(p.isSymmetrical())
         self.assertEqual(p.nPlies(), 3)
@@ -53,7 +53,7 @@ class TestShells(unittest.TestCase):
         self.assertAlmostEqual(p.Theta(2), 20.)
         with self.assertRaises(IndexError):
             p.Theta(3)
-        
+
         self.assertEqual(p.Mid(0), 1)
         self.assertEqual(p.Mid(1), 2)
         self.assertEqual(p.Mid(2), 3)
@@ -97,7 +97,7 @@ class TestShells(unittest.TestCase):
             mid = p.plies[iply][0]
             p.plies[iply][0] = m # MAT1
             #p.mids = [m, m, m]
-        
+
         #Rho
         self.assertAlmostEqual(p.Rho(0), 1.0)
         self.assertAlmostEqual(p.Rho(1), 1.0)
@@ -133,13 +133,13 @@ class TestShells(unittest.TestCase):
         self.assertAlmostEqual(p.MassPerArea(2, method='t'), 0.3+3/6.)
         with self.assertRaises(IndexError):
             p.MassPerArea(3, method='nplies')
-        
+
         z = p.get_z_locations()
         z_expected = array([0., T[0], T[0]+T[1], T[0]+T[1]+T[2]])
         for za, ze in zip(z, z_expected):
             self.assertAlmostEqual(za, ze)
-        
-        #z0  = 
+
+        #z0  =
         p.z0 = 1.0
         z_expected = 1.0 + z_expected
         z = p.get_z_locations()
@@ -166,7 +166,7 @@ class TestShells(unittest.TestCase):
         p = PCOMP(data=data)
         self.assertTrue(p.isSymmetrical())
         self.assertEqual(p.nPlies(), 6)
-        
+
         self.assertAlmostEqual(p.Thickness(), 1.2)
         self.assertAlmostEqual(p.Thickness(0), 0.1)
         self.assertAlmostEqual(p.Thickness(1), 0.2)
@@ -185,7 +185,7 @@ class TestShells(unittest.TestCase):
         self.assertAlmostEqual(p.Theta(5), 20.)
         with self.assertRaises(IndexError):
             p.Theta(6)
-        
+
         self.assertEqual(p.Mid(0), 1)
         self.assertEqual(p.Mid(1), 2)
         self.assertEqual(p.Mid(2), 3)
@@ -243,7 +243,7 @@ class TestShells(unittest.TestCase):
         self.assertAlmostEqual(p.MassPerArea(5), 0.3)
         with self.assertRaises(IndexError):
             p.MassPerArea(6)
-        
+
         self.assertEqual(p.Nsm(), 0.0)
         #----------------------
         # change the nsm to 1.0
@@ -259,7 +259,7 @@ class TestShells(unittest.TestCase):
         self.assertAlmostEqual(p.MassPerArea(4, method='nplies'), 0.2+1/6.)
         self.assertAlmostEqual(p.MassPerArea(5, method='nplies'), 0.3+1/6.)
         with self.assertRaises(IndexError):
-            p.MassPerArea(6)        
+            p.MassPerArea(6)
 
 if __name__ == '__main__':
     unittest.main()

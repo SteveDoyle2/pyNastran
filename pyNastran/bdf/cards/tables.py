@@ -26,7 +26,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.utils import list_print, is_string
-from pyNastran.bdf.bdfInterface.assign_type import (integer,  # fields, 
+from pyNastran.bdf.bdfInterface.assign_type import (integer,  # fields,
     double, components, string, string_or_blank)
 
 class Table(BaseCard):
@@ -42,6 +42,13 @@ class Table(BaseCard):
 
     def parse_fields(self, xy, nrepeated, isData=False):
         self.table = TableObj(xy, nrepeated, isData)
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        #if size == 8:
+            #return self.comment() + print_card_8(card)
+        #return self.comment() + print_card_16(card)
+        return self.comment() + card_writer(card)
 
 
 class TableObj(object):
@@ -101,7 +108,7 @@ class TableObj(object):
     def _cleanup_xy(self, xy, isData=False):
         """
         Removes the **ENDT** field.
-        
+
         :param xy:     the xy data as a table with alternating x, y entries
         :param isData: did this come from the OP2/BDF (True -> OP2)
         """

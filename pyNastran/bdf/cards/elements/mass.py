@@ -19,6 +19,8 @@ from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element #, BaseCard
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
                                        double_or_blank)
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 
 
 class PointElement(Element):
@@ -50,6 +52,9 @@ class CMASS1(PointMassElement):
     CMASS1 EID PID G1 C1 G2 C2
     """
     type = 'CMASS1'
+    _field_map = {
+        1: 'eid', 2:'pid', 3:'g1', 4:'c1', 5:'g2', 6:'c2',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         PointMassElement.__init__(self, card, data)
@@ -88,7 +93,7 @@ class CMASS1(PointMassElement):
         assert isinstance(eid, int), 'eid=%r' % eid
         assert isinstance(pid, int), 'pid=%r' % pid
         assert isinstance(mass, float), 'mass=%r' % mass
-        assert c2 is None or isinstance(c1, int), 'c1=%r' % c1
+        assert c1 is None or isinstance(c1, int), 'c1=%r' % c1
         assert c2 is None or isinstance(c2, int), 'c2=%r' % c2
 
     def cross_reference(self, model):
@@ -107,6 +112,10 @@ class CMASS1(PointMassElement):
                   self.g2, self.c2]
         return fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class CMASS2(PointMassElement):
     """
@@ -114,6 +123,9 @@ class CMASS2(PointMassElement):
     CMASS2 EID M G1 C1 G2 C2
     """
     type = 'CMASS2'
+    _field_map = {
+        1: 'eid', 2:'pid', 3:'g1', 4:'c1', 5:'g2', 6:'c2',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         PointMassElement.__init__(self, card, data)
@@ -134,6 +146,23 @@ class CMASS2(PointMassElement):
             self.g2 = data[3]
             self.c1 = data[4]
             self.c2 = data[5]
+
+    def _verify(self, xref=False):
+        eid = self.Eid()
+        pid = self.Pid()
+        mass = self.Mass()
+        c1 = self.c1
+        c2 = self.c2
+        #self.nodes
+
+        assert isinstance(eid, int), 'eid=%r' % eid
+        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(mass, float), 'mass=%r' % mass
+        assert c1 is None or isinstance(c1, int), 'c1=%r' % c1
+        assert c2 is None or isinstance(c2, int), 'c2=%r' % c2
+
+    def Eid(self):
+        return self.eid
 
     def nodeIDs(self):
         g1 = self.G1()
@@ -197,6 +226,10 @@ class CMASS2(PointMassElement):
                   self.G2(), self.c2]
         return fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class CMASS3(PointMassElement):
     """
@@ -204,6 +237,9 @@ class CMASS3(PointMassElement):
     CMASS3 EID PID S1 S2
     """
     type = 'CMASS3'
+    _field_map = {
+        1: 'eid', 2:'pid', 3:'s1', 4:'s2',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         PointMassElement.__init__(self, card, data)
@@ -221,6 +257,9 @@ class CMASS3(PointMassElement):
             self.s1 = data[2]
             self.s2 = data[3]
         assert self.s1 != self.s2
+
+    def Eid(self):
+        return self.eid
 
     def Mass(self):
         return self.pid.mass
@@ -247,6 +286,10 @@ class CMASS3(PointMassElement):
         fields = ['CMASS3', self.eid, self.Pid(), self.s1, self.s2]
         return fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class CMASS4(PointMassElement):
     """
@@ -255,6 +298,9 @@ class CMASS4(PointMassElement):
     CMASS4 EID M S1 S2
     """
     type = 'CMASS4'
+    _field_map = {
+        1: 'eid', 2:'mass', 3:'s1', 4:'s2',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         print("***")
@@ -273,6 +319,9 @@ class CMASS4(PointMassElement):
             self.s1 = data[2]
             self.s2 = data[3]
         assert self.s1 != self.s2
+
+    def Eid(self):
+        return self.eid
 
     def Mass(self):
         return self.mass
@@ -297,9 +346,62 @@ class CMASS4(PointMassElement):
         fields = ['CMASS4', self.eid, self.mass, self.s1, self.s2]
         return fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class CONM1(PointMassElement):
     type = 'CONM1'
+    _field_map = {
+        1: 'eid', 2:'nid', 3:'cid',
+    }
+    def _update_field_helper(self, n, value):
+        m = self.massMatrix
+        if n == 4:
+            m[0, 0] = value
+        elif n == 5:
+            m[1, 0] = value
+        elif n == 6:
+            m[1, 1] = value
+        elif n == 7:
+            m[2, 0] = value
+        elif n == 8:
+            m[2, 1] = value
+        elif n == 9:
+            m[2, 2] = value
+        elif n == 10:
+            m[3, 0] = value
+        elif n == 11:
+            m[3, 1] = value
+        elif n == 12:
+            m[3, 2] = value
+        elif n == 13:
+            m[3, 3] = value
+        elif n == 14:
+            m[4, 0] = value
+        elif n == 15:
+            m[4, 1] = value
+        elif n == 16:
+            m[4, 2] = value
+        elif n == 17:
+            m[4, 3] = value
+        elif n == 18:
+            m[4, 4] = value
+        elif n == 19:
+            m[5, 0] = value
+        elif n == 20:
+            m[5, 1] = value
+        elif n == 21:
+            m[5, 2] = value
+        elif n == 22:
+            m[5, 3] = value
+        elif n == 23:
+            m[5, 4] = value
+        elif n == 24:
+            m[5, 5] = value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         """
@@ -382,6 +484,9 @@ class CONM1(PointMassElement):
             m[5, 5] = m6f  # M66
         self.massMatrix = m
 
+    def Eid(self):
+        return self.eid
+
     def nodeIDs(self):
         return [self.Nid()]
 
@@ -421,6 +526,10 @@ class CONM1(PointMassElement):
             list_fields2.append(val)
         return list_fields2
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class CONM2(PointMassElement):
     """
@@ -430,12 +539,37 @@ class CONM2(PointMassElement):
     :param cid:  coordinate frame of the offset (-1=absolute coordinates)
     :param X:    offset vector
     :param I:    mass moment of inertia matrix about the CG
-    
+
     ::
 
       CONM2    501274  11064          132.274
     """
     type = 'CONM2'
+    _field_map = {
+        1: 'eid', 2:'nid', 3:'cid', 4:'mass',
+    }
+    def _update_field_helper(self, n, value):
+        if n == 5:
+            self.X[0] = value
+        elif n == 6:
+            self.X[1] = value
+        elif n == 7:
+            self.X[2] = value
+
+        elif n == 9:
+            self.I[0] = value
+        elif n == 10:
+            self.I[1] = value
+        elif n == 11:
+            self.I[2] = value
+        elif n == 12:
+            self.I[3] = value
+        elif n == 13:
+            self.I[4] = value
+        elif n == 14:
+            self.I[5] = value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         PointMassElement.__init__(self, card, data)
@@ -471,7 +605,7 @@ class CONM2(PointMassElement):
         cid = self.Cid()
         mass = self.Mass()
         c = self.Centroid()
-        
+
         assert isinstance(eid, int), 'eid=%r' % eid
         assert isinstance(nid, int), 'nid=%r' % nid
         assert isinstance(cid, int), 'cid=%r' % cid
@@ -565,3 +699,10 @@ class CONM2(PointMassElement):
         list_fields = (['CONM2', self.eid, self.Nid(), cid, self.mass] + X +
                   [None] + I)
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card)

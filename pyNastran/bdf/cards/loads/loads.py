@@ -25,6 +25,8 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     integer_string_or_blank,
     string_or_blank, integer_double_or_blank,
     components_or_blank)
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 
 
 class Load(BaseCard):
@@ -126,12 +128,11 @@ class LoadCombination(Load):  # LOAD, DLOAD
         #return load.lid
 
     def getLoads(self):
+        """
+        .. note:: requires a cross referenced load
+        """
         loads = []
         for allLoads in self.loadIDs:
-            #if isinstance(allLoads, int):  ## has a problem with partial
-                #print("allLoads =", allLoads)
-                #loads.append(allLoads)
-                #continue
             for load in allLoads:
                 loads += load.getLoads()
             #loads += self.ID  #: :: todo:  what does this mean, was uncommented
@@ -211,6 +212,10 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + print_card_8(card)
+
 
 class DLOAD(LoadCombination):
     type = 'DLOAD'
@@ -228,6 +233,10 @@ class DLOAD(LoadCombination):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + print_card_8(card)
 
 
 class DAREA(BaseCard):
@@ -271,7 +280,7 @@ class TabularLoad(BaseCard):
 class SLOAD(Load):
     """
     Static Scalar Load
-    
+
     Defines concentrated static loads on scalar or grid points.
 
     .. note:: Can be used in statics OR dynamics.
@@ -326,16 +335,20 @@ class SLOAD(Load):
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, f, size=8):
+        card = self.rawFields()
+        f.write(print_card_8(card))
+
 
 class TLOAD1(TabularLoad):
     r"""
     Transient Response Dynamic Excitation, Form 1
-    
+
     Defines a time-dependent dynamic load or enforced motion of the form:
-    
+
     .. math::
       \left\{ P(t) \right\} = \left\{ A \right\} \cdot F(t-\tau)
-    
+
     for use in transient response analysis.
     """
     type = 'TLOAD1'
@@ -413,6 +426,10 @@ class TLOAD1(TabularLoad):
         list_fields = ['TLOAD1', self.sid, self.exciteID, self.delay, self.Type,
                   self.Tid(), us0, vs0]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
 
 
 class TLOAD2(TabularLoad):
@@ -511,6 +528,10 @@ class TLOAD2(TabularLoad):
                   self.T1, self.T2, frequency, phase, c, b, us0, vs0]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class RFORCE(Load):
     type = 'RFORCE'
@@ -530,7 +551,7 @@ class RFORCE(Load):
             self.racc = double_or_blank(card, 9, 'racc', 0.)
             self.mb = integer_or_blank(card, 10, 'mb', 0)
             self.idrf = integer_or_blank(card, 11, 'idrf', 0)
-            assert len(card) <= 12, 'len(RFORCE2 card) = %i' % len(card)
+            assert len(card) <= 12, 'len(RFORCE card) = %i' % len(card)
         else:
             self.sid = data[0]
             print("RFORCE = %s" % data)
@@ -571,6 +592,13 @@ class RFORCE(Load):
                   self.r1, self.r2, self.r3, self.method, racc,
                   mb, idrf]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card)
 
 
 class RLOAD1(TabularLoad):
@@ -655,6 +683,10 @@ class RLOAD1(TabularLoad):
                   self.Tc(), self.Td(), Type]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class RLOAD2(TabularLoad):
     r"""
@@ -663,7 +695,7 @@ class RLOAD2(TabularLoad):
 
     .. math:: \left\{ P(f)  \right\}  = \left\{A\right\} * B(f)
         e^{  i \left\{ \phi(f) + \theta - 2 \pi f \tau \right\} }
-    
+
     ::
 
       RLOAD2 SID EXCITEID DELAY DPHASE TB TP TYPE
@@ -740,6 +772,10 @@ class RLOAD2(TabularLoad):
                   self.Tb(), self.Tp(), Type]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class RandomLoad(BaseCard):
     def __init__(self, card, data):
@@ -752,7 +788,7 @@ class RANDPS(RandomLoad):
 
     Defines load set power spectral density factors for use in random analysis
     having the frequency dependent form:
-    
+
     .. math:: S_{jk}(F) = (X+iY)G(F)
     """
     type = 'RANDPS'
@@ -804,3 +840,7 @@ class RANDPS(RandomLoad):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)

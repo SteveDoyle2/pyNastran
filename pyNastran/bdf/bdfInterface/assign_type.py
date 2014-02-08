@@ -1,9 +1,5 @@
-#from numpy import int32, float32
 from pyNastran.utils import is_string
 from .BDF_Card import BDFCard
-
-int32 = int
-float32 = float
 
 def components(card, n, fieldname):
     """
@@ -19,28 +15,28 @@ def components(card, n, fieldname):
         pass
     elif svalue is None or '.' in svalue:
         Type = getType(svalue)
-        msg = '%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) 
+        msg = '%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card)
         raise SyntaxError(msg)
 
     try:
-        value = int32(svalue)
+        value = int(svalue)
     except:
         Type = getType(svalue)
-        msg = '%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) 
+        msg = '%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card)
         raise SyntaxError(msg)
     if value > 0  and is_string(svalue):
         if '0' in svalue:
             value2 = str(svalue).replace('0', '')
-            msg = '%s = %r (field #%s) on card must contain 0 or %s (not both).\ncard=%s' % (fieldname, svalue, n, value2, card) 
+            msg = '%s = %r (field #%s) on card must contain 0 or %s (not both).\ncard=%s' % (fieldname, svalue, n, value2, card)
             raise SyntaxError(msg)
     svalue2 = str(value)
     svalue3 = ''.join(sorted(svalue2))
     for i,v in enumerate(svalue3):
         if v not in '0123456':
-            msg = '%s = %r (field #%s) on card contains an invalid component %r.\ncard=%s' % (fieldname, svalue, n, v, card) 
+            msg = '%s = %r (field #%s) on card contains an invalid component %r.\ncard=%s' % (fieldname, svalue, n, v, card)
             raise SyntaxError(msg)
         if v in svalue3[i + 1:]:
-            msg = '%s = %r (field #%s) on card must not contain duplicate entries.\ncard=%s' % (fieldname, svalue, n, card) 
+            msg = '%s = %r (field #%s) on card must not contain duplicate entries.\ncard=%s' % (fieldname, svalue, n, card)
             raise SyntaxError(msg)
     return svalue3
 
@@ -80,14 +76,14 @@ def blank(card, n, fieldname, default=None):
     svalue = card.field(n)
     if svalue is None:
         return default
-        
+
     if is_string(svalue):
-        svalue = svalue.strip()
+        svalue = svalue.strip().upper()
         if len(svalue) == 0:
            return default
     Type = getType(svalue)
     raise SyntaxError('%s = %r (field #%s) on card must be blank (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
-    
+
 def field(card, n, fieldname):
     """
     :param card:      BDF card as a list
@@ -121,13 +117,13 @@ def integer_double_string_or_blank(card, n, fieldname, default=None):
     elif isinstance(svalue, float):
         return svalue
 
-    svalue = svalue.strip()
+    svalue = svalue.strip().upper()
     if svalue:  # integer/float/string
         if '.' in svalue:  # float
             value = double(card, n, fieldname)
         elif svalue.isdigit():  # int
             try:
-                value = int32(svalue)
+                value = int(svalue)
             except ValueError:
                 Type = getType(svalue)
                 raise SyntaxError('%s = %r (field #%s) on card must be an integer, float, or string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
@@ -157,7 +153,7 @@ def fields_or_blank(f, card, fieldname, i, j=None, defaults=None):
     fs = []
     if j is None:
         j = len(card)
-    
+
     assert j - i == len(defaults), 'j=%s i=%s j-i=%s len(defaults)=%s\ncard=%s' % (j,i,j-i, len(defaults), card)
     for ii, default in enumerate(defaults):
         fs.append( f(card, ii + i, fieldname + str(ii), default) )
@@ -175,14 +171,14 @@ def integer(card, n, fieldname):
     try:
         svalue = card.field(n)
     except IndexError:
-        raise SyntaxError('%s (field #%s) on card must be an integer.' % (fieldname, n) )
+        raise SyntaxError('%s (field #%s) on card must be an integer, but doesnt exist.' % (fieldname, n) )
 
     if isinstance(svalue, float):
         Type = getType(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
-        
+
     try:
-        return int32(svalue)
+        return int(svalue)
     except:
         Type = getType(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
@@ -214,7 +210,7 @@ def integer_or_blank(card, n, fieldname, default=None):
             raise SyntaxError('%s = %r (field #%s) on card must be an integer or blank (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
 
         try:
-            return int32(svalue)
+            return int(svalue)
         except:
             Type = getType(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be an integer or blank (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
@@ -222,7 +218,7 @@ def integer_or_blank(card, n, fieldname, default=None):
     Type = getType(svalue)
     raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
     #return default
-    
+
 def double(card, n, fieldname):
     """
     :param card:      BDF card as a list
@@ -235,8 +231,8 @@ def double(card, n, fieldname):
     try:
         svalue = card.field(n)
     except IndexError:
-        raise SyntaxError('%s (field #%s) on card must be a float.\ncard=%s' % (fieldname, n, card) )
-    
+        raise SyntaxError('%s (field #%s) on card must be a float, but doesnt exist..\ncard=%s' % (fieldname, n, card) )
+
     if isinstance(svalue, float):
         return svalue
     elif isinstance(svalue, int):
@@ -245,14 +241,14 @@ def double(card, n, fieldname):
     elif svalue is None or len(svalue) == 0:  ## None
         Type = getType(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
-    
+
     if svalue.isdigit(): # if only int
         Type = getType(int(svalue))
         raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
-    
+
     #svalue = svalue.strip()
     try:  # 1.0, 1.0E+3, 1.0E-3
-        value = float32(svalue)
+        value = float(svalue)
     except TypeError:
         Type = getType(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
@@ -262,12 +258,12 @@ def double(card, n, fieldname):
             if 'D' in svalue:  # 1.0D+3, 1.0D-3
                 svalue2 = svalue.replace('D','E')
                 return float(svalue2)
-            
+
             # 1.0+3, 1.0-3
             sign = ''
             if '+' in svalue[0] or '-' in svalue[0]:
-                svalue = svalue[1:]
                 sign = svalue[0]
+                svalue = svalue[1:]
             if '+' in svalue:
                 svalue = sign + svalue.replace('+','E+')
             elif '-' in svalue:
@@ -293,14 +289,14 @@ def double_or_blank(card, n, fieldname, default=None):
     svalue = card.field(n)
     #except IndexError:
         #return default
-    
+
     if isinstance(svalue, float):
         return svalue
     elif isinstance(svalue, int):
         Type = getType(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
     elif is_string(svalue):
-        svalue = svalue.strip()
+        svalue = svalue.strip().upper()
         if not svalue:
             return default
         try:
@@ -309,7 +305,7 @@ def double_or_blank(card, n, fieldname, default=None):
             Type = getType(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
     return default
-    
+
 def double_or_string(card, n, fieldname):
     """
     :param card:      BDF card as a list
@@ -330,7 +326,7 @@ def double_or_string(card, n, fieldname):
         Type = getType(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an float or string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
     elif is_string(svalue):
-        svalue = svalue.strip()
+        svalue = svalue.strip().upper()
 
     if '.' in svalue: # float
         try:
@@ -341,7 +337,7 @@ def double_or_string(card, n, fieldname):
     elif svalue.isdigit(): # fail
         pass
     elif svalue: # string
-        return svalue
+        return str(svalue)
     Type = getType(svalue)
     raise SyntaxError('%s = %r (field #%s) on card must be an float or string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
 
@@ -367,7 +363,7 @@ def double_string_or_blank(card, n, fieldname, default=None):
     elif svalue is None:
         return default
     elif is_string(svalue):
-        svalue = svalue.strip()
+        svalue = svalue.strip().upper()
     elif isinstance(svalue, int):
         Type = getType(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an float, string, or blank (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
@@ -401,6 +397,7 @@ def integer_or_double(card, n, fieldname):
     svalue = card.field(n)
     #except IndexError:
         #raise SyntaxError('%s (field #%s) on card must be an integer or float.\ncard=%s' % (fieldname, n, card) )
+
     if isinstance(svalue, int) or isinstance(svalue, float):
         return svalue
     elif svalue is None:
@@ -415,8 +412,11 @@ def integer_or_double(card, n, fieldname):
             raise SyntaxError('%s = %r (field #%s) on card must be a integer or a float (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
     else:  # int
         try:
-            value = int32(svalue)
+            value = int(svalue)
         except:
+            value = interpret_value(svalue)
+            if isinstance(value, int) or isinstance(value, float):
+                return value
             Type = getType(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be an integer or a float (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
     return value
@@ -448,7 +448,7 @@ def integer_double_or_blank(card, n, fieldname, default=None):
             Type = getType(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be an integer, float, or blank (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
     return default
-    
+
 def integer_or_string(card, n, fieldname):
     """
     :param card:      BDF card as a list
@@ -474,7 +474,7 @@ def integer_or_string(card, n, fieldname):
 
     if svalue.isdigit():  # int
         try:
-            value = int32(svalue)
+            value = int(svalue)
         except ValueError:
             Type = getType(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be an integer or string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
@@ -482,7 +482,12 @@ def integer_or_string(card, n, fieldname):
         Type = getType(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an integer or string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
     else:  # string
-        return str(svalue)
+        value = double_or_string(card, n, fieldname)
+        if isinstance(value, float):
+            Type = getType(svalue)
+            raise SyntaxError('%s = %r (field #%s) on card must be an integer or string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
+        
+        return str(svalue.upper())
     return value
 
 def integer_string_or_blank(card, n, fieldname, default=None):
@@ -530,7 +535,7 @@ def getType(value):
     elif isinstance(value, int):
         Type = 'an integer'
     elif isinstance(value, float):
-        Type = 'a double'
+        Type = 'a double value=%r' % value
     elif is_string(value):
         Type = 'a string'
     else:
@@ -547,24 +552,24 @@ def integer_double_or_string(card, n, fieldname):
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(n, int), type(n)
     assert is_string(fieldname), type(fieldname)
-    #try:
-    svalue = card.field(n)
-    #except IndexError:
-        #raise SyntaxError('%s (field #%s) on card must be an integer, float, or string.\ncard=%s' % (fieldname, n, card) )
+    try:
+        svalue = card.field(n)
+    except IndexError:
+        raise SyntaxError('%s (field #%s) on card must be an integer, float, or string, but doesnt exist.\ncard=%s' % (fieldname, n, card) )
     if isinstance(svalue, int) or isinstance(svalue, float):
         return svalue
-    
+
     svalue = str(svalue.strip())
     if svalue:  # integer/float/string
         if '.' in svalue:  # float
             value = double(card, n, fieldname)
         elif svalue.isdigit():  # int
             try:
-                value = int32(svalue)
+                value = int(svalue)
             except ValueError:
                 raise SyntaxError('%s = %r (field #%s) on card must be an integer, float, or string (not blank).\ncard=%s' % (fieldname, svalue, n, card) )
         else:
-            value = svalue
+            value = interpret_value(svalue)
         return value
     Type = getType(svalue)
     raise SyntaxError('%s = %r (field #%s) on card must be an integer, float, or string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
@@ -585,14 +590,14 @@ def string(card, n, fieldname):
     else:
         Type = getType(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
-    
+
     if svalue.isdigit() or '.' in svalue:
         value = integer_or_double(card, n, fieldname)
         Type = getType(value)
         raise SyntaxError('%s = %r (field #%s) on card must be an string with a character (not %s).\ncard=%s' % (fieldname, value, n, Type, card) )
 
     if svalue:  # string
-        return str(svalue)
+        return str(svalue.upper())
     Type = getType(svalue)
     msg = '%s = %r (field #%s) on card must be an string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card)
     raise SyntaxError(msg)
@@ -612,7 +617,7 @@ def string_or_blank(card, n, fieldname, default=None):
     if svalue is None:
         return default
     elif is_string(svalue):
-        svalue = svalue.strip()
+        svalue = svalue.strip().upper()
     else:
         Type = getType(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
@@ -621,9 +626,9 @@ def string_or_blank(card, n, fieldname, default=None):
     if svalue.isdigit() or '.' in svalue:
         Type = getType(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an string or blank (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
-        
+
     if svalue:  # string
-        return str(svalue)
+        return str(svalue.upper())
     return default
 
 # int                    - done
@@ -660,6 +665,10 @@ def interpret_value(valueRaw, card='', debug=False):
     if debug:
         print("v1 = |%s|" % valueRaw)
     #lvalue = valueRaw.lstrip()
+
+    if valueRaw is None:
+        return None
+
     try:
         valueIn = valueRaw.lstrip().rstrip(' *').upper()
     except AttributeError:  # it's already an int/float
@@ -693,9 +702,9 @@ def interpret_value(valueRaw, card='', debug=False):
     if valuePositive.isdigit():
         if debug:
             print("INT!")
-        return int32(valueIn)
+        return int(valueIn)
     try:
-        value = float32(valueIn)
+        value = float(valueIn)
         if debug:
             print("FLOAT!")
         return value
@@ -748,13 +757,13 @@ def interpret_value(valueRaw, card='', debug=False):
                "card=%s\nYou also might have mixed tabs/spaces/commas."
                % (valueRaw, valueLeft, card))
         raise SyntaxError(msg)
-    
+
     if 'D' == sline[0][-1]:
         sline[0] = sline[0][:-1]
 
     try:
-        s0 = vFactor * float32(sline[0])
-        s1 = expFactor * int32(sline[1])
+        s0 = vFactor * float(sline[0])
+        s1 = expFactor * int(sline[1])
     except ValueError:
         msg = "vm=%s vp=%s valueRaw=|%s| sline=%s" % (vm, vp, valueRaw, sline)
         raise SyntaxError('cannot parse sline[0] into a float and sline[1] '
@@ -806,16 +815,16 @@ def string_parser(stringIn):
 
     typeCheck = typeCheck.strip()
     if typeCheck in ['1', '+1']:  # integer
-        return int32(stringIn)
+        return int(stringIn)
 
     elif typeCheck in ['1.', '1.1', '.1',  # float
                        '+1.', '+1.1', '+.1']:
-        return float32(stringIn)
+        return float(stringIn)
 
     elif typeCheck in ['1.1e1', '1.1e+1', '1.e1', '1.e+1',  # python scientific
                        '+1.1e1', '+1.1e+1', '+1.e1', '+1.e+1',
                        '.1e1', '.1e+1', '+.1e1', '+.1e+1', ]:
-        return float32(stringIn)
+        return float(stringIn)
 
     elif typeCheck in ['1+1', '+1+1', '.1+1', '+.1+1']:  # nastran scientific
         stringReversed = stringIn[::-1]

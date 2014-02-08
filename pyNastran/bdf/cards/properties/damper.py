@@ -28,6 +28,9 @@ class DamperProperty(Property):
 
 class PDAMP(DamperProperty):
     type = 'PDAMP'
+    _field_map = {
+        1: 'pid', 2:'b',
+    }
 
     def __init__(self, card=None, nPDAMP=0, data=None, comment=''):
         DamperProperty.__init__(self, card, data)
@@ -46,6 +49,15 @@ class PDAMP(DamperProperty):
             self.pid = data[0]
             self.b = data[1]
 
+    def B(self):
+        return self.b
+
+    def _verify(self, xref=True):
+        pid = self.Pid()
+        b = self.B()
+        assert isinstance(pid, int), 'pid=%r\n%s' % (pid, str(self))
+        assert isinstance(b, float), 'b=%r\n%s' % (b, str(self))
+
     def rawFields(self):
         list_fields = ['PDAMP', self.pid, self.b]
         return list_fields
@@ -53,9 +65,16 @@ class PDAMP(DamperProperty):
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class PDAMP5(DamperProperty):
     type = 'PDAMP5'
+    _field_map = {
+        1: 'pid', 2:'mid', 3:'b',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         """
@@ -95,9 +114,16 @@ class PDAMP5(DamperProperty):
         list_fields = ['PDAMP5', self.pid, self.Mid(), self.b]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class PDAMPT(DamperProperty):
     type = 'PDAMPT'
+    _field_map = {
+        1: 'pid', 2:'tbid',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         DamperProperty.__init__(self, card, data)
@@ -113,6 +139,10 @@ class PDAMPT(DamperProperty):
         else:
             self.pid = data[0]
             self.tbid = data[1]
+
+    def _verify(self, xref=False):
+        pid = self.Pid()
+        assert isinstance(pid, int), 'pid=%r' % pid
 
     def cross_reference(self, model):
         self.tbid = model.Table(self.tbid)
@@ -131,9 +161,16 @@ class PDAMPT(DamperProperty):
         list_fields = ['PDAMPT', self.pid, self.Tbid()]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class PVISC(DamperProperty):
     type = 'PVISC'
+    _field_map = {
+        1: 'pid', 2:'ce', 3:'cr',
+    }
 
     def __init__(self, card=None, nPVISC=0, data=None, comment=''):
         DamperProperty.__init__(self, card, data)
@@ -151,6 +188,10 @@ class PVISC(DamperProperty):
     def cross_reference(self, model):
         pass
 
+    def _verify(self, xref=False):
+        pid = self.Pid()
+        assert isinstance(pid, int), 'pid=%r' % pid
+
     def rawFields(self):
         list_fields = ['PVISC', self.pid, self.ce, self.cr]
         return list_fields
@@ -159,3 +200,7 @@ class PVISC(DamperProperty):
         cr = set_blank_if_default(self.cr, 0.)
         list_fields = ['PVISC', self.pid, self.ce, cr]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)

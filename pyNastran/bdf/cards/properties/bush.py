@@ -16,7 +16,8 @@ from pyNastran.bdf.cards.baseCard import Property
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     string, string_or_blank, blank, fields)
-
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 
 class BushingProperty(Property):
     type = 'BushingProperty'
@@ -30,6 +31,9 @@ class BushingProperty(Property):
 
 class PBUSH(BushingProperty):
     type = 'PBUSH'
+    _field_map = {
+        1: 'pid',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         BushingProperty.__init__(self, card, data)
@@ -149,6 +153,13 @@ class PBUSH(BushingProperty):
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card)
+
 
 class PBUSH1D(BushingProperty):
     type = 'PBUSH1D'
@@ -199,7 +210,7 @@ class PBUSH1D(BushingProperty):
             self.k = double_or_blank(card, 2, 'k', 0.0)
             self.c = double_or_blank(card, 3, 'c', 0.0)
             self.m = double_or_blank(card, 4, 'm', 0.0)
-            
+
             self.sa = double_or_blank(card, 6, 'sa', 0.0)
             self.se = double_or_blank(card, 7, 'se', 0.0)
 
@@ -223,6 +234,10 @@ class PBUSH1D(BushingProperty):
             self.pid = data[0]
             self.b = data[1]
             raise NotImplementedError('PBUSH1D data...')
+
+    def _verify(self, xref=False):
+        pid = self.Pid()
+        assert isinstance(pid, int), 'pid=%r' % pid
 
     def getShockA(self, card, iStart):
         self.shockType = string_or_blank(card, iStart + 1, 'shockType')
@@ -347,6 +362,13 @@ class PBUSH1D(BushingProperty):
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card)
+
 
 class PBUSH2D(BushingProperty):
     type = 'PBUSH2D'
@@ -360,6 +382,13 @@ class PBUSH2D(BushingProperty):
         else:
             raise NotImplementedError()
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        #if size == 8:
+            #return self.comment() + print_card_8(card)
+        #return self.comment() + print_card_16(card)
+        return self.comment() + card_writer(card)
+
 
 class PBUSHT(BushingProperty):
     type = 'PBUSHT'
@@ -372,3 +401,10 @@ class PBUSHT(BushingProperty):
             raise NotImplementedError()
         else:
             raise NotImplementedError()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)

@@ -23,9 +23,11 @@ from pyNastran.bdf.cards.baseCard import Property
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     string, string_or_blank,
-    integer_or_double, double_string_or_blank, fields)
+    integer_or_double, double_string_or_blank, fields, integer_double_string_or_blank)
 from pyNastran.utils import is_string
 from pyNastran.utils.mathematics import integrate_line, integrate_positive_line
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 
 def IyyBeam(b, h):
     return 1 / 12. * b * h ** 3
@@ -56,12 +58,12 @@ def IBeamOffset(b, h, y, z):
 def getInertiaRectangular(sections):
     """
     Calculates the moment of inertia for a section about the CG.
-    
+
     :param sections: [[b,h,y,z]_1,...] y,z is the centroid
                      (x in the direction of the beam,
                       y right, z up)
     :returns: interiaParameters list of [Area, Iyy, Izz, Iyz]
-    
+
     .. seealso:: http://www.webs1.uidaho.edu/mindworks/Machine_Design/Posters/PDF/Moment%20of%20Inertia.pdf
     """
     As = []
@@ -149,15 +151,15 @@ class LineProperty(Property):
     def CA_Section(self, iFace, iStart, dims):
         """
         ::
-          
+
           ---msg1---
           H1=0.1
           W1=0.05
-          
+
           ---msg2---
           Face_1 = geompy.MakeFaceHW(H1, W1, 1)
           geompy.addToStudy( Face_1, 'Face_1' )
-          
+
           ---msg---
           H1=0.1
           W1=0.05
@@ -205,16 +207,16 @@ class LineProperty(Property):
             # |   ----------
             sections = []
             h1 = dim[5]  # d2
-            w1 = dim[2]                         
-            y1 = dim[0] / 2. - h1               
-            sections.append([w1, h1, 0., y1])   
-                                                
-            h3 = dim[4]                         
-            w3 = dim[1]                         
-            y3 = -dim[0] / 2. + h3              
-            sections.append([w3, h3, 0., y1])   
-                                                
-            h2 = dim[0] - h1 - h3               
+            w1 = dim[2]
+            y1 = dim[0] / 2. - h1
+            sections.append([w1, h1, 0., y1])
+
+            h3 = dim[4]
+            w3 = dim[1]
+            y3 = -dim[0] / 2. + h3
+            sections.append([w3, h3, 0., y1])
+
+            h2 = dim[0] - h1 - h3
             w2 = dim[3]  # d1
             sections.append([w2, h2, 0., 0.])
 
@@ -230,9 +232,9 @@ class LineProperty(Property):
             #:    w1
             #: I_{xx}=\frac{bh^3}{12}
             #: I_{yy}=\frac{hb^3}{12}
-            h1 = dim[1]  
-            w1 = dim[0]  
-            A = h1 * w1  
+            h1 = dim[1]
+            w1 = dim[0]
+            A = h1 * w1
             Iyy = 1 / 12. * w1 * h1 ** 3
             Izz = 1 / 12. * h1 * w1 ** 3
             Iyz = 0.  #: .. todo:: is the Ixy of a bar 0 ???
@@ -274,7 +276,7 @@ class LineProperty(Property):
           |      |
           |   b  |
           *------*
-        
+
         .. math:: I_1 = \frac{1}{12} b h^3
 
         .. math:: I_2 = \frac{1}{12} h b^3
@@ -304,7 +306,7 @@ class LineProperty(Property):
         :param dim:    a list of the dimensions associated with **self.Type**
         :returns Area: Area of the given cross section defined
                        by **self.Type**
-        
+
         .. note:: internal method
         """
         try:
@@ -614,6 +616,13 @@ class PROD(LineProperty):
         list_fields = ['PROD', self.pid, self.Mid(), self.A, j, c, nsm]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+
 
 class PTUBE(LineProperty):
     type = 'PTUBE'
@@ -668,7 +677,7 @@ class PTUBE(LineProperty):
     def MassPerLength(self):
         r"""
         Gets the mass per length :math:`\frac{m}{L}` of the CTUBE.
-        
+
         .. math:: \frac{m}{L} = (A \rho) nsm
         """
         return self.Area() * self.Rho() + self.nsm
@@ -676,11 +685,11 @@ class PTUBE(LineProperty):
     def Area(self):
         r"""
         Gets the area :math:`A` of the CTUBE.
-         
+
         .. math:: A_1 = \pi \frac{d_1^2}{4} - \pi {(D_1-2t)^2}{4}
-        
+
         .. math:: A_2 = \pi \frac{d_2^2}{4} - \pi {(D_2-2t)^2}{4}
-        
+
         .. math:: A = A_1 + A_2
         """
         A = (self._area1() + self._area2()) / 2.
@@ -734,6 +743,13 @@ class PTUBE(LineProperty):
         OD2 = set_blank_if_default(self.OD2, self.OD1)
         list_fields = ['PTUBE', self.pid, self.Mid(), self.OD1, t, nsm, OD2]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class PBAR(LineProperty):
@@ -828,7 +844,7 @@ class PBAR(LineProperty):
     def MassPerLength(self):
         r"""
         Gets the mass per length :math:`\frac{m}{L}` of the CBAR.
-        
+
         .. math:: \frac{m}{L} = \rho A + nsm
         """
         A = self.Area()
@@ -909,6 +925,13 @@ class PBAR(LineProperty):
         list_fields = ['PBAR', self.pid, self.Mid(), self.A, i1, i2, j, nsm,
                        None, C1, C2, D1, D2, E1, E2, F1, F2, K1, K2, i12]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class PBARL(LineProperty):
@@ -1032,7 +1055,7 @@ class PBARL(LineProperty):
     def MassPerLength(self):
         r"""
         Gets the mass per length :math:`\frac{m}{L}` of the CBAR.
-        
+
         .. math:: \frac{m}{L} = A \rho + nsm
         """
         rho = self.Rho()
@@ -1048,7 +1071,7 @@ class PBARL(LineProperty):
             #Ix = pi*r**4/4.
             #J = pi*r**4/2.
             (Ix, Iy, Ixy) = self.I1_I2_I12()
-            
+
         elif self.Type in ['BAR']:
             assert len(self.dim) == 2, 'dim=%r' % self.dim
             b, h = self.dim
@@ -1065,7 +1088,7 @@ class PBARL(LineProperty):
 
     #def I12(self):
         #return self.I12()
-    
+
     def _points(self, Type, dim):
         if Type in ['BAR']:  # origin ar center
             (d1, d2) = dim
@@ -1200,7 +1223,7 @@ class PBARL(LineProperty):
             yip1 = points[0,1:]
             xi = points[1,:-1]
             xip1 = points[1,1:]
-            
+
             #: .. seealso:: http://en.wikipedia.org/wiki/Area_moment_of_inertia
             ai = xi*yip1 - xip1*yi
             Ixx1 = 1/12*sum((yi**2 + yi*yip1+yip1**2)*ai)
@@ -1212,13 +1235,13 @@ class PBARL(LineProperty):
             yip1 = points[0,1:]
             xi = points[1,:-1]
             xip1 = points[1,1:]
-            
+
             #: .. seealso:: http://en.wikipedia.org/wiki/Area_moment_of_inertia
             ai = xi*yip1 - xip1*yi
             Ixx2 = 1/12*sum((yi**2 + yi*yip1+yip1**2)*ai)
             Iyy2 = 1/12*sum((xi**2 + xi*xip1+xip1**2)*ai)
             #Ixy2 = 1/24*sum((xi*yip1 + 2*xi*yi + 2*xip1*yip1 + xip1*yi)*ai)
-            
+
             Ixx = Ixx1 - Ixx2
             Iyy = Iyy1 - Iyy2
             #Ixy = Ixy1 - Ixy2
@@ -1235,7 +1258,7 @@ class PBARL(LineProperty):
 
             xi = points[1,:-1]
             xip1 = points[1,1:]
-            
+
             #: .. seealso:: http://en.wikipedia.org/wiki/Area_moment_of_inertia
             ai = xi*yip1 - xip1*yi
             Ixx = 1/12*sum((yi**2 + yi*yip1+yip1**2)*ai)
@@ -1278,6 +1301,13 @@ class PBARL(LineProperty):
         list_fields = ['PBARL', self.pid, self.Mid(), group, self.Type, None,
                        None, None, None] + self.dim + [self.nsm]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class PBCOMP(LineProperty):
@@ -1372,6 +1402,13 @@ class PBCOMP(LineProperty):
             list_fields += [yi, zi, ci, mid, None, None, None, None]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+
 
 class PBEAM(IntegratedLineProperty):
     type = 'PBEAM'
@@ -1383,6 +1420,7 @@ class PBEAM(IntegratedLineProperty):
         IntegratedLineProperty.__init__(self, card, data)
         if comment:
             self._comment = comment
+
         if card:
             #: Property ID
             self.pid = integer(card, 1, 'pid')
@@ -1408,7 +1446,11 @@ class PBEAM(IntegratedLineProperty):
             self.j = [double_or_blank(card, 7, 'J', 0.0)]
             #: Non-structural mass :math:`nsm`
             self.nsm = [double_or_blank(card, 8, 'nsm', 0.0)]
-            
+
+            assert self.i1 > 0, self.i1
+            assert self.i2 > 0, self.i2
+
+
             isCDEF = False
             field9 = double_string_or_blank(card, 9, 'field9')
             field17 = double_string_or_blank(card, 17, 'field17')
@@ -1436,7 +1478,7 @@ class PBEAM(IntegratedLineProperty):
                 #elif nlines == 3:
                 #    isCDEF = Tru
                 #else:
-                    
+
 
             #print("isCDEF=%s isContinue=%s" % (isCDEF, isContinue))
             #if isCDEF:
@@ -1484,7 +1526,8 @@ class PBEAM(IntegratedLineProperty):
                 # The fourth and fifth continuation entries, which
                 # contain fields K1 through N2(B), are optional
                 # and may be omitted if the default values are appropriate.
-                if card.field(x) in ['YES', 'YESA', 'NO']:  # there is no footer
+                val = integer_double_string_or_blank(card, x, 'YES/YESA/NO')
+                if val in ['YES', 'YESA', 'NO']:  # there is no footer
                     nmajor += 1
                     x += 16
                 else:
@@ -1499,7 +1542,8 @@ class PBEAM(IntegratedLineProperty):
                     nmajor = 1
                 x = nmajor * 8 + 1
 
-                if card.field(x) in ['YES', 'YESA', 'NO']:  # there is no footer
+                val = integer_double_string_or_blank(card, x, 'YES/YESA/NO')
+                if val in ['YES', 'YESA', 'NO']:  # there is no footer
                     nmajor += 1
                     x += 8
                 else:
@@ -1522,9 +1566,9 @@ class PBEAM(IntegratedLineProperty):
                 A   = double_or_blank(card,  nStart + 2, 'Area%i' % nRepeated, 0.0)
                 i1  = double_or_blank(card, nStart + 3, 'I1 %i' % nRepeated, 0.0)
                 i2  = double_or_blank(card, nStart + 4, 'I2 %i' % nRepeated, 0.0)
-                i12 = double_or_blank(card, nStart + 3, 'I12 %i' % nRepeated, 0.0)
-                j   = double_or_blank(card, nStart + 5, 'J%i' % nRepeated, 0.0)
-                nsm = double_or_blank(card, nStart + 6, 'nsm%i' % nRepeated, 0.0)
+                i12 = double_or_blank(card, nStart + 5, 'I12 %i' % nRepeated, 0.0)
+                j   = double_or_blank(card, nStart + 6, 'J%i' % nRepeated, 0.0)
+                nsm = double_or_blank(card, nStart + 7, 'nsm%i' % nRepeated, 0.0)
 
                 self.so.append(so)
                 self.xxb.append(xxb)
@@ -1536,14 +1580,14 @@ class PBEAM(IntegratedLineProperty):
                 self.nsm.append(nsm)
 
                 if isCDEF:
-                    c1 = double_or_blank(card, nStart + 7, 'c1 %i' % nRepeated, 0.0)
-                    c2 = double_or_blank(card, nStart + 8, 'c2 %i' % nRepeated, 0.0)
-                    d1 = double_or_blank(card, nStart + 9, 'd1 %i' % nRepeated, 0.0)
-                    d2 = double_or_blank(card, nStart + 10, 'd2 %i' % nRepeated, 0.0)
-                    e1 = double_or_blank(card, nStart + 11, 'e1 %i' % nRepeated, 0.0)
-                    e2 = double_or_blank(card, nStart + 12, 'e2 %i' % nRepeated, 0.0)
-                    f1 = double_or_blank(card, nStart + 13, 'f1 %i' % nRepeated, 0.0)
-                    f2 = double_or_blank(card, nStart + 14, 'f2 %i' % nRepeated, 0.0)
+                    c1 = double_or_blank(card, nStart + 8, 'c1 %i' % nRepeated, 0.0)
+                    c2 = double_or_blank(card, nStart + 9, 'c2 %i' % nRepeated, 0.0)
+                    d1 = double_or_blank(card, nStart + 10, 'd1 %i' % nRepeated, 0.0)
+                    d2 = double_or_blank(card, nStart + 11, 'd2 %i' % nRepeated, 0.0)
+                    e1 = double_or_blank(card, nStart + 12, 'e1 %i' % nRepeated, 0.0)
+                    e2 = double_or_blank(card, nStart + 13, 'e2 %i' % nRepeated, 0.0)
+                    f1 = double_or_blank(card, nStart + 14, 'f1 %i' % nRepeated, 0.0)
+                    f2 = double_or_blank(card, nStart + 15, 'f2 %i' % nRepeated, 0.0)
                     self.c1.append(c1)
                     self.c2.append(c2)
                     self.d1.append(d1)
@@ -1565,19 +1609,19 @@ class PBEAM(IntegratedLineProperty):
             if len(self.xxb) > 1:
                 assert min(self.xxb) == 0.0, 'min=%s, but should be 0.0\nxxb=%s' % (min(self.xxb), self.xxb)
                 assert max(self.xxb) == 1.0, 'max=%s, but should be 1.0\nxxb=%s' % (max(self.xxb), self.xxb)
-            
+
 
             # footer fields
             #: Shear stiffness factor K in K*A*G for plane 1.
             self.k1 = double_or_blank(card, x, 'k1', 1.0)
             #: Shear stiffness factor K in K*A*G for plane 2.
             self.k2 = double_or_blank(card, x + 1, 'k2', 1.0)
-            
+
             #: Shear relief coefficient due to taper for plane 1.
             self.s1 = double_or_blank(card, x + 2, 's1', 0.0)
             #: Shear relief coefficient due to taper for plane 2.
             self.s2 = double_or_blank(card, x + 3, 's2', 0.0)
-            
+
             #: non structural mass moment of inertia per unit length
             #: about nsm center of gravity at Point A.
             self.nsia = double_or_blank(card, x + 4, 'nsia', 0.0)
@@ -1626,6 +1670,12 @@ class PBEAM(IntegratedLineProperty):
     #    #raise RuntimeError(self.nsm[0])
     #    return self.nsm[0]
 
+    def I1_I2_I12(self):
+        assert self.i1  is not None, 'I1=%r' % self.i1
+        assert self.i2  is not None, 'I2=%r' % self.i2
+        assert self.i12 is not None, 'I12=%r' % self.i12
+        return self.i1[0], self.i2[0], self.i12[0]
+
     def MassPerLength(self):
         """
         mass = L*(Area*rho+nsm)
@@ -1641,6 +1691,9 @@ class PBEAM(IntegratedLineProperty):
     def cross_reference(self, model):
         msg = ' which is required by PBEAM mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
+        #if model.sol != 600:
+            #assert max(self.j) == 0.0, self.j
+            #assert min(self.j) == 0.0, self.j
 
     def _verify(self, xref=False):
         pid = self.Pid()
@@ -1658,7 +1711,7 @@ class PBEAM(IntegratedLineProperty):
         assert isinstance(A, float), 'pid=%r' % A
         assert isinstance(J, float), 'cid=%r' % J
         assert isinstance(nsm, float), 'nsm=%r' % nsm
-        if xref == 1:  # True
+        if xref:
             assert self.mid.type in ['MAT1', 'MAT4', 'MAT5'], 'pid.type=%s; mid.type=%s' % (self.type, self.mid.type)
             #self.MassPerLength()
 
@@ -1695,6 +1748,7 @@ class PBEAM(IntegratedLineProperty):
                              self.i12, self.j, self.nsm, self.c1, self.c2,
                              self.d1, self.d2, self.e1, self.e2, self.f1,
                              self.f2):
+
             if i == 0:  # the first 2 fields aren't written
                 list_fields += [         A, i1, i2, i12, j, nsm,
                                 c1, c2, d1, d2, e1, e2, f1, f2]
@@ -1718,7 +1772,6 @@ class PBEAM(IntegratedLineProperty):
         #print('i1  = %r' % self.i1)
         #print('i2  = %r' % self.i2)
         #print('i12 = %r' % self.i12)
-
         i = 0
         for (so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2, e1, e2, f1,
              f2) in izip(self.so, self.xxb, self.A, self.i1, self.i2, self.i12,
@@ -1752,6 +1805,10 @@ class PBEAM(IntegratedLineProperty):
         k2 = set_blank_if_default(self.k2, 1.0)
         s1 = set_blank_if_default(self.s1, 0.0)
         s2 = set_blank_if_default(self.s2, 0.0)
+        #k1 = self.k1
+        #k2 = self.k2
+        #s1 = self.s1
+        #s2 = self.s2
 
         nsia = set_blank_if_default(self.nsia, 0.0)
         nsib = set_blank_if_default(self.nsib, self.nsia)
@@ -1759,6 +1816,10 @@ class PBEAM(IntegratedLineProperty):
         cwa = set_blank_if_default(self.cwa, 0.0)
         cwb = set_blank_if_default(self.cwb, self.cwa)
 
+        #m1a = self.m1a
+        #m2a = self.m2a
+        #m1b = self.m1b
+        #m2b = self.m2b
         m1a = set_blank_if_default(self.m1a, 0.0)
         m2a = set_blank_if_default(self.m2a, self.m1a)
         m1b = set_blank_if_default(self.m1b, 0.0)
@@ -1774,6 +1835,13 @@ class PBEAM(IntegratedLineProperty):
 
         list_fields += footer
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class PBEAML(IntegratedLineProperty):
@@ -1806,6 +1874,7 @@ class PBEAML(IntegratedLineProperty):
         IntegratedLineProperty.__init__(self, card, data)
         if comment:
             self._comment = comment
+
         if card:
             #: Property ID
             self.pid = integer(card, 1, 'pid')
@@ -1876,12 +1945,24 @@ class PBEAML(IntegratedLineProperty):
             #print("nsm = %s" %(self.nsm))
             #print self
 
+    def _verify(self, xref=False):
+        pid = self.Pid()
+        rho = self.Rho()
+        nsm = self.Nsm()
+        area = self.Area()
+        mass_per_length = self.MassPerLength()
+        assert isinstance(pid, int), 'pid=%r\n%s' % (pid, str(self))
+        assert isinstance(rho, float), 'rho=%r\n%s' % (rho, str(self))
+        assert isinstance(nsm, float), 'nsm=%r\n%s' % (nsm, str(self))
+        assert isinstance(area, float), 'area=%r\n%s' % (area, str(self))
+        assert isinstance(mass_per_length, float), 'mass/L=%r\n%s' % (mass_per_length, str(self))
+
     def MassPerLength(self):
         r"""
         Gets the mass per length :math:`\frac{m}{L}` of the PBEAML.
-        
+
         .. math:: \frac{m}{L} = A(x) \rho + nsm
-        
+
         .. math:: \frac{m}{L} = nsm L + \rho \int \, A(x) dx
         """
         rho = self.Rho()
@@ -1899,9 +1980,9 @@ class PBEAML(IntegratedLineProperty):
     def Area(self):
         r"""
         Gets the Area :math:`A` of the PBEAML.
-        
+
         .. math:: A = \int \, A(x) dx
-        
+
         .. note:: a spline is fit to :math:`A(x)` and then integrated.
         """
         Areas = []
@@ -1996,6 +2077,14 @@ class PBEAML(IntegratedLineProperty):
         list_fields = self.rawFields()
         list_fields[3] = group
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        """..todo:: having bug with PBEAML"""
+        card = self.reprFields()
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)  #is this allowed???
 
 
 class PBEAM3(LineProperty):  # not done, cleanup
@@ -2157,3 +2246,10 @@ class PBEND(LineProperty):
         else:
             raise ValueError('only beamType=1 and 2 supported')
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)

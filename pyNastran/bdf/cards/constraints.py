@@ -458,8 +458,9 @@ class SPC1(Constraint):
             self.nodes = expand_thru(nodes)
             self.nodes.sort()
         else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+            self.conid = data[0]
+            self.constraints = data[1]
+            self.nodes = data[2:]
 
     def cross_reference(self, i, node):
         self.nodes[i] = node

@@ -1,14 +1,13 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-import sys
 from numpy import array
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, blank, integer_or_string)
-
+from pyNastran.bdf.fieldWriter import print_card_8
 
 class Ring(BaseCard):
     """Generic Ring base class"""
@@ -37,6 +36,7 @@ class RINGAX(Ring):
     +-------+-----+-----+-----+----+-----+-----+------+-----+
     """
     type = 'RINGAX'
+    _field_map = {1: 'mid', 3:'R', 4:'z', 7:'ps'}
 
     def __init__(self, card=None, data=None, comment=''):  # this card has missing fields
         Ring.__init__(self, card, data)
@@ -58,6 +58,10 @@ class RINGAX(Ring):
         list_fields = ['RINGAX', self.nid, None, self.R, self.z, None,
                   None, self.ps]
         return list_fields
+
+    def write_bdf(self, f, method):
+        card = self.reprFields()
+        f.write(method(card))
 
 
 class SPOINT(Node):
@@ -82,6 +86,10 @@ class SPOINT(Node):
         else:
             list_fields = ['SPOINT'] + collapse_thru(self.nid)
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card)
 
 
 class SPOINTs(Node):
@@ -142,6 +150,10 @@ class SPOINTs(Node):
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card)
+
 
 class GRDSET(Node):
     """
@@ -154,6 +166,7 @@ class GRDSET(Node):
     +--------+-----+----+----+----+----+----+----+------+
     """
     type = 'GRDSET'
+    _field_map = {1: 'nid', 2:'cp', 6:'cd', 7:'ps', 8:'seid'}
 
     def __init__(self, card=None, data=None, comment=''):
         if comment:
@@ -207,7 +220,7 @@ class GRDSET(Node):
         assert isinstance(cp, int), 'cp=%r' % cp
         assert isinstance(cd, int), 'cd=%r' % cd
         assert isinstance(seid, int), 'seid=%r' % seid
-        
+
     def rawFields(self):
         list_fields = ['GRDSET', None, self.Cp(), None, None, None,
                   self.Cd(), self.ps, self.SEid()]
@@ -221,9 +234,14 @@ class GRDSET(Node):
         list_fields = ['GRDSET', None, cp, None, None, None, cd, ps, seid]
         return list_fields
 
+    def write_bdf(self, f, method):
+        card = self.reprFields()
+        f.write(print_card_8(card))
+
 
 class GRIDB(Node):
     type = 'GRIDB'
+    _field_map = {1: 'nid', 4:'phi', 6:'cd', 7:'ps', 8:'idf'}
 
     def __init__(self, card=None, data=None, comment=''):
         """
@@ -276,6 +294,10 @@ class GRIDB(Node):
                        idf]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class GRID(Node):
     """
@@ -286,6 +308,17 @@ class GRID(Node):
     +------+-----+----+----+----+----+----+----+------+
     """
     type = 'GRID'
+    _field_map = {1: 'nid', 2:'cp', 6:'cd', 7:'ps', 8:'seid'}
+
+    def _update_field_helper(self, n, value):
+        if n == 3:
+            self.xyz[0] = value
+        elif n == 4:
+            self.xyz[1] = value
+        elif n == 5:
+            self.xyz[2] = value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         """
@@ -302,7 +335,7 @@ class GRID(Node):
 
             #: Grid point coordinate system
             self.cp = integer_or_blank(card, 2, 'cp', 0)
-            
+
             x = double_or_blank(card, 3, 'x1', 0.)
             y = double_or_blank(card, 4, 'x2', 0.)
             z = double_or_blank(card, 5, 'x3', 0.)
@@ -373,7 +406,7 @@ class GRID(Node):
         assert isinstance(cd, int), 'cd=%r' % cd
         if xref:
             pos_xyz = self.Position()
-        
+
     def nDOF(self):
         return 6
 
@@ -409,7 +442,6 @@ class GRID(Node):
         # converting the xyz point arbitrary->global
         p, matrixDum = self.cp.transformToGlobal(self.xyz, debug=debug)
         #print "wrt = ",p
-
         msg = ' which is required by %s nid=%s' % (self.type, self.nid)
         coordB = model.Coord(cid, msg=msg)
 
@@ -433,7 +465,6 @@ class GRID(Node):
                 self.ps = grdset.ps
             if not self.seid:
                 self.seid = grdset.seid
-
         msg = ' which is required by %s nid=%s' % (self.type, self.nid)
         self.cp = model.Coord(self.cp, msg=msg)
         if self.cd != -1:
@@ -453,16 +484,21 @@ class GRID(Node):
                                                                  seid]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class POINT(Node):
     """
     +-------+-----+----+----+----+----+----+----+-----+
     |   1   |  2  | 3  | 4  | 5  | 6  |  7 | 8  |  9  |
     +=======+=====+====+====+====+====+====+====+=====+
-    | POINT | NID | CP | X1 | X2 | X3 |    |    |     | 
+    | POINT | NID | CP | X1 | X2 | X3 |    |    |     |
     +-------+-----+----+----+----+----+----+----+-----+
     """
     type = 'POINT'
+    _field_map = {1: 'nid', 2:'cp'}
 
     def __init__(self, card=None, data=None, comment=''):
         """
@@ -568,3 +604,7 @@ class POINT(Node):
         cp = set_blank_if_default(self.Cp(), 0)
         list_fields = ['POINT', self.nid, cp] + list(self.xyz)
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
