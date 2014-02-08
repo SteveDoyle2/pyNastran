@@ -44,7 +44,7 @@ if __name__ == '__main__':
     debug = False
 
     saveCases = True
-    regenerate = False
+    regenerate = True
     stopOnFailure = False
 
     if regenerate:
@@ -52,6 +52,7 @@ if __name__ == '__main__':
         files2 += get_all_files(foldersFile, '.nas')
         files2 += get_all_files(foldersFile, '.dat')
         files2 += files
+        files2.sort()
     else:
         files2 = get_failed_files('failedCases.in')
 
@@ -69,10 +70,14 @@ if __name__ == '__main__':
     print("nFiles = %s" % len(files))
     cid = None
     check = True
-    xref = 'partial'
+    xref = True
     debug = False
     failed_files = run_lots_of_files(files, debug=debug, xref=xref,
                                      check=check, cid=cid)
+    ntotal = len(files)
+    nfailed = len(failed_files)
+    npassed = ntotal - nfailed
+    sys.stderr.write('%i/%i passed\n' % (npassed, ntotal))
     try:
         f = open('failedCases.in', 'wb')
     except IOError:

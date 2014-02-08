@@ -20,10 +20,17 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     string_or_blank, integer_string_or_blank,
     fields, blank)
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 
 
 class PFAST(Property):
     type = 'PFAST'
+    _field_map = {1: 'pid', 2:'d', 3:'mcid', 4:'mflag',
+        5:'kt1', 6:'kt2', 7:'kt3',
+        8:'kr1', 9:'kr2', 10:'kr3',
+        11:'mass', 12:'ge'
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         Property.__init__(self, card, data)
@@ -87,9 +94,20 @@ class PFAST(Property):
                   self.kt3, kr1, kr2, kr3, mass, ge]
         return fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+
 
 class PGAP(Property):
     type = 'PGAP'
+    _field_map = {
+        1: 'pid', 2:'u0', 3:'f0', 4:'ka', 5:'kb', 6:'kt', 7:'mu1',
+        8:'mu2', 9:'tmax', 10:'mar', 11:'trmin',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         """
@@ -133,6 +151,10 @@ class PGAP(Property):
             self.mar = data[9]
             self.trmin = data[10]
 
+    def _verify(self, xref=True):
+        pid = self.Pid()
+        assert isinstance(pid, int), 'pid=%r\n%s' % (pid, str(self))
+
     def cross_reference(self, model):
         pass
 
@@ -157,6 +179,13 @@ class PGAP(Property):
                   tmax, mar, trmin]
         return fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+
 
 class SolidProperty(Property):
     def __init__(self, card, data):
@@ -174,6 +203,9 @@ class PLSOLID(SolidProperty):
     PLSOLID 20 21
     """
     type = 'PLSOLID'
+    _field_map = {
+        1: 'pid', 2:'mid', 3:'str',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         SolidProperty.__init__(self, card, data)
@@ -205,6 +237,13 @@ class PLSOLID(SolidProperty):
         fields = ['PLSOLID', self.pid, self.Mid(), stressStrain]
         return fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+
 
 class PSOLID(SolidProperty):
     """
@@ -213,6 +252,10 @@ class PSOLID(SolidProperty):
     PSOLID 2 100 6 TWO GRID REDUCED
     """
     type = 'PSOLID'
+    _field_map = {
+        1: 'pid', 2:'mid', 3:'cordm', 4:'integ', 5:'stress',
+        6:'isop', 7:'fctn',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         SolidProperty.__init__(self, card, data)
@@ -243,13 +286,16 @@ class PSOLID(SolidProperty):
             if self.fctn == 'SMEC':
                 self.fctn = 'SMECH'
 
-    def _verify(self, xref):
+    def materials(self):
+        return [self.mid]
+
+    def _verify(self, xref=False):
         pid = self.Pid()
         mid = self.Mid()
         assert isinstance(pid, int), 'pid=%r' % pid
         assert isinstance(mid, int), 'mid=%r' % mid
-        
-        if xref == 1:  # True
+
+        if xref:
             assert self.mid.type in ['MAT1', 'MAT4', 'MAT9', 'MAT10'], 'mid=%i self.mid.type=%s' % (mid, self.mid.type)
 
     def writeCalculix(self, elementSet=999):
@@ -269,6 +315,12 @@ class PSOLID(SolidProperty):
                   self.stress, self.isop, fctn]
         return fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 class CrackProperty(Property):
     def __init__(self, card, data):
@@ -279,6 +331,13 @@ class CrackProperty(Property):
             return self.mid
         return self.mid.mid
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+
 
 class PRAC2D(CrackProperty):
     """
@@ -287,6 +346,9 @@ class PRAC2D(CrackProperty):
     the CRAC2D structural element.
     """
     type = 'PRAC2D'
+    _field_map = {
+        1: 'pid', 2:'mid', 3:'thick', 4:'iPlane', 5:'nsm',6:'gamma', 7:'phi',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         CrackProperty.__init__(self, card, data)
@@ -342,6 +404,9 @@ class PRAC3D(CrackProperty):
     Defines the properties of the CRAC3D structural element.
     """
     type = 'PRAC3D'
+    _field_map = {
+        1: 'pid', 2:'mid', 3:'gamma', 4:'phi',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         CrackProperty.__init__(self, card, data)
@@ -380,6 +445,14 @@ class PRAC3D(CrackProperty):
 
 class PCONEAX(Property):
     type = 'PCONEAX'
+    _field_map = {
+        1: 'pid', 2:'mid1', 3:'t1', 4:'mid2', 5:'i', 6:'mid3', 7:'t2',
+        8: 'nsm', 9:'z1', 10:'z2',
+    }
+    def _update_field_helper(self, n, value):
+        if n <= 0:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+        self.phi[n - 10] = value
 
     def __init__(self, card=None, data=None, comment=''):
         Property.__init__(self, card, data)
@@ -456,3 +529,10 @@ class PCONEAX(Property):
         list_fields = ['PCONEAX', self.pid, mid1, t1, mid2, i, mid3, t2,
                   nsm, self.z1, self.z2] + self.phi
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)

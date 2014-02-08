@@ -11,7 +11,7 @@ testpath = os.path.join(rootpath, 'bdf', 'test', 'unit')
 
 
 class TestMass(unittest.TestCase):
-        
+
     def verify_pcomp_element(self, element, mass, area, centroid, normal):
         #print object_methods(element,'all')
         self.assertAlmostEqual(element.Mass(),mass, msg='mass=%s expected=%s' % (element.Mass(), mass))
@@ -50,7 +50,7 @@ class TestMass(unittest.TestCase):
         model = BDF(debug=True, log=None)
         bdfname = os.path.join(testpath, 'test_mass.dat')
         model.read_bdf(bdfname, include_dir=None, xref=True)
-        
+
         # quad - pcomp
         quad = model.elements[1]
         mass = 0.12
@@ -58,7 +58,7 @@ class TestMass(unittest.TestCase):
         centroid = array([.5, .5, 0.])
         normal = array([.0, .0, 1.])
         self.verify_pcomp_element(quad, mass, area, centroid, normal)
-        
+
         # quad - pshell, nsm=0
         quad = model.elements[3]
         mass = 0.0125
@@ -90,7 +90,7 @@ class TestMass(unittest.TestCase):
         mass = 0.50625 # mass w/o nsm + 0.5 b/c area=0.5
         nsm = 1.
         self.verify_pshell_element(tri, mass, area, centroid, normal, nsm)
-        
+
         # hexa - psolid - nsm = 0
         hexa = model.elements[7]
         mass = 0.2

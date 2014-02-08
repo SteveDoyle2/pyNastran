@@ -368,13 +368,12 @@ class Subcase(object):
 
     def _add_data(self, key, value, options, param_type):
         key = update_param_name(key)
-        #print("adding isubcase=%s key=|%s| value=|%s| options=|%s| "
-        #      "param_type=%s" %(self.id, key, value, options, param_type))
+        #print("adding isubcase=%s key=%r value=%r options=%r "
+        #      "param_type=%r" %(self.id, key, value, options, param_type))
         if is_string(value) and value.isdigit():
             value = int(value)
 
-        (key, value, options) = self._simplify_data(key, value, options,
-                                                    param_type)
+        (key, value, options) = self._simplify_data(key, value, options, param_type)
         self.params[key] = [value, options, param_type]
 
     def _simplify_data(self, key, value, options, param_type):
@@ -411,8 +410,7 @@ class Subcase(object):
             #b = 'value=|%s|'     % value
             #c = 'options=|%s|'   % options
             #d = 'param_type=|%s|' % param_type
-            #print("_adding isubcase=%s %-18s %-12s %-12s %-12s" %(self.id, a,
-            #                                                      b, c, d))
+            #print("_adding isubcase=%s %-18s %-12s %-12s %-12s" %(self.id, a, b, c, d))
             if isinstance(value, int) or value is None:
                 pass
             elif value.isdigit():  # STRESS = ALL
@@ -529,6 +527,7 @@ class Subcase(object):
         if self.id > 0:
             spaces = '    '
 
+        #print('key=%s param=%s param_type=%s' % (key, param, param_type))
         if param_type == 'SUBCASE-type':
             if self.id > 0:
                 msg += 'SUBCASE %s\n' % (self.id)
@@ -537,7 +536,12 @@ class Subcase(object):
         elif param_type == 'KEY-type':
             #print "KEY-TYPE:  |%s|" %(value)
             assert value is not None, param
-            msg += spaces + '%s\n' % (value)
+            if ',' in value:
+                sline = value.split(',')
+                two_spaces = ',\n' + 2 * spaces
+                msg += spaces + two_spaces.join(sline) + '\n'
+            else:
+                msg += spaces + '%s\n' % value
         elif param_type == 'STRING-type':
             msg += spaces + '%s = %s\n' % (key, value)
         elif param_type == 'CSV-type':
@@ -547,10 +551,14 @@ class Subcase(object):
             #print("sOptions = |%s|" %(sOptions))
             #print("STRESSTYPE key=%s value=%s options=%s"
             #    %(key, value, options))
-            if len(sOptions) > 0:
-                msg += '%s(%s) = %s\n' % (key, sOptions, value)
+            if value is None:
+                val = ''
             else:
-                msg += '%s = %s\n' % (key, value)
+                val = ' = %s' % value
+            if len(sOptions) > 0:
+                msg += '%s(%s)%s\n' % (key, sOptions, val)
+            else:
+                msg += '%s%s\n' % (key, val)
             msg = spaces + msg
 
         elif param_type == 'SET-type':
@@ -647,9 +655,9 @@ class Subcase(object):
         if self.id == 0:
             msg = str(self)
         else:
-            msg = 'SUBCASE %s\n' % (self.id)
+            msg = 'SUBCASE %s\n' % self.id
             nparams = 0
-            for (key, param) in self.subcase_sorted(self.params.iteritems()):
+            for (key, param) in self.subcase_sorted(self.params.items()):
                 if key in subcase0.params and subcase0.params[key] == param:
                     pass  # dont write global subcase parameters
                 else:
@@ -661,7 +669,7 @@ class Subcase(object):
                     nparams += 1
                     #print ""
             if nparams == 0:
-                for (key, param) in self.subcase_sorted(self.params.iteritems()):
+                for (key, param) in self.subcase_sorted(self.params.items()):
                     #print("key=%s param=%s" %(key, param))
                     (value, options, paramType) = param
                     #print("  *key=|%s| value=|%s| options=%s "
@@ -734,10 +742,10 @@ class Subcase(object):
         #msg = "-------SUBCASE %s-------\n" %(self.id)
         msg = ''
         if self.id > 0:
-            msg += 'SUBCASE %s\n' % (self.id)
+            msg += 'SUBCASE %s\n' % self.id
 
         nparams = 0
-        for (key, param) in self.subcase_sorted(self.params.iteritems()):
+        for (key, param) in self.subcase_sorted(self.params.items()):
             #print("key=%s param=%s" %(key,param))
             (value, options, paramType) = param
             #print("  ?*key=|%s| value=|%s| options=%s paramType=|%s|"
@@ -834,6 +842,8 @@ def update_param_name(param_name):
         param_name = 'YTITLE'
     elif param_name.startswith('SACCE'):
         param_name = 'SACCELERATION'
+    elif param_name.startswith('GPSTRE'):
+        param_name = 'GPSTRESS'
     elif param_name.startswith('GPSTR'):
         param_name = 'GPSTRAIN'
     elif param_name in ['DEFO', 'DEFOR']:

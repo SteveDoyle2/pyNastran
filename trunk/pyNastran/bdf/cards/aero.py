@@ -31,10 +31,11 @@ from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru,
                                           wipe_empty_fields)
 from pyNastran.bdf.bdfInterface.assign_type import (fields,
     integer, integer_or_blank,
-    double, double_or_blank, 
+    double, double_or_blank,
     string, string_or_blank,
     integer_or_string, double_string_or_blank,
-    blank)
+    blank, interpret_value)
+from pyNastran.bdf.fieldWriter import print_card_8
 
 
 class AEFACT(BaseCard):
@@ -60,7 +61,7 @@ class AEFACT(BaseCard):
             #: Set identification number. (Unique Integer > 0)
             self.sid = integer(card, 1, 'sid')
             #: Number (float)
-            self.Di = card.fields(2)
+            self.Di = [interpret_value(field) for field in card.fields(2)]
         else:
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
@@ -72,18 +73,21 @@ class AEFACT(BaseCard):
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card)
 
 class AELINK(BaseCard):
     r"""
     Defines relationships between or among AESTAT and AESURF entries, such
     that:
-    
+
     .. math:: u^D + \Sigma_{i=1}^n C_i u_i^I = 0.0
 
     +--------+-------+-------+--------+----+-------+----+-------+----+
     | AELINK | ID    | LABLD | LABL1  | C1 | LABL2 | C2 | LABL3 | C3 |
     +--------+-------+-------+--------+----+-------+----+-------+----+
-    |        | LABL4 | C4    | etc.   | 
+    |        | LABL4 | C4    | etc.   |
     +--------+-------+-------+--------+
 
     +--------+-------+-------+-------+------+
@@ -105,7 +109,7 @@ class AELINK(BaseCard):
             #: linking coefficient (real)
             self.Cis = []
 
-            fields = card[3:]
+            fields = [interpret_value(field) for field in card[3:] ]
             assert len(fields) % 2 == 0, 'fields=%s' % fields
             for i in xrange(0, len(fields), 2):
                 independentLabel = fields[i]
@@ -174,6 +178,10 @@ class AELIST(BaseCard):
         list_fields = ['AELIST', self.sid] + self.elements
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card)
+
 
 class AEPARM(BaseCard):
     """
@@ -184,12 +192,13 @@ class AEPARM(BaseCard):
     +--------+----+--------+-------+
     | AEPARM | ID | LABEL  | UNITS |
     +--------+----+--------+-------+
-
-    +--------+----+--------+-------+
     | AEPARM | 5  | THRUST | LBS   |
     +--------+----+--------+-------+
     """
     type = 'AEPARM'
+    _field_map = {
+        1: 'id', 2:'label', 3:'units'
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         if comment:
@@ -218,13 +227,14 @@ class AESTAT(BaseCard):
     +--------+------+--------+
     | AESTAT | ID   | LABEL  |
     +--------+------+--------+
-
-    +--------+------+--------+
     | AESTAT | 5001 | ANGLEA |
     +--------+------+--------+
     """
     type = 'AESTAT'
 
+    _field_map = {
+        1: 'id', 2:'label',
+    }
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
@@ -257,6 +267,11 @@ class AESURF(BaseCard):
     +--------+--------+-------+-------+-------+--------+--------+--------+--------+
     """
     type = 'AESURF'
+    _field_map = {
+        1: 'aesid', 2:'label', 3:'cid1', 4:'alid1', 5:'cid2', 6:'alid2',
+        7:'eff', 8:'ldw', 9:'crefc', 10:'crefs', 11:'pllim', 12:'pulim',
+        13:'hmllim', 14:'hmulim', 15:'tqllim', '16':'tqulim',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         if comment:
@@ -418,6 +433,10 @@ class AERO(Aero):
     +------+-------+----------+------+--------+-------+-------+
     """
     type = 'AERO'
+    _field_map = {
+        1: 'acsid', 2:'velocity', 3:'cRef', 4:'rhoRef', 5:'symXZ',
+        6:'symXY',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         Aero.__init__(self, card, data)
@@ -465,12 +484,15 @@ class AEROS(Aero):
     +-------+-------+-------+------+------+-------+------+-------+
     | AEROS | ACSID | RCSID | REFC | REFB | REFS  |SYMXZ | SYMXY |
     +-------+-------+-------+------+------+-------+------+-------+
-
     +-------+-------+-------+------+------+-------+------+-------+
     | AEROS | 10    | 20    | 10.  | 100. | 1000. | 1    |       |
     +-------+-------+-------+------+------+-------+------+-------+
     """
     type = 'AEROS'
+    _field_map = {
+        1: 'acsid', 2:'rcsid', 3:'cRef', 4:'bRef', 5:'Sref',
+        6:'symXZ', 7:'symXY',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         Aero.__init__(self, card, data)
@@ -520,6 +542,9 @@ class CSSCHD(BaseCard):
     +--------+-----+-------+--------+-------+-------+
     """
     type = 'ASSCHD'
+    _field_map = {
+        1: 'sid', 2:'aesid', 3:'lAlpha', 4:'lMach', 5:'lSchd',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         Aero.__init__(self, card, data)
@@ -590,11 +615,31 @@ class CAERO1(BaseCard):
     +--------+-----+-----+----+-------+--------+--------+--------+------+
     """
     type = 'CAERO1'
+    _field_map = {
+        1: 'sid', 2:'pid', 3:'cp', 4:'nspan', 5:'nchord',
+        6:'lspan', 7:'lchord', 8:'igid', 12:'x12', 16:'x43',
+    }
+    def _update_field_helper(self, n, value):
+        if n == 9:
+            self.p1[0] = value
+        elif n == 10:
+            self.p1[1] = value
+        elif n == 11:
+            self.p1[2] = value
+
+        elif n == 13:
+            self.p4[0] = value
+        elif n == 14:
+            self.p4[1] = value
+        elif n == 15:
+            self.p4[2] = value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         r"""
         ::
-        
+
           1
           | \
           |   \
@@ -696,11 +741,24 @@ class CAERO2(BaseCard):
     Doublet-Lattice aerodynamics.
     """
     type = 'CAERO2'
+    _field_map = {
+        1: 'sid', 2:'pid', 3:'cp', 4:'nsb', 5:'lsb',
+        6:'nint', 7:'lint', 8:'igid', 12:'x12',
+    }
+    def _update_field_helper(self, n, value):
+        if n == 9:
+            self.p1[0] = value
+        elif n == 10:
+            self.p1[1] = value
+        elif n == 11:
+            self.p1[2] = value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         """
         ::
-        
+
           1 \
           |   \
           |     \
@@ -1013,6 +1071,20 @@ class FLUTTER(BaseCard):
     +---------+-----+--------+------+------+-------+-------+-------------+------+
     """
     type = 'FLUTTER'
+    _field_map = {
+        1: 'sid', 2:'method', 3:'density', 4:'mach', 5:'rfreq_vel', 6:'imethod',
+        8:'epsilon',
+    }
+    def _update_field_helper(self, n, value):
+        if n == 7:
+            if self.method in ['K', 'KE']:
+                self.nValue = value
+            elif self.method in ['PKS', 'PKNLS']:
+                self.omax = value
+            else:
+                self.nValue = value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         if comment:
@@ -1125,6 +1197,9 @@ class GUST(BaseCard):
     +------+-----+-------+-----+-----+------+
     """
     type = 'GUST'
+    _field_map = {
+        1: 'sid', 2:'dload', 3:'wg', 4:'x0', 5:'V',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         if comment:
@@ -1172,7 +1247,7 @@ class MKAERO1(BaseCard):
         if comment:
             self._comment = comment
         if card:
-            fields = card[1:]
+            fields = [interpret_value(field) for field in card[1:] ]
             nfields = len(fields) - 8
             self.machs = []
             self.rFreqs = []
@@ -1275,7 +1350,7 @@ class PAERO1(BaseCard):
             self._comment = comment
         if card:
             self.pid = integer(card, 1, 'pid')
-            Bi = card[2:]
+            Bi = [interpret_value(field) for field in card[2:] ]
             self.Bi = []
 
             for bi in Bi:
@@ -1308,6 +1383,18 @@ class PAERO2(BaseCard):
       THI1 THN1 THI2 THN2 THI3 THN3
     """
     type = 'PAERO2'
+    _field_map = {
+        1: 'pid', 2:'orient', 3:'width', 4:'AR', 5:'lrsb', 6:'lrib',
+        7: 'lth1', 8:'lth2',
+    }
+    def _update_field_helper(self, n, value):
+        nnew = n - 8
+        spot = nnew // 2
+        i = nnew % 2
+        if i == 0:
+            self.thi[spot] = value
+        else:
+            self.thn[spot] = value
 
     def __init__(self, card=None, data=None, comment=''):
         if comment:
@@ -1340,7 +1427,7 @@ class PAERO2(BaseCard):
             self.lth2 = integer_or_blank(card, 8, 'lth2')
             self.thi = []
             self.thn = []
-            fields = card[9:]
+            fields = [interpret_value(field) for field in card[9:] ]
             nFields = len(fields)
             for i in xrange(9, 9 + nFields, 2):
                 self.thi.append(integer(card, i, 'lth'))
@@ -1378,6 +1465,10 @@ class SPLINE1(Spline):
       SPLINE1 3   111    115  122  14   0.
     """
     type = 'SPLINE1'
+    _field_map = {
+        1: 'eid', 2:'caero', 3:'box1', 4:'box2', 5:'setg', 6:'dz',
+        7: 'method', 8:'usage', 9:'nelements', 10:'melements',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         Spline.__init__(self, card, data)
@@ -1461,6 +1552,10 @@ class SPLINE2(Spline):
       1.
     """
     type = 'SPLINE2'
+    _field_map = {
+        1: 'eid', 2:'caero', 3:'id1', 4:'id2', 5:'setg', 6:'dz',
+        7: 'dtor', 8:'cid', 9:'dthx', 10:'dthy',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         Spline.__init__(self, card, data)
@@ -1532,6 +1627,10 @@ class SPLINE4(Spline):
       SPLINE4 3 111 115 --- 14 0. IPS
     """
     type = 'SPLINE4'
+    _field_map = {
+        1: 'eid', 2:'caero', 3:'aelist', 5:'setg', 6:'dz',
+        7: 'method', 8:'usage', 9:'nelements', 10:'melements',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         Spline.__init__(self, card, data)
@@ -1616,6 +1715,10 @@ class SPLINE5(Spline):
               DTHX DTHY ---    USAGE
     """
     type = 'SPLINE5'
+    _field_map = {
+        1: 'eid', 2:'caero', 3:'aelist', 5:'setg', 6:'dz',
+        7: 'dtor', 8:'cid', 9:'thx', 10:'thy', 12:'usage',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         Spline.__init__(self, card, data)
@@ -1682,6 +1785,25 @@ class SPLINE5(Spline):
 
 class TRIM(BaseCard):
     type = 'TRIM'
+    _field_map = {
+        1: 'sid', 2:'mach', 3:'q', 8:'aeqr',
+    }
+
+    def _update_field_helper(self, n, value):
+        ni = 4
+        for (i, label, ux) in izip(count(), self.labels, self.uxs):
+            if n == ni:
+                self.labels[i] = value
+                return
+            elif n + 1 == ni:
+                self.uxs[i] = value
+                return
+
+            #list_fields += [label, ux]
+            if i == 1:
+                #list_fields += [self.aeqr]
+                ni += 1
+        raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         if comment:
@@ -1737,3 +1859,7 @@ class TRIM(BaseCard):
             if i == 1:
                 list_fields += [self.aeqr]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card)

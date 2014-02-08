@@ -103,25 +103,24 @@ class TestCoords(unittest.TestCase):
                  ]
         self.getNodes(grids, grids_expected, coords)
 
-    @unittest.skip('skipping test_rid_1')
-    def test_rid_1(self):  # did i mess up the transform???
+    def test_rid_1(self):
         #print('test_rid_1')
         grids = [
-                     [2, 10., 5., 3.],  # cid, x,y,z
-                    #[3,    10., 5.,  3.],
+                    [2, 10., 5., 3.],  # cid, x,y,z
+                    [3, 10., 5., 3.],
                  ]
         grids_expected = [
-                     ['x', 11., 6., 4.],  # ??? x,y,z
-                    #['x',  11., 6.,  4.],
+                    ['x', 11., 6., 4.],  # ??? x,y,z
+                    ['x', 11., 6., 4.],
                  ]
 
         coords = [  # rid origin,     zaxis        xaxis
-                   [0, [0., 0., 0.], [0., 0., -1.], [1., 0., 0.]],  # cid=1
+                   [0, [0., 0., 0.], [0., 0., 1.], [1., 0., 0.]],  # cid=1
                    [1, [1., 1., 1.], [1., 1., 2.], [2., 1., 1.]],  # cid=2
-                  #[  1,  [0.,0.,0.], [0.,0., 1.], [1.,0.,0.]  ],  # cid=2,equiv
+                  #[1, [0., 0., 0.], [0., 0., 1.], [1., 0., 0.]],  # cid=2,equiv
 
                    [0, [1., 1., 1.], [1., 1., 2.], [2., 1., 1.]],  # cid=3
-                  #[  0,  [0.,0.,0.], [0.,0., 1.], [1.,0.,0.]  ],  # cid=3,equiv
+                  #[0, [0., 0., 0.], [0., 0., 1.], [1., 0., 0.]],  # cid=3,equiv
                  ]
         self.getNodes(grids, grids_expected, coords)
 
@@ -133,16 +132,20 @@ class TestCoords(unittest.TestCase):
         model = BDF()
         card = model.process_card(grid)
         model.add_card(card, card[0])
+
         card = model.process_card(coord)
         model.add_card(card, card[0])
         model.cross_reference()
-    
-        fields = [20145, 0, 0.,0.,0., 0, 123, 0]
-        model.nodes.add_grid(data=fields)
-        #print(g.Position(debug=False))
-        diff = self.nodes.Position(model, g) - array([1.106704, .207647, -0.068531])
 
-        assert allclose(diff, 0.)
+        g = model.Node(20143)
+        #print(g.Position(debug=False))
+
+        # by running it through Patran...
+        #GRID     20143          1.1067  .207647 -.068531
+        diff = g.Position() - array([1.106704, .207647, -0.068531])
+
+        msg = 'diff=%s' % diff
+        assert allclose(diff, 0.), msg
 
     #def makeNodes(self, grids, coords):
         #grids2 = []
@@ -153,7 +156,7 @@ class TestCoords(unittest.TestCase):
         for (nid, grid) in enumerate(grids):
             (cid, x, y, z) = grid
             model.add_card(['GRID', nid + 1, cid, x, y, z], 'GRID')
-            gridObj = model.Node(nid + 1, msg='')
+            gridObj = model.Node(nid + 1)
             if debug:
                 print(gridObj)
 
@@ -161,7 +164,7 @@ class TestCoords(unittest.TestCase):
             #print coord
             (rid, x, y, z) = coord
             model.add_card(['CORD2R', cid + 1, rid] + x + y + z, 'CORD2R')
-            coordObj = model.Coord(cid + 1, msg='')
+            coordObj = model.Coord(cid + 1)
             if debug:
                 print(coordObj)
 
@@ -170,7 +173,7 @@ class TestCoords(unittest.TestCase):
         for (i, grid) in enumerate(grids_expected):
             (cid, x, y, z) = grid
             node = model.Node(i + 1)
-            pos = self.nodes.Position(model, nid)
+            pos = node.Position()
             n = array([x, y, z])
 
             msg = 'expected=%s actual=%s\n' % (n, pos)

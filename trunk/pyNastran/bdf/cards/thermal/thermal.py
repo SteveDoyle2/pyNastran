@@ -5,7 +5,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by,
                                           collapse_thru_by)
-from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_blank, 
+from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_blank,
     double, double_or_blank,
     integer_or_string, string, blank)
 
@@ -118,7 +118,12 @@ class CHBDYE(ThermalElement):
         pass
 
     def _verify(self, xref=False):
-        pass
+        eid = self.Eid()
+        eid2 = self.Eid2()
+        pid = self.Pid()
+        assert isinstance(eid, int)
+        assert isinstance(eid2, int)
+        assert isinstance(pid, int)
 
     # def sideToEIDs(self, eid):
     #     sideIDs = self.sideMaps[eid.type][self.side]
@@ -128,6 +133,12 @@ class CHBDYE(ThermalElement):
     #     nodes = [enodes[id - 1] for id in xrange(len(eid.nodes))
     #              if id in sideIDs]
     #     return side
+
+    def Eid(self):
+        return self.eid
+
+    def Eid2(self):
+        return self.eid2
 
     def rawFields(self):
         list_fields = ['CHBDYE', self.eid, self.eid2, self.side,
@@ -144,6 +155,10 @@ class CHBDYE(ThermalElement):
                   self.iViewFront, self.iViewBack, self.radMidFront,
                   self.radMidBack]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
 
 
 class CHBDYG(ThermalElement):
@@ -199,13 +214,19 @@ class CHBDYG(ThermalElement):
             self.grids = data[6:14]
 
     def _verify(self, xref=False):
-        pass
+        eid = self.Eid()
+        pid = self.Pid()
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
 
     def cross_reference(self, model):
         pass
         #msg = ' which is required by CHBDYG eid=%s' % self.eid
         #self.pid = model.Phbdy(self.pid, msg=msg)
         #self.grids
+
+    def Eid(self):
+        return self.eid
 
     def rawFields(self):
         list_fields = ['CHBDYG', self.eid, None, self.Type, self.iViewFront,
@@ -222,6 +243,10 @@ class CHBDYG(ThermalElement):
         list_fields = ['CHBDYG', self.eid, None, self.Type, iViewFront, iViewBack,
                   radMidFront, radMidBack, None, ] + self.grids
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
 
 
 class CHBDYP(ThermalElement):
@@ -296,6 +321,15 @@ class CHBDYP(ThermalElement):
         msg = ' which is required by CHBDYP pid=%s' % self.pid
         self.pid = model.Phbdy(self.pid, msg=msg)
 
+    def _verify(self, xref=False):
+        eid = self.Eid()
+        pid = self.Pid()
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+
+    def Eid(self):
+        return self.eid
+
     def rawFields(self):
         list_fields = ['CHBDYP', self.eid, self.Pid(), self.Type, self.iViewFront,
                   self.iViewBack, self.g1, self.g2, self.g0, self.radMidFront,
@@ -316,6 +350,10 @@ class CHBDYP(ThermalElement):
                   iViewBack, self.g1, self.g2, g0, radMidFront, radMidBack,
                   self.gmid, ce, self.e1, self.e2, self.e3]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
 
 # Elements
 #-------------------------------------------------------
@@ -396,6 +434,10 @@ class PCONV(ThermalProperty):
                   self.e3]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class PCONVM(ThermalProperty):
     """
@@ -440,7 +482,6 @@ class PCONVM(ThermalProperty):
             assert len(card) <= 9, 'len(PCONVM card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
-
     #def cross_reference(self,model):
     #    pass
 
@@ -458,6 +499,10 @@ class PCONVM(ThermalProperty):
         list_fields = ['PCONVM', self.pconid, self.mid, form, flag,
                   self.coef, expr, exppi, exppo]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
 
 
 class PHBDY(ThermalProperty):
@@ -501,6 +546,10 @@ class PHBDY(ThermalProperty):
         d2 = set_blank_if_default(self.d2, self.d1)
         list_fields = ['PHBDY', self.pid, self.af, self.d1, d2]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
 
 
 # Properties
@@ -579,6 +628,10 @@ class CONV(ThermalBC):
         list_fields = ['CONV', self.eid, self.pconID, flmnd, cntrlnd] + ta
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class CONVM(ThermalBC):
     """
@@ -632,6 +685,10 @@ class CONVM(ThermalBC):
                   self.cntmdot, self.ta1, ta2, mdot]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class RADM(ThermalBC):
     """
@@ -667,6 +724,10 @@ class RADM(ThermalBC):
         list_fields = ['RADM', self.radmid, self.absorb] + self.emissivity
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class RADBC(ThermalBC):
     """
@@ -679,6 +740,7 @@ class RADBC(ThermalBC):
         ThermalBC.__init__(self, card, data)
         if comment:
             self._comment = comment
+
         if card:
             #: NODAMB Ambient point for radiation exchange. (Integer > 0)
             self.nodamb = integer(card, 1, 'nodamb')
@@ -699,6 +761,11 @@ class RADBC(ThermalBC):
             self.eids = expand_thru_by(eids)
         else:
             raise NotImplementedError(data)
+
+        min_eid = min(self.eids)
+        if min_eid < 1:
+            msg = 'min(eids)=%i' % min_eid
+            raise ValueError(msg)
 
     def cross_reference(self, model):
         msg = ' which is required by RADBC pid=%s' % self.nodamb
@@ -726,6 +793,10 @@ class RADBC(ThermalBC):
         eids = collapse_thru_by(self.Eids())
         list_fields = ['RADBC', self.nodamb, self.famb, cntrlnd] + eids
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
 
 # Boundary Conditions
 #-------------------------------------------------------

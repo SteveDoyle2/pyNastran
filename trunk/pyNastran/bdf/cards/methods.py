@@ -21,7 +21,10 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     string, string_or_blank,
     components, components_or_blank,
-    integer_double_string_or_blank, blank)
+    integer_double_string_or_blank, blank, interpret_value)
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
+
 
 class Method(BaseCard):
     """
@@ -49,7 +52,7 @@ class EIGB(Method):
             #: Method of eigenvalue extraction. (Character: 'INV' for inverse
             #: power method or 'SINV' for enhanced inverse power method.)
             self.method = string(card, 2, 'method')
-            
+
             if self.method not in ['INV', 'SINV']:
                 msg = 'method must be INV or SINV.  method=|%s|' % self.method
                 raise RuntimeError(msg)
@@ -96,11 +99,15 @@ class EIGB(Method):
         nep = set_blank_if_default(self.nep, 0)
         ndp = set_blank_if_default(self.ndp, 3 * self.nep)
         ndn = set_blank_if_default(self.ndn, 3 * self.nep)
-        
+
         norm = set_blank_if_default(self.norm, 'MAX')
         list_fields = ['EIGB', self.sid, self.method, self.L1, self.L2, nep, ndp,
                   ndn, None, norm, self.G, self.C]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
 
 
 class EIGC(Method):
@@ -147,7 +154,7 @@ class EIGC(Method):
             else:
                 self.G = blank(card, 4, 'G')
                 self.C = blank(card, 5, 'C')
-            
+
             #: Convergence criterion. (Real > 0.0. Default values are:
             #: 10^-4 for METHOD = "INV",
             #: 10^-15 for METHOD = "HESS",
@@ -156,7 +163,7 @@ class EIGC(Method):
             self.ndo = integer_double_string_or_blank(card, 7, 'ND0')
 
             # ALPHAAJ OMEGAAJ ALPHABJ OMEGABJ LJ NEJ NDJ
-            fields = card[9:]
+            fields = [interpret_value(field) for field in card[9:] ]
             self.alphaAjs = []
             self.omegaAjs = []
             nFields = len(fields)
@@ -205,7 +212,7 @@ class EIGC(Method):
             NDJ_default = None
             if self.method == 'INV':
                 NDJ_default = 3 * NEj
-            
+
             i = 9 + 8 * iRow
             self.alphaAjs.append(
                 double_or_blank(card, i,     'alphaA' + str(iRow), alphaOmega_default))
@@ -273,6 +280,10 @@ class EIGC(Method):
         list_fields += self.reprMethod()
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class EIGP(Method):
     """
@@ -318,6 +329,10 @@ class EIGP(Method):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
 
 
 class EIGR(Method):
@@ -391,6 +406,10 @@ class EIGR(Method):
                   self.nd, None, None, norm, self.G, self.C]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class EIGRL(Method):
     """
@@ -423,7 +442,7 @@ class EIGRL(Method):
             #: Method for normalizing eigenvectors (Character: 'MASS' or 'MAX')
             self.norm = string_or_blank(card, 8, 'norm')
 
-            optionValues = card[9:]
+            optionValues = [interpret_value(field) for field in card[9:] ]
             self.options = []
             self.values = []
             #print "optionValues = ",optionValues
@@ -475,3 +494,10 @@ class EIGRL(Method):
         for (option, value) in izip(self.options, self.values):
             list_fields += [option + '=' + str(value)]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card)

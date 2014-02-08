@@ -13,6 +13,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from pyNastran.bdf.cards.baseCard import Property
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
     double, double_or_blank, string)
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 
 
 class PointProperty(Property):
@@ -28,6 +30,10 @@ class NSM(PointProperty):
     Defines a set of non structural mass.
     """
     type = 'NSM'
+    _field_map = {
+        1: 'sid', 2:'Type', 3:'id', 4:'value'
+    }
+
     #: Set points to either Property entries or Element entries.
     #: Properties are:
     validProperties = [
@@ -62,9 +68,20 @@ class NSM(PointProperty):
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+
 
 class PMASS(PointProperty):
     type = 'PMASS'
+    _field_map = {
+        1: 'pid', 2:'mass',
+    }
+
     def __init__(self, card=None, nOffset=0, data=None, comment=''):
         PointProperty.__init__(self, card, data)
         if comment:
@@ -93,3 +110,10 @@ class PMASS(PointProperty):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        #return self.comment() + card_writer(card)  #is this allowed???
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)

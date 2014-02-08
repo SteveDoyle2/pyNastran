@@ -20,8 +20,8 @@ from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Property, Material
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, double,
     double_or_blank, string_or_blank)
+from pyNastran.bdf.fieldWriter16 import print_card_16
 
-    
 class ShellProperty(Property):
     def __init__(self, card, data):
         Property.__init__(self, card, data)
@@ -33,6 +33,7 @@ class CompositeShellProperty(ShellProperty):
     def cross_reference(self, model):
         """
         Links the Material IDs to the materials.
+
         :param self:  the PCOMP/PCOMPG object
         :param model: a BDF object
         """
@@ -44,6 +45,7 @@ class CompositeShellProperty(ShellProperty):
     def isSymmetrical(self):
         """
         Is the laminate symmetrical?
+
         :returns; True or False
         """
         if self.lam == 'SYM':
@@ -63,7 +65,7 @@ class CompositeShellProperty(ShellProperty):
         :param self: the PCOMP object
         :param iply: the ply ID
         :raises: IndexError if iply is invalid
-        
+
         ::
 
           Case 1 (nplies=6, len(plies)=3, lam='SYM'):
@@ -188,7 +190,7 @@ class CompositeShellProperty(ShellProperty):
     def Material(self, iply):
         """
         Gets the material of the :math:`i^{th}` ply (not the ID unless
-        it's not cross-referenced)
+        it is not cross-referenced).
 
         :param self: the PCOMP/PCOMPG object
         :param iply: the ply ID (starts from 0)
@@ -210,7 +212,8 @@ class CompositeShellProperty(ShellProperty):
 
     def sout(self, iply):
         """
-        Gets the ply angle of the :math:`i^{th}` ply (not the ID)
+        Gets the the flag identifying stress/strain outpur of the
+        :math:`i^{th}` ply (not the ID).  default='NO'.
 
         :param self: the PCOMP/PCOMPG object
         :param iply: the ply ID (starts from 0)
@@ -225,7 +228,7 @@ class CompositeShellProperty(ShellProperty):
 
         :param self: the PCOMP/PCOMPG object
         :param iply: the ply ID (starts from 0)
-        
+
         Assume there are 2 plies, each of 1.0 thick, starting from :math:`z=0`.
 
         >>> pcomp.get_z_locations()
@@ -238,7 +241,7 @@ class CompositeShellProperty(ShellProperty):
             zi += t
             z.append(zi)
         return array(z)
-        
+
     def MassPerArea(self, iply='all', method='nplies'):
         r"""
         Gets the Mass/Area for the property.
@@ -309,7 +312,7 @@ class CompositeShellProperty(ShellProperty):
             assert isinstance(iply, int), 'iply must be an integer; iply=%r' % iply
             rho = self.Rho(iply)
             t = self.plies[iply][1]
-            
+
             if method == 'nplies':
                 # we divide by nplies b/c it's nsm per area and
                 # we're working on a per ply basis
@@ -358,13 +361,33 @@ class CompositeShellProperty(ShellProperty):
 class PCOMP(CompositeShellProperty):
     """
     ::
-    
+
       PCOMP     701512   0.0+0 1.549-2                   0.0+0   0.0+0     SYM
                 300704   3.7-2   0.0+0     YES  300704   3.7-2     45.     YES
                 300704   3.7-2    -45.     YES  300704   3.7-2     90.     YES
                 300705      .5   0.0+0     YES
     """
     type = 'PCOMP'
+    _field_map = {
+        1: 'pid', 2: 'z0', 3:'nsm', 4:'sb', 5:'ft', 6:'TRef',
+        7: 'ge', 8:'lam',
+    }
+
+    def _update_field_helper(self, n, value):
+        nnew = n - 9
+        if nnew <= 0:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+
+        ilayer = nnew // 4
+        try:
+            ply = self.plies[ilayer]
+        except IndexError:
+            msg = 'On PCOMP pid=%r, ply %i is not defined.  iply_min=0; iply_max=%i' % (self.pid, ilayer, len(self.plies))
+            raise IndexError(msg)
+
+        # ply = [mid, t, theta, sout]
+        slot = nnew % 4
+        ply[slot] = value
 
     def __init__(self, card=None, data=None, comment=''):  # not done, cleanup
         ShellProperty.__init__(self, card, data)
@@ -382,7 +405,7 @@ class PCOMP(CompositeShellProperty):
             #:   ['HILL', 'HOFF', 'TSAI', 'STRN', None]
             self.ft = string_or_blank(card, 5, 'ft')
             assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', None]
-            
+
             #: Reference Temperature (default=0.0)
             self.TRef = double_or_blank(card, 6, 'TRef', 0.0)
             self.ge = double_or_blank(card, 7, 'ge', 0.0)
@@ -407,7 +430,7 @@ class PCOMP(CompositeShellProperty):
             tLast = None
             ply = None
             iply = 1
-            
+
             # supports single ply per line
             for i in xrange(9, 9 + nplies * 4, 4):
                 actual = card.fields(i, i + 4)
@@ -499,7 +522,7 @@ class PCOMP(CompositeShellProperty):
             assert isinstance(t, float), 'thickness=%r' % t
             assert isinstance(rho, float), 'rho=%r' % rho
             assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
-            
+
     def rawFields(self):
         list_fields = ['PCOMP', self.pid, self.z0, self.nsm, self.sb, self.ft,
                   self.TRef, self.ge, self.lam, ]
@@ -525,9 +548,33 @@ class PCOMP(CompositeShellProperty):
             list_fields += [mid, t, theta, sout]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class PCOMPG(CompositeShellProperty):
     type = 'PCOMPG'
+    _field_map = {
+        1: 'pid', 2: 'z0', 3:'nsm', 4:'sb', 5:'ft', 6:'TRef',
+        7: 'ge', 8:'lam',
+    }
+
+    def _update_field_helper(self, n, value):
+        nnew = n - 9
+        if nnew <= 0:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+
+        ilayer = nnew // 5
+        try:
+            ply = self.plies[ilayer]
+        except IndexError:
+            msg = 'On PCOMPG pid=%r, ply %i is not defined.  iply_min=0; iply_max=%i' % (self.pid, ilayer, len(self.plies))
+            raise IndexError(msg)
+
+        #ply = [mid, thickness, theta, sout, gPlyID]
+        slot = nnew % 5
+        ply[slot] = value
 
     def __init__(self, card=None, data=None, comment=''):
         ShellProperty.__init__(self, card, data)
@@ -641,9 +688,14 @@ class PCOMPG(CompositeShellProperty):
             list_fields += [gPlyID, mid, t, theta, sout, None, None, None]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class PLPLANE(ShellProperty):
     type = 'PLPLANE'
+    _field_map = {1: 'pid', 2:'mid', 6:'cid', 7:'str'}
 
     def __init__(self, card=None, data=None, comment=''):
         ShellProperty.__init__(self, card, data)
@@ -668,9 +720,9 @@ class PLPLANE(ShellProperty):
         mid = self.Mid()
         cid = self.Cid()
         str = self.str
-        if xref == 1:  # True
+        if xref:
             assert self.mid.type in ['MATHE', 'MATHP'], 'mid.type=%s' % self.mid.type
-        
+
     #def Pid(self):
         #return self.pid
 
@@ -692,9 +744,14 @@ class PLPLANE(ShellProperty):
         list_fields = ['PLPLANE', self.pid, self.Mid(), self.Cid(), self.str]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card)
+
 
 class PSHEAR(ShellProperty):
     type = 'PSHEAR'
+    _field_map = {1: 'pid', 2:'mid', 3:'t', 4:'nsm', 5:'f1', 6:'f2'}
 
     def __init__(self, card=None, data=None, comment=''):
         """
@@ -740,6 +797,10 @@ class PSHEAR(ShellProperty):
                   self.f1, self.f2]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class PSHELL(ShellProperty):
     """
@@ -749,6 +810,10 @@ class PSHELL(ShellProperty):
       Z1 Z2 MID4
       PSHELL   41111   1      1.0000   1               1               0.02081"""
     type = 'PSHELL'
+    _field_map = {
+        1: 'pid', 2:'mid1', 3:'t', 4:'mid2', 5:'twelveIt3', 6:'mid3',
+        7: 'tst', 8:'nsm', 9:'z1', 10:'z2',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         ShellProperty.__init__(self, card, data)
@@ -760,7 +825,7 @@ class PSHELL(ShellProperty):
             self.mid1 = integer_or_blank(card, 2, 'mid1')
             #: thickness
             self.t = double(card, 3, 't')
-            
+
             #: Material identification number for bending
             self.mid2 = integer_or_blank(card, 4, 'mid2')
             #: Scales the moment of interia of the element based on the
@@ -812,7 +877,7 @@ class PSHELL(ShellProperty):
         mid2 = self.Mid2()
         mid3 = self.Mid3()
         mid4 = self.Mid4()
-        
+
         assert isinstance(pid, int), 'pid=%r' % pid
         assert isinstance(mid, int), 'mid=%r' % mid
         assert mid1 is None or isinstance(mid1, int), 'mid1=%r' % mid1
@@ -823,9 +888,9 @@ class PSHELL(ShellProperty):
         mids = [mid for mid in [self.mid1, self.mid2, self.mid3, self.mid4]
                 if mid is not None]
         assert len(mids) > 0
-        if xref == 1:  # True
+        if xref:
             assert isinstance(self.mid(), Material), 'mid=%r' % self.mid()
-            
+
             for mid in mids:
                 assert isinstance(mid, Material), 'mid=%r' % mid
                 assert mid.type in ['MAT1', 'MAT2', 'MAT4', 'MAT5', 'MAT8'], 'pid.type=%s mid.type=%s' % (self.type, mid.type)
@@ -859,6 +924,9 @@ class PSHELL(ShellProperty):
     def get_z_locations(self):
         z = array([self.z1, self.z2])
         return z
+
+    def materials(self):
+        return [self.mid1, self.mid2, self.mid3, self.mid4]
 
     def mid(self):
         if isinstance(self.mid1, Material):
@@ -938,7 +1006,7 @@ class PSHELL(ShellProperty):
         """
         * http://www.caelinux.org/wiki/index.php/Contrib:KeesWouters/shell/static
         * http://www.caelinux.org/wiki/index.php/Contrib:KeesWouters/platedynamics
-        
+
         The angle_rep is a direction angle, use either angle(a,b) or
         vecteur(x,y,z)
         coque_ncou is the number of gauss nodes along the thickness, for
@@ -973,3 +1041,9 @@ class PSHELL(ShellProperty):
         list_fields = ['PSHELL', self.pid, self.Mid1(), self.t, self.Mid2(),
                   twelveIt3, self.Mid3(), tst, nsm, z1, z2, self.Mid4()]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 16:
+            return self.comment() + print_card_16(card)
+        return self.comment() + card_writer(card)

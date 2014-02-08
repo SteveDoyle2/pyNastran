@@ -6,6 +6,7 @@ from itertools import izip
 from pyNastran.bdf.fieldWriter import print_card, is_same
                                #print_card_8, set_default_if_blank, print_card
 #from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 from pyNastran.bdf.bdfInterface.BDF_Card import wipe_empty_fields
 
 
@@ -17,6 +18,31 @@ class BaseCard(object):
         if hasattr(self, '_comment'):
             return '%s' % self._comment
         return ''
+
+    def _test_update_fields(self):
+        n = 1
+        while 1:
+            try:
+                self.update_field(n, 1.0)  # dummy updating the field
+            except IndexError:
+                return
+            except KeyError:
+                return
+
+    def update_field(self, n, value):
+        try:
+            key_name = self._field_map[n]
+            setattr(self, key_name, value)
+        except KeyError:
+            self._update_field_helper(n, value)
+
+    def get_field(self, n):
+        try:
+            key_name = self._field_map[n]
+            value = getattr(self, key_name)
+        except KeyError:
+            value = self._get_field_helper(n)
+        return value
 
     def writeCodeAster(self):
         return ('# skipping %s  because writeCodeAster is not implemented\n'
@@ -32,7 +58,7 @@ class BaseCard(object):
         #that the PBEAML has a proper material type
         #"""
         #pass
-    
+
     def _verify(self, xref=False):
         """
         This method checks that all the card is various methods of the card
@@ -133,8 +159,8 @@ class BaseCard(object):
         try:
             return self.print_card()
         except:
-            fields = self.reprFields()
             print('problem printing %s card' % self.type)
+            fields = self.reprFields()
             print("fields = ", fields)
             raise
 
@@ -228,20 +254,15 @@ class Element(BaseCard):
         else:
             return self.pid.pid
 
-    def nodePositions(self, model, nodes=None):
-        """
-        returns the positions of multiple node objects  ## TODO: WRONG...
-        nodes - node IDs
-        """
+    def nodePositions(self, nodes=None):
+        """returns the positions of multiple node objects"""
         if not nodes:
             nodes = self.nodes
-        
+
         positions = []
-        #print("nodes =", nodes)
-        for nid in nodes:
-            if nid is not None:
-                pos = model.nodes.get_position(model, nid)
-                positions.append(pos)
+        for node in nodes:
+            if node is not None:
+                positions.append(node.Position())
             else:
                 positions.append(None)
         return positions
@@ -302,7 +323,7 @@ class Element(BaseCard):
                             nodeIDs.append(node)
                         else:
                             nodeIDs.append(node.nid)
-                    
+
                     #if isinstance(nodes[0], int):
                         #nodeIDs = [node for node in nodes]
                     #else:
@@ -333,39 +354,58 @@ class Element(BaseCard):
                                    % nids)
 
 
-def expand_thru(fields):
+def expand_thru(fields, set_fields=True, sort_fields=False):
     """
     Expands a list of values of the form [1,5,THRU,9,13]
     to be [1,5,6,7,8,9,13]
+
+    :param fields:      the fields to expand
+    :param set_fields:  should the fields be converted to a set and then back
+                        to a list? This is useful for [2, 'THRU' 5, 1] (default=True)
+    :param sort_fields: should the fields be sorted at the end? (default=False)
     """
+    fields = [field.upper() if isinstance(field, basestring) else field for field in fields]
     if isinstance(fields, int):
         return [fields]
     if len(fields) == 1:
-        return fields
+        return [int(fields[0])]
     out = []
     nFields = len(fields)
     i = 0
     while(i < nFields):
         if fields[i] == 'THRU':
-            for j in xrange(fields[i - 1], fields[i + 1] + 1):
+            istart = int(fields[i - 1])
+            iend = int(fields[i + 1])
+            for j in xrange(istart, iend + 1): # adding 1 to iend for the xrange offset
                 out.append(j)
             i += 2
         else:
-            out.append(fields[i])
+            out.append(int(fields[i]))
             i += 1
-    return list(set(out))
+
+    if set_fields:
+        out = list(set(out))
+    if sort_fields:
+        out.sort()
+    return out
 
 
-def expand_thru_by(fields):
+def expand_thru_by(fields, set_fields=True, sort_fields=False):
     """
     Expands a list of values of the form [1,5,THRU,9,BY,2,13]
     to be [1,5,7,9,13]
 
+    :param fields:      the fields to expand
+    :param set_fields:  should the fields be converted to a set and then back
+                        to a list? This is useful for [2, 'THRU' 5, 1] (default=True)
+    :param sort_fields: should the fields be sorted at the end? (default=False)
+
     .. todo:: not tested
     .. note:: used for QBDY3, ???
     """
+    fields = [field.upper() if isinstance(field, basestring) else field for field in fields]
     if len(fields) == 1:
-        return fields
+        return [interpret_value(fields[0])]
     out = []
     nFields = len(fields)
     i = 0
@@ -375,12 +415,12 @@ def expand_thru_by(fields):
             by = 1
             byCase = False
             if i + 2 < nFields and fields[i + 2] == 'BY':
-                by = fields[i + 3]
+                by = interpret_value(fields[i + 3])
             else:
                 by = 1
                 byCase = True
-            minValue = fields[i - 1]
-            maxValue = fields[i + 1]
+            minValue = interpret_value(fields[i - 1])
+            maxValue = interpret_value(fields[i + 1])
             maxR = int((maxValue - minValue) // by + 1)  # max range value
 
             for j in xrange(0, maxR):  # +1 is to include final point
@@ -392,9 +432,14 @@ def expand_thru_by(fields):
             else:     # BY case
                 i += 3
         else:
-            out.append(fields[i])
+            out.append(interpret_value(fields[i]))
             i += 1
-    return list(set(out))
+
+    if set_fields:
+        out = list(set(out))
+    if sort_fields:
+        out.sort()
+    return out
 
 
 def expand_thru_exclude(self, fields):
@@ -404,6 +449,7 @@ def expand_thru_exclude(self, fields):
 
     .. warning:: hasnt been tested
     """
+    fields = [interpret_value(field.upper()) if isinstance(field, basestring) else field for field in fields]
     fieldsOut = []
     nFields = len(fields)
     for i in xrange(nFields):
@@ -424,10 +470,20 @@ def expand_thru_exclude(self, fields):
     return fieldsOut
 
 
-def collapse_thru_by(fields):
+def collapse_thru_by(fields, get_packs=False):
+    """
+    :param fields:    the list of fields to collapse
+    :param get_packs: get the list of packs so "special" formatting can be done
+
+    fields              packs
+    [1, 2, 3...150]  -> [1, 150, 1]
+    [1, 3, 5...150]  -> [1, 150, 2]
+    """
     assert 'THRU' not in fields, fields
     fields.sort()
     packs = condense(fields)
+    if get_packs:
+        return packs
     fields2 = build_thru(packs)
     #assert fields == expand_thru_by(fields2)  # why doesn't this work?
     return fields2
@@ -449,6 +505,15 @@ def collapse_thru(fields):
     fields2 = build_thru(packs, maxDV=1)
     #assert fields == expand_thru_by(fields2), fields2  # why doesn't this work?
     return fields2
+
+def collapse_thru_packs(fields):
+    assert 'THRU' not in fields, fields
+    fields.sort()
+    packs = condense(fields)
+    singles, doubles = build_thru_packs(packs, maxDV=1)
+
+    #assert fields == expand_thru_by(fields2), fields2  # why doesn't this work?
+    return singles, doubles
 
 
 def condense(valueList):
@@ -497,6 +562,33 @@ def condense(valueList):
         packs.append([firstVal, val, dvOld])
     return packs
 
+def build_thru_packs(packs, maxDV=1):
+    """
+    # invalid
+    SET1,4000, 1, 3, THRU, 10, 20, THRU, 30
+
+    # valid
+    SET1,4000, 1
+    SET1,4000, 3,  THRU, 10
+    SET1,4000, 20, THRU, 30
+
+    returns
+      singles = [1]
+      doubles = [[3, 'THRU', 10], [20, 'THRU', 30]]
+    """
+    singles = []
+    doubles = []
+    for (firstVal, lastVal, by) in packs:
+        if firstVal == lastVal:
+            singles.append(firstVal)
+        else:
+            if lastVal - firstVal > 2:
+                double = [firstVal, 'THRU', lastVal]
+                doubles.append(double)
+            else:
+                for val in xrange(lastVal, firstVal+1, by):
+                    singles.append(val)
+    return singles, doubles
 
 def build_thru(packs, maxDV=None):
     """
@@ -540,6 +632,8 @@ def build_thru(packs, maxDV=None):
                 for v in xrange(firstVal, lastVal + dv, dv):
                     fields.append(v)
     return fields
+
+
 
 
 def build_thru_float(packs, maxDV=None):

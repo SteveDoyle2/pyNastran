@@ -23,11 +23,11 @@ class ShellPropertyBackup(Property):
         dz2 = (z1**2 - z0**2)/2
         dz3 = (z1**3 - z0**3)/3
         #Qb = self.Qbar()
-        
+
         A = zeros((3,3), dtype='float64')
         B = A
         D = A
-        
+
         Q = zeros(3,3)
 
         #T = array([ [cc, ss,  2*s*c],
@@ -40,8 +40,8 @@ class ShellPropertyBackup(Property):
         #Qbar = dot(dot(iT, Q), transpose(iT))
         #Q45 = array([ [Q44, 0.],
         #              [0., Q55]], dtype='float64')
-        
-        
+
+
         #S11 = 1/E1
         #S12 = -nu12/E1
         #S22 = 1/E2
@@ -56,7 +56,7 @@ class ShellPropertyBackup(Property):
         #Sb12 = S12*(ssss+cccc) + (S11+S22-S66)*ss*cc
         #Sb16 = (2*S11-2*S12-S66)*s*ccc - (2*S22-2*S12-S66)*sss*c
         #Sb26 = (2*S11-2*S12-S66)*sss*c - (2*S22-2*S12-S66)*s*ccc
-        
+
         #Qb16 = 0. # for isotropic
         #Qb26 = 0. # for isotropic
 
@@ -75,7 +75,7 @@ class ShellPropertyBackup(Property):
             E = mat.E()
             G = mat.G()
             nu = mat.Nu()
-            
+
             E11 = E
             E22 = E
             G12 = G
@@ -83,7 +83,7 @@ class ShellPropertyBackup(Property):
             G31 = 0.01
             nu12 = nu
             nu21 = E2/E1 * nu12
-            
+
             Q11 = E1     /(1-nu12*nu21)
             Q12 = nu21*E1/(1-nu12*nu21)
             Q22 = E2     /(1-nu12*nu21)
@@ -98,7 +98,7 @@ class ShellPropertyBackup(Property):
             Qb12 = (Q11 - Q12 - 4*Q66)*ss*cc + Q12*(ssss+cccc)
             Qb16 = (Q11 - Q12 - 2*Q66)*s*ccc + (Q12-Q22-2*Q66)*sss*c
             Qb26 = (Q11 - Q12 - 2*Q66)*sss*c + (Q12-Q22-2*Q66)*s*ccc
-            
+
             Qb44 = Q44*cc + Q55*ss
             Qb55 = Q44*ss + Q55*cc
             Qb45 = (Q55-Q44)*ss*cc
@@ -117,7 +117,7 @@ class ShellPropertyBackup(Property):
             D45 += Qb45 * dz3[iply]
             #N += Q * alpha * dz
             #M += 1/2. * Q * alpha * dz2
-        
+
         if self.isSymmetrical():
             B = zeros(Q.shape)
             B45 = zeros(Q.shape)
@@ -186,7 +186,7 @@ class ShellPropertyBackup(Property):
           [Mx] = [            ] [ k_xx0    ]
           [My] = [  [B]   [D] ] [ k_yy0    ]
           [Mz] = [            ] [ k_xy0    ]
-        
+
         \f[ A_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k \left( z_k  -z_{k-1}   \right) = \Sigma_{k=1}^N (Q_{ij})_k t_k                                                                                    \f]
         \f[ B_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k \left( z_k^2-z_{k-1}^2 \right) = \Sigma_{k=1}^N (Q_{ij})_k                           \left( \overline{z} t_k                      \right)         \f]
         \f[ D_{ij} = \Sigma_{k=1}^N (\overline{Q_{ij}})_k \left( z_k^3-z_{k-1}^3 \right) = \Sigma_{k=1}^N (Q_{ij})_k                           \left( \overline{z}^2 t_k + \frac{t_k^3}{12} \right)         \f]
@@ -288,7 +288,7 @@ class ShellPropertyBackup(Property):
               -mn & mn  & m^2-n^2
           \end{array} \right]
         \f]
-        
+
         ::
                    [ m^2  n^2        2mn]
           [T]    = [ n^2  m^2       -2mn]   # transformation matrix
@@ -302,7 +302,7 @@ class ShellPropertyBackup(Property):
               mn  & -mn & m^2-n^2
           \end{array} \right]
         \f]
-        
+
         ::
                    [ m^2  n^2       -2mn]
           [T]^-1 = [ n^2  m^2        2mn]   # inverse transform

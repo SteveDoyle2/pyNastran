@@ -29,6 +29,9 @@ class PELAS(SpringProperty):
     scalar elastic (spring) element (CELAS1 or CELAS3 entry).
     """
     type = 'PELAS'
+    _field_map = {
+        1: 'pid', 2:'k', 3:'ge', 4:'s',
+    }
 
     def __init__(self, card=None, nPELAS=0, data=None, comment=''):
         SpringProperty.__init__(self, card, data)
@@ -60,7 +63,7 @@ class PELAS(SpringProperty):
         #if self.sol in [108,129]:
             #self.pid = self.pelasts[self.pid]
         pass
-    
+
     def K(self):
         return self.k
 
@@ -124,6 +127,9 @@ class PELAST(SpringProperty):
     response (108) or nonlinear analyses (129).
     """
     type = 'PELAST'
+    _field_map = {
+        1: 'pid', 2:'tkid', 3:'tgeid', 4:'tknid',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         SpringProperty.__init__(self, card, data)

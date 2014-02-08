@@ -14,11 +14,15 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 #import sys
 
 from pyNastran.bdf.cards.baseCard import Element
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_blank,
     integer_double_or_blank, double_or_blank, string)  # double
- 
+
 class CFAST(Element):
     type = 'CFAST'
+    _field_map = {
+        1: 'eid', 2:'pid', 3:'Type', 4:'ida', 5:'idb', 6:'gs', 7:'ga', 8:'gb',
+        9:'xs', 10:'ys', 11:'zs',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         Element.__init__(self, card, data)
@@ -59,6 +63,10 @@ class CFAST(Element):
 
 class CGAP(Element):
     type = 'CGAP'
+    _field_map = {
+        1: 'eid', 2:'pid', 3:'ga', 4:'gb',
+    }
+    ## todo:: not done...
 
     def __init__(self, card=None, data=None, comment=''):
         Element.__init__(self, card, data)
@@ -99,6 +107,23 @@ class CGAP(Element):
             self.x = [x1, x2, x3]
             self.cid = data[8]
 
+    def _verify(self, xref=True):
+        cid = self.Cid()
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+
+        assert cid is None or isinstance(cid, int), 'cid=%r\n%s' % (cid, str(self))
+        assert isinstance(eid, int), 'eid=%r\n%s' % (eid, str(self))
+        assert isinstance(pid, int), 'pid=%r\n%s' % (pid, str(self))
+        for i, nid in enumerate(nids):
+            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+
+        if xref:
+            assert self.pid.type in ['PGAP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            if self.cid is not None and self.cid != 0:
+                assert self.cid.type in ['CORD1R', 'CORD1C', 'CORD1S', 'CORD2R', 'CORD2C', 'CORD2S'], 'cid=%i self.cid.type=%s' % (cid, self.cid.type)
+
     def cross_reference(self, model):
         msg = ' which is required by CGAP eid=%s' % self.eid
         self.ga = model.Node(self.ga, msg=msg)
@@ -109,6 +134,12 @@ class CGAP(Element):
         self.pid = model.Property(self.pid, msg=msg)
         if self.cid:
             self.cid = model.Coord(self.cid, msg=msg)
+
+    def Eid(self):
+        return self.eid
+
+    def nodeIDs(self):
+        return [self.Ga(), self.Gb()]
 
     def Cid(self):
         if isinstance(self.cid, int) or self.cid is None:
@@ -149,6 +180,10 @@ class CrackElement(Element):
 
 class CRAC2D(CrackElement):
     type = 'CRAC2D'
+    _field_map = {
+        1: 'eid', 2:'pid',
+    }
+    ## todo:: not done
 
     def __init__(self, card=None, data=None, comment=''):
         CrackElement.__init__(self, card, data)
@@ -188,6 +223,10 @@ class CRAC2D(CrackElement):
 
 class CRAC3D(CrackElement):
     type = 'CRAC3D'
+    _field_map = {
+        1: 'eid', 2:'pid',
+    }
+    ## todo:: not done
 
     def __init__(self, card=None, data=None, comment=''):
         CrackElement.__init__(self, card, data)
@@ -198,8 +237,8 @@ class CRAC3D(CrackElement):
             self.pid = integer(card, 2, 'pid')
             # required 1-10, 19-28
             # optional 11-18, 29-36, 37-64
-            # all/none 37-46 
-            nids = card.fields(3, 67)  # cap at +3 = 67
+            # all/none 37-46
+            nids = fields(integer_or_blank, card, 'nid', 3, 67)  # cap at +3 = 67
             assert len(card) <= 67, 'len(CRAC3D card) = %i' % len(card)
         else:
             self.eid = data[0]

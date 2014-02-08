@@ -17,6 +17,7 @@ from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     integer_double_or_blank, double_or_blank, string_or_blank) # double
+from pyNastran.bdf.fieldWriter import print_card_8
 
 
 class BushElement(Element):
@@ -47,6 +48,32 @@ class BushElement(Element):
 
 class CBUSH(BushElement):
     type = 'CBUSH'
+    _field_map = {
+        1: 'eid', 2:'pid', 3:'ga', 4:'gb', 8:'cid', 9:'s', 10:'ocid'
+    }
+
+    def _update_field_helper(self, n, value):
+        if n == 11:
+            self.si[0] = value
+        elif n == 12:
+            self.si[1] = value
+        elif n == 13:
+            self.si[2] = value
+        else:
+            if self.g0 is not None:
+                if n == 5:
+                    self.g0 = value
+                else:
+                    raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+            else:
+                if n == 5:
+                    self.x[0] = value
+                elif n == 6:
+                    self.x[1] = value
+                elif n == 7:
+                    self.x[2] = value
+                else:
+                    raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         BushElement.__init__(self, card, data)
@@ -97,7 +124,7 @@ class CBUSH(BushElement):
     def nodeIDs(self):
         return [self.Ga(), self.Gb()]
 
-    def _verify(self, model, xref):
+    def _verify(self, xref=False):
         ga = self.Ga()
         gb = self.Gb()
         cid = self.Cid()
@@ -136,8 +163,8 @@ class CBUSH(BushElement):
 
     def cross_reference(self, model):
         msg = ' which is required by CBUSH eid=%s' % self.eid
-        #self.ga = model.Node(self.ga, msg=msg)
-        #self.gb = model.Node(self.gb, msg=msg)
+        self.ga = model.Node(self.ga, msg=msg)
+        self.gb = model.Node(self.gb, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
         if self.cid is not None:
             self.cid = model.Coord(self.cid, msg=msg)
@@ -163,9 +190,16 @@ class CBUSH(BushElement):
                   x + [self.Cid(), s, ocid] + self.si)
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card)
+
 
 class CBUSH1D(BushElement):
     type = 'CBUSH1D'
+    _field_map = {
+        1: 'eid', 2:'pid', 3:'ga', 4:'gb', 5:'cid',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         BushElement.__init__(self, card, data)
@@ -186,20 +220,20 @@ class CBUSH1D(BushElement):
 
     def cross_reference(self, model):
         msg = ' which is required by CBUSH1D eid=%s' % self.eid
-        #self.ga = model.Node(self.ga, msg=msg)
-        #if self.gb:
-            #self.gb = model.Node(self.gb, msg=msg)
+        self.ga = model.Node(self.ga, msg=msg)
+        if self.gb:
+            self.gb = model.Node(self.gb, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
         if self.cid is not None:
-            self.cid = model.Coord(self.cid, msg=msg)
+            self.cid = model.Coord(self.cid)
 
-    def _verify(self, model, xref):
+    def _verify(self, xref=False):
         ga = self.Ga()
         gb = self.Gb()
         cid = self.Cid()
         pid = self.Pid()
         assert isinstance(ga, int), 'ga=%r' % ga
-        assert isinstance(gb, int), 'gb=%r' % gb
+        assert isinstance(gb, int) or gb is None, 'gb=%r' % gb
         assert isinstance(pid, int), 'pid=%r' % pid
         assert isinstance(cid, int) or cid is None, 'cid=%r' % cid
 
@@ -228,6 +262,10 @@ class CBUSH1D(BushElement):
     #def reprFields(self):
         #return self.rawFields()
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card)
+
 
 class CBUSH2D(BushElement):
     """
@@ -235,6 +273,9 @@ class CBUSH2D(BushElement):
     Defines the connectivity of a two-dimensional Linear-Nonlinear element.
     """
     type = 'CBUSH2D'
+    _field_map = {
+        1: 'eid', 2:'pid', 3:'ga', 4:'gb', 5:'cid', 6:'plane', 7:'sptid',
+    }
 
     def __init__(self, card=None, data=None, comment=''):
         BushElement.__init__(self, card, data)
@@ -252,14 +293,15 @@ class CBUSH2D(BushElement):
                 msg = ("plane not in required list, plane=|%s|\n"
                        "expected planes = ['XY','YZ','ZX']" % self.plane)
                 raise RuntimeError(msg)
-            assert len(card) <= 7, 'len(CBUSH2D card) = %i' % len(card)
+            self.sptid = integer_or_blank(card, 7, 'sptid')
+            assert len(card) <= 8, 'len(CBUSH2D card) = %i' % len(card)
         else:
             self.eid = data[0]
             self.pid = data[1]
             self.ga = data[2]
             self.gb = data[3]
 
-    def _verify(self, model, xref):
+    def _verify(self, xref=False):
         ga = self.Ga()
         gb = self.Gb()
         cid = self.Cid()
@@ -286,11 +328,13 @@ class CBUSH2D(BushElement):
 
     def cross_reference(self, model):
         msg = ' which is required by CBUSH2D eid=%s' % self.eid
-        #self.ga = model.Node(self.ga, msg=msg)
-        #self.gb = model.Node(self.gb, msg=msg)
+        self.ga = model.Node(self.ga, msg=msg)
+        self.gb = model.Node(self.gb, msg=msg)
         #self.pid = model.Property(self.pid)
         if self.cid is not None:
             self.cid = model.Coord(self.cid, msg=msg)
+        if self.sptid is not None:
+            pass
 
     def rawFields(self):
         list_fields = ['CBUSH2D', self.eid, self.Pid(), self.Ga(), self.Gb(),
@@ -299,3 +343,7 @@ class CBUSH2D(BushElement):
 
     #def reprFields(self):
         #return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card)

@@ -19,8 +19,10 @@ from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
     integer_or_double, integer_double_or_blank, integer_or_blank,
-    double_or_blank, components, components_or_blank, blank, fields, string)
+    double_or_blank, integer_double_or_string, components, components_or_blank,
+    blank, fields, string, interpret_value)
 # integer_or_double, double,
+from pyNastran.bdf.fieldWriter import print_card_8
 
 class RigidElement(Element):
     def cross_reference(self, model):
@@ -99,6 +101,10 @@ class RBAR(RigidElement):
                   self.cma, self.cmb, alpha]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class RBAR1(RigidElement):
     type = 'RBAR1'
@@ -136,6 +142,10 @@ class RBAR1(RigidElement):
         list_fields = ['RBAR1', self.eid, self.ga, self.gb, self.cb, alpha]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class RBE1(RigidElement):  # maybe not done, needs testing
     type = 'RBE1'
@@ -149,21 +159,22 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         self.Gni = []
         self.Cni = []
 
-        #fields = card[2:]
+        #fields = [interpret_value(field) for field in card[2:] ]
         iUm = card.index('UM')
         if iUm > 0:
             assert string(card, iUm, 'UM') == 'UM'
 
-        if isinstance(card[-1], float):
-            self.alpha = card.fields[-1].pop()  # the last field is not part of fields
-            #nfields = len(card) - 1
+        #assert isinstance(card[-1], str), 'card[-1]=%r type=%s' %(card[-1], type(card[-1]))
+        alpha_last = integer_double_or_string(card, -1, 'alpha_last')
+        if isinstance(alpha_last, float):
+            self.alpha = alpha_last
+            card.pop()  # remove the last field so len(card) will not include alpha
         else:
-            #nfields = len(card)
             self.alpha = 0.
 
         # loop till UM, no field9,field10
         #print("iUm = %s" % iUm)
-        
+
         n = 1
         i = 0
         offset = 2
@@ -180,7 +191,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
             else:
                 assert cni is None
             i += 2
-        
+
         #print('Gni =', self.Gni)
         #print('Cni =', self.Cni)
         self.Gmi = []
@@ -231,7 +242,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
                 #print "---"
                 j -= 3
             j += 1
-        
+
         if self.alpha > 0.:  # handles default alpha value
             nSpaces = 8 - (len(list_fields) - 1) % 8  # puts ALPHA onto next line
             if nSpaces == 1:
@@ -241,6 +252,10 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
 
 
 class RBE2(RigidElement):
@@ -277,7 +292,7 @@ class RBE2(RigidElement):
                 #: Grid point identification numbers at which dependent
                 #: degrees-of-freedom are assigned. (Integer > 0)
                 self.alpha = alpha
-                
+
                 # the last field is not part of Gmi
                 n = 1
             else:
@@ -311,7 +326,7 @@ class RBE2(RigidElement):
         .. math:: -A_i u_i + A_j u_j = 0
 
         where :math:`u_i` are the base DOFs (max=6)::
-        
+
           mpc sid   g1 c1 a1  g2 c2 a2
           rbe2 eid  gn cm g1  g2 g3 g4
         """
@@ -368,6 +383,10 @@ class RBE2(RigidElement):
         list_fields = ['RBE2', self.eid, self.gn, self.cm] + self.Gmi + [alpha]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card)
+
 
 class RBE3(RigidElement):
     """
@@ -394,8 +413,7 @@ class RBE3(RigidElement):
         self.refc = components_or_blank(card, 4, 'refc')
         #iUM = fields.index('UM')
 
-        fields = card[5:]
-        #print "fields = ",fields
+        fields = [field.upper() if isinstance(field, basestring) else field for field in card[5:]]
         iOffset = 5
         iWtMax = len(fields) + iOffset
         try:
@@ -426,11 +444,11 @@ class RBE3(RigidElement):
             if wt is not None:
                 cname = 'c'+str(n)
                 ci = components_or_blank(card, i + 1, cname)
-                
+
                 #print("%s=%s %s=%s" % (wtname, wt, cname, ci))
                 i += 2
                 gij = 0
-                
+
                 j = 0
                 while isinstance(gij, int) and i < iWtMax:
                     j += 1
@@ -457,7 +475,7 @@ class RBE3(RigidElement):
             n = 1
             #print("i=%s iUmStop=%s" % (i,iUmStop))
             for j in xrange(i, iUmStop, 2):
-                
+
                 gm_name = 'gm' + str(n)
                 cm_name = 'cm' + str(n)
                 gmi = integer_or_blank(card, j, gm_name)
@@ -529,3 +547,7 @@ class RBE3(RigidElement):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card)

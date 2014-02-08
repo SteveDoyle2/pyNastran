@@ -3,7 +3,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 import warnings
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card, print_card_8, print_card_16
+from pyNastran.bdf.field_writer_double import print_card_double
 #from pyNastran.bdf.bdfInterface.bdf_Reader import print_filename
 
 
@@ -15,7 +16,7 @@ class WriteMeshDeprecated(object):
         """
         warnings.warn('writeBDF has been deprecated; use '
                       'write_bdf', DeprecationWarning, stacklevel=2)
-        self.write_bdf(outFileName, size, debug)
+        self.write_bdf(out_filename=outFileName, interspersed=False, size=size, debug=debug)
 
     def writeBDFAsPatran(self, outFileName='fem.out.bdf', size=8, debug=False):
         """
@@ -24,7 +25,7 @@ class WriteMeshDeprecated(object):
         """
         warnings.warn('writeBDFAsPatran has been deprecated; use '
                       'write_bdf_as_patran', DeprecationWarning, stacklevel=2)
-        self.write_bdf_as_patran(outFileName, size, debug)
+        self.write_bdf(outFileName, interspersed=True, size=size, debug=debug)
 
     def echoBDF(self, infileName):
         """
@@ -78,7 +79,7 @@ class WriteMesh(WriteMeshDeprecated):
                 msg += element.print_card(size)
         return msg
 
-    def _write_dmigs(self, size):
+    def _write_dmigs(self, size, card_writer):
         """
         :param self:  the BDF object
         :param size:  large field (16) or small field (8)
@@ -97,33 +98,34 @@ class WriteMesh(WriteMeshDeprecated):
             msg.append(str(dmik))
         return ''.join(msg)
 
-    def _write_common(self, size):
+    def _write_common(self, size, card_writer):
         """
         method to write the common outputs so none get missed...
         :param self: the BDF object
         :returns msg: part of the bdf
         """
         msg = ''
-        msg += self._write_rigid_elements(size)
-        msg += self._write_dmigs(size)
-        msg += self._write_loads(size)
-        msg += self._write_dynamic(size)
-        msg += self._write_aero(size)
-        msg += self._write_aero_control(size)
-        msg += self._write_flutter(size)
-        msg += self._write_thermal(size)
-        msg += self._write_thermal_materials(size)
+        msg += self._write_rigid_elements(size, card_writer)
+        msg += self._write_dmigs(size, card_writer)
+        msg += self._write_loads(size, card_writer)
+        msg += self._write_dynamic(size, card_writer)
+        msg += self._write_aero(size, card_writer)
+        msg += self._write_aero_control(size, card_writer)
+        msg += self._write_flutter(size, card_writer)
+        msg += self._write_thermal(size, card_writer)
+        msg += self._write_thermal_materials(size, card_writer)
 
-        msg += self._write_constraints(size)
-        msg += self._write_optimization(size)
-        msg += self._write_tables(size)
-        msg += self._write_sets(size)
-        msg += self._write_rejects(size)
-        msg += self._write_coords(size)
+        msg += self._write_constraints(size, card_writer)
+        msg += self._write_optimization(size, card_writer)
+        msg += self._write_tables(size, card_writer)
+        msg += self._write_sets(size, card_writer)
+        msg += self._write_contact(size, card_writer)
+        msg += self._write_rejects(size, card_writer)
+        msg += self._write_coords(size, card_writer)
         return msg
 
     def write_bdf(self, out_filename='fem.out.bdf', interspersed=True,
-                  size=8, debug=False):
+                  size=8, precision='single', debug=False):
         """
         Writes the BDF.
 
@@ -136,33 +138,45 @@ class WriteMesh(WriteMeshDeprecated):
               much easier to compare to a Patran-formatted bdf and is
               more clear. (default=True)
         :param size:  the field size (8 is recommended)
+        :param precision:  'single', 'double'
         :param debug: developer debug
         """
+        if size == 8:
+            assert precision == 'single', 'precision=%r' % precision
+            card_writer = print_card_8
+        elif size == 16:
+            assert precision in ['single', 'double'], 'precision=%r' % precision
+            if precision == 'single':
+                card_writer = print_card_16
+            else:
+                card_writer = print_card_double
+        else:
+            assert size in [8, 16], size
+
         assert isinstance(interspersed, bool)
-        assert size in [8, 16]
         #size = 16
         fname = self.print_filename(out_filename)
         self.log.debug("***writing %s" % fname)
 
         outfile = open(out_filename, 'wb')
         msg = self._write_header()
-        msg += self._write_params(size)
+        msg += self._write_params(size, card_writer)
         outfile.write(msg)
 
-        msg = self._write_nodes(outfile, size)
+        msg = self._write_nodes(outfile, size, card_writer)
         outfile.write(msg)
 
         if interspersed:
-            msg = self._write_elements_properties(outfile, size)
+            msg = self._write_elements_properties(outfile, size, card_writer)
         else:
-            msg = self._write_elements(size)
+            msg = self._write_elements(outfile, size, card_writer)
             outfile.write(msg)
-            msg = self._write_properties(size)
+            msg = self._write_properties(outfile, size, card_writer)
 
         outfile.write(msg)
 
-        msg = self._write_materials(size)
-        msg += self._write_common(size)
+        msg = self._write_materials(size, card_writer)
+        msg += self._write_common(size, card_writer)
         msg += 'ENDDATA\n'
         outfile.write(msg)
         outfile.close()
@@ -182,13 +196,13 @@ class WriteMesh(WriteMeshDeprecated):
 
         outfile = open(out_filename, 'wb')
         msg = self._write_header()
-        msg += self._write_params(size)
+        msg += self._write_params(size, card_writer)
         outfile.write(msg)
 
-        msg = self._write_nodes(outfile, size)
+        msg = self._write_nodes(outfile, size, card_writer)
         outfile.write(msg)
 
-        msg = self._write_elements_as_CTRIA3(size)
+        msg = self._write_elements_as_CTRIA3(outfile, size, card_writer)
         outfile.write(msg)
 
         msg = self._write_properties(size)
@@ -216,9 +230,9 @@ class WriteMesh(WriteMeshDeprecated):
         if self.executive_control_lines:
             msg = '$EXECUTIVE CONTROL DECK\n'
             if self.sol == 600:
-                newSol = 'SOL 600,%s' % (self.solMethod)
+                newSol = 'SOL 600,%s' % self.solMethod
             else:
-                newSol = 'SOL %s' % (self.sol)
+                newSol = 'SOL %s' % self.sol
 
             if self.iSolLine is not None:
                 self.executive_control_lines[self.iSolLine] = newSol
@@ -239,7 +253,7 @@ class WriteMesh(WriteMeshDeprecated):
             assert 'BEGIN BULK' in msg, msg
         return msg
 
-    def _write_params(self, size):
+    def _write_params(self, size, card_writer):
         """
         Writes the PARAM cards
         :param self: the BDF object
@@ -248,10 +262,10 @@ class WriteMesh(WriteMeshDeprecated):
         if self.params:
             msg = ['$PARAMS\n']
             for (key, param) in sorted(self.params.iteritems()):
-                msg.append(param.print_card(size))
+                msg.append(param.write_bdf(size, card_writer))
         return ''.join(msg)
 
-    def _write_nodes(self, outfile, size):
+    def _write_nodes(self, outfile, size, card_writer):
         """
         Writes the NODE-type cards
         :param self: the BDF object
@@ -263,21 +277,18 @@ class WriteMesh(WriteMeshDeprecated):
             outfile.write(''.join(msg))
 
         if self.nodes:
-            msg = []
             msg.append('$NODES\n')
             if self.gridSet:
                 msg.append(self.gridSet.print_card(size))
-
-            self.nodes.write(outfile)
-            #for (nid, node) in sorted(self.nodes.iteritems()):
+            for (nid, node) in sorted(self.nodes.iteritems()):
                 #msg.append(node.print_card(size))
+                msg.append(node.write_bdf(size, card_writer))
         if 0:
             self._write_nodes_associated(outfile, size)
 
-        msg = []
         return ''.join(msg)
 
-    def _write_nodes_associated(self, f, size):
+    def _write_nodes_associated(self, f, size, card_writer):
         """
         Writes the NODE-type in associated and unassociated groups.
         :param self: the BDF object
@@ -312,7 +323,7 @@ class WriteMesh(WriteMeshDeprecated):
                     msg.append('$ Missing NodeID=%s' % key)
         return ''.join(msg)
 
-    def _write_elements(self, size):
+    def _write_elements(self, size, card_writer):
         """
         Writes the elements in a sorted order
         :param self: the BDF object
@@ -329,21 +340,21 @@ class WriteMesh(WriteMeshDeprecated):
                     raise
         return ''.join(msg)
 
-    def _write_rigid_elements(self, size):
+    def _write_rigid_elements(self, size, card_writer):
         """Writes the rigid elements in a sorted order"""
         msg = []
         if self.rigidElements:
             msg = ['$RIGID ELEMENTS\n']
             for (eid, element) in sorted(self.rigidElements.iteritems()):
                 try:
-                    msg.append(element.print_card(size))
+                    msg.append(element.write_bdf(size, card_writer))
                 except:
                     print('failed printing element...'
                           'type=%s eid=%s' % (element.type, eid))
                     raise
         return ''.join(msg)
 
-    def _write_properties(self, size):
+    def _write_properties(self, size, card_writer):
         """Writes the properties in a sorted order"""
         msg = []
         if self.properties:
@@ -352,32 +363,32 @@ class WriteMesh(WriteMeshDeprecated):
                 msg.append(prop.print_card(size))
         return ''.join(msg)
 
-    def _write_elements_properties(self, outfile, size):
-        """Writes the elements and properties in and interspersed order"""
+    def _write_elements_properties(self, outfile, size, card_writer):
+        """
+        Writes the elements and properties in and interspersed order
+        """
         msg = []
         missing_properties = []
-
-        msg.append('$BROKEN ELEMENTS\n')
-        msg.append(self.cquad4s.write(f=outfile))
-        msg.append(self.ctria3s.write(f=outfile))
-
         if self.properties:
             msg.append('$ELEMENTS_WITH_PROPERTIES\n')
 
         eids_written = []
-        for (pid, prop) in sorted(self.properties.iteritems()):
-            eids = self.getElementIDsWithPID(pid)
+        pids = sorted(self.properties.keys())
+        eids2 = self.getElementIDsWithPIDs(pids, mode='dict')
 
+        for (pid, eids) in sorted(eids2.iteritems()):
+            prop = self.properties[pid]
             if eids:
-                msg.append(prop.print_card(size))
+                #msg.append(prop.print_card(size))
+                msg.append(prop.write_bdf(size, card_writer))
                 eids.sort()
                 for eid in eids:
-                    element = self.Element(eid, msg='')
+                    element = self.Element(eid)
                     try:
-                        msg.append(element.print_card(size))
+                        #msg.append(element.print_card(size))
+                        msg.append(element.write_bdf(size, card_writer))
                     except:
-                        print('failed printing element...'
-                              'type=%s eid=%s' % (element.type, eid))
+                        print('failed printing element...' 'type=%r eid=%s' % (element.type, eid))
                         raise
                 eids_written += eids
             else:
@@ -391,7 +402,7 @@ class WriteMesh(WriteMeshDeprecated):
             for eid in sorted(eids_missing):
                 element = self.Element(eid, msg='')
                 try:
-                    msg.append(element.print_card(size))
+                    msg.append(element.write_bdf(size, card_writer))
                 except:
                     print('failed printing element...'
                           'type=%s eid=%s' % (element.type, eid))
@@ -411,20 +422,43 @@ class WriteMesh(WriteMeshDeprecated):
                 msg.append(missing_property)
         return ''.join(msg)
 
-    def _write_materials(self, size):
+    def _write_materials(self, size, card_writer):
         """Writes the materials in a sorted order"""
         msg = []
-        if self.materials:
+        if(self.materials or self.creepMaterials or
+            self.MATS1 or self.MATS3 or self.MATS8 or self.MATT1 or
+            self.MATT2 or self.MATT3 or self.MATT4 or self.MATT5 or
+            self.MATT8 or self.MATT9):
             msg.append('$MATERIALS\n')
             for (mid, material) in sorted(self.materials.iteritems()):
-                msg.append(material.print_card(size))
+                msg.append(material.write_bdf(size, card_writer))
             for (mid, material) in sorted(self.creepMaterials.iteritems()):
                 msg.append(material.print_card(size))
-            for (mid, material) in sorted(self.materialDeps.iteritems()):
+
+            for (mid, material) in sorted(self.MATS1.iteritems()):
+                msg.append(material.print_card(size))
+            for (mid, material) in sorted(self.MATS3.iteritems()):
+                msg.append(material.print_card(size))
+            for (mid, material) in sorted(self.MATS8.iteritems()):
+                msg.append(material.print_card(size))
+
+            for (mid, material) in sorted(self.MATT1.iteritems()):
+                msg.append(material.print_card(size))
+            for (mid, material) in sorted(self.MATT2.iteritems()):
+                msg.append(material.print_card(size))
+            for (mid, material) in sorted(self.MATT3.iteritems()):
+                msg.append(material.print_card(size))
+            for (mid, material) in sorted(self.MATT4.iteritems()):
+                msg.append(material.print_card(size))
+            for (mid, material) in sorted(self.MATT5.iteritems()):
+                msg.append(material.print_card(size))
+            for (mid, material) in sorted(self.MATT8.iteritems()):
+                msg.append(material.print_card(size))
+            for (mid, material) in sorted(self.MATT9.iteritems()):
                 msg.append(material.print_card(size))
         return ''.join(msg)
 
-    def _write_thermal_materials(self, size):
+    def _write_thermal_materials(self, size, card_writer):
         """Writes the thermal materials in a sorted order"""
         msg = []
         if self.thermalMaterials:
@@ -433,7 +467,7 @@ class WriteMesh(WriteMeshDeprecated):
                 msg.append(material.print_card(size))
         return ''.join(msg)
 
-    def _write_constraints(self, size):
+    def _write_constraints(self, size, card_writer):
         """Writes the constraint cards sorted by ID"""
         msg = []
         if self.suports:
@@ -466,7 +500,7 @@ class WriteMesh(WriteMeshDeprecated):
                         msg.append(str(mpc))
         return ''.join(msg)
 
-    def _write_loads(self, size):
+    def _write_loads(self, size, card_writer):
         """Writes the load cards sorted by ID"""
         msg = []
         if self.loads:
@@ -474,14 +508,35 @@ class WriteMesh(WriteMeshDeprecated):
             for (key, loadcase) in sorted(self.loads.iteritems()):
                 for load in loadcase:
                     try:
-                        msg.append(load.print_card(size))
+                        msg.append(load.write_bdf(size, card_writer))
                     except:
-                        print('failed printing load...type=%s key=%s'
-                              % (load.type, key))
+                        print('failed printing load...type=%s key=%r' % (load.type, key))
                         raise
         return ''.join(msg)
 
-    def _write_optimization(self, size):
+    def _write_contact(self, size, card_writer):
+        """Writes the contact cards sorted by ID"""
+        msg = []
+        if (self.bcrparas or self.bctadds or self.bctparas or self.bctsets
+            or self.bsurf or self.bsurfs):
+            msg.append('$CONTACT\n')
+            for (ID, bcrpara) in sorted(self.bcrparas.iteritems()):
+                msg.append(bcrpara.print_card(size))
+            for (ID, bctadds) in sorted(self.bctadds.iteritems()):
+                msg.append(bctadds.print_card(size))
+            for (ID, bctpara) in sorted(self.bctparas.iteritems()):
+                msg.append(bctpara.print_card(size))
+
+            for (ID, bctset) in sorted(self.bctsets.iteritems()):
+                msg.append(bctset.write_bdf(size, card_writer))
+            for (ID, bsurfi) in sorted(self.bsurf.iteritems()):
+                msg.append(bsurfi.write_bdf(size, card_writer))
+            for (ID, bsurfsi) in sorted(self.bsurfs.iteritems()):
+                #msg.append(bsurfsi.print_card(size))
+                msg.append(bsurfsi.write_bdf(size, card_writer))
+        return ''.join(msg)
+
+    def _write_optimization(self, size, card_writer):
         """Writes the optimization cards sorted by ID"""
         msg = []
         if (self.dconstrs or self.desvars or self.ddvals or self.dresps
@@ -489,72 +544,74 @@ class WriteMesh(WriteMeshDeprecated):
             or self.ddvals):
             msg.append('$OPTIMIZATION\n')
             for (ID, dconstr) in sorted(self.dconstrs.iteritems()):
-                msg.append(dconstr.print_card(size))
+                msg.append(dconstr.write_bdf(size, card_writer))
             for (ID, desvar) in sorted(self.desvars.iteritems()):
-                msg.append(desvar.print_card(size))
+                msg.append(desvar.write_bdf(size, card_writer))
             for (ID, ddval) in sorted(self.ddvals.iteritems()):
-                msg.append(ddval.print_card(size))
+                msg.append(ddval.write_bdf(size, card_writer))
             for (ID, dlink) in sorted(self.dlinks.iteritems()):
-                msg.append(dlink.print_card(size))
+                msg.append(dlink.write_bdf(size, card_writer))
             for (ID, dresp) in sorted(self.dresps.iteritems()):
-                msg.append(dresp.print_card(size))
+                msg.append(dresp.write_bdf(size, card_writer))
             for (ID, dvmrel) in sorted(self.dvmrels.iteritems()):
-                msg.append(dvmrel.print_card(size))
+                msg.append(dvmrel.write_bdf(size, card_writer))
             for (ID, dvprel) in sorted(self.dvprels.iteritems()):
-                msg.append(dvprel.print_card(size))
+                msg.append(dvprel.write_bdf(size, card_writer))
             for (ID, equation) in sorted(self.dequations.iteritems()):
                 msg.append(str(equation))
             if self.doptprm is not None:
-                msg.append(self.doptprm.print_card(size))
+                msg.append(self.doptprm.write_bdf(size, card_writer))
+
         return ''.join(msg)
 
-    def _write_tables(self, size):
+    def _write_tables(self, size, card_writer):
         """Writes the TABLEx cards sorted by ID"""
         msg = []
         if self.tables:
             msg.append('$TABLES\n')
             for (ID, table) in sorted(self.tables.iteritems()):
-                msg.append(table.print_card(size))
+                msg.append(table.write_bdf(size, card_writer))
+
         if self.randomTables:
             msg.append('$RANDOM TABLES\n')
             for (ID, table) in sorted(self.randomTables.iteritems()):
-                msg.append(table.print_card(size))
+                msg.append(table.write_bdf(size, card_writer))
         return ''.join(msg)
 
-    def _write_sets(self, size):
+    def _write_sets(self, size, card_writer):
         """Writes the SETx cards sorted by ID"""
         msg = []
         if (self.sets or self.setsSuper or self.asets or self.bsets or
             self.csets or self.qsets):
             msg.append('$SETS\n')
             for (ID, setObj) in sorted(self.sets.iteritems()):  # dict
-                msg.append(str(setObj))
+                msg.append(setObj.write_bdf(size, card_writer))
             for setObj in self.asets:  # list
-                msg.append(str(setObj))
+                msg.append(setObj.write_bdf(size, card_writer))
             for setObj in self.bsets:  # list
-                msg.append(str(setObj))
+                msg.append(setObj.write_bdf(size, card_writer))
             for setObj in self.csets:  # list
-                msg.append(str(setObj))
+                msg.append(setObj.write_bdf(size, card_writer))
             for setObj in self.qsets:  # list
-                msg.append(str(setObj))
+                msg.append(setObj.write_bdf(size, card_writer))
             for (ID, setObj) in sorted(self.setsSuper.iteritems()):  # dict
-                msg.append(str(setObj))
+                msg.append(setObj.write_bdf(size, card_writer))
         return ''.join(msg)
 
-    def _write_dynamic(self, size):
+    def _write_dynamic(self, size, card_writer):
         """Writes the dynamic cards sorted by ID"""
         msg = []
         if (self.dareas or self.nlparms or self.frequencies or self.methods or
             self.cMethods or self.tsteps or self.tstepnls):
             msg.append('$DYNAMIC\n')
             for (ID, method) in sorted(self.methods.iteritems()):
-                msg.append(method.print_card(size))
+                msg.append(method.write_bdf(size, card_writer))
             for (ID, cMethod) in sorted(self.cMethods.iteritems()):
-                msg.append(cMethod.print_card(size))
+                msg.append(cMethod.write_bdf(size, card_writer))
             for (ID, darea) in sorted(self.dareas.iteritems()):
-                msg.append(darea.print_card(size))
+                msg.append(darea.write_bdf(size, card_writer))
             for (ID, nlparm) in sorted(self.nlparms.iteritems()):
-                msg.append(nlparm.print_card(size))
+                msg.append(nlparm.write_bdf(size, card_writer))
             for (ID, nlpci) in sorted(self.nlpcis.iteritems()):
                 msg.append(nlpci.print_card(size))
             for (ID, tstep) in sorted(self.tsteps.iteritems()):
@@ -565,7 +622,7 @@ class WriteMesh(WriteMeshDeprecated):
                 msg.append(freq.print_card(size))
         return ''.join(msg)
 
-    def _write_aero(self, size):
+    def _write_aero(self, size, card_writer):
         """Writes the aero cards"""
         msg = []
         if (self.aero or self.aeros or self.gusts or self.caeros
@@ -578,7 +635,7 @@ class WriteMesh(WriteMeshDeprecated):
             for (ID, spline) in sorted(self.splines.iteritems()):
                 msg.append(spline.print_card(size))
             for (ID, trim) in sorted(self.trims.iteritems()):
-                msg.append(trim.print_card(size))
+                msg.append(trim.write_bdf(size, card_writer))
 
             for (ID, aero) in sorted(self.aero.iteritems()):
                 msg.append(aero.print_card(size))
@@ -589,7 +646,7 @@ class WriteMesh(WriteMeshDeprecated):
                 msg.append(gust.print_card(size))
         return ''.join(msg)
 
-    def _write_aero_control(self, size):
+    def _write_aero_control(self, size, card_writer):
         """Writes the aero control surface cards"""
         msg = []
         if (self.aefacts or self.aeparams or self.aelinks or self.aelists or
@@ -604,14 +661,14 @@ class WriteMesh(WriteMeshDeprecated):
                 msg.append(aestat.print_card(size))
 
             for (ID, aelist) in sorted(self.aelists.iteritems()):
-                msg.append(aelist.print_card(size))
+                msg.append(aelist.write_bdf(size, card_writer))
             for (ID, aesurf) in sorted(self.aesurfs.iteritems()):
                 msg.append(aesurf.print_card(size))
             for (ID, aefact) in sorted(self.aefacts.iteritems()):
-                msg.append(aefact.print_card(size))
+                msg.append(aefact.write_bdf(size, card_writer))
         return ''.join(msg)
 
-    def _write_flutter(self, size):
+    def _write_flutter(self, size, card_writer):
         """Writes the flutter cards"""
         msg = []
         if (self.flfacts or self.flutters or self.mkaeros):
@@ -625,7 +682,7 @@ class WriteMesh(WriteMeshDeprecated):
                 msg.append(mkaero.print_card(size))
         return ''.join(msg)
 
-    def _write_thermal(self, size):
+    def _write_thermal(self, size, card_writer):
         """Writes the thermal cards"""
         msg = []
         # PHBDY
@@ -647,17 +704,17 @@ class WriteMesh(WriteMeshDeprecated):
                     msg.append(bc.print_card(size))
         return ''.join(msg)
 
-    def _write_coords(self, size):
+    def _write_coords(self, size, card_writer):
         """Writes the coordinate cards in a sorted order"""
         msg = []
         if len(self.coords) > 1:
             msg.append('$COORDS\n')
         for (ID, coord) in sorted(self.coords.iteritems()):
             if ID != 0:
-                msg.append(coord.print_card(size))
+                msg.append(coord.write_bdf(size, card_writer))
         return ''.join(msg)
 
-    def _write_rejects(self, size):
+    def _write_rejects(self, size, card_writer):
         """
         Writes the rejected (processed) cards and the rejected unprocessed
         cardLines

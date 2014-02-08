@@ -25,45 +25,11 @@ class XrefMesh(object):
         warnings.warn('crossReference is deprecated; use cross_reference')
         self.cross_reference(xref)
 
-    def cross_reference(self, xref=True):
+    def cross_reference(self, xref=True, xref_loads=True, xref_constraints=True):
         """
         Links up all the cards to the cards they reference
         """
-        if xref==False:
-            xref = 0
-        elif xref==True:
-            xref = 1
-        elif xref=='partial':
-            xref = 2
-        else:
-            raise NotImplementedError('xref=%r is not supported')
-
-        #########################
-        ## THIS IS A HACK...   ##
-        #########################
-        #xref = 2
-        if 0:
-            xref = 2
-
-            null_prop = False
-            null_mat = True
-            null_loads = False
-            null_constraints = False
-            if null_prop:
-                self.card_count['PBUSH'] = 0
-                self.properties = {}
-            if null_mat:
-                self.materials = {}
-            if null_loads:
-                self.loads = {}
-            if null_constraints:
-                self.constraints = {}
-        #########################
-        ## THIS IS A HACK...   ##
-        #########################
-        self._xref = xref
-
-        if self._xref:
+        if xref:
             self.log.debug("Cross Referencing...")
             #for key,e in self.elements.iteritems():
                 #print(e)
@@ -76,10 +42,11 @@ class XrefMesh(object):
             self._cross_reference_materials()
 
             self._cross_reference_aero()
-            self._cross_reference_constraints()
-            self._cross_reference_loads()
+            if xref_constraints:
+                self._cross_reference_constraints()
+            if xref_loads:
+                self._cross_reference_loads()
             #self.caseControlDeck.cross_reference(self)
-        #self._xref = 1  ## HACK!
 
     def _cross_reference_constraints(self):
         """
@@ -137,14 +104,12 @@ class XrefMesh(object):
         Links the nodes to coordinate systems
         """
         gridSet = self.gridSet
-        
-        self.nodes.finalize()
-        #for n in self.nodes.itervalues():
-            #try:
-                #n.cross_reference(self, gridSet)
-            #except:
-                #self.log.error("Couldn't cross reference GRID.\n%s" % (str(n)))
-                #raise
+        for n in self.nodes.itervalues():
+            try:
+                n.cross_reference(self, gridSet)
+            except:
+                self.log.error("Couldn't cross reference GRID.\n%s" % (str(n)))
+                raise
 
         if self.spoints:
             self.spointi = self.spoints.createSPOINTi()
@@ -158,7 +123,7 @@ class XrefMesh(object):
             try:
                 elem.cross_reference(self)
             except:
-                msg = "Couldn't cross reference Element.\n%s" % (str(elem))
+                msg = "Couldn't cross reference Element.\n%s" % str(elem)
                 self.log.error(msg)
                 raise
 
@@ -187,13 +152,18 @@ class XrefMesh(object):
                 self.log.error(msg)
                 raise
 
-        for mat in self.materialDeps.itervalues():  # CREEP - depends on MAT1
-            try:
-                mat.cross_reference(self)
-            except:
-                msg = "Couldn't cross reference Material\n%s" % (str(mat))
-                self.log.error(msg)
-                raise
+        # CREEP - depends on MAT1
+        data = [self.MATS1, self.MATS3, self.MATS8,
+                self.MATT1, self.MATT2, self.MATT3, self.MATT4, self.MATT5,
+                self.MATT8, self.MATT9]
+        for material_deps in data:
+            for mat in material_deps.itervalues():
+                try:
+                    mat.cross_reference(self)
+                except:
+                    msg = "Couldn't cross reference Material\n%s" % (str(mat))
+                    self.log.error(msg)
+                    raise
 
     def _cross_reference_loads(self):
         """

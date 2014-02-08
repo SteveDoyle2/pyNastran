@@ -40,7 +40,7 @@ def assert_fields(card1, card2):
 
 def compare_card_content(fem1, fem2):
     assert len(fem1.params) == len(fem2.params), 'len(fem1.params)=%i len(fem2.params)=%i' % (len(fem1.params), len(fem2.params))
-    assert len(fem1.nodes.nid) == len(fem2.nodes.nid), 'len(fem1.nodes.nid)=%i len(fem2.nodes.nid)=%i' % (len(fem1.nodes.nid), len(fem2.nodes.nid))
+    assert len(fem1.nodes) == len(fem2.nodes), 'len(fem1.nodes)=%i len(fem2.nodes)=%i' % (len(fem1.nodes), len(fem2.nodes))
     assert len(fem1.elements) == len(fem2.elements), 'len(fem1.elements)=%i len(fem2.elements)=%i' % (len(fem1.elements), len(fem2.elements))
     assert len(fem1.rigidElements) == len(fem2.rigidElements), 'len(fem1.rigidElements)=%i len(fem2.rigidElements)=%i' % (len(fem1.rigidElements), len(fem2.rigidElements))
     assert len(fem1.properties) == len(fem2.properties), 'len(fem1.properties)=%i len(fem2.properties)=%i' % (len(fem1.properties), len(fem2.properties))
@@ -71,13 +71,10 @@ def compare_card_content(fem1, fem2):
         card2 = fem2.params[key]
         assert_fields(card1, card2)
 
-    nids = fem1.nodes.nid
-    for key in fem1.nodes.nid:
-        card1 = fem1.nodes.write(nids=key)
-        card2 = fem2.nodes.write(nids=key)
-        msg = 'card1=%r\ncard2=%r' % (card1, card2)
-        assert card1 == card2,msg
-        #assert_fields(card1, card2)
+    for key in fem1.nodes:
+        card1 = fem1.nodes[key]
+        card2 = fem2.nodes[key]
+        assert_fields(card1, card2)
 
     for key in fem1.elements:
         card1 = fem1.elements[key]

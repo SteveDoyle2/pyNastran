@@ -24,6 +24,7 @@ from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     string_or_blank, blank, fields)
+from pyNastran.bdf.fieldWriter import print_card_8
 
 
 class FREQ(BaseCard):
@@ -159,7 +160,7 @@ class FREQ4(FREQ):
     response problems by specifying the amount of 'spread' around each natural
     frequency and the number of equally spaced excitation frequencies within
     the spread.
-    
+
     +------+-----+-----+-----+------+-----+-----+-----+-----+
     |  1   |  2  | 3   |  4  |  5   |  6  |  7  |  8  |  9  |
     +======+=====+=====+=====+======+=====+=====+=====+=====+
@@ -212,7 +213,7 @@ class NLPCI(BaseCard):
         self.scale = double_or_blank(card, 5, 'scale', 0.0)
         blank(card, 6, 'blank')
         self.desiter = double_or_blank(card, 7, 'minalr', 12)
-        self.mxinc = integer_or_blank(card, 7, 'minalr', 20)
+        self.mxinc = integer_or_blank(card, 8, 'minalr', 20)
 
     def rawFields(self):
         list_fields = ['NLPCI', self.nlparm_id, self.Type, self.minalr,
@@ -331,7 +332,7 @@ class TSTEPNL(BaseCard):
             self.maxR = double_or_blank(card, 21, 'maxR', 32.)
             self.uTol = double_or_blank(card, 22, 'uTol', 0.1)
             self.rTolB = double_or_blank(card, 23, 'rTolB', 20.)
-            
+
             # not listed in all QRGs
             self.minIter = integer_or_blank(card, 24, 'minIter')
             assert len(card) <= 25, 'len(TSTEPNL card) = %i' % len(card)
@@ -525,3 +526,7 @@ class NLPARM(BaseCard):
                   fStress, lsTol, maxBisect, None, None, None, maxR, None,
                   rTolB]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card) # having trouble with double precision...

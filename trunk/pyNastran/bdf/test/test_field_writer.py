@@ -5,9 +5,9 @@ import unittest
 
 from pyNastran.bdf.fieldWriter import (print_field, print_float_8,
                                        set_default_if_blank,
-                                       set_blank_if_default)
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_field_16
+                                       set_blank_if_default, is_same, print_card_8)
+from pyNastran.bdf.fieldWriter16 import print_field_16, print_card_16
+from pyNastran.bdf.field_writer_double import print_card_double
 
 
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
@@ -116,6 +116,15 @@ class TestFieldWriter(unittest.TestCase):
 
     def test_floats_positive_8(self):
         tol = 1.0
+        # ideal
+        #self.assertEqual(print_float_8(-.003607), '-.003607',
+        #                 print_float_8(-.003607))
+
+        # actual
+        self.assertEqual(print_float_8(-.003607), '-3.607-3',
+                         print_float_8(-.003607))
+
+        # good
         self.assertEqual(print_float_8(1.2), '     1.2',
                          print_float_8(1.2))
         self.assertEqual(print_float_8(0.5), '      .5',
@@ -132,10 +141,10 @@ class TestFieldWriter(unittest.TestCase):
         self.assertEqual(print_field(123456.28), '123456.3', 'g')
         self.assertEqual(print_field(1234567.25), '1234567.',
                          print_field(1234567.25))  # 1.2346+6
+        self.assertEqual(print_field(12345678.), '1.2346+7',
+                         '%r' % print_field(12345678.))
         self.assertEqual(print_field(
-            12345678.), '1.2346+7', '|%s|' % print_field(12345678.))
-        self.assertEqual(print_field(
-            123456789.), '1.2346+8', '|%s|' % print_field(12345678.))
+            123456789.), '1.2346+8', '%r' % print_field(12345678.))
 
         self.assertEqual(print_field(0.1), '      .1',
                          'A|%s|' % print_field(0.1))
@@ -244,6 +253,85 @@ class TestFieldWriter(unittest.TestCase):
                                      None, None,
                                      None,None,None,None,None,None,None,None,
                                      1, None]))
+
+    def test_same(self):
+        self.assertTrue(is_same(1.0, 1.000))
+        self.assertFalse(is_same(1.0, 1e-15 + 1))
+        self.assertTrue(is_same('MAT', 'MAT'))
+        self.assertFalse(is_same('MAT', 'MAT1'))
+
+    def test_card_double(self):
+        card = print_card_double(['GRID', 1, None, 120.322,-4.82872,1.13362])
+        card_expected = 'GRID*                  1                1.2032200000D+02-4.828720000D+00\n'
+        card_expected += '*       1.1336200000D+00\n'
+        self.assertEqual(card, card_expected)
+
+        #card = print_card_double(['CHEXA', 1, 2, 2, 3, 4, 1, 8, 5,
+                                           #6, 7])
+        #card_expected = ''
+        #card_expected += 'CHEXA*                 1               2               2               3\n'
+        #card_expected +='*                      4               1               8               5\n'
+        #card_expected +='*                      6               7\n'
+        #card_expected += '*       1.1336200000D+00\n'
+
+        #card = print_card_double(['CTETRA',6437,1,14533,5598,1577,9976,42364,5599,42365,42363,30022,12904])
+        #card_expected = ''
+
+        #card_expected += 'CTETRA*             6437               1           14533            5598\n'
+        #card_expected += '*                   1577            9976           42364            5599\n'
+        #card_expected += '*                  42365           42363           30022           12904\n'
+        #card_expected += '*       \n'
+
+        #card_expected +='CTETRA*  6437            1               14533           5598\n'
+        #card_expected +='*        1577            9976            42364           5599\n'
+        #card_expected +='*        42365           42363           30022           12904\n'
+        #card_expected +='*       \n'
+        #self.assertEqual(card, card_expected)
+
+        #=============================
+        #                            mid   E1      E2      nu12 G12      G1z      G2z      rho
+        card = print_card_8(['MAT8', 6,    1.7e+7, 1.7e+7, .98, 340000., 180000., 180000., .0001712,
+        #                            a1    a2    TRef
+                                     None, 71.33])
+        card_expected = ''
+        card_expected += 'MAT8           6   1.7+7   1.7+7     .98 340000. 180000. 180000..0001712\n'
+        card_expected += '                   71.33\n'
+        self.assertEqual(card, card_expected)
+
+
+        card = print_card_16(['MAT8', 6,    1.7e+7, 1.7e+7, .98, 340000., 180000., 180000., .0001712,
+        #                            a1    a2    TRef
+                                     None, 71.33])
+
+        card_expected = ''
+        card_expected += 'MAT8*                  6       17000000.       17000000.             .98\n'
+        card_expected += '*                340000.         180000.         180000.        .0001712\n'
+        card_expected += '*                                  71.33\n'
+        card_expected += '*\n'
+        # bad
+        self.assertEqual(card, card_expected)
+        #=============================
+        #layer = mid, t, theta sout
+        #                      mid E1              E2                  nu12
+        #'MAT8*                  6 1.7000000000+07 1.7000000000+07     0.980000000+ '
+        #                      G12 G1z             G2z                 rho
+        #'*        340000.00000000 180000.00000000 180000.00000000     0.000171204+ '
+        #                       a1              a2 Tref                Xt
+        #'*                    0.0             0.0    71.330000000                + '
+        #                      Xc               Yt Yc                  S
+        #'*                                                                       + '
+        #                       GE             F12 STRN
+        #'*                    0.0             0.0                                + '
+        #'*
+
+        #====
+        #'MAT8*                  6 1.7000000000+07 1.7000000000+07     0.980000000+ ' - 1
+        #'*        340000.00000000 180000.00000000 180000.00000000     0.000171204+ ' - 2
+        #'*                    0.0             0.0    71.330000000                + ' - 3
+        #'*                                                                       + ' - 4
+        #'*                    0.0             0.0                                + ' - 5
+        #'*                                                                           - 6
+        print('1')
 
 def compare(valueIn):
     #print "a = |%s|" % valueIn

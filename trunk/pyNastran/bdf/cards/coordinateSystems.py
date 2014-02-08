@@ -168,7 +168,7 @@ class Coord(BaseCard):
               g_y \cdot i  &  g_y \cdot j  &  g_y \cdot k    \\
               g_z \cdot i  &  g_z \cdot j  &  g_z \cdot k
           \end{array} \right]
-        
+
 
         * :math:`g` is the global directional vector (e.g. :math:`g_x = [1,0,0]`)
         * :math:`ijk` is the math:`i^{th}` direction in the local coordinate system
@@ -285,7 +285,7 @@ class Coord(BaseCard):
         :param v:    the vector to normalize
 
         :returns:  normalized v
-        
+
         .. math:: v_{norm} = \frac{v}{\lvert v \lvert}
         """
         normV = norm(v)
@@ -296,10 +296,10 @@ class Coord(BaseCard):
     def T(self):
         r"""
         Gets the 6x6 transformation
-        
+
         .. math:: [\lambda] = [B_{ij}]
-  
-        .. math:: 
+
+        .. math::
           [T] =
           \left[
             \begin{array}{cc}
@@ -351,7 +351,7 @@ class CylindricalCoord(object):
     .. seealso:: `MSC Reference Manual (pdf) <`http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=>`_.
 
 
-    
+
     """
     def coordToXYZ(self, p):
         r"""
@@ -829,11 +829,15 @@ class CORD1C(Cord1x, CylindricalCoord):
         list_fields = ['CORD1C', self.cid] + self.NodeIDs()
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class CORD1S(Cord1x, SphericalCoord):
     """
     ::
-    
+
       CORD1S CIDA G1A G2A G3A CIDB G1B G2B G3B
     """
     type = 'CORD1S'
@@ -855,6 +859,10 @@ class CORD1S(Cord1x, SphericalCoord):
     def rawFields(self):
         list_fields = ['CORD1S', self.cid] + self.NodeIDs()
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
 
 
 class CORD2R(Cord2x, RectangularCoord):
@@ -885,6 +893,10 @@ class CORD2R(Cord2x, RectangularCoord):
             self.e2) + list(self.e3)
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class CORD2S(Cord2x, SphericalCoord):
     type = 'CORD2S'
@@ -913,6 +925,10 @@ class CORD2S(Cord2x, SphericalCoord):
                   list(self.e3))
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
+
 
 class CORD2C(Cord2x, CylindricalCoord):
     type = 'CORD2C'
@@ -940,3 +956,7 @@ class CORD2C(Cord2x, CylindricalCoord):
         list_fields = (['CORD2C', self.cid, rid] + list(self.e1) + list(self.e2) +
                   list(self.e3))
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + card_writer(card)
