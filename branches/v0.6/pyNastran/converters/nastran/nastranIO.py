@@ -87,7 +87,7 @@ class NastranIO(object):
                        save_skipped_cards=False,
                        debug=True, log=self.log)
             model.read_op2(op2_filename)
-            model.crossReference(xref=True)
+            model.cross_reference(xref=True, xref_loads=False, xref_constraints=False)
         else:  # read the bdf/punch
             model = BDF(log=self.log, debug=True)
             self.modelType = model.modelType
@@ -96,6 +96,7 @@ class NastranIO(object):
         nNodes = model.nNodes()
         assert nNodes > 0
         nElements = model.nElements()
+        assert nElements > 0
         nCAeros = model.nCAeros()
         self.nNodes = nNodes
         self.nElements = nElements
@@ -362,10 +363,15 @@ class NastranIO(object):
                       'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):
 
                     nodeIDs = element.nodeIDs()
-                    if 0 not in nodeIDs:
+                    if None not in nodeIDs:  # used to be 0...
                         elem = vtk.vtkLine()
-                        elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
-                        elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
+                        try:
+                            elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
+                            elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
+                        except KeyError:
+                            print "nodeIDs =", nodeIDs
+                            print str(element)
+                            continue
                         self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, CONM2):  # not perfectly located
                 del self.eidMap[eid]

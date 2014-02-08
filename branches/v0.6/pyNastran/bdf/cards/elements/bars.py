@@ -586,7 +586,7 @@ class CROD(RodElement):
         return self.rawFields()
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.rawFields()
         return self.comment() + print_card_8(card)
 
 
