@@ -14,7 +14,7 @@ def is_string(value):
 def is_binary(filename):
     """
     Return true if the given filename is binary.
-    
+
     :raises:  IOError if the file cannot be opened.
     :returns: True if filename is a binary file (contains null byte)
               and False otherwise.
@@ -23,6 +23,7 @@ def is_binary(filename):
     that file is binary if it contains null.
 
     .. warning:: this may not work for unicode."""
+    assert os.path.exists(filename), '%r does not exist' % filename
     with io.open(filename, mode='rb') as fil:
         for chunk in iter(lambda: fil.read(1024), bytes()):
             if b"\0" in chunk:  # found null byte
@@ -85,7 +86,7 @@ def de_obscure(num, debug=False):
 
 def get_files_of_type(dirname, extension='.txt', maxSize=100.):
     """
-    Gets the list of all the files with a given extension in the specified directory 
+    Gets the list of all the files with a given extension in the specified directory
 
     :param dirname:   the directory name
     :param extension: list of filetypes to get (default='.txt')
@@ -116,7 +117,7 @@ def print_bad_path(path):
     return "\n".join(["%s: %s" % (msg[os.path.exists(i)], i) for i in res])
 
 
-def list_print(lst):
+def list_print(lst, float_fmt='%-4.2f'):
     """
     Prints a list, numpy array, or numpy matrix in an abbreviated format.
     Supported element types: None, string, numbers. Useful for debugging.
@@ -128,11 +129,11 @@ def list_print(lst):
         if val is None or isinstance(val, basestring):
             return str(val)
         if isinstance(val, float):
-            return '%-4.2f' % val
+            return float_fmt % val
         try:
             return '%g' % val
         except TypeError:
-            print("parameter = |%s|" % val)
+            print("parameter = %r" % val)
             raise
 
     try: # TODO: remove try block and fix bug in OP2 code or add a warning message
@@ -175,13 +176,13 @@ def object_methods(obj, mode = "public"):
     """
     List the names of methods of a class as strings. Returns public methods
     as default.
-    
+
     :param obj:  the object for checking
     :param mode: defines what kind of methods will be listed
        * "public" - names that do not begin with underscore
        * "private" - names that begin with single underscore
        * "both" - private and public
-       * "all" - all methods that are defined for the object 
+       * "all" - all methods that are defined for the object
     :returns:  sorted list of the names of methods of a given type
                or None if the mode is wrong
     """
@@ -192,13 +193,13 @@ def object_attributes(obj, mode = "public"):
     """
     List the names of attributes of a class as strings. Returns public attributes
     as default.
-    
+
     :param obj:  the object for checking
     :param mode: defines what kind of attributes will be listed
        * "public" - names that do not begin with underscore
        * "private" - names that begin with single underscore
        * "both" - private and public
-       * "all" - all attributes that are defined for the object 
+       * "all" - all attributes that are defined for the object
     :returns: sorted list of the names of attributes of a given type or None
               if the mode is wrong
     """

@@ -254,7 +254,7 @@ class FortranFile(object):
         #msg += "longs  = %s\n" % longs
         msg += "floats  = %s\n" % str(floats)
         #msg += "doubles = %s\n" % str(doubles)
-        msg += "strings = |%r|\n" % strings
+        msg += "strings = %r\n" % strings
         msg += "nWords  = %s\n" % (len(data) // 4)
         #msg += "tell    = %s\n" % self.op2.tell()
         return msg
@@ -262,7 +262,7 @@ class FortranFile(object):
     def print_block2(self, data, endian):
         """
         Prints a data set in int/float/double/string format to determine table
-        info.  This oesn't move the cursor.
+        info.  This doesn't move the cursor.
 
         .. note:: this is a great function for debugging
         """
@@ -276,7 +276,10 @@ class FortranFile(object):
         #msg += "longs  = %s\n" % longs
         msg += "floats  = %s\n" % str(floats)
         #msg += "doubles = %s\n" % doubles
-        msg += "strings = |b%r|\n" % (''.join(strings))
+        try:
+            msg += "strings = b%r\n" % (''.join(strings))
+        except UnicodeDecodeError:
+            msg += 'strings = Error...\n'
         msg += "nWords  = %s\n" % (len(data) // 4)
         #msg += "tell    = %s\n" % self.op2.tell()
         return msg

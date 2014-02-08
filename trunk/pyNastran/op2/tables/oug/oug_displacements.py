@@ -2,7 +2,7 @@ from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObj
 
 
 class DisplacementObject(TableObject):  # approach_code=1, thermal=0
-    def __init__(self, data_code, is_sort1, isubcase, dt=None, read_mode=0):
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode=0):
         TableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
 
     def write_matlab(self, isubcase, f, is_mag_phase=False):
@@ -30,7 +30,7 @@ class DisplacementObject(TableObject):  # approach_code=1, thermal=0
 
 
 class ComplexDisplacementObject(ComplexTableObject):  # approach_code=1, sort_code=0, thermal=0
-    def __init__(self, data_code, is_sort1, isubcase, dt=None, read_mode=0):
+    def __init__(self, data_code, is_sort1, isubcase, dt, read_mode=0):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
 
     def write_matlab(self, isubcase, f, is_mag_phase=False):

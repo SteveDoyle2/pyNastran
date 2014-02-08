@@ -23,6 +23,7 @@ if sys.version_info < (3, 0):
 
     The program's return code is 0
     .. note:: Python v3.0+ doesn't have scipy.weave
+    .. note:: This is a 64-bit, Windows 7 specific bug as far as I know.
     """
     import scipy.weave
 
@@ -30,8 +31,10 @@ if sys.version_info < (3, 0):
 def integrate_line(x, y):
     """
     Integrates a line of length 1.0
-    :x: the independent variable
-    :y: the dependent variable
+    :param x: the independent variable
+    :param y: the dependent variable
+
+    :returns integrated_value: the area under the curve
     """
     if len(set(y)) == 1:
         return y[0]  # (x1-x0 = 1., so yBar*1 = yBar)
@@ -50,6 +53,10 @@ def build_spline(x, y):
     Builds a cubic spline or 1st order spline if there are less than 3 terms
     :param x: the independent variable
     :param y: the dependent variable
+
+    :returns splrep: a splrep object (linear or cubic spline depending
+                     on the length of x)
+
     .. note:: a 1st order spline is the same as linear interpolation
     """
     # build a linearly interpolated representation or cubic one
@@ -61,6 +68,7 @@ def integrate_positive_line(x, y, minValue=0.):
     Integrates a line of length 1.0
     :param x: the independent variable
     :param y: the dependent variable
+    :returns integrated_value: the area under the curve
     """
     if len(set(y)) == 1:
         return y[0]  # (x1-x0 = 1., so yBar*1 = yBar)
@@ -89,8 +97,13 @@ def reduce_matrix(matA, nids):
 
 def is_list_ranged(a, List, b):
     """
-    Returns true if a<= x <= b
-    or a-x < 0 < b-x
+    Returns true if a<= x <= b or a-x < 0 < b-x
+
+    :param a: the lower bound value (inclusive)
+    :param x: the search values
+    :param b: the upper bound value (inclusive)
+
+    :returns is_ranged: True/False
     """
     for x in List:
         if not is_float_ranged(a, x, b):
@@ -100,8 +113,13 @@ def is_list_ranged(a, List, b):
 
 def is_float_ranged(a, x, b):
     """
-    Returns true if a<= x <= b
-    or a-x < 0 < b-x
+    Returns true if a<= x <= b or a-x < 0 < b-x.
+
+    :param a: the lower bound value (inclusive)
+    :param x: the search value
+    :param b: the upper bound value (inclusive)
+
+    :returns is_ranged: True/False
     """
     if (not a < x) and (not allclose(x, a)):
         return False
@@ -112,16 +130,32 @@ def is_float_ranged(a, x, b):
     return True
 
 
-def print_annotated_matrix(A, rowNames=None, tol=1e-8):
+def print_annotated_matrix(A, row_names=None, col_names=None, tol=1e-8):
     """
-    takes a list/dictionary and annotates the row number with that value
+    Takes a list/dictionary and annotates the row number with that value
     indicies go from 0 to N
     """
-    if rowNames is None:
-        rowNames = [i for i in xrange(A.shape[0])]
     B = array(A)
-    return ''.join([ '%-2s' % (str(rowNames[i])) + ' ' + list_print(B[i, :], tol)
-                     + '\n' for i in xrange(B.shape[0])])
+    if row_names is None:
+        row_names = [i for i in xrange(B.shape[0])]
+
+    rwidth = max([len(str(row_names[i])) for i in range(len(row_names))])
+    row_fmt = '%%-%ss' % rwidth
+
+    header = ''
+    if col_names is not None:
+        col_name_list = [str(col_names[i]) for i in col_names]
+        cwidth = max([len(name) for name in col_name_list])
+
+        cwidth = 5
+        col_fmt = '%%-%ss ' % cwidth
+        #print("col_fmt = ", col_fmt)
+        header = row_fmt % '' + '   ' + col_fmt * len(col_names) % tuple(col_name_list) + '\n'
+        float_fmt = '%%-%i.2f' % cwidth
+
+    c= header + ''.join([row_fmt % (str(row_names[i])) + ' ' + list_print(B[i, :], tol, float_fmt=float_fmt)
+                              + '\n' for i in xrange(B.shape[0])])
+    return c
 
 
 def print_matrix(A, tol=1e-8):
@@ -129,16 +163,18 @@ def print_matrix(A, tol=1e-8):
     return ''.join([list_print(B[i, :], tol) + '\n' for i in xrange(B.shape[0])])
 
 
-def list_print(listA, tol=1e-8):
+def list_print(listA, tol=1e-8, float_fmt='-%3.2g', zero_fmt='    0'):
     if len(listA) == 0:
         return '[]'
 
     def _print(a):
         if isinstance(a, str):
             return a
-        for i, j in ((float, '%-3.2g'), (float32, '%-3.2g'),
-                     (float64, '%-3.2g'), (int, '%3i') ):
+        for i, j in ((float, float_fmt), (float32, float_fmt),
+                     (float64, float_fmt), (int, '%3i') ):
             if isinstance(a, i):
+                if abs(a) < tol:
+                    return zero_fmt
                 return j % (0. if abs(a) < tol else a)
 
         if isinstance(a, complex) or isinstance(a, complex64) or isinstance(a, complex128):
@@ -148,7 +184,7 @@ def list_print(listA, tol=1e-8):
             print("list_print: type(a) is not supported... %s" % (type(a)))
             return ' %g' % a
         except TypeError:
-            print("a = |%s|" % a)
+            print("a = %r" % a)
             raise
 
     return '[ '+ ', '.join([_print(a) for a in listA])+ ']'
@@ -158,18 +194,22 @@ def augmented_identity(A):
     """
     Creates an Identity Matrix augmented with zeros.
     The location of the extra zeros depends on A.
+    [ 1, 0, 0, 0 ]
+    [ 0, 1, 0, 0 ]
+    [ 0, 0, 1, 0 ]
     """
     (nx, ny) = A.shape
-    I = zeros([nx, ny], 'd')
-
-    for i in xrange(nx):
-        if i == nx or i == ny:
-            break
-        I[i][i] = 1.
-    return I
+    I = eye(max(nx, ny), 'float64')
+    return I[:nx, :ny]
 
 
 def solve_tridag(A, D):
+    """
+    Solves a tridagonal matrix [A]{x}={b} for {x}
+    :param A: main diagonal (length=N)
+    :param D: off diagonal (length=N-1)
+    :returns x
+    """
     # Find the diagonals
     ud = insert(diag(A, 1), 0, 0)  # upper diagonal
     d = diag(A)  # main diagonal
@@ -182,6 +222,13 @@ def solve_tridag(A, D):
 Area = lambda a, b: 0.5 * norm(cross(a, b))
 
 def centroid_triangle(n1, n2, n3):
+    """
+    Calculates the centroid of a triangle
+
+    :param n1: NDARRAY of node 1
+    :param n2: NDARRAY of node 2
+    :param n3: NDARRAY of node 3
+    """
     centroid = (n1 + n2 + n3) / 3.
     return centroid
 
@@ -198,23 +245,23 @@ def gauss(n):
 
     * n = 2:
 
-     * \f$ \pm 1/\sqrt{3} \f$ --> \f$ 1 \f$ 
+     * \f$ \pm 1/\sqrt{3} \f$ --> \f$ 1 \f$
 
     * n = 3
 
      * \f$ 0 \f$   --> \f$ 8/9 \f$
-     * \f$ \pm\sqrt{3/5} \f$ --> \f$ 5/9 \f$ 
+     * \f$ \pm\sqrt{3/5} \f$ --> \f$ 5/9 \f$
 
     * n = 4:
 
      * \f$ \pm\sqrt{\left( 3 - 2\sqrt{6/5} \right)/7} \f$ --> \f$ (18+\sqrt{30})/36 \f$
-     * \f$ \pm\sqrt{\left( 3 + 2\sqrt{6/5} \right)/7} \f$ --> \f$ (18-\sqrt{30})/36 \f$ 
+     * \f$ \pm\sqrt{\left( 3 + 2\sqrt{6/5} \right)/7} \f$ --> \f$ (18-\sqrt{30})/36 \f$
 
     * n = 5:
 
-     - \f$ 0 \f$ --> \f$ 128/225 \f$     
-     - \f$ \pm\frac{1}{3}\sqrt{5-2\sqrt{10/7}} \f$ --> \f$ (322+13\sqrt{70})/900 \f$ 
-     - \f$ \pm\frac{1}{3}\sqrt{5+2\sqrt{10/7}} \f$ --> \f$ (322-13\sqrt{70})/900 \f$ 
+     - \f$ 0 \f$ --> \f$ 128/225 \f$
+     - \f$ \pm\frac{1}{3}\sqrt{5-2\sqrt{10/7}} \f$ --> \f$ (322+13\sqrt{70})/900 \f$
+     - \f$ \pm\frac{1}{3}\sqrt{5+2\sqrt{10/7}} \f$ --> \f$ (322-13\sqrt{70})/900 \f$
 
 
     :param n: Number of quadrature points
@@ -222,19 +269,19 @@ def gauss(n):
     .. seealso:: http://en.wikipedia.org/wiki/Gaussian_quadrature"""
     if n == 1:
         return ([0.], [2.])
-    if n == 2:
+    elif n == 2:
         p = 1. / sqrt(3)
         return ([-p, p], [1., 1.])
-    if n == 3:
+    elif n == 3:
         p = sqrt(3 / 5.)
         return ([-p, 0., p], [5 / 9., 8 / 9., 5 / 9.])
-    if n == 4:
+    elif n == 4:
         p1 = (3 - 2. * sqrt(6 / 5)) / 7.
         p2 = (3 + 2. * sqrt(6 / 5)) / 7.
         w1 = (18 + sqrt(30)) / 36.
         w2 = (18 - sqrt(30)) / 36.
         return ([-p2, -p1, p1, p2], [w2, w1, w1, w2])
-    if n == 5:
+    elif n == 5:
         p1 = 1 / 3. * sqrt(5 - 2 * sqrt(10. / 7.))
         p2 = 1 / 3. * sqrt(5 + 2 * sqrt(10. / 7.))
         w1 = (322 + 13 * sqrt(70)) / 900.

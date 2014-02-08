@@ -30,7 +30,7 @@ def stderr_logging(typ, msg):
     Default logging function. Takes a text and outputs to stderr.
     :param typ: messeage type
     :param msg: message to be displayed
-    
+
     Message will have format 'typ: msg'
     """
     name = '%-8s' % (typ + ':')  # max length of 'INFO', 'DEBUG', 'WARNING',.etc.
@@ -42,7 +42,7 @@ class SimpleLogger(object):
     Simple logger object. In future might be changed to use Python logging module.
     Two levels are supported: 'debug' and 'info'. Info level discards debug
     messages, 'debug' level displays all messages.
-    
+
     .. note:: Logging module is currently not supported because I don't
       know how to repoint the log file if the program is called a second
       time.  Poor logging can result in:\n
