@@ -30,6 +30,29 @@ class PanairPatch(object):
 
         #self.log.debug("shape = %s" % (str(shape)))
 
+    def write_plot3d(self, f, dim):
+        """
+        ..todo: is the normal defined correctly?
+        ..todo: will this load into tecplot
+        """
+        print "x.shape=%s" % str(self.x.shape)
+        if dim == 1:
+            data = self.x
+        elif dim == 2:
+            data = self.y
+        elif dim == 3:
+            data = self.z
+        else:
+            raise RuntimeError('dim=1 -> x; dim=2 -> y; dim=3 -> z')
+        ni, nj = data.shape
+        for j in xrange(nj):
+            msg = ''
+            for i in xrange(ni):
+                msg += '%s ' % data[i, j]
+            f.write(msg)
+        msg += '\n'
+        f.write(msg)
+
     def process(self):
         msg = '     network # being processed %3i\n\n' % (self.iNetwork + 1)
         return msg
@@ -206,11 +229,12 @@ class PanairPatch(object):
         #edgeNumber = 4
         print("edgeNumber=%s" % edgeNumber)
         self.log.debug("x.shape = %s" % (str(self.x.shape)))
-        
+
         if edgeNumber == 1:
-            self.log.debug("self.x[:]\n%54s%s" % ('', self.x[:]))
-            self.log.debug("self.y[:]\n%54s%s" % ('', self.y[:]))
-            self.log.debug("self.z[:]\n%54s%s" % ('', self.z[:]))
+            pass
+            #self.log.debug("self.x[:]\n%54s%s" % ('', self.x[:]))
+            #self.log.debug("self.y[:]\n%54s%s" % ('', self.y[:]))
+            #self.log.debug("self.z[:]\n%54s%s" % ('', self.z[:]))
             #edgeNumber = 2
 
         if edgeNumber == 1:
@@ -434,139 +458,3 @@ class PanairWakePatch(PanairPatch):
                                                         ' ',
                                                         self.netName)
         return header
-
-
-class PanairGridHelper(object):
-
-    def getCases(self, section):
-        """
-        $cases - no. of solutions
-        =nacase
-        1.
-        """
-        self.ncases = int(float(section[1][0:10]))
-        #self.log.debug("ncases = %s" % (self.ncases))
-        return True
-
-    def get_mach(self, section):
-        """
-        $mach number
-        =amach
-        .6
-        """
-        self.mach = float(section[1][0:10])
-        #self.log.debug("mach = %s" % (self.mach))
-        return True
-
-    def set_mach(self, mach):
-        self.mach = mach
-
-    def write_mach(self):
-        out = '$mach number\n'
-        out += '%-10s' % (self.mach) + '\n'
-        return out
-
-    def write_cases(self):
-        out = ''
-        if self.ncases is not None:
-            out = '$cases - number of solutions\n'
-            out += '%-10s' % sInt(self.ncases) + '\n'
-        return out
-
-    def get_alphas(self, section):
-        """
-        $angles-of-attack
-        =alpc
-        4.
-        =alpha(1) alpha(2)  alpha(3)
-        4.        10.       0.
-        """
-        self.alphas = []
-        self.alphaC = float(section[1][0:10])  # alphaCompressibility
-        sline = section[2].split()
-        self.alphas = [float(slot) for slot in sline]
-        #self.log.debug("alphaC=%s alphas=%s" % (self.alphaC, self.alphas))
-        return True
-
-    def set_alphas(self, alphas, alphaC):
-        self.alphaC = alphaC
-        self.alphas = alphas
-        self.ncases = len(alphas)
-
-    def write_title(self):
-        out = '$title\n'
-        out += '%s\n' % self.title.strip()
-        return out
-
-    def write_alphas(self):
-        out = '$angles-of-attack\n'
-        out += '%-s\n' % self.alphaC
-        out += '%-10s' * len(self.alphas) % (tuple(self.alphas)) + '\n'
-        return out
-
-    def get_betas(self, section):
-        """
-        $angles-of-attack
-        =alpc
-        4.
-        =alpha(1) alpha(2)  alpha(3)
-        4.        10.       0.
-        """
-        self.betas = []
-        self.betaC = float(section[1][0:10])  # betaCompressibility
-        sline = section[2].split()
-        self.betas = [float(slot) for slot in sline]
-        #self.log.debug("betaC=%s betas=%s" % (self.betaC, self.betas))
-        return True
-
-    def set_betas(self, betas, betaC):
-        self.betaC = betaC
-        self.betas = betas
-        self.ncases = len(betas)
-
-    def write_betas(self):
-        out = '$yaw\n'
-        out += '%s\n' % self.betaC
-        out += '%-10s' * len(self.betas) % (tuple(self.betas)) + '\n'
-        return out
-
-    def get_reference_quantities(self, section):
-        """
-        $references for accumulated forces and moments
-        =xref     yref      zref      nref
-        46.       0.        0.
-        =sref     bref      cref      dref
-        2400.     60.       40.       90.
-        """
-        self.xref = float(section[1][0:10])  # 0
-        self.yref = float(section[1][10:20])
-        self.zref = float(section[1][20:30])
-       #self.nref = float(section[1][30:40])
-        self.sref = float(section[2][0:10])  # 0
-        self.bref = float(section[2][10:20])
-        self.cref = float(section[2][20:30])
-        self.dref = float(section[2][30:40])
-        #self.log.debug("xref=%s yref=%s zref=%s" % (self.xref,
-        #                                            self.yref, self.zref))
-        #self.log.debug("sref=%s bref=%s cref=%s dref=%s " % (
-        #    self.sref, self.bref, self.cref, self.dref))
-        return True
-
-    def write_reference_quantities(self):
-        out = '$references for accumulated forces and moments\n'
-        out += '=%-10s%-10s%s\n' % ('Xref', 'Yref', 'Zref')
-        out += '%-10s%-10s%-s\n' % (self.xref, self.yref, self.zref)
-        out += '=%-10s%-10s%-10s%s\n' % ('Sref', 'Bref', 'Cref', 'Dref')
-        out += '%-10s%-10s%-10s%s\n' % (self.sref, self.bref, self.cref,
-                                        self.dref)
-        return out
-
-    def get_end(self, section):
-        self.isEnd = True
-        #self.log.debug("end...")
-        return True
-
-    def write_end(self):
-        if self.isEnd:
-            return '$end of panair inputs\n '
-        return ''

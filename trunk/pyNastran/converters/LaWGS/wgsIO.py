@@ -10,9 +10,7 @@ class LaWGS_IO(object):
 #    lawgs = LaWGS('tmx1242.wgs')
 #    lawgs.run()
 
-    def load_LaWGS_geometry(self, lawgsFileName, dirname, isNodal, isCentroidal):
-        self.isNodal = isNodal
-        self.isCentroidal = isCentroidal
+    def load_LaWGS_geometry(self, lawgsFileName, dirname):
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
 
@@ -32,12 +30,12 @@ class LaWGS_IO(object):
         print("nElements = ", self.nElements)
 
         self.grid.Allocate(self.nElements, 1000)
-        self.gridResult.SetNumberOfComponents(self.nElements)
+        #self.gridResult.SetNumberOfComponents(self.nElements)
         self.grid2.Allocate(1, 1000)
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nNodes)
-        self.gridResult.Allocate(self.nNodes, 1000)
+        #self.gridResult.Allocate(self.nNodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
         self.nidMap = {}
         #elem.SetNumberOfPoints(nNodes)
@@ -87,12 +85,12 @@ class LaWGS_IO(object):
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
-        self.iSubcaseNameMap = {1: ['Cart3d', '']}
+        self.iSubcaseNameMap = {1: ['LaWGS', '']}
         cases = {}
         ID = 1
 
         #print "nElements = ",nElements
-        cases = self.fillCart3dCase(cases, ID, regions, loads)
+        #cases = self._fill_lawgs_case(cases, ID, regions, loads)
 
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
@@ -102,6 +100,8 @@ class LaWGS_IO(object):
         self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
         self.cycleResults()  # start at nCase=0
 
+    def _fill_lawgs_case(self, cases, ID, regions, loads):
+        pass
 if __name__ == '__main__':
     print('')
 
@@ -110,4 +110,4 @@ if __name__ == '__main__':
     test = LaWGS_IO()
     test.removeOldGeometry = removeOldGeometry
 
-    test.loadLaWGSGeometry('tmx1242.wgs', '', True, True)
+    test.load_LaWGS_geometry('tmx1242.wgs', '', True, True)
