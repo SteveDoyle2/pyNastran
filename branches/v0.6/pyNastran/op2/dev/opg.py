@@ -126,14 +126,14 @@ class OPG(object):
     def read_opg1_4(self, data):
         if self.table_code == 2:  # load vector
             assert self.table_name in ['OPG1', 'OPGV1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-            self.read_load_vector(data)
+            n = self.read_load_vector(data)
         elif self.table_code == 12:  # ???
-            self.read_force_vector(data)
-            pass
+            n = self.read_force_vector(data)
         #else:
-            #self.not_implemented_or_skip('bad OPG table')
+            #n = self.not_implemented_or_skip('bad OPG table')
         else:
             raise NotImplementedError(self.table_code)
+        return n
 
     def read_load_vector(self, data):
         """
@@ -144,15 +144,16 @@ class OPG(object):
             storage_obj = self.loadVectors
             real_obj = LoadVectorObject
             complex_obj = ComplexLoadVectorObject
-            self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            n = self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         elif self.thermal == 1:
             result_name = 'thermalLoadVectors'
             storage_obj = self.thermalLoadVectors
             real_obj = ThermalLoadVectorObject
             complex_obj = None
-            self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            n = self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         else:
             raise NotImplementedError(self.thermal)
+        return n
 
     def read_force_vector(self, data):
         """
@@ -163,12 +164,12 @@ class OPG(object):
             storage_obj = self.forceVectors
             real_obj = ForceVectorObject
             complex_obj = ComplexForceVectorObject
-            self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            n = self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         #elif self.thermal == 1:
             #result_name = 'thermalForceVectors'
             #storage_obj = self.thermalForceVectors
             #real_obj = ThermalForceVectorObject
             #complex_obj = None
-            #self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            #n = self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
         else:
             raise NotImplementedError(self.thermal)

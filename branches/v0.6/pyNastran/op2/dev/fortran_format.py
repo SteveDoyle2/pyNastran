@@ -100,6 +100,7 @@ class FortranFormat(object):
         markers = self.get_nmarkers(1, rewind=True)
         while markers[0] != 0:
             data = self._skip_record()
+            self.log.debug("table_name = %r" % self.table_name)
             #if len(data) == 584:
                 #self._parse_results_table3(data)
             #else:
@@ -126,21 +127,38 @@ class FortranFormat(object):
         #self.read_markers([self.isubtable, 1, 0])
 
         if self.table_name in self._table_mapper:
+            self.log.debug("*table_name = %r" % self.table_name)
             table3_parser, table4_parser = self._table_mapper[self.table_name]
+            passer = False
         else:
-            table3_parser = self.passer
-            table4_parser = self.passer
+            self.log.debug("table_name = %r" % self.table_name)
+            table3_parser = None
+            table4_parser = None
+            passer = True
 
         markers = self.get_nmarkers(1, rewind=True)
         while markers[0] != 0:
-            data = self._read_record()
-            if len(data) == 584:
+            record_len = self._get_record_length()
+            if record_len == 584:
                 self.data_code = {'log': self.log,}  # resets the logger
                 self.obj = None
+                data = self._read_record()
                 table3_parser(data)
             else:
-                if self.is_valid_subcase():
-                    table4_parser(data)
+                if passer or not self.is_valid_subcase():
+                    data = self._skip_record()
+                else:
+                    if hasattr(self, 'num_wide'):
+                        datai = b''
+                        for data in self._stream_record():
+                            data = datai + data
+                            n = table4_parser(data)
+                            assert isinstance(n, int), self.table_name
+                            datai = data[n:]
+                    else:
+                        data = self._read_record()
+                        n = table4_parser(data)
+                    del n
 
             self.isubtable -= 1
             self.read_markers([self.isubtable, 1, 0])
@@ -171,6 +189,31 @@ class FortranFormat(object):
         self.n = n
         self.f.seek(n)
 
+    def _get_record_length(self):
+        len_record = 0
+        n0 = self.n
+        markers0 = self.get_nmarkers(1, rewind=False)
+
+        n = self.n
+        record = self.skip_block()
+        len_record += self.n - n - 8  # -8 is for the block
+        #print "len1 =", len_record
+
+        markers1 = self.get_nmarkers(1, rewind=True)
+        # handling continuation blocks
+        if markers1[0] > 0:
+            #nloop = 0
+            while markers1[0] > 0: #, 'markers0=%s markers1=%s' % (markers0, markers1)
+                markers1 = self.get_nmarkers(1, rewind=False)
+
+                n = self.n
+                record = self.skip_block()
+                len_record += self.n - n - 8  # -8 is for the block
+
+                markers1 = self.get_nmarkers(1, rewind=True)
+        self.goto(n0)
+        return len_record
+
     def _skip_record(self):
         markers0 = self.get_nmarkers(1, rewind=False)
         record = self.skip_block()
@@ -186,11 +229,37 @@ class FortranFormat(object):
                 #nloop += 1
         return record
 
-    def _read_record(self, debug=True):
+    def _stream_record(self, debug=True):
         markers0 = self.get_nmarkers(1, rewind=False)
         if self.debug and debug:
             self.binary_debug.write('marker = [4, %i, 4]\n' % markers0[0])
         record = self.read_block()
+
+        if self.debug and debug:
+            nrecord = len(record)
+            self.binary_debug.write('record = [%i, recordi, %i]\n' % (nrecord, nrecord))
+        assert (markers0[0]*4) == len(record), 'markers0=%s*4 len(record)=%s' % (markers0[0]*4, len(record))
+        yield record
+
+        markers1 = self.get_nmarkers(1, rewind=True)
+
+        # handling continuation blocks
+        if markers1[0] > 0:
+            nloop = 0
+            while markers1[0] > 0: #, 'markers0=%s markers1=%s' % (markers0, markers1)
+                markers1 = self.get_nmarkers(1, rewind=False)
+
+                record = self.read_block()
+                yield record
+                markers1 = self.get_nmarkers(1, rewind=True)
+                nloop += 1
+
+    def _read_record(self, stream=False, debug=True):
+        markers0 = self.get_nmarkers(1, rewind=False)
+        if self.debug and debug:
+            self.binary_debug.write('marker = [4, %i, 4]\n' % markers0[0])
+        record = self.read_block()
+
         if self.debug and debug:
             nrecord = len(record)
             self.binary_debug.write('record = [%i, recordi, %i]\n' % (nrecord, nrecord))
@@ -204,11 +273,13 @@ class FortranFormat(object):
             records = [record]
             while markers1[0] > 0: #, 'markers0=%s markers1=%s' % (markers0, markers1)
                 markers1 = self.get_nmarkers(1, rewind=False)
+
                 record = self.read_block()
+                records.append(record)
                 markers1 = self.get_nmarkers(1, rewind=True)
 
-                records.append(record)
                 nloop += 1
+
             if nloop > 0:
                 record = ''.join(records)
         return record

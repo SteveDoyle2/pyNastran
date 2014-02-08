@@ -191,11 +191,12 @@ class OES(OP2Common):
         #print "element_name =", self.element_name
 
         if self.is_sort1():
-            self._read_oes1_4_sort1(data)
+            n = self._read_oes1_4_sort1(data)
         else:
             raise NotImplementedError('sort2 Type=%s num=%s' % (self.element_name, self.element_type))
         if self.debug3():
             self.binary_debug.write('*'* 20 + '\n\n')
+        return n
 
     def _read_oes1_4_sort1(self, data):
         """
@@ -203,17 +204,18 @@ class OES(OP2Common):
         """
         assert self.is_sort1() == True
         if self.thermal == 0:
-            self._read_oes_loads(data)
+            n = self._read_oes_loads(data)
         elif self.thermal == 1:
-            self._read_oes_thermal(data)
+            n = self._read_oes_thermal(data)
         else:
             raise NotImplementedError(self.thermal)
+        return n
 
     def _read_oes_thermal(self, data):
         """
         Reads OES self.thermal=1 tables
         """
-        pass
+        return len(data)
 
     def _read_oes_loads(self, data):
         """
@@ -1010,7 +1012,7 @@ class OES(OP2Common):
                     eid_old = eid
                     n += 44
             elif self.num_wide == 9:  # imag? - not done...
-                return
+                return len(data)
                 if self.isStress():
                     #self.create_transient_object(self.compositePlateStress, ComplexCompositePlateStressObject)  # undefined
                     raise NotImplementedError('ComplexCompositePlateStrainObject')
@@ -1085,7 +1087,7 @@ class OES(OP2Common):
                         #self.obj.add(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
                         n += 32  # 4*8
             elif self.num_wide == 37: # imag
-                return
+                return len(data)
                 if self.isStress():
                     #self.create_transient_object(self.ctriaxStress, ComplexTriaxStressObject)  # undefined
                     raise NotImplementedError('ComplexTriaxStressObject')
@@ -1209,7 +1211,7 @@ class OES(OP2Common):
         elif self.element_type in [40]:  # bush
             # 40-CBUSH1D
             if self.num_wide == 8:
-                return
+                #return len(data)
                 if self.isStress():
                     self.create_transient_object(self.bush1dStressStrain, ComplexBush1DStressObject)  # undefined
                 else:
@@ -1376,7 +1378,7 @@ class OES(OP2Common):
                     n += ntotal
 
             elif self.num_wide == 5: # imag
-                return
+                #return len(data)
                 if self.isStress():
                     self.create_transient_object(self.shearStress, ComplexShearStressObject)
                 else:
@@ -1406,14 +1408,14 @@ class OES(OP2Common):
 
         elif self.element_type in [35]:
             # 35-CON
-            return
+            return len(data)
         elif self.element_type in [60, 61]:
             # 60-DUM8
             # 61-DUM9
-            return
+            return len(data)
         elif self.element_type in [69]:
             # 69-CBEND
-            return
+            return len(data)
         elif self.element_type in [86]:
             # 86-GAPNL
             if self.num_wide == 11:
@@ -1438,27 +1440,27 @@ class OES(OP2Common):
             else:
                 raise NotImplementedError(self.num_wide)
 
-            return
+            return len(data)
         elif self.element_type in [94]:
             # 94-BEAMNL
-            return
+            return len(data)
         elif self.element_type in [85, 91, 93]:
             # 85-TETRANL
             # 91-PENTANL
             # 93-HEXANL
-            return
+            return len(data)
         elif self.element_type in [100]:  # bars
             # 100-BARS
-            return
+            return len(data)
         elif self.element_type in [101]:
             # 101-AABSF
-            return
+            return len(data)
         elif self.element_type in [140, 145, 146, 147, 201]:
             # 140-HEXA8FD, 201-QUAD4FD
             # 145-VUHEXA
             # 146-VUPENTA
             # 147-VUTETRA
-            return
+            return len(data)
         elif self.element_type in [139]:
             # 139-QUAD4FD
             if self.num_wide == 30:
@@ -1502,15 +1504,15 @@ class OES(OP2Common):
             # 48-AXIF3
             # 189-VUQUAD
             # 190-VUTRIA
-            return
+            return len(data)
         elif self.element_type in [191]:
             # 191-VUBEAM
-            return
+            return len(data)
         elif self.element_type in [50, 51, 203]:
             # 203-SLIF1D?
             # 50-SLOT3
             # 51-SLOT4
-            return
+            return len(data)
         elif self.element_type in [160, 161, 162, 163, 164, 165, 166, 167, 168,
                                    169, 170, 171, 172, 202,
                                    204, 218, 211, 213, 214,
@@ -1546,13 +1548,14 @@ class OES(OP2Common):
             # 232-QUADRLC
             # 233-TRIARLC
             # 235-CQUADR
-            return
+            return len(data)
         else:
             raise NotImplementedError('sort1 Type=%s num=%s' % (self.element_name, self.element_type))
 
         assert len(data) > 0, len(data)
         assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
-        assert len(data) % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data) % self.num_wide, len(data), ntotal)
+        #assert len(data) % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data) % self.num_wide, len(data), ntotal)
         assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
         assert self.thermal == 0, self.thermal
         assert n > 0, n
+        return n

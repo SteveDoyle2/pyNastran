@@ -247,11 +247,12 @@ class OEF(OP2Common):
 
     def _read_oef1_4(self, data):
         if self.thermal == 0:
-            self._read_oef1_loads(data)
+            return self._read_oef1_loads(data)
         elif self.thermal == 1:
-            self._read_oef1_thermal(data)
+            return self._read_oef1_thermal(data)
         else:
-            self.not_implemented_or_skip('thermal=%s' % self.thermal)
+            n = self.not_implemented_or_skip('thermal=%s' % self.thermal)
+        return n
 
     def _read_oef1_thermal(self, data):
         n = 0
@@ -296,7 +297,7 @@ class OEF(OP2Common):
             # 75-TRIA6
             # 33-CQUAD4-centroidal
             # 68-CPENTA
-            return
+            return len(data)
         elif self.element_type in [107, 108, 109, 110, 145, 146,
                 147, 189, 190, 191]:
             # 107-CHBDYE
@@ -309,15 +310,16 @@ class OEF(OP2Common):
             # 189-VUQUAD
             # 190-VUTRIA
             # 191-VUBEAM
-            return
+            return len(data)
         else:
             raise NotImplementedError('OEF sort1 thermal Type=%s num=%s' % (self.element_name, self.element_type))
 
         assert len(data) > 0
         assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
-        assert len(data) % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data) % self.num_wide, len(data), ntotal)
+        #assert len(data) % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data) % self.num_wide, len(data), ntotal)
         assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
         assert n > 0, n
+        return n
 
     def _read_oef1_loads(self, data):
         (num_wide_real, num_wide_imag) = self.OEF_ForceCode()
@@ -873,7 +875,7 @@ class OEF(OP2Common):
             # 97 - CTRIA3
             # 98 - CTRIA6 (composite)
             if self.num_wide == 9:  # real
-                return
+                return len(data)
                 print self.code_information()
                 self.create_transient_object(self.compositePlateForces, RealCompositePlateForce)  # undefined
                 #return
@@ -914,21 +916,20 @@ class OEF(OP2Common):
                 raise NotImplementedError(self.num_wide)
 
         elif self.element_type in [67, 68]: # solids
+            # 67-CHEXA
+            # 68-CPENTA
             if self.num_wide == 0:
                 self.create_transient_object(self.shearForces, RealCShearForce)
             else:
                 raise NotImplementedError(self.num_wide)
 
-            # 67-CHEXA
-            # 68-CPENTA
-            return
         elif self.element_type in [53]:
             # 53-CTRIAX6
             if self.num_wide == 0:
                 self.create_transient_object(self.ctriaxForce, RealCTriaxForce)  # undefined
             else:
                 raise NotImplementedError(self.num_wide)
-            return
+            return len(data)
         elif self.element_type in [4]:
             # 4-CSHEAR
             if self.num_wide == 17:  # real
@@ -1012,10 +1013,9 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
             else:
                 raise NotImplementedError(self.num_wide)
-            return
         elif self.element_type in [35]:
             # 35-CON
-            return
+            return len(data)
         elif self.element_type in [38]:
             # 38-GAP
             if self.num_wide == 9:
@@ -1040,7 +1040,6 @@ class OEF(OP2Common):
                     n += ntotal
             else:
                 raise NotImplementedError(self.num_wide)
-            return
         elif self.element_type in [69]:
             # 69-CBEND
             if self.num_wide == 15:
@@ -1121,19 +1120,19 @@ class OEF(OP2Common):
                     self.obj.add(dt, dataIn)
             else:
                 raise NotImplementedError(self.num_wide)
-            return
+            return len(data)
         elif self.element_type in [76, 77, 78]:
             # 76-HEXPR
             # 77-PENPR
             # 78-TETPR
-            return
+            return len(data)
         elif self.element_type in [100]:
             # 100-BARS
             if self.num_wide == 0:
                 self.create_transient_object(self.bar100Forces, RealCBar100Force)
             else:
                 raise NotImplementedError(self.num_wide)
-            return
+            return len(data)
         elif self.element_type in [102]:
             # 102-CBUSH
             if self.num_wide == 7:  # real
@@ -1192,21 +1191,21 @@ class OEF(OP2Common):
                     n += ntotal
             else:
                 raise NotImplementedError(self.num_wide)
-            return
+            return len(data)
         elif self.element_type in [145, 146, 147]:
             # 145-VUHEXA
             # 146-VUPENTA
             # 147-VUTETRA
-            return
+            return len(data)
         elif self.element_type in [189, 190]:
             # 189-VUQUAD
             # 190-VUTRIA
-            return
+            return len(data)
         elif self.element_type in [191, 233, 235]:
             # 191-VUBEAM
             # 233-TRIARLC
             # 235-CQUADR
-            return
+            return len(data)
         else:
             raise NotImplementedError('OEF sort1 Type=%s num=%s' % (self.element_name, self.element_type))
         assert len(data) > 0
@@ -1214,6 +1213,7 @@ class OEF(OP2Common):
         assert len(data) % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data) % self.num_wide, len(data), ntotal)
         assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
         assert n > 0, n
+        return n
 
     def _read_oef2_4(self, data):
         pass

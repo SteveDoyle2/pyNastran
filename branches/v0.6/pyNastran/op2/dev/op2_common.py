@@ -428,15 +428,16 @@ class OP2Common(Op2Codes, F06Writer):
             # real_obj
             assert real_obj is not None
             self.create_transient_object(result_name, real_obj)
-            self._read_real_table(data, result_name, node_elem)
+            n = self._read_real_table(data, result_name, node_elem)
         elif self.num_wide == 14:  # real/imaginary or mag/phase
             # complex_obj
             assert complex_obj is not None
             self.create_transient_object(result_name, complex_obj)
-            self._read_complex_table(data, result_name, node_elem)
+            n = self._read_complex_table(data, result_name, node_elem)
         else:
             msg = 'only num_wide=8 or 14 is allowed  num_wide=%s' % self.num_wide
-            self.not_implemented_or_skip(msg)
+            n = self.not_implemented_or_skip(msg)
+        return n
 
     def _read_real_table(self, data, result_name, flag):
         #return
@@ -446,14 +447,13 @@ class OP2Common(Op2Codes, F06Writer):
         dt = self.nonlinear_factor
         format1 = '2i6f' # 8
 
+        n = 0
         ntotal = 32 # 8 * 4
         nnodes = len(data) // ntotal
 
         assert self.obj is not None
         assert nnodes > 0
-        assert len(data) % ntotal == 0
-
-        n = 0
+        #assert len(data) % ntotal == 0
         s = Struct(format1)
         for inode in xrange(nnodes):
             edata = data[n:n+ntotal]
@@ -467,6 +467,7 @@ class OP2Common(Op2Codes, F06Writer):
             data_in = [eid, grid_type, tx, ty, tz, rx, ry, rz]
             self.obj.add(dt, data_in)
             n += ntotal
+        return n
 
     def _read_complex_table(self, data, result_name, flag):
         #return
@@ -517,6 +518,7 @@ class OP2Common(Op2Codes, F06Writer):
             data_in = [eid, grid_type, tx, ty, tz, rx, ry, rz]
             self.obj.add(dt, data_in)
             n += ntotal
+        return n
 
     def create_transient_object(self, storageObj, classObj, debug=False):
         """
@@ -554,9 +556,9 @@ class OP2Common(Op2Codes, F06Writer):
             else:
                 storageObj[self.ID] = self.obj
 
-    def not_implemented_or_skip(self, msg=''):
+    def not_implemented_or_skip(self, data, msg=''):
         #if isRelease:
-            #pass
+            return len(data)
         #else:
             raise NotImplementedError('table_name=%s table_code=%s %s' % (self.table_name, self.table_code, msg))
 

@@ -3,7 +3,7 @@
 Defines the OP2 class.
 """
 import os
-from struct import unpack
+from struct import unpack, Struct
 #from struct import error as StructError
 
 from numpy import array
@@ -203,6 +203,13 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
             'OPGV1' : [self.read_opg1_3, self.read_opg1_4],
             'OPNL1' : [self.read_opg1_3, self.read_opg1_4],
 
+            # OGPFB1
+            # grid point forces
+            'OGPFB1' : [self.read_ogpf1_3, self.read_ogpf1_4],
+
+            # ONR
+            # grid point forces
+            'ONRGY1' : [self.read_onr1_3, self.read_onr1_4],
             #=======================
             # OES
             # stress
@@ -276,25 +283,189 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
             'MPT' : [self._not_available, self._read_mpt_4],
             'MPTS': [self._not_available, self._read_mpt_4],
         }
+        self.make_geom = False
+
+    def read_onr1_3(self, data):  # TODO: this is wrong...
+        self.read_opg1_3(data)
+
+    def read_onr1_4(self, data):
+        if self.table_code == 18:  # element strain energy
+            assert self.table_name in ['ONRGY1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            n = self._read_element_strain_energy(data)
+        else:
+            raise NotImplementedError(self.table_code)
+        return n
+
+    def read_ogpf1_3(self, data):
+        self.read_opg1_3(data)  # TODO: this is wrong...
+
+    def read_ogpf1_4(self, data):
+        if self.table_code == 19:  # grid point force balance
+            assert self.table_name in ['OGPFB1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            n = self._read_grid_point_forces(data)
+        else:
+            raise NotImplementedError(self.table_code)
+        return n
+
+    def _read_element_strain_energy(self, data):
+        """
+        table_code = 19
+        """
+        from pyNastran.op2.tables.oee_energy.oee_objects import StrainEnergyObject
+        dt = self.nonlinear_factor
+        n = 0
+        if self.thermal == 0:
+            result_name = 'strainEnergy'
+            if self.num_wide == 4:
+                self.create_transient_object(self.strainEnergy, StrainEnergyObject)
+                s = Struct(b'i3f')
+
+                ntotal = 16
+                nnodes = len(data) // ntotal
+                for i in xrange(nnodes):
+                    eData = data[n:n+ntotal]
+
+                    out = s.unpack(eData)
+                    (eid_device, energy, percent, density) = out
+                    eid = (eid_device - self.device_code) // 10
+                    #print "eType=%s" %(eType)
+
+                    dataIn = [eid, energy, percent, density]
+                    #print "%s" %(self.get_element_type(self.element_type)),dataIn
+                    self.obj.add(dt, dataIn)
+                    n += ntotal
+            elif self.num_wide == 5:
+                self.create_transient_object(self.strainEnergy, StrainEnergyObject)  # why is this not different?
+                s = Struct(b'i8s3f')
+                ntotal = 20
+                nnodes = len(data) // ntotal
+                for i in xrange(nnodes):
+                    eData = self.data[n:n+20]
+                    out = unpack(format1, eData)
+                    (word, energy, percent, density) = out
+                    #print "out = ",out
+                    word = word.strip()
+                    #print "eType=%s" %(eType)
+
+                    dataIn = [word, energy, percent, density]
+                    #print "%s" %(self.get_element_type(self.element_type)),dataIn
+                    #eid = self.obj.add_new_eid(out)
+                    self.obj.add(dt, dataIn)
+                    n += ntotal
+            else:
+                raise NotImplementedError('num_wide = %s' % (self.num_wide))
+
+            #complex_obj = complexGridPointForcesObject
+
+            #self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
+        #elif self.thermal == 1:
+            #result_name = 'thermalLoadVectors'
+            #storage_obj = self.thermalLoadVectors
+            #real_obj = ThermalLoadVectorObject
+            #complex_obj = None
+            #self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
+        else:
+            raise NotImplementedError(self.thermal)
+        return n
+
+    def _read_grid_point_forces(self, data):
+        """
+        table_code = 19
+        """
+        from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import gridPointForcesObject, complexGridPointForcesObject
+        dt = self.nonlinear_factor
+        n = 0
+        if self.thermal == 0:
+            result_name = 'gridPointForces'
+            if self.num_wide == 10:
+                self.create_transient_object(self.gridPointForces, gridPointForcesObject)
+                s = Struct(b'ii8s6f')
+                ntotal = 40
+                nnodes = len(data) // ntotal
+                for i in xrange(nnodes):
+                    eData = data[n:n+ntotal]
+                    out = s.unpack(eData)
+                    (eKey, eid, elemName, f1, f2, f3, m1, m2, m3) = out
+                    ekey = (eKey - self.device_code) // 10
+                    elemName = elemName.strip()
+                    #data = (eid,elemName,f1,f2,f3,m1,m2,m3)
+                    self.obj.add(dt, eKey, eid, elemName, f1, f2, f3, m1, m2, m3)
+                    #print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%g f2=%g f3=%g m1=%g m2=%g m3=%g" %(ekey,eid,elemName,f1,f2,f3,m1,m2,m3)
+                    n += ntotal
+            else:
+                raise NotImplementedError('num_wide = %s' % (self.num_wide))
+
+            #complex_obj = complexGridPointForcesObject
+
+            #self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
+        #elif self.thermal == 1:
+            #result_name = 'thermalLoadVectors'
+            #storage_obj = self.thermalLoadVectors
+            #real_obj = ThermalLoadVectorObject
+            #complex_obj = None
+            #self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
+        else:
+            raise NotImplementedError(self.thermal)
+        return n
 
     def _not_available(self, data):
         raise RuntimeError('this should never be called...table_name=%r' % self.table_name)
 
     def _read_complex_eigenvalue_3(self, data):
-        self.show_data(100)
+        self.show_data(data)
         aaa
 
     def _read_complex_eigenvalue_4(self, data):
-        self.show_data(100)
+        self.show_data(data)
         bbb
 
     def _read_real_eigenvalue_3(self, data):
-        self.show_data(100)
-        ccc
+        #self.show_data(data)
+
+        (three) = self.parse_approach_code(data)
+
+        self.add_data_parameter(data, 'seven', 'i', 10, False)  # seven
+        ## residual vector augmentation flag
+        self.add_data_parameter(data, 'resFlag', 'i', 11, False)
+        ## fluid modes Flag
+        self.add_data_parameter(data, 'fldFlag', 'i', 12, False)
+
+        #print self.data_code
+        #self.add_data_parameter(data,'format_code',  'i',9,False)   ## format code
+        #self.add_data_parameter(data,'num_wide',     'i',10,False)  ## number of words per entry in record; .. note:: is this needed for this table ???
+
+        #if self.analysis_code==2: # sort2
+        #    self.lsdvmn = self.get_values(data,'i',5)
+
+        #print "*isubcase=%s"%(self.isubcase)
+        #print "analysis_code=%s table_code=%s thermal=%s" %(self.analysis_code,self.table_code,self.thermal)
+
+        #self.print_block(data)
+        self._read_title(data)
+
 
     def _read_real_eigenvalue_4(self, data):
-        self.show_data(100)
-        ddd
+        #self.show_data(data)
+        nModes = len(data) // 28
+        from pyNastran.op2.tables.lama_eigenvalues.lama_objects import (
+            RealEigenvalues, ComplexEigenvalues)
+
+        n = 0
+        ntotal = 28
+        lama = RealEigenvalues(self.isubcase)
+        self.eigenvalues[self.isubcase] = lama
+        s = Struct('ii5f')
+        for i in xrange(nModes):
+            edata = data[n:n+28]
+            out = s.unpack(edata)
+            if self.debug4():
+                self.binary_debug.write('  eigenvalue%s - %s\n' % (i, str(out)))
+            #(iMode,order,eigen,omega,freq,mass,stiff) = out
+            #(modeNum,extractOrder,eigenvalue,radian,cycle,genM,genK) = line
+            #print out
+            lama.addF06Line(out)
+            n += ntotal
+        return n
 
     def readFake(self, data, n):
         return n
@@ -364,7 +535,6 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
             markers = self.get_nmarkers(1, rewind=True)
         except:
             self.goto(0)
-            self.show(100)
             try:
                 self.f.read(4)
             except:
@@ -412,7 +582,6 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
             table_names.append(table_name)
 
             if self.debug:
-                self.log.debug("table_name = %r" % table_name)
                 self.binary_debug.write('-' * 80 + '\n')
                 self.binary_debug.write('table_name = %r; f.tell()=%s\n' % (table_name, self.f.tell()))
 
@@ -572,6 +741,7 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
         ..todo:: this table follows a totally different pattern...
         The KELM table stores information about the K matrix???
         """
+        self.log.debug("table_name = %r" % self.table_name)
         table_name = self.read_table_name(rewind=False)
         self.read_markers([-1])
         data = self._read_record()
@@ -668,7 +838,7 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
             i -= 1
 
         print "n=%s" % (self.n)
-        strings, ints, floats = self.show(100)
+        #strings, ints, floats = self.show(100)
 
         pass
 
@@ -677,6 +847,7 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
         Reads the PCOMPTS table (poorly).
         The PCOMPTS table stores information about the PCOMP cards???
         """
+        self.log.debug("table_name = %r" % self.table_name)
         table_name = self.read_table_name(rewind=False)
 
         self.read_markers([-1])
@@ -757,6 +928,7 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
         self._skip_subtables()
 
     def _read_omm2(self):
+        self.log.debug("table_name = %r" % self.table_name)
         self.table_name = self.read_table_name(rewind=False)
         self.read_markers([-1])
         data = self._read_record()
@@ -774,6 +946,7 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
         self._read_subtables()
 
     def _read_fol(self):
+        self.log.debug("table_name = %r" % self.table_name)
         self.table_name = self.read_table_name(rewind=False)
         self.read_markers([-1])
         data = self._read_record()
@@ -816,6 +989,7 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
         self._read_subtables()
 
     def _read_sdf(self):
+        self.log.debug("table_name = %r" % self.table_name)
         self.table_name = self.read_table_name(rewind=False)
         self.read_markers([-1])
         data = self._read_record()

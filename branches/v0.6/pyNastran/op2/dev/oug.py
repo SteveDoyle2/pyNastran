@@ -129,17 +129,21 @@ class OUG(OP2Common):
     def _read_oug1_4(self, data):
         if self.table_code == 1:   # Displacements
             assert self.table_name in ['OUG1', 'BOUGV1', 'OUGV1', 'OUPV1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-            self.read_displacement(data)
+            n = self.read_displacement(data)
         elif self.table_code == 7:
-            self.read_eigenvector(data)
+            n = self.read_eigenvector(data)
         elif self.table_code == 10:
-            self.read_velocity(data)
+            n = self.read_velocity(data)
         elif self.table_code == 11:
-            self.read_acceleration(data)
+            n = self.read_acceleration(data)
         else:
             raise NotImplementedError(self.table_code)
         #else:
             #self.not_implemented_or_skip('bad OUG table')
+        return n
+
+    def read_displacement_solution_set(self, data):
+        asdf
 
     def read_displacement(self, data):
         if self.thermal == 0:
@@ -147,21 +151,20 @@ class OUG(OP2Common):
             complex_obj = ComplexDisplacementObject
             result_name = 'displacements'
             storage_obj = self.displacements
-            self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            n = self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         elif self.thermal == 1:
             real_obj = TemperatureObject
             complex_obj = None
             result_name = 'temperatures'
             storage_obj = self.temperatures
-            self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
-        elif self.thermal == 2:
-            self.not_implemented_or_skip(msg='thermal=2')
+            n = self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         elif self.thermal == 4:
-            self.not_implemented_or_skip(msg='thermal=4')
+            n = self.not_implemented_or_skip(data, msg='thermal=4')
         else:
-            self.not_implemented_or_skip('bad thermal=%r table' % self.thermal)
+            n = self.not_implemented_or_skip(data, 'bad thermal=%r table' % self.thermal)
         #else:
             #raise NotImplementedError(self.thermal)
+        return n
 
     def read_velocity(self, data):
         """
@@ -172,15 +175,16 @@ class OUG(OP2Common):
         if self.thermal == 0:
             real_obj = VelocityObject
             complex_obj = ComplexVelocityObject
-            self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            n = self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         elif self.thermal == 1:
             real_obj = ThermalVelocityVectorObject
             complex_obj = None
-            self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            n = self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         elif self.thermal == 2:
-            self.not_implemented_or_skip(msg='thermal=2')
+            n = self.not_implemented_or_skip(data, msg='thermal=2')
         else:
             raise NotImplementedError(self.thermal)
+        return n
 
     def read_acceleration(self, data):
         """
@@ -191,17 +195,18 @@ class OUG(OP2Common):
         if self.thermal == 0:
             real_obj = AccelerationObject
             complex_obj = ComplexAccelerationObject
-            self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            n = self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         elif self.thermal == 1:
             real_obj = None
             complex_obj = None
-            self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            n = self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         elif self.thermal == 2:
-            self.not_implemented_or_skip(msg='thermal=2')
+            n = self.not_implemented_or_skip(msg='thermal=2')
         elif self.thermal == 4:
-            self.not_implemented_or_skip(msg='thermal=4')
+            n = self.not_implemented_or_skip(msg='thermal=4')
         else:
             raise NotImplementedError(self.thermal)
+        return n
 
     def read_eigenvector(self, data):
         """
@@ -212,10 +217,11 @@ class OUG(OP2Common):
         if self.thermal == 0:
             real_obj = EigenVectorObject
             complex_obj = ComplexEigenVectorObject
-            self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            n = self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         elif self.thermal == 1:
             real_obj = None
             complex_obj = None
-            self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            n = self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         else:
             raise NotImplementedError(self.thermal)
+        return n

@@ -92,15 +92,15 @@ class OGS(OP2Common):
     def _read_ogs1_4(self, data):
         if self.table_code == 26:  # OGS1 - grid point stresses - surface
             assert self.table_name in ['OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-            self._read_ogs1_table26(data)
+            n = self._read_ogs1_table26(data)
         elif self.table_code == 27:  # OGS1 - grid point stresses - volume direct
             assert self.table_name in ['OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-            self._read_ogs1_table27(data)
+            n = self._read_ogs1_table27(data)
         elif self.table_code == 28:  # OGS1- grid point stresses - principal
             assert self.table_name in ['OGS1'],'table_name=%s table_code=%s' % (self.table_name,self.table_code)
-            self._read_ogs1_table28(data)
+            n = self._read_ogs1_table28(data)
         #elif self.table_code == 35:  # OGS - Grid point stress discontinuities (plane strain)
-            #self.not_implemented_or_skip()
+            #n = self.not_implemented_or_skip(data, msg)
         else:
             raise NotImplementedError(self.table_code)
 
@@ -109,6 +109,7 @@ class OGS(OP2Common):
             pass
         else:
             raise NotImplementedError(self.num_wide)
+        return len(data)
 
     def _read_ogs1_table26(self, data):
         resultName = 'gridPointStresses'
@@ -118,6 +119,7 @@ class OGS(OP2Common):
         else:
             msg = 'only num_wide=11 is allowed  num_wide=%s' % self.num_wide
             raise RuntimeError(msg)
+        return len(data)
 
     def _readOGS1_table26_numWide11(self, data):  # surface stresses
         #dt = self.nonlinear_factor
@@ -136,16 +138,18 @@ class OGS(OP2Common):
             assert nid > 0, nid
             #self.obj.add(dt, nid, eid, fiber, nx, ny, txy,
             #             angle, major, minor, tmax, ovm)
+        return n
 
     def _read_ogs1_table27(self, data):  # OGS1 - grid point stresses - volume direct
         #is_sort1 = self.is_sort1()
         if self.num_wide == 9:  # real/random
             resultName = 'gridPointVolumeStresses'
             #self.create_transient_object(self.gridPointVolumeStresses, GridPointStressesVolumeObject)
-            self._readOGS1_table27_numWide9(data)
+            n = self._readOGS1_table27_numWide9(data)
         else:
             msg = 'only num_wide=9 is allowed  num_wide=%s' % self.num_wide
             raise RuntimeError(msg)
+        return n
 
     def _readOGS1_table27_numWide9(self, data):  # surface stresses
         format1 = b'2i7f'
@@ -161,3 +165,4 @@ class OGS(OP2Common):
             assert nid > 0, nid
             #check_nid
             #self.obj.add(dt, nid, nx, ny, nz, txy, tyz, txz, pressure, ovm)
+        return n

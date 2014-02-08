@@ -95,6 +95,7 @@ class LAMA(object):
 
         #self.print_block(data)
         self.read_title()
+        self._write_debug_bits()
 
     def readTable_LAMA_4(self, iTable):  # iTable=-4
         buffer_words = self.get_marker()  # 70*4=280

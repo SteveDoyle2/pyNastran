@@ -109,3 +109,4 @@ class StrainEnergyObject(scalarObject):
         #print "self.energy = ",self.energy
         self.percent[dt][eid] = percent
         self.density[dt][eid] = density
+

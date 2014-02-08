@@ -1117,3 +1117,4 @@ class ComplexPlateStrainObject(StrainObject):
                 else:
                     msg += '   %6s   %13s     %13s / %13s     %13s / %13s     %13s / %-s\n' % ('', fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
         return msg
+

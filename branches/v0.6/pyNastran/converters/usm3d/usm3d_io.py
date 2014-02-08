@@ -156,7 +156,6 @@ class Usm3dIO(object):
 
         #ID = 1
         cases = self._fill_usm3d_case(cases, bcs, mapbc, bcmap_to_bc_name, loads)
-
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
         print("caseKeys = ",self.caseKeys)

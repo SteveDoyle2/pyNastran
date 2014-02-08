@@ -506,7 +506,10 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         """
         isubcase = 1 # TODO not correct
         cycles = self.stored_lines[-1][1:].strip()
-        cycles = float(cycles.split('=')[1])
+        try:
+            cycles = float(cycles.split('=')[1])
+        except IndexError, ValueError:
+            return
 
         eigenvalue = self.stored_lines[-2][1:].strip()
         eigenvalue = float(eigenvalue.split('=')[1])

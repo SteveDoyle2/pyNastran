@@ -7,6 +7,11 @@ from pyNastran.bdf.fieldWriter import print_card
 bdf = BDF()
 
 class TestMaterials(unittest.TestCase):
+    def test_mat5_01(self):
+        #
+        #MAT5           1    700.    300.    900.    400.    200.    600.     90.+
+        #+             .1
+        pass
 
     def test_mat5_01(self):
         #
