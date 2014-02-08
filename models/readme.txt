@@ -1,3 +1,8 @@
+bar3truss
+ - taken from OpenMDAO
+ - https://github.com/OpenMDAO-Plugins/nastranwrapper
+ - demonstrates OpenMDAO syntax
+ 
 solid_bending
  - written by MSC.Nastran
  - BDF reader - SOL 101
