@@ -1,7 +1,6 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-#import sys
 from numpy import array
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -190,9 +189,10 @@ class GRDSET(Node):
         assert len(card) <= 9, 'len(GRDSET card) = %i' % len(card)
 
     def cross_reference(self, model):
-        self.cp = model.Coord(self.cp)
-        self.cd = model.Coord(self.cd)
-        #self.seid = model.SuperElement(self.seid)
+        msg = ' which is required by the GRDSET'
+        self.cp = model.Coord(self.cp, msg=msg)
+        self.cd = model.Coord(self.cd, msg=msg)
+        #self.seid = model.SuperElement(self.seid, msg)
 
     def Cd(self):
         if isinstance(self.cd, int):
@@ -394,7 +394,7 @@ class GRID(Node):
     #def SEid(self):
         #return self.seid
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         nid = self.Nid()
         cp = self.Cp()
         cd = self.Cd()
@@ -412,7 +412,8 @@ class GRID(Node):
 
     def UpdatePosition(self, model, xyz, cid):
         self.xyz = xyz
-        self.cp = model.Coord(cid)
+        msg = ' which is required by GRID nid=%s' % self.nid
+        self.cp = model.Coord(cid, msg=msg)
         #assert cid == 0
 
     def Position(self, debug=False):
@@ -437,11 +438,12 @@ class GRID(Node):
         """
         if cid == self.Cp():
             return self.xyz
-        #coordA = model.Coord(cid)
+        #coordA = model.Coord(cid, msg=msg)
         # converting the xyz point arbitrary->global
         p, matrixDum = self.cp.transformToGlobal(self.xyz, debug=debug)
         #print "wrt = ",p
-        coordB = model.Coord(cid)
+        msg = ' which is required by %s nid=%s' % (self.type, self.nid)
+        coordB = model.Coord(cid, msg=msg)
 
         # a matrix global->local matrix is found
         pdum, matrix = coordB.transformToGlobal(
@@ -463,9 +465,10 @@ class GRID(Node):
                 self.ps = grdset.ps
             if not self.seid:
                 self.seid = grdset.seid
-        self.cp = model.Coord(self.cp)
+        msg = ' which is required by %s nid=%s' % (self.type, self.nid)
+        self.cp = model.Coord(self.cp, msg=msg)
         if self.cd != -1:
-            self.cd = model.Coord(self.cd)
+            self.cd = model.Coord(self.cd, msg=msg)
         #self.xyzGlobal = coord.transformToGlobal(self.xyz)
 
     def rawFields(self):

@@ -115,9 +115,10 @@ class MATS1(MaterialDependence):
         return E
 
     def cross_reference(self, model):
-        self.mid = model.Material(self.mid)
+        msg = 'which is required by MATS1 mid=%s' % self.mid
+        self.mid = model.Material(self.mid, msg=msg)
         if self.tid:  # then self.h is used
-            self.tid = model.Table(self.tid)
+            self.tid = model.Table(self.tid, msg=msg)
 
     def Mid(self):
         if isinstance(self.mid, int):
@@ -189,6 +190,7 @@ class MATT1(MaterialDependence):
         return E
 
     def cross_reference(self, model):
+        msg = 'which is required by MATS1 mid=%s' % self.mid
         self.mid = model.Material(self.mid)
         self._xref_table(model, '_E_table')
         self._xref_table(model, '_G_table')

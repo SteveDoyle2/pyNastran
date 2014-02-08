@@ -23,6 +23,15 @@ class GetMethodsDeprecated(object):
                       'getElementIDsWithPIDs', DeprecationWarning, stacklevel=2)
         return self.getElementIDsWithPIDs([pid], mode='list')
 
+    def Grav(self, sid, msg=''):
+        raise DeprecationWarning('use Load(sid) instead of Grav(sid)')
+        return self.Load(sid, msg)
+
+    def Flfact(self, sid, msg):
+        raise DeprecationWarning('use FLFACT(sid) instead of Flfact(sid)')
+        return self.FLFACT(sid, msg)
+
+
 class GetMethods(GetMethodsDeprecated):
     def __init__(self):
         pass
@@ -45,10 +54,10 @@ class GetMethods(GetMethodsDeprecated):
     def getNodeIDsWithElement(self, eid):
         return self.getNodeIDsWithElements([eid])
 
-    def getNodeIDsWithElements(self, eids):
+    def getNodeIDsWithElements(self, eids, msg=''):
         nids2 = set([])
         for eid in eids:
-            element = self.Element(eid)
+            element = self.Element(eid, msg=msg)
             self.log.debug("element.pid = %s" % (element.pid))
             nids = set(element.nids)
             nids2 = nids2.union(nids)
@@ -191,17 +200,29 @@ class GetMethods(GetMethodsDeprecated):
     def elementIDs(self):
         return self.elements.keys()
 
-    def Element(self, eid):
-        return self.elements[eid]
+    def Element(self, eid, msg=''):
+        try:
+            return self.elements[eid]
+        except KeyError:
+            if self._xref == 2:
+                return eid
+            raise KeyError('eid=%s not found%s.  Allowed elements=%s'
+                           % (eid, msg, self.elements.keys()))
 
-    def Elements(self, eids):
+    def Elements(self, eids, msg=''):
         elements = []
         for eid in eids:
-            elements.append(self.elements[eid])
+            elements.append(self.Element(eid, msg))
         return elements
 
-    def RigidElement(self, eid):
-        return self.rigidElements[eid]
+    def RigidElement(self, eid, msg=''):
+        try:
+            return self.rigidElements[eid]
+        except KeyError:
+            if self._xref == 2:
+                return eid
+            raise KeyError('eid=%s not found%s.  Allowed rigidElements=%s'
+                           % (pid, msg, self.rigidElements.keys()))
 
     #--------------------
     # PROPERTY CARDS
@@ -220,11 +241,17 @@ class GetMethods(GetMethodsDeprecated):
         properties = []
         #print "pids = ",pids
         for pid in pids:
-            properties.append(self.properties[pid])
+            properties.append(self.Property(pid, msg))
         return properties
 
     def Phbdy(self, pid, msg=''):
-        return self.phbdys[pid]
+        try:
+            return self.phbdys[pid]
+        except KeyError:
+            if self._xref == 2:
+                return pid
+            raise KeyError('pid=%s not found%s.  Allowed PHBDY Pids=%s'
+                           % (pid, msg, self.phbdys.keys()))
 
     #--------------------
     # MATERIAL CARDS
@@ -248,15 +275,23 @@ class GetMethods(GetMethodsDeprecated):
             raise KeyError('Invalid Material ID:  mid=%s%s' % (mid, msg))
 
     def StructuralMaterial(self, mid, msg=''):
-        return self.materials[mid]
+        try:
+            mat = self.materials[mid]
+        except KeyError:
+            msg = '\n' + msg
+            raise KeyError('Invalid Material ID:  mid=%s%s' % (mid, msg))
 
     def ThermalMaterial(self, mid, msg=''):
-        return self.thermalMaterials[mid]
+        try:
+            mat = self.thermalMaterials[mid]
+        except KeyError:
+            msg = '\n' + msg
+            raise KeyError('Invalid Material ID:  mid=%s%s' % (mid, msg))
 
     def Materials(self, mids, msg=''):
         materials = []
         for mid in mids:
-            materials.append(self.Material(mid))
+            materials.append(self.Material(mid, msg))
         return materials
 
     #--------------------
@@ -271,16 +306,12 @@ class GetMethods(GetMethodsDeprecated):
             raise KeyError('cannot find LoadID=%r%s.' % (sid, msg))
         return load
 
-    def Grav(self, sid, msg=''):
-        raise DeprecationWarning('use Load(sid) instead of Grav(sid)')
-        return self.Load(sid)
-
     #--------------------
     # SPCs
 
     def SPC(self, conid, msg=''):
         #print 'conid=%s self.spcs=%s' %(conid,(self.spcs.keys()))
-        assert isinstance(conid, int), 'conid=%s is not an integer\n' % (conid)
+        assert isinstance(conid, int), 'conid=%s is not an integer\n' % conid
         if conid in self.spcs:
             constraint = self.spcs[conid]
         else:
@@ -305,63 +336,132 @@ class GetMethods(GetMethodsDeprecated):
         return len(self.caeros)
 
     def Aero(self, acsid, msg=''):
-        return self.aero[acsid]
+        try:
+            return self.aero[acsid]
+        except KeyError:
+            raise KeyError('acsid=%s not found%s.  Allowed AERO=%s'
+                           % (acsid, msg, self.aero.keys()))
 
     def Aeros(self, acsid, msg=''):
-        return self.aeros[acsid]
+        try:
+            return self.aeros[acsid]
+        except KeyError:
+            raise KeyError('acsid=%s not found%s.  Allowed AEROS=%s'
+                           % (acsid, msg, self.aeros.keys()))
 
     def Spline(self, eid, msg=''):
-        return self.splines[eid]
+        try:
+            return self.splines[eid]
+        except KeyError:
+            raise KeyError('eid=%s not found%s.  Allowed SPLINEx=%s'
+                           % (eid, msg, self.splines.keys()))
 
     def CAero(self, eid, msg=''):
-        return self.caeros[eid]
+        try:
+            return self.caeros[eid]
+        except KeyError:
+            if self._xref == 2:
+                return eid
+            raise KeyError('eid=%s not found%s.  Allowed CAEROx=%s'
+                           % (eid, msg, self.caeros.keys()))
 
     def PAero(self, pid, msg=''):
-        return self.paeros[pid]
+        try:
+            return self.paeros[pid]
+        except KeyError:
+            raise KeyError('pid=%s not found%s.  Allowed PAEROx=%s'
+                           % (pid, msg, self.paeros.keys()))
 
     def Gust(self, sid, msg=''):
-        return self.gusts[sid]
+        try:
+            return self.gusts[sid]
+        except KeyError:
+            raise KeyError('sid=%s not found%s.  Allowed GUSTs=%s'
+                           % (sid, msg, self.gusts.keys()))
 
     #--------------------
     # AERO CONTROL SURFACE CARDS
     def AEStat(self, aid, msg=''):
-        return self.aestats[aid]
+        try:
+            return self.aestats[aid]
+        except KeyError:
+            raise KeyError('aid=%s not found%s.  Allowed AESTATs=%s'
+                           % (aid, msg, self.aestats.keys()))
 
     def AELink(self, linkID, msg=''):
-        return self.aelinks[linkID]
+        try:
+            return self.aelinks[linkID]
+        except KeyError:
+            raise KeyError('linkID=%s not found%s.  Allowed AELINKs=%s'
+                           % (linkID, msg, self.aelinks.keys()))
 
     def AEParam(self, aid, msg=''):
-        return self.aeparams[aid]
+        try:
+            return self.aeparams[aid]
+        except KeyError:
+            raise KeyError('aid=%s not found%s.  Allowed AEPARMs=%s'
+                           % (aid, msg, self.aeparams.keys()))
 
     #--------------------
     # FLUTTER CARDS
 
-    def Flfact(self, sid, msg=''):
-        return self.flfacts[sid]
+    def FLFACT(self, sid, msg=''):
+        try:
+            return self.flfacts[sid]
+        except KeyError:
+                return sid
+            raise KeyError('sid=%s not found%s.  Allowed FLFACTs=%s'
+                           % (sid, msg, self.flfacts.keys()))
 
     def Flutter(self, fid, msg=''):
-        return self.flutters[fid]
+        try:
+            return self.flutters[fid]
+        except KeyError:
+            raise KeyError('fid=%s not found%s.  Allowed FLUTTERs=%s'
+                           % (fid, msg, self.flutters.keys()))
 
     #--------------------
     # OPTIMIZATION CARDS
 
     def DConstr(self, oid, msg=''):
-        return self.dconstrs[oid]
+        try:
+            return self.dconstrs[oid]
+        except KeyError:
+            raise KeyError('oid=%s not found%s.  Allowed DCONSTRs=%s'
+                           % (oid, msg, self.dconstrs.keys()))
 
     def Desvar(self, oid, msg=''):
-        return self.desvars[oid]
+        try:
+            return self.desvars[oid]
+        except KeyError:
+            if self._xref == 2:
+                return oid
+            raise KeyError('oid=%s not found%s.  Allowed DESVARs=%s'
+                           % (oid, msg, self.desvars.keys()))
 
     def DDVal(self, oid, msg=''):
-        return self.ddvals[oid]
+        try:
+            return self.ddvals[oid]
+        except KeyError:
+            raise KeyError('oid=%s not found%s.  Allowed DDVALs=%s'
+                           % (oid, msg, self.ddvals.keys()))
 
     #--------------------
     # SET CARDS
 
     def Set(self, sid, msg=''):
-        return self.sets[sid]
+        try:
+            return self.sets[sid]
+        except KeyError:
+            raise KeyError('sid=%s not found%s.  Allowed SETx=%s'
+                           % (sid, msg, self.sets.keys()))
 
     def SetSuper(self, seid, msg=''):
-        return self.setsSuper[seid]
+        try:
+            return self.setsSuper[seid]
+        except KeyError:
+            raise KeyError('seid=%s not found%s.  Allowed SETx=%s'
+                           % (seid, msg, self.setsSuper.keys()))
 
     #--------------------
     # METHOD CARDS
@@ -369,13 +469,15 @@ class GetMethods(GetMethodsDeprecated):
         try:
             return self.methods[sid]
         except KeyError:
-            raise KeyError('cannot find Method ID=%r.\n%s' % (sid, msg))
+            raise KeyError('sid=%s not found%s.  Allowed METHODs=%s'
+                           % (sid, msg, self.methods.keys()))
 
     def CMethod(self, sid, msg=''):
         try:
-            return self.cMethods[sid]
+            return self.cmethods[sid]
         except KeyError:
-            raise KeyError('cannot find CMethod ID=%r.\n%s' % (sid, msg))
+            raise KeyError('sid=%s not found%s.  Allowed CMETHODs=%s'
+                           % (sid, msg, self.cmethods.keys()))
 
     #--------------------
     # TABLE CARDS
@@ -383,21 +485,31 @@ class GetMethods(GetMethodsDeprecated):
         try:
             return self.tables[tid]
         except KeyError:
-            raise KeyError('cannot find Table ID=%r.\n%s' % (tid, msg))
+            raise KeyError('tid=%s not found%s.  Allowed TABLEs=%s'
+                           % (tid, msg, self.tables.keys()))
 
     def RandomTable(self, tid, msg=''):
         try:
             return self.randomTables[tid]
         except KeyError:
-            raise KeyError('cannot find RandomTable ID=%r.\n%s' % (tid, msg))
+            raise KeyError('tid=%s not found%s.  Allowed TABLEs=%s'
+                           % (tid, msg, self.randomTables.keys()))
 
     #--------------------
     # NONLINEAR CARDS
 
     def NLParm(self, nid, msg=''):
-        return self.nlparms[nid]
+        try:
+            return self.nlparms[nid]
+        except KeyError:
+            raise KeyError('nid=%s not found%s.  Allowed NLPARMs=%s'
+                           % (nid, msg, self.nlparms.keys()))
 
     #--------------------
     # MATRIX ENTRY CARDS
     def DMIG(self, dname, msg=''):
-        return self.dmig[dname]
+        try:
+            return self.dmig[dname]
+        except KeyError:
+            raise KeyError('dname=%s not found%s.  Allowed DMIGs=%s'
+                           % (dname, msg, self.dmig.keys()))

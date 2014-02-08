@@ -267,15 +267,7 @@ class CaseControlDeck(object):
                      follow that when it's written out
         """
         isubcase = 0
-        #print('---------------')
-        #print('?' + '\n?'.join(lines))
         lines = _clean_lines(self, lines)
-        #print('---------------')
-        #print('$' + '\n$'.join(lines))
-        #print('---------------')
-        
-        #aaa
-        
         self.output_lines = []
         i = 0
         is_output_lines = False
@@ -285,14 +277,7 @@ class CaseControlDeck(object):
             lines2 = [line]
             while ',' in lines[i][-1]:
                 i += 1
-                #print("**lines[%s] = %s" %(i, lines[i]))
                 lines2.append(lines[i])
-
-                #print('---------------')
-                #print(lines2)
-                #print('---------------')
-            
-            #print("lines[%s] = %s" %(i, lines2))
             (j, key, value, options, paramType) = self._parse_entry(lines2)
             i += 1
             if key == 'BEGIN':
@@ -318,7 +303,6 @@ class CaseControlDeck(object):
                     paramType, isubcase)
                 self.output_lines.append(line)
                 continue
-            #print("")
             #print("key=%-12r icase=%i value=%r options=%r paramType=%r" %(key,
             #    isubcase, value, options, paramType))
             isubcase = self._add_parameter_to_subcase(key, value, options,

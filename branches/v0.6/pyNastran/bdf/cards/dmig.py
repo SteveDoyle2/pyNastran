@@ -202,6 +202,9 @@ class NastranMatrix(BaseCard):
         #if self.isComplex():
             #self.Complex(double(card, v, 'complex')
 
+    def getMatrix(self, isSparse=False):
+        return getMatrix(self, isSparse)
+
     def rename(self, newName):
         self.name = newName
 

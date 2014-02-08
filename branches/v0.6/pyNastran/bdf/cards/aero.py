@@ -565,10 +565,11 @@ class CSSCHD(BaseCard):
             self.lSchd = data[4]  # AEFACT
 
     def cross_reference(self, model):
-        self.aesid = model.AESurf(self.aesid)
-        self.lAlpha = model.AEFact(self.lAlpha)
-        self.lMach = model.AEFact(self.lMach)
-        self.lSchd = model.AEFact(self.lSchd)
+        msg = ' which is required by ASSCHD sid=%s' % self.sid
+        self.aesid = model.AESurf(self.aesid, msg=msg)
+        self.lAlpha = model.AEFact(self.lAlpha, msg=msg)
+        self.lMach = model.AEFact(self.lMach, msg=msg)
+        self.lSchd = model.AEFact(self.lSchd, msg=msg)
 
     def AESid(self):
         if isinstance(self.aesid, int):
@@ -696,8 +697,9 @@ class CAERO1(BaseCard):
         return self.pid.pid
 
     def cross_reference(self, model):
-        self.pid = model.PAero(self.pid)
-        self.cp = model.Coord(self.cp)
+        msg = ' which is required by CAERO1 eid=%s' % self.eid
+        self.pid = model.PAero(self.pid, msg=msg)
+        self.cp = model.Coord(self.cp, msg=msg)
 
     def Points(self):
         p1, matrix = self.cp.transformToGlobal(self.p1)
@@ -835,9 +837,10 @@ class CAERO2(BaseCard):
         return self.lsb.sid
 
     def cross_reference(self, model):
-        self.pid = model.PAero(self.pid)  # links to PAERO2
-        self.cp = model.Coord(self.cp)
-        #self.lsb = model.AeFact(self.lsb) # not added
+        msg = ' which is required by CAERO2 eid=%s' % self.eid
+        self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO2
+        self.cp = model.Coord(self.cp, msg=msg)
+        #self.lsb = model.AeFact(self.lsb, msg=msg) # not added
 
     def Points(self):
         (p1, matrix) = self.cp.transformToGlobal(self.p1)
@@ -896,11 +899,12 @@ class CAERO3(BaseCard):
             raise NotImplementedError(msg)
 
     def cross_reference(self, model):
-        self.pid = model.PAero(self.pid)  # links to PAERO3
-        self.cp = model.Coord(self.cp)
-        #self.list_w = model.AeFact(self.list_w)   # not added
-        #self.list_c1 = model.AeFact(self.list_c1) # not added
-        #self.list_c2 = model.AeFact(self.list_c2) # not added
+        msg = ' which is required by CAERO3 eid=%s' % self.eid
+        self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO3
+        self.cp = model.Coord(self.cp, msg=msg)
+        #self.list_w = model.AeFact(self.list_w, msg=msg)   # not added
+        #self.list_c1 = model.AeFact(self.list_c1, msg=msg) # not added
+        #self.list_c2 = model.AeFact(self.list_c2, msg=msg) # not added
 
     def Cp(self):
         if isinstance(self.cp, int):
@@ -957,8 +961,9 @@ class CAERO4(BaseCard):
             raise NotImplementedError(msg)
 
     def cross_reference(self, model):
-        #self.pid = model.PAero(self.pid)  # links to PAERO4
-        self.cp = model.Coord(self.cp)
+        msg = ' which is required by CAERO4 eid=%s' % self.eid
+        #self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO4
+        self.cp = model.Coord(self.cp, msg=msg)
 
     def Cp(self):
         if isinstance(self.cp, int):
@@ -1126,9 +1131,10 @@ class FLUTTER(BaseCard):
         assert self.method in ['K', 'PK', 'PKNL', 'PKS', 'PKNLS', 'KE'], 'method = %s' % self.method
 
     def cross_reference(self, model):
-        self.density = model.FLFACT(self.density)
-        self.mach = model.FLFACT(self.density)
-        self.rfreq_val = model.FLFACT(self.density)
+        msg = ' which is required by FLUTTER sid=%s' % self.sid
+        self.density = model.FLFACT(self.density, msg=msg)
+        self.mach = model.FLFACT(self.density, msg=msg)
+        self.rfreq_val = model.FLFACT(self.density, msg=msg)
 
     def get_density(self):
         if isinstance(self.density, int):
@@ -1510,8 +1516,9 @@ class SPLINE1(Spline):
         return self.setg.sid
 
     def cross_reference(self, model):
-        self.caero = model.CAero(self.caero)
-        self.setg = model.Set(self.setg)
+        msg = ' which is required by SPLINE1 eid=%s' % self.eid
+        self.caero = model.CAero(self.caero, msg=msg)
+        self.setg = model.Set(self.setg, msg=msg)
 
     def rawFields(self):
         list_fields = ['SPLINE1', self.eid, self.CAero(), self.box1, self.box2,
@@ -1574,8 +1581,9 @@ class SPLINE2(Spline):
             raise NotImplementedError(msg)
 
     def cross_reference(self, model):
-        self.caero = model.CAero(self.caero)
-        self.setg = model.Set(self.setg)
+        msg = ' which is required by SPLINE2 sid=%s' % self.eid
+        self.caero = model.CAero(self.caero, msg=msg)
+        self.setg = model.Set(self.setg, msg=msg)
 
     def Cid(self):
         if isinstance(self.cid, int):
@@ -1671,9 +1679,10 @@ class SPLINE4(Spline):
         return self.setg.sid
 
     def cross_reference(self, model):
-        self.caero = model.CAero(self.caero)
-        self.setg = model.Set(self.setg)
-        self.aelist = model.AEList(self.aelist)
+        msg = ' which is required by SPLINE4 eid=%s' % self.eid
+        self.caero = model.CAero(self.caero, msg=msg)
+        self.setg = model.Set(self.setg, msg=msg)
+        self.aelist = model.AEList(self.aelist, msg=msg)
 
     def rawFields(self):
         list_fields = ['SPLINE4', self.eid, self.CAero(), self.AEList(), None,
@@ -1754,9 +1763,10 @@ class SPLINE5(Spline):
         return self.setg.sid
 
     def cross_reference(self, model):
-        self.caero = model.CAero(self.caero)
-        self.setg = model.Set(self.setg)
-        self.aelist = model.AEList(self.aelist)
+        msg = ' which is required by SPLINE5 eid=%s' % self.eid
+        self.caero = model.CAero(self.caero, msg=msg)
+        self.setg = model.Set(self.setg, msg=msg)
+        self.aelist = model.AEList(self.aelist, msg=msg)
 
     def rawFields(self):
         list_fields = ['SPLINE5', self.eid, self.CAero(), self.AEList(), None,

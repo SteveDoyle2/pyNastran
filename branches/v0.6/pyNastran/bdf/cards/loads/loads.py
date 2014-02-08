@@ -558,9 +558,10 @@ class RFORCE(Load):
             raise NotImplementedError(data)
 
     def cross_reference(self, model):
+        msg = ' which is required by RFORCE sid=%s' % self.sid
         if self.nid > 0:
-            self.nid = model.Node(self.nid)
-        self.cid = model.Coord(self.cid)
+            self.nid = model.Node(self.nid, msg=msg)
+        self.cid = model.Coord(self.cid, msg=msg)
         pass
 
     def Nid(self):

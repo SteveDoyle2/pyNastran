@@ -57,7 +57,8 @@ class QBDY1(ThermalLoad):
         return [self]
 
     def cross_reference(self, model):
-        self.eids = model.Elements(self.eids)
+        msg = ' which is required by QBDY1 sid=%s' % self.sid
+        self.eids = model.Elements(self.eids, msg=msg)
 
     def Eid(self, eid):
         if isinstance(eid, int):
@@ -124,7 +125,8 @@ class QBDY2(ThermalLoad):  # not tested
         return [self]
 
     def cross_reference(self, model):
-        self.eid = model.Element(self.eid)
+        msg = ' which is required by QBDY2 sid=%s' % self.sid
+        self.eid = model.Element(self.eid, msg=msg)
 
     def Eid(self):
         if isinstance(self.eid, int):
@@ -175,8 +177,9 @@ class QBDY3(ThermalLoad):
             self.eids = list(data[3:])
 
     def cross_reference(self, model):
+        msg = ' which is required by QBDY3 sid=%s' % self.sid
         for i, eid in enumerate(self.eids):
-            self.eids[i] = model.Element(eid)
+            self.eids[i] = model.Element(eid, msg=msg)
 
     def Eids(self):
         eids = []

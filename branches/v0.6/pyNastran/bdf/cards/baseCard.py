@@ -200,7 +200,8 @@ class Property(BaseCard):
         return self.isSameFields(fields1, fields2)
 
     def cross_reference(self, model):
-        self.mid = model.Material(self.mid)
+        msg = ' which is required by %s pid=%s' % (self.type, self.pid)
+        self.mid = model.Material(self.mid, msg)
 
 
 class Material(BaseCard):

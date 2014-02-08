@@ -106,7 +106,6 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
     if dynamic_vars:
         fem1.set_dynamic_syntax(dynamic_vars)
 
-    #print(type(fem1))
     fem1.log.info('starting fem1')
     sys.stdout.flush()
     fem2 = None
@@ -394,7 +393,7 @@ def main():
     msg += "  BDF_FILENAME   path to BDF/DAT/NAS file\n"
     msg += '\n'
 
-    msg += "Options:\n"
+    msg += 'Options:\n'
     msg += '  -q, --quiet    prints debug messages (default=False)\n'
     msg += '  -x, --xref     disables cross-referencing and checks of the BDF.\n'
     msg += '                  (default=False -> on)\n'
@@ -416,7 +415,6 @@ def main():
 
     ver = str(pyNastran.__version__)
     data = docopt(msg, version=ver)
-    #print("data", data)
 
     for key, value in sorted(data.iteritems()):
         print("%-12s = %r" % (key.strip('--'), value))

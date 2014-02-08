@@ -39,7 +39,8 @@ class CompositeShellProperty(ShellProperty):
         """
         for iply in xrange(len(self.plies)):
             mid = self.plies[iply][0]
-            self.plies[iply][0] = model.Material(mid)  # mid
+            msg = ' which is required by PLPCOMP/G pid=%s iply=%s' % (self.pid, iply)
+            self.plies[iply][0] = model.Material(mid, msg)  # mid
 
     def isSymmetrical(self):
         """
@@ -983,14 +984,15 @@ class PSHELL(ShellProperty):
         return self.mid().Dplate()
 
     def cross_reference(self, model):
+        msg = ' which is required by PSHELL pid=%s' % self.pid
         if self.mid1:
-            self.mid1 = model.Material(self.mid1)
+            self.mid1 = model.Material(self.mid1, msg)
         if self.mid2 and self.mid2 != -1:
-            self.mid2 = model.Material(self.mid2)
+            self.mid2 = model.Material(self.mid2, msg)
         if self.mid3:
-            self.mid3 = model.Material(self.mid3)
+            self.mid3 = model.Material(self.mid3, msg)
         if self.mid4:
-            self.mid4 = model.Material(self.mid4)
+            self.mid4 = model.Material(self.mid4, msg)
 
     def writeCalculix(self, marker='markerDummyProp',
                       elementSet='ELsetDummyProp'):

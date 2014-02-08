@@ -151,7 +151,7 @@ class WriteMesh(WriteMeshDeprecated):
             else:
                 card_writer = print_card_double
         else:
-            assert size in [8, 16]
+            assert size in [8, 16], size
 
         assert isinstance(interspersed, bool)
         #size = 16
@@ -163,15 +163,15 @@ class WriteMesh(WriteMeshDeprecated):
         msg += self._write_params(size, card_writer)
         outfile.write(msg)
 
-        msg = self._write_nodes(size, card_writer)
+        msg = self._write_nodes(outfile, size, card_writer)
         outfile.write(msg)
 
         if interspersed:
-            msg = self._write_elements_properties(size, card_writer)
+            msg = self._write_elements_properties(outfile, size, card_writer)
         else:
-            msg = self._write_elements(size, card_writer)
+            msg = self._write_elements(outfile, size, card_writer)
             outfile.write(msg)
-            msg = self._write_properties(size, card_writer)
+            msg = self._write_properties(outfile, size, card_writer)
 
         outfile.write(msg)
 
@@ -196,13 +196,13 @@ class WriteMesh(WriteMeshDeprecated):
 
         outfile = open(out_filename, 'wb')
         msg = self._write_header()
-        msg += self._write_params(size)
+        msg += self._write_params(size, card_writer)
         outfile.write(msg)
 
-        msg = self._write_nodes(size)
+        msg = self._write_nodes(outfile, size, card_writer)
         outfile.write(msg)
 
-        msg = self._write_elements_as_CTRIA3(size)
+        msg = self._write_elements_as_CTRIA3(outfile, size, card_writer)
         outfile.write(msg)
 
         msg = self._write_properties(size)
@@ -262,11 +262,10 @@ class WriteMesh(WriteMeshDeprecated):
         if self.params:
             msg = ['$PARAMS\n']
             for (key, param) in sorted(self.params.iteritems()):
-                #msg.append(param.print_card(size))
                 msg.append(param.write_bdf(size, card_writer))
         return ''.join(msg)
 
-    def _write_nodes(self, size, card_writer):
+    def _write_nodes(self, outfile, size, card_writer):
         """
         Writes the NODE-type cards
         :param self: the BDF object
@@ -275,6 +274,7 @@ class WriteMesh(WriteMeshDeprecated):
         if self.spoints:
             msg.append('$SPOINTS\n')
             msg.append(str(self.spoints))
+            outfile.write(''.join(msg))
 
         if self.nodes:
             msg.append('$NODES\n')
@@ -284,11 +284,11 @@ class WriteMesh(WriteMeshDeprecated):
                 #msg.append(node.print_card(size))
                 msg.append(node.write_bdf(size, card_writer))
         if 0:
-            self._write_nodes_associated(size)
+            self._write_nodes_associated(outfile, size)
 
         return ''.join(msg)
 
-    def _write_nodes_associated(self, size, card_writer):
+    def _write_nodes_associated(self, f, size, card_writer):
         """
         Writes the NODE-type in associated and unassociated groups.
         :param self: the BDF object
@@ -363,7 +363,7 @@ class WriteMesh(WriteMeshDeprecated):
                 msg.append(prop.print_card(size))
         return ''.join(msg)
 
-    def _write_elements_properties(self, size, card_writer):
+    def _write_elements_properties(self, outfile, size, card_writer):
         """
         Writes the elements and properties in and interspersed order
         """
@@ -400,7 +400,7 @@ class WriteMesh(WriteMeshDeprecated):
             msg.append('$ELEMENTS_WITH_NO_PROPERTIES '
                        '(PID=0 and unanalyzed properties)\n')
             for eid in sorted(eids_missing):
-                element = self.Element(eid)
+                element = self.Element(eid, msg='')
                 try:
                     msg.append(element.write_bdf(size, card_writer))
                 except:
@@ -431,7 +431,6 @@ class WriteMesh(WriteMeshDeprecated):
             self.MATT8 or self.MATT9):
             msg.append('$MATERIALS\n')
             for (mid, material) in sorted(self.materials.iteritems()):
-                #msg.append(material.print_card(size))
                 msg.append(material.write_bdf(size, card_writer))
             for (mid, material) in sorted(self.creepMaterials.iteritems()):
                 msg.append(material.print_card(size))
@@ -509,7 +508,6 @@ class WriteMesh(WriteMeshDeprecated):
             for (key, loadcase) in sorted(self.loads.iteritems()):
                 for load in loadcase:
                     try:
-                        #msg.append(load.print_card(size))
                         msg.append(load.write_bdf(size, card_writer))
                     except:
                         print('failed printing load...type=%s key=%r' % (load.type, key))
@@ -607,16 +605,12 @@ class WriteMesh(WriteMeshDeprecated):
             self.cMethods or self.tsteps or self.tstepnls):
             msg.append('$DYNAMIC\n')
             for (ID, method) in sorted(self.methods.iteritems()):
-                #msg.append(method.print_card(size))
                 msg.append(method.write_bdf(size, card_writer))
             for (ID, cMethod) in sorted(self.cMethods.iteritems()):
-                #msg.append(cMethod.print_card(size))
                 msg.append(cMethod.write_bdf(size, card_writer))
             for (ID, darea) in sorted(self.dareas.iteritems()):
-                #msg.append(darea.print_card(size))
                 msg.append(darea.write_bdf(size, card_writer))
             for (ID, nlparm) in sorted(self.nlparms.iteritems()):
-                #msg.append(nlparm.print_card(size))
                 msg.append(nlparm.write_bdf(size, card_writer))
             for (ID, nlpci) in sorted(self.nlpcis.iteritems()):
                 msg.append(nlpci.print_card(size))
@@ -641,7 +635,6 @@ class WriteMesh(WriteMeshDeprecated):
             for (ID, spline) in sorted(self.splines.iteritems()):
                 msg.append(spline.print_card(size))
             for (ID, trim) in sorted(self.trims.iteritems()):
-                #msg.append(trim.print_card(size))
                 msg.append(trim.write_bdf(size, card_writer))
 
             for (ID, aero) in sorted(self.aero.iteritems()):
