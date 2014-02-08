@@ -410,8 +410,8 @@ class GetMethods(GetMethodsDeprecated):
             return self.flfacts[sid]
         except KeyError:
                 return sid
-            raise KeyError('sid=%s not found%s.  Allowed FLFACTs=%s'
-                           % (sid, msg, self.flfacts.keys()))
+                raise KeyError('sid=%s not found%s.  Allowed FLFACTs=%s'
+                               % (sid, msg, self.flfacts.keys()))
 
     def Flutter(self, fid, msg=''):
         try:

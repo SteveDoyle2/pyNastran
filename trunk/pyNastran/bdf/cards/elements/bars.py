@@ -530,21 +530,22 @@ class CROD(RodElement):
         assert len(self.nodes) == 2
 
     def _verify(self, xref=False):
-        eid = self.Eid()        pid = self.Pid()
-        if xref:  # True
-        mid = self.Mid()
-        L = self.Length()
-        A = self.Area()
-        nsm = self.Nsm()
-        mpa = self.MassPerLength()
-        mass = self.Mass()
+        eid = self.Eid()
+        pid = self.Pid()
         assert isinstance(pid, int), 'pid=%r' % pid
-        assert isinstance(mid, int), 'mid=%r' % mid
-        assert isinstance(L, float), 'L=%r' % L
-        assert isinstance(A, float), 'A=%r' % A
-        assert isinstance(nsm, float), 'nsm=%r' % nsm
-        assert isinstance(mpa, float), 'mass_per_length=%r' % mpa
-        assert isinstance(mass, float), 'mass=%r' % mass
+        if xref:  # True
+            mid = self.Mid()
+            L = self.Length()
+            A = self.Area()
+            nsm = self.Nsm()
+            mpa = self.MassPerLength()
+            mass = self.Mass()
+            assert isinstance(mid, int), 'mid=%r' % mid
+            assert isinstance(L, float), 'L=%r' % L
+            assert isinstance(A, float), 'A=%r' % A
+            assert isinstance(nsm, float), 'nsm=%r' % nsm
+            assert isinstance(mpa, float), 'mass_per_length=%r' % mpa
+            assert isinstance(mass, float), 'mass=%r' % mass
 
         c = self.Centroid()
         for i in range(3):
