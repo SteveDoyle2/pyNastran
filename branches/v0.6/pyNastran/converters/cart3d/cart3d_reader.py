@@ -470,7 +470,7 @@ class Cart3DReader(object):
             rho = loads['rho']
             rhoU = loads['rhoU']
             rhoV = loads['rhoV']
-            rhoW = loads['rhoV']
+            rhoW = loads['rhoW']
             E = loads['E']
 
             nrows = len(Cp)
