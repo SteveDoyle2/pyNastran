@@ -1,9 +1,7 @@
-import os
 import copy
 from math import sin, cos
 from numpy import array, radians, dot, zeros
 
-from pyNastran.utils import print_bad_path
 
 class LaWGS_Panel(object):
     """
@@ -186,7 +184,6 @@ class LaWGS(object):
     modelType = 'LaWGS'
 
     def __init__(self, filename='tmx1242.wgs'):
-        assert os.path.exists(filename), print_bad_path(filename)
         self.filename = filename
 
     def readLaWGS(self):

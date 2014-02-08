@@ -5,29 +5,24 @@ from numpy import zeros, arange, mean
 import vtk
 from vtk import vtkTriangle
 
-from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
+from pyNastran.converters.stl.stl_reader import STLReader
 
 
-class Cart3dIO(object):
+class STL_IO(object):
     def __init__(self):
         pass
 
-    def removeOldGeometry(self, fileName):
+    def _removeOldGeometry(self, fileName):
+        # unused...
         self.eidMap = {}
         self.nidMap = {}
         if fileName is None:
-            #self.emptyResult = vtk.vtkFloatArray()
-            #self.vectorResult = vtk.vtkFloatArray()
             self.scalarBar.VisibilityOff()
             skipReading = True
         else:
             self.TurnTextOff()
             self.grid.Reset()
             self.grid2.Reset()
-            #print(dir(self.grid2))
-            #self.grid2.VisibilityOff()
-            #self.gridResult.Reset()
-            #self.gridResult.Modified()
 
             self.resultCases = {}
             self.nCases = 0
@@ -45,21 +40,21 @@ class Cart3dIO(object):
         self.scalarBar.Modified()
         return skipReading
 
-    def load_cart3d_geometry(self, cart3dFileName, dirname):
-        #key = self.caseKeys[self.iCase]
-        #case = self.resultCases[key]
-
-        skipReading = self.removeOldGeometry(cart3dFileName)
+    def load_stl_geometry(self, stl_filename, dirname):
+        print "load_stl_geometry..."
+        skipReading = self.removeOldGeometry(stl_filename)
         if skipReading:
             return
 
-        model = Cart3DReader(log=self.log, debug=False)
-        self.modelType = model.modelType
-        (nodes, elements, regions, loads) = model.read_cart3d(cart3dFileName)
-        self.nNodes = model.nPoints
-        self.nElements = model.nElementsRead
+        model = STLReader(log=self.log, debug=False)
+        #self.modelType = model.modelType
+        model.read_stl(stl_filename)
+        nodes = model.nodes
+        elements = model.elements
+        self.nNodes, three = nodes.shape
+        self.nElements, three = elements.shape
 
-        #print("nNodes = ",self.nNodes)
+        print("nNodes = ",self.nNodes)
         print("nElements = ", self.nElements)
 
         self.grid.Allocate(self.nElements, 1000)
@@ -94,7 +89,7 @@ class Cart3dIO(object):
             nid += 1
 
         nelements, three = elements.shape
-        elements -= 1
+        #elements -= 1
         for eid in xrange(nelements):
             elem = vtkTriangle()
             node_ids = elements[eid, :]
@@ -104,44 +99,30 @@ class Cart3dIO(object):
             self.grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
 
         self.grid.SetPoints(points)
-        #self.grid2.SetPoints(points2)
-        #self.grid.GetPointData().SetScalars(self.gridResult)
-        #print dir(self.grid) #.SetNumberOfComponents(0)
-        #self.grid.GetCellData().SetNumberOfTuples(1);
-        #self.grid.GetCellData().SetScalars(self.gridResult)
         self.grid.Modified()
-        #self.grid2.Modified()
         self.grid.Update()
-        #self.grid2.Update()
         print("updated grid")
 
-        # loadCart3dResults - regions/loads
+        # loadSTLResults - regions/loads
         self.TurnTextOn()
-        self.scalarBar.VisibilityOn()
+        self.scalarBar.VisibilityOff()
         self.scalarBar.Modified()
 
-        assert loads is not None
-        if 'Mach' in loads:
-            avgMach = mean(loads['Mach'])
-            note = ':  avg(Mach)=%g' % avgMach
-        else:
-            note = ''
-        self.iSubcaseNameMap = {1: ['Cart3d%s' % note, '']}
         cases = {}
         ID = 1
 
-        #print "nElements = ",nElements
-        cases = self.fillCart3dCase(cases, ID, elements, regions, loads)
-
+        cases = self._fill_stl_case(cases, ID, elements)
+        #self.finish_io()
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
         #print "caseKeys = ",self.caseKeys
         #print "type(caseKeys) = ",type(self.caseKeys)
-        self.iCase = -1
-        self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
+        self.nCases = min(0, len(self.resultCases) - 1)  # number of keys in dictionary
+        self.iCase = 0 if self.nCases == 0 else -1
         self.cycleResults()  # start at nCase=0
 
-    def fillCart3dCase(self, cases, ID, elements, regions, loads):
+    def _fill_stl_case(self, cases, ID, elements):
+        return cases
         #print "regions**** = ",regions
         #nNodes = self.nNodes
         #nElements = self.nElements
@@ -149,23 +130,10 @@ class Cart3dIO(object):
         print "is_centroidal=%s isNodal=%s" % (self.is_centroidal, self.is_nodal)
         assert self.is_centroidal!= self.is_nodal
 
-        result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
-                                      'rhoU', 'rhoV', 'rhoW', 'rhoE']
         if self.is_centroidal:
             nelements, three = elements.shape
             cases[(ID, 'Region', 1, 'centroid', '%.0f')] = regions
             cases[(ID, 'Eids', 1, 'centroid', '%.0f')] = arange(1, nelements+1)
-
-            #print("load.keys() = ", loads.keys())
-            #print("type(loads)", type(loads))
-            for key in result_names:
-                if key in loads:
-                    nodal_data = loads[key]
-                    n1 = elements[:, 0]
-                    n2 = elements[:, 1]
-                    n3 = elements[:, 2]
-                    elemental_result = (nodal_data[n1] + nodal_data[n2] + nodal_data[n3])/3.0
-                    cases[(ID, key, 1, 'centroid', '%.3f')] = elemental_result
 
         elif self.is_nodal:
             #print("load.keys() = ", loads.keys())

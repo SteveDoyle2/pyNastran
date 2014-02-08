@@ -1,75 +1,97 @@
 import vtk
 from vtk import vtkQuad
-from pyNastran.converters.panair.panairGrid import PanairGrid
+from pyNastran.converters.plot3d.plot3d import Plot3d
 
 
-class PanairIO(object):
+class Plot3d_io(object):
     def __init__(self):
         pass
-#if __name__=='__main__':
-#    lawgs = LaWGS('tmx1242.wgs')
-#    lawgs.run()
 
-    def load_panair_geometry(self, panairFileName, dirname):
+    def load_plot3d_geometry(self, p3d_filename, dirname):
+        print "load_plot3d_geometry"
         self.nidMap = {}
 
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
 
-        skipReading = self.removeOldGeometry(panairFileName)
+        skipReading = self.removeOldGeometry(p3d_filename)
         if skipReading:
             return
 
-        model = PanairGrid(panairFileName, log=self.log, debug=self.debug)
-        self.modelType = model.modelType
-        model.read_panair()
+        model = Plot3d(log=self.log, debug=self.debug)
+        #self.modelType = model.modelType
+        model.read_plot3d(p3d_filename)
 
-        nodes, elements, regions = model.getPointsElementsRegions()
+        npoints = 0
+        nelements = 0
+        for iblock, shape in sorted(model.block_shapes.iteritems()):
+            npoints += shape[0] * shape[1] * shape[2]
+            nelements += (shape[0] - 1)  * (shape[1] - 1) * (shape[2] - 1)
+        nblocks = iblock
+        self.nNodes = npoints
+        self.nElements = nelements
+
+
+        #nodes, elements, regions = model.getPointsElementsRegions()
         #for nid,node in enumerate(nodes):
             #print "node[%s] = %s" %(nid,str(node))
 
-        self.nNodes = len(nodes)
-        self.nElements = len(elements)
-
-        #print("nNodes = ",self.nNodes)
-        print("nElements = ", self.nElements)
-
         self.grid.Allocate(self.nElements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nElements)
         self.grid2.Allocate(1, 1000)
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nNodes)
-        #self.gridResult.Allocate(self.nNodes, 1000)
-        #vectorReselt.SetNumberOfComponents(3)
-        #elem.SetNumberOfPoints(nNodes)
-        if 0:
-            fraction = 1. / nNodes  # so you can color the nodes by ID
-            for nid, node in sorted(nodes.iteritems()):
-                points.InsertPoint(nid - 1, *point)
-                self.gridResult.InsertNextValue(nid * fraction)
-                #print str(element)
 
-                #elem = vtk.vtkVertex()
-                #elem.GetPointIds().SetId(0, i)
-                #self.aQuadGrid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                #vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
+        nid = 0
+        nid_base = 0
 
-        for nid, node in enumerate(nodes):
-            points.InsertPoint(nid, *node)
-        #print "nid = ",nid
+        eid_base = 0
 
-        for eid, element in enumerate(elements):
-            (p1, p2, p3, p4) = element
-            #print "element = ",element
-            elem = vtkQuad()
-            elem.GetPointIds().SetId(0, p1)
-            elem.GetPointIds().SetId(1, p2)
-            elem.GetPointIds().SetId(2, p3)
-            elem.GetPointIds().SetId(3, p4)
-            self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+        elem = vtkQuad()
+        quad_type = elem.GetCellType()
+        #nblocks = len(model.x)
+        for iblock in xrange(nblocks):
+            print "iblock =", iblock
+            nid_base = nid
+            x = model.x[iblock]
+            y = model.y[iblock]
+            z = model.z[iblock]
+            print "x.shape[%s] =" % iblock, x.shape
+            print x
+            (ni, nj, nk) = x.shape
+            assert nk == 1
+            for k in xrange(nk):
+                for j in xrange(nj):
+                    for i in xrange(ni):
+                        points.InsertPoint(nid, x[i, j, 0],
+                                                y[i, j, 0],
+                                                z[i, j, 0])
+                        nid += 1
 
-        print("eid = ", eid)
+            for j in xrange(nj - 1):
+                jstart = nid_base + j * ni
+                for i in xrange(ni - 1):
+                    elem = vtkQuad()
+
+                    p1 = jstart + (i)
+                    p2 = jstart + (i + 1)
+                    p3 = jstart + (ni) + (i + 1)
+                    p4 = jstart + (ni) + (i)
+
+                    elem.GetPointIds().SetId(0, p1)
+                    elem.GetPointIds().SetId(1, p2)
+                    elem.GetPointIds().SetId(2, p3)
+                    elem.GetPointIds().SetId(3, p4)
+                    element = [p1, p2, p3, p4]
+                    self.grid.InsertNextCell(quad_type, elem.GetPointIds())
+                    print element
+                #jstart += ni
+
+            #nid_base += ni * nj * nk
+            eid_base += (ni-1) * (nj-1) * (nk-1)
+            break
+
+        #print("eid = ", eid)
         self.grid.SetPoints(points)
         #self.grid2.SetPoints(points2)
         #self.grid.GetPointData().SetScalars(self.gridResult)
@@ -89,22 +111,18 @@ class PanairIO(object):
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
-        self.iSubcaseNameMap = {1: ['Panair', '']}
+        self.iSubcaseNameMap = {1: ['Plot3d', '']}
         cases = {}
         ID = 1
 
-        #print "nElements = ",nElements
-        loads = []
-        cases = self.fillPanairGeometryCase(cases, ID, nodes, elements, regions, loads)
-
+        #cases = self._fill_stl_case(cases, ID, elements)
+        #self.finish_io()
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
-        print "caseKeys = ",self.caseKeys
+        #print "caseKeys = ",self.caseKeys
         #print "type(caseKeys) = ",type(self.caseKeys)
-        self.iCase = -1
-        self.nCases = len(self.resultCases) #- 1  # number of keys in dictionary
-        if self.nCases > 1:
-            self.nCases -= 1
+        self.nCases = min(0, len(self.resultCases) - 1)  # number of keys in dictionary
+        self.iCase = 0 if self.nCases == 0 else -1
         self.cycleResults()  # start at nCase=0
 
     def fillPanairGeometryCase(self, cases, ID, nodes, elements, regions, loads):
