@@ -409,7 +409,6 @@ class GetMethods(GetMethodsDeprecated):
         try:
             return self.flfacts[sid]
         except KeyError:
-                return sid
             raise KeyError('sid=%s not found%s.  Allowed FLFACTs=%s'
                            % (sid, msg, self.flfacts.keys()))
 

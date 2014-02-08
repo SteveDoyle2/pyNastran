@@ -142,6 +142,15 @@ class TriShell(ShellElement):
         """
         Returns area,centroid, normal as it's more efficient to do them
         together
+
+        Returns
+        -------
+        area : float
+               the area
+        centroid : (3,) array
+               the centroid
+        normal : (3,) array
+               the normal vector
         """
         (n0, n1, n2) = self.nodePositions()
         return _triangle_area_centroid_normal([n0, n1, n2])
