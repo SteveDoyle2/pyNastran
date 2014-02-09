@@ -11,7 +11,7 @@ class FortranFile(object):
         #:                              '>' for old HPCs)
         #: currently does nothing
         self.endian = '<'
-        ## currently does nothing
+        #: currently does nothing
         self.buffer_size = 65535
         self.table_name = None
         self.op2 = None
@@ -318,6 +318,7 @@ class FortranFile(object):
         :param nBytes: the number of bytes to print the data specs on
         :returns msg:  ints/floats/strings of the next nBytes
           (handles poorly sized nBytes; uncrashable :) )
+
         .. note:: this the BEST function when adding new cards/tables/debugging
         """
         data = self.op2.read(nBytes)
@@ -333,6 +334,7 @@ class FortranFile(object):
         :param nBytes: the number of bytes to print the data specs on
         :returns msg:  ints/floats/strings of the next nBytes
          (handles poorly sized nBytes; uncrashable :) )
+
         .. note:: this the BEST function when adding new cards/tables/debugging
         """
         data = self.op2.read(nBytes)
@@ -419,7 +421,6 @@ class FortranFile(object):
         if rewind:
             self.n -= 12 * nMarkers
             self.op2.seek(self.n)
-
         return markers
 
     def is_table_done(self, expectedMarkers):
@@ -452,7 +453,7 @@ class FortranFile(object):
     def read_block(self):
         """
         Reads a fortran formatted data block
-        
+
         nWords  data1 data2 data3 nWords
         """
         data = self.op2.read(4)
