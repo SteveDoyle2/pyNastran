@@ -1,6 +1,8 @@
-# pylint: disable=C0103,C0302,R0901,R0902,R0904,R0912,R0914,R0915,W0201,W0611,W0212,W0612,C0301,C0111
+# pylint: disable=W0212,C0103,W0633,W0611,W0201,C0301,R0915,R0912
 """
-Main BDF class
+Main BDF class.  Defines:
+  - BDF
+  - BDFDeprecated (unused for major releases)
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -12,11 +14,13 @@ import warnings
 import traceback
 
 
-from pyNastran.utils import list_print, is_string, object_attributes
+from pyNastran.utils import (list_print, is_string,
+                             object_attributes, print_bad_path)
 from pyNastran.utils.log import get_logger
 from pyNastran.utils.gui_io import load_file_dialog
 
-from pyNastran.bdf.bdfInterface.assign_type import integer, integer_or_string, string
+from pyNastran.bdf.bdfInterface.assign_type import (integer,
+    integer_or_string, string)
 
 from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
 from .cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
@@ -57,7 +61,8 @@ from .cards.constraints import (SPC, SPCADD, SPCD, SPCAX, SPC1,
 from .cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
                                       CORD2R, CORD2C, CORD2S, CORD3G)
 from .cards.dmig import (DEQATN, DMIG, DMI, DMIJ, DMIK, DMIJI, NastranMatrix)
-from .cards.dynamic import (FREQ, FREQ1, FREQ2, FREQ4, TSTEP, TSTEPNL, NLPARM, NLPCI)
+from .cards.dynamic import (FREQ, FREQ1, FREQ2, FREQ4, TSTEP, TSTEPNL, NLPARM,
+                            NLPCI)
 from .cards.loads.loads import (LSEQ, SLOAD, DLOAD, DAREA, TLOAD1, TLOAD2,
                                 RLOAD1, RLOAD2, RANDPS, RFORCE)
 from .cards.loads.staticLoads import (LOAD, GRAV, ACCEL1, FORCE,
@@ -94,63 +99,26 @@ from .bdfInterface.bdf_writeMesh import WriteMesh
 from .bdfInterface.crossReference import XrefMesh
 
 
-class BDFDeprecated(object):
-    def readBDF(self, bdf_filename, includeDir=None, xref=True, punch=False):
-        """
-        .. deprecated: will be replaced in version 0.7 with :func: `read_bdf`
-        """
-        warnings.warn('readBDF has been deprecated; use '
-                      'read_bdf', DeprecationWarning, stacklevel=2)
-        self.read_bdf(bdf_filename, includeDir, xref, punch)
+#class BDFDeprecated(object):
+    #def updateSolution(self, sol, method=None):
+        #"""
+        #.. deprecated: will be replaced in version 0.7 with
+        #               :func: update_solution
+        #"""
+        #warnings.warn('updateSolution has been deprecated; use '
+        #              'update_solution', DeprecationWarning, stacklevel=2)
+        #self.update_solution(sol, method)
+    #def __init__(self):
+        #pass
 
-    def updateSolution(self, sol, method=None):
-        """
-        .. deprecated: will be replaced in version 0.7 with :func: update_solution
-        """
-        warnings.warn('updateSolution has been deprecated; use '
-                      'update_solution', DeprecationWarning, stacklevel=2)
-        self.update_solution(sol, method)
-
-    def setDynamicSyntax(self, dictOfVars):
-        """
-        .. deprecated: will be replaced in version 0.7 with :func: `set_dynamic_syntax`
-        """
-        warnings.warn('setDynamicSyntax has been deprecated; use '
-                      'set_dynamic_syntax', DeprecationWarning, stacklevel=2)
-        self.set_dynamic_syntax(dictOfVars)
-
-    def addCard(self, card, cardName, iCard=0, oldCardObj=None):
-        """
-        .. deprecated: will be replaced in version 0.7 with :func: `add_card`
-        """
-        warnings.warn('addCard has been deprecated; use add_card',
-                      DeprecationWarning, stacklevel=2)
-        return self.add_card(card, cardName)
-
-    def disableCards(self, cards):
-        """
-        .. deprecated: will be replaced in version 0.7 with :func: `disable_cards`
-        """
-        warnings.warn('disableCards has been deprecated; use '
-                      'disable_cards', DeprecationWarning, stacklevel=2)
-        self.disable_cards(cards)
-
-    def card_stats(self, return_type='string'):
-        """
-        .. deprecated: will be replaced in version 0.7 with :func: `get_bdf_stats`
-        ..see:: get_bdf_stats
-        """
-        warnings.warn('card_stats has been deprecated; use '
-                      'get_bdf_stats', DeprecationWarning, stacklevel=2)
-        self.get_bdf_stats()  # consistent with get_op2_stats
-
-
-class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated):
+# BDFDeprecated
+class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
     """
     NASTRAN BDF Reader/Writer/Editor class.
     """
     #: this is a nastran model
     modelType = 'nastran'
+
     #: Flips between a dictionary based storage BDF storage method and
     #: a list based method.  Don't modify this.
     _isDict = True
@@ -663,6 +631,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         self.bsurfs = {}
 
     def _verify_bdf(self):
+        """
+        Cross reference verification method.
+        """
         xref = self._xref
         #for key, card in sorted(self.params.iteritems()):
             #try:
@@ -698,7 +669,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 print(str(card))
                 raise
 
-    def read_bdf(self, bdf_filename=None, include_dir=None, xref=True, punch=False):
+    def read_bdf(self, bdf_filename=None, include_dir=None,
+                 xref=True, punch=False):
         """
         Read method for the bdf files
 
@@ -723,11 +695,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         etc.
         """
         if bdf_filename is None:
-            wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas; *.pch)|*.bdf;*.dat;*.nas;*.pch|" \
+            wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas; *.pch)|" \
+                "*.bdf;*.dat;*.nas;*.pch|" \
                 "All files (*.*)|*.*"
             wildcard_qt = "Nastran BDF (*.bdf *.dat *.nas *.pch);;All files (*)"
             title = 'Please select a BDF/DAT/PCH to load'
             bdf_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)
+            assert bdf_filename is not None, bdf_filename
 
         #: the active filename (string)
         self.bdf_filename = bdf_filename
@@ -738,7 +712,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         self.include_dir = include_dir
 
         if not os.path.exists(bdf_filename):
-            raise IOError('cannot find bdf_filename=%r' % bdf_filename)
+            msg = 'cannot find bdf_filename=%r' % print_bad_path(bdf_filename)
+            raise IOError(msg)
         if bdf_filename.lower().endswith('.pch'):
             punch = True
 
@@ -746,11 +721,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             self._open_file(self.bdf_filename)
             self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
             if not punch:
-                self.log.debug('---reading executive and case control decks---')
+                self.log.debug('---reading executive & case control decks---')
                 self._read_executive_control_deck()
                 self._read_case_control_deck()
             else:
-                self.log.debug('---skipping executive and case control decks---')
+                self.log.debug('---skipping executive & case control decks---')
 
             self._read_bulk_data_deck()
             self.cross_reference(xref=xref)
@@ -787,7 +762,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         """Reads the executive control deck"""
         self._break_comment = False
         lineUpper = ''
-        while 'CEND' not in lineUpper[:4] and 'BEGIN' not in lineUpper and 'BULK' not in lineUpper:
+        while('CEND' not in lineUpper[:4] and 'BEGIN' not in lineUpper and
+              'BULK' not in lineUpper):
             (i, line, comment) = self._get_line()
             line = line.rstrip('\n\r\t ')
 
@@ -866,7 +842,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                                    'len(%s)=%s' % (key, len(key)))
             assert len(key) >= 1, ('min length for key is 1; '
                                    'len(%s)=%s' % (key, len(key)))
-            assert isinstance(key, basestring), 'key=%r must be a string.  type=%s' % (key, type(key))
+            if not isinstance(key, basestring):
+                msg = 'key=%r must be a string.  type=%s' % (key, type(key))
+                raise TypeError(msg)
             self.dict_of_vars[key] = value
         self._is_dynamic_syntax = True
 
@@ -914,7 +892,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             return
         line = ''
         while self.active_filename:  # keep going until finished
-            lines = []
+            #lines = []
             (i, lineIn, comment) = self._get_line()
             if lineIn is None:
                 return  # file was closed
@@ -934,6 +912,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 include_lines = [line]
                 while '\\' in next_line or '/' in next_line:  # more includes
                     include_lines.append(next_line)
+                    # TODO: should this be next_line instead of line_next???
                     (i, line_next, comment) = self._get_line()
                     next_line = next_line.strip().split('$')[0].strip()
                 self.case_control_lines.append(next_line)
@@ -943,7 +922,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             else:
                 self.case_control_lines.append(lineUpper)
 
-            if 'BEGIN' in lineUpper and (('BULK' in lineUpper) or ('SUPER' in lineUpper)):
+            if 'BEGIN' in lineUpper and ('BULK' in lineUpper or 'SUPER' in lineUpper):
                 self.log.debug('found the end of the Case Control Deck!')
                 break
         self.log.info("finished with Case Control Deck..")
@@ -951,7 +930,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         #for line in self.case_control_lines:
             #print("** line=%r" % line)
 
-        self.caseControlDeck = CaseControlDeck(self.case_control_lines, self.log)
+        self.caseControlDeck = CaseControlDeck(self.case_control_lines,
+                                               self.log)
         self.caseControlDeck.solmap_toValue = self._solmap_to_value
         self.caseControlDeck.rsolmap_toStr = self.rsolmap_toStr
 
@@ -990,7 +970,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             raise IOError(msg)
 
         if bdf_filename in self.active_filenames:
-            msg = 'bdf_filename=%s is already active.\nactive_filenames=%s' % (bdf_filename, self.active_filenames)
+            msg = 'bdf_filename=%s is already active.\nactive_filenames=%s' \
+                % (bdf_filename, self.active_filenames)
             raise RuntimeError(msg)
         self.log.info('opening %r' % bdf_filename)
 
@@ -1012,6 +993,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
 
 
     def _close_file(self):
+        """
+        handles closing the file stream and resetting the active file
+        """
         self.log.info('closing %r' % self.active_filename)
         if self._ifile == 0:
             self._ifile = -1
@@ -1094,7 +1078,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             # CSV - comma separated value; large or small formatted line
 
             # If the line is a continuation line, keep going.
-            in_loop = False
+            #in_loop = False
 
             Is2 = []
             lines2 = []
@@ -1161,7 +1145,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         card_name = lines[0][:8].rstrip('\t, ').split(',')[0].split('\t')[0].strip('*\t ')
         if len(card_name) == 0:
             return None
-        assert ' ' not in card_name and len(card_name) > 0, 'card_name=%r\nline=|%s| in filename=%s is invalid' % (card_name, lines[0], self.active_filename)
+        if ' ' in card_name or len(card_name) == 0:
+            msg = 'card_name=%r\nline=%r in filename=%r is invalid' \
+                  % (card_name, lines[0], self.active_filename)
+            raise RuntimeError(msg)
         return card_name.upper()
 
     def _read_bulk_data_deck(self):
@@ -1172,8 +1159,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         """
         self.log.info("reading Bulk Data Deck...")
         self._break_comment = True
-        n = 1
-        isEndData = False
+        #n = 1
+        #isEndData = False
         while self.active_filename: # or self._stored_lines:
             try:
                 (lines, comment) = self._card_streams[self._ifile].next()
@@ -1181,7 +1168,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 self._close_file()
                 continue
             assert len(lines) > 0
-            n += 1
+            #n += 1
 
             card_name = self._get_card_name(lines)
             assert is_string(comment), type(comment)
@@ -1195,7 +1182,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 self.rejects.append([reject])
                 continue
             elif 'ENDDATA' in card_name:
-                isEndData = True  # exits while loop
+                #isEndData = True  # exits while loop
                 break
 
             self._increase_card_count(card_name)
@@ -1227,6 +1214,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             self.card_count[card_name] = 1
 
     def _get_line(self):
+        """
+        Gets the next line in the BDF from the current or sub-BDF
+        """
         try:
             return self._line_streams[self._ifile].next()
         except StopIteration:
@@ -1236,6 +1226,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             return
 
     def _stream_line(self):
+        """
+        Uses generators to open the file and stream the next line into
+        a (line_number, comment, and line).
+        """
         with open(self.active_filename, 'r') as f:
             for n, line in enumerate(f):
                 line = line.rstrip('\t\r\n ')
@@ -1244,7 +1238,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                     i = line.index('$')
                     comment = line[i:] + '\n'
                     line = line[:i].rstrip('\t ')
-
                 yield n, line, comment
 
                 while self._stored_lines[self._ifile]:
@@ -1256,7 +1249,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                         self._stored_comments[self._ifile] = []
                     yield i2, line2, comment
 
-    def process_card(self, card_lines, debug=False):
+    def process_card(self, card_lines):
         """
         :param self: the BDF object
         """
@@ -1306,12 +1299,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 fields = [self._parse_dynamic_syntax(field) if '%' in
                           field[0:1] else field for field in fields]
 
-                card = wipe_empty_fields([interpret_value(field, fields) if field is not None
+                card = wipe_empty_fields([interpret_value(field, fields)
+                                          if field is not None
                                           else None for field in fields])
             else:  # leave everything as strings
                 #if 1:
-                #    card = wipe_empty_fields([interpret_value(field, fields) if field is not None
-                #                              else None for field in fields])
+                    #card = wipe_empty_fields([interpret_value(field, fields)
+                    #                          if field is not None
+                    #                          else None for field in fields])
                 #else:
                 card = wipe_empty_fields(fields)
                 #card = fields
@@ -1328,7 +1323,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
         except Exception as e:
             if not e.args:
                 e.args = ('',)
-            e.args = ('%s' % e.args[0] + "\ncard = %s" % card,)+e.args[1:]
+            e.args = ('%s' % e.args[0] + "\ncard = %s" % card,) + e.args[1:]
             raise
         _cls = lambda name: globals()[name]
 
@@ -1336,16 +1331,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
             # cards that have their own method add_CARDNAME to add them
             if card_name in ['LSEQ', 'PHBDY', 'AERO', 'AEROS', 'AEFACT',
               'AELINK', 'AELIST', 'AEPARM', 'AESTAT', 'AESURF', 'TRIM',
-              'FLUTTER', 'FLFACT', 'GUST', 'NLPARM', 'NLPCI', 'TSTEP', 'TSTEPNL',
-              'SESET', 'DCONSTR', 'DESVAR', 'DDVAL', 'DLINK', 'PARAM',
-              'PDAMPT', 'PELAST', 'PBUSHT']:
+              'FLUTTER', 'FLFACT', 'GUST', 'NLPARM', 'NLPCI', 'TSTEP',
+              'TSTEPNL', 'SESET', 'DCONSTR', 'DESVAR', 'DDVAL', 'DLINK',
+              'PARAM', 'PDAMPT', 'PELAST', 'PBUSHT']:
                 try:
                     # PHBDY -> add_PHBDY
                     getattr(self, 'add_' + card_name)(_get_cls(card_name))
                 except Exception as e:
                     if not e.args:
                         e.args = ('',)
-                    e.args = ('%s' % e.args[0] + "\ncard = %s" % card,)+e.args[1:]
+                    e.args = ('%s' % e.args[0] + "\ncard = %s" % card,) + e.args[1:]
                     raise
                 return card_obj
 
@@ -1374,8 +1369,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
              # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
              'add_creep_material': ['CREEP'],
              'add_structural_material': ['MAT1', 'MAT2', 'MAT3', 'MAT8',
-                                         'MAT9', 'MAT10', 'MAT11', 'MATHP', 'MATHE',
-                                         'EQUIV'],
+                                         'MAT9', 'MAT10', 'MAT11', 'MATHP',
+                                         'MATHE', 'EQUIV'],
              'add_thermal_material': ['MAT4', 'MAT5'],
              'add_material_dependence': ['MATS1', 'MATS3', 'MATS8',
                         'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5',
@@ -1419,7 +1414,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                     except Exception as e:
                         if not e.args:
                             e.args = ('',)
-                        e.args = ('%s' % e.args[0] + "\ncard = %s" % card,)+e.args[1:]
+                        e.args = ('%s' % e.args[0] + "\ncard = %s" % card,) + e.args[1:]
                         raise
                     return card_obj
 
@@ -1440,7 +1435,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                 except Exception as e:
                     if not e.args:
                         e.args = ('',)
-                    e.args = ('%s' % e.args[0] + "\ncard = %s" % card,)+e.args[1:]
+                    e.args = ('%s' % e.args[0] + "\ncard = %s" % card,) + e.args[1:]
                     raise
                 for i in _dct[card_name]:
                     if card_obj.field(i):
@@ -1469,7 +1464,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh, BDFDeprecated
                     try:
                         dmig = self.dmigs[name]
                     except KeyError:
-                        msg = 'cannot find DMIG name=%r in names=%s' % (name, self.dmigs.keys())
+                        msg = 'cannot find DMIG name=%r in names=%s' \
+                            % (name, self.dmigs.keys())
                         raise KeyError(msg)
                     dmig.addColumn(card_obj, comment=comment)
 
@@ -1721,17 +1717,17 @@ def _clean_comment(comment, end=-1):
     :param comment: the comment to possibly remove
     """
     if comment[:end] in ['$EXECUTIVE CONTROL DECK',
-                   '$CASE CONTROL DECK',
-                   '$NODES', '$SPOINTS', '$ELEMENTS',
-                   '$PARAMS', '$PROPERTIES', '$ELEMENTS_WITH_PROPERTIES',
-                   '$ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)',
-                   '$UNASSOCIATED_PROPERTIES',
-                   '$MATERIALS', '$THERMAL MATERIALS',
-                   '$CONSTRAINTS', '$SPCs', '$MPCs', '$RIGID ELEMENTS',
-                   '$LOADS', '$AERO', '$AERO CONTROL SURFACES',
-                   '$FLUTTER', '$DYNAMIC', '$OPTIMIZATION',
-                   '$COORDS', '$THERMAL', '$TABLES', '$RANDOM TABLES',
-                   '$SETS', '$CONTACT', '$REJECTS', '$REJECT_LINES']:
+            '$CASE CONTROL DECK',
+            '$NODES', '$SPOINTS', '$ELEMENTS',
+            '$PARAMS', '$PROPERTIES', '$ELEMENTS_WITH_PROPERTIES',
+            '$ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)',
+            '$UNASSOCIATED_PROPERTIES',
+            '$MATERIALS', '$THERMAL MATERIALS',
+            '$CONSTRAINTS', '$SPCs', '$MPCs', '$RIGID ELEMENTS',
+            '$LOADS', '$AERO', '$AERO CONTROL SURFACES',
+            '$FLUTTER', '$DYNAMIC', '$OPTIMIZATION',
+            '$COORDS', '$THERMAL', '$TABLES', '$RANDOM TABLES',
+            '$SETS', '$CONTACT', '$REJECTS', '$REJECT_LINES']:
         comment = ''
     return comment
 
@@ -1808,9 +1804,13 @@ def to_fields(card_lines, card_name):
                 for i in range(8 - len(new_fields)):
                     new_fields.append('')
             else:  # standard
-                new_fields = [line[8:16], line[16:24], line[24:32], line[32:40],
-                              line[40:48], line[48:56], line[56:64], line[64:72]]
-            assert len(new_fields) == 8, 'nFields=%s new_fields=%s' % (len(new_fields), new_fields)
+                new_fields = [line[8:16], line[16:24], line[24:32],
+                              line[32:40], line[40:48], line[48:56],
+                              line[56:64], line[64:72]]
+            if len(new_fields) != 8:
+                nfields = len(new_fields)
+                msg = 'nFields=%s new_fields=%s' % (nfields, new_fields)
+                raise RuntimeError(msg)
 
         fields += new_fields
     return [field.strip() for field in fields]

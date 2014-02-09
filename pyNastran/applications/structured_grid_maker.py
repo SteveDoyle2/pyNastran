@@ -54,7 +54,7 @@ def Grid(object):
             positions[nid] = node.Position()
 
         # size the array
-        xyz = array( (nx, ny, 3), 'float32') )
+        xyz = array( (nx, ny, 3), 'float32')
         xyz[0, 0, :] = positions[corner_nid]
 
         # 7----8
@@ -100,7 +100,7 @@ def Grid(object):
             #edge3.sort()
             edges = [tuple(edge1), tuple(edge2), tuple(edge3)]
 
-            A = array[ (positions[nA] - positions[nB]) for (nA, nB) in edges] )
+            A = array([ (positions[nA] - positions[nB]) for (nA, nB) in edges] )
             cosTs = dot(v12, A)/(n12*norm(A))
             thetas = acos(cosTs)
 
@@ -112,10 +112,6 @@ def Grid(object):
         for ix in xrange(nx):
             for iy in xrange(ny):
                 xyz[0, icol, :] = xyzi
-
-
-
-
 
 
     def walk_edge(self, starting_eid, edge_x):
@@ -148,7 +144,7 @@ def Grid(object):
 
         for eid, element in self.bdf.elements:
             if isinstance(element, CQUAD4):
-                (n1, n2, n3, n4) element.nodeIDs()
+                (n1, n2, n3, n4) = element.nodeIDs()
                 edge1 = [n1, n2]
                 edge2 = [n2, n3]
                 edge3 = [n3, n4]

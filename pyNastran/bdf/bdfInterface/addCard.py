@@ -80,6 +80,7 @@ class AddMethods(object):
                 pass
         else:
             assert key > 0, 'nid=%s node=%s' % (key, node)
+            #print(node)
             self.nodes[key] = node
 
     def add_SPOINT(self, spoint):
