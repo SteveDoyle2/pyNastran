@@ -15,63 +15,66 @@ from pyNastran.bdf.bdf import (NSM, PBAR, PBARL, PBEAM,
 class EPT(object):
     def add_property(self, card, allowOverwrites=True):
         raise RuntimeError('this should be overwritten')
-    def readFake(self, data, n):
+    def _readFake(self, data, n):
         raise RuntimeError('this should be overwritten')
+
+    def _read_ept_4(self, data):
+        self._read_geom_4(self._ept_map, data)
 
     def __init__(self):
         self.skippedCardsFile = StringIO.StringIO()
         self.card_count = {}
         self.bigProperties = {}
         self._ept_map = {
-            (3201,32,55):    ['NSM',    self.readNSM],     # record 2  - needs an object holder (e.g. self.elements/self.properties)
-            (52,   20, 181): ['PBAR',   self.readPBAR],    # record 11 - buggy
-            (9102, 91,  52): ['PBARL',  self.readPBARL],   # record 12 - almost there...
-            (2706, 27, 287): ['PCOMP',  self.readPCOMP],   # record 22 - buggy
-            (302,   3,  46): ['PELAS',  self.readPELAS],   # record 39
-            (2102, 21, 121): ['PGAP',   self.readPGAP],    # record 42
-            (902,   9,  29): ['PROD',   self.readPROD],    # record 49
-            (1002, 10,  42): ['PSHEAR', self.readPSHEAR],  # record 50
-            (2402, 24, 281): ['PSOLID', self.readPSOLID],  # record 51
-            (2302, 23, 283): ['PSHELL', self.readPSHELL],  # record 52
-            (1602, 16,  30): ['PTUBE',  self.readPTUBE],   # record 56
+            (3201,32,55):    ['NSM',    self._readNSM],     # record 2  - needs an object holder (e.g. self.elements/self.properties)
+            (52,   20, 181): ['PBAR',   self._readPBAR],    # record 11 - buggy
+            (9102, 91,  52): ['PBARL',  self._readPBARL],   # record 12 - almost there...
+            (2706, 27, 287): ['PCOMP',  self._readPCOMP],   # record 22 - buggy
+            (302,   3,  46): ['PELAS',  self._readPELAS],   # record 39
+            (2102, 21, 121): ['PGAP',   self._readPGAP],    # record 42
+            (902,   9,  29): ['PROD',   self._readPROD],    # record 49
+            (1002, 10,  42): ['PSHEAR', self._readPSHEAR],  # record 50
+            (2402, 24, 281): ['PSOLID', self._readPSOLID],  # record 51
+            (2302, 23, 283): ['PSHELL', self._readPSHELL],  # record 52
+            (1602, 16,  30): ['PTUBE',  self._readPTUBE],   # record 56
 
-            (5402,  54, 262): ['PBEAM',   self.readPBEAM],   # record 14 - not done
-            (9202,  92,  53): ['PBEAML',  self.readPBEAML],  # record 15 - not done
-            (2502,  25, 248): ['PBEND',   self.readPBEND],   # record 16 - not done
-            (3101,  31, 219): ['PBUSH1D', self.readPBUSH1D], # record 20 - not done
-            (152,   19, 147): ['PCONEAX', self.readPCONEAX], # record 24 - not done
-            (11001,110, 411): ['PCONV',   self.readPCONV],   # record 25 - not done
+            (5402,  54, 262): ['PBEAM',   self._readPBEAM],   # record 14 - not done
+            (9202,  92,  53): ['PBEAML',  self._readPBEAML],  # record 15 - not done
+            (2502,  25, 248): ['PBEND',   self._readPBEND],   # record 16 - not done
+            (3101,  31, 219): ['PBUSH1D', self._readPBUSH1D], # record 20 - not done
+            (152,   19, 147): ['PCONEAX', self._readPCONEAX], # record 24 - not done
+            (11001,110, 411): ['PCONV',   self._readPCONV],   # record 25 - not done
             # record 26
-            (202,    2,  45): ['PDAMP',   self.readPDAMP],   # record 27 - not done
-            (2802,  28, 236): ['PHBDY',   self.readPHBDY],   # record 43 - not done
-            (402,    4,  44): ['PMASS',   self.readPMASS],   # record 48
-            (1802,  18,  31): ['PVISC',   self.readPVISC],   # record 59
-            (10201,102, 400): ['PVAL',   self.readPVAL],     # record 58 - not done
-            (2606,  26, 289): ['VIEW',   self.readVIEW],     # record 62 - not done
-            (1402,   14,  37): ['', self.readFake],    # record
-            (2706,   27, 287): ['', self.readFake],    # record
-            (702,     7,  38): ['', self.readFake],    # record
-            (10301, 103, 399): ['', self.readFake],
-            (5403, 55, 349): ['', self.readFake],
-            (6902, 69, 165): ['', self.readFake],
-            (3002, 30, 415): ['', self.readFake],
-            (13301, 133, 509): ['', self.readFake],
-            (6802, 68, 164): ['', self.readFake],
-            (4606, 46, 375): ['', self.readFake],
-            (1302, 13, 34): ['', self.readFake],
-            (4706, 47, 376): ['', self.readFake],
-            (8702, 87, 412): ['', self.readFake],
-            (2902, 29, 420): ['', self.readFake],
-            (1502, 15, 36): ['', self.readFake],
-            (3301, 33, 56): ['', self.readFake],
-            (3401, 34, 57): ['', self.readFake],    # record
-            (1202, 12, 33): ['', self.readFake],  # record
-            (12001, 120, 480): ['', self.readFake],  # record
-            (12101, 121, 484): ['', self.readFake],  # record
-            (3501, 35, 58): ['', self.readFake],  # record
-            (3601, 36, 62): ['', self.readFake],  # record
-            (8300, 83, 382): ['', self.readFake],  # record
-            (8500, 85, 384): ['', self.readFake],  # record
+            (202,    2,  45): ['PDAMP',   self._readPDAMP],   # record 27 - not done
+            (2802,  28, 236): ['PHBDY',   self._readPHBDY],   # record 43 - not done
+            (402,    4,  44): ['PMASS',   self._readPMASS],   # record 48
+            (1802,  18,  31): ['PVISC',   self._readPVISC],   # record 59
+            (10201,102, 400): ['PVAL',   self._readPVAL],     # record 58 - not done
+            (2606,  26, 289): ['VIEW',   self._readVIEW],     # record 62 - not done
+            (1402,   14,  37): ['', self._readFake],    # record
+            (2706,   27, 287): ['', self._readFake],    # record
+            (702,     7,  38): ['', self._readFake],    # record
+            (10301, 103, 399): ['', self._readFake],
+            (5403, 55, 349): ['', self._readFake],
+            (6902, 69, 165): ['', self._readFake],
+            (3002, 30, 415): ['', self._readFake],
+            (13301, 133, 509): ['', self._readFake],
+            (6802, 68, 164): ['', self._readFake],
+            (4606, 46, 375): ['', self._readFake],
+            (1302, 13, 34): ['', self._readFake],
+            (4706, 47, 376): ['', self._readFake],
+            (8702, 87, 412): ['', self._readFake],
+            (2902, 29, 420): ['', self._readFake],
+            (1502, 15, 36): ['', self._readFake],
+            (3301, 33, 56): ['', self._readFake],
+            (3401, 34, 57): ['', self._readFake],    # record
+            (1202, 12, 33): ['', self._readFake],  # record
+            (12001, 120, 480): ['', self._readFake],  # record
+            (12101, 121, 484): ['', self._readFake],  # record
+            (3501, 35, 58): ['', self._readFake],  # record
+            (3601, 36, 62): ['', self._readFake],  # record
+            (8300, 83, 382): ['', self._readFake],  # record
+            (8500, 85, 384): ['', self._readFake],  # record
         }
 
     def addOp2Property(self, prop):
@@ -80,12 +83,11 @@ class EPT(object):
 
 # HGSUPPR
 
-    def readNSM(self, data, n):
+    def _readNSM(self, data, n):
         """
         NSM(3201,32,55) - the marker for Record 2
         .. todo:: this isnt a property...
         """
-        #print "reading NSM"
         return n
         s = Struct(b'i4sif')
         while len(data) >= 16:  # 4*4
@@ -106,12 +108,11 @@ class EPT(object):
 # PAABSF
 # PACABS
 # PACBAR
-    def readPBAR(self, data, n):
+    def _readPBAR(self, data, n):
         """
         PBAR(52,20,181) - the marker for Record 11
         .. warning:: this makes a funny property...
         """
-        #print "reading PBAR"
         ntotal = 76  # 19*4
         s = Struct(b'2i17f')
         nentries = (len(data) - n) // ntotal
@@ -127,7 +128,7 @@ class EPT(object):
         self.card_count['PBAR'] = nentries
         return n
 
-    def readPBARL(self, data, n):
+    def _readPBARL(self, data, n):
         """
         PBARL(9102,91,52) - the marker for Record 12
         """
@@ -154,8 +155,7 @@ class EPT(object):
             "DBOX": 10,  # was 12
         }  # for GROUP="MSCBML0"
 
-        #print "reading PBARL"
-        ntotal = 28# 7*4 - ROD - shortest entry...could be buggy... # TODO fix this
+        ntotal = 28  # 7*4 - ROD - shortest entry...could be buggy... # TODO fix this
         s = Struct(b'2i8s8sf')
         nentries = (len(data) - n) // ntotal
         for i in xrange(nentries):
@@ -182,12 +182,11 @@ class EPT(object):
 
 # PBCOMP
 
-    def readPBEAM(self, data, n):
+    def _readPBEAM(self, data, n):
         """
         PBEAM(5402,54,262) - the marker for Record 14
         .. todo:: add object
         """
-        #print "reading PBEAM"
         s1 = Struct(b'4if')
         s2 = Struct(b'16f')
         s3 = Struct(b'11f')
@@ -220,34 +219,33 @@ class EPT(object):
         self.card_count['PBEAM'] = nproperties
         return n
 
-    def readPBEAML(self, data, n):
+    def _readPBEAML(self, data, n):
         self.skippedCardsFile.write('skipping PBEAML in EPT\n')
         return n
 
-    def readPBEND(self, data, n):
+    def _readPBEND(self, data, n):
         self.skippedCardsFile.write('skipping PBEND in EPT\n')
         return n
 
 # PBMSECT
 # PBRSECT
 
-    def readPBUSH(self, data, n):
+    def _readPBUSH(self, data, n):
         self.skippedCardsFile.write('skipping PBUSH in EPT\n')
         return n
 
-    def readPBUSH1D(self, data, n):
+    def _readPBUSH1D(self, data, n):
         self.skippedCardsFile.write('skipping PBUSH1D in EPT\n')
         return n
 
-    def readPBUSHT(self, data, n):
+    def _readPBUSHT(self, data, n):
         self.skippedCardsFile.write('skipping PBUSHT in EPT\n')
         return n
 
-    def readPCOMP(self, data, n):
+    def _readPCOMP(self, data, n):
         """
         PCOMP(2706,27,287) - the marker for Record 22
         """
-        #print "reading PCOMP"
         nproperties = 0
         n2 = n
         s1 = Struct(b'2i3fi2f')
@@ -290,14 +288,13 @@ class EPT(object):
         return n
 
 # PCOMPA
-    def readPCONEAX(self, data, n):  # 24
+    def _readPCONEAX(self, data, n):  # 24
         self.skippedCardsFile.write('skipping PCONEAX\n')
-    def readPCONV(self, data, n):  # 25
+    def _readPCONV(self, data, n):  # 25
         self.skippedCardsFile.write('skipping PCONV\n')
-    def readPCONVM(self, data, n):  # 26
+    def _readPCONVM(self, data, n):  # 26
         self.skippedCardsFile.write('skipping PCONVM\n')
-
-    def readPDAMP(self, data, n):
+    def _readPDAMP(self, data, n):
         self.skippedCardsFile.write('skipping PDAMP\n')
         return n
 
@@ -313,9 +310,8 @@ class EPT(object):
 # PDUM8
 # PDUM9
 
-    def readPELAS(self, data, n):
+    def _readPELAS(self, data, n):
         """PELAS(302,3,46) - the marker for Record 39"""
-        #print "reading PELAS"
         s = Struct(b'i3f')
         ntotal = 16  # 4*4
         nproperties = (len(data) - n) // ntotal
@@ -332,11 +328,10 @@ class EPT(object):
 # PFAST
 # PELAST
 
-    def readPGAP(self, data, n):
+    def _readPGAP(self, data, n):
         """
         PGAP(3201,32,55) - the marker for Record 42
         """
-        #print "reading PGAP"
         s = Struct(b'i10f')
         nproperties = (len(data) - n) // 44
         for i in xrange(nproperties):
@@ -347,18 +342,18 @@ class EPT(object):
             self.addOp2Property(prop)
         return n
 
-    def readPHBDY(self, data, n):
+    def _readPHBDY(self, data, n):
         return n
-    def readPINTC(self, data, n):
+    def _readPINTC(self, data, n):
         return n
-    def readPINTS(self, data, n):
+    def _readPINTS(self, data, n):
         return n
-    def readPLPLANE(self, data, n):
+    def _readPLPLANE(self, data, n):
         return n
-    def readPLSOLID(self, data, n):
+    def _readPLSOLID(self, data, n):
         return n
 
-    def readPMASS(self, data, n):
+    def _readPMASS(self, data, n):
         """
         PMASS(402,4,44) - the marker for Record 48
         """
@@ -374,11 +369,10 @@ class EPT(object):
             n += 8
         return n
 
-    def readPROD(self, data, n):
+    def _readPROD(self, data, n):
         """
         PROD(902,9,29) - the marker for Record 49
         """
-        #print "reading PROD"
         ntotal = 24  # 6*4
         s = Struct(b'2i4f')
         nproperties = (len(data) - n) // ntotal
@@ -391,11 +385,10 @@ class EPT(object):
             n += ntotal
         self.card_count['PROD'] = nproperties
 
-    def readPSHEAR(self, data, n):
+    def _readPSHEAR(self, data, n):
         """
         PSHEAR(1002,10,42) - the marker for Record 50
         """
-        #print "reading PSHEAR"
         s = Struct(b'2i4f')
         nproperties = (len(data) - n) // 24
         for i in xrange(nproperties):
@@ -408,11 +401,10 @@ class EPT(object):
         self.card_count['PSHEAR'] = nproperties
         return n
 
-    def readPSHELL(self, data, n):
+    def _readPSHELL(self, data, n):
         """
         PSHELL(2302,23,283) - the marker for Record 51
         """
-        #print "reading PSHELL"
         ntotal = 44  # 11*4
         s = Struct(b'iififi4fi')
         nproperties = (len(data) - n) // ntotal
@@ -431,7 +423,7 @@ class EPT(object):
         self.card_count['PSHELL'] = nproperties
 
 
-    def readPSOLID(self, data, n):
+    def _readPSOLID(self, data, n):
         """
         PSOLID(2402,24,281) - the marker for Record 52
         """
@@ -452,14 +444,13 @@ class EPT(object):
 # PTRIA6
 # PTSHELL
 
-    def readPTUBE(self, data, n):
+    def _readPTUBE(self, data, n):
         """
         PTUBE(1602,16,30) - the marker for Record 56
         .. todo:: OD2 only exists for heat transfer...how do i know if there's heat transfer at this point...
         .. todo:: I could store all the tubes and add them later, but what about themal/non-thermal subcases
         .. warning:: assuming OD2 is not written (only done for thermal)
         """
-        #print "reading PTUBE"
         s = Struct(b'2i3f')
         nproperties = (len(data) - n) // 20
         for i in xrange(nproperties):
@@ -471,14 +462,13 @@ class EPT(object):
             n += 20
         self.card_count['PTUBE'] = nproperties
 
-    def readPSET(self, data, n):
+    def _readPSET(self, data, n):
         return n
-    def readPVAL(self, data, n):
+    def _readPVAL(self, data, n):
         return n
 
-    def readPVISC(self, data, n):
+    def _readPVISC(self, data, n):
         """PVISC(1802,18,31) - the marker for Record 39"""
-        #print "reading PVISC"
         s = Struct(b'i2f')
         nproperties = (len(data) - n) // 12
         for i in xrange(nproperties):
@@ -493,7 +483,7 @@ class EPT(object):
 
 # PWELD
 # PWSEAM
-    def readVIEW(self, data, n):
+    def _readVIEW(self, data, n):
         return n
-    def readVIEW3D(self, data, n):
+    def _readVIEW3D(self, data, n):
         return n

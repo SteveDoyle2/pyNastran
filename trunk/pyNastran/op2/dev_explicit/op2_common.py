@@ -418,6 +418,27 @@ class OP2Common(Op2Codes, F06Writer):
                     self.binary_debug.write('  format_code  = %i\n' % self.format_code)
             self.binary_debug.write('  recordi = [%s]\n\n' % msg)
 
+    def _read_geom_4(self, mapper, data):
+        if not self.make_geom:
+            return
+        n = 0
+        keys = unpack('3i', data[n:n+12])
+        n += 12
+        if len(data) == 12:
+            pass
+        elif keys in mapper:
+            func = mapper[keys]
+            if isinstance(func, list):
+                name, func = func
+                print "found keys=(%5s,%4s,%4s) name=%s" % (keys[0], keys[1], keys[2], name)
+            else:
+                print "found keys=(%5s,%4s,%4s)" % (keys[0], keys[1], keys[2])
+            n = func(data, n)  # gets all the grid/mat cards
+        else:
+            raise NotImplementedError('keys=%s not found' % str(keys))
+        #assert n == len(data), 'n=%s len(data)=%s' % (n, len(data))
+        #self.show_data(data[n:])
+
     def _read_table(self, data, result_name, real_obj, complex_obj, node_elem):
         assert isinstance(result_name, dict), 'result_name=%r' % result_name
         #assert real_obj is None

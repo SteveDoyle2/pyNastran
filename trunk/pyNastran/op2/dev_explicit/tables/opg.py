@@ -9,8 +9,7 @@ class OPG(object):
     def __init__(self):
         pass
 
-
-    def read_opg1_3(self, data):
+    def _read_opg1_3(self, data):
         three = self.parse_approach_code(data)
         self.words = [
             'aCode',       'tCode',    '???',           'isubcase',
@@ -123,19 +122,19 @@ class OPG(object):
         self._write_debug_bits()
 
 
-    def read_opg1_4(self, data):
+    def _read_opg1_4(self, data):
         if self.table_code == 2:  # load vector
             assert self.table_name in ['OPG1', 'OPGV1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-            n = self.read_load_vector(data)
+            n = self._read_load_vector(data)
         elif self.table_code == 12:  # ???
-            n = self.read_force_vector(data)
+            n = self._read_force_vector(data)
         #else:
             #n = self.not_implemented_or_skip('bad OPG table')
         else:
             raise NotImplementedError(self.table_code)
         return n
 
-    def read_load_vector(self, data):
+    def _read_load_vector(self, data):
         """
         table_code = 2
         """
@@ -155,7 +154,7 @@ class OPG(object):
             raise NotImplementedError(self.thermal)
         return n
 
-    def read_force_vector(self, data):
+    def _read_force_vector(self, data):
         """
         table_code = 12
         """

@@ -12,41 +12,44 @@ class GEOM1(object):
         raise RuntimeError('this should be overwritten')
     def add_coord(self, coord, allowOverwrites=True):
         raise RuntimeError('this should be overwritten')
-    def readFake(self, data, n):
+    def _readFake(self, data, n):
         raise RuntimeError('this should be overwritten')
+
+    def _read_geom1_4(self, data):
+        self._read_geom_4(self._geom1_map, data)
 
     def __init__(self):
         self.skippedCardsFile = StringIO.StringIO()
         self.card_count = {}
         self._geom1_map = {
-            (1701,  17,  6): ['CORD1C', self.readCord1C],  # record 1
-            (1801,  18,  5): ['CORD1R', self.readCord1R],  # record 2
-            (1901,  19,  7): ['CORD1S', self.readCord1S],  # record 3
-            (2001,  20,  9): ['CORD2C', self.readCord2C],  # record 4
-            (2101,  21,  8): ['CORD2R', self.readCord2R],  # record 5
-            (2201,  22, 10): ['CORD2S', self.readCord2S],  # record 6
-            (14301,143,651): ['CORD3G', self.readCord3G],  # record 7
-            (4501,  45,  1): ['GRID',   self.readGrid],    # record 17 - slow, but works
-            (5301,  53,  4): ['SEQGP',  self.readSEQGP],   # record 27 - not done
+            (1701,  17,  6): ['CORD1C', self._readCord1C],  # record 1
+            (1801,  18,  5): ['CORD1R', self._readCord1R],  # record 2
+            (1901,  19,  7): ['CORD1S', self._readCord1S],  # record 3
+            (2001,  20,  9): ['CORD2C', self._readCord2C],  # record 4
+            (2101,  21,  8): ['CORD2R', self._readCord2R],  # record 5
+            (2201,  22, 10): ['CORD2S', self._readCord2S],  # record 6
+            (14301,143,651): ['CORD3G', self._readCord3G],  # record 7
+            (4501,  45,  1): ['GRID',   self._readGrid],    # record 17 - slow, but works
+            (5301,  53,  4): ['SEQGP',  self._readSEQGP],   # record 27 - not done
 
-            (1101,  11,  66): ['', self.readFake],  # record
-            (2201,  22,  10): ['', self.readFake],  # record
-            (3901,  39,  50): ['', self.readFake],  # record
-            (5501, 55, 297): ['', self.readFake],  # record
-            (5601, 56, 296): ['', self.readFake],  # record
-            (6001,  60, 377): ['', self.readFake],  # record
-            (6101,  61, 388): ['', self.readFake],  # record
-            (6601, 66, 392): ['', self.readFake],  # record
-            (7902,  79, 302): ['', self.readFake],  # record
-            (13301, 133, 509): ['', self.readFake],  # record
-            (1227, 12, 462): ['', self.readFake],  # record
-            (6201, 62, 389): ['', self.readFake],  # record
-            (10101, 101, 394): ['', self.readFake],  # record
-            (6401, 64, 402): ['', self.readFake],    # record
-            (1427, 14, 465): ['', self.readFake],  # record
-            (5678, 71, 475): ['', self.readFake],  # record
+            (1101,  11,  66): ['', self._readFake],  # record
+            (2201,  22,  10): ['', self._readFake],  # record
+            (3901,  39,  50): ['', self._readFake],  # record
+            (5501, 55, 297): ['', self._readFake],  # record
+            (5601, 56, 296): ['', self._readFake],  # record
+            (6001,  60, 377): ['', self._readFake],  # record
+            (6101,  61, 388): ['', self._readFake],  # record
+            (6601, 66, 392): ['', self._readFake],  # record
+            (7902,  79, 302): ['', self._readFake],  # record
+            (13301, 133, 509): ['', self._readFake],  # record
+            (1227, 12, 462): ['', self._readFake],  # record
+            (6201, 62, 389): ['', self._readFake],  # record
+            (10101, 101, 394): ['', self._readFake],  # record
+            (6401, 64, 402): ['', self._readFake],    # record
+            (1427, 14, 465): ['', self._readFake],  # record
+            (5678, 71, 475): ['', self._readFake],  # record
         }
-    def readCord1C(self, data, n):
+    def _readCord1C(self, data, n):
         """
         (1701,17,6) - the marker for Record 1
         """
@@ -64,7 +67,7 @@ class GEOM1(object):
         self.card_count['CORD1C'] = nEntries
         return n
 
-    def readCord1R(self, data, n):
+    def _readCord1R(self, data, n):
         """
         (1801,18,5) - the marker for Record 2
         """
@@ -82,7 +85,7 @@ class GEOM1(object):
         self.card_count['CORD1R'] = nEntries
         return n
 
-    def readCord1S(self, data, n):
+    def _readCord1S(self, data, n):
         """
         (1901,19,7) - the marker for Record 3
         """
@@ -100,7 +103,7 @@ class GEOM1(object):
         self.card_count['CORD1S'] = nEntries
         return n
 
-    def readCord2C(self, data, n):
+    def _readCord2C(self, data, n):
         """
         (2001,20,9) - the marker for Record 4
         """
@@ -118,7 +121,7 @@ class GEOM1(object):
         self.card_count['CORD2C'] = nEntries
         return n
 
-    def readCord2R(self, data, n):
+    def _readCord2R(self, data, n):
         """
         (2101,21,8) - the marker for Record 5
         """
@@ -137,7 +140,7 @@ class GEOM1(object):
         self.card_count['CORD2R'] = nEntries
         return n
 
-    def readCord2S(self, data, n):
+    def _readCord2S(self, data, n):
         """
         (2201,22,10) - the marker for Record 6
         """
@@ -154,7 +157,7 @@ class GEOM1(object):
         self.card_count['CORD2S'] = nEntries
         return n
 
-    def readCord3G(self, data, n):
+    def _readCord3G(self, data, n):
         """
         (14301,143,651) - the marker for Record 7
         .. todo:: isnt this a CORD3G, not a CORD3R ???
@@ -171,7 +174,7 @@ class GEOM1(object):
         self.card_count['CORD3G'] = nEntries
         return n
 
-    def readGrid(self, data, n):  # 21.8 sec, 18.9
+    def _readGrid(self, data, n):  # 21.8 sec, 18.9
         """(4501,45,1) - the marker for Record 17"""
         s = Struct(b'ii3f3i')
         ntotal = 32
@@ -189,7 +192,7 @@ class GEOM1(object):
         self.card_count['GRID'] = nentries
         return n
 
-    def readSEQGP(self, data, n):
+    def _readSEQGP(self, data, n):
         """(5301,53,4) - the marker for Record 27"""
         self.skippedCardsFile.write('skipping SEQGP in GEOM1\n')
         return n
