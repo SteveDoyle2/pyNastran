@@ -1,7 +1,6 @@
-# pylint: disable=C0103,R0902,R0904,R0914,C0111
+#pylint: disable=C0103,C0111,W0513,R0902
 """
 All ungrouped properties are defined in this file.  This includes:
-
  * PFAST
  * PGAP
  * PLSOLID (SolidProperty)
@@ -39,24 +38,32 @@ class PFAST(Property):
         if card:
             #: Property ID
             self.pid = integer(card, 1, 'pid')
+
             #: diameter of the fastener
             self.d = double(card, 2, 'd')
             assert self.d > 0
+
             #: Specifies the element stiffness coordinate system
             self.mcid = integer_or_blank(card, 3, 'mcid', -1)
             assert self.mcid >= -1
-            self.mflag = integer_or_blank(card, 4, 'mflag', 0)  # 0-absolute 1-relative
+
+            #: 0-absolute 1-relative
+            self.mflag = integer_or_blank(card, 4, 'mflag', 0)
             assert self.mflag in [0, 1]
+
             #: stiffness values in directions 1-3
             self.kt1 = double(card, 5, 'kt1')
             self.kt2 = double(card, 6, 'kt2')
             self.kt3 = double(card, 7, 'kt3')
+
             #: Rotational stiffness values in directions 1-3
             self.kr1 = double_or_blank(card, 8, 'kr1', 0.0)
             self.kr2 = double_or_blank(card, 9, 'kr2', 0.0)
             self.kr3 = double_or_blank(card, 10, 'kr3', 0.0)
+
             #: Lumped mass of fastener
             self.mass = double_or_blank(card, 11, 'mass', 0.0)
+
             #: Structural damping
             self.ge = double_or_blank(card, 12, 'ge', 0.0)
             assert len(card) <= 13, 'len(PFAST card) = %i' % len(card)
@@ -76,10 +83,10 @@ class PFAST(Property):
         return self.mass
 
     def rawFields(self):
-        fields = ['PFAST', self.pid, self.d, self.Mcid(), self.mflag, self.kt1,
-                  self.kt2, self.kt3, self.kr1, self.kr2, self.kr3, self.mass,
-                  self.ge]
-        return fields
+        _fields = ['PFAST', self.pid, self.d, self.Mcid(), self.mflag, self.kt1,
+                   self.kt2, self.kt3, self.kr1, self.kr2, self.kr3, self.mass,
+                   self.ge]
+        return _fields
 
     def reprFields(self):
         mcid = set_blank_if_default(self.mcid, -1)
@@ -90,9 +97,9 @@ class PFAST(Property):
 
         mass = set_blank_if_default(self.mass, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
-        fields = ['PFAST', self.pid, self.d, mcid, mflag, self.kt1, self.kt2,
-                  self.kt3, kr1, kr2, kr3, mass, ge]
-        return fields
+        _fields = ['PFAST', self.pid, self.d, mcid, mflag, self.kt1, self.kt2,
+                   self.kt3, kr1, kr2, kr3, mass, ge]
+        return _fields
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -159,9 +166,9 @@ class PGAP(Property):
         pass
 
     def rawFields(self):
-        fields = ['PGAP', self.pid, self.u0, self.f0, self.ka, self.kb,
-                  self.kt, self.mu1, self.mu2, self.tmax, self.mar, self.trmin]
-        return fields
+        _fields = ['PGAP', self.pid, self.u0, self.f0, self.ka, self.kb,
+                   self.kt, self.mu1, self.mu2, self.tmax, self.mar, self.trmin]
+        return _fields
 
     def reprFields(self):
         u0 = set_blank_if_default(self.u0, 0.)
@@ -175,9 +182,9 @@ class PGAP(Property):
         mar = set_blank_if_default(self.mar, 100.)
         trmin = set_blank_if_default(self.trmin, 0.001)
 
-        fields = ['PGAP', self.pid, u0, f0, ka, kb, kt, mu1, mu2,
-                  tmax, mar, trmin]
-        return fields
+        _fields = ['PGAP', self.pid, u0, f0, ka, kb, kt, mu1, mu2,
+                   tmax, mar, trmin]
+        return _fields
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -226,16 +233,17 @@ class PLSOLID(SolidProperty):
             self.str = data[3]
         if self.str not in ['GRID', 'GAUS']:
             raise RuntimeError('STR="%s" doesnt have a valid stress/strain '
-                               'output value set; valid=["GRID", "GAUS"]\n' % self.str)
+                               'output value set; valid=["GRID", "GAUS"]\n'
+                               % self.str)
 
     def cross_reference(self, model):
         msg = ' which is required by PLSOLID pid=%s' % self.pid
         self.mid = model.Material(self.mid, msg)
 
     def rawFields(self):
-        stressStrain = set_blank_if_default(self.str, 'GRID')
-        fields = ['PLSOLID', self.pid, self.Mid(), stressStrain]
-        return fields
+        stress_strain = set_blank_if_default(self.str, 'GRID')
+        _fields = ['PLSOLID', self.pid, self.Mid(), stress_strain]
+        return _fields
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -296,7 +304,9 @@ class PSOLID(SolidProperty):
         assert isinstance(mid, int), 'mid=%r' % mid
 
         if xref:
-            assert self.mid.type in ['MAT1', 'MAT4', 'MAT9', 'MAT10'], 'mid=%i self.mid.type=%s' % (mid, self.mid.type)
+            if self.mid.type not in ['MAT1', 'MAT4', 'MAT9', 'MAT10']:
+                msg = 'mid=%i self.mid.type=%s' % (mid, self.mid.type)
+                raise TypeError(msg)
 
     def writeCalculix(self, elementSet=999):
         msg = '*SOLID SECTION,MATERIAL=M%s,ELSET=E_Mat%s\n' % (
@@ -304,23 +314,21 @@ class PSOLID(SolidProperty):
         return msg
 
     def rawFields(self):
-        fields = ['PSOLID', self.pid, self.Mid(), self.cordm, self.integ,
+        _fields = ['PSOLID', self.pid, self.Mid(), self.cordm, self.integ,
                   self.stress, self.isop, self.fctn]
-        return fields
+        return _fields
 
     def reprFields(self):
         cordm = set_blank_if_default(self.cordm, 0)
         fctn = set_blank_if_default(self.fctn, 'SMECH')
-        fields = ['PSOLID', self.pid, self.Mid(), cordm, self.integ,
-                  self.stress, self.isop, fctn]
-        return fields
+        _fields = ['PSOLID', self.pid, self.Mid(), cordm, self.integ,
+                   self.stress, self.isop, fctn]
+        return _fields
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        #return self.comment() + card_writer(card)  #is this allowed???
-        if size == 8:
-            return self.comment() + print_card_8(card)
-        return self.comment() + print_card_16(card)
+        # this card has integers & strings, so it uses...
+        return self.comment() + print_card_8(card)
 
 class CrackProperty(Property):
     def __init__(self, card, data):
@@ -347,7 +355,7 @@ class PRAC2D(CrackProperty):
     """
     type = 'PRAC2D'
     _field_map = {
-        1: 'pid', 2:'mid', 3:'thick', 4:'iPlane', 5:'nsm',6:'gamma', 7:'phi',
+        1: 'pid', 2:'mid', 3:'thick', 4:'iPlane', 5:'nsm', 6:'gamma', 7:'phi',
     }
 
     def __init__(self, card=None, data=None, comment=''):
@@ -451,7 +459,8 @@ class PCONEAX(Property):
     }
     def _update_field_helper(self, n, value):
         if n <= 0:
-            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+            msg = 'Field %r=%r is an invalid %s entry.' % (n, value, self.type)
+            raise KeyError(msg)
         self.phi[n - 10] = value
 
     def __init__(self, card=None, data=None, comment=''):
@@ -465,7 +474,7 @@ class PCONEAX(Property):
             self.mid1 = integer_or_blank(card, 2, 'mid1', 0)
             self.t1 = double_or_blank(card, 3, 't1')
 
-            self.mid2 = integer(card, 4, 'mid2', 0)
+            self.mid2 = integer_or_blank(card, 4, 'mid2', 0)
             if self.mid2 > 0:
                 self.i = double(card, 5, 'i')
                 assert self.i > 0.0
@@ -494,8 +503,6 @@ class PCONEAX(Property):
             self.mid2 = model.Material(self.mid2, msg=msg)
         if self.mid3 > 0:
             self.mid3 = model.Material(self.mid3, msg=msg)
-        if self.mid4 > 0:
-            self.mid4 = model.Material(self.mid4, msg=msg)
 
     def Mid1(self):
         if isinstance(self.mid1, Material):
