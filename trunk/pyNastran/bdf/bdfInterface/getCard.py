@@ -197,9 +197,6 @@ class GetMethods(GetMethodsDeprecated):
                         midToPidsMap[mid].append(pid)
         return (midToPidsMap)
 
-    def elementIDs(self):
-        return self.elements.keys()
-
     def Element(self, eid, msg=''):
         try:
             return self.elements[eid]
