@@ -26,14 +26,14 @@ log = get_logger(None, 'debug' if debug else 'info')
 
 class DeflectionReader(object):
     def __init__(self, infilename='fem.op2'):
-        log.info('---starting deflectionReader.init of %s---' %(infilename))
+        log.info('---starting deflectionReader.init of %s---' % infilename)
         op2 = OP2Reader(infilename)
-        terms = ['force','stress','stress_comp','strain','strain_comp','displacement','grid_point_forces']
+        terms = ['force', 'stress', 'stress_comp', 'strain', 'strain_comp', 'displacement', 'grid_point_forces']
         op2.read(terms)
         self.displacement = op2.nastranModel.displacement
         #op2.nastranModel.printDisplacement()
         self.convertDisplacements()
-        log.info('---finished deflectionReader.init of %s---' %(infilename))
+        log.info('---finished deflectionReader.init of %s---' % infilename)
 
     def getDeflections(self,ID,n0,n1,n2,n3):
         defs = [
@@ -78,7 +78,7 @@ class DeflectionReader(object):
             for gid,result in results.items():
                 log.info("gid = %s" %(gid))
                 layers = result.getLayers()
-                
+
                 for layer in layers:
                     #print "layer = ",layer
                     log.info("  disp.mag = %s" %(layer.mag))
@@ -112,7 +112,7 @@ class DeflectionMapper(object):
         Finds the closest tet.  Has the potential to fail, but until then, skipping.
         Solution to failure:  brute force method.
         m = aeroNode
-        tets = 
+        tets =
         """
         if closestTet==None:
             closestTet = tets[1]
@@ -122,7 +122,7 @@ class DeflectionMapper(object):
         #closestTet = self.findClosestTet_recursion(m,startingTet,tets)
         #print "found tet = ",closestTet.ID
         #v1 = array([1.,0.,0.])
-        
+
         #tet,tetID = self.bruteForce(m,tets)
         #return tet
         log.info("starting tet = %s" %(closestTet))
@@ -132,7 +132,7 @@ class DeflectionMapper(object):
         counter = 0
         counterMax = 100
         broken = False
-        
+
         isInternal,localVol = closestTet.isInternalNode(m)
         if isInternal:
             log.info("***already Internal")
@@ -143,7 +143,7 @@ class DeflectionMapper(object):
             closestTet = copy.deepcopy(newTet)
             tetID = closestTet.ID
             #print "excluded = ",len(excluded)
-            
+
             counter +=1
             if(counter==counterMax):
                 break
@@ -157,7 +157,7 @@ class DeflectionMapper(object):
                #print "ID=%s dist=%s" %(tetID,minValue)
 
             (isInternal,localVol) = closestTet.isInternalNode(m)
-        
+
         if broken:
             (closestTet,tetID) = self.bruteForce(m,tets,excluded)
         else:
@@ -167,26 +167,26 @@ class DeflectionMapper(object):
         #print "nodes = ",closestTet.nodes
 
         return closestTet,closestTet.ID
-        
+
     def bruteForce(self,m,tets,excluded=[]):
         """
         m is the point
         tets is the list of tets
         excluded is a list of tet ID's to skip
-        
+
         Basically, loop thru the tets and put the point m in each tet.
         The tet thtat is the least bad (ideally perfect) is the one that
         will be used.
-        
+
         If a localVol (localVolume) is negative, then the point is outside.
-        However, currently localVol is actually the zeta natural coordinate, so 
+        However, currently localVol is actually the zeta natural coordinate, so
         0.<zeta<1.
 
         If a point isnt found, the least bad point is taken (the one with the lowest
         optValue (optimization value) and a 'test' is performed to check how bad it is.
         """
         log.info("brute Forcing...")
-        
+
         localVols = []
         counter = []
         #print "m = [%g %g %g]" %(m[0],m[1],m[2])
@@ -204,18 +204,18 @@ class DeflectionMapper(object):
                 log.info("*foundID = %s" %(foundID))
                 #print self.findCloserTet(m,tets[excluded[-1]],tets)
                 #print self.findCloserTet(m,tets[foundID],tets)
-                
+
                 return tet,foundID
                 #raise Exception('unhandled success!')
                 #break
         maxI = localVols.index(max(localVols))
-        
+
         localI = argsort(localVols)
         localVols.sort()
         #for i,localVol in zip(localI,localVols):
         #    log.info("localVol[%s]=%s" %(i,localVol))
         log.info("guessing...closeID = %s" %(tet.ID))
-        
+
         tetOut = tets[maxI]
         log.info('tetOut = %s' %(tetOut))
         (isInternal,optValue) = tetOut.isInternalNode(m)
@@ -228,7 +228,7 @@ class DeflectionMapper(object):
         Makes an assumption that there is a direct line from the starting tet
         to the final tet that can be minimized with nearly every subsequent tet.
         At worst, it will get the starting node one tet closer to the solution.
-        
+
         m = starting point (mid point)
         """
         #print "findCloserTet"
@@ -244,7 +244,7 @@ class DeflectionMapper(object):
                 dists[i] = self.distance(m,tets[neighbor].centroid())
         #dists[0] = 9.e9
         #print "dists = ",dists
-        
+
         #print dists
         minValue = min(dists)
         i = dists.index(minValue)
@@ -253,10 +253,10 @@ class DeflectionMapper(object):
         #print "tet0.neightbors[%s] = %s" %(i,tet0.neighbors[i])
         tetNew = tets[tet0.neighbors[i]]
         #print "tetNew = ",tetNew
-        
+
         #closestTet = self.findClosestTet_recursion(m,tetNew,tets,excluded)
         return tetNew,minValue
-        
+
 
     def distance(self,p1,p2):
         return norm(p1-p2)
@@ -273,9 +273,9 @@ class DeflectionMapper(object):
         #tets = self.tets
         d = self.deflectionReader
         tets = self.tets
-        
+
         #tets = self.buildTetrahedralization()
-        
+
         #aeroNodes = [array([0.0,0.,0.])]
         aeroNodes2 = []
         tet = tets[1]
@@ -287,7 +287,7 @@ class DeflectionMapper(object):
                 log.info('skipping aeroNode=%s bc y<0.' % i)
                 continue
             log.info("aeroNode[%s]  = %s" % (i, ListPrint(aeroNode)))
-            
+
             #print "aeroNode  = ",aeroNode
             #continue
 
@@ -312,7 +312,7 @@ class DeflectionMapper(object):
             #for tet in tets:  # should select in certain order based on centroids
             #    if tet.isInternalNode(aeroNode):
             #        n0,n1,n2,n3 = tet.nodes
-            #        
+            #
             #        deflectionsTet = [ d[n0],d[n1],d[n2],d[n3] ]
             #        aeroNode2 = tet.mapDeflections(deflectionsTet,aeroNode)
             #break # uncomment to run one aeroNode
@@ -323,7 +323,7 @@ class DeflectionMapper(object):
         #    print "pointID=%s  -> tetID=%s" %(key,value)
         sys.stdout.flush()
         return (aeroNodes2,properTets)
-        
+
     #def writeAeroInfile(self):
         #self.aeroModel.updateNodes(nodes)
         #self.aeroModel.write(self.aeroFile)
@@ -332,13 +332,13 @@ class DeflectionMapper(object):
 
 def loadProperTets(properTetFilename='properTets.in'):
     properTets = {}
-    
+
     if os.path.exists(properTetFilename):
         log.info("loading tets from |%s|..." %(properTetFilename))
         infile = open(properTetFilename,'r')
         lines = infile.readlines()
         for line in lines[1:]:
-            #print 
+            #print
             (pointID,properTet) = line.strip().split()
             properTets[int(pointID)] = int(properTet)
     else:
@@ -374,7 +374,7 @@ def test_deflections():
     op2 = deflectionReader(infilename)
     #op2.printDisplacement()
     displacements = op2.convertDisplacements()
-    
+
     #for gridID,disp in sorted(displacements.items()):
     #    print "gridID=%s disp=%s" %(gridID,disp)
 
@@ -426,7 +426,7 @@ def mapDeflectionsStructures_Aero(bdfModel='test_tet10.bdf',op2Filename='test_te
     dmap = DeflectionMapper(cartPoints,tets,defreader)
     t1 = time()
     log.info("setup time = %g sec" %(t1-t0))
-    
+
     (aeroNodes2,properTets) = dmap.mapDeflections(properTets)
     writeProperTets(workpath,properTets)
 
@@ -462,7 +462,7 @@ if __name__=='__main__':
     #mapDeflectionsStructures_Aero()
     #test_Tet()
     #test_deflections()
-    
+
     #model = 'test_tet10' # bdf, op2, triq, tri
 
     sys.exit('finished mapDeflections.py')
