@@ -21,24 +21,23 @@ class FatalError(RuntimeError):
 
 class F06Deprecated(object):
     def __init__(self, f06_filename):
-        self.f06FileName = f06_filename
-        self.f06_filename = None
-    def read_f06(self, f06_filename):
+        #self.f06FileName = f06_filename
+        #self.f06_filename = None
+    #def read_f06(self, f06_filename):
         pass
-    def readF06(self):
-        """... seealso::: read_f06"""
-        self.read_f06(self.f06_filename)
+    #def readF06(self):
+        #"""... seealso::: read_f06"""
+        #self.read_f06(self.f06_filename)
 
 
 class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
     def stop_after_reading_grid_point_weight(self, stop=True):
         self._stop_after_reading_mass = stop
 
-    def __init__(self, f06_filename, debug=False, log=None):
+    def __init__(self, debug=False, log=None):
         """
         Initializes the F06 object
 
-        :f06FileName: the file to be parsed
         :makeGeom:    reads the BDF tables (default=False)
         :debug:       prints data about how the F06 was parsed (default=False)
         :log:         a logging object to write debug messages to
@@ -61,7 +60,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         if not os.path.exists(self.f06_filename):
             msg = 'cant find f06_filename=%r\n%s' % (self.f06_filename, print_bad_path(self.f06_filename))
             raise RuntimeError(msg)
-        self.infile = open(self.f06_filename, 'r')
+
         self.__init_data__(debug, log)
 
         self._line_marker_map = {
@@ -668,11 +667,27 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         Reads the F06 file
 
         :self: the object pointer
+
+        :f06FileName: the file to be parsed (None -> GUI)
         """
         if f06_filename is None:
-            f06_filename = self.f06_filename
+            wildcard_wx = "Nastran F06 (*.f06)|*.f06|" \
+                "All files (*.*)|*.*"
+            wildcard_qt = "Nastran F06 (*.f06);;All files (*)"
+            title = 'Please select a F06 to load'
+            op2_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)
+            assert op2_filename is not None, op2_filename
+
+        if is_binary(f06_filename):
+            raise IOError('f06_filename=%r is not a binary F06.' % f06_filename)
+        if os.path.getsize(f06_filename) == 0:
+            raise IOError('f06_filename=%r is empty.' % f06_filename)
+
+        self.log.debug('f06_filename = %r' % f06_filename)
+        self.f06_filename = f06_filename
 
         blank = 0
+        self.infile = open(self.f06_filename, 'r')
         while 1:
             #if self.i%1000==0:
                 #print "i=%i" %(self.i)
@@ -766,23 +781,12 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         self.i += iskip
         return self.infile.readline()
 
-    def print_results(self):
-        msg = ''
-        data = [self.displacements, self.spcForces, self.mpcForces, self.temperatures,
-                self.eigenvalues, self.eigenvectors,
-                self.rodStress, self.rodStrain,
-                self.conrodStress, self.conrodStrain,
-                self.barStress, self.barStrain,
-                self.plateStress, self.plateStrain,
-                self.compositePlateStress, self.compositePlateStrain,
-                ]
-
-        self.iSubcases = list(set(self.iSubcases))
-        for isubcase in self.iSubcases:
-            for result in data:
-                if isubcase in result:
-                    msg += str(result[isubcase])
-        return msg
+    #def get_op2_stats(self):
+        #"""
+        #Gets info about the contents of the different attributes of the
+        #OP2 class.
+        #"""
+        #pass
 
 def _parse_label_isubcase(stored_lines):
     label = stored_lines[-2][1:65].strip()

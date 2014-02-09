@@ -49,7 +49,7 @@ def run_lots_of_files(files, debug=True, saveCases=True, skipFiles=[],
     sys.exit('-----done with all models %s/%s=%.2f%%  nFailed=%s-----' % (nPassed, nTotal, 100. * nPassed / float(nTotal), nTotal - nPassed))
 
 
-def run_f06(f06file, iSubcases=[], write_f06=True, print_f06=False, debug=False,
+def run_f06(f06file, iSubcases=[], write_f06=True, debug=False,
             stopOnFailure=True):
     isPassed = False
     #stopOnFailure = False
@@ -67,8 +67,6 @@ def run_f06(f06file, iSubcases=[], write_f06=True, print_f06=False, debug=False,
             (model, ext) = os.path.splitext(f06file)
             f06.write_f06(model + '.test_f06.f06')
 
-        if print_f06:
-            print(f06.print_results())
         #print "subcases = ",f06.subcases
 
         #assert tableNamesF06==tableNamesF06,'tableNamesF06=%s tableNamesF06=%s' %(tableNamesF06,tableNamesF06)
@@ -152,12 +150,12 @@ def main():
     msg += 'Options:\n'
     msg += '  -q, --quiet      prints debug messages (default=False)\n'
     msg += '  -f, --write_f06  writes the f06 to fem.f06.out (default=True)\n'
-    msg += '  -p, --print_f06  prints objects to screen which can require lots of\n'
-    msg += '                    memory (default=True)\n'
     msg += '  -h, --help       show this help message and exit\n'
     msg += "  -v, --version    show program's version number and exit\n"
-   #msg += '  -z, --is_mag_phase      F06 Writer writes Magnitude/Phase instead of\n'
-   #msg += '                          Real/Imaginary (still stores Real/Imag)\n'
+    
+    # disabled b/c the F06 doesn't support complex well
+    #msg += '  -z, --is_mag_phase      F06 Writer writes Magnitude/Phase instead of\n'
+    #msg += '                          Real/Imaginary (still stores Real/Imag)\n'
 
     if len(sys.argv) == 1:
         sys.exit(msg)
@@ -172,8 +170,7 @@ def main():
         os.remove('skippedCards.out')
     run_f06(data['F06_FILENAME'],
             write_f06 = data['--write_f06'],
-            print_f06 = data['--print_f06'],
-            debug     = not(data['--quiet'])
+            debug     = not(data['--quiet']),
     )
 
 if __name__ == '__main__':  # f06
