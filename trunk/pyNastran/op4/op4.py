@@ -5,14 +5,14 @@ import os
 import io
 from struct import pack, unpack
 
-from numpy import (array, zeros, float32, float64, complex64, complex128)
+from numpy import (array, zeros, float32, float64, complex64, complex128,
+                  allclose)
 from scipy.sparse import coo_matrix
 
 from pyNastran.utils import is_binary
 from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
 #from pyNastran.op2.fortranFile import FortranFile
 from pyNastran.utils.gui_io import load_file_dialog
-
 
 
 class OP4Deprecated(object):
@@ -106,7 +106,7 @@ class OP4(OP4Deprecated):
         #assert isinstance(matrix_names, list), 'type(matrix_names)=%s' % type(matrix_names)
 
         if not os.path.exists(op4_filename):
-            raise IOError('cannot find op4_filename=|%s|' % op4_filename)
+            raise IOError('cannot find op4_filename=%r' % op4_filename)
 
         if is_binary(op4_filename):
             return self.read_op4_binary(op4_filename, matrix_names, precision)
@@ -120,8 +120,7 @@ class OP4(OP4Deprecated):
             matrices = {}
             name = 'dummyName'
             while name is not None:
-                (name, form, matrix) = self._read_matrix_ascii(f,
-                    matrix_names, precision)
+                (name, form, matrix) = self._read_matrix_ascii(f, matrix_names, precision)
                 if name is not None:
                     if matrix_names is None or name in matrix_names:  # save the matrix
                         matrices[name] = (form, matrix)
@@ -147,12 +146,11 @@ class OP4(OP4Deprecated):
         ncols = int(ncols)
         form = int(form)
         Type = int(Type)
-        dType = self.get_dtype(Type, precision)
+        dType = get_dtype(Type, precision)
 
         name = line[32:40].strip()
         size = line[40:].strip()
-        lineSize = size.split(
-            ',')[1].split('E')[1].split('.')[0]  # 3E23.16 to 23
+        lineSize = size.split(',')[1].split('E')[1].split('.')[0]  # 3E23.16 to 23
         lineSize = int(lineSize)
 
         line = f.readline().rstrip()
@@ -164,13 +162,11 @@ class OP4(OP4Deprecated):
             isSparse = True
 
         if Type in [1, 2]:  # real
-            (A) = self.read_real_ascii(f, nrows, ncols, lineSize,
-                                     line, dType, isSparse, isBigMat)
+            (A) = self.read_real_ascii(f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat)
         elif Type in [3, 4]:  # complex
-            (A) = self.read_complex_ascii(f, nrows, ncols,
-                                        lineSize, line, dType, isSparse, isBigMat)
+            (A) = self.read_complex_ascii(f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat)
         else:
-            raise RuntimeError('invalid matrix type.  Type=%s' % (Type))
+            raise RuntimeError('invalid matrix type.  Type=%s' % Type)
 
         if not(matrix_names is None or name in matrix_names):  # kill the matrix
             A = None
@@ -234,7 +230,7 @@ class OP4(OP4Deprecated):
                         wasBroken = True
                         break
 
-                    for i in xrange(nWordsInLine):
+                    for i in range(nWordsInLine):
                         word = line[n:n + lineSize]
                         if isSparse:
                             rows.append(irow - 1)
@@ -252,8 +248,7 @@ class OP4(OP4Deprecated):
         f.readline()
 
         if isSparse:  # Initialize a real matrix
-            A = coo_matrix((entries, (rows, cols)), shape=(
-                nrows, ncols), dtype=dType)
+            A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dType)
             #print("type = %s %s" % (type(A),type(A.todense())))
             #A = A.todense()
         return A
@@ -305,7 +300,7 @@ class OP4(OP4Deprecated):
                         wasBroken = True
                         break
 
-                    for i in xrange(nWordsInLine):
+                    for i in range(nWordsInLine):
                         value = float(line[n:n + lineSize])
 
                         if iWord % 2 == 0:
@@ -316,8 +311,7 @@ class OP4(OP4Deprecated):
                                 cols.append(icol - 1)
                                 entries.append(complex(realValue, value))
                             else:
-                                A[irow - 1, icol - 1] = complex(realValue,
-                                                                value)
+                                A[irow - 1, icol - 1] = complex(realValue, value)
                             irow += 1
                         iWord += 1
                         n += lineSize
@@ -326,8 +320,7 @@ class OP4(OP4Deprecated):
                 nLoops += 1
 
         if isSparse:  # Initialize a complex matrix
-            A = coo_matrix((entries, (rows, cols)), shape=(
-                nrows, ncols), dtype=dType)
+            A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dType)
         f.readline()
         return A
 
@@ -366,8 +359,8 @@ class OP4(OP4Deprecated):
 
         # get the endian
         data = self.op4.read(4)
-        (recordLengthBig,) = unpack('>' + 'i', data)
-        (recordLengthLittle,) = unpack('<' + 'i', data)
+        (recordLengthBig,) = unpack('>i', data)
+        (recordLengthLittle,) = unpack('<i', data)
         #print
         if recordLengthBig == 24:
             self.endian = '>'
@@ -391,8 +384,7 @@ class OP4(OP4Deprecated):
             if len(data1) == 0:
                 break
 
-            (name, form, matrix) = self._read_matrix_binary(self.op4,
-                precision, matrix_names)
+            (name, form, matrix) = self._read_matrix_binary(self.op4, precision, matrix_names)
             #print print_matrix(matrix)
             if name is not None:
                 if matrix_names is None or name in matrix_names:  # save the matrix
@@ -417,29 +409,6 @@ class OP4(OP4Deprecated):
             #
             i += 1
         return matrices
-
-    def get_dtype(self, Type, precision='default'):
-        """reset the type if 'default' not selected"""
-        if precision == 'single':
-            if Type in [1, 2]:
-                dType = 'float32'
-            else:
-                dType = 'complex64'
-        elif precision == 'double':
-            if Type in [1, 2]:
-                dType = 'float64'
-            else:
-                dType = 'complex128'
-        else:  # default
-            if Type == 1:
-                dType = 'float32'
-            elif Type == 2:
-                dType = 'float64'
-            elif Type == 3:
-                dType = 'complex64'
-            else:
-                dType = 'complex128'
-        return dType
 
     def read_start_marker(self, f):
         #print '--------------------------------------'
@@ -595,7 +564,7 @@ class OP4(OP4Deprecated):
             d = 'dd'
         else:
             raise RuntimeError("Type=%s" % Type)
-        dtype = self.get_dtype(Type)
+        dtype = get_dtype(Type)
         return (NWV, NBW, d, dtype)
 
     def readRealBinary(self, f, nrows, ncols, Type, isSparse, isBigMat):
@@ -705,7 +674,7 @@ class OP4(OP4Deprecated):
                 #print "isSparse = ",isSparse
                 if isSparse:
                     #cols += [icol]*nValues
-                    #rows += [i+irow for i in xrange(nValues)]
+                    #rows += [i+irow for i in range(nValues)]
                     for value in valueList:
                         cols.append(icol - 1)
                         rows.append(irow - 1)
@@ -732,8 +701,7 @@ class OP4(OP4Deprecated):
             #print "-------------------------------"
 
         if isSparse:  # Initialize a real matrix
-            A = coo_matrix((entries, (rows, cols)), shape=(
-                nrows, ncols), dtype=dType)
+            A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dType)
 
             if isBigMat:
                 #f.read(4); self.n+=4
@@ -910,20 +878,20 @@ class OP4(OP4Deprecated):
         an entry in the matrix takes up.
 
         :param A: a matrix or entry in a matrix (to save memory)
-        :param precision: data precision ='default','single','double'
+        :param precision: data precision ='default', 'single', 'double'
 
         :returns: Type matrix type
-                       1=real,single precision;
-                       2=real,double precision;
-                       3=complex,single precision;
-                       4=complex,double precision
+                       1 = real,single precision;
+                       2 = real,double precision;
+                       3 = complex,single precision;
+                       4 = complex,double precision
         :returns: NWV Number of Words per Value
 
-        .. note:: A word is 4 bytes
-                  nwords(float32)=1;   single precison
-                  nwords(complex32)=2; single precison
-                  nwords(float64)=2;   double precision
-                  nwords(complex64)=4; double precision
+        .. note:: a word is 4 bytes
+                  nwords(float32)=1;    single precison
+                  nwords(complex64)=2;  single precison
+                  nwords(float64)=2;    double precision
+                  nwords(complex128)=4; double precision
         """
         #print A.dtype.type()
         if isinstance(A.dtype.type(), float32):
@@ -1008,7 +976,7 @@ class OP4(OP4Deprecated):
 
         #if nrows==ncols and form==2:
         #    form = 1
-        print("Type=%s" % (Type))
+        print("Type=%s" % Type)
         if isBigMat:
             msg += '%8i%8i%8i%8i%-8s1P,3E23.16\n' % (
                 ncols, -nrows, form, Type, name)
@@ -1225,6 +1193,28 @@ class OP4(OP4Deprecated):
         msg += ' 1.0000000000000000E+00\n'
         return msg
 
+def get_dtype(Type, precision='default'):
+    """reset the type if 'default' not selected"""
+    if precision == 'single':
+        if Type in [1, 2]:
+            dType = 'float32'
+        else:
+            dType = 'complex64'
+    elif precision == 'double':
+        if Type in [1, 2]:
+            dType = 'float64'
+        else:
+            dType = 'complex128'
+    else:  # default
+        if Type == 1:
+            dType = 'float32'
+        elif Type == 2:
+            dType = 'float64'
+        elif Type == 3:
+            dType = 'complex64'
+        else:
+            dType = 'complex128'
+    return dType
 
 def letter_count(word, letter):
     """Counts the number of occurrences of a letter in a word/line."""
@@ -1296,14 +1286,16 @@ def compressColumn(col):
     return packs
 
 if __name__ == '__main__':  ## pragma: no cover
+    from pyNastran.op4.utils import write_DMIG
+
     #compressColumn([14, 15, 16, 20, 21, 22, 26, 27, 28])
     filenames = [
-        #'test/mat_t_dn.op4',
+        'test/mat_t_dn.op4',
         'test/mat_t_s1.op4',
-        #'test/mat_t_s2.op4',
-        #'test/mat_b_dn.op4',
-        #'test/mat_b_s1.op4',
-        #'test/mat_b_s2.op4',
+        'test/mat_t_s2.op4',
+        'test/mat_b_dn.op4',
+        'test/mat_b_s1.op4',
+        'test/mat_b_s2.op4',
         #'test/b_sample.op4',
         #'binary.op4',
     ]
@@ -1330,7 +1322,7 @@ if __name__ == '__main__':  ## pragma: no cover
 
         matrices = op4.read_op4(fname, matrix_names=matrix_names,
             precision='default')
-        print("keys = %s" % (matrices.keys()))
+        print("keys = %s" % matrices.keys())
         print("fname=%s" % fname)
         for name, (form, matrix) in sorted(matrices.iteritems()):
             print("-----------------------------------")
@@ -1346,8 +1338,10 @@ if __name__ == '__main__':  ## pragma: no cover
             #if 't' in fname:
             #f.write(op4.writeDenseMatrixAscii(name,matrix,form=form,precision='default'))
             if isinstance(matrix, coo_matrix):
-                op4.writeSparseMatrixAscii(f, name, matrix, form=form,
-                                           precision='default', isBigMat=isBigMat)
+                #op4.writeSparseMatrixAscii(f, name, matrix, form=form,
+                #                           precision='default', isBigMat=isBigMat)
+                #write_DMIG(f, name, matrix, form, precision='default')
+                pass
             else:
                 f.write(op4.writeDenseMatrixAscii(name, matrix, 1, 'single'))
                 #f.write(op4.writeDenseMatrixBinary(name,matrix,1,'single'))
