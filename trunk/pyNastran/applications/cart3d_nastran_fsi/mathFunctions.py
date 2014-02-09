@@ -2,24 +2,24 @@ from numpy import array,cross,allclose
 from numpy.linalg import norm, solve
 
 #------------------------------------------------------------------
-def isListRanged(a,List,b):
+def is_list_ranged(a,List,b):
     """
     Returns true if a<= x <= b
     or a-x < 0 < b-x
     """
     for x in List:
-        if not isFloatRanged(a,x,b):
+        if not is_float_ranged(a, x, b):
             return False
     return True
 
-def isFloatRanged(a,x,b):
+def is_float_ranged(a, x, b):
     """
     Returns true if a<= x <= b
     or a-x < 0 < b-x
     """
     if not a<x:
         if not allclose(x,a):
-           return False 
+           return False
 
     if not x<b:
         if not allclose(x,b):
@@ -57,7 +57,7 @@ def ListPrint(listA):
     return msg
 
 #------------------------------------------------------------------
-def piercePlaneVector(p0,p1,p2,pA,pB,piercedElements):
+def pierce_plane_vector(p0, p1, p2, pA, pB, piercedElements):
     """
     http://en.wikipedia.org/wiki/Line-plane_intersection
 
@@ -71,7 +71,7 @@ def piercePlaneVector(p0,p1,p2,pA,pB,piercedElements):
     p0,p1,p2 on plane
     a,b are points on the vector
     """
-    mat = array([pA-pB,p1-p0,p2-p0]) # numpy array-matrix
+    mat = array([pA-pB, p1-p0, p2-p0]) # numpy array-matrix
     #mat = array([[xa-xb, x1-x0, x2-x0],
     #             [ya-yb, y1-y0, y2-y0],
     #             [za-xb, x1-z0, z2-z0]])
@@ -86,18 +86,18 @@ def piercePlaneVector(p0,p1,p2,pA,pB,piercedElements):
     #print "t,u,v = ",tuv
     return tuv
 
-def distance(x,y):
+def distance(x, y):
     """Finds the euclidian/spherical (2D/3D) distance between 2 points"""
-    return norm(x-y)
+    return norm(x - y)
 
-def shepardSMSWeight(n,nodes):
+def shepard_SMS_weight(n, nodes):
     """
     a = (R-hi/R*hi)^2
     wi = a/sum(a)
-    
+
     hi = distance from interpolation point to scatter point
     R  = distance from interpolation point to most distant scatter point
-    
+
     http://www.ems-i.com/smshelp/Data_Module/Interpolation/Inverse_Distance_Weighted.htm
     Franke & Nielson, 1980
     """
@@ -106,16 +106,16 @@ def shepardSMSWeight(n,nodes):
         hi = distance(n,nodei)
         dists.append(hi)
     R = min(dists)
-    
+
     Aweights = []
     for hi in dists:
-        a = ((R-hi)/R*hi)**2.
+        a = ((R-hi) / R*hi)**2.
         aWeights.append(a)
     aWeights = array(aWeights)
-    weights = aWeights/sum(aWeights)
+    weights = aWeights / sum(aWeights)
     return weights
 
-def shepardWeight(n,nodes):
+def shepard_weight(n, nodes):
     """
     Finds the weightings based on the distance weighted average method
     In:
@@ -131,15 +131,15 @@ def shepardWeight(n,nodes):
     invDistSum = 0.
     d = 0.
     for nodei in nodes:
-        hi = distance(n,nodei)
+        hi = distance(n, nodei)
         d += hi
         if allclose(hi, 0.):
             hi = 0.000001  # make this the dominating node
-        
+
         invDist = 1.0 / hi
         invDists.append(invDist)
         invDistSum += invDist
-    
+
     invDists = array(invDists)
     weights = invDists / invDistSum
     return weights
@@ -158,18 +158,19 @@ def areaWeight(n, n1, n2, n3):
     b2 = a2 / a
     b3 = a3 / a
 
-    x = b1*x1+b2*x2+b3*x3
-    return(w1,w2,w3)
+    x = b1 * x1 + b2 * x2 + b3 * x3
+    #x = (a1 * x1 + a2 * x2 + a3 * x3) / a
+    return(w1, w2, w3)
 
-def getTriangleWeights(n, n1, n2, n3):
+def get_triangle_weights(n, n1, n2, n3):
     """
     Returns the weighting for each node such that:
         <F1,F2,F3> = F*<w1,w2,w3>
     on the 3 nodes of a triangle
     """
-    weights = shepardWeight(n,[n1,n2,n3])
-    (w1,w2,w3) = weights
-    #(w1,w2,w3) = areaWeight(n,n1,n2,n3)
+    weights = shepard_weight(n, [n1, n2, n3])
+    (w1, w2, w3) = weights
+    #(w1, w2, w3) = areaWeight(n, n1, n2, n3)
     return(w1,w2,w3)
 
 def Area(a, b):
@@ -182,7 +183,7 @@ def AreaNormal(nodes):
     Area   = 1/2 * |a x b|
     V = <v1,v2,v3>
     |V| = sqrt(v1^0.5+v2^0.5+v3^0.5) = norm(V)
-    
+
     Area = 0.5 * |n|
     unitNormal = n/|n|
     """
@@ -220,7 +221,7 @@ def Centroid(A, B, C):
     #print "type(A,B,C) = ",type(A),type(C),type(B)
     centroid = (A + B + C)/3.
     return centroid
-    
+
 #------------------------------------------------------------------
 
 if __name__=='__main__':
@@ -229,12 +230,12 @@ if __name__=='__main__':
     n3 = array([1.,0.,0.])
     n4 = array([5.,3.,0.])
     n5 = array([2.,0.,4.])
-    
+
     n2 = array([0.,1.,0.])
     c1 = Centroid(n1,n2,n3)
     n = Normal(n5,n2)
     print "norm = ",n,norm(n)
-    
+
     (area,centroid,normal) = Triangle_AreaCentroidNormal([n1,n2,n3])
     print "area=%s centroid=%s normal=%s" %(area,centroid,normal)
 

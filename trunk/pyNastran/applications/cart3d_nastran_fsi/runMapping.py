@@ -5,15 +5,45 @@ import shutil
 from numpy import allclose
 
 from mapLoads import run_map_loads
-from runSpline import run as runMapDeflections
+from runSpline import run_map_deflections
 
 from pyNastran.utils.log import get_logger
 debug = True
 log = get_logger(None, 'debug' if debug else 'info')
 
-def run():
+def run_mapping():
     basepath    = os.path.normpath(os.getcwd())
     configpath  = os.path.join(basepath, 'inputs')
+    print "os.getcwd()", os.getcwd()
+    globals2 = {}
+    locals2 = {}
+
+    fname = "inputs.user_inputs"
+    command_module = __import__("inputs.user_inputs", globals2, locals2, ['*'])
+
+    required_inputs = {
+        'xref' : None,
+        'nastran_call' :  None,
+    }
+    for key in required_inputs:
+        if key not in command_module.__dict__:
+            msg = 'fname=%r doesnt contain %r' % (fname, key)
+        value = command_module.__dict__[key]
+        required_inputs[key] = value
+        #print key, value
+
+
+    nastran_call = required_inputs['nastran_call']
+    xref = required_inputs['xref']
+
+    print "nastran_call = %r" % nastran_call
+    #print "globals2 =", globals2
+    print "xref =", xref
+    #print "locals2 =", locals2
+    #print "globals()", globals()
+    asfd
+
+
     workpath    = os.path.join(basepath, 'outputsFinal')
 
     # load mapping
@@ -39,7 +69,7 @@ def run():
 
     nodeList = [20037, 21140, 21787, 21028, 1151, 1886, 2018, 1477, 1023, 1116, 1201, 1116, 1201, 1828, 2589, 1373, 1315, 1571, 1507, 1532, 1317, 1327, 2011, 1445, 2352, 1564, 1878, 1402, 1196, 1234, 1252, 1679, 1926, 1274, 2060, 2365, 21486, 20018, 20890, 20035, 1393, 2350, 1487, 1530, 1698, 1782]
     outfile = open('convergeDeflections.out', 'ab')
-    
+
     maxADeflectionOld = 0.
     nIterations = 30
     iCart = 1
@@ -47,7 +77,7 @@ def run():
         strI = '_' + str(i)
         assert os.path.exists('Components.i.tri')
         #if i==iCart:
-        if 1:
+        if 0:
             # run cart3d
             log.info("---running Cart3d #%s---" % i)
             sys.stdout.flush()
@@ -74,13 +104,13 @@ def run():
         copyFile('fem3.op2', 'fem3.op2' + strI)
         copyFile('fem3.f06', 'fem3.f06' + strI)
         os.remove(bdfModelOut) # cleans up fem_loads.bdf
-        
+
         # map deflections
-        (wA, wS) = runMapDeflections(nodeList, bdf, f06, cart3dGeom, cart3dGeom2)
+        (wA, wS) = run_map_deflections(nodeList, bdf, op2, cart3dGeom, cart3dGeom2, log=log)
         assert os.path.exists('Components.i.tri')
         os.remove(op2) # verifies new fem3.op2 was created
         os.remove(f06) # verifies new fem3.f06 was created
-        
+
         # post-processing
         (maxAID, maxADeflection) = maxDict(wA)
         maxSID = '???'
@@ -130,5 +160,5 @@ def copyFile(a, b):
     assert os.path.exists(b), 'fileB=%r was not copied...' % b
 
 if __name__=='__main__':
-    run()
+    run_mapping()
 

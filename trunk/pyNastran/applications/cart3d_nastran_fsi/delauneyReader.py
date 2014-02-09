@@ -2,7 +2,7 @@ import os
 from numpy import array, cross, dot, abs, transpose
 from numpy.linalg import norm, solve, cond
 
-from mathFunctions import printMatrix, isListRanged, ListPrint, shepardWeight
+from mathFunctions import printMatrix, is_list_ranged, ListPrint, shepard_weight
 from matTest import fIsNatural
 
 from logger import dummyLogger
@@ -21,11 +21,11 @@ class Tet4(object):
         self.p1 = array(p1)
         self.p2 = array(p2)
         self.p3 = array(p3)
-        
+
         self.ID   = ID
         self.nodes = nodes
         self.neighbors = neighbors
-        
+
         #self.face0 = (self.p0+self.p1+self.p2)/3
         #self.face1 = (self.p0+self.p1+self.p3)/3
         #self.face2 = (self.p0+self.p2+self.p3)/3
@@ -51,7 +51,7 @@ class Tet4(object):
     def __repr__(self):
         nodes = "[%3s, %3s, %3s, %3s]" %(self.nodes[0],self.nodes[1],self.nodes[2],self.nodes[3])
         return "ID=%4s nodes=%s p0=%s p1=%s p2=%s p3=%s" %(self.ID,nodes,self.p0,self.p1,self.p2,self.p3)
-        
+
     def calculateCentroid(self):
         """
         centroid = (a+b+c)/4  with point d at the origin
@@ -72,7 +72,7 @@ class Tet4(object):
     def testVol(self,a,b,c,d):
         vol = dot(a-d,cross(b-d,c-d)) / 6.
         return vol
-    
+
     def volume(self):
         """
         volume = dot(a-d,cross(b-d,c-d))/6
@@ -85,17 +85,17 @@ class Tet4(object):
         return self._volume
 
     def mapDeflections2(self,deflections,aeroNode):
-        #A = 
+        #A =
         pass
 
     def mapDeflections(self,deflections,aeroNode):
         """
         determines the mapped x,y,z deflections of the aero node
-        
+
         deflections - deflections at p0,p1,p2,p3
         aeroNode    - node to find the deflections at
-        
-        Solves Ax=b  where A is the nodes, x is the abc coeffs, 
+
+        Solves Ax=b  where A is the nodes, x is the abc coeffs,
                      b is the deflection at the tet node points (x,y,z)
         then uses x to find the deflection at an arbitrary point m (aeroNode)
         """
@@ -113,11 +113,11 @@ class Tet4(object):
         #condA = cond(A,2)
         #log.info("A cond=%g;  A=\n%s" %(condA,printMatrix(A)))
         #print "ID  = ",self.ID
-        
+
         #condMax = 1E6  # max allowable condition number before alternate approach
         if 1:
             nodes   = [self.p0,self.p1,self.p2,self.p3]
-            weights = shepardWeight(aeroNode,nodes)
+            weights = shepard_weight(aeroNode,nodes)
             du = array([0.,0.,0.])
             for (node,weight) in zip(nodes,weights):
                 du += weight*node
@@ -146,14 +146,14 @@ class Tet4(object):
         #ui = abcd*aeroNode # element-wise multiplication...faster, cant make it work; tried dot & transpose too...
         (a,b,c,d) = abcd
         ui = a+b*aeroNode[0]+c*aeroNode[1]+d*aeroNode[2]
-        isRanged = isListRanged(0.,abcd,1.)
+        isRanged = is_list_ranged(0.,abcd,1.)
         log.info('isRanged=%s  u%sRatio=%g - a=%g b=%g c=%g d=%g' %(isRanged,dType,abs(ui/diMax),a,b,c,d))
         return ui
 
     def isInternalNode(self,pAero):
         """
         If there is an internal node, than the sum of the internal volumes without
-        an absolute value will equatl the volume of the local tet 
+        an absolute value will equatl the volume of the local tet
           *   3
          /  \
         *---*  0 1
@@ -161,12 +161,12 @@ class Tet4(object):
         """
         (isContained,gammas) = fIsNatural(pAero,self.p0,self.p1,self.p2,self.p3,V=self._volume)
         return isContained,min(gammas)
-        
+
         a = Tet4(self.p0, self.p1, self.p2, pAero,ID='a',nodes=[0,1,2,'p'])
         b = Tet4(self.p0, self.p1, pAero,self.p3, ID='b',nodes=[0,1,'p',3] )
         c = Tet4(pAero,self.p0, self.p2, self.p3, ID='c',nodes=['p',0,2,3] )
         d = Tet4(self.p1,pAero, self.p2, self.p3, ID='d',nodes=[1,'p',2,3] )
-        
+
         #aVol = a.volume()
         #if aVol>=0:
         #    bVol = b.volume()
@@ -196,20 +196,20 @@ class Tet4(object):
 class DelauneyReader(object):
     def __init__(self,infilename):
         self.infilename = infilename
-    
+
     def buildTets(self):
         grids,elements,volume = self.read()
-        
+
         tets = {}
         for key,elementNeighbors in elements.items():
             nodes,neighbors = elementNeighbors
             id1,id0,id2,id3 = nodes
-            
+
             grid0 = grids[id0]
             grid1 = grids[id1]
             grid2 = grids[id2]
             grid3 = grids[id3]
-            
+
             tet = Tet4(grid0,grid1,grid2,grid3,
                        ID=key,nodes=nodes,neighbors=neighbors)
             tets[key] = tet
@@ -227,14 +227,14 @@ class DelauneyReader(object):
 #        for tet in tets:
 #            vol += tet.volume()
 #        print "volume=%s vol=%s" %(volume,-vol/2.)
-        
+
     def testMapper(self):
         m = array([0.,0.,0.])
         tets,grids,elements,volume = self.buildTets()
         tetNew = self.findClosestTet(m,tets)
         updateNode(m,tets)
         return tetNew
-    
+
     def updateNode(self,m,tets):
         """
         Takes in a new point m (mid tet point) and a list of tets
@@ -244,7 +244,7 @@ class DelauneyReader(object):
         """
         #m = array([21.18,0.5,-1.87e-6])
         tetNew = self.findClosestTet(m,tets)
-        
+
         # def = deflections at p0,p1,p2,p3
         newAeroNode = tetNew.mapDeflections(deflections,m)
         return newAeroNode
@@ -253,23 +253,23 @@ class DelauneyReader(object):
         """
         Finds the closest tet.  Has the potential to fail, but until then, skipping.
         Solution to failure:  brute force method.
-        
+
         m = aeroNode
-        tets = 
+        tets =
         """
         startingTet = tets[0]
         closestTet = self.findClosestTet_recursion(m,startingTet,tets)
         #print "found tet = ",closestTet.ID
         #v1 = array([1.,0.,0.])
         return closestTet
-        
+
 
     def findClosestTet_recursion(self,m,tet0,tets,excluded=[]):
         """
         Makes an assumption that there is a direct line from the starting tet
         to the final tet that can be minimized with nearly every subsequent tet.
         At worst, it will get the starting node one tet closer to the solution.
-        
+
         m = starting point (mid point)
         """
         #print "working on tet = ",tet0.ID
@@ -285,13 +285,13 @@ class DelauneyReader(object):
                 dists[i] = self.distance(m,tets[i].centroid())
         #dists[0] = 9.e9
         #print "dists = ",dists
-        
+
         minValue = min(dists)
         i = dists.index(minValue)
         tetNew = tets[tet0.neighbors[i]]
         excluded.append(tet0.ID)
         #print "excluding ID=%s\n" %(tet0.ID)
-        
+
         closestTet = self.findClosestTet_recursion(m,tetNew,tets,excluded)
         return closestTet
 
@@ -304,24 +304,24 @@ class DelauneyReader(object):
         infile = open(self.infilename,'r')
         lines = infile.readlines()
         infile.close()
-        
+
         slines = []
         for line in lines:
             sline = line.strip().split()
             if sline:
                 slines.append(sline)
         infile.close()
-        
+
         #log.info('slines[0] = %s' %(slines[0]))
         ngrids,nelements = self.ints(slines[0])
         log.info("ngrid=%s  nelements=%s" %(ngrids,nelements))
-        
+
         grids = {}
         for sline in slines[1:ngrids+1]:
             node = self.node(sline)
             grids[node[0]] = node[1:]
             #print "id=%s grid=%s" %(node[0],node[1:])
-        
+
         maxX = grids[1][0]
         maxY = grids[1][1]
         maxZ = grids[1][2]
@@ -338,7 +338,7 @@ class DelauneyReader(object):
             minX = min(minX,grid[0])
             minY = min(minY,grid[1])
             minZ = min(minZ,grid[2])
-        
+
         elements = {}
         nelements = 1
         for sline in slines[ngrids+1:]:
@@ -352,9 +352,9 @@ class DelauneyReader(object):
             #print len(element2)
             elements[nelements] = [element,neighbors]
             nelements +=1
-            
+
             #print "e[%s]=%s" %(e[0],e[1:])
-        
+
         log.info("maxX=%s minX=%s" %(maxX,minX))
         log.info("maxY=%s minY=%s" %(maxY,minY))
         log.info("maxZ=%s minZ=%s" %(maxZ,minZ))
@@ -363,9 +363,9 @@ class DelauneyReader(object):
         dz = maxZ-minZ
         volume = dx*dy*dz
         log.info("volume = %s" %(volume))
-        
+
         return grids,elements,volume
-    
+
     def writeTetsAsNastran(self,nodes,tets):
         tetFilename = 'tet.bdf'
         outfile = open(tetFilename,'wb')
@@ -385,7 +385,7 @@ class DelauneyReader(object):
             if i%1000==0:
                 outfile.write(msg)
                 msg = ''
-            
+
         outfile.write(msg)
 
         outfile.close()
@@ -396,7 +396,7 @@ class DelauneyReader(object):
 
     def floats(self,values):
         return [float(value) for value in values]
-    
+
     def node(self,values):
         return [int(values[0])] + self.floats(values[1:])
 
@@ -404,10 +404,10 @@ def run():
     infilename = os.path.join('delauney','geometry.morph.in')
     d = DelauneyReader(infilename)
     tets,nodes,elements,volume = d.buildTets()
-    
+
     m = array([21.18,0.5,-1.87347e-6])
     d.findClosestTet(m,tets)
-    
+
     d.writeTetsAsNastran(nodes,tets)
     #d.read()
     #d.testVolume()
