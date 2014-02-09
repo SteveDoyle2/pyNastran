@@ -5,7 +5,7 @@ from traceback import print_exc
 
 import pyNastran
 from pyNastran.op2.op2 import OP2
-#from pyNastran.op2.dev_explicit.op2 import OP2
+from pyNastran.op2.dev_explicit.op2 import OP2, FatalError
 
 
 def parse_table_names_from_F06(f06Name):
@@ -38,6 +38,9 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
                    debug=True, saveCases=True, skipFiles=[],
                    stopOnFailure=False, nStart=0, nStop=1000000000):
     n = ''
+    assert make_geom in [True, False]
+    assert write_bdf in [True, False]
+    assert write_f06 in [True, False]
     iSubcases = []
     failedCases = []
     nFailed = 0
@@ -55,6 +58,7 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
             nTotal += 1
             isPassed = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
                                write_f06=write_f06, write_matlab=write_matlab,
+                               is_mag_phase=False,
                                delete_f06=delete_f06,
                                iSubcases=iSubcases, debug=debug,
                                stopOnFailure=stopOnFailure) # True/False
@@ -93,12 +97,12 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
     #debug = True
     write_matlab = False
     try:
-        op2 = OP2(op2FileName, make_geom=make_geom, debug=debug)
+        op2 = OP2(make_geom=make_geom, debug=debug)
         op2.set_subcases(iSubcases)
 
         #op2.read_bdf(op2.bdfFileName,includeDir=None,xref=False)
         #op2.write_bdf_as_patran()
-        op2.read_op2()
+        op2.read_op2(op2FileName)
         print("---stats for %s---" % op2FileName)
         #op2.get_op2_stats()
         print(op2.get_op2_stats())
@@ -140,8 +144,10 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
     #    else:
     #        isPassed = True
 
-    #except IOError: # missing file
-        #pass
+    except IOError: # missing file
+        pass
+    except FatalError:
+        pass
     #except AssertionError:
     #    isPassed = True
 

@@ -129,7 +129,7 @@ class OPG(object):
         elif self.table_code == 12:  # ???
             n = self._read_force_vector(data)
         #else:
-            #n = self.not_implemented_or_skip('bad OPG table')
+            #n = self._not_implemented_or_skip('bad OPG table')
         else:
             raise NotImplementedError(self.table_code)
         return n
@@ -172,3 +172,4 @@ class OPG(object):
             #n = self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
         else:
             raise NotImplementedError(self.thermal)
+        return n

@@ -19,7 +19,7 @@ class EPT(object):
         raise RuntimeError('this should be overwritten')
 
     def _read_ept_4(self, data):
-        self._read_geom_4(self._ept_map, data)
+        return self._read_geom_4(self._ept_map, data)
 
     def __init__(self):
         self.skippedCardsFile = StringIO.StringIO()

@@ -364,7 +364,11 @@ class OP2Common(Op2Codes, F06Writer):
         if add_to_dict:
             self.data_code[var_name] = value
 
-        self.words[field_num-1] = var_name
+        try:
+            self.words[field_num-1] = var_name
+        except IndexError:
+            msg = 'Trying to set word, but...len(words)=%s ifield=%s' % (len(self.words), field_num - 1)
+            raise IndexError(msg)
         return value
 
     def apply_data_code_value(self, name, value):
@@ -374,7 +378,7 @@ class OP2Common(Op2Codes, F06Writer):
         self.nonlinear_factor = None
         self.data_code['nonlinear_factor'] = None
 
-    def _read_title(self, data):
+    def _read_title_helper(self, data):
         assert len(data) == 584, len(data)
         Title, subtitle, label = unpack(b'128s128s128s', data[200:])  # titleSubtitleLabel
 
@@ -392,6 +396,9 @@ class OP2Common(Op2Codes, F06Writer):
             self.binary_debug.write('  Title    = %r\n' % self.Title)
             self.binary_debug.write('  subtitle = %r\n' % self.subtitle)
             self.binary_debug.write('  label    = %r\n' % self.label)
+
+    def _read_title(self, data):
+        self._read_title_helper(data)
 
         if hasattr(self, 'isubcase'):
             if self.isubcase not in self.iSubcaseNameMap:
@@ -420,7 +427,7 @@ class OP2Common(Op2Codes, F06Writer):
 
     def _read_geom_4(self, mapper, data):
         if not self.make_geom:
-            return
+            return len(data)
         n = 0
         keys = unpack('3i', data[n:n+12])
         n += 12
@@ -438,6 +445,7 @@ class OP2Common(Op2Codes, F06Writer):
             raise NotImplementedError('keys=%s not found' % str(keys))
         #assert n == len(data), 'n=%s len(data)=%s' % (n, len(data))
         #self.show_data(data[n:])
+        return n
 
     def _read_table(self, data, result_name, real_obj, complex_obj, node_elem):
         assert isinstance(result_name, dict), 'result_name=%r' % result_name
@@ -457,7 +465,7 @@ class OP2Common(Op2Codes, F06Writer):
             n = self._read_complex_table(data, result_name, node_elem)
         else:
             msg = 'only num_wide=8 or 14 is allowed  num_wide=%s' % self.num_wide
-            n = self.not_implemented_or_skip(msg)
+            n = self._not_implemented_or_skip(data, msg)
         return n
 
     def _read_real_table(self, data, result_name, flag):
@@ -507,7 +515,7 @@ class OP2Common(Op2Codes, F06Writer):
 
         assert self.obj is not None
         assert nnodes > 0
-        assert len(data) % ntotal == 0
+        #assert len(data) % ntotal == 0
 
         for inode in xrange(nnodes):
             edata = data[n:n+ntotal]
@@ -577,7 +585,7 @@ class OP2Common(Op2Codes, F06Writer):
             else:
                 storageObj[self.ID] = self.obj
 
-    def not_implemented_or_skip(self, data, msg=''):
+    def _not_implemented_or_skip(self, data, msg=''):
         #if isRelease:
             return len(data)
         #else:

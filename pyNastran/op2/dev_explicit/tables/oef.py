@@ -251,7 +251,7 @@ class OEF(OP2Common):
         elif self.thermal == 1:
             return self._read_oef1_thermal(data)
         else:
-            n = self.not_implemented_or_skip('thermal=%s' % self.thermal)
+            n = self._not_implemented_or_skip(data, 'thermal=%s' % self.thermal)
         return n
 
     def _read_oef1_thermal(self, data):
@@ -1210,7 +1210,7 @@ class OEF(OP2Common):
             raise NotImplementedError('OEF sort1 Type=%s num=%s' % (self.element_name, self.element_type))
         assert len(data) > 0
         assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
-        assert len(data) % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data) % self.num_wide, len(data), ntotal)
+        #assert len(data) % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data) % self.num_wide, len(data), ntotal)
         assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
         assert n > 0, n
         return n

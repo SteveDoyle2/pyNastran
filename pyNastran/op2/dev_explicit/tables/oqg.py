@@ -124,7 +124,7 @@ class OQG(OP2Common):
         else:
             raise NotImplementedError(self.table_code)
         #else:
-            #self.not_implemented_or_skip('bad OQG table')
+            #self._not_implemented_or_skip('bad OQG table')
         return n
 
     def _read_spc_forces(self, data):

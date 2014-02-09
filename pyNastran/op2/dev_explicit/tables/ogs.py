@@ -100,9 +100,10 @@ class OGS(OP2Common):
             assert self.table_name in ['OGS1'],'table_name=%s table_code=%s' % (self.table_name,self.table_code)
             n = self._read_ogs1_table28(data)
         #elif self.table_code == 35:  # OGS - Grid point stress discontinuities (plane strain)
-            #n = self.not_implemented_or_skip(data, msg)
+            #n = self._not_implemented_or_skip(data, msg)
         else:
             raise NotImplementedError(self.table_code)
+        return n
 
     def _read_ogs1_table28(self, data):
         if self.num_wide == 15:
@@ -115,11 +116,11 @@ class OGS(OP2Common):
         resultName = 'gridPointStresses'
         if self.num_wide == 11:  # real/random
             #self.create_transient_object(self.gridPointStresses, GridPointStressesObject)
-            self._readOGS1_table26_numWide11(data)
+            n = self._readOGS1_table26_numWide11(data)
         else:
             msg = 'only num_wide=11 is allowed  num_wide=%s' % self.num_wide
             raise RuntimeError(msg)
-        return len(data)
+        return n
 
     def _readOGS1_table26_numWide11(self, data):  # surface stresses
         #dt = self.nonlinear_factor

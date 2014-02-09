@@ -62,7 +62,6 @@ def main():
     write_bdf  = False
     write_f06  = True
     write_matlab = True
-    print_results = False
 
     delete_f06 = True
     saveCases = True
@@ -93,7 +92,7 @@ def main():
     import time
     t0 = time.time()
     run_lots_of_files(files,make_geom,write_bdf,write_f06,write_matlab,delete_f06,
-                   print_results,debug,saveCases,skipFiles,stopOnFailure,
+                   debug,saveCases,skipFiles,stopOnFailure,
                    nStart,nStop)
     print("dt = %f" %(time.time() - t0))
     sys.exit('final stop...')
