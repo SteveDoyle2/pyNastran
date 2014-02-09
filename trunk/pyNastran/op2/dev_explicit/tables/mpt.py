@@ -25,7 +25,7 @@ class MPT(object):
         raise RuntimeError('this should be overwritten')
 
     def _read_mpt_4(self, data):
-        self._read_geom_4(self._mpt_map, data)
+        return self._read_geom_4(self._mpt_map, data)
 
     def __init__(self):
         self.skippedCardsFile = StringIO.StringIO()

@@ -22,7 +22,7 @@ from pyNastran.bdf.cards.nodes import SPOINTs
 class GEOM2(object):
 
     def _read_geom2_4(self, data):
-        self._read_geom_4(self._geom2_map, data)
+        return self._read_geom_4(self._geom2_map, data)
 
     def __init__(self):
         self.skippedCardsFile = StringIO.StringIO()

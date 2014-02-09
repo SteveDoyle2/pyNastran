@@ -265,38 +265,39 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
             'LAMA': [self._read_real_eigenvalue_3, self._read_real_eigenvalue_4],
 
             # geometry
-            'GEOM1': [self._not_available, self._read_geom1_4],
-            'GEOM2': [self._not_available, self._read_geom2_4],
-            'GEOM3': [self._not_available, self._read_geom3_4],
-            'GEOM4': [self._not_available, self._read_geom4_4],
+            'GEOM1': [self._read_geom1_4, self._read_geom1_4],
+            'GEOM2': [self._read_geom2_4, self._read_geom2_4],
+            'GEOM3': [self._read_geom3_4, self._read_geom3_4],
+            'GEOM4': [self._read_geom4_4, self._read_geom4_4],
 
             # superelements
-            'GEOM1S': [self._not_available, self._read_geom1_4],
-            'GEOM2S': [self._not_available, self._read_geom2_4],
-            'GEOM3S': [self._not_available, self._read_geom3_4],
-            'GEOM4S': [self._not_available, self._read_geom4_4],
+            'GEOM1S': [self._read_geom1_4, self._read_geom1_4],
+            'GEOM2S': [self._read_geom2_4, self._read_geom2_4],
+            'GEOM3S': [self._read_geom3_4, self._read_geom3_4],
+            'GEOM4S': [self._read_geom4_4, self._read_geom4_4],
 
-            'GEOM1N': [self._not_available, self._read_geom1_4],
-            #'GEOM2N': [self._not_available, self._read_geom2_4],
-            #'GEOM3N': [self._not_available, self._read_geom3_4],
-            #'GEOM4N': [self._not_available, self._read_geom4_4],
+            'GEOM1N': [self._read_geom1_4, self._read_geom1_4],
+            #'GEOM2N': [self._read_geom2_4, self._read_geom2_4],
+            #'GEOM3N': [self._read_geom3_4, self._read_geom3_4],
+            #'GEOM4N': [self._read_geom4_4, self._read_geom4_4],
 
-            'GEOM1OLD': [self._not_available, self._read_geom1_4],
-            'GEOM2OLD': [self._not_available, self._read_geom2_4],
-            #'GEOM3OLD': [self._not_available, self._read_geom3_4],
-            'GEOM4OLD': [self._not_available, self._read_geom4_4],
+            'GEOM1OLD': [self._read_geom1_4, self._read_geom1_4],
+            'GEOM2OLD': [self._read_geom2_4, self._read_geom2_4],
+            #'GEOM3OLD': [self._read_geom3_4, self._read_geom3_4],
+            'GEOM4OLD': [self._read_geom4_4, self._read_geom4_4],
 
-            'EPT' : [self._not_available, self._read_ept_4],
-            'EPTS': [self._not_available, self._read_ept_4],
-            'EPTOLD' : [self._not_available, self._read_ept_4],
+            'EPT' : [self._read_ept_4, self._read_ept_4],
+            'EPTS': [self._read_ept_4, self._read_ept_4],
+            'EPTOLD' : [self._read_ept_4, self._read_ept_4],
 
-            'MPT' : [self._not_available, self._read_mpt_4],
-            'MPTS': [self._not_available, self._read_mpt_4],
+            'MPT' : [self._read_mpt_4, self._read_mpt_4],
+            'MPTS': [self._read_mpt_4, self._read_mpt_4],
         }
         self.make_geom = False
 
     def _not_available(self, data):
-        raise RuntimeError('this should never be called...table_name=%r' % self.table_name)
+        if len(data) > 0:
+            raise RuntimeError('this should never be called...table_name=%r len(data)=%s' % (self.table_name, len(data)))
 
     def readFake(self, data, n):
         return n
@@ -405,11 +406,12 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
                                   'GEOM1OLD', 'GEOM2OLD', 'GEOM4OLD',
 
                                   'EPT', 'EPTS', 'EPTOLD',
+                                  'EDTS',
                                   'MPT', 'MPTS',
 
                                   'PVT0', 'CASECC',
                                   'EDOM', 'OGPFB1',
-                                  'BGPDT', 'BGPDTOLD',
+                                  'BGPDT', 'BGPDTS', 'BGPDTOLD',
                                   'DYNAMIC', 'DYNAMICS',
                                   'EQEXIN', 'EQEXINS',
                                   'GPDT', 'ERRORN',

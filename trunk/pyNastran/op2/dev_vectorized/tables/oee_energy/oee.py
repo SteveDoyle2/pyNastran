@@ -141,7 +141,7 @@ class OEE(object):
         elif self.num_wide == 5:
             self.handle_results_buffer(self.OEE_Strain5, resultName, name)
         else:
-            self.not_implemented_or_skip()
+            self.not_implemented_or_skip('numwide=%s' % numwide)
         #self.readMappedScalarsOut(debug=False) # handles dtMap, not correct...
 
     def OEE_Strain4(self, name):
