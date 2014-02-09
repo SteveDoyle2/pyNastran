@@ -6,7 +6,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import sys
-import warnings
+#import warnings
 from numpy import array
 from struct import unpack
 import StringIO
@@ -20,38 +20,23 @@ from pyNastran.op2.tables.ogpwg import OGPWG
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.f06.f06Writer import F06Writer
-from pyNastran.utils.gui_io import load_file_dialog
+
 from pyNastran.utils import is_binary
+from pyNastran.utils.gui_io import load_file_dialog
 
 
 class OP2Deprecated(object):
 
-    def readOP2(self):
-        """
-        Reads the op2 file
-
-        .. deprecated: will be replaced in version 0.7 with :func:`read_op2`
-        """
-        warnings.warn('readOP2 has been deprecated; use '
-                      'read_op2', DeprecationWarning, stacklevel=2)
-        self.read_op2()
-
-    def setSubcases(self, iSubcases):
-        """
-        .. deprecated: will be replaced in version 0.7 with :func:`set_subcases`
-        """
-        warnings.warn('setSubcases has been deprecated; use '
-                      'set_subcases', DeprecationWarning, stacklevel=2)
-        self.set_subcases(iSubcases)
-
-    def setTransientTimes(self, times):
-        """
-        .. todo:: rename this
-        .. deprecated: will be replaced in version 0.7 with :func:`set_transient_times`
-        """
-        warnings.warn('setTransientTimes has been deprecated; use '
-                      'set_transient_times', DeprecationWarning, stacklevel=2)
-        self.set_transient_times(times)
+    def __init__(self):
+        pass
+    #def setTransientTimes(self, times):
+        #"""
+        #.. todo:: rename this
+        #.. deprecated: will be replaced in version 0.7 with :func:`set_transient_times`
+        #"""
+        #warnings.warn('setTransientTimes has been deprecated; use '
+        #              'set_transient_times', DeprecationWarning, stacklevel=2)
+        #self.set_transient_times(times)
 
 
 class OP2(BDF,
@@ -103,12 +88,11 @@ class OP2(BDF,
             return False
         return True
 
-    def __init__(self, op2FileName=None, make_geom=False, save_skipped_cards=False,
+    def __init__(self, make_geom=False, save_skipped_cards=False,
                  debug=True, log=None):
         """
         Initializes the OP2 object
 
-        :param op2FileName: the file to be parsed (string or None for GUI)
         :param make_geom: reads the BDF tables (default=False)
         :param save_skipped_cards: creates the skippedCards.out file (default=False)
         :param debug: prints data about how the OP2 was parsed (default=False)
@@ -127,32 +111,17 @@ class OP2(BDF,
 
         self.set_subcases()  # initializes the variables
 
-        if op2FileName is None:
-            wildcard_wx = "Nastran OP2 (*.op2)|*.op2|" \
-                "All files (*.*)|*.*"
-            wildcard_qt = "Nastran OP2 (*.op2);;All files (*)"
-            title = 'Please select a OP2 to load'
-            op2FileName = load_file_dialog(title, wildcard_wx, wildcard_qt)
-
-        self.log.debug('op2FileName = %s' % op2FileName)
-        bdfExtension = '.bdf'
-        f06Extension = '.f06'
-        (fname, extension) = os.path.splitext(op2FileName)
         self.table_name = 'temp'
 
         #: should the BDF tables be parsed
         self.make_geom = make_geom
 
         #: the input OP2 filename
-        self.op2FileName = op2FileName
-        self.op2_filename = self.op2FileName
-
+        self.op2_filename = None
         #: the expected BDF filename (guessed)
-        self.bdfFileName = fname + bdfExtension
-
+        self.bdf_filename = None
         #: the expected F06 filename (guessed)
-        self.f06FileName = fname + f06Extension
-        #print "bdfFileName = ",self.bdfFileName
+        self.f06_filename = None
 
         #: developer parameter to write the OP2 is ASCII format
         #: to better understand it
@@ -490,17 +459,38 @@ class OP2(BDF,
         self.n += n * 4 + 4
         #print("self.n = ",self.n)
         self.op2.seek(self.n)
-
         return data
 
     def read_op2(self, op2_filename=None):
-        if op2_filename:
-            self.op2_filename = op2_filename
+        """
+        Starts the OP2 file reading
+        :param op2_filename: if a string is set, the filename specified in the
+            __init__ is overwritten.
 
-        if not is_binary(self.op2_filename):
-            if os.path.getsize(self.op2_filename) == 0:
-                raise RuntimeError('op2_filename=%r is empty.' % self.op2_filename)
-            raise RuntimeError('op2_filename=%r is not a binary OP2.' % self.op2_filename)
+            init=None,  op2_filename=None   -> a dialog is popped up  (not implemented; crash)
+            init=fname, op2_filename=fname  -> fname is used
+        """
+        if op2_filename is None:
+            wildcard_wx = "Nastran OP2 (*.op2)|*.op2|" \
+                "All files (*.*)|*.*"
+            wildcard_qt = "Nastran OP2 (*.op2);;All files (*)"
+            title = 'Please select a OP2 to load'
+            op2_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)
+            assert op2_filename is not None, op2_filename
+
+        if not is_binary(op2_filename):
+            if os.path.getsize(op2_filename) == 0:
+                raise IOError('op2_filename=%r is empty.' % op2_filename)
+            raise IOError('op2_filename=%r is not a binary OP2.' % op2_filename)
+
+        self.log.debug('op2_filename = %r' % op2_filename)
+        bdf_extension = '.bdf'
+        f06_extension = '.f06'
+        (fname, extension) = os.path.splitext(op2_filename)
+
+        self.op2_filename = op2_filename
+        self.bdf_filename = fname + bdf_extension
+        self.f06_filename = fname + f06_extension
 
         #: file index
         self.n = 0
@@ -514,7 +504,6 @@ class OP2(BDF,
             self.n = self.op2.tell()
 
             try:
-                #self.readTapeCodePost2()
                 self.read_tape_code()
             except:
                 #raise
@@ -528,7 +517,7 @@ class OP2(BDF,
                       '  3.  Run the problem on a different Operating System\n'
                       '  4.  Are you running an OP2? :)  \n'
                       'fname=%s' % (self.op2FileName, self.op2FileName))
-                #raise RuntimeError("Tape Code Error: %s" % msg)
+                raise RuntimeError("Tape Code Error: %s" % msg)
                 raise
 
             isAnotherTable = True

@@ -8,6 +8,7 @@ from struct import unpack, Struct
 
 from numpy import array
 
+
 from pyNastran.f06.f06 import FatalError
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 
@@ -18,6 +19,10 @@ from pyNastran.op2.dev_explicit.tables.geom4 import GEOM4
 
 from pyNastran.op2.dev_explicit.tables.ept import EPT
 from pyNastran.op2.dev_explicit.tables.mpt import MPT
+
+from pyNastran.op2.dev_explicit.tables.lama import LAMA
+from pyNastran.op2.dev_explicit.tables.onr import ONR
+from pyNastran.op2.dev_explicit.tables.ogpf import OGPF
 
 from pyNastran.op2.dev_explicit.tables.oef import OEF
 from pyNastran.op2.dev_explicit.tables.oes import OES
@@ -32,9 +37,11 @@ from pyNastran.op2.dev_explicit.fortran_format import FortranFormat
 from pyNastran.bdf.bdf import BDF
 
 from pyNastran.utils import is_binary
+from pyNastran.utils.gui_io import load_file_dialog
 
 
 class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
+          LAMA, ONR, OGPF,
           OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
     """
     Defines an interface for the Nastran OP2 file.
@@ -147,10 +154,8 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
         """
         self.tables_to_read = table_names
 
-    def __init__(self, op2_filename, make_geom=False, save_skipped_cards=False, debug=False, log=None):
+    def __init__(self, make_geom=False, save_skipped_cards=False, debug=False, log=None):
         self.save_skipped_cards = save_skipped_cards
-        if op2_filename:
-            self.op2_filename = op2_filename
         self.make_geom = make_geom
 
         #self.tables_to_read = []
@@ -163,6 +168,10 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
 
         EPT.__init__(self)
         MPT.__init__(self)
+
+        LAMA.__init__(self)
+        ONR.__init__(self)
+        OGPF.__init__(self)
 
         OEF.__init__(self)
         OES.__init__(self)
@@ -178,7 +187,8 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
         self.words = []
         self.debug = True
         if self.debug:
-            self.binary_debug = open('debug.out', 'wb')
+            #: an ASCII version of the op2 (creates lots of output)
+             self.binary_debug = open('debug.out', 'wb')
 
         self._table_mapper = {
             #'DIT': self.read_dit,
@@ -199,17 +209,17 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
             #=======================
             # OPG
             # applied loads
-            'OPG1'  : [self.read_opg1_3, self.read_opg1_4],
-            'OPGV1' : [self.read_opg1_3, self.read_opg1_4],
-            'OPNL1' : [self.read_opg1_3, self.read_opg1_4],
+            'OPG1'  : [self._read_opg1_3, self._read_opg1_4],
+            'OPGV1' : [self._read_opg1_3, self._read_opg1_4],
+            'OPNL1' : [self._read_opg1_3, self._read_opg1_4],
 
             # OGPFB1
             # grid point forces
-            'OGPFB1' : [self.read_ogpf1_3, self.read_ogpf1_4],
+            'OGPFB1' : [self._read_ogpf1_3, self._read_ogpf1_4],
 
             # ONR
             # grid point forces
-            'ONRGY1' : [self.read_onr1_3, self.read_onr1_4],
+            'ONRGY1' : [self._read_onr1_3, self._read_onr1_4],
             #=======================
             # OES
             # stress
@@ -285,231 +295,13 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
         }
         self.make_geom = False
 
-    def read_onr1_3(self, data):  # TODO: this is wrong...
-        self.read_opg1_3(data)
-
-    def read_onr1_4(self, data):
-        if self.table_code == 18:  # element strain energy
-            assert self.table_name in ['ONRGY1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-            n = self._read_element_strain_energy(data)
-        else:
-            raise NotImplementedError(self.table_code)
-        return n
-
-    def read_ogpf1_3(self, data):
-        self.read_opg1_3(data)  # TODO: this is wrong...
-
-    def read_ogpf1_4(self, data):
-        if self.table_code == 19:  # grid point force balance
-            assert self.table_name in ['OGPFB1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-            n = self._read_grid_point_forces(data)
-        else:
-            raise NotImplementedError(self.table_code)
-        return n
-
-    def _read_element_strain_energy(self, data):
-        """
-        table_code = 19
-        """
-        from pyNastran.op2.tables.oee_energy.oee_objects import StrainEnergyObject
-        dt = self.nonlinear_factor
-        n = 0
-        if self.thermal == 0:
-            result_name = 'strainEnergy'
-            if self.num_wide == 4:
-                self.create_transient_object(self.strainEnergy, StrainEnergyObject)
-                s = Struct(b'i3f')
-
-                ntotal = 16
-                nnodes = len(data) // ntotal
-                for i in xrange(nnodes):
-                    eData = data[n:n+ntotal]
-
-                    out = s.unpack(eData)
-                    (eid_device, energy, percent, density) = out
-                    eid = (eid_device - self.device_code) // 10
-                    #print "eType=%s" %(eType)
-
-                    dataIn = [eid, energy, percent, density]
-                    #print "%s" %(self.get_element_type(self.element_type)),dataIn
-                    self.obj.add(dt, dataIn)
-                    n += ntotal
-            elif self.num_wide == 5:
-                self.create_transient_object(self.strainEnergy, StrainEnergyObject)  # why is this not different?
-                s = Struct(b'i8s3f')
-                ntotal = 20
-                nnodes = len(data) // ntotal
-                for i in xrange(nnodes):
-                    eData = self.data[n:n+20]
-                    out = unpack(format1, eData)
-                    (word, energy, percent, density) = out
-                    #print "out = ",out
-                    word = word.strip()
-                    #print "eType=%s" %(eType)
-
-                    dataIn = [word, energy, percent, density]
-                    #print "%s" %(self.get_element_type(self.element_type)),dataIn
-                    #eid = self.obj.add_new_eid(out)
-                    self.obj.add(dt, dataIn)
-                    n += ntotal
-            else:
-                raise NotImplementedError('num_wide = %s' % (self.num_wide))
-
-            #complex_obj = complexGridPointForcesObject
-
-            #self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
-        #elif self.thermal == 1:
-            #result_name = 'thermalLoadVectors'
-            #storage_obj = self.thermalLoadVectors
-            #real_obj = ThermalLoadVectorObject
-            #complex_obj = None
-            #self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
-        else:
-            raise NotImplementedError(self.thermal)
-        return n
-
-    def _read_grid_point_forces(self, data):
-        """
-        table_code = 19
-        """
-        from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import gridPointForcesObject, complexGridPointForcesObject
-        dt = self.nonlinear_factor
-        n = 0
-        if self.thermal == 0:
-            result_name = 'gridPointForces'
-            if self.num_wide == 10:
-                self.create_transient_object(self.gridPointForces, gridPointForcesObject)
-                s = Struct(b'ii8s6f')
-                ntotal = 40
-                nnodes = len(data) // ntotal
-                for i in xrange(nnodes):
-                    eData = data[n:n+ntotal]
-                    out = s.unpack(eData)
-                    (eKey, eid, elemName, f1, f2, f3, m1, m2, m3) = out
-                    ekey = (eKey - self.device_code) // 10
-                    elemName = elemName.strip()
-                    #data = (eid,elemName,f1,f2,f3,m1,m2,m3)
-                    self.obj.add(dt, eKey, eid, elemName, f1, f2, f3, m1, m2, m3)
-                    #print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%g f2=%g f3=%g m1=%g m2=%g m3=%g" %(ekey,eid,elemName,f1,f2,f3,m1,m2,m3)
-                    n += ntotal
-            else:
-                raise NotImplementedError('num_wide = %s' % (self.num_wide))
-
-            #complex_obj = complexGridPointForcesObject
-
-            #self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
-        #elif self.thermal == 1:
-            #result_name = 'thermalLoadVectors'
-            #storage_obj = self.thermalLoadVectors
-            #real_obj = ThermalLoadVectorObject
-            #complex_obj = None
-            #self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
-        else:
-            raise NotImplementedError(self.thermal)
-        return n
-
     def _not_available(self, data):
         raise RuntimeError('this should never be called...table_name=%r' % self.table_name)
-
-    def _read_complex_eigenvalue_3(self, data):
-        self.show_data(data)
-        aaa
-
-    def _read_complex_eigenvalue_4(self, data):
-        self.show_data(data)
-        bbb
-
-    def _read_real_eigenvalue_3(self, data):
-        #self.show_data(data)
-
-        (three) = self.parse_approach_code(data)
-
-        self.add_data_parameter(data, 'seven', 'i', 10, False)  # seven
-        ## residual vector augmentation flag
-        self.add_data_parameter(data, 'resFlag', 'i', 11, False)
-        ## fluid modes Flag
-        self.add_data_parameter(data, 'fldFlag', 'i', 12, False)
-
-        #print self.data_code
-        #self.add_data_parameter(data,'format_code',  'i',9,False)   ## format code
-        #self.add_data_parameter(data,'num_wide',     'i',10,False)  ## number of words per entry in record; .. note:: is this needed for this table ???
-
-        #if self.analysis_code==2: # sort2
-        #    self.lsdvmn = self.get_values(data,'i',5)
-
-        #print "*isubcase=%s"%(self.isubcase)
-        #print "analysis_code=%s table_code=%s thermal=%s" %(self.analysis_code,self.table_code,self.thermal)
-
-        #self.print_block(data)
-        self._read_title(data)
-
-
-    def _read_real_eigenvalue_4(self, data):
-        #self.show_data(data)
-        nModes = len(data) // 28
-        from pyNastran.op2.tables.lama_eigenvalues.lama_objects import (
-            RealEigenvalues, ComplexEigenvalues)
-
-        n = 0
-        ntotal = 28
-        lama = RealEigenvalues(self.isubcase)
-        self.eigenvalues[self.isubcase] = lama
-        s = Struct('ii5f')
-        for i in xrange(nModes):
-            edata = data[n:n+28]
-            out = s.unpack(edata)
-            if self.debug4():
-                self.binary_debug.write('  eigenvalue%s - %s\n' % (i, str(out)))
-            #(iMode,order,eigen,omega,freq,mass,stiff) = out
-            #(modeNum,extractOrder,eigenvalue,radian,cycle,genM,genK) = line
-            #print out
-            lama.addF06Line(out)
-            n += ntotal
-        return n
 
     def readFake(self, data, n):
         return n
 
-    def _read_geom1_4(self, data):
-        self._read_geom_4(self._geom1_map, data)
-
-    def _read_geom2_4(self, data):
-        self._read_geom_4(self._geom2_map, data)
-
-    def _read_geom3_4(self, data):
-        self._read_geom_4(self._geom3_map, data)
-
-    def _read_geom4_4(self, data):
-        self._read_geom_4(self._geom4_map, data)
-
-    def _read_ept_4(self, data):
-        self._read_geom_4(self._ept_map, data)
-    def _read_mpt_4(self, data):
-        self._read_geom_4(self._mpt_map, data)
-
-
-    def _read_geom_4(self, mapper, data):
-        if not self.make_geom:
-            return
-        n = 0
-        keys = unpack('3i', data[n:n+12])
-        n += 12
-        if len(data) == 12:
-            pass
-        elif keys in mapper:
-            func = mapper[keys]
-            if isinstance(func, list):
-                name, func = func
-                print "found keys=(%5s,%4s,%4s) name=%s" % (keys[0], keys[1], keys[2], name)
-            else:
-                print "found keys=(%5s,%4s,%4s)" % (keys[0], keys[1], keys[2])
-            n = func(data, n)  # gets all the grid/mat cards
-        else:
-            raise NotImplementedError('keys=%s not found' % str(keys))
-        #assert n == len(data), 'n=%s len(data)=%s' % (n, len(data))
-        #self.show_data(data[n:])
-
-    def read_op2(self, op2_filename=None):
+    def read_op2(self, op2_filename):
         """
         Starts the OP2 file reading
         :param op2_filename: if a string is set, the filename specified in the
@@ -517,19 +309,36 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
 
             init=None,  op2_filename=None   -> a dialog is popped up  (not implemented; crash)
             init=fname, op2_filename=fname  -> fname is used
-            init=fname, op2_filename=fname2 -> fname2 is used
-            init=None,  op2_filename=fname  -> fname is used
         """
-        if op2_filename:
-            self.op2_filename = op2_filename
+        if op2_filename is None:
+            wildcard_wx = "Nastran OP2 (*.op2)|*.op2|" \
+                "All files (*.*)|*.*"
+            wildcard_qt = "Nastran OP2 (*.op2);;All files (*)"
+            title = 'Please select a OP2 to load'
+            op2_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)
+            assert op2_filename is not None, op2_filename
+
+        if not is_binary(op2_filename):
+            if os.path.getsize(op2_filename) == 0:
+                raise IOError('op2_filename=%r is empty.' % op2_filename)
+            raise IOError('op2_filename=%r is not a binary OP2.' % op2_filename)
+
+        self.log.debug('op2_filename = %r' % op2_filename)
+        bdf_extension = '.bdf'
+        f06_extension = '.f06'
+        (fname, extension) = os.path.splitext(op2_filename)
+
+        self.op2_filename = op2_filename
+        self.bdf_filename = fname + bdf_extension
+        self.f06_filename = fname + f06_extension
+
         if self.save_skipped_cards:
             self.skippedCardsFile = open('skippedCards.out', 'a')
+        #: file index
         self.n = 0
         self.table_name = None
-        if not is_binary(self.op2_filename):
-            if os.path.getsize(self.op2_filename) == 0:
-                raise IOError('op2_filename=%r is empty.' % self.op2_filename)
-            raise IOError('op2_filename=%r is not a binary OP2.' % self.op2_filename)
+
+        #: the OP2 file object
         self.f = open(self.op2_filename, 'rb')
         try:
             markers = self.get_nmarkers(1, rewind=True)
