@@ -1,7 +1,7 @@
 #pylint: disable=C0301,C0103
 from struct import unpack
 
-from pyNastran.op2.dev.op2_common import OP2Common
+from pyNastran.op2.dev_explicit.op2_common import OP2Common
 
 from pyNastran.op2.tables.oug.oug_displacements import (
     DisplacementObject,              # table_code=1     format_code=1 sort_code=0

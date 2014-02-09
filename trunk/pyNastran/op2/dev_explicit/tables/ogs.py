@@ -1,5 +1,5 @@
 from struct import Struct, unpack
-from pyNastran.op2.dev.op2_common import OP2Common
+from pyNastran.op2.dev_explicit.op2_common import OP2Common
 
 class OGS(OP2Common):
     def __init__(self):

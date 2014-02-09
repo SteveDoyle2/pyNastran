@@ -429,10 +429,12 @@ class ComplexElementsStressStrain(object):
         format1 = bytes(format1)
         is_magnitude_phase = self.is_magnitude_phase()
 
-        while len(self.data) >= 60:
-            eData = self.data[0:60]  # 4*15=60
-            self.data = self.data[60:]
-            out = unpack(format1, eData)
+        n = 0
+        s = Struct(format1)
+        nelements = len(self.data) // 60
+        for i in xrange(nelements):
+            eData = self.data[n:n+60]  # 4*15=60
+            out = s.unpack(eData)
 
             (eid, fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
                   fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
@@ -459,3 +461,5 @@ class ComplexElementsStressStrain(object):
             self.obj.add(dt, eid, 'CEN/3', fd2, sx2, sy2, txy2)
             if self.make_op2_debug:
                 self.op2_debug.write('%s\n' % str(out))
+            n += 60
+        self.data = self.data[n:]
