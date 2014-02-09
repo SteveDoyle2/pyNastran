@@ -29,6 +29,8 @@ def make_stamp(Title, today=None):
     release_date = '02/08/12'  # pyNastran.__releaseDate__
     release_date = ''
     build = 'pyNastran v%s %s' % (pyNastran.__version__, release_date)
+    if Title is None:
+        Title = ''
     out = '1    %-67s   %-19s %-22s PAGE %%5i\n' % (Title.strip(), str_today, build)
     return out
 
@@ -525,6 +527,10 @@ class F06Writer(F06WriterDeprecated):
         if self.grid_point_weight.reference_point is not None:
             print("grid_point_weight")
             self.pageNum = self.grid_point_weight.write_f06(f06, page_stamp, self.pageNum)
+
+        if self.eigenvalues:
+            print("eigenvalues")
+            self.pageNum = self.eigenvalues.write_f06(f06, page_stamp, self.pageNum)
         #print "page_stamp = %r" % page_stamp
         #print "stamp      = %r" % stamp
 
