@@ -20,28 +20,63 @@
 # 1}}}
 
 """ 
-Load matrices from NASTRAN Output 4 (.op4) files.
-Example:
+Load and save matrices from/to NASTRAN Output 4 (.op4) files.
 
-  >>> fh = op4.File('sol103.op4', 'r')
+  >>> from pyNastran.op4 import cop4
 
-    Creates a read object associated with the file sol103.op4.
+    Examining OP4 File Contents
+    ===========================
 
-  >>> fh.nmat
+  >>> cop4.Scan('sol103.op4').print_header()
 
-    Returns the number of matrices contained in the file.
+    Prints detailed information on the matrices stored in the file sol103.op4.
 
-  >>> fh.print_headers()
+  >>> header = cop4.Scan('sol103.op4')
 
-    Prints detailed information on the matrices stored in the file.
+    Store the OP4 header information in the Python variable 'header'.
 
-  >>> K, M = fh.Load(skip=1, nmat=2)
+  >>> for i in range(header.nmat): print('%2d. %s' % (i+1, header.name[i]))
 
-    Loads the second and third matrices from the file sol103.op4 into K and M.
+    Print the names of the matrices in the file 'sol103.op4'.
 
-Limitations (these will be resolved in future releases):
+
+    Loading Matrices
+    ================
+
+  >>> K = cop4.Load('kd.op4')
+        Load the first matrix from the file kd.op4.
+
+  >>> K, D, M = cop4.Load('kd.op4', nmat=3)
+        Load the first three matrices from file kd.op4.
+
+  >>> D, M = cop4.Load('kd.op4', nmat=2, skip=1)
+        Skip the first matrix, then load the next two matrices from kd.op4.
+
+  >>> K, M = cop4.Load('kd.op4', 'Kxx', 'Mxx')
+        Load the matrices named Kxx and Mxx from kd.op4.
+
+  >>> Dict = cop4.Load('kd.op4', '*')
+        Load all matrices from kd.op4.  Returns a dictionary of
+        matrices keyed by matrix name.
+
+  >>> Dict = cop4.Load('kd.op4', '*', skip=1)
+        Skip the first matrix, then load all remaining matrices from 
+        kd.op4.  Returns a dictionary of matrices keyed by matrix name.
+
+
+    Saving Matrices
+    ===============
+  >>> cop4.Save('kd.op4', Kxx=K, D)
+        Write numpy arrays K and D to the file 'kd.op4' with names 
+        "Kxx" and "M0000001" using native binary format.
+     
+  >>> cop4.Save('kd.op4', Kxx=K, Dxx=D, digits=5)
+        Write numpy arrays K and D to the file 'kd.op4' with names 
+        "Kxx" and "Dxx" as a text file with 5 mantissa digits.
+
+
+Limitation (to be resolved in a future release):
     1. unable to byte-swap files created on a different-endian machine
-    2. unable to save sparse Python arrays to op4 files
 """
 
 # Early version of op4.pyx was based on cython_wrapper.pyx from
@@ -751,6 +786,10 @@ class OP4:                                                 # {{{1
 
     # 2}}}
 # 1}}}
+# class alias:
+class Scan(OP4):                                           # {{{1
+    pass
+# 1}}}
 def Save(                                                  # {{{1
          filename ,
          *args    ,  # unnamed matrices
@@ -758,11 +797,11 @@ def Save(                                                  # {{{1
     """
 
     cop4.Save('kd.op4', Kxx=K, D)
-        Write matrices K and D to x.op4 with names 
+        Write numpy arrays K and D to the file kd.op4 with names 
         "Kxx" and "M0000001" using native binary format.
      
     cop4.Save('kd.op4', Kxx=K, Dxx=D, digits=5)
-        Write matrices K and D to x.op4 with names 
+        Write numpy arrays K and D to the file kd.op4 with names 
         "Kxx" and "Dxx" as a text file with 5 mantissa digits.
      
     """
@@ -1055,14 +1094,13 @@ def Load(                                                  # {{{1
             All_Matrices.append(fh.Load(skip=offset))
     else:
         # no name arguments given
-        nmat = len(fh.name) - skip
 #       print('op4.Load will get %d matrices' % (nmat))
         if nmat <= 0:
             print('op4.Load: %s only has %d matrices.' % (
                 filename, len(fh.name)))
             return None
         All_Matrices = []
-        for i in range(skip, len(fh.name)):
+        for i in range(skip, skip+nmat):
             All_Matrices.append(fh.Load(skip=i))
 
     if   len(All_Matrices) == 0:

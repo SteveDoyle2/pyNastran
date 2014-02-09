@@ -14,30 +14,60 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-Load matrices from NASTRAN Output 4 (.op4) files.
-Example:
+Load and save matrices from/to NASTRAN Output 4 (.op4) files.
 
-  >>> from pyNastran.op4.op4 import OP4
+  >>> from pyNastran.op4 import cop4
 
-    Load the OP4 reader
-  
-  >>> fh = OP4('sol103.op4', 'r')
+    Examining OP4 File Contents
+    ===========================
 
-    Creates a read object associated with the file sol103.op4.
+  >>> cop4.Scan('sol103.op4').print_header()
 
-  >>> fh.nmat
+    Prints detailed information on the matrices stored in the file sol103.op4.
 
-    Returns the number of matrices contained in the file.
+  >>> header = cop4.Scan('sol103.op4')
 
-  >>> fh.print_header()
+    Store the OP4 header information in the Python variable 'header'.
 
-    Prints detailed information on the matrices stored in the file.
+  >>> for i in range(header.nmat): print('%2d. %s' % (i+1, header.name[i]))
 
-  >>> K, M = fh.Load(skip=1, nmat=2)
+    Print the names of the matrices in the file 'sol103.op4'.
 
-    Loads the second and third matrices from the file sol103.op4 into K and M.
 
-Limitations (these will be resolved in future releases):
-    1. only handles dense matrices in text and binary op4 files
-    2. unable to byte-swap files created on a different-endian machine
-    3. unable to save Python arrays to new op4 files
+    Loading Matrices
+    ================
+
+  >>> K = cop4.Load('kd.op4')
+        Load the first matrix from the file kd.op4.
+
+  >>> K, D, M = cop4.Load('kd.op4', nmat=3)
+        Load the first three matrices from file kd.op4.
+
+  >>> D, M = cop4.Load('kd.op4', nmat=2, skip=1)
+        Skip the first matrix, then load the next two matrices from kd.op4.
+
+  >>> K, M = cop4.Load('kd.op4', 'Kxx', 'Mxx')
+        Load the matrices named Kxx and Mxx from kd.op4.
+
+  >>> Dict = cop4.Load('kd.op4', '*')
+        Load all matrices from kd.op4.  Returns a dictionary of
+        matrices keyed by matrix name.
+
+  >>> Dict = cop4.Load('kd.op4', '*', skip=1)
+        Skip the first matrix, then load all remaining matrices from 
+        kd.op4.  Returns a dictionary of matrices keyed by matrix name.
+
+
+    Saving Matrices
+    ===============
+  >>> cop4.Save('kd.op4', Kxx=K, D)
+        Write numpy arrays K and D to the file 'kd.op4' with names 
+        "Kxx" and "M0000001" using native binary format.
+     
+  >>> cop4.Save('kd.op4', Kxx=K, Dxx=D, digits=5)
+        Write numpy arrays K and D to the file 'kd.op4' with names 
+        "Kxx" and "Dxx" as a text file with 5 mantissa digits.
+
+
+Limitation (to be resolved in a future release):
+    - unable to byte-swap files created on a different-endian machine

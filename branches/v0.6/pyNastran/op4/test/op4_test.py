@@ -65,7 +65,7 @@ class TestOP4(unittest.TestCase):
             op4 = OP4()
 
             matrices = op4.read_op4(os.path.join(op4Path, fname))
-            for name, (form, matrix) in sorted(matrices.items()):
+            for name, (form, matrix) in sorted(matrices.iteritems()):
                 #print("name = %s" % (name))
                 if isinstance(matrix, ndarray):
                     print(matrix)
@@ -80,7 +80,7 @@ class TestOP4(unittest.TestCase):
                       ]:
             op4 = OP4()
             matrices = op4.read_op4(os.path.join(op4Path, fname))
-            for name, (form, matrix) in sorted(matrices.items()):
+            for name, (form, matrix) in sorted(matrices.iteritems()):
                 #print("name = %s" % name)
                 if isinstance(matrix, ndarray):
                     print(matrix)
