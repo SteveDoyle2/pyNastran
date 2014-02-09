@@ -53,28 +53,31 @@ Solver
    - added D matricies for PSHELL, PCOMP, PSOLID
 
 -----------------------v0.7.0 released 2013/05/??-----------------------
+Release notes
+   - added large field BDF writing
+   - more OP2/F06 results (e.g. mass properties)
+   - OP2 reader is faster
+   - vastly improved GUI that supports Cart3d, Panair, and Usm3D
+
 Deprecated
    - 
 
 Minor Updates:
    - improved messages when cross-referencing
+   - making bdf/f06/op2 APIs more consistent
 
-Modified
-   - read_bdf now has an xref='partial' option, which allows you to load in a partial
-     bdf (e.g. nodes and elements only).
+BDF API change
+   - readBDF is now gone, replaced by read_bdf
 
-Changed Paramters
-   - bdf._xref
-      - old parameter now called bdf.xref
-         - options True/False/'partial'
-         - new option 'partial'
-      - new parameter bdf._xref
-         - 0 : False
-         - 1 : True
-         - 2 : 'partial'
-      - if it's not clear, BOTH now exist
+F06 API change
+   - F06 no longer defines the filename
+   - readF06 is now gone, replaced by read_f06
 
------------------------v0.6.1 released 2013/05/??-----------------------
+OP2 API change
+   - OP2 no longer defines the filename
+   - readBDF is now gone, replaced by read_op2
+
+-----------------------v0.6.1 released 2013/06/13-----------------------
 BDF Bug Fixes
    - Parsing of "1.2345D+04".  It worked in Python 2.6, but not 2.7.
    - RBE2 card with alpha field.

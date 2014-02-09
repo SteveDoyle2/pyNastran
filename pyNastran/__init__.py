@@ -1,4 +1,4 @@
-dev = 0
+dev = 2
 if dev == 1:
     import os
     import pysvn
@@ -23,8 +23,8 @@ __email__   = 'mesheb82@gmail.com'
 __desc__    = 'Nastran BDF/F06/OP2/OP4 File reader/editor/writer/viewer'
 __license__     = 'LGPLv3'
 __copyright__   = 'Copyright %s; 2011-2014' % __license__
-__releaseDate__ = '2014/6/xx'
-__releaseDate2__ = 'JUNE xx, 2014'
+__releaseDate__ = '2014/3/xx'
+__releaseDate2__ = 'MARCH xx, 2014'
 __version__     = '0.7.0_%s' % revision
 __website__     = 'http://code.google.com/p/pynastran/'
 

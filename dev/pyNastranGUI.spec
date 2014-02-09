@@ -9,10 +9,11 @@ import pyNastran
 
 pkg_path = pyNastran.__path__[0]
 
-#a1 = os.path.join(pkgPath,'bdf','bdf.py')
-#a2 = os.path.join(pkgPath,'op2','op2.py')
-#a3 = os.path.join(pkgPath,'f06','f06.py')
-a4 = os.path.join(pkgPath,'gui','gui.py')
+#a1 = os.path.join(pkg_path, 'bdf','bdf.py')
+#a2 = os.path.join(pkg_path, 'op2','op2.py')
+#a3 = os.path.join(pkg_path, 'f06','f06.py')
+a4 = os.path.join(pkg_path, 'gui','gui_wx.py')
+#a4 = os.path.join(pkg_path, 'gui','gui_qt.py')
 
 #analyze_files = [a1,a2,a3,a4]
 analyze_files = [a4]
@@ -21,6 +22,7 @@ analyze_files = [a4]
 icon_path = os.path.join(pkg_path, 'gui', 'icons')
 
 icon_names = os.listdir(icon_path)
+icons = []
 for icon_name in icon_names:
     i1 = os.path.join('icons', icon_name)
     i2 = os.path.join(icon_path, icon_name)
@@ -39,7 +41,7 @@ for icon_name in icon_names:
 #i11 = ('icons/tundo.png',     os.path.join(iconPath,'tundo.png'),     'DATA')
 
 #icon_main = os.path.join(iconPath,'guiDemo_128.ico')
-icon_main = 'guiDemo.ico' # pyInstaller doesnt like paths in the ico
+icon_main = 'guiDemo.png' # pyInstaller doesnt like paths in the ico
 
 #icons = [i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11]
 
@@ -69,7 +71,7 @@ exe = EXE(pyz,
           debug=False,
           strip=None,
           upx=True,
-          icon=icon_main,
+          #icon=icon_main,
           console=True )
 
 #print '*'*80
@@ -79,7 +81,7 @@ coll = COLLECT(exe,
                a.zipfiles,
                a.datas,
                exclude_binaries=1,
-               icon=icon_main,
+               #icon=icon_main,
                strip=None,
                upx=True,
                name=os.path.join('dist', 'pyNastranGUI'))
