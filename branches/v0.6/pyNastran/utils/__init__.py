@@ -336,6 +336,7 @@ def write_dict(obj, nspaces, nbase, isClass):
 def write_list(obj, nspaces, nbase, isClass):
     if len(obj) == 0:
         return '[]'
+    return ' ' * (nspaces + nbase) + "???"  # don't choke on long numpy arrays
 
     spaces = ' ' * (nspaces + nbase)
     msg = '[\n%s    ' % spaces

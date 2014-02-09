@@ -69,8 +69,8 @@ setup(name='pyNastran',
                             'test_f06  = pyNastran.f06.test.test_f06:main',
                             'pyNastran  = pyNastran.applications.pyNastranSolver:main',
 
-                            'test_bdf2 = pyNastran.bdf2.test.test_bdf:main',
-                            'pyNastran2 = pyNastran.bdf2.solver.solver:main',
+                            'test_bdf2 = pyNastran.bdf.dev_vectorized.test.test_bdf:main',
+                            'pyNastran2 = pyNastran.bdf.dev_vectorized.solver.solver:main',
                            #'nastranToCodeAster = pyNastran.converters.toCodeAster:main',
                            ] + py2_gui_scripts
       },

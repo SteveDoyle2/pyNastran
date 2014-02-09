@@ -83,3 +83,4 @@ coll = COLLECT(exe,
                strip=None,
                upx=True,
                name=os.path.join('dist', 'pyNastranGUI'))
+
