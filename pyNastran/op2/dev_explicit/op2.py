@@ -11,23 +11,23 @@ from numpy import array
 from pyNastran.f06.f06 import FatalError
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 
-from pyNastran.op2.dev.geom1 import GEOM1
-from pyNastran.op2.dev.geom2 import GEOM2
-from pyNastran.op2.dev.geom3 import GEOM3
-from pyNastran.op2.dev.geom4 import GEOM4
+from pyNastran.op2.dev_explicit.tables.geom1 import GEOM1
+from pyNastran.op2.dev_explicit.tables.geom2 import GEOM2
+from pyNastran.op2.dev_explicit.tables.geom3 import GEOM3
+from pyNastran.op2.dev_explicit.tables.geom4 import GEOM4
 
-from pyNastran.op2.dev.ept import EPT
-from pyNastran.op2.dev.mpt import MPT
+from pyNastran.op2.dev_explicit.tables.ept import EPT
+from pyNastran.op2.dev_explicit.tables.mpt import MPT
 
-from pyNastran.op2.dev.oef import OEF
-from pyNastran.op2.dev.oes import OES
-from pyNastran.op2.dev.ogs import OGS
+from pyNastran.op2.dev_explicit.tables.oef import OEF
+from pyNastran.op2.dev_explicit.tables.oes import OES
+from pyNastran.op2.dev_explicit.tables.ogs import OGS
 
-from pyNastran.op2.dev.opg import OPG
-from pyNastran.op2.dev.oqg import OQG
-from pyNastran.op2.dev.oug import OUG
-from pyNastran.op2.dev.ogpwg import OGPWG
-from pyNastran.op2.dev.fortran_format import FortranFormat
+from pyNastran.op2.dev_explicit.tables.opg import OPG
+from pyNastran.op2.dev_explicit.tables.oqg import OQG
+from pyNastran.op2.dev_explicit.tables.oug import OUG
+from pyNastran.op2.dev_explicit.tables.ogpwg import OGPWG
+from pyNastran.op2.dev_explicit.fortran_format import FortranFormat
 
 from pyNastran.bdf.bdf import BDF
 

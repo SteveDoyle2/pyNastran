@@ -393,29 +393,29 @@ class SolidStressObject(StressObject):
          tetra10_eids, hexa20_eids, penta15_eids) = self.getF06_Header()
         #nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
         if tetra_eids:
-            self.writeElement('CTETRA', 4, tetra_eids, header, tetraMsg, f)
+            self.writeElement('CTETRA4', 4, tetra_eids, header, tetraMsg, f)
             f.write(pageStamp % pageNum)
             pageNum += 1
         if tetra10_eids:
-            self.writeElement('CTETRA', 10, tetra10_eids, header, tetraMsg, f)
+            self.writeElement('CTETRA10', 10, tetra10_eids, header, tetraMsg, f)
             f.write(pageStamp % pageNum)
             pageNum += 1
 
         if hexa_eids:
-            self.writeElement('CHEXA', 8,  hexa_eids,  header,  hexaMsg, f)
+            self.writeElement('CHEXA8', 8,  hexa_eids,  header,  hexaMsg, f)
             f.write(pageStamp % pageNum)
             pageNum += 1
         if hexa20_eids:
-            self.writeElement('CHEXA', 20,  hexa20_eids,  header,  hexaMsg, f)
+            self.writeElement('CHEXA20', 20,  hexa20_eids,  header,  hexaMsg, f)
             f.write(pageStamp % pageNum)
             pageNum += 1
 
         if penta_eids:
-            self.writeElement('CPENTA', 6, penta_eids, header, pentaMsg, f)
+            self.writeElement('CPENTA6', 6, penta_eids, header, pentaMsg, f)
             f.write(pageStamp % pageNum)
             pageNum += 1
         if penta15_eids:
-            self.writeElement('CPENTA', 15, penta15_eids, header, pentaMsg, f)
+            self.writeElement('CPENTA15', 15, penta15_eids, header, pentaMsg, f)
             f.write(pageStamp % pageNum)
             pageNum += 1
         return pageNum - 1
@@ -427,29 +427,29 @@ class SolidStressObject(StressObject):
         dts = self.oxx.keys()
         for dt in dts:
             if tetra_eids:
-                self.writeElement('CTETRA', 4, tetra_eids, header, tetraMsg, f)
+                self.writeElement('CTETRA4', 4, tetra_eids, header, tetraMsg, f)
                 f.write(pageStamp % pageNum)
                 pageNum += 1
             if tetra10_eids:
-                self.writeElement('CTETRA', 10, tetra10_eids, dt, header, tetraMsg, f)
+                self.writeElement('CTETRA10', 10, tetra10_eids, dt, header, tetraMsg, f)
                 f.write(pageStamp % pageNum)
                 pageNum += 1
 
             if hexa_eids:
-                self.writeElement('CHEXA', 8,  hexa_eids, dt, header,  hexaMsg, f)
+                self.writeElement('CHEXA8', 8,  hexa_eids, dt, header,  hexaMsg, f)
                 f.write(pageStamp % pageNum)
                 pageNum += 1
             if hexa20_eids:
-                self.writeElement('CHEXA', 20,  hexa20_eids, dt, header,  hexaMsg, f)
+                self.writeElement('CHEXA20', 20,  hexa20_eids, dt, header,  hexaMsg, f)
                 f.write(pageStamp % pageNum)
                 pageNum += 1
 
             if penta_eids:
-                self.writeElement('CPENTA', 6, penta_eids, dt, header, pentaMsg, f)
+                self.writeElement('CPENTA6', 6, penta_eids, dt, header, pentaMsg, f)
                 f.write(pageStamp % pageNum)
                 pageNum += 1
             if penta15_eids:
-                self.writeElement('CPENTA', 15, penta15_eids, dt, header, pentaMsg, f)
+                self.writeElement('CPENTA15', 15, penta15_eids, dt, header, pentaMsg, f)
                 f.write(pageStamp % pageNum)
                 pageNum += 1
         return pageNum - 1
@@ -499,6 +499,7 @@ class SolidStressObject(StressObject):
             k.remove(cen)
             k.sort()
             msg.append('0  %8s           0GRID CS  %i GP\n' % (eid, nNodes))
+
             for nid in [cen] + k:
                 oxx = self.oxx[dt][eid][nid]
                 oyy = self.oyy[dt][eid][nid]

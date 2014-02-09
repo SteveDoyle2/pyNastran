@@ -2,7 +2,7 @@
 from struct import Struct
 
 from pyNastran.op2.op2_helper import polar_to_real_imag
-from pyNastran.op2.dev.op2_common import OP2Common
+from pyNastran.op2.dev_explicit.op2_common import OP2Common
 
 from pyNastran.op2.tables.oef_forces.oef_thermalObjects import (HeatFlux_CHBDYx, HeatFlux_2D_3D, HeatFlux_1D,
                                  HeatFlux_VU, HeatFlux_VUBEAM, HeatFlux_VU_3D,
