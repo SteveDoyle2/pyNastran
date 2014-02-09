@@ -23,6 +23,7 @@ def is_binary(filename):
     that file is binary if it contains null.
 
     .. warning:: this may not work for unicode."""
+    assert isinstance(filename, basestring), '%r is not a valid filename' % filename
     assert os.path.exists(filename), '%r does not exist' % filename
     with io.open(filename, mode='rb') as fil:
         for chunk in iter(lambda: fil.read(1024), bytes()):
@@ -168,7 +169,7 @@ def __object_attr(obj, mode, attr_type):
             out.append(k)
     out.sort()
     return out
-    #return sorted([k for k in dir(obj) if (check(k) and  
+    #return sorted([k for k in dir(obj) if (check(k) and
     #                                           attr_type(getattr(obj, k)))])
 
 
@@ -189,7 +190,7 @@ def object_methods(obj, mode = "public"):
     return __object_attr(obj, mode, lambda x: isinstance(x, MethodType))
 
 
-def object_attributes(obj, mode = "public"):
+def object_attributes(obj, mode="public"):
     """
     List the names of attributes of a class as strings. Returns public attributes
     as default.

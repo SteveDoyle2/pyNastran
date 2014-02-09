@@ -58,14 +58,14 @@ class TestUtils(unittest.TestCase):
         r = ('[[1         ,2         ,3         ],\n [4         ,5         ,6'
              '         ],\n [7         ,8         ,9         ]]')
         self.assertEqual(list_print(array([(1,2,3),(4,5,6),(7,8,9)])), r)
-        self.assertEqual(list_print(matrix([(1,2,3),(4,5,6),(7,8,9)])), r)    
+        self.assertEqual(list_print(matrix([(1,2,3),(4,5,6),(7,8,9)])), r)
         self.assertEqual(list_print(array([(1.0,2,3.),(4.,5.,6),(7.0,8,9)])), r)
         self.assertEqual(list_print(matrix([(1,2,3.0),(4,5.0,6),(7.,8,9.0)])), r)
 
         r = "[[1.1       ,2.234     ,3.00001   ],\n [4.001     ,5         ,6.2       ]]"
         self.assertEqual(list_print(array([(1.1,2.234,3.00001),(4.001,5.0000005,6.2)])), r)
-        self.assertEqual(list_print(matrix([(1.1,2.234,3.00001),(4.001,5.0000005,6.2)])), r)         
-        
+        self.assertEqual(list_print(matrix([(1.1,2.234,3.00001),(4.001,5.0000005,6.2)])), r)
+
         self.assertEqual(list_print(['a',None,11,'']), '[a, None, 11, ]')
         self.assertEqual(list_print(('a',None,11,'')), '[a, None, 11, ]')
 
@@ -80,7 +80,7 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(methods, ['_getA', '_getB', 'getA', 'getB'])
 
         methods = object_methods(self.b, "all")
-        self.assertEqual(methods, ['__init__', '_getA', '_getB', 'getA', 
+        self.assertEqual(methods, ['__init__', '_getA', '_getB', 'getA',
                                     'getB'])
 
     def test_object_attributes_introspection(self):
@@ -97,19 +97,19 @@ class TestUtils(unittest.TestCase):
     def test_object_attributes_introspection_2(self):
         attributes = object_attributes(self.b, "all")
         self.assertEqual(attributes, ['__class__', '__delattr__', '__dict__',
-                '__doc__', '__format__', '__getattribute__', '__hash__', 
-                '__module__', '__new__', '__reduce__', '__reduce_ex__', 
-                '__repr__', '__setattr__', '__sizeof__', '__str__', 
+                '__doc__', '__format__', '__getattribute__', '__hash__',
+                '__module__', '__new__', '__reduce__', '__reduce_ex__',
+                '__repr__', '__setattr__', '__sizeof__', '__str__',
                 '__subclasshook__', '__weakref__', '_a', '_b', 'a', 'b', 'c'])
 
     @unittest.skipIf(sys.version_info < (3,0), "est for Python 3.x")
     def test_object_attributes_introspection_3(self):
         attributes = object_attributes(self.b, "all")
-        self.assertEqual(attributes, ['__class__', '__delattr__', '__dict__', 
+        self.assertEqual(attributes, ['__class__', '__delattr__', '__dict__',
                 '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__',
-                '__gt__', '__hash__', '__le__', '__lt__', '__module__', 
+                '__gt__', '__hash__', '__le__', '__lt__', '__module__',
                 '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__',
-                '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 
+                '__setattr__', '__sizeof__', '__str__', '__subclasshook__',
                 '__weakref__', '_a', '_b', 'a', 'b', 'c'])
 
 if __name__ == "__main__":

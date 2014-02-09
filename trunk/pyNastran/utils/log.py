@@ -10,17 +10,17 @@ def make_log(display=False):
     :param display: do not only create file but also print log information
     """
     smsg = [("sys.version", sys.version), ("sys.version_info", sys.version_info)]
-    pmsg = ["machine", "platform", "processor", "architecture", "python_branch", 
+    pmsg = ["machine", "platform", "processor", "architecture", "python_branch",
            "python_revision", "win32_ver", "version", "uname", "system",
            "python_build", "python_compiler", "python_implementation", "system",
            "mac_ver", "linux_distribution", "libc_ver"]
-    
+
     fmt = "%-{0}s = %s\n".format(max(map(len, pmsg + [j[0] for j in smsg])))
     msg = "".join([fmt % (i, str(j).replace("\n", "; ")) for (i, j) in smsg])
     msg += "".join([fmt % (i, str(getattr(platform, i)())) for i in pmsg])
     if display:
         print(msg)
-    
+
     with open('pyNastran.log', 'wb') as fil:
         fil.write(msg)
 
@@ -76,9 +76,9 @@ class SimpleLogger(object):
         if self.level != 'debug':
             return
         lines = str(msg).split('\n')
-        self.msg_typ('DEBUG', ''.join([lines[0]] + [' ' * 54 + line + '\n' 
+        self.msg_typ('DEBUG', ''.join([lines[0]] + [' ' * 54 + line + '\n'
                                                    for line in lines[1:]]))
-        
+
     def msg_typ(self, typ, msg):
         """
         Log message of a given type
@@ -87,7 +87,7 @@ class SimpleLogger(object):
         """
         n, fn = self.properties()
         self.log_func(typ, '   fname=%-25s lineNo=%-4s   %s\n' % (fn, n, msg))
- 
+
     def simple_msg(self,msg, typ = None):
         """
         Log message directly without any altering.
