@@ -348,12 +348,12 @@ class FortranFile(object):
         return msg
 
     def skip(self, n):
-        """skips nBits"""
+        """Skips nBits"""
         self.n += n
         self.op2.seek(self.n)
 
     def scan(self, n):
-        """same as skip, but actually reads the data instead of using seek"""
+        """Same as skip, but actually reads the data instead of using seek"""
         self.op2.read(n)
         self.n += n
 
@@ -417,7 +417,7 @@ class FortranFile(object):
             self.log.debug("")
 
     def getNMarkers(self, nMarkers, rewind=False):
-        """gets the next N markers, verifies they're correct"""
+        """Gets the next N markers, verifies they're correct"""
         markers = []
         for iMarker in xrange(nMarkers):
             table_code = self.read_header(None)
