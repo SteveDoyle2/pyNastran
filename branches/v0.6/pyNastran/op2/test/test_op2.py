@@ -5,6 +5,7 @@ from traceback import print_exc
 
 import pyNastran
 from pyNastran.op2.op2 import OP2
+#from pyNastran.op2.dev_explicit.op2 import OP2
 
 
 def parse_table_names_from_F06(f06Name):
@@ -33,7 +34,7 @@ def get_failed_files(filename):
 
 
 def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
-                   write_matlab=True, delete_f06=True, print_results=True,
+                   write_matlab=True, delete_f06=True,
                    debug=True, saveCases=True, skipFiles=[],
                    stopOnFailure=False, nStart=0, nStop=1000000000):
     n = ''
@@ -54,7 +55,7 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
             nTotal += 1
             isPassed = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
                                write_f06=write_f06, write_matlab=write_matlab,
-                               delete_f06=delete_f06, print_results=print_results,
+                               delete_f06=delete_f06,
                                iSubcases=iSubcases, debug=debug,
                                stopOnFailure=stopOnFailure) # True/False
             if not isPassed:
@@ -85,7 +86,7 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
 
 def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
             write_matlab=True, is_mag_phase=False, delete_f06=False,
-            print_results=True, iSubcases=[], debug=False, stopOnFailure=True):
+            iSubcases=[], debug=False, stopOnFailure=True):
     assert '.op2' in op2FileName.lower(), 'op2FileName=%s is not an OP2' % op2FileName
     isPassed = False
     stopOnFailure = False
@@ -118,15 +119,11 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
             (model, ext) = os.path.splitext(op2FileName)
             op2.write_matlab(model+'.m', is_mag_phase=is_mag_phase)
 
-        #print op2.print_results()
-        if print_results:
-            op2.print_results()
         #print "subcases = ",op2.subcases
 
         #assert tableNamesF06==tableNamesOP2,'tableNamesF06=%s tableNamesOP2=%s' %(tableNamesF06,tableNamesOP2)
         #op2.caseControlDeck.sol = op2.sol
         #print op2.caseControlDeck.get_op2_data()
-        #print op2.print_results()
         #print op2.caseControlDeck.get_op2_data()
         isPassed = True
     except KeyboardInterrupt:
@@ -196,7 +193,7 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
 def main():
     from docopt import docopt
     msg  = "Usage:\n"
-    msg += "test_op2 [-q] [-g] [-w] [-f] [-z] [-p] OP2_FILENAME\n"
+    msg += "test_op2 [-q] [-g] [-w] [-f] [-z] OP2_FILENAME\n"
     msg += "  test_op2 -h | --help\n"
     msg += "  test_op2 -v | --version\n"
     msg += "\n"
@@ -212,8 +209,6 @@ def main():
     msg += "  -f, --write_f06      Writes the f06 to fem.f06.out (default=True)\n"
     msg += "  -z, --is_mag_phase   F06 Writer writes Magnitude/Phase instead of\n"
     msg += "                       Real/Imaginary (still stores Real/Imag); (default=False)\n"
-    msg += "  -p, --print_results  Prints objects to screen which can require lots of\n"
-    msg += "                       memory (default=False).\n"
     msg += "  -h, --help           Show this help message and exit\n"
     msg += "  -v, --version        Show program's version number and exit\n"
 
@@ -239,7 +234,6 @@ def main():
             write_f06     = data['--write_f06'],
             write_matlab  = False, #data['--write_matlab'],
             is_mag_phase  = data['--is_mag_phase'],
-            print_results = data['--print_results'],
             debug         = not(data['--quiet']))
     print("dt = %f" %(time.time() - t0))
 

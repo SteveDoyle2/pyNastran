@@ -4,7 +4,7 @@ Contains the OES class that is used to read stress/strain data
 #pylint: disable=C0301,C0103,W0201
 from struct import Struct
 
-from pyNastran.op2.dev.op2_common import OP2Common
+from pyNastran.op2.dev_explicit.op2_common import OP2Common
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import BarStressObject, BarStrainObject

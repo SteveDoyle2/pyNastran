@@ -1,6 +1,6 @@
 from struct import unpack
 
-from pyNastran.op2.dev.op2_common import OP2Common
+from pyNastran.op2.dev_explicit.op2_common import OP2Common
 
 from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import (
     SPCForcesObject, ComplexSPCForcesObject)
