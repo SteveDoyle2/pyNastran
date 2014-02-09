@@ -293,7 +293,7 @@ class RealElementsStressStrain(object):
         format1 += "i4si"
         format1 = bytes(format1)
 
-        element_type = self.get_element_type(self.element_type)
+        #element_type = self.get_element_type(self.element_type)
         nNodes = 1  # this is a minimum, it will be reset later
         nnodes_expected = 1
 
@@ -303,10 +303,13 @@ class RealElementsStressStrain(object):
         # so we can figure out how many elements there are
         if self.element_type == 39: # CTETRA
             nnodes_expected = 5  # 1 centroid + 4 corner points
+            element_type = 'CTETRA'
         elif self.element_type == 67: # CPENTA
             nnodes_expected = 7
+            element_type = 'CPENTA'
         elif self.element_type == 68: # CHEXA
             nnodes_expected = 9
+            element_type = 'CHEXA'
         else:
             msg = ('not supported....EType=%s eType=%s nNodes=%s'
                    'num_wide=%s' % (element_type, self.element_type,
@@ -326,6 +329,7 @@ class RealElementsStressStrain(object):
             #print "abcd = %r" % abcd
             #print "eid=%s cid=%s nNodes=%s nNodesExpected=%s" % (eid,cid,nNodes,nNodesExpected)
 
+            etype = '%s%s' % (element_type, nNodes)
             assert nNodes < 21,  self.print_block(self.data[ibase:ibase+16])
 
             ibase += 16
@@ -336,7 +340,6 @@ class RealElementsStressStrain(object):
                 (grid_device, sxx, sxy, s1, a1, a2, a3, pressure, svm,
                               syy, syz, s2, b1, b2, b3,
                               szz, sxz, s3, c1, c2, c3) = out
-
                 if grid_device == 0:
                     grid = 'CENTER'
                 else:
@@ -355,7 +358,7 @@ class RealElementsStressStrain(object):
                 bCos = []
                 cCos = []
                 if nodeID == 0:
-                    self.obj.add_new_eid(element_type+str(nNodes), cid, dt, eid, grid, sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
+                    self.obj.add_new_eid(etype, cid, dt, eid, grid, sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
                 else:
                     self.obj.add(dt, eid, grid, sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
                 ibase += 84
