@@ -13,6 +13,10 @@ from scipy.integrate import quad
 
 from math import sqrt
 
+from numpy.linalg import norm as norm
+
+import numpy
+
 if sys.version_info < (3, 0):
     """
     "fixes" bug where scipy screws up return code handling
@@ -22,15 +26,46 @@ if sys.version_info < (3, 0):
         >>> sys.exit(1)
 
     The program's return code is 0
+
     .. note:: Python v3.0+ doesn't have scipy.weave
     .. note:: This is a 64-bit, Windows 7 specific bug as far as I know.
     """
     import scipy.weave
 
+# should future proof this as it handles 1.9.0.dev-d1dbf8e, 1.10.2, and 1.6.2
+_numpy_version = [int(i) for i in numpy.__version__.split('.') if i.isdigit()]
+if _numpy_version < [1, 8]:
+    def norm_axis(x, ord=None, axis=None):
+        """A modified form of numpy.norm to work in numpy <= 1.8.0
+
+        Only supports 1D and 2D x vectors (unlike 1.8.0).
+        -------------------------
+        %s""" % norm.__doc__
+        if axis is None:
+            n = norm(x, ord)
+        else:
+            assert isinstance(axis, int), 'axis=%r' % axis
+            assert not isinstance(x, list)
+            assert len(x.shape) == 2
+            if len(x.shape) == 2:
+                if axis == 0:
+                    n = array([norm(x[:, i], ord=ord) for i in xrange(x.shape[1])])
+                elif axis == 1:
+                    n = array([norm(x[i, :], ord=ord) for i in xrange(x.shape[0])])
+                else:
+                    raise RuntimeError('invalid axis=%r' % axis)
+            else:
+                raise RuntimeError('invalid shape...upgrade numpy >= 1.8.0')
+        if n is None:
+            raise RuntimeError('invalid axis=%r' % axis)
+        return n
+else:
+    norm_axis = norm
 
 def integrate_line(x, y):
     """
     Integrates a line of length 1.0
+
     :param x: the independent variable
     :param y: the dependent variable
 
@@ -66,8 +101,10 @@ def build_spline(x, y):
 def integrate_positive_line(x, y, minValue=0.):
     """
     Integrates a line of length 1.0
+
     :param x: the independent variable
     :param y: the dependent variable
+
     :returns integrated_value: the area under the curve
     """
     if len(set(y)) == 1:
@@ -76,7 +113,7 @@ def integrate_positive_line(x, y, minValue=0.):
         assert len(x) == len(y), 'x=%s y=%s' % (x, y)
         # now integrate the area
         eval_posit_spline = lambda x, spl, min_val: max(splev([x], spl), min_val)
-        out = quad(eval_posit_spline, 0., 1., args=(build_spline(x, y), minValue))  
+        out = quad(eval_posit_spline, 0., 1., args=(build_spline(x, y), minValue))
     except:
         raise RuntimeError('spline Error x=%s y=%s' % (x, y))
     return out[0]
@@ -163,7 +200,7 @@ def print_matrix(A, tol=1e-8):
     return ''.join([list_print(B[i, :], tol) + '\n' for i in xrange(B.shape[0])])
 
 
-def list_print(listA, tol=1e-8, float_fmt='-%3.2g', zero_fmt='    0'):
+def list_print(listA, tol=1e-8, float_fmt='%-3.2g', zero_fmt='    0'):
     if len(listA) == 0:
         return '[]'
 
@@ -194,6 +231,7 @@ def augmented_identity(A):
     """
     Creates an Identity Matrix augmented with zeros.
     The location of the extra zeros depends on A.
+
     [ 1, 0, 0, 0 ]
     [ 0, 1, 0, 0 ]
     [ 0, 0, 1, 0 ]
