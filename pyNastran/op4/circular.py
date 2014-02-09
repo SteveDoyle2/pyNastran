@@ -23,12 +23,12 @@
 #
 import numpy        as np
 import scipy.sparse as S
-import cop4 
+import cop4
 
 nTests      = 200
 approx_size =  20
-nErrors     =   0 
-max_E       =   0 
+nErrors     =   0
+max_E       =   0
 filename    = 'junk.op4'
 
 for iSet in range(nTests):
@@ -42,7 +42,7 @@ for iSet in range(nTests):
         nRows = np.random.randint(approx_size) + 1
         nCols = np.random.randint(approx_size) + 1
 
-    # Category II:  sparse or dense 
+    # Category II:  sparse or dense
     #    matrix values will be random between -10..10
     if np.random.random() < 0.5:  #  sparse
         cat_2   = 'sparse'
@@ -87,7 +87,7 @@ for iSet in range(nTests):
             # happens when input is 1x1, or error is exactly zero
             pass
         else:
-            if error.getnnz() == 0: 
+            if error.getnnz() == 0:
                 error = 0.0
             else:
                 error = np.max(error.data)
