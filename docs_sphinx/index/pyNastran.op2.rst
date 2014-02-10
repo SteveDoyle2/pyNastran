@@ -61,8 +61,9 @@ Subpackages
 
 .. toctree::
 
+    pyNastran.op2.dev_explicit
+    pyNastran.op2.dev_vectorized
     pyNastran.op2.resultObjects
     pyNastran.op2.tables
     pyNastran.op2.test
-    pyNastran.op2.writer
 

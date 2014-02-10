@@ -129,6 +129,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
     def __init__(self, debug=True, log=None):
         """
         Initializes the BDF object
+
         :param self:  the BDF object
         :param debug: used to set the logger if no logger is passed in
         :param log:   a python logging module object

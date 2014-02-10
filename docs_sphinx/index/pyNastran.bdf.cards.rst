@@ -34,6 +34,17 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`contact` Module
+---------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.contact
+
+.. automodule:: pyNastran.bdf.cards.contact
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`coordinateSystems` Module
 -------------------------------
 
@@ -95,6 +106,17 @@ cards Package
 .. inheritance-diagram:: pyNastran.bdf.cards.materials
 
 .. automodule:: pyNastran.bdf.cards.materials
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`material_deps` Module
+---------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.material_deps
+
+.. automodule:: pyNastran.bdf.cards.material_deps
     :members:
     :private-members:
     :undoc-members:

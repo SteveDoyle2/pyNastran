@@ -56,6 +56,17 @@ test Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`run_nastran_double_precision` Module
+------------------------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.test.run_nastran_double_precision
+
+.. automodule:: pyNastran.bdf.test.run_nastran_double_precision
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`test_bdf` Module
 ----------------------
 
@@ -67,12 +78,12 @@ test Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`test_field_writer` Module
--------------------------------
+:mod:`test_case_control_deck` Module
+------------------------------------
 
-.. inheritance-diagram:: pyNastran.bdf.test.test_field_writer
+.. inheritance-diagram:: pyNastran.bdf.test.test_case_control_deck
 
-.. automodule:: pyNastran.bdf.test.test_field_writer
+.. automodule:: pyNastran.bdf.test.test_case_control_deck
     :members:
     :private-members:
     :undoc-members:
@@ -84,6 +95,28 @@ test Package
 .. inheritance-diagram:: pyNastran.bdf.test.test_field_writer
 
 .. automodule:: pyNastran.bdf.test.test_field_writer
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`test_openmdao` Module
+---------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.test.test_openmdao
+
+.. automodule:: pyNastran.bdf.test.test_openmdao
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`test_openmdao` Module
+---------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.test.test_openmdao
+
+.. automodule:: pyNastran.bdf.test.test_openmdao
     :members:
     :private-members:
     :undoc-members:

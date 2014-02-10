@@ -71,6 +71,7 @@ class BDFMethods(BDFMethodsDeprecated):
     def mass_properties(self, reference_point=None, sym_axis=None, num_cpus=1):
         """
         Caclulates mass properties in the global system about the reference point.
+
         :param self: the BDF object
         :param reference_point: an array that defines the origin of the frame.
             default = <0,0,0>.
@@ -154,7 +155,7 @@ class BDFMethods(BDFMethodsDeprecated):
                     raise NotImplementedError('%s is antisymmetric about the XZ plane' % str(aero))
         if sym_axis is not None:
             print('Mass/MOI sym_axis = %r' % sym_axis)
-        
+
         scale = 1.0
         if 'WTMASS' in self.params:
             scale = self.params['WTMASS'].values[0]
@@ -187,7 +188,7 @@ class BDFMethods(BDFMethodsDeprecated):
             I[4] *= 0.0  # Ixz
             I[5] *= 0.0  # Iyz
             cg[2] = 0.0
-        
+
         # these are strangely not included in the F06...
         #mass *= scale
         #I *= scale ** 2.0
@@ -197,6 +198,7 @@ class BDFMethods(BDFMethodsDeprecated):
     def _mass_properties_mp(self, num_cpus, reference_point=None, sym_axis=None):
         """
         Caclulates mass properties in the global system about the reference point.
+
         :param self: the BDF object
         :param reference_point: an array that defines the origin of the frame.
             default = <0,0,0>.

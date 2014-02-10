@@ -1,6 +1,17 @@
 test Package
 ============
 
+:mod:`all_tests` Module
+-----------------------
+
+.. inheritance-diagram:: pyNastran.op2.test.all_tests
+
+.. automodule:: pyNastran.op2.test.all_tests
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`op2_test` Module
 ----------------------
 

@@ -34,3 +34,32 @@ unit Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`test_read_write` Module
+-----------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.test.unit.test_read_write
+
+.. automodule:: pyNastran.bdf.test.unit.test_read_write
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`test_read_write` Module
+-----------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.test.unit.test_read_write
+
+.. automodule:: pyNastran.bdf.test.unit.test_read_write
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+
+    pyNastran.bdf.test.unit.include_dir
+

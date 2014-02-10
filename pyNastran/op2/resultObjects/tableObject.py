@@ -511,6 +511,8 @@ class TableObject(scalarObject):  # displacement style table
     def plot(self, nodeList=None, resultType='Translation', coord=3, markers=None,
              Title=None, hasLegend=True, Legend=None, xLabel=None, yLabel=None, alphaLegend=0.5):
         """
+        Plots a result
+
         :param nodeList: a list of the node IDs to plot vs the
                independent variable (default=None; all nodes)
         :param resultType: the variable to plot ('Translation','Rotation')
@@ -849,6 +851,8 @@ class ComplexTableObject(scalarObject):
     def plot(self, nodeList=None, resultType='Translation', displayType='Real Imag', coord=3, markers=None,
              Title=None, hasLegend=True, Legend=None, xLabel=None, yLabel=None, alphaLegend=0.5):
         """
+        Plots a result
+
         :param nodeList: a list of the node IDs to plot vs the
                independent variable (default=None; all nodes)
         :param resultType: the variable to plot ('Translation','Rotation')

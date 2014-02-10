@@ -49,6 +49,8 @@ class OES_Object(ScalarObject):
 
     def getOrderedETypes(self, validTypes):
         """
+        Groups element IDs by element type
+
         :param validTypes: list of valid element types
                            e.g. ['CTRIA3', 'CTRIA6', 'CQUAD4', 'CQUAD8']
         :returns TypesOut:      the ordered list of types

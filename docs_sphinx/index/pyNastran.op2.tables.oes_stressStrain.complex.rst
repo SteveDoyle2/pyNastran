@@ -67,6 +67,28 @@ complex Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`oes_shear` Module
+-----------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.complex.oes_shear
+
+.. automodule:: pyNastran.op2.tables.oes_stressStrain.complex.oes_shear
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`oes_solids` Module
+------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oes_stressStrain.complex.oes_solids
+
+.. automodule:: pyNastran.op2.tables.oes_stressStrain.complex.oes_solids
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`oes_springs` Module
 -------------------------
 

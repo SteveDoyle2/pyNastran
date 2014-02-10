@@ -56,12 +56,23 @@ op4 Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`test_loadop4` Module
---------------------------
+:mod:`utils` Module
+-------------------
 
-.. inheritance-diagram:: pyNastran.op4.test_loadop4
+.. inheritance-diagram:: pyNastran.op4.utils
 
-.. automodule:: pyNastran.op4.test_loadop4
+.. automodule:: pyNastran.op4.utils
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`utils` Module
+-------------------
+
+.. inheritance-diagram:: pyNastran.op4.utils
+
+.. automodule:: pyNastran.op4.utils
     :members:
     :private-members:
     :undoc-members:

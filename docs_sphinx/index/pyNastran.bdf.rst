@@ -23,12 +23,34 @@ bdf Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`bdf_replacer` Module
+--------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.bdf_replacer
+
+.. automodule:: pyNastran.bdf.bdf_replacer
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`caseControlDeck` Module
 -----------------------------
 
 .. inheritance-diagram:: pyNastran.bdf.caseControlDeck
 
 .. automodule:: pyNastran.bdf.caseControlDeck
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`caseControlDeck2` Module
+------------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.caseControlDeck2
+
+.. automodule:: pyNastran.bdf.caseControlDeck2
     :members:
     :private-members:
     :undoc-members:
@@ -51,6 +73,17 @@ bdf Package
 .. inheritance-diagram:: pyNastran.bdf.fieldWriter16
 
 .. automodule:: pyNastran.bdf.fieldWriter16
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`field_writer_double` Module
+---------------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.field_writer_double
+
+.. automodule:: pyNastran.bdf.field_writer_double
     :members:
     :private-members:
     :undoc-members:
@@ -96,5 +129,6 @@ Subpackages
 
     pyNastran.bdf.bdfInterface
     pyNastran.bdf.cards
+    pyNastran.bdf.dev_vectorized
     pyNastran.bdf.test
 

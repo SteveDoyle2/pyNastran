@@ -47,6 +47,7 @@ class OP2(BDF,
     def set_subcases(self, subcases=None):
         """
         Allows you to read only the subcases in the list of iSubcases
+
         :param subcases: list of [subcase1_ID,subcase2_ID]
                          (default=None; all subcases)
         """
@@ -464,6 +465,7 @@ class OP2(BDF,
     def read_op2(self, op2_filename=None):
         """
         Starts the OP2 file reading
+
         :param op2_filename: if a string is set, the filename specified in the
             __init__ is overwritten.
 
