@@ -18,7 +18,7 @@ from pyNastran.f06.f06Writer import sorted_bulk_data_header
 from pyNastran.utils import list_print
 from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
 #from pyNastran.bdf.bdf import BDF
-from pyNastran.bdf2.bdf import BDF, SPC, SPC1
+from pyNastran.bdf.dev_vectorized.bdf import BDF, SPC, SPC1
 from pyNastran.f06.f06 import F06
 from pyNastran.op2.op2 import OP2
 

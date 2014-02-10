@@ -6,16 +6,16 @@ import sys
 import numpy
 import warnings
 warnings.simplefilter('always')
-
 numpy.seterr(all='raise')
 import traceback
+#import resource
 
 from pyNastran.utils import print_bad_path
-from pyNastran.bdf2.bdf import BDF #, NastranMatrix
-from pyNastran.bdf2.test.compare_card_content import compare_card_content
+from pyNastran.bdf.dev_vectorized.bdf import BDF #, NastranMatrix
+from pyNastran.bdf.dev_vectorized.test.compare_card_content import compare_card_content
 
-import pyNastran.bdf2.test
-test_path = pyNastran.bdf2.test.__path__[0]
+import pyNastran.bdf.dev_vectorized.test
+test_path = pyNastran.bdf.dev_vectorized.test.__path__[0]
 #print "test_path = ",test_path
 
 
@@ -82,6 +82,13 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
     return failedFiles
 
 
+def memory_usage_psutil():
+    # return the memory usage in MB
+    import psutil
+    process = psutil.Process(os.getpid())
+    mem = process.get_memory_info()[0] / float(2 ** 20)
+    return mem
+
 def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False,
             cid=None, meshForm='combined', isFolder=False, print_stats=False):
     bdfModel = str(bdfFilename)
@@ -91,7 +98,10 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
 
     assert os.path.exists(bdfModel), '|%s| doesnt exist' % (bdfModel)
 
+    print("before read bdf, Memory usage: %s (Mb) " % memory_usage_psutil())
+    #print('before read bdf, Memory usage: %s (kb)' % resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
     fem1 = BDF(debug=debug, log=None)
+    #print('after read bdf, Memory usage: %s (kb)' % resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
     fem1.log.info('starting fem1')
     sys.stdout.flush()
     fem2 = None
@@ -312,7 +322,7 @@ def get_element_stats(fem1, fem2):
    #         print("e=\n",str(e))
    #         #print("*stats - e.type=%s eid=%s  element=\n%s"
    #             #% (e.type, e.eid, str(exp.args)))
-   #             
+   #
    #         #raise
 
 
@@ -332,7 +342,7 @@ def get_matrix_stats(fem1, fem2):
 
 def compare(fem1, fem2, xref=True, check=True, print_stats=True):
     diffCards = compare_card_count(fem1, fem2, print_stats=print_stats)
-    
+
     #if xref and check:
     if check:
         fem1.mass_properties()
@@ -395,7 +405,7 @@ def main():
     xref = args.xref
     punch = args.punch
     check = args.check
-    
+
     debug = not(args.quiet)
     bdf_filename = args.bdfFileName[0]
 

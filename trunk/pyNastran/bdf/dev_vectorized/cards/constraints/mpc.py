@@ -1,5 +1,5 @@
 import StringIO
-from pyNastran.bdf2.bdf_interface.assign_type import (integer, double_or_blank, components_or_blank)
+from pyNastran.bdf.dev_vectorized.bdf_interface.assign_type import (integer, double_or_blank, components_or_blank)
 from pyNastran.bdf.fieldWriter import print_card
 
 def get_mpc_constraint(card):

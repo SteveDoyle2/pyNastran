@@ -6,7 +6,7 @@ import StringIO
 
 from pyNastran.bdf.fieldWriter import print_card
 #from pyNastran.bdf.cards.baseCard import expand_thru
-#from pyNastran.bdf2.bdf_interface.assign_type import (integer, integer_or_blank,
+#from pyNastran.bdf.dev_vectorized.bdf_interface.assign_type import (integer, integer_or_blank,
     #double, double_or_blank, components, components_or_blank)
 
 class MPCADD(object):
