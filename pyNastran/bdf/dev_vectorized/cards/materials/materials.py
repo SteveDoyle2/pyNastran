@@ -6,7 +6,7 @@ from numpy import zeros
 #from .mat10 import MAT10
 
 from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT4, MAT5, MAT8,
-    MAT10, MAT11, MATS1)
+    MAT10, MAT11) #, MATS1)
 from pyNastran.bdf.bdfInterface.assign_type import integer
 
 class Materials(object):
@@ -163,7 +163,7 @@ class Materials(object):
                         #yield mid
 
     def _get_types(self):
-        return [self.mat1, self.mat2, self.mat4, self.mat8, self.mat10, 
+        return [self.mat1, self.mat2, self.mat4, self.mat8, self.mat10,
                 self.mats1,]
 
     def _get_type_names(self):
