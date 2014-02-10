@@ -5,11 +5,11 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 #from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.bdf.cards.tables import Table
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank)
+#from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank)
 
-#from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-#    double, double_or_blank,
-#    string, string_or_blank, blank)
+from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+    double, double_or_blank,
+    string, string_or_blank, blank)
 
 
 class MaterialDependence(BaseCard):
@@ -141,8 +141,8 @@ class MATS1(MaterialDependence):
 
 class MATT1(MaterialDependence):
     """
-    Specifies temperature-dependent material properties on MAT1 entry fields
-    via TABLEMi entries.
+    Specifies temperature-dependent material properties on MAT1 entry
+    fields via TABLEMi entries.
 
     +-------+-------+-------+-------+-------+--------+------+------+-------+
     |   1   |   2   |   3   |   4   |   5   |    6   |  7   |  8   |   9   |
@@ -177,35 +177,34 @@ class MATT1(MaterialDependence):
 
     def E(self, temperature):
         """
-        Gets E (Young's Modulus) for a given strain.
+        Gets E (Young's Modulus) for a given temperature.
 
-        :param self:        the object pointer
+        :param self:   the object pointer
         :param temperature: the temperature (None -> linear E value)
-        :returns E:         Young's Modulus
+        :returns E:    Young's Modulus
         """
-        #msg = "E (Young's Modulus) not implemented for MATT1"
-        #raise NotImplementedError(msg)
+        E = None
         if self._E_table:
-            E = self._E_table.Value(strain)
+            E = self._E_table.Value(temperature)
         return E
 
     def cross_reference(self, model):
-        msg = 'which is required by MATS1 mid=%s' % self.mid
-        self.mid = model.Material(self.mid)
-        self._xref_table(model, '_E_table')
-        self._xref_table(model, '_G_table')
-        self._xref_table(model, '_nu_table')
-        self._xref_table(model, '_rho_table')
-        self._xref_table(model, '_A_table')
-        self._xref_table(model, '_ge_table')
-        self._xref_table(model, '_st_table')
-        self._xref_table(model, '_sc_table')
-        self._xref_table(model, '_ss_table')
-
-    def _xref_table(self, model, key):
+        msg = 'which is required by MATT1 mid=%s' % self.mid
+        self.mid = model.Material(self.mid, msg=msg)
+        self._xref_table(model, '_E_table', msg=msg)
+        self._xref_table(model, '_G_table', msg=msg)
+        self._xref_table(model, '_nu_table', msg=msg)
+        self._xref_table(model, '_rho_table', msg=msg)
+        self._xref_table(model, '_A_table', msg=msg)
+        self._xref_table(model, '_ge_table', msg=msg)
+        self._xref_table(model, '_st_table', msg=msg)
+        self._xref_table(model, '_sc_table', msg=msg)
+        self._xref_table(model, '_ss_table', msg=msg)
+    
+    def _xref_table(self, model, key, msg):
         slot = getattr(self, key)
         if slot is not None:
-            setattr(self, key, model.Table(slot))
+            setattr(self, key, model.Table(slot, msg))
 
     def _get_table(self, key):
         slot = getattr(self, key)
@@ -254,3 +253,4 @@ class MATT1(MaterialDependence):
 
     def reprFields(self):
         return self.rawFields()
+
