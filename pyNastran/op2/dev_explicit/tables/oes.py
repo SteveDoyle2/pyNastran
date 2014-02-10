@@ -1,7 +1,7 @@
+#pylint: disable=C0301,C0103,W0201,RO911,RO915,R0914
 """
 Contains the OES class that is used to read stress/strain data
 """
-#pylint: disable=C0301,C0103,W0201
 from struct import Struct
 
 from pyNastran.op2.dev_explicit.op2_common import OP2Common
@@ -79,13 +79,14 @@ class OES(OP2Common):
             self.dataNames = self.apply_data_code_value('dataNames', ['lsdvmn'])
             self.setNullNonlinearFactor()
         elif self.analysis_code == 2:  # real eigenvalues
-            ## mode number
+            #: mode number
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
-            ## real eigenvalue
-            #self.eign = self.add_data_parameter(data, 'eign', 'f', 6, False)
-            ## mode or cycle TODO confused on the type - F1???
-            self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', 'f', 7, False)
-            self.dataNames = self.apply_data_code_value('dataNames', ['mode', 'eigr', 'mode_cycle'])
+            #: real eigenvalue
+            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            #: mode or cycle TODO confused on the type - F1 means float/int???
+            self.mode2 = self.add_data_parameter(data, 'mode2', 'f', 7, False)
+            self.cycle = self.add_data_parameter(data, 'cycle', 'i', 7, False)
+            self.dataNames = self.apply_data_code_value('dataNames', ['mode', 'eigr', 'mode2', 'cycle'])
         #elif self.analysis_code==3: # differential stiffness
             #self.lsdvmn = self.get_values(data,'i',5) ## load set number
             #self.data_code['lsdvmn'] = self.lsdvmn
@@ -141,7 +142,7 @@ class OES(OP2Common):
         #                                                      self.isubcase))
         if self.debug3():
             self.binary_debug.write('  element_name = %r\n' % self.element_name)
-            self.binary_debug.write('  aCode    = %r\n' % self.aCode)
+            self.binary_debug.write('  approach_code = %r\n' % self.approach_code)
             self.binary_debug.write('  tCode    = %r\n' % self.tCode)
             self.binary_debug.write('  isubcase = %r\n' % self.isubcase)
 
@@ -453,7 +454,7 @@ class OES(OP2Common):
                     if self.debug4():
                         self.binary_debug.write('  eid=%i result%i=[%i, %f, %f]\n' % (eid, i, eid_device, axial_real, axial_imag))
                     assert eid > 0
-                    self.obj.add_new_eid(dt, eid, axial)
+                    self.obj.add_new_eid_sort1(dt, eid, axial)
                     n += ntotal
             else:
                 raise NotImplementedError(self.num_wide)
@@ -1041,7 +1042,7 @@ class OES(OP2Common):
                         out = s2.unpack(data[n+4:n+ntotal])
                     else:
                         out1 = s2.unpack(data[n+4:n+ntotal])
-                        out  = s3.unpack(data[n+4:n+ntotal])
+                        out = s3.unpack(data[n+4:n+ntotal])
                         #print(out1)
                     #print(out)
                     (theory, lamid, fp, fm, fb, fmax, fflag) = out
@@ -1356,7 +1357,7 @@ class OES(OP2Common):
 
         elif self.element_type in [4]: # shear
             # 4-CSHEAR
-            if self.num_wide == 4:
+            if self.num_wide == 4:  # real
                 if self.isStress():
                     self.create_transient_object(self.shearStress, ShearStressObject)
                 else:
@@ -1377,7 +1378,7 @@ class OES(OP2Common):
                     self.obj.add_new_eid(dt, eid, data_in)
                     n += ntotal
 
-            elif self.num_wide == 5: # imag
+            elif self.num_wide == 5:  # imag
                 #return len(data)
                 if self.isStress():
                     self.create_transient_object(self.shearStress, ComplexShearStressObject)
@@ -1401,7 +1402,7 @@ class OES(OP2Common):
                     else:
                         etmax = complex(etmaxr, etmaxi)
                         etavg = complex(etavgr, etavgi)
-                    self.obj.add_new_eid(self.element_type, dt, eid, etmax, etavg)
+                    self.obj.add_new_eid_sort1(dt, eid, (etmax, etavg))
                     n += ntotal
             else:
                 raise NotImplementedError(self.num_wide)

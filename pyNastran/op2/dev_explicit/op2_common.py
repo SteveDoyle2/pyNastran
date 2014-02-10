@@ -549,6 +549,56 @@ class OP2Common(Op2Codes, F06Writer):
             n += ntotal
         return n
 
+    def _read_complex_table2(self, data, result_name, flag):
+        #return
+        if self.debug4():
+            self.binary_debug.write('  _read_complex_table\n')
+        assert flag in ['node', 'elem'], flag
+        dt = self.nonlinear_factor
+
+        format1 = 'fi12f'
+        is_magnitude_phase = self.is_magnitude_phase()
+
+        n = 0
+        ntotal = 56  # 14 * 4
+        nnodes = len(data) // ntotal
+        s = Struct(format1)
+
+        assert self.obj is not None
+        assert nnodes > 0
+        #assert len(data) % ntotal == 0
+
+        for inode in xrange(nnodes):
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
+
+            (freq, grid_type, txr, tyr, tzr, rxr, ryr, rzr,
+             txi, tyi, tzi, rxi, ryi, rzi) = out
+
+            if self.debug4():
+                self.binary_debug.write('  %s=%i %s\n' % ('freq', freq, str(out)))
+            if is_magnitude_phase:
+                tx = polar_to_real_imag(txr, txi)
+                ty = polar_to_real_imag(tyr, tyi)
+                tz = polar_to_real_imag(tzr, tzi)
+
+                rx = polar_to_real_imag(rxr, rxi)
+                ry = polar_to_real_imag(ryr, ryi)
+                rz = polar_to_real_imag(rzr, rzi)
+            else:
+                tx = complex(txr, txi)
+                ty = complex(tyr, tyi)
+                tz = complex(tzr, tzi)
+
+                rx = complex(rxr, rxi)
+                ry = complex(ryr, ryi)
+                rz = complex(rzr, rzi)
+
+            data_in = [freq, grid_type, tx, ty, tz, rx, ry, rz]
+            self.obj.add(dt, data_in)
+            n += ntotal
+        return n
+
     def create_transient_object(self, storageObj, classObj, debug=False):
         """
         Creates a transient object (or None if the subcase should be skippied).
@@ -592,8 +642,8 @@ class OP2Common(Op2Codes, F06Writer):
             raise NotImplementedError('table_name=%s table_code=%s %s' % (self.table_name, self.table_code, msg))
 
     def parse_approach_code(self, data):
-        (aCode, tCode, int3, isubcase) = unpack(b'4i', data[:16])
-        self.aCode = aCode
+        (approach_code, tCode, int3, isubcase) = unpack(b'4i', data[:16])
+        self.approach_code = approach_code
         self.tCode = tCode
         self.int3 = int3
 
@@ -614,14 +664,14 @@ class OP2Common(Op2Codes, F06Writer):
         #: what type of data was saved from the run; used to parse the
         #: approach_code and grid_device.  device_code defines what options
         #: inside a result, STRESS(PLOT,PRINT), are used.
-        self.device_code = aCode % 10
+        self.device_code = approach_code % 10
         self.data_code['device_code'] = self.device_code
 
         #: what solution was run (e.g. Static/Transient/Modal)
-        self.analysis_code = (aCode - self.device_code) // 10
+        self.analysis_code = (approach_code - self.device_code) // 10
         self.data_code['analysis_code'] = self.analysis_code
 
-        #print('parse_approach_code - aCode=%s tCode=%s int3=%s isubcase=%s' % (aCode, tCode, int3, isubcase))
+        #print('parse_approach_code - approach_code=%s tCode=%s int3=%s isubcase=%s' % (approach_code, tCode, int3, isubcase))
         #print('                 so - analysis_code=%s device_code=%s table_code=%s sort_code=%s\n' % (self.analysis_code, self.device_code, self.table_code, self.sort_code))
         if self.device_code == 3:
             #sys.stderr.write('The op2 may be inconsistent...\n')
@@ -636,7 +686,7 @@ class OP2Common(Op2Codes, F06Writer):
 
         if self.debug3():
             self.binary_debug.write('  table_name    = %r\n' % self.table_name)
-            self.binary_debug.write('  aCode         = %r\n' % self.aCode)
+            self.binary_debug.write('  approach_code = %r\n' % self.approach_code)
             self.binary_debug.write('  tCode         = %r\n' % self.tCode)
             self.binary_debug.write('  table_code    = %r\n' % self.table_code)
             self.binary_debug.write('  sort_code     = %r\n' % self.sort_code)
@@ -696,26 +746,67 @@ class OP2Common(Op2Codes, F06Writer):
         #print "sort_bits =", bits
         #self.data_code['sort_bits'] = self.sort_bits
 
+    def _table_specs(self):
+        """
+        +=======+===========+=============+==========+
+        | Value | Sort Type | Data Format | Random ? |
+        +=======+===========+=============+==========+
+        |   0   |   SORT1   |    Real     |   No     |
+        +=======+===========+=============+==========+
+        |   1   |   SORT1   |    Complex  |   No     |
+        +=======+===========+=============+==========+
+        |   2   |   SORT2   |    Real     |   No     |
+        +=======+===========+=============+==========+
+        |   3   |   SORT2   |    Complex  |   No     |
+        +=======+===========+=============+==========+
+        |   4   |   SORT1   |    Real     |   Yes    |
+        +=======+===========+=============+==========+
+        |   5   |   SORT2   |    Real     |   Yes    |
+        +=======+===========+=============+==========+
+        """
+        tcode = self.table_code // 1000
+        sort_method = 1
+        is_real = True
+        is_random = False
+        assert tcode in [0, 1, 2, 3, 4, 5], tcode
+        if tcode in [2, 3, 5]:
+            sort_method = 2
+        if tcode in [1, 3]:
+            is_real = False
+        if tcode in [4, 5]:
+            is_random = True
+        return sort_method, is_real, is_random
+
     def is_sort1(self):
-        if self.sort_bits[0] == 0:
-            return True
-        return False
+        sort_method, is_real, is_random = self._table_specs()
+        return True if sort_method == 1 else False
+        #if self.sort_bits[0] == 0:
+        #    return True
+        #return False
 
     def is_sort2(self):
-        return not(self.is_sort1())
+        sort_method, is_real, is_random = self._table_specs()
+        return True if sort_method == 2 else False
+        #return not(self.is_sort1())
 
     def is_real(self):
-        return not(self.is_complex())
+        sort_method, is_real, is_random = self._table_specs()
+        return is_real
+        #return not(self.is_complex())
 
     def is_complex(self):
-        if self.sort_bits[1] == 1:
-            return True
-        return False
+        sort_method, is_real, is_random = self._table_specs()
+        return not(is_real)
+        #if self.sort_bits[1] == 1:
+        #    return True
+        #return False
 
     def is_random(self):
-        if self.sort_bits[1] == 1:
-            return True
-        return False
+        sort_method, is_real, is_random = self._table_specs()
+        return is_random
+        #if self.sort_bits[1] == 1:
+        #    return True
+        #return False
 
     def is_mag_phase(self):
         assert self.format_code in [0, 1], self.format_code

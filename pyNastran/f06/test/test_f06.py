@@ -49,17 +49,17 @@ def run_lots_of_files(files, debug=True, saveCases=True, skipFiles=[],
     sys.exit('-----done with all models %s/%s=%.2f%%  nFailed=%s-----' % (nPassed, nTotal, 100. * nPassed / float(nTotal), nTotal - nPassed))
 
 
-def run_f06(f06file, iSubcases=[], write_f06=True, debug=False,
+def run_f06(f06_filename, iSubcases=[], write_f06=True, debug=False,
             stopOnFailure=True):
     isPassed = False
     #stopOnFailure = False
     #debug = True
     try:
-        f06 = F06(f06file, debug=debug)
+        f06 = F06(f06_filename, debug=debug)
         #f06.set_subcases(iSubcases)  # TODO not supported
 
         #f06.readBDF(f06.bdf_filename,includeDir=None,xref=False)
-        f06.read_f06()
+        f06.read_f06(f06_filename)
         #tableNamesF06 = parseTableNamesFromF06(f06.f06FileName)
         #tableNamesF06 = f06.getTableNamesFromF06()
         assert write_f06 == True, write_f06

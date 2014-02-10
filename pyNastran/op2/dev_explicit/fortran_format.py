@@ -100,7 +100,7 @@ class FortranFormat(object):
         markers = self.get_nmarkers(1, rewind=True)
         while markers[0] != 0:
             data = self._skip_record()
-            self.log.debug("table_name = %r" % self.table_name)
+            self.log.debug("skipping table_name = %r" % self.table_name)
             #if len(data) == 584:
                 #self._parse_results_table3(data)
             #else:
@@ -127,11 +127,12 @@ class FortranFormat(object):
         #self.read_markers([self.isubtable, 1, 0])
 
         if self.table_name in self._table_mapper:
-            self.log.debug("*table_name = %r" % self.table_name)
+            self.log.debug("table_name = %r" % self.table_name)
             table3_parser, table4_parser = self._table_mapper[self.table_name]
             passer = False
         else:
-            self.log.debug("table_name = %r" % self.table_name)
+            raise NotImplementedError(self.table_name)
+            self.log.debug("skipping table_name = %r" % self.table_name)
             table3_parser = None
             table4_parser = None
             passer = True
@@ -143,7 +144,8 @@ class FortranFormat(object):
                 self.data_code = {'log': self.log,}  # resets the logger
                 self.obj = None
                 data = self._read_record()
-                table3_parser(data)
+                if not passer:
+                    table3_parser(data)
             else:
                 if passer or not self.is_valid_subcase():
                     data = self._skip_record()

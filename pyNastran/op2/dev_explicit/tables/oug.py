@@ -54,7 +54,7 @@ class OUG(OP2Common):
         self.num_wide = self.add_data_parameter(data, 'num_wide', 'i', 10, False)
 
         ## acoustic pressure flag
-        self.acoustic_flag = self.add_data_parameter(data, 'acoustic_flag', 'f', 13, False)
+        self.acoustic_flag = self.add_data_parameter(data, 'acoustic_flag', 'i', 13, False)
 
         ## thermal flag; 1 for heat transfer, 0 otherwise
         self.thermal = self.add_data_parameter(data, 'thermal', 'i', 23, False)
@@ -120,13 +120,16 @@ class OUG(OP2Common):
 
         #print self.code_information()
         if self.debug:
-            self.binary_debug.write('  aCode    = %r\n' % self.aCode)
+            self.binary_debug.write('  approach_code = %r\n' % self.approach_code)
             self.binary_debug.write('  tCode    = %r\n' % self.tCode)
             self.binary_debug.write('  isubcase = %r\n' % self.isubcase)
         self._read_title(data)
         self._write_debug_bits()
 
     def _read_oug1_4(self, data):
+        if self.is_sort2():
+            raise NotImplementedError('SORT2!!!!!')
+
         if self.table_code == 1:   # Displacements
             assert self.table_name in ['OUG1', 'BOUGV1', 'OUGV1', 'OUPV1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_displacement(data)
@@ -142,7 +145,28 @@ class OUG(OP2Common):
             #self._not_implemented_or_skip(data, 'bad OUG table')
         return n
 
+    def _read_eigenvector_displacement_solution_set(self, data):
+        """
+        table_code = 14
+        """
+        asdf
+
     def _read_displacement_solution_set(self, data):
+        """
+        table_code = 15
+        """
+        asdf
+
+    def _read_velocity_solution_set(self, data):
+        """
+        table_code = 16
+        """
+        asdf
+
+    def _read_acceleration_solution_set(self, data):
+        """
+        table_code = 17
+        """
         asdf
 
     def _read_displacement(self, data):

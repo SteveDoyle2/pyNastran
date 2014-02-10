@@ -74,6 +74,7 @@ class ONR(OP2Common):
         #self.print_block(data) # on
         if self.analysis_code == 1:   # statics / displacement / heat flux
             #del self.data_code['nonlinear_factor']
+            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5, False)
             self.dataNames = self.apply_data_code_value('dataNames', ['lsdvmn'])
             self.setNullNonlinearFactor()
         elif self.analysis_code == 2:  # real eigenvalues
@@ -112,7 +113,7 @@ class ONR(OP2Common):
                                self.analysis_code)
 
         if self.debug:
-            self.binary_debug.write('  aCode    = %r\n' % self.aCode)
+            self.binary_debug.write('  approach_code = %r\n' % self.approach_code)
             self.binary_debug.write('  tCode    = %r\n' % self.tCode)
             self.binary_debug.write('  isubcase = %r\n' % self.isubcase)
         self._read_title(data)
@@ -157,12 +158,30 @@ class ONR(OP2Common):
         elif self.num_wide == 5:
             self.create_transient_object(self.strainEnergy, StrainEnergyObject)  # why is this not different?
             ntotal = 20
-            s = Struct(b'i8s3f')
+            s = Struct(b'8s3f')
             nnodes = len(data) // ntotal
             for i in xrange(nnodes):
                 edata = data[n:n+20]
                 out = s.unpack(edata)
                 (word, energy, percent, density) = out
+                #print "out = ",out
+                word = word.strip()
+                #print "eType=%s" % (eType)
+
+                data_in = [word, energy, percent, density]
+                #print "%s" %(self.get_element_type(self.element_type)), data_in
+                #eid = self.obj.add_new_eid(out)
+                self.obj.add(dt, data_in)
+                n += ntotal
+        elif self.num_wide == 6:  ## TODO: figure this out...
+            self.create_transient_object(self.strainEnergy, StrainEnergyObject)  # TODO: why is this not different?
+            ntotal = 24
+            s = Struct(b'i8s3f')
+            nnodes = len(data) // ntotal
+            for i in xrange(nnodes):
+                edata = data[n:n+24]
+                out = s.unpack(edata)
+                (word, energy, percent, density) = out  # TODO: this has to be wrong...
                 #print "out = ",out
                 word = word.strip()
                 #print "eType=%s" % (eType)

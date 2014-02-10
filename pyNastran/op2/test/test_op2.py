@@ -5,7 +5,8 @@ from traceback import print_exc
 
 import pyNastran
 from pyNastran.op2.op2 import OP2
-from pyNastran.op2.dev_explicit.op2 import OP2, FatalError
+from pyNastran.f06.f06 import FatalError
+#from pyNastran.op2.dev_explicit.op2 import OP2
 
 
 def parse_table_names_from_F06(f06Name):
@@ -93,7 +94,6 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
             iSubcases=[], debug=False, stopOnFailure=True):
     assert '.op2' in op2FileName.lower(), 'op2FileName=%s is not an OP2' % op2FileName
     isPassed = False
-    stopOnFailure = False
     #debug = True
     write_matlab = False
     try:
@@ -107,7 +107,7 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
         #op2.get_op2_stats()
         print(op2.get_op2_stats())
         if write_bdf:
-            op2.write_bdf(interspersed=True)
+            op2.write_bdf('fem.bdf.out', interspersed=True)
         #tableNamesF06 = parse_table_names_from_F06(op2.f06FileName)
         #tableNamesOP2 = op2.getTableNamesFromOP2()
         if write_f06:
@@ -135,8 +135,6 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
         print_exc(file=sys.stdout)
         sys.stderr.write('**file=%s\n' % op2FileName)
         sys.exit('keyboard stop...')
-    #except AddNewElementError:
-    #    raise
     #except RuntimeError: # the op2 is bad, not my fault
     #    isPassed = True
     #    if stopOnFailure:
@@ -145,20 +143,14 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
     #        isPassed = True
 
     except IOError: # missing file
-        pass
+        if stopOnFailure:
+            raise
     except FatalError:
-        pass
+        if stopOnFailure:
+            raise
     #except AssertionError:
     #    isPassed = True
-
-    #except InvalidFormatCodeError:
-    #    isPassed = True
     #except RuntimeError: #invalid analysis code
-    #    isPassed = True
-    #except SyntaxError: # Invalid Marker
-        #isPassed = True
-
-    #except EOFError:
     #    isPassed = True
     except SystemExit:
         #print_exc(file=sys.stdout)
@@ -169,21 +161,11 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
     #        raise
     #    else:
     #        isPassed = True
-    #except AttributeError:  # missing function
-    #    if stopOnFailure:
-    #        raise
-    #    else:
-    #        isPassed = True
-    #except KeyError:
-    #    raise
-    #except TypeError:  # numpy error
-    #    isPassed = True
     #except IndexError: # bad bdf
     #    isPassed = True
-    except IOError: # missing file
-        isPassed = False
-        raise
     except SyntaxError: #Param Parse
+        if stopOnFailure:
+            raise
         isPassed = True
     except:
         #print e

@@ -1,4 +1,4 @@
-#pylint: disable=C0111,C0301
+#pylint: disable=C0111,C0301,C0326
 from struct import Struct
 
 from pyNastran.op2.op2_helper import polar_to_real_imag
@@ -184,8 +184,9 @@ class OEF(OP2Common):
             #: mode number
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
             #: eigenvalue
-            self.eign = self.add_data_parameter(data, 'eign', 'f', 6, False)
-            self.dataNames = self.apply_data_code_value('dataNames', ['mode', 'eigr', 'mode_cycle'])
+            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            self.dataNames = self.apply_data_code_value('dataNames', ['mode', 'eigr'])
+            #self.dataNames = self.apply_data_code_value('dataNames', ['mode', 'eigr', 'mode_cycle'])  ## TODO: mode_cycle is not defined?
         elif self.analysis_code == 3:  # differential stiffness 0
             #: load set ID number
             self.loadID = self.add_data_parameter(data, 'loadID', 'i', 5)
@@ -233,7 +234,7 @@ class OEF(OP2Common):
         self.element_name = self.element_mapper[self.element_type]
         if self.debug:
             self.binary_debug.write('  element_name = %r\n' % self.element_name)
-            self.binary_debug.write('  aCode    = %r\n' % self.aCode)
+            self.binary_debug.write('  approach_code = %r\n' % self.approach_code)
             self.binary_debug.write('  tCode    = %r\n' % self.tCode)
             self.binary_debug.write('  isubcase = %r\n' % self.isubcase)
 

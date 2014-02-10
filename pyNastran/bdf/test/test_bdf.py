@@ -208,9 +208,9 @@ def compare_card_count(fem1, fem2, print_stats=False):
     cards1 = fem1.card_count
     cards2 = fem2.card_count
     if print_stats:
-        print(fem1.card_stats())
+        print(fem1.get_bdf_stats())
     else:
-        fem1.card_stats()
+        fem1.get_bdf_stats()
     return compute_ints(cards1, cards2, fem1)
 
 

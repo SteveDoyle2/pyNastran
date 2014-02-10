@@ -690,13 +690,18 @@ class ComplexTableObject(scalarObject):
         #print msg
         if dt not in self.translations:
             self.add_new_transient(dt)
-        assert isinstance(nodeID, int), nodeID  # remove
-        msg = "nodeID=%s v1=%s v2=%s v3=%s\n" % (nodeID, v1, v2, v3)
-        msg += "          v4=%s v5=%s v6=%s" % (v4, v5, v6)
         #print msg
-        assert 0 < nodeID < 1000000000, msg  # -1
-        assert -0.5 < dt, msg  # remove
-        assert isinstance(nodeID, int), msg
+        if isinstance(nodeID, float):
+            msg = "nodeID=%s v1=%s v2=%s v3=%s\n" % (nodeID, v1, v2, v3)
+            msg += "          v4=%s v5=%s v6=%s" % (v4, v5, v6)
+            print(msg)
+
+        if not 0 < nodeID < 1000000000:
+            msg = "nodeID=%s v1=%s v2=%s v3=%s\n" % (nodeID, v1, v2, v3)
+            msg += "          v4=%s v5=%s v6=%s" % (v4, v5, v6)
+            raise ValueError(msg)
+        #assert -0.5 < dt, msg  # TODO: remove
+        #assert isinstance(nodeID, int), msg  # TODO: remove
         #assert nodeID not in self.translations,'complexDisplacementObject - static failure'
 
         self.gridTypes[nodeID] = self.recastGridType(gridType)

@@ -527,33 +527,21 @@ class F06Writer(F06WriterDeprecated):
         if self.grid_point_weight.reference_point is not None:
             print("grid_point_weight")
             self.pageNum = self.grid_point_weight.write_f06(f06, page_stamp, self.pageNum)
+            assert isinstance(self.pageNum, int), self.grid_point_weight.__class__.__name__
 
-        if self.eigenvalues:
-            print("eigenvalues")
-            self.pageNum = self.eigenvalues.write_f06(f06, page_stamp, self.pageNum)
         #print "page_stamp = %r" % page_stamp
         #print "stamp      = %r" % stamp
-
-        self.pageNum = self.grid_point_weight.write_f06(f06, page_stamp, self.pageNum)
 
         #is_mag_phase = False
         header = ['     DEFAULT                                                                                                                        \n',
                   '\n', '']
 
         # eigenvalues are written first
-        for isubcase, result in sorted(self.eigenvalues.iteritems()):
-            try:
-                (subtitle, label) = self.iSubcaseNameMap[isubcase]
-            except KeyError:  # rarely happens (only eigenvalues were read), but...
-                subtitle = ''
-                label = ''
-            subtitle = subtitle.strip()
-            header[0] = '     %s\n' % subtitle
-            header[1] = '0 %-32s                                                                            SUBCASE %i\n \n' % (label, isubcase)
-            #header[2] = complex/nonlinear
-            print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
-            self.pageNum = result.write_f06(header, page_stamp,
-                                            pageNum=self.pageNum, f=f06, is_mag_phase=is_mag_phase)
+        for ikey, result in sorted(self.eigenvalues.iteritems()):
+            header
+            #print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
+            self.pageNum = result.write_f06(f06, header, page_stamp,
+                                            pageNum=self.pageNum)
             assert isinstance(self.pageNum, int), 'pageNum=%r' % str(self.pageNum)
             if delete_objects:
                 del result

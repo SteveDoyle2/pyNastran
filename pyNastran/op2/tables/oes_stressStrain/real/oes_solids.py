@@ -1,5 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from collections import defaultdict
+
 from numpy import array, sqrt
 from numpy.linalg import eigh
 
@@ -354,25 +356,17 @@ class SolidStressObject(StressObject):
                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (vonMises)]
 
         #nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
-        from collections import defaultdict
         TETRA = defaultdict(list)
         HEXA = defaultdict(list)
         PENTA = defaultdict(list)
 
-        tetra_eids = []
-        hexa_eids = []
-        penta_eids = []
-
-        tetra10_eids = []
-        hexa20_eids = []
-        penta15_eids = []
         for eid, eType in sorted(self.eType.iteritems()):
             if 'CTETRA' in eType:
-                TETRA[eType[5:]].append(eid)
+                TETRA[eType[6:]].append(eid)
             elif 'CHEXA' in eType:
                 HEXA[eType[5:]].append(eid)
             elif 'CPENTA' in eType:
-                HEXA[eType[6:]].append(eid)
+                PENTA[eType[6:]].append(eid)
             else:
                 raise NotImplementedError('eType=%r' % eType)
 
@@ -866,6 +860,10 @@ class SolidStrainObject(StrainObject):
                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (vonMises)]
 
         #nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
+        TETRA = defaultdict(list)
+        HEXA = defaultdict(list)
+        PENTA = defaultdict(list)
+
         tetra_eids = []
         hexa_eids = []
         penta_eids = []
@@ -874,25 +872,17 @@ class SolidStrainObject(StrainObject):
         hexa20_eids = []
         penta15_eids = []
         for eid, eType in sorted(self.eType.iteritems()):
-            if eType in ['CTETRA4']:
-                tetra_eids.append(eid)
-            elif eType in ['CTETRA10']:
-                tetra10_eids.append(eid)
-
-            elif eType in ['CPENTA6']:
-                penta_eids.append(eid)
-            elif eType in ['CPENTA15']:
-                penta_eids.append(eid)
-
-            elif eType in ['CHEXA8']:
-                hexa_eids.append(eid)
-            elif eType in ['CHEXA20']:
-                hexa20_eids.append(eid)
+            if 'CTETRA' in eType:
+                TETRA[eType[6:]].append(eid)
+            elif 'CHEXA' in eType:
+                HEXA[eType[5:]].append(eid)
+            elif 'CPENTA' in eType:
+                PENTA[eType[6:]].append(eid)
             else:
                 raise NotImplementedError('eType=%r' % eType)
 
-        return (tetraMsg, pentaMsg, hexaMsg, tetra_eids, hexa_eids, penta_eids,
-                tetra10_eids, hexa20_eids, penta15_eids)
+        return (tetraMsg, pentaMsg, hexaMsg,
+                TETRA, HEXA, PENTA)
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         assert f is not None

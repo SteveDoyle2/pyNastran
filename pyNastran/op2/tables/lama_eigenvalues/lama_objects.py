@@ -9,24 +9,23 @@ from pyNastran.f06.f06_formatting import writeFloats13E
 
 class RealEigenvalues(baseScalarObject):
 
-    def __init__(self, isubcase):
+    def __init__(self, title):
         #self.modeNumber = []
         baseScalarObject.__init__(self)
-        self. subcase = isubcase
+        self.title = title
         self.extractionOrder = {}
         self.eigenvalues = {}
         self.radians = {}
         #self.cycles = {}
         self.generalizedMass = {}
         self.generalizedStiffness = {}
-        self.note = None
 
     def get_stats(self):
         msg = []
         neigenvalues = len(self.extractionOrder)
         msg.append('  type=%s neigenvalues=%s\n' % (self.__class__.__name__,
                                                  neigenvalues))
-        msg.append('  isubcase, extractionOrder, eigenvalues, radians, '
+        msg.append('  title, extractionOrder, eigenvalues, radians, '
                    'cycles, generalizedMass, generalizedStiffness\n')
         return msg
 
@@ -48,8 +47,7 @@ class RealEigenvalues(baseScalarObject):
         self.generalizedMass[modeNum] = genM
         self.generalizedStiffness[modeNum] = genK
 
-    def add_f06_data(self, note, data):
-        self.note = note
+    def add_f06_data(self, data):
         for line in data:
             self.addF06Line(line)
 
@@ -81,11 +79,11 @@ class RealEigenvalues(baseScalarObject):
         f.write(massMsg + '];\n')
         f.write(stiffMsg + '];\n')
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
-        note = ''
-        if self.note is not None:
-            note = '%s\n' % self.note.center(72)
-        msg = header + ['                                              R E A L   E I G E N V A L U E S\n', note,
+    def write_f06(self, f, header, pageStamp, pageNum=1):
+        title = ''
+        if self.title is not None:
+            title = '%s\n' % self.title.center(72)
+        msg = header + ['                                              R E A L   E I G E N V A L U E S\n', title,
                         '   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED\n',
                         '    NO.       ORDER                                                                       MASS              STIFFNESS\n']
         for (iMode, order) in sorted(self.extractionOrder.iteritems()):
@@ -118,10 +116,10 @@ class RealEigenvalues(baseScalarObject):
 
 
 class ComplexEigenvalues(baseScalarObject):
-    def __init__(self, isubcase):
+    def __init__(self, title):
         baseScalarObject.__init__(self)
         #self.rootNumber = []
-        self. subcase = isubcase
+        self.title = title
         self.extractionOrder = {}
         self.eigenvalues = {}
         self.cycles = {}
@@ -152,8 +150,11 @@ class ComplexEigenvalues(baseScalarObject):
         for line in data:
             self.addF06Line(line)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):  # not proper msg start
-        msg = header + ['                                        C O M P L E X   E I G E N V A L U E   S U M M A R Y\n',
+    def write_f06(self, f, header, pageStamp, pageNum=1):  # not proper msg start
+        title = ''
+        if self.title is not None:
+            title = '%s\n' % self.title.center(72)
+        msg = header + ['                                        C O M P L E X   E I G E N V A L U E   S U M M A R Y\n', title,
                         '0                ROOT     EXTRACTION                  EIGENVALUE                     FREQUENCY              DAMPING\n',
                         '                  NO.        ORDER             (REAL)           (IMAG)                (CYCLES)            COEFFICIENT\n']
 
