@@ -306,7 +306,7 @@ class CPENTA6(SolidElement):
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 6
 
-    def getFaceNodesAndArea(self, nid, nidOpposite):
+    def getFaceNodesAndArea(self, nidOpposite, nid):
         nids = self.nodeIDs()[:6]
         indx1 = nids.index(nid)
         indx2 = nids.index(nidOpposite)
@@ -516,7 +516,7 @@ class CTETRA4(SolidElement):
         (n1, n2, n3, n4) = self.nodePositions()
         return (n1 + n2 + n3 + n4) / 4.
 
-    def getFaceNodes(self, nid, nidOpposite):
+    def getFaceNodes(self, nidOpposite, nid=None):
         nids = self.nodeIDs()[:4]
         indx = nids.index(nidOpposite)
         nids.pop(indx)
@@ -661,7 +661,7 @@ class CTETRA10(CTETRA4):
         (n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = self.nodePositions()
         return (n1 + n2 + n3 + n4) / 4.
 
-    def getFaceNodes(self, nid, nidOpposite):
+    def getFaceNodes(self, nidOpposite, nid=None):
         nids = self.nodeIDs()[:4]
         indx = nids.index(nidOpposite)
         nids.pop(indx)
