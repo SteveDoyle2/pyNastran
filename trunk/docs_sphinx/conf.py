@@ -52,6 +52,9 @@ class Mock(object):
     def __call__(self, *args, **kwargs):
         return Mock()
 
+    #def __len__(self):  # for numpy arrays
+    #    return 3 #  needs to be an integer
+
     @classmethod
     def __getattr__(cls, name):
         if name in ('__file__', '__path__'):
@@ -63,8 +66,8 @@ class Mock(object):
         else:
             return Mock()
 
-for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = Mock()
+#for mod_name in MOCK_MODULES:
+    #sys.modules[mod_name] = Mock()
 
 # -- General configuration -----------------------------------------------------
 
@@ -76,7 +79,7 @@ for mod_name in MOCK_MODULES:
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage',
               'sphinx.ext.mathjax', 'sphinx.ext.viewcode',
               'sphinx.ext.todo', 'sphinx.ext.graphviz',
-              'sphinx.ext.inheritance_diagram' ]
+              'sphinx.ext.inheritance_diagram','numpydoc' ]
 
 # display todos
 todo_include_todos=True
@@ -421,6 +424,8 @@ def convert_doxygen_comments(app, what, name, obj, options, lines):
 
     lines[:] = res_lines
 
+def passer(app, what, name, obj, options, lines):
+    pass
 
 def setup(app):
-    app.connect('autodoc-process-docstring', convert_doxygen_comments)
+    app.connect('autodoc-process-docstring', passer)

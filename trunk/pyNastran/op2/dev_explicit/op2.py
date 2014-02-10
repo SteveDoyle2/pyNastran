@@ -53,6 +53,7 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
     def set_subcases(self, subcases=None):
         """
         Allows you to read only the subcases in the list of iSubcases
+
         :param subcases: list of [subcase1_ID,subcase2_ID]
                          (default=None; all subcases)
         """
@@ -87,7 +88,10 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
 
     def set_result_types(self, result_types):
         """
-        :param result_types: allows a user to reduce the amount of data that's extracted
+        Method for setting the tables to read based on the results you want.
+
+        :param result_types: allows a user to reduce the amount of data that's
+                             extracted
 
         Example
         =======
@@ -159,6 +163,8 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
 
     def set_tables_to_read(self, table_names):
         """
+        Specifies the explicit tables to read.
+
         :param table_names: list/set of tables as strings
         """
         self.tables_to_read = table_names
@@ -430,6 +436,7 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
     def read_op2(self, op2_filename):
         """
         Starts the OP2 file reading
+
         :param op2_filename: if a string is set, the filename specified in the
             __init__ is overwritten.
 
@@ -509,6 +516,7 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
         """
         Reads all the geometry/result tables.
         The OP2 header is not read by this function.
+
         :param table_name: the first table's name
         """
         table_names = []
@@ -994,6 +1002,7 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
     def _print_month(self, month, day, year, zero, one):
         """
         Creates the self.date attribute from the 2-digit year.
+
         :param month: the month (integer <= 12)
         :param day:  the day (integer <= 31)
         :param year: the day (integer <= 99)

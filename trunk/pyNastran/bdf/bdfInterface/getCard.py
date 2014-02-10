@@ -96,8 +96,8 @@ class GetMethods(GetMethodsDeprecated):
 
     def getElementIDsWithPIDs(self, pids, mode='list'):
         """
-        Gets all the element IDs with a specific property ID
-        .
+        Gets all the element IDs with a specific property ID.
+
         :param self: the BDF object
         :param pids: list of property ID
         :param mode:  'list' - returns the data as one list (default)

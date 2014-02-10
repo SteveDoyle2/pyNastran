@@ -78,6 +78,7 @@ class BDFCard(object):
     def fields(self, i=0, j=None, defaults=None, debug=False):
         """
         Gets multiple fields on the card
+
         :param self:     the object pointer
         :param i:        the ith field on the card (following list notation)
         :param j:        the jth field on the card (None means till the end

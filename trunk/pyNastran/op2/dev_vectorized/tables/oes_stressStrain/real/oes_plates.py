@@ -39,7 +39,7 @@ class RealPlateResults(object):
     def _is_full(self, nnodes, nelements):
         self._inode_start += nnodes
         self._ielement_start += nelements
-        
+
         #print('check....inode_start=%s size_node_end=%s' %(self._inode_start, self._size_node_end))
         #print('check...._ielement_start=%s size_element_end=%s' %(self._ielement_start, self._size_element_end))
         if self._inode_start == self._size_node_end:
@@ -76,7 +76,7 @@ class RealPlateResults(object):
         """
         nodes will create self.data
         elements will create self.element_data
-        
+
         data is primary, so nodes are input first
         """
         #print('---preallocate nnodes=%s nelements=%s' % (nnodes, nelements))
@@ -403,6 +403,8 @@ class PlateStressObject(RealPlateResults, StressObject):
 
     def getOrderedETypes(self, valid_types):
         """
+        Groups element IDs by element type
+
         :param validTypes: list of valid element types
                            e.g. ['CTRIA3', 'CTRIA6', 'CQUAD4', 'CQUAD8']
         :returns TypesOut:      the ordered list of types
@@ -830,7 +832,7 @@ class PlateStressObject(RealPlateResults, StressObject):
                     'CQUAD4': quadMsg,
                     'CQUAD8': quad8Msg,
                     'CQUADR': quadrMsg, }
-        
+
         return self._write_f06_transient_helper(msgPacks, header, pageStamp, f, pageNum, is_mag_phase)
 
 

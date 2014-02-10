@@ -1,6 +1,17 @@
 test Package
 ============
 
+:mod:`all_tests` Module
+-----------------------
+
+.. inheritance-diagram:: pyNastran.f06.test.all_tests
+
+.. automodule:: pyNastran.f06.test.all_tests
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`f06_test` Module
 ----------------------
 
@@ -34,12 +45,23 @@ test Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`test_f06` Module
-----------------------
+:mod:`test_f06_formatting` Module
+---------------------------------
 
-.. inheritance-diagram:: pyNastran.f06.test.test_f06
+.. inheritance-diagram:: pyNastran.f06.test.test_f06_formatting
 
-.. automodule:: pyNastran.f06.test.test_f06
+.. automodule:: pyNastran.f06.test.test_f06_formatting
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`test_f06_formatting` Module
+---------------------------------
+
+.. inheritance-diagram:: pyNastran.f06.test.test_f06_formatting
+
+.. automodule:: pyNastran.f06.test.test_f06_formatting
     :members:
     :private-members:
     :undoc-members:

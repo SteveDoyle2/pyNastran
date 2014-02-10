@@ -39,6 +39,7 @@ class OP2(BDF,
     def set_subcases(self, subcases=None):
         """
         Allows you to read only the subcases in the list of iSubcases
+
         :param subcases: list of [subcase1_ID,subcase2_ID]
                          (default=None; all subcases)
         """

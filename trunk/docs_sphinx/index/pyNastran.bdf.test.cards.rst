@@ -34,6 +34,17 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`test_materials` Module
+----------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.test.cards.test_materials
+
+.. automodule:: pyNastran.bdf.test.cards.test_materials
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`test_rigid` Module
 ------------------------
 

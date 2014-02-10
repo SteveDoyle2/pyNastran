@@ -34,6 +34,17 @@ tables Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`ogpwg` Module
+-------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.ogpwg
+
+.. automodule:: pyNastran.op2.tables.ogpwg
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`r1tab` Module
 -------------------
 

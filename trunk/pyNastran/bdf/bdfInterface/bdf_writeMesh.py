@@ -80,6 +80,8 @@ class WriteMesh(object):
 
     def _write_dmigs(self, size, card_writer):
         """
+        Writes the DMIG cards
+
         :param self:  the BDF object
         :param size:  large field (16) or small field (8)
         :returns msg: string representation of the DMIGs
@@ -99,7 +101,8 @@ class WriteMesh(object):
 
     def _write_common(self, size, card_writer):
         """
-        method to write the common outputs so none get missed...
+        Write the common outputs so none get missed...
+
         :param self: the BDF object
         :returns msg: part of the bdf
         """
@@ -197,6 +200,7 @@ class WriteMesh(object):
                         size=8, precision='single'):
         """
         Writes a series of CQUAD4s as CTRIA3s.  All other cards are echoed.
+
         :param self:         the BDF object
         :param out_filename: the name to call the output bdf
         :param debug:        developer debug (unused)
@@ -224,6 +228,7 @@ class WriteMesh(object):
     def _write_header(self, outfile):
         """
         Writes the executive and case control decks.
+
         :param self: the BDF object
         """
         msg = self._write_executive_control_deck()
@@ -233,6 +238,7 @@ class WriteMesh(object):
     def _write_executive_control_deck(self):
         """
         Writes the executive control deck.
+
         :param self: the BDF object
         """
         msg = ''
@@ -253,6 +259,7 @@ class WriteMesh(object):
     def _write_case_control_deck(self):
         """
         Writes the Case Control Deck.
+
         :param self: the BDF object
         """
         msg = ''
@@ -265,6 +272,7 @@ class WriteMesh(object):
     def _write_params(self, size, card_writer):
         """
         Writes the PARAM cards
+
         :param self: the BDF object
         """
         msg = []
@@ -277,6 +285,7 @@ class WriteMesh(object):
     def _write_nodes(self, outfile, size, card_writer):
         """
         Writes the NODE-type cards
+
         :param self: the BDF object
         """
         if self.spoints:
@@ -339,6 +348,7 @@ class WriteMesh(object):
     def _write_elements(self, outfile, size, card_writer):
         """
         Writes the elements in a sorted order
+
         :param self: the BDF object
         """
         if self.elements:
