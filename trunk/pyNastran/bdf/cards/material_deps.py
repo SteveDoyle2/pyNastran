@@ -1,3 +1,4 @@
+#pylint: disable=E1103,C0103,C0326,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #from numpy import zeros, array
@@ -9,7 +10,7 @@ from pyNastran.bdf.cards.tables import Table
 
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
-    string, string_or_blank, blank)
+    string, blank)
 
 
 class MaterialDependence(BaseCard):
@@ -48,10 +49,10 @@ class MATS1(MaterialDependence):
                 self.limit1 = blank(card, 7, 'yf')
                 self.limit2 = blank(card, 8, 'yf')
             else:
-                #: Work hardening slope (slope of stress versus plastic strain) in
-                #: units of stress. For elastic-perfectly plastic cases, H=0.0.
-                #: For more than a single slope in the plastic range, the
-                #: stress-strain data must be supplied on a TABLES1 entry
+                #: Work hardening slope (slope of stress versus plastic strain)
+                #: in units of stress. For elastic-perfectly plastic cases,
+                #: H=0.0.  For more than a single slope in the plastic range,
+                #: the stress-strain data must be supplied on a TABLES1 entry
                 #: referenced by TID, and this field must be blank
                 self.h = double_or_blank(card, 4, 'H')
 
@@ -100,7 +101,7 @@ class MATS1(MaterialDependence):
         d = {1: 'Isotropic', 2: 'Kinematic', 3: 'Combined'}
         return d[self.hr]
 
-    def E(self, strain=None):
+    def E(self, strain):
         """
         Gets E (Young's Modulus) for a given strain.
 
@@ -110,9 +111,9 @@ class MATS1(MaterialDependence):
         """
         msg = "E (Young's Modulus) not implemented for MATS1"
         raise NotImplementedError(msg)
-        if self.tid:
-            E = self.tid.Value(strain)
-        return E
+        #if self.tid:
+            #E = self.tid.Value(strain)
+        #return E
 
     def cross_reference(self, model):
         msg = 'which is required by MATS1 mid=%s' % self.mid
@@ -146,7 +147,7 @@ class MATT1(MaterialDependence):
 
     +-------+-------+-------+-------+-------+--------+------+------+-------+
     |   1   |   2   |   3   |   4   |   5   |    6   |  7   |  8   |   9   |
-    +=======+=======+=======+======+=======+========+======+======+=======+
+    +=======+=======+=======+=======+=======+========+======+======+=======+
     | MATT1 |  MID  |  T(E) |  T(G) | T(NU) | T(RHO) | T(A) |      | T(GE) |
     +-------+-------+-------+-------+-------+--------+------+------+-------+
     |       | T(ST) | T(SC) | T(SS) |       |        |      |      |       |
@@ -200,7 +201,7 @@ class MATT1(MaterialDependence):
         self._xref_table(model, '_st_table', msg=msg)
         self._xref_table(model, '_sc_table', msg=msg)
         self._xref_table(model, '_ss_table', msg=msg)
-    
+
     def _xref_table(self, model, key, msg):
         slot = getattr(self, key)
         if slot is not None:

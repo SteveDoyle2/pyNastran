@@ -353,6 +353,73 @@ class Element(BaseCard):
                                    'nodes...nids=%s allowEmptyNodes=False'
                                    % nids)
 
+    @property  # I think this means you can just call it as an attribute...
+    def faces(self):
+        """
+        Gets the faces of the element
+
+        :returns: dictionary with face number as the keys and
+                  a list of nodes (integer pointers) as the values.
+        ..note::  The order of the nodes are consistent with ANSYS numbering.
+        
+        Example
+        =======
+        >>> print element.faces  # TODO: is this right???
+        """
+        faces = {}
+        nodes = self.nodeIDs()
+        if self.type.find('HEX') != -1:  # CHEXA
+            faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]
+            faces[2] = [nodes[0], nodes[1], nodes[5], nodes[4]]
+            faces[3] = [nodes[1], nodes[2], nodes[6], nodes[5]]
+            faces[4] = [nodes[2], nodes[3], nodes[7], nodes[6]]
+            faces[5] = [nodes[3], nodes[0], nodes[4], nodes[7]]
+            faces[6] = [nodes[4], nodes[5], nodes[6], nodes[7]]
+        elif self.type.find('TET') != -1:  # CTETRA
+            faces[1] = [nodes[0], nodes[1], nodes[2]]
+            faces[2] = [nodes[0], nodes[1], nodes[3]]
+            faces[3] = [nodes[1], nodes[2], nodes[3]]
+            faces[4] = [nodes[2], nodes[0], nodes[3]]
+        elif self.type.find('PYR') != -1:  # PYRAMID
+            faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]
+            faces[2] = [nodes[0], nodes[1], nodes[4]]
+            faces[3] = [nodes[1], nodes[2], nodes[4]]
+            faces[4] = [nodes[2], nodes[3], nodes[4]]
+            faces[5] = [nodes[3], nodes[0], nodes[4]]
+        elif self.type.find('PEN') != -1:  # CPENTA
+            faces[1] = [nodes[0], nodes[1], nodes[2]]
+            faces[2] = [nodes[3], nodes[4], nodes[5]]
+            faces[3] = [nodes[0], nodes[1], nodes[4], nodes[3]]
+            faces[4] = [nodes[1], nodes[2], nodes[5], nodes[4]]
+            faces[5] = [nodes[2], nodes[0], nodes[3], nodes[5]]
+        elif self.type.find('QUAD') != -1:  # CQUADx
+            # both sides
+            faces[1] = [nodes[0], nodes[1], nodes[2], nodes[3]]
+            faces[2] = [nodes[1], nodes[0], nodes[3], nodes[2]]
+        elif self.type.find('TRI') != -1:  # CTRIAx
+            # both sides
+            faces[1] = [nodes[0], nodes[1], nodes[2]]
+            faces[2] = [nodes[1], nodes[0], nodes[2]]
+        else:
+            faces = None
+        return faces
+
+    def nodes2face(self, nodes):
+        """
+        returns the face number that matches the list of nodes input
+
+        :param nodes:   list of nodes
+        :returns faces: the face number as an integer
+
+        ..warning:: It's assumed you have the nodes in the proper order.
+        """
+        assert isinstance(nodes, list), 'nodes=%s' % str(nodes)
+        face = None
+        for i in self.faces.keys():
+            chck = self.faces[i]
+            if nodes == chck:
+                face = i
+        return face
 
 def expand_thru(fields, set_fields=True, sort_fields=False):
     """
