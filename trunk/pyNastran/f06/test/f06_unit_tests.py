@@ -29,9 +29,9 @@ class TestF06(unittest.TestCase):
             outputs.append(bdf)
 
         if f06_name:
-            f06 = F06(f06_name, debug=False, log=None)
-            f06.read_f06()
-            f06.write_f06(f06_name+'.out')
+            f06 = F06(debug=False, log=None)
+            f06.read_f06(f06_name)
+            f06.write_f06(f06_name + '.out')
             outputs.append(f06)
             if f06_has_weight:
                 assert f06.grid_point_weight.reference_point is not None
@@ -40,40 +40,42 @@ class TestF06(unittest.TestCase):
 
 
         if op2_name:
-            op2 = OP2(op2_name, debug=False)
-            op2.read_op2()
-            op2.write_f06(op2_name+'.out')
+            op2 = OP2(debug=False)
+            op2.read_op2(op2_name)
+            op2.write_f06(op2_name + '.out')
             outputs.append(op2)
 
         if op4_name:
-            op4 = OP4(op4_name)
-            op4.read_op4(op4Name, matrixNames=None, precision='default')
+            op4 = OP4()
+            op4.read_op4(op4_name, matrixNames=None, precision='default')
 
         assert len(outputs) > 0
         if len(outputs) == 1: return outputs[0]
         return outputs
 
     def test_blade2dv_fatal_1(self):
-        f06_name = os.path.join(model_path, 'blade_2dv', 'blade_2dv.f06_fatal')
-        f06 = F06(f06_name, debug=False, log=None)
+        f06_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.f06_fatal')
+        f06 = F06(debug=False, log=None)
+        with self.assertRaises(AttributeError):
+            f06.readF06(f06_filename)
         with self.assertRaises(FatalError):
-            f06.readF06()
+            f06.read_f06(f06_filename)
 
     def test_blade2dv_fatal_2(self):
-        f06_name = os.path.join(model_path, 'blade_2dv', 'blade_2dv.f06_fatal')
-        bdf_name = os.path.join(model_path, 'blade_2dv', 'blade_2dv.bdf')
+        f06_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.f06_fatal')
+        bdf_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.bdf')
         #bdf2 = self.run_model(bdfname2, dynamic_vars=dynamic_vars)
         #self.assertEquals(bdf2.properties[1].t, 42., 't=%s' % bdf2.properties[1].t)
 
-        f06 = F06(f06_name, debug=False, log=None)
+        f06 = F06(debug=False, log=None)
 
         try:  # this is supposed to raise a FatalError
-            f06.read_f06()
+            f06.read_f06(f06_filename)
             assert False, 'a FATAL should have been raised'
         except FatalError:
             pass
 
-        f06.write_f06(f06_name+'.out')
+        f06.write_f06(f06_filename + '.out')
 
         ref_point = f06.grid_point_weight.reference_point
         #print "ref_point", ref_point
@@ -126,18 +128,18 @@ class TestF06(unittest.TestCase):
         self.assertTrue(array_equiv(IQ, IQ_exact), msg=msg)
 
     def test_blade2dv_fatal_3(self):
-        f06_name = os.path.join(model_path, 'blade_2dv', 'blade_2dv.f06_fatal')
-        bdf_name = os.path.join(model_path, 'blade_2dv', 'blade_2dv.bdf')
+        f06_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.f06_fatal')
+        bdf_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.bdf')
         #bdf2 = self.run_model(bdfname2, dynamic_vars=dynamic_vars)
         #self.assertEquals(bdf2.properties[1].t, 42., 't=%s' % bdf2.properties[1].t)
 
-        f06 = F06(f06_name, debug=False, log=None)
+        f06 = F06(debug=False, log=None)
 
         # we skip the fatal by stopping after reading the matrices
         f06.stop_after_reading_grid_point_weight()
-        f06.read_f06()
+        f06.read_f06(f06_filename)
 
-        f06.write_f06(f06_name+'.out')
+        f06.write_f06(f06_filename + '.out')
 
         ref_point = f06.grid_point_weight.reference_point
         #print "ref_point", ref_point

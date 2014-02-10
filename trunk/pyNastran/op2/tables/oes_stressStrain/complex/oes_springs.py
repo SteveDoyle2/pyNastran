@@ -27,7 +27,7 @@ class ComplexCelasStressObject(complexStressObject):
         self.code = [self.format_code, self.sort_code, self.s_code]
         self.stress = {}
 
-        self.dt = dt
+        #self.dt = dt
         if is_sort1:
             if dt is not None:
                 #self.add = self.add_sort1
@@ -147,9 +147,7 @@ class ComplexCelasStrainObject(complexStrainObject):
         StrainObject.__init__(self, data_code, isubcase)
         self.eType = {}
         self.element_name = self.data_code['element_name']
-
         self.code = [self.format_code, self.sort_code, self.s_code]
-
         self.strain = {}
 
         self.dt = dt
@@ -174,6 +172,7 @@ class ComplexCelasStrainObject(complexStrainObject):
         """
         initializes the transient variables
         """
+        self.dt = dt
         self.strain[dt] = {}
 
     def add_new_eid(self, dt, eid, strain):
@@ -184,6 +183,7 @@ class ComplexCelasStrainObject(complexStrainObject):
 
     def add_new_eid_sort1(self, dt, eid, strain):
         assert eid >= 0
-
+        if dt not in self.strain:
+            self.add_new_transient(dt)
         self.eType[eid] = self.element_type
         self.strain[dt][eid] = strain

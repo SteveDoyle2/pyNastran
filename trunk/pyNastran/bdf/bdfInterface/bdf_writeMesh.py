@@ -432,9 +432,9 @@ class WriteMesh(object):
             for card in sorted(self.pelast.itervalues()):
                 msg.append(card.write_bdf(size, card_writer))
             for card in missing_properties:
-                #print("missing_property = ",missing_property)
-                msg.append(card.write_bdf(size, card_writer))
-                #msg.append(missing_property)
+                # this is a string...
+                #print("missing_property = ", card
+                msg.append(card)
         outfile.write(''.join(msg))
 
     def _write_materials(self, size, card_writer):

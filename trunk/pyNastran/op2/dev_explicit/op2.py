@@ -20,6 +20,10 @@ from pyNastran.op2.dev_explicit.tables.geom4 import GEOM4
 from pyNastran.op2.dev_explicit.tables.ept import EPT
 from pyNastran.op2.dev_explicit.tables.mpt import MPT
 
+from pyNastran.op2.dev_explicit.tables.dit import DIT
+from pyNastran.op2.dev_explicit.tables.dynamics import DYNAMICS
+#============================
+
 from pyNastran.op2.dev_explicit.tables.lama import LAMA
 from pyNastran.op2.dev_explicit.tables.onr import ONR
 from pyNastran.op2.dev_explicit.tables.ogpf import OGPF
@@ -40,7 +44,7 @@ from pyNastran.utils import is_binary
 from pyNastran.utils.gui_io import load_file_dialog
 
 
-class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
+class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
           LAMA, ONR, OGPF,
           OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
     """
@@ -91,6 +95,7 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
         op2.set_result_types(['displacements', 'solidStress'])
         """
         table_mapper = {  # very incomplete list
+            "grids_coords" : ['GEOM1', 'GEOM1S'],
             "geometry" : [],  # includes materials/properties
             "loads_constraints" : [],
 
@@ -105,13 +110,15 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
             'loadVectors' : ['OPG1', 'OPGV1', 'OPNL1', ],
             'thermalLoadVectors' : ['OPG1', 'OPGV1', 'OPNL1', ],
 
-            'barStress'    : ['OES1X1', 'OES1', 'OES1X', 'OESNLXR', 'OESNLXD', 'OESNLBR', 'OESTRCP', 'OESNL1X', 'OESRT', ],
-            'rodStress'    : ['OES1X1', 'OES1', 'OES1X', 'OESNLXR', 'OESNLXD', 'OESNLBR', 'OESTRCP', 'OESNL1X', 'OESRT', ],
-            'beamStress'   : ['OES1X1', 'OES1', 'OES1X', 'OESNLXR', 'OESNLXD', 'OESNLBR', 'OESTRCP', 'OESNL1X', 'OESRT', ],
-            'solidStress'  : ['OES1X1', 'OES1', 'OES1X', 'OESNLXR', 'OESNLXD', 'OESNLBR', 'OESTRCP', 'OESNL1X', 'OESRT', ],
-            'plateStress'  : ['OES1X1', 'OES1', 'OES1X', 'OESNLXR', 'OESNLXD', 'OESNLBR', 'OESTRCP', 'OESNL1X', 'OESRT', ],
-            'shearStress'  : ['OES1X1', 'OES1', 'OES1X', 'OESNLXR', 'OESNLXD', 'OESNLBR', 'OESTRCP', 'OESNL1X', 'OESRT', ],
+            'barStress'    : ['OES1X1', 'OES1', 'OES1X'],
+            'rodStress'    : ['OES1X1', 'OES1', 'OES1X'],
+            'beamStress'   : ['OES1X1', 'OES1', 'OES1X'],
+            'solidStress'  : ['OES1X1', 'OES1', 'OES1X'],
+            'plateStress'  : ['OES1X1', 'OES1', 'OES1X'],
+            'shearStress'  : ['OES1X1', 'OES1', 'OES1X'],
             'compositePlateStress': ['OES1C', 'OESCP'],
+            # nonlinear stress?
+            #, 'OESNLXR', 'OESNLXD', 'OESNLBR',  'OESNL1X', 'OESRT',
 
             'barStrain'    : ['OSTR1X'],
             'rodStrain'    : ['OSTR1X'],
@@ -120,13 +127,15 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
             'plateStrain'  : ['OSTR1X'],
             'shearStrain'  : ['OSTR1X'],
             'compositePlateStrain': ['OSTR1C'],
+            # nonlinear strain?
+            #'OESTRCP',
 
             'barForces'    : ['OEFIT', 'OEF1X', 'OEF1', 'DOEF1'],
             'beamForces'   : ['OEFIT', 'OEF1X', 'OEF1', 'DOEF1'],
             'rodForces'    : ['OEFIT', 'OEF1X', 'OEF1', 'DOEF1'],
             'plateForces'  : ['OEFIT', 'OEF1X', 'OEF1', 'DOEF1'],
             'bar100Forces' : ['OEFIT', 'OEF1X', 'OEF1', 'DOEF1'],
-            #'solidForces'  : ['OEFIT', 'OEF1X', 'OEF1', 'DOEF1'],
+            'solidForces'  : ['OEFIT', 'OEF1X', 'OEF1', 'DOEF1'],
 
             'grid_point_stresses' : ['OGS1'],
 
@@ -155,6 +164,10 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
         self.tables_to_read = table_names
 
     def __init__(self, make_geom=False, save_skipped_cards=False, debug=False, log=None):
+        assert isinstance(make_geom, bool), 'make_geom=%r' % make_geom
+        assert isinstance(save_skipped_cards, bool), 'save_skipped_cards=%r' % save_skipped_cards
+        assert isinstance(debug, bool), 'debug=%r' % debug
+
         self.save_skipped_cards = save_skipped_cards
         self.make_geom = make_geom
 
@@ -168,6 +181,9 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
 
         EPT.__init__(self)
         MPT.__init__(self)
+
+        DIT.__init__(self)
+        DYNAMICS.__init__(self)
 
         LAMA.__init__(self)
         ONR.__init__(self)
@@ -191,7 +207,6 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
              self.binary_debug = open('debug.out', 'wb')
 
         self._table_mapper = {
-            #'DIT': self.read_dit,
             #=======================
             # OEF
             # internal forces
@@ -206,6 +221,9 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
             'OQGV1' : [self._read_oqg1_3, self._read_oqg1_4],
             # mpc forces
             'OQMG1' : [self._read_oqg1_3, self._read_oqg1_4],
+
+            # ???? - passer
+            #'OQP1': [self._table_passer, self._table_passer],
             #=======================
             # OPG
             # applied loads
@@ -213,12 +231,13 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
             'OPGV1' : [self._read_opg1_3, self._read_opg1_4],
             'OPNL1' : [self._read_opg1_3, self._read_opg1_4],
 
+
             # OGPFB1
             # grid point forces
             'OGPFB1' : [self._read_ogpf1_3, self._read_ogpf1_4],
 
-            # ONR
-            # grid point forces
+            # ONR/OEE
+            # strain energy density
             'ONRGY1' : [self._read_onr1_3, self._read_onr1_4],
             #=======================
             # OES
@@ -257,11 +276,9 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
             # grid point stresses
             'OGS1' : [self._read_ogs1_3, self._read_ogs1_4],
             #=======================
-            # OEE
-            #'ONRGY1' : [self._read_oee1_3, self._read_oee1_4],
-
             # eigenvalues
-            'BLAMA': [self._read_complex_eigenvalue_3, self._read_complex_eigenvalue_4],
+            'BLAMA': [self._read_buckling_eigenvalue_3, self._read_buckling_eigenvalue_4],
+            'CLAMA': [self._read_complex_eigenvalue_3, self._read_complex_eigenvalue_4],
             'LAMA': [self._read_real_eigenvalue_3, self._read_real_eigenvalue_4],
 
             # geometry
@@ -292,12 +309,120 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT,
 
             'MPT' : [self._read_mpt_4, self._read_mpt_4],
             'MPTS': [self._read_mpt_4, self._read_mpt_4],
+
+            'DYNAMIC': [self._read_dynamics_4, self._read_dynamics_4],
+            'DYNAMICS': [self._read_dynamics_4, self._read_dynamics_4],
+            'DIT': [self._read_dit_4, self._read_dit_4],
+
+            # ===passers===
+            'EQEXIN': [self._table_passer, self._table_passer],
+            'EQEXINS': [self._table_passer, self._table_passer],
+
+            'GPDT': [self._table_passer, self._table_passer],
+            'BGPDT': [self._table_passer, self._table_passer],
+            'BGPDTS': [self._table_passer, self._table_passer],
+            'BGPDTOLD': [self._table_passer, self._table_passer],
+
+            'PVT0': [self._table_passer, self._table_passer],
+            'DESTAB': [self._table_passer, self._table_passer],
+            'STDISP': [self._table_passer, self._table_passer],
+            'R1TABRG': [self._table_passer, self._table_passer],
+            'CASECC': [self._table_passer, self._table_passer],
+
+            'HISADD': [self._table_passer, self._table_passer],
+            'EDTS': [self._table_passer, self._table_passer],
+            'FOL': [self._table_passer, self._table_passer],
+            'MONITOR': [self._table_passer, self._table_passer],
+            'PERF': [self._table_passer, self._table_passer],
+            'VIEWTB': [self._table_passer, self._table_passer],
+
+            #==================================
+            'OUGATO2': [self._table_passer, self._table_passer],
+            'OUGCRM2': [self._table_passer, self._table_passer],
+            'OUGNO2': [self._table_passer, self._table_passer],
+            'OUGPSD2': [self._table_passer, self._table_passer],
+            'OUGRMS2': [self._table_passer, self._table_passer],
+
+            'OQGATO2': [self._table_passer, self._table_passer],
+            'OQGCRM2': [self._table_passer, self._table_passer],
+
+            'OQGNO2': [self._table_passer, self._table_passer],
+            'OQGPSD2': [self._table_passer, self._table_passer],
+            'OQGRMS2': [self._table_passer, self._table_passer],
+
+            'OFMPF2M': [self._table_passer, self._table_passer],
+            'OLMPF2M': [self._table_passer, self._table_passer],
+            'OPMPF2M': [self._table_passer, self._table_passer],
+            'OSMPF2M': [self._table_passer, self._table_passer],
+            'OGPMPF2M': [self._table_passer, self._table_passer],
+
+            'OEFATO2': [self._table_passer, self._table_passer],
+            'OEFCRM2': [self._table_passer, self._table_passer],
+            'OEFNO2': [self._table_passer, self._table_passer],
+            'OEFPSD2': [self._table_passer, self._table_passer],
+            'OEFRMS2': [self._table_passer, self._table_passer],
+
+            'OESATO2': [self._table_passer, self._table_passer],
+            'OESCRM2': [self._table_passer, self._table_passer],
+            'OESNO2': [self._table_passer, self._table_passer],
+            'OESPSD2': [self._table_passer, self._table_passer],
+            'OESRMS2': [self._table_passer, self._table_passer],
+
+            'OVGATO2': [self._table_passer, self._table_passer],
+            'OVGCRM2': [self._table_passer, self._table_passer],
+            'OVGNO2': [self._table_passer, self._table_passer],
+            'OVGPSD2': [self._table_passer, self._table_passer],
+            'OVGRMS2': [self._table_passer, self._table_passer],
+
+            #==================================
+            'GPL': [self._table_passer, self._table_passer],
+            'OMM2': [self._table_passer, self._table_passer],
+            'ERRORN': [self._table_passer, self._table_passer],
+            #==================================
+
+
+            'OCRPG': [self._table_passer, self._table_passer],
+            'OCRUG': [self._table_passer, self._table_passer],
+
+            'EDOM': [self._table_passer, self._table_passer],
+
+            'OAGPSD2': [self._table_passer, self._table_passer],
+            'OAGATO2': [self._table_passer, self._table_passer],
+            'OAGRMS2': [self._table_passer, self._table_passer],
+            'OAGNO2': [self._table_passer, self._table_passer],
+            'OAGCRM2': [self._table_passer, self._table_passer],
+
+            'OPGPSD2': [self._table_passer, self._table_passer],
+            'OPGATO2': [self._table_passer, self._table_passer],
+            'OPGRMS2': [self._table_passer, self._table_passer],
+            'OPGNO2': [self._table_passer, self._table_passer],
+            'OPGCRM2': [self._table_passer, self._table_passer],
+
+            'OSTRPSD2': [self._table_passer, self._table_passer],
+            'OSTRATO2': [self._table_passer, self._table_passer],
+            'OSTRRMS2': [self._table_passer, self._table_passer],
+            'OSTRNO2': [self._table_passer, self._table_passer],
+            'OSTRCRM2': [self._table_passer, self._table_passer],
+
+            'OQMPSD2': [self._table_passer, self._table_passer],
+            'OQMATO2': [self._table_passer, self._table_passer],
+            'OQMRMS2': [self._table_passer, self._table_passer],
+            'OQMNO2': [self._table_passer, self._table_passer],
+            'OQMCRM2': [self._table_passer, self._table_passer],
+
+            'AAA': [self._table_passer, self._table_passer],
+            'AAA': [self._table_passer, self._table_passer],
+            'AAA': [self._table_passer, self._table_passer],
+            'AAA': [self._table_passer, self._table_passer],
         }
         self.make_geom = False
 
     def _not_available(self, data):
         if len(data) > 0:
             raise RuntimeError('this should never be called...table_name=%r len(data)=%s' % (self.table_name, len(data)))
+
+    def _table_passer(self, data):
+        return len(data)
 
     def readFake(self, data, n):
         return n

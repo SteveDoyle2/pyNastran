@@ -15,14 +15,8 @@ from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
 from pyNastran.utils.gui_io import load_file_dialog
 
 
-class OP4Deprecated(object):
-
-    def __init__(self):
-        pass
-
-
 #class OP4(FortranFile):
-class OP4(OP4Deprecated):
+class OP4(object):
     """
     todo:: add endian checking
     todo:: test on big matrices
@@ -100,13 +94,14 @@ class OP4(OP4Deprecated):
             wildcard_qt = "Nastran OP4 (*.op4);;All files (*)"
             title = 'Please select a OP4 to load'
             op4_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)
+            assert op2_filename is not None, op2_filename
+
+        if not os.path.exists(op4_filename):
+            raise IOError('cannot find op4_filename=%r' % op4_filename)
 
         if isinstance(matrix_names, str):
             matrix_names = [matrix_names]
         #assert isinstance(matrix_names, list), 'type(matrix_names)=%s' % type(matrix_names)
-
-        if not os.path.exists(op4_filename):
-            raise IOError('cannot find op4_filename=%r' % op4_filename)
 
         if is_binary(op4_filename):
             return self.read_op4_binary(op4_filename, matrix_names, precision)

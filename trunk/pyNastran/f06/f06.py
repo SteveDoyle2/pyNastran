@@ -15,22 +15,25 @@ from pyNastran.f06.tables.oqg import OQG  # OUG
 from pyNastran.f06.f06_classes import MaxDisplacement  # classes not in op2
 from pyNastran.f06.f06Writer import F06Writer
 
+from pyNastran.utils import is_binary
+from pyNastran.utils.gui_io import load_file_dialog
+
 
 class FatalError(RuntimeError):
     pass
 
-class F06Deprecated(object):
-    def __init__(self, f06_filename):
+#class F06Deprecated(object):
+    #def __init__(self, f06_filename):
         #self.f06FileName = f06_filename
         #self.f06_filename = None
     #def read_f06(self, f06_filename):
-        pass
+        #pass
     #def readF06(self):
         #"""... seealso::: read_f06"""
         #self.read_f06(self.f06_filename)
 
 
-class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
+class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
     def stop_after_reading_grid_point_weight(self, stop=True):
         self._stop_after_reading_mass = stop
 
@@ -47,19 +50,14 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         OES.__init__(self)
         OQG.__init__(self)
         OUG.__init__(self)
-        F06Deprecated.__init__(self, f06_filename)
+        #F06Deprecated.__init__(self, f06_filename)
         #F06Writer.__init__(self)
 
         self._subtitle = None
         self.card_count = {}
-        self.f06_filename = f06_filename
         self._stop_after_reading_mass = False
         self.stored_lines = []
         self.i = 0
-
-        if not os.path.exists(self.f06_filename):
-            msg = 'cant find f06_filename=%r\n%s' % (self.f06_filename, print_bad_path(self.f06_filename))
-            raise RuntimeError(msg)
 
         self.__init_data__(debug, log)
 
@@ -437,10 +435,10 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
                 1         1        6.158494E+07        7.847607E+03        1.248985E+03        1.000000E+00        6.158494E+07
         """
         (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
-        note = None
+        Title = None
         line1 = self.infile.readline().strip(); self.i += 1
         if line1 != 'MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED':
-            note = line1
+            Title = line1
             line1 = self.infile.readline().strip(); self.i += 1
         line2 = self.infile.readline().strip(); self.i += 1
 
@@ -453,12 +451,12 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
         #print headers
         data = self._read_f06_table([int, int, float, float, float, float, float])
 
-        if isubcase in self.eigenvalues:
-            self.eigenvalues[isubcase].add_f06_data(note, data)
-        else:
-            self.eigenvalues[isubcase] = RealEigenvalues(isubcase)
-            self.eigenvalues[isubcase].add_f06_data(note, data)
-        self.iSubcases.append(isubcase)
+        #if title in self.eigenvalues:
+            #self.eigenvalues[title].add_f06_data(note, data)
+        #else:
+        self.eigenvalues[Title] = RealEigenvalues(Title)
+        self.eigenvalues[Title].add_f06_data(data)
+        #self.iSubcases.append(isubcase)
 
     def _complex_eigenvalue_summary(self):
         """
@@ -677,6 +675,11 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
             title = 'Please select a F06 to load'
             op2_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)
             assert op2_filename is not None, op2_filename
+        else:
+            if not os.path.exists(f06_filename):
+                msg = 'cant find f06_filename=%r\n%s' \
+                    % (f06_filename, print_bad_path(f06_filename))
+                raise RuntimeError(msg)
 
         if is_binary(f06_filename):
             raise IOError('f06_filename=%r is not a binary F06.' % f06_filename)
@@ -685,6 +688,7 @@ class F06(OES, OUG, OQG, F06Writer, F06Deprecated):
 
         self.log.debug('f06_filename = %r' % f06_filename)
         self.f06_filename = f06_filename
+
 
         blank = 0
         self.infile = open(self.f06_filename, 'r')

@@ -40,6 +40,7 @@ class scalarObject(baseScalarObject):
         self.dt = None
         self.data_code = copy.deepcopy(data_code)
 
+        #print("***data_code =", self.data_code)
         if 0:
             if 'Title' in data_code:
                 self.Title = data_code['Title']
@@ -266,15 +267,16 @@ class scalarObject(baseScalarObject):
             return []
 
         for name in self.data_code['dataNames']:
-            try:
+            #try:
                 if hasattr(self, name + 's'):
                     vals = getattr(self, name + 's')
                     name = name + 's'
                 else:
                     vals = getattr(self, name)
                 msg.append('  %s = %s\n' % (name, list_print(vals)))
-            except AttributeError:  # weird case...
-                pass
+            #except AttributeError:  # weird case...
+                #pass
+        #print("***dataNames =", self.dataNames)
         return msg
 
     def getUnsteadyValue(self):

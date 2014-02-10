@@ -10,6 +10,9 @@ class LAMA(OP2Common):
         OP2Common.__init__(self)
 
     def _read_complex_eigenvalue_3(self, data):
+        raise NotImplementedError(self.table_name)
+
+    def _read_buckling_eigenvalue_3(self, data):
         #print self.show_data(data)
         #self._read_title_helper(data)
 
@@ -44,25 +47,33 @@ class LAMA(OP2Common):
         self._read_title(data)
 
         #assert self.isubcase != 0, self.isubcase
-        print self.Title
-        raise NotImplementedError(self.table_name)
+        #print self.Title
+        #raise NotImplementedError(self.table_name)
 
     def _read_complex_eigenvalue_4(self, data):
-        #self.show_data(data)
+        raise NotImplementedError(self.table_name)
+
+    def _read_buckling_eigenvalue_4(self, data):
+        # BLAMA - Buckling eigenvalue summary table.
+        # CLAMA - Complex eigenvalue summary table.
+        # LAMA - Normal modes eigenvalue summary table.
+
         ntotal = 4 * 7
         nModes = len(data) // ntotal
         n = 0
         #assert self.isubcase != 0, self.isubcase
         blama = ComplexEigenvalues(11)
-        #self.eigenvalues[self.isub)case] = lama
+        #self.eigenvalues[self.isubcase] = lama
         s = Struct(b'ii5f')
         for i in xrange(nModes):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
             if self.debug4():
                 self.binary_debug.write('  eigenvalue%s - %s\n' % (i, str(out)))
-            #(iMode,order,eigen,omega,freq,mass,stiff) = out
-            #(modeNum,extractOrder,eigenvalue,radian,cycle,genM,genK) = line
+            #(iMode,order,eigen,omega,freq,mass,stiff) = out # BLAMA??
+            #(modeNum,extractOrder,eigenvalue,radian,cycle,genM,genK) = line  # LAMA
+
+            #(rootNum, extractOrder, eigr, eigi, cycle, damping) = data  # CLAMA
             print out
             #blama.addF06Line(out)
             n += ntotal
@@ -105,9 +116,9 @@ class LAMA(OP2Common):
         nModes = len(data) // 28
         n = 0
         ntotal = 28
-        assert self.isubcase != 0, self.isubcase
-        lama = RealEigenvalues(self.isubcase)
-        self.eigenvalues[self.isubcase] = lama
+        #assert self.isubcase != 0, self.isubcase
+        lama = RealEigenvalues(self.Title)
+        self.eigenvalues[self.Title] = lama
         s = Struct('ii5f')
         for i in xrange(nModes):
             edata = data[n:n+28]
