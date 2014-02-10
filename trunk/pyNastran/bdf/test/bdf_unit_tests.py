@@ -59,7 +59,7 @@ class TestBDF(Tester):
         mass1, cg1, I1 = fem1.mass_properties(reference_point=reference_point, sym_axis=sym_axis)
         mass2, cg2, I2 = fem1.mass_properties(reference_point=reference_point, sym_axis=sym_axis, num_cpus=num_cpus)
 
-        assert mass1 == mass2, 'mass1=%s mass2=%s' % (mass1, mass2)
+        assert allclose(mass1, mass2), 'mass1=%s mass2=%s' % (mass1, mass2)
         assert allclose(norm((cg1 - cg2)**2), 0.0), 'cg1-cg2=%s' % (cg1 - cg2)
         assert allclose(norm((I1  -  I2)**2), 0.0), 'I1-I2=%s' % (I1 - I2)
 
