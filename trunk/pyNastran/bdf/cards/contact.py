@@ -339,7 +339,7 @@ class BCTPARA(BaseCard):
             raise NotImplementedError(msg)
 
     def rawFields(self):
-        fields = ['BCTPARA']
+        fields = ['BCTPARA', self.csid]
         for key, value in sorted(self.params.iteritems()):
             fields.append(key)
             fields.append(value)

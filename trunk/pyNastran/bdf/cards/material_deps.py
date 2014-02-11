@@ -6,11 +6,11 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 #from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.bdf.cards.tables import Table
-#from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank)
-
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     string, blank)
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 
 
 class MaterialDependence(BaseCard):
@@ -139,6 +139,13 @@ class MATS1(MaterialDependence):
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card) # is this valid?
+
 
 class MATT1(MaterialDependence):
     """
@@ -255,3 +262,9 @@ class MATT1(MaterialDependence):
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card)  # is this valid?

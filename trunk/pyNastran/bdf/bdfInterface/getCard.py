@@ -64,6 +64,7 @@ class GetMethods(GetMethodsDeprecated):
         return nids2
 
     def Node(self, nid, allowEmptyNodes=False, msg=''):
+        #print('nid=', nid, allowEmptyNodes)
         if (nid == 0 or nid is None) and allowEmptyNodes:
             return None
         elif nid in self.nodes:
@@ -78,7 +79,7 @@ class GetMethods(GetMethodsDeprecated):
         """
         Returns a series of node objects given a list of node IDs
         """
-        #print("nids",nids)
+        #print("nids",nids, allowEmptyNodes)
         nodes = []
         for nid in nids:
             #print("nid = %s" %(nid))

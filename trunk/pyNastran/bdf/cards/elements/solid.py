@@ -72,9 +72,7 @@ class SolidElement(Element):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def cross_reference(self, model):
-        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
-        self.nodes = model.Nodes(self.nodes, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
+        raise NotImplementedError('Element type=%r must implement cross_reference')
 
     def Eid(self):
         return self.eid
@@ -147,7 +145,16 @@ class CHEXA8(SolidElement):
             self.eid = integer(card, 1, 'eid')
             #: Property ID
             self.pid = integer(card, 2, 'pid')
-            nids = fields(integer, card, 'nid', i=3, j=11)
+            nids = [
+                integer(card, 3, 'nid1'),
+                integer(card, 4, 'nid2'),
+                integer(card, 5, 'nid3'),
+                integer(card, 6, 'nid4'),
+                integer(card, 7, 'nid5'),
+                integer(card, 8, 'nid6'),
+                integer(card, 9, 'nid7'),
+                integer(card, 10, 'nid8')
+            ]
             assert len(card) == 11, 'len(CHEXA8 card) = %i' % len(card)
         else:
             self.eid = data[0]
@@ -156,6 +163,11 @@ class CHEXA8(SolidElement):
             assert len(data) == 10, 'len(data)=%s data=%s' % (len(data), data)
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 8
+
+    def cross_reference(self, model):
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=False, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -240,6 +252,26 @@ class CHEXA20(CHEXA8):
         msg = 'len(nids)=%s nids=%s' % (len(nids), nids)
         assert len(self.nodes) <= 20, msg
 
+    def cross_reference(self, model):
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
+
+    def _verify(self, xref=False):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        for i,nid in enumerate(nids):
+            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
+        if xref:
+            c = self.Centroid()
+            v = self.Volume()
+            assert isinstance(v, float)
+            for i in range(3):
+                assert isinstance(c[i], float)
+
     def Centroid(self):
         """
         .. seealso:: CHEXA8.Centroid
@@ -296,7 +328,14 @@ class CPENTA6(SolidElement):
             self.eid = integer(card, 1, 'eid')
             #: Property ID
             self.pid = integer(card, 2, 'pid')
-            nids = fields(integer, card, 'nid', i=3, j=9)
+            nids = [
+                integer(card, 3, 'nid1'),
+                integer(card, 4, 'nid2'),
+                integer(card, 5, 'nid3'),
+                integer(card, 6, 'nid4'),
+                integer(card, 7, 'nid5'),
+                integer(card, 8, 'nid6'),
+            ]
             assert len(card) == 9, 'len(CPENTA6 card) = %i' % len(card)
         else:
             self.eid = data[0]
@@ -305,6 +344,11 @@ class CPENTA6(SolidElement):
             assert len(data) == 8, 'len(data)=%s data=%s' % (len(data), data)
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 6
+
+    def cross_reference(self, model):
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=False, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
     def getFaceNodesAndArea(self, nidOpposite, nid):
         nids = self.nodeIDs()[:6]
@@ -423,7 +467,23 @@ class CPENTA15(CPENTA6):
             self.eid = integer(card, 1, 'eid')
             #: Property ID
             self.pid = integer(card, 2, 'pid')
-            nids = fields(integer, card, 'nid', i=3, j=18)
+            nids = [
+                integer(card, 3, 'nid1'),
+                integer(card, 4, 'nid2'),
+                integer(card, 5, 'nid3'),
+                integer(card, 6, 'nid4'),
+                integer(card, 7, 'nid5'),
+                integer(card, 8, 'nid6'),
+                integer(card, 9, 'nid7'),
+                integer(card, 10, 'nid8'),
+                integer_or_blank(card, 11, 'nid9'),
+                integer_or_blank(card, 12, 'nid10'),
+                integer_or_blank(card, 13, 'nid11'),
+                integer_or_blank(card, 14, 'nid12'),
+                integer_or_blank(card, 15, 'nid13'),
+                integer_or_blank(card, 16, 'nid14'),
+                integer_or_blank(card, 17, 'nid15'),
+            ]
             assert len(card) <= 18, 'len(CPENTA15 card) = %i' % len(card)
         else:
             self.eid = data[0]
@@ -432,6 +492,26 @@ class CPENTA15(CPENTA6):
             assert len(data) == 17, 'len(data)=%s data=%s' % (len(data), data)
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) <= 15
+
+    def cross_reference(self, model):
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
+
+    def _verify(self, xref=False):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        for i,nid in enumerate(nids):
+            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
+        if xref:
+            c = self.Centroid()
+            v = self.Volume()
+            assert isinstance(v, float)
+            for i in range(3):
+                assert isinstance(c[i], float)
 
     def Centroid(self):
         """
@@ -492,6 +572,11 @@ class CTETRA4(SolidElement):
             assert len(data) == 6, 'len(data)=%s data=%s' % (len(data), data)
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 4
+
+    def cross_reference(self, model):
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=False, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -596,7 +681,8 @@ class CTETRA4(SolidElement):
         return m
 
     def nodeIDs(self):
-        return self._nodeIDs()
+        return self._nodeIDs(allowEmptyNodes=False)
+
 
 class CTETRA10(CTETRA4):
     """
@@ -620,7 +706,16 @@ class CTETRA10(CTETRA4):
             self.eid = integer(card, 1, 'eid')
             #: Property ID
             self.pid = integer(card, 2, 'pid')
-            nids = fields(integer, card, 'nid', i=3, j=13)
+            nids = [integer(card, 3, 'nid1'),
+                    integer(card, 4, 'nid2'),
+                    integer(card, 5, 'nid3'),
+                    integer(card, 6, 'nid4'),
+                    integer_or_blank(card, 7, 'nid5'),
+                    integer_or_blank(card, 8, 'nid6'),
+                    integer_or_blank(card, 9, 'nid7'),
+                    integer_or_blank(card, 10, 'nid8'),
+                    integer_or_blank(card, 11, 'nid9'),
+                    integer_or_blank(card, 12, 'nid10'), ]
             assert len(card) <= 13, 'len(CTETRA10 card) = %i' % len(card)
         else:
             self.eid = data[0]
@@ -629,6 +724,26 @@ class CTETRA10(CTETRA4):
             assert len(data) == 12, 'len(data)=%s data=%s' % (len(data), data)
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) <= 10
+
+    def cross_reference(self, model):
+        msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
+        self.pid = model.Property(self.pid, msg=msg)
+
+    def _verify(self, xref=False):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        for i,nid in enumerate(nids):
+            assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
+        if xref:
+            c = self.Centroid()
+            v = self.Volume()
+            assert isinstance(v, float)
+            for i in range(3):
+                assert isinstance(c[i], float)
 
     def N_10(self, g1, g2, g3, g4):
         N1 = g1 * (2 * g1 - 1)
