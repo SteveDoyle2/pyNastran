@@ -316,6 +316,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'EIGC', 'EIGP',
 
             #: contact
+            'BCTPARA',
             'BCRPARA', 'BCTADD', 'BCTSET', 'BSURF', 'BSURFS',
 
             # other
