@@ -559,9 +559,20 @@ class Usm3dReader(object):
         irho_zero = where(rho < rho_min)[0]
         rho[irho_zero] = rho_min
 
-        result_names = ['Mach', 'U', 'V', 'W', 'T', 'rhoU', 'rhoV', 'rhoW', 'p', 'Cp']
         loads = {}
 
+        if '.aux.' in flo_filename:
+            # the names (rho, e, rhoU, etc.) aren't correct, but that's OK
+            # the load names are correct
+            loads['inst vor'] = rho
+            loads['timeavg vor'] = rhoU
+            loads['inst visc'] = rhoV
+            loads['timeavg visc'] = rhoW
+            loads['local CFL'] = e
+            return node_id, loads
+
+        # standard outputs
+        result_names = ['Mach', 'U', 'V', 'W', 'T', 'rhoU', 'rhoV', 'rhoW', 'p', 'Cp']
         gamma = 1.4
         two_over_Mach2 = 2.0 / mach ** 2
         one_over_gamma = 1.0 / gamma
