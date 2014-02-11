@@ -975,11 +975,28 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         """ Take a screenshot of a current view and save as a file"""
         if fname is None:
             filt = QtCore.QString()
+            default_filename = ''
+
+            Title = ''
+            if self.Title is not None:
+                Title = self.Title
+
+            if self.out_filename is None:
+                base, ext = os.path.splitext(os.path.basename(self.infile_name))
+                #default_filename = base
+                default_filename = self.infile_name
+            else:
+                base, ext = os.path.splitext(os.path.basename(self.out_filename))
+                default_filename = Title + '_' + base
+
             fname = str(QtGui.QFileDialog.getSaveFileName(self, ('Choose a file name'
-                        'and type'), '', ('PNG Image *.png (*.png);; JPEG Image '
+                        'and type'), default_filename, ('PNG Image *.png (*.png);; JPEG Image '
                         '*.jpg *.jpeg (*.jpg, *.jpeg);; TIFF Image *.tif *.tiff '
                         '(*.tif, *.tiff);; BMP Image *.bmp (*.bmp);; PostScript '
                         'Document *.ps (*.ps)'), filt))
+            #print("fname=%r" % fname)
+            if fname is None or fname == '':  # 2nd option
+                return
             flt = str(filt).split()[0]
         else:
             flt = 'png'
@@ -1274,6 +1291,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
 
         if self.Title is not None:
             Title = self.Title
+        self.Title = Title
         #if self.min_value is not None:
             #min_value = self.min_value
         #if self.max_value is not None:
