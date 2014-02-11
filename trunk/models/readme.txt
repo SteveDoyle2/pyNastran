@@ -38,5 +38,11 @@ plate
 
 
 contact
+ - bdf
+   - tests contact cards (BCTPARA, PCTSET, BSURFS, BSURF)
+   - CTETRA10s with missing nodes
+   - CPYRAM solids
+   - MATT1
+   - shows a badly formatted BCTABLE
  - op2
    - skips CONTACT table, but reads stresses and displacements
