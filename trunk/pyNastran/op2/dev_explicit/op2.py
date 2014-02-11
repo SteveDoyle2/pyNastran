@@ -1194,64 +1194,7 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
                 else:
                     msg.append('skipping %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
                     #raise RuntimeError('skipping %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
-
         return ''.join(msg)
-
-    def print_results(self):
-        """
-        Prints an ASCII summary of the OP2.
-        ..warning:: Will take lots of memory for large OP2 files.
-        """
-        results = [
-            # OUG - Displacements/Velocity/Acceleration/Temperature
-            self.displacements, self.displacementsPSD,
-            self.displacementsATO,
-            self.temperatures,
-            self.eigenvalues,
-            self.eigenvectors,
-            self.velocities,
-            self.accelerations,
-
-            # OEF - Applied Forces/Temperatures - ???
-
-            # OQG1 - SPC/MPC Forces
-            self.spcForces, self.mpcForces,
-
-            # OGF - Grid Point Forces
-            self.gridPointForces,
-
-            # OPG - Applied Force/Moment
-            self.appliedLoads,
-            self.loadVectors, self.thermalLoadVectors,
-            self.forceVectors,
-
-            # OES - Stress/Strain
-            self.celasStress, self.celasStrain,
-            self.rodStress, self.rodStrain,
-            self.conrodStress, self.conrodStrain,
-            self.nonlinearRodStress, self.nonlinearRodStrain,
-
-            self.barStress, self.barStrain,
-            self.beamStress, self.beamStrain,
-            self.plateStress, self.plateStrain,
-            self.solidStress, self.solidStrain,
-            self.compositePlateStress, self.compositePlateStrain,
-            self.ctriaxStress, self.ctriaxStrain,
-
-            # OEE - Strain Energy
-            self.strainEnergy,
-        ]
-
-        msg = '---ALL RESULTS---\n'
-        for result in results:
-            for (isubcase, res) in sorted(result.iteritems()):
-                msg += 'isubcase = %s\n' % isubcase
-                try:
-                    msg += str(res) + '\n'
-                except:
-                    print 'failed on %s' % res.__class__.__name__
-                    raise
-        return msg
 
 
 if __name__ == '__main__':
