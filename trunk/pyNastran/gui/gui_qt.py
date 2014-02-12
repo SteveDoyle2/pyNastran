@@ -66,6 +66,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         settings = QtCore.QSettings()
 
         self.Title = None
+        self.Title_overwrite = None
         self.min_value = None
         self.max_value = None
         self.blue_to_red = False
@@ -1289,7 +1290,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         print("UpdateScalarBar min=%s max=%s norm=%s" % (min_value, max_value, norm_value))
         self.colorFunction.RemoveAllPoints()
 
-        if self.Title is not None:
+        if self.Title_overwrite is not None:
             Title = self.Title
         self.Title = Title
         #if self.min_value is not None:
