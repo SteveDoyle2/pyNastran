@@ -31,6 +31,17 @@ class MaterialDependence(BaseCard):
     def __init__(self, card, data):
         pass
 
+    def Mid(self):
+        if isinstance(self.mid, int):
+            return self.mid
+        return self.mid.mid  # TODO: is this something that should be supported?
+
+    def _get_table(self, key):
+        slot = getattr(self, key)
+        if slot is None or isinstance(slot, int):
+            return slot
+        return slot.tid
+
 
 class MATS1(MaterialDependence):
     """
@@ -135,11 +146,6 @@ class MATS1(MaterialDependence):
         if self.tid:  # then self.h is used
             self.tid = model.Table(self.tid, msg=msg)
 
-    def Mid(self):
-        if isinstance(self.mid, int):
-            return self.mid
-        return self.mid.mid
-
     def Tid(self):
         if isinstance(self.tid, Table):
             return self.tid.tid
@@ -227,17 +233,6 @@ class MATT1(MaterialDependence):
         slot = getattr(self, key)
         if slot is not None:
             setattr(self, key, model.Table(slot, msg))
-
-    def _get_table(self, key):
-        slot = getattr(self, key)
-        if slot is None or isinstance(slot, int):
-            return slot
-        return slot.tid
-
-    def Mid(self):
-        if isinstance(self.mid, int):
-            return self.mid
-        return self.mid.mid
 
     def E_table(self):
         return self._get_table('_E_table')
@@ -347,17 +342,6 @@ class MATT2(MaterialDependence):
         if slot is not None:
             setattr(self, key, model.Table(slot, msg))
 
-    def _get_table(self, key):
-        slot = getattr(self, key)
-        if slot is None or isinstance(slot, int):
-            return slot
-        return slot.tid
-
-    def Mid(self):
-        if isinstance(self.mid, int):
-            return self.mid
-        return self.mid.mid
-
     def G11_table(self):
         return self._get_table('_G11_table')
 
@@ -465,17 +449,6 @@ class MATT4(MaterialDependence):
         if slot is not None:
             setattr(self, key, model.Table(slot, msg))
 
-    def _get_table(self, key):
-        slot = getattr(self, key)
-        if slot is None or isinstance(slot, int):
-            return slot
-        return slot.tid
-
-    def Mid(self):
-        if isinstance(self.mid, int):
-            return self.mid
-        return self.mid.mid
-
     def K_table(self):
         return self._get_table('_k_table')
 
@@ -560,17 +533,6 @@ class MATT5(MaterialDependence):
         if slot is not None:
             setattr(self, key, model.Table(slot, msg))
 
-    def _get_table(self, key):
-        slot = getattr(self, key)
-        if slot is None or isinstance(slot, int):
-            return slot
-        return slot.tid
-
-    def Mid(self):
-        if isinstance(self.mid, int):
-            return self.mid
-        return self.mid.mid
-
     def Kxx_table(self):
         return self._get_table('_kxx_table')
 
@@ -615,4 +577,50 @@ class MATT5(MaterialDependence):
 
 #MATT8
 #MATT9
+
+class MATT8(MaterialDependence):
+    """
+    Specifies temperature-dependent material properties on MAT2 entry
+    fields via TABLEMi entries.
+
+    +-------+--------+--------+-------+---------+--------+--------+--------+--------+
+    |   1   |   2    |   3    |   4   |    5    |   6    |   7    |    8   |   9    |
+    +=======+========+========+=======+=========+========+========+========+========+
+    | MATT8 |  MID   | T(E1)  | T(E2) | T(Nu12) | T(G12) | T(G1z) | T(G2z) | T(RHO) |
+    +-------+--------+--------+-------+---------+--------+--------+--------+--------+
+    |       |  T(A1) | T(A2)  |       |  T(Xt)  | T(Yc)  | T(Yt)  | T(Yc)  | T(S)   |
+    +-------+--------+--------+-------+---------+--------+--------+--------+--------+
+    |       |  T(GE) | T(F12) |
+    +-------+--------+--------+
+    """
+    type = 'MATT4'
+
+    def __init__(self, card=None, data=None, comment=''):
+        MaterialDependence.__init__(self, card, data)
+        if comment:
+            self._comment = comment
+
+        if card:
+            self.mid = integer(card, 1, 'mid')
+            self._E1_table = integer_or_blank(card, 2, 'T(E1)')
+            self._E2_table = integer_or_blank(card, 3, 'T(E2)')
+            self._Nu12_table = integer_or_blank(card, 3, 'T(Nu12)')
+            self._G12_table = integer_or_blank(card, 5, 'T(G12)')
+            self._G1z_table = integer_or_blank(card, 6, 'T(G1z)')
+            self._G2z_table = integer_or_blank(card, 7, 'T(G2z)')
+            self._rho_table = integer_or_blank(card, 8, 'T(Rho)')
+            self._A1_table = integer_or_blank(card, 9, 'T(A1)')
+            self._A2_table = integer_or_blank(card, 10, 'T(A2)')
+
+            self._Xt_table = integer_or_blank(card, 12, 'T(Xt)')
+            self._Xc_table = integer_or_blank(card, 13, 'T(Xc)')
+            self._Yt_table = integer_or_blank(card, 14, 'T(Yt)')
+            self._Yc_table = integer_or_blank(card, 15, 'T(Yc)')
+            self._S_table = integer_or_blank(card, 16, 'T(S)')
+            self._GE_table = integer_or_blank(card, 17, 'T(GE)')
+            self._F12_table = integer_or_blank(card, 18, 'T(F12)')
+
+            assert len(card) <= 19, 'len(MATT8 card) = %i' % len(card)
+        else:
+            raise NotImplementedError()
 
