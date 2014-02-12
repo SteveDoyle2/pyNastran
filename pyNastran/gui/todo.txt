@@ -11,10 +11,12 @@ both
  - window title
  - auto-importing
  - loading of geometry/results from command line
+ - implicit pulldown for formats
 
 wx unique
  - hotkeys
  - lawgs input (broken for qt???)
+ - explcit pulldown for formats
 
 PySide/PyQt4 unique
  - logger
@@ -24,6 +26,9 @@ PySide/PyQt4 unique
     - incrementing files for Usm3d (e.g. running a job and want to watch the
       flow develop without having to click load_results)
  - zoom/rotate/snap buttons
+ - default filename for pictues
+ - python scripting
+ - pretty title that tells you your "format - infile - outfile"
 
 ----------------------------------------------------
 ---NOT DONE---
@@ -48,11 +53,15 @@ wx
  - reload button
  - logging
  - plot3d hooks
+ - default filename for pictues
+ - python scripting
+ - pretty title that tells you your "format - infile - outfile"
 
 --------------
 qt
  - zoom/rotate/snap hotkeys
  - unbreak hotkeys (p, r, ???)
+ - explcit pulldown for formats
 
 ----------------------------------------------------
 ---Format Specific---
@@ -64,8 +73,9 @@ Nastran
 
 Usm3d
  - load geometry -> cogsg/front
- - load results -> flo
- - supports auto-reload
+ - load results -> flo, .aux.flo
+   - old results not cleared out if loading both flo & aux.flo, so be careful
+ - supports auto-reload of geometry and guesses for the latest result file
 
  - dynamic mapbc/bc file loading when input file loaded (if available)
  - dynamic flo output file loading on input
@@ -84,7 +94,7 @@ LaWGS
  - load geometry -> wgs
 
 Plot3d
- - ???
+ - I don't think this is right...
 
 Tetgen
  - load geometry -> smesh
