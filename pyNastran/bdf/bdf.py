@@ -72,7 +72,7 @@ from .cards.loads.staticLoads import (LOAD, GRAV, ACCEL1, FORCE,
 from .cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                               MAT8, MAT9, MAT10, MAT11,
                               MATHP, CREEP, EQUIV)
-from .cards.material_deps import (MATT1, MATS1)
+from .cards.material_deps import (MATT1, MATT2, MATT4, MATT5, MATS1)  # TODO: add MATT3, MATT8, MATT9
 
 from .cards.methods import (EIGB, EIGC, EIGR, EIGP, EIGRL)
 from .cards.nodes import GRID, GRDSET, SPOINTs
@@ -234,7 +234,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             # materials
             'MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MAT11', 'MATHP',
-            'MATT1', #'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
+            'MATT1', 'MATT2', 'MATT4', 'MATT5',  #'MATT3', 'MATT8', 'MATT9',
             'MATS1', #'MATS3', 'MATS8',
             # 'MATHE'
             #'EQUIV', # testing only, should never be activated...
@@ -301,7 +301,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             # tables
             #'DTABLE', 'TABLEHT', 'TABRNDG',
-            'TABLED1', 'TABLED2', 'TABLED3',  # 'TABLED4',
+            'TABLED1', 'TABLED2', 'TABLED3', # 'TABLED4',
             'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
             'TABLES1', 'TABLEST',
             'TABRND1', 'TABRNDG',
@@ -1375,8 +1375,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                                          'MATHE', 'EQUIV'],
              'add_thermal_material': ['MAT4', 'MAT5'],
              'add_material_dependence': ['MATS1', 'MATS3', 'MATS8',
-                        'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5',
-                        'MATT8', 'MATT8'],
+                                         'MATT1', 'MATT2', 'MATT3', 'MATT4',
+                                         'MATT5', 'MATT8', 'MATT9'],
              'add_load': ['FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1',
                           'MOMENT2', 'GRAV', 'ACCEL1', 'LOAD', 'PLOAD',
                               'PLOAD1', 'PLOAD2', 'PLOAD4', 'PLOADX1',
@@ -1579,8 +1579,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         card_stats = [
             'params', 'nodes', 'points', 'elements', 'rigidElements',
             'properties', 'materials', 'creepMaterials',
-            'MATT1', #'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
-            'MATS1', #'MATS3', 'MATT8',
+            'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
+            'MATS1', 'MATS3', 'MATT8',
             'coords', 'mpcs', 'mpcadds',
 
             # dynamic cards
