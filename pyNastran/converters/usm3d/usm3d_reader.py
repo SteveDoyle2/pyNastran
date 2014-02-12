@@ -107,7 +107,7 @@ class Usm3dReader(object):
         mapbc_file.close()
         return mapbc
 
-    def read_usm3d(self, basename, dimension_flag):
+    def read_usm3d(self, basename, dimension_flag, read_loads=True):
         cogsg_filename = basename + '.cogsg'
         bc_filename = basename + '.bc'
         face_filename = basename + '.face'
@@ -159,7 +159,7 @@ class Usm3dReader(object):
         self.mapbc = mapbc
 
         loads = {}
-        if os.path.exists(flo_filename):
+        if read_loads and os.path.exists(flo_filename):
             npoints, three = nodes.shape
             try:
                 node_ids_volume, loads = self.read_flo(flo_filename, n=npoints)
