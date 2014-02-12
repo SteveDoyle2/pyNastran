@@ -1,7 +1,21 @@
 #pylint: disable=E1103,C0103,C0326,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-#from numpy import zeros, array
+"""
+All material dependency cards are defined in this file.  This includes:
+
+ * MATS1 (isotropic solid/shell)
+
+ * MATT1 (isotropic solid/shell)
+ * MATT2 (anisotropic)
+ * MATT3 (linear orthotropic) - NA
+ * MATT4 (thermal)
+ * MATT5 (thermal)
+ * MATT8 (orthotropic shell) - NA
+ * MATT9 (anisotropic solid) - NA
+
+All cards are Material objects.
+"""#from numpy import zeros, array
 
 #from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
@@ -268,3 +282,337 @@ class MATT1(MaterialDependence):
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
         #return self.comment() + card_writer(card)  # is this valid?
+
+class MATT2(MaterialDependence):
+    """
+    Specifies temperature-dependent material properties on MAT2 entry
+    fields via TABLEMi entries.
+
+    +-------+-------+--------+--------+--------+--------+--------+--------+--------+
+    |   1   |   2   |    3   |   4    |   5    |    6   |    7   |    8   |   9    |
+    +=======+=======+========+========+========+========+========+========+========+
+    | MATT2 |  MID  | T(G12) | T(G13) | T(G13) | T(G22) | T(G23) | T(G33) | T(RHO) |
+    +-------+-------+--------+--------+--------+--------+--------+--------+--------+
+    |       | T(A1) | T(A2)  | T(A3)  |        | T(GE)  | T(ST)  | T(SC)  |  T(SS) |
+    +-------+-------+--------+--------+--------+--------+--------+--------+--------+
+    """
+    type = 'MATT2'
+
+    def __init__(self, card=None, data=None, comment=''):
+        MaterialDependence.__init__(self, card, data)
+        if comment:
+            self._comment = comment
+
+        if card:
+            self.mid = integer(card, 1, 'mid')
+            self._G11_table   = integer_or_blank(card, 2, 'T(G11)')
+            self._G12_table   = integer_or_blank(card, 3, 'T(G12)')
+            self._G13_table   = integer_or_blank(card, 4, 'T(G13)')
+            self._G22_table   = integer_or_blank(card, 5, 'T(G22)')
+            self._G23_table   = integer_or_blank(card, 6, 'T(G23)')
+            self._G33_table   = integer_or_blank(card, 7, 'T(G33)')
+            self._rho_table = integer_or_blank(card, 8, 'T(rho)')
+            self._A1_table   = integer_or_blank(card, 9, 'T(A1)')
+            self._A2_table   = integer_or_blank(card, 10, 'T(A2)')
+            self._A3_table   = integer_or_blank(card, 11, 'T(A3)')
+            self._ge_table  = integer_or_blank(card, 13, 'T(ge)')
+            self._st_table  = integer_or_blank(card, 14, 'T(st)')
+            self._sc_table  = integer_or_blank(card, 15, 'T(sc)')
+            self._ss_table  = integer_or_blank(card, 16, 'T(ss)')
+
+            assert len(card) <= 17, 'len(MATT2 card) = %i' % len(card)
+        else:
+            raise NotImplementedError()
+
+    def cross_reference(self, model):
+        msg = 'which is required by MATT2 mid=%s' % self.mid
+        self.mid = model.Material(self.mid, msg=msg)
+        self._xref_table(model, '_G11_table', msg=msg)
+        self._xref_table(model, '_G12_table', msg=msg)
+        self._xref_table(model, '_G13_table', msg=msg)
+        self._xref_table(model, '_G22_table', msg=msg)
+        self._xref_table(model, '_G23_table', msg=msg)
+        self._xref_table(model, '_G33_table', msg=msg)
+        self._xref_table(model, '_rho_table', msg=msg)
+        self._xref_table(model, '_A1_table', msg=msg)
+        self._xref_table(model, '_A2_table', msg=msg)
+        self._xref_table(model, '_A3_table', msg=msg)
+        self._xref_table(model, '_ge_table', msg=msg)
+        self._xref_table(model, '_st_table', msg=msg)
+        self._xref_table(model, '_sc_table', msg=msg)
+        self._xref_table(model, '_ss_table', msg=msg)
+
+    def _xref_table(self, model, key, msg):
+        slot = getattr(self, key)
+        if slot is not None:
+            setattr(self, key, model.Table(slot, msg))
+
+    def _get_table(self, key):
+        slot = getattr(self, key)
+        if slot is None or isinstance(slot, int):
+            return slot
+        return slot.tid
+
+    def Mid(self):
+        if isinstance(self.mid, int):
+            return self.mid
+        return self.mid.mid
+
+    def G11_table(self):
+        return self._get_table('_G11_table')
+
+    def G12_table(self):
+        return self._get_table('_G12_table')
+
+    def G13_table(self):
+        return self._get_table('_G13_table')
+
+    def G22_table(self):
+        return self._get_table('_G22_table')
+
+    def G23_table(self):
+        return self._get_table('_G23_table')
+
+    def G33_table(self):
+        return self._get_table('_G33_table')
+
+    def rho_table(self):
+        return self._get_table('_rho_table')
+
+    def A1_table(self):
+        return self._get_table('_A1_table')
+
+    def A2_table(self):
+        return self._get_table('_A2_table')
+
+    def A3_table(self):
+        return self._get_table('_A3_table')
+
+    def ge_table(self):
+        return self._get_table('_ge_table')
+
+    def st_table(self):
+        return self._get_table('_st_table')
+
+    def sc_table(self):
+        return self._get_table('_sc_table')
+
+    def ss_table(self):
+        return self._get_table('_ss_table')
+
+    def rawFields(self):
+        list_fields = ['MATT2', self.Mid(), self.G11_table(), self.G12_table(),
+                       self.G13_table(), self.G22_table(), self.G23_table(),
+                       self.G33_table(), self.rho_table(), self.A1_table(),
+                       self.A2_table(), self.A3_table(), None, self.ge_table(),
+                       self.st_table(), self.sc_table(), self.ss_table()
+                       ]
+        return list_fields
+
+    def reprFields(self):
+        return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card)  # is this valid?
+
+#MATT3 - CTRIAX6 only
+
+class MATT4(MaterialDependence):
+    """
+    Specifies temperature-dependent material properties on MAT2 entry
+    fields via TABLEMi entries.
+
+    +-------+-------+-------+-------+--------+-------+-------+---------+--------+
+    |   1   |   2   |   3   |   4   |   5    |   6   |   7   |    8    |   9    |
+    +=======+=======+=======+=======+========+=======+=======+=========+========+
+    | MATT4 |  MID  |  T(K) | T(CP) |        | T(H)  | T(mu) | T(HGEN) |        |
+    +-------+-------+-------+-------+--------+-------+-------+---------+--------+
+    """
+    type = 'MATT4'
+
+    def __init__(self, card=None, data=None, comment=''):
+        MaterialDependence.__init__(self, card, data)
+        if comment:
+            self._comment = comment
+
+        if card:
+            self.mid = integer(card, 1, 'mid')
+            self._k_table   = integer_or_blank(card, 2, 'T(K)')
+            self._cp_table   = integer_or_blank(card, 3, 'T(CP)')
+            self._H_table   = integer_or_blank(card, 5, 'T(H)')
+            self._mu_table   = integer_or_blank(card, 6, 'T(mu)')
+            self._Hgen_table = integer_or_blank(card, 7, 'T(HGEN)')
+
+            assert len(card) <= 8, 'len(MATT4 card) = %i' % len(card)
+        else:
+            raise NotImplementedError()
+
+    def cross_reference(self, model):
+        msg = 'which is required by MATT4 mid=%s' % self.mid
+        self.mid = model.Material(self.mid, msg=msg)
+        self._xref_table(model, '_k_table', msg=msg)
+        self._xref_table(model, '_cp_table', msg=msg)
+        self._xref_table(model, '_H_table', msg=msg)
+        self._xref_table(model, '_mu_table', msg=msg)
+        self._xref_table(model, '_Hgen_table', msg=msg)
+
+    def _xref_table(self, model, key, msg):
+        slot = getattr(self, key)
+        if slot is not None:
+            setattr(self, key, model.Table(slot, msg))
+
+    def _get_table(self, key):
+        slot = getattr(self, key)
+        if slot is None or isinstance(slot, int):
+            return slot
+        return slot.tid
+
+    def Mid(self):
+        if isinstance(self.mid, int):
+            return self.mid
+        return self.mid.mid
+
+    def K_table(self):
+        return self._get_table('_k_table')
+
+    def Cp_table(self):
+        return self._get_table('_cp_table')
+
+    def H_table(self):
+        return self._get_table('_H_table')
+
+    def mu_table(self):
+        return self._get_table('_mu_table')
+
+    def Hgen_table(self):
+        return self._get_table('_Hgen_table')
+
+    def rawFields(self):
+        list_fields = ['MATT4', self.Mid(), self.K_table(), self.Cp_table(),
+                       None,
+                       self.H_table(), self.mu_table(), self.Hgen_table()
+                       ]
+        return list_fields
+
+    def reprFields(self):
+        return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card)  # is this valid?
+
+class MATT5(MaterialDependence):
+    """
+    Specifies temperature-dependent material properties on MAT2 entry
+    fields via TABLEMi entries.
+
+    +-------+---------+---------+--------+--------+--------+--------+--------+-------+
+    |   1   |    2    |    3    |   4    |   5    |   6    |   7    |    8   |   9   |
+    +=======+=========+=========+========+========+========+========+========+=======+
+    | MATT5 |   MID   | T(Kxx)  | T(Kxy) | T(Kxz) | T(Kyy) | T(Kyz) | T(Kzz) | T(CP) |
+    +-------+---------+---------+--------+--------+--------+--------+--------+-------+
+    |       |         | T(HGEN) |
+    +-------+---------+---------+
+    """
+    type = 'MATT5'
+
+    def __init__(self, card=None, data=None, comment=''):
+        MaterialDependence.__init__(self, card, data)
+        if comment:
+            self._comment = comment
+
+        if card:
+            self.mid = integer(card, 1, 'mid')
+            self._kxx_table   = integer_or_blank(card, 2, 'T(Kxx)')
+            self._kxy_table   = integer_or_blank(card, 3, 'T(Kxy)')
+            self._kxz_table   = integer_or_blank(card, 5, 'T(Kxz)')
+            self._kyy_table   = integer_or_blank(card, 6, 'T(Kyy)')
+            self._kyz_table = integer_or_blank(card, 7, 'T(Kyz)')
+            self._kzz_table = integer_or_blank(card, 8, 'T(Kyz)')
+            self._cp_table = integer_or_blank(card, 9, 'T(Kyz)')
+            self.Hgen_table = integer_or_blank(card, 11, 'T(HGEN)')
+
+            assert len(card) <= 12, 'len(MATT5 card) = %i' % len(card)
+        else:
+            raise NotImplementedError()
+
+    def cross_reference(self, model):
+        msg = 'which is required by MATT5 mid=%s' % self.mid
+        self.mid = model.Material(self.mid, msg=msg)
+        self._xref_table(model, '_kxx_table', msg=msg)
+        self._xref_table(model, '_kxy_table', msg=msg)
+        self._xref_table(model, '_kxz_table', msg=msg)
+        self._xref_table(model, '_kyy_table', msg=msg)
+        self._xref_table(model, '_kyz_table', msg=msg)
+        self._xref_table(model, '_kzz_table', msg=msg)
+        self._xref_table(model, '_cp_table', msg=msg)
+        self._xref_table(model, '_Hgen_table', msg=msg)
+
+    def _xref_table(self, model, key, msg):
+        slot = getattr(self, key)
+        if slot is not None:
+            setattr(self, key, model.Table(slot, msg))
+
+    def _get_table(self, key):
+        slot = getattr(self, key)
+        if slot is None or isinstance(slot, int):
+            return slot
+        return slot.tid
+
+    def Mid(self):
+        if isinstance(self.mid, int):
+            return self.mid
+        return self.mid.mid
+
+    def Kxx_table(self):
+        return self._get_table('_kxx_table')
+
+    def Kxy_table(self):
+        return self._get_table('_kxy_table')
+
+    def Kxz_table(self):
+        return self._get_table('_kxz_table')
+
+    def Kyy_table(self):
+        return self._get_table('_kyy_table')
+
+    def Kyz_table(self):
+        return self._get_table('_kyz_table')
+
+    def Kzz_table(self):
+        return self._get_table('_kzz_table')
+
+    def Cp_table(self):
+        return self._get_table('_cp_table')
+
+    def Hgen_table(self):
+        return self._get_table('_Hgen_table')
+
+    def rawFields(self):
+        list_fields = ['MATT5', self.Mid(),
+                       self.Kxx_table(), self.Kxy_table(), self.Kxz_table(),
+                       self.Kyy_table(), self.Kyz_table(), self.Kzz_table(),
+                       self.Cp_table(), None, self.Hgen_table(),
+                       ]
+        return list_fields
+
+    def reprFields(self):
+        return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
+        #return self.comment() + card_writer(card)  # is this valid?
+
+#MATT8
+#MATT9
+

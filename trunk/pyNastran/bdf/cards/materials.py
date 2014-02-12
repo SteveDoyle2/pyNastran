@@ -1,6 +1,6 @@
 # pylint: disable=C0103,C0111,C0302,R0902,R0904,R0914,E1101,W0612,E0602
 """
-All dynamic control cards are defined in this file.  This includes:
+All material cards are defined in this file.  This includes:
 
  * CREEP
  * MAT1 (isotropic solid/shell)
@@ -408,6 +408,11 @@ class MAT2(AnisotropicMaterial):
             self.Ss = data[15]
             self.Mcsid = data[16]
 
+    def cross_reference(self, model):
+        msg = ' which is required by MAT2 mid=%s' % self.mid
+        if self.mid in model.MATT2:
+            self.matt2 = model.MATT2[self.mid]  # not using a method...
+
     def _verify(self, xref=True):
         pass
 
@@ -580,6 +585,11 @@ class MAT3(OrthotropicMaterial):
             self.TRef = data[12]
             self.ge = data[13]
 
+    def cross_reference(self, model):
+        #msg = ' which is required by MAT3 mid=%s' % self.mid
+        if self.mid in model.MATT3:
+            self.matt3 = model.MATT3[self.mid]  # not using a method...
+
     def rawFields(self):
         list_fields = ['MAT3', self.mid, self.ex, self.eth, self.ez, self.nuxth,
                   self.nuthz, self.nuzx, self.rho, None, None, self.gzx,
@@ -655,6 +665,11 @@ class MAT4(ThermalMaterial):
             self.tdelta = data[9]
             self.qlat = data[10]
 
+    def cross_reference(self, model):
+        #msg = ' which is required by MAT4 mid=%s' % self.mid
+        if self.mid in model.MATT4:
+            self.matt4 = model.MATT4[self.mid]  # not using a method...
+
     def rawFields(self):
         list_fields = ['MAT4', self.mid, self.k, self.cp, self.rho, self.H, self.mu,
                   self.hgen, self.refEnthalpy, self.tch, self.tdelta,
@@ -721,6 +736,12 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
             self.cp = data[7]
             self.rho = data[8]
             self.hgen = data[9]
+
+
+    def cross_reference(self, model):
+        #msg = ' which is required by MAT5 mid=%s' % self.mid
+        if self.mid in model.MATT5:
+            self.matt5 = model.MATT5[self.mid]  # not using a method...
 
     def K(self):
         """
@@ -827,6 +848,11 @@ class MAT8(OrthotropicMaterial):
             self.ge = data[16]
             self.F12 = data[17]
             self.strn = data[18]
+
+    def cross_reference(self, model):
+        #msg = ' which is required by MATT8 mid=%s' % self.mid
+        if self.mid in model.MATT8:
+            self.matt8 = model.MATT8[self.mid]  # not using a method...
 
     def _verify(self, xref=False):
         mid = self.Mid()
