@@ -50,6 +50,15 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
     """
     Defines an interface for the Nastran OP2 file.
     """
+    def set_as_vectorized(self, vectorized=False, ask=False):
+        if vectorized is True:
+            msg = 'OP2 class doesnt support vectorization.  Use OP2_Vectorized '
+            msg += 'from pyNastran.op2.dev_explicit.op2_vectorized instead.'
+            raise RuntimeError(msg)
+        if ask is True:
+            msg = 'OP2 class doesnt support ask.'
+            raise RuntimeError(msg)
+
     def set_subcases(self, subcases=None):
         """
         Allows you to read only the subcases in the list of iSubcases
