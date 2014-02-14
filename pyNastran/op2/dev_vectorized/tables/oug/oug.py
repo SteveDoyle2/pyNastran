@@ -523,11 +523,11 @@ class OUG(object):
         for inode in xrange(nnodes):
             eData = self.data[istart : iend]
             out = unpack(format1, eData)
-            (nid, gridType, tx, ty, tz, rx, ry, rz) = out
+            (nid, grid_type, tx, ty, tz, rx, ry, rz) = out
             nid = extract(nid, dt)
-            
+
             nodeIDs_to_index[inode] = nid
-            gridTypes[inode] = gridType
+            gridTypes[inode] = grid_type
             translations[inode, :] = [tx, ty, tz, rx, ry, rz]
 
             istart = iend
@@ -584,7 +584,7 @@ class OUG(object):
         for inode in xrange(nnodes):
             eData = self.data[istart:iend]
             out = unpack(format1, eData)
-            (eid, gridType, txr, tyr, tzr, rxr, ryr, rzr,
+            (eid, grid_type, txr, tyr, tzr, rxr, ryr, rzr,
              txi, tyi, tzi, rxi, ryi, rzi) = out
 
             if is_magnitude_phase:
@@ -603,7 +603,7 @@ class OUG(object):
                 rz = complex(rzr, rzi)
             eid2 = extract(eid, dt)
             nodeIDs_to_index[inode] = eid2
-            gridTypes[inode] = gridType
+            gridTypes[inode] = grid_type
             translations[inode, :] = [tx, ty, tz, rx, ry, rz]
 
             istart = iend

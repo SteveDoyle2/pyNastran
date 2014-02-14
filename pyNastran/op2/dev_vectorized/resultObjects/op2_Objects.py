@@ -173,16 +173,16 @@ class ScalarObject(BaseScalarObject):
 
     def cast_grid_type(self, gridType):
         """converts a gridType integer to a string"""
-        if gridType == 'G':
+        if grid_type == 'G':
             Type = 1  # GRID
-        elif gridType == 'S':
+        elif grid_type == 'S':
             Type = 2  # SPOINT
-        elif gridType == 'L':
+        elif grid_type == 'L':
             Type = 7  # RIGID POINT (e.g. RBE3)
-        elif gridType == 'H':
+        elif grid_type == 'H':
             Type = 0      # SECTOR/HARMONIC/RING POINT
         else:
-            raise RuntimeError('gridType=%s' % gridType)
+            raise RuntimeError('gridType=%s' % grid_type)
         return Type
 
     def update_dt(self, data_code, dt):

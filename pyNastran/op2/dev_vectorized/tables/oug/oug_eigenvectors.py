@@ -27,8 +27,8 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
             self.update_mode(data_code, imode)
 
         for line in data:
-            (nid, gridType, t1, t2, t3, r1, r2, r3) = line
-            self.gridTypes[nid] = gridType
+            (nid, grid_type, t1, t2, t3, r1, r2, r3) = line
+            self.gridTypes[nid] = grid_type
             self.translations[imode][nid] = array([t1, t2, t3])
             self.rotations[imode][nid] = array([r1, r2, r3])
         assert self.eigrs[-1] == data_code['eigr']
@@ -80,7 +80,7 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
 
             msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
 
-            gridType = 'G'
+            grid_type = 'G'
             #gridType = self.gridTypes[nodeID]
             #ix = data.index[]
             mode_old = mode
@@ -98,7 +98,7 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
                 vals = [dx, dy, dz, rx, ry, rz]
                 (vals2, isAllZeros) = writeFloats13E(vals)
                 [dx, dy, dz, rx, ry, rz] = vals2
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (node_id, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
+                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (node_id, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
                 i += 1
                 try:
                     index = self.data.index[i]
@@ -162,14 +162,14 @@ class RealEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_code=0
             msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
             for nodeID, translation in sorted(eigVals.iteritems()):
                 rotation = self.rotations[iMode][nodeID]
-                gridType = self.gridTypes[nodeID]
+                grid_type = self.gridTypes[nodeID]
                 (dx, dy, dz) = translation
                 (rx, ry, rz) = rotation
 
                 vals = [dx, dy, dz, rx, ry, rz]
                 (vals2, isAllZeros) = writeFloats13E(vals)
                 [dx, dy, dz, rx, ry, rz] = vals2
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
+                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
             msg.append(pageStamp % pageNum)
             pageNum += 1
         return pageNum - 1
@@ -203,7 +203,7 @@ class ComplexEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_cod
             msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
             for nodeID, displacement in sorted(eigVals.iteritems()):
                 rotation = self.rotations[iMode][nodeID]
-                gridType = self.gridTypes[nodeID]
+                grid_type = self.gridTypes[nodeID]
                 (dx, dy, dz) = displacement
                 (rx, ry, rz) = rotation
 
@@ -212,7 +212,7 @@ class ComplexEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_cod
                 [dxr, dyr, dzr, rxr, ryr, rzr, dxi, dyi,
                     dzi, rxi, ryi, rzi] = vals2
 
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
+                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
                 msg.append('%14s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '', dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
 
             msg.append(pageStamp % pageNum)

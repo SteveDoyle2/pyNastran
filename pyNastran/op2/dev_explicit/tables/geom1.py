@@ -49,6 +49,7 @@ class GEOM1(object):
             (1427, 14, 465): ['', self._readFake],  # record
             (5678, 71, 475): ['', self._readFake],  # record
         }
+
     def _readCord1C(self, data, n):
         """
         (1701,17,6) - the marker for Record 1
