@@ -30,11 +30,11 @@ class TemperatureObject(TableObject):  # approach_code=1, sort_code=0, thermal=1
     def add_f06_data(self, data, transient):
         if transient is None:
             for line in data:
-                (gridID, gridType) = line[0:2]
+                (gridID, grid_type) = line[0:2]
                 temps = line[2:]
                 for (i, temp) in enumerate(temps):
                     nodeID = gridID + i
-                    self.gridTypes[nodeID] = gridType
+                    self.gridTypes[nodeID] = grid_type
                     self.temperatures[nodeID] = temp
             return
 
@@ -45,11 +45,11 @@ class TemperatureObject(TableObject):  # approach_code=1, sort_code=0, thermal=1
             self.isTransient = True
 
         for line in data:
-            (gridID, gridType) = line[0:2]
+            (gridID, grid_type) = line[0:2]
             temps = line[2:]
             for (i, temp) in enumerate(temps):
                 nodeID = gridID + i
-                self.gridTypes[nodeID] = gridType
+                self.gridTypes[nodeID] = grid_type
                 self.temperatures[dt][nodeID] = temp
 
     def update_dt(self, data_code, dt):
@@ -149,7 +149,7 @@ class TemperatureObject(TableObject):  # approach_code=1, sort_code=0, thermal=1
         msg += pageStamp + str(pageNum) + '\n'
         f.write(msg)
         return pageNum
-        
+
     def _write_f06_transient_block(self, words, header, pageStamp, f, pageNum):
         ndata = len(self.data)
         ndt, nnodes, dts = self._get_shape()
@@ -172,13 +172,13 @@ class TemperatureObject(TableObject):  # approach_code=1, sort_code=0, thermal=1
                 grid_type = 'S'  # TODO: incorrect grid_type
                 T = self.data['Temperature'][index]  # TODO: wrong label
                 pack.append(T)
-                
+
                 try:
                     _next_dt, next_node_id = self.data.index[i+1]
                     next_grid_type = 'S'  # TODO: incorrect grid_type
                 except IndexError:
                     break # done with writing f06
-                
+
                 # TODO doesn't check grid type
                 if len(pack) == 6 or (next_node_id != (node_id + 1)): # 6*2 # 6 spots, 2 values
                     #print pack
@@ -215,7 +215,7 @@ class TemperatureObject(TableObject):  # approach_code=1, sort_code=0, thermal=1
         msg = []
         if self.nonlinear_factor is not None:
             return self._write_f06_transient_block(header, pageStamp, f, pageNum)
-        
+
         return self._write_f06_block(words, header, pageStamp, f, pageNum)
         #msg += self.print_temp_lines(self.temperatures)
         #msg.append(pageStamp + str(pageNum) + '\n')

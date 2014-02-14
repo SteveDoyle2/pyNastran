@@ -26,7 +26,7 @@ class ForceVectorObject(TableObject):  # table_code=12, sort_code=0, thermal=0
 
         for nodeID, translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
-            gridType = self.gridTypes[nodeID]
+            grid_type = self.gridTypes[nodeID]
 
             (dx, dy, dz) = translation
             (rx, ry, rz) = rotation
@@ -34,7 +34,7 @@ class ForceVectorObject(TableObject):  # table_code=12, sort_code=0, thermal=0
             (vals2, isAllZeros) = writeFloats13E(vals)
             if not isAllZeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
+                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
 
         msg.append(pageStamp + str(pageNum) + '\n')
         f.write(''.join(msg))
@@ -69,7 +69,7 @@ class ComplexForceVectorObject(ComplexTableObject):  # table_code=12, approach_c
                         '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         for nodeID, translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
-            gridType = self.gridTypes[nodeID]
+            grid_type = self.gridTypes[nodeID]
 
             (dx, dy, dz) = translation
             dxr = dx.real
@@ -91,7 +91,7 @@ class ComplexForceVectorObject(ComplexTableObject):  # table_code=12, approach_c
             (vals2, isAllZeros) = writeFloats13E(vals)
             [dxr, dyr, dzr, rxr, ryr, rzr,
              dxi, dyi, dzi, rxi, ryi, rzi] = vals2
-            msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
+            msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
             msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '',           dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
 
         msg.append(pageStamp + str(pageNum) + '\n')
@@ -109,7 +109,7 @@ class ComplexForceVectorObject(ComplexTableObject):  # table_code=12, approach_c
             msg += header + words
             for nodeID, translation in sorted(translations.iteritems()):
                 rotation = self.rotations[dt][nodeID]
-                gridType = self.gridTypes[nodeID]
+                grid_type = self.gridTypes[nodeID]
 
                 (dx, dy, dz) = translation
                 dxr = dx.real
@@ -132,7 +132,7 @@ class ComplexForceVectorObject(ComplexTableObject):  # table_code=12, approach_c
                 (vals2, isAllZeros) = writeFloats13E(vals)
                 [dxr, dyr, dzr, rxr, ryr, rzr,
                  dxi, dyi, dzi, rxi, ryi, rzi] = vals2
-                msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
+                msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
                 msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '',           dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
             msg.append(pageStamp + str(pageNum) + '\n')
             f.write(''.join(msg))

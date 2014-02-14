@@ -519,7 +519,40 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
             self.binary_debug.write('f.tell()=%s\ndone...\n' % self.f.tell())
         if self.save_skipped_cards:
             self.skippedCardsFile.close()
+            del self.skippedCardsFile
+        self.binary_debug.close()
+        self.remove_unpickable_data()
         return table_names
+
+    def create_unpickable_data(self):
+        raise NotImplementedError()
+    #==== not needed ====
+    #self.f
+    #self.binary_debug
+
+    # needed
+    self._geom1_map
+    self._geom2_map
+    self._geom3_map
+    self._geom4_map
+    self._dit_map
+    self._dynamics_map
+    self._ept_map
+    self._mpt_map
+    self._table_mapper
+
+    def remove_unpickable_data(self):
+        del self.f
+        del self.binary_debug
+        del self._geom1_map
+        del self._geom2_map
+        del self._geom3_map
+        del self._geom4_map
+        del self._dit_map
+        del self._dynamics_map
+        del self._ept_map
+        del self._mpt_map
+        del self._table_mapper
 
     def _read_tables(self, table_name):
         """
@@ -1207,11 +1240,27 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
 
 
 if __name__ == '__main__':
-    import sys
-    op2_filename = sys.argv[1]
+    from pickle import dumps, dump, load, loads
+    txt_filename = 'solid_shell_bar.txt'
+    f = open(txt_filename, 'wb')
+    op2_filename = 'solid_shell_bar.op2'
+    op2 = OP2()
+    op2.read_op2(op2_filename)
+    print op2.displacements[1]
+    dump(op2, f)
+    f.close()
 
-    o = OP2(op2_filename)
-    o.read_op2(op2_filename)
-    (model, ext) = os.path.splitext(op2_filename)
-    f06_outname = model + '.test_op2.f06'
-    o.write_f06(f06_outname)
+    f = open(txt_filename, 'r')
+    op2 = load(f)
+    f.close()
+    print op2.displacements[1]
+
+
+    #import sys
+    #op2_filename = sys.argv[1]
+
+    #o = OP2(op2_filename)
+    #o.read_op2(op2_filename)
+    #(model, ext) = os.path.splitext(op2_filename)
+    #f06_outname = model + '.test_op2.f06'
+    #o.write_f06(f06_outname)

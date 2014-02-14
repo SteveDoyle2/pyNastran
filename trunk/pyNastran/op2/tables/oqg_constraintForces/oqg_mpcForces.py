@@ -22,7 +22,7 @@ class MPCForcesObject(TableObject):
                         '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         for nodeID, translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
-            gridType = self.gridTypes[nodeID]
+            grid_type = self.gridTypes[nodeID]
 
             (dx, dy, dz) = translation
             (rx, ry, rz) = rotation
@@ -30,7 +30,7 @@ class MPCForcesObject(TableObject):
             (vals2, isAllZeros) = writeFloats13E(vals)
             if not isAllZeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
+                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
 
         msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
@@ -46,7 +46,7 @@ class MPCForcesObject(TableObject):
             msg += header + words
             for nodeID, translation in sorted(translations.iteritems()):
                 rotation = self.rotations[dt][nodeID]
-                gridType = self.gridTypes[nodeID]
+                grid_type = self.gridTypes[nodeID]
 
                 (dx, dy, dz) = translation
                 (rx, ry, rz) = rotation
@@ -54,7 +54,7 @@ class MPCForcesObject(TableObject):
                 (vals2, isAllZeros) = writeFloats13E(vals)
                 if not isAllZeros:
                     [dx, dy, dz, rx, ry, rz] = vals2
-                    msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
+                    msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
 
             msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
@@ -83,7 +83,7 @@ class ComplexMPCForcesObject(ComplexTableObject):
         raise RuntimeError('is this valid...')
         for nodeID, translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
-            gridType = self.gridTypes[nodeID]
+            grid_type = self.gridTypes[nodeID]
 
             (dx, dy, dz) = translation
             #dxr=dx.real; dyr=dy.real; dzr=dz.real;
@@ -98,7 +98,7 @@ class ComplexMPCForcesObject(ComplexTableObject):
             (vals2, isAllZeros) = writeFloats13E(vals)
             if not isAllZeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
+                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
         msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
         return pageNum
@@ -115,7 +115,7 @@ class ComplexMPCForcesObject(ComplexTableObject):
             msg += header + words
             for nodeID, translation in sorted(translations.iteritems()):
                 rotation = self.rotations[dt][nodeID]
-                gridType = self.gridTypes[nodeID]
+                grid_type = self.gridTypes[nodeID]
 
                 (dx, dy, dz) = translation
                 (rx, ry, rz) = rotation
@@ -125,8 +125,8 @@ class ComplexMPCForcesObject(ComplexTableObject):
                 if not isAllZeros:
                     [v1r, v2r, v3r, v4r, v5r, v6r, v1i,
                         v2i, v3i, v4i, v5i, v6i] = vals2
-                    msg.append('0%13i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, v1r, v2r, v3r, v4r, v5r, v6r.rstrip()))
-                    msg.append(' %13i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, v1i, v2i, v3i, v4i, v5i, v6i.rstrip()))
+                    msg.append('0%13i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, v1r, v2r, v3r, v4r, v5r, v6r.rstrip()))
+                    msg.append(' %13i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, v1i, v2i, v3i, v4i, v5i, v6i.rstrip()))
 
             msg.append(pageStamp % pageNum)
             f.write(''.join(msg))

@@ -56,7 +56,7 @@ class OP2_Vectorized(OP2):
                           difficult to use data structure.
 
                           It limits the node IDs to all be integers (e.g. element
-                          centroid).  Composite plate elements (even for 1 type)
+                          centroid).  Composite plate elements (even for just CTRIA3s)
                           with an inconsistent number of layers will have a more
                           difficult data structure.  Models with solid elements of
                           mixed type will also be more complicated (or potentially
@@ -116,12 +116,113 @@ class OP2_Vectorized(OP2):
         self.op2.close()
         self.skippedCardsFile.close()
 
+
 if __name__ == '__main__':
     import pyNastran
     pkg_path = pyNastran.__file__[0]
 
     # we don't want the variable name to get picked up by the class
-    _op2_filename = os.path.join(pyNastran, '..', 'models', 'solid_bending', 'solid_bending.op2')
+    _op2_filename = os.path.join(pyNastran, '..', 'models', 'sol_101_elements', 'solid_shell_bar.op2')
 
     model = OP2_Vectorized()
     model.read_op2(_op2_filename)
+    isubcase = 1
+
+    # ============displacement================
+    # same for velocity/acceleration/mpc forces/spc forces/applied load
+    # maybe not temperature because it's only 1 result...
+    displacement = model.displacement[isubcase]
+    data = displacement.data
+    grid_type = model.displacement[isubcase].grid_type
+
+    # t1, t2, t3, r1, r2, r3
+    assert displacement.ntimes == 1, displacement.ntimes
+
+    # get all the nodes for element 1
+    inode1 = data.getNodeIndex( [1] )
+    # [itransient, node, t1/t2]
+    datai = data[0, inode1, :]
+    grid_typei = grid_type[inode]
+
+    # ============solid stress=================
+    # same for solid strain
+    solid_stress = model.solidStress[isubcase]
+    data = solid_stress.data
+    cid = model.solidStress[isubcase].cid
+
+    # oxx, oyy, ozz, txy, tyz, txz
+    assert solid_stress.ntimes == 1, solid_stress.ntimes
+
+    # get the indexs for cid, element 1
+    ielem1 = solid_stress.getElementPropertiesIndex( [1] )  # element-specific properties
+    datai = cid[ielem1]
+
+    # get all the nodes for element 1
+    ielem1 = solid_stress.getElementIndex( [1] )
+    # [itransient, elem*node, oxx/oyy, etc.]
+    datai = data[0, ielem1, :]
+
+    # get all the nodes for element 1
+    ielem1 = solid_stress.getElementIndex( [1] )
+    # [itransient, elem*node, oxx/oyy, etc.]
+    datai = data[0, ielem1, :]
+
+    # get all the nodes for element 4 and 5
+    ielem45 = solid_stress.getElementIndex( [[1, 4, 5]] )
+    datai = data[0, ielem45, :]
+
+    # get the index for element 1, centroid
+    ielem1_centroid = solid_stress.getElementNodeIndex( [[1, 0]] )
+    datai = data[0, ielem1_centroid, :]
+
+    # get the index for element 1, node 1
+    ielem1_node1 = solid_stress.getElementNodeIndex( [[1, 1]] )
+    datai = data[0, ielem1_node1, :]
+
+    # get the index for element 1, node 1 and element 1, node 2
+    ielem1_node12 = solid_stress.getElementNodeIndex( [[1, 1],
+                                                       [1, 2],])
+    datai = data[0, ielem1_node12, :]
+
+    # ============plate stress=================
+    # same for plate strain
+    plate_stress = model.plateStress[isubcase]
+    data = plate_stress.data
+
+    # oxx, oyy, ozz, txy, tyz, txz
+    assert plate_stress.ntimes == 1, plate_stress.ntimes
+
+    # get all the nodes for element 1
+    ielem1 = plate_stress.getElementIndex( [1] )
+    # [itransient, elem*node, oxx/oyy, etc.]
+    datai = plate_stress[0, ielem1, :]
+
+    # ========composite plate stress============
+    # same for plate strain
+    comp_plate_stress = model.compositePlateStress[isubcase]
+    data = comp_plate_stress.data
+    cid = model.plateStress[isubcase].cid
+
+    # get the indexs for cid, element 1
+    ielem1 = comp_plate_stress.getElementPropertiesIndex( [1] )  # element-specific properties
+    datai = cid[ielem1]
+
+    # oxx, oyy, ozz, txy, tyz, txz
+    assert comp_plate_stress.ntimes == 1, comp_plate_stress.ntimes
+
+    # get all the nodes/layers for element 1
+    ielem1 = comp_plate_stress.getElementIndex( [1] )
+    # [itransient, elem*node*layer, oxx/oyy, etc.]
+    datai = data[0, ielem1, :]
+
+    # get all the layers for element 1, centroid, and all the layers
+    ielem1_centroid = solid_stress.getElementNodeIndex( [[1, 0]] )
+    datai = data[0, ielem1_centroid, :]
+
+    # get the index for element 1, centroid, layer 0
+    ielem1_centroid_layer = solid_stress.getElementNodeLayerIndex( [[1, 0, 0]] )
+    datai = data[0, ielem1_centroid_layer, :]
+
+    # get the index for element 1, layer 0, and all the nodes
+    ielem1_layer = solid_stress.getElementLayerIndex( [[1, 0]] )
+    datai = data[0, ielem1_layer, :]

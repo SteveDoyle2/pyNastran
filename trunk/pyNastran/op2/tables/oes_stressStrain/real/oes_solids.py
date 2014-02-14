@@ -161,7 +161,7 @@ class SolidStressObject(StressObject):
             self.add_new_transient()
 
         for line in data:
-            (nodeID, gridType, t1, t2, t3, r1, r2, r3) = line
+            (nodeID, grid_type, t1, t2, t3, r1, r2, r3) = line
             self.gridTypes[dt][nodeID] = array([t1, t2, t3])
             self.translations[dt][nodeID] = array([t1, t2, t3])
             self.rotations[dt][nodeID] = array([r1, r2, r3])
@@ -655,7 +655,7 @@ class SolidStrainObject(StrainObject):
             self.add_new_transient()
 
         for line in data:
-            (nodeID, gridType, t1, t2, t3, r1, r2, r3) = line
+            (nodeID, grid_type, t1, t2, t3, r1, r2, r3) = line
             self.gridTypes[dt][nodeID] = array([t1, t2, t3])
             self.translations[dt][nodeID] = array([t1, t2, t3])
             self.rotations[dt][nodeID] = array([r1, r2, r3])

@@ -109,7 +109,7 @@ class BaseTable(object):
     def get_stats(self):
         ndt, nnodes, dts = self._get_shape()
         msg = self._get_data_code()
-        
+
         real_imag = 'real' if self.is_real() else 'imaginary'
         if dts[0] is not None:
             name = self.data_code['name']
@@ -158,9 +158,9 @@ class TableObject(BaseTable, ScalarObject):  # displacement style table
         translations = zeros((nnodes, 6), dtype='float32')
 
         for i, line in enumerate(data):
-            (nodeID, gridType, t1, t2, t3, r1, r2, r3) = line
+            (nodeID, grid_type, t1, t2, t3, r1, r2, r3) = line
             nodeIDs_to_index[i] = nodeID
-            gridTypes[i] = gridType
+            gridTypes[i] = grid_type
             translations[i, :] = array([t1, t2, t3, r1, r2, r3])
 
         if transient is None:
@@ -181,8 +181,8 @@ class TableObject(BaseTable, ScalarObject):  # displacement style table
         #raise RuntimeError('this should be commented out')
         if transient is None:
             for line in data:
-                (nodeID, gridType, t1, t2, t3, r1, r2, r3) = line
-                self.gridTypes[nodeID] = gridType
+                (nodeID, grid_type, t1, t2, t3, r1, r2, r3) = line
+                self.gridTypes[nodeID] = grid_type
                 self.translations[nodeID] = array([t1, t2, t3])
                 self.rotations[nodeID] = array([r1, r2, r3])
             return
@@ -193,8 +193,8 @@ class TableObject(BaseTable, ScalarObject):  # displacement style table
             self.update_dt(self.data_code, dt, read_mode)
 
         for line in data:
-            (nodeID, gridType, t1, t2, t3, r1, r2, r3) = line
-            self.gridTypes[nodeID] = gridType
+            (nodeID, grid_type, t1, t2, t3, r1, r2, r3) = line
+            self.gridTypes[nodeID] = grid_type
             self.translations[dt][nodeID] = array([t1, t2, t3])
             self.rotations[dt][nodeID] = array([r1, r2, r3])
 
@@ -210,7 +210,7 @@ class TableObject(BaseTable, ScalarObject):  # displacement style table
         for i in xrange(ndata):
             index = self.data.index[i]
             node_id = index
-            gridType = 'G' #self.gridTypes[nodeID]
+            grid_type = 'G' #self.gridTypes[nodeID]
             dx = self.data['T1'][index]
             dy = self.data['T2'][index]
             dz = self.data['T3'][index]
@@ -223,7 +223,7 @@ class TableObject(BaseTable, ScalarObject):  # displacement style table
             if not isAllZeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n'
-                        % (node_id, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
+                        % (node_id, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
             if i % 1000 == 0:
                 f.write(''.join(msg))
                 msg = ['']
@@ -259,7 +259,7 @@ class TableObject(BaseTable, ScalarObject):  # displacement style table
                 (dt, node_id) = index
 
                 data = self.data.ix[index]
-                gridType = 'G' #self.gridTypes[node_id]
+                grid_type = 'G' #self.gridTypes[node_id]
                 dx = data['T1']
                 dy = data['T2']
                 dz = data['T3']
@@ -271,13 +271,13 @@ class TableObject(BaseTable, ScalarObject):  # displacement style table
                 (vals2, isAllZeros) = writeFloats13E(vals)
                 if not isAllZeros:
                     [dx, dy, dz, rx, ry, rz] = vals2
-                    msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (node_id, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
+                    msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (node_id, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
                 i += 1
                 try:
                     dt = self.data.index[i+1][0]
                 except IndexError:
                     break
-                
+
                 if i % 1000 == 0:
                     #print("class=%s i=%s ndata=%s" % (classname, i, ndata))
                     f.write(''.join(msg))
@@ -383,11 +383,11 @@ class ComplexTableObject(BaseTable, ScalarObject):
         if transient is None:
             for line in data:
                 try:
-                    (nodeID, gridType, v1, v2, v3, v4, v5, v6) = line
+                    (nodeID, grid_type, v1, v2, v3, v4, v5, v6) = line
                 except:
                     print('line = %r' % line)
                     raise
-                self.gridTypes[nodeID] = gridType
+                self.gridTypes[nodeID] = grid_type
                 self.translations[self.dt][nodeID] = [v1, v2, v3]  # dx,dy,dz
                 self.rotations[self.dt][nodeID] = [v4, v5, v6]  # rx,ry,rz
             return
@@ -399,11 +399,11 @@ class ComplexTableObject(BaseTable, ScalarObject):
 
         for line in data:
             try:
-                (nodeID, gridType, v1, v2, v3, v4, v5, v6) = line
+                (nodeID, grid_type, v1, v2, v3, v4, v5, v6) = line
             except:
                 print('line = %r' % line)
                 raise
-            self.gridTypes[nodeID] = gridType
+            self.gridTypes[nodeID] = grid_type
             self.translations[self.dt][nodeID] = [v1, v2, v3]  # dx,dy,dz
             self.rotations[self.dt][nodeID] = [v4, v5, v6]  # rx,ry,rz
 
@@ -423,7 +423,7 @@ class ComplexTableObject(BaseTable, ScalarObject):
         msg = words
         for nodeID, translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
-            gridType = self.gridTypes[nodeID]
+            grid_type = self.gridTypes[nodeID]
             (dx, dy, dz) = translation
             (rx, ry, rz) = rotation
 
@@ -431,7 +431,7 @@ class ComplexTableObject(BaseTable, ScalarObject):
             (vals2, isAllZeros) = writeImagFloats13E(vals)
             [dxr, dyr, dzr, rxr, ryr, rzr, dxi, dyi, dzi, rxi,
                 ryi, rzi] = vals2
-            msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
+            msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
             msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' %
                        ('', '', dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
 
@@ -470,7 +470,7 @@ class ComplexTableObject(BaseTable, ScalarObject):
                 (dt, node_id) = index
 
                 data = self.data.ix[index]
-                gridType = 'G' #self.gridTypes[node_id]
+                grid_type = 'G' #self.gridTypes[node_id]
                 dx = data['T1']
                 dy = data['T2']
                 dz = data['T3']
@@ -483,7 +483,7 @@ class ComplexTableObject(BaseTable, ScalarObject):
                 [dxr, dyr, dzr, rxr, ryr, rzr,
                  dxi, dyi, dzi, rxi, ryi, rzi] = vals2
                 if not isAllZeros:
-                    msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (node_id, gridType, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
+                    msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (node_id, grid_type, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
                     msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '',            dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
 
                 i += 1
@@ -491,7 +491,7 @@ class ComplexTableObject(BaseTable, ScalarObject):
                     dt = self.data.index[i+1][0]
                 except IndexError:
                     break
-                
+
                 if i % 1000 == 0:
                     #print("class=%s i=%s ndata=%s" % (classname, i, ndata))
                     f.write(''.join(msg))

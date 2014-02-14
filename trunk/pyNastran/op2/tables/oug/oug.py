@@ -496,11 +496,11 @@ class OUG(object):
             out = unpack(format1, eData)
             if self.make_op2_debug:
                 self.op2_debug.write('RealTable - %s\n' % str(out))
-            (eid, gridType, tx, ty, tz, rx, ry, rz) = out
+            (eid, grid_type, tx, ty, tz, rx, ry, rz) = out
             eid2 = extract(eid, dt)
             #print "eType=%s" %(eType)
 
-            dataIn = [eid2, gridType, tx, ty, tz, rx, ry, rz]
+            dataIn = [eid2, grid_type, tx, ty, tz, rx, ry, rz]
             #print('eid=%g gridType=%g tx=%g ty=%g tz=%g rx=%g ry=%g rz=%g' %(eid2, gridType, tx, ty, tz, rx, ry, rz))
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #print "%s" %(self.table_name),dataIn
@@ -526,7 +526,7 @@ class OUG(object):
             out = unpack(format1, eData)
             if self.make_op2_debug:
                 self.op2_debug.write('ComplexTable - %s\n' % str(out))
-            (eid, gridType, txr, tyr, tzr, rxr, ryr, rzr,
+            (eid, grid_type, txr, tyr, tzr, rxr, ryr, rzr,
              txi, tyi, tzi, rxi, ryi, rzi) = out
 
             if is_magnitude_phase:
@@ -546,7 +546,7 @@ class OUG(object):
 
             eid2 = extract(eid, dt)
 
-            dataIn = [eid2, gridType, tx, ty, tz, rx, ry, rz]
+            dataIn = [eid2, grid_type, tx, ty, tz, rx, ry, rz]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)

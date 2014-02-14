@@ -21,7 +21,7 @@ class TemperatureGradientAndFluxObject(TableObject):
                         '   ELEMENT-ID   EL-TYPE        X-GRADIENT       Y-GRADIENT       Z-GRADIENT        X-FLUX           Y-FLUX           Z-FLUX\n']
         for nodeID, translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
-            gridType = self.gridTypes[nodeID]
+            grid_type = self.gridTypes[nodeID]
 
             (dx, dy, dz) = translation
             (rx, ry, rz) = rotation
@@ -29,7 +29,7 @@ class TemperatureGradientAndFluxObject(TableObject):
             (vals2, isAllZeros) = writeFloats13E(vals)
             if not isAllZeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
+                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
 
         msg.append(pageStamp + str(pageNum) + '\n')
         f.write(''.join(msg))
@@ -62,7 +62,7 @@ class ComplexTemperatureGradientAndFluxObject(ComplexTableObject):
         raise RuntimeError('is this valid...')
         for nodeID, translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
-            gridType = self.gridTypes[nodeID]
+            grid_type = self.gridTypes[nodeID]
 
             (dx, dy, dz) = translation
             #dxr=dx.real; dyr=dy.real; dzr=dz.real;
@@ -77,7 +77,7 @@ class ComplexTemperatureGradientAndFluxObject(ComplexTableObject):
             (vals2, isAllZeros) = writeFloats13E(vals)
             if not isAllZeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
+                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
         msg.append(pageStamp + str(pageNum) + '\n')
         f.write(''.join(msg))
         return pageNum

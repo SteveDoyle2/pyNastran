@@ -23,7 +23,7 @@ class LoadVectorObject(TableObject):  # table_code=2, sort_code=0, thermal=0
                         '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         for nodeID, translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
-            gridType = self.gridTypes[nodeID]
+            grid_type = self.gridTypes[nodeID]
 
             (dx, dy, dz) = translation
             (rx, ry, rz) = rotation
@@ -31,7 +31,7 @@ class LoadVectorObject(TableObject):  # table_code=2, sort_code=0, thermal=0
             (vals2, isAllZeros) = writeFloats13E(vals)
             if not isAllZeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
+                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
 
         msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
@@ -48,7 +48,7 @@ class LoadVectorObject(TableObject):  # table_code=2, sort_code=0, thermal=0
             msg += header + words
             for nodeID, translation in sorted(translations.iteritems()):
                 rotation = self.rotations[dt][nodeID]
-                gridType = self.gridTypes[nodeID]
+                grid_type = self.gridTypes[nodeID]
 
                 (dx, dy, dz) = translation
                 (rx, ry, rz) = rotation
@@ -57,7 +57,7 @@ class LoadVectorObject(TableObject):  # table_code=2, sort_code=0, thermal=0
                 (vals2, isAllZeros) = writeFloats13E(vals)
                 if not isAllZeros:
                     [dx, dy, dz, rx, ry, rz] = vals2
-                    msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
+                    msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
 
             msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
@@ -86,7 +86,7 @@ class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_co
                         '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         for nodeID, translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
-            gridType = self.gridTypes[nodeID]
+            grid_type = self.gridTypes[nodeID]
 
             (dx, dy, dz) = translation
             (rx, ry, rz) = rotation
@@ -124,7 +124,7 @@ class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_co
             (vals2, isAllZeros) = writeFloats13E(vals)
             [dxr, dyr, dzr, rxr, ryr, rzr,
              dxi, dyi, dzi, rxi, ryi, rzi] = vals2
-            msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
+            msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
             msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '',           dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
 
         msg.append(pageStamp % pageNum)
@@ -142,7 +142,7 @@ class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_co
             msg += header + words
             for nodeID, translation in sorted(translations.iteritems()):
                 rotation = self.rotations[dt][nodeID]
-                gridType = self.gridTypes[nodeID]
+                grid_type = self.gridTypes[nodeID]
 
                 (dx, dy, dz) = translation
                 (rx, ry, rz) = rotation
@@ -182,7 +182,7 @@ class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_co
                 [dxr, dyr, dzr, rxr, ryr, rzr,
                  dxi, dyi, dzi, rxi, ryi, rzi] = vals2
                 if not isAllZeros:
-                    msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
+                    msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
                     msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '', dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
 
             msg.append(pageStamp % pageNum)
@@ -205,7 +205,7 @@ class ThermalVector(TableObject):
                         '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']
         for nodeID, translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
-            gridType = self.gridTypes[nodeID]
+            grid_type = self.gridTypes[nodeID]
 
             (dx, dy, dz) = translation
             (rx, ry, rz) = rotation
@@ -213,7 +213,7 @@ class ThermalVector(TableObject):
             (vals2, isAllZeros) = writeFloats13E(vals)
             if not isAllZeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
+                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
 
         msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
@@ -230,7 +230,7 @@ class ThermalVector(TableObject):
             msg += header + words
             for nodeID, translation in sorted(translations.iteritems()):
                 rotation = self.rotations[dt][nodeID]
-                gridType = self.gridTypes[nodeID]
+                grid_type = self.gridTypes[nodeID]
 
                 (dx, dy, dz) = translation
                 (rx, ry, rz) = rotation
@@ -239,7 +239,7 @@ class ThermalVector(TableObject):
                 (vals2, isAllZeros) = writeFloats13E(vals)
                 if not isAllZeros:
                     [dx, dy, dz, rx, ry, rz] = vals2
-                    msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, gridType, dx, dy, dz, rx, ry, rz.rstrip()))
+                    msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
 
             msg.append(pageStamp % pageNum)
             f.write(''.join(msg))

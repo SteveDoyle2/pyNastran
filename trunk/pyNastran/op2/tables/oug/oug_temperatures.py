@@ -35,11 +35,11 @@ class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=
     def add_f06_data(self, data, transient):
         if transient is None:
             for line in data:
-                (gridID, gridType) = line[0:2]
+                (gridID, grid_type) = line[0:2]
                 temps = line[2:]
                 for (i, temp) in enumerate(temps):
                     nodeID = gridID + i
-                    self.gridTypes[nodeID] = gridType
+                    self.gridTypes[nodeID] = grid_type
                     self.temperatures[nodeID] = temp
             return
 
@@ -50,11 +50,11 @@ class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=
             self.isTransient = True
 
         for line in data:
-            (gridID, gridType) = line[0:2]
+            (gridID, grid_type) = line[0:2]
             temps = line[2:]
             for (i, temp) in enumerate(temps):
                 nodeID = gridID + i
-                self.gridTypes[nodeID] = gridType
+                self.gridTypes[nodeID] = grid_type
                 self.temperatures[dt][nodeID] = temp
 
     def update_dt(self, data_code, dt):
@@ -78,24 +78,24 @@ class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=
         self.temperatures[dt] = {}
 
     def add(self, dt, out):
-        (nodeID, gridType, v1, v2, v3, v4, v5, v6) = out  # v2-v6 are 0
+        (nodeID, grid_type, v1, v2, v3, v4, v5, v6) = out  # v2-v6 are 0
         assert 0 < nodeID < 1000000000, 'nodeID=%s' % (nodeID)
         #assert nodeID not in self.temperatures
 
-        gridType = self.recastGridType(gridType)
-        self.gridTypes[nodeID] = gridType
+        grid_type = self.recastGridType(grid_type)
+        self.gridTypes[nodeID] = grid_type
         self.temperatures[nodeID] = v1
 
     def add_sort1(self, dt, out):
         if dt not in self.temperatures:
             self.add_new_transient(dt)
 
-        (nodeID, gridType, v1, v2, v3, v4, v5, v6) = out  # v2-v6 are 0
+        (nodeID, grid_type, v1, v2, v3, v4, v5, v6) = out  # v2-v6 are 0
         assert 0 < nodeID < 1000000000, 'nodeID=%s' % (nodeID)
         #assert nodeID not in self.temperatures[self.dt]
 
-        gridType = self.recastGridType(gridType)
-        self.gridTypes[nodeID] = gridType
+        grid_type = self.recastGridType(grid_type)
+        self.gridTypes[nodeID] = grid_type
         self.temperatures[dt][nodeID] = v1
 
    # def write_op2(self,block3,device_code=1):
@@ -164,17 +164,17 @@ class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=
         oldNodeID = -1
         oldGridType = None
         for nodeID, T in sorted(temperatures.iteritems()):
-            gridType = self.gridTypes[nodeID]
+            grid_type = self.gridTypes[nodeID]
 
-            if oldNodeID + 1 == nodeID and gridType == oldGridType:
+            if oldNodeID + 1 == nodeID and grid_type == oldGridType:
                 oldNodeID = nodeID
                 ipack.append(T)
             else:
                 if oldNodeID > 0:
                     msg += self.print_pack(ipack)
-                oldGridType = gridType
+                oldGridType = grid_type
                 oldNodeID = nodeID
-                ipack = [nodeID, gridType, T]
+                ipack = [nodeID, grid_type, T]
         if ipack:
             msg += self.print_pack(ipack)
         return msg

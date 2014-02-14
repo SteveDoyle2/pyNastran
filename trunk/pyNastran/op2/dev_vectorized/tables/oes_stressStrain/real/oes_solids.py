@@ -207,7 +207,7 @@ class RealSolidResults(object):
         i = 0
         idt = 0
         ndt, nelements_size, nnodes_size, dts = self._get_shape()
-        
+
         delta = len(self.data) // ndt
         assert len(self.data) % ndt == 0
         max_size = 0
@@ -476,7 +476,7 @@ class SolidStressObject(RealSolidResults, StressObject):
             self.add_new_transient()
 
         for line in data:
-            (nodeID, gridType, t1, t2, t3, r1, r2, r3) = line
+            (nodeID, grid_type, t1, t2, t3, r1, r2, r3) = line
             self.gridTypes[dt][nodeID] = array([t1, t2, t3])
             self.translations[dt][nodeID] = array([t1, t2, t3])
             self.rotations[dt][nodeID] = array([r1, r2, r3])
@@ -635,7 +635,7 @@ class SolidStrainObject(RealSolidResults, StrainObject):
             self.add_new_transient()
 
         for line in data:
-            (nodeID, gridType, t1, t2, t3, r1, r2, r3) = line
+            (nodeID, grid_type, t1, t2, t3, r1, r2, r3) = line
             self.gridTypes[dt][nodeID] = array([t1, t2, t3])
             self.translations[dt][nodeID] = array([t1, t2, t3])
             self.rotations[dt][nodeID] = array([r1, r2, r3])
