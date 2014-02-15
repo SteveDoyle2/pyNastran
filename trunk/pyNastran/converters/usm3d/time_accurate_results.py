@@ -12,7 +12,7 @@ def get_n_list(dirname, model_name):
     # get the max N value
     for flo_filename in flo_filenames:
         base, ext = os.path.splitext(flo_filename)
-        if ext == '.flo':
+        if ext == '.flo' and '.aux.' not in flo_filename:
             if '_' not in flo_filename:
                 print flo_filename
                 continue
@@ -21,19 +21,27 @@ def get_n_list(dirname, model_name):
     n_list.sort()
     return n_list
 
-def get_flo_files(dirname, model_name, include_dirname_in_path=True):
+def get_flo_files(dirname, model_name, nstart=0, nlimit=None, include_dirname_in_path=True):
     """
     get the flo files in ascending order
     """
     if dirname == '':
         dirname = os.getcwd()
     n_list = get_n_list(dirname, model_name)
+    if nlimit is None:
+        nlimit = n_list[-1]  # inclusive
+
+    # handles case of user didn't define every data point
+    n_list2 = []
+    for ni in n_list:
+        if nstart <= ni <= nlimit:
+            n_list2.append(ni)
 
     if include_dirname_in_path:
-        flo_filenames = [os.path.join(dirname, '%s_%i.flo' % (model_name, n)) for n in n_list]
+        flo_filenames = [os.path.join(dirname, '%s_%i.flo' % (model_name, n)) for n in n_list2]
     else:
-        flo_filenames = ['%s_%i.flo' % (model_name, n) for n in n_list]
-    return flo_filenames
+        flo_filenames = ['%s_%i.flo' % (model_name, n) for n in n_list2]
+    return n_list2, flo_filenames
 
 def get_flo_files_from_n(dirname, model_name, n_list, include_dirname_in_path=True):
     """
@@ -49,11 +57,13 @@ def get_flo_files_from_n(dirname, model_name, n_list, include_dirname_in_path=Tr
     return flo_filenames
 
 
-def run(dirname, model_name, node_ids, nstart=0, nlimit=None, num_cpus=8):
+def run_time_acc(dirname, model_name, node_ids, nstart=0, nlimit=None, num_cpus=8):
+    """
+    node ids start at index=0
+    """
     model = Usm3dReader()
 
-    flo_filenames = get_flo_files(dirname, model_name)
-    flo_filenames = flo_filenames[nstart:nlimit]
+    n_list, flo_filenames = get_flo_files(dirname, model_name, nstart, nlimit)
     nlimit = len(flo_filenames)
     assert nlimit > 0, 'nfiles=%s' % (nlimit)
     #print "nmax =", nlimit
@@ -67,6 +77,7 @@ def run(dirname, model_name, node_ids, nstart=0, nlimit=None, num_cpus=8):
     p = {}
     rhoU = {}
 
+    # initialize the arrays
     for node_id in node_ids:
         Cp[node_id] = zeros(nlimit, 'float64')
         Mach[node_id] = zeros(nlimit, 'float64')
@@ -97,8 +108,8 @@ def run(dirname, model_name, node_ids, nstart=0, nlimit=None, num_cpus=8):
         result = pool.imap(_loads_func, [(flo_filename, node_ids) for flo_filename in flo_filenames])
         n = 0
         for j, loads in enumerate(result):
-            if n % 500 == 0:
-                print "n =", n
+            if j % 500 == 0:
+                print "n =", j, flo_filenames[j]
             for i, node_id in enumerate(node_ids):
                 #print "Cp[node=%s] =%s" % (node_id, loads['Cp'][i])
                 Cp[node_id][j] = loads['Cp'][i]
@@ -112,7 +123,7 @@ def run(dirname, model_name, node_ids, nstart=0, nlimit=None, num_cpus=8):
                 n += 1
         pool.close()
         pool.join()
-    return Cp, Mach, T, U, V, W, p, rhoU
+    return n_list, Cp, Mach, T, U, V, W, p, rhoU
 
 def _loads_func(data):
     flo_filename, node_ids = data
@@ -125,7 +136,7 @@ def write_loads(csv_filename, loads):
     #print "loads.keys() = ", sorted(loads.keys())
     f = open(csv_filename, 'wb')
     dt = 1.0
-    t = arange(len(Cp[node_id])) * dt
+    t = arange(len(Cp[node_id])) * dt  # broken...
     f.write('time\t');  savetxt(f, t, delimiter='', newline=',')
     f.write('\n')
     for node_id, Cpi in sorted(Cp.iteritems()):

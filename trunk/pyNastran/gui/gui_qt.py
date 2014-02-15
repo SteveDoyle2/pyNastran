@@ -679,8 +679,20 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         #return scalarBar
 
     def on_reload(self):
-        print("self.infile_name =", self.infile_name)
-        self.on_load_geometry(self.infile_name, self.format)
+        Title = self.Title
+        if self.format == 'usm3d':
+            self.step_results_usm3d()
+        else:
+            self.on_load_geometry(self.infile_name, self.format)
+
+        msg = '%s - %s - %s' % (self.format, self.infile_name, self.out_filename)
+        self.set_window_title(msg)
+        #self.cycleResults(Title)
+        for i in xrange(10):  #  limit on number of cycles
+            if self.Title != Title:
+                self.cycleResults(Title)
+            else:
+                break
 
     def on_load_geometry(self, infile_name=None, geometry_format=None):
         wildcard = ''
@@ -1076,8 +1088,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         self.rend.AddActor(geometryActor)
         vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
 
-    def cycleResults(self):
-        self.log_command('cycleResults()')
+    def cycleResults(self, result_name=None):
+        self.log_command('cycleResults(result_name=%r)' % result_name)
         #print("nCases = %i" %(self.nCases+1))
         if self.nCases == 0:
             self.log.warning('nCases=0')
@@ -1087,7 +1099,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         print('cycling...')
         print("is_nodal=%s is_centroidal=%s" % (self.is_nodal,self.is_centroidal))
 
-        foundCases = self.incrementCycle()
+        foundCases = self.incrementCycle(result_name)
         if foundCases:
             print("incremented case")
             #gridResult.Reset()
@@ -1239,11 +1251,20 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         except AttributeError:
             return 0
 
-    def incrementCycle(self):
-        if self.iCase is not self.nCases:
-            self.iCase += 1
-        else:
-            self.iCase = 0
+    def incrementCycle(self, result_name=False):
+        found_case = False
+        if result_name is not False and result_name is not None:
+            for icase, cases in sorted(self.resultCases.iteritems()):
+                #cases[(ID, 'Region', 1, 'centroid', '%.0f')] = bcs
+                if result_name == cases[1]:
+                    found_case = True
+                    self.iCase = icase
+
+        if not found_case:
+            if self.iCase is not self.nCases:
+                self.iCase += 1
+            else:
+                self.iCase = 0
 
         if len(self.caseKeys) > 0:
             #print('caseKeys =', self.caseKeys)
