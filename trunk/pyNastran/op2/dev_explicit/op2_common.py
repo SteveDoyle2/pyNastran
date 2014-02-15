@@ -452,6 +452,8 @@ class OP2Common(Op2Codes, F06Writer):
         #assert real_obj is None
         #assert complex_obj is None
         #assert thermal_real_obj is None
+        if self.read_mode == 1:
+            return len(data)
 
         if self.num_wide == 8:  # real/random
             # real_obj

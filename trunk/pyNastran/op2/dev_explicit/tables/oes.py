@@ -26,7 +26,7 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexBush
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStressObject, ComplexPlateStrainObject
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import ComplexRodStressObject, ComplexRodStrainObject
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShearStressObject, ComplexShearStrainObject
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressObject, ComplexSolidStrainObject
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressObject, ComplexSolidStrainObject, ComplexSolidStress, ComplexSolidStrain
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexCelasStressObject, ComplexCelasStrainObject
 
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import NonlinearRodObject, NonlinearQuadObject, HyperelasticQuadObject
@@ -477,6 +477,7 @@ class OES(OP2Common):
             numwide_imag = 4 + (17 - 4) * nnodes_expected
             preline1 = '%s-%s' % (self.element_name, self.element_type)
             preline2 = ' ' * len(preline1)
+            self._data_factor = nnodes_expected
             if self.num_wide == numwide_real:
                 if self.isStress():
                     self.create_transient_object(self.solidStress, SolidStressObject)
@@ -525,23 +526,49 @@ class OES(OP2Common):
                         bCos = [b1, b2, b3]
                         cCos = [c1, c2, c3]
                         if node_id == 0:
-                            self.obj.add_new_eid(self.element_name+str(nnodes), cid, dt, eid, grid,
-                                                 sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
-                                                 aCos, bCos, cCos, pressure, svm)
+                            self.obj.add_new_eid_sort1(self.element_name+str(nnodes), cid, dt, eid, grid,
+                                                       sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
+                                                       aCos, bCos, cCos, pressure, svm)
                         else:
-                            self.obj.add(dt, eid, grid,
-                                         sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
-                                         aCos, bCos, cCos, pressure, svm)
+                            self.obj.add_sort1(dt, eid, grid,
+                                               sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
+                                               aCos, bCos, cCos, pressure, svm)
                         n += 84
 
             elif self.num_wide == numwide_imag:
-                if self.isStress():
-                    self.create_transient_object(self.solidStress, ComplexSolidStressObject)
-                else:
-                    self.create_transient_object(self.solidStrain, ComplexSolidStrainObject)
-
                 ntotal = numwide_imag * 4
                 nelements = len(data) // ntotal
+                result_name = 'solidStresss' if self.isStress() else 'solidStrain'
+                result_name += '_subcase%i' % self.isubcase
+
+                if self.is_vectorized:
+                    if self.read_mode == 1:
+                        if self.isStress():
+                            self.create_transient_object(self.solidStress, ComplexSolidStress)
+                            #print "read_mode 1", self.obj.ntimes
+                        else:
+                            self.create_transient_object(self.solidStrain, ComplexSolidStrain)
+                        self.result_names.add(result_name)
+                        self.obj.nelements += nelements
+                        return nelements * ntotal
+                    elif self.read_mode == 2:
+                        if self.isStress():
+                            self.obj = self.solidStress[self.isubcase]
+                        else:
+                            self.obj = self.solidStrain[self.isubcase]
+                    #self.obj.update_data_code(self.data_code)
+                    self.obj.build()
+                else:  # not vectorized
+                    self.result_names.add(result_name)
+                    if self.read_mode == 1:
+                        return
+                    # pass = 0/2
+                    if self.isStress():
+                        self.create_transient_object(self.solidStress, ComplexSolidStressObject)
+                    else:
+                        self.create_transient_object(self.solidStrain, ComplexSolidStrainObject)
+
+                #print "self.obj.data.shape =", self.obj.data.shape
                 s1 = Struct(b'2i4si')
                 s2 = Struct(b'i12f')
                 for i in xrange(nelements):
@@ -554,15 +581,15 @@ class OES(OP2Common):
                         self.binary_debug.write('  eid=%i C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
                     assert eid > 0, eid
 
-                    self.obj.add_new_eid(self.element_name+str(nodef), dt, eid, cid, ctype, nodef)
+                    self.obj.add_eid_sort1(self.element_type, self.element_name+str(nodef), dt, eid, cid, ctype, nodef)
                     for inode in xrange(nnodes_expected):
                         edata = data[n:n+52]
                         n += 52
                         out = s2.unpack(edata)
                         (grid, exr, eyr, ezr, etxyr, etyzr, etzxr,
                                exi, eyi, ezi, etxyi, etyzi, etzxi) = out
-                        if grid == 0:
-                            grid = 'CENTER'
+                        #if grid == 0:
+                            #grid = 'CENTER'
 
                         if is_magnitude_phase:
                             ex = polar_to_real_imag(exr, exi)
@@ -581,7 +608,8 @@ class OES(OP2Common):
 
                         if self.debug4():
                             self.binary_debug.write('       node%s=[%s]\n' % (grid, ', '.join(['%r' % di for di in out])))
-                        self.obj.add(dt, eid, grid, ex, ey, ez, etxy, etyz, etzx)
+                        #self.obj.add(dt, eid, grid, ex, ey, ez, etxy, etyz, etzx)
+                        self.obj.add_node_sort1(dt, eid, grid, ex, ey, ez, etxy, etyz, etzx)
             else:
                 raise NotImplementedError(self.num_wide)
 

@@ -214,12 +214,15 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
         OGPWG.__init__(self)
         FortranFormat.__init__(self)
 
+        self.read_mode = 0
+        self.is_vectorized = False
+        self._close_op2 = True
+
+        self.result_names = set([])
+
         self.grid_point_weight = GridPointWeight()
         self.words = []
         self.debug = True
-        if self.debug:
-            #: an ASCII version of the op2 (creates lots of output)
-             self.binary_debug = open('debug.out', 'wb')
 
         self._table_mapper = {
             #=======================
@@ -246,7 +249,6 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
             'OPGV1' : [self._read_opg1_3, self._read_opg1_4],
             'OPNL1' : [self._read_opg1_3, self._read_opg1_4],
 
-
             # OGPFB1
             # grid point forces
             'OGPFB1' : [self._read_ogpf1_3, self._read_ogpf1_4],
@@ -268,6 +270,7 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
             'OESTRCP' : [self._read_oes1_3, self._read_oes1_4],
             'OESNL1X' : [self._read_oes1_3, self._read_oes1_4],
             'OESRT'   : [self._read_oes1_3, self._read_oes1_4],
+
             # strain
             'OSTR1X'  : [self._read_oes1_3, self._read_oes1_4],
             'OSTR1C'  : [self._read_oes1_3, self._read_oes1_4],
@@ -395,7 +398,6 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
             'ERRORN': [self._table_passer, self._table_passer],
             #==================================
 
-
             'OCRPG': [self._table_passer, self._table_passer],
             'OCRUG': [self._table_passer, self._table_passer],
 
@@ -474,6 +476,9 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
         self.bdf_filename = fname + bdf_extension
         self.f06_filename = fname + f06_extension
 
+        if self.debug:
+            #: an ASCII version of the op2 (creates lots of output)
+            self.binary_debug = open('debug.out', 'wb')
         if self.save_skipped_cards:
             self.skippedCardsFile = open('skippedCards.out', 'a')
         #: file index
@@ -521,25 +526,27 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
             self.skippedCardsFile.close()
             del self.skippedCardsFile
         self.binary_debug.close()
-        self.remove_unpickable_data()
+        if self._close_op2:
+            self.f.close()
+        #self.remove_unpickable_data()
         return table_names
 
     def create_unpickable_data(self):
         raise NotImplementedError()
-    #==== not needed ====
-    #self.f
-    #self.binary_debug
+        #==== not needed ====
+        #self.f
+        #self.binary_debug
 
-    # needed
-    self._geom1_map
-    self._geom2_map
-    self._geom3_map
-    self._geom4_map
-    self._dit_map
-    self._dynamics_map
-    self._ept_map
-    self._mpt_map
-    self._table_mapper
+        # needed
+        self._geom1_map
+        self._geom2_map
+        self._geom3_map
+        self._geom4_map
+        self._dit_map
+        self._dynamics_map
+        self._ept_map
+        self._mpt_map
+        self._table_mapper
 
     def remove_unpickable_data(self):
         del self.f

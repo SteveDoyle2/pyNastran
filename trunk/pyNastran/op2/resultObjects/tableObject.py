@@ -39,7 +39,7 @@ class TableObject(scalarObject):  # displacement style table
         else:
             msg.append('  type=%s ngrids=%s\n'
                        % (self.__class__.__name__, ngrids))
-        msg.append('  translations, rotations, gridTypes\n')
+        msg.append('  translations, rotations, gridTypes\n  ')
         msg += self.get_data_code()
         return msg
 
@@ -596,8 +596,7 @@ class ComplexTableObject(scalarObject):
 
     def get_stats(self):
         ngrids = len(self.gridTypes)
-        msg = self.get_data_code()
-
+        msg = []
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.translations)
             msg.append('  imaginary type=%s ntimes=%s ngrids=%s\n'
@@ -605,7 +604,8 @@ class ComplexTableObject(scalarObject):
         else:
             msg.append('  imaginary type=%s ngrids=%s\n'
                        % (self.__class__.__name__, ngrids))
-        msg.append('  translations, rotations, gridTypes\n')
+        msg.append('  translations, rotations, gridTypes\n  ')
+        msg += self.get_data_code()
         return msg
 
     def isImaginary(self):

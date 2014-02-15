@@ -7,6 +7,7 @@ import pyNastran
 #from pyNastran.op2.op2 import OP2
 from pyNastran.f06.f06 import FatalError
 from pyNastran.op2.dev_explicit.op2 import OP2
+#from pyNastran.op2.dev_explicit.op2_vectorized import OP2_Vectorized as OP2
 
 
 def parse_table_names_from_F06(f06Name):

@@ -36,7 +36,7 @@ class StrainEnergyObject(scalarObject):
             self.add = self.addSort2
 
     def get_stats(self):
-        msg = self.get_data_code()
+        msg = []
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.energy)
             time0 = self.energy.keys()[0]
@@ -47,7 +47,8 @@ class StrainEnergyObject(scalarObject):
             nelements = len(self.energy)
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
-        msg.append('  energy, percent, density\n')
+        msg.append('  energy, percent, density\n  ')
+        msg += self.get_data_code()
         return msg
 
     def update_dt(self, data_code, dt):
