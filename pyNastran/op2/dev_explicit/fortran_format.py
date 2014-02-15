@@ -118,6 +118,8 @@ class FortranFormat(object):
         pass
 
     def _read_subtables(self):
+        self._data_factor = 1
+        nstart = self.n
         self.isubtable = -3
         self.read_markers([-3, 1, 0])
         #data = self._read_record()
@@ -127,12 +129,14 @@ class FortranFormat(object):
         #self.read_markers([self.isubtable, 1, 0])
 
         if self.table_name in self._table_mapper:
-            self.log.debug("table_name = %r" % self.table_name)
+            if self.read_mode in [0, 1]:
+                self.log.debug("table_name = %r" % self.table_name)
             table3_parser, table4_parser = self._table_mapper[self.table_name]
             passer = False
         else:
             #raise NotImplementedError(self.table_name)
-            self.log.debug("skipping table_name = %r" % self.table_name)
+            if self.read_mode in [0, 1]:
+                self.log.debug("skipping table_name = %r" % self.table_name)
             table3_parser = None
             table4_parser = None
             passer = True
@@ -157,6 +161,11 @@ class FortranFormat(object):
                             n = table4_parser(data)
                             assert isinstance(n, int), self.table_name
                             datai = data[n:]
+                        if self.read_mode == 1:
+                            if hasattr(self, 'obj') and hasattr(self.obj, 'ntimes'):
+                                self.obj.ntimes += 1
+                                self.obj.ntotal = record_len // (self.num_wide * 4) * self._data_factor
+                                #print "ntotal =", self.obj.ntotal, type(self.obj)
                     else:
                         data = self._read_record()
                         n = table4_parser(data)
@@ -207,11 +216,9 @@ class FortranFormat(object):
             #nloop = 0
             while markers1[0] > 0: #, 'markers0=%s markers1=%s' % (markers0, markers1)
                 markers1 = self.get_nmarkers(1, rewind=False)
-
                 n = self.n
                 record = self.skip_block()
                 len_record += self.n - n - 8  # -8 is for the block
-
                 markers1 = self.get_nmarkers(1, rewind=True)
         self.goto(n0)
         return len_record
@@ -275,11 +282,9 @@ class FortranFormat(object):
             records = [record]
             while markers1[0] > 0: #, 'markers0=%s markers1=%s' % (markers0, markers1)
                 markers1 = self.get_nmarkers(1, rewind=False)
-
                 record = self.read_block()
                 records.append(record)
                 markers1 = self.get_nmarkers(1, rewind=True)
-
                 nloop += 1
 
             if nloop > 0:

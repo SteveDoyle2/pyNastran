@@ -11,7 +11,7 @@ from numpy import array
 
 #from pyNastran.utils import is_binary
 #from pyNastran.utils.gui_io import load_file_dialog
-from pyNastran.op2.dev_explicit import OP2
+from pyNastran.op2.dev_explicit.op2 import OP2
 
 class OP2_Vectorized(OP2):
 
@@ -26,11 +26,14 @@ class OP2_Vectorized(OP2):
         :param log: a logging object to write debug messages to
          (.. seealso:: import logging)
         """
-        OP2.__init__(self, make_geom=False, save_skipped_cards=False,
-                 debug=True, log=None, debug=debug, log=log)
-        self.ask = None
+        OP2.__init__(self, make_geom=make_geom, save_skipped_cards=save_skipped_cards,
+                     debug=debug, log=log)
+        debug = True
+        #print(self.binary_debug)
+        #self.binary_debug = None
+        self.ask = False
 
-    def set_as_vectorized(ask=False):
+    def set_as_vectorized(self, ask=False):
         """
         Enables vectorization (currently subject to change and break frequently)
 
@@ -79,11 +82,12 @@ class OP2_Vectorized(OP2):
         Cases
         ======
           1.   Scan the block to get the size, build the object (read_mode=1),
-               ask the user, start over, fill the data (read_mode=2).
+               ask the user, start over, fill the objects (read_mode=2).
                Degenerate to read_mode=0 when read_mode=2 cannot be used based
                upon the value of ask.
-          2.   Scan the block to get the size, build the object (read_mode=1),
-               start over, read the OP2 to fill the objects (read_mode=2).
+          2.   Same as case #1, but don't ask the user.
+               Scan the block to get the size, build the object (read_mode=1),
+               start over, fill the objects (read_mode=2).
           3.   Scan the block to get the object types (read_mode=1), ask the user,
                build the object & fill it (read_mode=2)
           4.   Read the block to get the size, build the object & fill it (read_mode=0)
@@ -96,35 +100,38 @@ class OP2_Vectorized(OP2):
         Starts the OP2 file reading
         """
         assert self.ask in [True, False], self.ask
-        if self.ask:
-            self.read_mode = 0
+        self.is_vectorized = True
+        if self.is_vectorized:
+            self.read_mode = 1
             self._close_op2 = False
 
             # get GUI object names, build objects, but don't read data
-            self.read_mode = 0
-            self.OP2.read_op2(op2_filename)
+            OP2.read_op2(self, op2_filename=op2_filename)
 
             # TODO: stuff to figure out objects
             # TODO: stuff to show gui of table names
             # TODO: clear out objects the user doesn't want
-            self.read_mode = 1
-            self._close_op2 = True
-            self.OP2.read_op2(self.op2_filename)
-        else:
             self.read_mode = 2
-            self.OP2.read_op2(self.op2_filename)
-        self.op2.close()
+            self._close_op2 = True
+            OP2.read_op2(self, op2_filename=op2_filename)
+        else:
+            #self.read_mode = 0
+            OP2.read_op2(self, op2_filename=op2_filename)
+            return
+            #raise NotImplementedError()
+        self.f.close()
         self.skippedCardsFile.close()
 
 
 if __name__ == '__main__':
     import pyNastran
-    pkg_path = pyNastran.__file__[0]
+    pkg_path = pyNastran.__path__[0]
 
     # we don't want the variable name to get picked up by the class
-    _op2_filename = os.path.join(pyNastran, '..', 'models', 'sol_101_elements', 'solid_shell_bar.op2')
+    _op2_filename = os.path.join(pkg_path, '..', 'models', 'sol_101_elements', 'solid_shell_bar.op2')
 
     model = OP2_Vectorized()
+    model.set_as_vectorized(ask=False)
     model.read_op2(_op2_filename)
     isubcase = 1
 

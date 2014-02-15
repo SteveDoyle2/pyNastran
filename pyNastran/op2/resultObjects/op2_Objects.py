@@ -9,6 +9,7 @@ from pyNastran.utils import list_print
 class baseScalarObject(Op2Codes):
     def __init__(self):
         Op2Codes.__init__(self)
+        self.is_built = False
 
     def name(self):
         return self.__class__.__name__
@@ -32,12 +33,14 @@ class baseScalarObject(Op2Codes):
 
 
 class scalarObject(baseScalarObject):
-    def __init__(self, data_code, isubcase):
+    def __init__(self, data_code, isubcase, apply_data_code=True):
         assert 'nonlinear_factor' in data_code, data_code
         baseScalarObject.__init__(self)
         self.isubcase = isubcase
         self.isTransient = False
         self.dt = None
+        self.ntimes = 0
+        self.ntotal = 0
         self.data_code = copy.deepcopy(data_code)
 
         #print("***data_code =", self.data_code)
@@ -227,8 +230,10 @@ class scalarObject(baseScalarObject):
                 #print(data_code)
                 pass
 
-        self.apply_data_code()
-        self.set_data_members()
+        if apply_data_code:
+            #print("adding data code...")
+            self.apply_data_code()
+            self.set_data_members()
         #self.log.debug(self.code_information())
 
     def isImaginary(self):
@@ -273,7 +278,7 @@ class scalarObject(baseScalarObject):
                     name = name + 's'
                 else:
                     vals = getattr(self, name)
-                msg.append('  %s = %s\n' % (name, list_print(vals)))
+                msg.append('%s = %s\n' % (name, list_print(vals)))
             #except AttributeError:  # weird case...
                 #pass
         #print("***dataNames =", self.dataNames)
@@ -321,7 +326,7 @@ class scalarObject(baseScalarObject):
             raise NotImplementedError(msg + self.code_information())
 
         for name in self.data_code['dataNames']:
-            #print "name = ",name
+            #print("name = ",name)
             self.append_data_member(name + 's', name)
 
     def update_data_code(self, data_code):
