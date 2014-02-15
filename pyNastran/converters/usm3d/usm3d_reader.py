@@ -572,7 +572,7 @@ class Usm3dReader(object):
             return node_id, loads
 
         # standard outputs
-        result_names = ['Mach', 'U', 'V', 'W', 'T', 'rhoU', 'rhoV', 'rhoW', 'p', 'Cp']
+        result_names = ['Mach', 'U', 'V', 'W', 'T', 'rho', 'rhoU', 'rhoV', 'rhoW', 'p', 'Cp']
         gamma = 1.4
         two_over_Mach2 = 2.0 / mach ** 2
         one_over_gamma = 1.0 / gamma

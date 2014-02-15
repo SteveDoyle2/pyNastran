@@ -5,11 +5,62 @@ import vtk
 from vtk import vtkTriangle, vtkTetra
 
 from pyNastran.converters.usm3d.usm3d_reader import Usm3dReader
+from pyNastran.converters.usm3d.time_accurate_results import get_n_list
 
 
 class Usm3dIO(object):
     def __init__(self):
         pass
+
+    def step_results_usm3d(self):
+        # minimum is 1
+        nstep = 100
+
+        assert self.out_filename is not None, self.out_filename
+        flo_filename = self.out_filename
+        dirname = os.path.dirname(flo_filename)
+        if dirname == '':
+            dirname = os.getcwd()
+        basename = os.path.basename(flo_filename)
+        base, ext = os.path.splitext(basename)
+        #print "base=%r ext=%r" % (base, ext)
+        if '_' in base:
+            model_name, n = base.rsplit('_', 1)
+            #print "model_name=%r n=%r" % (model_name, n)
+            n = int(n)
+            n_list = get_n_list(dirname, model_name)
+            inn = n_list.index(n)
+            if inn+nstep < len(n_list):
+                nnew = n_list[inn+nstep]
+            else:
+                nnew = max(n_list)
+                if nnew == n:
+                    raise RuntimeError('%r is the last file' % self.out_filename)
+            #print "inn=%r nnew=%r" % (inn, nnew)
+            flo_filename = model_name + '_%s.flo' % nnew
+        else:
+            raise RuntimeError('The current file is must have the format of xxx_%%i.flo, not %r' % self.out_filename)
+        #print "loading %r" % flo_filename
+        self.load_usm3d_results(flo_filename, dirname)
+        self.out_filename = os.path.join(dirname, flo_filename)
+
+        print "done stepping..."
+
+    def _get_next_n(self, base):
+        n = int(n)
+        # get the max N value
+        nmax = -1
+        for flo_filename in flo_filenames:
+            base, ext = os.path.splitext(flo_filename)
+            if ext == '.flo':
+                n = base.split('_')[-1]
+                try: # get the incrementation index
+                    n = int(n)
+                    if n > nold:
+                        return n
+                except:
+                    asdf
+        return None
 
     def load_usm3d_results(self, flo_filename, dirname):
         model = Usm3dReader(log=self.log, debug=False)
