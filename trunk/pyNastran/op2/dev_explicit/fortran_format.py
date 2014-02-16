@@ -161,11 +161,16 @@ class FortranFormat(object):
                             n = table4_parser(data)
                             assert isinstance(n, int), self.table_name
                             datai = data[n:]
+
                         if self.read_mode == 1:
                             if hasattr(self, 'obj') and hasattr(self.obj, 'ntimes'):
                                 self.obj.ntimes += 1
                                 self.obj.ntotal = record_len // (self.num_wide * 4) * self._data_factor
                                 #print "ntotal =", self.obj.ntotal, type(self.obj)
+                        elif self.read_mode == 2:
+                            #print('self.obj.name =', self.obj.__class__.__name__)
+                            if hasattr(self, 'obj') and hasattr(self.obj, 'itime'):
+                                self.obj.itime += 1
                     else:
                         data = self._read_record()
                         n = table4_parser(data)

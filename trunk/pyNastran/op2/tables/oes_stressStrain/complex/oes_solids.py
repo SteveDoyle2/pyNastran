@@ -2,6 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import izip
+from collections import defaultdict
 
 from numpy import zeros, array, string_, searchsorted, where, argwhere, ravel
 from numpy.linalg import eig
@@ -19,7 +20,6 @@ class ComplexSolid(OES_Object):
         #self.ntimes = 0  # or frequency/mode
         #self.ntotal = 0
         self.nelements = 0  # result specific
-
         #self.cid = {}  # gridGauss
         #self.oxx = {}
         #self.oyy = {}
@@ -87,12 +87,20 @@ class ComplexSolid(OES_Object):
         #self.data
 
     def add_node_sort1(self, dt, eid, grid, ex, ey, ez, etxy, etyz, etzx):
+        #print('eid=%i grid=%i exx=%s' % (eid, grid, str(ex)))
         self.data[self.itime, self.itotal, :] = [ex, ey, ez, etxy, etyz, etzx]
+        #print('data[%s, %s, :] = %s' % (self.itime, self.itotal, str(self.data[self.itime, self.itotal, :])))
         self.element_node[self.itotal] = [eid, grid]
         self.itotal += 1
         #self.data
 
     def get_stats(self):
+        if not self.is_built:
+            return ['<%s>\n' % self.__class__.__name__,
+                    '  ntimes: %i\n' % self.ntimes,
+                    '  ntotal: %i\n' % self.ntotal,
+                    ]
+
         nelements = self.nelements
         ntimes = self.ntimes
         #ntotal = self.ntotal
@@ -110,20 +118,12 @@ class ComplexSolid(OES_Object):
 
         msg.append(', '.join(set(self.eType.values())))
         msg += self.get_data_code()
-        msg.append('\n')
         return msg
-
 
     def get_f06_header(self, is_mag_phase=True):
         tetra_msg, penta_msg, hexa_msg = self._get_msgs(is_mag_phase)
-        # TODO: this should use numpy/scipy
-        #>>> from scipy.stats import itemfreq
-        #>>> x = [1,1,1,2,2,2,5,25,1,1]
-        #from numpy import bincount
-        #x = self.element_type3
 
-        #bins = [bincount(self.element_types3[i]) for i in range(self.element_types3.shape[1])]
-        from collections import defaultdict
+        # TODO: this should use numpy/scipy
         d1 = defaultdict(int)
         d2 = defaultdict(list)
 
@@ -138,8 +138,7 @@ class ComplexSolid(OES_Object):
         TETRA={}; HEXA={}; PENTA={}
         for key in d1:
             (eType, nnodes) = key
-            if eType == 39:
-                #elements['CTETRA'+str(nnodes)] = d2[key]
+            if eType == 39:  # TODO: doesn't support CPENTA, CHEXA
                 TETRA['CTETRA'+str(nnodes)] = array(d2[key])
             #elif eType == 39:
                 #elements['CTETRA'+str(nnodes)] = d2[key]
@@ -149,90 +148,98 @@ class ComplexSolid(OES_Object):
         return (tetra_msg, hexa_msg, penta_msg,
                 TETRA, HEXA, PENTA)
 
-    def find_element_index(self, eids):
-        itot = searchsorted(eids, self.element_node[:, 0])  #[0]
-        return itot
-
     def get_element_index(self, eids):
+        # elements are always sorted; nodes are not
         itot = searchsorted(eids, self.element_node[:, 0])  #[0]
         return itot
 
     def eid_to_element_node_index(self, eids):
         ind = ravel([argwhere(self.element_node[:, 0]==eid) for eid in eids])
-        ind.sort()
+        #ind.sort()
         return ind
 
     def write_f06(self, header, page_stamp, pageNum=1, f=None, is_mag_phase=False):
         (tetra_msg, hexa_msg, penta_msg,
          TETRA, HEXA, PENTA) = self.get_f06_header(is_mag_phase)
-        dts = self.times
 
-        #itime = 0
-        #itotal = 0
-        ielement = 0
-        (ntimes, ntotal, six) = self.data.shape
-
-        for itime, dt in enumerate(dts):
-            for Type, eids in sorted(TETRA.iteritems()):
-                #f.write(''.join(tetra_msg))
-                #nnodes = 4
-                nnodes = int(Type[6:])  # CTETRA4
-                dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
-                header[1] = dtLine
-                msg = header + tetra_msg
-                f.write('\n'.join(msg))
-
-                #print('eids=', eids)
-
-                # we know all the CTETRA eids, so lets
-                # get all the CTETRA indicies that we're going to write
+        # get the ieids by element type so we don't need to regenerate it inside the dt loop
+        ieids_map = {}
+        for dictionary in [TETRA, HEXA, PENTA]:
+            # don't worry about optimizing this length ~2 dictionary
+            for Type, eids in sorted(dictionary.iteritems()):  # CTETRA4, CTETRA10, CTETRA8, etc.
                 ieids = self.eid_to_element_node_index(eids)
+                ieids_map[Type] = ieids
 
-                #ieids = self.get_element_index(eids)
-                #eid = self.element_node[:, 0]
-                #grid = self.element_node[:, 1]
-                #print('ieids=', ieids)
-                #print('eid=', eid)
-                #print('grid=', grid)
-                #print('**', self.element_node[ieids, 0])
-                #oxx, oyy, ozz, txy, tyz, txz = self.data[itime, ieids, :]
-                n = len(ieids)
-                #print('itime=', itime)
-                oxx = self.data[itime, ieids, 0].reshape(n)
-                oyy = self.data[itime, ieids, 1].reshape(n)
-                ozz = self.data[itime, ieids, 2].reshape(n)
-                txy = self.data[itime, ieids, 3].reshape(n)
-                tyz = self.data[itime, ieids, 4].reshape(n)
-                txz = self.data[itime, ieids, 5].reshape(n)
+        # write the f06
+        (ntimes, ntotal, six) = self.data.shape
+        for itime in xrange(ntimes):
+            dt = self.times[itime]  ## TODO: rename this...
+            for dictionary, msg_temp in zip([TETRA, HEXA, PENTA], [tetra_msg, hexa_msg, penta_msg,]):
+                for Type, eids in sorted(dictionary.iteritems()):
+                    #print('eids=', eids)
 
-                #print("oxx =", oxx)
-                #for inode in ['CENTER'] + sorted(node_ids):
-                eids2 = self.element_node[ieids, 0]
-                nodes = self.element_node[ieids, 1]
-                for deid, node, doxx, doyy, dozz, dtxy, dtyz, dtxz in izip(eids2, nodes, oxx, oyy, ozz, txy, tyz, txz):
-                    # cid
-                    #print('doxx=', oxx.shape, doxx.shape)
-                    ([oxxr, oyyr, ozzr, txyr, tyzr, txzr,
-                      oxxi, oyyi, ozzi, txyi, tyzi, txzi,], isAllZeros) = writeImagFloats13E([doxx, doyy, dozz,
-                                                                                              dtxy, dtyz, dtxz], is_mag_phase)
-                    if node == 0:
-                        f.write('0 %12i %11sGRID CS %2i GP\n' % (deid, 0, nnodes))
-                        f.write('0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('CENTER', oxxr, oyyr, ozzr, txyr, tyzr, txzr))
-                        f.write('    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('',       oxxi, oyyi, ozzi, txyi, tyzi, txzi))
+                    dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
+                    header[1] = dtLine
+                    msg = header + msg_temp
+                    f.write('\n'.join(msg))
+
+                    if 'CTETRA' in Type or 'CPENTA' in Type:
+                        nnodes = int(Type[6:])  # CTETRA4 / CTETRA10 / CPENTA6 / CPENTA15
+                    elif 'CHEXA' in Type:
+                        nnodes = int(Type[5:])  # CHEXA8 / CHEXA20
                     else:
-                        f.write('0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % (node, oxxr, oyyr, ozzr, txyr, tyzr, txzr))
-                        f.write('    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('',   oxxi, oyyi, ozzi, txyi, tyzi, txzi))
-                #self.element_types3[ielem]
+                        raise NotImplementedError('complex solid stress/strain Type=%r' % Type)
 
-                #self.write_element_transient(Type, 4, eids, dt, header, tetra_msg, f, is_mag_phase)
-                f.write(page_stamp % pageNum)
-                pageNum += 1
-            # TODO: PENTA
-            # TODO: HEXA
+                    # we know all the CTETRA eids, so let's
+                    # get all the CTETRA indicies that we're going to write
+                    ieids = ieids_map[Type]  # faster way...
+                    #ieids = self.eid_to_element_node_index(eids)
+
+                    #ieids = self.get_element_index(eids)
+                    #eid = self.element_node[:, 0]
+                    #grid = self.element_node[:, 1]
+                    #print('ieids=', ieids)
+                    #print('eid=', eid)
+                    #print('grid=', grid)
+                    #print('**', self.element_node[ieids, 0])
+                    #oxx, oyy, ozz, txy, tyz, txz = self.data[itime, ieids, :]
+                    n = len(ieids)
+                    #print('itime=', itime)
+
+                    # TODO: can I get this without a reshape?
+                    oxx = self.data[itime, ieids, 0].reshape(n)
+                    oyy = self.data[itime, ieids, 1].reshape(n)
+                    ozz = self.data[itime, ieids, 2].reshape(n)
+                    txy = self.data[itime, ieids, 3].reshape(n)
+                    tyz = self.data[itime, ieids, 4].reshape(n)
+                    txz = self.data[itime, ieids, 5].reshape(n)
+
+                    eids2 = self.element_node[ieids, 0]
+                    nodes = self.element_node[ieids, 1]
+                    #print('eids2 =', eids2)
+                    #print('nodes =', nodes)
+                    #print('oxx =', oxx)
+                    # loop over all the elements and nodes
+                    for deid, node, doxx, doyy, dozz, dtxy, dtyz, dtxz in izip(eids2, nodes, oxx, oyy, ozz, txy, tyz, txz):
+                        # TODO: cid not supported
+                        ([oxxr, oyyr, ozzr, txyr, tyzr, txzr,
+                          oxxi, oyyi, ozzi, txyi, tyzi, txzi,], isAllZeros) = writeImagFloats13E([doxx, doyy, dozz,
+                                                                                                  dtxy, dtyz, dtxz], is_mag_phase)
+                        if node == 0:  # CENTER
+                            f.write('0 %12i %11sGRID CS %2i GP\n' % (deid, 0, nnodes))
+                            f.write('0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('CENTER', oxxr, oyyr, ozzr, txyr, tyzr, txzr))
+                            f.write('    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('',       oxxi, oyyi, ozzi, txyi, tyzi, txzi))
+                        else:
+                            f.write('0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % (node, oxxr, oyyr, ozzr, txyr, tyzr, txzr))
+                            f.write('    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('',   oxxi, oyyi, ozzi, txyi, tyzi, txzi))
+                    #self.element_types3[ielem]
+                if len(dictionary.keys()):
+                    f.write(page_stamp % pageNum)
+                    pageNum += 1
         return pageNum - 1
 
 
-class ComplexSolidStress(ComplexSolid, StressObject):
+class ComplexSolidStressVector(ComplexSolid, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexSolid.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
@@ -243,27 +250,28 @@ class ComplexSolidStress(ComplexSolid, StressObject):
 
     def _get_msgs(self, is_mag_phase):
         if is_mag_phase:
-            tetra_msg = [
-                '                 C O M P L E X   S T R E S S E S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )',
+            base_msg = [
                 '                                                          (MAGNITUDE/PHASE)',
                 '0                   CORNER      --------------------------CENTER AND CORNER POINT STRESSES---------------------------',
                 '     ELEMENT-ID    GRID-ID      NORMAL-X       NORMAL-Y       NORMAL-Z         SHEAR-XY       SHEAR-YZ       SHEAR-ZX',
-                '',
-            ]
+                '', ]
+
         else:
-            tetra_msg = [
-                '                 C O M P L E X   S T R E S S E S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )',
-                '                                                          (REAL/IMAGINARY)',
-                '0                   CORNER      --------------------------CENTER AND CORNER POINT STRESSES---------------------------',
-                '     ELEMENT-ID    GRID-ID      NORMAL-X       NORMAL-Y       NORMAL-Z         SHEAR-XY       SHEAR-YZ       SHEAR-ZX',
-                '',
-            ]
-        penta_msg = tetra_msg  # TODO: this isnt done
-        hexa_msg = tetra_msg  # TODO: this isnt done
+            base_msg = [
+            '                                                          (REAL/IMAGINARY)',
+            '0                   CORNER      --------------------------CENTER AND CORNER POINT STRESSES---------------------------',
+            '     ELEMENT-ID    GRID-ID      NORMAL-X       NORMAL-Y       NORMAL-Z         SHEAR-XY       SHEAR-YZ       SHEAR-ZX',
+            '', ]
+        tetra_msg = ['                 C O M P L E X   S T R E S S E S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )', ]
+        hexa_msg  = ['                 C O M P L E X   S T R E S S E S   I N   H E X A H E D R O N   E L E M E N T S   ( C H E X A )', ]
+        penta_msg = ['                 C O M P L E X   S T R E S S E S   I N   P E N T A H E D R O N   E L E M E N T S   ( C P E N T A )', ]
+        tetra_msg += base_msg
+        penta_msg += base_msg
+        hexa_msg += base_msg
         return tetra_msg, penta_msg, hexa_msg
 
 
-class ComplexSolidStrain(ComplexSolid, StressObject):
+class ComplexSolidStrainVector(ComplexSolid, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexSolid.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
@@ -274,23 +282,25 @@ class ComplexSolidStrain(ComplexSolid, StressObject):
 
     def _get_msgs(self, is_mag_phase):
         if is_mag_phase:
-            tetra_msg = [
-                '                 C O M P L E X     S T R A I N S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )',
+            base_msg = [
                 '                                                          (MAGNITUDE/PHASE)',
                 '0                   CORNER      --------------------------CENTER AND CORNER POINT  STRAINS---------------------------',
                 '     ELEMENT-ID    GRID-ID      NORMAL-X       NORMAL-Y       NORMAL-Z         SHEAR-XY       SHEAR-YZ       SHEAR-ZX',
                 '',
             ]
         else:
-            tetra_msg = [
-                '                 C O M P L E X     S T R A I N S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )',
+            base_msg = [
                 '                                                          (REAL/IMAGINARY)',
                 '0                   CORNER      --------------------------CENTER AND CORNER POINT  STRAINS---------------------------',
                 '     ELEMENT-ID    GRID-ID      NORMAL-X       NORMAL-Y       NORMAL-Z         SHEAR-XY       SHEAR-YZ       SHEAR-ZX',
                 '',
             ]
-        penta_msg = tetra_msg  # TODO: this isnt done
-        hexa_msg = tetra_msg  # TODO: this isnt done
+        tetra_msg = ['                 C O M P L E X     S T R A I N S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )',]
+        hexa_msg  = ['                 C O M P L E X     S T R A I N S   I N   H E X A H E D R O N   E L E M E N T S   ( C H E X A )',]
+        penta_msg = ['                 C O M P L E X     S T R A I N S   I N   P E N T A H E D R O N   E L E M E N T S   ( C P E N T A )',]
+        tetra_msg += base_msg
+        penta_msg += base_msg
+        hexa_msg += base_msg
         return tetra_msg, penta_msg, hexa_msg
 
 
@@ -333,7 +343,6 @@ class ComplexSolidStressObject(StressObject):
         msg.append('  eType, cid, oxx, oyy, ozz, txy, tyz, txz\n  ')
         msg.append(', '.join(set(self.eType.values()))+'\n  ')
         msg += self.get_data_code()
-        msg.append('\n')
         return msg
 
     def add_f06_data(self, data, transient):
@@ -378,7 +387,7 @@ class ComplexSolidStressObject(StressObject):
         self.tyz[dt] = {}
         self.txz[dt] = {}
 
-    def add_eid_sort1(self, elemNum, eType, dt, eid, cid, ctype, nodef):
+    def add_eid_sort1(self, element_num, eType, dt, eid, cid, ctype, nodef):
         assert cid >= 0
         assert eid >= 0
 
@@ -556,8 +565,9 @@ class ComplexSolidStrainObject(StrainObject):
         #self.dt = dt
         if is_sort1:
             if dt is not None:
-                self.add = self.add_sort1
-                self.add_new_eid = self.add_new_eid_sort1
+                pass
+                #self.add = self.add_sort1
+                #self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
             raise NotImplementedError('SORT2')
@@ -577,7 +587,6 @@ class ComplexSolidStrainObject(StrainObject):
         msg.append('  eType, cid, exx, eyy, ezz, exy, eyz, exz\n  ')
         msg.append(', '.join(set(self.eType.values()))+'\n  ')
         msg = msg + self.get_data_code()
-        msg.append('\n')
         return msg
 
     def add_f06_data(self, data, transient):
@@ -622,7 +631,7 @@ class ComplexSolidStrainObject(StrainObject):
         self.eyz[dt] = {}
         self.exz[dt] = {}
 
-    def add_new_eid_sort1(self, eType, dt, eid, cid, ctype, nodef):
+    def add_eid_sort1(self, element_num, eType, dt, eid, cid, ctype, nodef):
         assert cid >= 0
         assert eid >= 0
 
@@ -644,18 +653,20 @@ class ComplexSolidStrainObject(StrainObject):
         #if nodeID == 0:
             #raise ValueError(msg)
 
-    def add_sort1(self, dt, eid, nodeID, ex, ey, ez, etxy, etyz, etzx):
+    def add_node_sort1(self, dt, eid, node_id, ex, ey, ez, etxy, etyz, etzx):
         #msg = "eid=%s nodeID=%s vm=%g" % (eid, nodeID, evm)
         assert eid != 'C'
-        assert nodeID != 0, 'CENTER'
+        if node_id == 0:
+            node_id = 'CENTER'
+        assert node_id != 0, 'CENTER'
         #print "eid=%s nid=%s exx=%s" %(eid, nodeID, exx)
-        self.exx[dt][eid][nodeID] = ex
-        self.eyy[dt][eid][nodeID] = ey
-        self.ezz[dt][eid][nodeID] = ez
+        self.exx[dt][eid][node_id] = ex
+        self.eyy[dt][eid][node_id] = ey
+        self.ezz[dt][eid][node_id] = ez
 
-        self.exy[dt][eid][nodeID] = etxy
-        self.eyz[dt][eid][nodeID] = etyz
-        self.exz[dt][eid][nodeID] = etzx
+        self.exy[dt][eid][node_id] = etxy
+        self.eyz[dt][eid][node_id] = etyz
+        self.exz[dt][eid][node_id] = etzx
 
     def getHeaders(self):
         headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz']

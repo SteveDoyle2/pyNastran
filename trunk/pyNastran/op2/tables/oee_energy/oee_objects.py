@@ -2,10 +2,10 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from math import isnan
 
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 
 
-class StrainEnergyObject(scalarObject):
+class StrainEnergyObject(ScalarObject):
     """
     ::
 
@@ -20,7 +20,7 @@ class StrainEnergyObject(scalarObject):
                  14   6.576075E+07        6.6982            3.288037E+02
     """
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
         self.energy = {}
         self.percent = {}
         self.density = {}
@@ -45,8 +45,8 @@ class StrainEnergyObject(scalarObject):
                        % (self.__class__.__name__, ntimes, nelements))
         else:
             nelements = len(self.energy)
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
+            msg.append('  type=%s nelements=%s\n'
+                       % (self.__class__.__name__, nelements))
         msg.append('  energy, percent, density\n  ')
         msg += self.get_data_code()
         return msg

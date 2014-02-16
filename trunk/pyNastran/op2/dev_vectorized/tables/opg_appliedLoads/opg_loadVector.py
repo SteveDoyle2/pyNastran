@@ -8,13 +8,6 @@ class LoadVectorObject(TableObject):  # table_code=2, sort_code=0, thermal=0
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
         TableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
 
-    def write_matlab(self, isubcase, f, is_mag_phase=False):
-        name = 'loadVector'
-        if self.nonlinear_factor is None:
-            return self._write_matlab(name, isubcase, f)
-        else:
-            return self._write_matlab_transient(name, isubcase, f)
-
     def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, f, pageNum)
@@ -35,13 +28,6 @@ class LoadVectorObject(TableObject):  # table_code=2, sort_code=0, thermal=0
 class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_code=???
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
-
-    def write_matlab(self, isubcase, f, is_mag_phase=False):
-        name = 'loadVector'
-        if self.nonlinear_factor is None:
-            return self._write_matlab(name, isubcase, f, is_mag_phase)
-        else:
-            return self._write_matlab_transient(name, isubcase, f, is_mag_phase)
 
     def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.nonlinear_factor is not None:

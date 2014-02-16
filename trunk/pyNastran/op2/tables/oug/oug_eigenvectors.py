@@ -2,7 +2,7 @@ from math import sqrt
 
 from numpy import array, pi
 
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
@@ -73,10 +73,6 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
     def eigenvalues(self):
         return self.eigrs
 
-    def write_matlab(self, isubcase, f=None, is_mag_phase=False):
-        name = 'eigenvectors'
-        return self._write_matlab_transient(name, isubcase, f, is_mag_phase)
-
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         """
         ::
@@ -128,7 +124,7 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
         return pageNum - 1
 
 
-class RealEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, thermal=0
+class RealEigenVectorObject(ScalarObject):  # approach_code=2, sort_code=0, thermal=0
     """
     ::
 
@@ -138,7 +134,7 @@ class RealEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, ther
                7      G      9.999849E-01   0.0            6.728968E-03   0.0            8.021386E-03   0.0
     """
     def __init__(self, data_code, isubcase, iMode):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
         #self.caseVal = mode
         #print "mode = %s" %(iMode)
         self.caseVal = self.getUnsteadyValue()
@@ -199,10 +195,6 @@ class RealEigenVectorObject(scalarObject):  # approach_code=2, sort_code=0, ther
 
     def eigenvalues(self):
         return self.eigrs
-
-    def write_matlab(self, isubcase, f=None, is_mag_phase=False):
-        name = 'eigenvectors'
-        return self._write_matlab_transient(name, isubcase, f, is_mag_phase)
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         """
@@ -273,10 +265,6 @@ class ComplexEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_cod
 
     def eigenvalues(self):
         return sorted(self.translations.keys())
-
-    def write_matlab(self, isubcase, f=None, is_mag_phase=False):
-        name = 'complex_eigenvectors'
-        return self._write_matlab_transient(name, isubcase, f, is_mag_phase)
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         msg = []

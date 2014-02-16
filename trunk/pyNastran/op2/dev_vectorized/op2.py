@@ -19,7 +19,6 @@ from pyNastran.op2.tables.geom.geometryTables import GeometryTables
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.f06.f06Writer import F06Writer
-from pyNastran.f06.matlabWriter import MatlabWriter
 from pyNastran.utils.gui_io import load_file_dialog
 
 try:
@@ -34,7 +33,7 @@ class OP2Deprecated(object):
 
 class OP2(BDF,
           FortranFile, Op2Codes, GeometryTables, ResultTable, F06Writer,
-          MatlabWriter, OP2Deprecated):
+          OP2Deprecated):
 
     def set_subcases(self, subcases=None):
         """

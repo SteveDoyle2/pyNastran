@@ -7,13 +7,6 @@ class SPCForcesObject(TableObject):
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_matlab(self, isubcase, f=None, is_mag_phase=False):
-        name = 'spcForces'
-        if self.nonlinear_factor is None:
-            return self._write_matlab(name, isubcase, f)
-        else:
-            return self._write_matlab_transient(name, isubcase, f)
-
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
@@ -46,13 +39,6 @@ class SPCForcesObject(TableObject):
 class ComplexSPCForcesObject(ComplexTableObject):
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
-
-    def write_matlab(self, isubcase, f=None, is_mag_phase=False):
-        name = 'spcForces'
-        if self.nonlinear_factor is None:
-            return self._write_matlab(name, isubcase, f)
-        else:
-            return self._write_matlab_transient(name, isubcase, f)
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
