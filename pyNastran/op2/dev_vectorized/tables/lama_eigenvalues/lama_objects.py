@@ -45,31 +45,6 @@ class RealEigenvalues(BaseScalarObject):
         for line in data:
             self.addF06Line(line)
 
-    def write_matlab(self, isubcase, f=None, is_mag_phase=False):
-        iModesMsg = 'fem.eigenvalues(%i).iModes    = [' % isubcase
-        modesMsg = 'fem.eigenvalues(%i).modes     = [' % isubcase
-        orderMsg = 'fem.eigenvalues(%i).order     = [' % isubcase
-        omegaMsg = 'fem.eigenvalues(%i).radians   = [' % isubcase
-        cyclesMsg = 'fem.eigenvalues(%i).cycles    = [' % isubcase
-        massMsg = 'fem.eigenvalues(%i).mass      = [' % isubcase
-        stiffMsg = 'fem.eigenvalues(%i).stiffness = [' % isubcase
-
-        for (iMode, order) in sorted(self.extractionOrder.iteritems()):
-            iModesMsg += '%s,' % iMode
-            orderMsg += '%s,' % order
-            modesMsg += '%s,' % self.eigenvalues[iMode]
-            omegaMsg += '%s,' % self.radians[iMode]
-            cyclesMsg += '%s,' % self.cycles[iMode]
-            massMsg += '%s,' % self.generalizedMass[iMode]
-            stiffMsg += '%s,' % self.generalizedStiffness[iMode]
-        f.write(iModesMsg + '];\n')
-        f.write(orderMsg + '];\n')
-        f.write(modesMsg + '];\n')
-        f.write(omegaMsg + '];\n')
-        f.write(cyclesMsg + '];\n')
-        f.write(massMsg + '];\n')
-        f.write(stiffMsg + '];\n')
-
     def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         msg = header + ['                                              R E A L   E I G E N V A L U E S\n',
                         '   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED\n',

@@ -2,12 +2,12 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from numpy import argsort
 
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 
 
-class OES_Object(scalarObject):
+class OES_Object(ScalarObject):
     def __init__(self, data_code, isubcase, apply_data_code=True):
-        scalarObject.__init__(self, data_code, isubcase, apply_data_code=apply_data_code)
+        ScalarObject.__init__(self, data_code, isubcase, apply_data_code=apply_data_code)
         #self.log.debug("starting OES...element_name=%-6s isubcase=%s" % (self.element_name, self.isubcase))
         #print self.data_code
 

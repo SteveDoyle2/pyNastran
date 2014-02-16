@@ -447,23 +447,35 @@ class OP2Common(Op2Codes, F06Writer):
         #self.show_data(data[n:])
         return n
 
-    def _read_table(self, data, result_name, real_obj, complex_obj, node_elem):
-        assert isinstance(result_name, dict), 'result_name=%r' % result_name
+    def _read_table(self, data, result_name, storage_obj,
+                    real_obj, complex_obj,
+                    real_vector, complex_vector,
+                    node_elem):
+
+        assert isinstance(result_name, basestring), 'result_name=%r' % result_name
+        assert isinstance(storage_obj, dict), 'storage_obj=%r' % storage_obj
         #assert real_obj is None
         #assert complex_obj is None
         #assert thermal_real_obj is None
-        if self.read_mode == 1:
-            return len(data)
 
+        #print('self.num_wide =', self.num_wide)
         if self.num_wide == 8:  # real/random
             # real_obj
             assert real_obj is not None
-            self.create_transient_object(result_name, real_obj)
+            nnodes = len(data) // 32  # 8*4
+            auto_return = self._create_table_object(result_nam, nnodes, storage_obj, real_obj, real_vector)
+            if auto_return:
+                real_data
+                return len(data)
+            aaa
             n = self._read_real_table(data, result_name, node_elem)
         elif self.num_wide == 14:  # real/imaginary or mag/phase
             # complex_obj
             assert complex_obj is not None
-            self.create_transient_object(result_name, complex_obj)
+            nnodes = len(data) // 56  # 14*4
+            auto_return = self._create_table_object(result_name, nnodes, storage_obj, complex_obj, complex_vector)
+            if auto_return:
+                return len(data)
             n = self._read_complex_table(data, result_name, node_elem)
         else:
             msg = 'only num_wide=8 or 14 is allowed  num_wide=%s' % self.num_wide
@@ -625,6 +637,7 @@ class OP2Common(Op2Codes, F06Writer):
         assert self.log is not None
 
         if hasattr(self, 'isubcase'):
+            #print('isubcase =', self.isubcase)
             if self.isubcase in storageObj:
                 self.obj = storageObj[self.isubcase]
                 self.obj.update_data_code(copy.deepcopy(self.data_code))
@@ -836,3 +849,30 @@ class OP2Common(Op2Codes, F06Writer):
         if self.stress_bits[1] == 0:
             return True
         return False
+
+    def _create_table_object(self, result_name,  nnodes,
+                             slot, slot_object, slot_vector):
+        assert isinstance(result_name, basestring), result_name
+        assert isinstance(slot, dict), slot
+        auto_return = False
+        if self.is_vectorized:
+            if self.read_mode == 1:
+                print "read_mode = 1"
+                self.create_transient_object(slot, slot_vector)
+                self.result_names.add(result_name)
+                self.obj._nnodes += nnodes
+                auto_return = True
+            elif self.read_mode == 2:
+                print "read_mode = 2"
+                print self.displacements
+                self.obj = slot[self.isubcase]
+                #self.obj.update_data_code(self.data_code)
+                self.obj.build()
+        else:  # not vectorized
+            self.result_names.add(result_name)
+            if self.read_mode == 1:
+                self.result_names.add(result_name)
+                auto_return = True
+            # pass = 0/2
+            self.create_transient_object(slot, slot_object)
+        return auto_return

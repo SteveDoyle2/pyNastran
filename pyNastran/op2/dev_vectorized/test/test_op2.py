@@ -30,7 +30,7 @@ def get_failed_files(filename):
     return files
 
 def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
-                   write_matlab=True, delete_f06=True, print_results=True,
+                   delete_f06=True,
                    debug=True, saveCases=True, skipFiles=[],
                    stopOnFailure=False, nStart=0, nStop=1000000000):
     n = ''
@@ -50,8 +50,8 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
             sys.stderr.write('%sfile=%s\n' %(n, op2file))
             nTotal += 1
             isPassed = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
-                               write_f06=write_f06, write_matlab=write_matlab,
-                               delete_f06=delete_f06, print_results=print_results,
+                               write_f06=write_f06,
+                               delete_f06=delete_f06,
                                iSubcases=iSubcases, debug=debug,
                                stopOnFailure=stopOnFailure) # True/False
             if not isPassed:
@@ -80,8 +80,8 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
     sys.exit(msg)
 
 def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
-            write_matlab=True, is_mag_phase=False, delete_f06=False,
-            print_results=True, iSubcases=[], debug=False, stopOnFailure=True):
+            is_mag_phase=False, delete_f06=False,
+            iSubcases=[], debug=False, stopOnFailure=True):
     assert '.op2' in op2FileName.lower(), 'op2FileName=%s is not an OP2' % op2FileName
     isPassed = False
     stopOnFailure = False
@@ -112,19 +112,11 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
             if delete_f06:
                 os.remove(model+'.f06.out')
 
-        if write_matlab:
-            (model, ext) = os.path.splitext(op2FileName)
-            op2.write_matlab(model+'.m', is_mag_phase=is_mag_phase)
-
-        #print op2.print_results()
-        #if print_results:
-            #op2.print_results()
         #print "subcases = ",op2.subcases
 
         #assert tableNamesF06==tableNamesOP2,'tableNamesF06=%s tableNamesOP2=%s' %(tableNamesF06,tableNamesOP2)
         #op2.caseControlDeck.sol = op2.sol
         #print op2.caseControlDeck.get_op2_data()
-        #print op2.print_results()
         #print op2.caseControlDeck.get_op2_data()
         isPassed = True
     except KeyboardInterrupt:
@@ -205,9 +197,7 @@ def run_arg_parse():
     parser.add_argument('-g','--geometry',     dest='geometry',       action='store_true', help='Reads the OP2 for geometry, which can be written out')
     parser.add_argument('-w','--write_bdf',    dest='write_bdf',      action='store_true', help='Writes the bdf to fem.bdf.out')
     parser.add_argument('-f','--write_f06',    dest='write_f06',      action='store_true', help='Writes the f06 to fem.f06.out')
-    parser.add_argument('-z','--is_mag_phase', dest='is_mag_phase',   action='store_true', help='F06/Matlab Writer writes Magnitude/Phase instead of Real/Imaginary (still stores Real/Imag)')
-    parser.add_argument('-m','--matlab',       dest='write_matlab',   action='store_true', help='Matlab Writer is enabled (fails for transient; limited support)')
-    parser.add_argument('-p','--print_results',dest='print_results',  action='store_true', help='Prints objects to screen which can require lots of memory')
+    parser.add_argument('-z','--is_mag_phase', dest='is_mag_phase',   action='store_true', help='F06 Writer writes Magnitude/Phase instead of Real/Imaginary (still stores Real/Imag)')
     parser.add_argument('-v','--version',action='version',version=ver)
 
     if len(sys.argv)==1:
@@ -222,11 +212,9 @@ def run_arg_parse():
     write_bdf     = args.write_bdf
     write_f06     = args.write_f06
     is_mag_phase  = args.is_mag_phase
-    write_matlab  = args.write_matlab
-    print_results = args.print_results
     op2FileName   = args.op2FileName[0]
 
-    return (op2FileName,make_geom,write_bdf,write_f06,write_matlab,is_mag_phase,print_results,debug)
+    return (op2FileName, make_geom, write_bdf, write_f06, is_mag_phase, debug)
 
 def main():
     #op2FileName = r'C:\NASA\m4\formats\pynastran_v0.7\models\beam_modes\beam_modes_m1.op2'
@@ -234,11 +222,9 @@ def main():
     make_geom = False
     write_bdf = False
     write_f06 = True
-    write_matlab = False
     is_mag_phase = False
-    print_results = False
     debug = False
-    (op2FileName,make_geom,write_bdf,write_f06,write_matlab,is_mag_phase,print_results,debug) = run_arg_parse()
+    (op2FileName, make_geom, write_bdf, write_f06, is_mag_phase, debug) = run_arg_parse()
 
 
     if os.path.exists('skippedCards.out'):
@@ -246,7 +232,9 @@ def main():
 
     import time
     t0 = time.time()
-    run_op2(op2FileName,make_geom=make_geom,write_bdf=write_bdf,write_f06=write_f06,write_matlab=write_matlab,is_mag_phase=is_mag_phase,print_results=print_results,debug=debug)
+    run_op2(op2FileName, make_geom=make_geom, write_bdf=write_bdf,
+            write_f06=write_f06, is_mag_phase=is_mag_phase,
+            debug=debug)
     print("dt = %f" %(time.time() - t0))
 
 if __name__=='__main__':  # op2

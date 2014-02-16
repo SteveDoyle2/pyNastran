@@ -7,7 +7,7 @@ def parse_skipped_cards(fname):
     f = open(fname,'r')
     lines = f.readlines()
     f.close()
-    
+
     results = {}
     for line in lines:
         if 'OES' in line[0:3]:
@@ -22,11 +22,11 @@ def parse_skipped_cards(fname):
             key = (eName,eType,form)
             if key not in results:
                 results[key] = fpath
-    
+
     filesToAnalyze = []
     for (key,value) in sorted(results.iteritems()):
         filesToAnalyze.append(value)
-    
+
     f = open('newElements.in','wb')
     for fname in filesToAnalyze:
         f.write(fname+'\n')
@@ -49,7 +49,7 @@ def get_all_files(foldersFile,fileType):
 if __name__=='__main__':
     # works
     files = get_files_of_type('tests','.op2')
-    
+
     foldersFile = 'tests/foldersRead.txt'
 
     iSubcases = []
@@ -57,8 +57,6 @@ if __name__=='__main__':
     make_geom  = False
     write_bdf  = False
     write_f06  = True
-    write_matlab = False
-    print_results = False
 
     delete_f06 = True
     saveCases = True
@@ -74,7 +72,7 @@ if __name__=='__main__':
     else:
         files2 = get_failed_files('failedCases.in')
     files = files2
-    
+
     skipFiles = ['nltrot99.op2','rot12901.op2','plan20s.op2'] # giant
 
     nStart = 0
@@ -85,9 +83,9 @@ if __name__=='__main__':
         pass
 
     print("nFiles = %s" %(len(files)))
-    run_lots_of_files(files,make_geom,write_bdf,write_f06,write_matlab,delete_f06,
-                   print_results,debug,saveCases,skipFiles,stopOnFailure,
-                   nStart,nStop)
+    run_lots_of_files(files, make_geom, write_bdf, write_f06, delete_f06,
+                   debug, saveCases, skipFiles, stopOnFailure,
+                   nStart, nStop)
     sys.exit('final stop...')
-    
+
 

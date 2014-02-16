@@ -5,13 +5,6 @@ class DisplacementObject(TableObject):  # approach_code=1, thermal=0
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode=0):
         TableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
 
-    def write_matlab(self, isubcase, f, is_mag_phase=False):
-        name = 'displacements'
-        if self.nonlinear_factor is None:
-            return self._write_matlab(name, isubcase, f)
-        else:
-            return self._write_matlab_transient(name, isubcase, f)
-
     def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, f, pageNum)
@@ -32,13 +25,6 @@ class DisplacementObject(TableObject):  # approach_code=1, thermal=0
 class ComplexDisplacementObject(ComplexTableObject):  # approach_code=1, sort_code=0, thermal=0
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode=0):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
-
-    def write_matlab(self, isubcase, f, is_mag_phase=False):
-        name = 'displacements'
-        if self.nonlinear_factor is None:
-            return self._write_matlab(name, isubcase, f, is_mag_phase)
-        else:
-            return self._write_matlab_transient(name, isubcase, f, is_mag_phase)
 
     def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.nonlinear_factor is not None:

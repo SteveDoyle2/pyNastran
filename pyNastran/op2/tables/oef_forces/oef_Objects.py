@@ -4,12 +4,12 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from numpy import array
 
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 
 
-class nonlinearFluxObject(scalarObject):  # approach_code=10, sort_code=0
+class nonlinearFluxObject(ScalarObject):  # approach_code=10, sort_code=0
     def __init__(self, data_code, isubcase, load_step):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
 
         self.load_step = load_step
         self.eTypes = {}

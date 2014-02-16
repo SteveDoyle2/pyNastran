@@ -1,12 +1,12 @@
 # pylint: disable=E1101
 #import sys
 #from struct import pack
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 
 
-class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=1
+class TemperatureObject(ScalarObject):  # approach_code=1, sort_code=0, thermal=1
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
         self.gridTypes = {}
         self.temperatures = {}
 
@@ -82,7 +82,7 @@ class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=
         assert 0 < nodeID < 1000000000, 'nodeID=%s' % (nodeID)
         #assert nodeID not in self.temperatures
 
-        grid_type = self.recastGridType(grid_type)
+        grid_type = self.recast_gridtype_as_string(grid_type)
         self.gridTypes[nodeID] = grid_type
         self.temperatures[nodeID] = v1
 
@@ -94,7 +94,7 @@ class TemperatureObject(scalarObject):  # approach_code=1, sort_code=0, thermal=
         assert 0 < nodeID < 1000000000, 'nodeID=%s' % (nodeID)
         #assert nodeID not in self.temperatures[self.dt]
 
-        grid_type = self.recastGridType(grid_type)
+        grid_type = self.recast_gridtype_as_string(grid_type)
         self.gridTypes[nodeID] = grid_type
         self.temperatures[dt][nodeID] = v1
 

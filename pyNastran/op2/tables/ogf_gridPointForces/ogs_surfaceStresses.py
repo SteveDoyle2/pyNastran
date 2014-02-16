@@ -1,11 +1,11 @@
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats10E, writeFloats8p4F
 
 
-class GridPointStressesObject(scalarObject):
+class GridPointStressesObject(ScalarObject):
 
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
         self.nx = {}
         self.ny = {}
         self.txy = {}
@@ -203,9 +203,9 @@ class GridPointStressesObject(scalarObject):
         return pageNum - 1
 
 
-class GridPointStressesVolumeObject(scalarObject):
+class GridPointStressesVolumeObject(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
         self.nx = {}
         self.ny = {}
         self.nz = {}

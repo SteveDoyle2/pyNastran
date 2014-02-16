@@ -36,10 +36,6 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
     def eigenvalues(self):
         return self.eigrs
 
-    def write_matlab(self, isubcase, f, is_mag_phase=False):
-        name = 'eigenvectors'
-        return self._write_matlab_transient(name, isubcase, f, is_mag_phase)
-
     def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         """
         ::
@@ -136,10 +132,6 @@ class RealEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_code=0
     def eigenvalues(self):
         return self.eigrs
 
-    def write_matlab(self, isubcase, f, is_mag_phase=False):
-        name = 'eigenvectors'
-        return self._write_matlab_transient(name, isubcase, f, is_mag_phase)
-
     def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         """
         ::
@@ -182,10 +174,6 @@ class ComplexEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_cod
 
     def eigenvalues(self):
         return sorted(self.translations.keys())
-
-    def write_matlab(self, isubcase, f=None, is_mag_phase=False):
-        name = 'complex_eigenvectors'
-        return self._write_matlab_transient(name, isubcase, f, is_mag_phase)
 
     def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         msg = []

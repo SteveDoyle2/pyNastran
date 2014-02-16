@@ -6,7 +6,7 @@ from pyNastran.op2.op2Codes import Op2Codes
 from pyNastran.utils import list_print
 
 
-class baseScalarObject(Op2Codes):
+class BaseScalarObject(Op2Codes):
     def __init__(self):
         Op2Codes.__init__(self)
         self.is_built = False
@@ -32,10 +32,10 @@ class baseScalarObject(Op2Codes):
         return msg
 
 
-class scalarObject(baseScalarObject):
+class ScalarObject(BaseScalarObject):
     def __init__(self, data_code, isubcase, apply_data_code=True):
         assert 'nonlinear_factor' in data_code, data_code
-        baseScalarObject.__init__(self)
+        BaseScalarObject.__init__(self)
         self.isubcase = isubcase
         self.isTransient = False
         self.dt = None
@@ -239,24 +239,6 @@ class scalarObject(baseScalarObject):
     def isImaginary(self):
         return bool(self.sort_bits[1])
 
-    def _write_matlab_args(self, name, isubcase, f):
-        for key, value, in sorted(self.data_code.iteritems()):
-            if key is not 'log':
-                if isinstance(value, str):
-                    value = "'%s'" % value
-                    msg = 'fem.%s(%i).%s = %s;\n' % (name, isubcase, key, value)
-                elif isinstance(value, list) and isinstance(value[0], str):
-                    msgTemp = "','".join(value)
-                    msg = "fem.%s(%i).%s = {'%s'};\n" % (
-                        name, isubcase, key, msgTemp)
-
-                elif value is None:
-                    value = "'%s'" % value
-                else:
-                    msg = 'fem.%s(%i).%s = %s;\n' % (
-                        name, isubcase, key, value)
-                f.write(msg)
-
     def apply_data_code(self):
         self.log = self.data_code['log']
         for key, value in sorted(self.data_code.iteritems()):
@@ -368,7 +350,7 @@ class scalarObject(baseScalarObject):
             msg += '\n'
         return msg + '\n'
 
-    def recastGridType(self, grid_type):
+    def recast_gridtype_as_string(self, grid_type):
         """converts a grid_type integer to a string"""
         if grid_type == 1:
             Type = 'G'  # GRID

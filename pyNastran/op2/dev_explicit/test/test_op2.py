@@ -36,7 +36,7 @@ def get_failed_files(filename):
 
 
 def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
-                   write_matlab=True, delete_f06=True,
+                   delete_f06=True,
                    debug=True, saveCases=True, skipFiles=[],
                    stopOnFailure=False, nStart=0, nStop=1000000000):
     n = ''
@@ -59,7 +59,7 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
             sys.stderr.write('%sfile=%s\n' %(n, op2file))
             nTotal += 1
             isPassed = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
-                               write_f06=write_f06, write_matlab=write_matlab,
+                               write_f06=write_f06,
                                is_mag_phase=False,
                                delete_f06=delete_f06,
                                iSubcases=iSubcases, debug=debug,
@@ -91,12 +91,11 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
 
 
 def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
-            write_matlab=True, is_mag_phase=False, delete_f06=False,
+            is_mag_phase=False, delete_f06=False,
             iSubcases=[], debug=False, stopOnFailure=True):
     assert '.op2' in op2FileName.lower(), 'op2FileName=%s is not an OP2' % op2FileName
     isPassed = False
     #debug = True
-    write_matlab = False
     try:
         op2 = OP2(make_geom=make_geom, debug=debug)
         op2.set_subcases(iSubcases)
@@ -119,10 +118,6 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
                     os.remove(model+'.test_op2.f06')
                 except:
                     pass
-
-        if write_matlab:
-            (model, ext) = os.path.splitext(op2FileName)
-            op2.write_matlab(model+'.m', is_mag_phase=is_mag_phase)
 
         #print "subcases = ",op2.subcases
 
@@ -221,7 +216,6 @@ def main():
             make_geom     = data['--geometry'],
             write_bdf     = data['--write_bdf'],
             write_f06     = data['--write_f06'],
-            write_matlab  = False, #data['--write_matlab'],
             is_mag_phase  = data['--is_mag_phase'],
             debug         = not(data['--quiet']))
     print("dt = %f" %(time.time() - t0))

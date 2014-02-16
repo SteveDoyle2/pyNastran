@@ -1,6 +1,5 @@
 from struct import pack
-from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
-
+from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTableVector, TableObject, ComplexTableObject
 
 
 def make_pack_form(data):
@@ -33,16 +32,40 @@ def make_pack_form(data):
         Form += form
     return form
 
+
+class RealDisplacementVector(RealTableVector):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
+
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
+        words = ['                                             D I S P L A C E M E N T   V E C T O R\n',
+                 ' \n',
+                 '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        words += self.get_table_marker()
+        return self._write_f06_block(words, header, pageStamp, pageNum, f)
+
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        words = ['                                             D I S P L A C E M E N T   V E C T O R\n',
+                 ' \n',
+                 '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        words += self.get_table_marker()
+        return self._write_f06_transient_block(words, header, pageStamp, pageNum, f)
+
+
+class ComplexDisplacementVector(ComplexTableVector):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ComplexTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
+
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        words = ['                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R\n']
+        return self._write_f06_transient_block(words, header, pageStamp, pageNum, f, is_mag_phase)
+
+
 class DisplacementObject(TableObject):  # approach_code=1, thermal=0
     def __init__(self, data_code, is_sort1, isubcase, dt):
         TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
-
-    def write_matlab(self, isubcase, f, is_mag_phase=False):
-        name = 'displacements'
-        if self.nonlinear_factor is None:
-            return self._write_matlab(name, isubcase, f)
-        else:
-            return self._write_matlab_transient(name, isubcase, f)
 
     def write_table2(self, f, packing=False):
         i = -2
@@ -183,7 +206,6 @@ class DisplacementObject(TableObject):  # approach_code=1, thermal=0
         device_code = self.write_table2(f, packing=packing)
         return self._write_op2_block(f, header, device_code, packing=packing)
 
-
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
@@ -205,20 +227,6 @@ class ComplexDisplacementObject(ComplexTableObject):  # approach_code=1, sort_co
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_matlab(self, isubcase, f=None, is_mag_phase=False):
-        name = 'displacements'
-        if self.nonlinear_factor is None:
-            return self._write_matlab(name, isubcase, f, is_mag_phase)
-        else:
-            return self._write_matlab_transient(name, isubcase, f, is_mag_phase)
-
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
-        if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
-
-        words = ['                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R\n']
-        return self._write_f06_block(words, header, pageStamp, pageNum, f, is_mag_phase)
-
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         words = ['                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R\n']
         return self._write_f06_transient_block(words, header, pageStamp, pageNum, f, is_mag_phase)

@@ -2,16 +2,16 @@ from math import sqrt
 
 from numpy import array, pi, allclose
 
-from pyNastran.op2.resultObjects.op2_Objects import baseScalarObject
+from pyNastran.op2.resultObjects.op2_Objects import BaseScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 #from pyNastran.op2.resultObjects.op2_Objects import scalarObject,array
 
 
-class RealEigenvalues(baseScalarObject):
+class RealEigenvalues(BaseScalarObject):
 
     def __init__(self, title):
         #self.modeNumber = []
-        baseScalarObject.__init__(self)
+        BaseScalarObject.__init__(self)
         self.title = title
         self.extractionOrder = {}
         self.eigenvalues = {}
@@ -50,15 +50,6 @@ class RealEigenvalues(baseScalarObject):
     def add_f06_data(self, data):
         for line in data:
             self.addF06Line(line)
-
-    def write_matlab(self, isubcase, f=None, is_mag_phase=False):
-        iModesMsg = 'fem.eigenvalues(%i).iModes    = [' % isubcase
-        modesMsg = 'fem.eigenvalues(%i).modes     = [' % isubcase
-        orderMsg = 'fem.eigenvalues(%i).order     = [' % isubcase
-        omegaMsg = 'fem.eigenvalues(%i).radians   = [' % isubcase
-        cyclesMsg = 'fem.eigenvalues(%i).cycles    = [' % isubcase
-        massMsg = 'fem.eigenvalues(%i).mass      = [' % isubcase
-        stiffMsg = 'fem.eigenvalues(%i).stiffness = [' % isubcase
 
         for (iMode, order) in sorted(self.extractionOrder.iteritems()):
             eigenvalue = self.eigenvalues[iMode]
@@ -115,9 +106,9 @@ class RealEigenvalues(baseScalarObject):
         return msg
 
 
-class ComplexEigenvalues(baseScalarObject):
+class ComplexEigenvalues(BaseScalarObject):
     def __init__(self, title):
-        baseScalarObject.__init__(self)
+        BaseScalarObject.__init__(self)
         #self.rootNumber = []
         self.title = title
         self.extractionOrder = {}

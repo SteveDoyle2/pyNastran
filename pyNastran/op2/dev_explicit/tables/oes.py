@@ -26,7 +26,7 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexBush
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStressObject, ComplexPlateStrainObject
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import ComplexRodStressObject, ComplexRodStrainObject
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShearStressObject, ComplexShearStrainObject
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressObject, ComplexSolidStrainObject, ComplexSolidStress, ComplexSolidStrain
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressObject, ComplexSolidStrainObject, ComplexSolidStressVector, ComplexSolidStrainVector
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexCelasStressObject, ComplexCelasStrainObject
 
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import NonlinearRodObject, NonlinearQuadObject, HyperelasticQuadObject
@@ -540,33 +540,12 @@ class OES(OP2Common):
                 nelements = len(data) // ntotal
                 result_name = 'solidStresss' if self.isStress() else 'solidStrain'
                 result_name += '_subcase%i' % self.isubcase
-
-                if self.is_vectorized:
-                    if self.read_mode == 1:
-                        if self.isStress():
-                            self.create_transient_object(self.solidStress, ComplexSolidStress)
-                            #print "read_mode 1", self.obj.ntimes
-                        else:
-                            self.create_transient_object(self.solidStrain, ComplexSolidStrain)
-                        self.result_names.add(result_name)
-                        self.obj.nelements += nelements
-                        return nelements * ntotal
-                    elif self.read_mode == 2:
-                        if self.isStress():
-                            self.obj = self.solidStress[self.isubcase]
-                        else:
-                            self.obj = self.solidStrain[self.isubcase]
-                    #self.obj.update_data_code(self.data_code)
-                    self.obj.build()
-                else:  # not vectorized
-                    self.result_names.add(result_name)
-                    if self.read_mode == 1:
-                        return
-                    # pass = 0/2
-                    if self.isStress():
-                        self.create_transient_object(self.solidStress, ComplexSolidStressObject)
-                    else:
-                        self.create_transient_object(self.solidStrain, ComplexSolidStrainObject)
+                auto_return = self._create_oes_object2(nelements, result_name,
+                                                       self.solidStress, self.solidStrain,
+                                                       ComplexSolidStressVector, ComplexSolidStrainVector,
+                                                       ComplexSolidStressObject, ComplexSolidStrainObject)
+                if auto_return:
+                    return nelements * ntotal
 
                 #print "self.obj.data.shape =", self.obj.data.shape
                 s1 = Struct(b'2i4si')
@@ -1588,3 +1567,38 @@ class OES(OP2Common):
         assert self.thermal == 0, self.thermal
         assert n > 0, n
         return n
+
+    def _create_oes_object2(self, nelements, result_name,
+                            stress_slot, strain_slot,
+                            stress_vector, strain_vector,
+                            stress_object, strain_object):
+        auto_return = False
+        if self.is_vectorized:
+            if self.read_mode == 1:
+                if self.isStress():
+                    self.create_transient_object(stress_slot, stress_vector)
+                    #print "read_mode 1", self.obj.ntimes
+                else:
+                    self.create_transient_object(strain_slot, strain_vector)
+                self.result_names.add(result_name)
+                #print('self.obj =', self.obj)
+                self.obj.nelements += nelements
+                auto_return = True
+            elif self.read_mode == 2:
+                if self.isStress():
+                    self.obj = stress_slot[self.isubcase]
+                else:
+                    self.obj = strain_slot[self.isubcase]
+                #self.obj.update_data_code(self.data_code)
+                self.obj.build()
+        else:  # not vectorized
+            self.result_names.add(result_name)
+            if self.read_mode == 1:
+                self.result_names.add(result_name)
+                auto_return = True
+            # pass = 0/2
+            if self.isStress():
+                self.create_transient_object(stress_slot, stress_object)
+            else:
+                self.create_transient_object(strain_slot, strain_object)
+        return auto_return

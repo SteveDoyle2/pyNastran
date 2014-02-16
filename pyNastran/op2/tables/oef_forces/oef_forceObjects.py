@@ -1,12 +1,12 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from pyNastran.op2.resultObjects.op2_Objects import scalarObject
+from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats12E
 
 
-class RealRodForce(scalarObject):  # 1-ROD
+class RealRodForce(ScalarObject):  # 1-ROD
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
 
         self.elementType = 'CROD'
         self.axialForce = {}
@@ -142,9 +142,9 @@ class RealConrodForce(RealRodForce):  # 10-CONROD
         return self._write_f06(words, pageStamp, pageNum, f)
 
 
-class RealCBeamForce(scalarObject):  # 2-CBEAM
+class RealCBeamForce(ScalarObject):  # 2-CBEAM
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}
         self.nodes = {}
         self.bendingMoment = {}
@@ -329,9 +329,9 @@ class RealCBeamForce(scalarObject):  # 2-CBEAM
         return pageNum
 
 
-class RealCShearForce(scalarObject):  # 4-CSHEAR
+class RealCShearForce(ScalarObject):  # 4-CSHEAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}
         self.force41 = {}
         self.force14 = {}
@@ -538,9 +538,9 @@ class RealCShearForce(scalarObject):  # 4-CSHEAR
         return pageNum
 
 
-class RealSpringForce(scalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
+class RealSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}
         self.force = {}
 
@@ -660,9 +660,9 @@ class RealSpringForce(scalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
         return pageNum
 
 
-class RealDamperForce(scalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
+class RealDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}
         self.force = {}
 
@@ -773,9 +773,9 @@ class RealDamperForce(scalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
         return pageNum
 
 
-class RealViscForce(scalarObject):  # 24-CVISC
+class RealViscForce(ScalarObject):  # 24-CVISC
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}
         self.axialForce = {}
         self.torque = {}
@@ -834,9 +834,9 @@ class RealViscForce(scalarObject):  # 24-CVISC
         self.torque[dt][eid] = torque
 
 
-class RealPlateForce(scalarObject):  # 33-CQUAD4, 74-CTRIA3
+class RealPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}
         self.mx = {}
         self.my = {}
@@ -952,9 +952,9 @@ class RealPlateForce(scalarObject):  # 33-CQUAD4, 74-CTRIA3
             f.write(Fmt % (eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty))
         return pageNum
 
-class RealPlate2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
+class RealPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}
         self.term = {}
         self.ngrids = {}
@@ -1103,9 +1103,9 @@ class RealPlate2Force(scalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.ty[dt][eid].append(ty)
 
 
-class RealCBarForce(scalarObject):  # 34-CBAR
+class RealCBarForce(ScalarObject):  # 34-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}
         self.bendingMomentA = {}
         self.bendingMomentB = {}
@@ -1204,9 +1204,9 @@ class RealCBarForce(scalarObject):  # 34-CBAR
         return pageNum - 1
 
 
-class RealCBar100Force(scalarObject):  # 100-CBAR
+class RealCBar100Force(ScalarObject):  # 100-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}
         self.bendingMoment = {}
         self.shear = {}
@@ -1275,9 +1275,9 @@ class RealCBar100Force(scalarObject):  # 100-CBAR
         self.torque[dt][eid] = trq
 
 
-class RealConeAxForce(scalarObject):  # 35-CCONEAX
+class RealConeAxForce(ScalarObject):  # 35-CCONEAX
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}
         self.hopa = {}
         self.bmu = {}
@@ -1356,9 +1356,9 @@ class RealConeAxForce(scalarObject):  # 35-CCONEAX
         self.sv[dt][eid] = sv
 
 
-class RealCGapForce(scalarObject):  # 38-CGAP
+class RealCGapForce(ScalarObject):  # 38-CGAP
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}
         self.fx = {}
         self.sfy = {}
@@ -1447,9 +1447,9 @@ class RealCGapForce(scalarObject):  # 38-CGAP
         self.sw[dt][eid] = sw
 
 
-class RealBendForce(scalarObject):  # 69-CBEND
+class RealBendForce(ScalarObject):  # 69-CBEND
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}
         self.nodeIDs = {}
         self.bendingMoment1 = {}
@@ -1533,9 +1533,9 @@ class RealBendForce(scalarObject):  # 69-CBEND
         self.torque[dt][eid] = [torqueA, torqueB]
 
 
-class RealPentaPressureForce(scalarObject):  # 77-PENTA_PR,78-TETRA_PR
+class RealPentaPressureForce(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}
         self.acceleration = {}
         self.velocity = {}
@@ -1631,9 +1631,9 @@ class RealPentaPressureForce(scalarObject):  # 77-PENTA_PR,78-TETRA_PR
         return pageNum - 1
 
 
-class RealCBushForce(scalarObject):  # 102-CBUSH
+class RealCBushForce(ScalarObject):  # 102-CBUSH
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}
         self.force = {}
         self.moment = {}
@@ -1692,9 +1692,9 @@ class RealCBushForce(scalarObject):  # 102-CBUSH
         self.moment[dt][eid] = [mx, my, mz]
 
 
-class RealForce_VU(scalarObject):  # 191-VUBEAM
+class RealForce_VU(ScalarObject):  # 191-VUBEAM
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}
         self.parent = {}
         self.coord = {}
@@ -1815,9 +1815,9 @@ class RealForce_VU(scalarObject):  # 191-VUBEAM
             self.bendingZ[dt][eid][nid] = bendingZ
 
 
-class RealForce_VU_2D(scalarObject):  # 190-VUTRIA # 189-VUQUAD
+class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        scalarObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}
         self.parent = {}
         self.coord = {}
