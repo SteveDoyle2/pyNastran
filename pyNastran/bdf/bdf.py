@@ -17,7 +17,6 @@ import traceback
 from pyNastran.utils import (list_print, is_string,
                              object_attributes, print_bad_path)
 from pyNastran.utils.log import get_logger
-from pyNastran.utils.gui_io import load_file_dialog
 
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
     integer_or_string, string)
@@ -697,6 +696,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         etc.
         """
         if bdf_filename is None:
+            from pyNastran.utils.gui_io import load_file_dialog
             wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas; *.pch)|" \
                 "*.bdf;*.dat;*.nas;*.pch|" \
                 "All files (*.*)|*.*"
