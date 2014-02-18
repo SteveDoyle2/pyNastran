@@ -19,7 +19,7 @@ def writeFloats12E(vals):
     for v in vals:
         v2 = '%12.5E' % v
         if v2 == ' 0.00000E+00' or v2 == '-0.00000E+00':
-            v2 = ' 0.0        '
+            v2 = ' 0.0'
         else:
             isAllZeros = False
         vals2.append(v2)
@@ -32,7 +32,7 @@ def writeFloats13E(vals):
     for v in vals:
         v2 = '%13.6E' % v
         if v2 == ' 0.000000E+00' or v2 == '-0.000000E+00':
-            v2 = ' 0.0         '
+            v2 = ' 0.0'
         else:
             isAllZeros = False
         vals2.append(v2)
@@ -47,7 +47,7 @@ def writeImagFloats13E(vals, isMagPhase):
         for v in vals:
             v2 = '%13.6E' % (abs(v))
             if v2 == ' 0.000000E+00' or v2 == '-0.000000E+00':
-                v2 = ' 0.0         '
+                v2 = ' 0.0'
             else:
                 isAllZeros = False
             vals2.append(v2)
@@ -55,7 +55,7 @@ def writeImagFloats13E(vals, isMagPhase):
         for v in vals:
             v3 = '%13.6E' % angle(v, deg=True)
             if v3 == ' 0.000000E+00' or v3 == '-0.000000E+00':
-                v3 = ' 0.0         '
+                v3 = ' 0.0'
             else:
                 isAllZeros = False
             vals2.append(v3)
@@ -63,7 +63,7 @@ def writeImagFloats13E(vals, isMagPhase):
         for v in vals:
             v2 = '%13.6E' % v.real
             if v2 == ' 0.000000E+00' or v2 == '-0.000000E+00':
-                v2 = ' 0.0         '
+                v2 = ' 0.0'
             else:
                 isAllZeros = False
             vals2.append(v2)
@@ -71,7 +71,7 @@ def writeImagFloats13E(vals, isMagPhase):
         for v in vals:
             v3 = '%13.6E' % v.imag
             if v3 == ' 0.000000E+00' or v3 == '-0.000000E+00':
-                v3 = ' 0.0         '
+                v3 = ' 0.0'
             else:
                 isAllZeros = False
             vals2.append(v3)
@@ -90,3 +90,4 @@ def writeFloats8p4F(vals):
         assert len(v2) == 8, 'v=%r' % v2
         vals2.append(v2)
     return (vals2, isAllZeros)
+

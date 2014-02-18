@@ -12,7 +12,6 @@ from scipy.sparse import coo_matrix
 from pyNastran.utils import is_binary
 from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
 #from pyNastran.op2.fortranFile import FortranFile
-from pyNastran.utils.gui_io import load_file_dialog
 
 
 #class OP4(FortranFile):
@@ -89,6 +88,7 @@ class OP4(object):
         """
         assert precision in ['default', 'single', 'double'], "precison=%r valid=['default','single','double']"
         if op4_filename is None:
+            from pyNastran.utils.gui_io import load_file_dialog
             wildcard_wx = "Nastran OP4 (*.op4)|*.op4|" \
                 "All files (*.*)|*.*"
             wildcard_qt = "Nastran OP4 (*.op4);;All files (*)"
