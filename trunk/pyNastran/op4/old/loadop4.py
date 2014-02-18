@@ -90,7 +90,6 @@ def op4_filetype(filename):
                 type = 1;
             else:
                 type = 0;
-            ###
 
         elif(word == 24):        # Fortran binary record header,
             type = 2;            # native endian, for 6 word block
@@ -99,10 +98,8 @@ def op4_filetype(filename):
             type = 3;            # opposite endian, for 6 word block
         else:     # the first word indicates the file is not an .op4
             type = 0;
-        ###
     else:        # unable to read four bytes from the file
         type = 0;
-    ###
     fp.close();
     return type;
 
@@ -165,11 +162,8 @@ def op4_scan(  filename,  # in
             else:
                 for i in range(n_mat):
                     digits[i] =  0;
-                ###
-            ###
     else:
         result = 0;
-    ###
     return result;
 
 def  op4_scan_t(filename  ,  # in
@@ -229,7 +223,7 @@ def  op4_scan_t(filename  ,  # in
                     if(n_mat and not storage[n_mat-1]):
                         # previous matrix stored in dense scheme
                         nNnz[n_mat-1] = nRow[n_mat-1]nCol[n_mat-1];
-                    ###
+
                     storage[n_mat] = 0;  # dense unless proven otherwise
                     nStr[n_mat]    = 0;
                     nNnz[n_mat]    = 0;
@@ -250,7 +244,6 @@ def  op4_scan_t(filename  ,  # in
                         if(nRead != 11):
                             fp.close()
                             return 0;
-                        ###
                     else:
                         n_text_cols    =  5
                         text_col_width = 15
@@ -264,8 +257,7 @@ def  op4_scan_t(filename  ,  # in
                         if(nRead != 5):
                             fp.close()
                             return 0;
-                        ###
-                    ###
+
                     nRow[n_mat]   = fabs(nRow[n_mat])
                     offset[n_mat] = location
                     ++(n_mat);
@@ -292,16 +284,12 @@ def  op4_scan_t(filename  ,  # in
                 elif lineType==OP4_TEXT_ERROR:
                     fp.close()
                     return 0;
-                ###
-            ###
-        ###
-    ###
+
     offset[n_mat] = fp.tell();  # last byte in the file
     fp.close()
     if not storage[n_mat-1]:
         # last matrix stored in dense scheme
         nNnz[n_mat-1] = nRow[n_mat-1]nCol[n_mat-1];
-    ###
     return 1;
 
 
@@ -379,15 +367,11 @@ def op4_scan_b(filename, # in
                     fp.close()
                     n_mat = 0
                     return result
-                ###
-            ###
             ++(n_mat);
-        ###
+
         if DEBUG:
             location  = fp.tell();
             print "op4_scan_b location B =%ld nStr=%d\n" %(location, nStr[n_mat-1]);
-        ###
-    ###
 
     fseek(fp, 0, SEEK_END);     # Set the file pointer to the end of file.
     offset[n_mat] = fp.tell();  # If this isn't done ftell() returns bogus.
@@ -398,7 +382,6 @@ def op4_scan_b(filename, # in
     if not storage[n_mat-1]:
         # last matrix stored in dense scheme
         nNnz[n_mat-1] = nRow[n_mat-1]nCol[n_mat-1];
-    ###
     return 1;
 
 
@@ -448,7 +431,6 @@ if DEBUG:
             strncpy(my_name, name_ptr,9)
         else:
             strncpy(my_name, "unnamed",9)
-        ###
 
         nCol_  = header[0];
         nRow_  = header[1];
@@ -459,12 +441,10 @@ if DEBUG:
             nRow_ = flip_bytes_int(nRow_)
             Form_ = flip_bytes_int(Form_)
             Type_ = flip_bytes_int(Type_)
-        ###
 
         if DEBUG:
             print "op4_scan_b name=[%s] " %(my_name)
             print " is_ascii=%d nCols=%d nRows=%d Form=%d Type=%d\n" %(is_ascii,nCol_,nRow_,Form_,Type_)
-        ###
 
         if(is_ascii and nCol_ > 0 and nRow_ and Form_ < 50 and Type_ < 10):
             # we have a winner; this is a matrix header
@@ -486,7 +466,7 @@ if DEBUG:
                 column_id = flip_bytes_int(column_id)
                 start_row = flip_bytes_int(start_row)
                 n_words   = flip_bytes_int(n_words)
-            ###
+
             if DEBUG:
                 print "op4_scan_b rl=%2d c=%2d r=%2d nw=%2d\n" %(rec_len, column_id, start_row, n_words)
             if(nRow_ < 0):
@@ -496,9 +476,7 @@ if DEBUG:
                 storage = 1;   # sparse 1
             else:              # dense
                 storage = 0;
-            ###
-        ###
-    ###
+
     fseek(fp, location, SEEK_SET);
 
 
@@ -531,14 +509,13 @@ def op4_count_str_b(FILE fp     ,   # in  {{{1
             col           = flip_bytes_int(col)
             end_of_data   = flip_bytes_int(end_of_data)
             n_words       = flip_bytes_int(n_words)
-        ###
 
         if DEBUG:
             printf("record_length  =%d\n", record_length);
             printf("col            =%d\n", col          );
             printf("end_of_data    =%d\n", end_of_data  );
             printf("n_words        =%d\n", n_words      );
-        ###
+
         # make sure values aren't bogus {{{2
         if((end_of_data != 0) and (end_of_data != 1)):
             nNnz = 0;
@@ -546,7 +523,6 @@ def op4_count_str_b(FILE fp     ,   # in  {{{1
                     "end_of_data=%d out of range, byte offset %ld\n",
                      end_of_data, fp.tell());
             raise Exception(error_msg);
-        ###
 
         if((col < 1) or (col > (nCols + 2))):
             nNnz = 0;
@@ -554,7 +530,6 @@ def op4_count_str_b(FILE fp     ,   # in  {{{1
                     "col=%d out of range, byte offset %ld\n",
                      col, fp.tell());
             raise Exception(error_msg);
-        ###
 
         if((record_length < 4*BYTES_PER_WORD) or
             (record_length > BYTES_PER_WORD *
@@ -569,7 +544,6 @@ def op4_count_str_b(FILE fp     ,   # in  {{{1
                      fp.tell());
 
             raise Exception(error_msg);
-        ###
         # 2}}}
 
         if DEBUG:
@@ -578,7 +552,6 @@ def op4_count_str_b(FILE fp     ,   # in  {{{1
         if end_of_data:
             fseek(fp, record_length - 2*BYTES_PER_WORD, SEEK_CUR);
             break;
-        ###
 
         word_count = 0;
         while (word_count < n_words):
@@ -587,11 +560,10 @@ def op4_count_str_b(FILE fp     ,   # in  {{{1
                 word_count += 1;
                 if endian:
                     encoded = flip_bytes_int(encoded);
-                ###
+
                 length_in_words = (encoded/65536) -1;
                 if DEBUG:
                     print "op4_count_str_b B sp1 length_words=%d encoded=%d loc=%ld\n" %(length_in_words, encoded, fp.tell())
-                ###
             else:  # storage == 2
                 fread(&length_in_words, BYTES_PER_WORD, 1, fp);
                 fread(&row,             BYTES_PER_WORD, 1, fp); # unused
@@ -608,7 +580,6 @@ def op4_count_str_b(FILE fp     ,   # in  {{{1
                         "length_in_words=%d out of range, byte offset %ld\n",
                          length_in_words, fp.tell());
                 raise Exception(error_msg);
-            ###
             nNnz += length_in_words;
             ++(nStr);
 
@@ -622,11 +593,9 @@ def op4_count_str_b(FILE fp     ,   # in  {{{1
         fread(&record_length, BYTES_PER_WORD, 1, fp);
         if endian:
             record_length = flip_bytes_int(record_length);
-        ###
         if DEBUG:
             print "op4_count_str_b E end RL=%d  loc=%ld\n" %(record_length, fp.tell())
-        ###
-    ###
+
     nNnz /= op4_words_per_term[nType];
     return 1
 # 1}}}
@@ -652,8 +621,6 @@ def op4_line_type(line):  # in {{{1
         type = OP4_TEXT_ERROR
         if DEBUG:
             print "T=%d:[%s]\n", %(type,line)
-        ###
-    ###
     return type;
 # 1}}}
 
@@ -685,7 +652,7 @@ def op4_read_col_t(fp         ,  # {{{1
         # zero out dense column
         for j in range(NPTnRow):
             N[j] = 0.0;
-    ###
+
     while (still_reading):
         location = fp.tell();
         fgets(line, OP4_TXT_LINE_SIZE, fp);
@@ -712,9 +679,8 @@ def op4_read_col_t(fp         ,  # {{{1
                             if DEBUG:
                                 print " N[row=%d + N_index=%d]=%e\n" %(row, (N_index), x[j])
                             N[row + j] = x[j];
-                        ###
                         row += nRead;
-                    ###
+
                     n_nnz += nRead;
                     if DEBUG:
                         print "op4_read_col_t nR=%d n_nnz now=%d\n" %(nRead, n_nnz);
@@ -735,7 +701,6 @@ def op4_read_col_t(fp         ,  # {{{1
                             # this is not the column of interest
                             fseek(fp, location, SEEK_SET);
                             return n_nnz;
-                        ###
                         --col; --row; # internal indexing is 0 based
                         if not storage: # dense
                             row *= NPT
@@ -746,8 +711,7 @@ def op4_read_col_t(fp         ,  # {{{1
                             # have reached the spurious end of matrix entry
                             # or have encountered bad data
                             return n_nnz;
-                        ###
-                    ###
+
                 case OP4_TEXT_STRING_1  :
                 case OP4_TEXT_STRING_2  : # {{{2
                     n_read_this_str = 0;
@@ -758,16 +722,14 @@ def op4_read_col_t(fp         ,  # {{{1
                     else: # type 2
                         sscanf(line, "%8d%8d", &nwords, &start_row);
                         --nwords;
-                    ###
+
                     S[n_str].start_row = start_row - 1;
                     S[n_str].len       = 0;
                     S[n_str].N_idx     = N_index;
                     ++(n_str);
                 case OP4_TEXT_ERROR: # {{{2
                     raise Exception("op4_read_col_t error reading a column ");
-            ###
-        ###
-    ###
+
     return n_nnz;
 # 1}}}
 
@@ -824,8 +786,6 @@ def op4_read_col_b(fp         ,  # {{{1
         # zero out dense column
         for i in range(NPTnRow):
             N[i] = 0.0;
-        ###
-    ###
 
     fread(&record_length, BYTES_PER_WORD, 1, fp);
     fread(&col,           BYTES_PER_WORD, 1, fp);
@@ -836,7 +796,7 @@ def op4_read_col_b(fp         ,  # {{{1
         col           = flip_bytes_int(col);
         start_row     = flip_bytes_int(start_row);
         n_w_this_col  = flip_bytes_int(n_w_this_col);
-    ###
+
     if DEBUG:
         print "op4_read_col_b: requested col=%d  RL=%d got col=%d row=%d nW=%d\n" %(c_in, record_length, col, start_row, n_w_this_col)
     n_numbers = n_w_this_col/WPN;
@@ -852,7 +812,6 @@ def op4_read_col_b(fp         ,  # {{{1
         if DEBUG:
             print "op4_read_col_b: column mismatch, back up to location %ld & exit\n" %(fp.tell())
         return 0;
-    ###
 
     if DEBUG:
         print "op4_read_col_b: going to read col=%d\n" %(col)
@@ -865,30 +824,23 @@ def op4_read_col_b(fp         ,  # {{{1
             if endian: # opposite endian, need to flip terms
                 for i in range(n_numbers):
                     N[NPT*(start_row-1) + i] = flip_bytes_double(N[NPT*(start_row-1) + i]);
-                    ###
-                ###
-            ###
+
         elif not endian:
             # single precision native endian
             if DEBUG: print "op4_read_col_b: single prec native endian\n"
             for i in range(n_numbers):
                 fread(&xs, BPN, 1, fp);
                 N[NPT*(start_row-1) + i] = xs;
-            ###
         else:
             # single precision opposite endian
             if DEBUG: print "op4_read_col_b: single prec opposite endian\n"
             for i in range(n_numbers):
                 fread(&xs, BPN, 1, fp);
                 N[NPT*(start_row-1) + i] = flip_bytes_float(xs);
-            ###
-        ###
 
         if DEBUG:
             for i in range(n_numbers):
                 print "op4_read_col_b: N[%d]=%le\n" %(NPT*(start_row-1) + i,N[NPT*(start_row-1) + i])
-            ###
-        ###
         fseek(fp, BYTES_PER_WORD, SEEK_CUR);  # skip trailing RL
 
         if DEBUG:
@@ -912,9 +864,7 @@ def op4_read_col_b(fp         ,  # {{{1
                 if endian:
                     n_w_this_str = flip_bytes_int(n_w_this_str);
                     start_row    = flip_bytes_int(start_row);
-                ###
                 --n_w_this_str;
-            ###
             n_numbers = n_w_this_str/WPN;
             if DEBUG:
                 print "\nop4_read_col_b top of str: start_row=%d n_w_this_str=%d n_numbers=%d N_index=%d\n" %(start_row, n_w_this_str, n_numbers, N_index)
@@ -931,35 +881,26 @@ def op4_read_col_b(fp         ,  # {{{1
                 if endian: # opposite endian, need to flip terms
                     for i in range(n_numbers):
                         N[N_index + i] = flip_bytes_double(N[N_index + i]);
-                    ###
-                ###
             elif not endian:
                 # single precision native endian
                 if DEBUG: print "op4_read_col_b sp: single prec native endian\n")
                 for i in range(n_numbers):
                     fread(&xs, BPN, 1, fp);
                     N[N_index + i] = xs;
-                ###
             else:
                 # single precision opposite endian
                 if DEBUG: print "op4_read_col_b sp: single prec opposite endian\n"
                 for i in range(n_numbers):
                     fread(&xs, BPN, 1, fp);
                     N[N_index + i] = flip_bytes_float(xs);
-                ###
-            ###
             record_length -= BYTES_PER_WORD*n_w_this_str;
             if DEBUG:
                 print "op4_read_col_b sp end string  RL=%d loc=%ld\n" %(record_length, fp.tell());
                 for i in range(n_numbers):
                     print "op4_read_col_b N[%3d] = %e\n" %(N_index+i, N[N_index + i])
-                ###
-            ###
             N_index += n_numbers
             n_nnz   += n_numbers
-        ###
         fread(&record_length, BYTES_PER_WORD, 1, fp)
-    ###
     return n_nnz;
 
 FILE* op4_open_r(const char filename, long offset):  # in
@@ -1054,7 +995,6 @@ def op4_valid_name(name):
         return  0;
     elif(not isalpha((int) name[0])):  # first char must be [a-zA-Z]
         return  0;
-    ###
 
     for i in range(len):
         # this test is too conservative; Nastran allows names like 'a+'
@@ -1062,8 +1002,6 @@ def op4_valid_name(name):
               isalpha((int) name[i]) or
               isdigit((int) name[i]))):
             return 0;
-        ###
-    ###
 
     return 1;
 
@@ -1113,17 +1051,14 @@ def mexFunction(nlhs, plhs[], int nrhs, prhs[]):
     Nmat = nlhs
     if((Nmat < 1) or (Nmat >= Max_Matrices_Per_OP4) ):
         raise Exception("Number of LHS arguments must be >= 1 and <= 50.\n")
-    ###
 
     if(nrhs > 1):     # get # of matrices to skip over
         nskip_ptr = mxGetPr(prhs[1])
         Nskip     = (int) nskip_ptr
         if(Nskip < 0):
             raise Exception("Second RHS argument must be an integer >= 0.\n")
-        ###
     else:
         Nskip = 0
-    ###
 
 
     if DEBUG:
@@ -1144,7 +1079,7 @@ def mexFunction(nlhs, plhs[], int nrhs, prhs[]):
                   offset)):      # out byte offset to matrix
         snprintf(line, OP4_TXT_LINE_SIZE, " file error for '%s'", filename);
         raise Exception(line);
-    ###
+
     if DEBUG:
         print "loadop4 n_mat_in_file = %d\n" %(n_mat_in_file)
     if(n_mat_in_file < 1 ):
@@ -1161,14 +1096,12 @@ def mexFunction(nlhs, plhs[], int nrhs, prhs[]):
         snprintf(line, OP4_TXT_LINE_SIZE, " only %d matrices in '%s'",n_mat_in_file, filename);
 
         raise Exception(line);
-    ###
 
     filetype = op4_filetype(filename);
 
     fp = op4_open_r(filename, 0);
     if(fp == NULL):
         raise Exception("loadop4: unable to open op4 file at offset\n");
-    ###
 
     for i in range(Nskip,Nskip+Nmat):
         if DEBUG:
@@ -1204,7 +1137,6 @@ def mexFunction(nlhs, plhs[], int nrhs, prhs[]):
 
             if((D = (double *) malloc(size)) == NULL):
                 raise Exception("loadop4:  insufficient memory for matrix column");
-            ###
 
             m.data        = (char   *)   D;
             m.magic       = (int *) m.data;
@@ -1231,7 +1163,6 @@ def mexFunction(nlhs, plhs[], int nrhs, prhs[]):
                 plhs[i-Nskip] = mxCreateSparse(nRow[i], nCol[i],
                                                nNnz[i], mxREAL);
                 Mr[i-Nskip]   = mxGetPr(plhs[i-Nskip]);
-            ###
             ir[i-Nskip] = mxGetIr(plhs[i-Nskip]);
             jc[i-Nskip] = mxGetJc(plhs[i-Nskip]);
 
@@ -1249,11 +1180,8 @@ def mexFunction(nlhs, plhs[], int nrhs, prhs[]):
                 plhs[i-Nskip] = mxCreateDoubleMatrix(nRow[i], nCol[i],
                                                      mxREAL);
                 Mr[i-Nskip]   = mxGetPr(plhs[i-Nskip]);
-            ###
             for j in range(nRow[i]*nCol[i]):
                 Mr[i-Nskip][j] = 0.0;
-            ###
-        ###
 
         # 2}}}
 
@@ -1277,8 +1205,6 @@ def mexFunction(nlhs, plhs[], int nrhs, prhs[]):
         else:            # dense
             if((D = (double *) malloc(nRow[i]*NPT*sizeof(double))) == NULL):
                 raise Exception("loadop4:  insufficient memory for matrix column");
-            ###
-        ###
 
         for c in range(1,nCols[i]):  # op4 columns start at 1
             if DEBUG:
@@ -1293,7 +1219,6 @@ def mexFunction(nlhs, plhs[], int nrhs, prhs[]):
                 m.S[0].start_row = 0;
                 m.S[0].len       = 0;
                 m.S[0].N_idx     = 0;
-            ###
 
             if(filetype == 1):  # text
                 if storage[i]:     # load as sparse matrix
@@ -1314,7 +1239,6 @@ def mexFunction(nlhs, plhs[], int nrhs, prhs[]):
                          (str_t *) unused    , # out string data  (if sp1,2)
                          (int   *) unused    , # in/out index m.N (sp 1,2)
                                    D); # out numeric data
-                ###
             else:              # binary
                 if storage[i]:     # load as sparse matrix
                     n_nnz = op4_read_col_b(fp, filetype - 2,
@@ -1335,7 +1259,6 @@ def mexFunction(nlhs, plhs[], int nrhs, prhs[]):
                          (int   *) unused    , # in/out index m.N (sp 1,2)
                                    D
                                   ); # out numeric data
-                ###
             ### # 2}}}
 
 
@@ -1348,8 +1271,6 @@ def mexFunction(nlhs, plhs[], int nrhs, prhs[]):
                         if complx:
                             Mi[i-Nskip][ir_index] = m.N[m.S[s].N_idx + j*NPT+1];
                         ++ir_index;
-                    ###
-                ###
                 jc[i-Nskip][c] = ir_index;
 
             else: # dense
@@ -1357,23 +1278,18 @@ def mexFunction(nlhs, plhs[], int nrhs, prhs[]):
                     Mr[i-Nskip][(c-1)nRow[i] + r] = D[r*NPT];
                     if complx:
                         Mi[i-Nskip][(c-1)nRow[i] + r] = D[r*NPT + 1];
-                ###
-            ###
 
             if DEBUG:
                 print "loadop4<-column %2d read %d values\n\n" %(c, n_nnz)
-            ###
         ### end loop over columns of matrix i
 
         if(not storage[i])     # dense matrix
             free(D);
         if(print_header):
             print "loadop4: %2d x %2d %2s %2s nStr=%4d nNnz=%4d f=%2d %-8s dg=%1d of %1d\n" %(nRow[i], nCol[i], op4_type_str[type[i]-1],op4_store_str[storage[i]], nStr[i], nNnz[i],form[i],name[i], digits[i], i+1, Nmat)
-        ###
     ### # end loop over matrices
 
     fp.close()
     if DEBUG:
         print "end of loadop4\n"
     return;
-###
