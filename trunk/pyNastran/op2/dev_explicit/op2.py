@@ -228,8 +228,10 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
         self.grid_point_weight = GridPointWeight()
         self.words = []
         self.debug = False
+        self.make_geom = False
 
-        self._table_mapper = {
+    def _get_table_mapper(self):
+        table_mapper = {
             #=======================
             # OEF
             # internal forces
@@ -437,7 +439,7 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
             'AAA': [self._table_passer, self._table_passer],
             'AAA': [self._table_passer, self._table_passer],
         }
-        self.make_geom = False
+        return table_mapper
 
     def _not_available(self, data):
         if len(data) > 0:

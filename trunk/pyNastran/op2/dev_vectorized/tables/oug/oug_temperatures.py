@@ -2,12 +2,12 @@
 #import sys
 #from struct import pack
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
+from pyNastran.op2.resultObjects.tableObject import RealTableObject, ComplexTableObject
 
 
-class TemperatureObject(TableObject):  # approach_code=1, sort_code=0, thermal=1
+class TemperatureObject(RealTableObject):  # approach_code=1, sort_code=0, thermal=1
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
-        TableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
+        RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
         #ScalarObject.__init__(self, data_code, isubcase, read_mode)
         #self.gridTypes = {}
         #self.temperatures = {}

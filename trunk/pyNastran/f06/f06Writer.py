@@ -224,12 +224,12 @@ class F06Writer(F06WriterDeprecated):
         self.celas4_strain = {}
 
         self.ctetra_stress = {}
-        self.chexa_stress = {}
         self.cpenta_stress = {}
+        self.chexa_stress = {}
 
         self.ctetra_strain = {}
-        self.chexa_strain = {}
         self.cpenta_strain = {}
+        self.chexa_strain = {}
 
     def __objects_init__(self):
         """More variable declarations"""
@@ -399,16 +399,6 @@ class F06Writer(F06WriterDeprecated):
     def make_stamp(self, Title, today):
         """If this class is inherited, the PAGE stamp may be overwritten"""
         return make_stamp(Title, today)
-
-    def writeF06(self, f06OutName, is_mag_phase=False, makeFile=True,
-                 deleteObjects=True):
-        """
-        .. deprecated: will be replaced in version 0.7 with :func:`read_op2`
-        """
-        warnings.warn('writeF06 has been deprecated; use '
-                      'write_f06', DeprecationWarning, stacklevel=2)
-        self.write_f06(self, f06OutName, is_mag_phase=is_mag_phase,
-                 delete_objects=deleteObjects)
 
     def make_grid_point_singularity_table(self, failed):
         msg = ''
@@ -680,8 +670,8 @@ class F06Writer(F06WriterDeprecated):
             # solids
             self.solidStrain,
             self.ctetra_strain,
-            self.chexa_strain,
             self.cpenta_strain,
+            self.chexa_strain,
 
             #------------------------------------------
             # OES - stress
@@ -705,8 +695,8 @@ class F06Writer(F06WriterDeprecated):
             # solids
             self.solidStress,
             self.ctetra_stress,
-            self.chexa_stress,
             self.cpenta_stress,
+            self.chexa_stress,
             #------------------------------------------
 
             self.gridPointStresses, self.gridPointVolumeStresses, self.gridPointForces,

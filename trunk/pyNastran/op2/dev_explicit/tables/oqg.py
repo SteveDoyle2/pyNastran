@@ -160,6 +160,7 @@ class OQG(OP2Common):
                                  RealMPCForcesObject, ComplexMPCForcesObject,
                                  RealMPCForcesVector, ComplexMPCForcesVector, 'node')
         elif self.thermal == 1:
+            raise NotImplementedError(self.thermal)
             n = self._read_table(data, result_name, storage_obj,
                                  None, None,
                                  None, None, 'node')

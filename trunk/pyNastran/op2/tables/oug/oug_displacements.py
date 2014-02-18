@@ -1,5 +1,5 @@
 from struct import pack
-from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTableVector, TableObject, ComplexTableObject
+from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTableVector, RealTableObject, ComplexTableObject
 
 
 def make_pack_form(data):
@@ -56,9 +56,9 @@ class ComplexDisplacementVector(ComplexTableVector):
         return self._write_f06_transient_block(words, header, pageStamp, pageNum, f, is_mag_phase)
 
 
-class RealDisplacementObject(TableObject):  # approach_code=1, thermal=0
+class RealDisplacementObject(RealTableObject):  # approach_code=1, thermal=0
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_table2(self, f, packing=False):
         i = -2

@@ -2,7 +2,9 @@
 from struct import unpack
 
 from pyNastran.op2.tables.opg_appliedLoads.opg_Objects import AppliedLoadsObject  # ComplexAppliedLoadsObject
-from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import LoadVectorObject, ComplexLoadVectorObject, ThermalLoadVectorObject
+from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import (RealLoadVectorObject, ComplexLoadVectorObject,
+                                                                  RealLoadVectorVector, ComplexLoadVectorVector,
+                                                                  ThermalLoadVectorObject)
 from pyNastran.op2.tables.opg_appliedLoads.opnl_forceVector import ForceVectorObject, ComplexForceVectorObject
 
 class OPG(object):
@@ -142,8 +144,8 @@ class OPG(object):
             result_name = 'loadVectors'
             storage_obj = self.loadVectors
             n = self._read_table(data, result_name, storage_obj,
-                                 LoadVectorObject, ComplexLoadVectorObject,
-                                 None, None, 'node')
+                                 RealLoadVectorObject, ComplexLoadVectorObject,
+                                 RealLoadVectorVector, ComplexLoadVectorVector, 'node')
         elif self.thermal == 1:
             result_name = 'thermalLoadVectors'
             storage_obj = self.thermalLoadVectors

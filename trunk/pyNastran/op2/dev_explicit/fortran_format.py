@@ -117,6 +117,9 @@ class FortranFormat(object):
         """
         pass
 
+    def _get_table_mapper(self):
+        raise NotImplementedError('this should be overwritten')
+
     def _read_subtables(self):
         self._data_factor = 1
         nstart = self.n
@@ -127,11 +130,12 @@ class FortranFormat(object):
 
         #self.isubtable -= 1 # -4
         #self.read_markers([self.isubtable, 1, 0])
+        table_mapper = self._get_table_mapper()
 
-        if self.table_name in self._table_mapper:
+        if self.table_name in table_mapper:
             if self.read_mode in [0, 1]:
                 self.log.debug("table_name = %r" % self.table_name)
-            table3_parser, table4_parser = self._table_mapper[self.table_name]
+            table3_parser, table4_parser = table_mapper[self.table_name]
             passer = False
         else:
             #raise NotImplementedError(self.table_name)

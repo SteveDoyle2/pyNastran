@@ -220,7 +220,7 @@ class ComplexTableVector(TableVector):  # displacement style table
         return page_num - 1
 
 
-class TableObject(ScalarObject):  # displacement style table
+class RealTableObject(ScalarObject):  # displacement style table
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.nonlinear_factor = None
         self.table_name = None

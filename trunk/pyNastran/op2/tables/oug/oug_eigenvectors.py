@@ -4,7 +4,7 @@ from numpy import array, pi
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 
-from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTableVector, TableObject, ComplexTableObject
+from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTableVector, RealTableObject, ComplexTableObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
 class ComplexEigenvectorVector(ComplexTableVector):
@@ -55,7 +55,7 @@ class RealEigenvectorVector(RealTableVector):
         return page_num - 1
 
 
-class EigenvectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
+class EigenvectorObject(RealTableObject):  # approach_code=2, sort_code=0, thermal=0
     """
     ::
 
@@ -68,7 +68,7 @@ class EigenvectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
           2003      G      0.0            0.0            0.0            0.0            0.0            0.0
     """
     def __init__(self, data_code, is_sort1, isubcase, imode):
-        TableObject.__init__(self, data_code, is_sort1, isubcase, imode)
+        RealTableObject.__init__(self, data_code, is_sort1, isubcase, imode)
         #self.caseVal = mode
         self.update_dt = self.update_mode
         #print "mode = %s" %(mode)
@@ -336,9 +336,8 @@ class ComplexEigenvectorObject(ComplexTableObject):  # approach_code=2, sort_cod
 
                 vals = [dx, dy, dz, rx, ry, rz]
                 (vals2, isAllZeros) = writeImagFloats13E(vals, is_mag_phase)
-                [dxr, dyr, dzr, rxr, ryr, rzr, dxi, dyi,
-                    dzi, rxi, ryi, rzi] = vals2
-
+                [dxr, dyr, dzr, rxr, ryr, rzr,
+                 dxi, dyi, dzi, rxi, ryi, rzi] = vals2
                 msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
                 msg.append('%14s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '', dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
 

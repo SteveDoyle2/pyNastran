@@ -1,10 +1,10 @@
-from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
+from pyNastran.op2.resultObjects.tableObject import RealTableObject, ComplexTableObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 
-class SPCForcesObject(TableObject):
+class SPCForcesObject(RealTableObject):
     def __init__(self, data_code, is_sort1, isubcase, dt=None, read_mode=0):
-        TableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
+        RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
 
     def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.nonlinear_factor is not None:
@@ -48,9 +48,9 @@ class ComplexSPCForcesObject(ComplexTableObject):
             #vals = [dxr,dyr,dzr,rxr,ryr,rzr,dxi,dyi,dzi,rxi,ryi,rzi]
             vals = list(translation) + list(rotation)
             (vals2, isAllZeros) = writeFloats13E(vals)
-            if not isAllZeros:
-                [dx, dy, dz, rx, ry, rz] = vals2
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
+            #if not isAllZeros:
+            [dx, dy, dz, rx, ry, rz] = vals2
+            msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
         msg.append(pageStamp + str(pageNum) + '\n')
         f.write(''.join(msg))
         return pageNum
