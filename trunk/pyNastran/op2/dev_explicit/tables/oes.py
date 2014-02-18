@@ -600,7 +600,7 @@ class OES(OP2Common):
                                              sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
                                              aCos, bCos, cCos, pressure, svm)
                         else:
-                            self.obj.add_node(dt, eid, grid,
+                            self.obj.add_node(dt, eid, node_id, grid,
                                               sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
                                               aCos, bCos, cCos, pressure, svm)
                         n += 84
@@ -1702,3 +1702,4 @@ class OES(OP2Common):
             # pass = 0/2
             self.create_transient_object(slot, obj)
         return auto_return
+
