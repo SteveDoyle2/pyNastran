@@ -84,6 +84,7 @@ def save_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
         raise ImportError(msg)
     return fname
 
+
 def load_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
     """
     creates a load file dialog in wx or PyQt4/PySide
@@ -135,3 +136,4 @@ def _main():  # pragma: no conver
 
 if __name__ == '__main__':  # pragma: no conver
     _main()
+
