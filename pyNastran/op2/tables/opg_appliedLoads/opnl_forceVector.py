@@ -1,11 +1,11 @@
-from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
+from pyNastran.op2.resultObjects.tableObject import RealTableObject, ComplexTableObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 
-class ForceVectorObject(TableObject):  # table_code=12, sort_code=0, thermal=0
+class ForceVectorObject(RealTableObject):  # table_code=12, sort_code=0, thermal=0
 
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:

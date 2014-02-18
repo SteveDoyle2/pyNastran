@@ -1,11 +1,11 @@
 from numpy import array
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
+from pyNastran.op2.resultObjects.tableObject import RealTableObject, ComplexTableObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
 
-class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
+class EigenVectorObject(RealTableObject):  # approach_code=2, sort_code=0, thermal=0
     """
     ::
 
@@ -18,7 +18,7 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
           2003      G      0.0            0.0            0.0            0.0            0.0            0.0
     """
     def __init__(self, data_code, is_sort1, isubcase, imode, read_mode):
-        TableObject.__init__(self, data_code, is_sort1, isubcase, imode, read_mode)
+        RealTableObject.__init__(self, data_code, is_sort1, isubcase, imode, read_mode)
         self.gridTypes = {}
 
     def read_f06_data(self, data_code, data):

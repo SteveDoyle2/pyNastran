@@ -4,7 +4,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from struct import unpack
 
 from .opg_Objects import AppliedLoadsObject  # ComplexAppliedLoadsObject
-from .opg_loadVector import LoadVectorObject, ComplexLoadVectorObject, ThermalLoadVectorObject
+from .opg_loadVector import (RealLoadVectorTable, ComplexLoadVectorTable,
+                             RealLoadVectorObject, ComplexLoadVectorObject,
+                             ThermalLoadVectorObject)
 from .opnl_forceVector import ForceVectorObject, ComplexForceVectorObject
 
 # OGS table # TODO move this...
@@ -190,7 +192,7 @@ class OPG(object):
         if self.num_wide == 8:  # real/random
             if self.thermal == 0:
                 resultName = 'loadVectors'
-                self.create_transient_object(self.loadVectors, LoadVectorObject)
+                self.create_transient_object(self.loadVectors, RealLoadVectorObject)
                 self.handle_results_buffer(self.OUG_RealTable, resultName)
             elif self.thermal == 1:
                 resultName = 'thermalLoadVectors'

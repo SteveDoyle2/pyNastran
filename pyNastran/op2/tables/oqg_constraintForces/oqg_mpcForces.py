@@ -1,4 +1,4 @@
-from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTableVector, TableObject, ComplexTableObject
+from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTableVector, RealTableObject, ComplexTableObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
 
@@ -25,10 +25,10 @@ class ComplexMPCForcesVector(ComplexTableVector):
         return self._write_f06_transient_block(words, header, pageStamp, pageNum, f, is_mag_phase)
 
 
-class RealMPCForcesObject(TableObject):
+class RealMPCForcesObject(RealTableObject):
 
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:

@@ -1,5 +1,5 @@
 from struct import pack
-from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTableVector, TableObject, ComplexTableObject
+from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTableVector, RealTableObject, ComplexTableObject
 
 
 class RealVelocityVector(RealTableVector):
@@ -26,9 +26,9 @@ class ComplexVelocityVector(ComplexTableVector):
         return self._write_f06_transient_block(words, header, pageStamp, pageNum, f, is_mag_phase)
 
 
-class RealVelocityObject(TableObject):  # approach_code=10, thermal=0
+class RealVelocityObject(RealTableObject):  # approach_code=10, thermal=0
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         words = ['                                                   V E L O C I T Y   V E C T O R\n',

@@ -1,5 +1,5 @@
 from pyNastran.f06.f06_formatting import writeFloats13E
-from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTableVector, TableObject, ComplexTableObject
+from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTableVector, RealTableObject, ComplexTableObject
 
 class RealSPCForcesVector(RealTableVector):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -25,10 +25,10 @@ class ComplexSPCForcesVector(ComplexTableVector):
         return self._write_f06_transient_block(words, header, pageStamp, pageNum, f, is_mag_phase)
 
 
-class RealSPCForcesObject(TableObject):
+class RealSPCForcesObject(RealTableObject):
 
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
-        TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         words = ['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n',

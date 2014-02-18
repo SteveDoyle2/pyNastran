@@ -1,12 +1,12 @@
 from numpy import abs, angle
-from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
+from pyNastran.op2.resultObjects.tableObject import RealTableObject, ComplexTableObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 
-class LoadVectorObject(TableObject):  # table_code=2, sort_code=0, thermal=0
+class LoadVectorObject(RealTableObject):  # table_code=2, sort_code=0, thermal=0
 
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
-        TableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
+        RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
 
     def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.nonlinear_factor is not None:
@@ -48,9 +48,9 @@ class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_co
         return self._write_f06_transient_block(words, header, pageStamp, f, pageNum, is_mag_phase)
 
 
-class ThermalVector(TableObject):
+class ThermalVector(RealTableObject):
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
-        TableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
+        RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
 
     def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.nonlinear_factor is not None:

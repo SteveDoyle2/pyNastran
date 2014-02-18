@@ -12,6 +12,8 @@ class OGPF(object):
         self._read_opg1_3(data)  # TODO: this is wrong...
 
     def _read_ogpf1_4(self, data):
+        if self.read_mode == 1:
+            return len(data)
         if self.table_code == 19:  # grid point force balance
             assert self.table_name in ['OGPFB1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_grid_point_forces(data)

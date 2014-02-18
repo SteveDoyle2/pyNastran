@@ -1,9 +1,9 @@
-from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
+from pyNastran.op2.resultObjects.tableObject import RealTableObject, ComplexTableObject
 
 
-class DisplacementObject(TableObject):  # approach_code=1, thermal=0
+class DisplacementObject(RealTableObject):  # approach_code=1, thermal=0
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode=0):
-        TableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
+        RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt, read_mode)
 
     def write_f06(self, header, pageStamp, f, pageNum=1, is_mag_phase=False):
         if self.nonlinear_factor is not None:
