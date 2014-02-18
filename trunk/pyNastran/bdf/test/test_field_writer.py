@@ -37,7 +37,6 @@ class TestFieldWriter(unittest.TestCase):
                          print_field(-0.0748662))
 
 
-    #@unittest.skip('skipping test_2')
     def test_2(self):
         for i in xrange(100):
             a = random.uniform(-20, 20)

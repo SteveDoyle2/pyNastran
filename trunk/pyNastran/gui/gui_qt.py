@@ -40,10 +40,10 @@ pkg_path = pyNastran.__path__[0]
 script_path = os.path.join(pkg_path, 'gui', 'scripts')
 icon_path = os.path.join(pkg_path, 'gui', 'icons')
 
-#### tcolorpick.png and tabout.png trefresh.png icons on LGPL license, see
-#### http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/color-picker-grey.png
-#### http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/help-hint.png
-#### http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/view-refresh-8.png
+# tcolorpick.png and tabout.png trefresh.png icons on LGPL license, see
+# http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/color-picker-grey.png
+# http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/help-hint.png
+# http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/view-refresh-8.png
 
 # kills the program when you hit Cntl+C from the command line
 import signal
@@ -303,21 +303,21 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         self.setWindowIcon(QtGui.QIcon(os.path.join(icon_path, 'logo.png')))
         self.set_window_title('')
 
-        ############  Results widget ##################
+        #=========== Results widget ===================
         self.res_dock = QtGui.QDockWidget("Results", self)
         self.res_dock.setObjectName("results_obj")
         self.res_widget = QtGui.QTextEdit()
         self.res_widget.setReadOnly(True)
         self.res_dock.setWidget(self.res_widget)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.res_dock)
-        ############  Logging widget ##################
+        #=========== Logging widget ===================
         self.log_dock = QtGui.QDockWidget("Application log", self)
         self.log_dock.setObjectName("application_log")
         self.log_widget = QtGui.QTextEdit()
         self.log_widget.setReadOnly(True)
         self.log_dock.setWidget(self.log_widget)
         self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock)
-        ################################################
+        #===============================================
 
         # right sidebar
 
@@ -467,7 +467,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         # this is our main, 'central' widget
         self.setCentralWidget(vtk_frame)
 
-        ##############################################################
+        #=============================================================
         self.rend = vtk.vtkRenderer()
         self.vtk_interactor.GetRenderWindow().AddRenderer(self.rend)
         self.vtk_interactor.GetRenderWindow().Render()
