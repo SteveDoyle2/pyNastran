@@ -1,5 +1,27 @@
-from pyNastran.op2.resultObjects.tableObject import RealTableObject, ComplexTableObject
+from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTableVector, RealTableObject, ComplexTableObject
 from pyNastran.f06.f06_formatting import writeFloats13E
+
+
+class RealForceVectorVector(RealTableVector):  # table_code=2, sort_code=0, thermal=0
+
+    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+        RealTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
+
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        msg = ['                                         N O N - L I N E A R - F O R C E   V E C T O R\n']
+        #words += self.get_table_marker()
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient_block(words, header, pageStamp, pageNum, f)
+        return self._write_f06_block(words, header, pageStamp, pageNum, f)
+
+
+class ComplexForceVectorVector(ComplexTableVector):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ComplexTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
+
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        words = ['                                       C O M P L E X   F O R C E   V E C T O R\n',]
+        return self._write_f06_transient_block(words, header, pageStamp, pageNum, f, is_mag_phase)
 
 
 class ForceVectorObject(RealTableObject):  # table_code=12, sort_code=0, thermal=0
@@ -24,7 +46,7 @@ class ForceVectorObject(RealTableObject):  # table_code=12, sort_code=0, thermal
             (vals2, isAllZeros) = writeFloats13E(vals)
             if not isAllZeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
+                msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
 
         msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
@@ -50,7 +72,7 @@ class ForceVectorObject(RealTableObject):  # table_code=12, sort_code=0, thermal
                 (vals2, isAllZeros) = writeFloats13E(vals)
                 if not isAllZeros:
                     [dx, dy, dz, rx, ry, rz] = vals2
-                    msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
+                    msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
 
             msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
@@ -66,7 +88,7 @@ class ComplexForceVectorObject(ComplexTableObject):  # table_code=12, approach_c
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase=False)
-        msg = header + ['                                       C O M P L E X   FORCE   V E C T O R\n',
+        msg = header + ['                                       C O M P L E X   F O R C E   V E C T O R\n',
                         '                                                          (REAL/IMAGINARY)\n',
                         ' \n',
                         '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
@@ -94,8 +116,8 @@ class ComplexForceVectorObject(ComplexTableObject):  # table_code=12, approach_c
             (vals2, isAllZeros) = writeFloats13E(vals)
             [dxr, dyr, dzr, rxr, ryr, rzr,
              dxi, dyi, dzi, rxi, ryi, rzi] = vals2
-            msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
-            msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '',           dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
+            msg.append('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr))
+            msg.append('  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % ('', '',            dxi, dyi, dzi, rxi, ryi, rzi))
 
         msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
@@ -135,8 +157,8 @@ class ComplexForceVectorObject(ComplexTableObject):  # table_code=12, approach_c
                 (vals2, isAllZeros) = writeFloats13E(vals)
                 [dxr, dyr, dzr, rxr, ryr, rzr,
                  dxi, dyi, dzi, rxi, ryi, rzi] = vals2
-                msg.append('0 %12i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
-                msg.append('  %12s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '',           dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
+                msg.append('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr))
+                msg.append('  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % ('', '',           dxi, dyi, dzi, rxi, ryi, rzi))
             msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
             msg = ['']
