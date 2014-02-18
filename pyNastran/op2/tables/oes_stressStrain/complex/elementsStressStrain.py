@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from struct import unpack
+from struct import Struct
 
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
@@ -26,11 +26,12 @@ class ComplexElementsStressStrain(object):
         is_magnitude_phase = self.is_magnitude_phase()
 
         n = 0
+        s = Struct(format1)
         nelements = len(self.data) // ntotal
         for i in xrange(nEntries):
             edata = self.data[n:n + ntotal]
             (eid, axialReal, axialImag, torsionReal,
-                torsionImag) = unpack(format1, edata)
+                torsionImag) = s.unpack(edata)
 
             if is_magnitude_phase:
                 (axial) = polar_to_real_imag(axialReal, axialImag)
@@ -59,10 +60,11 @@ class ComplexElementsStressStrain(object):
         is_magnitude_phase = self.is_magnitude_phase()
 
         n = 0
+        s = Struct(format1)
         nEntries = len(self.data) // nTotal
         for i in xrange(nEntries):
             eData = self.data[n:n + nTotal]
-            (eid, axialReal, axialImag) = unpack(format1, eData)
+            (eid, axialReal, axialImag) = s.unpack(eData)
 
             if is_magnitude_phase:
                 axial = polar_to_real_imag(axialReal, axialImag)
@@ -87,6 +89,7 @@ class ComplexElementsStressStrain(object):
 
         n = 0
         ntotal = 76
+        s = Struct(format1)
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):
             edata = self.data[n:n+ntotal]
@@ -95,7 +98,7 @@ class ComplexElementsStressStrain(object):
             (eid_device, s1ar, s2ar, s3ar, s4ar, axialr,
              s1ai, s2ai, s3ai, s4ai, axiali,
              s1br, s2br, s3br, s4br,
-             s1bi, s2bi, s3bi, s4bi) = unpack(format1, edata)
+             s1bi, s2bi, s3bi, s4bi) = s.unpack(edata)
 
             if is_magnitude_phase:
                 s1a = polar_to_real_imag(s1ar, s1ai)
@@ -143,10 +146,12 @@ class ComplexElementsStressStrain(object):
         ntotal = 4 * (2 + 15 * 5)
         nelements = len(self.data) // ntotal
         n = 0
+        s1 = Struct(format1)
+        s2 = Struct(b'i14f')
         for i in xrange(nelements):
             edata = self.data[n:n+60]  # 4*15=60
             n += 60
-            out = unpack(format1, edata)  # 15
+            out = s1.unpack(edata)  # 15
             if self.make_op2_debug:
                 self.op2_debug.write('%s\n' % (str(out)))
             (eid, fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
@@ -174,11 +179,10 @@ class ComplexElementsStressStrain(object):
             #print "nNodes = ",nNodes
             self.obj.add_new_eid('CQUAD4', dt, eid, 'CEN/4', fd1, sx1, sy1, txy1)
             self.obj.add(dt, eid, 'CEN/4', fd2, sx2, sy2, txy2)
-
             for nodeID in xrange(nNodes):  # nodes pts
                 edata = self.data[n:n+60]  # 4*15=60
                 n += 60
-                out = unpack(b'i14f', edata)
+                out = s2.unpack(edata)
                 if self.make_op2_debug:
                     self.op2_debug.write('%s\n' % (str(out)))
                 (grid, fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
@@ -214,11 +218,11 @@ class ComplexElementsStressStrain(object):
         format1 += '24f'
         format1 = bytes(format1)
 
+        s = Struct(format1)
         while len(self.data) >= nTotal:
             eData = self.data[0:nTotal]
             self.data = self.data[nTotal:]
-
-            out = unpack(format1, eData)  # num_wide=25
+            out = s.unpack(eData)  # num_wide=25
             (eid, fd1, sx1, sy1, xxx, txy1, es1, eps1, ecs1, ex1, ey1, xxx, exy1,
                   fd2, sx2, sy2, xxx, txy2, es2, eps2, ecs2, ex2, ey2, xxx, exy2) = out
             eid = extract(eid, dt)
@@ -244,12 +248,12 @@ class ComplexElementsStressStrain(object):
         nTotal = 36  # 4*9
         format1 += '8f'
         format1 = bytes(format1)
-
+        s = Struct(format1)
         while len(self.data) >= nTotal:
             eData = self.data[0:nTotal]
             self.data = self.data[nTotal:]
 
-            out = unpack(format1, eData)  # num_wide=25
+            out = s.unpack(eData)  # num_wide=25
             (eid, fer, uer, aor, aer,
                   fei, uei, aoi, aei) = out
             eid = extract(eid, dt)
@@ -276,12 +280,12 @@ class ComplexElementsStressStrain(object):
         nTotal = 52  # 4*13
         format1 += '12f'
         format1 = bytes(format1)
-
+        s = Struct(format1)
         while len(self.data) >= nTotal:
             eData = self.data[0:nTotal]
             self.data = self.data[nTotal:]
 
-            out = unpack(format1, eData)  # num_wide=25
+            out = s.unpack(eData)  # num_wide=25
             (eid, txr,tyr,tzr,rxr,ryr,rzr,
                   txi,tyi,tzi,rxi,ryi,rzi) = out
             eid = extract(eid, dt)
@@ -352,13 +356,16 @@ class ComplexElementsStressStrain(object):
         n = 0
         nelements = len(self.data) // ntotal
         gridC = 'CEN/' + str(nNodes)
+        s1 = Struct(b'i4s')
+        s2 = Struct(format1)
+        s3 = Struct(b'i14f')
         for i in xrange(nelements):
-            (eid, _) = unpack(b'i4s', self.data[n:n+8])
+            (eid, _) = s1.unpack(self.data[n:n+8])
             n += 8
             eid = extract(eid, dt)
             edata = self.data[n:n+60]  # 4*15
             n += 60
-            out = unpack(format1, edata)  # len=15*4
+            out = s2.unpack(edata)  # len=15*4
             if self.make_op2_debug:
                 self.op2_debug.write('%s\n' % (str(out)))
             (grid, fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
@@ -381,11 +388,10 @@ class ComplexElementsStressStrain(object):
 
             self.obj.add_new_eid(eType, dt, eid, gridC, fd1, sx1, sy1, txy1)
             self.obj.add(dt, eid, gridC, fd2, sx2, sy2, txy2)
-
             for nodeID in xrange(nNodes):  # nodes pts
                 edata = self.data[n:n+60]  # 4*15=60
                 n += 60
-                out = unpack(b'i14f', edata)
+                out = s3.unpack(edata)
                 if self.make_op2_debug:
                     self.op2_debug.write('%s\n' % (str(out)))
                 (grid, fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,

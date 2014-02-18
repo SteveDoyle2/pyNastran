@@ -117,10 +117,10 @@ class RealGridPointForcesObject(ScalarObject):
                 [f1, f2, f3, m1, m2, m3] = vals2
                 if eid == 0:
                     eid = ''
-                msg.append('%s  %8s    %10s    %-8s      %s  %s  %s  %s  %s  %-s\n' % (zero, eKey, eid, elemName, f1, f2, f3, m1, m2, m3.rstrip()))
+                msg.append('%s  %8s    %10s    %-8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (zero, eKey, eid, elemName,
+                                                                                                     f1, f2, f3, m1, m2, m3))
                 zero = ' '
             zero = '0'
-
         msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
         return pageNum
@@ -146,8 +146,8 @@ class RealGridPointForcesObject(ScalarObject):
                     [f1, f2, f3, m1, m2, m3] = vals2
                     if eid == 0:
                         eid = ''
-
-                    msg.append('%s  %8s    %10s    %8s      %s  %s  %s  %s  %s  %-s\n' % (zero, eKey, eid, elemName, f1, f2, f3, m1, m2, m3))
+                    msg.append('%s  %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (zero, eKey, eid, elemName,
+                                                                                                        f1, f2, f3, m1, m2, m3))
                     zero = ' '
                 zero = '0'
 
@@ -176,4 +176,3 @@ class ComplexGridPointForcesObject(ScalarObject):
                                                      nelements))
         msg.append('  forces, moments, elemName, eids\n')
         return msg
-
