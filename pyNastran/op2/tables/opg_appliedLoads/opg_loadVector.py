@@ -128,9 +128,9 @@ class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_co
             [dxr, dyr, dzr, rxr, ryr, rzr,
              dxi, dyi, dzi, rxi, ryi, rzi] = vals2
             f.write('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-            '  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
-                nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr,
-                '', '',            dxi, dyi, dzi, rxi, ryi, rzi))
+                    '  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                      nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr,
+                      '', '',            dxi, dyi, dzi, rxi, ryi, rzi))
         f.write(pageStamp % pageNum)
         return pageNum
 
@@ -189,7 +189,7 @@ class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_co
                 f.write('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
                         '  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                             nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr,
-                            '', '', dxi, dyi, dzi, rxi, ryi, rzi))
+                            '', '',            dxi, dyi, dzi, rxi, ryi, rzi))
 
             f.write(pageStamp % pageNum)
             pageNum += 1
