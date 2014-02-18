@@ -6,24 +6,24 @@ from numpy import zeros, ones #, array
 
 
 from pyNastran.op2.tables.oug.oug_displacements import (
-    DisplacementObject,              # table_code=1     format_code=1 sort_code=0
+    RealDisplacementObject,              # table_code=1     format_code=1 sort_code=0
     ComplexDisplacementObject)       # analysis_code=5  format_code=3 sort_code=1
 
 # table_code=10 format_code=1 sort_code=0
 from pyNastran.op2.tables.oug.oug_velocities import (
-    VelocityObject, ComplexVelocityObject)
+    RealVelocityObject, ComplexVelocityObject)
 
 # table_code=11 format_code=1 sort_code=0
 from pyNastran.op2.tables.oug.oug_accelerations import (
-    AccelerationObject, ComplexAccelerationObject)
+    RealAccelerationObject, ComplexAccelerationObject)
 
 # table_code=1 format_code=1 sort_code=0
 from pyNastran.op2.tables.oug.oug_temperatures import (
-    TemperatureObject)
+    RealTemperatureObject)
 
 from pyNastran.op2.tables.oug.oug_eigenvectors import (
-     EigenVectorObject,                     # analysis_code=2, sort_code=0 format_code   table_code=7
-     ComplexEigenVectorObject,              # analysis_code=5, sort_code=1 format_code=1 table_code=7
+     EigenvectorObject,                     # analysis_code=2, sort_code=0 format_code   table_code=7
+     ComplexEigenvectorObject,              # analysis_code=5, sort_code=1 format_code=1 table_code=7
     #RealEigenVectorObject,                 # analysis_code=9, sort_code=1 format_code=1 table_code=7
 )
 from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import ThermalVelocityVectorObject
@@ -377,22 +377,22 @@ class OUG(object):
                 #print self.data_code
                 if self.table_name in ['OUGV1', 'OUG1']:
                     resultName = 'displacements'
-                    self.create_transient_object(self.displacements, DisplacementObject)
+                    self.create_transient_object(self.displacements, RealDisplacementObject)
                 elif self.table_name in ['OUGATO2']:
                     resultName = 'displacementsATO'
-                    self.create_transient_object(self.displacementsATO, DisplacementObject)
+                    self.create_transient_object(self.displacementsATO, RealDisplacementObject)
                 elif self.table_name in ['OUGCRM2']:
                     resultName = 'displacementsCRM'
-                    self.create_transient_object(self.displacementsCRM, DisplacementObject)
+                    self.create_transient_object(self.displacementsCRM, RealDisplacementObject)
                 elif self.table_name in ['OUGPSD2']:
                     resultName = 'displacementsPSD'
-                    self.create_transient_object(self.displacementsPSD, DisplacementObject)
+                    self.create_transient_object(self.displacementsPSD, RealDisplacementObject)
                 elif self.table_name in ['OUGRMS2']:
                     resultName = 'displacementsRMS'
-                    self.create_transient_object(self.displacementsRMS, DisplacementObject)
+                    self.create_transient_object(self.displacementsRMS, RealDisplacementObject)
                 elif self.table_name in ['OUGNO2']:
                     resultName = 'displacementsNO'
-                    self.create_transient_object(self.displacementsNO, DisplacementObject)
+                    self.create_transient_object(self.displacementsNO, RealDisplacementObject)
                 else:
                     isSkip = True
                     msg = '***table=%s***\n%s' % (self.table_name, self.code_information())
@@ -404,7 +404,7 @@ class OUG(object):
                 resultName = 'temperatures'
                 name = resultName + ': Subcase %s' % self.isubcase
                 self.create_transient_object(
-                    self.temperatures, TemperatureObject)
+                    self.temperatures, RealTemperatureObject)
                 self.handle_results_buffer(self.OUG_RealTable, resultName, name)
             #elif self.thermal == 8:
                 #resultName = 'scaledDisplacements'
@@ -431,7 +431,7 @@ class OUG(object):
             if self.thermal == 0:
                 resultName = 'eigenvectors'
                 name = resultName + ': Subcase %s' % self.isubcase
-                self.create_transient_object(self.eigenvectors, EigenVectorObject)
+                self.create_transient_object(self.eigenvectors, EigenvectorObject)
                 self.handle_results_buffer(self.OUG_RealTable, resultName, name)
             else:
                 self.not_implemented_or_skip()
@@ -439,7 +439,7 @@ class OUG(object):
             if self.thermal == 0:
                 resultName = 'eigenvectors'
                 name = resultName + ': Subcase %s' % self.isubcase
-                self.create_transient_object(self.eigenvectors, ComplexEigenVectorObject)
+                self.create_transient_object(self.eigenvectors, ComplexEigenvectorObject)
                 self.handle_results_buffer(self.OUG_ComplexTable, resultName, name)
             else:
                 self.not_implemented_or_skip()
@@ -452,7 +452,7 @@ class OUG(object):
             if self.thermal == 0:
                 resultName = 'velocities'
                 name = resultName + ': Subcase %s' % self.isubcase
-                self.create_transient_object(self.velocities, VelocityObject)
+                self.create_transient_object(self.velocities, RealVelocityObject)
                 self.handle_results_buffer(self.OUG_RealTable, resultName, name)
             elif self.thermal == 1:
                 resultName = 'velocities'
@@ -478,7 +478,7 @@ class OUG(object):
             if self.thermal == 0:
                 resultName = 'accelerations'
                 name = resultName + ': Subcase %s' % self.isubcase
-                self.create_transient_object(self.accelerations, AccelerationObject)
+                self.create_transient_object(self.accelerations, RealAccelerationObject)
                 self.handle_results_buffer(self.OUG_RealTable, resultName, name)
             else:
                 self.not_implemented_or_skip()

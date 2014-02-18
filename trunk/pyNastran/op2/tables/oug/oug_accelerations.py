@@ -1,8 +1,33 @@
-from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
+from struct import pack
+from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTableVector, TableObject, ComplexTableObject
 
 
-class AccelerationObject(TableObject):  # approach_code=11, thermal=0
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+class RealAccelerationVector(RealTableVector):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
+
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        words = ['                                             A C C E L E R A T I O N   V E C T O R\n', ]
+                 #' \n',
+                 #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        #words += self.get_table_marker()
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient_block(words, header, pageStamp, pageNum, f)
+        return self._write_f06_block(words, header, pageStamp, pageNum, f)
+
+
+class ComplexAccelerationVector(ComplexTableVector):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ComplexTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
+
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        words = ['                                       C O M P L E X   A C C E L E R A T I O N   V E C T O R\n']
+        #words += self.get_table_marker()
+        return self._write_f06_transient_block(words, header, pageStamp, pageNum, f, is_mag_phase)
+
+
+class RealAccelerationObject(TableObject):  # approach_code=11, thermal=0
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         TableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):

@@ -41,8 +41,13 @@ from pyNastran.op2.dev_explicit.fortran_format import FortranFormat
 from pyNastran.bdf.bdf import BDF
 
 from pyNastran.utils import is_binary
-from pyNastran.utils.gui_io import load_file_dialog
 
+
+class TranshWriter(file):
+    def __init__(self, *args, **kwargs):
+        file.__init__(self, *args, **kwargs)
+    def write(self, msg):
+        pass
 
 class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
           LAMA, ONR, OGPF,
@@ -222,7 +227,7 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
 
         self.grid_point_weight = GridPointWeight()
         self.words = []
-        self.debug = True
+        self.debug = False
 
         self._table_mapper = {
             #=======================
@@ -455,6 +460,7 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
             init=fname, op2_filename=fname  -> fname is used
         """
         if op2_filename is None:
+            from pyNastran.utils.gui_io import load_file_dialog
             wildcard_wx = "Nastran OP2 (*.op2)|*.op2|" \
                 "All files (*.*)|*.*"
             wildcard_qt = "Nastran OP2 (*.op2);;All files (*)"
@@ -479,6 +485,9 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
         if self.debug:
             #: an ASCII version of the op2 (creates lots of output)
             self.binary_debug = open('debug.out', 'wb')
+        else:
+            self.binary_debug = TranshWriter('debug.out', 'wb')
+
         if self.save_skipped_cards:
             self.skippedCardsFile = open('skippedCards.out', 'a')
         #: file index
@@ -835,11 +844,50 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
 
         pass
 
+    def _skip_pcompts(self):
+        """
+        Reads the PCOMPTS table (poorly).
+        The PCOMPTS table stores information about the PCOMP cards???
+        """
+        self.log.debug("table_name = %r" % self.table_name)
+        table_name = self.read_table_name(rewind=False)
+
+        self.read_markers([-1])
+        data = self._skip_record()
+
+        self.read_markers([-2, 1, 0])
+        data = self._skip_record()
+        #table_name, = unpack(b'8s', data)
+        #print "table_name = %r" % table_name
+
+        self.read_markers([-3, 1, 0])
+        markers = self.get_nmarkers(1, rewind=True)
+        if markers != [-4]:
+            data = self._skip_record()
+
+        self.read_markers([-4, 1, 0])
+        markers = self.get_nmarkers(1, rewind=True)
+        if markers != [0]:
+            data = self._skip_record()
+        else:
+            self.read_markers([0])
+            return
+
+        self.read_markers([-5, 1, 0])
+        data = self._skip_record()
+
+        self.read_markers([-6, 1, 0])
+        self.read_markers([0])
+
     def _read_pcompts(self):
         """
         Reads the PCOMPTS table (poorly).
         The PCOMPTS table stores information about the PCOMP cards???
         """
+        self._skip_pcompts()
+        return
+        if self.read_mode == 1:
+            return
         self.log.debug("table_name = %r" % self.table_name)
         table_name = self.read_table_name(rewind=False)
 
@@ -1121,19 +1169,30 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
 
             # OES - tCode=5 thermal=0 s_code=0,1 (stress/strain)
             ## OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
-            'celasStress',
+            'celasStress',  # non-vectorized
+            'celas1_stress',  # vectorized
+            'celas2_stress',
+            'celas3_stress',
+            'celas4_stress',
+
             ## OES - CELAS1/CELAS2/CELAS3/CELAS4 strain
-            'celasStrain',
+            'celasStrain',  # non-vectorized
+            'celas1_strain',  # vectorized
+            'celas2_strain',
+            'celas3_strain',
+            'celas4_strain',
 
             ## OES - isotropic CROD/CONROD/CTUBE stress
-            'rodStress',
-            'conrodStress',
-            'ctubeStress',
+            'rodStress',  # non-vectorized
+            'crod_stress',  # vectorized
+            'conrod_stress',
+            'ctube_stress',
 
             ## OES - isotropic CROD/CONROD/CTUBE strain
-            'rodStrain',
-            'conrodStrain',
-            'ctubeStrain',
+            'rodStrain',  # non-vectorized
+            'crod_strain',  # vectorized
+            'conrod_strain',
+            'ctube_strain',
 
             ## OES - isotropic CBAR stress
             'barStress',
@@ -1148,10 +1207,18 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
             'plateStress',
             # OES - isotropic CTRIA3/CQUAD4 strain
             'plateStrain',
+
             ## OES - isotropic CTETRA/CHEXA/CPENTA stress
-            'solidStress',
+            'solidStress',  # non-vectorized
+            'ctetra_stress',  # vectorized
+            'chexa_stress',
+            'cpenta_stress',
+
             ## OES - isotropic CTETRA/CHEXA/CPENTA strain
-            'solidStrain',
+            'solidStrain',  # non-vectorized
+            'ctetra_strain',  # vectorized
+            'chexa_strain',
+            'cpenta_strain',
 
             ## OES - CSHEAR stress
             'shearStress',
@@ -1170,9 +1237,10 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
             'eigenvalues',
 
             # OEF - Forces - tCode=4 thermal=0
-            'rodForces',
-            'conrodForces',
-            'ctubeForces',
+            'rodForces',  # non-vectorized
+            'crod_forces',  # vectorized
+            'conrod_forces',
+            'ctube_forces',
 
             'barForces',
             'bar100Forces',
@@ -1246,7 +1314,7 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
         return ''.join(msg)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no conver
     from pickle import dumps, dump, load, loads
     txt_filename = 'solid_shell_bar.txt'
     f = open(txt_filename, 'wb')

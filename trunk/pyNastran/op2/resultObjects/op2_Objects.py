@@ -240,9 +240,9 @@ class ScalarObject(BaseScalarObject):
         return bool(self.sort_bits[1])
 
     def apply_data_code(self):
-        self.log = self.data_code['log']
+        #self.log = self.data_code['log']
         for key, value in sorted(self.data_code.iteritems()):
-            if key is not 'log':
+            #if key is not 'log':
                 self.__setattr__(key, value)
                 #self.log.debug("  key=%s value=%s" %(key, value))
                 #print "  key=%s value=%s" %(key, value)
@@ -310,6 +310,11 @@ class ScalarObject(BaseScalarObject):
         for name in self.data_code['dataNames']:
             #print("name = ",name)
             self.append_data_member(name + 's', name)
+
+        if 'element_name' in self.data_code:
+            #self.element_names = [self.element_name]
+            self.element_names = [self.data_code['element_name']]
+
 
     def update_data_code(self, data_code):
         if not self.data_code or (data_code['nonlinear_factor'] != self.data_code['nonlinear_factor']):

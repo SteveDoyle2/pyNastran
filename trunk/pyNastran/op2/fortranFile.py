@@ -604,7 +604,6 @@ class FortranFile(object):
             #print "n      = ",n
             #print "self.n = ",self.n
             #print "op2.tell = ",self.op2.tell()
-            #print "******"
             if rewind:
                 self.n = n
                 self.op2.seek(n)

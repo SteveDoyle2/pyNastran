@@ -1,10 +1,32 @@
 # pylint: disable=E1101
 #import sys
 #from struct import pack
+
+from pyNastran.op2.resultObjects.tableObject import RealTableVector  #, ComplexTableVector, TableObject, ComplexTableObject
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 
 
-class TemperatureObject(ScalarObject):  # approach_code=1, sort_code=0, thermal=1
+class RealTemperatureVector(RealTableVector):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
+
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        asdf
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(header, pageStamp, pageNum, f)
+        words = ['                                             A C C E L E R A T I O N   V E C T O R\n',
+                 ' \n',
+                 '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+        #words += self.get_table_marker()
+        return self._write_f06_block(words, header, pageStamp, pageNum, f)
+
+    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        words = ['                                       C O M P L E X   A C C E L E R A T I O N   V E C T O R\n']
+        #words += self.get_table_marker()
+        return self._write_f06_transient_block(words, header, pageStamp, pageNum, f)
+
+
+class RealTemperatureObject(ScalarObject):  # approach_code=1, sort_code=0, thermal=1
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
         self.gridTypes = {}
@@ -125,16 +147,6 @@ class TemperatureObject(ScalarObject):  # approach_code=1, sort_code=0, thermal=
    #             grid = nodeID*10+device_code
    #             msg += pack('iffffff',grid,T,0,0,0,0,0)
    #     return msg
-
-    def write_header(self):
-        mainHeaders = ('nodeID', 'GridType')
-        headers = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6']
-
-        msg = '%-10s %-8s ' % (mainHeaders)
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-        return msg
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         words = ['                                              T E M P E R A T U R E   V E C T O R\n',

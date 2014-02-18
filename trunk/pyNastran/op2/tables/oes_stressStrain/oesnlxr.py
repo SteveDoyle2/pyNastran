@@ -138,7 +138,6 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
         if self.make_op2_debug:
             self.op2_debug.write('buffer_words=|%s|\n' % (str(buffer_words)))
 
-        #print "*********************"
         #buffer_words = self.get_marker() # 87 - buffer
         #print "OES4 buffer_words = ",buffer_words,buffer_words*4
         #self.verifyBufferSize(buffer_words)

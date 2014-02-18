@@ -723,7 +723,6 @@ class ComplexPlateStrainObject(StrainObject):
             raise ValueError(msg)
 
     def add(self, dt, eid, nodeID, curvature, exx, eyy, exy):
-        #print "***add"
         msg = "eid=%s nodeID=%s curvature=%g exx=%s eyy=%s exy=%s" % (
             eid, nodeID, curvature, exx, eyy, exy)
         #print msg
@@ -739,7 +738,6 @@ class ComplexPlateStrainObject(StrainObject):
             raise ValueError(msg)
 
     def add_sort1(self, dt, eid, nodeID, curvature, exx, eyy, exy):
-        #print "***add"
         msg = "eid=%s nodeID=%s curvature=%g exx=%s eyy=%s exy=%s" % (
             eid, nodeID, curvature, exx, eyy, exy)
         #print msg
@@ -756,7 +754,6 @@ class ComplexPlateStrainObject(StrainObject):
             raise ValueError(msg)
 
     def addNewNode(self, dt, eid, nodeID, curvature, exx, eyy, exy):
-        #print "***addNewNode"
         #print self.oxx
         msg = "eid=%s nodeID=%s curvature=%g exx=%s eyy=%s exy=%s" % (
             eid, nodeID, curvature, exx, eyy, exy)

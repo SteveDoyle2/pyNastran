@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from .oes_objects import StressObject, StrainObject
 
 
-class CelasStressObject(StressObject):
+class RealCelasStressObject(StressObject):
     """
     ::
 
@@ -124,7 +124,7 @@ class CelasStressObject(StressObject):
         return pageNum
 
 
-class CelasStrainObject(StrainObject):
+class RealCelasStrainObject(StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StrainObject.__init__(self, data_code, isubcase)
         self.eType = {}

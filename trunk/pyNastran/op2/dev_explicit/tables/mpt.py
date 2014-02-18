@@ -25,6 +25,8 @@ class MPT(object):
         raise RuntimeError('this should be overwritten')
 
     def _read_mpt_4(self, data):
+        if self.read_mode == 1:
+            return len(data)
         return self._read_geom_4(self._mpt_map, data)
 
     def __init__(self):

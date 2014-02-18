@@ -619,46 +619,6 @@ class ComplexPlateStressObject(StressObject):
                     msg += '   %6s   %13s     %13s / %13s     %13s / %13s     %13s / %-s\n' % ('', fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi)
         return msg
 
-    def __repr__(self):
-        #print "sCodes = ",self.sCodes
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---ISOTROPIC PLATE STRESS---\n'
-        headers = self.getHeaders()
-        msg += '%-6s %6s %8s %7s ' % ('EID', 'eType', 'nodeID', 'iLayer')
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        #print self.oxx.keys()
-        for eid, oxxNodes in sorted(self.oxx.iteritems()):
-            eType = self.eType[eid]
-            k = oxxNodes.keys()
-            k.remove('C')
-            k.sort()
-            for nid in ['C'] + k:
-                for iLayer in xrange(len(self.oxx[eid][nid])):
-                    fd = self.fiberCurvature[eid][nid][iLayer]
-                    oxx = self.oxx[eid][nid][iLayer]
-                    oyy = self.oyy[eid][nid][iLayer]
-                    txy = self.txy[eid][nid][iLayer]
-
-                    msg += '%-6i %6s %8s %7s %10g ' % (
-                        eid, eType, nid, iLayer + 1, fd)
-                    vals = [oxx, oyy, txy]
-                    for val in vals:
-                        if abs(val) < 1e-6:
-                            msg += '%10s ' % '0'
-                        else:
-                            try:
-                                msg += '%10i %10i' % (val.real, val.imag)
-                            except:
-                                print("bad val = %s" % val)
-                                raise
-                    msg += '\n'
-        return msg
-
 
 class ComplexPlateStrainObject(StrainObject):
     """
@@ -1228,72 +1188,4 @@ class ComplexPlateStrainObject(StrainObject):
                     msg += '0  %6i   %13s     %13s / %13s     %13s / %13s     %13s / %-s\n' % (eid, fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
                 else:
                     msg += '   %6s   %13s     %13s / %13s     %13s / %13s     %13s / %-s\n' % ('', fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
-        return msg
-
-    def __repr__(self):
-        #print "dt = ",self.dt
-        #print "nf = ",self.nonlinear_factor
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---ISOTROPIC PLATE STRAIN---\n'
-        headers = self.getHeaders()
-        msg += '%-6s %6s %8s %7s ' % ('EID', 'eType', 'nodeID', 'iLayer')
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-
-        for eid, exxNodes in sorted(self.exx.iteritems()):
-            eType = self.eType[eid]
-            k = exxNodes.keys()
-            k.remove('C')
-            k.sort()
-            for nid in ['C'] + k:
-                for iLayer in xrange(len(self.exx[eid][nid])):
-                    fd = self.fiberCurvature[eid][nid][iLayer]
-                    exx = self.exx[eid][nid][iLayer]
-                    eyy = self.eyy[eid][nid][iLayer]
-                    exy = self.exy[eid][nid][iLayer]
-
-                    msg += '%-6i %6s %8s %7s %10g ' % (
-                        eid, eType, nid, iLayer + 1, fd)
-                    vals = [exx, eyy, exy]
-                    for val in vals:
-                        if abs(val) < 1e-6:
-                            msg += '%10s ' % '0.'
-                        else:
-                            msg += '%10.3g ' % val
-                    msg += '\n'
-
-                    #msg += "eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g eyy=%-9.3g exy=%-9.3g\n" %(eid,eType,nid,iLayer,exx,eyy,exy)
-        return msg
-
-    def __reprTransient__(self):
-        msg = '---ISOTROPIC PLATE STRAIN---\n'
-        msg += '%-6s %6s %8s %7s ' % ('EID', 'eType', 'nodeID', 'iLayer')
-        msg += "".join(['%10s ' % (h) for h in self.getHeaders()]) + '\n'
-
-        for dt, exx in sorted(self.exx.iteritems()):
-            msg += '%s = %g\n' % (self.data_code['name'], dt)
-            for eid, exxNodes in sorted(exx.iteritems()):
-                eType = self.eType[eid]
-                k = exxNodes.keys()
-                k.remove('C')
-                for nid in ['C'] + sorted(k):
-                    for iLayer in xrange(len(self.exx[dt][eid][nid])):
-                        fd = self.fiberCurvature[eid][nid][iLayer]
-                        exx = self.exx[dt][eid][nid][iLayer]
-                        eyy = self.eyy[dt][eid][nid][iLayer]
-                        exy = self.exy[dt][eid][nid][iLayer]
-
-                        msg += '%-6i %6s %8s %7s %10g ' % (eid, eType,
-                                                           nid, iLayer + 1, fd)
-                        for val in [exx, eyy, exy]:
-                            if abs(val) < 1e-6:
-                                msg += '%10s ' % '0.'
-                            else:
-                                msg += '%10.3g ' % val.real
-                        msg += '\n'
-
-                        #msg += "eid=%s eType=%s nid=%s iLayer=%s exx=%-9.3g eyy=%-9.3g exy=%-9.3g\n" %(eid,eType,nid,iLayer,exx,eyy,exy)
         return msg

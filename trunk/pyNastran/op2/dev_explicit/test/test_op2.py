@@ -7,8 +7,18 @@ import pyNastran
 #from pyNastran.op2.op2 import OP2
 from pyNastran.f06.f06 import FatalError
 from pyNastran.op2.dev_explicit.op2 import OP2
-#from pyNastran.op2.dev_explicit.op2_vectorized import OP2_Vectorized as OP2
+from pyNastran.op2.dev_explicit.op2_vectorized import OP2_Vectorized as OP2V
 
+# we need to check the memory usage
+try:
+    if os.name == 'nt':  # windows
+        import wmi
+        windows_flag = True
+    elif os.name in ['posix', 'mac']:  # linux/mac
+        import resource
+        windows_flag = False
+except:
+    is_mem = False
 
 def parse_table_names_from_F06(f06Name):
     """gets the op2 names from the f06"""
@@ -36,7 +46,7 @@ def get_failed_files(filename):
 
 
 def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
-                   delete_f06=True,
+                   delete_f06=True, is_vector=False,
                    debug=True, saveCases=True, skipFiles=[],
                    stopOnFailure=False, nStart=0, nStop=1000000000):
     n = ''
@@ -61,6 +71,7 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
             isPassed = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
                                write_f06=write_f06,
                                is_mag_phase=False,
+                               is_vector=is_vector,
                                delete_f06=delete_f06,
                                iSubcases=iSubcases, debug=debug,
                                stopOnFailure=stopOnFailure) # True/False
@@ -91,13 +102,17 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
 
 
 def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
-            is_mag_phase=False, delete_f06=False,
+            is_mag_phase=False, is_vector=False, delete_f06=False,
             iSubcases=[], debug=False, stopOnFailure=True):
     assert '.op2' in op2FileName.lower(), 'op2FileName=%s is not an OP2' % op2FileName
     isPassed = False
     #debug = True
     try:
-        op2 = OP2(make_geom=make_geom, debug=debug)
+        if is_vector:
+            op2 = OP2V(make_geom=make_geom, debug=debug)
+        else:
+            op2 = OP2(make_geom=make_geom, debug=debug)
+
         op2.set_subcases(iSubcases)
 
         #op2.read_bdf(op2.bdfFileName,includeDir=None,xref=False)
@@ -176,12 +191,14 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
 
 def main():
     from docopt import docopt
+    ver = str(pyNastran.__version__)
+
     msg  = "Usage:\n"
-    msg += "test_op2 [-q] [-g] [-w] [-f] [-z] OP2_FILENAME\n"
+    msg += "test_op2 [-q] [-g] [-w] [-f] [-z] [-t] OP2_FILENAME\n"
     msg += "  test_op2 -h | --help\n"
     msg += "  test_op2 -v | --version\n"
     msg += "\n"
-    msg += "Tests to see if an OP2 will work with pyNastran.\n"
+    msg += "Tests to see if an OP2 will work with pyNastran %s.\n" % ver
     msg += "\n"
     msg += "Positional Arguments:\n"
     msg += "  OP2_FILENAME         Path to OP2 file\n"
@@ -193,14 +210,13 @@ def main():
     msg += "  -f, --write_f06      Writes the f06 to fem.f06.out (default=True)\n"
     msg += "  -z, --is_mag_phase   F06 Writer writes Magnitude/Phase instead of\n"
     msg += "                       Real/Imaginary (still stores Real/Imag); (default=False)\n"
+    msg += "  -t, --vector         Vectorizes the results (default=False)\n"
     msg += "  -h, --help           Show this help message and exit\n"
     msg += "  -v, --version        Show program's version number and exit\n"
 
     if len(sys.argv) == 1:
-        aadf
         sys.exit(msg)
 
-    ver = str(pyNastran.__version__)
     data = docopt(msg, version=ver)
     #print("data", data)
 
@@ -217,6 +233,7 @@ def main():
             write_bdf     = data['--write_bdf'],
             write_f06     = data['--write_f06'],
             is_mag_phase  = data['--is_mag_phase'],
+            is_vector     = data['--vector'],
             debug         = not(data['--quiet']))
     print("dt = %f" %(time.time() - t0))
 

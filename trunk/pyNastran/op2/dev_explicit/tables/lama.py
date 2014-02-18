@@ -51,9 +51,13 @@ class LAMA(OP2Common):
         #raise NotImplementedError(self.table_name)
 
     def _read_complex_eigenvalue_4(self, data):
+        if self.read_mode == 1:
+            return len(data)
         raise NotImplementedError(self.table_name)
 
     def _read_buckling_eigenvalue_4(self, data):
+        if self.read_mode == 1:
+            return len(data)
         # BLAMA - Buckling eigenvalue summary table.
         # CLAMA - Complex eigenvalue summary table.
         # LAMA - Normal modes eigenvalue summary table.
@@ -112,6 +116,8 @@ class LAMA(OP2Common):
 
 
     def _read_real_eigenvalue_4(self, data):
+        if self.read_mode == 1:
+            return len(data)
         #self.show_data(data)
         nModes = len(data) // 28
         n = 0

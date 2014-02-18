@@ -1,7 +1,7 @@
 from struct import Struct
 
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import (
-    gridPointForcesObject, complexGridPointForcesObject)
+    RealGridPointForcesObject, ComplexGridPointForcesObject)
 
 
 class OGPF(object):
@@ -28,7 +28,7 @@ class OGPF(object):
         if self.thermal == 0:
             result_name = 'gridPointForces'
             if self.num_wide == 10:
-                self.create_transient_object(self.gridPointForces, gridPointForcesObject)
+                self.create_transient_object(self.gridPointForces, RealGridPointForcesObject)
                 s = Struct(b'ii8s6f')
                 ntotal = 40
                 nnodes = len(data) // ntotal
@@ -38,7 +38,7 @@ class OGPF(object):
                     (eKey, eid, elemName, f1, f2, f3, m1, m2, m3) = out
                     ekey = (eKey - self.device_code) // 10
                     elemName = elemName.strip()
-                    #data = (eid,elemName,f1,f2,f3,m1,m2,m3)
+                    #data = (eid, elemName, f1, f2, f3, m1, m2, m3)
                     self.obj.add(dt, eKey, eid, elemName, f1, f2, f3, m1, m2, m3)
                     #print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%g f2=%g f3=%g m1=%g m2=%g m3=%g" %(ekey,eid,elemName,f1,f2,f3,m1,m2,m3)
                     n += ntotal

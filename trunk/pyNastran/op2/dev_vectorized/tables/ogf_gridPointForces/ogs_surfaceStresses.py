@@ -199,10 +199,6 @@ class GridPointStressesObject(ScalarObject):
             pageNum += 1
         return pageNum - 1
 
-    def __repr__(self):
-        return self.write_f06([], 'PAGE ', 1)[0]
-        #return '---gridPointStressesObject---'
-
 
 class GridPointStressesVolumeObject(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -399,7 +395,3 @@ class GridPointStressesVolumeObject(ScalarObject):
             msg = ['']
             pageNum += 1
         return pageNum - 1
-
-    def __repr__(self):
-        return self.write_f06([], 'PAGE ', 1)[0]
-        #return '---gridPointStressesVolumeObject---'

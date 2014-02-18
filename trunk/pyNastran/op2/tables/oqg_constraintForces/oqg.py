@@ -1,9 +1,9 @@
 from struct import unpack
 
 from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import (
-    SPCForcesObject, ComplexSPCForcesObject)
+    RealSPCForcesObject, ComplexSPCForcesObject)
 from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import (
-    MPCForcesObject, ComplexMPCForcesObject)
+    RealMPCForcesObject, ComplexMPCForcesObject)
 from pyNastran.op2.tables.oqg_constraintForces.oqg_thermalGradientAndFlux import (
     TemperatureGradientAndFluxObject)
 
@@ -156,7 +156,7 @@ class OQG(object):
         elif self.num_wide == 8:  # real/random
             if self.thermal == 0:
                 resultName = 'spcForces'
-                self.create_transient_object(self.spcForces, SPCForcesObject)
+                self.create_transient_object(self.spcForces, RealSPCForcesObject)
                 self.handle_results_buffer(self.OUG_RealTable, resultName)
             elif self.thermal == 1:
                 resultName = 'thermalGradientAndFlux' #'finite element temperature gradients and fluxes'
@@ -176,7 +176,7 @@ class OQG(object):
         if self.num_wide == 8:  # real/random
             if self.thermal == 0:
                 resultName = 'mpcForces'
-                self.create_transient_object(self.mpcForces, MPCForcesObject)
+                self.create_transient_object(self.mpcForces, RealMPCForcesObject)
                 self.handle_results_buffer(self.OUG_RealTable, resultName)
             else:
                 self.not_implemented_or_skip()

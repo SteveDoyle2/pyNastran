@@ -183,9 +183,6 @@ class NonlinearQuadObject(StressObject):
         f.write(''.join(msg))
         return pageNum - 1
 
-    def __repr__(self):
-        return self.write_f06([], 'PAGE ', 1)[0]
-
 
 class HyperelasticQuadObject(StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -297,9 +294,6 @@ class HyperelasticQuadObject(StressObject):
 
         f.write(''.join(msg))
         return pageNum
-
-    def __repr__(self):
-        return self.write_f06([], 'PAGE ', 1)[0]
 
 
 class NonlinearRodObject(StressObject):
@@ -414,6 +408,3 @@ class NonlinearRodObject(StressObject):
 
         f.write(''.join(msg))
         return pageNum
-
-    def __repr__(self):
-        return self.write_f06([], 'PAGE ', 1)[0]

@@ -157,11 +157,6 @@ class GridPointForcesObject(ScalarObject):
             pageNum += 1
         return pageNum - 1
 
-    def __repr__(self):
-        return ''
-        #return self.write_f06([], 'PAGE ', 1)[0]
-        #return '---gridPointForceObject---'
-
 
 class ComplexGridPointForcesObject(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, freq, read_mode):

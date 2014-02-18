@@ -3,11 +3,59 @@ from math import sqrt
 from numpy import array, pi
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.op2.resultObjects.tableObject import TableObject, ComplexTableObject
+
+from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTableVector, TableObject, ComplexTableObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
+class ComplexEigenvectorVector(ComplexTableVector):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ComplexTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
 
-class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
+class RealEigenvectorVector(RealTableVector):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
+
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        #if self.nonlinear_factor is not None:
+            #return self._write_f06_transient(header, pageStamp, pageNum, f)
+        # modes get added
+        words = '                                         R E A L   E I G E N V E C T O R   N O . %10i\n \n' \
+                '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n'
+
+        msg = []
+        #if not len(header) >= 3:
+            #header.append('')
+        for itime in xrange(self.ntimes):
+            node = self.node_gridtype[:, 0]
+            gridtype = self.node_gridtype[:, 1]
+            t1 = self.data[itime, :, 0]
+            t2 = self.data[itime, :, 1]
+            t3 = self.data[itime, :, 2]
+            r1 = self.data[itime, :, 3]
+            r2 = self.data[itime, :, 4]
+            r3 = self.data[itime, :, 5]
+
+            dt = self._times[itime]
+            #if isinstance(dt, float):
+                #header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+            #else:
+                #header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
+            msg += header + words % dt
+            for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in izip(node, gridtype, t1, t2, t3, r1, r2, r3):
+                sgridtype = self.recast_gridtype_as_string(gridtypei)
+                vals = [t1i, t2i, t3i, r1i, r2i, r3i]
+                (vals2, isAllZeros) = writeFloats13E(vals)
+                (dx, dy, dz, rx, ry, rz) = vals2
+                msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz.rstrip()))
+
+            msg.append(page_stamp % page_num)
+            f.write(''.join(msg))
+            msg = ['']
+            page_num += 1
+        return page_num - 1
+
+
+class EigenvectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
     """
     ::
 
@@ -124,7 +172,7 @@ class EigenVectorObject(TableObject):  # approach_code=2, sort_code=0, thermal=0
         return pageNum - 1
 
 
-class RealEigenVectorObject(ScalarObject):  # approach_code=2, sort_code=0, thermal=0
+class RealEigenvectorObject(ScalarObject):  # approach_code=2, sort_code=0, thermal=0
     """
     ::
 
@@ -182,7 +230,7 @@ class RealEigenVectorObject(ScalarObject):  # approach_code=2, sort_code=0, ther
         elif grid_type == 7:
             Type = 'L'
         else:
-            raise ValueError('invalid grid type...gridType=%s' % (grid_type))
+            raise ValueError('invalid grid type...gridType=%s' % grid_type)
 
         self.gridTypes[nodeID] = Type
         #print 'self.caseVal = %s' %(self.caseVal),type(self.caseVal)
@@ -233,7 +281,7 @@ class RealEigenVectorObject(ScalarObject):  # approach_code=2, sort_code=0, ther
         return pageNum - 1
 
 
-class ComplexEigenVectorObject(ComplexTableObject):  # approach_code=2, sort_code=0, thermal=0
+class ComplexEigenvectorObject(ComplexTableObject):  # approach_code=2, sort_code=0, thermal=0
     def __init__(self, data_code, is_sort1, isubcase, iMode):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, iMode)
         self.caseVal = iMode

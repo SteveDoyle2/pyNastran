@@ -133,9 +133,6 @@ class RealBushResults(object):
         msg.append('              : result:  element_type, T1, T2, T3, R1, R2, R3\n')
         return msg
 
-    def __repr__(self):
-        return ''.join(self.get_stats())
-
     def _write_f06_helper(self, words, pageStamp, f, pageNum, is_mag_phase):
         ndt, nelements, dts = self._get_shape()
 

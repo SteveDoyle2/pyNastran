@@ -139,7 +139,7 @@ class ComplexElementsStressStrain(object):
         nNodes = 0  # centroid + 4 corner points
 
         assert self.num_wide == 15, 'invalid num_wide...num_wide=%s' % self.num_wide
-        
+
         ntotal = 4 * (2 + 15 * 5)
         nelements = len(self.data) // ntotal
         n = 0
@@ -213,7 +213,7 @@ class ComplexElementsStressStrain(object):
         nTotal = 100  # 4*25
         format1 += '24f'
         format1 = bytes(format1)
-        
+
         while len(self.data) >= nTotal:
             eData = self.data[0:nTotal]
             self.data = self.data[nTotal:]
@@ -314,7 +314,6 @@ class ComplexElementsStressStrain(object):
         #self.print_section(20)
         #term = data[0:4] CEN/
         #data = data[4:]
-        #print "*****"
         #self.print_block(self.data)
         #assert self.num_wide==87,'invalid num_wide...num_wide=%s' %(self.num_wide)
         #if self.num_wide==87: # 2+(17-1)*5 = 87 -> 87*4 = 348

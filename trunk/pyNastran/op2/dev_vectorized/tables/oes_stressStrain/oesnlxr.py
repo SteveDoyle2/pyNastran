@@ -139,7 +139,6 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
         if self.make_op2_debug:
             self.op2Debug.write('buffer_words=|%s|\n' % (str(buffer_words)))
 
-        #print "*********************"
         #buffer_words = self.get_marker() # 87 - buffer
         #print "OES4 buffer_words = ",buffer_words,buffer_words*4
         #self.verifyBufferSize(buffer_words)
@@ -203,7 +202,7 @@ class OESNLXR(RealElementsStressStrain):  ##todo real or complex?? see r767
         raise NotImplementedError('code this...')
         #msg = 'OES element_type=%-3s -> %-6s\n' %(self.element_type,self.get_element_type(self.element_type))
         msg = ''
-        
+
         if self.element_type in [1, 3, 10]:  # crod/ctube/conrod
             self.makeOES_Object(self.rodStress, rodStressObject,
                                 self.rodStrain, rodStrainObject)
