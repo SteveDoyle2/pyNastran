@@ -21,12 +21,12 @@ from pyNastran.f06.f06 import F06
 from pyNastran.op2.op2 import OP2
 
 # Tables
-from pyNastran.op2.tables.oug.oug_displacements import DisplacementObject
+from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementObject
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import SPCForcesObject
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import MPCForcesObject
 
 # springs
-from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import CelasStressObject, CelasStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealCelasStressObject, RealCelasStrainObject
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealSpringForce
 
 # rods
@@ -1062,12 +1062,12 @@ class Solver(F06, OP2):
 
         if Type == 'stress':
             #if elementType == 'CELAS2':
-            stress = CelasStressObject(data_code, is_sort1, isubcase, dt=None)
+            stress = RealCelasStressObject(data_code, is_sort1, isubcase, dt=None)
             #else:
                 #raise NotImplementedError(elementType)
         elif Type == 'strain':
             #if elementType == 'CELAS2':
-            stress = CelasStrainObject(data_code, is_sort1, isubcase, dt=None)
+            stress = RealCelasStrainObject(data_code, is_sort1, isubcase, dt=None)
             #else:
                 #raise NotImplementedError(elementType)
         else:
@@ -1224,7 +1224,7 @@ class Solver(F06, OP2):
                     'device_code': 1, 'table_code': 1, 'sort_code': 0,
                     'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OUG',
                     'nonlinear_factor': None}
-        disp = DisplacementObject(data_code, is_sort1, isubcase, dt=None)
+        disp = RealDisplacementObject(data_code, is_sort1, isubcase, dt=None)
 
         data = []
 
@@ -1609,7 +1609,7 @@ class Solver(F06, OP2):
                 Ug_separate = [[Ua, iUa], [Us, iUs], [Um, iUm]]
                 Ug = departition_dense_vector(Ug_separate)
 
-                result = DisplacementObject(data_code, transient)
+                result = RealDisplacementObject(data_code, transient)
                 result.add_f06_data()
 
                 if 'PRINT' in options:
@@ -1624,7 +1624,7 @@ class Solver(F06, OP2):
                 if isMPC:
                     SPCForces += Ksm * Um
 
-                result = SPCForcesObject(data_code, transient)
+                result = RealSPCForcesObject(data_code, transient)
                 result.add_f06_data()
                 if 'PRINT' in options:
                     f06.write(result.write_f06(header, pageStamp, pageNum))
@@ -1638,7 +1638,7 @@ class Solver(F06, OP2):
                 if isSPC:
                     MPCForces += Kms * Us
 
-                result = MPCForcesObject(data_code, transient)
+                result = RealMPCForcesObject(data_code, transient)
                 result.add_f06_data()
                 if 'PRINT' in options:
                     f06.write(result.write_f06(header, pageStamp, pageNum))
