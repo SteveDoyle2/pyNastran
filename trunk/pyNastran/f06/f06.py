@@ -16,7 +16,6 @@ from pyNastran.f06.f06_classes import MaxDisplacement  # classes not in op2
 from pyNastran.f06.f06Writer import F06Writer
 
 from pyNastran.utils import is_binary
-from pyNastran.utils.gui_io import load_file_dialog
 
 
 class FatalError(RuntimeError):
@@ -669,12 +668,13 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
         :f06FileName: the file to be parsed (None -> GUI)
         """
         if f06_filename is None:
+            from pyNastran.utils.gui_io import load_file_dialog
             wildcard_wx = "Nastran F06 (*.f06)|*.f06|" \
                 "All files (*.*)|*.*"
             wildcard_qt = "Nastran F06 (*.f06);;All files (*)"
             title = 'Please select a F06 to load'
-            op2_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)
-            assert op2_filename is not None, op2_filename
+            f06_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)
+            assert f06_filename is not None, f06_filename
         else:
             if not os.path.exists(f06_filename):
                 msg = 'cant find f06_filename=%r\n%s' \

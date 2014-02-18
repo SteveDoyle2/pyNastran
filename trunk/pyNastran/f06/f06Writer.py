@@ -13,7 +13,9 @@ from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 def make_stamp(Title, today=None):
     if 'Title' is None:
         Title = ''
-    months = ['January', 'February', 'March', 'April', 'May', 'June',
+
+    #lenghts = [7, 8, 5, 5, 3, 4, 4, 6, 9, 7, 8, 8]
+    months = [' January', 'February', 'March', 'April', 'May', 'June',
               'July', 'August', 'September', 'October', 'November', 'December']
     if today is None:
         today = date.today()
@@ -24,7 +26,7 @@ def make_stamp(Title, today=None):
         #print "day=%s month=%s year=%s" % (day, month, year)
         str_month = months[month - 1].upper()
         str_today = '%-9s %2s, %4s' % (str_month, day, year)
-    str_today = str_today.strip()
+    str_today = str_today  #.strip()
 
     release_date = '02/08/12'  # pyNastran.__releaseDate__
     release_date = ''
@@ -188,7 +190,46 @@ class F06Writer(F06WriterDeprecated):
         self.pageNum = 1
 
         self.iSubcases = []
+        self.__objects_vector_init__()
         self.__objects_init__()
+
+
+    def __objects_vector_init__(self):
+        """
+        All OUG table is simple to vectorize, so we declere it in __objects_init__
+        On the other hand, the rodForces object contains CROD/CTUBE/CONROD elements.
+        It is difficult to handle initializing the CRODs/CONRODs given a
+        mixed type case, so we split out the elements.
+        """
+        self.crod_forces = {}
+        self.conrod_forces = {}
+        self.ctube_forces = {}
+
+        self.crod_stress = {}
+        self.conrod_stress = {}
+        self.ctube_stress = {}
+
+        self.crod_strain = {}
+        self.conrod_strain = {}
+        self.ctube_strain = {}
+
+        self.celas1_stress = {}
+        self.celas2_stress = {}
+        self.celas3_stress = {}
+        self.celas4_stress = {}
+
+        self.celas1_strain = {}
+        self.celas2_strain = {}
+        self.celas3_strain = {}
+        self.celas4_strain = {}
+
+        self.ctetra_stress = {}
+        self.chexa_stress = {}
+        self.cpenta_stress = {}
+
+        self.ctetra_strain = {}
+        self.chexa_strain = {}
+        self.cpenta_strain = {}
 
     def __objects_init__(self):
         """More variable declarations"""
@@ -228,8 +269,6 @@ class F06Writer(F06WriterDeprecated):
         # OEF - Forces - tCode=4 thermal=0
         # rods
         self.rodForces = {}
-        self.conrodForces = {}
-        self.ctubeForces = {}
 
         self.barForces = {}
         self.bar100Forces = {}
@@ -263,6 +302,7 @@ class F06Writer(F06WriterDeprecated):
         # OES - tCode=5 thermal=0 s_code=0,1 (stress/strain)
         #: OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
         self.celasStress = {}
+
         #: OES - CELAS1/CELAS2/CELAS3/CELAS4 strain
         self.celasStrain = {}
 
@@ -272,13 +312,9 @@ class F06Writer(F06WriterDeprecated):
 
         #: OES - isotropic CROD/CONROD/CTUBE stress
         self.rodStress = {}
-        self.conrodStress = {}
-        self.ctubeStress = {}
 
         #: OES - isotropic CROD/CONROD/CTUBE strain
         self.rodStrain = {}
-        self.conrodStrain = {}
-        self.ctubeStrain = {}
 
         #: OES - nonlinear CROD/CONROD/CTUBE stress
         self.nonlinearRodStress = {}
@@ -312,8 +348,10 @@ class F06Writer(F06WriterDeprecated):
 
         #: OES - isotropic CTETRA/CHEXA/CPENTA stress
         self.solidStress = {}
+
         #: OES - isotropic CTETRA/CHEXA/CPENTA strain
         self.solidStrain = {}
+
         #: OES - composite CTRIA3/CQUAD4 stress
         self.compositePlateStress = {}
         #: OES - composite CTRIA3/CQUAD4 strain
@@ -585,7 +623,8 @@ class F06Writer(F06WriterDeprecated):
             #------------------------------------------
             # OEF - forces
             # rods
-            self.rodForces, self.conrodForces, self.ctubeForces,
+            self.rodForces,
+            self.crod_forces, self.conrod_forces, self.ctube_forces,
 
             # springs
             self.springForces,
@@ -610,10 +649,21 @@ class F06Writer(F06WriterDeprecated):
             # OES - strain
 
             # springs,
-            self.celasStrain, self.celasStress,
+            self.celasStrain,
+            self.celas1_stress,
+            self.celas2_stress,
+            self.celas3_stress,
+            self.celas4_stress,
+
+            self.celasStress,
+            self.celas1_strain,
+            self.celas2_strain,
+            self.celas3_strain,
+            self.celas4_strain,
 
             # rods
-            self.rodStrain, self.conrodStrain, self.ctubeStrain, self.nonlinearRodStress,
+            self.rodStrain, self.nonlinearRodStrain,  # non-vectorized
+            self.crod_strain, self.conrod_strain, self.ctube_strain,  # vectorized
 
             # bars/beams
             self.barStrain, self.beamStrain,
@@ -629,12 +679,16 @@ class F06Writer(F06WriterDeprecated):
 
             # solids
             self.solidStrain,
+            self.ctetra_strain,
+            self.chexa_strain,
+            self.cpenta_strain,
 
             #------------------------------------------
             # OES - stress
 
             # rods
-            self.rodStress, self.conrodStress, self.ctubeStress, self.nonlinearRodStrain,
+            self.rodStress, self.nonlinearRodStress,
+            self.crod_stress, self.conrod_stress, self.ctube_stress,
 
             # bars/beams
             self.barStress, self.beamStress,
@@ -650,6 +704,9 @@ class F06Writer(F06WriterDeprecated):
 
             # solids
             self.solidStress,
+            self.ctetra_stress,
+            self.chexa_stress,
+            self.cpenta_stress,
             #------------------------------------------
 
             self.gridPointStresses, self.gridPointVolumeStresses, self.gridPointForces,
@@ -673,6 +730,7 @@ class F06Writer(F06WriterDeprecated):
                 #header[1] = '0    %-72s                                SUBCASE %-15i\n' % (label, isubcase)
                 #header[1] = '0    %-72s                                SUBCASE %-15i\n' % ('',isubcase)
                 for res_type in res_types:
+                    #print("res_type ", res_type)
                     header = ['', '']
                     #header[0] = '     %s\n' % subtitle
                     header[0] = '      %-126s\n' % subtitle
@@ -680,6 +738,7 @@ class F06Writer(F06WriterDeprecated):
                     #print "res_type = ", res_type
                     if isubcase in res_type:
                         #header = copy.deepcopy(headerOld)  # fixes bug in case
+                        #print("isubcase ", isubcase)
                         result = res_type[isubcase]
                         if result.nonlinear_factor is not None:
                             header.append('')
@@ -703,3 +762,4 @@ class F06Writer(F06WriterDeprecated):
                     self.pageNum += 1
         f06.write(make_end(end_flag))
         f06.close()
+
