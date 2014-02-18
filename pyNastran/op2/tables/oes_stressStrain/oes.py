@@ -15,8 +15,8 @@ from .real.oes_gap import NonlinearGapStressObject
 from .real.oes_plates import PlateStressObject, PlateStrainObject
 from .real.oes_rods import RodStressObject, RodStrainObject
 from .real.oes_shear import ShearStressObject, ShearStrainObject
-from .real.oes_solids import SolidStressObject, SolidStrainObject
-from .real.oes_springs import CelasStressObject, CelasStrainObject, NonlinearSpringStressObject
+from .real.oes_solids import RealSolidStressObject, RealSolidStrainObject
+from .real.oes_springs import RealCelasStressObject, RealCelasStrainObject, NonlinearSpringStressObject
 from .real.oes_triax import TriaxStressObject, TriaxStrainObject
 
 
@@ -175,9 +175,9 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             4 : ['CSHEAR', self.shearStress, self.OES_basicElement, ShearStressObject, 'shearStress'],
 
             # springs
-            11 : ['CELAS1', self.celasStress, self.OES_basicElement, CelasStressObject, 'celasStress'],
-            12 : ['CELAS2', self.celasStress, self.OES_basicElement, CelasStressObject, 'celasStress'],
-            13 : ['CELAS3', self.celasStress, self.OES_basicElement, CelasStressObject, 'celasStress'],
+            11 : ['CELAS1', self.celasStress, self.OES_basicElement, RealCelasStressObject, 'celasStress'],
+            12 : ['CELAS2', self.celasStress, self.OES_basicElement, RealCelasStressObject, 'celasStress'],
+            13 : ['CELAS3', self.celasStress, self.OES_basicElement, RealCelasStressObject, 'celasStress'],
 
             # dampers
 
@@ -209,9 +209,9 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             40 : ['CBUSH1D', self.bush1dStressStrain, self.OES_CBUSH1D_40, Bush1DStressObject, 'bush1dStressStrain'],
 
             # solid
-            39 : ['CTETRA', self.solidStress, self.OES_CSOLID_39_67_68, SolidStressObject, 'solidStress',],
-            67 : ['CHEXA',  self.solidStress, self.OES_CSOLID_39_67_68, SolidStressObject, 'solidStress',],
-            68 : ['CPENTA', self.solidStress, self.OES_CSOLID_39_67_68, SolidStressObject, 'solidStress',],
+            39 : ['CTETRA', self.solidStress, self.OES_CSOLID_39_67_68, RealSolidStressObject, 'solidStress',],
+            67 : ['CHEXA',  self.solidStress, self.OES_CSOLID_39_67_68, RealSolidStressObject, 'solidStress',],
+            68 : ['CPENTA', self.solidStress, self.OES_CSOLID_39_67_68, RealSolidStressObject, 'solidStress',],
 
             # gap
             86 : ['CGAPNL', self.nonlinearGapStress, self.OES_CGAPNL_86, NonlinearGapStressObject, 'nonlinearGapStress',],
@@ -223,9 +223,9 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             # composite plate nonlinear
 
             # solid nonlinear
-            85 : ['CTETRANL', self.solidStress, self.OES_TETRANL_85_PENTANL_91_CHEXANL_93, SolidStressObject, 'solidStress',],
-            91 : ['CPENTANL', self.solidStress, self.OES_TETRANL_85_PENTANL_91_CHEXANL_93, SolidStressObject, 'solidStress',],
-            93 : ['CHEXANL',  self.solidStress, self.OES_TETRANL_85_PENTANL_91_CHEXANL_93, SolidStressObject, 'solidStress',],
+            85 : ['CTETRANL', self.solidStress, self.OES_TETRANL_85_PENTANL_91_CHEXANL_93, RealSolidStressObject, 'solidStress',],
+            91 : ['CPENTANL', self.solidStress, self.OES_TETRANL_85_PENTANL_91_CHEXANL_93, RealSolidStressObject, 'solidStress',],
+            93 : ['CHEXANL',  self.solidStress, self.OES_TETRANL_85_PENTANL_91_CHEXANL_93, RealSolidStressObject, 'solidStress',],
 
             # nonlinear rod
             87 : ['CTUBENL',  self.nonlinearRodStress, self.OES_RODNL_89_92, NonlinearRodObject, 'nonlinearRodStress',],
@@ -233,9 +233,9 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             92 : ['CONRODNL', self.nonlinearRodStress, self.OES_RODNL_89_92, NonlinearRodObject, 'nonlinearRodStress',],
 
             # VU
-            145 : ['VUHEXA',  self.solidStress, self.OES_VUHEXA_145_VUPENTA_146_VUTETRA_147, SolidStressObject, 'solidStress'],
-            146 : ['VUPENTA', self.solidStress, self.OES_VUHEXA_145_VUPENTA_146_VUTETRA_147, SolidStressObject, 'solidStress'],
-            147 : ['VUTETRA', self.solidStress, self.OES_VUHEXA_145_VUPENTA_146_VUTETRA_147, SolidStressObject, 'solidStress'],
+            145 : ['VUHEXA',  self.solidStress, self.OES_VUHEXA_145_VUPENTA_146_VUTETRA_147, RealSolidStressObject, 'solidStress'],
+            146 : ['VUPENTA', self.solidStress, self.OES_VUHEXA_145_VUPENTA_146_VUTETRA_147, RealSolidStressObject, 'solidStress'],
+            147 : ['VUTETRA', self.solidStress, self.OES_VUHEXA_145_VUPENTA_146_VUTETRA_147, RealSolidStressObject, 'solidStress'],
 
             # hyperelastic
             139 : ['QUAD4FD', self.hyperelasticPlateStress, self.OES_QUAD4FD_139, HyperelasticQuadObject, 'hyperelasticPlateStress'],
@@ -259,9 +259,9 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             4 : ['CSHEAR', self.shearStrain, self.OES_basicElement, ShearStrainObject, 'shearStrain'],
 
             # springs
-            11 : ['CELAS1', self.celasStrain, self.OES_basicElement, CelasStrainObject, 'celasStrain'],
-            12 : ['CELAS2', self.celasStrain, self.OES_basicElement, CelasStrainObject, 'celasStrain'],
-            13 : ['CELAS3', self.celasStrain, self.OES_basicElement, CelasStrainObject, 'celasStrain'],
+            11 : ['CELAS1', self.celasStrain, self.OES_basicElement, RealCelasStrainObject, 'celasStrain'],
+            12 : ['CELAS2', self.celasStrain, self.OES_basicElement, RealCelasStrainObject, 'celasStrain'],
+            13 : ['CELAS3', self.celasStrain, self.OES_basicElement, RealCelasStrainObject, 'celasStrain'],
             # dampers
 
             # bar
@@ -291,9 +291,9 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             #40 : ['CBUSH1D', self.bush1dStressStrain, self.OES_CBUSH1D_40, Bush1DStressObject, 'bush1dStressStrain'],
 
             # solid
-            39 : ['CTETRA', self.solidStrain, self.OES_CSOLID_39_67_68, SolidStrainObject, 'solidStrain',],
-            67 : ['CHEXA',  self.solidStrain, self.OES_CSOLID_39_67_68, SolidStrainObject, 'solidStrain',],
-            68 : ['CPENTA', self.solidStrain, self.OES_CSOLID_39_67_68, SolidStrainObject, 'solidStrain',],
+            39 : ['CTETRA', self.solidStrain, self.OES_CSOLID_39_67_68, RealSolidStrainObject, 'solidStrain',],
+            67 : ['CHEXA',  self.solidStrain, self.OES_CSOLID_39_67_68, RealSolidStrainObject, 'solidStrain',],
+            68 : ['CPENTA', self.solidStrain, self.OES_CSOLID_39_67_68, RealSolidStrainObject, 'solidStrain',],
 
             # gap
             86 : ['CGAPNL', self.nonlinearGapStress, self.OES_CGAPNL_86, NonlinearGapStressObject, 'nonlinearGapStress',],
@@ -302,9 +302,9 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             90 : ['CQUAD4NL', self.nonlinearPlateStrain, self.OES_CQUAD4NL_90, NonlinearQuadObject, 'nonlinearPlateStrain',],
 
             # solid nonlinear
-            85 : ['CTETRANL', self.solidStrain, self.OES_TETRANL_85_PENTANL_91_CHEXANL_93, SolidStrainObject, 'solidStrain',],
-            91 : ['CPENTANL', self.solidStrain, self.OES_TETRANL_85_PENTANL_91_CHEXANL_93, SolidStrainObject, 'solidStrain',],
-            93 : ['CHEXANL', self.solidStrain, self.OES_TETRANL_85_PENTANL_91_CHEXANL_93, SolidStrainObject, 'solidStrain',],
+            85 : ['CTETRANL', self.solidStrain, self.OES_TETRANL_85_PENTANL_91_CHEXANL_93, RealSolidStrainObject, 'solidStrain',],
+            91 : ['CPENTANL', self.solidStrain, self.OES_TETRANL_85_PENTANL_91_CHEXANL_93, RealSolidStrainObject, 'solidStrain',],
+            93 : ['CHEXANL', self.solidStrain, self.OES_TETRANL_85_PENTANL_91_CHEXANL_93, RealSolidStrainObject, 'solidStrain',],
         }
 
 
@@ -1002,8 +1002,8 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
             #else:  raise Exception('not implemented error')
 
             if self.num_wide == numWideReal:
-                resultName = self.makeOES_Object(self.celasStress, CelasStressObject, 'celasStress',
-                                                 self.celasStrain, CelasStrainObject, 'celasStrain')
+                resultName = self.makeOES_Object(self.celasStress, RealCelasStressObject, 'celasStress',
+                                                 self.celasStrain, RealCelasStrainObject, 'celasStrain')
                 name = resultName + ': Subcase %s' % self.isubcase
                 self.handle_results_buffer(self.OES_basicElement, resultName, name)
             elif self.num_wide == numWideImag:
@@ -1119,8 +1119,8 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
 
         elif self.element_type in [39, 67, 68]:   # ctetra/chexa/cpenta (linear)
             if self.num_wide == numWideReal:
-                resultName = self.makeOES_Object(self.solidStress, SolidStressObject, 'solidStress',
-                                                 self.solidStrain, SolidStrainObject, 'solidStrain')
+                resultName = self.makeOES_Object(self.solidStress, RealSolidStressObject, 'solidStress',
+                                                 self.solidStrain, RealSolidStrainObject, 'solidStrain')
                 name = resultName + ': Subcase %s' % self.isubcase
                 self.handle_results_buffer(self.OES_CSOLID_39_67_68, resultName, name)
             elif self.num_wide == numWideImag:
@@ -1160,8 +1160,8 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
 
         elif self.element_type in [85, 91, 93]: # CTETRANL 85 / CPENTANL 91 / CHEXANL 93
             #print('not done...')
-            resultName = self.makeOES_Object(self.solidStress, SolidStressObject, 'solidStress',
-                                             self.solidStrain, SolidStrainObject, 'solidStrain')
+            resultName = self.makeOES_Object(self.solidStress, RealSolidStressObject, 'solidStress',
+                                             self.solidStrain, RealSolidStrainObject, 'solidStrain')
             name = resultName + ': Subcase %s' % self.isubcase
             self.handle_results_buffer(self.OES_TETRANL_85_PENTANL_91_CHEXANL_93, resultName, name)
 
@@ -1171,8 +1171,8 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
                 return
             else:
                 #print('only the first type read, not parsed...')
-                resultName = self.makeOES_Object(self.solidStress, SolidStressObject, 'solidStress',
-                                                 self.solidStrain, SolidStrainObject, 'solidStrain')
+                resultName = self.makeOES_Object(self.solidStress, RealSolidStressObject, 'solidStress',
+                                                 self.solidStrain, RealSolidStrainObject, 'solidStrain')
                 name = resultName + ': Subcase %s' % self.isubcase
                 self.handle_results_buffer(self.OES_VUHEXA_145_VUPENTA_146_VUTETRA_147, resultName, name)
 

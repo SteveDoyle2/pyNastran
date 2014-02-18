@@ -141,15 +141,15 @@ class OPG(object):
         if self.thermal == 0:
             result_name = 'loadVectors'
             storage_obj = self.loadVectors
-            real_obj = LoadVectorObject
-            complex_obj = ComplexLoadVectorObject
-            n = self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            n = self._read_table(data, result_name, storage_obj,
+                                 LoadVectorObject, ComplexLoadVectorObject,
+                                 None, None, 'node')
         elif self.thermal == 1:
             result_name = 'thermalLoadVectors'
             storage_obj = self.thermalLoadVectors
-            real_obj = ThermalLoadVectorObject
-            complex_obj = None
-            n = self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            n = self._read_table(data, result_name, storage_obj,
+                                 ThermalLoadVectorObject, None,
+                                 None, None, 'node')
         else:
             raise NotImplementedError(self.thermal)
         return n
@@ -163,7 +163,9 @@ class OPG(object):
             storage_obj = self.forceVectors
             real_obj = ForceVectorObject
             complex_obj = ComplexForceVectorObject
-            n = self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            n = self._read_table(data, result_name, storage_obj,
+                                 ForceVectorObject, ComplexForceVectorObject,
+                                 None, None, 'node')
         #elif self.thermal == 1:
             #result_name = 'thermalForceVectors'
             #storage_obj = self.thermalForceVectors

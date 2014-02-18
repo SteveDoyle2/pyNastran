@@ -64,9 +64,6 @@ class RealRodForce(ScalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
         self.axialForce[dt][eid] = axialForce
         self.torque[dt][eid] = torque
 
-    def __repr__(self):
-        return str(self.axialForce)
-
 
 class RealCBeamForce(ScalarObject):  # 2-CBEAM
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -229,10 +226,6 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
         f.write(''.join(msg))
         return pageNum
 
-    def __repr__(self):
-        #return str(self.axial)
-        return self.write_f06(['', ''], 'PAGE', 1)
-
 
 class RealCShearForce(ScalarObject):  # 4-CSHEAR
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -355,9 +348,6 @@ class RealCShearForce(ScalarObject):  # 4-CSHEAR
         self.shear34[dt][eid] = s34
         self.shear41[dt][eid] = s41
 
-    def __repr__(self):
-        return str(self.force41)
-
 
 class RealSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -473,9 +463,6 @@ class RealSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
         f.write(''.join(msg))
         return pageNum
 
-    def __repr__(self):
-        return str(self.force)
-
 
 class RealDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -589,9 +576,6 @@ class RealDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
         f.write(''.join(msg))
         return pageNum
 
-    def __repr__(self):
-        return str(self.force)
-
 
 class RealViscForce(ScalarObject):  # 24-CVISC
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -652,9 +636,6 @@ class RealViscForce(ScalarObject):  # 24-CVISC
         #self.eType[eid] = eType
         self.axialForce[dt][eid] = axialForce
         self.torque[dt][eid] = torque
-
-    def __repr__(self):
-        return str(self.axialForce)
 
 
 class RealPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
@@ -746,9 +727,6 @@ class RealPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         self.bmxy[dt][eid] = bmxy
         self.tx[dt][eid] = tx
         self.ty[dt][eid] = ty
-
-    def __repr__(self):
-        return str(self.mx)
 
 
 class RealPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
@@ -901,9 +879,6 @@ class RealPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.tx[dt][eid].append(tx)
         self.ty[dt][eid].append(ty)
 
-    def __repr__(self):
-        return str(self.mx)
-
 
 class RealCBarForce(ScalarObject):  # 34-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -1031,9 +1006,6 @@ class RealCBarForce(ScalarObject):  # 34-CBAR
             pageNum += 1
         return pageNum - 1
 
-    def __repr__(self):
-        return self._get_stats()
-
 
 class RealCBar100Force(ScalarObject):  # 100-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -1104,9 +1076,6 @@ class RealCBar100Force(ScalarObject):  # 100-CBAR
         self.shear[dt][eid] = [ts1, ts2]
         self.axial[dt][eid] = af
         self.torque[dt][eid] = trq
-
-    def __repr__(self):
-        return str(self.axial)
 
 
 class RealConeAxForce(ScalarObject):  # 35-CCONEAX
@@ -1188,9 +1157,6 @@ class RealConeAxForce(ScalarObject):  # 35-CCONEAX
         self.tm[dt][eid] = tm
         self.su[dt][eid] = su
         self.sv[dt][eid] = sv
-
-    def __repr__(self):
-        return str(self.hopa)
 
 
 class RealCGapForce(ScalarObject):  # 38-CGAP
@@ -1283,9 +1249,6 @@ class RealCGapForce(ScalarObject):  # 38-CGAP
         self.sv[dt][eid] = sv
         self.sw[dt][eid] = sw
 
-    def __repr__(self):
-        return str(self.fx)
-
 
 class RealBendForce(ScalarObject):  # 69-CBEND
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -1371,9 +1334,6 @@ class RealBendForce(ScalarObject):  # 69-CBEND
         self.shearPlane2[dt][eid] = [sp2A, sp2B]
         self.axial[dt][eid] = [axialA, axialB]
         self.torque[dt][eid] = [torqueA, torqueB]
-
-    def __repr__(self):
-        return str(self.axial)
 
 
 class RealPentaPressureForce(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
@@ -1473,9 +1433,6 @@ class RealPentaPressureForce(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
             pageNum += 1
         return pageNum - 1
 
-    def __repr__(self):
-        return str(self.acceleration)
-
 
 class RealCBushForce(ScalarObject):  # 102-CBUSH
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -1536,9 +1493,6 @@ class RealCBushForce(ScalarObject):  # 102-CBUSH
         #self.eType[eid] = eType
         self.force[dt][eid] = [fx, fy, fz]
         self.moment[dt][eid] = [mx, my, mz]
-
-    def __repr__(self):
-        return str(self.force)
 
 
 class RealForce_VU(ScalarObject):  # 191-VUBEAM
@@ -1663,9 +1617,6 @@ class RealForce_VU(ScalarObject):  # 191-VUBEAM
             self.bendingY[dt][eid][nid] = bendingY
             self.bendingZ[dt][eid][nid] = bendingZ
 
-    def __repr__(self):
-        return str(self.forceX)
-
 
 class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -1786,5 +1737,3 @@ class RealForce_VU_2D(ScalarObject):  # 190-VUTRIA # 189-VUQUAD
             self.shearYZ[dt][eid][nid] = shearYZ
             self.shearXZ[dt][eid][nid] = shearXZ
 
-    def __repr__(self):
-        return str(self.membraneX)

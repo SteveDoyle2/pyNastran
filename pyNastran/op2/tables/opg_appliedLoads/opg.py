@@ -187,7 +187,6 @@ class OPG(object):
 
     def readOPG_Data_table2(self):  # Load Vector
         #is_sort1 = self.is_sort1()
-        #print "********\n",self.code_information()
         if self.num_wide == 8:  # real/random
             if self.thermal == 0:
                 resultName = 'loadVectors'
@@ -327,11 +326,11 @@ class OPG(object):
 
             source = unpack(b'8s', data[8:16])
             (dx, dy, dz, rx, ry, rz) = unpack(b'6f', data[16:40])
-            #print "source = |%s|" %(source)
+            #print "source = %r" % source
 
             #print "nodeID=%s eid=%s source=|%s| dx=%-4i dy=%-4i dz=%-4i rx=%-4i ry=%-4i rz=%-4i" %(nodeID,eid,source,dx,dy,dz,rx,ry,rz)
             source2 = source.replace('*', '').replace('-', '').strip()
-            assert source2.isalnum(), 'source=|%s| contains invalid characters...' % (source)
+            assert source2.isalnum(), 'source=%r contains invalid characters...' % source
 
             self.obj.add(nodeID, eid, source, dx, dy, dz, rx, ry, rz)
             #print "grid_device = ",grid_device
@@ -339,5 +338,4 @@ class OPG(object):
             #print "nodeID=%g dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(nodeID,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
             self.data = self.data[dn:]
 
-        #print "***********"
         #print self.obj

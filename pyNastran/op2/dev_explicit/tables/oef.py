@@ -247,6 +247,8 @@ class OEF(OP2Common):
         pass
 
     def _read_oef1_4(self, data):
+        if self.read_mode == 1:
+            return len(data)
         if self.thermal == 0:
             return self._read_oef1_loads(data)
         elif self.thermal == 1:

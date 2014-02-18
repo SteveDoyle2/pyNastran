@@ -3,9 +3,11 @@ from struct import unpack
 from pyNastran.op2.dev_explicit.op2_common import OP2Common
 
 from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import (
-    SPCForcesObject, ComplexSPCForcesObject)
+    RealSPCForcesVector, ComplexSPCForcesVector,
+    RealSPCForcesObject, ComplexSPCForcesObject)
 from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import (
-    MPCForcesObject, ComplexMPCForcesObject)
+    RealMPCForcesVector, ComplexMPCForcesVector,
+    RealMPCForcesObject, ComplexMPCForcesObject)
 from pyNastran.op2.tables.oqg_constraintForces.oqg_thermalGradientAndFlux import (
     TemperatureGradientAndFluxObject)
 
@@ -132,16 +134,17 @@ class OQG(OP2Common):
         table_code = 3
         """
         if self.thermal == 0:
-            real_obj = SPCForcesObject
-            complex_obj = ComplexSPCForcesObject
+            result_name = 'spcForces'
             storage_obj = self.spcForces
-            n = self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            n = self._read_table(data, result_name, storage_obj,
+                                 RealSPCForcesObject, ComplexSPCForcesObject,
+                                 RealSPCForcesVector, ComplexSPCForcesVector, 'node')
         elif self.thermal == 1:
             result_name = 'thermalGradientAndFlux' #'finite element temperature gradients and fluxes'
             storage_obj =  self.thermalGradientAndFlux
-            real_obj = TemperatureGradientAndFluxObject
-            complex_obj = None
-            n = self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            n = self._read_table(data, result_name, storage_obj,
+                                 TemperatureGradientAndFluxObject, None,
+                                 TemperatureGradientAndFluxVector, None, 'node')
         else:
             raise NotImplementedError(self.thermal)
         return n
@@ -153,13 +156,13 @@ class OQG(OP2Common):
         result_name = 'mpcForces'
         storage_obj = self.mpcForces
         if self.thermal == 0:
-            real_obj = MPCForcesObject
-            complex_obj = ComplexMPCForcesObject
-            n = self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            n = self._read_table(data, result_name, storage_obj,
+                                 RealMPCForcesObject, ComplexMPCForcesObject,
+                                 RealMPCForcesVector, ComplexMPCForcesVector, 'node')
         elif self.thermal == 1:
-            real_obj = None
-            complex_obj = None
-            n = self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            n = self._read_table(data, result_name, storage_obj,
+                                 None, None,
+                                 None, None, 'node')
         else:
             raise NotImplementedError(self.thermal)
         return n

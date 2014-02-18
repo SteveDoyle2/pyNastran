@@ -145,7 +145,7 @@ class FortranFormat(object):
         while markers[0] != 0:
             record_len = self._get_record_length()
             if record_len == 584:
-                self.data_code = {'log': self.log,}  # resets the logger
+                self.data_code = {}  #'log': self.log,}  # resets the logger
                 self.obj = None
                 data = self._read_record()
                 if not passer:
@@ -156,21 +156,43 @@ class FortranFormat(object):
                 else:
                     if hasattr(self, 'num_wide'):
                         datai = b''
-                        for data in self._stream_record():
-                            data = datai + data
-                            n = table4_parser(data)
-                            assert isinstance(n, int), self.table_name
-                            datai = data[n:]
+                        if self.read_mode in [0, 2]:
+                            #print "read_mode", self.read_mode
+                            for data in self._stream_record():
+                                data = datai + data
+                                n = table4_parser(data)
+                                assert isinstance(n, int), self.table_name
+                                datai = data[n:]
+                        elif self.read_mode == 1:
+                            #n = self._skip_record()
+                            #n = table4_parser(datai, 300000)
+                            if 1:
+                                n = self.n
+                                for i, data in enumerate(self._stream_record()):
+                                    #if i == 0:
+                                        #data = datai + data
+                                        n = table4_parser(data)
+                                        assert isinstance(n, int), self.table_name
+                                        datai = data[n:]
+                                        #break
+                                #n = record_len
+                                #break
+                            #self.goto(n)
+                            #n = self._skip_record()
 
                         if self.read_mode == 1:
                             if hasattr(self, 'obj') and hasattr(self.obj, 'ntimes'):
+                                #if self.nonlinear_factor ==
                                 self.obj.ntimes += 1
-                                self.obj.ntotal = record_len // (self.num_wide * 4) * self._data_factor
+                                self.obj.ntotal += record_len // (self.num_wide * 4) * self._data_factor
                                 #print "ntotal =", self.obj.ntotal, type(self.obj)
                         elif self.read_mode == 2:
                             #print('self.obj.name =', self.obj.__class__.__name__)
                             if hasattr(self, 'obj') and hasattr(self.obj, 'itime'):
-                                self.obj.itime += 1
+                                if self.obj.ntotal > self.obj.data.shape[1]:
+                                    self.reset_indices()
+                                    self.obj.itime += 1
+                                    #self.obj.itotal = 0
                     else:
                         data = self._read_record()
                         n = table4_parser(data)

@@ -589,12 +589,11 @@ class FortranFile(object):
             #print ""
             self.read_markers([0, 2], debug)
             word = self.read_string_block(debug)
-            #print("*word = |%r|" % word)
+            #print("*word = %r" % word)
 
             #print "n      = ",n
             #print "self.n = ",self.n
             #print "op2.tell = ",self.op2.tell()
-            #print "******"
             if rewind:
                 self.n = n
                 self.op2.seek(n)

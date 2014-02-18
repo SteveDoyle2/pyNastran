@@ -5,7 +5,7 @@ from struct import unpack
 
 # pyNastran
 from pyNastran.op2.op2_helper import polar_to_real_imag
-from .ogf_Objects import gridPointForcesObject, complexGridPointForcesObject
+from .ogf_Objects import RealGridPointForcesObject, ComplexGridPointForcesObject
 
 
 class OGF(object):
@@ -137,7 +137,7 @@ class OGF(object):
         if self.num_wide == 10:  # real/random
             #if self.thermal==0:
             self.create_transient_object(self.gridPointForces,
-                                       gridPointForcesObject)  # real
+                                       RealGridPointForcesObject)
             self.handle_results_buffer(self.readOGF_numWide10,
                                       resultName='gridPointForces')
             #else:
@@ -146,7 +146,7 @@ class OGF(object):
         elif self.num_wide == 16:  # real/imaginary or mag/phase
             #if self.thermal==0:
             self.create_transient_object(self.gridPointForces,
-                                       complexGridPointForcesObject)  # complex
+                                       ComplexGridPointForcesObject)
             self.handle_results_buffer(self.readOGF_numWide16,
                                       resultName='gridPointForces')
             #else:

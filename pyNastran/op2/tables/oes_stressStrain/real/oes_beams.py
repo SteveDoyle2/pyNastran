@@ -297,13 +297,10 @@ class BeamStrainObject(StrainObject):
     def add_f06_data(self, data, dt):
         if dt is not None:
             raise NotImplementedError(dt)
-        #print(data)
-        #print('*****************smax', self.smax)
         for datai in data:
             #print('smax', self.smax)
             (eid, grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = datai
             #print('(*')
-            #print(datai)
             if eid in self.grids:
                 self.grids[eid].append(grid)
                 self.xxb[eid].append(sd)

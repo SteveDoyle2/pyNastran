@@ -1,15 +1,329 @@
+# pylint: disable=C0301,W0613,C0103,R0913,R0914,R0904,C0111,R0201,R0902
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from collections import defaultdict
-
-from numpy import array, sqrt
+from itertools import izip, count
+from numpy import array, sqrt, zeros, where, searchsorted, ravel, argwhere, unique, arange
 from numpy.linalg import eigh
 
-from .oes_objects import StressObject, StrainObject
+from .oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 
-class SolidStressObject(StressObject):
+class RealSolidVector(OES_Object):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
+        self.eType = {}
+        #self.code = [self.format_code, self.sort_code, self.s_code]
+
+        #self.ntimes = 0  # or frequency/mode
+        #self.ntotal = 0
+        self.nelements = 0  # result specific
+
+        if is_sort1:
+            #sort1
+            self.add_node = self.add_node_sort1
+            self.add_eid = self.add_eid_sort1
+        else:
+            raise NotImplementedError('SORT2')
+
+    def _get_msgs(self):
+        raise NotImplementedError()
+
+    def get_headers(self):
+        raise NotImplementedError()
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def build(self):
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        #self.names = []
+        self.nelements //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        self.is_built = True
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        self.times = zeros(self.ntimes, 'float32')
+        #self.element_types2 = array(self.nelements, dtype='|S8')
+        self.element_types3 = zeros((self.nelements, 2), dtype='int32')
+
+        # TODO: could be more efficient by using nelements for cid
+        self.element_node = zeros((self.ntotal, 2), 'int32')
+        self.element_cid = zeros((self.nelements, 2), 'int32')
+
+        #[oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovmShear]
+        self.data = zeros((self.ntimes, self.ntotal, 10), 'float32')
+
+    def _add_eid_sort1(self, element_num, element_type, dt, eid, cid, ctype, nodef):
+        self.times[self.itime] = dt
+        #print(self.element_types2, element_type, self.element_types2.dtype)
+        #self.element_types2[self.ielement] = string_(element_type)   # TODO: save this...
+        #self.element_types2[self.ielement] = element_type
+
+        #try:
+        if self.ielement < self.nelements:
+            self.element_cid[self.ielement] = [eid, cid]
+            self.element_types3[self.ielement, :] = [element_num, nodef]
+        #except IndexError:
+            #pass
+            #print('element_types3', self.element_types3)
+
+        self.element_node[self.itotal, :] = [eid, 0]  # 0 is center
+        self.ielement += 1
+        #self.itotal += 1
+        #self.data
+
+    def add_eid_sort1(self, eType, cid, dt, eid, node_id, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
+        #assert cid >= 0
+        assert eid >= 0
+
+        #print "dt=%s eid=%s eType=%s" %(dt,eid,eType)
+        self.times[self.itime] = dt
+
+        self.eType[self.ielement] = eType
+        self.element_node[self.itotal, :] = [eid, 0]  # 0 is center
+        self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
+
+        #print('element_cid[%i, :] = [%s, %s]' % (self.ielement, eid, cid))
+        if self.ielement == self.nelements:
+            self.ielement = 0
+        self.element_cid[self.ielement, :] = [eid, cid]
+        self.itotal += 1
+        self.ielement += 1
+
+    def add_node_sort1(self, dt, eid, node_id, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
+        msg = "eid=%s node_id=%s vm=%g" % (eid, node_id, ovm)
+        #print msg
+
+        #self.eType[eid] = eType
+        #print "eid=%s nid=%s oxx=%s" %(eid, node_id, oxx)
+
+        # skipping aCos, bCos, cCos, pressure
+        self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
+
+        #print('eid=%i node_id=%i exx=%s' % (eid, node_id, str(ex)))
+        #print('data[%s, %s, :] = %s' % (self.itime, self.itotal, str(self.data[self.itime, self.itotal, :])))
+        self.element_node[self.itotal, :] = [eid, node_id]
+        self.itotal += 1
+        #self.data
+
+    def get_stats(self):
+        if not self.is_built:
+            return ['<%s>\n' % self.__class__.__name__,
+                    '  ntimes: %i\n' % self.ntimes,
+                    '  ntotal: %i\n' % self.ntotal,
+                    ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        #ntotal = self.ntotal
+        nnodes_per_element = self.element_node.shape[0] // nelements
+        nnodes = self.element_node.shape[0]
+
+        msg = []
+
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i nnodes=%i\n  nnodes_per_element=%i (including centroid)\n'
+                       % (self.__class__.__name__, ntimes, nelements, nnodes, nnodes_per_element))
+            ntimes_word = 'ntimes'
+        else:
+            msg.append('  type=%s nelements=%i nnodes=%i\n  nodes_per_element=%i (including centroid)\n'
+                       % (self.__class__.__name__, nelements, nnodes, nnodes_per_element))
+            ntimes_word = 1
+        msg.append('  eType, cid\n')
+        #msg.append('  data.shape=%s' % str(self.data.shape))
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  element types: %s\n  ' % ', '.join(self.element_names))
+        msg += self.get_data_code()
+        return msg
+
+    def get_f06_header(self, is_mag_phase=True):
+        tetra_msg, penta_msg, hexa_msg = self._get_msgs()
+        eids = unique(self.element_cid[:, 0])
+        if 'CTETRA' in self.element_name:
+            msg = tetra_msg
+            nnodes = 4
+        elif 'CHEXA' in self.element_name:
+            msg = hexa_msg
+            nnodes = 8
+        elif 'CPENTA' in self.element_name:
+            msg = penta_msg
+            nnodes = 6
+        return self.element_name, nnodes, msg, eids
+
+    def get_element_index(self, eids):
+        # elements are always sorted; nodes are not
+        itot = searchsorted(eids, self.element_node[:, 0])  #[0]
+        return itot
+
+    def eid_to_element_node_index(self, eids):
+        #ind = ravel([searchsortd(self.element_node[:, 0] == eid) for eid in eids])
+        ind = searchsorted(eids, self.element_node[:, 0])
+        #ind = ind.reshape(ind.size)
+        #ind.sort()
+        return ind
+
+    def write_f06(self, header, page_stamp, pageNum=1, f=None, is_mag_phase=False):
+        (elem_name, nnodes, msg_temp, eids) = self.get_f06_header(is_mag_phase)
+        #print('solid eids =', eids)
+
+        # we know all the CTETRA eids, so let's
+        # get all the CTETRA indicies that we're going to write
+        #ieids = self.eid_to_element_node_index(eids)
+        #ieids = arange(self.ntotal)
+        #n = len(ieids)
+        #print('solid ieids =', ieids)
+
+        # write the f06
+        (ntimes, ntotal, six) = self.data.shape
+
+        eids2 = self.element_node[:, 0]
+        nodes = self.element_node[:, 1]
+        for itime in xrange(ntimes):
+            dt = self.times[itime]  # TODO: rename this...
+            #print('eids=', eids)
+            if self.nonlinear_factor is not None:
+                dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
+                header[1] = dtLine
+            f.write(''.join(header + msg_temp))
+
+            #ieids = self.get_element_index(eids)
+            #eid = self.element_node[:, 0]
+            #grid = self.element_node[:, 1]
+            #print('ieids=', ieids)
+            #print('eid=', eid)
+            #print('grid=', grid)
+            #print('**', self.element_node[ieids, 0])
+            #oxx, oyy, ozz, txy, tyz, txz = self.data[itime, ieids, :]
+            #print('itime=', itime)
+
+            # TODO: can I get this without a reshape?
+            #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+            oxx = self.data[itime, :, 0]
+            oyy = self.data[itime, :, 1]
+            ozz = self.data[itime, :, 2]
+            txy = self.data[itime, :, 3]
+            tyz = self.data[itime, :, 4]
+            txz = self.data[itime, :, 5]
+            o1 = self.data[itime, :, 6]
+            o2 = self.data[itime, :, 7]
+            o3 = self.data[itime, :, 8]
+            ovm = self.data[itime, :, 9]
+            p = (o1 + o2 + o3) / -3.
+
+            #print('eids2 =', eids2)
+            #print('nodes =', nodes)
+            #print('oxx =', oxx)
+            # loop over all the elements and nodes
+            cnnodes = nnodes + 1
+            for i, deid, node_id, doxx, doyy, dozz, dtxy, dtyz, dtxz, do1, do2, do3, dp, dovm in izip(
+                count(), eids2, nodes, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm):
+
+                # TODO: cid not supported
+                A = [[doxx, dtxy, dtxz],
+                     [dtxy, doyy, dtyz],
+                     [dtxz, dtyz, dozz]]
+                (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
+
+                ([oxxi, oyyi, ozzi, txyi, tyzi, txzi, o1i, o2i, o3i, pi, ovmi],
+                 isAllZeros) = writeFloats13E([doxx, doyy, dozz, dtxy, dtyz, dtxz,
+                                               do1, do2, do3, dp, dovm])
+
+                if i % cnnodes == 0:
+                    f.write('0  %8s           0GRID CS  %i GP\n' % (deid, nnodes))
+                    #msg.append('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
+                    f.write('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
+                            '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'
+                            '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'
+                            % ('CENTER', oxxi, txyi, o1i, v[0, 1], v[0, 2], v[0, 0], pi, ovmi,
+                                     '', oyyi, tyzi, o2i, v[1, 1], v[1, 2], v[1, 0],
+                                     '', ozzi, txzi, o3i, v[2, 1], v[2, 2], v[2, 0]))
+                else:
+                    f.write('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
+                            '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'
+                            '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'
+                            % (node_id, oxxi, txyi, o1i, v[0, 1], v[0, 2], v[0, 0], pi, ovmi,
+                                    '', oyyi, tyzi, o2i, v[1, 1], v[1, 2], v[1, 0],
+                                    '', ozzi, txzi, o3i, v[2, 1], v[2, 2], v[2, 0]))
+                i += 1
+            f.write(page_stamp % pageNum)
+            pageNum += 1
+        return pageNum - 1
+
+
+class RealSolidStressVector(RealSolidVector, StressObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealSolidVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        StressObject.__init__(self, data_code, isubcase)
+
+    def get_headers(self):
+        if self.isVonMises():
+            von_mises = 'von_mises'
+        else:
+            von_mises = 'max_shear'
+        headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz', 'o1', 'o2', 'o3', von_mises]
+        return headers
+
+    def _get_msgs(self):
+        if self.isVonMises():
+            von_mises = 'VON MISES'
+        else:
+            von_mises = 'MAX SHEAR'
+
+        base_msg = [
+            '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
+            '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % von_mises,
+        ]
+
+        tetra_msg = ['                   S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n', ]
+        penta_msg = ['                    S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n', ]
+        hexa_msg = ['                      S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n', ]
+        tetra_msg += base_msg
+        penta_msg += base_msg
+        hexa_msg += base_msg
+        return tetra_msg, penta_msg, hexa_msg
+
+class RealSolidStrainVector(RealSolidVector, StrainObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealSolidVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        StrainObject.__init__(self, data_code, isubcase)
+
+    def get_headers(self):
+        if self.isVonMises():
+            von_mises = 'von_mises'
+        else:
+            von_mises = 'max_shear'
+        headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz', 'e1', 'e2', 'e3', von_mises]
+        return headers
+
+    def _get_msgs(self):
+        if self.isVonMises():
+            von_mises = 'VON MISES'
+        else:
+            von_mises = 'MAX SHEAR'
+
+        base_msg = [
+            '0                CORNER        ------CENTER AND CORNER POINT STRAINS---------       DIR.  COSINES       MEAN\n',
+            '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % von_mises]
+        tetra_msg = ['                     S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n', ]
+        penta_msg = ['                      S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n', ]
+        hexa_msg = ['                      S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n', ]
+        tetra_msg += base_msg
+        penta_msg += base_msg
+        hexa_msg += base_msg
+        return tetra_msg, penta_msg, hexa_msg
+
+
+class RealSolidStressObject(StressObject):
     """
     ::
 
@@ -52,17 +366,18 @@ class SolidStressObject(StressObject):
         self.dt = dt
         if is_sort1:
             if dt is not None:
-                self.add = self.add_sort1
-                self.add_new_eid = self.add_new_eid_sort1
+                self.add_node = self.add_node_sort1
+                self.add_eid = self.add_eid_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
-            self.add_new_eid = self.add_new_eid_sort2
+            raise NotImplementedError('SORT2')
+            #self.add = self.addSort2
+            #self.add_eid = self.add_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
 
-        msg = self.get_data_code()
+        msg = []
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.oxx)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
@@ -72,8 +387,8 @@ class SolidStressObject(StressObject):
                                                      nelements))
         msg.append('  eType, cid, oxx, oyy, ozz, txy, tyz, txz, '
                    'o1, o2, o3, ovmShear\n  ')
-        msg.append(', '.join(set(self.eType.values())))
-        msg.append('\n')
+        msg.append('elementTypes: %s\n  ' % ', '.join(set(self.eType.values())))
+        msg += self.get_data_code()
         return msg
 
     def add_f06_data(self, data, transient):
@@ -132,9 +447,9 @@ class SolidStressObject(StressObject):
                 n += 1
                 for j in xrange(nNodes):
                     #print self.data[n]
-                    (blank,nodeID,x,oxx,xy,txy,a,o1,lx,d1,d2,d3,pressure,ovmShear) = self.data[n]
-                    (blank,blank, y,oyy,yz,tyz,b,o2,ly,d1,d2,d3,blank,blank) = self.data[n+1]
-                    (blank,blank, z,ozz,zx,txz,c,o3,lz,d1,d2,d3,blank,blank) = self.data[n+2]
+                    (blank, nodeID, x, oxx, xy, txy, a, o1, lx, d1, d2, d3, pressure, ovmShear) = self.data[n]
+                    (blank, blank, y, oyy, yz, tyz, b, o2, ly, d1, d2, d3, blank, blank) = self.data[n+1]
+                    (blank, blank, z, ozz, zx, txz, c, o3, lz, d1, d2, d3, blank, blank) = self.data[n+2]
                     if    nodeID.strip() == 'CENTER':
                         nodeID = 'CENTER'
                     else:
@@ -203,8 +518,7 @@ class SolidStressObject(StressObject):
         #self.pressure[dt] = {}
         self.ovmShear[dt] = {}
 
-    def add_new_eid(self, eType, cid, dt, eid, nodeID, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
-        #print "Solid Stress add..."
+    def add_eid(self, eType, cid, dt, eid, nodeID, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
         #assert eid not in self.oxx
         assert cid >= 0
         assert eid >= 0
@@ -229,8 +543,7 @@ class SolidStressObject(StressObject):
         if nodeID == 0:
             raise ValueError(msg)
 
-    def add_new_eid_sort1(self, eType, cid, dt, eid, nodeID, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
-        #print "Solid Stress add transient..."
+    def add_eid_sort1(self, eType, cid, dt, eid, nodeID, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
         assert cid >= 0
         assert eid >= 0
 
@@ -262,8 +575,7 @@ class SolidStressObject(StressObject):
         if nodeID == 0:
             raise ValueError(msg)
 
-    def add(self, dt, eid, nodeID, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
-        #print "***add"
+    def add_node(self, dt, eid, nodeID, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
         msg = "eid=%s nodeID=%s vm=%g" % (eid, nodeID, ovm)
         #print msg
         #print self.oxx
@@ -288,7 +600,7 @@ class SolidStressObject(StressObject):
         if nodeID == 0:
             raise ValueError(msg)
 
-    def add_sort1(self, dt, eid, nodeID, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
+    def add_node_sort1(self, dt, eid, nodeID, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
         msg = "eid=%s nodeID=%s vm=%g" % (eid, nodeID, ovm)
         #print msg
 
@@ -431,7 +743,7 @@ class SolidStressObject(StressObject):
         return pageNum - 1
 
     def _write_element(self, eType, nNodes, eids, header, tetraMsg, f):
-        msg = header + tetraMsg
+        f.write(''.join(header + tetraMsg))
         for eid in eids:
             #eType = self.eType[eid]
 
@@ -439,7 +751,7 @@ class SolidStressObject(StressObject):
             cen = 'CENTER'
             k.remove(cen)
             k.sort()
-            msg.append('0  %8s           0GRID CS  %i GP\n' % (eid, nNodes))
+            f.write('0  %8s           0GRID CS  %i GP\n' % (eid, nNodes))
             for nid in [cen] + k:
                 oxx = self.oxx[eid][nid]
                 oyy = self.oyy[eid][nid]
@@ -459,23 +771,25 @@ class SolidStressObject(StressObject):
                      [txz, tyz, ozz]]
                 (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
 
-                ([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm], isAllZeros) = writeFloats13E([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm])
-                msg.append('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' % (nid, oxx, txy, o1, v[0, 1], v[0, 2], v[0, 0], p, ovm.strip()))
-                msg.append('               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n' % ('', oyy, tyz, o2, v[1, 1], v[1, 2], v[1, 0]))
-                msg.append('               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n' % ('', ozz, txz, o3, v[2, 1], v[2, 2], v[2, 0]))
-        f.write(''.join(msg))
+                ([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm], isAllZeros) = writeFloats13E([
+                  oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm])
+                f.write('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n'
+                        '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'
+                        '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n' % (
+                            nid, oxx, txy, o1, v[0, 1], v[0, 2], v[0, 0], p, ovm,
+                            '', oyy, tyz, o2, v[1, 1], v[1, 2], v[1, 0],
+                            '', ozz, txz, o3, v[2, 1], v[2, 2], v[2, 0]))
 
     def _write_element_transient(self, eType, nNodes, eids, dt, header, tetraMsg, f):
         dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
         header[1] = dtLine
-        msg = header + tetraMsg
+        f.write(''.join(header + tetraMsg))
         cen = 'CENTER'
         for eid in eids:
             k = self.oxx[dt][eid].keys()
             k.remove(cen)
             k.sort()
-            msg.append('0  %8s           0GRID CS  %i GP\n' % (eid, nNodes))
-
+            f.write('0  %8s           0GRID CS  %i GP\n' % (eid, nNodes))
             for nid in [cen] + k:
                 oxx = self.oxx[dt][eid][nid]
                 oyy = self.oyy[dt][eid][nid]
@@ -496,14 +810,17 @@ class SolidStressObject(StressObject):
                      [txz, tyz, ozz]]
                 (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
 
-                ([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm], isAllZeros) = writeFloats13E([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm])
-                msg.append('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' % (nid, oxx, txy, o1, v[0, 1], v[0, 2], v[0, 0], p, ovm.strip()))
-                msg.append('               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n' % ('', oyy, tyz, o2, v[1, 1], v[1, 2], v[1, 0]))
-                msg.append('               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n' % ('', ozz, txz, o3, v[2, 1], v[2, 2], v[2, 0]))
-        f.write(''.join(msg))
+                ([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm], isAllZeros) = writeFloats13E([
+                  oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm])
+                f.write('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %s\n'
+                        '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'
+                        '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'
+                        % (nid, oxx, txy, o1, v[0, 1], v[0, 2], v[0, 0], p, ovm,
+                        '', oyy, tyz, o2, v[1, 1], v[1, 2], v[1, 0],
+                        '', ozz, txz, o3, v[2, 1], v[2, 2], v[2, 0]))
 
 
-class SolidStrainObject(StrainObject):
+class RealSolidStrainObject(StrainObject):
     """
     ::
 
@@ -525,7 +842,7 @@ class SolidStrainObject(StrainObject):
                              Y  -2.289814E-04  YZ  -2.369997E-04   B  -2.909276E-04  LY-0.10 0.71-0.70
                              Z   9.383460E-04  ZX  -2.369997E-04   C  -1.917288E-04  LZ 0.99 0.00-0.15
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StrainObject.__init__(self, data_code, isubcase)
         self.eType = {}
 
@@ -550,17 +867,19 @@ class SolidStrainObject(StrainObject):
         self.nonlinear_factor = dt
         if is_sort1:
             if dt is not None:
-                self.add = self.add_sort1
-                self.add_new_eid = self.add_new_eid_sort1
+                print("dt =", dt)
+                self.add_node = self.add_node_sort1
+                self.add_eid = self.add_eid_sort1
+
         else:
             assert dt is not None
-            self.add = self.addSort2
-            self.add_new_eid = self.add_new_eid_sort2
+            self.add_node = self.add_node_sort2
+            self.add_eid = self.add_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
 
-        msg = self.get_data_code()
+        msg = []
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.exx)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
@@ -570,21 +889,23 @@ class SolidStrainObject(StrainObject):
                                                      nelements))
         msg.append('  eType, cid, exx, eyy, ezz, exy, eyz, exz, '
                    'e1, e2, e3, evmShear\n')
+        msg.append('  elementTypes: %s\n  ' % ', '.join(set(self.eType.values())))
+        msg += self.get_data_code()
         return msg
 
     def add_f06_data(self, data, transient):
         if transient is None:
-            if not hasattr(self, 'data'):
-                self.data = []
-            self.data += data
+            if not hasattr(self, '_f06_data'):
+                self._f06_data = []
+            self._f06_data += data
         else:
-            if not hasattr(self, 'data'):
-                self.data = {}
+            if not hasattr(self, '_f06_data'):
+                self._f06_data = {}
             dt = transient[1]
             if dt not in self.data:
-                self.data[dt] = []
+                self._f06_data[dt] = []
             for line in data:
-                self.data[dt] += data
+                self._f06_data[dt] += data
 
     def processF06Data(self):
         """
@@ -659,7 +980,7 @@ class SolidStrainObject(StrainObject):
             self.gridTypes[dt][nodeID] = array([t1, t2, t3])
             self.translations[dt][nodeID] = array([t1, t2, t3])
             self.rotations[dt][nodeID] = array([r1, r2, r3])
-        del self.data
+        del self._f06_data
 
     def delete_transient(self, dt):
         del self.exx[dt]
@@ -698,7 +1019,7 @@ class SolidStrainObject(StrainObject):
         #self.pressure[dt] = {}
         self.evmShear[dt] = {}
 
-    def add_new_eid(self, eType, cid, dt, eid, nodeID, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
+    def add_eid(self, eType, cid, dt, eid, nodeID, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
         assert eid not in self.exx
         assert cid >= 0
         assert eid >= 0
@@ -723,7 +1044,7 @@ class SolidStrainObject(StrainObject):
         if nodeID == 0:
             raise Exception(msg)
 
-    def add_new_eid_sort1(self, eType, cid, dt, eid, nodeID, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
+    def add_eid_sort1(self, eType, cid, dt, eid, nodeID, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
         assert cid >= 0
         assert eid >= 0
 
@@ -752,7 +1073,7 @@ class SolidStrainObject(StrainObject):
         if nodeID == 0:
             raise Exception(msg)
 
-    def add(self, dt, eid, nodeID, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
+    def add_node(self, dt, eid, nodeID, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
         msg = "eid=%s nodeID=%s vm=%g" % (eid, nodeID, evm)
         #print msg
         self.exx[eid][nodeID] = exx
@@ -775,7 +1096,7 @@ class SolidStrainObject(StrainObject):
         if nodeID == 0:
             raise Exception(msg)
 
-    def add_sort1(self, dt, eid, nodeID, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
+    def add_node_sort1(self, dt, eid, nodeID, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
         msg = "eid=%s nodeID=%s vm=%g" % (eid, nodeID, evm)
         #print msg
 
@@ -864,13 +1185,6 @@ class SolidStrainObject(StrainObject):
         HEXA = defaultdict(list)
         PENTA = defaultdict(list)
 
-        tetra_eids = []
-        hexa_eids = []
-        penta_eids = []
-
-        tetra10_eids = []
-        hexa20_eids = []
-        penta15_eids = []
         for eid, eType in sorted(self.eType.iteritems()):
             if 'CTETRA' in eType:
                 TETRA[eType[6:]].append(eid)
@@ -888,7 +1202,6 @@ class SolidStrainObject(StrainObject):
         assert f is not None
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
-        msg = []
 
         (tetraMsg, pentaMsg, hexaMsg,
          TETRA, HEXA, PENTA) = self.getF06_Header()
@@ -903,7 +1216,7 @@ class SolidStrainObject(StrainObject):
         keys = [int(key) for key in HEXA.keys()]
         for key in sorted(keys):
             eids = HEXA[str(key)]
-            self._write_element('CHEXA'+str(key), key, eids, header, hexaMsg, f)
+            self._write_element('CHEXA'+str(key), key, eids, header, pentaMsg, f)
             f.write(pageStamp % pageNum)
             pageNum += 1
 
@@ -913,7 +1226,6 @@ class SolidStrainObject(StrainObject):
             self._write_element('CPENTA'+str(key), key, eids, header, hexaMsg, f)
             f.write(pageStamp % pageNum)
             pageNum += 1
-
         return pageNum - 1
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
@@ -939,15 +1251,13 @@ class SolidStrainObject(StrainObject):
             keys = [int(key) for key in PENTA.keys()]
             for key in sorted(keys):
                 eids = PENTA[str(key)]
-                self._write_element_transient('CPENTA'+str(key), key, eids, dt, header, hexaMsg, f)
+                self._write_element_transient('CPENTA'+str(key), key, eids, dt, header, pentaMsg, f)
                 f.write(pageStamp % pageNum)
                 pageNum += 1
-
-        f.write(''.join(msg))
         return pageNum - 1
 
     def _write_element(self, eType, nNodes, eids, header, tetraMsg, f):
-        msg = header + tetraMsg
+        f.write(''.join(header + tetraMsg))
         cen = 'CENTER'
         for eid in eids:
             #eType = self.eType[eid]
@@ -955,7 +1265,7 @@ class SolidStrainObject(StrainObject):
             k = self.exx[eid].keys()
             k.remove(cen)
             k.sort()
-            msg.append('0  %8s           0GRID CS  %i GP\n' % (eid, nNodes))
+            f.write('0  %8s           0GRID CS  %i GP\n' % (eid, nNodes))
             for nid in [cen] + k:
                 exx = self.exx[eid][nid]
                 eyy = self.eyy[eid][nid]
@@ -977,15 +1287,17 @@ class SolidStrainObject(StrainObject):
                 (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
 
                 ([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm], isAllZeros) = writeFloats13E([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm])
-                msg.append('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' % (nid, exx, exy, e1, v[0, 1], v[0, 2], v[0, 0], p, evm.strip()))
-                msg.append('               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n' % ('', eyy, eyz, e2, v[1, 1], v[1, 2], v[1, 0]))
-                msg.append('               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n' % ('', ezz, exz, e3, v[2, 1], v[2, 2], v[2, 0]))
-        f.write(''.join(msg))
+                f.write('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n'
+                           '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'
+                           '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'
+                           % (nid, exx, exy, e1, v[0, 1], v[0, 2], v[0, 0], p, evm,
+                              '', eyy, eyz, e2, v[1, 1], v[1, 2], v[1, 0],
+                              '', ezz, exz, e3, v[2, 1], v[2, 2], v[2, 0]), )
 
     def _write_element_transient(self, eType, nNodes, eids, dt, header, tetraMsg, f):
         dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
         header[1] = dtLine
-        msg = header + tetraMsg
+        f.write(''.join(header + tetraMsg))
         cen = 'CENTER'
         for eid in eids:
             #eType = self.eType[eid]
@@ -993,7 +1305,7 @@ class SolidStrainObject(StrainObject):
             k = self.exx[dt][eid].keys()
             k.remove(cen)
             k.sort()
-            msgA = '0  %8s           0GRID CS  %i GP\n' % (eid, nNodes)
+            f.write('0  %8s           0GRID CS  %i GP\n' % (eid, nNodes))
             for nid in [cen] + k:
                 exx = self.exx[dt][eid][nid]
                 eyy = self.eyy[dt][eid][nid]
@@ -1015,8 +1327,9 @@ class SolidStrainObject(StrainObject):
                 (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
 
                 ([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm], isAllZeros) = writeFloats13E([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm])
-                msgA += '0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n' % (nid, exx, exy, e1, v[0, 1], v[0, 2], v[0, 0], p, evm.strip())
-                msgA += '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n' % ('', eyy, eyz, e2, v[1, 1], v[1, 2], v[1, 0])
-                msgA += '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n' % ('', ezz, exz, e3, v[2, 1], v[2, 2], v[2, 0])
-            msg.append(msgA)
-        f.write(''.join(msg))
+                f.write('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n'
+                         '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'
+                         '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n' % (
+                             nid, exx, exy, e1, v[0, 1], v[0, 2], v[0, 0], p, evm,
+                             '', eyy, eyz, e2, v[1, 1], v[1, 2], v[1, 0],
+                             '', ezz, exz, e3, v[2, 1], v[2, 2], v[2, 0]))

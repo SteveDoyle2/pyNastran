@@ -1,4 +1,12 @@
 #pylint: disable=C0301,C0103
+"""
+This file defines the OUG Table, which contains:
+ * Real/Complex Displacement
+ * Real/Complex Acceleration
+ * Real/Complex Velocity
+ * Real/Complex Eigenvectors
+ * Real Temperature
+"""
 from struct import unpack
 
 from pyNastran.op2.dev_explicit.op2_common import OP2Common
@@ -6,34 +14,40 @@ from pyNastran.op2.dev_explicit.op2_common import OP2Common
 from pyNastran.op2.tables.oug.oug_displacements import (
     RealDisplacementVector,
     ComplexDisplacementVector,
-    DisplacementObject,              # table_code=1     format_code=1 sort_code=0
+    RealDisplacementObject,          # table_code=1     format_code=1 sort_code=0
     ComplexDisplacementObject)       # analysis_code=5  format_code=3 sort_code=1
 
 # table_code=10 format_code=1 sort_code=0
 from pyNastran.op2.tables.oug.oug_velocities import (
-    VelocityObject, ComplexVelocityObject)
+    RealVelocityVector, ComplexVelocityVector,
+    RealVelocityObject, ComplexVelocityObject)
 
 # table_code=11 format_code=1 sort_code=0
 from pyNastran.op2.tables.oug.oug_accelerations import (
-    AccelerationObject, ComplexAccelerationObject)
+    RealAccelerationVector, ComplexAccelerationVector,
+    RealAccelerationObject, ComplexAccelerationObject)
 
 # table_code=1 format_code=1 sort_code=0
 from pyNastran.op2.tables.oug.oug_temperatures import (
-    TemperatureObject)
+    RealTemperatureVector, RealTemperatureObject)
 
 from pyNastran.op2.tables.oug.oug_eigenvectors import (
-     EigenVectorObject,                     # analysis_code=2, sort_code=0 format_code   table_code=7
-     ComplexEigenVectorObject,              # analysis_code=5, sort_code=1 format_code=1 table_code=7
-    #RealEigenVectorObject,                 # analysis_code=9, sort_code=1 format_code=1 table_code=7
+    RealEigenvectorVector,
+    ComplexEigenvectorVector,
+
+    #ComplexEigenvectorObject,              # analysis_code=5, sort_code=1 format_code=1 table_code=7
+     EigenvectorObject,                     # analysis_code=2, sort_code=0 format_code   table_code=7
+     ComplexEigenvectorObject,              # analysis_code=5, sort_code=1 format_code=1 table_code=7
+    #RealEigenvectorObject,                 # analysis_code=9, sort_code=1 format_code=1 table_code=7
 )
 
 from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import ThermalVelocityVectorObject
 
 
 class OUG(OP2Common):
+
     def __init__(self):
         OP2Common.__init__(self)
-
 
     def _read_oug1_3(self, data):
         three = self.parse_approach_code(data)
@@ -137,7 +151,7 @@ class OUG(OP2Common):
             n = self._read_displacement(data)
         elif self.table_code == 7:
             n = self._read_eigenvector(data)
-        elif self.table_code ==  10:
+        elif self.table_code == 10:
             n = self._read_velocity(data)
         elif self.table_code == 11:
             n = self._read_acceleration(data)
@@ -151,39 +165,39 @@ class OUG(OP2Common):
         """
         table_code = 14
         """
-        asdf
+        raise NotImplementedError()
 
     def _read_displacement_solution_set(self, data):
         """
         table_code = 15
         """
-        asdf
+        raise NotImplementedError()
 
     def _read_velocity_solution_set(self, data):
         """
         table_code = 16
         """
-        asdf
+        raise NotImplementedError()
 
     def _read_acceleration_solution_set(self, data):
         """
         table_code = 17
         """
-        asdf
+        raise NotImplementedError()
 
     def _read_displacement(self, data):
         if self.thermal == 0:
             result_name = 'displacements'
             storage_obj = self.displacements
             n = self._read_table(data, result_name, storage_obj,
-                                 DisplacementObject, ComplexDisplacementObject,
+                                 RealDisplacementObject, ComplexDisplacementObject,
                                  RealDisplacementVector, ComplexDisplacementVector, 'node')
         elif self.thermal == 1:
-            real_obj = TemperatureObject
-            complex_obj = None
             result_name = 'temperatures'
             storage_obj = self.temperatures
-            n = self._read_table(data, result_name, storage_obj, real_obj, complex_obj, 'node')
+            n = self._read_table(data, result_name, storage_obj,
+                                 RealTemperatureObject, None,
+                                 RealTemperatureVector, None, 'node')
         elif self.thermal == 4:
             n = self._not_implemented_or_skip(data, msg='thermal=4')
         else:
@@ -199,13 +213,17 @@ class OUG(OP2Common):
         result_name = 'velocities'
         storage_obj = self.velocities
         if self.thermal == 0:
-            real_obj = VelocityObject
+            real_obj = RealVelocityObject
             complex_obj = ComplexVelocityObject
-            n = self._read_table(data, result_name, storage_obj, real_obj, complex_obj, 'node')
+            n = self._read_table(data, result_name, storage_obj,
+                                 RealVelocityObject, ComplexVelocityObject,
+                                 RealVelocityVector, ComplexVelocityVector, 'node')
         elif self.thermal == 1:
             real_obj = ThermalVelocityVectorObject
             complex_obj = None
-            n = self._read_table(data, result_name, storage_obj, real_obj, complex_obj, 'node')
+            n = self._read_table(data, result_name, storage_obj,
+                                 ThermalVelocityVectorObject, None,
+                                 None, None, 'node')
         elif self.thermal == 2:
             n = self._not_implemented_or_skip(data, msg='thermal=2')
         else:
@@ -219,13 +237,13 @@ class OUG(OP2Common):
         result_name = 'accelerations'
         storage_obj = self.accelerations
         if self.thermal == 0:
-            real_obj = AccelerationObject
-            complex_obj = ComplexAccelerationObject
-            n = self._read_table(data, result_name, storage_obj, real_obj, complex_obj, 'node')
+            n = self._read_table(data, result_name, storage_obj,
+                                 RealAccelerationObject, ComplexAccelerationObject,
+                                 RealAccelerationVector, ComplexAccelerationVector, 'node')
         elif self.thermal == 1:
-            real_obj = None
-            complex_obj = None
-            n = self._read_table(data, result_name, storage_obj, real_obj, complex_obj, 'node')
+            n = self._read_table(data, result_name, storage_obj,
+                                 None, None,
+                                 None, None, 'node')
         elif self.thermal == 2:
             n = self._not_implemented_or_skip(data, msg='thermal=2')
         elif self.thermal == 4:
@@ -241,13 +259,16 @@ class OUG(OP2Common):
         result_name = 'eigenvectors'
         storage_obj = self.eigenvectors
         if self.thermal == 0:
-            real_obj = EigenVectorObject
-            complex_obj = ComplexEigenVectorObject
-            n = self._read_table(data, result_name, storage_obj, real_obj, complex_obj, 'node')
+            real_obj = EigenvectorObject
+            complex_obj = ComplexEigenvectorObject
+            n = self._read_table(data, result_name, storage_obj,
+                                 EigenvectorObject, ComplexEigenvectorObject,
+                                 RealEigenvectorVector, ComplexEigenvectorVector, 'node')
         elif self.thermal == 1:
-            real_obj = None
-            complex_obj = None
-            n = self._read_table(data, result_name, storage_obj, real_obj, complex_obj, 'node')
+            n = self._not_implemented_or_skip(data, msg='thermal=1')
+            #n = self._read_table(data, result_name, storage_obj,
+            #                     None, None,
+            #                     None, None, 'node')
         else:
             raise NotImplementedError(self.thermal)
         return n

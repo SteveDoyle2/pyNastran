@@ -15,7 +15,7 @@ class OP2Common(Op2Codes, F06Writer):
         #: the storage dictionary that is passed to OP2 objects (e.g. DisplacementObject)
         #: the key-value pairs are extracted and used to generate dynamic self
         #: variables for the OP2 objects
-        self.data_code = {'log': self.log,}
+        self.data_code = {}  # 'log': self.log,
 
         #: current subcase ID
         #: non-transient (SOL101) cases have isubcase set to None
@@ -463,11 +463,9 @@ class OP2Common(Op2Codes, F06Writer):
             # real_obj
             assert real_obj is not None
             nnodes = len(data) // 32  # 8*4
-            auto_return = self._create_table_object(result_nam, nnodes, storage_obj, real_obj, real_vector)
+            auto_return = self._create_table_object(result_name, nnodes, storage_obj, real_obj, real_vector)
             if auto_return:
-                real_data
                 return len(data)
-            aaa
             n = self._read_real_table(data, result_name, node_elem)
         elif self.num_wide == 14:  # real/imaginary or mag/phase
             # complex_obj
@@ -505,10 +503,8 @@ class OP2Common(Op2Codes, F06Writer):
 
             eid = (eid_device - self.device_code) // 10
             if self.debug4():
-                self.binary_debug.write('  %s=%i; %s\n' % (flag, eid_device, str(out)))
-
-            data_in = [eid, grid_type, tx, ty, tz, rx, ry, rz]
-            self.obj.add(dt, data_in)
+                self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
+            self.obj.add(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
             n += ntotal
         return n
 
@@ -855,24 +851,27 @@ class OP2Common(Op2Codes, F06Writer):
         assert isinstance(result_name, basestring), result_name
         assert isinstance(slot, dict), slot
         auto_return = False
-        if self.is_vectorized:
+        is_vectorized = self.is_vectorized
+        if is_vectorized and slot_vector is None:
+            is_vectorized = False
+
+        if is_vectorized:
             if self.read_mode == 1:
-                print "read_mode = 1"
+                #print "read_mode = 1"
                 self.create_transient_object(slot, slot_vector)
                 self.result_names.add(result_name)
                 self.obj._nnodes += nnodes
                 auto_return = True
             elif self.read_mode == 2:
-                print "read_mode = 2"
-                print self.displacements
+                #print "read_mode = 2"
                 self.obj = slot[self.isubcase]
                 #self.obj.update_data_code(self.data_code)
                 self.obj.build()
         else:  # not vectorized
             self.result_names.add(result_name)
             if self.read_mode == 1:
-                self.result_names.add(result_name)
                 auto_return = True
+                return auto_return
             # pass = 0/2
             self.create_transient_object(slot, slot_object)
         return auto_return

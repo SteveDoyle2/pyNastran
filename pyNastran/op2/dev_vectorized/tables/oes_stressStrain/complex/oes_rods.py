@@ -191,33 +191,6 @@ class ComplexRodStressObject(StressObject):
             pageNum += 1
         return(''.join(msg), pageNum - 1)
 
-    def __repr__(self):
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        #print 'axial = ',self.axial
-        msg = '---ROD STRESSES---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['axial', 'torsion', 'MS_axial', 'MS_torsion']
-        for header in headers:
-            msg += '%10s ' % header
-        msg += '\n'
-        #print "self.code = ",self.code
-        for eid in sorted(self.axial):
-            #print self.__dict__.keys()
-            axial = self.axial[eid]
-            torsion = self.torsion[eid]
-            msg += '%-6i %6s ' % (eid, self.eType)
-            vals = [axial, torsion]
-            for val in vals:
-                if abs(val) < 1e-6:
-                    msg += '%10s ' % '0'
-                else:
-                    msg += '%10i ' % val
-            msg += '\n'
-            #msg += "eid=%-4s eType=%s axial=%-4i torsion=%-4i\n" %(eid,self.eType,axial,torsion)
-        return msg
-
 
 class ComplexRodStrainObject(StrainObject):
     """
@@ -389,29 +362,7 @@ class ComplexRodStrainObject(StrainObject):
                     tuple(out[-1]))
                 msg.append(outLine)
             msg.append(pageStamp + str(pageNum) + '\n')
+            f.write(''.join(msg))
+            msg = ['']
             pageNum += 1
-        return(''.join(msg), pageNum - 1)
-
-    def __repr__(self):
-        if self.dt is not None:
-            return self.__reprTransient__()
-
-        msg = '---ROD STRAINS---\n'
-        msg += '%-6s %6s ' % ('EID', 'eType')
-        headers = ['axial', 'torsion']
-        for header in headers:
-            msg += '%8s ' % header
-        msg += '\n'
-
-        for eid in sorted(self.axial):
-            axial = self.axial[eid]
-            torsion = self.torsion[eid]
-            msg += '%-6i %6s ' % (eid, self.eType)
-            vals = [axial, torsion]
-            for val in vals:
-                if abs(val) < 1e-7:
-                    msg += '%8s ' % '0'
-                else:
-                    msg += '%8.3g ' % val
-            msg += '\n'
-        return msg
+        return pageNum - 1

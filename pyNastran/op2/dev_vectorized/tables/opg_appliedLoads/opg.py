@@ -47,7 +47,7 @@ class OPG(object):
         ## number of words per entry in record
         ## .. note:: is this needed for this table ???
         self._add_data_parameter(data, 'num_wide', 'i', 10, False)
-        
+
         ## undefined in DMAP...
         self._add_data_parameter(data, 'oCode', 'i', 11, False)
         ## thermal flag; 1 for heat transfer, 0 otherwise
@@ -73,7 +73,7 @@ class OPG(object):
             self._apply_data_code_value('dataNames', ['mode', 'eign', 'mode_cycle'])
         #elif self.analysis_code == 3: # differential stiffness
         #    ## load set number
-        #    self.lsdvmn = self.get_values(data,'i',5) 
+        #    self.lsdvmn = self.get_values(data,'i',5)
         #elif self.analysis_code == 4: # differential stiffness
         #    ## load set number
         #    self.lsdvmn = self.get_values(data,'i',5)
@@ -313,7 +313,7 @@ class OPG(object):
         (format1, extract) = self.getOEF_FormatStart()
         format1 += 'i7f'
         format1 = bytes(format1)
-        
+
         nelements = len(self.data) // 36
         for i in xrange(nelements):
             eData = self.data[0:36]
@@ -358,5 +358,4 @@ class OPG(object):
             #print "nodeID=%g dx=%g dy=%g dz=%g rx=%g ry=%g rz=%g" %(nodeID,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux)
             self.data = self.data[dn:]
 
-        #print "***********"
         #print self.obj

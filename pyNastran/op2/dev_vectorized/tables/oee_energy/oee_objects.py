@@ -137,20 +137,3 @@ class StrainEnergyObject(ScalarObject):
                 msg += "%-10s %-14g %-14g %s" % (
                     eid, energy, percent, density2)
         return msg
-
-    def __repr__(self):
-        if self.nonlinear_factor is not None:
-            return self.__reprTransient__()
-
-        msg = '---Strain Energy Object---\n'
-        msg += "%-10s %-14s% -14s% -14s\n" % (
-            'EID', 'Energy', 'PercentTotal', 'Density')
-        for eid, energy in sorted(self.energy.iteritems()):
-            percent = self.percent[eid]
-            density = self.density[eid]
-            if isnan(density):
-                density2 = '%-14s\n' % ('-----')
-            else:
-                density2 = '%-14g\n' % (density)
-            msg += "%-10s %-14g %-14g %s" % (eid, energy, percent, density2)
-        return msg

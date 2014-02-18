@@ -81,9 +81,6 @@ class HeatFlux_VU_3D(ScalarObject):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
             self.grad[dt][eid][nid] = [xGrad, yGrad, zGrad]
             self.flux[dt][eid][nid] = [xFlux, yFlux, zFlux]
 
-    def __repr__(self):
-        return str(self.grad)
-
 
 class HeatFlux_VU(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -171,9 +168,6 @@ class HeatFlux_VU(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
             self.grad[dt][eid][nid] = [xGrad, yGrad, zGrad]
             self.flux[dt][eid][nid] = [xFlux, yFlux, zFlux]
 
-    def __repr__(self):
-        return str(self.grad)
-
 
 class HeatFlux_VUBEAM(ScalarObject):  # 191-VUBEAM
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -257,9 +251,6 @@ class HeatFlux_VUBEAM(ScalarObject):  # 191-VUBEAM
             self.grad[dt][eid][nid] = [xGrad, yGrad, zGrad]
             self.flux[dt][eid][nid] = [xFlux, yFlux, zFlux]
 
-    def __repr__(self):
-        return str(self.grad)
-
 
 class HeatFlux_1D(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69-BEND
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -315,9 +306,6 @@ class HeatFlux_1D(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69
         self.grad[dt][eid] = [xGrad, yGrad, zGrad]
         self.flux[dt][eid] = [xFlux, yFlux, zFlux]
 
-    def __repr__(self):
-        return str(self.grad)
-
 
 class HeatFlux_2D_3D(ScalarObject):  # 33-QUAD4, 39-TETRA, 53-TRIAX6,64-QUAD8, 67-HEXA, 68-PENTA, 74-TRIA3, 75-TRIA6
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -364,9 +352,6 @@ class HeatFlux_2D_3D(ScalarObject):  # 33-QUAD4, 39-TETRA, 53-TRIAX6,64-QUAD8, 6
         self.eType[eid] = eType
         self.grad[dt][eid] = [xGrad, yGrad, zGrad]
         self.flux[dt][eid] = [xFlux, yFlux, zFlux]
-
-    def __repr__(self):
-        return str(self.grad)
 
 
 class HeatFlux_CONV(ScalarObject):  # 110-CONV
@@ -430,9 +415,6 @@ class HeatFlux_CONV(ScalarObject):  # 110-CONV
         self.forceConv[dt][eid] = forceConv
         self.fRad[dt][eid] = fRad
         self.fTotal[dt][eid] = fTotal
-
-    def __repr__(self):
-        return str(self.fApplied)
 
 
 class HeatFlux_CHBDYx(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
@@ -504,6 +486,3 @@ class HeatFlux_CHBDYx(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.forceConv[dt][eid] = forceConv
         self.fRad[dt][eid] = fRad
         self.fTotal[dt][eid] = fTotal
-
-    def __repr__(self):
-        return str(self.fApplied)

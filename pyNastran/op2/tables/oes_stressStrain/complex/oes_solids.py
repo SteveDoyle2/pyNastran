@@ -21,12 +21,6 @@ class ComplexSolid(OES_Object):
         #self.ntotal = 0
         self.nelements = 0  # result specific
         #self.cid = {}  # gridGauss
-        #self.oxx = {}
-        #self.oyy = {}
-        #self.ozz = {}
-        #self.txy = {}
-        #self.tyz = {}
-        #self.txz = {}
 
         if is_sort1:
             #sort1
@@ -56,14 +50,11 @@ class ComplexSolid(OES_Object):
         self.element_types3 = zeros((self.nelements, 2), dtype='int32')
 
         # TODO: could be more efficient by using nelements for cid
-        #self.nodes_elements_cid = zeros((self.ntotal, 3), 'int32')
         self.element_node = zeros((self.ntotal, 2), 'int32')
-        #self.cid = zeros(self.nelements, 'int32')
         self.element_cid = zeros((self.nelements, 2), 'int32')
 
         #[oxx, oyy, ozz, txy, tyz, txz]
         self.data = zeros((self.ntimes, self.ntotal, 6), 'complex64')
-        #self.cid = {}  # gridGauss
 
     def add_eid_sort1(self, element_num, element_type, dt, eid, cid, ctype, nodef):
         self.times[self.itime] = dt
@@ -135,7 +126,9 @@ class ComplexSolid(OES_Object):
         #print("d1=%s" % d1)
         #print("d2=%s" % d2)
         elements = {}
-        TETRA={}; HEXA={}; PENTA={}
+        TETRA = {}
+        HEXA = {}
+        ENTA = {}
         for key in d1:
             (eType, nnodes) = key
             if eType == 39:  # TODO: doesn't support CPENTA, CHEXA
@@ -411,7 +404,6 @@ class ComplexSolidStressObject(StressObject):
             #raise ValueError(msg)
 
     def add_node_sort1(self, dt, eid, nodeID, oxx, oyy, ozz, txy, tyz, tzx):
-        #print "***add"
         #msg = "eid=%s nodeID=%s vm=%g" % (eid, nodeID, ovm)
         #print msg
 

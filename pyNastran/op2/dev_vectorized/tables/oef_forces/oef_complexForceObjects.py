@@ -64,9 +64,6 @@ class ComplexRodForce(ScalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
         self.axialForce[dt][eid] = axialForce
         self.torque[dt][eid] = torque
 
-    def __repr__(self):
-        return str(self.axialForce)
-
 
 class ComplexCBeamForce(ScalarObject):  # 2-CBEAM
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -172,9 +169,6 @@ class ComplexCBeamForce(ScalarObject):  # 2-CBEAM
         self.axial[dt][eid] = {sd: af}
         self.totalTorque[dt][eid] = {sd: ttrq}
         self.warpingTorque[dt][eid] = {sd: wtrq}
-
-    def __repr__(self):
-        return str(self.axial)
 
 
 class ComplexCShearForce(ScalarObject):  # 4-CSHEAR
@@ -297,9 +291,6 @@ class ComplexCShearForce(ScalarObject):  # 4-CSHEAR
         self.shear34[dt][eid] = s34
         self.shear41[dt][eid] = s41
 
-    def __repr__(self):
-        return str(self.force41)
-
 
 class ComplexSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -418,9 +409,6 @@ class ComplexSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
             pageNum += 1
         return pageNum - 1
 
-    def __repr__(self):
-        return str(self.force)
-
 
 class ComplexDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -476,9 +464,6 @@ class ComplexDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAM
 
         #self.eType[eid] = eType
         self.force[dt][eid] = force
-
-    def __repr__(self):
-        return str(self.force)
 
 
 class ComplexViscForce(ScalarObject):  # 24-CVISC
@@ -540,9 +525,6 @@ class ComplexViscForce(ScalarObject):  # 24-CVISC
         #self.eType[eid] = eType
         self.axialForce[dt][eid] = axialForce
         self.torque[dt][eid] = torque
-
-    def __repr__(self):
-        return str(self.axialForce)
 
 
 class ComplexPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
@@ -634,9 +616,6 @@ class ComplexPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         self.bmxy[dt][eid] = bmxy
         self.tx[dt][eid] = tx
         self.ty[dt][eid] = ty
-
-    def __repr__(self):
-        return str(self.mx)
 
 
 class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
@@ -801,9 +780,6 @@ class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         return 'ComplexPlate _write_f06_transient not implemented...\n'
         #raise NotImplementedError()
 
-    def __repr__(self):
-        return str(self.mx)
-
 
 class ComplexCBarForce(ScalarObject):  # 34-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -930,9 +906,6 @@ class ComplexCBarForce(ScalarObject):  # 34-CBAR
         f.write(''.join(msg))
         return pageNum
 
-    def __repr__(self):
-        return str(self.axial)
-
 
 class ComplexBendForce(ScalarObject):  # 69-CBEND
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -1021,9 +994,6 @@ class ComplexBendForce(ScalarObject):  # 69-CBEND
         self.axial[dt][eid] = [axialA, axialB]
         self.torque[dt][eid] = [torqueA, torqueB]
 
-    def __repr__(self):
-        return str(self.axial)
-
 
 class ComplexPentaPressureForce(ScalarObject):  # 76-CHEXA_PR,77-PENTA_PR,78-TETRA_PR
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -1090,9 +1060,6 @@ class ComplexPentaPressureForce(ScalarObject):  # 76-CHEXA_PR,77-PENTA_PR,78-TET
         self.velocity[dt][eid] = [vx, vy, vz]
         self.pressure[dt][eid] = pressure
 
-    def __repr__(self):
-        return str(self.acceleration)
-
 
 class ComplexCBushForce(ScalarObject):  # 102-CBUSH
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -1153,9 +1120,6 @@ class ComplexCBushForce(ScalarObject):  # 102-CBUSH
         #self.eType[eid] = eType
         self.force[dt][eid] = [fx, fy, fz]
         self.moment[dt][eid] = [mx, my, mz]
-
-    def __repr__(self):
-        return str(self.force)
 
 
 class ComplexForce_VU(ScalarObject):  # 191-VUBEAM
@@ -1280,9 +1244,6 @@ class ComplexForce_VU(ScalarObject):  # 191-VUBEAM
             self.bendingY[dt][eid][nid] = bendingY
             self.bendingZ[dt][eid][nid] = bendingZ
 
-    def __repr__(self):
-        return str(self.forceX)
-
 
 class ComplexForce_VU_2D(ScalarObject):  # 189-VUQUAD,190-VUTRIA
     def __init__(self, data_code, is_sort1, isubcase, dt, read_mode):
@@ -1402,6 +1363,3 @@ class ComplexForce_VU_2D(ScalarObject):  # 189-VUQUAD,190-VUTRIA
             self.bendingXY[dt][eid][nid] = bendingXY
             self.shearYZ[dt][eid][nid] = shearYZ
             self.shearXZ[dt][eid][nid] = shearXZ
-
-    def __repr__(self):
-        return str(self.membraneX)

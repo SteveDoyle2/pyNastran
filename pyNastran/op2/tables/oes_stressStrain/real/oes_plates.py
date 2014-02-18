@@ -205,7 +205,6 @@ class PlateStressObject(StressObject):
         self.ovmShear[dt] = {}
 
     def add_new_eid(self, eType, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #print "***add_new_eid..."
         #if eid in self.oxx:
             #return self.add(dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
 
@@ -226,7 +225,6 @@ class PlateStressObject(StressObject):
             raise Exception(msg)
 
     def add_new_eid_sort1(self, eType, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #print "***addNewEidTransient..."
         #msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
         msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g major=%g vm=%g" % (dt, eid, nodeID, fd, oxx, majorP, ovm)
         #print msg
@@ -257,7 +255,6 @@ class PlateStressObject(StressObject):
             raise ValueError(msg)
 
     def add(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #print "***add"
         msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
         #print msg
         #print self.oxx
@@ -275,7 +272,6 @@ class PlateStressObject(StressObject):
             raise ValueError(msg)
 
     def add_sort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #print "***addTransient"
         msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" % (dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
         #print msg
         #print self.oxx
@@ -293,7 +289,6 @@ class PlateStressObject(StressObject):
             raise ValueError(msg)
 
     def addNewNode(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #print "***addNewNode"
         assert eid is not None
         #assert nodeID not in self.oxx[eid]
         self.fiberCurvature[eid][nodeID] = [fd]
@@ -310,7 +305,6 @@ class PlateStressObject(StressObject):
             raise ValueError(msg)
 
     def addNewNodeSort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #print "***addNewNodeTransient"
         #print self.oxx
         assert eid is not None
         msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
@@ -942,7 +936,6 @@ class PlateStrainObject(StrainObject):
             raise ValueError(msg)
 
     def add(self, dt, eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
-        #print "***add"
         msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
         #print msg
         #print self.oxx
@@ -961,7 +954,6 @@ class PlateStrainObject(StrainObject):
             raise ValueError(msg)
 
     def add_sort1(self, dt, eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
-        #print "***add"
         msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
         #print msg
         #print self.oxx
@@ -981,7 +973,6 @@ class PlateStrainObject(StrainObject):
             raise ValueError(msg)
 
     def addNewNode(self, dt, eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
-        #print "***addNewNode"
         #print self.oxx
         msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
         assert nodeID not in self.exx[eid], msg

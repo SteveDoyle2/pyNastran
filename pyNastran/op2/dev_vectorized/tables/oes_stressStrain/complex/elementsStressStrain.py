@@ -141,7 +141,6 @@ class ComplexElementsStressStrain(object):
         #self.print_section(20)
         #term = data[0:4] CEN/
         #data = data[4:]
-        #print "*****"
         #self.print_block(self.data)
         #print "self.num_wide = ",self.num_wide
         #print "len(data) = ",len(self.data)
@@ -270,7 +269,7 @@ class ComplexElementsStressStrain(object):
             (eid, fer, uer, aor, aer,
                   fei, uei, aoi, aei) = out
             eid = extract(eid, dt)
-            
+
             if is_magnitude_phase:
                 fe = polar_to_real_imag(fer, fei)
                 ue = polar_to_real_imag(uer, uei)
@@ -302,7 +301,7 @@ class ComplexElementsStressStrain(object):
             (eid, txr,tyr,tzr,rxr,ryr,rzr,
                   txi,tyi,tzi,rxi,ryi,rzi) = out
             eid = extract(eid, dt)
-            
+
             if is_magnitude_phase:
                 tx = polar_to_real_imag(txr, txi)
                 ty = polar_to_real_imag(tyr, tyi)
@@ -331,7 +330,6 @@ class ComplexElementsStressStrain(object):
         #self.print_section(20)
         #term = data[0:4] CEN/
         #data = data[4:]
-        #print "*****"
         #self.print_block(self.data)
         #assert self.num_wide==87,'invalid num_wide...num_wide=%s' %(self.num_wide)
         #if self.num_wide==87: # 2+(17-1)*5 = 87 -> 87*4 = 348
