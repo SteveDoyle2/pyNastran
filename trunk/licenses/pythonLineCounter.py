@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #-------------------------------------------------------------------------------
 # Name:       pytonLineCounter.py (originally plc.py)
-# Purpose:    A Python line counter.  Reports how many lines are in the given 
+# Purpose:    A Python line counter.  Reports how many lines are in the given
 #             input files, broken down into code, comment and blank lines.
 #
 # Author:     Wayne Koorts
@@ -24,7 +24,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-#    Per discussion with Wayne, he has agreed to release this under the 
+#    Per discussion with Wayne, he has agreed to release this under the
 #    LGPL license for pyNastran.  Updates for additional breakdowns were
 #    added.  Wayne's script was also renamed for clarity.  It runs on a single
 #    file, but creating a single file with all the pyNastran code allows plc to
@@ -39,7 +39,7 @@ usage = \
     Enter a list of files to count, one per line, in a file named
     inputs.txt in this script's path, or pass in a list of
     space-separated filenames to count, e.g:
-        
+
         plc.py <file1.py> <file2.py> <file3.py>"""
 
 def countLines(fnames=[]):
@@ -81,11 +81,11 @@ def countLines(fnames=[]):
     bad_doxygen_lines = 0
     quote_lines = 0
     doxygen_starter_lines = 0
-    
+
     input_file_list = []
 
     print
-    
+
     if 0 and len(sys.argv) < 2 and len(fnames)==0:
         try:
             inputs_file = open("inputs.txt", "r")
@@ -103,9 +103,9 @@ def countLines(fnames=[]):
             sys.exit(1)
     else:
         input_file_list = fnames
-        
+
     print "Input files:"
-    
+
     for input_file_name in input_file_list:
         if not input_file_name.endswith('.py'):
             continue
@@ -116,7 +116,7 @@ def countLines(fnames=[]):
         except IOError:
             print "Error opening \"" + input_file_name + "\", skipping...\n"
             break
-        except TypeError:        
+        except TypeError:
             print "Error opening \"" + str(input_file_name) + "\", skipping...\n"
             break
         i = 0
@@ -132,19 +132,18 @@ def countLines(fnames=[]):
                 if nQuotes == 2:
                     header_lines += 1  # inline """comment"""
                     continue
-                
+
                 if toggleComment: # if already on
                     header_lines += 1
                 toggleComment = not(toggleComment)
-                
-            
+
             if toggleComment:
                 #line2 = line.strip(' \n\t\r').strip('"').strip("'")
                 #if not line2:
                 header_lines += 1
                 #line = line2
                 continue
-            
+
             for char in line:
                 if char == "\n":
                     blank_lines += 1
@@ -160,7 +159,7 @@ def countLines(fnames=[]):
                 n  = line.count('#')
                 n2 = line.count('##')
                 n3 = line.count('###')
-                
+
                 if n3==1:
                     format_lines += 1
                     print input_file_name, "###"
@@ -171,16 +170,15 @@ def countLines(fnames=[]):
                     doxygen_starter_lines += 1
                 elif n2==1:
                     doxygen_lines += 1
+                    #print input_file_name, "doxygen_line ##", line
                 else:
                     comment_lines += 1
-                ###
-            ###
-            
+
         current_file.close()
-        
+
     total_lines2 = (blank_lines + comment_lines + code_lines +
-                    header_lines + doxygen_lines + format_lines)
-    
+                    header_lines + doxygen_lines + format_lines)  # doesn't include ???
+
     print "Total lines:   " + str(total_lines)
     print "Total lines2:  " + str(total_lines2)
     print "Code lines:    " + str(code_lines)

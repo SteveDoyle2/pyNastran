@@ -83,4 +83,3 @@ def update_copyright():
 
 if __name__ == '__main__':
     update_copyright()
-
