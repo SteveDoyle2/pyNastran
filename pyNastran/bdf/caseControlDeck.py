@@ -728,7 +728,7 @@ def _clean_lines(case_control, lines):
     lines3 = []  # TODO: line, comment
     lines_pack = []
     for line in lines2:
-        #print("@@@@@@", line)
+        #print(line)
         #if 'ECHO' in line:
             #asdf
 

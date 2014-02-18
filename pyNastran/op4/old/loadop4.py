@@ -1259,7 +1259,7 @@ def mexFunction(nlhs, plhs[], int nrhs, prhs[]):
                          (int   *) unused    , # in/out index m.N (sp 1,2)
                                    D
                                   ); # out numeric data
-            ### # 2}}}
+            # # 2}}}
 
 
             # copy column c from internal to matlab variable
@@ -1281,13 +1281,13 @@ def mexFunction(nlhs, plhs[], int nrhs, prhs[]):
 
             if DEBUG:
                 print "loadop4<-column %2d read %d values\n\n" %(c, n_nnz)
-        ### end loop over columns of matrix i
+        # end loop over columns of matrix i
 
         if(not storage[i])     # dense matrix
             free(D);
         if(print_header):
             print "loadop4: %2d x %2d %2s %2s nStr=%4d nNnz=%4d f=%2d %-8s dg=%1d of %1d\n" %(nRow[i], nCol[i], op4_type_str[type[i]-1],op4_store_str[storage[i]], nStr[i], nNnz[i],form[i],name[i], digits[i], i+1, Nmat)
-    ### # end loop over matrices
+    # # end loop over matrices
 
     fp.close()
     if DEBUG:
