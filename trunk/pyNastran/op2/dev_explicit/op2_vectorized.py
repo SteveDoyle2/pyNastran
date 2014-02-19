@@ -26,9 +26,9 @@ class OP2_Vectorized(OP2):
         :param log: a logging object to write debug messages to
          (.. seealso:: import logging)
         """
+        debug = False
         OP2.__init__(self, make_geom=make_geom, save_skipped_cards=save_skipped_cards,
                      debug=debug, log=log)
-        debug = True
         #print(self.binary_debug)
         #self.binary_debug = None
         self.ask = False
@@ -123,10 +123,10 @@ class OP2_Vectorized(OP2):
             #raise NotImplementedError()
         self.f.close()
         self.skippedCardsFile.close()
-        self.compress_results()
+        self.combine_results()
         self.log.info('finished reading op2')
 
-    def compress_results(self):
+    def combine_results(self, combine=True):
         """
         we want the data to be in the same format and grouped by subcase, so
         we take
@@ -144,6 +144,8 @@ class OP2_Vectorized(OP2):
             2 : result4,
         }
         """
+        if not combine:
+            return
         self.log.info('compress_results')
         result_types = ['ctetra_stress', 'displacements', 'plateStress', 'spcForces']
         for result_type in result_types:
@@ -165,12 +167,25 @@ class OP2_Vectorized(OP2):
                     del result[keys[0]]
                 else:
                     # multiple results to combine
-                    continue
-                    raise NotImplementedError('multiple results to combine')
-                    res1.combine([res2, res3, res4])
+                    res1 = result[keys[0]]
+                    if not hasattr(res1, 'combine'):
+                        print("res1=%s has no method combine" % res1.__class__.__name__)
+                        continue
+
+                    #raise NotImplementedError('multiple results to combine')
+                    del result[keys[0]]
+
+                    results_list = []
+                    for key in keys[1:]:
+                        results_list.append(result[key])
+                        del result[key]
+
                     #res1.data = hstack(res1.data, res2.data)
                     # combination method depends on result, so stresses are
                     # combined differently than displacements
+                    res1.combine(results_list)
+                    result[isubcase] = res1
+
                 #print(keys)
             setattr(self, result_type, result)
 
