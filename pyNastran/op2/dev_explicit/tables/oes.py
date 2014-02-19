@@ -493,11 +493,13 @@ class OES(OP2Common):
             if self.isStress():
                 result_name = 'solidStress'
                 slot = self.solidStress
-                obj = RealSolidStressObject
+                obj_real = RealSolidStressObject
+                obj_complex = ComplexSolidStressObject
 
                 #result_vector_name
                 #slot_vector
-                obj_vector = RealSolidStressVector
+                obj_vector_real = RealSolidStressVector
+                obj_vector_complex = ComplexSolidStressVector
                 if self.element_type == 39: # CTETRA
                     nnodes_expected = 5  # 1 centroid + 4 corner points
                     result_vector_name = 'ctetra_stress'
@@ -515,11 +517,13 @@ class OES(OP2Common):
             else:
                 result_name = 'solidStrain'
                 slot = self.solidStrain
-                obj = RealSolidStrainObject
+                obj_real = RealSolidStrainObject
+                obj_complex = ComplexSolidStrainObject
 
                 #result_vector_name
                 #slot_vector
-                obj_vector = RealSolidStrainVector
+                obj_vector_real = RealSolidStrainVector
+                obj_vector_complex = ComplexSolidStrainVector
                 if self.element_type == 39: # CTETRA
                     nnodes_expected = 5  # 1 centroid + 4 corner points
                     result_vector_name = 'ctetra_strain'
@@ -539,6 +543,7 @@ class OES(OP2Common):
             numwide_imag = 4 + (17 - 4) * nnodes_expected
             preline1 = '%s-%s' % (self.element_name, self.element_type)
             preline2 = ' ' * len(preline1)
+            #print "_data_factor =", self._data_factor
             self._data_factor = nnodes_expected
             if self.num_wide == numwide_real:
                 #if self.isStress():
@@ -550,7 +555,7 @@ class OES(OP2Common):
                 auto_return = self._create_oes_object2(nelements,
                                                        result_name, result_vector_name,
                                                        slot, slot_vector,
-                                                       obj, obj_vector)
+                                                       obj_real, obj_vector_real)
                 if auto_return:
                     return len(data)
                     #return nelements * ntotal
@@ -572,7 +577,7 @@ class OES(OP2Common):
                     assert nnodes < 21, 'print_block(data[n:n+16])'  #self.print_block(data[n:n+16])
 
                     n += 16
-                    for node_id in xrange(nnodes_expected):  # nodes pts, +1 for centroid (???)
+                    for inode in xrange(nnodes_expected):  # nodes pts, +1 for centroid (???)
                         out = struct2.unpack(data[n:n + 84]) # 4*21 = 84
                         if self.debug4():
                             self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
@@ -595,25 +600,27 @@ class OES(OP2Common):
                         aCos = [a1, a2, a3]
                         bCos = [b1, b2, b3]
                         cCos = [c1, c2, c3]
-                        if node_id == 0:
+                        if inode == 0:
                             self.obj.add_eid(self.element_name+str(nnodes), cid, dt, eid, grid,
                                              sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
                                              aCos, bCos, cCos, pressure, svm)
                         else:
-                            self.obj.add_node(dt, eid, node_id, grid,
+                            self.obj.add_node(dt, eid, grid, inode,
                                               sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
                                               aCos, bCos, cCos, pressure, svm)
                         n += 84
 
             elif self.num_wide == numwide_imag:
                 ntotal = numwide_imag * 4
+                #nelements = len(data) / float(ntotal)
                 nelements = len(data) // ntotal
                 result_name = 'solidStresss' if self.isStress() else 'solidStrain'
                 result_name += '_subcase%i' % self.isubcase
-                auto_return = self._create_oes_object2(nelements, result_name,
-                                                       self.solidStress, self.solidStrain,
-                                                       ComplexSolidStressVector, ComplexSolidStrainVector,
-                                                       ComplexSolidStressObject, ComplexSolidStrainObject)
+                #print "nelements =", nelements
+                auto_return = self._create_oes_object2(nelements,
+                                                       result_name, result_vector_name,
+                                                       slot, slot_vector,
+                                                       obj_complex, obj_vector_complex)
                 if auto_return:
                     return len(data)
                     #return nelements * ntotal
@@ -660,7 +667,8 @@ class OES(OP2Common):
                         if self.debug4():
                             self.binary_debug.write('       node%s=[%s]\n' % (grid, ', '.join(['%r' % di for di in out])))
                         #self.obj.add(dt, eid, grid, ex, ey, ez, etxy, etyz, etzx)
-                        self.obj.add_node_sort1(dt, eid, grid, ex, ey, ez, etxy, etyz, etzx)
+                        self.obj.add_node_sort1(dt, eid, grid, inode,
+                                                ex, ey, ez, etxy, etyz, etzx)
             else:
                 raise NotImplementedError(self.num_wide)
 
@@ -1689,7 +1697,7 @@ class OES(OP2Common):
                 self.obj.nelements += nelements
                 auto_return = True
             elif self.read_mode == 2:
-                self.obj = slot_vector[self.isubcase]
+                self.obj = slot_vector[self.code]
                 #self.obj.update_data_code(self.data_code)
                 self.obj.build()
 
