@@ -263,13 +263,15 @@ class OP2(BDF,
 
             ## OES - isotropic CROD/CONROD/CTUBE stress
             'rodStress',
-            'conrodStress',
-            'ctubeStress',
+            'crod_stress',
+            'conrod_stress',
+            'ctube_stress',
 
             ## OES - isotropic CROD/CONROD/CTUBE strain
             'rodStrain',
-            'conrodStrain',
-            'ctubeStrain',
+            'crod_strain',
+            'conrod_strain',
+            'ctube_strain',
 
             ## OES - isotropic CBAR stress
             'barStress',
@@ -308,8 +310,9 @@ class OP2(BDF,
 
             # OEF - Forces - tCode=4 thermal=0
             'rodForces',
-            'conrodForces',
-            'ctubeForces',
+            'crod_forces',
+            'conrod_forces',
+            'ctube_forces',
 
             'barForces',
             'bar100Forces',

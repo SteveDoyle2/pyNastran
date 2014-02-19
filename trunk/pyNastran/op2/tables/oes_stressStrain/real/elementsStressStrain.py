@@ -16,7 +16,7 @@ class RealElementsStressStrain(object):
         if not isRelease:
            raise NotImplementedError(self.code_information())
 
-        self.log.debug('skipping approach_code=%s, table_code=%s, format_code-%s '
+        self.log.debug('skipping approach_code=%s, table_code=%s, format_code=%s '
                        'sort_code=%s on %s table' % (self.analysis_code,
                        self.table_code, self.format_code, self.sort_code,
                        self.table_name))
