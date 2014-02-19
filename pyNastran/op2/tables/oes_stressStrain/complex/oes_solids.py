@@ -49,7 +49,7 @@ class ComplexSolid(OES_Object):
         return nnodes
 
     def build(self):
-        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (self.ntimes, self.nelements, self.ntotal, self.subtitle))
         if self.is_built:
             return
         nnodes = self.get_nnodes()
@@ -111,11 +111,12 @@ class ComplexSolid(OES_Object):
     def add_node_sort1(self, dt, eid, grid, inode, ex, ey, ez, etxy, etyz, etzx):
         ielem = self.ielement-1
         #print('eid=%i grid=%i exx=%s' % (eid, grid, str(ex)))
-        print('data[%s, %s, :] = %s' % (self.itime, self.itotal, [ex, ey, ez, etxy, etyz, etzx]))
+        #print('data[%s, %s, :] = %s dt=%s' % (self.itime, self.itotal, ex, dt))
+        #print('data[%s, %s, :] = %s' % (self.itime, self.itotal, [ex, ey, ez, etxy, etyz, etzx]))
         #print('element_node[%s, %s] = [%s, %s]' % (ielem, inode, eid, grid))
 
-        self.data[self.itime, self.itotal, :] = [ex, ey, ez, etxy, etyz, etzx]
-        self.element_node[self.itotal, :] = [eid, grid]
+        #self.data[self.itime, self.itotal, :] = [ex, ey, ez, etxy, etyz, etzx]
+        #self.element_node[self.itotal, :] = [eid, grid]
         self.itotal += 1
 
     def get_stats(self):

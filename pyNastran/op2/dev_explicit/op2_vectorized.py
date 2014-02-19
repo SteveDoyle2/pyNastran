@@ -7,7 +7,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import os
 import sys
 #import warnings
-from numpy import array
+from numpy import array, unique, where
 
 #from pyNastran.utils import is_binary
 #from pyNastran.utils.gui_io import load_file_dialog
@@ -102,6 +102,7 @@ class OP2_Vectorized(OP2):
         assert self.ask in [True, False], self.ask
         self.is_vectorized = True
         if self.is_vectorized:
+            self.log.info('-------- reading the op2 with read_mode=1 --------')
             self.read_mode = 1
             self._close_op2 = False
 
@@ -113,6 +114,7 @@ class OP2_Vectorized(OP2):
             # TODO: clear out objects the user doesn't want
             self.read_mode = 2
             self._close_op2 = True
+            self.log.info('-------- reading the op2 with read_mode=2 --------')
             OP2.read_op2(self, op2_filename=op2_filename)
         else:
             #self.read_mode = 0
@@ -121,6 +123,56 @@ class OP2_Vectorized(OP2):
             #raise NotImplementedError()
         self.f.close()
         self.skippedCardsFile.close()
+        self.compress_results()
+        self.log.info('finished reading op2')
+
+    def compress_results(self):
+        """
+        we want the data to be in the same format and grouped by subcase, so
+        we take
+
+        stress = {
+            (1, 'SUPERELEMENT 0') : result1,
+            (1, 'SUPERELEMENT 10') : result2,
+            (1, 'SUPERELEMENT 20') : result3,
+            (2, 'SUPERELEMENT 0') : result4,
+        }
+        and convert it to:
+
+        stress = {
+            1 : result1 + result2 + results3,
+            2 : result4,
+        }
+        """
+        self.log.info('compress_results')
+        result_types = ['ctetra_stress', 'displacements', 'plateStress', 'spcForces']
+        for result_type in result_types:
+            result = getattr(self, result_type)
+            case_keys = sorted(result.keys())
+            isubcases = [isubcase for (isubcase, name) in case_keys]
+            unique_isubcases = unique(isubcases)
+
+            #print(case_keys)
+            #print(isubcases)
+            #print(unique_isubcases)
+            for isubcase in unique_isubcases:
+                #wherei = where(isubcases==isubcase)[0]
+                wherei = [i for i, isubcase in enumerate(isubcases) if isubcase == 1]
+                keys = [case_keys[i] for i in wherei]
+                if len(wherei) == 1:
+                    # rename the case since we have only one tuple for the result
+                    result[isubcase] = result[keys[0]]
+                    del result[keys[0]]
+                else:
+                    # multiple results to combine
+                    continue
+                    raise NotImplementedError('multiple results to combine')
+                    res1.combine([res2, res3, res4])
+                    #res1.data = hstack(res1.data, res2.data)
+                    # combination method depends on result, so stresses are
+                    # combined differently than displacements
+                #print(keys)
+            setattr(self, result_type, result)
 
 
 if __name__ == '__main__':
