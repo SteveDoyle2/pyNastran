@@ -15,11 +15,12 @@ class ComplexSolid(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         self.eType = {}
-        self.result_flag = 1
+        self.result_flag = 0
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
         #self.ntotal = 0
+        self.itime = 0
         self.nelements = 0  # result specific
         #self.cid = {}  # gridGauss
 
@@ -85,8 +86,12 @@ class ComplexSolid(OES_Object):
                                                                            self.ntotal)
             raise RuntimeError(msg)
 
-        #[oxx, oyy, ozz, txy, tyz, txz]
-        self.data = zeros((self.ntimes, self.ntotal, 6), 'complex64')
+        if self.result_flag == 0:
+            # [oxx, oyy, ozz, txy, tyz, txz]
+            self.data = zeros((self.ntimes, self.ntotal, 6), 'complex64')
+        else:
+            # oxx
+            self.data = zeros((self.ntimes, self.ntotal, 1), 'complex64')
 
     def add_eid_sort1(self, element_num, element_type, dt, eid, cid, ctype, nodef):
         self.times[self.itime] = dt
@@ -112,11 +117,16 @@ class ComplexSolid(OES_Object):
         ielem = self.ielement-1
         #print('eid=%i grid=%i exx=%s' % (eid, grid, str(ex)))
         #print('data[%s, %s, :] = %s dt=%s' % (self.itime, self.itotal, ex, dt))
+        #if dt != 0.0:
+            #asfd
         #print('data[%s, %s, :] = %s' % (self.itime, self.itotal, [ex, ey, ez, etxy, etyz, etzx]))
         #print('element_node[%s, %s] = [%s, %s]' % (ielem, inode, eid, grid))
 
-        #self.data[self.itime, self.itotal, :] = [ex, ey, ez, etxy, etyz, etzx]
-        #self.element_node[self.itotal, :] = [eid, grid]
+        if self.result_flag == 0:
+            self.data[self.itime, self.itotal, :] = [ex, ey, ez, etxy, etyz, etzx]
+        else:
+            self.data[self.itime, self.itotal, 0] = ex
+        self.element_node[self.itotal, :] = [eid, grid]
         self.itotal += 1
 
     def get_stats(self):
@@ -240,6 +250,7 @@ class ComplexSolidStressVector(ComplexSolid, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexSolid.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
+        #print(self.subtitle)
 
     def getHeaders(self):
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz']
@@ -305,7 +316,7 @@ class ComplexSolidStressObject(StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
 
-        self.result_flag = 1
+        self.result_flag = 0
         self.eType = {}
         self.code = [self.format_code, self.sort_code, self.s_code]
 

@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from struct import unpack
 
 from .opg_Objects import AppliedLoadsObject  # ComplexAppliedLoadsObject
-from .opg_loadVector import (RealLoadVectorTable, ComplexLoadVectorTable,
+from .opg_loadVector import (RealLoadVectorVector, ComplexLoadVectorVector,
                              RealLoadVectorObject, ComplexLoadVectorObject,
                              ThermalLoadVectorObject)
 from .opnl_forceVector import ForceVectorObject, ComplexForceVectorObject

@@ -171,6 +171,20 @@ class FortranFormat(object):
                                 assert isinstance(n, int), self.table_name
                                 datai = data[n:]
                             #aaa
+                            if self.read_mode == 2:
+                                if hasattr(self, 'obj') and hasattr(self.obj, 'itime'):
+                                    #ntotal = record_len // (self.num_wide * 4) * self._data_factor
+                                    if self.obj.ntotal == self.obj.data.shape[1]:
+                                        self.obj._reset_indices()
+                                        self.obj.itime += 1
+                                        #self.obj.itotal = 0
+                                    else:
+                                        print('self.obj.name=%r has itime', self.obj.__class__.__name__)
+                                        print('ntotal=%s shape=%s' % (self.obj.ntotal, str(self.obj.data.shape)))
+                                #else:
+                                    #print('self.obj.name=%r doesnt have itime' % self.obj.__class__.__name__)
+
+
                         elif self.read_mode == 1:
                             #n = self._skip_record()
                             #n = table4_parser(datai, 300000)
@@ -193,7 +207,6 @@ class FortranFormat(object):
                             #self.goto(n)
                             #n = self._skip_record()
 
-                        if self.read_mode == 1:
                             if hasattr(self, 'obj') and self.obj is not None:
                                 if hasattr(self.obj, 'ntimes'):
                                     #print self.freq
@@ -208,15 +221,6 @@ class FortranFormat(object):
                                     #sys.exit()
                                 else:
                                     print('obj=%s doesnt have ntimes' % self.obj.__class__.__name__)
-
-                        elif self.read_mode == 2:
-                            #print('self.obj.name =', self.obj.__class__.__name__)
-                            if hasattr(self, 'obj') and hasattr(self.obj, 'itime'):
-                                #ntotal = record_len // (self.num_wide * 4) * self._data_factor
-                                if self.obj.ntotal > self.obj.data.shape[1]:
-                                    self.obj._reset_indices()
-                                    self.obj.itime += 1
-                                    #self.obj.itotal = 0
                     else:
                         data = self._read_record()
                         n = table4_parser(data)
