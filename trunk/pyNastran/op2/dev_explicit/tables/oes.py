@@ -546,10 +546,6 @@ class OES(OP2Common):
             #print "_data_factor =", self._data_factor
             self._data_factor = nnodes_expected
             if self.num_wide == numwide_real:
-                #if self.isStress():
-                    #self.create_transient_object(self.solidStress, SolidStressObject)
-                #else:
-                    #self.create_transient_object(self.solidStrain, SolidStrainObject)
                 ntotal = 16 + 84 * nnodes_expected
                 nelements = len(data) // ntotal
                 auto_return = self._create_oes_object2(nelements,
@@ -557,8 +553,7 @@ class OES(OP2Common):
                                                        slot, slot_vector,
                                                        obj_real, obj_vector_real)
                 if auto_return:
-                    return len(data)
-                    #return nelements * ntotal
+                    return nelements * self.num_wide * 4
 
                 struct1 = Struct(b'ii4si')
                 struct2 = Struct(b'i20f')
@@ -616,14 +611,13 @@ class OES(OP2Common):
                 nelements = len(data) // ntotal
                 result_name = 'solidStresss' if self.isStress() else 'solidStrain'
                 result_name += '_subcase%i' % self.isubcase
-                #print "nelements =", nelements
+                self.ntotal += nelements * nnodes_expected
                 auto_return = self._create_oes_object2(nelements,
                                                        result_name, result_vector_name,
                                                        slot, slot_vector,
                                                        obj_complex, obj_vector_complex)
                 if auto_return:
-                    return len(data)
-                    #return nelements * ntotal
+                    return nelements * self.num_wide * 4
 
 
                 #print "self.obj.data.shape =", self.obj.data.shape
@@ -674,7 +668,8 @@ class OES(OP2Common):
 
         #=========================
         # plates
-        elif self.element_type in [33]: # QUAD4-centroidal
+        elif self.element_type in [33]:
+            # 33-QUAD4-centroidal
             if self.read_mode == 1:
                 return len(data)
             numwide_real = 17
@@ -1697,6 +1692,8 @@ class OES(OP2Common):
                 self.obj.nelements += nelements
                 auto_return = True
             elif self.read_mode == 2:
+                self.code = self._get_code()
+                #print "***code =", self.code
                 self.obj = slot_vector[self.code]
                 #self.obj.update_data_code(self.data_code)
                 self.obj.build()

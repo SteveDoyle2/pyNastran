@@ -630,10 +630,8 @@ class OP2Common(Op2Codes, F06Writer):
         #assert classObj is not None, 'name=%r has no associated classObject' % storageName
         self.data_code['table_name'] = self.table_name
         assert self.log is not None
-        #code = (self.isubcase, self.subtitle)
-        code = self.isubcase
-        self.code = code
 
+        code = self._get_code()
         if hasattr(self, 'isubcase'):
             #print('isubcase =', self.isubcase)
             #print('code =', self.code)
@@ -649,6 +647,16 @@ class OP2Common(Op2Codes, F06Writer):
                 #print "code =", code
             else:
                 storageObj[code] = self.obj
+
+    def _get_code(self):
+        code = self.isubcase
+        if self.read_mode == 0:
+            code = self.isubcase
+        else:
+            code = (self.isubcase, self.subtitle)
+        self.code = code
+        #print('code = ', self.code)
+        return self.code
 
     def _not_implemented_or_skip(self, data, msg=''):
         #if isRelease:
@@ -868,7 +876,8 @@ class OP2Common(Op2Codes, F06Writer):
                 auto_return = True
             elif self.read_mode == 2:
                 #print "read_mode = 2"
-                self.obj = slot[self.isubcase]
+                self.code = self._get_code()
+                self.obj = slot[self.code]
                 #self.obj.update_data_code(self.data_code)
                 self.obj.build()
         else:  # not vectorized

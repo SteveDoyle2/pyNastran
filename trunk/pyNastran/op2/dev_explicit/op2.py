@@ -227,7 +227,7 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
 
         self.grid_point_weight = GridPointWeight()
         self.words = []
-        self.debug = False
+        self.debug = debug
         self.make_geom = False
 
     def _get_table_mapper(self):
@@ -1314,7 +1314,6 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
                     msg.append('skipping %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
                     #raise RuntimeError('skipping %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
         return ''.join(msg)
-
 
 if __name__ == '__main__':  # pragma: no conver
     from pickle import dumps, dump, load, loads

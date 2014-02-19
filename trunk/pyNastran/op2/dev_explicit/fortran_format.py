@@ -162,16 +162,20 @@ class FortranFormat(object):
                     if hasattr(self, 'num_wide'):
                         datai = b''
                         if self.read_mode in [0, 2]:
+                            self.ntotal = 0
                             #print "read_mode", self.read_mode
+                            #print "-----------------------------------------"
                             for data in self._stream_record():
                                 data = datai + data
                                 n = table4_parser(data)
                                 assert isinstance(n, int), self.table_name
                                 datai = data[n:]
+                            #aaa
                         elif self.read_mode == 1:
                             #n = self._skip_record()
                             #n = table4_parser(datai, 300000)
                             if 1:
+                                self.ntotal = 0
                                 #n = self.n
                                 n = 0
                                 for i, data in enumerate(self._stream_record()):
@@ -200,13 +204,15 @@ class FortranFormat(object):
                                     self.obj.ntimes += 1
                                     self.obj.ntotal = record_len // (self.num_wide * 4) * self._data_factor
                                     #self.obj.ntotal = record_len // nwide
-                                    #print "ntotal =", self.obj.ntotal, type(self.obj)
+                                    #print "ntotal         =", self.ntotal, self.obj.ntotal  #, type(self.obj)
+                                    #sys.exit()
                                 else:
                                     print('obj=%s doesnt have ntimes' % self.obj.__class__.__name__)
 
                         elif self.read_mode == 2:
                             #print('self.obj.name =', self.obj.__class__.__name__)
                             if hasattr(self, 'obj') and hasattr(self.obj, 'itime'):
+                                #ntotal = record_len // (self.num_wide * 4) * self._data_factor
                                 if self.obj.ntotal > self.obj.data.shape[1]:
                                     self.obj._reset_indices()
                                     self.obj.itime += 1
@@ -253,13 +259,13 @@ class FortranFormat(object):
         n = self.n
         record = self.skip_block()
         len_record += self.n - n - 8  # -8 is for the block
-        #print "len1 =", len_record
 
         markers1 = self.get_nmarkers(1, rewind=True)
         # handling continuation blocks
         if markers1[0] > 0:
             #nloop = 0
-            while markers1[0] > 0: #, 'markers0=%s markers1=%s' % (markers0, markers1)
+            while markers1[0] > 0:
+                # 'markers0=%s markers1=%s' % (markers0, markers1)
                 markers1 = self.get_nmarkers(1, rewind=False)
                 n = self.n
                 record = self.skip_block()
@@ -276,7 +282,8 @@ class FortranFormat(object):
         # handling continuation blocks
         if markers1[0] > 0:
             #nloop = 0
-            while markers1[0] > 0: #, 'markers0=%s markers1=%s' % (markers0, markers1)
+            while markers1[0] > 0:
+                # 'markers0=%s markers1=%s' % (markers0, markers1)
                 markers1 = self.get_nmarkers(1, rewind=False)
                 record = self.read_block()
                 markers1 = self.get_nmarkers(1, rewind=True)
@@ -300,7 +307,8 @@ class FortranFormat(object):
         # handling continuation blocks
         if markers1[0] > 0:
             nloop = 0
-            while markers1[0] > 0: #, 'markers0=%s markers1=%s' % (markers0, markers1)
+            while markers1[0] > 0:
+                # 'markers0=%s markers1=%s' % (markers0, markers1)
                 markers1 = self.get_nmarkers(1, rewind=False)
 
                 record = self.read_block()
@@ -325,7 +333,8 @@ class FortranFormat(object):
         if markers1[0] > 0:
             nloop = 0
             records = [record]
-            while markers1[0] > 0: #, 'markers0=%s markers1=%s' % (markers0, markers1)
+            while markers1[0] > 0:
+                # 'markers0=%s markers1=%s' % (markers0, markers1)
                 markers1 = self.get_nmarkers(1, rewind=False)
                 record = self.read_block()
                 records.append(record)
