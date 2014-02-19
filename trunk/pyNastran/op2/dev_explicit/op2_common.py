@@ -554,8 +554,7 @@ class OP2Common(Op2Codes, F06Writer):
                 ry = complex(ryr, ryi)
                 rz = complex(rzr, rzi)
 
-            data_in = [eid, grid_type, tx, ty, tz, rx, ry, rz]
-            self.obj.add(dt, data_in)
+            self.obj.add(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
             n += ntotal
         return n
 
@@ -631,20 +630,25 @@ class OP2Common(Op2Codes, F06Writer):
         #assert classObj is not None, 'name=%r has no associated classObject' % storageName
         self.data_code['table_name'] = self.table_name
         assert self.log is not None
+        #code = (self.isubcase, self.subtitle)
+        code = self.isubcase
+        self.code = code
 
         if hasattr(self, 'isubcase'):
             #print('isubcase =', self.isubcase)
-            if self.isubcase in storageObj:
-                self.obj = storageObj[self.isubcase]
+            #print('code =', self.code)
+            if self.code in storageObj:
+                self.obj = storageObj[code]
                 self.obj.update_data_code(copy.deepcopy(self.data_code))
             else:
                 self.obj = classObj(self.data_code, self.is_sort1(), self.isubcase, self.nonlinear_factor)
-            storageObj[self.isubcase] = self.obj
+            storageObj[code] = self.obj
         else:
-            if self.ID in storageObj:
-                self.obj = storageObj[self.ID]
+            if code in storageObj:
+                self.obj = storageObj[code]
+                #print "code =", code
             else:
-                storageObj[self.ID] = self.obj
+                storageObj[code] = self.obj
 
     def _not_implemented_or_skip(self, data, msg=''):
         #if isRelease:

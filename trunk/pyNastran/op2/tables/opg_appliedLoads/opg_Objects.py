@@ -132,7 +132,7 @@ class ComplexAppliedLoadsVector(AppliedLoadsVector):
                 (vals2, is_all_zeros) = writeFloats13E(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
                 f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
-                f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                        '%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                         node_id, eid, source, dxr, dyr, dzr, rxr, ryr, rzr,
                         '', '', '',           dxi, dyi, dzi, rxi, ryi, rzi))
             f.write(page_stamp % page_num)

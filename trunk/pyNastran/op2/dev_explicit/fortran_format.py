@@ -1,4 +1,5 @@
 from struct import unpack
+import copy
 
 class FortranFormat(object):
     def __init__(self):
@@ -171,30 +172,43 @@ class FortranFormat(object):
                             #n = self._skip_record()
                             #n = table4_parser(datai, 300000)
                             if 1:
-                                n = self.n
+                                #n = self.n
+                                n = 0
                                 for i, data in enumerate(self._stream_record()):
                                     #if i == 0:
-                                        #data = datai + data
+                                        data = datai + data
+                                        ndata = len(data)
                                         n = table4_parser(data)
                                         assert isinstance(n, int), self.table_name
                                         datai = data[n:]
-                                        #break
+                                        #if self.obj is not None:
+                                            #print "len(datai) =", len(datai), ndata / (self.num_wide * 4.)
+                                assert len(datai) == 0, len(datai)
                                 #n = record_len
                                 #break
                             #self.goto(n)
                             #n = self._skip_record()
 
                         if self.read_mode == 1:
-                            if hasattr(self, 'obj') and hasattr(self.obj, 'ntimes'):
-                                #if self.nonlinear_factor ==
-                                self.obj.ntimes += 1
-                                self.obj.ntotal += record_len // (self.num_wide * 4) * self._data_factor
-                                #print "ntotal =", self.obj.ntotal, type(self.obj)
+                            if hasattr(self, 'obj') and self.obj is not None:
+                                if hasattr(self.obj, 'ntimes'):
+                                    #print self.freq
+                                    self.obj._reset_indices()
+                                    #print "isubcase", self.isubcase
+                                    #print "record_len", record
+                                    # _len
+                                    self.obj.ntimes += 1
+                                    self.obj.ntotal = record_len // (self.num_wide * 4) * self._data_factor
+                                    #self.obj.ntotal = record_len // nwide
+                                    #print "ntotal =", self.obj.ntotal, type(self.obj)
+                                else:
+                                    print('obj=%s doesnt have ntimes' % self.obj.__class__.__name__)
+
                         elif self.read_mode == 2:
                             #print('self.obj.name =', self.obj.__class__.__name__)
                             if hasattr(self, 'obj') and hasattr(self.obj, 'itime'):
                                 if self.obj.ntotal > self.obj.data.shape[1]:
-                                    self.reset_indices()
+                                    self.obj._reset_indices()
                                     self.obj.itime += 1
                                     #self.obj.itotal = 0
                     else:
@@ -216,7 +230,7 @@ class FortranFormat(object):
         :retval is_valid: should this subcase defined by self.isubcase be read?
         """
         if not self.isAllSubcases:
-            if self.isubcase in self.valid_subcases:
+            if hasattr(self, 'isubcase') and self.isubcase in self.valid_subcases:
                 return True
             return False
         return True

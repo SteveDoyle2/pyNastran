@@ -114,7 +114,7 @@ class RealTableVector(TableVector):  # displacement style table
         words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         #words += self.getTableMarker()
         msg = header + words
-        #print('words =', words)
+        f.write(''.join(header + words))
 
         node = self.node_gridtype[:, 0]
         gridtype = self.node_gridtype[:, 1]
@@ -124,7 +124,6 @@ class RealTableVector(TableVector):  # displacement style table
         r1 = self.data[0, :, 3]
         r2 = self.data[0, :, 4]
         r3 = self.data[0, :, 5]
-        f.write(''.join(msg))
         for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in izip(node, gridtype, t1, t2, t3, r1, r2, r3):
             sgridtype = self.recast_gridtype_as_string(gridtypei)
             vals = [t1i, t2i, t3i, r1i, r2i, r3i]
@@ -203,7 +202,7 @@ class ComplexTableVector(TableVector):  # displacement style table
 
             dt = self._times[itime]
             header[2] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-            f.write(header + words)
+            f.write(''.join(header + words))
             for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in izip(node, gridtype, t1, t2, t3, r1, r2, r3):
                 sgridtype = self.recast_gridtype_as_string(gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
@@ -639,8 +638,7 @@ class ComplexTableObject(ScalarObject):
         self.translations[dt] = {}
         self.rotations[dt] = {}
 
-    def add(self, dt, out):
-        (nodeID, grid_type, v1, v2, v3, v4, v5, v6) = out
+    def add(self, dt, nodeID, grid_type, v1, v2, v3, v4, v5, v6):
         #msg = "dt=%s nodeID=%s v1=%s v2=%s v3=%s" %(dt,nodeID,v1,v2,v3)
         #assert isinstance(nodeID,int),nodeID
         msg = "nodeID=%s v1=%s v2=%s v3=%s\n" % (nodeID, v1, v2, v3)
@@ -655,8 +653,7 @@ class ComplexTableObject(ScalarObject):
         self.translations[nodeID] = [v1, v2, v3]  # dx,dy,dz
         self.rotations[nodeID] = [v4, v5, v6]  # rx,ry,rz
 
-    def add_sort1(self, dt, out):
-        (nodeID, grid_type, v1, v2, v3, v4, v5, v6) = out
+    def add_sort1(self, dt, nodeID, grid_type, v1, v2, v3, v4, v5, v6):
         #msg = "dt=%s nodeID=%s v1=%s v2=%s v3=%s" %(dt,nodeID,v1,v2,v3)
         #print msg
         if dt not in self.translations:

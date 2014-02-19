@@ -106,6 +106,13 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
             iSubcases=[], debug=False, stopOnFailure=True):
     assert '.op2' in op2FileName.lower(), 'op2FileName=%s is not an OP2' % op2FileName
     isPassed = False
+    if isinstance(iSubcases, basestring):
+        if '_' in iSubcases:
+            iSubcases = [int(i) for i in iSubcases.split('_')]
+        else:
+            iSubcases = [int(iSubcases)]
+    print('iSubcases =', iSubcases)
+
     #debug = True
     try:
         if is_vector:
@@ -194,7 +201,7 @@ def main():
     ver = str(pyNastran.__version__)
 
     msg  = "Usage:\n"
-    msg += "test_op2 [-q] [-g] [-w] [-f] [-z] [-t] OP2_FILENAME\n"
+    msg += "test_op2 [-q] [-g] [-w] [-f] [-z] [-t] [-s <sub>] OP2_FILENAME\n"
     msg += "  test_op2 -h | --help\n"
     msg += "  test_op2 -v | --version\n"
     msg += "\n"
@@ -210,6 +217,7 @@ def main():
     msg += "  -f, --write_f06      Writes the f06 to fem.f06.out (default=True)\n"
     msg += "  -z, --is_mag_phase   F06 Writer writes Magnitude/Phase instead of\n"
     msg += "                       Real/Imaginary (still stores Real/Imag); (default=False)\n"
+    msg += "  -s <sub>, --subcase  Specify a single subcase to parse\n"
     msg += "  -t, --vector         Vectorizes the results (default=False)\n"
     msg += "  -h, --help           Show this help message and exit\n"
     msg += "  -v, --version        Show program's version number and exit\n"
@@ -234,6 +242,7 @@ def main():
             write_f06     = data['--write_f06'],
             is_mag_phase  = data['--is_mag_phase'],
             is_vector     = data['--vector'],
+            iSubcases     = data['--subcase'],
             debug         = not(data['--quiet']))
     print("dt = %f" %(time.time() - t0))
 

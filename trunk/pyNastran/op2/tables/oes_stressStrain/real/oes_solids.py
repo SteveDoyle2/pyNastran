@@ -38,15 +38,17 @@ class RealSolidVector(OES_Object):
         self.ielement = 0
 
     def build(self):
-        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
 
         #self.names = []
-        self.nelements //= self.ntimes
+        #self.nelements //= self.ntimes
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
+        self.ntimes = 0
+        self.nelements = 0
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
@@ -65,6 +67,7 @@ class RealSolidVector(OES_Object):
         #elif self.element_name == 'CHEXA':
             #nnodes = 8
         #self.element_node = zeros((self.ntotal, nnodes, 2), 'int32')
+
 
         #[oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovmShear]
         self.data = zeros((self.ntimes, self.ntotal, 10), 'float32')
