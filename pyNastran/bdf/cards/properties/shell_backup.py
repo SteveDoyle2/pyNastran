@@ -9,6 +9,7 @@ from numpy import transpose, array
 import copy
 
 from math import sin, cos, radians
+from pyNastran.bdf.cards.baseCard import Property
 
 class ShellPropertyBackup(Property):
     def __init__(self):
@@ -91,8 +92,8 @@ class ShellPropertyBackup(Property):
             Q55 = G31
             Q66 = G12
 
-            Qb11 = Q11*cccc + 2*(Q12+2Q66)*ss*cc + Q22*ssss
-            Qb22 = Q11*ssss + 2*(Q12+2Q66)*ss*cc + Q22*cccc
+            Qb11 = Q11*cccc + 2*(Q12+2*Q66)*ss*cc + Q22*ssss
+            Qb22 = Q11*ssss + 2*(Q12+2*Q66)*ss*cc + Q22*cccc
             Qb66 = (Q11 + Q22 - 2*Q12 - 2*Q66) * ss*cc + Q66*(ssss + cccc)
 
             Qb12 = (Q11 - Q12 - 4*Q66)*ss*cc + Q12*(ssss+cccc)
@@ -343,7 +344,7 @@ class ShellPropertyBackup(Property):
         TinvT = transpose(Tinv)
         return (Tinv, TinvT)
 
-class PCOMP_backup(self):
+class PCOMP_backup(Property):
     def __init__(self):
         pass
 
