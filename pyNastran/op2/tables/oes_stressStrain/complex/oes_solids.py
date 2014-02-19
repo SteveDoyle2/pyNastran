@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from itertools import izip
 from collections import defaultdict
 
-from numpy import zeros, array, string_, searchsorted, where, argwhere, ravel
+from numpy import zeros, array, concatenate, string_, searchsorted, where, argwhere, ravel
 from numpy.linalg import eig, eigvalsh
 
 from ..real.oes_objects import StressObject, StrainObject, OES_Object
@@ -29,6 +29,32 @@ class ComplexSolid(OES_Object):
             pass
         else:
             raise NotImplementedError('SORT2')
+
+    def combine(self, results):
+        #print('ComplexSolid combine')
+        #print('data.shape1 =', self.data.shape)
+        #self.data = vstack(data)
+
+        data = [self.nelements] + [result.nelements for result in results]
+        self.nelements = sum(data)
+
+        data = [self.ntotal] + [result.ntotal for result in results]
+        self.ntotal = sum(data)
+
+        data = [self.element_types3] + [result.element_types3 for result in results]
+        self.element_types3 = concatenate(data, axis=0)
+
+        data = [self.element_node] + [result.element_node for result in results]
+        self.element_node = concatenate(data, axis=0)
+
+        data = [self.element_cid] + [result.element_cid for result in results]
+        self.element_cid = concatenate(data, axis=0)
+
+        data = [self.data] + [result.data for result in results]
+        self.data = concatenate(data, axis=1)
+
+        self.data = concatenate(data, axis=1)
+        #print('data.shape2 =', self.data.shape)
 
     def _get_msgs(self, is_mag_phase):
         raise NotImplementedError()

@@ -43,10 +43,14 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.utils import is_binary
 
 
-class TranshWriter(file):
+class TrashWriter(file):
     def __init__(self, *args, **kwargs):
         file.__init__(self, *args, **kwargs)
-    def write(self, msg):
+    def open(self, *args, **kwargs):
+        pass
+    def write(self, *args, **kwargs):
+        pass
+    def close(self, *args, **kwargs):
         pass
 
 class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
@@ -488,7 +492,7 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
             #: an ASCII version of the op2 (creates lots of output)
             self.binary_debug = open('debug.out', 'wb')
         else:
-            self.binary_debug = TranshWriter('debug.out', 'wb')
+            self.binary_debug = TrashWriter('debug.out', 'wb')
 
         if self.save_skipped_cards:
             self.skippedCardsFile = open('skippedCards.out', 'a')
