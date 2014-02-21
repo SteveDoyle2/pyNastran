@@ -55,7 +55,7 @@ def run_f06(f06_filename, iSubcases=[], write_f06=True, debug=False,
     #stopOnFailure = False
     #debug = True
     try:
-        f06 = F06(f06_filename, debug=debug)
+        f06 = F06(debug=debug)
         #f06.set_subcases(iSubcases)  # TODO not supported
 
         #f06.readBDF(f06.bdf_filename,includeDir=None,xref=False)
@@ -64,7 +64,7 @@ def run_f06(f06_filename, iSubcases=[], write_f06=True, debug=False,
         #tableNamesF06 = f06.getTableNamesFromF06()
         assert write_f06 == True, write_f06
         if write_f06:
-            (model, ext) = os.path.splitext(f06file)
+            (model, ext) = os.path.splitext(f06_filename)
             f06.write_f06(model + '.test_f06.f06')
 
         #print "subcases = ",f06.subcases
@@ -113,9 +113,9 @@ def run_f06(f06_filename, iSubcases=[], write_f06=True, debug=False,
     #    isPassed = True
     #except IndexError: # bad bdf
     #    isPassed = True
-    except IOError:  # missing bdf file
-        isPassed = False
-        raise
+    #except IOError:  # missing bdf file
+        #isPassed = False
+        #raise
     #except SyntaxError: #Invalid Subcase
     #    isPassed = True
     #except SyntaxError: # Param Parse:
@@ -152,7 +152,7 @@ def main():
     msg += '  -f, --write_f06  writes the f06 to fem.f06.out (default=True)\n'
     msg += '  -h, --help       show this help message and exit\n'
     msg += "  -v, --version    show program's version number and exit\n"
-    
+
     # disabled b/c the F06 doesn't support complex well
     #msg += '  -z, --is_mag_phase      F06 Writer writes Magnitude/Phase instead of\n'
     #msg += '                          Real/Imaginary (still stores Real/Imag)\n'
@@ -171,6 +171,7 @@ def main():
     run_f06(data['F06_FILENAME'],
             write_f06 = data['--write_f06'],
             debug     = not(data['--quiet']),
+            stopOnFailure = True
     )
 
 if __name__ == '__main__':  # f06

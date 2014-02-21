@@ -245,13 +245,14 @@ class ComplexElementsStressStrain(object):
         is_magnitude_phase = self.is_magnitude_phase()
 
         assert self.num_wide == 9, "num_wide=%s not 9" % (self.num_wide)
-        nTotal = 36  # 4*9
+        ntotal = 36  # 4*9
         format1 += '8f'
         format1 = bytes(format1)
         s = Struct(format1)
-        while len(self.data) >= nTotal:
-            eData = self.data[0:nTotal]
-            self.data = self.data[nTotal:]
+        n = 0
+        nelements = len(self.data) // ntotal
+        for i in xrange(nelements):
+            eData = self.data[n:n+ntotal]
 
             out = s.unpack(eData)  # num_wide=25
             (eid, fer, uer, aor, aer,
@@ -268,8 +269,8 @@ class ComplexElementsStressStrain(object):
                 ue = complex(uer, uei)
                 ao = complex(aor, aoi)
                 ae = complex(aer, aei)
-
             self.obj.add_new_eid(self.element_type, dt, eid, fe, ue, ao, ae)
+        self.data = self.data[n:]
 
     def OES_CBUSH_102_alt(self):
         dt = self.nonlinear_factor

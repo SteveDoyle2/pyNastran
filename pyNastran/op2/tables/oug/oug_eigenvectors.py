@@ -46,7 +46,7 @@ class RealEigenvectorVector(RealTableVector):
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                 (vals2, isAllZeros) = writeFloats13E(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
-                msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz.rstrip()))
+                msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, sgridtype, dx, dy, dz, rx, ry, rz))
 
             msg.append(page_stamp % page_num)
             f.write(''.join(msg))
@@ -80,25 +80,33 @@ class EigenvectorObject(RealTableObject):  # approach_code=2, sort_code=0, therm
         self.rotations    = {imode: {}}
 
     def read_f06_data(self, data_code, data):
+        """
+        it is now assumed that all data coming in is correct, so...
+
+
+        so...
+           [node_id, grid_type, t1, t2, t3, r1, r2, r3]
+           [100, 'G', 1.0, 2.0, 3.0, 4.0, 5.0, 6.0] #  valid
+
+           [101, 'S', 1.0, 2.0] #  invalid
+           [101, 'S', 1.0, 0.0, 0.0, 0.0, 0.0, 0.0] #  valid
+           [102, 'S', 2.0, 0.0, 0.0, 0.0, 0.0, 0.0] #  valid
+        is no longer valid
+        """
         imode = data_code['mode']
         if imode not in self.translations:
             self.update_mode(data_code, imode)
 
         for line in data:
-            (node_id, grid_type, t1) = line[:3]
+            if len(line) != 8:
+                msg = 'invalid length; even spoints must be in \n'
+                msg += '[nid, type, t1, t2, t3, r1, r2, t3] format\nline=%s\n' % line
+                msg += 'expected length=8; length=%s' % len(line)
+                raise RuntimeError(msg)
+            (node_id, grid_type, t1, t2, t3, r1, r2, r3) = line
             self.gridTypes[node_id] = grid_type
-
-            if grid_type == 'G':
-                t2, t3, r1, r2, r3 = line[3:]
-                self.translations[imode][node_id] = array([t1, t2, t3])
-                self.rotations[imode][node_id] = array([r1, r2, r3])
-            else:
-                t2 = t3 = r1 = r2 = r3 = 0.0
-                for i, t1 in enumerate(line[3:]):
-                    node_id2 = node_id + i + 1
-                    self.translations[imode][node_id2] = array([t1, t2, t3])
-                    self.rotations[imode][node_id2] = array([r1, r2, r3])
-
+            self.translations[imode][node_id] = array([t1, t2, t3])
+            self.rotations[imode][node_id] = array([r1, r2, r3])
         assert self.eigrs[-1] == data_code['eigr'], 'eigrs=%s\ndata_code[eigrs]=%s' %(self.eigrs, data_code['eigr'])
 
     def update_mode(self, data_code, imode):
@@ -152,7 +160,7 @@ class EigenvectorObject(RealTableObject):  # approach_code=2, sort_code=0, therm
                 msg.append('%16s = %13E         R E A L   E I G E N V E C T O R   N O . %10i\n \n' % ('CYCLES', cycle, iMode))
                 #msg.append('%16s = %13E         R E A L   E I G E N V E C T O R   N O . %10i\n \n' % ('CYCLES', self.mode_cycle, iMode))
             else:
-                msg.append('                                         R E A L   E I G E N V E C T O R   N O . %10i\n \n' % (iMode))
+                msg.append('                                         R E A L   E I G E N V E C T O R   N O . %10i\n \n' % iMode)
 
             msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
             for nodeID, displacement in sorted(eigVals.iteritems()):
@@ -164,7 +172,7 @@ class EigenvectorObject(RealTableObject):  # approach_code=2, sort_code=0, therm
                 vals = [dx, dy, dz, rx, ry, rz]
                 (vals2, isAllZeros) = writeFloats13E(vals)
                 [dx, dy, dz, rx, ry, rz] = vals2
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
+                msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
             msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
             msg = ['']
@@ -219,7 +227,7 @@ class RealEigenvectorObject(ScalarObject):  # approach_code=2, sort_code=0, ther
     def add(self, nodeID, gridType, v1, v2, v3, v4, v5, v6):
         msg = "nodeID=%s v1=%s v2=%s v3=%s" % (nodeID, v1, v2, v3)
         msg += "           v4=%s v5=%s v6=%s" % (v4, v5, v6)
-        #print msg
+        #print(msg)
         assert 0 < nodeID < 1000000000, msg
         #assert nodeID not in self.translations
 
@@ -273,7 +281,7 @@ class RealEigenvectorObject(ScalarObject):  # approach_code=2, sort_code=0, ther
                 vals = [dx, dy, dz, rx, ry, rz]
                 (vals2, isAllZeros) = writeFloats13E(vals)
                 [dx, dy, dz, rx, ry, rz] = vals2
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
+                msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
             msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
             msg = ['']
@@ -338,8 +346,8 @@ class ComplexEigenvectorObject(ComplexTableObject):  # approach_code=2, sort_cod
                 (vals2, isAllZeros) = writeImagFloats13E(vals, is_mag_phase)
                 [dxr, dyr, dzr, rxr, ryr, rzr,
                  dxi, dyi, dzi, rxi, ryi, rzi] = vals2
-                msg.append('%14i %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % (nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
-                msg.append('%14s %6s     %13s  %13s  %13s  %13s  %13s  %-s\n' % ('', '', dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
+                msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr))
+                msg.append('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % ('', '', dxi, dyi, dzi, rxi, ryi, rzi))
 
             msg.append(pageStamp % pageNum)
             f.write(''.join(msg))

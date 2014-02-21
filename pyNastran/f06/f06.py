@@ -448,6 +448,8 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
         #print line2
         #headers = self.skip(2)
         #print headers
+
+
         data = self._read_f06_table([int, int, float, float, float, float, float])
 
         #if title in self.eigenvalues:
@@ -731,6 +733,7 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
                 blank = 0
                 #print("\n2*marker = %r" % marker)
                 self._line_marker_map['R E A L   E I G E N V E C T O R   N O'](marker)
+                #print('done with real eigenvector')
                 self.stored_lines = []
             elif 'C O M P L E X   E I G E N V E C T O R   NO' in marker:
                 blank = 0

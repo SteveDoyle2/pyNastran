@@ -327,11 +327,15 @@ class RealElementsStressStrain(object):
         ntotal = 16 + 84 * nnodes_expected
         nelements = len(self.data) // ntotal
 
+        aCos = []
+        bCos = []
+        cCos = []
+
         ibase = 0
-        s1 = Struct(format1)
-        s2 = Struct(b'i20f')
+        struct1 = Struct(format1)
+        struct2 = Struct(b'i20f')
         for i in xrange(nelements):
-            out = s1.unpack(self.data[ibase:ibase+16])
+            out = struct1.unpack(self.data[ibase:ibase+16])
             if self.make_op2_debug:
                 self.op2_debug.write('%s-%sA - %s\n' % (element_type, self.element_type, str(out)))
             (eid_device, cid, abcd, nNodes) = out
@@ -344,7 +348,7 @@ class RealElementsStressStrain(object):
 
             ibase += 16
             for nodeID in xrange(nnodes_expected):  # nodes pts, +1 for centroid (???)
-                out = s2.unpack(self.data[ibase:ibase + 84]) # 4*21 = 84
+                out = struct2.unpack(self.data[ibase:ibase + 84]) # 4*21 = 84
                 if self.make_op2_debug:
                     self.op2_debug.write('%s-%sB - %s\n' % (element_type, self.element_type, str(out)))
                 (grid_device, sxx, sxy, s1, a1, a2, a3, pressure, svm,
@@ -353,24 +357,12 @@ class RealElementsStressStrain(object):
                 if grid_device == 0:
                     grid = 'CENTER'
                 else:
-                    #grid = (grid_device - device_code) // 10
                     grid = grid_device
 
-                #print("%s eid=%s cid=%s grid=%s sxx=%-6i txy=%-5i s1=%-6i a1=%i a2=%i a3=%i press=%i vm=%s" % (element_type,eid,cid,grid,sxx,sxy,s1,a1,a2,a3,pressure,svm))
-                #print("%s eid=%s cid=%s grid=%s syy=%-6i tyz=%-5i s2=%-6i b1=%i b2=%i b3=%i"                % (element_type,eid,cid,grid,syy,syz,s2,b1,b2,b3))
-                #print("%s eid=%s cid=%s grid=%s szz=%-6i txz=%-5i s3=%-6i c1=%i c2=%i c3=%i"                % (element_type,eid,cid,grid,szz,sxz,s3,c1,c2,c3))
-                #print("")
-
-                #smax = max(s1,s2,s3)
-                #smin = min(s1,s2,s3)
-
-                aCos = []
-                bCos = []
-                cCos = []
                 if nodeID == 0:
-                    self.obj.add_new_eid(etype, cid, dt, eid, grid, sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
+                    self.obj.add_eid(etype, cid, dt, eid, grid, sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
                 else:
-                    self.obj.add(dt, eid, grid, sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
+                    self.obj.add_node(dt, eid, grid, nodeID, sxx, syy, szz, sxy, syz, sxz, s1, s2, s3, aCos, bCos, cCos, pressure, svm)
                 ibase += 84
         n = nelements * ntotal
         assert n == ibase, 'n=%s ibase=%s' % (n, ibase)

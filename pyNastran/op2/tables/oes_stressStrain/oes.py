@@ -1090,6 +1090,9 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
                 msg = 'card not implemented element_type=%s' % (
                     self.element_type)
                 raise NotImplementedError(msg)
+
+            numWideReal
+            numWideImag
             if self.num_wide == numWideReal:
                 resultName = self.makeOES_Object(self.plateStress, PlateStressObject, 'plateStress',
                                                  self.plateStrain, PlateStrainObject, 'plateStrain')
@@ -1100,6 +1103,7 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
                                                  self.plateStrain, ComplexPlateStrainObject, 'plateStrain')
                 name = resultName + ': Subcase %s' % self.isubcase
                 self.handle_results_buffer(self.OES_CQUAD4_144_alt, resultName, name)
+                ntotal
             else:
                 self.not_implemented_or_skip()
 

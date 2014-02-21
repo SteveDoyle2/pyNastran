@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from itertools import izip
 from collections import defaultdict
 
-from numpy import zeros, array, concatenate, string_, searchsorted, where, argwhere, ravel
+from numpy import zeros, array, concatenate, string_, searchsorted, where, argwhere, ravel, abs
 from numpy.linalg import eig, eigvalsh
 
 from ..real.oes_objects import StressObject, StrainObject, OES_Object
@@ -342,7 +342,7 @@ class ComplexSolidStressObject(StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
 
-        self.result_flag = 0
+        self.result_flag = 1
         self.eType = {}
         self.code = [self.format_code, self.sort_code, self.s_code]
 
@@ -469,6 +469,9 @@ class ComplexSolidStressObject(StressObject):
             nodeID = 'CENTER'
 
         if self.result_flag == 1:
+            self.wmax[dt][eid][nodeID] = oxx
+            return
+
             tensor = zeros((3, 3), dtype='complex64')
             tensor[0,0] = oxx
             tensor[1,1] = oyy
@@ -479,6 +482,29 @@ class ComplexSolidStressObject(StressObject):
             tensor[1,0] = tensor[0,1]
             tensor[2,1] = tensor[1,2]
             tensor[2,0] = tensor[0,2]
+
+            wr, v = eig(tensor.real)
+            wi, v = eig(tensor.imag)
+            self.wmax[dt][eid][nodeID] = abs(wr+1j*wi).max()   #close...
+            return
+
+            w, v = eig(tensor)
+            self.wmax[dt][eid][nodeID] = abs(w).max()
+            return
+
+            w, v = eig(abs(tensor))  #  close for freq=343
+            self.wmax[dt][eid][nodeID] = abs(w).max()
+            return
+
+            w, v = eig(abs(tensor.real))
+            self.wmax[dt][eid][nodeID] = w.max()
+            return
+            w, v = eig(tensor)
+            abs_w = abs(w)
+            iw = list(abs_w).index(abs_w.max())
+            self.wmax[dt][eid][nodeID] = w[iw]
+            return
+
             wreal = eigvalsh(tensor.real)
             wimag = eigvalsh(tensor.imag)
             wmaxr = 0.
