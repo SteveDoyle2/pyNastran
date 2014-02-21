@@ -143,8 +143,8 @@ def fields(f, card, fieldname, i, j=None):
     fs = []
     if j is None:
         j = len(card)
-    for ii in range(i,j):
-        fs.append( f(card, ii, fieldname) )
+    for ii in range(i, j):
+        fs.append( f(card, ii, fieldname + str(ii)) )
     return fs
 
 def fields_or_blank(f, card, fieldname, i, j=None, defaults=None):
@@ -486,7 +486,7 @@ def integer_or_string(card, n, fieldname):
         if isinstance(value, float):
             Type = getType(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be an integer or string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
-        
+
         return str(svalue.upper())
     return value
 

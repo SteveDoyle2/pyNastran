@@ -1022,7 +1022,12 @@ class CAERO4(BaseCard):
 
 
 class CAERO5(BaseCard):
-    pass
+    def __init__(self, card):
+        pass
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card)
 
 
 class FLFACT(BaseCard):
@@ -1088,6 +1093,10 @@ class FLFACT(BaseCard):
     def __repr__(self):
         list_fields = self.rawFields()
         return self.print_card(list_fields)
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card)
 
 
 class FLUTTER(BaseCard):
@@ -1262,6 +1271,10 @@ class GUST(BaseCard):
     def rawFields(self):
         list_fields = ['GUST', self.sid, self.dload, self.wg, self.x0, self.V]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card)
 
 
 class MKAERO1(BaseCard):

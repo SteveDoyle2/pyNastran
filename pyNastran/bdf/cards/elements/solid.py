@@ -563,7 +563,10 @@ class CTETRA4(SolidElement):
             self.eid = integer(card, 1, 'eid')
             #: Property ID
             self.pid = integer(card, 2, 'pid')
-            nids = fields(integer, card, 'nid', i=3, j=7)
+            nids = [integer(card, 3, 'nid1'),
+                    integer(card, 4, 'nid2'),
+                    integer(card, 5, 'nid3'),
+                    integer(card, 6, 'nid4'), ]
             assert len(card) == 7, 'len(CTETRA4 card) = %i' % len(card)
         else:
             self.eid = data[0]

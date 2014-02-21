@@ -39,16 +39,16 @@ class BDFCard(object):
             return True
         return False
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key, value):  # card[4] = value
         self.card.__setitem__(key, value)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key):  # print card[5]
         return self.card.__getitem__(key)
 
-    def __getslice__(self, i, j):
+    def __getslice__(self, i, j):  # card[1:10]
         return self.card.__getslice__(i, j)
 
-    def __setslice__(self, i, j, sequence):
+    def __setslice__(self, i, j, sequence):  # card[1:10] = 2
         self.card.__setslice__(i, j, sequence)
 
     def index(self, i):
@@ -81,12 +81,15 @@ class BDFCard(object):
 
         :param self:     the object pointer
         :param i:        the ith field on the card (following list notation)
+        :type i:         integer >= 0
         :param j:        the jth field on the card (None means till the end
                          of the card)
+        :type j:         integer or None (default=end of card)
         :param defaults: the default value for the field (as a list)
                          len(defaults)=i-j-1
         :param debug:    prints out the values at intermediate steps
-        :returns: the values on the ith-jth fields
+        :type debug:     bool
+        :returns value: the values on the ith-jth fields
         """
         if defaults is None:
             defaults = []
@@ -116,11 +119,11 @@ class BDFCard(object):
 
         :param self:    the object pointer
         :param i:       the ith field on the card (following list notation)
+        :type i:        integer
         :param default: the default value for the field
-        :returns: the value on the ith field
+        :returns value: the value on the ith field
         """
-        if(i < self.nfields and self.card[i] is not None and
-           self.card[i] is not ''):
+        if(i < self.nfields and self.card[i] is not None and self.card[i] is not ''):
             return self.card[i]
         else:
             return default
