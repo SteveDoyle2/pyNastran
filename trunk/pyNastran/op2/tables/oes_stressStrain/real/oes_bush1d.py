@@ -164,15 +164,11 @@ class Bush1DStressObject(StressObject):
             vals = [element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed]
             (vals2, isAllZeros) = self.writeImagFloats13E(vals, is_mag_phase)
             [element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed] = vals2
-            msg.append('0%8i   %13s  %13s  %13s  %13s  %-s\n' %
-                       (eid, element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed.rstrip()))
-            msg.append(' %8s   %13s  %13s  %13s  %13s  %-s\n' %
-                       ('', s1ai, s2ai, s3ai, s4ai, axiali.rstrip()))
+            msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %s\n' % (eid, element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed))
+            msg.append(' %8s   %-13s  %-13s  %-13s  %-13s  %s\n' % ('', s1ai, s2ai, s3ai, s4ai, axiali))
 
-            msg.append(' %8s   %13s  %13s  %13s  %-s\n' % (
-                '', s1br, s2br, s3br, s4br.rstrip()))
-            msg.append(' %8s   %13s  %13s  %13s  %-s\n' % (
-                '', s1bi, s2bi, s3bi, s4bi.rstrip()))
+            msg.append(' %8s   %-13s  %-13s  %-13s  %s\n' % ('', s1br, s2br, s3br, s4br))
+            msg.append(' %8s   %-13s  %-13s  %-13s  %s\n' % ('', s1bi, s2bi, s3bi, s4bi))
 
         msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
@@ -204,8 +200,8 @@ class Bush1DStressObject(StressObject):
                 (vals2, isAllZeros) = writeFloats13E(vals)
                 [element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed] = vals2
 
-                msg.append(' %13s   %13s  %13s  %13s  %13s  %13s  %13s  %-s\n' % (eid,
-                                                                     element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed.rstrip()))
+                msg.append(' %-13s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (eid,
+                    element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed))
 
             msg.append(pageStamp % pageNum)
             f.write(''.join(msg))

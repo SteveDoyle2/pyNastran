@@ -237,8 +237,7 @@ class RodStressObject(StressObject):
                 msg.append(outLine)
 
             if nOut % 2 == 1:
-                outLine = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (
-                    tuple(out[-1]))
+                outLine = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[-1]))
                 msg.append(outLine)
             msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
@@ -414,8 +413,7 @@ class RodStrainObject(StrainObject):
             msg.append(outLine)
 
         if nOut % 2 == 1:
-            outLine = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (
-                tuple(out[-1]))
+            outLine = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[-1]))
             msg.append(outLine)
         msg.append(pageStamp % pageNum)
         f.write(''.join(msg))

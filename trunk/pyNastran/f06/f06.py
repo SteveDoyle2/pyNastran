@@ -243,7 +243,7 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
 
     def _get_max_spc_forces(self):  # .. todo:: not done
         headers = self.skip(2)
-        #print "headers = %s" %(headers)
+        #print "headers = %s" % (headers)
         data = self._read_f06_table([int, float, float, float, float, float, float])
         #print "max SPC Forces   ",data
         #self.disp[isubcase] = DisplacementObject(isubcase,data)
@@ -251,15 +251,15 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
 
     def _get_max_mpc_forces(self):  # .. todo:: not done
         headers = self.skip(2)
-        #print "headers = %s" %(headers)
+        #print "headers = %s" % (headers)
         data = self._read_f06_table([int, float, float, float, float, float, float])
         #print "max SPC Forces   ", data
-        #self.disp[isubcase] = DisplacementObject(isubcase,data)
+        #self.disp[isubcase] = DisplacementObject(isubcase, data)
         #print self.disp[isubcase]
 
     def _get_max_displacements(self):  # .. todo:: not done
         headers = self.skip(2)
-        #print "headers = %s" %(headers)
+        #print "headers = %s" % (headers)
         data = self._read_f06_table([int, float, float, float, float, float, float])
         #print "max Displacements",data
         disp = MaxDisplacement(data)
@@ -269,7 +269,7 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
 
     def _get_max_applied_loads(self):  # .. todo:: not done
         headers = self.skip(2)
-        #print "headers = %s" %(headers)
+        #print "headers = %s" % (headers)
         data = self._read_f06_table([int, float, float, float, float, float, float])
         #print "max Applied Loads",data
         #self.disp[isubcase] = DisplacementObject(isubcase,data)
@@ -558,7 +558,7 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
         (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
         #print transient
         headers = self.skip(2)
-        #print "headers = %s" %(headers)
+        #print "headers = %s" % (headers)
         data = self.readGradientFluxesTable()
         #print data
         return
@@ -587,7 +587,7 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
             if entry.strip() is '':
                 out.append(0.0)
             else:
-                #print "sline=|%r|\n entry=|%r| format=%r" %(sline,entry,iFormat)
+                #print "sline=|%r|\n entry=|%r| format=%r" % (sline, entry, iFormat)
                 entry2 = iFormat(entry)
                 out.append(entry2)
         return out
@@ -657,7 +657,7 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
                     raise
             else:
                 entry2 = None
-                #print "sline=|%s|\n entry=|%s| format=%s" %(sline, entry, iFormat)
+                #print "sline=|%s|\n entry=|%s| format=%s" % (sline, entry, iFormat)
             out.append(entry2)
         return out
 
@@ -696,7 +696,7 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
         self.infile = open(self.f06_filename, 'r')
         while 1:
             #if self.i%1000==0:
-                #print "i=%i" %(self.i)
+                #print "i=%i" % (self.i)
             line = self.infile.readline()
             marker = line[1:].strip()
 
@@ -757,7 +757,7 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
 
             self.stored_lines.append(line)
             self.i += 1
-        #print "i=%i" %(self.i)
+        #print "i=%i" % (self.i)
         self.infile.close()
         self._process_f06()
 
@@ -775,7 +775,7 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
         if len(marker) < 2 or marker == '* * * * * * * * * * * * * * * * * * * *':
             return False
         for i, char in enumerate(marker):
-            #print "i=%s i%%2=%s char=%s" %(i,i%2,char)
+            #print "i=%s i%%2=%s char=%s" % (i, i%2, char)
             if i % 2 == 1 and ' ' is not char:
                 return False
             elif i % 2 == 0 and ' ' == char:
@@ -809,3 +809,4 @@ def _parse_label_isubcase(stored_lines):
 if __name__ == '__main__':
     from pyNastran.f06.test.test_f06 import main
     main()
+

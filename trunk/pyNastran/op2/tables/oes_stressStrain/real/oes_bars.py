@@ -216,6 +216,7 @@ class BarStressObject(StressObject):
                 '    ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C\n',
               ]
 
+        f.write(''.join(msg))
         for eid, S1s in sorted(self.s1.iteritems()):
             #eType = self.eType[eid]
             axial = self.axial[eid]
@@ -235,11 +236,11 @@ class BarStressObject(StressObject):
             (vals2, isAllZeros) = writeFloats13E(vals)
             [s1a, s2a, s3a, s4a, axial, smaxa, smina,
              s1b, s2b, s3b, s4b, smaxb, sminb] = vals2
-            msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % (eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt.rstrip()))
-            msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % ('', s1b, s2b, s3b, s4b, '', smaxb, sminb, MSc.rstrip()))
-
-        msg.append(pageStamp % pageNum)
-        f.write(''.join(msg))
+            f.write('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n'
+                    ' %8s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n'
+                    % (eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
+                       '', s1b, s2b, s3b, s4b, '', smaxb, sminb, MSc))
+        f.write(pageStamp % pageNum)
         return pageNum
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
@@ -248,10 +249,9 @@ class BarStressObject(StressObject):
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
                 '    ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C\n',
               ]
-        msg = []
         for dt, S1s in sorted(self.s1.iteritems()):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-            msg += header + words
+            f.write(''.join(header + words))
             for eid, S1 in sorted(S1s.iteritems()):
                 #eType = self.eType[eid]
                 axial = self.axial[dt][eid]
@@ -271,11 +271,12 @@ class BarStressObject(StressObject):
                 (vals2, isAllZeros) = writeFloats13E(vals)
                 [s1a, s2a, s3a, s4a, axial, smaxa, smina,
                  s1b, s2b, s3b, s4b, smaxb, sminb] = vals2
-                msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % (eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt.rstrip()))
-                msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % ('', s1b, s2b, s3b, s4b, '', smaxb, sminb, MSc.rstrip()))
+                f.write('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n'
+                        ' %8s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n'
+                        % (eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
+                            '', s1b, s2b, s3b, s4b, '', smaxb, sminb, MSc))
 
-            msg.append(pageStamp % pageNum)
-            f.write(''.join(msg))
+            f.write(pageStamp % pageNum)
             msg = ['']
             pageNum += 1
         return pageNum - 1
@@ -480,8 +481,8 @@ class BarStrainObject(StrainObject):
             [e10, e20, e30, e40, axial, emax0, emin0,
              e11, e21, e31, e41, emax1, emin1] = vals2
 
-            msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % (eid, e10, e20, e30, e40, axial, emax0, emin0, MSt.rstrip()))
-            msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % ('', e11, e21, e31, e41, '', emax1, emin1, MSc.rstrip()))
+            msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n' % (eid, e10, e20, e30, e40, axial, emax0, emin0, MSt))
+            msg.append(' %8s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n' % ('', e11, e21, e31, e41, '', emax1, emin1, MSc))
 
         msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
@@ -517,8 +518,8 @@ class BarStrainObject(StrainObject):
                 [e10, e20, e30, e40, axial, emax0, emin0,
                  e11, e21, e31, e41, emax1, emin1] = vals2
 
-                msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % (eid, e10, e20, e30, e40, axial, emax0, emin0, MSt.rstrip()))
-                msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % ('', e11, e21, e31, e41, '', emax1, emin1, MSc.rstrip()))
+                msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n' % (eid, e10, e20, e30, e40, axial, emax0, emin0, MSt))
+                msg.append(' %8s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n' % ('', e11, e21, e31, e41, '', emax1, emin1, MSc))
 
             msg.append(pageStamp % pageNum)
             f.write(''.join(msg))

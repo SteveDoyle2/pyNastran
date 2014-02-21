@@ -595,11 +595,11 @@ class PlateStressObject(StressObject):
                 ([angle], isAllZeros) = writeFloats8p4F([angle])
 
                 if nid == cen and iLayer == 0:
-                    msg.append('0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, cen, fd, oxx, oyy, txy, angle, major, minor, ovm))
+                    msg.append('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n' % (eid, cen, fd, oxx, oyy, txy, angle, major, minor, ovm))
                 elif iLayer == 0:
-                    msg.append('   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % ('', nid, fd, oxx, oyy, txy, angle, major, minor, ovm))
+                    msg.append('   %8s %8i  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n' % ('', nid, fd, oxx, oyy, txy, angle, major, minor, ovm))
                 elif iLayer == 1:
-                    msg.append('   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' % ('', '', fd, oxx, oyy, txy, angle, major, minor, ovm))
+                    msg.append('   %8s %8s  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n\n' % ('', '', fd, oxx, oyy, txy, angle, major, minor, ovm))
                 else:
                     raise Exception('Invalid option for cquad4')
         return ''.join(msg)
@@ -624,11 +624,11 @@ class PlateStressObject(StressObject):
                 ([angle], isAllZeros) = writeFloats8p4F([angle])
 
                 if nid == cen and iLayer == 0:
-                    msg.append('0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, cen, fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip()))
+                    msg.append('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n' % (eid, cen, fd, oxx, oyy, txy, angle, major, minor, ovm))
                 elif iLayer == 0:
-                    msg.append('   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % ('', nid, fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip()))
+                    msg.append('   %8s %8i  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n' % ('', nid, fd, oxx, oyy, txy, angle, major, minor, ovm))
                 elif iLayer == 1:
-                    msg.append('   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' % ('', '', fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip()))
+                    msg.append('   %8s %8s  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n\n' % ('', '', fd, oxx, oyy, txy, angle, major, minor, ovm))
                 else:
                     raise RuntimeError('Invalid option for cquad4')
         return ''.join(msg)
@@ -672,9 +672,9 @@ class PlateStressObject(StressObject):
                 ([angle], isAllZeros) = writeFloats8p4F([angle])
 
                 if iLayer == 0:
-                    msg.append('0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % (eid, fd, oxx, oyy, txy, angle, major, minor, ovm))
+                    msg.append('0  %6i   %-13s     %-13s  %-13s  %-13s   %8s   %-13s   %-13s  %s\n' % (eid, fd, oxx, oyy, txy, angle, major, minor, ovm))
                 else:
-                    msg.append('   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, oxx, oyy, txy, angle, major, minor, ovm))
+                    msg.append('   %6s   %-13s     %-13s  %-13s  %-13s   %8s   %-13s   %-13s  %s\n' % ('', fd, oxx, oyy, txy, angle, major, minor, ovm))
         return ''.join(msg)
 
 
@@ -1264,11 +1264,11 @@ class PlateStrainObject(StrainObject):
                 ([angle], isAllZeros) = writeFloats8p4F([angle])
 
                 if nid == cen and iLayer == 0:
-                    msg.append('0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, cen, fd, exx, eyy, exy, angle, major, minor, evm.rstrip()))
+                    msg.append('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n' % (eid, cen, fd, exx, eyy, exy, angle, major, minor, evm))
                 elif iLayer == 0:
-                    msg.append('   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % ('', nid, fd, exx, eyy, exy, angle, major, minor, evm.rstrip()))
+                    msg.append('   %8s %8i  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n' % ('', nid, fd, exx, eyy, exy, angle, major, minor, evm))
                 elif iLayer == 1:
-                    msg.append('   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' % ('', '', fd, exx, eyy, exy, angle, major, minor, evm.rstrip()))
+                    msg.append('   %8s %8s  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n\n' % ('', '', fd, exx, eyy, exy, angle, major, minor, evm))
                 else:
                     raise RuntimeError('Invalid option for cquad4')
         return ''.join(msg)

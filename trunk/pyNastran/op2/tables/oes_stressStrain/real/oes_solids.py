@@ -228,17 +228,16 @@ class RealSolidVector(OES_Object):
 
                 if i % cnnodes == 0:
                     f.write('0  %8s           0GRID CS  %i GP\n' % (deid, nnodes))
-                    #msg.append('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
-                    f.write('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
-                            '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'
-                            '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'
+                    f.write('0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
+                            '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
+                            '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n'
                             % ('CENTER', oxxi, txyi, o1i, v[0, 1], v[0, 2], v[0, 0], pi, ovmi,
                                      '', oyyi, tyzi, o2i, v[1, 1], v[1, 2], v[1, 0],
                                      '', ozzi, txzi, o3i, v[2, 1], v[2, 2], v[2, 0]))
                 else:
-                    f.write('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
-                            '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'
-                            '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'
+                    f.write('0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
+                            '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
+                            '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n'
                             % (node_id, oxxi, txyi, o1i, v[0, 1], v[0, 2], v[0, 0], pi, ovmi,
                                     '', oyyi, tyzi, o2i, v[1, 1], v[1, 2], v[1, 0],
                                     '', ozzi, txzi, o3i, v[2, 1], v[2, 2], v[2, 0]))
@@ -755,9 +754,9 @@ class RealSolidStressObject(StressObject):
 
                 ([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm], isAllZeros) = writeFloats13E([
                   oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm])
-                f.write('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n'
-                        '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'
-                        '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n' % (
+                f.write('0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
+                        '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
+                        '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n' % (
                             nid, oxx, txy, o1, v[0, 1], v[0, 2], v[0, 0], p, ovm,
                             '', oyy, tyz, o2, v[1, 1], v[1, 2], v[1, 0],
                             '', ozz, txz, o3, v[2, 1], v[2, 2], v[2, 0]))
@@ -794,9 +793,9 @@ class RealSolidStressObject(StressObject):
 
                 ([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm], isAllZeros) = writeFloats13E([
                   oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm])
-                f.write('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %s\n'
-                        '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'
-                        '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'
+                f.write('0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
+                        '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
+                        '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n'
                         % (nid, oxx, txy, o1, v[0, 1], v[0, 2], v[0, 0], p, ovm,
                         '', oyy, tyz, o2, v[1, 1], v[1, 2], v[1, 0],
                         '', ozz, txz, o3, v[2, 1], v[2, 2], v[2, 0]))
@@ -1260,9 +1259,9 @@ class RealSolidStrainObject(StrainObject):
                 (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
 
                 ([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm], isAllZeros) = writeFloats13E([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm])
-                f.write('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n'
-                           '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'
-                           '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n'
+                f.write('0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
+                           '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
+                           '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n'
                            % (nid, exx, exy, e1, v[0, 1], v[0, 2], v[0, 0], p, evm,
                               '', eyy, eyz, e2, v[1, 1], v[1, 2], v[1, 0],
                               '', ezz, exz, e3, v[2, 1], v[2, 2], v[2, 0]), )
@@ -1297,9 +1296,9 @@ class RealSolidStrainObject(StrainObject):
                 (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
 
                 ([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm], isAllZeros) = writeFloats13E([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm])
-                f.write('0              %8s  X  %13s  XY  %13s   A  %13s  LX%5.2f%5.2f%5.2f  %13s   %-s\n'
-                         '               %8s  Y  %13s  YZ  %13s   B  %13s  LY%5.2f%5.2f%5.2f\n'
-                         '               %8s  Z  %13s  ZX  %13s   C  %13s  LZ%5.2f%5.2f%5.2f\n' % (
+                f.write('0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
+                         '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
+                         '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n' % (
                              nid, exx, exy, e1, v[0, 1], v[0, 2], v[0, 0], p, evm,
                              '', eyy, eyz, e2, v[1, 1], v[1, 2], v[1, 0],
                              '', ezz, exz, e3, v[2, 1], v[2, 2], v[2, 0]))
