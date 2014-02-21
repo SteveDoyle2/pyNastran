@@ -75,6 +75,8 @@ PBARL    10      1       	rod
 	.3
 PBARL	11	1		cross
 	.4	.1	.6	.1
+pbeaml	12	1		bar
+	5.0	1.5		no	1.0	4.	1.0	        
 PCOMPG   55     -1.65
          1001    2      .275     0.      YES
          1002    2      .275     0.      YES
@@ -258,13 +260,6 @@ $SETS
 ASET1   3        1      THRU     8
 ASET1   3       10      THRU    16
 SESET   0       1       THRU    10
-$REJECTS
-pbeaml	1	1		bar
-	8.	2.5		no	1.0	6.	2.0
-pbeaml	2	1		bar
-	6.	2.0		no	1.0	5.	1.5	
-pbeaml	3	1		bar
-	5.0	1.5		no	1.0	4.	1.0	        
 $REJECT_LINES
 CONM1          1      11
           17400.                          4.37+7
