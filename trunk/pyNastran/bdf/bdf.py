@@ -1314,6 +1314,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 #card = fields
             card_obj = BDFCard(card)
 
+        #print(card_obj)
         if self._auto_reject:
             self.reject_cards.append(card)
             print('rejecting processed auto=rejected %s' % card)
@@ -1363,7 +1364,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                                     'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5'],
              'add_rigid_element': ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3'],
              'add_property': ['PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR', 'PSOLID',
-                              'PBAR', 'PBARL', 'PBEAM', 'PBCOMP', #'PBEAML',
+                              'PBAR', 'PBARL', 'PBEAM', 'PBCOMP', 'PBEAML',
                               'PROD', 'PTUBE', 'PLSOLID', 'PBUSH1D', 'PBUSH',
                               'PFAST', 'PDAMP5', 'PGAP', 'PRAC2D', 'PRAC3D',
                               'PLPLANE',],
@@ -1529,13 +1530,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             elif card_name == 'SPOINT':
                 self.add_SPOINT(SPOINTs(card_obj, comment=comment))
             elif card_name == 'PBEAML':
-                #try:
                 prop = PBEAML(card_obj, comment=comment)
-                #except Exception as e:
-                    ##self.log.exception(traceback.format_exc())
-                    #self.log.exception('rejecting processed PBEAML %s' % card)
-                    #self.reject_cards.append(card)
-                    #return card_obj
                 self.add_property(prop)
 
             elif 'ENDDATA' in card_name:

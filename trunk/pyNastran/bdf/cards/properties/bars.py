@@ -1845,6 +1845,21 @@ class PBEAM(IntegratedLineProperty):
 
 
 class PBEAML(IntegratedLineProperty):
+    """
+    +--------+---------+---------+---------+---------+---------+---------+---------+---------+
+    | PBEAML | PID     | MID     | GROUP   | TYPE    |         |         |         |         |
+    +--------+---------+---------+---------+---------+---------+---------+---------+---------+
+    |        | DIM1(A) | DIM2(A) | -etc.-  | DIMn(A) | NSM(A)  | SO(1)   | X(1)/XB | DIM1(1) |
+    +--------+---------+---------+---------+---------+---------+---------+---------+---------+
+    |        | DIM2(1) | -etc.-  | DIMn(1) | NSM(1)  | SO(2)   | X(2)/XB | DIM1(2) | DIM2(2) |
+    +--------+---------+---------+---------+---------+---------+---------+---------+---------+
+    |        | -etc.-  | DIMn(2) | NSM(m)  | -etc.-  | SO(m)   | X(m)/XB | DIM1(m) | -etc.-  |
+    +--------+---------+---------+---------+---------+---------+---------+---------+---------+
+    |        | DIMn(m) |  NSM(m) | SO(B)   | 1.0     | DIM1(B) | DIM2(B) | -etc.-  | DIMn(B) |
+    +--------+---------+---------+---------+---------+---------+---------+---------+---------+
+    |        | NSM(B)  |
+    +--------+---------+
+    """
     type = 'PBEAML'
     validTypes = {
         "ROD": 1,
@@ -1888,62 +1903,40 @@ class PBEAML(IntegratedLineProperty):
             nDim = self.validTypes[self.Type]
             #nAll = nDim + 1
 
-            #nDim = len(self.dim) - 1
-            dimAll = fields(double, card, 'dim', i=9, j=len(card))
-
             #: dimension list
             self.dim = []
             Dim = []
+
             #: Section position
             self.xxb = [0.]
+
             #: Output flag
             self.so = ['YES']
+
             #: non-structural mass :math:`nsm`
             self.nsm = []
 
-            j = 0  # the dimension counter
-            n = 0  # there is no SO or XXB for the first section (n=0)
-            i = 9  # the index in the card
-            #print("dimAll = ", dimAll, nDim, i)
-
-            # ii is the counter starting from 9
-            for (ii, dim) in enumerate(dimAll):
-                if j < nDim:  # the first block, n=0 ???
-                    #print "*1"
-                    Dim.append(dim)
-                    j += 1
-                    i += 1
-                else:  # other blocks, n>0 ???
-                    #print "*2",
-                    #print "dim = ",Dim
-                    if is_string(dim):
-                        msg = ('nsm is a string...nsm=|%s|; fields=%s'
-                               % (dim, card.fields()))
-                        raise RuntimeError(msg)
-                    self.nsm.append(dim)
-                    if n > 0:
-                        so = string_or_blank(card, i + 1, 'so', 'YES')
-                        xxb = double_or_blank(i + 2, 'xxb', 1.0)
-                        self.so.append(so)  # dimAll[i+1]
-                        self.xxb.append(xxb)  # dimAll[i+2]
-                    n += 1
+            i = 9
+            n = 0
+            while i < len(card):
+                if n > 0:
+                    so = string_or_blank(card, i, 'so_n=%i' % n, 'YES')
+                    xxb = double_or_blank(card, i + 1, 'xxb_n=%i' % n, 1.0)
+                    self.so.append(so)
+                    self.xxb.append(xxb)
                     i += 2
-                    #print "Dim = ",Dim
-                    self.dim.append(Dim)
-                    Dim = []
-                    j = 0
-                #print("i=%s ii=%s j=%s Dim=%s" %(i, ii, j, Dim))
 
-            if j <= nDim:  # if the last field is blank
-                #print "DimB = ",Dim
+                Dim = []
+                for ii in range(nDim):
+                    dim = double(card, i, 'dim_n=%i_ii=%i' % (n, ii))
+                    Dim.append(dim)
+                    i += 1
                 self.dim.append(Dim)
-                self.nsm.append(0.0)
-                if is_string(self.nsm[0]):
-                    msg = 'nsm is a string...nsm=|%s|' % (self.nsm)
-                    raise RuntimeError(msg)
 
-            #print("nsm = %s" %(self.nsm))
-            #print self
+                nsm = double_or_blank(card, i, 'nsm_n=%i' % n, 0.0)
+                self.nsm.append(nsm)
+                n += 1
+                i += 1
 
     def _verify(self, xref=False):
         pid = self.Pid()
@@ -2068,14 +2061,14 @@ class PBEAML(IntegratedLineProperty):
             if i == 0:
                 list_fields += dim + [nsm]
             else:
-                list_fields += [xxb, so] + dim + [nsm]
+                list_fields += [so, xxb] + dim + [nsm]
         #raise NotImplementedError('verify PBEAML...')
         return list_fields
 
     def reprFields(self):
-        group = set_blank_if_default(self.group, 'MSCBMLO')
+        #group = set_blank_if_default(self.group, 'MSCBMLO')
         list_fields = self.rawFields()
-        list_fields[3] = group
+        #list_fields[3] = group
         return list_fields
 
     def write_bdf(self, size, card_writer):
