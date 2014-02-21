@@ -20,6 +20,10 @@ class OUG(object):
 
     def _real_eigenvectors(self, marker):
         """
+        Reads real eigenvector table accounting for blank entries
+
+        :param self:   the object pointer
+
         ::
                                                                                                                  SUBCASE 1
           EIGENVALUE =  6.158494E+07
@@ -28,6 +32,8 @@ class OUG(object):
           POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
                  1      G      2.547245E-17  -6.388945E-16   2.292728E+00  -1.076928E-15   2.579163E-17   0.0
               2002      G     -6.382321E-17  -1.556607E-15   3.242408E+00  -6.530917E-16   1.747180E-17   0.0
+              2003      G     -6.382321E-17  -1.556607E-15   3.242408E+00
+              2004      S     -6.382321E-17  -1.556607E-15   3.242408E+00
 
         * analysis_code = 2 (Normal modes)
         * table_code    = 7 (Eigenvector)
@@ -66,9 +72,7 @@ class OUG(object):
             #'s_code':0,
             #'element_name':'CBAR','element_type':34,'stress_bits':stress_bits,
         }
-
-        data_types = [int, str, float, float, float, float, float, float]
-        data = self._read_f06_table(data_types, debug=False)
+        data = self._real_eigenvectors_data()
 
         #print("cycle=%-8s eigen=%s" % (cycle, eigenvalue_real))
         #print "isubcase = %s" % isubcase
@@ -78,6 +82,54 @@ class OUG(object):
             is_sort1 = True
             self.eigenvectors[isubcase] = EigenvectorObject(data_code, is_sort1, isubcase, iMode)
             self.eigenvectors[isubcase].read_f06_data(data_code, data)
+
+    def _real_eigenvectors_data(self):
+        """
+        Reads real eigenvector table accounting for blank entries and SPOINT entries.
+        ..todo:: support L, H points
+
+        :param self:   the object pointer
+        """
+
+        field_length = 15  # width of each eigenvector field
+        num_fields = 6     # the number of fields (T1, T2, T3, R1, R2, R3)
+        data = []
+
+        n = 0
+        while 1:
+            line = self.infile.readline()[1:].rstrip()
+
+            # TODO: add catch for FATAL
+            if 'PAGE' in line:
+                break
+
+            #: point ID (int)
+            node_id = int(line[:14].strip())
+
+            #: TYPE (str)
+            grid_type = line[14:24].strip()
+
+            if grid_type == 'G':
+                sline = [node_id, grid_type]
+                fields = [line[24:39], line[39:54], line[54:69], line[69:84], line[84:99], line[99:114]]
+                sline += [float(val) if val.strip() != '' else 0.0 for val in fields]
+                data.append(sline)
+            elif grid_type == 'S':
+                fields = [line[24:39], line[39:54], line[54:69], line[69:84], line[84:99],  line[99:114]]
+                fields = [float(val) if val.strip() != '' else None for val in fields]
+                for ioffset, field in enumerate(fields):
+                    if field is None:
+                        # incomplete spoint line
+                        # ID, S, 1.0, 2.0, 3.0, 4.0, 5.0, None
+                        break
+                    sline = [node_id + ioffset,
+                             grid_type, field, 0.0, 0.0, 0.0, 0.0, 0.0]
+                    data.append(sline)
+            else:
+                raise NotImplementedError('grid_type = %r' % grid_type)
+            self.i += 1
+            n += 1
+        return data
 
     def _displacement_vector(self):
         """

@@ -500,12 +500,12 @@ class OUG(object):
             eid2 = extract(eid, dt)
             #print "eType=%s" %(eType)
 
-            dataIn = [eid2, grid_type, tx, ty, tz, rx, ry, rz]
+            #dataIn = [eid2, grid_type, tx, ty, tz, rx, ry, rz]
             #print('eid=%g gridType=%g tx=%g ty=%g tz=%g rx=%g ry=%g rz=%g' %(eid2, gridType, tx, ty, tz, rx, ry, rz))
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #print "%s" %(self.table_name),dataIn
             #eid = self.obj.add_new_eid(out)
-            self.obj.add(dt, dataIn)
+            self.obj.add(dt, eid2, grid_type, tx, ty, tz, rx, ry, rz)
             istart = iend
             iend += 32
         self.data = self.data[istart:]

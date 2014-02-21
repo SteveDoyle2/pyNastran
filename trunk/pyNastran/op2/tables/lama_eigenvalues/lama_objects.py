@@ -42,33 +42,16 @@ class RealEigenvalues(BaseScalarObject):
         self.eigenvalues[modeNum] = eigenvalue
         self.radians[modeNum] = radian
         cyclei = sqrt(abs(eigenvalue)) / (2. * pi)
-        assert allclose(cycle, cyclei), 'cycle=%s cyclei=%s' % (cycle, cyclei)
+        if not allclose(cycle, cyclei):
+            print('cycle=%s cyclei=%s' % (cycle, cyclei))
         #self.cycles[modeNum] = cycle
         self.generalizedMass[modeNum] = genM
         self.generalizedStiffness[modeNum] = genK
 
     def add_f06_data(self, data):
+        #print('real eigenvalues')
         for line in data:
             self.addF06Line(line)
-
-        for (iMode, order) in sorted(self.extractionOrder.iteritems()):
-            eigenvalue = self.eigenvalues[iMode]
-            cycle = sqrt(abs(eigenvalue)) / (2. * pi)
-
-            iModesMsg += '%s,' % iMode
-            orderMsg += '%s,' % order
-            modesMsg += '%s,' % eigenvalue
-            omegaMsg += '%s,' % self.radians[iMode]
-            cyclesMsg += '%s,' % cycle
-            massMsg += '%s,' % self.generalizedMass[iMode]
-            stiffMsg += '%s,' % self.generalizedStiffness[iMode]
-        f.write(iModesMsg + '];\n')
-        f.write(orderMsg + '];\n')
-        f.write(modesMsg + '];\n')
-        f.write(omegaMsg + '];\n')
-        f.write(cyclesMsg + '];\n')
-        f.write(massMsg + '];\n')
-        f.write(stiffMsg + '];\n')
 
     def write_f06(self, f, header, pageStamp, pageNum=1):
         title = ''

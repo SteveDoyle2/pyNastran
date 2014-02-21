@@ -2,7 +2,7 @@ import os
 import unittest
 from math import sqrt
 
-from numpy import array, array_equiv
+from numpy import array, array_equiv, array_equal
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF
@@ -21,7 +21,7 @@ class TestF06(unittest.TestCase):
         if bdf_name:
             bdf = BDF(debug=False, log=None)
             if dynamic_vars is not None:
-                print('dynamic')
+                #print('dynamic')
                 bdf.set_dynamic_syntax(dynamic_vars)
             bdf.read_bdf(bdf_name)
             bdf.write_bdf(bdf_name+'.out', interspersed=False)
@@ -132,7 +132,6 @@ class TestF06(unittest.TestCase):
         bdf_filename = os.path.join(model_path, 'blade_2dv', 'blade_2dv.bdf')
         #bdf2 = self.run_model(bdfname2, dynamic_vars=dynamic_vars)
         #self.assertEquals(bdf2.properties[1].t, 42., 't=%s' % bdf2.properties[1].t)
-
         f06 = F06(debug=False, log=None)
 
         # we skip the fatal by stopping after reading the matrices
@@ -226,6 +225,40 @@ class TestF06(unittest.TestCase):
 
         #f06.write_f06(f06name2)
         #os.remove(f06name2)
+
+    def test_eigenvectors1(self):
+        bdfname = None
+        f06name = os.path.join(test_path, 'test_no_rotations.f06')
+        op2name = None
+        f06 = self.run_model(bdfname, f06name, op2name, f06_has_weight=False)
+        subcase = 1
+        eig = 1
+        nid = 2
+        self.assertTrue(array_equal(f06.eigenvectors[subcase].translations[eig][2], array([4., 5., 6.])),
+                            msg=str(f06.eigenvectors[subcase].translations[eig][2]))
+        self.assertTrue(array_equal(f06.eigenvectors[subcase].translations[eig][4], array([10., 0., 0.])),
+                            msg=str(f06.eigenvectors[subcase].translations[eig][4]))
+
+
+        self.assertTrue(array_equal(f06.eigenvectors[subcase].rotations[eig][2], array([0., 0., 0.])))
+        self.assertTrue(array_equal(f06.eigenvectors[subcase].rotations[eig][4], array([0., 0., 0.])))
+
+    def test_eigenvectors2(self):
+        bdfname = None
+        f06name = os.path.join(test_path, 'test_with_rotations.f06')
+        op2name = None
+
+        subcase = 1
+        eig = 1
+        f06 = self.run_model(bdfname, f06name, op2name, f06_has_weight=False)
+        self.assertTrue(array_equal(f06.eigenvectors[subcase].translations[eig][2], array([4., 5., 6.])),
+                            msg=str(f06.eigenvectors[subcase].translations[eig][2]))
+
+        self.assertTrue(array_equal(f06.eigenvectors[subcase].translations[eig][4], array([10., 11., 12.])),
+                            msg=str(f06.eigenvectors[subcase].translations[eig][4]))
+
+        self.assertTrue(array_equal(f06.eigenvectors[subcase].rotations[eig][2], array([1., 1., 1.])))
+        self.assertTrue(array_equal(f06.eigenvectors[subcase].rotations[eig][4], array([1., 1., 1.])))
 
     def test_plate_vonmises(self):
         bdfname = os.path.join(model_path, 'plate', 'plate.bdf')
