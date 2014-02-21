@@ -72,7 +72,7 @@ class OUG(object):
             #'s_code':0,
             #'element_name':'CBAR','element_type':34,'stress_bits':stress_bits,
         }
-        data = self._real_eigenvectors_data()
+        data = self._real_f06_table_data(allow_blanks=True)
 
         #print("cycle=%-8s eigen=%s" % (cycle, eigenvalue_real))
         #print "isubcase = %s" % isubcase
@@ -83,14 +83,18 @@ class OUG(object):
             self.eigenvectors[isubcase] = EigenvectorObject(data_code, is_sort1, isubcase, iMode)
             self.eigenvectors[isubcase].read_f06_data(data_code, data)
 
-    def _real_eigenvectors_data(self):
+    def _real_f06_table_data(self, allow_blanks=False):
         """
-        Reads real eigenvector table accounting for blank entries and SPOINT entries.
-        ..todo:: support L, H points
+        Reads real displacement/velocity/spc forces/mpc forces
+        Handles GRIDs and SPOINTs.
 
-        :param self:   the object pointer
+        :param self:         the object pointer
+        :param allow_blanks: Accounting for blank entries (e.g. on eigenvector)
+                             default=False
+        :returns data:       the parsed data
+
+        ..todo:: support L, H, and R points
         """
-
         field_length = 15  # width of each eigenvector field
         num_fields = 6     # the number of fields (T1, T2, T3, R1, R2, R3)
         data = []
@@ -112,7 +116,10 @@ class OUG(object):
             if grid_type == 'G':
                 sline = [node_id, grid_type]
                 fields = [line[24:39], line[39:54], line[54:69], line[69:84], line[84:99], line[99:114]]
-                sline += [float(val) if val.strip() != '' else 0.0 for val in fields]
+                if allow_blanks:
+                    sline += [float(val) if val.strip() != '' else 0.0 for val in fields]
+                else:
+                    sline += [float(val) for val in fields]
                 data.append(sline)
             elif grid_type == 'S':
                 fields = [line[24:39], line[39:54], line[54:69], line[69:84], line[84:99],  line[99:114]]
@@ -160,8 +167,8 @@ class OUG(object):
                     'dataNames':['lsdvmn']}
         #print "headers = %s" %(headers)
         #print "transient =", transient
-        data_types = [int, str, float, float, float, float, float, float]
-        data = self._read_f06_table(data_types)
+
+        data = self._real_f06_table_data(allow_blanks=False)
 
         if isubcase in self.displacements:
             self.displacements[isubcase].add_f06_data(data, transient)

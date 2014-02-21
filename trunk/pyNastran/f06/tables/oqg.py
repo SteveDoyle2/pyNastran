@@ -18,8 +18,7 @@ class OQG(object):
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
-        data_types = [int, str, float, float, float, float, float, float]
-        data = self._read_f06_table(data_types)
+        data = self._real_f06_table_data(allow_blanks=False)
 
         data_code = {'log': self.log, 'analysis_code': analysis_code,
                     'device_code': 1, 'table_code': 3, 'sort_code': 0,
@@ -42,8 +41,7 @@ class OQG(object):
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
-        data_types = [int, str, float, float, float, float, float, float]
-        data = self._read_f06_table(data_types)
+        data = self._real_f06_table_data(allow_blanks=False)
 
         data_code = {'log': self.log, 'analysis_code': analysis_code,
                     'device_code': 1, 'table_code': 39,
