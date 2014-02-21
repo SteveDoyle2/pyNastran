@@ -470,7 +470,7 @@ class RealTableObject(ScalarObject):  # displacement style table
                 (vals2, is_all_zeros) = writeFloats13E(vals)
                 #if not is_all_zeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
-                msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
+                msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
 
             msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
@@ -715,8 +715,8 @@ class ComplexTableObject(ScalarObject):
             (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
             [dxr, dyr, dzr, rxr, ryr, rzr,
              dxi, dyi, dzi, rxi, ryi, rzi] = vals2
-            f.write('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
-                    '  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
+            f.write('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                    '  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
                       % (node_id, grid_type, dxr, dyr, dzr, rxr, ryr, rzr,
                                     '', '', dxi, dyi, dzi, rxi, ryi, rzi))
 
@@ -752,8 +752,8 @@ class ComplexTableObject(ScalarObject):
                 [dxr, dyr, dzr, rxr, ryr, rzr, dxi, dyi,
                     dzi, rxi, ryi, rzi] = vals2
                 #if not is_all_zeros:
-                msg.append('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (node_id, grid_type, dxr, dyr, dzr, rxr, ryr, rzr.rstrip()))
-                msg.append('  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % ('', '', dxi, dyi, dzi, rxi, ryi, rzi.rstrip()))
+                msg.append('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, grid_type, dxr, dyr, dzr, rxr, ryr, rzr))
+                msg.append('  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % ('', '', dxi, dyi, dzi, rxi, ryi, rzi))
 
             msg.append(pageStamp % pageNum)
             f.write(''.join(msg))

@@ -472,11 +472,11 @@ class ComplexPlateStressObject(StressObject):
                   fdi, oxxi, oyyi, txyi], isAllZeros) = writeImagFloats13E([fd, oxx, oyy, txy], is_mag_phase)
 
                 if nid == cen and iLayer == 0:
-                    msg += '0  %8i %8s  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n' % (eid, cen, fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi.rstrip())
+                    msg += '0  %8i %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s /   %s\n' % (eid, cen, fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi)
                 elif iLayer == 0:
-                    msg += '   %8s %8i  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n' % ('', nid, fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi.rstrip())
+                    msg += '   %8s %8i  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s /   %s\n' % ('', nid, fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi)
                 elif iLayer == 1:
-                    msg += '   %8s %8s  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n\n' % ('', '', fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi.rstrip())
+                    msg += '   %8s %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s /   %s\n\n' % ('', '', fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi)
                 else:
                     raise Exception('Invalid option for cquad4')
         return msg
@@ -497,11 +497,11 @@ class ComplexPlateStressObject(StressObject):
                   fdi, oxxi, oyyi, txyi], isAllZeros) = writeImagFloats13E([fd, oxx, oyy, txy], is_mag_phase)
 
                 if nid == cen and iLayer == 0:
-                    msg += '0  %8i %8s  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n' % (eid, cen, fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi.rstrip())
+                    msg += '0  %8i %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s /   %s\n' % (eid, cen, fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi)
                 elif iLayer == 0:
-                    msg += '   %8s %8i  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n' % ('', nid, fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi.rstrip())
+                    msg += '   %8s %8i  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s /   %s\n' % ('', nid, fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi)
                 elif iLayer == 1:
-                    msg += '   %8s %8s  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n\n' % ('', '', fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi.rstrip())
+                    msg += '   %8s %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s /   %s\n\n' % ('', '', fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi)
                 else:
                     #msg += '   %8s %8s  %13E  %13E %13E %13E   %8.4F  %13E %13E %13E\n' %('','',  fd,oxx,oyy,txy)
                     raise Exception('Invalid option for cquad4')
@@ -522,9 +522,10 @@ class ComplexPlateStressObject(StressObject):
                 ([fd, oxx, oyy, txy], isAllZeros) = writeFloats13E([fd, oxx, oyy, txy])
 
                 if iLayer == 0:
-                    msg += '0G  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % (eid, fd, oxx, oyy, txy)
+                    # TODO: how is this valid?
+                    msg += '0G  %6i   %-13s     %-13s  %-13s  %-13s   %8s   %-13s   %-13s  %s\n' % (eid, fd, oxx, oyy, txy)
                 else:
-                    msg += ' H  %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, oxx, oyy, txy)
+                    msg += ' H  %6s   %-13s     %-13s  %-13s  %-13s   %8s   %-13s   %-13s  %s\n' % ('', fd, oxx, oyy, txy)
         return msg
 
     def writeF06_Tri3Transient(self, dt, eid, n, is_mag_phase):
@@ -543,9 +544,9 @@ class ComplexPlateStressObject(StressObject):
                   fdi, oxxi, oyyi, txyi], isAllZeros) = writeImagFloats13E([fd, oxx, oyy, txy], is_mag_phase)
 
                 if iLayer == 0:
-                    msg += '0  %6i   %13s     %13s / %13s     %13s / %13s     %13s / %-s\n' % (eid, fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi)
+                    msg += '0  %6i   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (eid, fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi)
                 else:
-                    msg += '   %6s   %13s     %13s / %13s     %13s / %13s     %13s / %-s\n' % ('', fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi)
+                    msg += '   %6s   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % ('', fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi)
         return msg
 
 
@@ -1042,11 +1043,11 @@ class ComplexPlateStrainObject(StrainObject):
                   fdi, exxi, eyyi, exyi], isAllZeros) = writeImagFloats13E([fd, exx, eyy, exy], is_mag_phase)
 
                 if nid == cen and iLayer == 0:
-                    msg += '0  %8i %8s  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n' % (eid, cen, fd, exxr, exxi, eyyr, eyyi, exyr, exyi.rstrip())
+                    msg += '0  %8i %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s /   %s\n' % (eid, cen, fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
                 elif iLayer == 0:
-                    msg += '   %8s %8i  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n' % ('', nid, fd, exxr, exxi, eyyr, eyyi, exyr, exyi.rstrip())
+                    msg += '   %8s %8i  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s /   %s\n' % ('', nid, fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
                 elif iLayer == 1:
-                    msg += '   %8s %8s  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n\n' % ('', '', fd, exxr, exxi, eyyr, eyyi, exyr, exyi.rstrip())
+                    msg += '   %8s %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s /   %s\n\n' % ('', '', fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
                 else:
                     raise Exception('Invalid option for cquad4')
         return msg
@@ -1067,11 +1068,11 @@ class ComplexPlateStrainObject(StrainObject):
                   fdi, exxi, eyyi, exyi], isAllZeros) = writeImagFloats13E([fd, exx, eyy, exy], is_mag_phase)
 
                 if nid == cen and iLayer == 0:
-                    msg += '0  %8i %8s  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n' % (eid, cen, fd, exxr, exxi, eyyr, eyyi, exyr, exyi.rstrip())
+                    msg += '0  %8i %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s /   %s\n' % (eid, cen, fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
                 elif iLayer == 0:
-                    msg += '   %8s %8i  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n' % ('', nid, fd, exxr, exxi, eyyr, eyyi, exyr, exyi.rstrip())
+                    msg += '   %8s %8i  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s /   %s\n' % ('', nid, fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
                 elif iLayer == 1:
-                    msg += '   %8s %8s  %13s   %13s / %13s   %13s / %13s   %13s /   %-s\n\n' % ('', '', fd, exxr, exxi, eyyr, eyyi, exyr, exyi.rstrip())
+                    msg += '   %8s %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s /   %s\n\n' % ('', '', fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
                 else:
                     raise Exception('Invalid option for cquad4')
         return msg
@@ -1092,9 +1093,9 @@ class ComplexPlateStrainObject(StrainObject):
                 ([fd, exxr, eyyr, exyr,
                   fdi, exxi, eyyi, exyi], isAllZeros) = writeImagFloats13E([fd, exx, eyy, exy], is_mag_phase)
                 if iLayer == 0:
-                    msg += '0  %6i   %13s     %13s / %13s     %13s / %13s     %13s / %-s\n' % (eid, fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
+                    msg += '0  %6i   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (eid, fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
                 else:
-                    msg += '   %6s   %13s     %13s / %13s     %13s / %13s     %13s / %-s\n' % ('', fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
+                    msg += '   %6s   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % ('', fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
         return msg
 
     def writeF06_Tri3Transient(self, dt, eid, n, is_mag_phase):
@@ -1113,8 +1114,8 @@ class ComplexPlateStrainObject(StrainObject):
                 ([fd, exxr, eyyr, exyr,
                   fdi, exxi, eyyi, exyi], isAllZeros) = writeImagFloats13E([fd, exx, eyy, exy], is_mag_phase)
                 if iLayer == 0:
-                    msg += '0  %6i   %13s     %13s / %13s     %13s / %13s     %13s / %-s\n' % (eid, fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
+                    msg += '0  %6i   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (eid, fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
                 else:
-                    msg += '   %6s   %13s     %13s / %13s     %13s / %13s     %13s / %-s\n' % ('', fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
+                    msg += '   %6s   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % ('', fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
         return msg
 

@@ -132,7 +132,7 @@ class ComplexCelasStressObject(complexStressObject):
                 if i == 1:
                     elementID2 = elementID
                     [stress2Real, stress2Imag] = vals2
-                    msg.append('%14i %13s / %13s  %14i %13s / %-s\n' % (elementID1, stress1Real, stress1Imag, elementID2, stress2Real, stress2Imag.rstrip()))
+                    msg.append('%14i %-13s / %-13s  %14i %-13s / %s\n' % (elementID1, stress1Real, stress1Imag, elementID2, stress2Real, stress2Imag))
                     i = -1
                 i += 1
             msg.append(pageStamp % pageNum)

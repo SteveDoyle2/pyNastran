@@ -101,11 +101,11 @@ class RealRodForce(ScalarObject):  # 1-ROD
         if nOut % 2 == 1:
             nWrite = nOut - 1
         for i in xrange(0, nWrite, 2):
-            outLine = '      %8i   %13s  %13s  %8i   %13s  %13s\n' % tuple(out[i] + out[i + 1])
+            outLine = '      %8i   %-13s  %-13s  %8i   %-13s  %-13s\n' % tuple(out[i] + out[i + 1])
             msg.append(outLine)
 
         if nOut % 2 == 1:
-            outLine = '      %8i   %13s  %13s\n' % tuple(out[-1])
+            outLine = '      %8i   %-13s  %-13s\n' % tuple(out[-1])
             msg.append(outLine)
         msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
@@ -298,7 +298,7 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
                         msg.append('0  %8i\n' % (eid))
 
                     # TODO store grid ID
-                    msg.append('           %8i   %.3f   %13s %13s  %13s %13s  %13s  %13s  %-s\n' % (nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq))
+                    msg.append('           %8i   %.3f   %-13s %-13s  %-13s %-13s  %-13s  %-13s  %s\n' % (nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq))
 
             msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
@@ -322,7 +322,7 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
                 (vals2, isAllZeros) = writeFloats13E([bm1, bm2, ts1, ts2, af, ttrq, wtrq])
                 [bm1, bm2, ts1, ts2, af, ttrq, wtrq] = vals2
                 msg.append('0  %8i\n' % (eid))
-                msg.append('           %8i   %.3f   %13s %13s  %13s %13s  %13s  %13s  %-s\n' % (eid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq))
+                msg.append('           %8i   %.3f   %-13s %-13s  %-13s %-13s  %-13s  %-13s  %s\n' % (eid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq))
 
         msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
@@ -530,8 +530,8 @@ class RealCShearForce(ScalarObject):  # 4-CSHEAR
             [f14, f12,  f21, f23,  f32, f34,  f43, f41,
              kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41,
             ] = vals2
-            msg.append('0%13i%13s %13s %13s %13s %13s %13s %13s %13s\n' % (eid, f14, f12, f21, f23, f32, f34, f43, f41))
-            msg.append('                     %13s %13s %13s %13s %13s %13s %13s %13s\n' % ( kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41))
+            msg.append('0%13i%-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (eid, f14, f12, f21, f23, f32, f34, f43, f41))
+            msg.append('                     %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % ( kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41))
 
         msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
@@ -1194,7 +1194,7 @@ class RealCBarForce(ScalarObject):  # 34-CBAR
                 trq = self.torque[dt][eid]
                 (vals2, isAllZeros) = writeFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq])
                 [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = vals2
-                msg.append('      %8i    %13s %13s  %13s %13s  %13s %13s  %13s  %-s\n' % (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq))
+                msg.append('      %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq))
 #            1     2.504029E+06  9.728743E+06   5.088001E+05  1.976808E+06   1.995229E+06  7.751935E+06  -3.684978E-07  -1.180941E-07
 
             msg.append(pageStamp % pageNum)
@@ -1623,7 +1623,7 @@ class RealPentaPressureForce(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
                 (vals2, isAllZeros) = writeFloats13E(vals)
                 [ax, ay, az, pressure] = vals2
                 eType = 'PENPR'
-                msg.append('0%13s    %5s               %13s             %13s             %13s             %-s\n' % (eid, eType, ax, ay, az, pressure))
+                msg.append('0%13s    %5s               %-13s             %-13s             %-13s             %s\n' % (eid, eType, ax, ay, az, pressure))
             msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
             msg = ['']

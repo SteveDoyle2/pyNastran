@@ -103,7 +103,7 @@ class BushStressObject(StressObject):
             vals = [tx, ty, tz, rx, ry, rz]
             (vals2, isAllZeros) = writeFloats13E(vals)
             [tx, ty, tz, rx, ry, rz] = vals2
-            msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %-s\n' % (eid, tx, ty, tz, rx, ry, rz.rstrip()))
+            msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (eid, tx, ty, tz, rx, ry, rz))
 
         msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
@@ -125,7 +125,7 @@ class BushStressObject(StressObject):
                 vals = [tx, ty, tz, rx, ry, rz]
                 (vals2, isAllZeros) = writeFloats13E(vals)
                 [tx, ty, tz, rx, ry, rz] = vals2
-                msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %-s\n' % (eid, tx, ty, tz, rx, ry, rz.rstrip()))
+                msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (eid, tx, ty, tz, rx, ry, rz))
 
             msg.append(pageStamp % pageNum)
             f.write(''.join(msg))

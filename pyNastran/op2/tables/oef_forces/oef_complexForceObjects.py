@@ -363,7 +363,7 @@ class ComplexSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
             forces.append(force)
             #pack.append(eid)
             #pack.append(f)
-            line += '%13s  %13s / %13s     ' % (eid, force.real, force.imag)
+            line += '%-13s  %-13s / %-13s     ' % (eid, force.real, force.imag)
             if len(forces) == 3:
                 msg.append(line.rstrip() + '\n')
         if forces:
@@ -394,8 +394,7 @@ class ComplexSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
                 #pack.append(f)
                 ([forceReal, forceImag], isAllZeros) = writeFloats13E([force.real, force.imag])
 
-                line += '          %13s      %13s / %13s' % (
-                    eid, forceReal, forceImag)
+                line += '          %13s      %-13s / %-13s' % (eid, forceReal, forceImag)
                 if len(forces) == 2:
                     msg.append(line.rstrip() + '\n')
                     line = ''
@@ -858,7 +857,6 @@ class ComplexCBarForce(ScalarObject):  # 34-CBAR
         self.torque[dt][eid] = trq
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
-
         words = ['                             C O M P L E X   F O R C E S   I N   B A R   E L E M E N T S   ( C B A R )\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
@@ -877,8 +875,8 @@ class ComplexCBarForce(ScalarObject):  # 34-CBAR
                 (vals2, isAllZeros) = writeImagFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq], is_mag_phase)
                 [bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr,
                  bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi] = vals2
-                msg.append('     %8i    %13s %13s  %13s %13s  %13s %13s  %13s  %-s\n' % (eid, bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr))
-                msg.append('     %8s    %13s %13s  %13s %13s  %13s %13s  %13s  %-s\n' % ('', bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi))
+                msg.append('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr))
+                msg.append('     %8s    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % ('', bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi))
             msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
             msg = ['']
@@ -902,8 +900,8 @@ class ComplexCBarForce(ScalarObject):  # 34-CBAR
             (vals2, isAllZeros) = writeImagFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq], is_mag_phase)
             [bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr,
              bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi] = vals2
-            msg.append('     %8i    %13s %13s  %13s %13s  %13s %13s  %13s  %-s\n' % (eid, bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr))
-            msg.append('     %8s    %13s %13s  %13s %13s  %13s %13s  %13s  %-s\n' % ('', bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi))
+            msg.append('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr))
+            msg.append('     %8s    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % ('', bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi))
         msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
         return pageNum

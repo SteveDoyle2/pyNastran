@@ -170,9 +170,9 @@ class NonlinearQuadObject(StressObject):
                     ecs = self.ecs[dt][eid][i]
                     ([oxx, oyy, ozz, txy, exx, eyy, es, eps, ecs, exx, eyy, ezz, exy], isAllZeros) = writeFloats13E([oxx, oyy, ozz, txy, exx, eyy, es, eps, ecs, exx, eyy, ezz, exy])
                     if i == 0:
-                        msgT[eid].append('0 %9.3E %13s  %13s  %13s  %13s  %13s  %13s  %13s  %-s\n' % (dt, fd, oxx, oyy, ozz, txy, es, eps, ecs))
+                        msgT[eid].append('0 %9.3E %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (dt, fd, oxx, oyy, ozz, txy, es, eps, ecs))
                     else:
-                        msgT[eid].append('     %9s %13s  %13s  %13s  %13s  %13s\n' % ('', '', exx, eyy, ezz, exy))
+                        msgT[eid].append('     %9s %-13s  %-13s  %-13s  %-13s  %-13s\n' % ('', '', exx, eyy, ezz, exy))
 
         msg = []
         for eid, e in sorted(msgE.iteritems()):

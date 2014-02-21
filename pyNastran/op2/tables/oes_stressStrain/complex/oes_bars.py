@@ -189,15 +189,11 @@ class ComplexBarStressObject(StressObject):
              s1br, s2br, s3br, s4br,
              s1ai, s2ai, s3ai, s4ai, axiali,
              s1bi, s2bi, s3bi, s4bi, ] = vals2
-            msg.append('0%8i   %13s  %13s  %13s  %13s  %-s\n' %
-                       (eid, s1ar, s2ar, s3ar, s4ar, axialr.rstrip()))
-            msg.append(' %8s   %13s  %13s  %13s  %13s  %-s\n' %
-                       ('', s1ai, s2ai, s3ai, s4ai, axiali.rstrip()))
+            msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %s\n' % (eid, s1ar, s2ar, s3ar, s4ar, axialr))
+            msg.append(' %8s   %-13s  %-13s  %-13s  %-13s  %s\n' % ('', s1ai, s2ai, s3ai, s4ai, axiali))
 
-            msg.append(' %8s   %13s  %13s  %13s  %-s\n' % (
-                '', s1br, s2br, s3br, s4br.rstrip()))
-            msg.append(' %8s   %13s  %13s  %13s  %-s\n' % (
-                '', s1bi, s2bi, s3bi, s4bi.rstrip()))
+            msg.append(' %8s   %-13s  %-13s  %-13s  %s\n' % ('', s1br, s2br, s3br, s4br))
+            msg.append(' %8s   %-13s  %-13s  %-13s  %s\n' % ('', s1bi, s2bi, s3bi, s4bi))
 
         msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
@@ -227,15 +223,11 @@ class ComplexBarStressObject(StressObject):
                  s1br, s2br, s3br, s4br,
                  s1ai, s2ai, s3ai, s4ai, axiali,
                  s1bi, s2bi, s3bi, s4bi, ] = vals2
-                msg.append('0%8i   %13s  %13s  %13s  %13s  %-s\n' % (eid,
-                                                                     s1ar, s2ar, s3ar, s4ar, axialr.rstrip()))
-                msg.append(' %8s   %13s  %13s  %13s  %13s  %-s\n' % ('',
-                                                                     s1ai, s2ai, s3ai, s4ai, axiali.rstrip()))
+                msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %s\n' % (eid, s1ar, s2ar, s3ar, s4ar, axialr))
+                msg.append(' %8s   %-13s  %-13s  %-13s  %-13s  %s\n' % ('', s1ai, s2ai, s3ai, s4ai, axiali))
 
-                msg.append(' %8s   %13s  %13s  %13s  %-s\n' %
-                           ('', s1br, s2br, s3br, s4br.rstrip()))
-                msg.append(' %8s   %13s  %13s  %13s  %-s\n' %
-                           ('', s1bi, s2bi, s3bi, s4bi.rstrip()))
+                msg.append(' %8s   %-13s  %-13s  %-13s  %s\n' % ('', s1br, s2br, s3br, s4br))
+                msg.append(' %8s   %-13s  %-13s  %-13s  %s\n' % ('', s1bi, s2bi, s3bi, s4bi))
 
             msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
@@ -394,8 +386,8 @@ class ComplexBarStrainObject(StrainObject):
             [e10, e20, e30, e40, axial,
              e11, e21, e31, e41] = vals2
 
-            msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % (eid, e10, e20, e30, e40, axial.rstrip()))
-            msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % ('', e11, e21, e31, e41.rstrip()))
+            msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n' % (eid, e10, e20, e30, e40, axial))
+            msg.append(' %8s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n' % ('', e11, e21, e31, e41))
         msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
         return pageNum
@@ -424,8 +416,8 @@ class ComplexBarStrainObject(StrainObject):
                 [e10, e20, e30, e40,
                  e11, e21, e31, e41] = vals2
 
-                msg.append('0%8i   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % (eid, e10, e20, e30, e40, axial.rstrip()))
-                msg.append(' %8s   %13s  %13s  %13s  %13s  %13s  %13s  %13s %-s\n' % ('', e11, e21, e31, e41.rstrip()))
+                msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n' % (eid, e10, e20, e30, e40, axial))
+                msg.append(' %8s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n' % ('', e11, e21, e31, e41))
             msg.append(pageStamp % pageNum)
             f.write(''.join(msg))
             msg = ['']
