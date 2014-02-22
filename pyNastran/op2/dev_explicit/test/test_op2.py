@@ -166,6 +166,7 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
     except FatalError:
         if stopOnFailure:
             raise
+        isPassed = True
     #except AssertionError:
     #    isPassed = True
     #except RuntimeError: #invalid analysis code
@@ -187,10 +188,10 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
         isPassed = True
     except:
         #print e
-        print_exc(file=sys.stdout)
         if stopOnFailure:
             raise
         else:
+            print_exc(file=sys.stdout)
             isPassed = False
 
     return isPassed
