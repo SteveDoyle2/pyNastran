@@ -56,17 +56,19 @@ class LAMA(OP2Common):
         raise NotImplementedError(self.table_name)
 
     def _read_buckling_eigenvalue_4(self, data):
+        # BLAMA - Buckling eigenvalue summary table
+        # CLAMA - Complex eigenvalue summary table
+        # LAMA - Normal modes eigenvalue summary table
         if self.read_mode == 1:
             return len(data)
-        # BLAMA - Buckling eigenvalue summary table.
-        # CLAMA - Complex eigenvalue summary table.
-        # LAMA - Normal modes eigenvalue summary table.
+
+        return len(data)  # TODO: implement buckling eigenvalues
 
         ntotal = 4 * 7
         nModes = len(data) // ntotal
         n = 0
         #assert self.isubcase != 0, self.isubcase
-        blama = ComplexEigenvalues(11)
+        blama = BucklingEigenvalues(11)
         #self.eigenvalues[self.isubcase] = lama
         s = Struct(b'ii5f')
         for i in xrange(nModes):
@@ -76,9 +78,7 @@ class LAMA(OP2Common):
                 self.binary_debug.write('  eigenvalue%s - %s\n' % (i, str(out)))
             #(iMode,order,eigen,omega,freq,mass,stiff) = out # BLAMA??
             #(modeNum,extractOrder,eigenvalue,radian,cycle,genM,genK) = line  # LAMA
-
             #(rootNum, extractOrder, eigr, eigi, cycle, damping) = data  # CLAMA
-            print out
             #blama.addF06Line(out)
             n += ntotal
         return n

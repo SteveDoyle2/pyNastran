@@ -438,7 +438,7 @@ class OP2(BDF,
         n = -2
         keepGoingOnTable = True
         while keepGoingOnTable:
-            print("n = %s" % n)
+            #print("n = %s" % n)
             try:
                 nStar = self.n
                 self.read_markers([n, 1, 0])

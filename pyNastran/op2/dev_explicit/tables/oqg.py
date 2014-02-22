@@ -9,7 +9,7 @@ from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import (
     RealMPCForcesVector, ComplexMPCForcesVector,
     RealMPCForcesObject, ComplexMPCForcesObject)
 from pyNastran.op2.tables.oqg_constraintForces.oqg_thermalGradientAndFlux import (
-    TemperatureGradientAndFluxObject)
+    RealTemperatureGradientAndFluxObject, RealTemperatureGradientAndFluxVector)
 
 
 class OQG(OP2Common):
@@ -143,8 +143,8 @@ class OQG(OP2Common):
             result_name = 'thermalGradientAndFlux' #'finite element temperature gradients and fluxes'
             storage_obj =  self.thermalGradientAndFlux
             n = self._read_table(data, result_name, storage_obj,
-                                 TemperatureGradientAndFluxObject, None,
-                                 TemperatureGradientAndFluxVector, None, 'node')
+                                 RealTemperatureGradientAndFluxObject, None,
+                                 RealTemperatureGradientAndFluxVector, None, 'node')
         else:
             raise NotImplementedError(self.thermal)
         return n

@@ -155,6 +155,9 @@ class FortranFormat(object):
                 data = self._read_record()
                 if not passer:
                     table3_parser(data)
+                    #if hasattr(self, 'isubcase'):
+                        #print "code = ", self._get_code()
+
             else:
                 if passer or not self.is_valid_subcase():
                     data = self._skip_record()

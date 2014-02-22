@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from .oes_objects import StressObject, StrainObject
 
 
-class ShearStressObject(StressObject):
+class RealShearStressObject(StressObject):
     """
     ::
 
@@ -119,7 +119,7 @@ class ShearStressObject(StressObject):
         self.margin[dt][eid] = margin
 
 
-class ShearStrainObject(StrainObject):
+class RealShearStrainObject(StrainObject):
 
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StrainObject.__init__(self, data_code, isubcase)

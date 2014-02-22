@@ -99,8 +99,8 @@ class RealTemperatureObject(ScalarObject):  # approach_code=1, sort_code=0, ther
         """initializes the transient variables"""
         self.temperatures[dt] = {}
 
-    def add(self, dt, out):
-        (nodeID, grid_type, v1, v2, v3, v4, v5, v6) = out  # v2-v6 are 0
+    def add(self, dt, nodeID, grid_type, v1, v2, v3, v4, v5, v6):
+        # v2-v6 are 0
         assert 0 < nodeID < 1000000000, 'nodeID=%s' % (nodeID)
         #assert nodeID not in self.temperatures
 
@@ -108,11 +108,11 @@ class RealTemperatureObject(ScalarObject):  # approach_code=1, sort_code=0, ther
         self.gridTypes[nodeID] = grid_type
         self.temperatures[nodeID] = v1
 
-    def add_sort1(self, dt, out):
+    def add_sort1(self, dt, nodeID, grid_type, v1, v2, v3, v4, v5, v6):
+        # v2-v6 are 0
         if dt not in self.temperatures:
             self.add_new_transient(dt)
 
-        (nodeID, grid_type, v1, v2, v3, v4, v5, v6) = out  # v2-v6 are 0
         assert 0 < nodeID < 1000000000, 'nodeID=%s' % (nodeID)
         #assert nodeID not in self.temperatures[self.dt]
 

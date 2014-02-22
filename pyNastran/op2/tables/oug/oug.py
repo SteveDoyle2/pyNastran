@@ -546,10 +546,9 @@ class OUG(object):
 
             eid2 = extract(eid, dt)
 
-            dataIn = [eid2, grid_type, tx, ty, tz, rx, ry, rz]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
-            self.obj.add(dt, dataIn)
+            self.obj.add(dt, eid2, grid_type, tx, ty, tz, rx, ry, rz)
             istart = iend
             iend += 56
         self.data = self.data[istart:]
