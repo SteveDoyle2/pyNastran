@@ -56,26 +56,28 @@ Solver
 Release notes
    - added large field BDF writing
    - more OP2/F06 results (e.g. mass properties)
-   - OP2 reader is faster
+   - OP2 reader is faster, more robust, and catches FatalErrors
    - vastly improved GUI that supports Cart3d, Panair, and Usm3D
 
-Deprecated
-   - 
+OP2 support
+   - rewrite of the OP2 allows for increased robustness
+   - grid point weight table is now supported (see beam_modes demo)
 
 Minor Updates:
    - improved messages when cross-referencing
    - making bdf/f06/op2 APIs more consistent
 
 BDF API change
-   - readBDF is now gone, replaced by read_bdf
+   - readBDF is now gone, replaced by read_bdf (was previously deprecated)
+   - write_bdf method now has a precision='single' or 'double' option
 
 F06 API change
-   - F06 no longer defines the filename
-   - readF06 is now gone, replaced by read_f06
+   - F06 no longer defines the filename; use read_f06
+   - readF06 is now gone, replaced by read_f06 (was previously deprecated)
 
 OP2 API change
-   - OP2 no longer defines the filename
-   - readBDF is now gone, replaced by read_op2
+   - OP2 no longer defines the filename; use read_f06
+   - readOP2 is now gone, replaced by read_op2 (was previously deprecated)
 
 -----------------------v0.6.1 released 2013/06/13-----------------------
 BDF Bug Fixes
