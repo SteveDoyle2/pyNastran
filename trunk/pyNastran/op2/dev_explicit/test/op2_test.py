@@ -1,7 +1,7 @@
 import os
 import sys
 
-from pyNastran.op2.test.test_op2 import get_failed_files, run_lots_of_files
+from pyNastran.op2.dev_explicit.test.test_op2 import get_failed_files, run_lots_of_files
 from pyNastran.utils import get_files_of_type
 
 
@@ -61,10 +61,11 @@ def main():
     make_geom  = False
     write_bdf  = False
     write_f06  = True
+    is_vector = False
 
     delete_f06 = True
     saveCases = True
-    regenerate = False
+    regenerate = True
     stopOnFailure = False
     getSkipCards = False
 
@@ -90,9 +91,11 @@ def main():
     print("nFiles = %s" % len(files))
     import time
     t0 = time.time()
-    run_lots_of_files(files,make_geom,write_bdf,write_f06,delete_f06,
-                   debug,saveCases,skipFiles,stopOnFailure,
-                   nStart,nStop)
+    run_lots_of_files(files, make_geom=make_geom, write_bdf=write_bdf,
+                   write_f06=write_f06, delete_f06=delete_f06,
+                   debug=debug, saveCases=saveCases, skipFiles=skipFiles,
+                   stopOnFailure=stopOnFailure, is_vector=is_vector,
+                   nStart=nStart, nStop=nStop)
     print("dt = %f" %(time.time() - t0))
     sys.exit('final stop...')
 
