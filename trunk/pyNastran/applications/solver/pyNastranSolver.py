@@ -30,15 +30,15 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealCelasStre
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealSpringForce
 
 # rods
-from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RodStressObject, RodStrainObject, ConrodStressObject, ConrodStrainObject, CtubeStressObject, CtubeStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RealRodStressObject, RealRodStrainObject, ConrodStressObject, ConrodStrainObject, CtubeStressObject, CtubeStrainObject
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealRodForce, RealConrodForce, RealCtubeForce
 
 # shear
-from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import ShearStressObject, ShearStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import RealShearStressObject, RealShearStrainObject
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealCShearForce
 
 # beams
-from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import BeamStressObject, BeamStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import RealBeamStressObject, RealBeamStrainObject
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealCBeamForce
 
 
@@ -859,10 +859,10 @@ class Solver(F06, OP2):
                     'nonlinear_factor': None}
         if Type == 'stress':
             if elementType == 'CBEAM':
-                stress = BeamStressObject(data_code, is_sort1, isubcase, dt=False)
+                stress = RealBeamStressObject(data_code, is_sort1, isubcase, dt=False)
         elif Type == 'strain':
             if elementType == 'CBEAM':
-                stress = BeamStrainObject(data_code, is_sort1, isubcase, dt=False)
+                stress = RealBeamStrainObject(data_code, is_sort1, isubcase, dt=False)
         else:
             raise NotImplementedError(Type)
 
@@ -1014,12 +1014,12 @@ class Solver(F06, OP2):
 
         if Type == 'stress':
             #if elementType == 'CELAS2':
-            stress = ShearStressObject(data_code, is_sort1, isubcase, dt=None)
+            stress = RealShearStressObject(data_code, is_sort1, isubcase, dt=None)
             #else:
                 #raise NotImplementedError(elementType)
         elif Type == 'strain':
             #if elementType == 'CELAS2':
-            stress = ShearStrainObject(data_code, is_sort1, isubcase, dt=None)
+            stress = RealShearStrainObject(data_code, is_sort1, isubcase, dt=None)
             #else:
                 #raise NotImplementedError(elementType)
         else:
@@ -1171,14 +1171,14 @@ class Solver(F06, OP2):
                     'nonlinear_factor': None}
         if Type == 'stress':
             if elementType == 'CROD':
-                stress = RodStressObject(data_code, is_sort1, isubcase, dt=False)
+                stress = RealRodStressObject(data_code, is_sort1, isubcase, dt=False)
             elif elementType == 'CONROD':
                 stress = ConrodStressObject(data_code, is_sort1, isubcase, dt=False)
             elif elementType == 'CTUBE':
                 stress = CtubeStressObject(data_code, is_sort1, isubcase, dt=False)
         elif Type == 'strain':
             if elementType == 'CROD':
-                stress = RodStrainObject(data_code, is_sort1, isubcase, dt=False)
+                stress = RealRodStrainObject(data_code, is_sort1, isubcase, dt=False)
             elif elementType == 'CONROD':
                 stress = ConrodStrainObject(data_code, is_sort1, isubcase, dt=False)
             elif elementType == 'CTUBE':
