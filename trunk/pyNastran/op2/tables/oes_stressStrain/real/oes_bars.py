@@ -6,7 +6,7 @@ from .oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
 
-class BarStressObject(StressObject):
+class RealBarStressObject(StressObject):
     """
     ::
 
@@ -282,7 +282,7 @@ class BarStressObject(StressObject):
         return pageNum - 1
 
 
-class BarStrainObject(StrainObject):
+class RealBarStrainObject(StrainObject):
     """
     ::
 

@@ -87,13 +87,9 @@ class ThermalElements(object):
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             #print "len(data) = ",len(self.data)
-        if self.make_op2_debug:
-            print("done with OEF_CHBDYx")
         #print(self.thermalLoad_CHBDY)
 
     def OEF_CONV(self):  # [110]  CONV
-        if self.make_op2_debug:
-            self.op2_debug.write('---OEF_CONV---\n')
         #device_code = self.device_code
 
         dt = self.nonlinear_factor
@@ -122,10 +118,6 @@ class ThermalElements(object):
             dataIn = [eid2, cntlNode, freeConv, freeConvK]
             #print "heatFlux %s" %(self.get_element_type(self.element_type)),dataIn
             self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
-
-        if self.make_op2_debug:
-            print("done with OEF_CONV")
         #print(self.thermalLoad_CHBDY)
 
     def OEF_VU_Element(self):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
@@ -184,9 +176,6 @@ class ThermalElements(object):
             #print "heatFlux %s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(nNodes, dt, dataIn)
-            #print "len(data) = ",len(self.data)
-        if self.make_op2_debug:
-            print("done with OEF_1D")
         #print self.thermalLoad_VU
 
     def OEF_VUBeam_Element(self):  # 191-VUBEAM
@@ -240,9 +229,6 @@ class ThermalElements(object):
             #print "heatFlux %s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(nNodes, dt, dataIn)
-            #print "len(data) = ",len(self.data)
-        if self.make_op2_debug:
-            print("done with OEF_1D")
         #print self.thermalLoad_VUBeam
 
     def OEF_VU_3D_Element(self):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
@@ -296,9 +282,6 @@ class ThermalElements(object):
 
             #print "heatFlux %s" %(self.get_element_type(self.element_type)),dataIn
             self.obj.add(nNodes, dt, dataIn)
-            #print "len(data) = ",len(self.data)
-        if self.make_op2_debug:
-            print("done with OEF_VU_3D_Element")
         #print self.thermalLoad_VU_3D
 
     def OEF_1D(self):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69-BEND
@@ -334,8 +317,6 @@ class ThermalElements(object):
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             n += ntotal
-        if self.make_op2_debug:
-            print("done with OEF_1D")
         self.data = self.data[n:]
         #print self.thermalLoad_1D
 
@@ -388,8 +369,5 @@ class ThermalElements(object):
             #print "heatFlux %s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
-        if self.make_op2_debug:
-            print("done with OEF_2D_3D")
 
         #print self.thermalLoad_2D_3D

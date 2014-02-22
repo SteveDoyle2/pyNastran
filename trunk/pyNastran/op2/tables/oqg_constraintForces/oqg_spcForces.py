@@ -7,7 +7,6 @@ class RealSPCForcesVector(RealTableVector):
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
         words = ['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n', ]
-        #words = ['                                                   V E L O C I T Y   V E C T O R\n', ]
                  #' \n',
                  #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         #words += self.get_table_marker()

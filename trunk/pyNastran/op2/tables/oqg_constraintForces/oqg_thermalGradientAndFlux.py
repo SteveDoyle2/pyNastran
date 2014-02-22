@@ -2,9 +2,25 @@ from pyNastran.op2.resultObjects.tableObject import RealTableObject, ComplexTabl
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 
-class TemperatureGradientAndFluxObject(RealTableObject):
+from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTableVector, RealTableObject, ComplexTableObject
 
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+class RealTemperatureGradientAndFluxVector(RealTableVector):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
+
+    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+        msg = header + ['                   F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S\n',
+                        ' \n',
+                        '   ELEMENT-ID   EL-TYPE        X-GRADIENT       Y-GRADIENT       Z-GRADIENT        X-FLUX           Y-FLUX           Z-FLUX\n']
+        #words += self.get_table_marker()
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient_block(words, header, pageStamp, pageNum, f)
+        return self._write_f06_block(words, header, pageStamp, pageNum, f)
+
+
+class RealTemperatureGradientAndFluxObject(RealTableObject):
+
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
@@ -13,6 +29,7 @@ class TemperatureGradientAndFluxObject(RealTableObject):
         msg = header + ['                   F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S\n',
                         ' \n',
                         '   ELEMENT-ID   EL-TYPE        X-GRADIENT       Y-GRADIENT       Z-GRADIENT        X-FLUX           Y-FLUX           Z-FLUX\n']
+        f.write(''.join(msg))
         for nodeID, translation in sorted(self.translations.iteritems()):
             rotation = self.rotations[nodeID]
             grid_type = self.gridTypes[nodeID]
@@ -23,10 +40,8 @@ class TemperatureGradientAndFluxObject(RealTableObject):
             (vals2, isAllZeros) = writeFloats13E(vals)
             #if not isAllZeros:
             [dx, dy, dz, rx, ry, rz] = vals2
-            msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
-
-        msg.append(pageStamp % pageNum)
-        f.write(''.join(msg))
+            f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
+        f.write(pageStamp % pageNum)
         return pageNum
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):

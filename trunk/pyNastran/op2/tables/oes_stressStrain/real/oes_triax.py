@@ -5,7 +5,7 @@ from .oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 
-class TriaxStressObject(StressObject):
+class RealTriaxStressObject(StressObject):
     """
     ::
 
@@ -225,7 +225,7 @@ class TriaxStressObject(StressObject):
         return pageNum - 1
 
 
-class TriaxStrainObject(StrainObject):
+class RealTriaxStrainObject(StrainObject):
     """
     ::
 

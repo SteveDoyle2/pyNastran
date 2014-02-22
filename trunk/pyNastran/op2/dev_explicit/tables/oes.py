@@ -1,24 +1,26 @@
-#pylint: disable=C0301,C0103,W0201,RO911,RO915,R0914
+#pylint: disable=C0301,C0103,W0201,R0911,R0915,R0914
 """
 Contains the OES class that is used to read stress/strain data
 """
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        unicode_literals)  # print_function,
 from struct import Struct
 
 from pyNastran.op2.dev_explicit.op2_common import OP2Common
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
-from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import BarStressObject, BarStrainObject
-from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import BeamStressObject, BeamStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStressObject, RealBarStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import RealBeamStressObject, RealBeamStrainObject
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush import BushStressObject, BushStrainObject
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush1d import Bush1DStressObject  # unused
 from pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates import CompositePlateStressObject, CompositePlateStrainObject
 from pyNastran.op2.tables.oes_stressStrain.real.oes_gap import NonlinearGapStressObject
-from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import PlateStressObject, PlateStrainObject
-from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RodStressObject, RodStrainObject
-from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import ShearStressObject, ShearStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateStressObject, RealPlateStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RealRodStressObject, RealRodStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import RealShearStressObject, RealShearStrainObject
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStressObject, RealSolidStrainObject, RealSolidStrainVector, RealSolidStressVector
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealCelasStressObject, RealCelasStrainObject, NonlinearSpringStressObject
-from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import TriaxStressObject, TriaxStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import RealTriaxStressObject, RealTriaxStrainObject
 
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStressObject, ComplexBarStrainObject
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush import ComplexBushStressObject, ComplexBushStrainObject
@@ -203,7 +205,13 @@ class OES(OP2Common):
 
 
     def print_obj_name_on_crash(func):
+        """
+        Debugging function to print the object name and an needed parameters
+        """
         def new_func(self, data):
+            """
+            The actual function exec'd by the decorated function.
+            """
             try:
                 n = func(self, data)
             except:
@@ -254,9 +262,9 @@ class OES(OP2Common):
 
             if self.num_wide == 5:  # real
                 if self.isStress():
-                    self.create_transient_object(self.rodStress, RodStressObject)
+                    self.create_transient_object(self.rodStress, RealRodStressObject)
                 else:
-                    self.create_transient_object(self.rodStrain, RodStrainObject)
+                    self.create_transient_object(self.rodStrain, RealRodStrainObject)
 
                 ntotal = 5 * 4
                 nelements = len(data) // ntotal
@@ -325,9 +333,9 @@ class OES(OP2Common):
             if self.num_wide == 111:  # real
                 ntotal = 444 # 44 + 10*40  (11 nodes)
                 if self.isStress():
-                    self.create_transient_object(self.beamStress, BeamStressObject)
+                    self.create_transient_object(self.beamStress, RealBeamStressObject)
                 else:
-                    self.create_transient_object(self.beamStrain, BeamStrainObject)
+                    self.create_transient_object(self.beamStrain, RealBeamStrainObject)
 
                 nelements = len(data) // ntotal
                 s = Struct(b'i')
@@ -370,9 +378,9 @@ class OES(OP2Common):
                 return len(data)
             if self.num_wide == 4:  # real
                 if self.isStress():
-                    self.create_transient_object(self.shearStress, ShearStressObject)
+                    self.create_transient_object(self.shearStress, RealShearStressObject)
                 else:
-                    self.create_transient_object(self.shearStrain, ShearStrainObject)
+                    self.create_transient_object(self.shearStrain, RealShearStrainObject)
                 ntotal = 16  # 4*4
                 s = Struct(b'i3f')
 
@@ -468,9 +476,9 @@ class OES(OP2Common):
                 return len(data)
             if self.num_wide == 16:  # real
                 if self.isStress():
-                    self.create_transient_object(self.barStress, BarStressObject)
+                    self.create_transient_object(self.barStress, RealBarStressObject)
                 else:
-                    self.create_transient_object(self.barStrain, BarStrainObject)
+                    self.create_transient_object(self.barStrain, RealBarStrainObject)
                 ntotal = 16 * 4
                 nelements = len(data) // ntotal
                 if self.debug:
@@ -586,7 +594,7 @@ class OES(OP2Common):
                     slot_vector = self.ctetra_strain
                 elif self.element_type == 67:  # CHEXA
                     nnodes_expected = 9
-                    result_vector_name ='cpenta_strain'
+                    result_vector_name = 'cpenta_strain'
                     slot_vector = self.cpenta_strain
                 elif self.element_type == 68:  # CPENTA
                     nnodes_expected = 7
@@ -730,9 +738,9 @@ class OES(OP2Common):
                 return len(data)
             if self.num_wide == 17:  # real
                 if self.isStress():
-                    self.create_transient_object(self.plateStress, PlateStressObject)
+                    self.create_transient_object(self.plateStress, RealPlateStressObject)
                 else:
-                    self.create_transient_object(self.plateStress, PlateStressObject)
+                    self.create_transient_object(self.plateStress, RealPlateStressObject)
 
                 #return
                 ntotal = 68  # 4*17
@@ -829,9 +837,9 @@ class OES(OP2Common):
                 return len(data)
             if self.num_wide == 17:  # real
                 if self.isStress():
-                    self.create_transient_object(self.plateStress, PlateStressObject)
+                    self.create_transient_object(self.plateStress, RealPlateStressObject)
                 else:
-                    self.create_transient_object(self.plateStress, PlateStressObject)
+                    self.create_transient_object(self.plateStress, RealPlateStressObject)
 
                 #return
                 ntotal = 68  # 4*17
@@ -925,9 +933,9 @@ class OES(OP2Common):
             gridC = 'CEN/%i' % nnodes
             if self.num_wide == numwide_real:
                 if self.isStress():
-                    self.create_transient_object(self.plateStress, PlateStressObject)
+                    self.create_transient_object(self.plateStress, RealPlateStressObject)
                 else:
-                    self.create_transient_object(self.plateStrain, PlateStrainObject)
+                    self.create_transient_object(self.plateStrain, RealPlateStrainObject)
                 ntotal = 4 * (2 + 17 * (nnodes + 1))
                 #assert ntotal == 348, ntotal
                 center_format = b'i4si16f'
@@ -1166,12 +1174,11 @@ class OES(OP2Common):
                 else:
                     #self.create_transient_object(self.compositePlateStrain, ComplexCompositePlateStrainObject)  # undefined
                     raise NotImplementedError('ComplexCompositePlateStrainObject')
-                #format1 = b'i8si3fi4s'  # this is an OEF result???
-                #                        # furthermore the actual table is calle dout as
-                #                        # 'i8si4f4s', not 'i8si3fi4s'
+                # TODO: this is an OEF result???
+                #    furthermore the actual table is calle dout as
+                #    'i8si4f4s', not 'i8si3fi4s'
                 ntotal = 36
                 nelements = len(data) // ntotal
-                #s = Struct(format1)
                 s = Struct(b'i')
                 s2 = Struct(b'8si3fi4s')
                 s3 = Struct(b'8si4f4s')
@@ -1209,9 +1216,9 @@ class OES(OP2Common):
                 return len(data)
             if self.num_wide == 33: # real
                 if self.isStress():
-                    self.create_transient_object(self.ctriaxStress, TriaxStressObject)
+                    self.create_transient_object(self.ctriaxStress, RealTriaxStressObject)
                 else:
-                    self.create_transient_object(self.ctriaxStrain, TriaxStrainObject)
+                    self.create_transient_object(self.ctriaxStrain, RealTriaxStrainObject)
 
                 ntotal = 132  # (1+8*4)*4 = 33*4 = 132
                 nelements = len(data) // ntotal
@@ -1361,7 +1368,6 @@ class OES(OP2Common):
             if self.read_mode == 1:
                 return len(data)
             if self.num_wide == 8:  # real
-                #return len(data)
                 if self.isStress():
                     self.create_transient_object(self.bush1dStressStrain, Bush1DStressObject)  # undefined
                 else:
@@ -1669,21 +1675,74 @@ class OES(OP2Common):
             # 85-TETRANL
             # 91-PENTANL
             # 93-HEXANL
-            raise NotImplementedError('element_type=%s element_name=%s ntotal not defined...' % (self.element_type, self.element_name))
-            if self.num_wide == 0:  # real
+            #raise NotImplementedError('element_type=%s element_name=%s ntotal not defined...' % (self.element_type, self.element_name))
+
+            #85: 2 + (18 - 2) * 5,  # Nonlinear CTETRA
+            #91: 4 + (25 - 4) * 7,  # Nonlinear CPENTA
+            #93: 4 + (25 - 4) * 9,  # Nonlinear CHEXA
+            if self.element_type == 85:
+                eType = 'CTETRANL'
+                nnodes = 5
+            elif self.element_type == 91:
+                eType = 'CPENTANL'
+                nnodes = 7
+            elif self.element_type == 93:
+                eType = 'CHEXANL'
+                nnodes = 9
+            else:
+                raise NotImplementedError(self.element_type)
+
+            numwide_real = 4 + (25 - 4) * nnodes  # real???
+            numwide_imag = 2 + (18 - 2) * nnodes  # imag???
+            #print "numwide=%s numwide_real=%s numwide_imag=%s" % (self.num_wide, numwide_real, numwide_imag)
+
+            #numwide_real = 0
+            #numwide_imag = 2 + 16 * nnodes
+            #ntotal = 8 + 64 * nnodes
+
+            if self.num_wide == numwide_real:
+                ntotal = numwide_real * 4
                 pass
-            #if self.num_wide == numWideReal:
-                #resultName = self.makeOES_Object(self.nonlinearPlateStress, NonlinearQuadObject, 'nonlinearPlateStress',
-                                                 #self.nonlinearPlateStrain, NonlinearQuadObject, 'nonlinearPlateStrain')
-                #name = resultName + ': Subcase %s' % self.isubcase
+                #if self.isStress():
+                    #self.create_transient_object(self.nonlinearPlateStress, NonlinearSolidObject)
+                #else:
+                    #self.create_transient_object(self.nonlinearPlateStrain, NonlinearSolidObject)
                 #self.handle_results_buffer(self.OES_CQUAD4NL_90, resultName, name)
-            elif self.num_wide == 0:  # imag
-                pass
-                # TODO switch to ComplexNonlinearPlateObject
-                #resultName = self.makeOES_Object(self.nonlinearPlateStress, NonlinearQuadObject, 'nonlinearPlateStress',
-                                                 #self.nonlinearPlateStrain, NonlinearQuadObject, 'nonlinearPlateStrain')
-                #name = resultName + ': Subcase %s' % self.isubcase
-                #self.handle_results_buffer(self.OES_CQUAD4NL_90_alt, resultName, name)
+            elif self.num_wide == numwide_imag:  # imag
+                ntotal = numwide_imag * 4
+                #if self.isStress():
+                    #self.create_transient_object(self.nonlinearPlateStress, NonlinearSolidObject)
+                #else:
+                    #self.create_transient_object(self.nonlinearPlateStrain, NonlinearSolidObject)
+
+                n = 0
+                s1 = Struct(b'i4s')
+                s2 = Struct(b'i15f')
+                nelements = len(data) // ntotal
+                for i in xrange(nelements):  # 2+16*9 = 146 -> 146*4 = 584
+                    eData = data[n:n+8]
+                    n += 8
+
+                    out = s1.unpack(eData)
+                    if self.debug4():
+                        self.binary_debug.write('%s-%s - %s\n' % (eType, self.element_type, str(out)))
+                    (eid_device, cType) = out
+                    eid = (eid_device - self.device_code) // 10
+
+                    for i in xrange(nnodes):
+                        eData = data[n:n+64]
+                        n += 64
+                        out = s2.unpack(eData)
+                        if self.debug4():
+                            self.binary_debug.write('%s-%sB - %s\n' % (eType, self.element_type, str(out)))
+
+                        assert len(out) == 16
+                        (grid, sx, sy, sz, sxy, syz, sxz, se, eps,
+                          ecs, ex, ey, ez, exy, eyz, exz) = out
+                        #print "eid=%3s cType=%s sx=%i sy=%i sz=%i sxy=%s syz=%i szx=%i se=%s" % (eid,cType,sx,sy,sz,sxy,syz,sxz,se)
+                        #print "gid=%3s ecs=%.3g   ex=%.3g ey=%.3g ez=%.3g exy=%.3g eyz=%.3g ezx=%.3g"  % (grid,ecs,ex,ey,ez,exy,eyz,exz)
+                        #assert cType == 'GRID',cType
+                        #print("cType =", cType)
             else:
                 raise NotImplementedError(self.num_wide)
 
@@ -1693,12 +1752,68 @@ class OES(OP2Common):
         elif self.element_type in [101]:
             # 101-AABSF
             return len(data)
-        elif self.element_type in [140, 145, 146, 147, 201]:
+        elif self.element_type in [140, 201]:
             # 140-HEXA8FD, 201-QUAD4FD
-            # 145-VUHEXA
-            # 146-VUPENTA
-            # 147-VUTETRA
             return len(data)
+        elif self.element_type in [145, 146, 147]:
+            # 145-VUHEXA  (8 nodes)
+            # 146-VUPENTA (6 nodes)
+            # 147-VUTETRA (4 nodes)
+            if self.element_type == 147:
+                eType = 'VUTETRA'
+                nnodes = 4
+                #numwideA = 2 + (14 - 2) * nnodes  # 50
+                #numwideB = 2 + (9 - 2) * nnodes  # 30
+                #numwideC = 2 + 13 * nnodes  # 54
+            elif self.element_type == 146:
+                eType = 'VUPENTA'
+                nnodes = 6
+            elif self.element_type == 145:
+                eType = 'VUHEXA'
+                nnodes = 8
+            else:
+                raise NotImplementedError(self.element_type)
+
+            #num_wideA = 2 + 12 * nnodes
+            #ntotal = 8 + 48 * nnodes
+            # assuming TETRA...
+            numwideA = 2 + (14 - 2) * nnodes  # 50
+            numwideB = 2 + (9 - 2) * nnodes  # 30
+            numwideC = 2 + 13 * nnodes  # 54
+            if self.num_wide == numwideA:
+                ntotal = numwideA * 4
+                s1 = Struct(b'ii')
+                s2 = Struct(b'i11f')
+                nelements = len(data) // ntotal  # 2+16*9 = 146 -> 146*4 = 584
+                for i in xrange(nelements):
+                    eData = data[n:n+8]
+                    (eid_device, parentID) = s1.unpack(eData)
+                    eid = (eid_device - self.device_code) // 10
+
+                    for i in xrange(nnodes):
+                        eData = data[n:n+48]
+                        out = s2.unpack(eData)
+                        if self.debug4():
+                            self.binary_debug.write('%s-%s - %s\n' % (eType, self.element_type, str(out)))
+                        assert len(out) == 12
+                        (grid, xnorm, ynorm, znorm, txy, tyz, txz,
+                         prin1, prin2, prin3, mean, vonoRoct) = out
+                        #print "eid=%3s cType=%s sx=%i sy=%i sz=%i sxy=%s syz=%i szx=%i se=%s" % (eid,cType,sx,sy,sz,sxy,syz,sxz,se)
+                        #print "gid=%3s ecs=%.3g   ex=%.3g ey=%.3g ez=%.3g exy=%.3g eyz=%.3g ezx=%.3g"  % (grid,ecs,ex,ey,ez,exy,eyz,exz)
+                        #assert cType == 'GRID',cType
+                        #print("grid =",grid)
+                return len(data)
+            elif self.num_wide == numwideB:
+                ntotal = numwideC * 4
+                nelements = len(data) // ntotal
+                n = nelements * ntotal
+            elif self.num_wide == numwideC:
+                ntotal = numwideC * 4
+                nelements = len(data) // ntotal
+                n = nelements * ntotal
+            else:
+                raise NotImplementedError('numwide=%s A=%s B=%s C=%s' % (self.num_wide, numwideA, numwideB, numwideC))
+
         elif self.element_type in [139]:
             # 139-QUAD4FD
             if self.read_mode == 1:
@@ -1739,10 +1854,80 @@ class OES(OP2Common):
                         n += 28
             else:
                 raise NotImplementedError(self.num_wide)
+        elif self.element_type in [189]:
+            # 189-VUQUAD
+            if self.element_type == 189:  # VQUAD
+                #ntotal = 440  # 6+(33-7)*4 =  -> 110*4 = 440
+                nnodes = 4    # 4 corner points + 1 centroid
+                eType = 'VUQUAD4'
+            elif self.element_type == 144:  # CQUAD4
+                ntotal = 440  # 6+(33-7)*4 =  -> 110*4 = 440
+                nnodes = 4    # 4 corner points
+                eType = 'CQUAD4'
+            #elif self.element_type == 64:  # CQUAD8
+                #ntotal = 348  # 2+17*5 = 87 -> 87*4 = 348
+                #nnodes = 4    # centroid + 4 corner points
+                #eType = 'CQUAD8'
+            #elif self.element_type == 82:  # CQUADR
+                #ntotal = 348  # 2+17*5 = 87 -> 87*4 = 348
+                #nnodes = 4    # centroid + 4 corner points
+                #eType = 'CQUAD4'  # TODO write the word CQUADR
+            #elif self.element_type == 75:  # CTRIA6
+                #ntotal = 280  # 2+17*3 = 70 -> 70*4 = 280
+                #nnodes = 3    # centroid + 3 corner points
+                #eType = 'CTRIA6'
+            #elif self.element_type == 70:  # CTRIAR
+                #ntotal = 280  # 2+17*3 = 70 -> 70*4 = 280
+                #nnodes = 3    # centroid + 3 corner points
+                #eType = 'CTRIAR'  # TODO write the word CTRIAR
+            else:
+                raise NotImplementedError('element_type=%s not defined...' % self.element_type)
+
+            numwide_real = 6 + (23 - 6) * nnodes  # real???
+            numwide_imag = 6 + (33 - 6) * nnodes  # imag???
+
+            if self.num_wide == numwide_real:  # real???
+                ntotal = numwide_real * 4
+                s2 = Struct(b'3i4s2i')
+                s3 = Struct(b'i16f')
+                nelements = len(data) // ntotal
+                for i in xrange(nelements):
+                    (eid_device, parent, coord, icord, theta, itype) = s2.unpack(data[n:n+24])
+                    n += 24
+                    eid = (eid_device - self.device_code) // 10
+                    assert eid > 0, eid
+                    eData = data[n:n+68]
+                    out = s3.unpack(eData)  # len=17*4
+                    n += 68
+
+                    if self.debug4():
+                        self.binary_debug.write('%s-%s - %s\n' % (eType, self.element_type, str(out)))
+
+                    #self.obj.addNewNode(dt, eid, parent, coord, icord, theta, itype)
+                    #self.obj.add_new_eid(eType, dt, eid, parent, coord, icord, theta, itype)
+                    for nodeID in xrange(nnodes-1):  # nodes pts
+                        eData = data[n:n+68]
+                        n += 68
+                        out = s3.unpack(eData)
+                        if self.debug4():
+                            self.binary_debug.write('              %s\n' % (str(out)))
+
+                        (vuid, dummy, dummy2, msx, msy, mxy, dummy3, dummy4, dummy5,
+                         bcx, bcy, bcxy, tyz, tzx, dummy6, dummy7, dummy8) = out
+                        #self.obj.add(vuid, dummy, dummy2, msx, msy, mxy,
+                                     #dummy3, dummy4, dummy5,
+                                     #bcx, bcy, bcxy, tyz, tzx,
+                                     #dummy6, dummy7, dummy8)
+            elif self.num_wide == numwide_imag:
+                ntotal = numwide_imag * 4
+                nelements = len(data) // ntotal
+                n = nelements * ntotal
+            else:
+                raise NotImplementedError(self.num_wide)
+
         elif self.element_type in [47, 48, 189, 190]:
             # 47-AXIF2
             # 48-AXIF3
-            # 189-VUQUAD
             # 190-VUTRIA
             return len(data)
         elif self.element_type in [191]:
@@ -1804,6 +1989,29 @@ class OES(OP2Common):
                             result_name, result_vector_name,
                             slot, slot_vector,
                             obj, obj_vector):
+        """
+        Creates the self.obj parameter based on if this is vectorized or not.
+        :param self: the object pointer
+        :param nelements: the number of elements to preallocate for vectorization
+        :param result_name: unused
+        :param result_name_vector: unused
+        :param slot: the self dictionary that will be filled with a non-vectorized result
+        :param slot_vector: the self dictionary that will be filled with a vectorized result
+        :param obj: a pointer to the non-vectorized class
+        :param obj_vector: a pointer to the vectorized class
+        :returns auto_return: a flag indicating a return n should be called
+
+        Since that's weird, let's say we have real CTETRA stress data.  We're going to fill
+        self.solidStress with the class RealSolidStressObject.  If it were vectorized, we'd
+        fill self.ctetra_stress. with RealSolidStressVector.  So we call:
+
+        auto_return = self._create_oes_object2(self, nelements,
+                            'solidStress', 'ctetra_stress',
+                            self.solidStress, self.ctetra_stress,
+                            RealSolidStressObject, RealSolidStressVector)
+        if auto_return:
+            return nelements * ntotal
+        """
         auto_return = False
         is_vectorized = False
         if self.is_vectorized:

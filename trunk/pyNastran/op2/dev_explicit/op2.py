@@ -769,7 +769,7 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
         for i in xrange(170//10):
             self.read_markers([2])
             data = self.read_block()
-            print "i=%s n=%s" % (i, self.n)
+            #print "i=%s n=%s" % (i, self.n)
 
         self.read_markers([4])
         data = self.read_block()
@@ -777,14 +777,14 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
         for i in xrange(7):
             self.read_markers([2])
             data = self.read_block()
-            print "i=%s n=%s" % (i, self.n)
+            #print "i=%s n=%s" % (i, self.n)
 
 
         self.read_markers([-4, 1, 1])
         for i in xrange(170//10):
             self.read_markers([2])
             data = self.read_block()
-            print "i=%s n=%s" % (i, self.n)
+            #print "i=%s n=%s" % (i, self.n)
 
         self.read_markers([4])
         data = self.read_block()
@@ -792,7 +792,7 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
         for i in xrange(7):
             self.read_markers([2])
             data = self.read_block()
-            print "i=%s n=%s" % (i, self.n)
+            #print "i=%s n=%s" % (i, self.n)
 
         self.read_markers([-5, 1, 1])
         self.read_markers([600])
@@ -823,10 +823,10 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
         while 1:
             n = self.get_nmarkers(1, rewind=True)[0]
             if n not in [2, 4, 6, 8]:
-                print "n =", n
+                #print "n =", n
                 break
             n = self.get_nmarkers(1, rewind=False)[0]
-            print n
+            #print n
             data = self.read_block()
 
 
@@ -838,14 +838,14 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
             while 1:
                 n = self.get_nmarkers(1, rewind=True)[0]
                 if n not in [2, 4, 6, 8]:
-                    print "n =", n
+                    #print "n =", n
                     break
                 n = self.get_nmarkers(1, rewind=False)[0]
-                print n
+                #print n
                 data = self.read_block()
             i -= 1
 
-        print "n=%s" % (self.n)
+        #print "n=%s" % (self.n)
         #strings, ints, floats = self.show(100)
 
         pass

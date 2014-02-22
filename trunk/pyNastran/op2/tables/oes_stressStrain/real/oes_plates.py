@@ -5,7 +5,7 @@ from .oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats8p4F
 
 
-class PlateStressObject(StressObject):
+class RealPlateStressObject(StressObject):
     """
     ::
 
@@ -225,16 +225,22 @@ class PlateStressObject(StressObject):
             raise Exception(msg)
 
     def add_new_eid_sort1(self, eType, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
-        msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g major=%g vm=%g" % (dt, eid, nodeID, fd, oxx, majorP, ovm)
+        #print('add_new_eid_sort1', msg)
+        #print(self.oxx)
+        #msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g major=%g vm=%g" % (dt, eid, nodeID, fd, oxx, majorP, ovm)
         #print msg
         #if eid in self.ovmShear[dt]:
         #    return self.add(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
 
-        if 1:
+        if 0:
             if dt in self.oxx and eid in self.oxx[dt]:  # SOL200, erase the old result
                 #nid = nodeID
-                #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s major=%s vm=%s" %(dt,eid,nodeID,str(self.fiberCurvature[eid][nid]),str(self.oxx[dt][eid][nid]),str(self.majorP[dt][eid][nid]),str(self.ovmShear[dt][eid][nid]))
+                msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s major=%s vm=%s" %(dt,eid,nodeID,
+                                                                             str(self.fiberCurvature[eid][nodeID]),
+                                                                             str(self.oxx[dt][eid][nodeID]),
+                                                                             str(self.majorP[dt][eid][nodeID]),
+                                                                             str(self.ovmShear[dt][eid][nodeID]))
+                #print("************", msg)
                 self.delete_transient(dt)
                 self.add_new_transient(dt)
 
@@ -252,6 +258,7 @@ class PlateStressObject(StressObject):
         self.ovmShear[dt][eid] = {nodeID: [ovm]}
         #print msg
         if nodeID == 0:
+            msg = "dt=%s eid=%s nodeID=%s " % (dt, eid, nodeID) #fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
             raise ValueError(msg)
 
     def add(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
@@ -273,6 +280,7 @@ class PlateStressObject(StressObject):
 
     def add_sort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
         msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" % (dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
+        #print('add_sort1')
         #print msg
         #print self.oxx
         #print self.fiberCurvatrure
@@ -306,6 +314,7 @@ class PlateStressObject(StressObject):
 
     def addNewNodeSort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
         #print self.oxx
+        #print('addNewNodeSort1')
         assert eid is not None
         msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
         #print msg
@@ -474,8 +483,10 @@ class PlateStressObject(StressObject):
         dt = dts[0]
         if 'CQUAD4' in eTypes:
             qkey = eTypes.index('CQUAD4')
+            #print(self.eType)
             kkey = self.eType.keys()[qkey]
-            #print "qkey=%s kkey=%s" %(qkey,kkey)
+            #print("qkey=%s kkey=%s" % (qkey, kkey))
+            #print(self.oxx[dt])
             ekey = self.oxx[dt][kkey].keys()
             isBilinear = True
             quadMsg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quadMsgTemp
@@ -678,7 +689,7 @@ class PlateStressObject(StressObject):
         return ''.join(msg)
 
 
-class PlateStrainObject(StrainObject):
+class RealPlateStrainObject(StrainObject):
     """
     ::
 

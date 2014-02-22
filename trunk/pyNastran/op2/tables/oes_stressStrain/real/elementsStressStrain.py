@@ -341,10 +341,10 @@ class RealElementsStressStrain(object):
             (eid_device, cid, abcd, nNodes) = out
             eid = extract(eid_device, dt)
             #print "abcd = %r" % abcd
-            #print "eid=%s cid=%s nNodes=%s nNodesExpected=%s" % (eid,cid,nNodes,nNodesExpected)
+            #print "eid=%s cid=%s nNodes=%s nNodesExpected=%s" % (eid, cid, nNodes, nNodesExpected)
 
             etype = '%s%s' % (element_type, nNodes)
-            assert nNodes < 21,  self.print_block(self.data[ibase:ibase+16])
+            assert nNodes < 21, self.print_block(self.data[ibase:ibase+16])
 
             ibase += 16
             for nodeID in xrange(nnodes_expected):  # nodes pts, +1 for centroid (???)
@@ -462,7 +462,7 @@ class RealElementsStressStrain(object):
                                     sy1, txy1, angle1, major1, minor1, vm1)
                 self.obj.add(eid, grid, fd2, sx2, sy2,
                              txy2, angle2, major2, minor2, vm2)
-                n+= 68
+                n += 68
         #n2 = nelements * ntotal
         #assert n == n2
         self.data = self.data[n:]
@@ -559,7 +559,7 @@ class RealElementsStressStrain(object):
         their repeat statements.
 
         stress is extracted at the centroid
-        CTETRANL_ - 4 nodes
+        CTETRANL_85 - 5 nodes
         CPENTANL_91 - 7 nodes
         CHEXANL_93 - 9 nodes
         """
