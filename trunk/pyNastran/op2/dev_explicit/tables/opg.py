@@ -1,13 +1,17 @@
 #pylint: disable=C0301,C0103
 from struct import unpack
 
-from pyNastran.op2.tables.opg_appliedLoads.opg_Objects import AppliedLoadsObject  # ComplexAppliedLoadsObject
+from pyNastran.op2.tables.opg_appliedLoads.opg_Objects import (AppliedLoadsObject,  #ComplexAppliedLoadsObject,
+                                                               AppliedLoadsVector, ComplexAppliedLoadsVector)
 from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import (RealLoadVectorObject, ComplexLoadVectorObject,
                                                                   RealLoadVectorVector, ComplexLoadVectorVector,
                                                                   ThermalLoadVectorObject)
 from pyNastran.op2.tables.opg_appliedLoads.opnl_forceVector import ForceVectorObject, ComplexForceVectorObject
 
-class OPG(object):
+from pyNastran.op2.dev_explicit.op2_common import OP2Common
+
+
+class OPG(OP2Common):
     def __init__(self):
         pass
 
@@ -49,17 +53,18 @@ class OPG(object):
         ## assuming tCode=1
         if self.analysis_code == 1:   # statics
             ## load set number
-            self.add_data_parameter(data, 'lsdvmn', 'i', 5, False)
-            self.apply_data_code_value('dataNames', ['lsdvmn'])
+            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5, False)
+            self.dataNames = self.apply_data_code_value('dataNames', ['lsdvmn'])
             self.setNullNonlinearFactor()
         elif self.analysis_code == 2:  # normal modes/buckling (real eigenvalues)
             ## mode number
-            self.add_data_parameter(data, 'mode', 'i', 5)
+            self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
             ## real eigenvalue
-            self.add_data_parameter(data, 'eign', 'f', 6, False)
+            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
             ## mode or cycle .. todo:: confused on the type - F1???
-            self.add_data_parameter(data, 'mode_cycle', 'f', 7, False)
-            self.apply_data_code_value('dataNames', ['mode', 'eign', 'mode_cycle'])
+            self.mode2 = self.add_data_parameter(data, 'mode2_cycle', 'i', 7, False)
+            self.cycle2 = self.add_data_parameter(data, 'mode_cycle2', 'f', 7, False)
+            self.dataNames = self.apply_data_code_value('dataNames', ['mode', 'eign', 'mode_cycle'])
         #elif self.analysis_code == 3: # differential stiffness
         #    ## load set number
         #    self.lsdvmn = self.get_values(data,'i',5)
@@ -68,42 +73,42 @@ class OPG(object):
         #    self.lsdvmn = self.get_values(data,'i',5)
         elif self.analysis_code == 5:   # frequency
             ## frequency
-            self.add_data_parameter(data, 'freq', 'f', 5)
-            self.apply_data_code_value('dataNames', ['freq'])
+            self.freq = self.add_data_parameter(data, 'freq', 'f', 5)
+            self.dataNames = self.apply_data_code_value('dataNames', ['freq'])
         elif self.analysis_code == 6:  # transient
             ## time step
-            self.add_data_parameter(data, 'time', 'f', 5)
-            self.apply_data_code_value('dataNames', ['time'])
+            self.time = self.add_data_parameter(data, 'time', 'f', 5)
+            self.dataNames = self.apply_data_code_value('dataNames', ['time'])
         elif self.analysis_code == 7:  # pre-buckling
             ## load set number
-            self.add_data_parameter(data, 'lsdvmn', 'i', 5)
-            self.apply_data_code_value('dataNames', ['lsdvmn'])
+            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
+            self.dataNames = self.apply_data_code_value('dataNames', ['lsdvmn'])
         elif self.analysis_code == 8:  # post-buckling
             ## load set number
-            self.add_data_parameter(data, 'lsdvmn', 'i', 5)
+            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
             ## real eigenvalue
-            self.add_data_parameter(data, 'eigr', 'f', 6, False)
-            self.apply_data_code_value('dataNames', ['lsdvmn', 'eigr'])
+            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            self.dataNames = self.apply_data_code_value('dataNames', ['lsdvmn', 'eigr'])
         elif self.analysis_code == 9:  # complex eigenvalues
             ## mode number
-            self.add_data_parameter(data, 'mode', 'i', 5)
+            self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
             ## real eigenvalue
-            self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
             ## imaginary eigenvalue
-            self.add_data_parameter(data, 'eigi', 'f', 7, False)
-            self.apply_data_code_value('dataNames', ['mode', 'eigr', 'eigi'])
+            self.eigi = self.add_data_parameter(data, 'eigi', 'f', 7, False)
+            self.dataNames = self.apply_data_code_value('dataNames', ['mode', 'eigr', 'eigi'])
         elif self.analysis_code == 10:  # nonlinear statics
             ## load step
-            self.add_data_parameter(data, 'lftsfq', 'f', 5)
-            self.apply_data_code_value('dataNames', ['lftsfq'])
+            self.lftsfq = self.add_data_parameter(data, 'lftsfq', 'f', 5)
+            self.dataNames = self.apply_data_code_value('dataNames', ['lftsfq'])
         elif self.analysis_code == 11:  # old geometric nonlinear statics
             ## load set number
-            self.add_data_parameter(data, 'lsdvmn', 'i', 5)
-            self.apply_data_code_value('dataNames', ['lsdvmn'])
+            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
+            self.dataNames = self.apply_data_code_value('dataNames', ['lsdvmn'])
         elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             ## load set number
-            self.add_data_parameter(data, 'lsdvmn', 'i', 5)
-            self.apply_data_code_value('dataNames', ['lsdvmn'])
+            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
+            self.dataNames = self.apply_data_code_value('dataNames', ['lsdvmn'])
         else:
             raise RuntimeError('invalid analysis_code...analysis_code=%s' %
                                self.analysis_code)
@@ -149,9 +154,13 @@ class OPG(object):
         elif self.thermal == 1:
             result_name = 'thermalLoadVectors'
             storage_obj = self.thermalLoadVectors
+
+            ComplexThermalLoadVectorObject = None
+            ThermalLoadVectorVector = None
+            ComplexThermalLoadVectorVector = None
             n = self._read_table(data, result_name, storage_obj,
-                                 ThermalLoadVectorObject, None,
-                                 None, None, 'node')
+                                 ThermalLoadVectorObject, ComplexThermalLoadVectorObject,
+                                 ThermalLoadVectorVector, ComplexThermalLoadVectorVector, 'node')
         else:
             raise NotImplementedError(self.thermal)
         return n
@@ -163,17 +172,21 @@ class OPG(object):
         if self.thermal == 0:
             result_name = 'forceVectors'
             storage_obj = self.forceVectors
-            real_obj = ForceVectorObject
-            complex_obj = ComplexForceVectorObject
+            ForceVectorVector = None
+            ComplexForceVectorVector = None
             n = self._read_table(data, result_name, storage_obj,
                                  ForceVectorObject, ComplexForceVectorObject,
-                                 None, None, 'node')
+                                 ForceVectorVector, ComplexForceVectorVector, 'node')
         #elif self.thermal == 1:
             #result_name = 'thermalForceVectors'
             #storage_obj = self.thermalForceVectors
-            #real_obj = ThermalForceVectorObject
-            #complex_obj = None
-            #n = self.read_table(data, storage_obj, real_obj, complex_obj, 'node')
+            #ThermalForceVectorObject = None
+            #ComplexThermalForceVectorObject = None
+            #ThermalForceVectorVector = None
+            #ComplexThermalForceVectorVector = None
+            #n = self._read_table(data, result_name, storage_obj,
+                                 #ThermalForceVectorObject, ComplexThermalForceVectorObject,
+                                 #ThermalForceVectorVector, ComplexThermalForceVectorVector, 'node')
         else:
             raise NotImplementedError(self.thermal)
         return n

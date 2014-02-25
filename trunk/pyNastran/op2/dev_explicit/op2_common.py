@@ -12,6 +12,18 @@ class OP2Common(Op2Codes, F06Writer):
     def __init__(self):
         Op2Codes.__init__(self)
         F06Writer.__init__(self)
+
+        #: flag for vectorization
+        #: 0 - no vectorization
+        #: 1 -   first pass
+        #: 2 -   second pass
+        self.read_mode = None
+
+        #: the results
+        self.result_names = set([])
+        #: bool
+        self.is_vectorized = None
+
         #: the storage dictionary that is passed to OP2 objects (e.g. DisplacementObject)
         #: the key-value pairs are extracted and used to generate dynamic self
         #: variables for the OP2 objects

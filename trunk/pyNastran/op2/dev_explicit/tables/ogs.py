@@ -72,7 +72,7 @@ class OGS(OP2Common):
         elif self.analysis_code == 10:  # nonlinear statics
             ## load step
             self.lftsfq = self.add_data_parameter(data, 'lftsfq', 'f', 5)
-            self.apply_data_code_value('dataNames', ['lftsfq'])
+            self.dataNames = self.apply_data_code_value('dataNames', ['lftsfq'])
         #elif self.analysis_code == 11:  # old geometric nonlinear statics
         #elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
         else:
