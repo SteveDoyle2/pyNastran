@@ -65,6 +65,7 @@ class AppliedLoadsVector(ScalarObject):
         #[f1, f2, f3, m1, m2, m3]
         self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
 
+
 class RealAppliedLoadsVector(AppliedLoadsVector):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         AppliedLoadsVector.__init__(self, data_code, isubcase, dt)
@@ -100,6 +101,7 @@ class RealAppliedLoadsVector(AppliedLoadsVector):
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num-1
+
 
 class ComplexAppliedLoadsVector(AppliedLoadsVector):
     def __init__(self, data_code, is_sort1, isubcase, dt):

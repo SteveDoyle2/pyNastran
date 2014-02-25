@@ -53,7 +53,7 @@ class TrashWriter(file):
     def close(self, *args, **kwargs):
         pass
 
-class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
+class OP2( #BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
           LAMA, ONR, OGPF,
           OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
     """
@@ -196,18 +196,18 @@ class OP2(BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
         self.make_geom = make_geom
 
         #self.tables_to_read = []
-        BDF.__init__(self, debug=debug, log=log)
+        #BDF.__init__(self, debug=debug, log=log)
 
-        GEOM1.__init__(self)
-        GEOM2.__init__(self)
-        GEOM3.__init__(self)
-        GEOM4.__init__(self)
+        #GEOM1.__init__(self)
+        #GEOM2.__init__(self)
+        #GEOM3.__init__(self)
+        #GEOM4.__init__(self)
 
-        EPT.__init__(self)
-        MPT.__init__(self)
+        #EPT.__init__(self)
+        #MPT.__init__(self)
 
-        DIT.__init__(self)
-        DYNAMICS.__init__(self)
+        #DIT.__init__(self)
+        #DYNAMICS.__init__(self)
 
         LAMA.__init__(self)
         ONR.__init__(self)

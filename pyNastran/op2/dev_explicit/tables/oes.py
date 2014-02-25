@@ -40,9 +40,6 @@ class OES(OP2Common):
     """
     def __init__(self):
         OP2Common.__init__(self)
-        self.read_mode = None
-        self.is_vectorized = False
-        self.result_names = set([])
         self.ntotal = 0
 
     def _read_oes1_3(self, data):

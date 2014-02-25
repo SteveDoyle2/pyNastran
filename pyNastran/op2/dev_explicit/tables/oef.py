@@ -531,13 +531,13 @@ class OEF(OP2Common):
                 for i in xrange(nelements):
                     edata = data[n:n+12]
                     out = s.unpack(edata)
-                    (eid_device, forceReal, forceImag) = out
+                    (eid_device, force_real, force_imag) = out
                     eid = (eid_device - self.device_code) // 10
 
                     if is_magnitude_phase:
-                        force = polar_to_real_imag(forceReal, forceImag)
+                        force = polar_to_real_imag(force_real, force_imag)
                     else:
-                        force = complex(forceReal, forceImag)
+                        force = complex(force_real, force_imag)
 
                     data_in = [eid, force]
                     #print "%s" % (self.get_element_type(self.element_type)), data_in
@@ -802,7 +802,7 @@ class OEF(OP2Common):
                         #print "***%s    " % (self.get_element_type(self.element_type)), data_in
                         self.obj.add(eid, dt, out)
                         n += 36
-            elif self.num_wide == num_wide_imag: # complex
+            elif self.num_wide == numwide_imag: # complex
                 self.create_transient_object(self.plateForces2, ComplexPlate2Force)
                 s1 = Struct(b'i4s17f')  # 2+17=19 * 4 = 76
                 s2 = Struct(b'17f')  # 17 * 4 = 68
@@ -879,42 +879,42 @@ class OEF(OP2Common):
             # 98 - CTRIA6 (composite)
             if self.num_wide == 9:  # real
                 return len(data)
-                print self.code_information()
-                self.create_transient_object(self.compositePlateForces, RealCompositePlateForce)  # undefined
-                #return
-                ntotal = 9 * 4
-                nelements = len(data) // ntotal
-                if self.debug:
-                    self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-                    self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
-                    #self.binary_debug.write('  #centeri = [eid_device, j, grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
-                    #self.binary_debug.write('  #                                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
-                    #self.binary_debug.write('  #nodeji = [eid, iLayer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)]\n')
-                    self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+                #print self.code_information()
+                #self.create_transient_object(self.compositePlateForces, RealCompositePlateForce)  # undefined
+                ##return
+                #ntotal = 9 * 4
+                #nelements = len(data) // ntotal
+                #if self.debug:
+                    #self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                    #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
+                    ##self.binary_debug.write('  #centeri = [eid_device, j, grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
+                    ##self.binary_debug.write('  #                                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
+                    ##self.binary_debug.write('  #nodeji = [eid, iLayer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)]\n')
+                    #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                eid_old = 0
-                format1 = 'i8si4f4s' # 9
-                s = Struct(format1)
-                for i in xrange(nelements):
-                    if i % 10000 == 0:
-                        print 'i = ', i
-                    edata = data[n:n+ntotal]  # 4*9
-                    out = s.unpack(edata)
-                    (eid_device, theory, lamid, failure_index_direct_stress, failure_mode_max_shear,
-                             failure_index_interlaminar_shear, fmax, failure_flag) = out
-                    eid = (eid_device - self.device_code) // 10
-                    if self.debug4():
-                        if eid > 0:
-                            self.binary_debug.write('  eid=%i; C=[%s]\n' % (', '.join(['%r' % di for di in out]) ))
-                        else:
-                            self.binary_debug.write('      %s  C=[%s]\n' % (' ' * len(str(eid)), ', '.join(['%r' % di for di in out]) ))
+                #eid_old = 0
+                #format1 = 'i8si4f4s' # 9
+                #s = Struct(format1)
+                #for i in xrange(nelements):
+                    #if i % 10000 == 0:
+                        #print 'i = ', i
+                    #edata = data[n:n+ntotal]  # 4*9
+                    #out = s.unpack(edata)
+                    #(eid_device, theory, lamid, failure_index_direct_stress, failure_mode_max_shear,
+                             #failure_index_interlaminar_shear, fmax, failure_flag) = out
+                    #eid = (eid_device - self.device_code) // 10
+                    #if self.debug4():
+                        #if eid > 0:
+                            #self.binary_debug.write('  eid=%i; C=[%s]\n' % (', '.join(['%r' % di for di in out]) ))
+                        #else:
+                            #self.binary_debug.write('      %s  C=[%s]\n' % (' ' * len(str(eid)), ', '.join(['%r' % di for di in out]) ))
 
-                    if eid > 0:
-                        self.obj.add_new_eid(eType, dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
-                    else:
-                        self.obj.add(dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
-                    eid_old = eid
-                    n += ntotal
+                    #if eid > 0:
+                        #self.obj.add_new_eid(eType, dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+                    #else:
+                        #self.obj.add(dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+                    #eid_old = eid
+                    #n += ntotal
             else:
                 raise NotImplementedError(self.num_wide)
 
@@ -928,11 +928,11 @@ class OEF(OP2Common):
 
         elif self.element_type in [53]:
             # 53-CTRIAX6
-            if self.num_wide == 0:
-                self.create_transient_object(self.ctriaxForce, RealCTriaxForce)  # undefined
-            else:
-                raise NotImplementedError(self.num_wide)
-            return len(data)
+            #if self.num_wide == 0:
+                #self.create_transient_object(self.ctriaxForce, RealCTriaxForce)  # undefined
+            #else:
+            raise NotImplementedError(self.num_wide)
+            #return len(data)
         elif self.element_type in [4]:
             # 4-CSHEAR
             if self.num_wide == 17:  # real
