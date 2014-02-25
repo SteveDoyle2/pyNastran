@@ -41,6 +41,7 @@ from pyNastran.op2.dev_explicit.fortran_format import FortranFormat
 from pyNastran.bdf.bdf import BDF
 
 from pyNastran.utils import is_binary
+from pyNastran.utils.log import get_logger
 
 
 class TrashWriter(file):
@@ -53,7 +54,8 @@ class TrashWriter(file):
     def close(self, *args, **kwargs):
         pass
 
-class OP2( #BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
+class OP2( #BDF,
+          GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
           LAMA, ONR, OGPF,
           OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
     """
@@ -197,17 +199,18 @@ class OP2( #BDF, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
 
         #self.tables_to_read = []
         #BDF.__init__(self, debug=debug, log=log)
+        self.log = get_logger(log, 'debug' if debug else 'info')
 
-        #GEOM1.__init__(self)
-        #GEOM2.__init__(self)
-        #GEOM3.__init__(self)
-        #GEOM4.__init__(self)
+        GEOM1.__init__(self)
+        GEOM2.__init__(self)
+        GEOM3.__init__(self)
+        GEOM4.__init__(self)
 
-        #EPT.__init__(self)
-        #MPT.__init__(self)
+        EPT.__init__(self)
+        MPT.__init__(self)
 
-        #DIT.__init__(self)
-        #DYNAMICS.__init__(self)
+        DIT.__init__(self)
+        DYNAMICS.__init__(self)
 
         LAMA.__init__(self)
         ONR.__init__(self)
