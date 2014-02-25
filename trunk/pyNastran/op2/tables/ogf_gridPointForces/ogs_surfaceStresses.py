@@ -1,10 +1,52 @@
+from numpy import zeros
+
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats10E, writeFloats8p4F
 
 
+class GridPointStressesVector(ScalarObject):
+    """
+        msg = header + ['                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
+                        '0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  Z         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        0\n',
+                        '     GRID      ELEMENT            STRESSES IN SURFACE SYSTEM           PRINCIPAL STRESSES            MAX             \n',
+                        '     ID          ID    FIBRE   NORMAL-X   NORMAL-Y   SHEAR-XY     ANGLE      MAJOR      MINOR      SHEAR     VON MISES\n']
+              #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
+              #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
+              #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
+    """
+    def __init__(self, data_code, isubcase, dt):
+        ScalarObject.__init__(self, data_code, isubcase)
+        self.ntotal = 0
+        self.ntimes = 0
+
+    def build(self):
+        self.grid_element = zeros((self.ntotal, 2), dtype='int32')
+        #oxx, oyy, txy, angle, major, minor, ovm
+        self.data = zeros((self.ntimes, self.ntotal, 7), dtype='float32')
+
+    def add_sort1(self, dt, eKey, eid, elemName, nx, ny, txy, angle, majorP, minorP, tmax, ovm):
+        self.times[self.itime] = dt
+        self.grid_element[self.ntotal, :] = [eKey, eid]
+        self.data[self.itime, self.ntotal, :] = [nx, ny, txy, angle, majorP, minorP, tmax, ovm]
+
+    def get_stats(self):
+        msg = self.get_data_code()
+        if self.nonlinear_factor is not None:  # transient
+            ntimes = len(self.nx)
+            times0 = self.nx.keys()[0]
+            nelements = len(self. nx[times0])
+            msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            nelements = len(self. nx)
+            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     nelements))
+        msg.append('  nx, ny, txy, angle, majorP, minorP, tmax, ovm\n')
+        return msg
+
 class GridPointStressesObject(ScalarObject):
 
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
         self.nx = {}
         self.ny = {}
@@ -159,10 +201,9 @@ class GridPointStressesObject(ScalarObject):
                     eid = zero
                 angle, isAllZero = writeFloats8p4F([angle])
                 anglei = angle[0]
-                msg.append('%s%8s  %8s   %4s    %s %s %s   %8s %s %s %s  %-s\n' % (zero, eKey2, eid, elemName, nx, ny, txy, anglei, majorP, minorP, tmax, ovm.rstrip()))
+                msg.append('%s%8s  %8s   %4s    %s %s %s   %8s %10s %10s %10s  %s\n' % (zero, eKey2, eid, elemName, nx, ny, txy, anglei, majorP, minorP, tmax, ovm))
                 zero = ' '
                 eKey2 = ' '
-
         msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
         return pageNum
@@ -192,8 +233,7 @@ class GridPointStressesObject(ScalarObject):
                     [f1, f2, f3, m1, m2, m3] = vals2
                     if eid == 0:
                         eid = ''
-
-                    msg.append('%s  %8s    %10s    %8s      %s  %s  %s  %s  %s  %-s\n' % (zero, eKey, eid, elemName, f1, f2, f3, m1, m2, m3))
+                    msg.append('%s  %8s    %10s    %8s      %10s  %10s  %10s  %10s  %10s  %s\n' % (zero, eKey, eid, elemName, f1, f2, f3, m1, m2, m3))
                     zero = ' '
 
             msg.append(pageStamp % pageNum)
@@ -204,7 +244,7 @@ class GridPointStressesObject(ScalarObject):
 
 
 class GridPointStressesVolumeObject(ScalarObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
         self.nx = {}
         self.ny = {}
