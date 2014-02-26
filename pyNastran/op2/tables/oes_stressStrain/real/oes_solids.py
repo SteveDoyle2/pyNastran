@@ -42,23 +42,26 @@ class RealSolidVector(OES_Object):
         if self.is_built:
             return
 
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
         #self.names = []
         #self.nelements //= self.ntimes
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
-        self.ntimes = 0
-        self.nelements = 0
+        #self.ntimes = 0
+        #self.nelements = 0
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        self.times = zeros(self.ntimes, 'float32')
+        self.times = zeros(self.ntimes, dtype='float32')
         #self.element_types2 = array(self.nelements, dtype='|S8')
         self.element_types3 = zeros((self.nelements, 2), dtype='int32')
 
         # TODO: could be more efficient by using nelements for cid
-        self.element_node = zeros((self.ntotal, 2), 'int32')
-        self.element_cid = zeros((self.nelements, 2), 'int32')
+        self.element_node = zeros((self.ntotal, 2), dtype='int32')
+        self.element_cid = zeros((self.nelements, 2), dtype='int32')
 
         #if self.element_name == 'CTETRA':
             #nnodes = 4
@@ -135,13 +138,16 @@ class RealSolidVector(OES_Object):
         nelements = self.nelements
         ntimes = self.ntimes
         #ntotal = self.ntotal
-        nnodes_per_element = self.element_node.shape[0] // nelements
+        try:
+            nnodes_per_element = self.element_node.shape[0] // nelements
+        except ZeroDivisionError:
+            nnodes_per_element = '???'
         nnodes = self.element_node.shape[0]
 
         msg = []
 
         if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i nnodes=%i\n  nnodes_per_element=%i (including centroid)\n'
+            msg.append('  type=%s ntimes=%i nelements=%i nnodes=%i\n  nnodes_per_element=%s (including centroid)\n'
                        % (self.__class__.__name__, ntimes, nelements, nnodes, nnodes_per_element))
             ntimes_word = 'ntimes'
         else:

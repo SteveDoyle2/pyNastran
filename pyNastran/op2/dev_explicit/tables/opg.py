@@ -62,9 +62,9 @@ class OPG(OP2Common):
             ## real eigenvalue
             self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
             ## mode or cycle .. todo:: confused on the type - F1???
-            self.mode2 = self.add_data_parameter(data, 'mode2_cycle', 'i', 7, False)
-            self.cycle2 = self.add_data_parameter(data, 'mode_cycle2', 'f', 7, False)
-            self.dataNames = self.apply_data_code_value('dataNames', ['mode', 'eign', 'mode_cycle'])
+            self.mode2 = self.add_data_parameter(data, 'mode2', 'i', 7, False)
+            self.cycle2 = self.add_data_parameter(data, 'cycle', 'f', 7, False)
+            self.dataNames = self.apply_data_code_value('dataNames', ['mode', 'eigr', 'mode2', 'cycle', ])
         #elif self.analysis_code == 3: # differential stiffness
         #    ## load set number
         #    self.lsdvmn = self.get_values(data,'i',5)

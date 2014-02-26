@@ -87,8 +87,8 @@ class OES(OP2Common):
             #: real eigenvalue
             self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
             #: mode or cycle TODO confused on the type - F1 means float/int???
-            self.mode2 = self.add_data_parameter(data, 'mode2', 'f', 7, False)
-            self.cycle = self.add_data_parameter(data, 'cycle', 'i', 7, False)
+            self.mode2 = self.add_data_parameter(data, 'mode2', 'i', 7, False)
+            self.cycle = self.add_data_parameter(data, 'cycle', 'f', 7, False)
             self.dataNames = self.apply_data_code_value('dataNames', ['mode', 'eigr', 'mode2', 'cycle'])
         #elif self.analysis_code==3: # differential stiffness
             #self.lsdvmn = self.get_values(data,'i',5) ## load set number
@@ -101,6 +101,8 @@ class OES(OP2Common):
             self.dataNames = self.apply_data_code_value('dataNames', ['freq'])
         elif self.analysis_code == 6:  # transient
             ## time step
+
+
             self.dt = self.add_data_parameter(data, 'dt', 'f', 5)
             self.dataNames = self.apply_data_code_value('dataNames', ['dt'])
         elif self.analysis_code == 7:  # pre-buckling
@@ -229,6 +231,7 @@ class OES(OP2Common):
         """
         Reads OES1 subtable 4
         """
+        #return len(data)
         assert self.is_sort1() == True
         if self.thermal == 0:
             n = self._read_oes_loads(data)
@@ -737,7 +740,7 @@ class OES(OP2Common):
                 if self.isStress():
                     self.create_transient_object(self.plateStress, RealPlateStressObject)
                 else:
-                    self.create_transient_object(self.plateStress, RealPlateStressObject)
+                    self.create_transient_object(self.plateStrain, RealPlateStrainObject)
 
                 #return
                 ntotal = 68  # 4*17
@@ -836,7 +839,7 @@ class OES(OP2Common):
                 if self.isStress():
                     self.create_transient_object(self.plateStress, RealPlateStressObject)
                 else:
-                    self.create_transient_object(self.plateStress, RealPlateStressObject)
+                    self.create_transient_object(self.plateStrain, RealPlateStrainObject)
 
                 #return
                 ntotal = 68  # 4*17
@@ -2026,7 +2029,7 @@ class OES(OP2Common):
                 auto_return = True
             elif self.read_mode == 2:
                 self.code = self._get_code()
-                #print "***code =", self.code
+                print "***code =", self.code
                 self.obj = slot_vector[self.code]
                 #self.obj.update_data_code(self.data_code)
                 self.obj.build()
