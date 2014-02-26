@@ -81,6 +81,12 @@ class FREQ(BaseCard):
         list_fields = ['FREQ', self.sid] + self.freqs
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return eturn self.comment() + print_card_16(card)
+
 
 class FREQ1(FREQ):
     """
@@ -111,6 +117,12 @@ class FREQ1(FREQ):
         for i in xrange(ndf):
             self.freqs.append(f1 + i * df)
         self.cleanFreqs()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return eturn self.comment() + print_card_16(card)
 
 
 class FREQ2(FREQ):
@@ -153,6 +165,12 @@ class FREQ3(FREQ):
             self._comment = comment
         raise NotImplementedError()
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return eturn self.comment() + print_card_16(card)
+
 
 class FREQ4(FREQ):
     """
@@ -190,6 +208,12 @@ class FREQ4(FREQ):
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return eturn self.comment() + print_card_16(card)
+
 
 class FREQ5(FREQ):
     type = 'FREQ5'
@@ -198,6 +222,12 @@ class FREQ5(FREQ):
         if comment:
             self._comment = comment
         raise NotImplementedError()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return eturn self.comment() + print_card_16(card)
 
 
 class NLPCI(BaseCard):
@@ -223,6 +253,12 @@ class NLPCI(BaseCard):
     def reprFields(self):
         #minalr = set_blank_if_default(self.minalr, 0.25)
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return eturn self.comment() + print_card_16(card)
 
 
 class TSTEP(BaseCard):
@@ -269,6 +305,12 @@ class TSTEP(BaseCard):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return eturn self.comment() + print_card_16(card)
 
 
 class TSTEPNL(BaseCard):
@@ -414,6 +456,12 @@ class TSTEPNL(BaseCard):
                   maxR, uTol, rTolB, self.minIter]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return eturn self.comment() + print_card_16(card)
+
 
 class NLPARM(BaseCard):
     """
@@ -529,4 +577,6 @@ class NLPARM(BaseCard):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return self.comment() + print_card_8(card) # having trouble with double precision...
+        if size == 8:
+            return self.comment() + print_card_8(card) # having trouble with double precision...
+        return eturn self.comment() + print_card_16(card)
