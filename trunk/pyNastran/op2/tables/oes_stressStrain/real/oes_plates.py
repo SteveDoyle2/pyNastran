@@ -314,10 +314,10 @@ class RealPlateStressObject(StressObject):
 
     def addNewNodeSort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
         #print self.oxx
-        #print('addNewNodeSort1')
+        print('addNewNodeSort1')
         assert eid is not None
-        msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
-        #print msg
+        msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
+        print(msg)
         #assert nodeID not in self.oxx[dt][eid]
         self.fiberCurvature[eid][nodeID] = [fd]
         self.oxx[dt][eid][nodeID] = [oxx]
@@ -733,8 +733,12 @@ class RealPlateStrainObject(StrainObject):
             if dt is not None:
                 self.add = self.add_sort1
                 self.add_new_eid = self.add_new_eid_sort1
+                self.addNewNode = self.addNewNodeSort1
+                #self.add = self.add_sort1
+                #self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
+            asdf
             self.add = self.addSort2
             self.add_new_eid = self.add_new_eid_sort2
 
@@ -995,6 +999,22 @@ class RealPlateStrainObject(StrainObject):
         self.majorP[eid][nodeID] = [majorP]
         self.minorP[eid][nodeID] = [minorP]
         self.evmShear[eid][nodeID] = [evm]
+        #print msg
+        if nodeID == 0:
+            raise ValueError(msg)
+
+    def addNewNodeSort1(self, dt, eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
+        #print self.oxx
+        msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
+        #assert nodeID not in self.exx[eid], msg
+        self.fiberCurvature[eid][nodeID] = [curvature]
+        self.exx[dt][eid][nodeID] = [exx]
+        self.eyy[dt][eid][nodeID] = [eyy]
+        self.exy[dt][eid][nodeID] = [exy]
+        self.angle[dt][eid][nodeID] = [angle]
+        self.majorP[dt][eid][nodeID] = [majorP]
+        self.minorP[dt][eid][nodeID] = [minorP]
+        self.evmShear[dt][eid][nodeID] = [evm]
         #print msg
         if nodeID == 0:
             raise ValueError(msg)
