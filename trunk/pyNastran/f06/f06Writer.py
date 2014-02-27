@@ -201,9 +201,11 @@ class F06Writer(F06WriterDeprecated):
         It is difficult to handle initializing the CRODs/CONRODs given a
         mixed type case, so we split out the elements.
         """
-        self.crod_forces = {}
-        self.conrod_forces = {}
-        self.ctube_forces = {}
+        #======================================================================
+        # rods
+        self.crod_force = {}
+        self.conrod_force = {}
+        self.ctube_force = {}
 
         self.crod_stress = {}
         self.conrod_stress = {}
@@ -212,6 +214,13 @@ class F06Writer(F06WriterDeprecated):
         self.crod_strain = {}
         self.conrod_strain = {}
         self.ctube_strain = {}
+
+        #======================================================================
+        # springs
+        self.celas1_force = {}
+        self.celas2_force = {}
+        self.celas3_force = {}
+        self.celas4_force = {}
 
         self.celas1_stress = {}
         self.celas2_stress = {}
@@ -223,6 +232,7 @@ class F06Writer(F06WriterDeprecated):
         self.celas3_strain = {}
         self.celas4_strain = {}
 
+        #======================================================================
         self.ctetra_stress = {}
         self.cpenta_stress = {}
         self.chexa_stress = {}
@@ -230,6 +240,7 @@ class F06Writer(F06WriterDeprecated):
         self.ctetra_strain = {}
         self.cpenta_strain = {}
         self.chexa_strain = {}
+        #======================================================================
 
     def __objects_init__(self):
         """More variable declarations"""
@@ -612,9 +623,25 @@ class F06Writer(F06WriterDeprecated):
 
             #------------------------------------------
             # OEF - forces
+
+            # 1. cbar
+            # 2. cbeam
+            # 3. cquad4
+            # 4. crod/ctube/conrod
+
+            # bars
+            self.barForces,
+
+            # beam
+            self.beamForces, self.bar100Forces, self.bendForces,
+
+            # quad
+            self.plateForces,   # centroidal elements
+            self.plateForces2,  # bilinear elements
+
             # rods
             self.rodForces,
-            self.crod_forces, self.conrod_forces, self.ctube_forces,
+            self.crod_force, self.conrod_force, self.ctube_force,
 
             # springs
             self.springForces,
@@ -625,18 +652,14 @@ class F06Writer(F06WriterDeprecated):
             # cshear,
             self.shearForces,
 
-            # quad
-            self.plateForces,   # centroidal elements
-            self.plateForces2,  # bilinear elements
-
-            # bars
-            self.beamForces, self.barForces, self.bar100Forces, self.bendForces,
-
             # other
             self.bushForces, self.gapForces, self.solidPressureForces,
 
             #------------------------------------------
             # OES - strain
+            # 1.  cbar
+            # 2.  cbeam
+            # 3.  crod/ctube/conrod
 
             # springs,
             self.celasStrain,
@@ -651,21 +674,21 @@ class F06Writer(F06WriterDeprecated):
             self.celas3_strain,
             self.celas4_strain,
 
-            # rods
-            self.rodStrain, self.nonlinearRodStrain,  # non-vectorized
-            self.crod_strain, self.conrod_strain, self.ctube_strain,  # vectorized
-
             # bars/beams
             self.barStrain, self.beamStrain,
-
-            # bush
-            self.bushStrain,
 
             # plates
             self.plateStrain, self.compositePlateStrain,
             self.nonlinearPlateStrain,
             self.ctriaxStrain, self.hyperelasticPlateStress,
             self.shearStrain,
+
+            # rods
+            self.rodStrain, self.nonlinearRodStrain,  # non-vectorized
+            self.crod_strain, self.conrod_strain, self.ctube_strain,  # vectorized
+
+            # bush
+            self.bushStrain,
 
             # solids
             self.solidStrain,
@@ -676,21 +699,24 @@ class F06Writer(F06WriterDeprecated):
             #------------------------------------------
             # OES - stress
 
-            # rods
-            self.rodStress, self.nonlinearRodStress,
-            self.crod_stress, self.conrod_stress, self.ctube_stress,
-
-            # bars/beams
-            self.barStress, self.beamStress,
+            # cbars/cbeams
+            self.barStress,
+            self.beamStress,
 
             # bush
             self.bushStress, self.bush1dStressStrain,
+
+            # shear
+            self.shearStress,
+
+            # rods
+            self.rodStress, self.nonlinearRodStress,
+            self.crod_stress, self.conrod_stress, self.ctube_stress,
 
             # plates
             self.plateStress, self.compositePlateStress,
             self.nonlinearPlateStress,
             self.ctriaxStress, self.hyperelasticPlateStrain,
-            self.shearStress,
 
             # solids
             self.solidStress,

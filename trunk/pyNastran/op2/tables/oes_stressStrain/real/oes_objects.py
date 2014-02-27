@@ -112,9 +112,7 @@ class StrainObject(OES_Object):
     def update_dt(self, data_code, dt):
         self.data_code = data_code
         self.apply_data_code()
-        #print "data_code=",self.data_code
         self.element_name = self.data_code['element_name']
-        #assert dt>=0.
         if dt is not None:
             self.log.debug("updating strain...%s=%s element_name=%s" %
                            (self.data_code['name'], dt, self.element_name))

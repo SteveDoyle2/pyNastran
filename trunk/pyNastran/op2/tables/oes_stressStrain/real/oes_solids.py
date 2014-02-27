@@ -55,7 +55,10 @@ class RealSolidVector(OES_Object):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        self.times = zeros(self.ntimes, dtype='float32')
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, int):
+            dtype = 'int32'
+        self.times = zeros(self.ntimes, dtype=dtype)
         #self.element_types2 = array(self.nelements, dtype='|S8')
         self.element_types3 = zeros((self.nelements, 2), dtype='int32')
 
@@ -94,7 +97,7 @@ class RealSolidVector(OES_Object):
         # no data
         #self.element_node[self.ielement, 0, :] = [eid, 0]  # 0 is center
         self.ielement += 1
-        #self.itotal += 1
+        self.itotal += 1
         #self.data
 
     def add_eid_sort1(self, eType, cid, dt, eid, node_id, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
@@ -201,6 +204,8 @@ class RealSolidVector(OES_Object):
             if self.nonlinear_factor is not None:
                 dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
                 header[1] = dtLine
+                if hasattr(self, 'eigr'):
+                    header[2] = ' %14s = %12.6E\n' % ('EIGENVALUE', self.eigrs[itime])
             f.write(''.join(header + msg_temp))
 
             # TODO: can I get this without a reshape?
@@ -277,9 +282,9 @@ class RealSolidStressVector(RealSolidVector, StressObject):
             '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % von_mises,
         ]
 
-        tetra_msg = ['                   S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n', ]
+        tetra_msg = ['                   S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( T E T R A )\n', ]
         penta_msg = ['                    S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n', ]
-        hexa_msg = ['                      S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n', ]
+        hexa_msg  = ['                      S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n', ]
         tetra_msg += base_msg
         penta_msg += base_msg
         hexa_msg += base_msg
@@ -305,11 +310,11 @@ class RealSolidStrainVector(RealSolidVector, StrainObject):
             von_mises = 'MAX SHEAR'
 
         base_msg = [
-            '0                CORNER        ------CENTER AND CORNER POINT STRAINS---------       DIR.  COSINES       MEAN\n',
+            '0                CORNER        ------CENTER AND CORNER POINT  STRAINS---------       DIR.  COSINES       MEAN                   \n',
             '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % von_mises]
         tetra_msg = ['                     S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n', ]
         penta_msg = ['                      S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n', ]
-        hexa_msg = ['                      S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n', ]
+        hexa_msg  = ['                        S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n', ]
         tetra_msg += base_msg
         penta_msg += base_msg
         hexa_msg += base_msg
@@ -1149,15 +1154,15 @@ class RealSolidStrainObject(StrainObject):
             vonMises = 'MAX SHEAR'
 
         tetraMsg = ['                     S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n',
-                    '0                CORNER        ------CENTER AND CORNER POINT STRAINS---------       DIR.  COSINES       MEAN\n',
+                    '0                CORNER        ------CENTER AND CORNER POINT  STRAINS---------      DIR.  COSINES       MEAN\n',
                     '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (vonMises)]
 
         pentaMsg = ['                      S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n',
-                    '0                CORNER        ------CENTER AND CORNER POINT STRAINS---------       DIR.  COSINES       MEAN\n',
+                    '0                CORNER        ------CENTER AND CORNER POINT  STRAINS---------      DIR.  COSINES       MEAN\n',
                     '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (vonMises)]
 
         hexaMsg = ['                      S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n',
-                   '0                CORNER        ------CENTER AND CORNER POINT STRAINS---------       DIR.  COSINES       MEAN\n',
+                   '0                CORNER        ------CENTER AND CORNER POINT  STRAINS---------      DIR.  COSINES       MEAN\n',
                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (vonMises)]
 
         #nNodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}

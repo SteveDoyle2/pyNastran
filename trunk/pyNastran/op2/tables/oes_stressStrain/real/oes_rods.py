@@ -55,7 +55,10 @@ class RealRodVector(OES_Object):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        self.times = zeros(self.ntimes, dtype='float32')
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, int):
+            dtype = 'int32'
+        self.times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
 
         #[axial, torsion, SMa, SMt]
@@ -137,6 +140,8 @@ class RealRodVector(OES_Object):
             if self.nonlinear_factor is not None:
                 dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
                 header[1] = dtLine
+                if hasattr(self, 'eigr'):
+                    header[2] = ' %14s = %12.6E\n' % ('EIGENVALUE', self.eigrs[itime])
             f.write(''.join(header + msg_temp))
 
             # TODO: can I get this without a reshape?
@@ -150,7 +155,7 @@ class RealRodVector(OES_Object):
             out = []
             for eid, axiali, torsioni, SMai, SMti in izip(eids, axial, torsion, SMa, SMt):
                 #([axiali, torsioni, SMai, SMti],
-                 #isAllZeros) = writeFloats13E([axiali, torsioni, SMai, SMti])
+                #isAllZeros) = writeFloats13E([axiali, torsioni, SMai, SMti])
                 out.append([eid, axiali, SMai, torsioni, SMti])
 
             for i in xrange(0, nwrite, 2):
@@ -196,7 +201,7 @@ class RealRodStrainVector(RealRodVector, StrainObject):
 
     def _get_msgs(self):
         base_msg = ['       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
-                    '         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN\n']
+                    '         ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN\n']
         crod_msg   = ['                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )\n', ]
         conrod_msg = ['                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C O N R O D )\n', ]
         ctube_msg  = ['                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C T U B E )\n', ]
