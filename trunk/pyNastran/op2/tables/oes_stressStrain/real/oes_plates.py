@@ -314,10 +314,10 @@ class RealPlateStressObject(StressObject):
 
     def addNewNodeSort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
         #print self.oxx
-        print('addNewNodeSort1')
+        #print('addNewNodeSort1')
         assert eid is not None
         msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
-        print(msg)
+        #print(msg)
         #assert nodeID not in self.oxx[dt][eid]
         self.fiberCurvature[eid][nodeID] = [fd]
         self.oxx[dt][eid][nodeID] = [oxx]
@@ -1223,7 +1223,6 @@ class RealPlateStrainObject(StrainObject):
                 msg = []
                 msg_pack = msgPacks[eType]
                 eids.sort()
-                eType = self.eType[eid]
                 if eType in ['CQUAD4']:
                     if isBilinear:
                         for dt in dts:
@@ -1271,7 +1270,7 @@ class RealPlateStrainObject(StrainObject):
                         msg.append(pageStamp % pageNum)
                         pageNum += 1
                 else:
-                    raise NotImplementedError('eType = |%r|' % eType)  # CQUAD8, CTRIA6
+                    raise NotImplementedError('eType = %r' % eType)  # CQUAD8, CTRIA6
                 f.write(''.join(msg))
         return pageNum - 1
 

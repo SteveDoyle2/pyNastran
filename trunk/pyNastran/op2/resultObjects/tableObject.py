@@ -68,7 +68,10 @@ class TableVector(ScalarObject):  # displacement style table
         self.is_built = True
 
         #print("ntimes=%s nnodes/elements=%s" % (self.ntimes, self.ntotal))
-        self._times = zeros(self.ntimes, 'float32')
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, int):
+            dtype = 'int32'
+        self._times = zeros(self.ntimes, dtype=dtype)
         #self.types = array(self.nelements, dtype='|S1')
 
         #self.gridTypes = {}

@@ -321,11 +321,9 @@ class RealBarStrainObject(StrainObject):
 
         if is_sort1:
             if dt is not None:
-                #self.add = self.add_sort1
                 self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
-            #self.add = self.addSort2
             self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
@@ -410,9 +408,9 @@ class RealBarStrainObject(StrainObject):
         #self.MS_tension[dt]     = {}
         #self.MS_compression[dt] = {}
 
-    def add_new_eid(
-        self, eType, dt, eid, e1a, e2a, e3a, e4a, axial, emaxa, emina, MSt,
-                                    e1b, e2b, e3b, e4b, emaxb, eminb, MSc):
+    def add_new_eid(self, eType, dt, eid,
+                    e1a, e2a, e3a, e4a, axial, emaxa, emina, MSt,
+                    e1b, e2b, e3b, e4b, emaxb, eminb, MSc):
         #print "Bar Stress add..."
         self.eType[eid] = eType
         self.e1[eid] = [e1a, e1b]
@@ -429,9 +427,9 @@ class RealBarStrainObject(StrainObject):
         #print msg
         #if nodeID==0: raise Exception(msg)
 
-    def add_new_eid_sort1(
-        self, eType, dt, eid, e1a, e2a, e3a, e4a, axial, emaxa, emina, MSt,
-                                         e1b, e2b, e3b, e4b, emaxb, eminb, MSc):
+    def add_new_eid_sort1(self, eType, dt, eid,
+                          e1a, e2a, e3a, e4a, axial, emaxa, emina, MSt,
+                          e1b, e2b, e3b, e4b, emaxb, eminb, MSc):
         #print "Bar Stress add..."
 
         self.eType[eid] = eType
@@ -453,7 +451,7 @@ class RealBarStrainObject(StrainObject):
         #if nodeID==0: raise Exception(msg)
 
     def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
-        if self.isTransient:
+        if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, pageNum, f)
 
         msg = header + [
@@ -500,18 +498,18 @@ class RealBarStrainObject(StrainObject):
             msg += header + words
             for eid, e1s in sorted(E1s.iteritems()):
                 #eType = self.eType[eid]
-                axial = self.axial[eid]
+                axial = self.axial[dt][eid]
                 #MSt = self.MSt[eid]
                 #MSc = self.MSc[eid]
                 MSt = ''
                 MSc = ''
 
-                e1 = self.e1[eid]
-                e2 = self.e2[eid]
-                e3 = self.e3[eid]
-                e4 = self.e4[eid]
-                emax = self.emax[eid]
-                emin = self.emin[eid]
+                e1 = self.e1[dt][eid]
+                e2 = self.e2[dt][eid]
+                e3 = self.e3[dt][eid]
+                e4 = self.e4[dt][eid]
+                emax = self.emax[dt][eid]
+                emin = self.emin[dt][eid]
                 vals = [e1[0], e2[0], e3[0], e4[0], axial, emax[0], emin[0],
                         e1[1], e2[1], e3[1], e4[1], emax[1], emin[1]]
                 (vals2, isAllZeros) = writeFloats13E(vals)

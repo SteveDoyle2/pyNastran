@@ -85,7 +85,7 @@ class FREQ(BaseCard):
         card = self.reprFields()
         if size == 8:
             return self.comment() + print_card_8(card)
-        return eturn self.comment() + print_card_16(card)
+        return self.comment() + print_card_16(card)
 
 
 class FREQ1(FREQ):
@@ -122,7 +122,7 @@ class FREQ1(FREQ):
         card = self.reprFields()
         if size == 8:
             return self.comment() + print_card_8(card)
-        return eturn self.comment() + print_card_16(card)
+        return self.comment() + print_card_16(card)
 
 
 class FREQ2(FREQ):
@@ -169,7 +169,7 @@ class FREQ3(FREQ):
         card = self.reprFields()
         if size == 8:
             return self.comment() + print_card_8(card)
-        return eturn self.comment() + print_card_16(card)
+        return self.comment() + print_card_16(card)
 
 
 class FREQ4(FREQ):
@@ -212,7 +212,7 @@ class FREQ4(FREQ):
         card = self.reprFields()
         if size == 8:
             return self.comment() + print_card_8(card)
-        return eturn self.comment() + print_card_16(card)
+        return self.comment() + print_card_16(card)
 
 
 class FREQ5(FREQ):
@@ -227,7 +227,7 @@ class FREQ5(FREQ):
         card = self.reprFields()
         if size == 8:
             return self.comment() + print_card_8(card)
-        return eturn self.comment() + print_card_16(card)
+        return self.comment() + print_card_16(card)
 
 
 class NLPCI(BaseCard):
@@ -258,7 +258,7 @@ class NLPCI(BaseCard):
         card = self.reprFields()
         if size == 8:
             return self.comment() + print_card_8(card)
-        return eturn self.comment() + print_card_16(card)
+        return self.comment() + print_card_16(card)
 
 
 class TSTEP(BaseCard):
@@ -310,7 +310,7 @@ class TSTEP(BaseCard):
         card = self.reprFields()
         if size == 8:
             return self.comment() + print_card_8(card)
-        return eturn self.comment() + print_card_16(card)
+        return self.comment() + print_card_16(card)
 
 
 class TSTEPNL(BaseCard):
@@ -460,7 +460,7 @@ class TSTEPNL(BaseCard):
         card = self.reprFields()
         if size == 8:
             return self.comment() + print_card_8(card)
-        return eturn self.comment() + print_card_16(card)
+        return self.comment() + print_card_16(card)
 
 
 class NLPARM(BaseCard):
@@ -579,4 +579,4 @@ class NLPARM(BaseCard):
         card = self.reprFields()
         if size == 8:
             return self.comment() + print_card_8(card) # having trouble with double precision...
-        return eturn self.comment() + print_card_16(card)
+        return self.comment() + print_card_16(card)

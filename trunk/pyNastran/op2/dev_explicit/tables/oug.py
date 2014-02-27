@@ -199,7 +199,7 @@ class OUG(OP2Common):
                                  RealTemperatureObject, None,
                                  RealTemperatureVector, None, 'node')
         elif self.thermal == 4:
-            n = self._not_implemented_or_skip(data, msg='thermal=4')
+            return self._not_implemented_or_skip(data, msg='thermal=4')
         else:
             n = self._not_implemented_or_skip(data, 'bad thermal=%r table' % self.thermal)
         #else:

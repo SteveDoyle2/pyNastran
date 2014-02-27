@@ -585,7 +585,7 @@ class F06Writer(F06WriterDeprecated):
             #header[2] = complex/nonlinear
             print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
             self.pageNum = result.write_f06(header, page_stamp,
-                                            pageNum=self.pageNum, f=f06, is_mag_phase=is_mag_phase)
+                                            self.pageNum, f=f06, is_mag_phase=is_mag_phase)
             assert isinstance(self.pageNum, int), 'pageNum=%r' % str(self.pageNum)
             if delete_objects:
                 del result
