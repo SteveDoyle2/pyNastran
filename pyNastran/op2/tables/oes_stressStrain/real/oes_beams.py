@@ -277,8 +277,6 @@ class RealBeamStrainObject(StrainObject):
         self.MS_tension = {}
         self.MS_compression = {}
 
-        #if self.code in [[1, 0, 10]]:
-            #self.isImaginary = False
         if is_sort1:
             if dt is not None:
                 #self.add_new_transient = self.add_new_transient
@@ -374,6 +372,8 @@ class RealBeamStrainObject(StrainObject):
         """
         #print "addNewTransient_beam+1+0"
         self.dt = dt
+        self.grids = {}
+        self.xxb = {}
         self.sxc[dt] = {}
         self.sxd[dt] = {}
         self.sxe[dt] = {}
@@ -402,25 +402,6 @@ class RealBeamStrainObject(StrainObject):
         self.MS_compression[eid] = [msc]
         return eid
 
-    def add_new_eid_sort1(self, dt, eid, out):
-        #print "Beam Transient Stress add_new_eid..."
-        (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
-
-        assert eid >= 0
-        if dt not in self.sxc:
-            self.add_new_transient(dt)
-        self.grids[eid] = [grid]
-        self.xxb[eid] = [sd]
-        self.sxc[dt][eid] = [sxc]
-        self.sxd[dt][eid] = [sxd]
-        self.sxe[dt][eid] = [sxe]
-        self.sxf[dt][eid] = [sxf]
-        self.smax[dt][eid] = [smax]
-        self.smin[dt][eid] = [smin]
-        self.MS_tension[dt][eid] = [mst]
-        self.MS_compression[dt][eid] = [msc]
-        return eid
-
     def add(self, dt, eid, out):
         #print "Beam Stress add..."
         (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
@@ -436,12 +417,35 @@ class RealBeamStrainObject(StrainObject):
             self.MS_tension[eid].append(mst)
             self.MS_compression[eid].append(msc)
 
+    def add_new_eid_sort1(self, dt, eid, out):
+        #print "Beam Transient Stress add_new_eid..."
+        (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
+
+        assert eid >= 0
+        if dt not in self.sxc:
+            self.add_new_transient(dt)
+
+        self.grids[eid] = [grid]
+        self.xxb[eid] = [sd]
+        self.sxc[dt][eid] = [sxc]
+        self.sxd[dt][eid] = [sxd]
+        self.sxe[dt][eid] = [sxe]
+        self.sxf[dt][eid] = [sxf]
+        self.smax[dt][eid] = [smax]
+        self.smin[dt][eid] = [smin]
+        self.MS_tension[dt][eid] = [mst]
+        self.MS_compression[dt][eid] = [msc]
+        return eid
+
     def add_sort1(self, dt, eid, out):
-        #print "Beam Transient Stress add..."
         (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
         if grid:
             self.grids[eid].append(grid)
             self.xxb[eid].append(sd)
+            self.sxc[dt][eid].append(sxc)
+            self.sxd[dt][eid].append(sxd)
+            self.sxe[dt][eid].append(sxe)
+            self.sxf[dt][eid].append(sxf)
             self.smax[dt][eid].append(smax)
             self.smin[dt][eid].append(smin)
             self.MS_tension[dt][eid].append(mst)
@@ -456,7 +460,7 @@ class RealBeamStrainObject(StrainObject):
                         '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
 
         for eid in sorted(self.smax):
-            msg.append('0  %8i\n' % (eid))
+            msg.append('0  %8i\n' % eid)
             #print self.xxb[eid]
             #print("self.grids =", self.grids)
             #print("eid =", eid)
@@ -473,11 +477,10 @@ class RealBeamStrainObject(StrainObject):
                 (vals2, isAllZeros) = writeFloats13E([
                     sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc])
                 (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
-                msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc.strip()))
+                msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc))
 
         msg.append(pageStamp % pageNum)
         f.write(''.join(msg))
-        return pageNum
         return pageNum
 
     def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
@@ -500,10 +503,10 @@ class RealBeamStrainObject(StrainObject):
                     sMin = self.smin[dt][eid][i]
                     SMt = self.MS_tension[dt][eid][i]
                     SMc = self.MS_compression[dt][eid][i]
-                    (vals2, isAllZeros) = writeFloats13E([sxc, sxd,
-                                                          sxe, sxf, sMax, sMin, SMt, SMc])
+                    (vals2, isAllZeros) = writeFloats13E([sxc, sxd, sxe, sxf,
+                                                          sMax, sMin, SMt, SMc])
                     (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
-                    msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc.strip()))
+                    msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc))
 
             msg.append(pageStamp % pageNum)
             f.write(''.join(msg))

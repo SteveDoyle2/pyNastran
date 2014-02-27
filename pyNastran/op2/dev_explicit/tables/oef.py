@@ -25,6 +25,7 @@ from pyNastran.op2.tables.oef_forces.oef_complexForceObjects import (
     ComplexCBarForce, ComplexForce_VU)
 from pyNastran.op2.tables.oef_forces.thermal_elements import ThermalElements
 
+
 class OEF(OP2Common):
     def __init__(self):
         OP2Common.__init__(self)
@@ -186,7 +187,8 @@ class OEF(OP2Common):
             #: eigenvalue
             self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
             self.dataNames = self.apply_data_code_value('dataNames', ['mode', 'eigr'])
-            #self.dataNames = self.apply_data_code_value('dataNames', ['mode', 'eigr', 'mode_cycle'])  ## TODO: mode_cycle is not defined?
+            # TODO: mode_cycle is not defined?
+            #self.dataNames = self.apply_data_code_value('dataNames', ['mode', 'eigr', 'mode_cycle'])
         elif self.analysis_code == 3:  # differential stiffness 0
             #: load set ID number
             self.loadID = self.add_data_parameter(data, 'loadID', 'i', 5)
@@ -240,7 +242,8 @@ class OEF(OP2Common):
 
         self._read_title(data)
         if self.element_type not in self.element_mapper:
-            raise NotImplementedError(self.element_type)
+            msg = 'element_type = %s' % self.element_type
+            return self._not_implemented_or_skip(data, msg)
         self._write_debug_bits()
 
     def _read_oef2_3(self, data):
@@ -254,7 +257,7 @@ class OEF(OP2Common):
         elif self.thermal == 1:
             return self._read_oef1_thermal(data)
         else:
-            n = self._not_implemented_or_skip(data, 'thermal=%s' % self.thermal)
+            return self._not_implemented_or_skip(data, 'thermal=%s' % self.thermal)
         return n
 
     def _read_oef1_thermal(self, data):
@@ -288,7 +291,8 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
                     n += ntotal
             else:
-                raise NotImplementedError(self.num_wide)
+                msg = 'num_wide=%s' % self.num_wide
+                return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [33, 39, 53, 64, 67, 68, 74, 75]:
             # 33-CQUAD4-centroidal
@@ -315,7 +319,8 @@ class OEF(OP2Common):
             # 191-VUBEAM
             return len(data)
         else:
-            raise NotImplementedError('OEF sort1 thermal Type=%s num=%s' % (self.element_name, self.element_type))
+            msg = 'OEF sort1 thermal Type=%s num=%s' % (self.element_name, self.element_type)
+            return self._not_implemented_or_skip(data, msg)
 
         assert len(data) > 0
         assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
@@ -385,7 +390,8 @@ class OEF(OP2Common):
                 #print self.rodForces
 
             else:
-                raise NotImplementedError(self.num_wide)
+                msg = 'num_wide=%s' % self.num_wide
+                return self._not_implemented_or_skip(data, msg)
             #print self.rodForces
 
         elif self.element_type in [2]:
@@ -478,7 +484,8 @@ class OEF(OP2Common):
                             #print "%s cOld   " % (self.get_element_type(self.element_type)), data_in
                             self.obj.add(dt, data_in)
             else:
-                raise NotImplementedError(self.num_wide)
+                msg = 'num_wide=%s' % self.num_wide
+                return self._not_implemented_or_skip(data, msg)
             #print self.beamForces
 
         elif self.element_type in [11, 12, 13, 14,   # springs
@@ -498,7 +505,8 @@ class OEF(OP2Common):
                 elif self.element_type in [20, 21, 22, 23]:
                     self.create_transient_object(self.damperForces, RealDamperForce)
                 else:
-                    raise NotImplementedError(self.element_type)
+                    msg = self.element_type
+                    return self._not_implemented_or_skip(data, msg)
 
                 s = Struct(b'if')  # 2
                 ntotal = 8  # 2*4
@@ -522,7 +530,8 @@ class OEF(OP2Common):
                 elif self.element_type in [20, 21, 22, 23]:
                     self.create_transient_object(self.damperForces, ComplexDamperForce)
                 else:
-                    raise NotImplementedError(self.element_type)
+                    msg = self.element_type
+                    return self._not_implemented_or_skip(data, msg)
 
                 s = Struct(b'i2f')
                 ntotal = 12  # 3*4
@@ -545,7 +554,8 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
                     n += ntotal
             else:
-                raise NotImplementedError()
+                msg = self.element_type
+                return self._not_implemented_or_skip(data, msg)
             #print self.springForces
 
         elif self.element_type in [24]:  # CVISC
@@ -593,7 +603,8 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
                     n += ntotal
             else:
-                raise NotImplementedError(self.num_wide)
+                msg = 'num_wide=%s' % self.num_wide
+                return self._not_implemented_or_skip(data, msg)
             #print self.viscForces
 
         elif self.element_type in [34]:  # bars
@@ -655,7 +666,8 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
                     n += ntotal
             else:
-                raise NotImplementedError(self.num_wide)
+                msg = 'num_wide=%s' % self.num_wide
+                return self._not_implemented_or_skip(data, msg)
             #print self.barForces
 
         elif self.element_type in [100]:
@@ -683,7 +695,8 @@ class OEF(OP2Common):
                     n += 32
                 #elif self.num_wide == 14:  # imag
             else:
-                raise NotImplementedError(self.num_wide)
+                msg = 'num_wide=%s' % self.num_wide
+                return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [33, 74]: # centroidal shells
             # 33-CQUAD4
@@ -749,7 +762,8 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
                     n += ntotal
             else:
-                raise NotImplementedError(self.num_wide)
+                msg = 'num_wide=%s' % self.num_wide
+                return self._not_implemented_or_skip(data, msg)
             #print self.plateForces
 
         elif self.element_type in [64, 70, 75, 82, 144]: # bilinear shells
@@ -763,7 +777,8 @@ class OEF(OP2Common):
             elif self.element_type in [64, 82, 144]:  # CQUAD8,CQUADR,CQUAD4-bilinear
                 nnodes = 4
             else:
-                raise NotImplementedError('name=%r type=%r' % (self.element_name, self.element_type))
+                msg = 'name=%r type=%r' % (self.element_name, self.element_type)
+                return self._not_implemented_or_skip(data, msg)
 
             numwide_real = 2 + (nnodes + 1) * 9 # centroidal node is the + 1
             numwide_imag = 2 + (nnodes + 1) * 17
@@ -870,7 +885,8 @@ class OEF(OP2Common):
                         #print "***%s    " % (self.get_element_type(self.element_type)),data_in
                         self.obj.add(eid, dt, data_in)
             else:
-                raise NotImplementedError(self.num_wide)
+                msg = 'num_wide=%s' % self.num_wide
+                return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [95, 96, 97, 98]: # composites
             # 95 - CQUAD4
@@ -916,7 +932,8 @@ class OEF(OP2Common):
                     #eid_old = eid
                     #n += ntotal
             else:
-                raise NotImplementedError(self.num_wide)
+                msg = 'num_wide=%s' % self.num_wide
+                return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [67, 68]: # solids
             # 67-CHEXA
@@ -924,15 +941,18 @@ class OEF(OP2Common):
             if self.num_wide == 0:
                 self.create_transient_object(self.shearForces, RealCShearForce)
             else:
-                raise NotImplementedError(self.num_wide)
+                msg = 'num_wide=%s' % self.num_wide
+                return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type in [53]:
             # 53-CTRIAX6
-            #if self.num_wide == 0:
+            if self.num_wide == 0:
+                pass
                 #self.create_transient_object(self.ctriaxForce, RealCTriaxForce)  # undefined
-            #else:
-            raise NotImplementedError(self.num_wide)
-            #return len(data)
+            else:
+                msg = 'num_wide=%s' % self.num_wide
+                return self._not_implemented_or_skip(data, msg)
+
         elif self.element_type in [4]:
             # 4-CSHEAR
             if self.num_wide == 17:  # real
@@ -1015,7 +1035,9 @@ class OEF(OP2Common):
                     #eid = self.obj.add_new_eid(out)
                     self.obj.add(dt, data_in)
             else:
-                raise NotImplementedError(self.num_wide)
+                msg = 'num_wide=%s' % self.num_wide
+                return self._not_implemented_or_skip(data, msg)
+
         elif self.element_type in [35]:
             # 35-CON
             return len(data)
@@ -1042,7 +1064,8 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
                     n += ntotal
             else:
-                raise NotImplementedError(self.num_wide)
+                msg = 'num_wide=%s' % self.num_wide
+                return self._not_implemented_or_skip(data, msg)
         elif self.element_type in [69]:
             # 69-CBEND
             if self.num_wide == 15:
@@ -1122,8 +1145,9 @@ class OEF(OP2Common):
                     #print "%s" %(self.get_element_type(self.element_type)), dataIn
                     self.obj.add(dt, dataIn)
             else:
-                raise NotImplementedError(self.num_wide)
-            return len(data)
+                msg = 'num_wide=%s' % self.num_wide
+                return self._not_implemented_or_skip(data, msg)
+
         elif self.element_type in [76, 77, 78]:
             # 76-HEXPR
             # 77-PENPR
@@ -1134,8 +1158,8 @@ class OEF(OP2Common):
             if self.num_wide == 0:
                 self.create_transient_object(self.bar100Forces, RealCBar100Force)
             else:
-                raise NotImplementedError(self.num_wide)
-            return len(data)
+                msg = 'num_wide=%s' % self.num_wide
+                return self._not_implemented_or_skip(data, msg)
         elif self.element_type in [102]:
             # 102-CBUSH
             if self.num_wide == 7:  # real
@@ -1193,8 +1217,9 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
                     n += ntotal
             else:
-                raise NotImplementedError(self.num_wide)
-            return len(data)
+                msg = 'num_wide=%s' % self.num_wide
+                return self._not_implemented_or_skip(data, msg)
+
         elif self.element_type in [145, 146, 147]:
             # 145-VUHEXA
             # 146-VUPENTA
@@ -1210,7 +1235,8 @@ class OEF(OP2Common):
             # 235-CQUADR
             return len(data)
         else:
-            raise NotImplementedError('OEF sort1 Type=%s num=%s' % (self.element_name, self.element_type))
+            msg = 'OEF sort1 Type=%s num=%s' % (self.element_name, self.element_type)
+            return self._not_implemented_or_skip(data, msg)
         assert len(data) > 0
         assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
         #assert len(data) % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data) % self.num_wide, len(data), ntotal)

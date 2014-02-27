@@ -671,9 +671,9 @@ class OP2Common(Op2Codes, F06Writer):
         return self.code
 
     def _not_implemented_or_skip(self, data, msg=''):
-        #if isRelease:
+        if isRelease:
             return len(data)
-        #else:
+        else:
             raise NotImplementedError('table_name=%s table_code=%s %s' % (self.table_name, self.table_code, msg))
 
     def parse_approach_code(self, data):

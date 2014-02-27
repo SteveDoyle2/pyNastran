@@ -1,5 +1,5 @@
 from math import sqrt
-
+from itertools import izip
 from numpy import array, pi
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
@@ -15,7 +15,7 @@ class RealEigenvectorVector(RealTableVector):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         #if self.nonlinear_factor is not None:
             #return self._write_f06_transient(header, pageStamp, pageNum, f)
         # modes get added
@@ -40,7 +40,7 @@ class RealEigenvectorVector(RealTableVector):
                 #header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             #else:
                 #header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
-            msg += header + words % dt
+            msg += header + [words % dt]
             for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in izip(node, gridtype, t1, t2, t3, r1, r2, r3):
                 sgridtype = self.recast_gridtype_as_string(gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
