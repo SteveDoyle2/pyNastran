@@ -103,8 +103,6 @@ class OES(OP2Common):
             self.dataNames = self.apply_data_code_value('dataNames', ['freq'])
         elif self.analysis_code == 6:  # transient
             ## time step
-
-
             self.dt = self.add_data_parameter(data, 'dt', 'f', 5)
             self.dataNames = self.apply_data_code_value('dataNames', ['dt'])
         elif self.analysis_code == 7:  # pre-buckling
@@ -1235,7 +1233,9 @@ class OES(OP2Common):
                     eid_old = eid
                     n += 44
             elif self.num_wide == 9:  # TODO: imag? - not done...
-                #return len(data)
+                msg = 'num_wide=%s' % self.num_wide
+                return self._not_implemented_or_skip(data, msg)
+
                 if self.isStress():
                     #self.create_transient_object(self.compositePlateStress, ComplexCompositePlateStressObject)  # undefined
                     raise NotImplementedError('ComplexCompositePlateStrainObject')
@@ -1312,6 +1312,9 @@ class OES(OP2Common):
                         self.obj.add(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
                         n += 32  # 4*8
             elif self.num_wide == 37: # imag
+                msg = 'num_wide=%s' % self.num_wide
+                return self._not_implemented_or_skip(data, msg)
+
                 if self.isStress():
                     #self.create_transient_object(self.ctriaxStress, ComplexTriaxStressObject)  # undefined
                     raise NotImplementedError('ComplexTriaxStressObject')
@@ -1511,7 +1514,7 @@ class OES(OP2Common):
                 return self._not_implemented_or_skip(data, msg)
 
             # TODO: this is totally wrong and very likely to crash...
-            numwide_real = 2 + 17 *(nnodes + 1)
+            numwide_real = 2 + 17 * (nnodes + 1)
             numwide_imag = 2 + 15 * nnodes
 
             if self.num_wide == numwide_real:
@@ -2073,17 +2076,25 @@ class OES(OP2Common):
         Creates the self.obj parameter based on if this is vectorized or not.
         :param self: the object pointer
         :param nelements: the number of elements to preallocate for vectorization
+        :type nelements: integer
         :param result_name: unused
+        :type result_name: string
         :param result_name_vector: unused
-        :param slot: the self dictionary that will be filled with a non-vectorized result
-        :param slot_vector: the self dictionary that will be filled with a vectorized result
+        :type result_name_vector: string
+        :param slot: the self dictionary that will be filled with a
+                     non-vectorized result
+        :type slot: dictionary
+        :param slot_vector: the self dictionary that will be filled with a
+                            vectorized result
+        :type slot: slot_vector
         :param obj: a pointer to the non-vectorized class
         :param obj_vector: a pointer to the vectorized class
         :returns auto_return: a flag indicating a return n should be called
-
-        Since that's weird, let's say we have real CTETRA stress data.  We're going to fill
-        self.solidStress with the class RealSolidStressObject.  If it were vectorized, we'd
-        fill self.ctetra_stress. with RealSolidStressVector.  So we call:
+        :type auto_return: bool
+        Since that's confusing, let's say we have real CTETRA stress data.
+        We're going to fill self.solidStress with the class
+        RealSolidStressObject.  If it were vectorized, we'd fill
+        self.ctetra_stress. with RealSolidStressVector.  So we call:
 
         auto_return = self._create_oes_object2(self, nelements,
                             'solidStress', 'ctetra_stress',
@@ -2099,18 +2110,17 @@ class OES(OP2Common):
                 is_vectorized = True
 
         if is_vectorized:
-            print "vectorized...read_mode=%s...%s" % (self.read_mode, result_vector_name)
+            #print "vectorized...read_mode=%s...%s" % (self.read_mode, result_vector_name)
             if self.read_mode == 1:
                 self.create_transient_object(slot_vector, obj_vector)
-                print "read_mode 1", self.obj.ntimes
+                #print "read_mode 1", self.obj.ntimes
                 self.result_names.add(result_vector_name)
                 #print('self.obj =', self.obj)
                 self.obj.nelements += nelements
                 auto_return = True
             elif self.read_mode == 2:
                 self.code = self._get_code()
-                print "***code =", self.code
-                print slot_vector.keys()
+                #print "***code =", self.code
                 self.obj = slot_vector[self.code]
                 #self.obj.update_data_code(self.data_code)
                 self.obj.build()
