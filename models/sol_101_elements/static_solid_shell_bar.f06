@@ -26,13 +26,13 @@
                                               * *          JUN 17, 2005           * *
                                               * *                                 * *
                                               * *              Intel              * *
-                                              * *MODEL PentiumIII/2525 (sdoyle-de * *
+                                              * *MODEL PentiumIII/3783 (sdoyle-de * *
                                               * *   Windows XP 6.1 (Build 7601)   * *
                                               * *                                 * *
                                               * *                                 * *
                                               * * * * * * * * * * * * * * * * * * * *
                                               * * * * * * * * * * * * * * * * * * * *
-1                                                                          FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE     1
+1                                                                          FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE     1
                                                                                                                                     
 0        N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O                                           
 0                                                                                                                                   
@@ -41,7 +41,7 @@
      NASTRAN OP2NEW=0 $ MSC.NASTRAN .LCL FILE                                        
      NASTRAN BUFFSIZE=8193 $(C:/MSC.SOFTWARE/MSC.NASTRAN/CONF/NAST20051.RCF[2])      
      NASTRAN REAL=2144075776 $(PROGRAM DEFAULT)                                      
-1                                                                          FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE     2
+1                                                                          FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE     2
                                                                                                                                     
 0        N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O                                                             
 0                                                                                                                                   
@@ -49,7 +49,7 @@
                                                                                                                                     
      SOL 101                                                                                 
      CEND                                                                                    
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE     3
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE     3
                                                                                                                                     
 0                                                                                                                                   
 0                                        C A S E    C O N T R O L    E C H O                                                        
@@ -97,7 +97,7 @@
      (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        7 WORDS.)
      (NUMBER OF FORTRAN RECORDS WRITTEN =          8 RECORDS.)
      (TOTAL DATA WRITTEN FOR TAPE LABEL = WORDS.)
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE     4
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE     4
                                                                                                                                     
 0                                                                                                                                   
  *** USER INFORMATION MESSAGE 4114 (OUTPX2)
@@ -148,7 +148,7 @@
      (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
            (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
            (TOTAL DATA WRITTEN FOR DATA BLOCK =          46 WORDS.)
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE     5
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE     5
                                                                                                                                     
 0                                                                                                                                   
  *** USER INFORMATION MESSAGE 7310 (VECPRN)
@@ -164,7 +164,7 @@
                MY       ----          ----          ----          ----       0.000000E+00     ----                                  
                MZ       ----          ----          ----          ----          ----       0.000000E+00                             
              TOTALS  0.000000E+00  0.000000E+00  1.000000E+04  5.000000E+03 -5.000000E+03  0.000000E+00
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE     6
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE     6
                                                                                                                                     
 0                                                                                                            SUBCASE 1              
  *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
@@ -176,7 +176,7 @@
     FOR DATA BLOCK KLL     
     LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
                 1         -3.5852160E-16          1.3539179E+01
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE     7
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE     7
                                                                                                                                     
 0                                                                                                                                   
  *** USER INFORMATION MESSAGE 7310 (VECPRN)
@@ -192,28 +192,28 @@
                MY       ----          ----          ----          ----       4.198506E+01     ----                                  
                MZ       ----          ----          ----          ----          ----      -3.918899E+00                             
              TOTALS  2.174261E-11 -6.004086E-12 -1.000000E+04 -5.000000E+03  5.000000E+03  0.000000E+00
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE     8
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE     8
                                                                                                                                     
 0                                                                                                                                   
 0                                                  MAXIMUM  SPCFORCES       
   SUBCASE/
   DAREA ID        T1             T2             T3             R1             R2             R3
 0        1   3.9188993E+00  2.2497456E+01  2.5518879E+03  2.2007238E+01  2.4381554E+01  2.1167312E+00
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE     9
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE     9
                                                                                                                                     
 0                                                                                                                                   
 0                                                  MAXIMUM  DISPLACEMENTS   
   SUBCASE/
   DAREA ID        T1             T2             T3             R1             R2             R3
 0        1   2.1504343E-03  1.7363488E-04  2.7078358E-03  7.1231989E-05  6.7937555E-04  6.3551510E-05
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    10
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    10
                                                                                                                                     
 0                                                                                                                                   
 0                                                  MAXIMUM  APPLIED LOADS   
   SUBCASE/
   DAREA ID        T1             T2             T3             R1             R2             R3
 0        1   0.0000000E+00  0.0000000E+00  1.0000000E+04  0.0000000E+00  0.0000000E+00  0.0000000E+00
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    11
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    11
                                                                                                                                     
 0                                                                                                                                   
  *** USER INFORMATION MESSAGE 7310 (VECPRN)
@@ -229,7 +229,7 @@
                MY       ----          ----          ----          ----       0.000000E+00     ----                                  
                MZ       ----          ----          ----          ----          ----       0.000000E+00                             
              TOTALS  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    12
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    12
                                                                                                                                     
 0                                                                                                                                   
 0                                                  MAXIMUM  MPCFORCES       
@@ -262,7 +262,7 @@
      (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         168 WORDS.)
            (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
            (TOTAL DATA WRITTEN FOR DATA BLOCK =         347 WORDS.)
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    13
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    13
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -290,7 +290,7 @@
             19      G      0.0            0.0            0.0            0.0            0.0            0.0
             20      G      0.0            0.0            0.0            0.0            0.0            0.0
             21      G      0.0            0.0            0.0            0.0            0.0            0.0
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    14
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    14
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -298,7 +298,7 @@
  
       POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
             13      G      0.0            0.0            1.000000E+04   0.0            0.0            0.0
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    15
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    15
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -309,10 +309,10 @@
             19      G     -3.918899E+00   2.249746E+01  -2.490097E+03  -1.759619E+01   1.760350E+01  -9.754824E-02
             20      G      0.0            0.0           -2.514314E+03   0.0            0.0           -1.489290E+00
             21      G      0.0            0.0           -2.443701E+03   0.0            0.0           -2.153298E-01
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    16
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    16
                                                                                                                                     
 0                                                                                                                                   
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    17
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    17
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -320,7 +320,7 @@
 0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL
        ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE
            13     4.901266E+00 -2.152240E+01  -1.759619E+01 -1.760350E+01   2.249746E+01 -3.918899E+00   2.490097E+03   9.754824E-02
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    18
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    18
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -330,7 +330,7 @@
 0        12
                  14   0.000   -4.902161E-01 -2.046266E+01  -2.249746E+01  3.918899E+00   2.551888E+03   2.116731E+00   0.0
                  18   1.000    2.200724E+01 -2.438155E+01  -2.249746E+01  3.918899E+00   2.551888E+03   2.116731E+00   0.0
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    19
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    19
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -349,7 +349,7 @@
                    2 -9.557993E+01  2.431352E+03  2.014026E+01 -3.733045E-01  1.364601E-03 -8.553944E-01 -8.676423E+00  2.089208E-03
                   17  4.207343E+01  2.431352E+03  2.014026E+01 -4.977445E-01  1.364601E-03 -8.553944E-01 -8.676423E+00  2.089208E-03
                   16  4.207343E+01  2.576955E+03  2.014026E+01 -4.977445E-01 -7.038047E-03 -8.553944E-01 -8.676423E+00  2.089208E-03
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    20
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    20
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -357,7 +357,7 @@
        ELEMENT           AXIAL                                     ELEMENT           AXIAL
          ID.             FORCE          TORQUE                       ID.             FORCE          TORQUE
             14        2.514314E+03   1.489290E+00                       15        2.443701E+03   2.153298E-01
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    21
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    21
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -369,7 +369,7 @@
           9       2.486347E+01  2.435867E+03 -3.966760E+01    1.489885E+00  2.959731E+00  2.022230E-01   -2.339164E+01  1.034654E+01
          10      -7.541787E+01  2.415780E+03  2.883593E+01   -1.401873E+00  4.828164E-01  7.386314E-01   -3.011050E+00  1.760453E+00
          11      -8.864300E+00  2.571187E+03 -2.833572E+01   -1.054261E+00 -9.751582E-01  1.024634E+00   -1.457085E+01  8.194581E-01
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    22
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    22
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -378,7 +378,7 @@
     ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C
 0      13    0.0            0.0            0.0            0.0            3.434617E-04   3.434617E-04   3.434617E-04 
              0.0            0.0            0.0            0.0                           3.434617E-04   3.434617E-04 
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    23
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    23
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -388,7 +388,7 @@
 0        12
                  14   0.000    3.173037E-04  3.189265E-04  3.866654E-04  3.850426E-04  3.866654E-04  3.173037E-04          
                  18   1.000    3.507030E-04  3.480544E-04  2.751982E-04  3.559147E-04  3.559147E-04  2.751982E-04          
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    24
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    24
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -423,7 +423,7 @@
 0                     7  X  -5.091640E-05  XY  -1.098129E-04   A   2.363612E-04  LX 0.12 0.70 0.70  -4.248493E-05    2.057414E-04
                          Y  -4.855876E-05  YZ   8.020025E-05   B  -1.140864E-04  LY 0.12 0.69-0.71
                          Z   2.269300E-04  ZX   8.020025E-05   C   5.180048E-06  LZ 0.99-0.16 0.00
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    25
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    25
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -465,7 +465,7 @@
 0                     8  X  -9.299430E-05  XY  -1.242577E-04   A   3.633716E-04  LX 0.12 0.74 0.67  -5.919042E-05    3.149474E-04
                          Y  -7.657342E-05  YZ   1.285768E-04   B  -1.636057E-04  LY 0.13 0.65-0.75
                          Z   3.471390E-04  ZX   1.288055E-04   C  -2.219465E-05  LZ 0.98-0.18 0.01
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    26
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    26
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -481,7 +481,7 @@
 0                    11  X  -2.429426E-04  XY   1.097887E-04   A   5.016178E-04  LX 0.09 0.75-0.65  -5.809349E-06    4.990672E-04
                          Y  -2.291179E-04  YZ   1.285768E-04   B  -2.914053E-04  LY 0.09-0.66-0.75
                          Z   4.894885E-04  ZX   1.288055E-04   C  -1.927845E-04  LZ 0.99-0.01 0.13
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    27
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    27
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -519,7 +519,7 @@
                   16   0.0           -1.079382E-04  3.535850E-04  7.333832E-06    89.5448   3.536141E-04 -1.079674E-04  2.787900E-04
                       -1.000000E+00  -1.312200E-05  4.031740E-06 -5.980446E-05   -53.0023   2.656284E-05 -3.565311E-05  3.604797E-05
 
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    28
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    28
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -527,7 +527,7 @@
        ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
          ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN
             14    8.670047E-04              1.538156E-05                     15    8.426555E-04              2.223951E-06  
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    29
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    29
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -566,7 +566,7 @@
 0                    13  X  -2.286231E-04  XY   1.241081E-04   A   9.631959E-04  LX 0.10-0.71-0.70  -1.602005E-04    8.050376E-04
                          Y  -2.291179E-04  YZ   2.370006E-04   B  -2.909252E-04  LY 0.10 0.71-0.70
                          Z   9.383425E-04  ZX   2.370006E-04   C  -1.916693E-04  LZ 0.99 0.00 0.15
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    30
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    30
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -581,13 +581,13 @@
             -1.000000E+00     -4.121709E-05   2.466646E-05   5.164103E-05    70.9549    3.357991E-05   -5.013054E-05   4.864410E-05
 0      11    0.0              -1.147095E-04   3.550377E-04  -1.031811E-05   -89.3708    3.550943E-04   -1.147662E-04   2.828553E-04
             -1.000000E+00     -1.965579E-05  -1.689056E-05   7.163674E-05    46.1053    1.757187E-05   -5.411822E-05   4.314581E-05
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    31
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    31
                                                                                                                                     
 0                                                                                                                                   
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    32
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    32
                                                                                                                                     
 0                                                                                                                                   
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    33
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    33
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -596,7 +596,7 @@
     ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C
 0      13    0.0            0.0            0.0            0.0            9.960389E+03   9.960389E+03   9.960389E+03 
              0.0            0.0            0.0            0.0                           9.960389E+03   9.960389E+03 
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    34
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    34
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -606,7 +606,7 @@
 0        12
                  14   0.000    9.201808E+03  9.248868E+03  1.121330E+04  1.116623E+04  1.121330E+04  9.201808E+03          
                  18   1.000    1.017039E+04  1.009358E+04  7.980747E+03  1.032153E+04  1.032153E+04  7.980747E+03          
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    35
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    35
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -641,7 +641,7 @@
 0                     7  X   1.370399E+03  XY  -1.206278E+03   A   7.681800E+03  LX 0.12 0.70 0.70  -3.422397E+03    6.780112E+03
                          Y   1.422195E+03  YZ   8.809876E+02   B  -1.742798E+01  LY 0.12 0.69-0.71
                          Z   7.474599E+03  ZX   8.809876E+02   C   2.602821E+03  LZ 0.99-0.16 0.00
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    36
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    36
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -683,7 +683,7 @@
 0                     8  X   1.424665E+03  XY  -1.364952E+03   A   1.145088E+04  LX 0.12 0.74 0.67  -4.768117E+03    1.037895E+04
                          Y   1.785427E+03  YZ   1.412396E+03   B  -1.266451E+02  LY 0.13 0.65-0.75
                          Z   1.109426E+04  ZX   1.414909E+03   C   2.980112E+03  LZ 0.98-0.18 0.01
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    37
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    37
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -699,7 +699,7 @@
 0                    11  X  -4.997029E+03  XY   1.206012E+03   A   1.136074E+04  LX 0.09 0.75-0.65  -4.679753E+02    1.644653E+04
                          Y  -4.693304E+03  YZ   1.412396E+03   B  -6.061740E+03  LY 0.09-0.66-0.75
                          Z   1.109426E+04  ZX   1.414909E+03   C  -3.895070E+03  LZ 0.99-0.01 0.13
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    38
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    38
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -737,7 +737,7 @@
                   16  -1.250000E-01   1.205102E+02  1.030714E+04 -1.556825E+00   -89.9912   1.030714E+04  1.205100E+02  1.024742E+04
                        1.250000E-01   2.160772E+02  1.030850E+04  1.626789E+02    89.0768   1.031112E+04  2.134556E+02  1.020606E+04
 
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    39
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    39
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -745,7 +745,7 @@
        ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
          ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
             14    2.514314E+04              1.691971E+02                     15    2.443701E+04              2.446346E+01  
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    40
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    40
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -784,7 +784,7 @@
 0                    13  X   4.362702E+03  XY   1.363309E+03   A   3.054661E+04  LX 0.10-0.71-0.70  -1.290504E+04    2.652965E+04
                          Y   4.351833E+03  YZ   2.603416E+03   B   2.993946E+03  LY 0.10 0.71-0.70
                          Z   3.000059E+04  ZX   2.603416E+03   C   5.174568E+03  LZ 0.99 0.00 0.15
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    41
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    41
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -799,10 +799,10 @@
              1.250000E-01     -1.670916E+02   9.616768E+03   4.443509E+01    89.7398    9.616970E+03   -1.672935E+02   9.701698E+03
 0      11   -1.250000E-01     -1.366663E+02   1.019113E+04  -1.497803E+01   -89.9169    1.019115E+04   -1.366880E+02   1.026018E+04
              1.250000E-01      6.575189E+01   1.037836E+04  -2.117077E+02   -88.8244    1.038271E+04    6.140757E+01   1.035214E+04
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    42
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    42
                                                                                                                                     
 0                                                                                                                                   
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    43
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    43
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -850,7 +850,7 @@
          10             5    TETRA         -1.026678E+01  -5.083542E+02   2.066146E+03   0.0            0.0            0.0
          10                  *TOTALS*      -2.273737E-13   7.389644E-13   1.182343E-11   0.0            0.0            0.0
 0        11             2    PENTA          1.265878E+02  -3.719352E+02  -2.066164E+03   0.0            0.0            0.0
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    44
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    44
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -897,7 +897,7 @@
          20                  *TOTALS*       0.0            0.0            0.0            0.0            0.0            0.0
 0        21                  F-OF-SPC       0.0            0.0           -2.443701E+03   0.0            0.0           -2.153298E-01
          21            15    ROD            0.0            0.0            2.443701E+03   0.0            0.0            2.153298E-01
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    45
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    45
      DEFAULT                                                                                                                        
 0                                                                                                            SUBCASE 1              
  
@@ -905,7 +905,7 @@
  
    POINT-ID    ELEMENT-ID     SOURCE             T1             T2             T3             R1             R2             R3
          21                  *TOTALS*       0.0            0.0            0.0            0.0            0.0            0.0
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    46
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    46
                                                                                                                                     
 0                                                                                                                                   
  *** USER INFORMATION MESSAGE 4114 (OUTPX2)
@@ -918,7 +918,7 @@
            (TOTAL DATA WRITTEN FOR DATA BLOCK =         994 WORDS.)
  *** USER INFORMATION MESSAGE 4114 (OUTPX2)
      DATA BLOCK OEF1X    WRITTEN ON FORTRAN UNIT 12, TRL =
-                    101                63                 2                13                14                 0                 3
+                    101                63                 2                26                14                 0                 3
      NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OEF1X.
         (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
      (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         146 WORDS.)
@@ -926,7 +926,7 @@
            (TOTAL DATA WRITTEN FOR DATA BLOCK =        1040 WORDS.)
  *** USER INFORMATION MESSAGE 4114 (OUTPX2)
      DATA BLOCK OES1X1   WRITTEN ON FORTRAN UNIT 12, TRL =
-                    101                63                 2                13                14                 0                 3
+                    101                63                 2                26                14                 0                 3
      NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OES1X1.
         (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
      (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         302 WORDS.)
@@ -934,7 +934,7 @@
            (TOTAL DATA WRITTEN FOR DATA BLOCK =        2349 WORDS.)
  *** USER INFORMATION MESSAGE 4114 (OUTPX2)
      DATA BLOCK OSTR1X   WRITTEN ON FORTRAN UNIT 12, TRL =
-                    101                63                 2                13                14                 0                 3
+                    101                63                 2                26                14                 0                 3
      NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OSTR1X.
         (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
      (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         302 WORDS.)
@@ -953,7 +953,7 @@
                                  (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      1 WORDS.)
                                        (NUMBER OF FORTRAN RECORDS WRITTEN =      1 RECORDS.)
                                        (TOTAL DATA WRITTEN FOR EOF MARKER =      1 WORDS.)
-1    MSC.NASTRAN JOB                                                       FEBRUARY  13, 2014  MSC.NASTRAN  6/17/05   PAGE    47
+1    MSC.NASTRAN JOB                                                       FEBRUARY  26, 2014  MSC.NASTRAN  6/17/05   PAGE    47
                                                                                                                                     
 0                                                                                                                                   
  * * * *  D B D I C T   P R I N T  * * * *      SUBDMAP = PRTSUM  ,  DMAP STATEMENT NO.     30
