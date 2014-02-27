@@ -249,8 +249,11 @@ class RealBarStressObject(StressObject):
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
                 '    ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C\n',
               ]
+        i = 0
         for dt, S1s in sorted(self.s1.iteritems()):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+            if hasattr(self, 'eigr'):
+                header[2] = ' %14s = %12.6E\n' % ('EIGENVALUE', self.eigrs[i])
             f.write(''.join(header + words))
             for eid, S1 in sorted(S1s.iteritems()):
                 #eType = self.eType[eid]
@@ -279,6 +282,7 @@ class RealBarStressObject(StressObject):
             f.write(pageStamp % pageNum)
             msg = ['']
             pageNum += 1
+            i += 1
         return pageNum - 1
 
 
@@ -493,8 +497,11 @@ class RealBarStrainObject(StrainObject):
                 '    ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C\n',
               ]
         msg = []
+        i = 0
         for dt, E1s in sorted(self.e1.iteritems()):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+            if hasattr(self, 'eigr'):
+                header[2] = ' %14s = %12.6E\n' % ('EIGENVALUE', self.eigrs[i])
             msg += header + words
             for eid, e1s in sorted(E1s.iteritems()):
                 #eType = self.eType[eid]
@@ -523,4 +530,5 @@ class RealBarStrainObject(StrainObject):
             f.write(''.join(msg))
             msg = ['']
             pageNum += 1
+            i += 1
         return pageNum - 1

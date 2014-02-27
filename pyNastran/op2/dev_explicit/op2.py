@@ -1247,9 +1247,9 @@ class OP2( #BDF,
 
             # OEF - Forces - tCode=4 thermal=0
             'rodForces',  # non-vectorized
-            'crod_forces',  # vectorized
-            'conrod_forces',
-            'ctube_forces',
+            'crod_force',  # vectorized
+            'conrod_force',
+            'ctube_force',
 
             'barForces',
             'bar100Forces',

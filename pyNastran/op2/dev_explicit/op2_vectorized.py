@@ -149,22 +149,24 @@ class OP2_Vectorized(OP2):
         self.log.info('compress_results')
         result_types = [
             'displacements', 'eigenvectors', 'spcForces', 'mpcForces',
-
+            #=======================================================
             'ctetra_stress', 'chexa_stress', 'cpenta_stress',
             'ctetra_strain', 'chexa_strain', 'cpenta_strain',
+            #=======================================================
             'crod_stress', 'conrod_stress', 'ctube_stress',
             'crod_strain', 'conrod_strain', 'ctube_strain',
 
-            'plateStress', 'plateStrain',
-            'barStress', 'beamStress',
-            'barStrain', 'beamStrain',
-
             'rodForces',
-            'barForces',
-            'beamForces',
-            'plateForces', 'plateForces2',
+            'crod_force', 'conrod_force', 'ctube_force',
+            #=======================================================
+            'plateStress', 'plateStrain', 'plateForces', 'plateForces2',
+            #=======================================================
+            'barStress', 'barStrain', 'beamForces',
+            'beamStress', 'beamStrain', 'barForces',
+            #=======================================================
             'strainEnergy',
-            ]
+            #=======================================================
+        ]
 
         for result_type in result_types:
             result = getattr(self, result_type)

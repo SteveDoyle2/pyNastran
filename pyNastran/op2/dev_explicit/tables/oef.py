@@ -8,7 +8,8 @@ from pyNastran.op2.tables.oef_forces.oef_thermalObjects import (HeatFlux_CHBDYx,
                                  HeatFlux_VU, HeatFlux_VUBEAM, HeatFlux_VU_3D,
                                  HeatFlux_CONV)
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
-    RealRodForce, RealCBeamForce, RealCShearForce,
+    RealRodForce, RealRodForceVector,
+    RealCBeamForce, RealCShearForce,
     RealSpringForce, RealDamperForce, RealViscForce,
     RealPlateForce, RealConeAxForce, RealPlate2Force,
     RealCBar100Force, RealCGapForce, RealBendForce,
@@ -234,6 +235,8 @@ class OEF(OP2Common):
             raise RuntimeError('invalid analysis_code...analysis_code=%s' % str(self.analysis_code))
 
         self.element_name = self.element_mapper[self.element_type]
+        self.data_code['element_name'] = self.element_name
+
         if self.debug:
             self.binary_debug.write('  element_name = %r\n' % self.element_name)
             self.binary_debug.write('  approach_code = %r\n' % self.approach_code)
@@ -250,8 +253,6 @@ class OEF(OP2Common):
         pass
 
     def _read_oef1_4(self, data):
-        if self.read_mode == 1:
-            return len(data)
         if self.thermal == 0:
             return self._read_oef1_loads(data)
         elif self.thermal == 1:
@@ -261,6 +262,8 @@ class OEF(OP2Common):
         return n
 
     def _read_oef1_thermal(self, data):
+        if self.read_mode == 1:
+            return len(data)
         n = 0
         is_magnitude_phase = self.is_magnitude_phase()
         dt = self.nonlinear_factor
@@ -345,10 +348,36 @@ class OEF(OP2Common):
             #1-CROD
             #3-CTUBE
             #10-CONROD
+            result_name = 'rodForces'
+            slot = self.rodForces
+            obj_real = RealRodForce
+            obj_complex = ComplexRodForce
+
+            obj_vector_real = RealRodForceVector
+            obj_vector_complex = None  #ComplexRodForceVector
+            if self.element_type == 1: # CROD
+                result_vector_name = 'crod_force'
+                slot_vector = self.crod_force
+            elif self.element_type == 3:  # CTUBE
+                result_vector_name = 'ctube_force'
+                slot_vector = self.ctube_force
+            elif self.element_type == 10:  # CONROD
+                result_vector_name = 'conrod_force'
+                slot_vector = self.conrod_force
+            else:
+                msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
+                return self._not_implemented_or_skip(data, msg)
+
             if self.num_wide == 3: # real
-                self.create_transient_object(self.rodForces, RealRodForce)
                 ntotal = 12 # 3 * 4
                 nelements = len(data) // ntotal
+                auto_return = self._create_oes_object2(nelements,
+                                                       result_name, result_vector_name,
+                                                       slot, slot_vector,
+                                                       obj_real, obj_vector_real)
+                if auto_return:
+                    return nelements * self.num_wide * 4
+
                 s = Struct(b'iff')  # 3
                 for i in xrange(nelements):
                     edata = data[n:n+ntotal]
@@ -358,9 +387,8 @@ class OEF(OP2Common):
                     if self.debug4():
                         self.binary_debug.write('OEF_Rod - %s\n' % (str(out)))
 
-                    data_in = [eid, axial, torque]
                     #print "%s" % (self.get_element_type(self.element_type)), data_in
-                    self.obj.add(dt, data_in)
+                    self.obj.add(dt, eid, axial, torque)
                     n += ntotal
 
             elif self.num_wide == 5: # imag
@@ -396,6 +424,8 @@ class OEF(OP2Common):
 
         elif self.element_type in [2]:
             #2-CBEAM
+            if self.read_mode == 1:
+                return len(data)
             if self.num_wide == 9:  # centroid ???
                 self.create_transient_object(self.beamForces, RealCBeamForce)
                 s = Struct(b'i8f')  # 36
@@ -490,6 +520,8 @@ class OEF(OP2Common):
 
         elif self.element_type in [11, 12, 13, 14,   # springs
                                    20, 21, 22, 23]:  # dampers
+            if self.read_mode == 1:
+                return len(data)
             # 11-CELAS1
             # 12-CELAS2
             # 13-CELAS3
@@ -559,6 +591,8 @@ class OEF(OP2Common):
             #print self.springForces
 
         elif self.element_type in [24]:  # CVISC
+            if self.read_mode == 1:
+                return len(data)
             if self.num_wide == 3: # real
                 self.create_transient_object(self.viscForces, RealViscForce)
                 s = Struct(b'iff')
@@ -609,6 +643,8 @@ class OEF(OP2Common):
 
         elif self.element_type in [34]:  # bars
             # 34-CBAR
+            if self.read_mode == 1:
+                return len(data)
             if self.num_wide == 9: # real
                 self.create_transient_object(self.barForces, RealCBarForce)
                 s = Struct(b'i8f')  # 9
@@ -672,6 +708,8 @@ class OEF(OP2Common):
 
         elif self.element_type in [100]:
             #100-BARS
+            if self.read_mode == 1:
+                return len(data)
             if self.num_wide == 8:  # real
                 self.create_transient_object(self.bar100Forces, RealCBar100Force)
 
@@ -701,6 +739,8 @@ class OEF(OP2Common):
         elif self.element_type in [33, 74]: # centroidal shells
             # 33-CQUAD4
             # 74-CTRIA3
+            if self.read_mode == 1:
+                return len(data)
             if self.num_wide == 9:
                 self.create_transient_object(self.plateForces, RealPlateForce)
                 s = Struct(b'i8f')
@@ -772,6 +812,8 @@ class OEF(OP2Common):
             # 75-CTRIA6,
             # 82-CQUAD8,
             # 144-CQUAD4-bilinear
+            if self.read_mode == 1:
+                return len(data)
             if self.element_type in [70, 75]:  # CTRIAR,CTRIA6
                 nnodes = 3
             elif self.element_type in [64, 82, 144]:  # CQUAD8,CQUADR,CQUAD4-bilinear
@@ -893,6 +935,8 @@ class OEF(OP2Common):
             # 96 - CQUAD8
             # 97 - CTRIA3
             # 98 - CTRIA6 (composite)
+            if self.read_mode == 1:
+                return len(data)
             if self.num_wide == 9:  # real
                 return len(data)
                 #print self.code_information()
@@ -938,6 +982,8 @@ class OEF(OP2Common):
         elif self.element_type in [67, 68]: # solids
             # 67-CHEXA
             # 68-CPENTA
+            if self.read_mode == 1:
+                return len(data)
             if self.num_wide == 0:
                 self.create_transient_object(self.shearForces, RealCShearForce)
             else:
@@ -946,6 +992,8 @@ class OEF(OP2Common):
 
         elif self.element_type in [53]:
             # 53-CTRIAX6
+            if self.read_mode == 1:
+                return len(data)
             if self.num_wide == 0:
                 pass
                 #self.create_transient_object(self.ctriaxForce, RealCTriaxForce)  # undefined
@@ -955,6 +1003,8 @@ class OEF(OP2Common):
 
         elif self.element_type in [4]:
             # 4-CSHEAR
+            if self.read_mode == 1:
+                return len(data)
             if self.num_wide == 17:  # real
                 self.create_transient_object(self.shearForces, RealCShearForce)
                 s = Struct(b'i16f')
@@ -1040,9 +1090,13 @@ class OEF(OP2Common):
 
         elif self.element_type in [35]:
             # 35-CON
+            if self.read_mode == 1:
+                return len(data)
             return len(data)
-        elif self.element_type in [38]:
+        elif self.element_type in [38]:  # cgap
             # 38-GAP
+            if self.read_mode == 1:
+                return len(data)
             if self.num_wide == 9:
                 self.create_transient_object(self.gapForces, RealCGapForce)
                 s = Struct(b'i8f')
@@ -1066,8 +1120,10 @@ class OEF(OP2Common):
             else:
                 msg = 'num_wide=%s' % self.num_wide
                 return self._not_implemented_or_skip(data, msg)
-        elif self.element_type in [69]:
+        elif self.element_type in [69]:  # cbend
             # 69-CBEND
+            if self.read_mode == 1:
+                return len(data)
             if self.num_wide == 15:
                 self.create_transient_object(self.bendForces, RealBendForce)
                 s = Struct(b'ii13f')
@@ -1152,15 +1208,19 @@ class OEF(OP2Common):
             # 76-HEXPR
             # 77-PENPR
             # 78-TETPR
+            if self.read_mode == 1:
+                return len(data)
             return len(data)
-        elif self.element_type in [100]:
+        elif self.element_type in [100]:  #  bars
             # 100-BARS
+            if self.read_mode == 1:
+                return len(data)
             if self.num_wide == 0:
                 self.create_transient_object(self.bar100Forces, RealCBar100Force)
             else:
                 msg = 'num_wide=%s' % self.num_wide
                 return self._not_implemented_or_skip(data, msg)
-        elif self.element_type in [102]:
+        elif self.element_type in [102]:  # cbush
             # 102-CBUSH
             if self.num_wide == 7:  # real
                 self.create_transient_object(self.bushForces, RealCBushForce)
@@ -1224,15 +1284,21 @@ class OEF(OP2Common):
             # 145-VUHEXA
             # 146-VUPENTA
             # 147-VUTETRA
+            if self.read_mode == 1:
+                return len(data)
             return len(data)
         elif self.element_type in [189, 190]:
             # 189-VUQUAD
             # 190-VUTRIA
+            if self.read_mode == 1:
+                return len(data)
             return len(data)
         elif self.element_type in [191, 233, 235]:
             # 191-VUBEAM
             # 233-TRIARLC
             # 235-CQUADR
+            if self.read_mode == 1:
+                return len(data)
             return len(data)
         else:
             msg = 'OEF sort1 Type=%s num=%s' % (self.element_name, self.element_type)

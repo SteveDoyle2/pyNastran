@@ -1,8 +1,185 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from itertools import izip
+from numpy import zeros
+
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats12E
 
+
+class RealRodForceVector(ScalarObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ScalarObject.__init__(self, data_code, isubcase)
+        self.eType = {}
+        #self.code = [self.format_code, self.sort_code, self.s_code]
+
+        #self.ntimes = 0  # or frequency/mode
+        #self.ntotal = 0
+        self.nelements = 0  # result specific
+
+        if is_sort1:
+            self.add = self.add_sort1
+        else:
+            raise NotImplementedError('SORT2')
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def get_headers(self):
+        headers = ['axial', 'torsion', 'SMa', 'SMt']
+        return headers
+
+    def _get_msgs(self):
+        base_msg = ['       ELEMENT       AXIAL       TORSIONAL     ELEMENT       AXIAL       TORSIONAL\n',
+                    '         ID.         FORCE        MOMENT        ID.          FORCE        MOMENT\n']
+        crod_msg   = ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C R O D )\n', ]
+        conrod_msg = ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C O N R O D )\n', ]
+        ctube_msg  = ['                                     F O R C E S   I N   R O D   E L E M E N T S      ( C T U B E )\n', ]
+        crod_msg += base_msg
+        conrod_msg += base_msg
+        ctube_msg += base_msg
+        return crod_msg, conrod_msg, ctube_msg
+
+    def get_headers(self):
+        headers = ['axial', 'torque']
+        return headers
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def build(self):
+        print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        #self.names = []
+        self.nelements //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, int):
+            dtype = 'int32'
+        self.times = zeros(self.ntimes, dtype=dtype)
+        self.element = zeros(self.nelements, dtype='int32')
+
+        #[axial_force, torque]
+        self.data = zeros((self.ntimes, self.ntotal, 2), dtype='float32')
+
+    def add(self, dt, eid, axial, torque):
+        self.add_sort1(dt, eid, axial, torque)
+
+    def add_sort1(self, dt, eid, axial, torque):
+        self.times[self.itime] = dt
+        self.element[self.ielement] = eid
+        self.data[self.itime, self.ielement, :] = [axial, torque]
+        self.ielement += 1
+
+    def get_stats(self):
+        if not self.is_built:
+            return ['<%s>\n' % self.__class__.__name__,
+                    '  ntimes: %i\n' % self.ntimes,
+                    '  ntotal: %i\n' % self.ntotal,
+                    ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        #ntotal = self.ntotal
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+            ntimes_word = 'ntimes'
+        else:
+            msg.append('  type=%s nelements=%i\n'
+                       % (self.__class__.__name__, nelements))
+            ntimes_word = 1
+        msg.append('  eType\n')
+        #msg.append('  data.shape=%s' % str(self.data.shape))
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  element name: %s\n  ' % self.element_type)
+        msg += self.get_data_code()
+        return msg
+
+    def get_f06_header(self, is_mag_phase=True):
+        crod_msg, conrod_msg, ctube_msg = self._get_msgs()
+        if 'CROD' in self.element_name:
+            msg = crod_msg
+        elif 'CONROD' in self.element_name:
+            msg = conrod_msg
+        elif 'CTUBE' in self.element_name:
+            msg = ctube_msg
+        return self.element_name, msg
+
+    def get_element_index(self, eids):
+        # elements are always sorted; nodes are not
+        itot = searchsorted(eids, self.element)  #[0]
+        return itot
+
+    def eid_to_element_node_index(self, eids):
+        #ind = ravel([searchsortd(self.element == eid) for eid in eids])
+        ind = searchsorted(eids, self.element)
+        #ind = ind.reshape(ind.size)
+        #ind.sort()
+        return ind
+
+    def write_f06(self, header, page_stamp, pageNum=1, f=None, is_mag_phase=False):
+        (elem_name, msg_temp) = self.get_f06_header(is_mag_phase)
+
+        # write the f06
+        (ntimes, ntotal, two) = self.data.shape
+
+        eids = self.element
+        is_odd = False
+        nwrite = len(eids)
+        if len(eids) % 2 == 1:
+            nwrite -= 1
+            is_odd = True
+
+        #print('len(eids)=%s nwrite=%s is_odd=%s' % (len(eids), nwrite, is_odd))
+        for itime in xrange(ntimes):
+            dt = self.times[itime]  # TODO: rename this...
+            if self.nonlinear_factor is not None:
+                dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
+                header[1] = dtLine
+                if hasattr(self, 'eigr'):
+                    header[2] = ' %14s = %12.6E\n' % ('EIGENVALUE', self.eigrs[itime])
+            f.write(''.join(header + msg_temp))
+
+            # TODO: can I get this without a reshape?
+            #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+            axial = self.data[itime, :, 0]
+            torsion = self.data[itime, :, 1]
+
+            # loop over all the elements
+            out = []
+            for eid, axiali, torsioni in izip(eids, axial, torsion):
+                ([axiali, torsioni], isAllZeros) = writeFloats13E([axiali, torsioni])
+                out.append([eid, axiali, torsioni])
+
+            for i in xrange(0, nwrite, 2):
+                outLine = '      %8i   %-13s  %-13s  %8i   %-13s  %s\n' % tuple(out[i] + out[i + 1])
+                f.write(outLine)
+            if is_odd:
+                outLine = '      %8i   %-13s  %s\n' % tuple(out[-1])
+                f.write(outLine)
+                i += 1
+            f.write(page_stamp % pageNum)
+            pageNum += 1
+        return pageNum - 1
 
 class RealRodForce(ScalarObject):  # 1-ROD
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -40,13 +217,11 @@ class RealRodForce(ScalarObject):  # 1-ROD
         msg.append('  axialForce, torque\n')
         return msg
 
-    def add(self, dt, data):
-        [eid, axialForce, torque] = data
+    def add(self, dt, eid, axialForce, torque):
         self.axialForce[eid] = axialForce
         self.torque[eid] = torque
 
-    def add_sort1(self, dt, data):
-        [eid, axialForce, torque] = data
+    def add_sort1(self, dt, eid, axialForce, torque):
         if dt not in self.axialForce:
             self.add_new_transient(dt)
         self.axialForce[dt][eid] = axialForce
