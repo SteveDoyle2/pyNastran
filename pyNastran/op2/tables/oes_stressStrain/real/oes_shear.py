@@ -1,8 +1,10 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from .oes_objects import StressObject, StrainObject, OES_Object
+from itertools import izip
+from numpy import zeros
 
+from .oes_objects import StressObject, StrainObject, OES_Object
 
 class RealShearVector(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -16,7 +18,7 @@ class RealShearVector(OES_Object):
 
         if is_sort1:
             #sort1
-            self.add_eid = self.add_eid_sort1
+            self.add_new_eid = self.add_new_eid_sort1
         else:
             raise NotImplementedError('SORT2')
 
@@ -271,6 +273,9 @@ class RealShearStressObject(StressObject):
         self.maxShear[dt] = {}
         self.avgShear[dt] = {}
         self.margin[dt] = {}
+
+    def getLength(self):
+        return (16, 'fff')
 
     def add_f06_data(self, data, dt):
         if dt:

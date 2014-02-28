@@ -176,7 +176,6 @@ class RealRodForceVector(ScalarObject):
             if is_odd:
                 outLine = '      %8i   %-13s  %s\n' % tuple(out[-1])
                 f.write(outLine)
-                i += 1
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1

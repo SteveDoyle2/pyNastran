@@ -165,7 +165,6 @@ class RealRodVector(OES_Object):
             if is_odd:
                 outLine = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[-1]))
                 f.write(outLine)
-                i += 1
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1

@@ -1,6 +1,7 @@
+#pylint disable=W0612,C0301
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from struct import unpack
+from struct import Struct
 
 from .oef_thermalObjects import (HeatFlux_CHBDYx, HeatFlux_2D_3D, HeatFlux_1D,
                                  HeatFlux_VU, HeatFlux_VUBEAM, HeatFlux_VU_3D,
@@ -12,44 +13,38 @@ class ThermalElements(object):
     def readOEF_Thermal(self):
         assert self.format_code == 1, self.code_information()
         #print "self.element_type = ",self.element_type
-        if self.element_type in [107, 108, 109]:  # CHBDYE, CHBDYG, CHBDYP
-            assert self.num_wide == 8, self.code_information()
-            self.create_transient_object(self.thermalLoad_CHBDY, HeatFlux_CHBDYx)
-            self.handle_results_buffer(self.OEF_CHBDYx,
-                                       resultName='thermalLoad_CHBDY')
+        if 0:
+            pass
         elif self.element_type in [33, 39, 67, 68]:  # QUAD4,TETRA,HEXA,PENTA
             assert self.num_wide in [9, 10], self.code_information()
             self.create_transient_object(self.thermalLoad_2D_3D, HeatFlux_2D_3D)
-            self.handle_results_buffer(self.OEF_2D_3D,
-                                       resultName='thermalLoad_2D_3D')
+            self.handle_results_buffer(self.OEF_2D_3D, resultName='thermalLoad_2D_3D')
         elif self.element_type in [53, 64, 74, 75]:  # TRIAX6,QUAD8,TRIA3,TRIA6
             assert self.num_wide == 9, self.code_information()
             self.create_transient_object(self.thermalLoad_2D_3D, HeatFlux_2D_3D)
-            self.handle_results_buffer(self.OEF_2D_3D,
-                                       resultName='thermalLoad_2D_3D')
+            self.handle_results_buffer(self.OEF_2D_3D, resultName='thermalLoad_2D_3D')
         elif self.element_type in [1, 2, 3, 10, 34, 69]:  # ROD,BEAM,TUBE,CONROD,BAR,BEND
             assert self.num_wide == 9, self.code_information()
             self.create_transient_object(self.thermalLoad_1D, HeatFlux_1D)
             self.handle_results_buffer(self.OEF_1D, resultName='thermalLoad_1D')
+        elif self.element_type in [107, 108, 109]:  # CHBDYE, CHBDYG, CHBDYP
+            assert self.num_wide == 8, self.code_information()
+            self.create_transient_object(self.thermalLoad_CHBDY, HeatFlux_CHBDYx)
+            self.handle_results_buffer(self.OEF_CHBDYx, resultName='thermalLoad_CHBDY')
+        elif self.element_type in [110]:
+            self.create_transient_object(self.thermalLoad_CONV, HeatFlux_CONV)
+            self.handle_results_buffer(self.OEF_CONV, resultName='thermalLoad_CONV')
+        elif self.element_type in [145, 146, 147]:  # VUHEXA,VUPENTA,VUTETRA
+            self.create_transient_object(self.thermalLoad_VU_3D, HeatFlux_VU_3D)
+            self.handle_results_buffer(self.OEF_VU_3D_Element, resultName='thermalLoad_VU_3D')
         elif self.element_type in [189, 190]:  # VUQUAD,VUTRIA
             #assert self.num_wide==27,self.code_information()
             self.create_transient_object(self.thermalLoad_VU, HeatFlux_VU)
-            self.handle_results_buffer(
-                self.OEF_VU_Element, resultName='thermalLoad_VU')
+            self.handle_results_buffer(self.OEF_VU_Element, resultName='thermalLoad_VU')
         elif self.element_type in [191]:  # VUBEAM
             #assert self.num_wide==27,self.code_information()
-            self.create_transient_object(
-                self.thermalLoad_VUBeam, HeatFlux_VUBEAM)
-            self.handle_results_buffer(self.OEF_VUBeam_Element,
-                                      resultName='thermalLoad_VUBeam')
-        elif self.element_type in [145, 146, 147]:  # VUHEXA,VUPENTA,VUTETRA
-            self.create_transient_object(self.thermalLoad_VU_3D, HeatFlux_VU_3D)
-            self.handle_results_buffer(self.OEF_VU_3D_Element,
-                                      resultName='thermalLoad_VU_3D')
-        elif self.element_type in [110]:
-            self.create_transient_object(self.thermalLoad_CONV, HeatFlux_CONV)
-            self.handle_results_buffer(self.OEF_CONV,
-                                       resultName='thermalLoad_CONV')
+            self.create_transient_object(self.thermalLoad_VUBeam, HeatFlux_VUBEAM)
+            self.handle_results_buffer(self.OEF_VUBeam_Element, resultName='thermalLoad_VUBeam')
         else:
             self.not_implemented_or_skip()
 
@@ -72,12 +67,13 @@ class ThermalElements(object):
             #eid = self.nonlinear_factor
         format1 = bytes(format1)
 
+        s1 = Struct(format1)
         while len(self.data) >= 32:  # 8*4
             eData = self.data[0:32]
             self.data = self.data[32:]
             #print "len(data) = ",len(eData)
 
-            out = unpack(format1, eData)
+            out = s1.unpack(eData)
             (eid, eType, fApplied, freeConv, forceConv, fRad, fTotal) = out
             eid2 = extract(eid, dt)
             #print "eType=%s" %(eType)
@@ -106,12 +102,13 @@ class ThermalElements(object):
             #eid = self.nonlinear_factor
         format1 = bytes(format1)
 
+        s1 = Struct(format1)
         while len(self.data) >= 16:  # 4*4
             eData = self.data[0:16]
             self.data = self.data[16:]
             #print "len(data) = ",len(eData)
 
-            out = unpack(format1, eData)
+            out = s1.unpack(eData)
             (eid, cntlNode, freeConv, freeConvK) = out
             eid2 = extract(eid, dt)
 
@@ -145,17 +142,15 @@ class ThermalElements(object):
             extract = self.extractSort2
             #eid = self.nonlinear_factor
 
-        formatAll = 'iffffff'
-        format1 = bytes(format1)
-        formatAll = bytes(formatAll)
-
         n = 24 + 28 * nNodes
+        s1 = Struct(bytes(format1))
+        s2 = Struct(bytes('i6f'))
         while len(self.data) >= n:
             eData = self.data[0:24]  # 6*4
             self.data = self.data[24:]
             #print "len(data) = ",len(eData)
 
-            out = unpack(format1, eData)
+            out = s1.unpack(eData)
             (eid, parent, coord, icord, theta, null) = out
 
             eid2 = extract(eid, dt)
@@ -166,7 +161,7 @@ class ThermalElements(object):
                 eData = self.data[0:28]  # 7*4
                 self.data = self.data[28:]
                 #print "i=%s len(data)=%s" %(i,len(eData))
-                out = unpack(formatAll, eData)
+                out = s2.unpack(eData)
                 gradFluxes.append(out)
             dataIn.append(gradFluxes)
             #eType = a+b+c+d+e+f+g+h
@@ -203,12 +198,14 @@ class ThermalElements(object):
         formatAll = bytes(formatAll)
 
         n = 16 + 28 * nNodes
+        s1 = Struct(format1)
+        s2 = Struct(formatAll)
         while len(self.data) >= n:
             eData = self.data[0:16]  # 4*4
             self.data = self.data[16:]
             #print "len(data) = ",len(eData)
 
-            out = unpack(format1, eData)
+            out = s1.unpack(eData)
             (eid, parent, coord, icord) = out
 
             eid2 = extract(eid, dt)
@@ -219,7 +216,7 @@ class ThermalElements(object):
                 eData = self.data[0:28]  # 7*4
                 self.data = self.data[28:]
                 #print "i=%s len(data)=%s" %(i,len(eData))
-                out = unpack(formatAll, eData)
+                out = s2.unpack(eData)
                 gradFluxes.append(out)
             dataIn.append(gradFluxes)
             #eType = a+b+c+d+e+f+g+h
@@ -260,12 +257,14 @@ class ThermalElements(object):
         formatAll = bytes(formatAll)
 
         n = 8 + 28 * nNodes
+        s1 = Struct(format1)
+        s2 = Struct(formatAll)
         while len(self.data) >= n:
             eData = self.data[0:8]  # 2*4
             self.data = self.data[8:]
             #print "len(data) = ",len(eData)
 
-            out = unpack(format1, eData)
+            out = s1.unpack(eData)
             (eid, parent) = out
 
             eid2 = extract(eid, dt)
@@ -276,7 +275,7 @@ class ThermalElements(object):
                 eData = self.data[0:7 * 4]
                 self.data = self.data[7 * 4:]
                 #print "i=%s len(data)=%s" %(i,len(eData))
-                out = unpack(formatAll, eData)
+                out = s2.unpack(eData)
                 gradFluxes.append(out)
             dataIn.append(gradFluxes)
 
@@ -303,11 +302,12 @@ class ThermalElements(object):
 
         n = 0
         ntotal = 36  # 10*4
+        s = Struct(format1)
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):
             edata = self.data[n:n+ntotal]
 
-            out = unpack(format1, edata)
+            out = s.unpack(edata)
             (eid, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux) = out
             eid2 = extract(eid, dt)
             #print "eType=%s" %(eType)
@@ -327,7 +327,7 @@ class ThermalElements(object):
         #print "num_wide = ",self.num_wide
         #print "dt = ",dt
         if self.element_type in [39, 67, 68]:  # HEXA,PENTA
-            n = 40
+            ntotal = 40
             if is_sort1:
                 #print "SORT1 - %s" %(self.get_element_type(self.element_type))
                 format1 = 'i8s6fi'  # SORT1
@@ -339,7 +339,7 @@ class ThermalElements(object):
                 extract = self.extractSort2
                 #eid = self.nonlinear_factor
         elif self.element_type in [33, 53, 64, 74, 75]:  # no zed on this element for some reason...
-            n = 36
+            ntotal = 36
             if is_sort1:
                 #print "SORT1 - %s" %(self.get_element_type(self.element_type))
                 format1 = 'i8s6f'  # SORT1
@@ -354,11 +354,14 @@ class ThermalElements(object):
             raise NotImplementedError(self.code_information())
         format1 = bytes(format1)
 
-        while len(self.data) >= n:  # 10*4
-            eData = self.data[0:n]
-            self.data = self.data[n:]
+        n = 0
+        s = Struct(format1)
+        nelements = len(self.data) // ntotal
+        for i in xrange(nelements):
+            eData = self.data[n:n+ntotal]
+            n += ntotal
 
-            out = unpack(format1, eData)
+            out = s.unpack(eData)
             #print("len(out)=",len(out))
             # len=8
             (eid, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux) = out[:8]

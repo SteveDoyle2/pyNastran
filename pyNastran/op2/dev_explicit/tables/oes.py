@@ -18,7 +18,8 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_gap import NonlinearGapStres
 from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateStressObject, RealPlateStrainObject
 from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import (RealRodStressObject, RealRodStrainObject,
                                                                  RealRodStressVector, RealRodStrainVector)
-from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import RealShearStressObject, RealShearStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import (RealShearStressObject, RealShearStrainObject,
+                                                                  RealShearStrainVector, RealShearStressVector)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStressObject, RealSolidStrainObject, RealSolidStrainVector, RealSolidStressVector
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealCelasStressObject, RealCelasStrainObject, NonlinearSpringStressObject
 from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import RealTriaxStressObject, RealTriaxStrainObject
@@ -421,6 +422,10 @@ class OES(OP2Common):
                         # (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
                         self.obj.add(dt, eid, out)
                     #print "eid=%i axial=%i torsion=%i" % (eid, axial, torsion)
+            if self.format_code in [2, 3] and self.num_wide == 111:  # ???
+                ntotal = 444 # 44 + 10*40  (11 nodes)
+                msg = 'num_wide=%s' % self.num_wide
+                return self._not_implemented_or_skip(data, msg)
             else:
                 msg = 'num_wide=%s' % self.num_wide
                 return self._not_implemented_or_skip(data, msg)
@@ -471,9 +476,9 @@ class OES(OP2Common):
                     if self.debug4():
                         self.binary_debug.write('CSHEAR-4 - %s\n' % str(out))
 
-                    (eid_device, ) = out
+                    (eid_device, max_strain, avg_strain, margin) = out
                     eid = (eid_device - self.device_code) // 10
-                    self.obj.add_new_eid(dt, eid, etmax, etavg, MS)
+                    self.obj.add_new_eid(dt, eid, max_strain, avg_strain, margin)
                     n += ntotal
 
             elif self.format_code in [2, 3] and self.num_wide == 5:  # imag

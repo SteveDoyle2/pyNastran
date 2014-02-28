@@ -630,6 +630,7 @@ class OP2Common(Op2Codes, F06Writer):
 
         .. note:: dt can also be load_step depending on the class
         """
+        assert not isinstance(classObj, basestring), 'classObj=%r' % classObj
         if debug:
             print("create Transient Object")
             print("***NF = %s" % self.nonlinear_factor)
@@ -674,7 +675,7 @@ class OP2Common(Op2Codes, F06Writer):
         if isRelease:
             return len(data)
         else:
-            raise NotImplementedError('table_name=%s table_code=%s %s' % (self.table_name, self.table_code, msg))
+            raise NotImplementedError('table_name=%s table_code=%s %s\n%s' % (self.table_name, self.table_code, msg, self.code_information()))
 
     def parse_approach_code(self, data):
         (approach_code, tCode, int3, isubcase) = unpack(b'4i', data[:16])
