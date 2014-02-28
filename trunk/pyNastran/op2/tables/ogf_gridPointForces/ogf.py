@@ -1,7 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
-from struct import unpack
+from struct import Struct, unpack
 
 # pyNastran
 from pyNastran.op2.op2_helper import polar_to_real_imag
@@ -63,6 +63,7 @@ class OGF(object):
         ## assuming tCode=1
         if self.analysis_code == 1:   # statics / displacement / heat flux
             #self.extractDt = self.extractInt
+            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5, False)
             self.apply_data_code_value('dataNames', ['lsdvmn'])
             self.setNullNonlinearFactor()
         elif self.analysis_code == 2:  # real eigenvalues
@@ -161,10 +162,11 @@ class OGF(object):
         format1 += 'i8s6f'
         format1 = bytes(format1)
 
+        s = Struct(format1)
         while len(self.data) >= 40:
             eData = self.data[0:4 * 10]
             self.data = self.data[4 * 10:]
-            out = unpack(format1, eData)
+            out = s.unpack(eData)
             (eKey, eid, elemName, f1, f2, f3, m1, m2, m3) = out
             eKey = extract(eKey, dt)
             elemName = elemName.strip()
@@ -180,10 +182,11 @@ class OGF(object):
         format1 = bytes(format1)
         is_magnitude_phase = self.is_magnitude_phase()
 
+        s = Struct(format1)
         while len(self.data) >= 64:
             eData = self.data[0:4 * 16]
             self.data = self.data[4 * 16:]
-            out = unpack(format1, eData)
+            out = s.unpack(eData)
             (eKey, eid, elemName, f1r, f2r, f3r, m1r, m2r, m3r,
                 f1i, f2i, f3i, m1i, m2i, m3i) = out
             eKey = extract(eKey, dt)
@@ -211,10 +214,11 @@ class OGF(object):
         #print self.code_information()
         #print self.print_block(self.data)
         n = 0
+        s = Struct(b'2i6f')
         nEntries = len(self.data) // 32
         for i in xrange(nEntries):
             eData = self.data[n:n + 32]
-            out = unpack(b'2i6f', eData)
+            out = s.unpack(eData)
             #nid = (out[0]-self.device_code)//10  # TODO update...
             #print out
             n += 32

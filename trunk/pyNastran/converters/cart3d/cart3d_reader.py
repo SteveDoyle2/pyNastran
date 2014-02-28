@@ -8,7 +8,7 @@ from itertools import izip
 from numpy import array, zeros, where, savetxt, sqrt, abs, amax, amin
 from numpy import arange, searchsorted, vstack, unique, hstack, ravel
 
-from struct import unpack
+from struct import Struct, unpack
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.utils import is_binary
 from pyNastran.utils.log import get_logger
@@ -170,10 +170,10 @@ class Cart3DReader(object):
         assert tol >= 0, 'tol=%r' % tol #  prevents hacks to the axis
 
         nnodes, three = nodes.shape
-        assert nnodes > 0
+        assert nnodes > 0, 'nnodes=%s' % nnodes
 
         nelements, three = elements.shape
-        assert nelements > 0
+        assert nelements > 0, 'nelements=%s' % nelements
 
         ax = self._get_ax(axis)
         if ax in [0, 1, 2]:  # positive x, y, z values; mirror to -side
@@ -191,7 +191,7 @@ class Cart3DReader(object):
 
         nodes2 = vstack([nodes, nodes_upper])
         nnodes2, three = nodes2.shape
-        assert nnodes2 > nnodes
+        assert nnodes2 > nnodes, 'nnodes2=%s nnodes=%s' % (nnodes2, nnodes)
 
         nnodes_upper, three = nodes_upper.shape
         elements_upper = elements.copy()
@@ -210,7 +210,7 @@ class Cart3DReader(object):
 
         elements2 = vstack([elements, elements_upper])
         nelements2, three = elements2.shape
-        assert nelements2 > nelements
+        assert nelements2 > nelements, 'nelements2=%s nelements=%s' % (nelements2, nelements)
 
         nregions = len(unique(regions))
         regions_upper = regions.copy() + nregions
@@ -372,7 +372,7 @@ class Cart3DReader(object):
         return (nodes, elements, regions, loads)
 
     def write_cart3d(self, outfilename, points, elements, regions, loads=None, is_binary=False, float_fmt='%6.7f'):
-        assert len(points) > 0
+        assert len(points) > 0, 'len(points)=%s' % len(points)
 
         if loads is None or loads == {}:
             loads = {}
@@ -571,7 +571,7 @@ class Cart3DReader(object):
         """
         An element is defined by n1,n2,n3 and the ID is the location in elements.
         """
-        assert bypass == False
+        assert bypass == False, 'bypass=%r' % bypass
         assert self.nElementsRead > 0, 'nPoints=%s' % self.nPoints
         elements = zeros((self.nElementsRead, 3), 'int64')
 
@@ -837,16 +837,16 @@ class Cart3DReader(object):
 
     def read_header_binary(self):
         data = self.infile.read(4)
-        size, = unpack('>i', data)
+        size, = unpack(b'>i', data)
 
         data = self.infile.read(size)
         so4 = size // 4  # size over 4
         if so4 == 3:
-            (nPoints, nElements, nResults) = unpack('>iii', data)
+            (nPoints, nElements, nResults) = unpack(b'>iii', data)
             self.log.info("nPoints=%s nElements=%s nResults=%s" % (nPoints, nElements, nResults))
             self.cartType = 'grid'
         elif so4 == 2:
-            (nPoints, nElements) = unpack('>ii', data)
+            (nPoints, nElements) = unpack(b'>ii', data)
             self.log.info("nPoints=%s nElements=%s" % (nPoints, nElements))
             self.cartType = 'results'
         else:
@@ -860,23 +860,23 @@ class Cart3DReader(object):
         #print self.infile.tell(), 'points'
         #isBuffered = True
         size = npoints * 12  # 12=3*4 all the points
-        Format = '>3000f'  # 3000 floats; 1000 points
 
         n = 0
-        points = zeros(npoints*3, 'float64')
+        points = zeros(npoints * 3, 'float64')
+        s = Struct(b'>3000f') # 3000 floats; 1000 points
         while size > 12000:  # 12k = 4 bytes/float*3 floats/point*1000 points
             data = self.infile.read(4 * 3000)
 
-            nodeXYZs = unpack(Format, data)
+            nodeXYZs = s.unpack(data)
             points[n:n+3000] = nodeXYZs
             n += 3000
             size -= 4 * 3000
 
-        assert size >= 0
+        assert size >= 0, 'size=%s' % size
 
         if size > 0:
             data = self.infile.read(size)
-            Format = '>%if' % (size // 4)
+            Format = b'>%if' % (size // 4)
 
             nodeXYZs = unpack(Format, data)
             points[n:] = nodeXYZs
@@ -902,22 +902,22 @@ class Cart3DReader(object):
         #print self.infile.tell(), 'elements'
         #isBuffered = True
         size = nelements * 12  # 12=3*4 all the elements
-        Format = '>3000i'
 
         elements = zeros(self.nElements*3, 'int32')
 
         n = 0
+        s = Struct(b'>3000i')
         while size > 12000:  # 4k is 1000 elements
             data = self.infile.read(4 * 3000)
-            nodes = unpack(Format, data)
+            nodes = s.unpack(data)
             elements[n : n + 3000] = nodes
             size -= 4 * 3000
             n += 3000
 
-        assert size >= 0
+        assert size >= 0, 'size=%s' % size
         if size > 0:
             data = self.infile.read(size)
-            Format = '>%ii' % (size // 4)
+            Format = b'>%ii' % (size // 4)
 
             nodes = unpack(Format, data)
             elements[n:] = nodes
@@ -936,7 +936,7 @@ class Cart3DReader(object):
         #print self.infile.tell(), 'regions'
         #isBuffered = True
         size = nelements * 4  # 12=3*4 all the elements
-        Format = '>3000i'
+        s = Struct(b'>3000i')
 
         regions = zeros(self.nElementsRead, 'int32')
 
@@ -944,7 +944,7 @@ class Cart3DReader(object):
         while size > 12000:  # 12k is 3000 elements
             data = self.infile.read(4 * 3000)
             try:
-                region_data = unpack(Format, data)
+                region_data = s.unpack(data)
             except:
                 print "len =", len(data)
                 raise
@@ -955,11 +955,10 @@ class Cart3DReader(object):
             nr += delta
             size -= 4 * 3000
 
-        assert size >= 0
-
+        assert size >= 0, 'size=%s' % size
         if size > 0:
             data = self.infile.read(size)
-            Format = '>%ii' % (size // 4)
+            Format = b'>%ii' % (size // 4)
             try:
                 region_data = unpack(Format, data)
             except:
@@ -967,7 +966,9 @@ class Cart3DReader(object):
                 raise
 
             r = nelements
-            assert len(regions[nr:]) == len(region_data), 'len(regions[nr:]=%s len(region_data)=%s' % ( len(regions[nr:]), len(region_data) )
+            if len(regions[nr:]) != len(region_data):
+                msg = 'len(regions[nr:]=%s len(region_data)=%s' % ( len(regions[nr:]), len(region_data) )
+                raise RuntimeError(msg)
             regions[nr:] = region_data
             size = 0
 
