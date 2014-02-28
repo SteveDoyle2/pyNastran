@@ -253,9 +253,6 @@ class RealShearStressObject(StressObject):
         msg.append('  eType, maxShear, avgShear, margin\n')
         return msg
 
-    def getLength(self):
-        return (16, 'fff')
-
     def delete_transient(self, dt):
         del self.maxShear[dt]
         del self.avgShear[dt]
@@ -294,9 +291,8 @@ class RealShearStressObject(StressObject):
             self.avgShear[eid] = avg_shear
             self.margin[eid] = margin
 
-    def add_new_eid(self, dt, eid, out):
+    def add_new_eid(self, dt, eid, maxShear, avgShear, margin):
         #print "Rod Stress add..."
-        (maxShear, avgShear, margin) = out
         assert isinstance(eid, int)
         self.maxShear = {}
         self.avgShear = {}
@@ -305,8 +301,7 @@ class RealShearStressObject(StressObject):
         self.avgShear[eid] = avgShear
         self.margin[eid] = margin
 
-    def add_new_eid_sort1(self, dt, eid, out):
-        (maxShear, avgShear, margin) = out
+    def add_new_eid_sort1(self, dt, eid, maxShear, avgShear, margin):
         if dt not in self.maxShear:
             self.add_new_transient(dt)
         assert isinstance(eid, int)
@@ -352,9 +347,6 @@ class RealShearStrainObject(StrainObject):
         msg.append('  eType, maxShear, avgShear, margin\n')
         return msg
 
-    def getLength(self):
-        return (16, 'fff')
-
     def delete_transient(self, dt):
         del self.maxShear[dt]
         del self.avgShear[dt]
@@ -394,7 +386,7 @@ class RealShearStrainObject(StrainObject):
             self.avgShear[eid] = avg_shear
             self.margin[eid] = margin
 
-    def add_new_eid(self, dt, eid, out):
+    def add_new_eid(self, dt, eid, axial, SMa, torsion, SMt):
         raise NotImplementedError()
         (axial, SMa, torsion, SMt) = out
         #print "Rod Strain add..."
@@ -404,7 +396,7 @@ class RealShearStrainObject(StrainObject):
         self.avgShear[eid] = SMa
         self.margin[eid] = torsion
 
-    def add_new_eid_sort1(self, dt, eid, out):
+    def add_new_eid_sort1(self, dt, eid, maxShear, avgShear, margin):
         (maxShear, avgShear, margin) = out
         if dt not in self.maxShear:
             self.add_new_transient(dt)
@@ -415,7 +407,7 @@ class RealShearStrainObject(StrainObject):
         self.avgShear[dt][eid] = avgShear
         self.margin[dt][eid] = margin
 
-    def add_new_eid_sort2(self, eid, dt, out):
+    def add_new_eid_sort2(self, eid, dt, maxShear, avgShear, margin):
         (maxShear, avgShear, margin) = out
         if dt not in self.maxShear:
             self.add_new_transient(dt)
