@@ -191,7 +191,7 @@ class RealSolidVector(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, header, page_stamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         (elem_name, nnodes, msg_temp) = self.get_f06_header(is_mag_phase)
 
         # write the f06
@@ -253,9 +253,9 @@ class RealSolidVector(OES_Object):
                                     '', oyyi, tyzi, o2i, v[1, 1], v[1, 2], v[1, 0],
                                     '', ozzi, txzi, o3i, v[2, 1], v[2, 2], v[2, 0]))
                 i += 1
-            f.write(page_stamp % pageNum)
-            pageNum += 1
-        return pageNum - 1
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
 
 
 class RealSolidStressVector(RealSolidVector, StressObject):
@@ -676,10 +676,10 @@ class RealSolidStressObject(StressObject):
         return (tetraMsg, pentaMsg, hexaMsg,
                 TETRA, PENTA, HEXA)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         assert f is not None
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, page_num, f)
 
         (tetraMsg, pentaMsg, hexaMsg,
          TETRA, PENTA, HEXA) = self.getF06_Header()
@@ -688,25 +688,25 @@ class RealSolidStressObject(StressObject):
         for key in sorted(keys):
             eids = TETRA[str(key)]
             self._write_element('CTETRA'+str(key), key, eids, header, tetraMsg, f)
-            f.write(pageStamp % pageNum)
-            pageNum += 1
+            f.write(pageStamp % page_num)
+            page_num += 1
 
         keys = [int(key) for key in PENTA.keys()]
         for key in sorted(keys):
             eids = PENTA[str(key)]
             self._write_element('CPENTA'+str(key), key, eids, header, pentaMsg, f)
-            f.write(pageStamp % pageNum)
-            pageNum += 1
+            f.write(pageStamp % page_num)
+            page_num += 1
 
         keys = [int(key) for key in HEXA.keys()]
         for key in sorted(keys):
             eids = HEXA[str(key)]
             self._write_element('CHEXA'+str(key), key, eids, header, hexaMsg, f)
-            f.write(pageStamp % pageNum)
-            pageNum += 1
-        return pageNum - 1
+            f.write(pageStamp % page_num)
+            page_num += 1
+        return page_num - 1
 
-    def _write_f06_transient(self, header, pageStamp, pageNum, f):
+    def _write_f06_transient(self, header, pageStamp, page_num, f):
         (tetraMsg, pentaMsg, hexaMsg,
          TETRA, HEXA, PENTA) = self.getF06_Header()
         dts = self.oxx.keys()
@@ -715,24 +715,24 @@ class RealSolidStressObject(StressObject):
             for key in sorted(keys):
                 eids = TETRA[str(key)]
                 self._write_element_transient('CTETRA'+str(key), key, eids, dt, header, tetraMsg, f)
-                f.write(pageStamp % pageNum)
-                pageNum += 1
+                f.write(pageStamp % page_num)
+                page_num += 1
 
             keys = [int(key) for key in PENTA.keys()]
             for key in sorted(keys):
                 eids = PENTA[str(key)]
                 self._write_element_transient('CPENTA'+str(key), key, eids, dt, header, pentaMsg, f)
-                f.write(pageStamp % pageNum)
-                pageNum += 1
+                f.write(pageStamp % page_num)
+                page_num += 1
 
             keys = [int(key) for key in HEXA.keys()]
             for key in sorted(keys):
                 eids = HEXA[str(key)]
                 self._write_element_transient('CHEXA'+str(key), key, eids, dt, header, hexaMsg, f)
-                f.write(pageStamp % pageNum)
-                pageNum += 1
+                f.write(pageStamp % page_num)
+                page_num += 1
 
-        return pageNum - 1
+        return page_num - 1
 
     def _write_element(self, eType, nNodes, eids, header, tetraMsg, f):
         f.write(''.join(header + tetraMsg))
@@ -1183,10 +1183,10 @@ class RealSolidStrainObject(StrainObject):
         return (tetraMsg, pentaMsg, hexaMsg,
                 TETRA, PENTA, HEXA)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         assert f is not None
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, page_num, f)
 
         (tetraMsg, pentaMsg, hexaMsg,
          TETRA, PENTA, HEXA) = self.getF06_Header()
@@ -1195,25 +1195,25 @@ class RealSolidStrainObject(StrainObject):
         for key in sorted(keys):
             eids = TETRA[str(key)]
             self._write_element('CTETRA'+str(key), key, eids, header, tetraMsg, f)
-            f.write(pageStamp % pageNum)
-            pageNum += 1
+            f.write(pageStamp % page_num)
+            page_num += 1
 
         keys = [int(key) for key in PENTA.keys()]
         for key in sorted(keys):
             eids = PENTA[str(key)]
             self._write_element('CPENTA'+str(key), key, eids, header, pentaMsg, f)
-            f.write(pageStamp % pageNum)
-            pageNum += 1
+            f.write(pageStamp % page_num)
+            page_num += 1
 
         keys = [int(key) for key in HEXA.keys()]
         for key in sorted(keys):
             eids = HEXA[str(key)]
             self._write_element('CHEXA'+str(key), key, eids, header, hexaMsg, f)
-            f.write(pageStamp % pageNum)
-            pageNum += 1
-        return pageNum - 1
+            f.write(pageStamp % page_num)
+            page_num += 1
+        return page_num - 1
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         msg = []
         (tetraMsg, pentaMsg, hexaMsg,
          TETRA, PENTA, HEXA) = self.getF06_Header()
@@ -1223,24 +1223,24 @@ class RealSolidStrainObject(StrainObject):
             for key in sorted(keys):
                 eids = TETRA[str(key)]
                 self._write_element_transient('CTETRA'+str(key), key, eids, dt, header, tetraMsg, f)
-                f.write(pageStamp % pageNum)
-                pageNum += 1
+                f.write(pageStamp % page_num)
+                page_num += 1
 
             keys = [int(key) for key in PENTA.keys()]
             for key in sorted(keys):
                 eids = PENTA[str(key)]
                 self._write_element_transient('CPENTA'+str(key), key, eids, dt, header, pentaMsg, f)
-                f.write(pageStamp % pageNum)
-                pageNum += 1
+                f.write(pageStamp % page_num)
+                page_num += 1
 
             keys = [int(key) for key in HEXA.keys()]
             for key in sorted(keys):
                 eids = HEXA[str(key)]
                 self._write_element_transient('CHEXA'+str(key), key, eids, dt, header, hexaMsg, f)
-                f.write(pageStamp % pageNum)
-                pageNum += 1
+                f.write(pageStamp % page_num)
+                page_num += 1
 
-        return pageNum - 1
+        return page_num - 1
 
     def _write_element(self, eType, nNodes, eids, header, tetraMsg, f):
         f.write(''.join(header + tetraMsg))

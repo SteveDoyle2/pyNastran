@@ -232,9 +232,9 @@ class CompositePlateStressObject(StressObject):
             headers.append('maxShear')
         return headers
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, page_num, f)
 
         if self.isVonMises():
             von = 'VON'
@@ -287,17 +287,17 @@ class CompositePlateStressObject(StressObject):
             #    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8LC
 
         if isQuad:
-            quadMsg.append(pageStamp % pageNum)
-            pageNum += 1
+            quadMsg.append(pageStamp % page_num)
+            page_num += 1
         if isTri:
-            triMsg.append(pageStamp % pageNum)
-            pageNum += 1
+            triMsg.append(pageStamp % page_num)
+            page_num += 1
 
         f.write(''.join(quadMsg + triMsg))
-        return pageNum
+        return page_num
 
     def _write_f06_transient(self, header, pageStamp,
-                             pageNum=1, f=None, is_mag_phase=False):
+                             page_num=1, f=None, is_mag_phase=False):
         if self.isVonMises():
             von = 'VON'
             mises = 'MISES'
@@ -360,15 +360,15 @@ class CompositePlateStressObject(StressObject):
                 #    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8LC
 
             if isQuad:
-                quadMsg.append(pageStamp % pageNum)
+                quadMsg.append(pageStamp % page_num)
                 f.write(''.join(quadMsg))
-                pageNum += 1
+                page_num += 1
             if isTri:
-                triMsg.append(pageStamp % pageNum)
+                triMsg.append(pageStamp % page_num)
                 f.write(''.join(triMsg))
-                pageNum += 1
+                page_num += 1
 
-        return pageNum - 1
+        return page_num - 1
 
 
 class CompositePlateStrainObject(StrainObject):
@@ -585,9 +585,9 @@ class CompositePlateStrainObject(StrainObject):
             headers.append('maxShear')
         return headers
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, page_num, f)
 
         if self.isVonMises():
             von = 'VON'
@@ -642,16 +642,16 @@ class CompositePlateStrainObject(StrainObject):
             #    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8LC
 
         if isQuad:
-            quadMsg.append(pageStamp % pageNum)
-            pageNum += 1
+            quadMsg.append(pageStamp % page_num)
+            page_num += 1
         if isTri:
-            triMsg.append(pageStamp % pageNum)
-            pageNum += 1
+            triMsg.append(pageStamp % page_num)
+            page_num += 1
 
         f.write(''.join(quadMsg + triMsg))
-        return pageNum
+        return page_num
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.isVonMises():
             von = 'VON'
             mises = 'MISES'
@@ -713,13 +713,13 @@ class CompositePlateStrainObject(StrainObject):
                     raise NotImplementedError('eType = |%r|' % (eType))
 
             if isQuad:
-                quadMsg.append(pageStamp % pageNum)
-                pageNum += 1
+                quadMsg.append(pageStamp % page_num)
+                page_num += 1
                 f.write(''.join(quadMsg))
 
             if isTri:
-                triMsg.append(pageStamp % pageNum)
-                pageNum += 1
+                triMsg.append(pageStamp % page_num)
+                page_num += 1
                 f.write(''.join(triMsg))
 
-        return pageNum - 1
+        return page_num - 1

@@ -216,12 +216,12 @@ class ComplexPlateStressObject(StressObject):
         headers += ['oxx', 'oyy', 'txy']
         return headers
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         assert f is not None
         if len(self.eType) == 0:
             raise RuntimeError('The result object is empty')
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
+            return self._write_f06_transient(header, pageStamp, page_num, f, is_mag_phase)
 
         if is_mag_phase:
             magReal = ['                                                         (MAGNITUDE/PHASE)\n \n']
@@ -293,14 +293,14 @@ class ComplexPlateStressObject(StressObject):
                         msg.append(out)
                 else:
                     raise NotImplementedError('eType = %r' % eType)  # CQUAD8, CTRIA6
-                msg.append(pageStamp % pageNum)
+                msg.append(pageStamp % page_num)
                 f.write(''.join(msg))
                 msg = ['']
-                pageNum += 1
+                page_num += 1
 
-        return pageNum - 1
+        return page_num - 1
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if is_mag_phase:
             magReal = ['                                                         (MAGNITUDE/PHASE)\n \n']
         else:
@@ -398,8 +398,8 @@ class ComplexPlateStressObject(StressObject):
                             for eid in eids:
                                 out = self.writeF06_Quad4_BilinearTransient(dt, eid, 4, is_mag_phase)
                                 msg.append(out)
-                            msg.append(pageStamp % pageNum)
-                            pageNum += 1
+                            msg.append(pageStamp % page_num)
+                            page_num += 1
                             f.write(''.join(msg))
                             msg = ['']
                     else:
@@ -409,8 +409,8 @@ class ComplexPlateStressObject(StressObject):
                             for eid in eids:
                                 out = self.writeF06_Tri3Transient(dt, eid, 4, is_mag_phase)
                                 msg.append(out)
-                            msg.append(pageStamp % pageNum)
-                            pageNum += 1
+                            msg.append(pageStamp % page_num)
+                            page_num += 1
                             f.write(''.join(msg))
                             msg = ['']
                 elif eType in ['CTRIA3']:
@@ -420,8 +420,8 @@ class ComplexPlateStressObject(StressObject):
                         for eid in eids:
                             out = self.writeF06_Tri3Transient(dt, eid, 3, is_mag_phase)
                             msg.append(out)
-                        msg.append(pageStamp % pageNum)
-                        pageNum += 1
+                        msg.append(pageStamp % page_num)
+                        page_num += 1
                         f.write(''.join(msg))
                         msg = ['']
                 elif eType in ['CTRIA6', 'CTRIAR']:
@@ -432,8 +432,8 @@ class ComplexPlateStressObject(StressObject):
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 3, is_mag_phase)
                             msg.append(out)
-                        msg.append(pageStamp % pageNum)
-                        pageNum += 1
+                        msg.append(pageStamp % page_num)
+                        page_num += 1
                         f.write(''.join(msg))
                         msg = ['']
                 elif eType in ['CQUAD8']:
@@ -444,8 +444,8 @@ class ComplexPlateStressObject(StressObject):
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 8, is_mag_phase)
                             msg.append(out)
-                        msg.append(pageStamp % pageNum)
-                        pageNum += 1
+                        msg.append(pageStamp % page_num)
+                        page_num += 1
                         f.write(''.join(msg))
                         msg = ['']
                 else:
@@ -454,7 +454,7 @@ class ComplexPlateStressObject(StressObject):
                 f.write(''.join(msg))
                 msg = ['']
 
-        return pageNum - 1
+        return page_num - 1
 
     def writeF06_Quad4_Bilinear(self, eid, n, is_mag_phase):
         msg = ''
@@ -780,12 +780,12 @@ class ComplexPlateStrainObject(StrainObject):
             headers.append('maxShear')
         return headers
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         assert f is not None
         if len(self.eType) == 0:
             raise RuntimeError('The result object is empty')
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, page_num, f)
 
         if self.isVonMises():
             vonMises = 'VON MISES'
@@ -890,14 +890,14 @@ class ComplexPlateStrainObject(StrainObject):
                     raise NotImplementedError('eType = |%r|' % eType)  # CQUAD8, CTRIA6
 
                 msg.append(out)
-                msg.append(pageStamp % pageNum)
+                msg.append(pageStamp % page_num)
                 f.write(''.join(msg))
                 msg = ['']
-                pageNum += 1
+                page_num += 1
 
-        return pageNum - 1
+        return page_num - 1
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.isVonMises():
             vonMises = 'VON MISES'
         else:
@@ -974,10 +974,10 @@ class ComplexPlateStrainObject(StrainObject):
                             for eid in eids:
                                 out = self.writeF06_Quad4_BilinearTransient(dt, eid, 4, is_mag_phase)
                                 msg.append(out)
-                            msg.append(pageStamp % pageNum)
+                            msg.append(pageStamp % page_num)
                             f.write(''.join(msg))
                             msg = ['']
-                            pageNum += 1
+                            page_num += 1
                     else:
                         for dt in dts:
                             header[1] = ' %s = %10.4E\n' % (self.data_code[
@@ -985,10 +985,10 @@ class ComplexPlateStrainObject(StrainObject):
                             for eid in eids:
                                 out = self.writeF06_Tri3Transient(dt, eid, 4, is_mag_phase)
                                 msg.append(out)
-                            msg.append(pageStamp % pageNum)
+                            msg.append(pageStamp % page_num)
                             f.write(''.join(msg))
                             msg = ['']
-                            pageNum += 1
+                            page_num += 1
                 elif eType in ['CTRIA3']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (
@@ -996,10 +996,10 @@ class ComplexPlateStrainObject(StrainObject):
                         for eid in eids:
                             out = self.writeF06_Tri3Transient(dt, eid, 3, is_mag_phase)
                             msg.append(out)
-                        msg.append(pageStamp % pageNum)
+                        msg.append(pageStamp % page_num)
                         f.write(''.join(msg))
                         msg = ['']
-                        pageNum += 1
+                        page_num += 1
                 elif eType in ['CQUAD8']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (
@@ -1007,10 +1007,10 @@ class ComplexPlateStrainObject(StrainObject):
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 5, is_mag_phase)
                             msg.append(out)
-                        msg.append(pageStamp % pageNum)
+                        msg.append(pageStamp % page_num)
                         f.write(''.join(msg))
                         msg = ['']
-                        pageNum += 1
+                        page_num += 1
                 elif eType in ['CTRIA6', 'CTRIAR']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (
@@ -1018,14 +1018,14 @@ class ComplexPlateStrainObject(StrainObject):
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 3, is_mag_phase)
                             msg.append(out)
-                        msg.append(pageStamp % pageNum)
+                        msg.append(pageStamp % page_num)
                         f.write(''.join(msg))
                         msg = ['']
-                        pageNum += 1
+                        page_num += 1
                 else:
                     raise NotImplementedError('eType = %r' %
                                               eType)  # CQUAD8, CTRIA6
-        return pageNum - 1
+        return page_num - 1
 
     def writeF06_Quad4_Bilinear(self, eid, n, is_mag_phase):
         msg = ''

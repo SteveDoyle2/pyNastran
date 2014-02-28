@@ -7,21 +7,21 @@ class RealForceVectorVector(RealTableVector):  # table_code=2, sort_code=0, ther
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         RealTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         msg = ['                                         N O N - L I N E A R - F O R C E   V E C T O R\n']
         #words += self.get_table_marker()
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient_block(words, header, pageStamp, pageNum, f)
-        return self._write_f06_block(words, header, pageStamp, pageNum, f)
+            return self._write_f06_transient_block(words, header, pageStamp, page_num, f)
+        return self._write_f06_block(words, header, pageStamp, page_num, f)
 
 
 class ComplexForceVectorVector(ComplexTableVector):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                       C O M P L E X   F O R C E   V E C T O R\n',]
-        return self._write_f06_transient_block(words, header, pageStamp, pageNum, f, is_mag_phase)
+        return self._write_f06_transient_block(words, header, pageStamp, page_num, f, is_mag_phase)
 
 
 class ForceVectorObject(RealTableObject):  # table_code=12, sort_code=0, thermal=0
@@ -29,9 +29,9 @@ class ForceVectorObject(RealTableObject):  # table_code=12, sort_code=0, thermal
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, page_num, f)
 
         msg = header + ['                                         N O N - L I N E A R - F O R C E   V E C T O R\n'
                         ' \n',
@@ -48,11 +48,11 @@ class ForceVectorObject(RealTableObject):  # table_code=12, sort_code=0, thermal
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
 
-        msg.append(pageStamp % pageNum)
+        msg.append(pageStamp % page_num)
         f.write(''.join(msg))
-        return pageNum
+        return page_num
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         msg = []
         words = ['                                         N O N - L I N E A R - F O R C E   V E C T O R\n'
                  ' \n',
@@ -74,20 +74,20 @@ class ForceVectorObject(RealTableObject):  # table_code=12, sort_code=0, thermal
                     [dx, dy, dz, rx, ry, rz] = vals2
                     msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
 
-            msg.append(pageStamp % pageNum)
+            msg.append(pageStamp % page_num)
             f.write(''.join(msg))
             msg = ['']
-            pageNum += 1
-        return pageNum - 1
+            page_num += 1
+        return page_num - 1
 
 
 class ComplexForceVectorObject(ComplexTableObject):  # table_code=12, approach_code=???
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase=False)
+            return self._write_f06_transient(header, pageStamp, page_num, f, is_mag_phase=False)
         msg = header + ['                                       C O M P L E X   F O R C E   V E C T O R\n',
                         '                                                          (REAL/IMAGINARY)\n',
                         ' \n',
@@ -119,11 +119,11 @@ class ComplexForceVectorObject(ComplexTableObject):  # table_code=12, approach_c
             msg.append('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr))
             msg.append('  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % ('', '',            dxi, dyi, dzi, rxi, ryi, rzi))
 
-        msg.append(pageStamp % pageNum)
+        msg.append(pageStamp % page_num)
         f.write(''.join(msg))
-        return pageNum
+        return page_num
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                       C O M P L E X   F O R C E   V E C T O R\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',
@@ -159,8 +159,8 @@ class ComplexForceVectorObject(ComplexTableObject):  # table_code=12, approach_c
                  dxi, dyi, dzi, rxi, ryi, rzi] = vals2
                 msg.append('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr))
                 msg.append('  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % ('', '',           dxi, dyi, dzi, rxi, ryi, rzi))
-            msg.append(pageStamp % pageNum)
+            msg.append(pageStamp % page_num)
             f.write(''.join(msg))
             msg = ['']
-            pageNum += 1
-        return pageNum - 1
+            page_num += 1
+        return page_num - 1

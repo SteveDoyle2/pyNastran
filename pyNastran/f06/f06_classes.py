@@ -15,5 +15,5 @@ class MaxDisplacement(object):
             rot = self.rotations[sid]
             msg.append('0 %8i  %13.8E %13.8E %13.8E %13.8E %13.8E %13.8E' %
                        (tuple([sid] + trans + rot)))
-        msg.append(pageStamp % pageNum)
+        msg.append(pageStamp % page_num)
         return '\n'.join(msg)

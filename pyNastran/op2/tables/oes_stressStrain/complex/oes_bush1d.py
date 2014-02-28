@@ -119,10 +119,10 @@ class ComplexBush1DStressObject(StressObject):
         self.axial_stress[dt][eid] = ao
         self.axial_strain[dt][eid] = ae
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         raise NotImplementedError('CBUSH1D')
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
+            return self._write_f06_transient(header, pageStamp, page_num, f, is_mag_phase)
 
         msg = header + [
             '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
@@ -151,11 +151,11 @@ class ComplexBush1DStressObject(StressObject):
             msg.append(' %8s   %-13s  %-13s  %-13s  %s\n' % ('', s1br, s2br, s3br, s4br))
             msg.append(' %8s   %-13s  %-13s  %-13s  %s\n' % ('', s1bi, s2bi, s3bi, s4bi))
 
-        msg.append(pageStamp % pageNum)
+        msg.append(pageStamp % page_num)
         f.write(''.join(msg))
-        return pageNum
+        return page_num
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         raise NotImplementedError('CBUSH1D')
         words = [
             '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
@@ -186,8 +186,8 @@ class ComplexBush1DStressObject(StressObject):
                 msg.append(' %8s   %-13s  %-13s  %-13s  %s\n' % ('', s1br, s2br, s3br, s4br))
                 msg.append(' %8s   %-13s  %-13s  %-13s  %s\n' % ('', s1bi, s2bi, s3bi, s4bi))
 
-            msg.append(pageStamp % pageNum)
+            msg.append(pageStamp % page_num)
             f.write(''.join(msg))
             msg = ['']
-            pageNum += 1
-        return pageNum - 1
+            page_num += 1
+        return page_num - 1

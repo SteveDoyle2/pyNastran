@@ -343,9 +343,9 @@ class RealPlateStressObject(StressObject):
         return headers
 
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
+            return self._write_f06_transient(header, pageStamp, page_num, f, is_mag_phase)
 
         if self.isVonMises():
             vonMises = 'VON MISES'
@@ -448,13 +448,13 @@ class RealPlateStressObject(StressObject):
                 else:
                     raise NotImplementedError('eType = %r' % eType)
 
-                msg.append(pageStamp % pageNum)
+                msg.append(pageStamp % page_num)
                 f.write(''.join(msg))
                 msg = ['']
-                pageNum += 1
-        return pageNum - 1
+                page_num += 1
+        return page_num - 1
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.isVonMises():
             vonMises = 'VON MISES'
         else:
@@ -580,11 +580,11 @@ class RealPlateStressObject(StressObject):
                 else:
                     raise NotImplementedError('eType = %r' % eType)  # CQUAD8, CTRIA6
 
-                msg.append(pageStamp % pageNum)
+                msg.append(pageStamp % page_num)
                 f.write(''.join(msg))
                 msg = ['']
-                pageNum += 1
-        return pageNum - 1
+                page_num += 1
+        return page_num - 1
 
     def writeF06_Quad4_Bilinear(self, eid, n):
         msg = ['']
@@ -1032,9 +1032,9 @@ class RealPlateStrainObject(StrainObject):
             headers.append('maxShear')
         return headers
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, page_num, f)
 
         if self.isVonMises():
             vonMises = 'VON MISES'
@@ -1142,13 +1142,13 @@ class RealPlateStrainObject(StrainObject):
                         msg.append(out)
                 else:
                     raise NotImplementedError('eType = %r' % eType)
-                msg.append(pageStamp % pageNum)
+                msg.append(pageStamp % page_num)
                 f.write(''.join(msg))
                 msg = ['']
-                pageNum += 1
-        return pageNum - 1
+                page_num += 1
+        return page_num - 1
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.isVonMises():
             vonMises = 'VON MISES'
         else:
@@ -1231,8 +1231,8 @@ class RealPlateStrainObject(StrainObject):
                             for eid in eids:
                                 out = self.writeF06_Quad4_BilinearTransient(dt, eid, 4)
                                 msg.append(out)
-                            msg.append(pageStamp % pageNum)
-                            pageNum += 1
+                            msg.append(pageStamp % page_num)
+                            page_num += 1
                     else:
                         for dt in dts:
                             header[1] = dt_msg % dt
@@ -1240,8 +1240,8 @@ class RealPlateStrainObject(StrainObject):
                             for eid in eids:
                                 out = self.writeF06_Tri3Transient(dt, eid)
                                 msg.append(out)
-                            msg.append(pageStamp % pageNum)
-                            pageNum += 1
+                            msg.append(pageStamp % page_num)
+                            page_num += 1
                 elif eType in ['CTRIA3']:
                     for dt in dts:
                         header[1] = dt_msg % dt
@@ -1249,8 +1249,8 @@ class RealPlateStrainObject(StrainObject):
                         for eid in eids:
                             out = self.writeF06_Tri3Transient(dt, eid)
                             msg.append(out)
-                        msg.append(pageStamp % pageNum)
-                        pageNum += 1
+                        msg.append(pageStamp % page_num)
+                        page_num += 1
                 elif eType in ['CQUAD8']:
                     for dt in dts:
                         header[1] = dt_msg % dt
@@ -1258,8 +1258,8 @@ class RealPlateStrainObject(StrainObject):
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 5)
                             msg.append(out)
-                        msg.append(pageStamp % pageNum)
-                        pageNum += 1
+                        msg.append(pageStamp % page_num)
+                        page_num += 1
                 elif eType in ['CTRIA6', 'CTRIAR']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
@@ -1267,12 +1267,12 @@ class RealPlateStrainObject(StrainObject):
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 3)
                             msg.append(out)
-                        msg.append(pageStamp % pageNum)
-                        pageNum += 1
+                        msg.append(pageStamp % page_num)
+                        page_num += 1
                 else:
                     raise NotImplementedError('eType = %r' % eType)  # CQUAD8, CTRIA6
                 f.write(''.join(msg))
-        return pageNum - 1
+        return page_num - 1
 
     def writeF06_Quad4_Bilinear(self, eid, n):
         msg = ['']
