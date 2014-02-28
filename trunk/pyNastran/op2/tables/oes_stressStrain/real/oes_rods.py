@@ -64,11 +64,10 @@ class RealRodVector(OES_Object):
         #[axial, torsion, SMa, SMt]
         self.data = zeros((self.ntimes, self.ntotal, 4), dtype='float32')
 
-    def add_new_eid_sort1(self, dt, eid, out):
-        (axial, SMa, torsion, SMt) = out
+    def add_new_eid_sort1(self, dt, eid, axial, SMa, torsion, SMt):
         self.times[self.itime] = dt
         self.element[self.ielement] = eid
-        self.data[self.itime, self.ielement, :] = [axial, torsion, SMa, SMt]
+        self.data[self.itime, self.ielement, :] = [axial, SMa, torsion, SMt]
         self.ielement += 1
 
     def get_stats(self):
@@ -108,16 +107,18 @@ class RealRodVector(OES_Object):
             msg = conrod_msg
         elif 'CTUBE' in self.element_name:
             msg = ctube_msg
+        else:
+            raise NotImplementedError(self.element_name)
         return self.element_name, msg
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
-        itot = searchsorted(eids, self.element_node[:, 0])  #[0]
+        itot = searchsorted(eids, self.element)  #[0]
         return itot
 
     def eid_to_element_node_index(self, eids):
         #ind = ravel([searchsortd(self.element_node[:, 0] == eid) for eid in eids])
-        ind = searchsorted(eids, self.element_node[:, 0])
+        ind = searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
         return ind
@@ -147,13 +148,13 @@ class RealRodVector(OES_Object):
             # TODO: can I get this without a reshape?
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             axial = self.data[itime, :, 0]
-            torsion = self.data[itime, :, 1]
-            SMa = self.data[itime, :, 2]
+            SMa = self.data[itime, :, 1]
+            torsion = self.data[itime, :, 2]
             SMt = self.data[itime, :, 3]
 
             # loop over all the elements
             out = []
-            for eid, axiali, torsioni, SMai, SMti in izip(eids, axial, torsion, SMa, SMt):
+            for eid, axiali, SMai, torsioni, SMti in izip(eids, axial, SMa, torsion, SMt):
                 #([axiali, torsioni, SMai, SMti],
                 #isAllZeros) = writeFloats13E([axiali, torsioni, SMai, SMti])
                 out.append([eid, axiali, SMai, torsioni, SMti])
@@ -170,13 +171,36 @@ class RealRodVector(OES_Object):
         return pageNum - 1
 
 
+class RealBushStressVector(RealRodVector, StressObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealRodVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        StressObject.__init__(self, data_code, isubcase)
+
+    def get_headers(self):
+        headers = ['axial', 'SMa', 'torsion', 'SMt']
+        return headers
+
+    def _get_msgs(self):
+        base_msg = ['       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
+                    '         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN\n']
+        crod_msg   = ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n', ]
+        conrod_msg = ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C O N R O D )\n', ]
+        ctube_msg  = ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C T U B E )\n', ]
+        #cbush_msg  = ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C B U S H )\n', ]
+        crod_msg += base_msg
+        conrod_msg += base_msg
+        ctube_msg += base_msg
+        #cbush_msg += base_msg
+        return crod_msg, conrod_msg, ctube_msg
+
+
 class RealRodStressVector(RealRodVector, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealRodVector.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
     def get_headers(self):
-        headers = ['axial', 'torsion', 'SMa', 'SMt']
+        headers = ['axial', 'SMa', 'torsion', 'SMt']
         return headers
 
     def _get_msgs(self):
@@ -196,7 +220,7 @@ class RealRodStrainVector(RealRodVector, StrainObject):
         StrainObject.__init__(self, data_code, isubcase)
 
     def get_headers(self):
-        headers = ['axial', 'torsion', 'SMa', 'SMt']
+        headers = ['axial', 'SMa', 'torsion','SMt']
         return headers
 
     def _get_msgs(self):
@@ -348,18 +372,15 @@ class RealRodStressObject(StressObject):
         self.torsion[dt] = {}
         self.MS_torsion[dt] = {}
 
-    def add_new_eid(self, dt, eid, out):
+    def add_new_eid(self, dt, eid, axial, SMa, torsion, SMt):
         #print "Rod Stress add..."
-        (axial, SMa, torsion, SMt) = out
         assert isinstance(eid, int)
         self.axial[eid] = axial
         self.MS_axial[eid] = SMa
         self.torsion[eid] = torsion
         self.MS_torsion[eid] = SMt
 
-    def add_new_eid_sort1(self, dt, eid, out):
-        (axial, SMa, torsion, SMt) = out
-
+    def add_new_eid_sort1(self, dt, eid, axial, SMa, torsion, SMt):
         if dt not in self.axial:
             self.add_new_transient(dt)
         self.axial[dt][eid] = axial
@@ -367,9 +388,7 @@ class RealRodStressObject(StressObject):
         self.torsion[dt][eid] = torsion
         self.MS_torsion[dt][eid] = SMt
 
-    def add_new_eid_sort2(self, eid, dt, out):
-        (axial, SMa, torsion, SMt) = out
-
+    def add_new_eid_sort2(self, eid, dt, axial, SMa, torsion, SMt):
         if dt not in self.axial:
             self.add_new_transient(dt)
         self.axial[dt][eid] = axial
@@ -559,8 +578,7 @@ class RealRodStrainObject(StrainObject):
         self.torsion[self.dt] = {}
         self.MS_torsion[self.dt] = {}
 
-    def add_new_eid(self, dt, eid, out):
-        (axial, SMa, torsion, SMt) = out
+    def add_new_eid(self, dt, eid, axial, SMa, torsion, SMt):
         assert eid >= 0
         #self.eType = self.eType
         self.axial[eid] = axial
@@ -568,8 +586,7 @@ class RealRodStrainObject(StrainObject):
         self.torsion[eid] = torsion
         self.MS_torsion[eid] = SMt
 
-    def add_new_eid_sort1(self, dt, eid, out):
-        (axial, SMa, torsion, SMt) = out
+    def add_new_eid_sort1(self, dt, eid, axial, SMa, torsion, SMt):
         assert eid >= 0
         #self.eType[eid] = self.element_type
         if dt not in self.axial:
@@ -579,8 +596,7 @@ class RealRodStrainObject(StrainObject):
         self.torsion[dt][eid] = torsion
         self.MS_torsion[dt][eid] = SMt
 
-    def add_new_eid_sort2(self, eid, dt, out):
-        (axial, SMa, torsion, SMt) = out
+    def add_new_eid_sort2(self, eid, dt, axial, SMa, torsion, SMt):
         assert eid >= 0
         #self.eType[eid] = self.element_type
         if dt not in self.axial:
