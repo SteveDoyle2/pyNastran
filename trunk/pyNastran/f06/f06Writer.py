@@ -187,7 +187,7 @@ class F06Writer(F06WriterDeprecated):
         #: subcaseID
         self.iSubcaseNameMap = {}
 
-        self.pageNum = 1
+        self.page_num = 1
 
         self.iSubcases = []
         self.__objects_vector_init__()
@@ -423,8 +423,8 @@ class F06Writer(F06WriterDeprecated):
             msg += 'No constraints have been applied...\n'
 
         page_stamp = self.make_stamp(self.Title, self.date)
-        msg += page_stamp % self.pageNum
-        self.pageNum += 1
+        msg += page_stamp % self.page_num
+        self.page_num += 1
         return msg
 
     def write_oload(self, model, Fg):
@@ -447,8 +447,8 @@ class F06Writer(F06WriterDeprecated):
         msg += '                   TOTALS  3.000000E+03  5.000000E+03  0.000000E+00  1.300000E+04  0.000000E+00  1.400000E+05\n'
 
         page_stamp = self.make_stamp(self.Title, self.date)
-        msg += page_stamp % self.pageNum
-        self.pageNum += 1
+        msg += page_stamp % self.page_num
+        self.page_num += 1
         return msg
 
     def write_summary(self, f06, card_count=None):
@@ -534,8 +534,8 @@ class F06Writer(F06WriterDeprecated):
             f06.write(summary)
 
             page_stamp = self.make_stamp(self.Title, self.date)
-            f06.write(page_stamp % self.pageNum)
-            self.pageNum += 1
+            f06.write(page_stamp % self.page_num)
+            self.page_num += 1
             #print(summary)
 
     def write_f06(self, f06_outname, is_mag_phase=False,
@@ -565,8 +565,8 @@ class F06Writer(F06WriterDeprecated):
         page_stamp = self.make_stamp(self.Title, self.date)
         if self.grid_point_weight.reference_point is not None:
             print("grid_point_weight")
-            self.pageNum = self.grid_point_weight.write_f06(f06, page_stamp, self.pageNum)
-            assert isinstance(self.pageNum, int), self.grid_point_weight.__class__.__name__
+            self.page_num = self.grid_point_weight.write_f06(f06, page_stamp, self.page_num)
+            assert isinstance(self.page_num, int), self.grid_point_weight.__class__.__name__
 
         #print "page_stamp = %r" % page_stamp
         #print "stamp      = %r" % stamp
@@ -579,12 +579,12 @@ class F06Writer(F06WriterDeprecated):
         for ikey, result in sorted(self.eigenvalues.iteritems()):
             header
             #print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
-            self.pageNum = result.write_f06(f06, header, page_stamp,
-                                            pageNum=self.pageNum)
-            assert isinstance(self.pageNum, int), 'pageNum=%r' % str(self.pageNum)
+            self.page_num = result.write_f06(f06, header, page_stamp,
+                                            page_num=self.page_num)
+            assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
             if delete_objects:
                 del result
-            self.pageNum += 1
+            self.page_num += 1
 
         # then eigenvectors
         # has a special header
@@ -595,12 +595,12 @@ class F06Writer(F06WriterDeprecated):
             header[1] = '0                                                                                                            SUBCASE %i\n' % (isubcase)
             #header[2] = complex/nonlinear
             print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
-            self.pageNum = result.write_f06(header, page_stamp,
-                                            self.pageNum, f=f06, is_mag_phase=is_mag_phase)
-            assert isinstance(self.pageNum, int), 'pageNum=%r' % str(self.pageNum)
+            self.page_num = result.write_f06(header, page_stamp,
+                                            self.page_num, f=f06, is_mag_phase=is_mag_phase)
+            assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
             if delete_objects:
                 del result
-            self.pageNum += 1
+            self.page_num += 1
 
         # finally, we writte all the other tables
         # nastran puts the tables in order of the Case Control deck,
@@ -760,22 +760,22 @@ class F06Writer(F06WriterDeprecated):
                             header.append('')
                         try:
                             print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
-                            self.pageNum = result.write_f06(header, page_stamp, pageNum=self.pageNum, f=f06, is_mag_phase=False)
-                            assert isinstance(self.pageNum, int), 'pageNum=%r' % str(self.pageNum)
+                            self.page_num = result.write_f06(header, page_stamp, page_num=self.page_num, f=f06, is_mag_phase=False)
+                            assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
                         except:
                             #print "result name = %r" % result.name()
                             raise
                         if delete_objects:
                             del result
                         #f06.write('\n')
-                        self.pageNum += 1
+                        self.page_num += 1
         if 0:
             for res in res_types:
                 for isubcase, result in sorted(res.iteritems()):
-                    self.pageNum = result.write_f06(header, page_stamp, pageNum=self.pageNum, f=f06, is_mag_phase=False)
+                    self.page_num = result.write_f06(header, page_stamp, page_num=self.page_num, f=f06, is_mag_phase=False)
                     if delete_objects:
                         del result
-                    self.pageNum += 1
+                    self.page_num += 1
         f06.write(make_end(end_flag))
         f06.close()
 

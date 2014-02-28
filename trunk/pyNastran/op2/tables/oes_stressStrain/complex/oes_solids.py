@@ -205,7 +205,7 @@ class ComplexSolid(OES_Object):
         ##ind.sort()
         #return ind
 
-    def write_f06(self, header, page_stamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         (msg_temp, nnodes) = self.get_f06_header(is_mag_phase)
 
         # write the f06
@@ -267,9 +267,9 @@ class ComplexSolid(OES_Object):
                     f.write('0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % (node, oxxr, oyyr, ozzr, txyr, tyzr, txzr))
                     f.write('    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('',   oxxi, oyyi, ozzi, txyi, tyzi, txzi))
                     #self.element_types3[ielem]
-            f.write(page_stamp % pageNum)
-            pageNum += 1
-        return pageNum - 1
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
 
 
 class ComplexSolidStressVector(ComplexSolid, StressObject):
@@ -586,7 +586,7 @@ class ComplexSolidStressObject(StressObject):
                 tetra_eids, hexa_eids, penta_eids,
                 tetra10_eids, hexa20_eids, penta15_eids)
 
-    def write_f06(self, header, page_stamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         (tetra_msg, hexa_msg, penta_msg,
          tetra_eids, hexa_eids, penta_eids,
          tetra10_eids, hexa20_eids, penta15_eids) = self.getF06_Header(is_mag_phase)
@@ -594,31 +594,31 @@ class ComplexSolidStressObject(StressObject):
         for dt in sorted(dts):
             if tetra_eids:
                 self.write_element_transient('CTETRA', 4, tetra_eids, dt, header, tetra_msg, f, is_mag_phase)
-                f.write(page_stamp % pageNum)
-                pageNum += 1
+                f.write(page_stamp % page_num)
+                page_num += 1
             if tetra10_eids:
                 self.write_element_transient('CTETRA', 10, tetra10_eids, dt, header, tetra_msg, f, is_mag_phase)
-                f.write(page_stamp % pageNum)
-                pageNum += 1
+                f.write(page_stamp % page_num)
+                page_num += 1
 
             if hexa_eids:
                 self.write_element_transient('CHEXA',  8,  hexa_eids, dt, header, hexa_msg, f, is_mag_phase)
-                f.write(page_stamp % pageNum)
-                pageNum += 1
+                f.write(page_stamp % page_num)
+                page_num += 1
             if hexa20_eids:
                 self.write_element_transient('CHEXA',  20,  hexa20_eids, dt, header, hexa_msg, f,is_mag_phase)
-                f.write(page_stamp % pageNum)
-                pageNum += 1
+                f.write(page_stamp % page_num)
+                page_num += 1
 
             if penta_eids:
                 self.write_element_transient('CPENTA', 6, penta_eids, dt, header, penta_msg, f, is_mag_phase)
-                f.write(page_stamp % pageNum)
-                pageNum += 1
+                f.write(page_stamp % page_num)
+                page_num += 1
             if penta15_eids:
                 self.write_element_transient('CPENTA', 15, penta15_eids, dt, header, penta_msg, f,is_mag_phase)
-                f.write(page_stamp % pageNum)
-                pageNum += 1
-        return pageNum - 1
+                f.write(page_stamp % page_num)
+                page_num += 1
+        return page_num - 1
 
     def write_element_transient(self, element_name, nnodes, eids, dt, header, msg, f, is_mag_phase):
         dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
@@ -828,7 +828,7 @@ class ComplexSolidStrainObject(StrainObject):
                 tetra_eids, hexa_eids, penta_eids,
                 tetra10_eids, hexa20_eids, penta15_eids)
 
-    def write_f06(self, header, page_stamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         (tetra_msg, hexa_msg, penta_msg,
          tetra_eids, hexa_eids, penta_eids,
          tetra10_eids, hexa20_eids, penta15_eids) = self.getF06_Header(is_mag_phase)
@@ -836,32 +836,32 @@ class ComplexSolidStrainObject(StrainObject):
         for dt in sorted(dts):
             if tetra_eids:
                 self.write_element_transient('CTETRA', 4, tetra_eids, dt, header, tetra_msg, f, is_mag_phase)
-                f.write(page_stamp % pageNum)
-                pageNum += 1
+                f.write(page_stamp % page_num)
+                page_num += 1
             if tetra10_eids:
                 self.write_element_transient('CTETRA', 10, tetra10_eids, dt, header, tetra_msg, f, is_mag_phase)
-                f.write(page_stamp % pageNum)
-                pageNum += 1
+                f.write(page_stamp % page_num)
+                page_num += 1
 
             if hexa_eids:
                 self.write_element_transient('CHEXA',  8,  hexa_eids, dt, header, hexa_msg, f, is_mag_phase)
-                f.write(page_stamp % pageNum)
-                pageNum += 1
+                f.write(page_stamp % page_num)
+                page_num += 1
             if hexa20_eids:
                 self.write_element_transient('CHEXA',  20,  hexa20_eids, dt, header, hexa_msg, f,is_mag_phase)
-                f.write(page_stamp % pageNum)
-                pageNum += 1
+                f.write(page_stamp % page_num)
+                page_num += 1
 
             if penta_eids:
                 self.write_element_transient('CPENTA', 6, penta_eids, dt, header, penta_msg, f, is_mag_phase)
-                f.write(page_stamp % pageNum)
-                pageNum += 1
+                f.write(page_stamp % page_num)
+                page_num += 1
             if penta15_eids:
                 self.write_element_transient('CPENTA', 15, penta15_eids, dt, header, penta_msg, f,is_mag_phase)
-                f.write(page_stamp % pageNum)
-                pageNum += 1
+                f.write(page_stamp % page_num)
+                page_num += 1
 
-        return pageNum - 1
+        return page_num - 1
 
     def write_element_transient(self, element_name, nnodes, eids, dt, header, msg, f, is_mag_phase):
         dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)

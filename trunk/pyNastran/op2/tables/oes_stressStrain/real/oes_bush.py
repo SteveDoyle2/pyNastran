@@ -87,9 +87,9 @@ class BushStressObject(StressObject):
         self.translations[dt][eid] = [tx, ty, tz]
         self.rotations[dt][eid] = [rx, ry, rz]
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
+            return self._write_f06_transient(header, pageStamp, page_num, f, is_mag_phase)
 
         msg = header + [
             '                                  S T R E S S E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n\n',
@@ -105,11 +105,11 @@ class BushStressObject(StressObject):
             [tx, ty, tz, rx, ry, rz] = vals2
             msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (eid, tx, ty, tz, rx, ry, rz))
 
-        msg.append(pageStamp % pageNum)
+        msg.append(pageStamp % page_num)
         f.write(''.join(msg))
-        return pageNum
+        return page_num
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         words = [
             '                                  S T R E S S E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n\n',
             '                  ELEMENT-ID        STRESS-TX     STRESS-TY     STRESS-TZ    STRESS-RX     STRESS-RY     STRESS-RZ \n',
@@ -127,10 +127,10 @@ class BushStressObject(StressObject):
                 [tx, ty, tz, rx, ry, rz] = vals2
                 msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (eid, tx, ty, tz, rx, ry, rz))
 
-            msg.append(pageStamp % pageNum)
+            msg.append(pageStamp % page_num)
             f.write(''.join(msg))
-            pageNum += 1
-        return pageNum - 1
+            page_num += 1
+        return page_num - 1
 
 
 class BushStrainObject(StrainObject):
@@ -213,13 +213,13 @@ class BushStrainObject(StrainObject):
         self.translations[dt][eid] = [tx, ty, tz]
         self.rotations[dt][eid] = [rx, ry, rz]
 
-    def _write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         raise NotImplementedError('CBUSH')
-        return 'BushStress write_f06 not implemented...', pageNum
+        return 'BushStress write_f06 not implemented...', page_num
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
-        return pageNum
+            return self._write_f06_transient(header, pageStamp, page_num, f, is_mag_phase)
+        return page_num
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         raise NotImplementedError('CBUSH')
-        return pageNum - 1
+        return page_num - 1

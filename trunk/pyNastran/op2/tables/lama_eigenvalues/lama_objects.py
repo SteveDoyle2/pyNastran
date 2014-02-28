@@ -53,7 +53,7 @@ class RealEigenvalues(BaseScalarObject):
         for line in data:
             self.addF06Line(line)
 
-    def write_f06(self, f, header, pageStamp, pageNum=1):
+    def write_f06(self, f, header, pageStamp, page_num=1):
         title = ''
         if self.title is not None:
             title = '%s\n' % self.title.center(72)
@@ -70,9 +70,9 @@ class RealEigenvalues(BaseScalarObject):
             stiff = self.generalizedStiffness[iMode]
             ([eigen, omega, freq, mass, stiff], isAllZeros) = writeFloats13E([eigenvalue, omega, cycle, mass, stiff])
             msg.append(' %8s  %8s       %-13s       %-13s       %-13s       %-13s       %s\n' % (iMode, order, eigen, omega, freq, mass, stiff))
-        msg.append(pageStamp % pageNum)
+        msg.append(pageStamp % page_num)
         f.write(''.join(msg))
-        return pageNum
+        return page_num
 
     def __repr__(self):
         msg = '%-7s %15s %15s %10s %10s %10s %15s\n' % ('ModeNum', 'ExtractionOrder', 'Eigenvalue', 'Radians', 'Cycles', 'GenMass', 'GenStiffness')
@@ -123,7 +123,7 @@ class ComplexEigenvalues(BaseScalarObject):
         for line in data:
             self.addF06Line(line)
 
-    def write_f06(self, f, header, pageStamp, pageNum=1):  # not proper msg start
+    def write_f06(self, f, header, pageStamp, page_num=1):  # not proper msg start
         title = ''
         if self.title is not None:
             title = '%s\n' % self.title.center(72)
@@ -141,9 +141,9 @@ class ComplexEigenvalues(BaseScalarObject):
             #            imode order      eigr     eigi          freq        damping
             msg.append(' %22s  %10s       %-15s    %-13s         %-13s         %s\n' % (iMode, order, eigr, eigi, freq, damping))
 
-        msg.append(pageStamp % pageNum)
+        msg.append(pageStamp % page_num)
         f.write(''.join(msg))
-        return pageNum
+        return page_num
 
     def __repr__(self):
         msg = '%-7s %15s %15s %10s %10s %10s\n' % ('RootNum', 'ExtractionOrder', 'Eigenvalue', '', 'Cycles', 'Damping')

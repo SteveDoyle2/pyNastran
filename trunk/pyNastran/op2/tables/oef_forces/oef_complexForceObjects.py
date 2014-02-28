@@ -347,9 +347,9 @@ class ComplexSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
         #self.eType[eid] = eType
         self.force[dt][eid] = force
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
+            return self._write_f06_transient(header, pageStamp, page_num, f, is_mag_phase)
         msg = header + ['                         C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 4 )\n',
                         '                                                          (REAL/IMAGINARY)\n',
                         ' \n',
@@ -368,12 +368,12 @@ class ComplexSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
                 msg.append(line.rstrip() + '\n')
         if forces:
             msg.append(line.rstrip() + '\n')
-        msg.append(pageStamp % pageNum)
+        msg.append(pageStamp % page_num)
 
         f.write(''.join(msg))
-        return pageNum
+        return page_num
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                         C O M P L E X   F O R C E S   I N   S C A L A R   S P R I N G S   ( C E L A S 4 )\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',
@@ -401,12 +401,12 @@ class ComplexSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
                     forces = []
             if forces:
                 msg.append(line.rstrip() + '\n')
-            msg.append(pageStamp % pageNum)
+            msg.append(pageStamp % page_num)
 
             f.write(''.join(msg))
             msg = ['']
-            pageNum += 1
-        return pageNum - 1
+            page_num += 1
+        return page_num - 1
 
 
 class ComplexDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
@@ -764,20 +764,20 @@ class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.tx[dt][eid].append(tx)
         self.ty[dt][eid].append(ty)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, page_num, f)
         f.write('ComplexPlate write_f06 not implemented...\n')
         #raise NotImplementedError()
         #words = ['                                             A C C E L E R A T I O N   V E C T O R\n',
         #       ' \n',
         #       '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         #words += self.getTableMarker()
-        #return self._writeF06Block(words,header,pageStamp,pageNum,f)
+        #return self._writeF06Block(words,header,pageStamp,page_num,f)
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         f.write('ComplexPlate _write_f06_transient not implemented...\n')
-        return pageNum
+        return page_num
         #raise NotImplementedError()
 
 
@@ -856,7 +856,7 @@ class ComplexCBarForce(ScalarObject):  # 34-CBAR
         self.axial[dt][eid] = af
         self.torque[dt][eid] = trq
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                             C O M P L E X   F O R C E S   I N   B A R   E L E M E N T S   ( C B A R )\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
@@ -877,15 +877,15 @@ class ComplexCBarForce(ScalarObject):  # 34-CBAR
                  bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi] = vals2
                 msg.append('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr))
                 msg.append('     %8s    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % ('', bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi))
-            msg.append(pageStamp % pageNum)
+            msg.append(pageStamp % page_num)
             f.write(''.join(msg))
             msg = ['']
-            pageNum += 1
-        return pageNum - 1
+            page_num += 1
+        return page_num - 1
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f, is_mag_phase)
+            return self._write_f06_transient(header, pageStamp, page_num, f, is_mag_phase)
         msg = header + ['                             C O M P L E X   F O R C E S   I N   B A R   E L E M E N T S   ( C B A R )\n',
                         '                                                          (REAL/IMAGINARY)\n',
                         '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
@@ -902,9 +902,9 @@ class ComplexCBarForce(ScalarObject):  # 34-CBAR
              bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi] = vals2
             msg.append('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr))
             msg.append('     %8s    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % ('', bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi))
-        msg.append(pageStamp % pageNum)
+        msg.append(pageStamp % page_num)
         f.write(''.join(msg))
-        return pageNum
+        return page_num
 
 
 class ComplexBendForce(ScalarObject):  # 69-CBEND

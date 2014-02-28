@@ -137,7 +137,7 @@ class NonlinearQuadObject(StressObject):
         self.eps[dt][eid].append(eps)
         self.ecs[dt][eid].append(ecs)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=None):
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=None):
         msgStart = ['      ELEMENT-ID =     129\n'
                     '               N O N L I N E A R   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S    ( Q U A D 4 )\n'
                     ' \n',
@@ -177,10 +177,10 @@ class NonlinearQuadObject(StressObject):
         msg = []
         for eid, e in sorted(msgE.iteritems()):
             msg += header + e + msgStart + msgT[eid]
-            msg.append(pageStamp % pageNum)
-            pageNum += 1
+            msg.append(pageStamp % page_num)
+            page_num += 1
         f.write(''.join(msg))
-        return pageNum - 1
+        return page_num - 1
 
 
 class HyperelasticQuadObject(StressObject):
@@ -266,7 +266,7 @@ class HyperelasticQuadObject(StressObject):
         self.majorP[dt][eid].append(majorP)
         self.minorP[dt][eid].append(minorP)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):  # .. todo:: doesnt support CTRIA3NL (calls them CQUAD4s)
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):  # .. todo:: doesnt support CTRIA3NL (calls them CQUAD4s)
         msg = ['           S T R E S S E S   I N   H Y P E R E L A S T I C   Q U A D R I L A T E R A L   E L E M E N T S  ( QUAD4FD )\n',
                '  ELEMENT     GRID/    POINT       ---------CAUCHY STRESSES--------             PRINCIPAL STRESSES (ZERO SHEAR)\n',
                '     ID       GAUSS      ID      NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR\n', ]
@@ -291,7 +291,7 @@ class HyperelasticQuadObject(StressObject):
                     else:
                         msg.append(' %8s %8s  %8i  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6\n' % ('', '', i + 1, oxx[i], oyy[i], txy[i], angle[i], majorP[i], minorP[i]))
         f.write(''.join(msg))
-        return pageNum
+        return page_num
 
 
 class NonlinearRodObject(StressObject):
@@ -369,7 +369,7 @@ class NonlinearRodObject(StressObject):
         self.linearTorsionalStress[dt][eid] = data[6]
         #print data
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):  # .. todo:: doesnt support CONROD/CTUBE (calls them CRODs)
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):  # .. todo:: doesnt support CONROD/CTUBE (calls them CRODs)
         """
         ::
 
@@ -402,6 +402,6 @@ class NonlinearRodObject(StressObject):
 
         for eid, e in sorted(msgE.iteritems()):
             msg += header + [e] + msgStart + msgT[eid]
-            msg.append(pageStamp % pageNum)
+            msg.append(pageStamp % page_num)
         f.write(''.join(msg))
-        return pageNum
+        return page_num

@@ -206,9 +206,9 @@ class RealBarStressObject(StressObject):
 
         #if nodeID==0: raise Exception(msg)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, page_num, f)
 
         msg = header + [
                 '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
@@ -240,10 +240,10 @@ class RealBarStressObject(StressObject):
                     ' %8s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n'
                     % (eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                        '', s1b, s2b, s3b, s4b, '', smaxb, sminb, MSc))
-        f.write(pageStamp % pageNum)
-        return pageNum
+        f.write(pageStamp % page_num)
+        return page_num
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         words = [
                 '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
@@ -279,11 +279,11 @@ class RealBarStressObject(StressObject):
                         % (eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                             '', s1b, s2b, s3b, s4b, '', smaxb, sminb, MSc))
 
-            f.write(pageStamp % pageNum)
+            f.write(pageStamp % page_num)
             msg = ['']
-            pageNum += 1
+            page_num += 1
             i += 1
-        return pageNum - 1
+        return page_num - 1
 
 
 class RealBarStrainObject(StrainObject):
@@ -454,9 +454,9 @@ class RealBarStrainObject(StrainObject):
         #print msg
         #if nodeID==0: raise Exception(msg)
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, page_num, f)
 
         msg = header + [
                 '                                  S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )\n',
@@ -486,11 +486,11 @@ class RealBarStrainObject(StrainObject):
             msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n' % (eid, e10, e20, e30, e40, axial, emax0, emin0, MSt))
             msg.append(' %8s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n' % ('', e11, e21, e31, e41, '', emax1, emin1, MSc))
 
-        msg.append(pageStamp % pageNum)
+        msg.append(pageStamp % page_num)
         f.write(''.join(msg))
-        return pageNum
+        return page_num
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         words = [
                 '                                  S T R A I N S    I N   B A R   E L E M E N T S           ( C B A R )\n',
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
@@ -526,9 +526,9 @@ class RealBarStrainObject(StrainObject):
                 msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n' % (eid, e10, e20, e30, e40, axial, emax0, emin0, MSt))
                 msg.append(' %8s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n' % ('', e11, e21, e31, e41, '', emax1, emin1, MSc))
 
-            msg.append(pageStamp % pageNum)
+            msg.append(pageStamp % page_num)
             f.write(''.join(msg))
             msg = ['']
-            pageNum += 1
+            page_num += 1
             i += 1
-        return pageNum - 1
+        return page_num - 1

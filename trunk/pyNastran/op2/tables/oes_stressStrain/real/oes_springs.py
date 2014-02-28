@@ -98,9 +98,9 @@ class RealCelasStressObject(StressObject):
             (eid, stressi) = datai
             self.stress[eid] = stressi
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, page_num, f)
         msg = header + ['                              S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
                         '      ELEMENT         STRESS           ELEMENT         STRESS           ELEMENT         STRESS           ELEMENT         STRESS\n',
                         '        ID.                              ID.                              ID.                              ID.\n',
@@ -118,10 +118,10 @@ class RealCelasStressObject(StressObject):
 
         if stresses:
             msg.append(line.rstrip() + '\n')
-        msg.append(pageStamp % pageNum + '\n')
+        msg.append(pageStamp % page_num + '\n')
 
         f.write(''.join(msg))
-        return pageNum
+        return page_num
 
 
 class RealCelasStrainObject(StrainObject):
@@ -186,9 +186,9 @@ class RealCelasStrainObject(StrainObject):
             (eid, straini) = datai
             self.strain[eid] = straini
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, page_num, f)
         msg = header + ['                               S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
                         '      ELEMENT         STRAIN           ELEMENT         STRAIN           ELEMENT         STRAIN           ELEMENT         STRAIN\n',
                         '        ID.                              ID.                              ID.                              ID.\n',
@@ -206,10 +206,10 @@ class RealCelasStrainObject(StrainObject):
 
         if strains:
             msg.append(line.rstrip() + '\n')
-        msg.append(pageStamp % pageNum + '\n')
+        msg.append(pageStamp % page_num + '\n')
 
         f.write(''.join(msg))
-        return pageNum
+        return page_num
 
 
     def add_new_transient(self, dt):

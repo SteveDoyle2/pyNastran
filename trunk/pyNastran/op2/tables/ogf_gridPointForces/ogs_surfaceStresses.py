@@ -169,9 +169,9 @@ class GridPointStressesObject(ScalarObject):
         #self.elemName = self.elemName[k[0]]
         #self.eids = self.eids[k[0]]
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, page_num, f)
 
         msg = header + ['                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
                         '0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  Z         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        0\n',
@@ -204,13 +204,13 @@ class GridPointStressesObject(ScalarObject):
                 msg.append('%s%8s  %8s   %4s    %s %s %s   %8s %10s %10s %10s  %s\n' % (zero, eKey2, eid, elemName, nx, ny, txy, anglei, majorP, minorP, tmax, ovm))
                 zero = ' '
                 eKey2 = ' '
-        msg.append(pageStamp % pageNum)
+        msg.append(pageStamp % page_num)
         f.write(''.join(msg))
-        return pageNum
+        return page_num
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         f.write('GridPointStressesObject write_f06 is not implemented...\n')
-        return pageNum
+        return page_num
         #raise NotImplementedError()
         msg = header + ['                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
                         '0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  Z         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        0\n',
@@ -236,11 +236,11 @@ class GridPointStressesObject(ScalarObject):
                     msg.append('%s  %8s    %10s    %8s      %10s  %10s  %10s  %10s  %10s  %s\n' % (zero, eKey, eid, elemName, f1, f2, f3, m1, m2, m3))
                     zero = ' '
 
-            msg.append(pageStamp % pageNum)
+            msg.append(pageStamp % page_num)
             f.write(''.join(msg))
             msg = ['']
-            pageNum += 1
-        return pageNum - 1
+            page_num += 1
+        return page_num - 1
 
 
 class GridPointStressesVolumeObject(ScalarObject):
@@ -367,13 +367,13 @@ class GridPointStressesVolumeObject(ScalarObject):
         #self.elemName = self.elemName[k[0]]
         #self.eids = self.eids[k[0]]
 
-    def write_f06(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         f.write('GridPointStressesVolumeObject write_f06 is not implemented...\n')
-        return pageNum
+        return page_num
 
         #raise NotImplementedError()
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, pageNum, f)
+            return self._write_f06_transient(header, pageStamp, page_num, f)
 
         msg = header + ['                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
                         '0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  Z         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        0\n',
@@ -403,13 +403,13 @@ class GridPointStressesVolumeObject(ScalarObject):
                 zero = ' '
                 eKey2 = ' '
 
-        msg.append(pageStamp % pageNum)
+        msg.append(pageStamp % page_num)
         f.write(''.join(msg))
-        return pageNum
+        return page_num
 
-    def _write_f06_transient(self, header, pageStamp, pageNum=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         f.write('GridPointStressesVolumeObject _write_f06_transient is not implemented...\n')
-        return pageNum
+        return page_num
         #raise NotImplementedError()
         msg = header + ['                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
                         '0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  Z         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        0\n',
@@ -436,8 +436,8 @@ class GridPointStressesVolumeObject(ScalarObject):
                     msg.append('%s  %8s    %10s    %8s      %s  %s  %s  %s  %s  %-s\n' % (zero, eKey, eid, elemName, f1, f2, f3, m1, m2, m3))
                     zero = ' '
 
-            msg.append(pageStamp % pageNum)
+            msg.append(pageStamp % page_num)
             f.write(''.join(msg))
             msg = ['']
-            pageNum += 1
-        return pageNum - 1
+            page_num += 1
+        return page_num - 1
