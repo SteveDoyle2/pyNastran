@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from struct import unpack
+from struct import Struct, unpack
 
 
 class RealForces(object):
@@ -550,11 +550,13 @@ class RealForces(object):
         format1 = bytes(format1)
         formatAll = bytes(formatAll)
         n = 24 + 52 * nNodes
+        s1 = Struct(format1)
+        s2 = Struct(formatAll)
         while len(self.data) >= n:
             eData = self.data[0:24]  # 6*4
             self.data = self.data[24:]
 
-            out = unpack(format1, eData)
+            out = s1.unpack(eData)
             if self.make_op2_debug:
                 self.op2_debug.write('OEF_Force_%s-%s - %s\n' % (eType, self.element_type, str(out)))
             (eid, parent, coord, icord, theta, _) = out
@@ -567,7 +569,7 @@ class RealForces(object):
                 eData = self.data[0:52]  # 13*4
                 self.data = self.data[52:]
                 #print "i=%s len(data)=%s" %(i,len(eData))
-                out = unpack(formatAll, eData)
+                out = s2.unpack(eData)
                 if self.make_op2_debug:
                     self.op2_debug.write('%s\n' % (str(out)))
                 (vugrid, mfx, mfy, mfxy, a, b, c, bmx, bmy,

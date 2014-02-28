@@ -268,62 +268,84 @@ class OEF(OP2Common):
         is_magnitude_phase = self.is_magnitude_phase()
         dt = self.nonlinear_factor
 
-        if self.element_type in [1, 2, 3, 10, 34, 69]:
-            # 1-CROD
-            # 2-CBEAM
-            # 3-CTUBE
-            # 10-CONROD
-            # 34-CBAR
-            # 69-CBEND:
-            if self.num_wide == 9:
-                self.create_transient_object(self.thermalLoad_1D, HeatFlux_1D)
+        if 0:
+            if self.element_type in [1, 2, 3, 10, 34, 69]:  # ROD,BEAM,TUBE,CONROD,BAR,BEND
+                # 1-CROD
+                # 2-CBEAM
+                # 3-CTUBE
+                # 10-CONROD
+                # 34-CBAR
+                # 69-CBEND
+                if self.num_wide == 9:
+                    self.create_transient_object(self.thermalLoad_1D, HeatFlux_1D)
 
-                ntotal = 36  # 10*4
-                s = Struct(b'i8s6f')
-                nelements = len(data) // ntotal
-                for i in xrange(nelements):
-                    edata = data[n:n+ntotal]
+                    ntotal = 36  # 10*4
+                    s = Struct(b'i8s6f')
+                    nelements = len(data) // ntotal
+                    for i in xrange(nelements):
+                        edata = data[n:n+ntotal]
 
-                    out = s.unpack(edata)
-                    (eid_device, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux) = out
-                    eid = (eid_device - self.device_code) // 10
+                        out = s.unpack(edata)
+                        (eid_device, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux) = out
+                        eid = (eid_device - self.device_code) // 10
 
-                    data_in = [eid, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux]
-                    #print "heatFlux %s" % (self.get_element_type(self.element_type)), data_in
-                    #eid = self.obj.add_new_eid(out)
-                    self.obj.add(dt, data_in)
-                    n += ntotal
+                        data_in = [eid, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux]
+                        #print "heatFlux %s" % (self.get_element_type(self.element_type)), data_in
+                        #eid = self.obj.add_new_eid(out)
+                        self.obj.add(dt, data_in)
+                        n += ntotal
+                else:
+                    msg = 'num_wide=%s' % self.num_wide
+                    return self._not_implemented_or_skip(data, msg)
+
+            elif self.element_type in [33, 39, 67, 68]:  # QUAD4,TETRA,HEXA,PENTA
+                # 33-CQUAD4-centroidal
+                # 39-CTETRA
+                # 67-CHEXA
+                # 68-CPENTA
+                assert self.num_wide in [9, 10], self.code_information()
+                self.create_transient_object(self.thermalLoad_2D_3D, HeatFlux_2D_3D)
+                self.handle_results_buffer(self.OEF_2D_3D, resultName='thermalLoad_2D_3D')
+            elif self.element_type in [33, 53, 64, 74, 75]:  # CQUAD4, CTRIAX6,CQUAD8,CTRIA3,CTRIA6
+                # 33-CQUAD4-centroidal
+                # 53-CTRIAX6
+                # 64-QUAD8
+                # 74-CTRIA3-centroidal
+                # 75-TRIA6
+                assert self.num_wide == 9, self.code_information()
+                self.create_transient_object(self.thermalLoad_2D_3D, HeatFlux_2D_3D)
+                self.handle_results_buffer(self.OEF_2D_3D, resultName='thermalLoad_2D_3D')
+            elif self.element_type in [107, 108, 109]:  # CHBDYE, CHBDYG, CHBDYP
+                # 107-CHBDYE
+                # 108-CHBDYG
+                # 109-CHBDYP
+                assert self.num_wide == 8, self.code_information()
+                self.create_transient_object(self.thermalLoad_CHBDY, HeatFlux_CHBDYx)
+                self.handle_results_buffer(self.OEF_CHBDYx, resultName='thermalLoad_CHBDY')
+            elif self.element_type in [110]:
+                # 110-CONV
+                self.create_transient_object(self.thermalLoad_CONV, HeatFlux_CONV)
+                self.handle_results_buffer(self.OEF_CONV, resultName='thermalLoad_CONV')
+            elif self.element_type in [145, 146, 147]:  # VUHEXA,VUPENTA,VUTETRA
+                # 145-VUHEXA
+                # 146-VUPENTA
+                # 147-VUTETRA
+                self.create_transient_object(self.thermalLoad_VU_3D, HeatFlux_VU_3D)
+                self.handle_results_buffer(self.OEF_VU_3D_Element, resultName='thermalLoad_VU_3D')
+            elif self.element_type in [189, 190]:  # VUQUAD,VUTRIA
+                # 189-VUQUAD
+                # 190-VUTRIA
+                #assert self.num_wide==27,self.code_information()
+                self.create_transient_object(self.thermalLoad_VU, HeatFlux_VU)
+                self.handle_results_buffer(self.OEF_VU_Element, resultName='thermalLoad_VU')
+            elif self.element_type in [191]:  # VUBEAM
+                #assert self.num_wide==27,self.code_information()
+                self.create_transient_object(self.thermalLoad_VUBeam, HeatFlux_VUBEAM)
+                self.handle_results_buffer(self.OEF_VUBeam_Element, resultName='thermalLoad_VUBeam')
+
             else:
-                msg = 'num_wide=%s' % self.num_wide
+                msg = 'OEF sort1 thermal Type=%s num=%s' % (self.element_name, self.element_type)
                 return self._not_implemented_or_skip(data, msg)
-
-        elif self.element_type in [33, 39, 53, 64, 67, 68, 74, 75]:
-            # 33-CQUAD4-centroidal
-            # 39-CTETRA
-            # 53-CTRIAX6
-            # 67-CHEXA
-            # 64-QUAD8
-            # 74-CTRIA3-centroidal
-            # 75-TRIA6
-            # 33-CQUAD4-centroidal
-            # 68-CPENTA
-            return len(data)
-        elif self.element_type in [107, 108, 109, 110, 145, 146,
-                147, 189, 190, 191]:
-            # 107-CHBDYE
-            # 108-CHBDYG
-            # 109-CHBDYP
-            # 110-CONV
-            # 145-VUHEXA
-            # 146-VUPENTA
-            # 147-VUTETRA
-            # 189-VUQUAD
-            # 190-VUTRIA
-            # 191-VUBEAM
-            return len(data)
-        else:
-            msg = 'OEF sort1 thermal Type=%s num=%s' % (self.element_name, self.element_type)
-            return self._not_implemented_or_skip(data, msg)
 
         assert len(data) > 0
         assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)

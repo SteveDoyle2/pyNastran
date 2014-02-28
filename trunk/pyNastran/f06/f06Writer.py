@@ -292,7 +292,10 @@ class F06Writer(F06WriterDeprecated):
         self.plateForces = {}
         self.plateForces2 = {}
         self.compositePlateForces = {}
+
         self.shearForces = {}
+        self.cshear_force = {}
+
         self.solidPressureForces = {}
         self.springForces = {}
         self.viscForces = {}
@@ -370,8 +373,10 @@ class F06Writer(F06WriterDeprecated):
 
         #: OES - CSHEAR stress
         self.shearStress = {}
+        self.cshear_stress = {}
         #: OES - CSHEAR strain
         self.shearStrain = {}
+        self.cshear_strain = {}
 
         #: OES - CELAS1 224, CELAS3 225,
         self.nonlinearSpringStress = {}
@@ -759,7 +764,7 @@ class F06Writer(F06WriterDeprecated):
                         if result.nonlinear_factor is not None:
                             header.append('')
                         try:
-                            print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
+                            print('%-26s SUBCASE=%i' % (result.__class__.__name__, isubcase))
                             self.page_num = result.write_f06(header, page_stamp, page_num=self.page_num, f=f06, is_mag_phase=False)
                             assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
                         except:
