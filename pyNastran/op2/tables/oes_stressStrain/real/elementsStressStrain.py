@@ -103,7 +103,7 @@ class RealElementsStressStrain(object):
             if self.make_op2_debug:
                 self.op2_debug.write('basicElement - %s\n' % (str(out)))
             eid = extract(out[0], dt)
-            self.obj.add_new_eid(dt, eid, out[1:])
+            self.obj.add_new_eid(dt, eid, *out[1:])
             n += ntotal
         self.data = self.data[n:]
 

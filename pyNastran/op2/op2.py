@@ -310,9 +310,9 @@ class OP2(BDF,
 
             # OEF - Forces - tCode=4 thermal=0
             'rodForces',
-            'crod_forces',
-            'conrod_forces',
-            'ctube_forces',
+            'crod_force',
+            'conrod_force',
+            'ctube_force',
 
             'barForces',
             'bar100Forces',
