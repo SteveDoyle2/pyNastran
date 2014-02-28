@@ -228,7 +228,7 @@ class Solver(F06, OP2):
         F06.__init_data__(self)
         OP2.__init__(self, '')
 
-        self.pageNum = 1
+        self.page_num = 1
         self.fargs = fargs
 
         # normalization of stiffness matrix
@@ -1709,7 +1709,7 @@ class Solver(F06, OP2):
         iUs = self.iUs
         iUm = self.iUm
         iUa = self.iUa
-        pageNum = 1
+        page_num = 1
 
         if case.has_parameter('DISPLACEMENT'):
             (value, options) = case.get_parameter('DISPLACEMENT')
@@ -1721,7 +1721,7 @@ class Solver(F06, OP2):
                 result.add_f06_data()
 
                 if 'PRINT' in options:
-                    f06.write(result.write_f06(header, pageStamp, pageNum))
+                    f06.write(result.write_f06(header, pageStamp, page_num))
                 if 'PLOT' in options:
                     op2.write(result.write_op2(self.Title, self.Subtitle))
 
@@ -1739,13 +1739,13 @@ class Solver(F06, OP2):
 
                     flag = 0
                     if 'PRINT' in options:
-                        f06.write(result.write_f06(header, pageStamp, pageNum))
+                        f06.write(result.write_f06(header, pageStamp, page_num))
                         flag += 1
                     if 'PLOT' in options:
                         op2.write(result.write_op2(Title, Subtitle))
                         flag += 1
                     if not flag:
-                        f06.write(result.write_f06(header, pageStamp, pageNum))
+                        f06.write(result.write_f06(header, pageStamp, page_num))
 
         if case.has_parameter('MPCFORCES'):
             if options is not []:
@@ -1759,13 +1759,13 @@ class Solver(F06, OP2):
                     result.add_f06_data()
                     flag = 0
                     if 'PRINT' in options:
-                        f06.write(result.write_f06(header, pageStamp, pageNum))
+                        f06.write(result.write_f06(header, pageStamp, page_num))
                         flag += 1
                     if 'PLOT' in options:
                         f06.write(result.write_op2(Title, Subtitle))
                         flag += 1
                     if not flag:
-                        f06.write(result.write_f06(header, pageStamp, pageNum))
+                        f06.write(result.write_f06(header, pageStamp, page_num))
 
         if case.has_parameter('GPFORCE'):
             if options is not []:
@@ -1779,7 +1779,7 @@ class Solver(F06, OP2):
                 result = AppliedLoadsObject(data_code, transient)
                 result.add_f06_data()
                 if 'PRINT' in options:
-                    f06.write(result.write_f06(header, pageStamp, pageNum))
+                    f06.write(result.write_f06(header, pageStamp, page_num))
                 if 'PLOT' in options:
                     op2.write(result.write_op2(Title, Subtitle))
 
@@ -1793,7 +1793,7 @@ class Solver(F06, OP2):
                 result = xxxObject(data_code, transient)
                 result.add_f06_data()
                 if 'PRINT' in options:
-                    f06.write(result.write_f06(header, pageStamp, pageNum))
+                    f06.write(result.write_f06(header, pageStamp, page_num))
                 if 'PLOT' in options:
                     op2.write(result.write_op2(Title, Subtitle))
 
