@@ -380,9 +380,9 @@ class OES(OP2Common):
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type == 2: # CBEAM
+            # 2-CBEAM
             if self.read_mode == 1:
                 return len(data)
-            # 2-CBEAM
             if self.format_code == 1 and self.num_wide == 111:  # real
                 ntotal = 444 # 44 + 10*40  (11 nodes)
                 if self.isStress():
@@ -422,7 +422,7 @@ class OES(OP2Common):
                         # (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
                         self.obj.add(dt, eid, out)
                     #print "eid=%i axial=%i torsion=%i" % (eid, axial, torsion)
-            if self.format_code in [2, 3] and self.num_wide == 111:  # ???
+            elif self.format_code in [2, 3] and self.num_wide == 111:  # ???
                 ntotal = 444 # 44 + 10*40  (11 nodes)
                 msg = 'num_wide=%s' % self.num_wide
                 return self._not_implemented_or_skip(data, msg)
