@@ -75,8 +75,8 @@ class OEF(ThermalElements, RealForces, ComplexForces):
 
         ## assuming tCode=1
         if self.analysis_code == 1:   # statics
-            self.add_data_parameter(data, 'loadID', 'i', 5,
-                                  False)  # load set ID number
+            # load set ID number
+            self.add_data_parameter(data, 'loadID', 'i', 5, False)
             #self.apply_data_code_value('dataNames',['lsdvmn'])
             self.apply_data_code_value('dataNames', ['loadID'])
             self.setNullNonlinearFactor()

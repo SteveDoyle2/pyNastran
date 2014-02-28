@@ -91,10 +91,9 @@ class RealForces(object):
             eid2 = extract(eid, dt)
             #print "eType=%s" %(eType)
 
-            dataIn = [eid2, axial, torque]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
-            self.obj.add(dt, dataIn)
+            self.obj.add(dt, eid2, axial, torque)
             n += 12
             #print "len(data) = ",len(self.data)
         self.data = self.data[n:]

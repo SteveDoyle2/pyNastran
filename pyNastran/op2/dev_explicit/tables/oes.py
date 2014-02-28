@@ -332,11 +332,10 @@ class OES(OP2Common):
                     out = s.unpack(edata)
                     (eid_device, axial, axial_margin, torsion, torsion_margin) = out
                     eid = (eid_device - self.device_code) // 10
-                    data_in = (axial, axial_margin, torsion, torsion_margin)
                     if self.debug4():
                         self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
                     assert eid > 0, eid
-                    self.obj.add_new_eid(dt, eid, data_in)
+                    self.obj.add_new_eid(dt, eid, axial, axial_margin, torsion, torsion_margin)
                     n += ntotal
             elif self.num_wide == 5: # imag
                 ntotal = 20
