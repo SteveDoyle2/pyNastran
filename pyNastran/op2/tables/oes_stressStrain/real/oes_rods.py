@@ -38,7 +38,7 @@ class RealRodVector(OES_Object):
         self.ielement = 0
 
     def build(self):
-        print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
 

@@ -1,9 +1,404 @@
+#pylint disable=C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from .oes_objects import StressObject, StrainObject
+from itertools import izip, count
+from numpy import zeros, searchsorted
+
+from .oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats8p4F
 
+class RealPlateVector(OES_Object):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
+        self.eType = {}
+        #self.code = [self.format_code, self.sort_code, self.s_code]
+
+        #self.ntimes = 0  # or frequency/mode
+        #self.ntotal = 0
+        self.ielement = 0
+        self.nelements = 0  # result specific
+        self.nnodes = None
+
+        if is_sort1:
+            if dt is not None:
+                self.add = self.add_sort1
+                self.add_new_eid = self.add_new_eid_sort1
+                self.addNewNode = self.addNewNodeSort1
+        else:
+            raise NotImplementedError('SORT2')
+            #assert dt is not None
+            #self.add = self.addSort2
+            #self.add_new_eid = self.add_new_eid_sort2
+            #self.addNewNode = self.addNewNodeSort2
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def _get_msgs(self):
+        raise NotImplementedError('%s needs to implement _get_msgs' % self.__class__.__name__)
+
+    def get_headers(self):
+        raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
+
+    def is_bilinear(self):
+        if self.element_type in [33, 74]:  # CQUAD4, CTRIA3
+            return False
+        elif self.element_type in [144]:  # CQUAD4
+            return False
+        raise NotImplementedError(self.element_type)
+
+    def build(self):
+        #print("self.ielement =", self.ielement)
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        #self.names = []
+        if self.element_type == 74:
+            nnodes_per_element = 1
+        elif self.element_type == 144:
+            nnodes_per_element = 5
+
+        self.nnodes = nnodes_per_element
+        #self.nelements //= nnodes_per_element
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
+            #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, int):
+            dtype = 'int32'
+        self.times = zeros(self.ntimes, dtype=dtype)
+        self.element_node = zeros((self.ntotal, 2), dtype='int32')
+
+        #[fd, oxx, oyy, txy, angle, majorP, minorP, ovm]
+        self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+
+    def add_new_eid(self, eType, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
+        self.add_new_eid_sort1(eType, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
+
+    def add_new_eid_sort1(self, eType, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
+        #print("------------------")
+        #print("isStress =", self.isStress())
+        #msg = "i=%s eType=%s dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (
+            #self.itotal,  eType, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
+        #print(msg)
+
+        assert isinstance(eid, int)
+        self.times[self.itime] = dt
+        assert isinstance(nodeID, basestring), nodeID
+        if isinstance(nodeID, basestring):
+            nodeID = 0
+        self.element_node[self.itotal, :] = [eid, nodeID]
+        self.data[self.itime, self.itotal, :] = [fd, oxx, oyy, txy, angle, majorP, minorP, ovm]
+        self.itotal += 1
+        self.ielement += 1
+
+    def addNewNode(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
+        if isinstance(nodeID, basestring):
+            nodeID = 0
+        self.add_sort1(dt, eid, nodeID, fd, oxx, oyy, txy, angle,
+                            majorP, minorP, ovm)
+
+
+    def add(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
+        if isinstance(nodeID, basestring):
+            nodeID = 0
+        self.add_sort1(dt, eid, nodeID, fd, oxx, oyy, txy, angle,
+                            majorP, minorP, ovm)
+
+    def addNewNodeSort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
+        if isinstance(nodeID, basestring):
+            nodeID = 0
+        self.add_sort1(dt, eid, nodeID, fd, oxx, oyy, txy, angle,
+                            majorP, minorP, ovm)
+
+    def add_sort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
+        #print('addNewNodeSort1')
+        assert eid is not None
+        msg = "i=%s dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (
+            self.itotal, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
+        #print(msg)
+        if isinstance(nodeID, basestring):
+            nodeID = 0
+        #assert isinstance(nodeID, int), nodeID
+        self.element_node[self.itotal, :] = [eid, nodeID]
+        self.data[self.itime, self.itotal, :] = [fd, oxx, oyy, txy, angle, majorP, minorP, ovm]
+        self.itotal += 1
+
+    def get_stats(self):
+        if not self.is_built:
+            return ['<%s>\n' % self.__class__.__name__,
+                    '  ntimes: %i\n' % self.ntimes,
+                    '  ntotal: %i\n' % self.ntotal,
+                    ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        nnodes = self.nnodes
+        ntotal = self.ntotal
+        nlayers = 2
+        nelements = self.ntotal // self.nnodes // 2
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i nnodes_per_element=%i nlayers=%i ntotal=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements, nnodes, nlayers, ntotal))
+            ntimes_word = 'ntimes'
+        else:
+            msg.append('  type=%s nelements=%i nnodes_per_element=%i nlayers=%i ntotal=%i\n'
+                       % (self.__class__.__name__, nelements, nnodes, nlayers, ntotal))
+            ntimes_word = 1
+        #msg.append('  data.shape=%s' % str(self.data.shape))
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  element types: %s\n  ' % ', '.join(self.element_names))
+        msg += self.get_data_code()
+        return msg
+
+    def get_f06_header(self, is_mag_phase=True):
+        ctria3_msg, ctria6_msg, cquad4_msg, cquad8_msg = self._get_msgs()
+        if 'CTRIA3' in self.element_name and self.element_type == 74:
+            msg = ctria3_msg
+            nnodes = 3
+        elif 'CQUAD4' in self.element_name and self.element_type == 33:
+            msg = cquad4_msg
+            nnodes = 4
+        elif 'CTRIA6' in self.element_name and self.element_type == 0:
+            msg = ctria6_msg
+            nnodes = 6
+        elif 'CQUAD8' in self.element_name and self.element_type == 0:
+            msg = cquad8_msg
+            nnodes = 8
+            raise RuntimeError('can these be bilinear???')
+        else:
+            raise NotImplementedError(self.element_name)
+
+        return self.element_name, nnodes, msg
+
+    def get_element_index(self, eids):
+        # elements are always sorted; nodes are not
+        itot = searchsorted(eids, self.element_node[:, 0])  #[0]
+        return itot
+
+    def eid_to_element_node_index(self, eids):
+        ind = ravel([searchsortd(self.element_node[:, 0] == eid) for eid in eids])
+        #ind = searchsorted(eids, self.element)
+        #ind = ind.reshape(ind.size)
+        #ind.sort()
+        return ind
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+        msg, nnodes, is_bilinear = self._get_msgs()
+
+        # write the f06
+        (ntimes, ntotal, four) = self.data.shape
+
+        eids = self.element_node[:, 0]
+        nids = self.element_node[:, 1]
+
+        cen_word = 'CEN/%i' % nnodes
+        for itime in xrange(ntimes):
+            dt = self.times[itime]  # TODO: rename this...
+            if self.nonlinear_factor is not None:
+                dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
+                header[1] = dtLine
+                if hasattr(self, 'eigr'):
+                    header[2] = ' %14s = %12.6E\n' % ('EIGENVALUE', self.eigrs[itime])
+            f.write(''.join(header + msg))
+
+            # TODO: can I get this without a reshape?
+            #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+
+            #[fd, oxx, oyy, txy, angle, majorP, minorP, ovm]
+            fd = self.data[itime, :, 0]
+            oxx = self.data[itime, :, 1]
+            oyy = self.data[itime, :, 2]
+            txy = self.data[itime, :, 3]
+            angle = self.data[itime, :, 4]
+            majorP = self.data[itime, :, 5]
+            minorP = self.data[itime, :, 6]
+            ovm = self.data[itime, :, 7]
+
+            # loop over all the elements
+            for i, eid, nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi in izip(
+                count(), eids, nids, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
+                ([fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi],
+                 isAllZeros) = writeFloats13E([fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi])
+                #f.write([eidi, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi])
+                iLayer = i % 2
+                # tria3
+                if self.element_type == 74:
+                    if iLayer == 0:
+                        msg.append('0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % (eid, fd, oxx, oyy, txy, angle, major, minor, ovm))
+                    else:
+                        msg.append('   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, oxx, oyy, txy, angle, major, minor, ovm))
+
+                elif self.element_type == 144:
+                    # bilinear
+                    if nid == 0 and iLayer == 0:  # CEN
+                        msg.append('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n' % (eid, cen_word, fd, oxx, oyy, txy, angle, major, minor, ovm))
+                    elif iLayer == 0:
+                        msg.append('   %8s %8i  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n' % ('', nid, fd, oxx, oyy, txy, angle, major, minor, ovm))
+                    elif iLayer == 1:
+                        msg.append('   %8s %8s  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n\n' % ('', '', fd, oxx, oyy, txy, angle, major, minor, ovm))
+                else:
+                    raise RuntimeError(self.element_type)
+
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
+
+
+class RealPlateStressVector(RealPlateVector, StressObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealPlateVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        StressObject.__init__(self, data_code, isubcase)
+
+    def isStress(self):
+        return True
+    def isStrain(self):
+        return False
+
+    def get_headers(self):
+        if self.isFiberDistance():
+            fd = 'fiber_distance'
+        else:
+            fd = 'fiber_curvature'
+
+        if self.isVonMises():
+            ovm = 'von_mises'
+        else:
+            ovm = 'max_shear'
+        headers = [fd, 'oxx', 'oyy', 'txy', 'angle', 'omax', 'omin', ovm]
+        return headers
+
+    def _get_msgs(self):
+        if self.isVonMises():
+            von_mises = 'VON MISES'
+        else:
+            von_mises = 'MAX SHEAR'
+
+        if self.isFiberDistance():
+            quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
+                           '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % von_mises]
+            triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
+                          '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % von_mises]
+        else:
+            quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
+                           '      ID      GRID-ID  CURVATURE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % von_mises]
+            triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
+                          '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % von_mises]
+
+        #=============================
+
+        isBilinear = False
+        cquad4_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'] + triMsgTemp
+        cquad8_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n'] + triMsgTemp
+
+        ## TODO: can cquad8s be bilinear???
+        isBilinear = True
+        cquadr_bilinear_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quadMsgTemp
+        cquad4_bilinear_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quadMsgTemp
+
+        isBilinear = False
+        cquad_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'] + triMsgTemp
+        ctria3_msg = ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'] + triMsgTemp
+        ctria6_msg = ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + triMsgTemp
+        ctriar_msg = ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + triMsgTemp
+
+        if self.element_type == 74:
+            msg = ctria3_msg
+            nnodes = 3
+            is_bilinear = False
+        elif  self.element_type == 144:
+            msg = cquad4_bilinear_msg
+            nnodes = 4
+            is_bilinear = True
+        else:
+            raise NotImplementedError(self.element_type)
+        return msg, nnodes, is_bilinear
+
+
+class RealPlateStrainVector(RealPlateVector, StrainObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealPlateVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        StrainObject.__init__(self, data_code, isubcase)
+
+    def isStress(self):
+        return False
+    def isStrain(self):
+        return True
+
+    def get_headers(self):
+        if self.isFiberDistance():
+            fd = 'fiber_distance'
+        else:
+            fd = 'fiber_curvature'
+
+        if self.isVonMises():
+            ovm = 'von_mises'
+        else:
+            ovm = 'max_shear'
+        headers = [fd, 'exx', 'eyy', 'exy', 'angle', 'emax', 'emin', ovm]
+        return headers
+
+    def _get_msgs(self):
+        if self.isVonMises():
+            von_mises = 'VON MISES'
+        else:
+            von_mises = 'MAX SHEAR'
+
+        if self.isFiberDistance():
+            quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
+                           '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % von_mises]
+            triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
+                          '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % von_mises]
+        else:
+            quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
+                           '      ID      GRID-ID  CURVATURE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % von_mises]
+            triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
+                          '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % von_mises]
+
+        #=============================
+
+        isBilinear = False
+        cquad4_msg = ['                         STRAINS   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'] + triMsgTemp
+        cquad8_msg = ['                         STRAINS   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n'] + triMsgTemp
+
+        ## TODO: can cquad8s be bilinear???
+        isBilinear = True
+        cquadr_bilinear_msg = ['                         STRAINS   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quadMsgTemp
+        cquad4_bilinear_msg = ['                         STRAINS   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quadMsgTemp
+
+        isBilinear = False
+        cquad_msg = ['                         STRAINS   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'] + triMsgTemp
+        ctria3_msg = ['                           STRAINS   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'] + triMsgTemp
+        ctria6_msg = ['                           STRAINS   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + triMsgTemp
+        ctriar_msg = ['                           STRAINS   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + triMsgTemp
+
+        is_bilinear = False
+        if self.element_type == 74:
+            msg = ctria3_msg
+            nnodes = 3
+        elif  self.element_type == 144:
+            msg = cquad4_bilinear_msg
+            nnodes = 4
+            is_bilinear = True
+        else:
+            raise NotImplementedError(self.element_type)
+        return msg, nnodes, is_bilinear
 
 class RealPlateStressObject(StressObject):
     """
@@ -45,10 +440,11 @@ class RealPlateStressObject(StressObject):
                 self.add_new_eid = self.add_new_eid_sort1
                 self.addNewNode = self.addNewNodeSort1
         else:
-            assert dt is not None
-            self.add = self.addSort2
-            self.add_new_eid = self.add_new_eid_sort2
-            self.addNewNode = self.addNewNodeSort2
+            raise NotImplementedError('SORT2')
+            #assert dt is not None
+            #self.add = self.addSort2
+            #self.add_new_eid = self.add_new_eid_sort2
+            #self.addNewNode = self.addNewNodeSort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -737,10 +1133,10 @@ class RealPlateStrainObject(StrainObject):
                 #self.add = self.add_sort1
                 #self.add_new_eid = self.add_new_eid_sort1
         else:
-            assert dt is not None
-            asdf
-            self.add = self.addSort2
-            self.add_new_eid = self.add_new_eid_sort2
+            raise NotImplementedError('SORT2')
+            #assert dt is not None
+            #self.add = self.addSort2
+            #self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -809,7 +1205,7 @@ class RealPlateStrainObject(StrainObject):
                         self.fiberCurvature[eid][nid] = [f1, f2]
                         self.exx[eid][nid] = [ex1, ex2]
                         self.eyy[eid][nid] = [ey1, ey2]
-                        self.txy[eid][nid] = [exy1, exy2]
+                        self.exy[eid][nid] = [exy1, exy2]
                         self.angle[eid][nid] = [angle1, angle2]
                         self.majorP[eid][nid] = [e11, e12]
                         self.minorP[eid][nid] = [e21, e22]

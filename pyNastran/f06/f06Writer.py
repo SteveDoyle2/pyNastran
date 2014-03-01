@@ -289,7 +289,11 @@ class F06Writer(F06WriterDeprecated):
         self.coneAxForces = {}
         self.damperForces = {}
         self.gapForces = {}
+
         self.plateForces = {}
+        self.ctria3_force = {}
+        self.cquad4_force = {}
+
         self.plateForces2 = {}
         self.compositePlateForces = {}
 
@@ -351,8 +355,19 @@ class F06Writer(F06WriterDeprecated):
 
         #: OES - isotropic CTRIA3/CQUAD4 stress
         self.plateStress = {}
+        self.ctria3_stress = {}
+        self.ctria6_stress = {}
+        self.cquad4_stress = {}
+        self.cquad8_stress = {}
+        self.ctriar_stress = {}
         #: OES - isotropic CTRIA3/CQUAD4 strain
         self.plateStrain = {}
+        self.ctria3_strain = {}
+        self.ctria6_strain = {}
+        self.cquad4_strain = {}
+        self.cquad8_strain = {}
+        self.ctriar_strain = {}
+
         #: OESNLXR - CTRIA3/CQUAD4 stress
         self.nonlinearPlateStress = {}
         #: OESNLXR - CTRIA3/CQUAD4 strain
@@ -642,6 +657,9 @@ class F06Writer(F06WriterDeprecated):
 
             # quad
             self.plateForces,   # centroidal elements
+            self.ctria3_force,
+            self.cquad4_force,
+
             self.plateForces2,  # bilinear elements
 
             # rods
@@ -683,7 +701,11 @@ class F06Writer(F06WriterDeprecated):
             self.barStrain, self.beamStrain,
 
             # plates
-            self.plateStrain, self.compositePlateStrain,
+            self.plateStrain,
+            self.ctria3_strain,
+            self.cquad4_strain,
+
+            self.compositePlateStrain,
             self.nonlinearPlateStrain,
             self.ctriaxStrain, self.hyperelasticPlateStress,
             self.shearStrain,
@@ -719,7 +741,11 @@ class F06Writer(F06WriterDeprecated):
             self.crod_stress, self.conrod_stress, self.ctube_stress,
 
             # plates
-            self.plateStress, self.compositePlateStress,
+            self.plateStress,
+            self.ctria3_stress,
+            self.cquad4_stress,
+
+            self.compositePlateStress,
             self.nonlinearPlateStress,
             self.ctriaxStress, self.hyperelasticPlateStrain,
 

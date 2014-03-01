@@ -149,6 +149,9 @@ class OP2_Vectorized(OP2):
         self.log.info('compress_results')
         result_types = [
             'displacements', 'eigenvectors', 'spcForces', 'mpcForces',
+            'loadVectors',
+            #=======================================================
+            'gridPointForces',
             #=======================================================
             'ctetra_stress', 'chexa_stress', 'cpenta_stress',
             'ctetra_strain', 'chexa_strain', 'cpenta_strain',
@@ -160,6 +163,8 @@ class OP2_Vectorized(OP2):
             'crod_force', 'conrod_force', 'ctube_force',
             #=======================================================
             'plateStress', 'plateStrain', 'plateForces', 'plateForces2',
+            'ctria3_stress', 'ctria3_strain', 'ctria3_force',
+            'cquad4_stress', 'cquad4_strain', 'cquad4_force',
             #=======================================================
             'barStress', 'barStrain', 'beamForces',
             'beamStress', 'beamStrain', 'barForces',
