@@ -37,11 +37,11 @@ class OGPF(object):
                 for i in xrange(nnodes):
                     eData = data[n:n+ntotal]
                     out = s.unpack(eData)
-                    (eKey, eid, elemName, f1, f2, f3, m1, m2, m3) = out
-                    ekey = (eKey - self.device_code) // 10
+                    (ekey, eid, elemName, f1, f2, f3, m1, m2, m3) = out
+                    ekey = (ekey - self.device_code) // 10
                     elemName = elemName.strip()
                     #data = (eid, elemName, f1, f2, f3, m1, m2, m3)
-                    self.obj.add(dt, eKey, eid, elemName, f1, f2, f3, m1, m2, m3)
+                    self.obj.add(dt, ekey, eid, elemName, f1, f2, f3, m1, m2, m3)
                     #print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%g f2=%g f3=%g m1=%g m2=%g m3=%g" %(ekey,eid,elemName,f1,f2,f3,m1,m2,m3)
                     n += ntotal
             else:

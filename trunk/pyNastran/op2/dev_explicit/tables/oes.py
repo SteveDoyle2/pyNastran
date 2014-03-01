@@ -665,12 +665,12 @@ class OES(OP2Common):
                     slot_vector = self.ctetra_stress
                 elif self.element_type == 67:  # CHEXA
                     nnodes_expected = 9
-                    result_vector_name = 'cpenta_stress'
-                    slot_vector = self.cpenta_stress
-                elif self.element_type == 68:  # CPENTA
-                    nnodes_expected = 7
                     result_vector_name = 'chexa_stress'
                     slot_vector = self.chexa_stress
+                elif self.element_type == 68:  # CPENTA
+                    nnodes_expected = 7
+                    result_vector_name = 'cpenta_stress'
+                    slot_vector = self.cpenta_stress
                 else:
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
@@ -690,12 +690,12 @@ class OES(OP2Common):
                     slot_vector = self.ctetra_strain
                 elif self.element_type == 67:  # CHEXA
                     nnodes_expected = 9
-                    result_vector_name = 'cpenta_strain'
-                    slot_vector = self.cpenta_strain
-                elif self.element_type == 68:  # CPENTA
-                    nnodes_expected = 7
                     result_vector_name = 'chexa_strain'
                     slot_vector = self.chexa_strain
+                elif self.element_type == 68:  # CPENTA
+                    nnodes_expected = 7
+                    result_vector_name = 'cpenta_strain'
+                    slot_vector = self.cpenta_strain
                 else:
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
@@ -761,7 +761,7 @@ class OES(OP2Common):
                                              sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
                                              aCos, bCos, cCos, pressure, svm)
                         else:
-                            self.obj.add_node(dt, eid, grid, inode,
+                            self.obj.add_node(dt, eid, inode, grid,
                                               sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
                                               aCos, bCos, cCos, pressure, svm)
                         n += 84
