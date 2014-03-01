@@ -234,25 +234,25 @@ class RealPlateVector(OES_Object):
             # loop over all the elements
             for i, eid, nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi in izip(
                 count(), eids, nids, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-                ([fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi],
-                 isAllZeros) = writeFloats13E([fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi])
+                ([fdi, oxxi, oyyi, txyi, major, minor, ovmi],
+                 isAllZeros) = writeFloats13E([fdi, oxxi, oyyi, txyi, major, minor, ovmi])
                 #f.write([eidi, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi])
                 iLayer = i % 2
                 # tria3
                 if self.element_type == 74:
                     if iLayer == 0:
-                        msg.append('0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % (eid, fd, oxx, oyy, txy, angle, major, minor, ovm))
+                        f.write('0  %6i   %-13s     %-13s  %-13s  %-13s   %8.4f   %-13s   %-13s  %s\n' % (eid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
                     else:
-                        msg.append('   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, oxx, oyy, txy, angle, major, minor, ovm))
+                        f.write('   %6s   %-13s     %-13s  %-13s  %-13s   %8.4f   %-13s   %-13s  %s\n' % ('', fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
 
                 elif self.element_type == 144:
                     # bilinear
                     if nid == 0 and iLayer == 0:  # CEN
-                        msg.append('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n' % (eid, cen_word, fd, oxx, oyy, txy, angle, major, minor, ovm))
+                        f.write('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % (eid, cen_word, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
                     elif iLayer == 0:
-                        msg.append('   %8s %8i  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n' % ('', nid, fd, oxx, oyy, txy, angle, major, minor, ovm))
+                        f.write('   %8s %8i  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % ('', nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
                     elif iLayer == 1:
-                        msg.append('   %8s %8s  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n\n' % ('', '', fd, oxx, oyy, txy, angle, major, minor, ovm))
+                        f.write('   %8s %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n\n' % ('', '', fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
                 else:
                     raise RuntimeError(self.element_type)
 
@@ -291,12 +291,12 @@ class RealPlateStressVector(RealPlateVector, StressObject):
             von_mises = 'MAX SHEAR'
 
         if self.isFiberDistance():
-            quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
+            quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)               \n',
                            '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % von_mises]
             triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
                           '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % von_mises]
         else:
-            quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
+            quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)               \n',
                            '      ID      GRID-ID  CURVATURE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % von_mises]
             triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
                           '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % von_mises]
@@ -361,15 +361,15 @@ class RealPlateStrainVector(RealPlateVector, StrainObject):
             von_mises = 'MAX SHEAR'
 
         if self.isFiberDistance():
-            quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
+            quadMsgTemp = ['    ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)               \n',
                            '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % von_mises]
-            triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
+            triMsgTemp = ['  ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)                 \n',
                           '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % von_mises]
         else:
-            quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
-                           '      ID      GRID-ID  CURVATURE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % von_mises]
-            triMsgTemp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
-                          '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % von_mises]
+            quadMsgTemp = ['    ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)               \n',
+                           '      ID      GRID-ID   CURVATURE       NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % von_mises]
+            triMsgTemp = ['  ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)                 \n',
+                          '    ID.       CURVATURE          NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % von_mises]
 
         #=============================
 
@@ -379,14 +379,14 @@ class RealPlateStrainVector(RealPlateVector, StrainObject):
 
         ## TODO: can cquad8s be bilinear???
         isBilinear = True
-        cquadr_bilinear_msg = ['                         STRAINS   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quadMsgTemp
-        cquad4_bilinear_msg = ['                         STRAINS   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quadMsgTemp
+        cquadr_bilinear_msg = ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quadMsgTemp
+        cquad4_bilinear_msg = ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quadMsgTemp
 
         isBilinear = False
         cquad_msg = ['                         STRAINS   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'] + triMsgTemp
-        ctria3_msg = ['                           STRAINS   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'] + triMsgTemp
-        ctria6_msg = ['                           STRAINS   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + triMsgTemp
-        ctriar_msg = ['                           STRAINS   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + triMsgTemp
+        ctria3_msg = ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'] + triMsgTemp
+        ctria6_msg = ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + triMsgTemp
+        ctriar_msg = ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + triMsgTemp
 
         is_bilinear = False
         if self.element_type == 74:

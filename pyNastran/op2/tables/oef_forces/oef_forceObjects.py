@@ -1,7 +1,8 @@
+#pylint disable=C0301
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import izip
-from numpy import zeros
+from numpy import zeros, searchsorted
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats12E
@@ -30,6 +31,10 @@ class RealRodForceVector(ScalarObject):
         headers = ['axial', 'torsion', 'SMa', 'SMt']
         return headers
 
+    #def get_headers(self):
+        #headers = ['axial', 'torque']
+        #return headers
+
     def _get_msgs(self):
         base_msg = ['       ELEMENT       AXIAL       TORSIONAL     ELEMENT       AXIAL       TORSIONAL\n',
                     '         ID.         FORCE        MOMENT        ID.          FORCE        MOMENT\n']
@@ -40,10 +45,6 @@ class RealRodForceVector(ScalarObject):
         conrod_msg += base_msg
         ctube_msg += base_msg
         return crod_msg, conrod_msg, ctube_msg
-
-    def get_headers(self):
-        headers = ['axial', 'torque']
-        return headers
 
     def _reset_indices(self):
         self.itotal = 0
@@ -389,7 +390,7 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
         [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
         #print "CBEAM addnew",data
         #self.eType[eid] = eType
-        self.nodes[eid] = {sd: [nid]}
+        self.nodes[eid] = {sd: nid}
         self.bendingMoment[eid] = {sd: [bm1, bm2]}
         self.shear[eid] = {sd: [ts1, ts2]}
         self.axial[eid] = {sd: af}
@@ -410,8 +411,7 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
 
     def addNewElementSort1(self, dt, data):
         [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
-        self._fillObjectNew(
-            dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
+        self._fillObjectNew(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
 
     def add_sort1(self, dt, data):
         [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
@@ -487,7 +487,9 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
                         '                    STAT DIST/   - BENDING MOMENTS -            - WEB  SHEARS -           AXIAL          TOTAL          WARPING\n',
                         '   ELEMENT-ID  GRID   LENGTH    PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE         TORQUE\n']
         for eid, bm in sorted(self.bendingMoment.iteritems()):
+            msg.append('0  %8i\n' % eid)
             for sd in sorted(bm):
+                nid = self.nodes[eid][sd]
                 bm1, bm2 = self.bendingMoment[eid][sd]
                 ts1, ts2 = self.shear[eid][sd]
                 af = self.axial[eid][sd]
@@ -495,8 +497,7 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
                 wtrq = self.warpingTorque[eid][sd]
                 (vals2, isAllZeros) = writeFloats13E([bm1, bm2, ts1, ts2, af, ttrq, wtrq])
                 [bm1, bm2, ts1, ts2, af, ttrq, wtrq] = vals2
-                msg.append('0  %8i\n' % (eid))
-                msg.append('           %8i   %.3f   %-13s %-13s  %-13s %-13s  %-13s  %-13s  %s\n' % (eid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq))
+                msg.append('           %8i   %.3f   %-13s %-13s  %-13s %-13s  %-13s  %-13s  %s\n' % (nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq))
 
         msg.append(pageStamp % page_num)
         f.write(''.join(msg))
@@ -1147,10 +1148,6 @@ class RealPlateForceVector(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
     def get_headers(self):
         return ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
 
-    def _reset_indices(self):
-        self.itotal = 0
-        self.ielement = 0
-
     def build(self):
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
@@ -1190,6 +1187,7 @@ class RealPlateForceVector(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
     def add_sort1(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         #self.eType[eid] = eType
         self.times[self.itime] = dt
+        self.element[self.itotal] = eid
         self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
         self.itotal += 1
 
@@ -1233,21 +1231,23 @@ class RealPlateForceVector(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
     def get_f06_header(self, is_mag_phase=True):
         if 'CTRIA3' in self.element_name:
             msg = [
-                '                          F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )'
-                ' '
-                '    ELEMENT                - MEMBRANE  FORCES -                        - BENDING  MOMENTS -              - TRANSVERSE SHEAR FORCES -'
-                '      ID              FX            FY            FXY             MX            MY            MXY             QX            QY'
+                '                             F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'
+                ' \n'
+                '    ELEMENT                - MEMBRANE  FORCES -                        - BENDING  MOMENTS -              - TRANSVERSE SHEAR FORCES -\n'
+                '      ID              FX            FY            FXY             MX            MY            MXY             QX            QY\n'
             ]
+            nnodes = 3
         elif 'CQUAD4' in self.element_name:
             msg = [
-                '                          F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )'
-                ' '
-                '    ELEMENT                - MEMBRANE  FORCES -                        - BENDING  MOMENTS -              - TRANSVERSE SHEAR FORCES -'
-                '      ID              FX            FY            FXY             MX            MY            MXY             QX            QY'
+                '                          F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'
+                ' \n'
+                '    ELEMENT                    - MEMBRANE  FORCES -                      - BENDING   MOMENTS -            - TRANSVERSE SHEAR FORCES -\n'
+                '      ID       GRID-ID     FX            FY            FXY           MX            MY            MXY           QX            QY\n'
             ]
+            nnodes = 4
         else:
             raise NotImplementedError(self.element_name)
-        return self.element_name, msg
+        return self.element_name, nnodes, msg
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
@@ -1262,12 +1262,13 @@ class RealPlateForceVector(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         return ind
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        (elem_name, msg_temp) = self.get_f06_header(is_mag_phase)
+        (elem_name, nnodes, msg_temp) = self.get_f06_header(is_mag_phase)
 
         # write the f06
         (ntimes, ntotal, four) = self.data.shape
 
         eids = self.element
+        cen_word = 'CEN/%i' % nnodes
         for itime in xrange(ntimes):
             dt = self.times[itime]  # TODO: rename this...
             if self.nonlinear_factor is not None:
@@ -1291,12 +1292,26 @@ class RealPlateForceVector(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
 
             # loop over all the elements
             out = []
-            for eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in izip(eids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
-                #([eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi],
-                #isAllZeros) = writeFloats13E([eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
-                Fmt = '% 8i   ' + '%27.20E   ' * 8 + '\n'
-                f.write(Fmt % (eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
+            if self.element_type == 74:
+                for eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in izip(eids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+                    ([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi],
+                    isAllZeros) = writeFloats13E([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
+                    # ctria3
+                    #          8      -7.954568E+01  2.560061E+03 -4.476376E+01    1.925648E+00  1.914048E+00  3.593237E-01    8.491534E+00  5.596094E-01  #
+                    f.write('   %8i %18s %13s %13s   %13s %13s %13s   %13s %s\n' % (eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
 
+            elif self.element_type == 33:
+                for eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in izip(eids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+                    ([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi],
+                    isAllZeros) = writeFloats13E([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
+                    # cquad4
+                    #0         6    CEN/4  1.072685E+01  2.504399E+03 -2.455727E+01 -5.017930E+00 -2.081427E+01 -5.902618E-01 -9.126162E+00  4.194400E+01#
+                    #Fmt = '% 8i   ' + '%27.20E   ' * 8 + '\n'
+                    #f.write(Fmt % (eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
+                    #
+                    f.write('0 %8i %8s %13s %13s %13s %13s %13s %13s %13s %s\n' % (eid, cen_word, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
+            else:
+                raise NotImplementedError(self.element_type)
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
@@ -1346,6 +1361,7 @@ class RealPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
 
     def add_new_transient(self, dt):
         self.dt = dt
+        self.ngrids = {}
         self.mx[dt] = {}
         self.my[dt] = {}
         self.mxy[dt] = {}
@@ -1360,7 +1376,7 @@ class RealPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
 
         #self.eType[eid] = eType
         self.term[eid] = term
-        self.ngrids[eid] = nid
+        self.ngrids[eid] = [nid]
 
         self.mx[eid] = [mx]
         self.my[eid] = [my]
@@ -1374,6 +1390,7 @@ class RealPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
     def add(self, eid, dt, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         #self.eType[eid] = eType
         #print "mx = ",self.mx,mx
+        self.ngrids[eid].append(nid)
         self.mx[eid].append(mx)
         self.my[eid].append(my)
         self.mxy[eid].append(mxy)
@@ -1389,7 +1406,7 @@ class RealPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
 
         #self.eType[eid] = eType
         self.term[eid] = term
-        self.ngrids[eid] = nid
+        self.ngrids[eid] = [nid]
         self.mx[dt][eid] = [mx]
         self.my[dt][eid] = [my]
         self.mxy[dt][eid] = [mxy]
@@ -1404,6 +1421,7 @@ class RealPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
             self.add_new_transient(dt)
 
         #self.eType[eid] = eType
+        self.ngrids[eid].append(nid)
         self.mx[dt][eid].append(mx)
         self.my[dt][eid].append(my)
         self.mxy[dt][eid].append(mxy)
@@ -1443,6 +1461,43 @@ class RealPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.bmxy[dt][eid].append(bmxy)
         self.tx[dt][eid].append(tx)
         self.ty[dt][eid].append(ty)
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None,  is_mag_phase=False):
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=False)
+
+        words = header + [
+            '                          F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n'
+            ' \n'
+            '    ELEMENT                    - MEMBRANE  FORCES -                      - BENDING   MOMENTS -            - TRANSVERSE SHEAR FORCES -\n'
+            '      ID       GRID-ID     FX            FY            FXY           MX            MY            MXY           QX            QY\n'
+        ]
+        #header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+        f.write(''.join(words))
+        for eid in sorted(self.mx):
+            mxii = self.mx[eid]
+            term = self.term[eid]
+            #self.term[eid] = term
+            for i in xrange(len(mxii)):
+                node_id = self.ngrids[eid][i]
+                mxi = self.mx[eid][i]
+                myi = self.my[eid][i]
+                mxyi = self.mxy[eid][i]
+                bmxi = self.bmx[eid][i]
+                bmyi = self.bmy[eid][i]
+                bmxyi = self.bmxy[eid][i]
+                txi = self.tx[eid][i]
+                tyi = self.ty[eid][i]
+                (vals2, isAllZeros) = writeFloats13E([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
+                [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi] = vals2
+                if i == 0:
+                    f.write('0  %8i    CEN/4 %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
+                else:
+                    f.write('            %8i %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (node_id, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
+#            1     2.504029E+06  9.728743E+06   5.088001E+05  1.976808E+06   1.995229E+06  7.751935E+06  -3.684978E-07  -1.180941E-07
+
+        f.write(page_stamp % page_num)
+        return page_num
 
 
 class RealCBarForce(ScalarObject):  # 34-CBAR
@@ -1520,14 +1575,40 @@ class RealCBarForce(ScalarObject):  # 34-CBAR
         self.axial[dt][eid] = af
         self.torque[dt][eid] = trq
 
-    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=False)
+
         words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
                  '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
                  '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
         msg = []
+        #header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+        f.write(''.join(words))
+        for eid in sorted(self.bendingMomentA):
+            bm1a, bm2a = self.bendingMomentA[eid]
+            bm1b, bm2b = self.bendingMomentB[eid]
+            ts1, ts2 = self.shear[eid]
+            af = self.axial[eid]
+            trq = self.torque[eid]
+            (vals2, isAllZeros) = writeFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq])
+            [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = vals2
+            f.write('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq))
+#            1     2.504029E+06  9.728743E+06   5.088001E+05  1.976808E+06   1.995229E+06  7.751935E+06  -3.684978E-07  -1.180941E-07
+
+            f.write(page_stamp % page_num)
+        return page_num
+
+    def _write_f06_transient(self, header, page_stamp, page_num, f, is_mag_phase=False):
+        assert f is not None
+        words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
+                 '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
+                 '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
+
         for dt, bm in sorted(self.bendingMomentA.iteritems()):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-            msg += header + words
+            f.write(''.join(header + words))
             for eid in sorted(bm):
                 bm1a, bm2a = self.bendingMomentA[dt][eid]
                 bm1b, bm2b = self.bendingMomentB[dt][eid]
@@ -1536,12 +1617,10 @@ class RealCBarForce(ScalarObject):  # 34-CBAR
                 trq = self.torque[dt][eid]
                 (vals2, isAllZeros) = writeFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq])
                 [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = vals2
-                msg.append('      %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq))
+                f.write('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq))
 #            1     2.504029E+06  9.728743E+06   5.088001E+05  1.976808E+06   1.995229E+06  7.751935E+06  -3.684978E-07  -1.180941E-07
 
-            msg.append(pageStamp % page_num)
-            f.write(''.join(msg))
-            msg = ['']
+            f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 

@@ -79,27 +79,6 @@ class RealSolidVector(OES_Object):
         self.data = zeros((self.ntimes, self.ntotal, 10), 'float32')
         #self.data = zeros((self.ntimes, self.nelements, nnodes+1, 10), 'float32')
 
-    def _add_eid_sort1(self, element_num, element_type, dt, eid, cid, ctype, nodef):
-        self.times[self.itime] = dt
-        #print(self.element_types2, element_type, self.element_types2.dtype)
-        #self.element_types2[self.ielement] = string_(element_type)   # TODO: save this...
-        #self.element_types2[self.ielement] = element_type
-
-        #try:
-        if self.ielement < self.nelements:
-            self.element_cid[self.ielement] = [eid, cid]
-            self.element_types3[self.ielement, :] = [element_num, nodef]
-        #except IndexError:
-            #pass
-            #print('element_types3', self.element_types3)
-
-        self.element_node[self.itotal, :] = [eid, 0]  # 0 is center
-        # no data
-        #self.element_node[self.ielement, 0, :] = [eid, 0]  # 0 is center
-        self.ielement += 1
-        self.itotal += 1
-        #self.data
-
     def add_eid_sort1(self, eType, cid, dt, eid, node_id, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
         #assert cid >= 0
         assert eid >= 0
@@ -126,7 +105,7 @@ class RealSolidVector(OES_Object):
 
         #self.data[self.itime, self.ielement-1, self.inode, :] = [oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
 
-        #print('eid=%i node_id=%i exx=%s' % (eid, node_id, str(ex)))
+        print('eid=%i node_id=%i exx=%s' % (eid, node_id, str(oxx)))
         self.element_node[self.itotal, :] = [eid, node_id]
         #self.element_node[self.ielement-1, self.inode-1, :] = [eid, node_id]
         self.itotal += 1
@@ -282,7 +261,7 @@ class RealSolidStressVector(RealSolidVector, StressObject):
             '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % von_mises,
         ]
 
-        tetra_msg = ['                   S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( T E T R A )\n', ]
+        tetra_msg = ['                   S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n', ]
         penta_msg = ['                    S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n', ]
         hexa_msg  = ['                      S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n', ]
         tetra_msg += base_msg

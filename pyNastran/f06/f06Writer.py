@@ -631,40 +631,45 @@ class F06Writer(F06WriterDeprecated):
                      '\n', ' \n']
         header = copy.deepcopy(header_old)
         res_types = [
+            self.accelerations,
             self.displacements, self.displacementsPSD, self.displacementsATO, self.displacementsRMS,
             self.scaledDisplacements,  # ???
-            self.velocities, self.accelerations, #self.eigenvectors,
-            self.temperatures,
-            self.loadVectors, self.thermalLoadVectors,
-            self.forceVectors,
 
-            self.spcForces, self.mpcForces,
+            self.forceVectors,
+            self.loadVectors,
+            self.temperatures,
+            self.velocities, #self.eigenvectors,
+
+            self.mpcForces,
+            self.spcForces,
+            self.thermalLoadVectors,
 
 
             #------------------------------------------
             # OEF - forces
 
-            # 1. cbar
-            # 2. cbeam
-            # 3. cquad4
-            # 4. crod/ctube/conrod
-
+            # alphabetical order...
             # bars
             self.barForces,
 
             # beam
-            self.beamForces, self.bar100Forces, self.bendForces,
+            self.beamForces,
+            self.bar100Forces,
+            self.bendForces,
 
-            # quad
-            self.plateForces,   # centroidal elements
-            self.ctria3_force,
+            # alphabetical
+            self.conrod_force,
             self.cquad4_force,
-
+            self.plateForces,   # centroidal elements
             self.plateForces2,  # bilinear elements
+
+            self.crod_force,
+            self.cshear_force,
+            self.ctria3_force,
+            self.ctube_force,
 
             # rods
             self.rodForces,
-            self.crod_force, self.conrod_force, self.ctube_force,
 
             # springs
             self.springForces,
@@ -674,7 +679,6 @@ class F06Writer(F06WriterDeprecated):
 
             # cshear,
             self.shearForces,
-
             # other
             self.bushForces, self.gapForces, self.solidPressureForces,
 
@@ -686,46 +690,43 @@ class F06Writer(F06WriterDeprecated):
 
             # springs,
             self.celasStrain,
-            self.celas1_stress,
-            self.celas2_stress,
-            self.celas3_stress,
-            self.celas4_stress,
-
-            self.celasStress,
-            self.celas1_strain,
-            self.celas2_strain,
-            self.celas3_strain,
-            self.celas4_strain,
 
             # bars/beams
             self.barStrain, self.beamStrain,
 
             # plates
             self.plateStrain,
-            self.ctria3_strain,
-            self.cquad4_strain,
-
+            self.shearStrain,
             self.compositePlateStrain,
             self.nonlinearPlateStrain,
             self.ctriaxStrain, self.hyperelasticPlateStress,
-            self.shearStrain,
 
-            # rods
-            self.rodStrain, self.nonlinearRodStrain,  # non-vectorized
-            self.crod_strain, self.conrod_strain, self.ctube_strain,  # vectorized
-
-            # bush
-            self.bushStrain,
 
             # solids
             self.solidStrain,
-            self.ctetra_strain,
-            self.cpenta_strain,
+
+            # rods
+            self.rodStrain, self.nonlinearRodStrain,  # non-vectorized
+
+
+            self.celas1_strain,
+            self.celas2_strain,
+            self.celas3_strain,
+            self.celas4_strain,
+
             self.chexa_strain,
+            self.conrod_strain,
+            self.cpenta_strain,
+            self.cquad4_strain,
+            self.crod_strain,
+            self.cshear_strain,
+            self.ctetra_strain,
+            self.ctria3_strain,
+            self.ctube_strain,
 
+            # bush
+            self.bushStrain,
             #------------------------------------------
-            # OES - stress
-
             # cbars/cbeams
             self.barStress,
             self.beamStress,
@@ -733,27 +734,36 @@ class F06Writer(F06WriterDeprecated):
             # bush
             self.bushStress, self.bush1dStressStrain,
 
-            # shear
+            self.celasStress,
             self.shearStress,
+            self.plateStress,
+            self.solidStress,
 
             # rods
             self.rodStress, self.nonlinearRodStress,
-            self.crod_stress, self.conrod_stress, self.ctube_stress,
 
-            # plates
-            self.plateStress,
-            self.ctria3_stress,
+
+            # shear
+            # OES - stress
+            self.celas1_stress,
+            self.celas2_stress,
+            self.celas3_stress,
+            self.celas4_stress,
+
+            self.chexa_stress,
+            self.conrod_stress,
+            self.cpenta_stress,
             self.cquad4_stress,
+            self.crod_stress,
+            self.cshear_stress,
+            self.ctetra_stress,
+            self.ctria3_stress,
+            self.ctube_stress,
 
             self.compositePlateStress,
             self.nonlinearPlateStress,
             self.ctriaxStress, self.hyperelasticPlateStrain,
 
-            # solids
-            self.solidStress,
-            self.ctetra_stress,
-            self.cpenta_stress,
-            self.chexa_stress,
             #------------------------------------------
 
             self.gridPointStresses, self.gridPointVolumeStresses, self.gridPointForces,
@@ -762,7 +772,7 @@ class F06Writer(F06WriterDeprecated):
         if 1:
             iSubcases = self.iSubcaseNameMap.keys()
             #print("self.iSubcaseNameMap = %s" %(self.iSubcaseNameMap))
-            for isubcase in sorted(iSubcases):
+            for isubcase in iSubcases:
                 title = self.Title
                 (subtitle, label) = self.iSubcaseNameMap[isubcase]
                 subtitle = subtitle.strip()
@@ -790,7 +800,10 @@ class F06Writer(F06WriterDeprecated):
                         if result.nonlinear_factor is not None:
                             header.append('')
                         try:
-                            print('%-26s SUBCASE=%i' % (result.__class__.__name__, isubcase))
+                            element_name = ''
+                            if hasattr(result, 'element_name'):
+                                element_name = ' - ' + result.element_name
+                            print('%-26s SUBCASE=%i%s' % (result.__class__.__name__, isubcase, element_name))
                             self.page_num = result.write_f06(header, page_stamp, page_num=self.page_num, f=f06, is_mag_phase=False)
                             assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
                         except:
