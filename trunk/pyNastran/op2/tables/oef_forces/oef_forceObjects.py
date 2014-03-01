@@ -1055,8 +1055,7 @@ class RealPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         self.tx[dt] = {}
         self.ty[dt] = {}
 
-    def add(self, dt, data):
-        [eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
+    def add(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
 
         #self.eType[eid] = eType
         self.mx[eid] = mx
@@ -1068,8 +1067,7 @@ class RealPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         self.tx[eid] = tx
         self.ty[eid] = ty
 
-    def add_sort1(self, dt, data):
-        [eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
+    def add_sort1(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         if dt not in self.mx:
             self.add_new_transient(dt)
 
@@ -1083,8 +1081,7 @@ class RealPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         self.tx[dt][eid] = tx
         self.ty[dt][eid] = ty
 
-    def add_sort2(self, eid, data):
-        [dt, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
+    def add_sort2(self, eid, dt, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         if dt not in self.mx:
             self.add_new_transient(dt)
 
@@ -1125,6 +1122,184 @@ class RealPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
             Fmt = '% 8i   ' + '%27.20E   ' * 8 + '\n'
             f.write(Fmt % (eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty))
         return page_num
+
+class RealPlateForceVector(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ScalarObject.__init__(self, data_code, isubcase)
+
+        self.dt = dt
+        self.nelements = 0
+
+        if is_sort1:
+            if dt is not None:
+                self.add = self.add_sort1
+        else:
+            assert dt is not None
+            self.add = self.add_sort2
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def _get_msgs(self):
+        raise NotImplementedError()
+
+    def get_headers(self):
+        return ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def build(self):
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        #self.names = []
+        #self.nelements //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, int):
+            dtype = 'int32'
+        self.times = zeros(self.ntimes, dtype=dtype)
+        self.element = zeros(self.nelements, dtype='int32')
+
+        #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+        self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+
+    #def add_new_eid_sort1(self, dt, eid, axial, SMa, torsion, SMt):
+        #self.times[self.itime] = dt
+        #self.element[self.ielement] = eid
+        #self.data[self.itime, self.ielement, :] = [axial, SMa, torsion, SMt]
+        #self.ielement += 1
+
+    def add(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+        self.add_sort1(dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
+
+    def add_sort1(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+        #self.eType[eid] = eType
+        self.times[self.itime] = dt
+        self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+        self.itotal += 1
+
+    def add_sort2(self, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+        raise NotImplementedError('SORT2')
+        #if dt not in self.mx:
+            #self.add_new_transient(dt)
+        self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+
+        ##self.eType[eid] = eType
+
+    def get_stats(self):
+        if not self.is_built:
+            return ['<%s>\n' % self.__class__.__name__,
+                    '  ntimes: %i\n' % self.ntimes,
+                    '  ntotal: %i\n' % self.ntotal,
+                    ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        #ntotal = self.ntotal
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+            ntimes_word = 'ntimes'
+        else:
+            msg.append('  type=%s nelements=%i\n'
+                       % (self.__class__.__name__, nelements))
+            ntimes_word = 1
+        #msg.append('  eType\n')
+        #msg.append('  data.shape=%s' % str(self.data.shape))
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  element types: %s\n  ' % ', '.join(self.element_names))
+        msg += self.get_data_code()
+        return msg
+
+    def get_f06_header(self, is_mag_phase=True):
+        if 'CTRIA3' in self.element_name:
+            msg = [
+                '                          F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )'
+                ' '
+                '    ELEMENT                - MEMBRANE  FORCES -                        - BENDING  MOMENTS -              - TRANSVERSE SHEAR FORCES -'
+                '      ID              FX            FY            FXY             MX            MY            MXY             QX            QY'
+            ]
+        elif 'CQUAD4' in self.element_name:
+            msg = [
+                '                          F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )'
+                ' '
+                '    ELEMENT                - MEMBRANE  FORCES -                        - BENDING  MOMENTS -              - TRANSVERSE SHEAR FORCES -'
+                '      ID              FX            FY            FXY             MX            MY            MXY             QX            QY'
+            ]
+        else:
+            raise NotImplementedError(self.element_name)
+        return self.element_name, msg
+
+    def get_element_index(self, eids):
+        # elements are always sorted; nodes are not
+        itot = searchsorted(eids, self.element)  #[0]
+        return itot
+
+    def eid_to_element_node_index(self, eids):
+        #ind = ravel([searchsortd(self.element_node[:, 0] == eid) for eid in eids])
+        ind = searchsorted(eids, self.element)
+        #ind = ind.reshape(ind.size)
+        #ind.sort()
+        return ind
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+        (elem_name, msg_temp) = self.get_f06_header(is_mag_phase)
+
+        # write the f06
+        (ntimes, ntotal, four) = self.data.shape
+
+        eids = self.element
+        for itime in xrange(ntimes):
+            dt = self.times[itime]  # TODO: rename this...
+            if self.nonlinear_factor is not None:
+                dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
+                header[1] = dtLine
+                if hasattr(self, 'eigr'):
+                    header[2] = ' %14s = %12.6E\n' % ('EIGENVALUE', self.eigrs[itime])
+            f.write(''.join(header + msg_temp))
+
+            # TODO: can I get this without a reshape?
+            #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
+            #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+            mx = self.data[itime, :, 0]
+            my = self.data[itime, :, 1]
+            mxy = self.data[itime, :, 2]
+            bmx = self.data[itime, :, 3]
+            bmy = self.data[itime, :, 4]
+            bmxy = self.data[itime, :, 5]
+            tx = self.data[itime, :, 6]
+            ty = self.data[itime, :, 7]
+
+            # loop over all the elements
+            out = []
+            for eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in izip(eids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+                #([eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi],
+                #isAllZeros) = writeFloats13E([eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
+                Fmt = '% 8i   ' + '%27.20E   ' * 8 + '\n'
+                f.write(Fmt % (eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
+
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
 
 class RealPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -1180,9 +1355,8 @@ class RealPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.tx[dt] = {}
         self.ty[dt] = {}
 
-    def add_new_element(self, eid, dt, data):
+    def add_new_element(self, eid, dt, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         #print "eid = ",eid
-        [term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
 
         #self.eType[eid] = eType
         self.term[eid] = term
@@ -1197,9 +1371,7 @@ class RealPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.tx[eid] = [tx]
         self.ty[eid] = [ty]
 
-    def add(self, eid, dt, data):
-        [nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
-
+    def add(self, eid, dt, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         #self.eType[eid] = eType
         #print "mx = ",self.mx,mx
         self.mx[eid].append(mx)
@@ -1211,8 +1383,7 @@ class RealPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.tx[eid].append(tx)
         self.ty[eid].append(ty)
 
-    def addNewElementSort1(self, eid, dt, data):
-        [term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
+    def addNewElementSort1(self, eid, dt, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         if dt not in self.mx:
             self.add_new_transient(dt)
 
@@ -1228,8 +1399,7 @@ class RealPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.tx[dt][eid] = [tx]
         self.ty[dt][eid] = [ty]
 
-    def add_sort1(self, eid, dt, data):
-        [nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
+    def add_sort1(self, eid, dt, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         if dt not in self.mx:
             self.add_new_transient(dt)
 
@@ -1243,8 +1413,7 @@ class RealPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.tx[dt][eid].append(tx)
         self.ty[dt][eid].append(ty)
 
-    def addNewElementSort2(self, dt, eid, data):
-        [term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
+    def addNewElementSort2(self, dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         if dt not in self.mx:
             self.add_new_transient(dt)
 
@@ -1261,8 +1430,7 @@ class RealPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.tx[dt][eid] = [tx]
         self.ty[dt][eid] = [ty]
 
-    def add_sort2(self, dt, eid, data):
-        [nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
+    def add_sort2(self, dt, eid, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         if dt not in self.mx:
             self.add_new_transient(dt)
 

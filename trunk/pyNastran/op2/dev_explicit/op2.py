@@ -1141,7 +1141,7 @@ class OP2( #BDF,
         OP2 class.
         """
         table_types = [
-            ## OUG - displacement
+            # OUG - displacement
             'displacements',
             'displacementsPSD',
             'displacementsATO',
@@ -1150,16 +1150,16 @@ class OP2( #BDF,
             'displacementsNO',
             'scaledDisplacements',
 
-            ## OUG - temperatures
+            # OUG - temperatures
             'temperatures',
 
-            ## OUG - eigenvectors
+            # OUG - eigenvectors
             'eigenvectors',
 
-            ## OUG - velocity
+            # OUG - velocity
             'velocities',
 
-            ## OUG - acceleration
+            # OUG - acceleration
             'accelerations',
 
             # OQG - spc/mpc forces
@@ -1167,77 +1167,82 @@ class OP2( #BDF,
             'mpcForces',
             'thermalGradientAndFlux',
 
-            ## OGF - grid point forces
+            # OGF - grid point forces
             'gridPointForces',
 
-            ## OPG - summation of loads for each element
+            # OPG - summation of loads for each element
             'loadVectors',
             'thermalLoadVectors',
             'appliedLoads',
             'forceVectors',
 
             # OES - tCode=5 thermal=0 s_code=0,1 (stress/strain)
-            ## OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
+            # OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
             'celasStress',  # non-vectorized
             'celas1_stress',  # vectorized
             'celas2_stress',
             'celas3_stress',
             'celas4_stress',
 
-            ## OES - CELAS1/CELAS2/CELAS3/CELAS4 strain
+            # OES - CELAS1/CELAS2/CELAS3/CELAS4 strain
             'celasStrain',  # non-vectorized
             'celas1_strain',  # vectorized
             'celas2_strain',
             'celas3_strain',
             'celas4_strain',
 
-            ## OES - isotropic CROD/CONROD/CTUBE stress
+            # OES - isotropic CROD/CONROD/CTUBE stress
             'rodStress',  # non-vectorized
             'crod_stress',  # vectorized
             'conrod_stress',
             'ctube_stress',
 
-            ## OES - isotropic CROD/CONROD/CTUBE strain
+            # OES - isotropic CROD/CONROD/CTUBE strain
             'rodStrain',  # non-vectorized
             'crod_strain',  # vectorized
             'conrod_strain',
             'ctube_strain',
 
-            ## OES - isotropic CBAR stress
+            # OES - isotropic CBAR stress
             'barStress',
-            ## OES - isotropic CBAR strain
+            # OES - isotropic CBAR strain
             'barStrain',
-            ## OES - isotropic CBEAM stress
+            # OES - isotropic CBEAM stress
             'beamStress',
-            ## OES - isotropic CBEAM strain
+            # OES - isotropic CBEAM strain
             'beamStrain',
 
-            ## OES - isotropic CTRIA3/CQUAD4 stress
+            # OES - isotropic CTRIA3/CQUAD4 stress
             'plateStress',
+            'ctria3_stress',
+            'cquad4_stress',
+
             # OES - isotropic CTRIA3/CQUAD4 strain
             'plateStrain',
+            'ctria3_strain',
+            'cquad4_strain',
 
-            ## OES - isotropic CTETRA/CHEXA/CPENTA stress
+            # OES - isotropic CTETRA/CHEXA/CPENTA stress
             'solidStress',  # non-vectorized
             'ctetra_stress',  # vectorized
             'chexa_stress',
             'cpenta_stress',
 
-            ## OES - isotropic CTETRA/CHEXA/CPENTA strain
+            # OES - isotropic CTETRA/CHEXA/CPENTA strain
             'solidStrain',  # non-vectorized
             'ctetra_strain',  # vectorized
             'chexa_strain',
             'cpenta_strain',
 
-            ## OES - CSHEAR stress
+            # OES - CSHEAR stress
             'shearStress',
-            ## OES - CSHEAR strain
+            # OES - CSHEAR strain
             'shearStrain',
-            ## OES - CEALS1 224, CELAS3 225
+            # OES - CEALS1 224, CELAS3 225
             'nonlinearSpringStress',
-            ## OES - GAPNL 86
+            # OES - GAPNL 86
             'nonlinearGapStress',
-            ## OES - CBUSH 226
+            # OES - CBUSH 226
             'nolinearBushStress',
         ]
 
@@ -1259,7 +1264,11 @@ class OP2( #BDF,
             'coneAxForces',
             'damperForces',
             'gapForces',
+
             'plateForces',
+            'ctria3_force',
+            'cquad4_force',
+
             'plateForces2',
             'shearForces',
             'solidPressureForces',
@@ -1280,7 +1289,7 @@ class OP2( #BDF,
             #self.temperatureForces
         ]
         table_types += [
-            ## OES - CTRIAX6
+            # OES - CTRIAX6
             'ctriaxStress',
             'ctriaxStrain',
 
@@ -1288,25 +1297,25 @@ class OP2( #BDF,
             'bushStrain',
             'bush1dStressStrain',
 
-            ## OES - nonlinear CROD/CONROD/CTUBE stress
+            # OES - nonlinear CROD/CONROD/CTUBE stress
             'nonlinearRodStress',
             'nonlinearRodStrain',
 
-            ## OESNLXR - CTRIA3/CQUAD4 stress
+            # OESNLXR - CTRIA3/CQUAD4 stress
             'nonlinearPlateStress',
             'nonlinearPlateStrain',
             'hyperelasticPlateStress',
             'hyperelasticPlateStrain',
 
-            ## OES - composite CTRIA3/CQUAD4 stress
+            # OES - composite CTRIA3/CQUAD4 stress
             'compositePlateStress',
             'compositePlateStrain',
 
-            ## OGS1 - grid point stresses
+            # OGS1 - grid point stresses
             'gridPointStresses',        # tCode=26
             'gridPointVolumeStresses',  # tCode=27
 
-            ## OEE - strain energy density
+            # OEE - strain energy density
             'strainEnergy',  # tCode=18
         ]
         msg = []

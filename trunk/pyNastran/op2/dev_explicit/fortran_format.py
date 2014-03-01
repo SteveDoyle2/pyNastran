@@ -212,6 +212,12 @@ class FortranFormat(object):
 
                             if hasattr(self, 'obj') and self.obj is not None:
                                 if hasattr(self.obj, 'ntimes'):
+                                    if not hasattr(self.obj, '_reset_indices'):
+                                        methods = '\ndir(obj)=%s' % ', '.join(sorted(dir(self.obj)))
+                                        msg = 'is %s vectorized because its missing _reset_indices...%s' % (
+                                            self.obj.__class__.__name__, methods)
+                                        break
+                                        raise RuntimeError(msg)
                                     #print self.freq
                                     self.obj._reset_indices()
                                     #print "isubcase", self.isubcase

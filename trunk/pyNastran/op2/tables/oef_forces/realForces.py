@@ -293,10 +293,8 @@ class RealForces(object):
             eid2 = extract(eid, dt)
             #print "eType=%s" %(eType)
 
-            dataIn = [eid2, mx, my, mxy, bmx, bmy, bmxy, tx, ty]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
-            #eid = self.obj.add_new_eid(out)
-            self.obj.add(dt, dataIn)
+            self.obj.add(dt, eid2, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
             n += ntotal
         self.data = self.data[n:]
         #print self.plateForces
@@ -330,9 +328,8 @@ class RealForces(object):
             #term= 'CEN\'
             #print "eType=%s" %(eType)
             eid2 = extract(eid, dt)
-            dataIn = [term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
-            self.obj.add_new_element(eid2, dt, dataIn)
+            self.obj.add_new_element(eid2, dt, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
             n += 44
             for i in xrange(nnodes):
                 edata = self.data[n:n+36]
@@ -342,7 +339,7 @@ class RealForces(object):
                 #(nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty) = out
                 #dataIn = [nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty]
                 #print "***%s    " %(self.get_element_type(self.element_type)),dataIn
-                self.obj.add(eid2, dt, out)
+                self.obj.add(eid2, dt, *out)
                 n += 36
         self.data = self.data[n:]
         #print self.plateForces2

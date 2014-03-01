@@ -321,8 +321,7 @@ class OEF(ThermalElements, RealForces, ComplexForces):
                 self.create_transient_object(self.shearForces, RealCShearForce)
                 self.handle_results_buffer(self.OEF_Shear, resultName)
             elif self.num_wide == numWideImag:
-                self.create_transient_object(
-                    self.shearForces, ComplexCShearForce)
+                self.create_transient_object(self.shearForces, ComplexCShearForce)
                 self.handle_results_buffer(self.OEF_Shear_alt, resultName)
             else:
                 self.not_implemented_or_skip()
@@ -333,8 +332,7 @@ class OEF(ThermalElements, RealForces, ComplexForces):
                 self.create_transient_object(self.springForces, RealSpringForce)
                 self.handle_results_buffer(self.OEF_Spring, resultName)
             elif self.num_wide == numWideImag:
-                self.create_transient_object(
-                    self.springForces, ComplexSpringForce)
+                self.create_transient_object(self.springForces, ComplexSpringForce)
                 self.handle_results_buffer(self.OEF_Spring_alt, resultName)
             else:
                 self.not_implemented_or_skip()
@@ -343,8 +341,7 @@ class OEF(ThermalElements, RealForces, ComplexForces):
             resultName = 'damperForces'
             if self.num_wide == numWideReal:
                 self.create_transient_object(self.damperForces, RealDamperForce)
-                self.handle_results_buffer(self.OEF_Spring,
-                                          resultName)  # same reader as for springs
+                self.handle_results_buffer(self.OEF_Spring, resultName)  # same reader as for springs
             elif self.num_wide == numWideImag:
                 self.create_transient_object(
                     self.damperForces, ComplexDamperForce)
