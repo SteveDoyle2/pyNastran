@@ -5,7 +5,7 @@ from ..real.oes_objects import StressObject, StrainObject
 
 
 
-class ComplexShearStressObject(StressObject):
+class ComplexShearStress(StressObject):
     """
     ::
 
@@ -93,7 +93,7 @@ class ComplexShearStressObject(StressObject):
         self.avgShear[dt][eid] = avgShear
 
 
-class ComplexShearStrainObject(StrainObject):
+class ComplexShearStrain(StrainObject):
 
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StrainObject.__init__(self, data_code, isubcase)

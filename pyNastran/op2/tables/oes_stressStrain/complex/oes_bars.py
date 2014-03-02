@@ -5,7 +5,7 @@ from ..real.oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
 
-class ComplexBarStressObject(StressObject):
+class ComplexBarStress(StressObject):
     """
     # s_code=0
                            C O M P L E X   S T R E S S E S   I N   B A R   E L E M E N T S   ( C B A R )
@@ -236,7 +236,7 @@ class ComplexBarStressObject(StressObject):
         return page_num - 1
 
 
-class ComplexBarStrainObject(StrainObject):
+class ComplexBarStrain(StrainObject):
     """
     # s_code=10
                                      S T R A I N S   I N   B A R   E L E M E N T S          ( C B A R )

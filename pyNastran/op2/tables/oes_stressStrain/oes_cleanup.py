@@ -7,16 +7,16 @@ from struct import unpack
 from pyNastran import isRelease
 from .real.elementsStressStrain import RealElementsStressStrain
 from .real.oes_bush1d import Bush1DStressObject
-from .real.oes_compositePlates import CompositePlateStressObject, CompositePlateStrainObject
-from .real.oes_solids import RealSolidStressObject, RealSolidStrainObject
+from .real.oes_compositePlates import RealCompositePlateStress, RealCompositePlateStrain
+from .real.oes_solids import RealSolidStress, RealSolidStrain
 
 
 from .complex.elementsStressStrain import ComplexElementsStressStrain
-from .complex.oes_bush import ComplexBushStressObject, ComplexBushStrainObject
+from .complex.oes_bush import ComplexBushStress, ComplexBushStrain
 from .complex.oes_bush1d import ComplexBush1DStressObject
 
 
-from .oes_nonlinear import NonlinearQuadObject, HyperelasticQuadObject
+from .oes_nonlinear import NonlinearQuadObject, HyperelasticQuad
 
 
 class OES(RealElementsStressStrain, ComplexElementsStressStrain):
@@ -432,9 +432,9 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
 
         #print 'self.element_type  = ',self.element_type
         (numWideReal, numWideImag, numWideRandom) = self.OES_StressStrainCode()
-        print("numWideReal=%s numWideImag=%s numWideRandom=%s" %(numWideReal, numWideImag, numWideRandom))
-        print('element_type=%s' % self.element_type)
-        print('self.num_wide = %s' % self.num_wide)
+        #print("numWideReal=%s numWideImag=%s numWideRandom=%s" % (numWideReal, numWideImag, numWideRandom))
+        #print('element_type=%s' % self.element_type)
+        #print('self.num_wide = %s' % self.num_wide)
 
         if self.element_type == 95:
             self.OESRT_CQUAD4_95()
@@ -487,8 +487,8 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
 
         elif self.element_type in [85, 91, 93]: # CTETRANL 85 / CPENTANL 91 / CHEXANL 93
             #print('not done...')
-            result_name = self.makeOES_Object(self.solidStress, RealSolidStressObject, 'solidStress',
-                                             self.solidStrain, RealSolidStrainObject, 'solidStrain')
+            result_name = self.makeOES_Object(self.solidStress, RealSolidStress, 'solidStress',
+                                             self.solidStrain, RealSolidStrain, 'solidStrain')
             name = result_name + ': Subcase %s' % self.isubcase
             self.handle_results_buffer(self.OES_TETRANL_85_PENTANL_91_CHEXANL_93, result_name, name)
 
@@ -498,16 +498,16 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
                 return
             else:
                 #print('only the first type read, not parsed...')
-                result_name = self.makeOES_Object(self.solidStress, RealSolidStressObject, 'solidStress',
-                                                 self.solidStrain, RealSolidStrainObject, 'solidStrain')
+                result_name = self.makeOES_Object(self.solidStress, RealSolidStress, 'solidStress',
+                                                 self.solidStrain, RealSolidStrain, 'solidStrain')
                 name = result_name + ': Subcase %s' % self.isubcase
                 self.handle_results_buffer(self.OES_VUHEXA_145_VUPENTA_146_VUTETRA_147, result_name, name)
 
         elif self.element_type in [95, 96, 97, 98]:  # CQUAD4, CQUAD8, CTRIA3, CTRIA6 (composite)
             self.eid2 = None  # stores the previous elementID
             if self.num_wide == numWideReal:
-                result_name = self.makeOES_Object(self.compositePlateStress, CompositePlateStressObject, 'compositePlateStress',
-                                                 self.compositePlateStrain, CompositePlateStrainObject, 'compositePlateStrain')
+                result_name = self.makeOES_Object(self.compositePlateStress, RealCompositePlateStress, 'compositePlateStress',
+                                                 self.compositePlateStrain, RealCompositePlateStrain, 'compositePlateStrain')
                 name = result_name + ': Subcase %s' % self.isubcase
                 self.handle_results_buffer(self.OES_CQUAD4_95, result_name, name)
             #elif self.num_wide == numWideImag:
@@ -529,8 +529,8 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
 
         elif self.element_type in [139]:   # QUAD4FD (hyperelastic)
             if self.num_wide == numWideReal:
-                result_name = self.makeOES_Object(self.hyperelasticPlateStress, HyperelasticQuadObject, 'hyperelasticPlateStress',
-                                                 self.hyperelasticPlateStrain, HyperelasticQuadObject, 'hyperelasticPlateStrain')
+                result_name = self.makeOES_Object(self.hyperelasticPlateStress, HyperelasticQuad, 'hyperelasticPlateStress',
+                                                 self.hyperelasticPlateStrain, HyperelasticQuad, 'hyperelasticPlateStrain')
                 name = result_name + ': Subcase %s' % self.isubcase
                 self.handle_results_buffer(self.OES_QUAD4FD_139, result_name, name)
             #elif self.num_wide == numWideImag:

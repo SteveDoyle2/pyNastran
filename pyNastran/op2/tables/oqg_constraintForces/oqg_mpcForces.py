@@ -25,7 +25,7 @@ class ComplexMPCForcesVector(ComplexTableVector):
         return self._write_f06_transient_block(words, header, pageStamp, page_num, f, is_mag_phase)
 
 
-class RealMPCForcesObject(RealTableObject):
+class RealMPCForces(RealTableObject):
 
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
@@ -77,7 +77,7 @@ class RealMPCForcesObject(RealTableObject):
         return page_num - 1
 
 
-class ComplexMPCForcesObject(ComplexTableObject):
+class ComplexMPCForces(ComplexTableObject):
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 

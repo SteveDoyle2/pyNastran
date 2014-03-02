@@ -261,7 +261,7 @@ class RodDamperObject(StressObject):
         return msg
 
 
-class RealRodStressObject(StressObject):
+class RealRodStress(StressObject):
     """
     ::
 
@@ -469,7 +469,7 @@ class RealRodStressObject(StressObject):
         return page_num - 1
 
 
-class RealRodStrainObject(StrainObject):
+class RealRodStrain(StrainObject):
     """
     ::
 
@@ -676,10 +676,10 @@ class RealRodStrainObject(StrainObject):
         return page_num - 1
 
 
-class ConrodStressObject(RealRodStressObject):
+class ConrodStress(RealRodStress):
     eType = 'CONROD'
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealRodStressObject.__init__(self, data_code, isubcase, dt)
+        RealRodStress.__init__(self, data_code, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
@@ -691,10 +691,10 @@ class ConrodStressObject(RealRodStressObject):
         return self._write_f06(words, pageStamp, page_num, f)
 
 
-class CtubeStressObject(RealRodStressObject):
+class CtubeStress(RealRodStress):
     eType = 'CTUBE'
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealRodStressObject.__init__(self, data_code, isubcase, dt)
+        RealRodStress.__init__(self, data_code, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
@@ -706,10 +706,10 @@ class CtubeStressObject(RealRodStressObject):
         return self._write_f06(words, pageStamp, page_num, f)
 
 
-class ConrodStrainObject(RealRodStrainObject):
+class ConrodStrain(RealRodStrain):
     eType = 'CONROD'
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealRodStrainObject.__init__(self, data_code, isubcase, dt)
+        RealRodStrain.__init__(self, data_code, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
@@ -720,10 +720,10 @@ class ConrodStrainObject(RealRodStrainObject):
                  '         ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN\n']
         return self._write_f06(words, pageStamp, page_num, f)
 
-class CtubeStrainObject(RealRodStrainObject):
+class CtubeStrain(RealRodStrain):
     eType = 'CTUBE'
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealRodStrainObject.__init__(self, data_code, isubcase, dt)
+        RealRodStrain.__init__(self, data_code, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:

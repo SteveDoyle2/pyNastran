@@ -45,6 +45,9 @@ from pyNastran.utils.log import get_logger
 
 
 class TrashWriter(file):
+    """
+    A dummy file that just trashes all data
+    """
     def __init__(self, *args, **kwargs):
         file.__init__(self, *args, **kwargs)
     def open(self, *args, **kwargs):
@@ -189,7 +192,18 @@ class OP2( #BDF,
         """
         self.tables_to_read = table_names
 
-    def __init__(self, make_geom=False, save_skipped_cards=False, debug=False, log=None):
+    def __init__(self, make_geom=False, save_skipped_cards=False,
+                 debug=False, log=None, debug_file=None):
+        """
+        Initializes the OP2 object
+
+        :param make_geom: reads the BDF tables (default=False)
+        :param save_skipped_cards: creates the skippedCards.out file (default=False)
+        :param debug: enables the debug log and sets the debug in the logger (default=False)
+        :param log: a logging object to write debug messages to
+         (.. seealso:: import logging)
+        :param debug_file: sets the filename that will be written to (default=None -> no debug)
+        """
         assert isinstance(make_geom, bool), 'make_geom=%r' % make_geom
         assert isinstance(save_skipped_cards, bool), 'save_skipped_cards=%r' % save_skipped_cards
         assert isinstance(debug, bool), 'debug=%r' % debug
@@ -235,6 +249,7 @@ class OP2( #BDF,
         self.grid_point_weight = GridPointWeight()
         self.words = []
         self.debug = debug
+        self.debug_file = debug_file
         self.make_geom = False
 
     def _get_table_mapper(self):
@@ -491,10 +506,11 @@ class OP2( #BDF,
         self.bdf_filename = fname + bdf_extension
         self.f06_filename = fname + f06_extension
 
-        if self.debug:
+        if self.debug_file is not None:
             #: an ASCII version of the op2 (creates lots of output)
-            self.binary_debug = open('debug.out', 'wb')
+            self.binary_debug = open(self.debug_file, 'wb')
         else:
+            #self.binary_debug = open(os.devnull, 'wb')  #TemporaryFile()
             self.binary_debug = TrashWriter('debug.out', 'wb')
 
         if self.save_skipped_cards:
@@ -1309,7 +1325,16 @@ class OP2( #BDF,
 
             # OES - composite CTRIA3/CQUAD4 stress
             'compositePlateStress',
+            'cquad4_composite_stress',
+            'cquad8_composite_stress',
+            'ctria3_composite_stress',
+            'ctria6_composite_stress',
+
             'compositePlateStrain',
+            'cquad4_composite_strain',
+            'cquad8_composite_strain',
+            'ctria3_composite_strain',
+            'ctria6_composite_strain',
 
             # OGS1 - grid point stresses
             'gridPointStresses',        # tCode=26

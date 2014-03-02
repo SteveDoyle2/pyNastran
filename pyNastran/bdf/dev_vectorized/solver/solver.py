@@ -23,24 +23,24 @@ from pyNastran.f06.f06 import F06
 from pyNastran.op2.op2 import OP2
 
 # Tables
-from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementObject
+from pyNastran.op2.tables.oug.oug_displacements import RealDisplacement
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import SPCForcesObject
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import MPCForcesObject
 
 # springs
-from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealCelasStressObject, RealCelasStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealCelasStress, RealCelasStrain
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealSpringForce
 
 # rods
-from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RealRodStressObject, RealRodStrainObject, ConrodStressObject, ConrodStrainObject, CtubeStressObject, CtubeStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RealRodStress, RealRodStrain, ConrodStress, ConrodStrain, CtubeStress, CtubeStrain
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealRodForce, RealConrodForce, RealCtubeForce
 
 # shear
-from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import RealShearStressObject, RealShearStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import RealShearStress, RealShearStrain
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealCShearForce
 
 # beams
-from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import RealBeamStressObject, RealBeamStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import RealBeamStress, RealBeamStrain
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealCBeamForce
 
 
@@ -906,10 +906,10 @@ class Solver(F06, OP2):
                     'nonlinear_factor': None, 'dataNames':['lsdvmn']}
         if Type == 'stress':
             if elementType == 'CBEAM':
-                stress = RealBeamStressObject(data_code, is_sort1, isubcase, dt=False)
+                stress = RealBeamStress(data_code, is_sort1, isubcase, dt=False)
         elif Type == 'strain':
             if elementType == 'CBEAM':
-                stress = RealBeamStrainObject(data_code, is_sort1, isubcase, dt=False)
+                stress = RealBeamStrain(data_code, is_sort1, isubcase, dt=False)
         else:
             raise NotImplementedError(Type)
 
@@ -1061,12 +1061,12 @@ class Solver(F06, OP2):
 
         if Type == 'stress':
             #if elementType == 'CELAS2':
-            stress = RealShearStressObject(data_code, is_sort1, isubcase, dt=None)
+            stress = RealShearStress(data_code, is_sort1, isubcase, dt=None)
             #else:
                 #raise NotImplementedError(elementType)
         elif Type == 'strain':
             #if elementType == 'CELAS2':
-            stress = RealShearStrainObject(data_code, is_sort1, isubcase, dt=None)
+            stress = RealShearStrain(data_code, is_sort1, isubcase, dt=None)
             #else:
                 #raise NotImplementedError(elementType)
         else:
@@ -1109,12 +1109,12 @@ class Solver(F06, OP2):
 
         if Type == 'stress':
             #if elementType == 'CELAS2':
-            stress = RealCelasStressObject(data_code, is_sort1, isubcase, dt=None)
+            stress = RealCelasStress(data_code, is_sort1, isubcase, dt=None)
             #else:
                 #raise NotImplementedError(elementType)
         elif Type == 'strain':
             #if elementType == 'CELAS2':
-            stress = RealCelasStrainObject(data_code, is_sort1, isubcase, dt=None)
+            stress = RealCelasStrain(data_code, is_sort1, isubcase, dt=None)
             #else:
                 #raise NotImplementedError(elementType)
         else:
@@ -1218,18 +1218,18 @@ class Solver(F06, OP2):
                     'nonlinear_factor': None, 'dataNames':['lsdvmn']}
         if Type == 'stress':
             if elementType == 'CROD':
-                stress = RealRodStressObject(data_code, is_sort1, isubcase, dt=False)
+                stress = RealRodStress(data_code, is_sort1, isubcase, dt=False)
             elif elementType == 'CONROD':
-                stress = ConrodStressObject(data_code, is_sort1, isubcase, dt=False)
+                stress = ConrodStress(data_code, is_sort1, isubcase, dt=False)
             elif elementType == 'CTUBE':
-                stress = CtubeStressObject(data_code, is_sort1, isubcase, dt=False)
+                stress = CtubeStress(data_code, is_sort1, isubcase, dt=False)
         elif Type == 'strain':
             if elementType == 'CROD':
-                stress = RealRodStrainObject(data_code, is_sort1, isubcase, dt=False)
+                stress = RealRodStrain(data_code, is_sort1, isubcase, dt=False)
             elif elementType == 'CONROD':
-                stress = ConrodStrainObject(data_code, is_sort1, isubcase, dt=False)
+                stress = ConrodStrain(data_code, is_sort1, isubcase, dt=False)
             elif elementType == 'CTUBE':
-                stress = CtubeStrainObject(data_code, is_sort1, isubcase, dt=False)
+                stress = CtubeStrain(data_code, is_sort1, isubcase, dt=False)
         else:
             raise NotImplementedError(Type)
 
@@ -1271,7 +1271,7 @@ class Solver(F06, OP2):
                     'device_code': 1, 'table_code': 1, 'sort_code': 0,
                     'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OUG',
                     'nonlinear_factor': None, 'dataNames':['lsdvmn']}
-        disp = RealDisplacementObject(data_code, is_sort1, isubcase, dt=None)
+        disp = RealDisplacement(data_code, is_sort1, isubcase, dt=None)
 
         data = []
 
@@ -1717,7 +1717,7 @@ class Solver(F06, OP2):
                 Ug_separate = [[Ua, iUa], [Us, iUs], [Um, iUm]]
                 Ug = departition_dense_vector(Ug_separate)
 
-                result = RealDisplacementObject(data_code, transient)
+                result = RealDisplacement(data_code, transient)
                 result.add_f06_data()
 
                 if 'PRINT' in options:
@@ -1734,7 +1734,7 @@ class Solver(F06, OP2):
                     if isMPC:
                         SPCForces += Ksm * Um
 
-                    result = RealSPCForcesObject(data_code, transient)
+                    result = RealSPCForces(data_code, transient)
                     result.add_f06_data()
 
                     flag = 0
@@ -1755,7 +1755,7 @@ class Solver(F06, OP2):
                     if isSPC:
                         MPCForces += Kms * Us
 
-                    result = RealMPCForcesObject(data_code, transient)
+                    result = RealMPCForces(data_code, transient)
                     result.add_f06_data()
                     flag = 0
                     if 'PRINT' in options:

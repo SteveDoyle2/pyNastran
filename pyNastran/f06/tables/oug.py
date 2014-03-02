@@ -1,9 +1,9 @@
 #pylint: disable=C0301,C0103,W0612
 from itertools import izip
 
-from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementObject, ComplexDisplacementObject
+from pyNastran.op2.tables.oug.oug_displacements import RealDisplacement, ComplexDisplacement
 from pyNastran.op2.tables.oug.oug_eigenvectors import EigenvectorObject  # ,ComplexEigenVectorObject
-from pyNastran.op2.tables.oug.oug_temperatures import RealTemperatureObject
+from pyNastran.op2.tables.oug.oug_temperatures import RealTemperature
 
 
 class OUG(object):
@@ -174,7 +174,7 @@ class OUG(object):
             self.displacements[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            disp = RealDisplacementObject(data_code, is_sort1, isubcase, dt)
+            disp = RealDisplacement(data_code, is_sort1, isubcase, dt)
             disp.add_f06_data(data, transient)
             self.displacements[isubcase] = disp
         self.iSubcases.append(isubcase)
@@ -248,7 +248,7 @@ class OUG(object):
             self.displacements[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            disp = ComplexDisplacementObject(data_code, is_sort1, isubcase, dt)
+            disp = ComplexDisplacement(data_code, is_sort1, isubcase, dt)
             disp.add_f06_data(data, transient)
             self.displacements[isubcase] = disp
         self.iSubcases.append(isubcase)
@@ -297,7 +297,7 @@ class OUG(object):
             self.temperatures[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            temp = RealTemperatureObject(data_code, is_sort1, isubcase, dt)
+            temp = RealTemperature(data_code, is_sort1, isubcase, dt)
             temp.add_f06_data(data, transient)
             self.temperatures[isubcase] = temp
         self.iSubcases.append(isubcase)

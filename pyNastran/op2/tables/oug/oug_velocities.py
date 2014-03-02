@@ -26,7 +26,7 @@ class ComplexVelocityVector(ComplexTableVector):
         return self._write_f06_transient_block(words, header, pageStamp, page_num, f, is_mag_phase)
 
 
-class RealVelocityObject(RealTableObject):  # approach_code=10, thermal=0
+class RealVelocity(RealTableObject):  # approach_code=10, thermal=0
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
@@ -40,7 +40,7 @@ class RealVelocityObject(RealTableObject):  # approach_code=10, thermal=0
         return self._write_f06_block(words, header, pageStamp, page_num, f)
 
 
-class ComplexVelocityObject(ComplexTableObject):  # table_code=10, approach_code=???
+class ComplexVelocity(ComplexTableObject):  # table_code=10, approach_code=???
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 

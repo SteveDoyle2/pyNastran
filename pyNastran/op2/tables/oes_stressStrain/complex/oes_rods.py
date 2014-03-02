@@ -15,7 +15,7 @@ class ComplexRodDamperObject(StressObject):
         self.torsion = {}
 
 
-class ComplexRodStressObject(StressObject):
+class ComplexRodStress(StressObject):
     """
     """
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
@@ -170,7 +170,7 @@ class ComplexRodStressObject(StressObject):
         return page_num - 1
 
 
-class ComplexRodStrainObject(StrainObject):
+class ComplexRodStrain(StrainObject):
     """
     """
     def __init__(self, data_code, is_sort1, isubcase, dt=None):

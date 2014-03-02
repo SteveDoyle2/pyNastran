@@ -6,7 +6,7 @@ def writeFloats10E(vals):
     for v in vals:
         v2 = '%10.3E' % v
         if v2 == ' 0.000E+00' or v2 == '-0.000E+00':
-            v2 = ' 0.0      '
+            v2 = ' 0.0'
         else:
             isAllZeros = False
         vals2.append(v2)
@@ -45,7 +45,7 @@ def writeImagFloats13E(vals, isMagPhase):
 
     if isMagPhase:
         for v in vals:
-            v2 = '%13.6E' % (abs(v))
+            v2 = '%13.6E' % abs(v)
             if v2 == ' 0.000000E+00' or v2 == '-0.000000E+00':
                 v2 = ' 0.0'
             else:
@@ -90,4 +90,3 @@ def writeFloats8p4F(vals):
         assert len(v2) == 8, 'v=%r' % v2
         vals2.append(v2)
     return (vals2, isAllZeros)
-

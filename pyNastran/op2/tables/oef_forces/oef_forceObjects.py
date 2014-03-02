@@ -51,7 +51,7 @@ class RealRodForceVector(ScalarObject):
         self.ielement = 0
 
     def build(self):
-        print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
 
@@ -384,7 +384,7 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
                 self.axial[eid] = {sd: af}
                 self.totalTorque[eid] = {sd: ttrq}
                 self.warpingTorque[eid] = {sd: wtrq}
-            print('nodes', self.nodes)
+            #print('nodes', self.nodes)
 
     def add_new_element(self, dt, data):
         [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
