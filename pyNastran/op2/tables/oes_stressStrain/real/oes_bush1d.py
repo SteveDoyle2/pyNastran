@@ -5,7 +5,7 @@ from ..real.oes_objects import StressObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 
-class Bush1DStressObject(StressObject):
+class RealBush1DStress(StressObject):
     """
     # s_code=0
                            C O M P L E X   S T R E S S E S   I N   B A R   E L E M E N T S   ( C B A R )
@@ -17,7 +17,7 @@ class Bush1DStressObject(StressObject):
                   1     ENDA          9.331276E+04   9.331276E+04   9.331276E+04   9.331276E+04        0.0
                                       180.0000         0.0            0.0          180.0000              0.0
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = {}
         self.code = [self.format_code, self.sort_code, self.s_code]
@@ -162,7 +162,7 @@ class Bush1DStressObject(StressObject):
             #s4 = self.s4[eid]
 
             vals = [element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed]
-            (vals2, isAllZeros) = self.writeImagFloats13E(vals, is_mag_phase)
+            (vals2, is_all_zeros) = self.writeImagFloats13E(vals, is_mag_phase)
             [element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed] = vals2
             msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %s\n' % (eid, element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed))
             msg.append(' %8s   %-13s  %-13s  %-13s  %-13s  %s\n' % ('', s1ai, s2ai, s3ai, s4ai, axiali))
@@ -197,7 +197,7 @@ class Bush1DStressObject(StressObject):
                 plastic_strain = self.plastic_strain[dt][eid]
                 is_failed = self.is_failed[dt][eid]
                 vals = [element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed]
-                (vals2, isAllZeros) = writeFloats13E(vals)
+                (vals2, is_all_zeros) = writeFloats13E(vals)
                 [element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed] = vals2
 
                 msg.append(' %-13s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (eid,

@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from ..real.oes_objects import StressObject
 from pyNastran.f06.f06_formatting import writeImagFloats13E
 
-class ComplexBush1DStressObject(StressObject):
+class ComplexBush1DStress(StressObject):
     """
     # s_code=0
                            C O M P L E X   S T R E S S E S   I N   B A R   E L E M E N T S   ( C B A R )
@@ -16,7 +16,7 @@ class ComplexBush1DStressObject(StressObject):
                   1     ENDA          9.331276E+04   9.331276E+04   9.331276E+04   9.331276E+04        0.0
                                       180.0000         0.0            0.0          180.0000              0.0
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = {}
 
@@ -140,7 +140,7 @@ class ComplexBush1DStressObject(StressObject):
 
             vals = [s1[0], s2[0], s3[0], s4[0], axial,
                     s1[1], s2[1], s3[1], s4[1], ]
-            (vals2, isAllZeros) = writeImagFloats13E(vals, is_mag_phase)
+            (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
             [s1ar, s2ar, s3ar, s4ar, axialr,
              s1br, s2br, s3br, s4br,
              s1ai, s2ai, s3ai, s4ai, axiali,
@@ -175,7 +175,7 @@ class ComplexBush1DStressObject(StressObject):
                 s4 = self.s4[dt][eid]
                 vals = [s1[0], s2[0], s3[0], s4[0], axial,
                         s1[1], s2[1], s3[1], s4[1], ]
-                (vals2, isAllZeros) = writeImagFloats13E(vals, is_mag_phase)
+                (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
                 [s1ar, s2ar, s3ar, s4ar, axialr,
                  s1br, s2br, s3br, s4br,
                  s1ai, s2ai, s3ai, s4ai, axiali,

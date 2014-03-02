@@ -68,7 +68,7 @@ class RealEigenvalues(BaseScalarObject):
             #freq = self.cycles[iMode]
             mass = self.generalizedMass[iMode]
             stiff = self.generalizedStiffness[iMode]
-            ([eigen, omega, freq, mass, stiff], isAllZeros) = writeFloats13E([eigenvalue, omega, cycle, mass, stiff])
+            ([eigen, omega, freq, mass, stiff], is_all_zeros) = writeFloats13E([eigenvalue, omega, cycle, mass, stiff])
             msg.append(' %8s  %8s       %-13s       %-13s       %-13s       %-13s       %s\n' % (iMode, order, eigen, omega, freq, mass, stiff))
         msg.append(pageStamp % page_num)
         f.write(''.join(msg))
@@ -137,7 +137,7 @@ class ComplexEigenvalues(BaseScalarObject):
 
             freq = self.cycles[iMode]
             damping = self.damping[iMode]
-            ([eigr, eigi, freq, damping], isAllZeros) = writeFloats13E([eigr, eigi, freq, damping])
+            ([eigr, eigi, freq, damping], is_all_zeros) = writeFloats13E([eigr, eigi, freq, damping])
             #            imode order      eigr     eigi          freq        damping
             msg.append(' %22s  %10s       %-15s    %-13s         %-13s         %s\n' % (iMode, order, eigr, eigi, freq, damping))
 

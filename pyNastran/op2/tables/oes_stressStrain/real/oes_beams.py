@@ -16,7 +16,7 @@ class RealBeamStress(StressObject):
               1       1   0.000   -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04
                       2   1.000   -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04 -3.125000E+04
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = 'CBEAM'
 
@@ -218,7 +218,7 @@ class RealBeamStress(StressObject):
                 sMin = self.smin[eid][i]
                 SMt = self.MS_tension[eid][i]
                 SMc = self.MS_compression[eid][i]
-                (vals2, isAllZeros) = writeFloats13E([sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc])
+                (vals2, is_all_zeros) = writeFloats13E([sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc])
                 (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
                 msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc.strip()))
 
@@ -247,7 +247,7 @@ class RealBeamStress(StressObject):
                     sMin = self.smin[dt][eid][i]
                     SMt = self.MS_tension[dt][eid][i]
                     SMc = self.MS_compression[dt][eid][i]
-                    (vals2, isAllZeros) = writeFloats13E([sxc, sxd,
+                    (vals2, is_all_zeros) = writeFloats13E([sxc, sxd,
                                                           sxe, sxf, sMax, sMin, SMt, SMc])
                     (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
                     msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc.strip()))
@@ -260,7 +260,7 @@ class RealBeamStress(StressObject):
 
 
 class RealBeamStrain(StrainObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StrainObject.__init__(self, data_code, isubcase)
         self.eType = 'CBEAM'  # {} # 'CBEAM/CONBEAM'
 
@@ -474,7 +474,7 @@ class RealBeamStrain(StrainObject):
                 sMin = self.smin[eid][i]
                 SMt = self.MS_tension[eid][i]
                 SMc = self.MS_compression[eid][i]
-                (vals2, isAllZeros) = writeFloats13E([
+                (vals2, is_all_zeros) = writeFloats13E([
                     sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc])
                 (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
                 msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc))
@@ -503,7 +503,7 @@ class RealBeamStrain(StrainObject):
                     sMin = self.smin[dt][eid][i]
                     SMt = self.MS_tension[dt][eid][i]
                     SMc = self.MS_compression[dt][eid][i]
-                    (vals2, isAllZeros) = writeFloats13E([sxc, sxd, sxe, sxf,
+                    (vals2, is_all_zeros) = writeFloats13E([sxc, sxd, sxe, sxf,
                                                           sMax, sMin, SMt, SMc])
                     (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
                     msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc))

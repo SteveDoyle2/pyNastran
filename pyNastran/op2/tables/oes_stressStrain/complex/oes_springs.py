@@ -19,7 +19,7 @@ class ComplexCelasStress(complexStressObject):
       0.0            0.0               5.000000E-02   0.0               1.000000E-01   0.0               1.500000E-01   0.0
       2.000000E-01   0.0               2.500000E-01   0.0               3.000000E-01   0.0               3.500000E-01   0.0
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = {}
         self.element_name = self.data_code['element_name']
@@ -125,7 +125,7 @@ class ComplexCelasStress(complexStressObject):
                     stressr = stress.real
                     stressi = stress.imag
 
-                (vals2, isAllZeros) = writeImagFloats13E([stress], is_mag_phase)
+                (vals2, is_all_zeros) = writeImagFloats13E([stress], is_mag_phase)
                 if i == 0:
                     elementID1 = elementID
                     [stress1Real, stress1Imag] = vals2
@@ -143,7 +143,7 @@ class ComplexCelasStress(complexStressObject):
 
 
 class ComplexCelasStrain(complexStrainObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StrainObject.__init__(self, data_code, isubcase)
         self.eType = {}
         self.element_name = self.data_code['element_name']

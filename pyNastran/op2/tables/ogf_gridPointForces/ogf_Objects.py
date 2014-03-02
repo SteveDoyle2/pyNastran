@@ -5,7 +5,7 @@ from pyNastran.f06.f06_formatting import writeFloats13E
 
 class RealGridPointForcesObject(ScalarObject):
 
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
         self.forces = {}
         self.moments = {}
@@ -113,7 +113,7 @@ class RealGridPointForcesObject(ScalarObject):
                 (elemName) = self.elemName[eKey][iLoad]
                 eid = self.eids[eKey][iLoad]
                 vals = [f1, f2, f3, m1, m2, m3]
-                (vals2, isAllZeros) = writeFloats13E(vals)
+                (vals2, is_all_zeros) = writeFloats13E(vals)
                 [f1, f2, f3, m1, m2, m3] = vals2
                 if eid == 0:
                     eid = ''
@@ -142,7 +142,7 @@ class RealGridPointForcesObject(ScalarObject):
                     eid = self.eids[eKey][iLoad]
 
                     vals = [f1, f2, f3, m1, m2, m3]
-                    (vals2, isAllZeros) = writeFloats13E(vals)
+                    (vals2, is_all_zeros) = writeFloats13E(vals)
                     [f1, f2, f3, m1, m2, m3] = vals2
                     if eid == 0:
                         eid = ''

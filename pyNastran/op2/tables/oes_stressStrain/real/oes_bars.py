@@ -15,7 +15,7 @@ class RealBarStress(StressObject):
       ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T
         ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = {}
 
@@ -233,7 +233,7 @@ class RealBarStress(StressObject):
             smin = self.smin[eid]
             vals = [s1[0], s2[0], s3[0], s4[0], axial, smax[0], smin[0],
                     s1[1], s2[1], s3[1], s4[1], smax[1], smin[1]]
-            (vals2, isAllZeros) = writeFloats13E(vals)
+            (vals2, is_all_zeros) = writeFloats13E(vals)
             [s1a, s2a, s3a, s4a, axial, smaxa, smina,
              s1b, s2b, s3b, s4b, smaxb, sminb] = vals2
             f.write('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n'
@@ -271,7 +271,7 @@ class RealBarStress(StressObject):
                 smin = self.smin[dt][eid]
                 vals = [s1[0], s2[0], s3[0], s4[0], axial, smax[0], smin[0],
                         s1[1], s2[1], s3[1], s4[1], smax[1], smin[1]]
-                (vals2, isAllZeros) = writeFloats13E(vals)
+                (vals2, is_all_zeros) = writeFloats13E(vals)
                 [s1a, s2a, s3a, s4a, axial, smaxa, smina,
                  s1b, s2b, s3b, s4b, smaxb, sminb] = vals2
                 f.write('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n'
@@ -295,7 +295,7 @@ class RealBarStrain(StrainObject):
       ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T
         ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StrainObject.__init__(self, data_code, isubcase)
         self.eType = {}
 
@@ -479,7 +479,7 @@ class RealBarStrain(StrainObject):
             emin = self.emin[eid]
             vals = [e1[0], e2[0], e3[0], e4[0], axial, emax[0], emin[0],
                     e1[1], e2[1], e3[1], e4[1], emax[1], emin[1]]
-            (vals2, isAllZeros) = writeFloats13E(vals)
+            (vals2, is_all_zeros) = writeFloats13E(vals)
             [e10, e20, e30, e40, axial, emax0, emin0,
              e11, e21, e31, e41, emax1, emin1] = vals2
 
@@ -519,7 +519,7 @@ class RealBarStrain(StrainObject):
                 emin = self.emin[dt][eid]
                 vals = [e1[0], e2[0], e3[0], e4[0], axial, emax[0], emin[0],
                         e1[1], e2[1], e3[1], e4[1], emax[1], emin[1]]
-                (vals2, isAllZeros) = writeFloats13E(vals)
+                (vals2, is_all_zeros) = writeFloats13E(vals)
                 [e10, e20, e30, e40, axial, emax0, emin0,
                  e11, e21, e31, e41, emax1, emin1] = vals2
 

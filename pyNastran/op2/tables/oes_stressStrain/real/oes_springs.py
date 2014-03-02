@@ -13,7 +13,7 @@ class RealCelasStress(StressObject):
       0.0            0.0               5.000000E-02   0.0               1.000000E-01   0.0               1.500000E-01   0.0
       2.000000E-01   0.0               2.500000E-01   0.0               3.000000E-01   0.0               3.500000E-01   0.0
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = {}
         self.element_name = self.data_code['element_name']
@@ -125,7 +125,7 @@ class RealCelasStress(StressObject):
 
 
 class RealCelasStrain(StrainObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StrainObject.__init__(self, data_code, isubcase)
         self.eType = {}
         self.element_name = self.data_code['element_name']
@@ -235,7 +235,7 @@ class RealCelasStrain(StrainObject):
 class NonlinearSpringStress(StressObject):
     """
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = {}
         self.element_name = self.data_code['element_name']

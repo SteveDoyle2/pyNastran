@@ -235,7 +235,7 @@ class RealPlateVector(OES_Object):
             for i, eid, nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi in izip(
                 count(), eids, nids, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
                 ([fdi, oxxi, oyyi, txyi, major, minor, ovmi],
-                 isAllZeros) = writeFloats13E([fdi, oxxi, oyyi, txyi, major, minor, ovmi])
+                 is_all_zeros) = writeFloats13E([fdi, oxxi, oyyi, txyi, major, minor, ovmi])
                 #f.write([eidi, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi])
                 iLayer = i % 2
                 # tria3
@@ -416,7 +416,7 @@ class RealPlateStress(StressObject):
             6    CEN/4  -1.250000E-01  -4.278394E+02  8.021165E+03 -1.550089E+02   -88.9493   8.024007E+03 -4.306823E+02  4.227345E+03
                          1.250000E-01   5.406062E+02  1.201854E+04 -4.174177E+01   -89.7916   1.201869E+04  5.404544E+02  5.739119E+03
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = {}
 
@@ -998,8 +998,8 @@ class RealPlateStress(StressObject):
                 major = self.majorP[eid][nid][iLayer]
                 minor = self.minorP[eid][nid][iLayer]
                 ovm = self.ovmShear[eid][nid][iLayer]
-                ([fd, oxx, oyy, txy, major, minor, ovm], isAllZeros) = writeFloats13E([fd, oxx, oyy, txy, major, minor, ovm])
-                ([angle], isAllZeros) = writeFloats8p4F([angle])
+                ([fd, oxx, oyy, txy, major, minor, ovm], is_all_zeros) = writeFloats13E([fd, oxx, oyy, txy, major, minor, ovm])
+                ([angle], is_all_zeros) = writeFloats8p4F([angle])
 
                 if nid == cen and iLayer == 0:
                     msg.append('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n' % (eid, cen, fd, oxx, oyy, txy, angle, major, minor, ovm))
@@ -1027,8 +1027,8 @@ class RealPlateStress(StressObject):
                 major = self.majorP[dt][eid][nid][iLayer]
                 minor = self.minorP[dt][eid][nid][iLayer]
                 ovm = self.ovmShear[dt][eid][nid][iLayer]
-                ([fd, oxx, oyy, txy, major, minor, ovm], isAllZeros) = writeFloats13E([fd, oxx, oyy, txy, major, minor, ovm])
-                ([angle], isAllZeros) = writeFloats8p4F([angle])
+                ([fd, oxx, oyy, txy, major, minor, ovm], is_all_zeros) = writeFloats13E([fd, oxx, oyy, txy, major, minor, ovm])
+                ([angle], is_all_zeros) = writeFloats8p4F([angle])
 
                 if nid == cen and iLayer == 0:
                     msg.append('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n' % (eid, cen, fd, oxx, oyy, txy, angle, major, minor, ovm))
@@ -1053,8 +1053,8 @@ class RealPlateStress(StressObject):
                 major = self.majorP[eid][nid][iLayer]
                 minor = self.minorP[eid][nid][iLayer]
                 ovm = self.ovmShear[eid][nid][iLayer]
-                ([fd, oxx, oyy, txy, major, minor, ovm], isAllZeros) = writeFloats13E([fd, oxx, oyy, txy, major, minor, ovm])
-                ([angle], isAllZeros) = writeFloats8p4F([angle])
+                ([fd, oxx, oyy, txy, major, minor, ovm], is_all_zeros) = writeFloats13E([fd, oxx, oyy, txy, major, minor, ovm])
+                ([angle], is_all_zeros) = writeFloats8p4F([angle])
 
                 if iLayer == 0:
                     msg.append('0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % (eid, fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip()))
@@ -1075,8 +1075,8 @@ class RealPlateStress(StressObject):
                 major = self.majorP[dt][eid][nid][iLayer]
                 minor = self.minorP[dt][eid][nid][iLayer]
                 ovm = self.ovmShear[dt][eid][nid][iLayer]
-                ([fd, oxx, oyy, txy, major, minor, ovm], isAllZeros) = writeFloats13E([fd, oxx, oyy, txy, major, minor, ovm])
-                ([angle], isAllZeros) = writeFloats8p4F([angle])
+                ([fd, oxx, oyy, txy, major, minor, ovm], is_all_zeros) = writeFloats13E([fd, oxx, oyy, txy, major, minor, ovm])
+                ([angle], is_all_zeros) = writeFloats8p4F([angle])
 
                 if iLayer == 0:
                     msg.append('0  %6i   %-13s     %-13s  %-13s  %-13s   %8s   %-13s   %-13s  %s\n' % (eid, fd, oxx, oyy, txy, angle, major, minor, ovm))
@@ -1108,7 +1108,7 @@ class RealPlateStrain(StrainObject):
       ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)          MAX
         ID      GRID-ID   CURVATURE       NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR         SHEAR
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StrainObject.__init__(self, data_code, isubcase)
         self.eType = {}
 
@@ -1686,8 +1686,8 @@ class RealPlateStrain(StrainObject):
                 major = self.majorP[eid][nid][iLayer]
                 minor = self.minorP[eid][nid][iLayer]
                 evm = self.evmShear[eid][nid][iLayer]
-                ([fd, exx, eyy, exy, major, minor, evm], isAllZeros) = writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
-                ([angle], isAllZeros) = writeFloats8p4F([angle])
+                ([fd, exx, eyy, exy, major, minor, evm], is_all_zeros) = writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
+                ([angle], is_all_zeros) = writeFloats8p4F([angle])
 
                 if nid == cen and iLayer == 0:
                     msg.append('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n' % (eid, cen, fd, exx, eyy, exy, angle, major, minor, evm))
@@ -1716,8 +1716,8 @@ class RealPlateStrain(StrainObject):
                 minor = self.minorP[dt][eid][nid][iLayer]
                 evm = self.evmShear[dt][eid][nid][iLayer]
 
-                ([fd, exx, eyy, exy, major, minor, evm], isAllZeros) = writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
-                ([angle], isAllZeros) = writeFloats8p4F([angle])
+                ([fd, exx, eyy, exy, major, minor, evm], is_all_zeros) = writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
+                ([angle], is_all_zeros) = writeFloats8p4F([angle])
 
                 if nid == cen and iLayer == 0:
                     msg.append('0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, cen, fd, exx, eyy, exy, angle, major, minor, evm.rstrip()))
@@ -1743,8 +1743,8 @@ class RealPlateStrain(StrainObject):
                 minor = self.minorP[eid][nid][iLayer]
                 evm = self.evmShear[eid][nid][iLayer]
 
-                ([fd, exx, eyy, exy, major, minor, evm], isAllZeros) = writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
-                ([angle], isAllZeros) = writeFloats8p4F([angle])
+                ([fd, exx, eyy, exy, major, minor, evm], is_all_zeros) = writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
+                ([angle], is_all_zeros) = writeFloats8p4F([angle])
                 if iLayer == 0:
                     msg.append('0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % (eid, fd, exx, eyy, exy, angle, major, minor, evm.rstrip()))
                 else:
@@ -1766,8 +1766,8 @@ class RealPlateStrain(StrainObject):
                 minor = self.minorP[dt][eid][nid][iLayer]
                 evm = self.evmShear[dt][eid][nid][iLayer]
 
-                ([fd, exx, eyy, exy, major, minor, evm], isAllZeros) = writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
-                ([angle], isAllZeros) = writeFloats8p4F([angle])
+                ([fd, exx, eyy, exy, major, minor, evm], is_all_zeros) = writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
+                ([angle], is_all_zeros) = writeFloats8p4F([angle])
                 if iLayer == 0:
                     msg.append('0  %6i   %13s     %13s  %13s  %13s   %8s   '
                                '%13s   %13s  %-s\n' % (eid, fd, exx, eyy, exy,

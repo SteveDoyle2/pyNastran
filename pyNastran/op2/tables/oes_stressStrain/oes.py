@@ -9,7 +9,7 @@ from .real.elementsStressStrain import RealElementsStressStrain
 from .real.oes_bars import RealBarStress, RealBarStrain
 from .real.oes_beams import RealBeamStress, RealBeamStrain
 from .real.oes_bush import BushStress #, BushStrainObject
-from .real.oes_bush1d import Bush1DStressObject
+from .real.oes_bush1d import RealBush1DStress
 from .real.oes_compositePlates import RealCompositePlateStress, RealCompositePlateStrain
 from .real.oes_gap import NonlinearGapStressObject
 from .real.oes_plates import RealPlateStress, RealPlateStrain
@@ -23,13 +23,13 @@ from .real.oes_triax import RealTriaxStress, RealTriaxStrain
 from .complex.elementsStressStrain import ComplexElementsStressStrain
 from .complex.oes_bars import ComplexBarStress, ComplexBarStrain
 from .complex.oes_bush import ComplexBushStress, ComplexBushStrain
-from .complex.oes_bush1d import ComplexBush1DStressObject
+from .complex.oes_bush1d import ComplexBush1DStress
 from .complex.oes_plates import ComplexPlateStress, ComplexPlateStrain
 from .complex.oes_rods import ComplexRodStress, ComplexRodStrain
 from .complex.oes_springs import ComplexCelasStress, ComplexCelasStrain
 
 
-from .oes_nonlinear import NonlinearRod, NonlinearQuadObject, HyperelasticQuad
+from .oes_nonlinear import NonlinearRod, NonlinearQuad, HyperelasticQuad
 
 
 class OES(RealElementsStressStrain, ComplexElementsStressStrain):
@@ -774,13 +774,13 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
 
         elif self.element_type in [40]:   # CBUSH1D
             if self.num_wide == numWideReal:
-                result_name = self.makeOES_Object(self.bush1dStressStrain, Bush1DStressObject, 'bush1dStressStrain',
-                                                 self.bush1dStressStrain, Bush1DStressObject, 'bush1dStressStrain')
+                result_name = self.makeOES_Object(self.bush1dStressStrain, RealBush1DStress, 'bush1dStressStrain',
+                                                 self.bush1dStressStrain, RealBush1DStress, 'bush1dStressStrain')
                 name = result_name + ': Subcase %s' % self.isubcase
                 self.handle_results_buffer(self.OES_CBUSH1D_40, result_name, name)
             elif self.num_wide == numWideImag:
-                result_name = self.makeOES_Object(self.bush1dStressStrain, ComplexBush1DStressObject, 'bush1dStressStrain',
-                                                 self.bush1dStressStrain, ComplexBush1DStressObject, 'bush1dStressStrain')
+                result_name = self.makeOES_Object(self.bush1dStressStrain, ComplexBush1DStress, 'bush1dStressStrain',
+                                                 self.bush1dStressStrain, ComplexBush1DStress, 'bush1dStressStrain')
                 name = result_name + ': Subcase %s' % self.isubcase
                 self.handle_results_buffer(self.OES_CBUSH1D_40_alt, result_name, name)
             else:
@@ -793,8 +793,8 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
                 name = result_name + ': Subcase %s' % self.isubcase
                 self.handle_results_buffer(self.OES_CSOLID_39_67_68, result_name, name)
             elif self.num_wide == numWideImag:
-                #resultName = self.makeOES_Object(self.solidStress, ComplexSolidStressObject, 'solidStress',
-                #                                 self.solidStrain, ComplexSolidStrainObject, 'solidStrain')
+                #resultName = self.makeOES_Object(self.solidStress, ComplexSolidStress, 'solidStress',
+                #                                 self.solidStrain, ComplexSolidStrain, 'solidStrain')
                 #name = resultName + ': Subcase %s' % self.isubcase
                 #self.handle_results_buffer(self.OES_CSOLID_67_alt, resultName)
                 self.not_implemented_or_skip()
@@ -815,13 +815,13 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
 
         elif self.element_type in [88, 90]:  # CTRIA3NL, CQUAD4NL
             if self.num_wide == numWideReal:
-                result_name = self.makeOES_Object(self.nonlinearPlateStress, NonlinearQuadObject, 'nonlinearPlateStress',
-                                                 self.nonlinearPlateStrain, NonlinearQuadObject, 'nonlinearPlateStrain')
+                result_name = self.makeOES_Object(self.nonlinearPlateStress, NonlinearQuad, 'nonlinearPlateStress',
+                                                 self.nonlinearPlateStrain, NonlinearQuad, 'nonlinearPlateStrain')
                 name = result_name + ': Subcase %s' % self.isubcase
                 self.handle_results_buffer(self.OES_CQUAD4NL_90, result_name, name)
             elif self.num_wide == numWideImag:  # TODO switch to ComplexNonlinearPlateObject
-                result_name = self.makeOES_Object(self.nonlinearPlateStress, NonlinearQuadObject, 'nonlinearPlateStress',
-                                                 self.nonlinearPlateStrain, NonlinearQuadObject, 'nonlinearPlateStrain')
+                result_name = self.makeOES_Object(self.nonlinearPlateStress, NonlinearQuad, 'nonlinearPlateStress',
+                                                 self.nonlinearPlateStrain, NonlinearQuad, 'nonlinearPlateStrain')
                 name = result_name + ': Subcase %s' % self.isubcase
                 self.handle_results_buffer(self.OES_CQUAD4NL_90_alt, result_name, name)
             else:

@@ -392,7 +392,7 @@ class ComplexSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
                 forces.append(force)
                 #pack.append(eid)
                 #pack.append(f)
-                ([forceReal, forceImag], isAllZeros) = writeFloats13E([force.real, force.imag])
+                ([forceReal, forceImag], is_all_zeros) = writeFloats13E([force.real, force.imag])
 
                 line += '          %13s      %-13s / %-13s' % (eid, forceReal, forceImag)
                 if len(forces) == 2:
@@ -872,7 +872,7 @@ class ComplexCBarForce(ScalarObject):  # 34-CBAR
                 ts1, ts2 = self.shear[dt][eid]
                 af = self.axial[dt][eid]
                 trq = self.torque[dt][eid]
-                (vals2, isAllZeros) = writeImagFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq], is_mag_phase)
+                (vals2, is_all_zeros) = writeImagFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq], is_mag_phase)
                 [bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr,
                  bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi] = vals2
                 msg.append('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr))
@@ -897,7 +897,7 @@ class ComplexCBarForce(ScalarObject):  # 34-CBAR
             ts1, ts2 = self.shear[eid]
             af = self.axial[eid]
             trq = self.torque[eid]
-            (vals2, isAllZeros) = writeImagFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq], is_mag_phase)
+            (vals2, is_all_zeros) = writeImagFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq], is_mag_phase)
             [bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr,
              bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi] = vals2
             msg.append('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr))

@@ -27,7 +27,7 @@ class ComplexMPCForcesVector(ComplexTableVector):
 
 class RealMPCForces(RealTableObject):
 
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
@@ -78,7 +78,7 @@ class RealMPCForces(RealTableObject):
 
 
 class ComplexMPCForces(ComplexTableObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
@@ -129,8 +129,8 @@ class ComplexMPCForces(ComplexTableObject):
                 (rx, ry, rz) = rotation
 
                 vals = [dx, dy, dz, rx, ry, rz]
-                (vals2, isAllZeros) = writeImagFloats13E(vals, is_mag_phase)
-                #if not isAllZeros:
+                (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                #if not is_all_zeros:
                 [v1r, v2r, v3r, v4r, v5r, v6r, v1i,
                     v2i, v3i, v4i, v5i, v6i] = vals2
                 msg.append('0%13i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, v1r, v2r, v3r, v4r, v5r, v6r.rstrip()))

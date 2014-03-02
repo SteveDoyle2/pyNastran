@@ -6,7 +6,7 @@ from ..real.oes_objects import StressObject, StrainObject
 
 
 class ComplexRodDamperObject(StressObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = 'CBUSH'
 
@@ -18,7 +18,7 @@ class ComplexRodDamperObject(StressObject):
 class ComplexRodStress(StressObject):
     """
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = 'CROD'
 
@@ -112,7 +112,7 @@ class ComplexRodStress(StressObject):
         for eid in sorted(self.axial):
             axial = self.axial[eid]
             torsion = self.torsion[eid]
-            (vals2, isAllZeros) = writeFloatsImag13E([axial, torsion])
+            (vals2, is_all_zeros) = writeFloatsImag13E([axial, torsion])
             (axial, torsion) = vals2
             out.append([eid, axial, torsion])
 
@@ -149,7 +149,7 @@ class ComplexRodStress(StressObject):
                 axial = self.axial[dt][eid]
                 torsion = self.torsion[dt][eid]
 
-                (vals2, isAllZeros) = writeFloatsImag13E([axial, torsion])
+                (vals2, is_all_zeros) = writeFloatsImag13E([axial, torsion])
                 (axial, torsion) = vals2
                 out.append([eid, axial, MSa, torsion, MSt])
 
@@ -173,7 +173,7 @@ class ComplexRodStress(StressObject):
 class ComplexRodStrain(StrainObject):
     """
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StrainObject.__init__(self, data_code, isubcase)
         self.eType = 'CROD'  # {} # 'CROD/CONROD/CTUBE'
 
@@ -266,7 +266,7 @@ class ComplexRodStrain(StrainObject):
         for eid in sorted(self.axial):
             axial = self.axial[eid]
             torsion = self.torsion[eid]
-            (vals2, isAllZeros) = writeFloatsImag13E([axial, torsion])
+            (vals2, is_all_zeros) = writeFloatsImag13E([axial, torsion])
             (axial, torsion) = vals2
             out.append([eid, axial, torsion])
 

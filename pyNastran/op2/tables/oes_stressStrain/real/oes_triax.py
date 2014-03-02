@@ -16,7 +16,7 @@ class RealTriaxStress(StressObject):
          5351        0 -9.726205E+02 -1.678908E+03 -1.452340E+03 -1.325111E+02  -1.678908E+03  3.702285E+02  6.654553E+02
                   4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = 'CTRIAX6'
 
@@ -181,7 +181,7 @@ class RealTriaxStress(StressObject):
                     Eid = eid
                 else:
                     Eid = ''
-                ([rad, azimuth, axial, shear, omax, oms, ovm], isAllZeros) = writeFloats13E([rad, azimuth, axial, shear, omax, oms, ovm])
+                ([rad, azimuth, axial, shear, omax, oms, ovm], is_all_zeros) = writeFloats13E([rad, azimuth, axial, shear, omax, oms, ovm])
                 msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' % (Eid, nid, radial, azimuth, axial, shear, omax, oms, ovm.rstrip()))
             msg.append('\n')
 
@@ -214,7 +214,7 @@ class RealTriaxStress(StressObject):
                         Eid = eid
                     else:
                         Eid = ''
-                    ([rad, azimuth, axial, shear, omax, oms, ovm], isAllZeros) = writeFloats13E([rad, azimuth, axial, shear, omax, oms, ovm])
+                    ([rad, azimuth, axial, shear, omax, oms, ovm], is_all_zeros) = writeFloats13E([rad, azimuth, axial, shear, omax, oms, ovm])
                     msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' % (Eid, nid, rad, azimuth, axial, shear, omax, oms, ovm.rstrip()))
                 msg.append('\n')
 
@@ -236,7 +236,7 @@ class RealTriaxStrain(StrainObject):
          5351        0 -9.726205E+02 -1.678908E+03 -1.452340E+03 -1.325111E+02  -1.678908E+03  3.702285E+02  6.654553E+02
                   4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StrainObject.__init__(self, data_code, isubcase)
         self.eType = 'CTRIAX6'
 
@@ -370,7 +370,7 @@ class RealTriaxStrain(StrainObject):
                     Eid = eid
                 else:
                     Eid = ''
-                ([rad, azimuth, axial, shear, emax, ems, evm], isAllZeros) = writeFloats13E([rad, azimuth, axial, shear, emax, ems, evm])
+                ([rad, azimuth, axial, shear, emax, ems, evm], is_all_zeros) = writeFloats13E([rad, azimuth, axial, shear, emax, ems, evm])
                 msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' % (Eid, nid, radial, azimuth, axial, shear, emax, ems, evm.rstrip()))
             msg.append('\n')
 
@@ -403,7 +403,7 @@ class RealTriaxStrain(StrainObject):
                         Eid = eid
                     else:
                         Eid = ''
-                    ([rad, azimuth, axial, shear, emax, ems, evm], isAllZeros) = writeFloats13E([rad, azimuth, axial, shear, emax, ems, evm])
+                    ([rad, azimuth, axial, shear, emax, ems, evm], is_all_zeros) = writeFloats13E([rad, azimuth, axial, shear, emax, ems, evm])
                     msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n'
                                % (Eid, nid, rad, azimuth, axial, shear, emax,
                                   ems, evm.rstrip()))

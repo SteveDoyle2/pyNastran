@@ -17,7 +17,7 @@ class ComplexPlateStress(StressObject):
   0       100    CEN/8  -2.500000E-02    0.0          /  0.0             0.0          /  0.0             0.0          /  0.0
                          2.500000E-02    0.0          /  0.0             0.0          /  0.0             0.0          /  0.0
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         #print "making complex plate stress obj"
         StressObject.__init__(self, data_code, isubcase)
         self.eType = {}
@@ -469,7 +469,7 @@ class ComplexPlateStress(StressObject):
                 oyy = self.oyy[eid][nid][iLayer]
                 txy = self.txy[eid][nid][iLayer]
                 ([fd, oxxr, oyyr, txyr,
-                  fdi, oxxi, oyyi, txyi], isAllZeros) = writeImagFloats13E([fd, oxx, oyy, txy], is_mag_phase)
+                  fdi, oxxi, oyyi, txyi], is_all_zeros) = writeImagFloats13E([fd, oxx, oyy, txy], is_mag_phase)
 
                 if nid == cen and iLayer == 0:
                     msg += '0  %8i %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s /   %s\n' % (eid, cen, fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi)
@@ -494,7 +494,7 @@ class ComplexPlateStress(StressObject):
                 oyy = self.oyy[dt][eid][nid][iLayer]
                 txy = self.txy[dt][eid][nid][iLayer]
                 ([fd, oxxr, oyyr, txyr,
-                  fdi, oxxi, oyyi, txyi], isAllZeros) = writeImagFloats13E([fd, oxx, oyy, txy], is_mag_phase)
+                  fdi, oxxi, oyyi, txyi], is_all_zeros) = writeImagFloats13E([fd, oxx, oyy, txy], is_mag_phase)
 
                 if nid == cen and iLayer == 0:
                     msg += '0  %8i %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s /   %s\n' % (eid, cen, fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi)
@@ -519,7 +519,7 @@ class ComplexPlateStress(StressObject):
                 oxx = self.oxx[eid][nid][iLayer]
                 oyy = self.oyy[eid][nid][iLayer]
                 txy = self.txy[eid][nid][iLayer]
-                ([fd, oxx, oyy, txy], isAllZeros) = writeFloats13E([fd, oxx, oyy, txy])
+                ([fd, oxx, oyy, txy], is_all_zeros) = writeFloats13E([fd, oxx, oyy, txy])
 
                 if iLayer == 0:
                     # TODO: how is this valid?
@@ -541,7 +541,7 @@ class ComplexPlateStress(StressObject):
                 oyy = self.oyy[dt][eid][nid][iLayer]
                 txy = self.txy[dt][eid][nid][iLayer]
                 ([fd, oxxr, oyyr, txyr,
-                  fdi, oxxi, oyyi, txyi], isAllZeros) = writeImagFloats13E([fd, oxx, oyy, txy], is_mag_phase)
+                  fdi, oxxi, oyyi, txyi], is_all_zeros) = writeImagFloats13E([fd, oxx, oyy, txy], is_mag_phase)
 
                 if iLayer == 0:
                     msg += '0  %6i   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (eid, fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi)
@@ -573,7 +573,7 @@ class ComplexPlateStrain(StrainObject):
       ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)          MAX
         ID      GRID-ID   CURVATURE       NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR         SHEAR
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StrainObject.__init__(self, data_code, isubcase)
         self.eType = {}
 
@@ -1040,7 +1040,7 @@ class ComplexPlateStrain(StrainObject):
                 eyy = self.eyy[eid][nid][iLayer]
                 exy = self.exy[eid][nid][iLayer]
                 ([fd, exxr, eyyr, exyr,
-                  fdi, exxi, eyyi, exyi], isAllZeros) = writeImagFloats13E([fd, exx, eyy, exy], is_mag_phase)
+                  fdi, exxi, eyyi, exyi], is_all_zeros) = writeImagFloats13E([fd, exx, eyy, exy], is_mag_phase)
 
                 if nid == cen and iLayer == 0:
                     msg += '0  %8i %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s /   %s\n' % (eid, cen, fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
@@ -1065,7 +1065,7 @@ class ComplexPlateStrain(StrainObject):
                 eyy = self.eyy[dt][eid][nid][iLayer]
                 exy = self.exy[dt][eid][nid][iLayer]
                 ([fd, exxr, eyyr, exyr,
-                  fdi, exxi, eyyi, exyi], isAllZeros) = writeImagFloats13E([fd, exx, eyy, exy], is_mag_phase)
+                  fdi, exxi, eyyi, exyi], is_all_zeros) = writeImagFloats13E([fd, exx, eyy, exy], is_mag_phase)
 
                 if nid == cen and iLayer == 0:
                     msg += '0  %8i %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s /   %s\n' % (eid, cen, fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
@@ -1091,7 +1091,7 @@ class ComplexPlateStrain(StrainObject):
                 exy = self.exy[eid][nid][iLayer]
 
                 ([fd, exxr, eyyr, exyr,
-                  fdi, exxi, eyyi, exyi], isAllZeros) = writeImagFloats13E([fd, exx, eyy, exy], is_mag_phase)
+                  fdi, exxi, eyyi, exyi], is_all_zeros) = writeImagFloats13E([fd, exx, eyy, exy], is_mag_phase)
                 if iLayer == 0:
                     msg += '0  %6i   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (eid, fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
                 else:
@@ -1112,7 +1112,7 @@ class ComplexPlateStrain(StrainObject):
                 exy = self.exy[dt][eid][nid][iLayer]
 
                 ([fd, exxr, eyyr, exyr,
-                  fdi, exxi, eyyi, exyi], isAllZeros) = writeImagFloats13E([fd, exx, eyy, exy], is_mag_phase)
+                  fdi, exxi, eyyi, exyi], is_all_zeros) = writeImagFloats13E([fd, exx, eyy, exy], is_mag_phase)
                 if iLayer == 0:
                     msg += '0  %6i   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (eid, fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
                 else:

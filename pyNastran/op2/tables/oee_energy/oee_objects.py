@@ -19,7 +19,7 @@ class StrainEnergyObject(ScalarObject):
                  13   1.582968E+07        1.6124            1.055312E+02
                  14   6.576075E+07        6.6982            3.288037E+02
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
         self.energy = {}
         self.percent = {}

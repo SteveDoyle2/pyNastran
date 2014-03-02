@@ -242,7 +242,7 @@ class RealCompositePlateVector(OES_Object):
             for eid, layer, o11i, o22i, t12i, t1zi, t2zi, anglei, majori, minori, ovmi in izip(
                 eids, layers, o11, o22, t12, t1z, t2z, angle, major, minor, ovm):
 
-                ([o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi], isAllZeros) = writeFloats12E([
+                ([o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi], is_all_zeros) = writeFloats12E([
                   o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi])
                 f.write('0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %s\n'
                         % (eid, layer, o11i, o22i, t12i, t1zi, t2zi, anglei, majori, minori, ovmi))
@@ -298,7 +298,7 @@ class RealCompositePlateStress(StressObject):
       ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
         ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = {}
 
@@ -559,7 +559,7 @@ class RealCompositePlateStress(StressObject):
                 major = self.majorP[eid][iLayer]
                 minor = self.minorP[eid][iLayer]
                 ovm = self.ovmShear[eid][iLayer]
-                (vals2, isAllZeros) = writeFloats12E([o11, o22, t12, t1z, t2z, major, minor, ovm])
+                (vals2, is_all_zeros) = writeFloats12E([o11, o22, t12, t1z, t2z, major, minor, ovm])
                 [o11, o22, t12, t1z, t2z, major, minor, ovm] = vals2
                 out += '0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %-s\n' % (eid, iLayer + 1, o11, o22, t12, t1z, t2z, angle, major, minor, ovm)
 
@@ -630,7 +630,7 @@ class RealCompositePlateStress(StressObject):
                     major = self.majorP[dt][eid][iLayer]
                     minor = self.minorP[dt][eid][iLayer]
                     ovm = self.ovmShear[dt][eid][iLayer]
-                    (vals2, isAllZeros) = writeFloats12E([o11, o22,
+                    (vals2, is_all_zeros) = writeFloats12E([o11, o22,
                                                           t12, t1z, t2z,
                                                           major, minor, ovm])
                     [o11, o22, t12, t1z, t2z, major, minor, ovm] = vals2
@@ -662,7 +662,7 @@ class RealCompositePlateStrain(StrainObject):
       ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
         ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StrainObject.__init__(self, data_code, isubcase)
 
         self.eType = {}
@@ -912,7 +912,7 @@ class RealCompositePlateStrain(StrainObject):
                 minor = self.minorP[eid][iLayer]
                 evm = self.evmShear[eid][iLayer]
 
-                (vals2, isAllZeros) = writeFloats12E([e11,
+                (vals2, is_all_zeros) = writeFloats12E([e11,
                                                       e22, e12, e1z, e2z, major, minor, evm])
                 [e11, e22, e12, e1z, e2z, major, minor, evm] = vals2
                 out += '0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %-s\n' % (eid, iLayer + 1, e11, e22, e12, e1z, e2z, angle, major, minor, evm)
@@ -983,7 +983,7 @@ class RealCompositePlateStrain(StrainObject):
                     major = self.majorP[dt][eid][iLayer]
                     minor = self.minorP[dt][eid][iLayer]
                     evm = self.evmShear[dt][eid][iLayer]
-                    (vals2, isAllZeros) = writeFloats12E([e11, e22,
+                    (vals2, is_all_zeros) = writeFloats12E([e11, e22,
                                                           e12, e1z, e2z, major, minor, evm])
                     [e11, e22, e12, e1z, e2z, major, minor, evm] = vals2
                     out += '0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %-s\n' % (eid, iLayer + 1, e11, e22, e12, e1z, e2z, angle, major, minor, evm)

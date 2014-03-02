@@ -4,7 +4,7 @@ from pyNastran.f06.f06_formatting import writeFloats13E
 
 class RealForceVectorVector(RealTableVector):  # table_code=2, sort_code=0, thermal=0
 
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
@@ -26,7 +26,7 @@ class ComplexForceVectorVector(ComplexTableVector):
 
 class ForceVectorObject(RealTableObject):  # table_code=12, sort_code=0, thermal=0
 
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
@@ -43,8 +43,8 @@ class ForceVectorObject(RealTableObject):  # table_code=12, sort_code=0, thermal
             (dx, dy, dz) = translation
             (rx, ry, rz) = rotation
             vals = [dx, dy, dz, rx, ry, rz]
-            (vals2, isAllZeros) = writeFloats13E(vals)
-            if not isAllZeros:
+            (vals2, is_all_zeros) = writeFloats13E(vals)
+            if not is_all_zeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
 
@@ -69,8 +69,8 @@ class ForceVectorObject(RealTableObject):  # table_code=12, sort_code=0, thermal
                 (rx, ry, rz) = rotation
 
                 vals = [dx, dy, dz, rx, ry, rz]
-                (vals2, isAllZeros) = writeFloats13E(vals)
-                if not isAllZeros:
+                (vals2, is_all_zeros) = writeFloats13E(vals)
+                if not is_all_zeros:
                     [dx, dy, dz, rx, ry, rz] = vals2
                     msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
 
@@ -113,7 +113,7 @@ class ComplexForceVectorObject(ComplexTableObject):  # table_code=12, approach_c
             rzi = rz.imag
 
             vals = [dxr, dyr, dzr, rxr, ryr, rzr, dxi, dyi, dzi, rxi, ryi, rzi]
-            (vals2, isAllZeros) = writeFloats13E(vals)
+            (vals2, is_all_zeros) = writeFloats13E(vals)
             [dxr, dyr, dzr, rxr, ryr, rzr,
              dxi, dyi, dzi, rxi, ryi, rzi] = vals2
             msg.append('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr))
@@ -154,7 +154,7 @@ class ComplexForceVectorObject(ComplexTableObject):  # table_code=12, approach_c
 
                 vals = [dxr, dyr, dzr, rxr, ryr, rzr, dxi,
                         dyi, dzi, rxi, ryi, rzi]
-                (vals2, isAllZeros) = writeFloats13E(vals)
+                (vals2, is_all_zeros) = writeFloats13E(vals)
                 [dxr, dyr, dzr, rxr, ryr, rzr,
                  dxi, dyi, dzi, rxi, ryi, rzi] = vals2
                 msg.append('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr))

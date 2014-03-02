@@ -48,7 +48,7 @@ class RealAcceleration(RealTableObject):  # approach_code=11, thermal=0
 
 
 class ComplexAcceleration(ComplexTableObject):  # table_code=11, approach_code=???
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):

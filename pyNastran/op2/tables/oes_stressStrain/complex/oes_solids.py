@@ -256,7 +256,7 @@ class ComplexSolid(OES_Object):
 
                 # TODO: cid not supported
                 ([oxxr, oyyr, ozzr, txyr, tyzr, txzr,
-                  oxxi, oyyi, ozzi, txyi, tyzi, txzi,], isAllZeros) = writeImagFloats13E([doxx, doyy, dozz,
+                  oxxi, oyyi, ozzi, txyi, tyzi, txzi,], is_all_zeros) = writeImagFloats13E([doxx, doyy, dozz,
                                                                                           dtxy, dtyz, dtxz], is_mag_phase)
                 #print("node =", node)
                 if node == 0:  # CENTER
@@ -640,7 +640,7 @@ class ComplexSolidStress(StressObject):
                 tyz = self.tyz[dt][eid][inode]
                 txz = self.txz[dt][eid][inode]
                 ([oxxr, oyyr, ozzr, txyr, tyzr, txzr,
-                  oxxi, oyyi, ozzi, txyi, tyzi, txzi,], isAllZeros) = writeImagFloats13E([oxx, oyy, ozz,
+                  oxxi, oyyi, ozzi, txyi, tyzi, txzi,], is_all_zeros) = writeImagFloats13E([oxx, oyy, ozz,
                                                                                           txy, tyz, txz], is_mag_phase)
 
                 f.write('0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % (inode, oxxr, oyyr, ozzr, txyr, tyzr, txzr))
@@ -883,7 +883,7 @@ class ComplexSolidStrain(StrainObject):
                 tyz = self.eyz[dt][eid][inode]
                 txz = self.exz[dt][eid][inode]
                 ([oxxr, oyyr, ozzr, txyr, tyzr, txzr,
-                  oxxi, oyyi, ozzi, txyi, tyzi, txzi,], isAllZeros) = writeImagFloats13E([oxx, oyy, ozz,
+                  oxxi, oyyi, ozzi, txyi, tyzi, txzi,], is_all_zeros) = writeImagFloats13E([oxx, oyy, ozz,
                                                                                           txy, tyz, txz], is_mag_phase)
 
                 f.write('0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % (inode, oxxr, oyyr, ozzr, txyr, tyzr, txzr))

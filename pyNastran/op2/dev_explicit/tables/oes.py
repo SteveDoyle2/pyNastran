@@ -12,7 +12,7 @@ from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStress, RealBarStrain
 from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import RealBeamStress, RealBeamStrain
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush import BushStress, BushStrain
-from pyNastran.op2.tables.oes_stressStrain.real.oes_bush1d import Bush1DStressObject  # unused
+from pyNastran.op2.tables.oes_stressStrain.real.oes_bush1d import RealBush1DStress  # unused
 from pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates import (RealCompositePlateStress, RealCompositePlateStrain,
                                                                             RealCompositePlateStressVector, RealCompositePlateStrainVector)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_gap import NonlinearGapStressObject
@@ -22,13 +22,14 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import (RealRodStress, 
                                                                  RealRodStressVector, RealRodStrainVector)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import (RealShearStress, RealShearStrain,
                                                                   RealShearStrainVector, RealShearStressVector)
-from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStress, RealSolidStrain, RealSolidStrainVector, RealSolidStressVector
+from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import (RealSolidStress, RealSolidStrain,
+                                                                   RealSolidStrainVector, RealSolidStressVector)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealCelasStress, RealCelasStrain, NonlinearSpringStress
 from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import RealTriaxStress, RealTriaxStrain
 
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStress, ComplexBarStrain
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush import ComplexBushStress, ComplexBushStrain
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexBush1DStressObject
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexBush1DStress
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStress, ComplexPlateStrain
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import (ComplexRodStress, ComplexRodStrain)
                                                                     #ComplexRodStressVector, ComplexRodStrainVector)
@@ -37,7 +38,7 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import (ComplexSol
                                                                       ComplexSolidStressVector, ComplexSolidStrainVector)
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexCelasStress, ComplexCelasStrain
 
-from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import NonlinearRod, NonlinearQuadObject, HyperelasticQuad
+from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import NonlinearRod, NonlinearQuad, HyperelasticQuad
 
 
 class OES(OP2Common):
@@ -1291,9 +1292,9 @@ class OES(OP2Common):
                 return len(data)
             if self.format_code == 1 and self.num_wide == 13:  # real
                 if self.isStress():
-                    self.create_transient_object(self.nonlinearPlateStress, NonlinearQuadObject)
+                    self.create_transient_object(self.nonlinearPlateStress, NonlinearQuad)
                 else:
-                    self.create_transient_object(self.nonlinearPlateStrain, NonlinearQuadObject)
+                    self.create_transient_object(self.nonlinearPlateStrain, NonlinearQuad)
 
                 ntotal = 52  # 4*13
                 s = Struct(b'i12f')  # 1+12=13
@@ -1315,9 +1316,9 @@ class OES(OP2Common):
                     n += ntotal
             elif self.format_code == 1 and self.num_wide == 25:  # TODO: real?
                 if self.isStress():
-                    self.create_transient_object(self.nonlinearPlateStress, NonlinearQuadObject)
+                    self.create_transient_object(self.nonlinearPlateStress, NonlinearQuad)
                 else:
-                    self.create_transient_object(self.nonlinearPlateStrain, NonlinearQuadObject)
+                    self.create_transient_object(self.nonlinearPlateStrain, NonlinearQuad)
 
                 ntotal = 100  # 4*25
                 s = Struct(b'i24f') # 1+24=25
@@ -1460,10 +1461,10 @@ class OES(OP2Common):
 
                 if self.isStress():
                     #self.create_transient_object(self.compositePlateStress, ComplexCompositePlateStress)  # undefined
-                    raise NotImplementedError('ComplexCompositePlateStrainObject')
+                    raise NotImplementedError('ComplexCompositePlateStrain')
                 else:
                     #self.create_transient_object(self.compositePlateStrain, ComplexCompositePlateStrain)  # undefined
-                    raise NotImplementedError('ComplexCompositePlateStrainObject')
+                    raise NotImplementedError('ComplexCompositePlateStrain')
                 # TODO: this is an OEF result???
                 #    furthermore the actual table is calle dout as
                 #    'i8si4f4s', not 'i8si3fi4s'
@@ -1538,11 +1539,11 @@ class OES(OP2Common):
                 return self._not_implemented_or_skip(data, msg)
 
                 if self.isStress():
-                    #self.create_transient_object(self.ctriaxStress, ComplexTriaxStressObject)  # undefined
-                    raise NotImplementedError('ComplexTriaxStressObject')
+                    #self.create_transient_object(self.ctriaxStress, ComplexTriaxStress)  # undefined
+                    raise NotImplementedError('ComplexTriaxStress')
                 else:
-                    #self.create_transient_object(self.ctriaxStrain, ComplexTriaxStrainObject)  # undefined
-                    raise NotImplementedError('ComplexTriaxStrainObject')
+                    #self.create_transient_object(self.ctriaxStrain, ComplexTriaxStrain)  # undefined
+                    raise NotImplementedError('ComplexTriaxStrain')
                 s1 = Struct(b'ii7f')
                 s2 = Struct(b'i7f')
 
@@ -1664,7 +1665,7 @@ class OES(OP2Common):
                 return len(data)
             if self.format_code == 1 and self.num_wide == 8:  # real
                 if self.isStress():
-                    self.create_transient_object(self.bush1dStressStrain, Bush1DStressObject)  # undefined
+                    self.create_transient_object(self.bush1dStressStrain, RealBush1DStress)  # undefined
                 else:
                     #self.create_transient_object(self.bush1dStressStrain, Bush1DStrainObject)  # undefined
                     raise NotImplementedError('self.bush1dStressStrain; numwide=8')
@@ -1685,9 +1686,9 @@ class OES(OP2Common):
                     n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 9:  # imag
                 if self.isStress():
-                    self.create_transient_object(self.bush1dStressStrain, ComplexBush1DStressObject)  # undefined
+                    self.create_transient_object(self.bush1dStressStrain, ComplexBush1DStress)  # undefined
                 else:
-                    #self.create_transient_object(self.bush1dStressStrain, ComplexBush1DStressObject)  # undefined
+                    #self.create_transient_object(self.bush1dStressStrain, ComplexBush1DStress)  # undefined
                     raise NotImplementedError('self.bush1dStressStrain; complex strain')
 
                 ntotal = 36  # 4*9
@@ -1862,16 +1863,16 @@ class OES(OP2Common):
             if self.format_code == 1 and self.num_wide == numwide_real:
                 ntotal = numwide_real * 4
                 #if self.isStress():
-                    #self.create_transient_object(self.nonlinearPlateStress, NonlinearSolidObject)
+                    #self.create_transient_object(self.nonlinearPlateStress, NonlinearSolid)
                 #else:
-                    #self.create_transient_object(self.nonlinearPlateStrain, NonlinearSolidObject)
+                    #self.create_transient_object(self.nonlinearPlateStrain, NonlinearSolid)
                 #self.handle_results_buffer(self.OES_CQUAD4NL_90, resultName, name)
             elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
                 ntotal = numwide_imag * 4
                 #if self.isStress():
-                    #self.create_transient_object(self.nonlinearPlateStress, NonlinearSolidObject)
+                    #self.create_transient_object(self.nonlinearPlateStress, NonlinearSolid)
                 #else:
-                    #self.create_transient_object(self.nonlinearPlateStrain, NonlinearSolidObject)
+                    #self.create_transient_object(self.nonlinearPlateStrain, NonlinearSolid)
 
                 n = 0
                 s1 = Struct(b'i4s')

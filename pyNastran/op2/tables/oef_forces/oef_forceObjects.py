@@ -168,7 +168,7 @@ class RealRodForceVector(ScalarObject):
             # loop over all the elements
             out = []
             for eid, axiali, torsioni in izip(eids, axial, torsion):
-                ([axiali, torsioni], isAllZeros) = writeFloats13E([axiali, torsioni])
+                ([axiali, torsioni], is_all_zeros) = writeFloats13E([axiali, torsioni])
                 out.append([eid, axiali, torsioni])
 
             for i in xrange(0, nwrite, 2):
@@ -267,7 +267,7 @@ class RealRodForce(ScalarObject):  # 1-ROD
         for eid in sorted(self.axialForce):
             axial = self.axialForce[eid]
             torsion = self.torque[eid]
-            (vals2, isAllZeros) = writeFloats13E([axial, torsion])
+            (vals2, is_all_zeros) = writeFloats13E([axial, torsion])
             (axial, torsion) = vals2
             out.append([eid, axial, torsion])
 
@@ -367,7 +367,7 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
             raise NotImplementedError(dt)
 
         for d in data:
-            (eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq,) = d
+            (eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq) = d
             #print('eid, nid, sd', eid, nid, sd)
             if eid in self.nodes:
                 #if sd in self.nodes[eid]:
@@ -465,7 +465,7 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
                     af = self.axial[dt][eid][sd]
                     ttrq = self.totalTorque[dt][eid][sd]
                     wtrq = self.warpingTorque[dt][eid][sd]
-                    (vals2, isAllZeros) = writeFloats13E([bm1, bm2, ts1, ts2, af, ttrq, wtrq])
+                    (vals2, is_all_zeros) = writeFloats13E([bm1, bm2, ts1, ts2, af, ttrq, wtrq])
                     [bm1, bm2, ts1, ts2, af, ttrq, wtrq] = vals2
 
                     if sd == 0.:
@@ -495,7 +495,7 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
                 af = self.axial[eid][sd]
                 ttrq = self.totalTorque[eid][sd]
                 wtrq = self.warpingTorque[eid][sd]
-                (vals2, isAllZeros) = writeFloats13E([bm1, bm2, ts1, ts2, af, ttrq, wtrq])
+                (vals2, is_all_zeros) = writeFloats13E([bm1, bm2, ts1, ts2, af, ttrq, wtrq])
                 [bm1, bm2, ts1, ts2, af, ttrq, wtrq] = vals2
                 msg.append('           %8i   %.3f   %-13s %-13s  %-13s %-13s  %-13s  %-13s  %s\n' % (nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq))
 
@@ -701,7 +701,7 @@ class RealCShearForce(ScalarObject):  # 4-CSHEAR
                     kick3, tau34,
                     kick4, tau41,
             ]
-            (vals2, isAllZeros) = writeFloats12E(vals)
+            (vals2, is_all_zeros) = writeFloats12E(vals)
             [f14, f12,  f21, f23,  f32, f34,  f43, f41,
              kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41,
             ] = vals2
@@ -1295,7 +1295,7 @@ class RealPlateForceVector(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
             if self.element_type == 74:
                 for eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in izip(eids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
                     ([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi],
-                    isAllZeros) = writeFloats13E([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
+                    is_all_zeros) = writeFloats13E([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
                     # ctria3
                     #          8      -7.954568E+01  2.560061E+03 -4.476376E+01    1.925648E+00  1.914048E+00  3.593237E-01    8.491534E+00  5.596094E-01  #
                     f.write('   %8i %18s %13s %13s   %13s %13s %13s   %13s %s\n' % (eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
@@ -1303,7 +1303,7 @@ class RealPlateForceVector(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
             elif self.element_type == 33:
                 for eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in izip(eids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
                     ([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi],
-                    isAllZeros) = writeFloats13E([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
+                    is_all_zeros) = writeFloats13E([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
                     # cquad4
                     #0         6    CEN/4  1.072685E+01  2.504399E+03 -2.455727E+01 -5.017930E+00 -2.081427E+01 -5.902618E-01 -9.126162E+00  4.194400E+01#
                     #Fmt = '% 8i   ' + '%27.20E   ' * 8 + '\n'
@@ -1488,7 +1488,7 @@ class RealPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
                 bmxyi = self.bmxy[eid][i]
                 txi = self.tx[eid][i]
                 tyi = self.ty[eid][i]
-                (vals2, isAllZeros) = writeFloats13E([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
+                (vals2, is_all_zeros) = writeFloats13E([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
                 [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi] = vals2
                 if i == 0:
                     f.write('0  %8i    CEN/4 %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
@@ -1592,7 +1592,7 @@ class RealCBarForce(ScalarObject):  # 34-CBAR
             ts1, ts2 = self.shear[eid]
             af = self.axial[eid]
             trq = self.torque[eid]
-            (vals2, isAllZeros) = writeFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq])
+            (vals2, is_all_zeros) = writeFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq])
             [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = vals2
             f.write('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq))
 #            1     2.504029E+06  9.728743E+06   5.088001E+05  1.976808E+06   1.995229E+06  7.751935E+06  -3.684978E-07  -1.180941E-07
@@ -1615,7 +1615,7 @@ class RealCBarForce(ScalarObject):  # 34-CBAR
                 ts1, ts2 = self.shear[dt][eid]
                 af = self.axial[dt][eid]
                 trq = self.torque[dt][eid]
-                (vals2, isAllZeros) = writeFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq])
+                (vals2, is_all_zeros) = writeFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq])
                 [bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq] = vals2
                 f.write('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq))
 #            1     2.504029E+06  9.728743E+06   5.088001E+05  1.976808E+06   1.995229E+06  7.751935E+06  -3.684978E-07  -1.180941E-07
@@ -2041,7 +2041,7 @@ class RealPentaPressureForce(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
                 vx, vy, vz = self.velocity[dt][eid]
                 pressure = self.pressure[dt][eid]
                 vals = [ax, ay, az, pressure]
-                (vals2, isAllZeros) = writeFloats13E(vals)
+                (vals2, is_all_zeros) = writeFloats13E(vals)
                 [ax, ay, az, pressure] = vals2
                 eType = 'PENPR'
                 msg.append('0%13s    %5s               %-13s             %-13s             %-13s             %s\n' % (eid, eType, ax, ay, az, pressure))
