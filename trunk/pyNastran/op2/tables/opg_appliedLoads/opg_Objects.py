@@ -143,7 +143,7 @@ class ComplexAppliedLoadsVector(AppliedLoadsVector):
 
 class AppliedLoadsObject(ScalarObject):  # approach_code=1, sort_code=0
 
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
         self.dt = dt
 

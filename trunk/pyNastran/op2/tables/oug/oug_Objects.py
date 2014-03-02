@@ -6,7 +6,7 @@ from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 
 
 class FluxObject(ScalarObject):  # approach_code=1, table_code=3, thermal=1
-    def __init__(self, data_code, isubcase, dt=None):
+    def __init__(self, data_code, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
 
         self.dt = dt

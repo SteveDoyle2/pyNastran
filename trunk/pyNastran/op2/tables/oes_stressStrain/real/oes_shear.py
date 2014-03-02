@@ -150,7 +150,7 @@ class RealShearVector(OES_Object):
             out = []
             for eid, max_sheari, avg_sheari, margini in izip(eids, max_shear, avg_shear, margin):
                 #([max_sheari, avg_sheari, margini],
-                #isAllZeros) = writeFloats13E([max_sheari, avg_sheari, margini])
+                #is_all_zeros) = writeFloats13E([max_sheari, avg_sheari, margini])
                 out.append([eid, max_sheari, avg_sheari, margini])
 
             for i in xrange(0, nwrite, 2):
@@ -213,7 +213,7 @@ class RealShearStress(StressObject):
         ID.             SHEAR          SHEAR       MARGIN           ID.             SHEAR          SHEAR       MARGIN
           328        1.721350E+03   1.570314E+03   7.2E+01
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = 'CSHEAR'
 
@@ -318,7 +318,7 @@ class RealShearStress(StressObject):
 
 class RealShearStrain(StrainObject):
 
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StrainObject.__init__(self, data_code, isubcase)
         self.eType = 'CSHEAR'
         #raise Exception('not supported...CSHEAR strain')

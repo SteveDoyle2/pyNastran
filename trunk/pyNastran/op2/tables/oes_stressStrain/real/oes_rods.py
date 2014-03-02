@@ -156,7 +156,7 @@ class RealRodVector(OES_Object):
             out = []
             for eid, axiali, SMai, torsioni, SMti in izip(eids, axial, SMa, torsion, SMt):
                 #([axiali, torsioni, SMai, SMti],
-                #isAllZeros) = writeFloats13E([axiali, torsioni, SMai, SMti])
+                #is_all_zeros) = writeFloats13E([axiali, torsioni, SMai, SMti])
                 out.append([eid, axiali, SMai, torsioni, SMti])
 
             for i in xrange(0, nwrite, 2):
@@ -235,7 +235,7 @@ class RealRodStrainVector(RealRodVector, StrainObject):
 
 
 class RodDamperObject(StressObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = 'CBUSH'
 
@@ -411,7 +411,7 @@ class RealRodStress(StressObject):
             MSa = self.MS_axial[eid]
             torsion = self.torsion[eid]
             MSt = self.MS_torsion[eid]
-            (vals2, isAllZeros) = writeFloats13E([axial, torsion])
+            (vals2, is_all_zeros) = writeFloats13E([axial, torsion])
             (axial, torsion) = vals2
             out.append([eid, axial, MSa, torsion, MSt])
 
@@ -448,7 +448,7 @@ class RealRodStress(StressObject):
                 torsion = self.torsion[dt][eid]
                 MSt = self.MS_torsion[dt][eid]
 
-                (vals2, isAllZeros) = writeFloats13E([axial, torsion])
+                (vals2, is_all_zeros) = writeFloats13E([axial, torsion])
                 (axial, torsion) = vals2
                 out.append([eid, axial, MSa, torsion, MSt])
 
@@ -484,7 +484,7 @@ class RealRodStrain(StrainObject):
         ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN
          1001    1.000000E+00   1.0E+00    1.250000E+00   3.0E+00         1007    1.000000E+00   1.0E+00    1.250000E+00   3.0E+00
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StrainObject.__init__(self, data_code, isubcase)
         self.eType = 'CROD'  # {} # 'CROD/CONROD/CTUBE'
 
@@ -621,7 +621,7 @@ class RealRodStrain(StrainObject):
             MSa = self.MS_axial[eid]
             torsion = self.torsion[eid]
             MSt = self.MS_torsion[eid]
-            (vals2, isAllZeros) = writeFloats13E([axial, torsion])
+            (vals2, is_all_zeros) = writeFloats13E([axial, torsion])
             (axial, torsion) = vals2
             out.append([eid, axial, MSa, torsion, MSt])
 

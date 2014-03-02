@@ -6,7 +6,7 @@ from .oes_objects import StressObject
 
 class NonlinearGapStressObject(StressObject):
 
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = {}
         self.element_name = self.data_code['element_name']

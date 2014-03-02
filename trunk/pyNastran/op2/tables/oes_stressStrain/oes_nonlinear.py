@@ -6,9 +6,9 @@ from .real.oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 
-class NonlinearQuadObject(StressObject):
+class NonlinearQuad(StressObject):
 
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
         #self.eType = 'QUAD4FD' # or CTRIA3
 
@@ -168,7 +168,7 @@ class NonlinearQuadObject(StressObject):
                     es = self.es[dt][eid][i]
                     eps = self.eps[dt][eid][i]
                     ecs = self.ecs[dt][eid][i]
-                    ([oxx, oyy, ozz, txy, exx, eyy, es, eps, ecs, exx, eyy, ezz, exy], isAllZeros) = writeFloats13E([oxx, oyy, ozz, txy, exx, eyy, es, eps, ecs, exx, eyy, ezz, exy])
+                    ([oxx, oyy, ozz, txy, exx, eyy, es, eps, ecs, exx, eyy, ezz, exy], is_all_zeros) = writeFloats13E([oxx, oyy, ozz, txy, exx, eyy, es, eps, ecs, exx, eyy, ezz, exy])
                     if i == 0:
                         msgT[eid].append('0 %9.3E %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (dt, fd, oxx, oyy, ozz, txy, es, eps, ecs))
                     else:
@@ -184,7 +184,7 @@ class NonlinearQuadObject(StressObject):
 
 
 class HyperelasticQuad(StressObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = 'QUAD4FD'
 
@@ -295,7 +295,7 @@ class HyperelasticQuad(StressObject):
 
 
 class NonlinearRod(StressObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
         #self.eType = 'CROD'
         self.eTypeMap = {89: 'CRODNL', 92: 'CONRODNL'}

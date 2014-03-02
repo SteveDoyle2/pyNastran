@@ -4,7 +4,7 @@ from pyNastran.f06.f06_formatting import writeFloats13E
 
 class RealLoadVectorVector(RealTableVector):  # table_code=2, sort_code=0, thermal=0
 
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
@@ -26,7 +26,7 @@ class ComplexLoadVectorVector(ComplexTableVector):
 
 class RealLoadVectorObject(RealTableObject):  # table_code=2, sort_code=0, thermal=0
 
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
@@ -197,7 +197,7 @@ class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_co
 
 
 class RealThermalVectorObject(RealTableObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
@@ -249,10 +249,10 @@ class RealThermalVectorObject(RealTableObject):
 
 
 class ThermalLoadVectorObject(RealThermalVectorObject):     # table_code=2, thermal=1
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         RealThermalVectorObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
 
 class ThermalVelocityVectorObject(RealThermalVectorObject):  # table_code=10, thermal=1
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         RealThermalVectorObject.__init__(self, data_code, is_sort1, isubcase, dt)

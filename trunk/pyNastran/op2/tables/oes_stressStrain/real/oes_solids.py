@@ -213,7 +213,7 @@ class RealSolidVector(OES_Object):
                 (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
 
                 ([oxxi, oyyi, ozzi, txyi, tyzi, txzi, o1i, o2i, o3i, pi, ovmi],
-                 isAllZeros) = writeFloats13E([doxx, doyy, dozz, dtxy, dtyz, dtxz,
+                 is_all_zeros) = writeFloats13E([doxx, doyy, dozz, dtxy, dtyz, dtxz,
                                                do1, do2, do3, dp, dovm])
 
                 if i % cnnodes == 0:
@@ -322,7 +322,7 @@ class RealSolidStress(StressObject):
                              Y   4.094179E+02  YZ   5.456968E-12   B  -1.251798E+02  LY 0.00 0.72 0.69
                              Z   1.000000E+04  ZX  -4.547474E-13   C   9.845177E+02  LZ 1.00 0.00 0.00
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
 
         self.eType = {}
@@ -742,7 +742,7 @@ class RealSolidStress(StressObject):
                      [txz, tyz, ozz]]
                 (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
 
-                ([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm], isAllZeros) = writeFloats13E([
+                ([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm], is_all_zeros) = writeFloats13E([
                   oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm])
                 f.write('0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
                         '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
@@ -781,7 +781,7 @@ class RealSolidStress(StressObject):
                      [txz, tyz, ozz]]
                 (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
 
-                ([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm], isAllZeros) = writeFloats13E([
+                ([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm], is_all_zeros) = writeFloats13E([
                   oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm])
                 f.write('0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
                         '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
@@ -1248,7 +1248,7 @@ class RealSolidStrain(StrainObject):
                      [exz, eyz, ezz]]
                 (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
 
-                ([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm], isAllZeros) = writeFloats13E([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm])
+                ([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm], is_all_zeros) = writeFloats13E([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm])
                 f.write('0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
                            '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
                            '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n'
@@ -1285,7 +1285,7 @@ class RealSolidStrain(StrainObject):
                      [exz, eyz, ezz]]
                 (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
 
-                ([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm], isAllZeros) = writeFloats13E([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm])
+                ([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm], is_all_zeros) = writeFloats13E([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm])
                 f.write('0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
                          '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
                          '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n' % (

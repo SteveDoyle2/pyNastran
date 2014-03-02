@@ -7,7 +7,7 @@ from pyNastran.f06.f06_formatting import writeFloats13E
 
 class BushStress(StressObject):
 
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = {}
 
@@ -101,7 +101,7 @@ class BushStress(StressObject):
             (rx, ry, rz) = self.rotations[eid]
 
             vals = [tx, ty, tz, rx, ry, rz]
-            (vals2, isAllZeros) = writeFloats13E(vals)
+            (vals2, is_all_zeros) = writeFloats13E(vals)
             [tx, ty, tz, rx, ry, rz] = vals2
             msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (eid, tx, ty, tz, rx, ry, rz))
 
@@ -123,7 +123,7 @@ class BushStress(StressObject):
                 (rx, ry, rz) = self.rotations[dt][eid]
 
                 vals = [tx, ty, tz, rx, ry, rz]
-                (vals2, isAllZeros) = writeFloats13E(vals)
+                (vals2, is_all_zeros) = writeFloats13E(vals)
                 [tx, ty, tz, rx, ry, rz] = vals2
                 msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (eid, tx, ty, tz, rx, ry, rz))
 
@@ -136,7 +136,7 @@ class BushStress(StressObject):
 class BushStrain(StrainObject):
     """
     """
-    def __init__(self, data_code, is_sort1, isubcase, dt=None):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
         StrainObject.__init__(self, data_code, isubcase)
         self.eType = {}
 
