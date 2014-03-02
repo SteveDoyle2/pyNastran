@@ -37,7 +37,7 @@ class RealShearVector(OES_Object):
         self.ielement = 0
 
     def build(self):
-        print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
 
@@ -203,7 +203,7 @@ class RealShearStrainVector(RealShearVector, StrainObject):
         return msg
 
 
-class RealShearStressObject(StressObject):
+class RealShearStress(StressObject):
     """
     ::
 
@@ -316,7 +316,7 @@ class RealShearStressObject(StressObject):
         self.margin[dt][eid] = margin
 
 
-class RealShearStrainObject(StrainObject):
+class RealShearStrain(StrainObject):
 
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StrainObject.__init__(self, data_code, isubcase)

@@ -10,7 +10,7 @@ complexStressObject = StressObject
 complexStrainObject = StrainObject
 
 
-class ComplexCelasStressObject(complexStressObject):
+class ComplexCelasStress(complexStressObject):
     """
     ::
 
@@ -142,7 +142,7 @@ class ComplexCelasStressObject(complexStressObject):
         return page_num - 1
 
 
-class ComplexCelasStrainObject(complexStrainObject):
+class ComplexCelasStrain(complexStrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StrainObject.__init__(self, data_code, isubcase)
         self.eType = {}

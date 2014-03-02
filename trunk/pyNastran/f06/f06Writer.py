@@ -383,8 +383,17 @@ class F06Writer(F06WriterDeprecated):
 
         #: OES - composite CTRIA3/CQUAD4 stress
         self.compositePlateStress = {}
+        self.cquad4_composite_stress = {}
+        self.cquad8_composite_stress = {}
+        self.ctria3_composite_stress = {}
+        self.ctria6_composite_stress = {}
         #: OES - composite CTRIA3/CQUAD4 strain
         self.compositePlateStrain = {}
+        self.cquad4_composite_strain = {}
+        self.cquad8_composite_strain = {}
+        self.ctria3_composite_strain = {}
+        self.ctria6_composite_strain = {}
+
 
         #: OES - CSHEAR stress
         self.shearStress = {}
@@ -698,6 +707,11 @@ class F06Writer(F06WriterDeprecated):
             self.plateStrain,
             self.shearStrain,
             self.compositePlateStrain,
+            self.cquad4_composite_strain,
+            self.cquad8_composite_strain,
+            self.ctria3_composite_strain,
+            self.ctria6_composite_strain,
+
             self.nonlinearPlateStrain,
             self.ctriaxStrain, self.hyperelasticPlateStress,
 
@@ -761,6 +775,11 @@ class F06Writer(F06WriterDeprecated):
             self.ctube_stress,
 
             self.compositePlateStress,
+            self.cquad4_composite_stress,
+            self.cquad8_composite_stress,
+            self.ctria3_composite_stress,
+            self.ctria6_composite_stress,
+
             self.nonlinearPlateStress,
             self.ctriaxStress, self.hyperelasticPlateStrain,
 
@@ -770,7 +789,7 @@ class F06Writer(F06WriterDeprecated):
         ]
 
         if 1:
-            iSubcases = self.iSubcaseNameMap.keys()
+            iSubcases = sorted(self.iSubcaseNameMap.keys())
             #print("self.iSubcaseNameMap = %s" %(self.iSubcaseNameMap))
             for isubcase in iSubcases:
                 title = self.Title
@@ -786,6 +805,15 @@ class F06Writer(F06WriterDeprecated):
                 #header[0] = '     %-127s\n' % subtitle
                 #header[1] = '0    %-72s                                SUBCASE %-15i\n' % (label, isubcase)
                 #header[1] = '0    %-72s                                SUBCASE %-15i\n' % ('',isubcase)
+
+                res_length = 1
+                for res_type in res_types:
+                    if isubcase in res_type:
+                        result = res_type[isubcase]
+                        res_length = max(len(result.__class__.__name__), res_length)
+                        continue
+                res_format = '%%-%is SUBCASE=%%i%%s' % res_length
+
                 for res_type in res_types:
                     #print("res_type ", res_type)
                     header = ['', '']
@@ -803,7 +831,7 @@ class F06Writer(F06WriterDeprecated):
                             element_name = ''
                             if hasattr(result, 'element_name'):
                                 element_name = ' - ' + result.element_name
-                            print('%-26s SUBCASE=%i%s' % (result.__class__.__name__, isubcase, element_name))
+                            print(res_format % (result.__class__.__name__, isubcase, element_name))
                             self.page_num = result.write_f06(header, page_stamp, page_num=self.page_num, f=f06, is_mag_phase=False)
                             assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
                         except:
@@ -822,4 +850,3 @@ class F06Writer(F06WriterDeprecated):
                     self.page_num += 1
         f06.write(make_end(end_flag))
         f06.close()
-

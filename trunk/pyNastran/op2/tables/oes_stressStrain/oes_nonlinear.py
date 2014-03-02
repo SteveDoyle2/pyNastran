@@ -183,7 +183,7 @@ class NonlinearQuadObject(StressObject):
         return page_num - 1
 
 
-class HyperelasticQuadObject(StressObject):
+class HyperelasticQuad(StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = 'QUAD4FD'
@@ -294,7 +294,7 @@ class HyperelasticQuadObject(StressObject):
         return page_num
 
 
-class NonlinearRodObject(StressObject):
+class NonlinearRod(StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StressObject.__init__(self, data_code, isubcase)
         #self.eType = 'CROD'

@@ -950,7 +950,7 @@ class OEF(OP2Common):
                     eid = (eid_device - self.device_code) // 10
                     assert eid > 0, eid
 
-                    print "%s" % (self.get_element_type(self.element_type)), dt, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty
+                    #print "%s" % (self.get_element_type(self.element_type)), dt, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty
                     self.obj.add_new_element(eid, dt, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
                     n += 44
                     for i in xrange(nnodes):
@@ -961,7 +961,7 @@ class OEF(OP2Common):
                         (nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
                         assert nid > 0, 'nid=%s' % nid
                         data_in = [nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty]
-                        print "***%s    " % (self.get_element_type(self.element_type)), data_in
+                        #print "***%s    " % (self.get_element_type(self.element_type)), data_in
                         self.obj.add(eid, dt, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
                         n += 36
             elif self.num_wide == numwide_imag: # complex

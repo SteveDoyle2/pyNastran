@@ -338,7 +338,7 @@ class ComplexSolidStrainVector(ComplexSolid, StressObject):
         return tetra_msg, penta_msg, hexa_msg
 
 
-class ComplexSolidStressObject(StressObject):
+class ComplexSolidStress(StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
 
@@ -647,7 +647,7 @@ class ComplexSolidStressObject(StressObject):
                 f.write('    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('',    oxxi, oyyi, ozzi, txyi, tyzi, txzi))
 
 
-class ComplexSolidStrainObject(StrainObject):
+class ComplexSolidStrain(StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         StrainObject.__init__(self, data_code, isubcase)
 

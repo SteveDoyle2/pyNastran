@@ -16,19 +16,21 @@ from pyNastran.op2.dev_explicit.op2 import OP2
 class OP2_Vectorized(OP2):
 
     def __init__(self, make_geom=False, save_skipped_cards=False,
-                 debug=True, log=None):
+                 debug=True, log=None,
+                 debug_file=None):
         """
         Initializes the OP2 object
 
         :param make_geom: reads the BDF tables (default=False)
         :param save_skipped_cards: creates the skippedCards.out file (default=False)
-        :param debug: prints data about how the OP2 was parsed (default=False)
+        :param debug: enables the debug log and sets the debug in the logger (default=False)
         :param log: a logging object to write debug messages to
          (.. seealso:: import logging)
+        :param debug_file: sets the filename that will be written to (default=None -> no debug)
         """
         debug = False
         OP2.__init__(self, make_geom=make_geom, save_skipped_cards=save_skipped_cards,
-                     debug=debug, log=log)
+                     debug=debug, log=log, debug_file=None)
         #print(self.binary_debug)
         #self.binary_debug = None
         self.ask = False
@@ -153,6 +155,12 @@ class OP2_Vectorized(OP2):
             #=======================================================
             'gridPointForces',
             #=======================================================
+            'celasStress',
+            'celas1_stress', 'celas1_strain',
+            'celas2_stress', 'celas2_strain',
+            'celas3_stress', 'celas3_strain',
+            'celas4_stress', 'celas4_strain',
+            #=======================================================
             'ctetra_stress', 'chexa_stress', 'cpenta_stress',
             'ctetra_strain', 'chexa_strain', 'cpenta_strain',
             #=======================================================
@@ -165,6 +173,12 @@ class OP2_Vectorized(OP2):
             'plateStress', 'plateStrain', 'plateForces', 'plateForces2',
             'ctria3_stress', 'ctria3_strain', 'ctria3_force',
             'cquad4_stress', 'cquad4_strain', 'cquad4_force',
+
+            'compositePlateStress', 'compositePlateStrain',
+            'cquad4_composite_stress', 'cquad4_composite_strain',
+            'cquad8_composite_stress', 'cquad8_composite_strain',
+            'ctria3_composite_stress', 'ctria3_composite_strain',
+            'ctria6_composite_stress', 'ctria6_composite_strain',
             #=======================================================
             'barStress', 'barStrain', 'beamForces',
             'beamStress', 'beamStrain', 'barForces',
@@ -184,14 +198,17 @@ class OP2_Vectorized(OP2):
             #print(unique_isubcases)
             for isubcase in unique_isubcases:
                 #wherei = where(isubcases==isubcase)[0]
-                wherei = [i for i, isubcase in enumerate(isubcases) if isubcase == 1]
+                wherei = [i for i, isubcasei in enumerate(isubcases) if isubcasei == isubcase]
                 keys = [case_keys[i] for i in wherei]
                 if len(wherei) == 1:
                     # rename the case since we have only one tuple for the result
                     result[isubcase] = result[keys[0]]
                     del result[keys[0]]
                 else:
+                    continue
                     # multiple results to combine
+                    #print('result_type=%s keys=%s isubcase=%s \nisubcases=%s case_keys=%s wherei=%s' % (
+                        #result_type, keys, isubcase, isubcases, case_keys, wherei))
                     res1 = result[keys[0]]
                     if not hasattr(res1, 'combine'):
                         print("res1=%s has no method combine" % res1.__class__.__name__)

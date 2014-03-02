@@ -400,7 +400,7 @@ class RealPlateStrainVector(RealPlateVector, StrainObject):
             raise NotImplementedError(self.element_type)
         return msg, nnodes, is_bilinear
 
-class RealPlateStressObject(StressObject):
+class RealPlateStress(StressObject):
     """
     ::
 
@@ -1085,7 +1085,7 @@ class RealPlateStressObject(StressObject):
         return ''.join(msg)
 
 
-class RealPlateStrainObject(StrainObject):
+class RealPlateStrain(StrainObject):
     """
     ::
 

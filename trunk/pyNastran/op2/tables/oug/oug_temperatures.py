@@ -26,7 +26,7 @@ class RealTemperatureVector(RealTableVector):
         return self._write_f06_transient_block(words, header, pageStamp, page_num, f)
 
 
-class RealTemperatureObject(ScalarObject):  # approach_code=1, sort_code=0, thermal=1
+class RealTemperature(ScalarObject):  # approach_code=1, sort_code=0, thermal=1
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
         self.gridTypes = {}

@@ -1,6 +1,6 @@
 #pylint: disable=C0301,C0103,C0111
-from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import RealSPCForcesObject  # ,ComplexSPCForcesObject
-from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import RealMPCForcesObject  # ,ComplexMPCForcesObject
+from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import RealSPCForces  # ,ComplexSPCForcesObject
+from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import RealMPCForces  # ,ComplexMPCForcesObject
 
 
 class OQG(object):
@@ -31,7 +31,7 @@ class OQG(object):
             self.spcForces[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            spc = RealSPCForcesObject(data_code, is_sort1, isubcase, dt)
+            spc = RealSPCForces(data_code, is_sort1, isubcase, dt)
             spc.add_f06_data(data, transient)
             self.spcForces[isubcase] = spc
         self.iSubcases.append(isubcase)
@@ -53,7 +53,7 @@ class OQG(object):
             self.mpcForces[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            mpc = RealMPCForcesObject(data_code, is_sort1, isubcase, dt)
+            mpc = RealMPCForces(data_code, is_sort1, isubcase, dt)
             mpc.add_f06_data(data, transient)
             self.mpcForces[isubcase] = mpc
         self.iSubcases.append(isubcase)

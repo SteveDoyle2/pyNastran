@@ -56,7 +56,7 @@ class ComplexDisplacementVector(ComplexTableVector):
         return self._write_f06_transient_block(words, header, pageStamp, page_num, f, is_mag_phase)
 
 
-class RealDisplacementObject(RealTableObject):  # approach_code=1, thermal=0
+class RealDisplacement(RealTableObject):  # approach_code=1, thermal=0
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
@@ -210,7 +210,7 @@ class RealDisplacementObject(RealTableObject):  # approach_code=1, thermal=0
         return self._write_f06_block(words, header, pageStamp, page_num, f)
 
 
-class ComplexDisplacementObject(ComplexTableObject):  # approach_code=1, sort_code=0, thermal=0
+class ComplexDisplacement(ComplexTableObject):  # approach_code=1, sort_code=0, thermal=0
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 

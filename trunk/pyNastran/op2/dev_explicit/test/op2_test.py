@@ -65,7 +65,7 @@ def main():
 
     delete_f06 = True
     saveCases = True
-    regenerate = True
+    regenerate = False
     stopOnFailure = False
     getSkipCards = False
 

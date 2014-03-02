@@ -321,7 +321,7 @@ class FortranFile(object):
         Prints data, but doesn't move the cursor
 
         :param self:   the object pointer
-        :param nBytes: the number of bytes to print the data specs on
+        :param nBytes: the number of bytes to show the data specs on
         :returns msg:  ints/floats/strings of the next nBytes
           (handles poorly sized nBytes; uncrashable :) )
 
@@ -337,7 +337,7 @@ class FortranFile(object):
         Prints data, but doesn't move the cursor
 
         :param self:   the object pointer
-        :param nBytes: the number of bytes to print the data specs on
+        :param nBytes: the number of bytes to show the data specs on
         :returns msg:  ints/floats/strings of the next nBytes
          (handles poorly sized nBytes; uncrashable :) )
 

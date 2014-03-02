@@ -105,7 +105,7 @@ class RealSolidVector(OES_Object):
 
         #self.data[self.itime, self.ielement-1, self.inode, :] = [oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
 
-        print('eid=%i node_id=%i exx=%s' % (eid, node_id, str(oxx)))
+        #print('eid=%i node_id=%i exx=%s' % (eid, node_id, str(oxx)))
         self.element_node[self.itotal, :] = [eid, node_id]
         #self.element_node[self.ielement-1, self.inode-1, :] = [eid, node_id]
         self.itotal += 1
@@ -300,7 +300,7 @@ class RealSolidStrainVector(RealSolidVector, StrainObject):
         return tetra_msg, penta_msg, hexa_msg
 
 
-class RealSolidStressObject(StressObject):
+class RealSolidStress(StressObject):
     """
     ::
 
@@ -791,7 +791,7 @@ class RealSolidStressObject(StressObject):
                         '', ozz, txz, o3, v[2, 1], v[2, 2], v[2, 0]))
 
 
-class RealSolidStrainObject(StrainObject):
+class RealSolidStrain(StrainObject):
     """
     ::
 
@@ -839,7 +839,7 @@ class RealSolidStrainObject(StrainObject):
         self.nonlinear_factor = dt
         if is_sort1:
             if dt is not None:
-                print("dt =", dt)
+                #print("dt =", dt)
                 self.add_node = self.add_node_sort1
                 self.add_eid = self.add_eid_sort1
         else:

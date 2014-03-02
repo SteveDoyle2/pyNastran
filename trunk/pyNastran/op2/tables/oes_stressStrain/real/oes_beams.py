@@ -5,7 +5,7 @@ from .oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 
-class RealBeamStressObject(StressObject):
+class RealBeamStress(StressObject):
     """
     ::
 
@@ -259,7 +259,7 @@ class RealBeamStressObject(StressObject):
         return page_num - 1
 
 
-class RealBeamStrainObject(StrainObject):
+class RealBeamStrain(StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StrainObject.__init__(self, data_code, isubcase)
         self.eType = 'CBEAM'  # {} # 'CBEAM/CONBEAM'

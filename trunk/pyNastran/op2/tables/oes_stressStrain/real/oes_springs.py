@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from .oes_objects import StressObject, StrainObject
 
 
-class RealCelasStressObject(StressObject):
+class RealCelasStress(StressObject):
     """
     ::
 
@@ -124,7 +124,7 @@ class RealCelasStressObject(StressObject):
         return page_num
 
 
-class RealCelasStrainObject(StrainObject):
+class RealCelasStrain(StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StrainObject.__init__(self, data_code, isubcase)
         self.eType = {}
@@ -232,7 +232,7 @@ class RealCelasStrainObject(StrainObject):
         self.strain[dt][eid] = strain
 
 
-class NonlinearSpringStressObject(StressObject):
+class NonlinearSpringStress(StressObject):
     """
     """
     def __init__(self, data_code, is_sort1, isubcase, dt=None):

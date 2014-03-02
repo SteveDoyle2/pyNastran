@@ -1,12 +1,12 @@
 #pylint: disable=C0301,C0111,C0103
-from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RealRodStressObject, RealRodStrainObject
-from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStressObject, RealBarStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RealRodStress, RealRodStrain
+from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStress, RealBarStrain
 #from pyNastran.op2.tables.oes_stressStrain.real.oes_beams   import beamStressObject
 #from pyNastran.op2.tables.oes_stressStrain.real.oes_shear   import shearStressObject
-from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStressObject, RealSolidStrainObject
-from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateStressObject, RealPlateStrainObject
-from pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates import CompositePlateStressObject, CompositePlateStrainObject
-from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealCelasStressObject, RealCelasStrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStress, RealSolidStrain
+from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateStress, RealPlateStrain
+from pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates import RealCompositePlateStress, RealCompositePlateStrain
+from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealCelasStress, RealCelasStrain
 #strain...
 
 
@@ -65,7 +65,7 @@ class OES(object):
             self.rodStress[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            self.rodStress[isubcase] = RealRodStressObject(data_code, is_sort1, isubcase, transient)
+            self.rodStress[isubcase] = RealRodStress(data_code, is_sort1, isubcase, transient)
             self.rodStress[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
@@ -77,7 +77,7 @@ class OES(object):
             self.rodStrain[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            self.rodStrain[isubcase] = RealRodStrainObject(data_code, is_sort1, isubcase, transient)
+            self.rodStrain[isubcase] = RealRodStrain(data_code, is_sort1, isubcase, transient)
             self.rodStrain[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
@@ -89,7 +89,7 @@ class OES(object):
             self.celasStrain[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            self.celasStrain[isubcase] = RealCelasStressObject(data_code, is_sort1, isubcase, transient)
+            self.celasStrain[isubcase] = RealCelasStress(data_code, is_sort1, isubcase, transient)
             self.celasStrain[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
@@ -101,7 +101,7 @@ class OES(object):
             self.celasStrain[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            self.celasStrain[isubcase] = RealCelasStrainObject(data_code, is_sort1, isubcase, transient)
+            self.celasStrain[isubcase] = RealCelasStrain(data_code, is_sort1, isubcase, transient)
             self.celasStrain[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
@@ -215,7 +215,7 @@ class OES(object):
             self.barStress[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            self.barStress[isubcase] = RealBarStressObject(data_code, is_sort1, isubcase, dt)
+            self.barStress[isubcase] = RealBarStress(data_code, is_sort1, isubcase, dt)
             self.barStress[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
@@ -228,7 +228,7 @@ class OES(object):
             self.barStrain[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            self.barStrain[isubcase] = RealBarStrainObject(data_code, is_sort1, isubcase, dt)
+            self.barStrain[isubcase] = RealBarStrain(data_code, is_sort1, isubcase, dt)
             self.barStrain[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
@@ -374,10 +374,10 @@ class OES(object):
 
         if is_strain:
             dictA = self.compositePlateStrain
-            class_obj = CompositePlateStrainObject
+            class_obj = RealCompositePlateStrain
         else:
             dictA = self.compositePlateStress
-            class_obj = CompositePlateStressObject
+            class_obj = RealCompositePlateStress
 
         if isubcase in dictA:
             dictA[isubcase].add_f06_data(data, transient, element_name)
@@ -413,7 +413,7 @@ class OES(object):
             self.plateStress[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            self.plateStress[isubcase] = RealPlateStressObject(data_code, is_sort1, isubcase, transient)
+            self.plateStress[isubcase] = RealPlateStress(data_code, is_sort1, isubcase, transient)
             self.plateStress[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
@@ -426,7 +426,7 @@ class OES(object):
         else:
             is_sort1 = True
             assert 'nonlinear_factor' in data_code
-            self.plateStrain[isubcase] = RealPlateStrainObject(data_code, is_sort1, isubcase, transient)
+            self.plateStrain[isubcase] = RealPlateStrain(data_code, is_sort1, isubcase, transient)
             self.plateStrain[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
@@ -514,7 +514,7 @@ class OES(object):
         else:
             is_sort1 = True
             assert 'nonlinear_factor' in data_code
-            self.plateStress[isubcase] = RealPlateStressObject(data_code, is_sort1, isubcase, transient)
+            self.plateStress[isubcase] = RealPlateStress(data_code, is_sort1, isubcase, transient)
             self.plateStress[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
@@ -529,7 +529,7 @@ class OES(object):
             self.plateStrain[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            self.plateStrain[isubcase] = RealPlateStrainObject(data_code, is_sort1, isubcase, transient)
+            self.plateStrain[isubcase] = RealPlateStrain(data_code, is_sort1, isubcase, transient)
             self.plateStrain[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
@@ -568,17 +568,17 @@ class OES(object):
 
         if is_strain:
             dictA = self.plateStrain
-            class_obj = RealPlateStrainObject
+            class_obj = RealPlateStrain
         else:
             dictA = self.plateStress
-            class_obj = RealPlateStressObject
+            class_obj = RealPlateStress
 
         if isubcase in self.plateStress:
             self.plateStress[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
             assert 'nonlinear_factor' in data_code
-            self.plateStress[isubcase] = RealPlateStressObject(data_code, is_sort1, isubcase, transient)
+            self.plateStress[isubcase] = RealPlateStress(data_code, is_sort1, isubcase, transient)
             self.plateStress[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
@@ -681,7 +681,7 @@ class OES(object):
             self.solidStress[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            self.solidStress[isubcase] = RealSolidStressObject(data_code, is_sort1, isubcase, transient)
+            self.solidStress[isubcase] = RealSolidStress(data_code, is_sort1, isubcase, transient)
             self.solidStress[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
@@ -694,7 +694,7 @@ class OES(object):
             self.solidStrain[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            self.solidStrain[isubcase] = RealSolidStrainObject(data_code, is_sort1, isubcase, transient)
+            self.solidStrain[isubcase] = RealSolidStrain(data_code, is_sort1, isubcase, transient)
             self.solidStrain[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 

@@ -5,7 +5,7 @@ from .oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 
-class BushStressObject(StressObject):
+class BushStress(StressObject):
 
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
         StressObject.__init__(self, data_code, isubcase)
@@ -133,7 +133,7 @@ class BushStressObject(StressObject):
         return page_num - 1
 
 
-class BushStrainObject(StrainObject):
+class BushStrain(StrainObject):
     """
     """
     def __init__(self, data_code, is_sort1, isubcase, dt=None):
