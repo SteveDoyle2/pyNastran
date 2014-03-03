@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from struct import Struct, unpack
+from struct import Struct
 
 
 class RealForces(object):
@@ -81,21 +81,20 @@ class RealForces(object):
         format1 = bytes(format1)
 
         n = 0
+        s = Struct(format1)
         nelements = len(self.data) // 12  # 3*4
         for i in xrange(nelements):
             edata = self.data[n:n+12]
-            out = unpack(format1, edata)
+            out = s.unpack(edata)
             if self.make_op2_debug:
                 self.op2_debug.write('OEF_Rod - %s\n' % (str(out)))
-            (eid, axial, torque) = out
-            eid2 = extract(eid, dt)
+            (eid_device, axial, torque) = out
+            eid = extract(eid_device, dt)
             #print "eType=%s" %(eType)
 
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
-            #eid = self.obj.add_new_eid(out)
-            self.obj.add(dt, eid2, axial, torque)
+            self.obj.add(dt, eid, axial, torque)
             n += 12
-            #print "len(data) = ",len(self.data)
         self.data = self.data[n:]
         #print self.rodForces
 
@@ -106,11 +105,12 @@ class RealForces(object):
         format1 = bytes(format1)
         ntotal = 12  #   # 3*4
         n = 0
+        s = Struct(format1)
         nelements = len(self.data) // 12
         for i in xrange(nelements):
             edata = self.data[n:n+12]
 
-            out = unpack(format1, edata)
+            out = s.unpack(edata)
             if self.make_op2_debug:
                 self.op2_debug.write('OEF_CVisc - %s\n' % (str(out)))
             (eid_device, axial, torque) = out
@@ -119,7 +119,6 @@ class RealForces(object):
 
             dataIn = [eid, axial, torque]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
-            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             n += ntotal
         self.data = self.data[n:]
@@ -134,20 +133,22 @@ class RealForces(object):
         formatAll = bytes(formatAll)
 
         n = 0
+        s1 = Struct(format1)
+        s2 = Struct(formatAll)
         nelements = len(self.data) // 400  # 1+(10-1)*11=100 ->100*4 = 400
         for i in xrange(nelements):
             #print "eType=%s" %(eType)
 
             edata = self.data[n:n+4]
-            eid, = unpack(format1, edata)
-            eid2 = extract(eid, dt)
+            eid_device, = s1.unpack(edata)
+            eid = extract(eid_device, dt)
             n += 4
 
             for i in xrange(11):
                 edata = self.data[n:n+36]
                 n += 36
 
-                out = unpack(formatAll, edata)
+                out = s2.unpack(edata)
                 if self.make_op2_debug:
                     self.op2_debug.write('OEF_Beam - %s\n' % (str(out)))
                 (nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq) = out
@@ -155,7 +156,7 @@ class RealForces(object):
                 #print "nid = ",nid
                 #print "sd = ",sd
 
-                dataIn = [eid2, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
+                dataIn = [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
                 #print "%s        " %(self.get_element_type(self.element_type)),dataIn
                 #eid = self.obj.add_new_eid(out)
                 if i == 0:  # isNewElement:
@@ -175,19 +176,22 @@ class RealForces(object):
         format1 += '16f'
         format1 = bytes(format1)
         ntotal = 68  # 17*4
+        s = Struct(format1)
         nelements = len(self.data) // 68
         for i in xrange(nelements):
             edata = self.data[n:n+68]
 
-            out = unpack(format1, edata)
+            out = s.unpack(edata)
             if self.make_op2_debug:
                 self.op2_debug.write('OEF_Shear - %s\n' % (str(out)))
-            (eid, f41, f21, f12, f32, f23, f43, f34, f14, kf1,
-                s12, kf2, s23, kf3, s34, kf4, s41) = out
-            eid2 = extract(eid, dt)
+            (eid_device,
+             f41, f21, f12, f32, f23, f43, f34, f14, kf1,
+             s12, kf2, s23, kf3, s34, kf4, s41) = out
+            eid = extract(eid_device, dt)
             #print "eType=%s" %(eType)
 
-            dataIn = [eid2, f41, f21, f12, f32, f23, f43, f34,
+            dataIn = [eid,
+                      f41, f21, f12, f32, f23, f43, f34,
                       f14, kf1, s12, kf2, s23, kf3, s34, kf4, s41]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
@@ -203,20 +207,21 @@ class RealForces(object):
         format1 = bytes(format1)
 
         n = 0
+        s = Struct(format1)
         nelements = len(self.data) // 8 # 2*4
         for i in xrange(nelements):
             edata = self.data[n:n+8]
+            n += 8
 
-            out = unpack(format1, edata)
+            out = s.unpack(edata)
             if self.make_op2_debug:
                 self.op2_debug.write('OEF_Spring - %s\n' % (str(out)))
-            (eid, force) = out
-            eid2 = extract(eid, dt)
+            (eid_device, force) = out
+            eid = extract(eid_device, dt)
             #print "eType=%s" %(eType)
 
-            dataIn = [eid2, force]
+            dataIn = [eid, force]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
-            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
         self.data = self.data[n:]
         #print self.springForces
@@ -229,17 +234,18 @@ class RealForces(object):
 
         ntotal = 36  # 9*4
         n = 0
+        s = Struct(format1)
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):
             edata = self.data[n:n+36]
 
-            out = unpack(format1, edata)
+            out = s.unpack(edata)
             if self.make_op2_debug:
                 self.op2_debug.write('OEF_CBar - %s\n' % (str(out)))
-            (eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq) = out
-            eid2 = extract(eid, dt)
+            (eid_device, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq) = out
+            eid = extract(eid_device, dt)
 
-            dataIn = [eid2, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
+            dataIn = [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
             #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
@@ -254,12 +260,13 @@ class RealForces(object):
         format1 = bytes(format1)
 
         n = 0
+        s = Struct(format1)
         ntotal = 32  # 8*4
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):
             edata = self.data[n:n+32]
 
-            out = unpack(format1, edata)
+            out = s.unpack(edata)
             if self.make_op2_debug:
                 self.op2_debug.write('OEF_CBar100 - %s\n' % (str(out)))
             (eid_device, sd, bm1, bm2, ts1, ts2, af, trq) = out
@@ -268,7 +275,6 @@ class RealForces(object):
 
             data_in = [eid, sd, bm1, bm2, ts1, ts2, af, trq]
             #print "%s" %(self.get_element_type(self.element_type)), data_in
-            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, data_in)
             n += 32
         self.data = self.data[n:]
@@ -282,19 +288,20 @@ class RealForces(object):
 
         n = 0
         ntotal = 36 # 9*4
+        s = Struct(format1)
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):
             edata = self.data[n:n+36]
 
-            out = unpack(format1, edata)
+            out = s.unpack(edata)
             if self.make_op2_debug:
                 self.op2_debug.write('OEF_Plate-%s - %s\n' % (self.element_type, str(out)))
-            (eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
-            eid2 = extract(eid, dt)
+            (eid_device, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
+            eid = extract(eid_device, dt)
             #print "eType=%s" %(eType)
 
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
-            self.obj.add(dt, eid2, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
+            self.obj.add(dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
             n += ntotal
         self.data = self.data[n:]
         #print self.plateForces
@@ -317,29 +324,31 @@ class RealForces(object):
 
         n = 0
         ntotal = 44 + nnodes * 36
+        s1 = Struct(format1 + allFormat)
+        s2 = Struct(allFormat)
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):
             edata = self.data[n:n+44]
 
-            out = unpack(format1 + allFormat, edata)
+            out = s1.unpack(edata)
             if self.make_op2_debug:
                 self.op2_debug.write('OEF_Plate2-%s - %s\n' % (self.element_type, str(out)))
-            (eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
+            (eid_device, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
             #term= 'CEN\'
             #print "eType=%s" %(eType)
-            eid2 = extract(eid, dt)
+            eid = extract(eid_device, dt)
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
-            self.obj.add_new_element(eid2, dt, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
+            self.obj.add_new_element(eid, dt, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
             n += 44
             for i in xrange(nnodes):
                 edata = self.data[n:n+36]
-                out = unpack(allFormat, edata)
+                out = s2.unpack(edata)
                 if self.make_op2_debug:
                     self.op2_debug.write('%s\n' % (str(out)))
                 #(nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty) = out
                 #dataIn = [nid,mx,my,mxy,bmx,bmy,bmxy,tx,ty]
                 #print "***%s    " %(self.get_element_type(self.element_type)),dataIn
-                self.obj.add(eid2, dt, *out)
+                self.obj.add(eid, dt, *out)
                 n += 36
         self.data = self.data[n:]
         #print self.plateForces2
@@ -356,9 +365,10 @@ class RealForces(object):
         n = 0
         ntotal = 28  # 7*4
         nelements = len(self.data) // ntotal
+        s = Struct(format1)
         for i in xrange(nelements):
             edata = self.data[n:n+ntotal]
-            out = unpack(format1, edata)
+            out = s.unpack(edata)
             if self.make_op2_debug:
                 self.op2_debug.write('OEF_CONEAX-35 - %s\n' % (str(out)))
             (eid_device, hopa, bmu, bmv, tm, su, sv) = out
@@ -382,10 +392,11 @@ class RealForces(object):
         n = 0
         ntotal = 36 # 9*4
         nelements = len(self.data) // ntotal
+        s = Struct(format1)
         for i in xrange(nelements):
             edata = self.data[n:n+36]
 
-            out = unpack(format1, edata)
+            out = s.unpack(edata)
             if self.make_op2_debug:
                 self.op2_debug.write('OEF_CGAP-38 - %s\n' % (str(out)))
             (eid_device, fx, sfy, sfz, u, v, w, sv, sw) = out
@@ -408,11 +419,12 @@ class RealForces(object):
 
         n = 0
         ntotal = 60  # 15*4
+        s = Struct(format1)
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):
             edata = self.data[n:n+ntotal]
 
-            out = unpack(format1, edata)
+            out = s.unpack(edata)
             if self.make_op2_debug:
                 self.op2_debug.write('OEF_BEND-69 - %s\n' % (str(out)))
             (eid_device, nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
@@ -420,10 +432,10 @@ class RealForces(object):
             eid = extract(eid_device, dt)
             #print "eType=%s" % (eType)
 
-            data_in = [eid, nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
-                            nidB, bm1B, bm2B, ts1B, ts2B, afB, trqB]
+            data_in = [eid,
+                       nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
+                       nidB, bm1B, bm2B, ts1B, ts2B, afB, trqB]
             #print "%s" %(self.get_element_type(self.element_type)), data_in
-            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, data_in)
             n += ntotal
         self.data = self.data[n:]
@@ -435,24 +447,26 @@ class RealForces(object):
         format1 += '8s7f'
         format1 = bytes(format1)
 
-        while len(self.data) >= 40:  # 10*4
-            eData = self.data[0:40]
-            self.data = self.data[40:]
+        n = 0
+        s = Struct(format1)
+        ntotal = 40
+        nelements = len(self.data) // ntotal
+        for i in xrange(nelements):
+            eData = self.data[n:n+40]
+            n += 40
             #print "len(data) = ",len(eData)
 
-            out = unpack(format1, eData)
+            out = s.unpack(eData)
             if self.make_op2_debug:
                 self.op2_debug.write('OEF_PentaPressure-%s %s\n' % (self.element_type, str(out)))
-            (eid, eName, ax, ay, az, vx, vy, vz, pressure) = out
-            eid2 = extract(eid, dt)
+            (eid_device, eName, ax, ay, az, vx, vy, vz, pressure) = out
+            eid = extract(eid_device, dt)
             #print "eType=%s" %(eType)
 
-            dataIn = [eid2, eName, ax, ay, az, vx, vy, vz, pressure]
+            dataIn = [eid, eName, ax, ay, az, vx, vy, vz, pressure]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
-            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
-        #self.data = self.data[n:]
+        self.data = self.data[n:]
         #print self.pentaPressureForces
 
     def OEF_CBush(self):  # 102-CBUSH
@@ -463,11 +477,12 @@ class RealForces(object):
 
         n = 0
         ntotal = 28 # 7*4
+        s = Struct(format1)
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):
             edata = self.data[n:n+28]
 
-            out = unpack(format1, edata)
+            out = s.unpack(edata)
             if self.make_op2_debug:
                 self.op2_debug.write('OEF_CBUSH-102 - %s\n' % (str(out)))
             (eid_device, fx, fy, fz, mx, my, mz) = out
@@ -497,27 +512,31 @@ class RealForces(object):
         format1 = bytes(format1)
         formatAll = bytes(formatAll)
 
-        n = 16 + 32 * nNodes
-        while len(self.data) >= n:
-            eData = self.data[0:16]  # 8*4
-            self.data = self.data[16:]
+        n = 0
+        s1 = Struct(format1)
+        s2 = Struct(formatAll)
+        ntotal = 16 + 32 * nNodes
+        nelements = len(self.data) // ntotal
+        for i in xrange(nelements):
+            eData = self.data[n:n+16]  # 8*4
+            n += 16
 
-            out = unpack(format1, eData)
+            out = s1.unpack(format1, eData)
             if self.make_op2_debug:
                 self.op2_debug.write('OEF_Force_VU-191 - %s\n' % (str(out)))
-            (eid, parent, coord, icord) = out
+            (eid_device, parent, coord, icord) = out
 
-            eid2 = extract(eid, dt)
-            dataIn = [eid2, parent, coord, icord]
+            eid = extract(eid_device, dt)
+            dataIn = [eid, parent, coord, icord]
 
             forces = []
             for i in xrange(nNodes):
-                eData = self.data[0:32]  # 8*4
-                self.data = self.data[32:]
+                eData = self.data[n:n+32]  # 8*4
+                n += 32
                 #print "i=%s len(data)=%s" %(i,len(eData))
-                out = unpack(formatAll, eData)
+                out = s2.unpack(eData)
                 if self.make_op2_debug:
-                    self.op2_debug.write('%s\n' % (str(out)))
+                    self.op2_debug.write('%s\n' % str(out))
                 forces.append(out)
             dataIn.append(forces)
             #eType = a+b+c+d+e+f+g+h
@@ -525,9 +544,8 @@ class RealForces(object):
 
             #dataIn = [vugrid,posit,forceX,shearY,shearZ,torsion,bendY,bendZ]
             #print "force %s" %(self.get_element_type(self.element_type)),dataIn
-            #eid = self.obj.add_new_eid(out)
             self.obj.add(nNodes, dt, dataIn)
-        #self.data = self.data[n:]
+        self.data = self.data[n:]
 
     def OEF_Force_VUTRIA(self):  # 189-VUQUAD,190-VUTRIA
         dt = self.nonlinear_factor
@@ -546,25 +564,27 @@ class RealForces(object):
         formatAll = 'i3f3i5fi'
         format1 = bytes(format1)
         formatAll = bytes(formatAll)
-        n = 24 + 52 * nNodes
+        ntotal = 24 + 52 * nNodes
+        n = 0
         s1 = Struct(format1)
         s2 = Struct(formatAll)
-        while len(self.data) >= n:
-            eData = self.data[0:24]  # 6*4
-            self.data = self.data[24:]
+        nelements = len(self.data) // ntotal
+        for i in xrange(nelements):
+            eData = self.data[n:n+24]  # 6*4
+            n += 24
 
             out = s1.unpack(eData)
             if self.make_op2_debug:
                 self.op2_debug.write('OEF_Force_%s-%s - %s\n' % (eType, self.element_type, str(out)))
-            (eid, parent, coord, icord, theta, _) = out
+            (eid_device, parent, coord, icord, theta, _) = out
 
-            eid2 = extract(eid, dt)
-            dataIn = [eid2, parent, coord, icord, theta]
+            eid = extract(eid_device, dt)
+            dataIn = [eid, parent, coord, icord, theta]
 
             forces = []
             for i in xrange(nNodes):
-                eData = self.data[0:52]  # 13*4
-                self.data = self.data[52:]
+                eData = self.data[n:n+52]  # 13*4
+                n += 52
                 #print "i=%s len(data)=%s" %(i,len(eData))
                 out = s2.unpack(eData)
                 if self.make_op2_debug:
@@ -574,12 +594,10 @@ class RealForces(object):
                 out2 = (vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx)
                 forces.append(out2)
             dataIn.append(forces)
-            #eType = a+b+c+d+e+f+g+h
             #print "eType=%s" %(eType)
 
             #dataIn = [vugrid,mfx,mfy,mfxy,a,b,c,bmx,bmy,bmxy,syz,szx,d]
             #print "force %s" %(self.get_element_type(self.element_type)),dataIn
-            #eid = self.obj.add_new_eid(out)
             self.obj.add(nNodes, dt, dataIn)
 
         #self.data = self.data[n:]
