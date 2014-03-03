@@ -1,4 +1,4 @@
-#pylint disable=W0612,C0301
+#pylint disable=W0612,C0301,C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from struct import Struct
@@ -68,21 +68,21 @@ class ThermalElements(object):
         format1 = bytes(format1)
 
         s1 = Struct(format1)
-        while len(self.data) >= 32:  # 8*4
-            eData = self.data[0:32]
-            self.data = self.data[32:]
-            #print "len(data) = ",len(eData)
+        n = 0
+        ntotal = 32
+        nelements = len(self.data) // ntotal
+        for i in xrange(nelements):
+            eData = self.data[n:n+32]
+            n += ntotal
 
             out = s1.unpack(eData)
-            (eid, eType, fApplied, freeConv, forceConv, fRad, fTotal) = out
-            eid2 = extract(eid, dt)
-            #print "eType=%s" %(eType)
+            (eid_device, eType, fApplied, freeConv, forceConv, fRad, fTotal) = out
+            eid = extract(eid_device, dt)
 
-            dataIn = [eid2, eType, fApplied, freeConv, forceConv, fRad, fTotal]
+            dataIn = [eid, eType, fApplied, freeConv, forceConv, fRad, fTotal]
             #print "heatFlux %s" %(self.get_element_type(self.element_type)),dataIn
-            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
+        self.data = self.data[n:]
         #print(self.thermalLoad_CHBDY)
 
     def OEF_CONV(self):  # [110]  CONV
@@ -102,19 +102,22 @@ class ThermalElements(object):
             #eid = self.nonlinear_factor
         format1 = bytes(format1)
 
+        n = 0
         s1 = Struct(format1)
-        while len(self.data) >= 16:  # 4*4
-            eData = self.data[0:16]
-            self.data = self.data[16:]
+        ntotal = 16
+        nelements = len(self.data) // ntotal
+        for i in xrange(nelements):
+            eData = self.data[n:n+16]
             #print "len(data) = ",len(eData)
 
             out = s1.unpack(eData)
-            (eid, cntlNode, freeConv, freeConvK) = out
-            eid2 = extract(eid, dt)
+            (eid_device, cntlNode, freeConv, freeConvK) = out
+            eid = extract(eid_device, dt)
 
-            dataIn = [eid2, cntlNode, freeConv, freeConvK]
+            dataIn = [eid, cntlNode, freeConv, freeConvK]
             #print "heatFlux %s" %(self.get_element_type(self.element_type)),dataIn
             self.obj.add(dt, dataIn)
+        self.data = self.data[n:]
         #print(self.thermalLoad_CHBDY)
 
     def OEF_VU_Element(self):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
@@ -142,24 +145,25 @@ class ThermalElements(object):
             extract = self.extractSort2
             #eid = self.nonlinear_factor
 
-        n = 24 + 28 * nNodes
+        n = 0
+        ntotal = 24 + 28 * nNodes
         s1 = Struct(bytes(format1))
         s2 = Struct(bytes('i6f'))
-        while len(self.data) >= n:
-            eData = self.data[0:24]  # 6*4
-            self.data = self.data[24:]
-            #print "len(data) = ",len(eData)
+        nelements = len(self.data) // ntotal
+        for i in xrange(nelements):
+            eData = self.data[n:n+24]  # 6*4
+            n += 24
 
             out = s1.unpack(eData)
-            (eid, parent, coord, icord, theta, null) = out
+            (eid_device, parent, coord, icord, theta, null) = out
 
-            eid2 = extract(eid, dt)
-            dataIn = [eid2, parent, coord, icord, theta]
+            eid = extract(eid_device, dt)
+            dataIn = [eid, parent, coord, icord, theta]
 
             gradFluxes = []
             for i in xrange(nNodes):
-                eData = self.data[0:28]  # 7*4
-                self.data = self.data[28:]
+                eData = self.data[n:n+28]  # 7*4
+                n += 28
                 #print "i=%s len(data)=%s" %(i,len(eData))
                 out = s2.unpack(eData)
                 gradFluxes.append(out)
@@ -167,16 +171,16 @@ class ThermalElements(object):
             #eType = a+b+c+d+e+f+g+h
             #print "eType=%s" %(eType)
 
-            #dataIn = [eid2,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux]
+            #dataIn = [eid,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux]
             #print "heatFlux %s" %(self.get_element_type(self.element_type)),dataIn
-            #eid = self.obj.add_new_eid(out)
             self.obj.add(nNodes, dt, dataIn)
+        self.data = self.data[n:]
         #print self.thermalLoad_VU
 
     def OEF_VUBeam_Element(self):  # 191-VUBEAM
         dt = self.nonlinear_factor
         is_sort1 = self.is_sort1()
-        #print "num_wide = ",self.num_wide
+        #print "num_wide = ", self.num_wide
 
         if self.element_type in [191]:
             nNodes = 2
@@ -197,41 +201,39 @@ class ThermalElements(object):
         format1 = bytes(format1)
         formatAll = bytes(formatAll)
 
-        n = 16 + 28 * nNodes
+        n = 0
+        ntotal = 16 + 28 * nNodes
         s1 = Struct(format1)
         s2 = Struct(formatAll)
-        while len(self.data) >= n:
-            eData = self.data[0:16]  # 4*4
-            self.data = self.data[16:]
-            #print "len(data) = ",len(eData)
+        nelements = len(self.data) // ntotal
+        for i in xrange(nelements):
+            eData = self.data[n:n+16]  # 4*4
+            n += 16
 
             out = s1.unpack(eData)
-            (eid, parent, coord, icord) = out
+            (eid_device, parent, coord, icord) = out
 
-            eid2 = extract(eid, dt)
-            dataIn = [eid2, parent, coord, icord]
+            eid = extract(eid_device, dt)
+            dataIn = [eid, parent, coord, icord]
 
             gradFluxes = []
             for i in xrange(nNodes):
-                eData = self.data[0:28]  # 7*4
-                self.data = self.data[28:]
-                #print "i=%s len(data)=%s" %(i,len(eData))
+                eData = self.data[n:n+28]  # 7*4
+                n += 28
                 out = s2.unpack(eData)
                 gradFluxes.append(out)
             dataIn.append(gradFluxes)
-            #eType = a+b+c+d+e+f+g+h
-            #print "eType=%s" %(eType)
 
-            #dataIn = [eid2,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux]
+            #dataIn = [eid,eType,xGrad,yGrad,zGrad,xFlux,yFlux,zFlux]
             #print "heatFlux %s" %(self.get_element_type(self.element_type)),dataIn
-            #eid = self.obj.add_new_eid(out)
             self.obj.add(nNodes, dt, dataIn)
+        self.data = self.data[n:]
         #print self.thermalLoad_VUBeam
 
     def OEF_VU_3D_Element(self):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
         dt = self.nonlinear_factor
         is_sort1 = self.is_sort1()
-        #print "num_wide = ",self.num_wide
+        #print "num_wide = ", self.num_wide
 
         if self.element_type in [147]:
             nNodes = 4
@@ -256,24 +258,24 @@ class ThermalElements(object):
         format1 = bytes(format1)
         formatAll = bytes(formatAll)
 
-        n = 8 + 28 * nNodes
+        n = 0
+        ntotal = 8 + 28 * nNodes
         s1 = Struct(format1)
         s2 = Struct(formatAll)
-        while len(self.data) >= n:
-            eData = self.data[0:8]  # 2*4
-            self.data = self.data[8:]
-            #print "len(data) = ",len(eData)
+        nelements = len(self.data) // ntotal
+        for i in xrange(nelements):
+            eData = self.data[n:n+8]  # 2*4
+            n += 8
 
             out = s1.unpack(eData)
-            (eid, parent) = out
-
-            eid2 = extract(eid, dt)
-            dataIn = [eid2, parent]
+            (eid_device, parent) = out
+            eid = extract(eid_device, dt)
+            dataIn = [eid, parent]
 
             gradFluxes = []
             for i in xrange(nNodes):
-                eData = self.data[0:7 * 4]
-                self.data = self.data[7 * 4:]
+                eData = self.data[0:28]
+                n += 28
                 #print "i=%s len(data)=%s" %(i,len(eData))
                 out = s2.unpack(eData)
                 gradFluxes.append(out)
@@ -281,6 +283,7 @@ class ThermalElements(object):
 
             #print "heatFlux %s" %(self.get_element_type(self.element_type)),dataIn
             self.obj.add(nNodes, dt, dataIn)
+        self.data = self.data[n:]
         #print self.thermalLoad_VU_3D
 
     def OEF_1D(self):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69-BEND
@@ -308,13 +311,12 @@ class ThermalElements(object):
             edata = self.data[n:n+ntotal]
 
             out = s.unpack(edata)
-            (eid, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux) = out
-            eid2 = extract(eid, dt)
+            (eid_device, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux) = out
+            eid = extract(eid_device, dt)
             #print "eType=%s" %(eType)
 
-            dataIn = [eid2, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux]
+            dataIn = [eid, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux]
             #print "heatFlux %s" %(self.get_element_type(self.element_type)),dataIn
-            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             n += ntotal
         self.data = self.data[n:]
@@ -362,15 +364,13 @@ class ThermalElements(object):
             n += ntotal
 
             out = s.unpack(eData)
-            #print("len(out)=",len(out))
             # len=8
-            (eid, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux) = out[:8]
-            eid2 = extract(eid, dt)
+            (eid_device, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux) = out[:8]
+            eid = extract(eid_device, dt)
             #print "eType=%s" %(eType)
 
-            dataIn = [eid2, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux]
+            dataIn = [eid, eType, xGrad, yGrad, zGrad, xFlux, yFlux, zFlux]
             #print "heatFlux %s" %(self.get_element_type(self.element_type)),dataIn
-            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
-
+        self.data = self.data[n:]
         #print self.thermalLoad_2D_3D

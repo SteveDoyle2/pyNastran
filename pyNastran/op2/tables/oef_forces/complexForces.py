@@ -1,7 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-#import sys
-from struct import Struct, unpack
+from struct import Struct
 
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
@@ -17,12 +16,13 @@ class ComplexForces(object):
         is_magnitude_phase = self.is_magnitude_phase()
 
         n = 0
+        s = Struct(format1)
         ntotal = 20 # 5*4
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):
             edata = self.data[n:n+20]
-            out = unpack(format1, edata)
-            (eid, axialReal, torqueReal, axialImag, torqueImag) = out
+            out = s.unpack(edata)
+            (eid_device, axialReal, torqueReal, axialImag, torqueImag) = out
 
             if is_magnitude_phase:
                 axial = polar_to_real_imag(axialReal, axialImag)
@@ -30,11 +30,10 @@ class ComplexForces(object):
             else:
                 axial = complex(axialReal, axialImag)
                 torque = complex(torqueReal, torqueImag)
-            eid2 = extract(eid, dt)
+            eid = extract(eid_device, dt)
 
-            dataIn = [eid2, axial, torque]
+            dataIn = [eid, axial, torque]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
-            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             n += ntotal
         self.data = self.data[n:]
@@ -51,19 +50,21 @@ class ComplexForces(object):
         format1 = bytes(format1)
         formatAll = bytes(formatAll)
         n = 0
+        s1 = Struct(format1)
+        s2 = Struct(formatAll)
         ntotal = 708  # (16*11+1)*4 = 177*4
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):
             edata = self.data[n:n+4]
-            eidTemp, = unpack(format1, edata)
-            eid2 = extract(eidTemp, dt)
+            eid_device, = s1.unpack(edata)
+            eid = extract(eid_device, dt)
 
             n += 4
             for i in xrange(11):
                 edata = self.data[n:n+64]
                 n += 64
 
-                out = unpack(formatAll, edata)
+                out = s2.unpack(edata)
                 (nid, sd, bm1r, bm2r, ts1r, ts2r, afr, ttrqr, wtrqr,
                           bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi) = out
 
@@ -89,13 +90,13 @@ class ComplexForces(object):
 
                 #eid = self.obj.add_new_eid(out)
                 if i == 0:  # isNewElement:
-                    dataIn = [eid2, nid, sd, bm1, bm2,
+                    dataIn = [eid, nid, sd, bm1, bm2,
                               ts1, ts2, af, ttrq, wtrq]
                     #print "%s cNew   " %(self.get_element_type(self.element_type)),dataIn
                     self.obj.add_new_element(dt, dataIn)
                     #print
                 elif sd > 0.:
-                    dataIn = [eid2, nid, sd, bm1, bm2,
+                    dataIn = [eid, nid, sd, bm1, bm2,
                               ts1, ts2, af, ttrq, wtrq]
                     #print "%s cOld   " %(self.get_element_type(self.element_type)),dataIn
                     self.obj.add(dt, dataIn)
@@ -120,8 +121,9 @@ class ComplexForces(object):
             n += ntotal
 
             out = s.unpack(edata)
-            (eid, f41r, f21r, f12r, f32r, f23r, f43r, f34r, f14r, kf1r, s12r, kf2r, s23r, kf3r, s34r, kf4r, s41r,
-                  f41i, f21i, f12i, f32i, f23i, f43i, f34i, f14i, kf1i, s12i, kf2i, s23i, kf3i, s34i, kf4i, s41i) = out
+            (eid_device,
+             f41r, f21r, f12r, f32r, f23r, f43r, f34r, f14r, kf1r, s12r, kf2r, s23r, kf3r, s34r, kf4r, s41r,
+             f41i, f21i, f12i, f32i, f23i, f43i, f34i, f14i, kf1i, s12i, kf2i, s23i, kf3i, s34i, kf4i, s41i) = out
             if is_magnitude_phase:
                 f41r = polar_to_real_imag(f41r, f41i)
                 kf1 = polar_to_real_imag(kf1r, kf1i)
@@ -157,13 +159,12 @@ class ComplexForces(object):
                 f14 = complex(f14r, f14i)
                 s41 = complex(s41r, s41i)
 
-            eid2 = extract(eid, dt)
+            eid = extract(eid_device, dt)
             #print "eType=%s" % (eType)
 
-            data_in = [eid2, f41, f21, f12, f32, f23, f43, f34, f14,
-                             kf1, s12, kf2, s23, kf3, s34, kf4, s41]
+            data_in = [eid, f41, f21, f12, f32, f23, f43, f34, f14,
+                            kf1, s12, kf2, s23, kf3, s34, kf4, s41]
             #print "%s" %(self.get_element_type(self.element_type)), data_in
-            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, data_in)
         #print self.shearForces
 
@@ -176,11 +177,12 @@ class ComplexForces(object):
 
         n = 0
         ntotal = 12
+        s = Struct(format1)
         nelements = len(self.data) // 12  # 3*4
         for i in xrange(nelements):
             edata = self.data[n:n+12]
 
-            out = unpack(format1, edata)
+            out = s.unpack(edata)
             (eid_device, forceReal, forceImag) = out
             eid = extract(eid_device, dt)
             #print "eType=%s" %(eType)
@@ -192,7 +194,6 @@ class ComplexForces(object):
 
             dataIn = [eid, force]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
-            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             n += ntotal
         self.data = self.data[n:]
@@ -207,11 +208,12 @@ class ComplexForces(object):
 
         n = 0
         ntotal = 20  # 5*4
+        s = Struct(format1)
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):
             edata = self.data[n:n+20]
 
-            out = unpack(format1, edata)
+            out = s.unpack(edata)
             (eid_device, axialReal, torqueReal, axialImag, torqueImag) = out
             eid = extract(eid_device, dt)
             #print "eType=%s" %(eType)
@@ -225,7 +227,6 @@ class ComplexForces(object):
 
             dataIn = [eid, axial, torque]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
-            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             n += ntotal
         self.data = self.data[n:]
@@ -239,11 +240,12 @@ class ComplexForces(object):
         is_magnitude_phase = self.is_magnitude_phase()
         n = 0
         ntotal = 68  # 17*4
+        s = Struct(format1)
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):
             edata = self.data[n:n+68]
 
-            out = unpack(format1, edata)
+            out = s.unpack(edata)
             (eid_device, bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr,
                          bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi) = out
             eid = extract(eid_device, dt)
@@ -270,7 +272,6 @@ class ComplexForces(object):
 
             dataIn = [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
-            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             n += ntotal
         self.data = self.data[n:]
@@ -317,7 +318,6 @@ class ComplexForces(object):
 
             dataIn = [eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
-            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
             n += ntotal
         self.data = self.data[n:]
@@ -341,12 +341,14 @@ class ComplexForces(object):
         allFormat = bytes(allFormat)
         nTotal = 8 + (nNodes+1) * 68
         n = 0
+        s1 = Struct(format1 + allFormat)
+        s2 = Struct(allFormat)
         nelements = len(self.data) // nTotal
         for i in xrange(nelements):
             edata = self.data[n:n+76]
             n += 76
 
-            out = unpack(format1 + allFormat, edata)
+            out = s1.unpack(edata)
             (eid_device, term, nid, mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
                                     mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
             #term = 'CEN\'
@@ -379,7 +381,7 @@ class ComplexForces(object):
             for i in xrange(nNodes):  # .. todo:: fix crash...
                 edata = self.data[n:n+68]
                 n += 68
-                out = unpack(allFormat, edata)
+                out = s2.unpack(edata)
 
                 (nid, mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
                       mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
@@ -423,11 +425,12 @@ class ComplexForces(object):
             n += ntotal
 
             out = s.unpack(edata)
-            (eid, nidA, bm1Ar, bm2Ar, ts1Ar, ts2Ar, afAr, trqAr,
+            (eid_device,
+             nidA, bm1Ar, bm2Ar, ts1Ar, ts2Ar, afAr, trqAr,
              bm1Ai, bm2Ai, ts1Ai, ts2Ai, afAi, trqAi,
              nidB, bm1Br, bm2Br, ts1Br, ts2Br, afBr, trqBr,
              bm1Bi, bm2Bi, ts1Bi, ts2Bi, afBi, trqBi) = out
-            eid2 = extract(eid, dt)
+            eid = extract(eid_device, dt)
             #print "eType=%s" % (eType)
 
             if is_magnitude_phase:
@@ -457,10 +460,10 @@ class ComplexForces(object):
                 trqA = complex(trqAr, trqAi)
                 trqB = complex(trqBr, trqBi)
 
-            dataIn = [eid2, nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
+            dataIn = [eid,
+                      nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
                       nidB, bm1B, bm2B, ts1B, ts2B, afB, trqB]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
-            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
         #print self.bendForces
 
@@ -471,15 +474,18 @@ class ComplexForces(object):
         format1 = bytes(format1)
         is_magnitude_phase = self.is_magnitude_phase()
 
-        while len(self.data) >= 64:  # 16*4
-            eData = self.data[0:64]
-            self.data = self.data[64:]
-            #print "len(data) = ",len(eData)
+        s = Struct(format1)
+        n = 0
+        ntotal = 64
+        nelements = len(self.data) // ntotal
+        for i in xrange(nelements):
+            eData = self.data[n:n+64]
+            n += 64
 
-            out = unpack(format1, eData)
-            (eid, eName, axr, ayr, azr, vxr, vyr, vzr, pressure,
+            out = s.unpack(eData)
+            (eid_device, eName, axr, ayr, azr, vxr, vyr, vzr, pressure,
              axi, ayi, azi, vxi, vyi, vzi) = out
-            eid2 = extract(eid, dt)
+            eid = extract(eid_device, dt)
             eName = eName.decode('utf-8').strip()
             #print "eType=%s" %(eType)
 
@@ -498,12 +504,10 @@ class ComplexForces(object):
                 az = complex(azr, azi)
                 vz = complex(vzr, vzi)
 
-            dataIn = [eid2, eName, ax, ay, az, vx, vy, vz, pressure]
+            dataIn = [eid, eName, ax, ay, az, vx, vy, vz, pressure]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
-            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, dataIn)
-            #print "len(data) = ",len(self.data)
-        #self.data = self.data[n:]
+        self.data = self.data[n:]
         #print self.bendForces
 
     def OEF_CBush_alt(self):  # 102-CBUSH
@@ -515,11 +519,12 @@ class ComplexForces(object):
 
         n = 0
         ntotal = 52  # 13*4
+        s = Struct(format1)
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):
             edata = self.data[n:n+52]
 
-            out = unpack(format1, edata)
+            out = s.unpack(edata)
             (eid_device, fxr, fyr, fzr, mxr, myr, mzr,
                          fxi, fyi, fzi, mxi, myi, mzi) = out
             eid = extract(eid_device, dt)
@@ -542,7 +547,6 @@ class ComplexForces(object):
 
             data_in = [eid, fx, fy, fz, mx, my, mz]
             #print "%s" %(self.get_element_type(self.element_type)), data_in
-            #eid = self.obj.add_new_eid(out)
             self.obj.add(dt, data_in)
             n += ntotal
         self.data = self.data[n:]
@@ -562,24 +566,24 @@ class ComplexForces(object):
 
         formatAll = 'i13f'
         formatAll = bytes(formatAll)
-        n = 16 + 56 * nNodes
-        while len(self.data) >= n:
-            eData = self.data[0:16]  # 8*4
-            self.data = self.data[16:]
-            #print "len(data) = ",len(eData)
+        ntotal = 16 + 56 * nNodes
+        s1 = Struct(format1)
+        s2 = Struct(formatAll)
+        n = 0
+        nelements = len(self.data) // ntotal
+        for i in xrange(nelements):
+            eData = self.data[n:n+16]  # 8*4
 
-            out = unpack(format1, eData)
-            (eid, parent, coord, icord) = out
+            out = s1.unpack(eData)
+            (eid_device, parent, coord, icord) = out
 
-            eid2 = extract(eid, dt)
-            dataIn = [eid2, parent, coord, icord]
+            eid = extract(eid_device, dt)
+            dataIn = [eid, parent, coord, icord]
 
             forces = []
             for i in xrange(nNodes):
-                eData = self.data[0:56]  # 14*4
-                self.data = self.data[56:]
-                #print "i=%s len(data)=%s" %(i,len(eData))
-                out = unpack(formatAll, eData)
+                eData = self.data[n:n+56]  # 14*4
+                out = s2.unpack(eData)
                 [vugrid, posit, forceXr, shearYr, shearZr, torsionr, bendingYr, bendingZr,
                  forceXi, shearYi, shearZi, torsioni, bendingYi, bendingZi] = out
 
@@ -602,14 +606,12 @@ class ComplexForces(object):
                         shearZ, torsion, bendingY, bendingZ]
                 forces.append(out2)
             dataIn.append(forces)
-            #eType = a+b+c+d+e+f+g+h
             #print "eType=%s" %(eType)
 
             #dataIn = [vugrid,posit,forceX,shearY,shearZ,torsion,bendY,bendZ]
             #print "force %s" %(self.get_element_type(self.element_type)),dataIn
-            #eid = self.obj.add_new_eid(out)
             self.obj.add(nNodes, dt, dataIn)
-            #print "len(data) = ",len(self.data)
+        self.data = self.data[n:]
 
     def OEF_Force_VUTRIA_alt(self):  # 189-VUQUAD,190-VUTRIA
         dt = self.nonlinear_factor
@@ -628,24 +630,26 @@ class ComplexForces(object):
         formatAll = 'i3f3i5fi3f3i5fi'
         format1 = bytes(format1)
         formatAll = bytes(formatAll)
-        n = 24 + 100 * nNodes
-        while len(self.data) >= n:
-            eData = self.data[0:24]  # 6*4
-            self.data = self.data[24:]
-            #print "len(data) = ",len(eData)
+        n = 0
+        s1 = Struct(format1)
+        s2 = Struct(formatAll)
+        ntotal = 24 + 100 * nNodes
+        nelements = len(self.data) // ntotal
+        while len(self.data) >= ntotal:
+            eData = self.data[n:n+24]  # 6*4
+            n += 24
 
-            out = unpack(format1, eData)
-            (eid, parent, coord, icord, theta, _) = out
+            out = s1.unpack(eData)
+            (eid_device, parent, coord, icord, theta, _) = out
 
-            eid2 = extract(eid, dt)
-            dataIn = [eid2, parent, coord, icord, theta]
+            eid = extract(eid_device, dt)
+            dataIn = [eid, parent, coord, icord, theta]
 
             forces = []
             for i in xrange(nNodes):
-                eData = self.data[0:100]  # 13*4
-                self.data = self.data[100:]
-                #print "i=%s len(data)=%s" %(i,len(eData))
-                out = unpack(formatAll, eData)
+                eData = self.data[n:n+100]  # 13*4
+                n += 100
+                out = s2.unpack(eData)
                 [vugrid, mfxr, mfyr, mfxyr, a, b, c, bmxr, bmyr, bmxyr, syzr, szxr, d,
                  mfxi, mfyi, mfxyi, a, b, c, bmxi, bmyi, bmxyi, syzi, szxi, d] = out
 
@@ -667,16 +671,13 @@ class ComplexForces(object):
                     bmxy = complex(bmxyr, bmxyi)
                     syz = complex(syzr, syzi)
                     szx = complex(szxr, szxi)
-
                 out2 = [vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx]
                 forces.append(out2)
 
             dataIn.append(forces)
             #print "eType=%s" %(eType)
-
             #dataIn = [vugrid,mfxr,mfyr,mfxyr,bmxr,bmyr,bmxyr,syzr,szxr,
                              #mfxi,mfyi,mfxyi,bmxi,bmyi,bmxyi,syzi,szxi]
             #print "force %s" %(self.get_element_type(self.element_type)),dataIn
-            #eid = self.obj.add_new_eid(out)
             self.obj.add(nNodes, dt, dataIn)
-            #print "len(data) = ",len(self.data)
+        self.data = self.data[n:]
