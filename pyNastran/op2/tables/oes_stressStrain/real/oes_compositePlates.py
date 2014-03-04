@@ -85,8 +85,8 @@ class RealCompositePlateVector(OES_Object):
         #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
         self.data = zeros((self.ntimes, self.ntotal, 9), dtype='float32')
 
-    def add_new_eid(self, eType, dt, eid, nodeID, o11, o22, t12, t1z, t2z, angle, major, minor, ovm):
-        self.add_new_eid_sort1(eType, dt, eid, nodeID, o11, o22, t12, t1z, t2z, angle, major, minor, ovm)
+    def add_new_eid(self, eType, dt, eid, nodeID, layer, o11, o22, t12, t1z, t2z, angle, major, minor, ovm):
+        self.add_new_eid_sort1(eType, dt, eid, nodeID, layer, o11, o22, t12, t1z, t2z, angle, major, minor, ovm)
 
     def add_new_eid_sort1(self, eType, dt, eid, layer, o11, o22, t12, t1z, t2z, angle, major, minor, ovm):
         self.times[self.itime] = dt
@@ -455,7 +455,7 @@ class RealCompositePlateStress(StressObject):
         if dt not in self.o11:
             self.add_new_transient(dt)
         if eid in self.o11[dt]:
-            return self.add(dt, eid, o11, o22, t12, t1z, t2z, angle,
+            return self.add(dt, eid, layer, o11, o22, t12, t1z, t2z, angle,
                             majorP, minorP, ovm)
 
         assert eid not in self.o11[dt]
@@ -788,7 +788,7 @@ class RealCompositePlateStrain(StrainObject):
         """all points are located at the centroid"""
         #print "Composite Plate Strain add..."
         if eid in self.e11:
-            return self.add(dt, eid, e11, e22, e12, e1z, e2z, angle, majorP, minorP, evm)
+            return self.add(dt, eid, layer, e11, e22, e12, e1z, e2z, angle, majorP, minorP, evm)
         assert eid not in self.e11
         assert isinstance(eid, int)
         self.eType[eid] = eType

@@ -75,30 +75,30 @@ class ComplexRodStress(StressObject):
         self.axial[dt] = {}
         self.torsion[dt] = {}
 
-    def add_new_eid(self, dt, eid, out):
+    def add_new_eid(self, dt, eid, axial, torsion):
         #print "Rod Stress add..."
-        (axial, torsion) = out
+        #(axial, torsion) = out
         assert isinstance(eid, int)
         self.axial[eid] = axial
         self.torsion[eid] = torsion
 
-    def add_new_eid_sort1(self, dt, eid, out):
-        (axial, torsion) = out
+    def add_new_eid_sort1(self, dt, eid, axial, torsion):
+        #(axial, torsion) = out
 
         if dt not in self.axial:
             self.add_new_transient(dt)
         self.axial[dt][eid] = axial
         self.torsion[dt][eid] = torsion
 
-    def add_new_eid_sort2(self, eid, dt, out):
-        (axial, torsion) = out
+    def add_new_eid_sort2(self, eid, dt, axial, torsion):
+        #(axial, torsion) = out
 
         if dt not in self.axial:
             self.add_new_transient(dt)
         self.axial[dt][eid] = axial
         self.torsion[dt][eid] = torsion
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         f.write('ComplexRodStress write_f06 not implemented...\n')
         return page_num
         raise NotImplementedError()
@@ -228,15 +228,15 @@ class ComplexRodStrain(StrainObject):
         self.axial[self.dt] = {}
         self.torsion[self.dt] = {}
 
-    def add_new_eid(self, dt, eid, out):
-        (axial, torsion) = out
+    def add_new_eid(self, dt, eid, axial, torsion):
+        #(axial, torsion) = out
         assert eid >= 0
         #self.eType = self.eType
         self.axial[eid] = axial
         self.torsion[eid] = torsion
 
-    def add_new_eid_sort1(self, dt, eid, out):
-        (axial, torsion) = out
+    def add_new_eid_sort1(self, dt, eid, axial, torsion):
+        #(axial, torsion) = out
         assert eid >= 0
         #self.eType[eid] = self.element_type
         if dt not in self.axial:
@@ -253,7 +253,7 @@ class ComplexRodStrain(StrainObject):
         self.axial[dt][eid] = axial
         self.torsion[dt][eid] = torsion
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         return 'ComplexRodStrain write_f06 not implemented...', page_num
         raise NotImplementedError()
         if self.dt is not None:

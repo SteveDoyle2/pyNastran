@@ -206,7 +206,7 @@ class OES(OP2Common):
             n = self._read_oes1_4_sort1(data)
         else:
             msg = 'sort2 Type=%s num=%s' % (self.element_name, self.element_type)
-            return self._not_implemented_or_skip(data, msg)
+            n = self._not_implemented_or_skip(data, msg)
         return n
 
 
@@ -298,7 +298,6 @@ class OES(OP2Common):
                 obj_complex = ComplexRodStrain
 
                 #result_vector_name
-                #slot_vector
                 ComplexRodStrainVector = None
                 obj_vector_real = RealRodStrainVector
                 obj_vector_complex = ComplexRodStrainVector
@@ -348,7 +347,7 @@ class OES(OP2Common):
                 auto_return = self._create_oes_object2(nelements,
                                                        result_name, result_vector_name,
                                                        slot, slot_vector,
-                                                       obj_real, obj_vector_real)
+                                                       obj_complex, obj_vector_complex)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
@@ -426,10 +425,11 @@ class OES(OP2Common):
                         # (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
                         self.obj.add(dt, eid, out)
                     #print "eid=%i axial=%i torsion=%i" % (eid, axial, torsion)
-            elif self.format_code in [2, 3] and self.num_wide == 111:  # ???
-                ntotal = 444 # 44 + 10*40  (11 nodes)
-                msg = 'num_wide=%s' % self.num_wide
-                return self._not_implemented_or_skip(data, msg)
+            #elif self.format_code in [2, 3] and self.num_wide == 111:  # imag and random?
+                #ntotal = 444 # 44 + 10*40  (11 nodes)
+                #msg = 'num_wide=%s' % self.num_wide
+                #return self._not_implemented_or_skip(data, msg)
+                #return len(data)
             else:
                 msg = 'num_wide=%s' % self.num_wide
                 return self._not_implemented_or_skip(data, msg)
@@ -465,7 +465,6 @@ class OES(OP2Common):
             if self.format_code == 1 and self.num_wide == 4:  # real
                 ntotal = 16  # 4*4
                 nelements = len(data) // ntotal
-
                 auto_return = self._create_oes_object2(nelements,
                                                        result_name, result_vector_name,
                                                        slot, slot_vector,
@@ -488,11 +487,10 @@ class OES(OP2Common):
             elif self.format_code in [2, 3] and self.num_wide == 5:  # imag
                 ntotal = 20  # 4*5
                 nelements = len(data) // ntotal
-
                 auto_return = self._create_oes_object2(nelements,
                                                        result_name, result_vector_name,
                                                        slot, slot_vector,
-                                                       obj_real, obj_vector_real)
+                                                       obj_complex, obj_vector_complex)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
@@ -709,7 +707,7 @@ class OES(OP2Common):
             preline2 = ' ' * len(preline1)
             #print "_data_factor =", self._data_factor
             self._data_factor = nnodes_expected
-            if self.num_wide == numwide_real:
+            if self.format_code == 1 and self.num_wide == numwide_real:  # real
                 ntotal = 16 + 84 * nnodes_expected
                 nelements = len(data) // ntotal
                 auto_return = self._create_oes_object2(nelements,
@@ -769,7 +767,7 @@ class OES(OP2Common):
                                               aCos, bCos, cCos, pressure, svm)
                         n += 84
 
-            elif self.num_wide == numwide_imag:
+            elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # complex
                 ntotal = numwide_imag * 4
                 #nelements = len(data) / float(ntotal)
                 nelements = len(data) // ntotal
@@ -1024,7 +1022,7 @@ class OES(OP2Common):
                 auto_return = self._create_oes_object2(nelements,
                                                        result_name, result_vector_name,
                                                        slot, slot_vector,
-                                                       obj_real, obj_vector_real)
+                                                       obj_complex, obj_vector_complex)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
@@ -1088,9 +1086,12 @@ class OES(OP2Common):
                 elif self.element_type == 70:  # CTRIAR
                     result_vector_name = 'ctriar_stress'
                     slot_vector = self.ctriar_stress
-                elif self.element_type == 10:  # CTRIA6
+                elif self.element_type == 75:  # CTRIA6
                     result_vector_name = 'ctria6_stress'
                     slot_vector = self.ctria6_stress
+                elif self.element_type == 82:  # CTRIA6
+                    result_vector_name = 'cquadr_stress'
+                    slot_vector = self.cquadr_stress
                 elif self.element_type == 144:  # CQUAD4-bilinear
                     # there's no nead to separate this with centroidal strain
                     # because you can only have one in a given OP2
@@ -1115,9 +1116,12 @@ class OES(OP2Common):
                 elif self.element_type == 70:  # CTRIAR
                     result_vector_name = 'ctriar_strain'
                     slot_vector = self.ctriar_strain
-                elif self.element_type == 10:  # CTRIA6
-                    result_vector_name = 'ctria6_strain'
-                    slot_vector = self.ctria6_strain
+                elif self.element_type == 75:  # CTRIA6
+                    result_vector_name = 'ctria6_stress'
+                    slot_vector = self.ctria6_stress
+                elif self.element_type == 82: # CQUADR
+                    result_vector_name = 'cquadr_strain'
+                    slot_vector = self.cquadr_strain
                 elif self.element_type == 144: # CQUAD4-bilinear
                     # there's no nead to separate this with centroidal strain
                     # because you can only have one in a given OP2
@@ -1141,7 +1145,7 @@ class OES(OP2Common):
             etype = self.element_name
             #print "result_name =", result_name, result_vector_name
             gridC = 'CEN/%i' % nnodes
-            if self.num_wide == numwide_real:
+            if self.format_code == 1 and self.num_wide == numwide_real:  # real
                 ntotal = 4 * (2 + 17 * (nnodes + 1))
                 nelements = len(data) // ntotal
                 nlayers = 2 * nelements * (nnodes + 1)  # 2 layers per node
@@ -1209,14 +1213,14 @@ class OES(OP2Common):
                         self.obj.add(dt, eid, grid, fd2, sx2, sy2,
                                      txy2, angle2, major2, minor2, vm2)
                         n += 68
-            elif self.num_wide == numwide_imag:
+            elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
                 ntotal = numwide_imag * 4
                 assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
                 nelements = len(data) // ntotal
                 auto_return = self._create_oes_object2(nelements,
                                                        result_name, result_vector_name,
                                                        slot, slot_vector,
-                                                       obj_real, obj_vector_real)
+                                                       obj_complex, obj_vector_complex)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
@@ -1454,7 +1458,7 @@ class OES(OP2Common):
                 auto_return = self._create_oes_object2(nelements,
                                                        result_name, result_vector_name,
                                                        slot, slot_vector,
-                                                       obj_real, obj_vector_real)
+                                                       obj_complex, obj_vector_complex)
                 if auto_return:
                     return nelements * self.num_wide * 4
                 return self._not_implemented_or_skip(data, msg)
@@ -1853,7 +1857,7 @@ class OES(OP2Common):
                 return self._not_implemented_or_skip(data, msg)
 
             numwide_real = 4 + (25 - 4) * nnodes  # real???
-            numwide_imag = 2 + (18 - 2) * nnodes  # imag???
+            numwide_random = 2 + (18 - 2) * nnodes  # imag???
             #print "numwide=%s numwide_real=%s numwide_imag=%s" % (self.num_wide, numwide_real, numwide_imag)
 
             #numwide_real = 0
@@ -1867,8 +1871,9 @@ class OES(OP2Common):
                 #else:
                     #self.create_transient_object(self.nonlinearPlateStrain, NonlinearSolid)
                 #self.handle_results_buffer(self.OES_CQUAD4NL_90, resultName, name)
-            elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
-                ntotal = numwide_imag * 4
+            elif self.format_code == 1 and self.num_wide == numwide_random:  # random
+            #elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
+                ntotal = numwide_random * 4
                 #if self.isStress():
                     #self.create_transient_object(self.nonlinearPlateStress, NonlinearSolid)
                 #else:
@@ -2217,7 +2222,7 @@ class OES(OP2Common):
                 #print "***vectorized..."
 
         if is_vectorized:
-            #print "vectorized...read_mode=%s...%s" % (self.read_mode, result_vector_name)
+            #print("vectorized...read_mode=%s...%s" % (self.read_mode, result_vector_name))
             if self.read_mode == 1:
                 self.create_transient_object(slot_vector, obj_vector)
                 #print "read_mode 1", self.obj.ntimes
@@ -2234,7 +2239,7 @@ class OES(OP2Common):
 
         else:  # not vectorized
             self.result_names.add(result_name)
-            #print "not vectorized...read_mode=%s...%s" % (self.read_mode, result_name)
+            #print("not vectorized...read_mode=%s...%s" % (self.read_mode, result_name))
             if self.read_mode == 1:
                 self.result_names.add(result_name)
                 auto_return = True

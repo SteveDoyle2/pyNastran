@@ -191,13 +191,13 @@ class OUG(OP2Common):
             storage_obj = self.displacements
             n = self._read_table(data, result_name, storage_obj,
                                  RealDisplacement, ComplexDisplacement,
-                                 RealDisplacementVector, ComplexDisplacementVector, 'node')
+                                 RealDisplacementVector, ComplexDisplacementVector, 'node', random_code=self.random_code)
         elif self.thermal == 1:
             result_name = 'temperatures'
             storage_obj = self.temperatures
             n = self._read_table(data, result_name, storage_obj,
                                  RealTemperature, None,
-                                 RealTemperatureVector, None, 'node')
+                                 RealTemperatureVector, None, 'node', random_code=self.random_code)
         elif self.thermal == 4:
             return self._not_implemented_or_skip(data, msg='thermal=4')
         else:
@@ -217,13 +217,13 @@ class OUG(OP2Common):
             complex_obj = ComplexVelocity
             n = self._read_table(data, result_name, storage_obj,
                                  RealVelocity, ComplexVelocity,
-                                 RealVelocityVector, ComplexVelocityVector, 'node')
+                                 RealVelocityVector, ComplexVelocityVector, 'node', random_code=self.random_code)
         elif self.thermal == 1:
             real_obj = ThermalVelocityVectorObject
             complex_obj = None
             n = self._read_table(data, result_name, storage_obj,
                                  ThermalVelocityVectorObject, None,
-                                 None, None, 'node')
+                                 None, None, 'node', random_code=self.random_code)
         elif self.thermal == 2:
             n = self._not_implemented_or_skip(data, msg='thermal=2')
         else:
@@ -239,11 +239,11 @@ class OUG(OP2Common):
         if self.thermal == 0:
             n = self._read_table(data, result_name, storage_obj,
                                  RealAcceleration, ComplexAcceleration,
-                                 RealAccelerationVector, ComplexAccelerationVector, 'node')
+                                 RealAccelerationVector, ComplexAccelerationVector, 'node', random_code=self.random_code)
         elif self.thermal == 1:
             n = self._read_table(data, result_name, storage_obj,
                                  None, None,
-                                 None, None, 'node')
+                                 None, None, 'node', random_code=self.random_code)
         elif self.thermal == 2:
             n = self._not_implemented_or_skip(data, msg='thermal=2')
         elif self.thermal == 4:
@@ -263,12 +263,12 @@ class OUG(OP2Common):
             complex_obj = ComplexEigenvectorObject
             n = self._read_table(data, result_name, storage_obj,
                                  EigenvectorObject, ComplexEigenvectorObject,
-                                 RealEigenvectorVector, ComplexEigenvectorVector, 'node')
+                                 RealEigenvectorVector, ComplexEigenvectorVector, 'node', random_code=self.random_code)
         elif self.thermal == 1:
             n = self._not_implemented_or_skip(data, msg='thermal=1')
             #n = self._read_table(data, result_name, storage_obj,
             #                     None, None,
-            #                     None, None, 'node')
+            #                     None, None, 'node', random_code=self.random_code)
         else:
             raise NotImplementedError(self.thermal)
         return n

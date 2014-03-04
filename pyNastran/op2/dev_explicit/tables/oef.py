@@ -352,7 +352,6 @@ class OEF(OP2Common):
                 self.create_transient_object(self.thermalLoad_CHBDY, HeatFlux_CHBDYx)
 
                 s1 = Struct(b'i8s5f')
-                n = 0
                 ntotal = 32
                 nelements = len(data) // ntotal
                 for i in xrange(nelements):
@@ -378,6 +377,7 @@ class OEF(OP2Common):
                 nelements = len(data) // ntotal
                 for i in xrange(nelements):
                     edata = data[n:n+16]
+                    n += 16
                     out = s1.unpack(edata)
                     (eid_device, cntlNode, freeConv, freeConvK) = out
                     eid = (eid_device - self.device_code) // 10
@@ -476,7 +476,7 @@ class OEF(OP2Common):
             self.create_transient_object(self.thermalLoad_VUBeam, HeatFlux_VUBEAM)
             nnodes = 2
 
-            numwide_real == 4 + 7 * nnodes
+            numwide_real = 4 + 7 * nnodes
             if self.format_code == 1 and self.num_wide == numwide_real:  # real
                 ntotal = 16 + 28 * nnodes
                 s1 = Struct(b'iii4s')
@@ -531,7 +531,11 @@ class OEF(OP2Common):
                 n = func(self, data)
             except:
                 print "----------"
-                print self.obj
+                try:
+                    print self.obj
+                except:
+                    print "error printing %r" % self.obj.__class__.__name__
+                    pass
                 print self.data_code
                 if self.obj is not None:
                     #from pyNastran.utils import object_attributes
@@ -981,7 +985,7 @@ class OEF(OP2Common):
 
                     out = s.unpack(edata)
                     if self.debug4():
-                        self.binary_debug.write('OEF_Plate-%s - %s\n' % (self.element_type, str(out)))
+                        self.binary_debug.write('real_OEF_Plate-%s - %s\n' % (self.element_type, str(out)))
                     (eid_device, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
                     eid = (eid_device - self.device_code) // 10
                     assert eid > 0, 'eid_device=%s eid=%s table_name-%r' % (eid_device, eid, self.table_name)
@@ -993,7 +997,7 @@ class OEF(OP2Common):
             elif self.format_code in [2, 3] and self.num_wide == 17:  # imag
                 if self.read_mode == 1:
                     return len(data)
-                self.create_transient_object(self.plateForces, ComplexPlateForce)  # undefined
+                self.create_transient_object(self.plateForces, ComplexPlateForce)
                 s = Struct(b'i16f')
 
                 ntotal = 68
@@ -1006,7 +1010,7 @@ class OEF(OP2Common):
                     eid = (eid_device - self.device_code) // 10
                     assert eid > 0
                     if self.debug4():
-                        self.binary_debug.write('OEF_Plate-%s - %s\n' % (self.element_type, str(out)))
+                        self.binary_debug.write('complex_OEF_Plate-%s - %s\n' % (self.element_type, str(out)))
 
                     if is_magnitude_phase:
                         mx = polar_to_real_imag(mxr, mxi)
@@ -1110,7 +1114,7 @@ class OEF(OP2Common):
                         edata = data[n : n + 36]
                         out = s2.unpack(edata)
                         if self.debug4():
-                            self.binary_debug.write('%s\n' % (str(out)))
+                            self.binary_debug.write('    %s\n' % (str(out)))
                         (nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
                         assert nid > 0, 'nid=%s' % nid
                         data_in = [nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty]
@@ -1123,7 +1127,7 @@ class OEF(OP2Common):
 
                 self.create_transient_object(self.plateForces2, ComplexPlate2Force)
                 s1 = Struct(b'i4s17f')  # 2+17=19 * 4 = 76
-                s2 = Struct(b'17f')  # 17 * 4 = 68
+                s2 = Struct(b'i16f')  # 17 * 4 = 68
                 ntotal = 8 + (nnodes+1) * 68
                 nelements = len(data) // ntotal
                 for i in xrange(nelements):
@@ -1163,7 +1167,6 @@ class OEF(OP2Common):
                         edata = data[n:n+68]
                         n += 68
                         out = s2.unpack(edata)
-
                         (nid, mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
                               mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
                         if is_magnitude_phase:
@@ -1184,6 +1187,8 @@ class OEF(OP2Common):
                             bmxy = complex(bmxyr, bmxyi)
                             tx = complex(txr, txi)
                             ty = complex(tyr, tyi)
+                        if self.debug4():
+                            self.binary_debug.write('OEF_Plate2 - eid=%i nid=%s out=%s\n' % (eid, nid, str(out)))
                         data_in = [nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty]
                         #print "***%s    " % (self.get_element_type(self.element_type)),data_in
                         self.obj.add(eid, dt, data_in)
@@ -1497,9 +1502,10 @@ class OEF(OP2Common):
                 return len(data)
 
             if self.format_code == 1 and self.num_wide == 10:  # real
-                s = Struct(b'i8s7f')
                 ntotal = 40
                 nelements = len(data) // ntotal
+                self.create_transient_object(self.solidPressureForces, RealPentaPressureForce)
+                s = Struct(b'i8s7f')
                 for i in xrange(nelements):
                     eData = data[n:n+40]
                     n += 40
@@ -1663,6 +1669,8 @@ class OEF(OP2Common):
             numwide_imag = 6 + 25 * nNodes
 
             if self.format_code == 1 and self.num_wide == numwide_real:  # real
+                self.create_transient_object(self.force_VU_2D, RealForce_VU_2D)
+
                 ntotal = 24 + 52 * nNodes
                 nelements = len(data) // ntotal
 
@@ -1699,6 +1707,7 @@ class OEF(OP2Common):
                     self.obj.add(nNodes, dt, dataIn)
 
             elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
+                self.create_transient_object(self.force_VU_2D, ComplexForce_VU_2D)
                 ntotal = 24 + 100 * nNodes
                 s1 = Struct(b'iii4sii')
                 s2 = Struct(b'i3f3i5fi3f3i5fi')
@@ -1758,20 +1767,22 @@ class OEF(OP2Common):
             if self.read_mode == 1:
                 return len(data)
 
-
             if self.format_code == 1 and self.num_wide == 20:  # real
+                self.create_transient_object(self.force_VU, RealForce_VU)
                 # 20 = 4 + 8 * 2 = 4 = 16
                 nNodes = 2
                 #ntotal = 16 + 32 * nNodes
                 ntotal = self.num_wide * 4
                 nelements = len(data) // ntotal
+                self.create_transient_object(self.force_VU, RealForce_VU)
+
                 s1 = Struct(b'iii4s')
                 s2 = Struct(b'i7f')
                 for i in xrange(nelements):
                     eData = data[n:n+16]  # 8*4
                     n += 16
 
-                    out = s1.unpack(format1, eData)
+                    out = s1.unpack(eData)
                     if self.debug4():
                         self.binary_debug.write('OEF_Force_VU-191 - %s\n' % (str(out)))
                     (eid_device, parent, coord, icord) = out
@@ -1794,8 +1805,11 @@ class OEF(OP2Common):
                     #dataIn = [vugrid,posit,forceX,shearY,shearZ,torsion,bendY,bendZ]
                     #print "force %s" %(self.get_element_type(self.element_type)),dataIn
                     self.obj.add(nNodes, dt, dataIn)
+            elif self.format_code == 1 and self.num_wide == 32:  # random
+                return len(data)
             elif self.format_code in [2, 3] and self.num_wide == 32:  # imag
                 # 32 = 4 + 56/4 * 2 = 4 + 14 * 2 = 4 + 28
+                self.create_transient_object(self.force_VU, ComplexForce_VU)
                 nNodes = 2
                 #ntotal = 16 + 56 * nNodes
                 ntotal = self.num_wide * 4

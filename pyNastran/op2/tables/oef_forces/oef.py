@@ -438,8 +438,7 @@ class OEF(ThermalElements, RealForces, ComplexForces):
         elif self.element_type in [76, 77, 78]:  # CHEXA_PR,PENTA_PR,CTETRA_PR
             resultName = 'solidPressureForces'
             if self.num_wide == numWideReal:
-                self.create_transient_object(self.solidPressureForces,
-                                           RealPentaPressureForce)
+                self.create_transient_object(self.solidPressureForces, RealPentaPressureForce)
                 self.handle_results_buffer(self.OEF_PentaPressure, resultName)
             elif self.num_wide == numWideImag:
                 self.create_transient_object(self.solidPressureForces,
@@ -472,10 +471,8 @@ class OEF(ThermalElements, RealForces, ComplexForces):
                 self.create_transient_object(self.force_VU_2D, RealForce_VU_2D)
                 self.handle_results_buffer(self.OEF_Force_VUTRIA, resultName)
             elif self.num_wide == numWideImag:
-                self.create_transient_object(
-                    self.force_VU_2D, ComplexForce_VU_2D)
-                self.handle_results_buffer(
-                    self.OEF_Force_VUTRIA_alt, resultName)
+                self.create_transient_object(self.force_VU_2D, ComplexForce_VU_2D)
+                self.handle_results_buffer(self.OEF_Force_VUTRIA_alt, resultName)
             else:
                 self.not_implemented_or_skip()
         elif self.element_type in [191]:  # VUBEAM

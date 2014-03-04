@@ -316,9 +316,9 @@ class ComplexForces(object):
                 tx = complex(txr, txi)
                 ty = complex(tyr, tyi)
 
-            dataIn = [eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+            #dataIn = [eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty]
             #print "%s" %(self.get_element_type(self.element_type)),dataIn
-            self.obj.add(dt, dataIn)
+            self.obj.add(dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
             n += ntotal
         self.data = self.data[n:]
         #print self.plateForces

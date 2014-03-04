@@ -30,7 +30,7 @@ class OPG(OP2Common):
         #isubcase = self.get_values(data,'i',4)
 
         ## dynamic load set ID/random code
-        self.dLoadID = self.add_data_parameter(data, 'dLoadID', 'i', 8, False)
+        self.random_code = self.add_data_parameter(data, 'random_code', 'i', 8, False)
 
         ## format code
         self.format_code = self.add_data_parameter(data, 'format_code', 'i', 9, False)
@@ -150,7 +150,7 @@ class OPG(OP2Common):
             storage_obj = self.loadVectors
             n = self._read_table(data, result_name, storage_obj,
                                  RealLoadVectorObject, ComplexLoadVectorObject,
-                                 RealLoadVectorVector, ComplexLoadVectorVector, 'node')
+                                 RealLoadVectorVector, ComplexLoadVectorVector, 'node', random_code=self.random_code)
         elif self.thermal == 1:
             result_name = 'thermalLoadVectors'
             storage_obj = self.thermalLoadVectors
@@ -160,7 +160,7 @@ class OPG(OP2Common):
             ComplexThermalLoadVectorVector = None
             n = self._read_table(data, result_name, storage_obj,
                                  ThermalLoadVectorObject, ComplexThermalLoadVectorObject,
-                                 ThermalLoadVectorVector, ComplexThermalLoadVectorVector, 'node')
+                                 ThermalLoadVectorVector, ComplexThermalLoadVectorVector, 'node', random_code=self.random_code)
         else:
             raise NotImplementedError(self.thermal)
         return n
@@ -176,7 +176,7 @@ class OPG(OP2Common):
             ComplexForceVectorVector = None
             n = self._read_table(data, result_name, storage_obj,
                                  ForceVectorObject, ComplexForceVectorObject,
-                                 ForceVectorVector, ComplexForceVectorVector, 'node')
+                                 ForceVectorVector, ComplexForceVectorVector, 'node', random_code=self.random_code)
         #elif self.thermal == 1:
             #result_name = 'thermalForceVectors'
             #storage_obj = self.thermalForceVectors
@@ -186,7 +186,7 @@ class OPG(OP2Common):
             #ComplexThermalForceVectorVector = None
             #n = self._read_table(data, result_name, storage_obj,
                                  #ThermalForceVectorObject, ComplexThermalForceVectorObject,
-                                 #ThermalForceVectorVector, ComplexThermalForceVectorVector, 'node')
+                                 #ThermalForceVectorVector, ComplexThermalForceVectorVector, 'node', random_code=self.random_code)
         else:
             raise NotImplementedError(self.thermal)
         return n

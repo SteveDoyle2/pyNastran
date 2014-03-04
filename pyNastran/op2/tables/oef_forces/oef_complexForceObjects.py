@@ -545,7 +545,7 @@ class ComplexPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add = self.addSort2
+            self.add = self.add_sort2
 
     def get_stats(self):
         msg = self.get_data_code()
@@ -573,9 +573,7 @@ class ComplexPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         self.tx[dt] = {}
         self.ty[dt] = {}
 
-    def add(self, dt, data):
-        [eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
-
+    def add(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         #self.eType[eid] = eType
         self.mx[eid] = mx
         self.my[eid] = my
@@ -586,8 +584,7 @@ class ComplexPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         self.tx[eid] = tx
         self.ty[eid] = ty
 
-    def add_sort1(self, dt, data):
-        [eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
+    def add_sort1(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         if dt not in self.mx:
             self.add_new_transient(dt)
 
@@ -601,8 +598,7 @@ class ComplexPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         self.tx[dt][eid] = tx
         self.ty[dt][eid] = ty
 
-    def addSort2(self, eid, data):
-        [dt, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
+    def add_sort2(self, eid, dt, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         if dt not in self.mx:
             self.add_new_transient(dt)
 
