@@ -600,5 +600,5 @@ class RealForces(object):
             #print "force %s" %(self.get_element_type(self.element_type)),dataIn
             self.obj.add(nNodes, dt, dataIn)
 
-        #self.data = self.data[n:]
+        self.data = self.data[n:]
         #print(self.force_VU_2D)

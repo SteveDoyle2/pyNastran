@@ -573,6 +573,7 @@ class ComplexForces(object):
         nelements = len(self.data) // ntotal
         for i in xrange(nelements):
             eData = self.data[n:n+16]  # 8*4
+            n += 16
 
             out = s1.unpack(eData)
             (eid_device, parent, coord, icord) = out
@@ -583,8 +584,10 @@ class ComplexForces(object):
             forces = []
             for i in xrange(nNodes):
                 eData = self.data[n:n+56]  # 14*4
+                n += 56
                 out = s2.unpack(eData)
-                [vugrid, posit, forceXr, shearYr, shearZr, torsionr, bendingYr, bendingZr,
+                [vugrid, posit,
+                 forceXr, shearYr, shearZr, torsionr, bendingYr, bendingZr,
                  forceXi, shearYi, shearZi, torsioni, bendingYi, bendingZi] = out
 
                 if is_magnitude_phase:
@@ -635,7 +638,7 @@ class ComplexForces(object):
         s2 = Struct(formatAll)
         ntotal = 24 + 100 * nNodes
         nelements = len(self.data) // ntotal
-        while len(self.data) >= ntotal:
+        for i in xrange(nelements):
             eData = self.data[n:n+24]  # 6*4
             n += 24
 
