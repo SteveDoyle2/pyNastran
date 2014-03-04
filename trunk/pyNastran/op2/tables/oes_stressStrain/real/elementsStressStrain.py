@@ -734,15 +734,15 @@ class RealElementsStressStrain(object):
             out = s.unpack(eData)
             if self.make_op2_debug:
                 self.op2_debug.write('CQUAD4-95 - %s\n' % (str(out)))
-            (eid, iLayer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm) = out
+            (eid, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm) = out
             eid = extract(eid, dt)
 
             if eid != self.eid2:  # originally initialized to None, the buffer doesnt reset it, so it is the old value
                 #print "1 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
-                self.obj.add_new_eid(eType, dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+                self.obj.add_new_eid(eType, dt, eid, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
             else:
                 #print "2 - eid=%s iLayer=%i o1=%i o2=%i ovm=%i" % (eid,iLayer,o1,o2,ovm)
-                self.obj.add(dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+                self.obj.add(dt, eid, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
             self.eid2 = eid
             n += 44
             #self.dn += 348

@@ -359,6 +359,7 @@ class F06Writer(F06WriterDeprecated):
         self.ctria6_stress = {}
         self.cquad4_stress = {}
         self.cquad8_stress = {}
+        self.cquadr_stress = {}
         self.ctriar_stress = {}
         #: OES - isotropic CTRIA3/CQUAD4 strain
         self.plateStrain = {}
@@ -366,6 +367,7 @@ class F06Writer(F06WriterDeprecated):
         self.ctria6_strain = {}
         self.cquad4_strain = {}
         self.cquad8_strain = {}
+        self.cquadr_strain = {}
         self.ctriar_strain = {}
 
         #: OESNLXR - CTRIA3/CQUAD4 stress
@@ -732,10 +734,14 @@ class F06Writer(F06WriterDeprecated):
             self.conrod_strain,
             self.cpenta_strain,
             self.cquad4_strain,
+            self.cquad8_strain,
+            self.cquadr_strain,
             self.crod_strain,
             self.cshear_strain,
             self.ctetra_strain,
             self.ctria3_strain,
+            self.ctria6_strain,
+            self.ctriar_strain,
             self.ctube_strain,
 
             # bush
@@ -768,10 +774,14 @@ class F06Writer(F06WriterDeprecated):
             self.conrod_stress,
             self.cpenta_stress,
             self.cquad4_stress,
+            self.cquad8_stress,
+            self.cquadr_stress,
             self.crod_stress,
             self.cshear_stress,
             self.ctetra_stress,
             self.ctria3_stress,
+            self.ctria6_stress,
+            self.ctriar_stress,
             self.ctube_stress,
 
             self.compositePlateStress,

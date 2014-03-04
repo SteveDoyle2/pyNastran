@@ -124,7 +124,8 @@ class OQG(OP2Common):
             assert self.table_name in ['OQMG1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_mpc_forces(data)
         else:
-            raise NotImplementedError(self.table_code)
+            msg = 'table_code=%s' % self.table_code
+            return self._not_implemented_or_skip(data, msg)
         #else:
             #self._not_implemented_or_skip('bad OQG table')
         return n
@@ -138,15 +139,16 @@ class OQG(OP2Common):
             storage_obj = self.spcForces
             n = self._read_table(data, result_name, storage_obj,
                                  RealSPCForces, ComplexSPCForces,
-                                 RealSPCForcesVector, ComplexSPCForcesVector, 'node')
+                                 RealSPCForcesVector, ComplexSPCForcesVector, 'node', random_code=self.random_code)
         elif self.thermal == 1:
             result_name = 'thermalGradientAndFlux' #'finite element temperature gradients and fluxes'
             storage_obj =  self.thermalGradientAndFlux
             n = self._read_table(data, result_name, storage_obj,
                                  RealTemperatureGradientAndFluxObject, None,
-                                 RealTemperatureGradientAndFluxVector, None, 'node')
+                                 RealTemperatureGradientAndFluxVector, None, 'node', random_code=self.random_code)
         else:
-            raise NotImplementedError(self.thermal)
+            msg = 'thermal=%s' % self.thermal
+            return self._not_implemented_or_skip(data, msg)
         return n
 
     def _read_mpc_forces(self, data):
@@ -158,12 +160,13 @@ class OQG(OP2Common):
         if self.thermal == 0:
             n = self._read_table(data, result_name, storage_obj,
                                  RealMPCForces, ComplexMPCForces,
-                                 RealMPCForcesVector, ComplexMPCForcesVector, 'node')
-        elif self.thermal == 1:
-            raise NotImplementedError(self.thermal)
-            n = self._read_table(data, result_name, storage_obj,
-                                 None, None,
-                                 None, None, 'node')
+                                 RealMPCForcesVector, ComplexMPCForcesVector, 'node', random_code=self.random_code)
+        #elif self.thermal == 1:
+            #raise NotImplementedError(self.thermal)
+            #n = self._read_table(data, result_name, storage_obj,
+                                 #None, None,
+                                 #None, None, 'node')
         else:
-            raise NotImplementedError(self.thermal)
+            msg = 'thermal=%s' % self.thermal
+            return self._not_implemented_or_skip(data, msg)
         return n

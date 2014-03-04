@@ -768,7 +768,6 @@ class OES(RealElementsStressStrain, ComplexElementsStressStrain):
                                                  self.plateStrain, ComplexPlateStrain, 'plateStrain')
                 name = result_name + ': Subcase %s' % self.isubcase
                 self.handle_results_buffer(self.OES_CQUAD4_144_alt, result_name, name)
-                ntotal
             else:
                 self.not_implemented_or_skip()
 
