@@ -260,7 +260,8 @@ class ScalarObject(BaseScalarObject):
                     name = name + 's'
                 else:
                     vals = getattr(self, name)
-                msg.append('%s = %s\n' % (name, str(['%s' % val for val in vals]) ))
+                #msg.append('%s = %s\n' % (name, list_print(vals)))
+                msg.append('%s = [%s]\n' % (name, ', '.join(['%r' % val for val in vals])) )
             #except AttributeError:  # weird case...
                 #pass
         #print("***dataNames =", self.dataNames)

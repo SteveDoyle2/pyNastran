@@ -11,21 +11,20 @@ from pyNastran.op2.op2 import OP2
 
 class OP2_Vectorized(OP2):
 
-    def __init__(self, make_geom=False, save_skipped_cards=False,
+    def __init__(self, make_geom=False,
                  debug=True, log=None,
                  debug_file=None):
         """
         Initializes the OP2 object
 
         :param make_geom: reads the BDF tables (default=False)
-        :param save_skipped_cards: creates the skippedCards.out file (default=False)
         :param debug: enables the debug log and sets the debug in the logger (default=False)
         :param log: a logging object to write debug messages to
          (.. seealso:: import logging)
         :param debug_file: sets the filename that will be written to (default=None -> no debug)
         """
         debug = False
-        OP2.__init__(self, make_geom=make_geom, save_skipped_cards=save_skipped_cards,
+        OP2.__init__(self, make_geom=make_geom,
                      debug=debug, log=log, debug_file=None)
         #print(self.binary_debug)
         #self.binary_debug = None
@@ -120,7 +119,6 @@ class OP2_Vectorized(OP2):
             return
             #raise NotImplementedError()
         self.f.close()
-        self.skippedCardsFile.close()
         self.combine_results()
         self.log.info('finished reading op2')
 

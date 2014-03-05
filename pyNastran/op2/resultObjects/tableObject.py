@@ -74,7 +74,6 @@ class TableVector(ScalarObject):  # displacement style table
         self._times = zeros(self.ntimes, dtype=dtype)
         #self.types = array(self.nelements, dtype='|S1')
 
-        #self.gridTypes = {}
         self.node_gridtype = zeros((self.ntotal, 2), dtype='int32')
 
         #[t1, t2, t3, r1, r2, r3]
@@ -101,6 +100,7 @@ class TableVector(ScalarObject):  # displacement style table
         # [t1, t2, t3, r1, r2, r3]
         #print "%s node_gridtype[%s, :] = %s" % (self.__class__.__name__, self.itotal, [node_id, grid_type]),
         #print "%s data[%s, %s, :] = %s" % (self.__class__.__name__, self.itime, self.itotal, [v1, v2, v3, v4, v5, v6])
+        self._times[self.itime] = dt
         self.node_gridtype[self.itotal, :] = [node_id, grid_type]
         self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
         self.itotal += 1

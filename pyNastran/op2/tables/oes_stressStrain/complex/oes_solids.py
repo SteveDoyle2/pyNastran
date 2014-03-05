@@ -15,7 +15,7 @@ class ComplexSolid(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         self.eType = {}
-        self.result_flag = 0
+        self.result_flag = 1
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -342,7 +342,7 @@ class ComplexSolidStress(StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
 
-        self.result_flag = 1
+        self.result_flag = 0
         self.eType = {}
         self.code = [self.format_code, self.sort_code, self.s_code]
 
@@ -539,23 +539,24 @@ class ComplexSolidStress(StressObject):
 
     def getF06_Header(self, is_mag_phase):
         if is_mag_phase:
-            tetra_msg = [
-                '                 C O M P L E X   S T R E S S E S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )',
+            base_msg = [
                 '                                                          (MAGNITUDE/PHASE)',
                 '0                   CORNER      --------------------------CENTER AND CORNER POINT STRESSES---------------------------',
                 '     ELEMENT-ID    GRID-ID      NORMAL-X       NORMAL-Y       NORMAL-Z         SHEAR-XY       SHEAR-YZ       SHEAR-ZX',
-                '',
-            ]
+                '', ]
+
         else:
-            tetra_msg = [
-                '                 C O M P L E X   S T R E S S E S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )',
-                '                                                          (REAL/IMAGINARY)',
-                '0                   CORNER      --------------------------CENTER AND CORNER POINT STRESSES---------------------------',
-                '     ELEMENT-ID    GRID-ID      NORMAL-X       NORMAL-Y       NORMAL-Z         SHEAR-XY       SHEAR-YZ       SHEAR-ZX',
-                '',
-            ]
-        penta_msg = tetra_msg  # TODO: this isnt done
-        hexa_msg = tetra_msg  # TODO: this isnt done
+            base_msg = [
+            '                                                          (REAL/IMAGINARY)',
+            '0                   CORNER      --------------------------CENTER AND CORNER POINT STRESSES---------------------------',
+            '     ELEMENT-ID    GRID-ID      NORMAL-X       NORMAL-Y       NORMAL-Z         SHEAR-XY       SHEAR-YZ       SHEAR-ZX',
+            '', ]
+        tetra_msg = ['                 C O M P L E X   S T R E S S E S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )', ]
+        hexa_msg  = ['                 C O M P L E X   S T R E S S E S   I N   H E X A H E D R O N   E L E M E N T S   ( C H E X A )', ]
+        penta_msg = ['                 C O M P L E X   S T R E S S E S   I N   P E N T A H E D R O N   E L E M E N T S   ( C P E N T A )', ]
+        tetra_msg += base_msg
+        penta_msg += base_msg
+        hexa_msg += base_msg
 
         tetra_eids = []
         hexa_eids = []
@@ -781,23 +782,25 @@ class ComplexSolidStrain(StrainObject):
 
     def getF06_Header(self, is_mag_phase):
         if is_mag_phase:
-            tetra_msg = [
-                '                 C O M P L E X     S T R A I N S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )',
+            base_msg = [
                 '                                                          (MAGNITUDE/PHASE)',
                 '0                   CORNER      --------------------------CENTER AND CORNER POINT  STRAINS---------------------------',
                 '     ELEMENT-ID    GRID-ID      NORMAL-X       NORMAL-Y       NORMAL-Z         SHEAR-XY       SHEAR-YZ       SHEAR-ZX',
                 '',
             ]
         else:
-            tetra_msg = [
-                '                 C O M P L E X     S T R A I N S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )',
+            base_msg = [
                 '                                                          (REAL/IMAGINARY)',
                 '0                   CORNER      --------------------------CENTER AND CORNER POINT  STRAINS---------------------------',
                 '     ELEMENT-ID    GRID-ID      NORMAL-X       NORMAL-Y       NORMAL-Z         SHEAR-XY       SHEAR-YZ       SHEAR-ZX',
                 '',
             ]
-        penta_msg = tetra_msg
-        hexa_msg = tetra_msg
+        tetra_msg = ['                 C O M P L E X     S T R A I N S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )',]
+        hexa_msg  = ['                 C O M P L E X     S T R A I N S   I N   H E X A H E D R O N   E L E M E N T S   ( C H E X A )',]
+        penta_msg = ['                 C O M P L E X     S T R A I N S   I N   P E N T A H E D R O N   E L E M E N T S   ( C P E N T A )',]
+        tetra_msg += base_msg
+        penta_msg += base_msg
+        hexa_msg += base_msg
 
         tetra_eids = []
         hexa_eids = []
@@ -860,7 +863,6 @@ class ComplexSolidStrain(StrainObject):
                 self.write_element_transient('CPENTA', 15, penta15_eids, dt, header, penta_msg, f,is_mag_phase)
                 f.write(page_stamp % page_num)
                 page_num += 1
-
         return page_num - 1
 
     def write_element_transient(self, element_name, nnodes, eids, dt, header, msg, f, is_mag_phase):
