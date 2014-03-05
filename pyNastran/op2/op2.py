@@ -12,16 +12,16 @@ from numpy import array
 from pyNastran.f06.f06 import FatalError
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 
-from pyNastran.op2.dev_explicit.tables.geom1 import GEOM1
-from pyNastran.op2.dev_explicit.tables.geom2 import GEOM2
-from pyNastran.op2.dev_explicit.tables.geom3 import GEOM3
-from pyNastran.op2.dev_explicit.tables.geom4 import GEOM4
+#from pyNastran.op2.dev_explicit.tables.geom.geom1 import GEOM1
+#from pyNastran.op2.dev_explicit.tables.geom.geom2 import GEOM2
+#from pyNastran.op2.dev_explicit.tables.geom.geom3 import GEOM3
+#from pyNastran.op2.dev_explicit.tables.geom.geom4 import GEOM4
 
-from pyNastran.op2.dev_explicit.tables.ept import EPT
-from pyNastran.op2.dev_explicit.tables.mpt import MPT
+#from pyNastran.op2.dev_explicit.tables.geom.ept import EPT
+#from pyNastran.op2.dev_explicit.tables.geom.mpt import MPT
 
-from pyNastran.op2.dev_explicit.tables.dit import DIT
-from pyNastran.op2.dev_explicit.tables.dynamics import DYNAMICS
+#from pyNastran.op2.dev_explicit.tables.geom.dit import DIT
+#from pyNastran.op2.dev_explicit.tables.geom.dynamics import DYNAMICS
 #============================
 
 from pyNastran.op2.dev_explicit.tables.lama import LAMA
@@ -38,7 +38,7 @@ from pyNastran.op2.dev_explicit.tables.oug import OUG
 from pyNastran.op2.dev_explicit.tables.ogpwg import OGPWG
 from pyNastran.op2.fortran_format import FortranFormat
 
-from pyNastran.bdf.bdf import BDF
+#from pyNastran.bdf.bdf import BDF
 
 from pyNastran.utils import is_binary
 from pyNastran.utils.log import get_logger
@@ -58,7 +58,7 @@ class TrashWriter(file):
         pass
 
 class OP2( #BDF,
-          GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
+          #GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
           LAMA, ONR, OGPF,
           OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
     """
@@ -122,9 +122,9 @@ class OP2( #BDF,
         op2.set_result_types(['displacements', 'solidStress'])
         """
         table_mapper = {  # very incomplete list
-            "grids_coords" : ['GEOM1', 'GEOM1S'],
-            "geometry" : [],  # includes materials/properties
-            "loads_constraints" : [],
+            #"grids_coords" : ['GEOM1', 'GEOM1S'],
+            #"geometry" : [],  # includes materials/properties
+            #"loads_constraints" : [],
 
             'displacements' : ['OUG1', 'OUGV1', 'BOUGV1', 'OUPV1', ],
             'velocities'    : ['OUG1', 'OUGV1', 'BOUGV1', 'OUPV1', ],
@@ -215,16 +215,15 @@ class OP2( #BDF,
         #BDF.__init__(self, debug=debug, log=log)
         self.log = get_logger(log, 'debug' if debug else 'info')
 
-        GEOM1.__init__(self)
-        GEOM2.__init__(self)
-        GEOM3.__init__(self)
-        GEOM4.__init__(self)
+        #GEOM1.__init__(self)
+        #GEOM2.__init__(self)
+        #GEOM3.__init__(self)
+        #GEOM4.__init__(self)
 
-        EPT.__init__(self)
-        MPT.__init__(self)
-
-        DIT.__init__(self)
-        DYNAMICS.__init__(self)
+        #EPT.__init__(self)
+        #MPT.__init__(self)
+        #DIT.__init__(self)
+        #DYNAMICS.__init__(self)
 
         LAMA.__init__(self)
         ONR.__init__(self)
@@ -329,38 +328,72 @@ class OP2( #BDF,
             'CLAMA': [self._read_complex_eigenvalue_3, self._read_complex_eigenvalue_4],
             'LAMA': [self._read_real_eigenvalue_3, self._read_real_eigenvalue_4],
 
+            # ===geom passers===
             # geometry
-            'GEOM1': [self._read_geom1_4, self._read_geom1_4],
-            'GEOM2': [self._read_geom2_4, self._read_geom2_4],
-            'GEOM3': [self._read_geom3_4, self._read_geom3_4],
-            'GEOM4': [self._read_geom4_4, self._read_geom4_4],
+            'GEOM1': [self._table_passer, self._table_passer],
+            'GEOM2': [self._table_passer, self._table_passer],
+            'GEOM3': [self._table_passer, self._table_passer],
+            'GEOM4': [self._table_passer, self._table_passer],
 
             # superelements
-            'GEOM1S': [self._read_geom1_4, self._read_geom1_4],
-            'GEOM2S': [self._read_geom2_4, self._read_geom2_4],
-            'GEOM3S': [self._read_geom3_4, self._read_geom3_4],
-            'GEOM4S': [self._read_geom4_4, self._read_geom4_4],
+            'GEOM1S': [self._table_passer, self._table_passer],
+            'GEOM2S': [self._table_passer, self._table_passer],
+            'GEOM3S': [self._table_passer, self._table_passer],
+            'GEOM4S': [self._table_passer, self._table_passer],
 
-            'GEOM1N': [self._read_geom1_4, self._read_geom1_4],
+            'GEOM1N': [self._table_passer, self._table_passer],
+            'GEOM2N': [self._table_passer, self._table_passer],
+            'GEOM3N': [self._table_passer, self._table_passer],
+            'GEOM4N': [self._table_passer, self._table_passer],
+
+            'GEOM1OLD': [self._table_passer, self._table_passer],
+            'GEOM2OLD': [self._table_passer, self._table_passer],
+            'GEOM3OLD': [self._table_passer, self._table_passer],
+            'GEOM4OLD': [self._table_passer, self._table_passer],
+
+            'EPT' : [self._table_passer, self._table_passer],
+            'EPTS': [self._table_passer, self._table_passer],
+            'EPTOLD' : [self._table_passer, self._table_passer],
+
+            'MPT' : [self._table_passer, self._table_passer],
+            'MPTS': [self._table_passer, self._table_passer],
+
+            'DYNAMIC': [self._table_passer, self._table_passer],
+            'DYNAMICS': [self._table_passer, self._table_passer],
+            'DIT': [self._table_passer, self._table_passer],
+
+            # geometry
+            #'GEOM1': [self._read_geom1_4, self._read_geom1_4],
+            #'GEOM2': [self._read_geom2_4, self._read_geom2_4],
+            #'GEOM3': [self._read_geom3_4, self._read_geom3_4],
+            #'GEOM4': [self._read_geom4_4, self._read_geom4_4],
+
+            # superelements
+            #'GEOM1S': [self._read_geom1_4, self._read_geom1_4],
+            #'GEOM2S': [self._read_geom2_4, self._read_geom2_4],
+            #'GEOM3S': [self._read_geom3_4, self._read_geom3_4],
+            #'GEOM4S': [self._read_geom4_4, self._read_geom4_4],
+
+            #'GEOM1N': [self._read_geom1_4, self._read_geom1_4],
             #'GEOM2N': [self._read_geom2_4, self._read_geom2_4],
             #'GEOM3N': [self._read_geom3_4, self._read_geom3_4],
             #'GEOM4N': [self._read_geom4_4, self._read_geom4_4],
 
-            'GEOM1OLD': [self._read_geom1_4, self._read_geom1_4],
-            'GEOM2OLD': [self._read_geom2_4, self._read_geom2_4],
+            #'GEOM1OLD': [self._read_geom1_4, self._read_geom1_4],
+            #'GEOM2OLD': [self._read_geom2_4, self._read_geom2_4],
             #'GEOM3OLD': [self._read_geom3_4, self._read_geom3_4],
-            'GEOM4OLD': [self._read_geom4_4, self._read_geom4_4],
+            #'GEOM4OLD': [self._read_geom4_4, self._read_geom4_4],
 
-            'EPT' : [self._read_ept_4, self._read_ept_4],
-            'EPTS': [self._read_ept_4, self._read_ept_4],
-            'EPTOLD' : [self._read_ept_4, self._read_ept_4],
+            #'EPT' : [self._read_ept_4, self._read_ept_4],
+            #'EPTS': [self._read_ept_4, self._read_ept_4],
+            #'EPTOLD' : [self._read_ept_4, self._read_ept_4],
 
-            'MPT' : [self._read_mpt_4, self._read_mpt_4],
-            'MPTS': [self._read_mpt_4, self._read_mpt_4],
+            #'MPT' : [self._read_mpt_4, self._read_mpt_4],
+            #'MPTS': [self._read_mpt_4, self._read_mpt_4],
 
-            'DYNAMIC': [self._read_dynamics_4, self._read_dynamics_4],
-            'DYNAMICS': [self._read_dynamics_4, self._read_dynamics_4],
-            'DIT': [self._read_dit_4, self._read_dit_4],
+            #'DYNAMIC': [self._read_dynamics_4, self._read_dynamics_4],
+            #'DYNAMICS': [self._read_dynamics_4, self._read_dynamics_4],
+            #'DIT': [self._read_dit_4, self._read_dit_4],
 
             # ===passers===
             'EQEXIN': [self._table_passer, self._table_passer],

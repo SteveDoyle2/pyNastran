@@ -126,11 +126,6 @@ class FortranFormat(object):
         nstart = self.n
         self.isubtable = -3
         self.read_markers([-3, 1, 0])
-        #data = self._read_record()
-        #self._parse_results_table3(data)
-
-        #self.isubtable -= 1 # -4
-        #self.read_markers([self.isubtable, 1, 0])
         table_mapper = self._get_table_mapper()
 
         if self.table_name in table_mapper:
@@ -166,8 +161,6 @@ class FortranFormat(object):
                         datai = b''
                         if self.read_mode in [0, 2]:
                             self.ntotal = 0
-                            #print "read_mode", self.read_mode
-                            #print "-----------------------------------------"
                             for data in self._stream_record():
                                 data = datai + data
                                 n = table4_parser(data)
@@ -183,7 +176,6 @@ class FortranFormat(object):
                                     if self.obj.ntotal == self.obj.data.shape[1]:
                                         self.obj._reset_indices()
                                         self.obj.itime += 1
-                                        #self.obj.itotal = 0
                                     else:
                                         print('self.obj.name=%r has itime', self.obj.__class__.__name__)
                                         print('ntotal=%s shape=%s' % (self.obj.ntotal, str(self.obj.data.shape)))
@@ -221,16 +213,9 @@ class FortranFormat(object):
                                             self.obj.__class__.__name__, methods)
                                         break
                                         raise RuntimeError(msg)
-                                    #print self.freq
                                     self.obj._reset_indices()
-                                    #print "isubcase", self.isubcase
-                                    #print "record_len", record
-                                    # _len
                                     self.obj.ntimes += 1
                                     self.obj.ntotal = record_len // (self.num_wide * 4) * self._data_factor
-                                    #self.obj.ntotal = record_len // nwide
-                                    #print "ntotal         =", self.ntotal, self.obj.ntotal  #, type(self.obj)
-                                    #sys.exit()
                                 else:
                                     print('obj=%s doesnt have ntimes' % self.obj.__class__.__name__)
                     else:
@@ -279,9 +264,7 @@ class FortranFormat(object):
         markers1 = self.get_nmarkers(1, rewind=True)
         # handling continuation blocks
         if markers1[0] > 0:
-            #nloop = 0
             while markers1[0] > 0:
-                # 'markers0=%s markers1=%s' % (markers0, markers1)
                 markers1 = self.get_nmarkers(1, rewind=False)
                 n = self.n
                 record = self.skip_block()
@@ -297,13 +280,10 @@ class FortranFormat(object):
         markers1 = self.get_nmarkers(1, rewind=True)
         # handling continuation blocks
         if markers1[0] > 0:
-            #nloop = 0
             while markers1[0] > 0:
-                # 'markers0=%s markers1=%s' % (markers0, markers1)
                 markers1 = self.get_nmarkers(1, rewind=False)
                 record = self.read_block()
                 markers1 = self.get_nmarkers(1, rewind=True)
-                #nloop += 1
         return record
 
     def _stream_record(self, debug=True):
@@ -324,7 +304,6 @@ class FortranFormat(object):
         if markers1[0] > 0:
             nloop = 0
             while markers1[0] > 0:
-                # 'markers0=%s markers1=%s' % (markers0, markers1)
                 markers1 = self.get_nmarkers(1, rewind=False)
 
                 record = self.read_block()
@@ -350,7 +329,6 @@ class FortranFormat(object):
             nloop = 0
             records = [record]
             while markers1[0] > 0:
-                # 'markers0=%s markers1=%s' % (markers0, markers1)
                 markers1 = self.get_nmarkers(1, rewind=False)
                 record = self.read_block()
                 records.append(record)
