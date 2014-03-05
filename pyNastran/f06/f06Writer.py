@@ -164,20 +164,14 @@ def make_end(end_flag=False):
     return '\n'.join(lines+lines2+lines3)
 
 
-class F06WriterDeprecated(object):
-    def __init__(self):
-        pass
-    def write_f06(self, f06_outname, is_mag_phase=False, makeFile=True,
-                 deleteObjects=True):
-        raise RuntimeError()
-    def writeF06(self, f06_outname, is_mag_phase=False, makeFile=True,
-                 deleteObjects=True):
-        """.. seealso:: write_f06"""
-        self.write_f06(f06_outname, is_mag_phase, makeFile, deleteObjects)
+#class F06WriterDeprecated(object):
+#    def __init__(self):
+#        pass
 
-class F06Writer(F06WriterDeprecated):
+class F06Writer(object):
+#class F06Writer(F06WriterDeprecated):
     def __init__(self):
-        F06WriterDeprecated.__init__(self)
+        #F06WriterDeprecated.__init__(self)
         self.card_count = {}
 
         #: BDF Title
@@ -849,14 +843,6 @@ class F06Writer(F06WriterDeprecated):
                             raise
                         if delete_objects:
                             del result
-                        #f06.write('\n')
                         self.page_num += 1
-        if 0:
-            for res in res_types:
-                for isubcase, result in sorted(res.iteritems()):
-                    self.page_num = result.write_f06(header, page_stamp, page_num=self.page_num, f=f06, is_mag_phase=False)
-                    if delete_objects:
-                        del result
-                    self.page_num += 1
         f06.write(make_end(end_flag))
         f06.close()

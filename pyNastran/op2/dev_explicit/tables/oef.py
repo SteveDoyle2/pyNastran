@@ -25,7 +25,6 @@ from pyNastran.op2.tables.oef_forces.oef_complexForceObjects import (
     ComplexPentaPressureForce,
     ComplexCBushForce, ComplexForce_VU_2D,
     ComplexCBarForce, ComplexForce_VU)
-from pyNastran.op2.tables.oef_forces.thermal_elements import ThermalElements
 
 
 class OEF(OP2Common):
