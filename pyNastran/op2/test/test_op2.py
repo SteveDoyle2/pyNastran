@@ -4,9 +4,84 @@ import time
 from traceback import print_exc
 
 import pyNastran
-from pyNastran.op2.op2 import OP2
 from pyNastran.f06.f06 import FatalError
-#from pyNastran.op2.dev_explicit.op2 import OP2
+from pyNastran.op2.op2 import OP2
+from pyNastran.op2.op2_vectorized import OP2_Vectorized as OP2V
+
+# we need to check the memory usage
+is_linux = None
+is_memory = True
+try:
+    if os.name == 'nt':  # windows
+        windows_flag = True
+        is_linux = False
+        import wmi
+        comp = wmi.WMI()
+
+        """Functions for getting memory usage of Windows processes."""
+
+        __all__ = ['get_current_process', 'get_memory_info', 'get_memory_usage']
+
+        import ctypes
+        from ctypes import wintypes
+
+        GetCurrentProcess = ctypes.windll.kernel32.GetCurrentProcess
+        GetCurrentProcess.argtypes = []
+        GetCurrentProcess.restype = wintypes.HANDLE
+
+        SIZE_T = ctypes.c_size_t
+
+        class PROCESS_MEMORY_COUNTERS_EX(ctypes.Structure):
+            _fields_ = [
+                ('cb', wintypes.DWORD),
+                ('PageFaultCount', wintypes.DWORD),
+                ('PeakWorkingSetSize', SIZE_T),
+                ('WorkingSetSize', SIZE_T),
+                ('QuotaPeakPagedPoolUsage', SIZE_T),
+                ('QuotaPagedPoolUsage', SIZE_T),
+                ('QuotaPeakNonPagedPoolUsage', SIZE_T),
+                ('QuotaNonPagedPoolUsage', SIZE_T),
+                ('PagefileUsage', SIZE_T),
+                ('PeakPagefileUsage', SIZE_T),
+                ('PrivateUsage', SIZE_T),
+            ]
+
+        GetProcessMemoryInfo = ctypes.windll.psapi.GetProcessMemoryInfo
+        GetProcessMemoryInfo.argtypes = [
+            wintypes.HANDLE,
+            ctypes.POINTER(PROCESS_MEMORY_COUNTERS_EX),
+            wintypes.DWORD,
+        ]
+        GetProcessMemoryInfo.restype = wintypes.BOOL
+
+        def get_current_process():
+            """Return handle to current process."""
+            return GetCurrentProcess()
+
+        def get_memory_info(process=None):
+            """Return Win32 process memory counters structure as a dict."""
+            if process is None:
+                process = get_current_process()
+            counters = PROCESS_MEMORY_COUNTERS_EX()
+            ret = GetProcessMemoryInfo(process, ctypes.byref(counters),
+                                       ctypes.sizeof(counters))
+            if not ret:
+                raise ctypes.WinError()
+            info = dict((name, getattr(counters, name))
+                        for name, _ in counters._fields_)
+            return info
+
+        def get_memory_usage(process=None):
+            """Return this process's memory usage in bytes."""
+            info = get_memory_info(process=process)
+            return info['PrivateUsage']
+
+    elif os.name in ['posix', 'mac']:  # linux/mac
+        import resource
+        windows_flag = False
+        is_linux = True
+except:
+    is_memory = False
 
 
 def parse_table_names_from_F06(f06Name):
@@ -35,7 +110,7 @@ def get_failed_files(filename):
 
 
 def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
-                   delete_f06=True,
+                   delete_f06=True, is_vector=False,
                    debug=True, saveCases=True, skipFiles=[],
                    stopOnFailure=False, nStart=0, nStop=1000000000):
     n = ''
@@ -60,6 +135,7 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
             isPassed = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
                                write_f06=write_f06,
                                is_mag_phase=False,
+                               is_vector=is_vector,
                                delete_f06=delete_f06,
                                iSubcases=iSubcases, debug=debug,
                                stopOnFailure=stopOnFailure) # True/False
@@ -90,14 +166,33 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
 
 
 def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
-            is_mag_phase=False, delete_f06=False,
+            is_mag_phase=False, is_vector=False, delete_f06=False,
             iSubcases=[], debug=False, stopOnFailure=True):
     assert '.op2' in op2FileName.lower(), 'op2FileName=%s is not an OP2' % op2FileName
     isPassed = False
+    if isinstance(iSubcases, basestring):
+        if '_' in iSubcases:
+            iSubcases = [int(i) for i in iSubcases.split('_')]
+        else:
+            iSubcases = [int(iSubcases)]
+    print('iSubcases =', iSubcases)
+
     #debug = True
     try:
-        op2 = OP2(make_geom=make_geom, debug=debug)
+        if is_vector:
+            op2 = OP2V(make_geom=make_geom, debug=debug)
+        else:
+            op2 = OP2(make_geom=make_geom, debug=debug)
+
         op2.set_subcases(iSubcases)
+        if is_memory:
+            if is_linux: # linux
+                kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+            else: # windows
+                kb = get_memory_usage() / 1024
+            mb = kb / 1024.
+            #mbs.append(mb)
+            print "Memory usage start: %s (KB); %.2f (MB)" % (kb, mb)
 
         #op2.read_bdf(op2.bdfFileName,includeDir=None,xref=False)
         #op2.write_bdf_as_patran()
@@ -109,6 +204,16 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
             op2.write_bdf('fem.bdf.out', interspersed=True)
         #tableNamesF06 = parse_table_names_from_F06(op2.f06FileName)
         #tableNamesOP2 = op2.getTableNamesFromOP2()
+
+        if is_memory:
+            if is_linux: # linux
+                kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+            else: # windows
+                kb = get_memory_usage() / 1024
+            mb = kb / 1024.
+            #mbs.append(mb)
+            print "Memory usage     end: %s (KB); %.2f (MB)" % (kb, mb)
+
         if write_f06:
             (model, ext) = os.path.splitext(op2FileName)
             op2.write_f06(model+'.test_op2.f06', is_mag_phase=is_mag_phase)
@@ -118,7 +223,19 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
                 except:
                     pass
 
+        del op2
+        if is_memory:
+            if is_linux: # linux
+                kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+            else: # windows
+                kb = get_memory_usage() / 1024
+            mb = kb / 1024.
+            #mbs.append(mb)
+            print "Memory usage cleanup: %s (KB); %.2f (MB)" % (kb, mb)
+
+
         #print "subcases = ",op2.subcases
+
         #assert tableNamesF06==tableNamesOP2,'tableNamesF06=%s tableNamesOP2=%s' %(tableNamesF06,tableNamesOP2)
         #op2.caseControlDeck.sol = op2.sol
         #print op2.caseControlDeck.get_op2_data()
@@ -142,6 +259,7 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
     except FatalError:
         if stopOnFailure:
             raise
+        isPassed = True
     #except AssertionError:
     #    isPassed = True
     #except RuntimeError: #invalid analysis code
@@ -163,10 +281,10 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
         isPassed = True
     except:
         #print e
-        print_exc(file=sys.stdout)
         if stopOnFailure:
             raise
         else:
+            print_exc(file=sys.stdout)
             isPassed = False
 
     return isPassed
@@ -174,12 +292,14 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
 
 def main():
     from docopt import docopt
+    ver = str(pyNastran.__version__)
+
     msg  = "Usage:\n"
-    msg += "test_op2 [-q] [-g] [-w] [-f] [-z] OP2_FILENAME\n"
+    msg += "test_op2 [-q] [-g] [-w] [-f] [-z] [-t] [-s <sub>] OP2_FILENAME\n"
     msg += "  test_op2 -h | --help\n"
     msg += "  test_op2 -v | --version\n"
     msg += "\n"
-    msg += "Tests to see if an OP2 will work with pyNastran.\n"
+    msg += "Tests to see if an OP2 will work with pyNastran %s.\n" % ver
     msg += "\n"
     msg += "Positional Arguments:\n"
     msg += "  OP2_FILENAME         Path to OP2 file\n"
@@ -191,14 +311,14 @@ def main():
     msg += "  -f, --write_f06      Writes the f06 to fem.f06.out (default=True)\n"
     msg += "  -z, --is_mag_phase   F06 Writer writes Magnitude/Phase instead of\n"
     msg += "                       Real/Imaginary (still stores Real/Imag); (default=False)\n"
+    msg += "  -s <sub>, --subcase  Specify a single subcase to parse\n"
+    msg += "  -t, --vector         Vectorizes the results (default=False)\n"
     msg += "  -h, --help           Show this help message and exit\n"
     msg += "  -v, --version        Show program's version number and exit\n"
 
     if len(sys.argv) == 1:
-        aadf
         sys.exit(msg)
 
-    ver = str(pyNastran.__version__)
     data = docopt(msg, version=ver)
     #print("data", data)
 
@@ -215,8 +335,10 @@ def main():
             write_bdf     = data['--write_bdf'],
             write_f06     = data['--write_f06'],
             is_mag_phase  = data['--is_mag_phase'],
+            is_vector     = data['--vector'],
+            iSubcases     = data['--subcase'],
             debug         = not(data['--quiet']))
-    print("dt = %f" %(time.time() - t0))
+    print("dt = %f" % (time.time() - t0))
 
 if __name__=='__main__':  # op2
     main()
