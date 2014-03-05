@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from types import MethodType
 import os
-from os.path import splitext, getsize
-from os.path import join as pjoin
 from numpy import ndarray
 import io
 

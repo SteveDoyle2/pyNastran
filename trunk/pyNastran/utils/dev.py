@@ -1,3 +1,9 @@
+from os.path import splitext, getsize
+from os.path import join as pjoin
+
+from pyNastran.utils import object_attributes
+
+
 def get_files_of_type(dirname, extension='.txt', maxSize=100.):
     """
     Gets the list of all the files with a given extension in the specified directory
