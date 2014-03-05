@@ -1,6 +1,6 @@
 from struct import Struct
 
-from pyNastran.op2.dev_explicit.op2_common import OP2Common
+from pyNastran.op2.op2_common import OP2Common
 from pyNastran.op2.tables.lama_eigenvalues.lama_objects import (
     RealEigenvalues, ComplexEigenvalues)
 

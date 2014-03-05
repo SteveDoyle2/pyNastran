@@ -9,7 +9,7 @@ This file defines the OUG Table, which contains:
 """
 from struct import unpack
 
-from pyNastran.op2.dev_explicit.op2_common import OP2Common
+from pyNastran.op2.op2_common import OP2Common
 
 from pyNastran.op2.tables.oug.oug_displacements import (
     RealDisplacementVector,

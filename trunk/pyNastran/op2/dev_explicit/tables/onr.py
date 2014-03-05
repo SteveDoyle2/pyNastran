@@ -2,7 +2,7 @@
 from struct import Struct, unpack
 
 from pyNastran.op2.tables.oee_energy.oee_objects import StrainEnergyObject
-from pyNastran.op2.dev_explicit.op2_common import OP2Common
+from pyNastran.op2.op2_common import OP2Common
 
 class ONR(OP2Common):
     def __init__(self):

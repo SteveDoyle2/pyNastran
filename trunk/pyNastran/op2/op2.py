@@ -36,7 +36,7 @@ from pyNastran.op2.dev_explicit.tables.opg import OPG
 from pyNastran.op2.dev_explicit.tables.oqg import OQG
 from pyNastran.op2.dev_explicit.tables.oug import OUG
 from pyNastran.op2.dev_explicit.tables.ogpwg import OGPWG
-from pyNastran.op2.dev_explicit.fortran_format import FortranFormat
+from pyNastran.op2.fortran_format import FortranFormat
 
 from pyNastran.bdf.bdf import BDF
 
