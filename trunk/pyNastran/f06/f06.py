@@ -16,10 +16,7 @@ from pyNastran.f06.f06_classes import MaxDisplacement  # classes not in op2
 from pyNastran.f06.f06Writer import F06Writer
 
 from pyNastran.utils import is_binary
-
-
-class FatalError(RuntimeError):
-    pass
+from pyNastran.f06.errors import FatalError
 
 #class F06Deprecated(object):
     #def __init__(self, f06_filename):
