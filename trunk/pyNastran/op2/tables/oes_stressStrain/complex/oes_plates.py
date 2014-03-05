@@ -758,7 +758,7 @@ class ComplexPlateStrain(StrainObject):
         #print self.oxx
         msg = "eid=%s nodeID=%s curvature=%g exx=%s eyy=%s exy=%s" % (
             eid, nodeID, curvature, exx, eyy, exy)
-        assert nodeID not in self.exx[eid], msg
+        #assert nodeID not in self.exx[eid], msg
         self.fiberCurvature[eid][nodeID] = [curvature]
         self.exx[eid][nodeID] = [exx]
         self.eyy[eid][nodeID] = [eyy]

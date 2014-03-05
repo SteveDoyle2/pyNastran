@@ -192,23 +192,20 @@ class OP2( #BDF,
         """
         self.tables_to_read = table_names
 
-    def __init__(self, make_geom=False, save_skipped_cards=False,
+    def __init__(self, make_geom=False,
                  debug=False, log=None, debug_file=None):
         """
         Initializes the OP2 object
 
         :param make_geom: reads the BDF tables (default=False)
-        :param save_skipped_cards: creates the skippedCards.out file (default=False)
         :param debug: enables the debug log and sets the debug in the logger (default=False)
         :param log: a logging object to write debug messages to
          (.. seealso:: import logging)
         :param debug_file: sets the filename that will be written to (default=None -> no debug)
         """
         assert isinstance(make_geom, bool), 'make_geom=%r' % make_geom
-        assert isinstance(save_skipped_cards, bool), 'save_skipped_cards=%r' % save_skipped_cards
         assert isinstance(debug, bool), 'debug=%r' % debug
 
-        self.save_skipped_cards = save_skipped_cards
         self.make_geom = make_geom
 
         #self.tables_to_read = []
@@ -547,8 +544,6 @@ class OP2( #BDF,
             #self.binary_debug = open(os.devnull, 'wb')  #TemporaryFile()
             self.binary_debug = TrashWriter('debug.out', 'wb')
 
-        if self.save_skipped_cards:
-            self.skippedCardsFile = open('skippedCards.out', 'a')
         #: file index
         self.n = 0
         self.table_name = None
@@ -590,9 +585,6 @@ class OP2( #BDF,
         if self.debug:
             self.binary_debug.write('-' * 80 + '\n')
             self.binary_debug.write('f.tell()=%s\ndone...\n' % self.f.tell())
-        if self.save_skipped_cards:
-            self.skippedCardsFile.close()
-            del self.skippedCardsFile
         self.binary_debug.close()
         if self._close_op2:
             self.f.close()

@@ -946,18 +946,6 @@ class OES(OP2Common):
                 if self.element_type == 74: # CTRIA3
                     result_vector_name = 'ctria3_stress'
                     slot_vector = self.ctria3_stress
-                #elif self.element_type == 3:  # CQUAD4-centroidal
-                    #result_vector_name = 'cquad4_stress'
-                    #slot_vector = self.cquad4_stress
-                #elif self.element_type == 10:  # CQUAD8
-                    #result_vector_name = 'cquad8_stress'
-                    #slot_vector = self.cquad8_stress
-                #elif self.element_type == 10:  # CTRIAR
-                    #result_vector_name = 'ctriar_stress'
-                    #slot_vector = self.ctriar_stress
-                #elif self.element_type == 10:  # CTRIA6
-                    #result_vector_name = 'ctria6_stress'
-                    #slot_vector = self.ctria6_stress
                 else:
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
@@ -1058,7 +1046,8 @@ class OES(OP2Common):
                 msg = 'num_wide=%s' % self.num_wide
                 return self._not_implemented_or_skip(data, msg)
 
-        elif self.element_type in [64, 70, 75, 82, 144]:  # 64-cquad8/70-ctriar/ctria6/cquadr/144-cquad4
+        elif self.element_type in [64, 70, 82, 144]:  # bilinear plates
+        #elif self.element_type in [64, 70, 75, 82, 144]:  # bilinear plates
             # 64-CQUAD8
             # 70-CTRIAR
             # 75-CTRIA6
@@ -1217,12 +1206,13 @@ class OES(OP2Common):
                 ntotal = numwide_imag * 4
                 assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
                 nelements = len(data) // ntotal
+                #if 1:
                 auto_return = self._create_oes_object2(nelements,
                                                        result_name, result_vector_name,
                                                        slot, slot_vector,
                                                        obj_complex, obj_vector_complex)
                 if auto_return:
-                    return nelements * self.num_wide * 4
+                    return nelements * ntotal
 
                 s1 = Struct(b'ii')  # 2
                 s2 = Struct(b'i14f') # 15
