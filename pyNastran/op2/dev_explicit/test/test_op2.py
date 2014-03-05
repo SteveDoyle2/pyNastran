@@ -4,21 +4,85 @@ import time
 from traceback import print_exc
 
 import pyNastran
-#from pyNastran.op2.op2 import OP2
 from pyNastran.f06.f06 import FatalError
 from pyNastran.op2.dev_explicit.op2 import OP2
 from pyNastran.op2.dev_explicit.op2_vectorized import OP2_Vectorized as OP2V
 
 # we need to check the memory usage
+is_linux = None
+is_memory = True
 try:
     if os.name == 'nt':  # windows
-        import wmi
         windows_flag = True
+        is_linux = False
+        import wmi
+        comp = wmi.WMI()
+
+        """Functions for getting memory usage of Windows processes."""
+
+        __all__ = ['get_current_process', 'get_memory_info', 'get_memory_usage']
+
+        import ctypes
+        from ctypes import wintypes
+
+        GetCurrentProcess = ctypes.windll.kernel32.GetCurrentProcess
+        GetCurrentProcess.argtypes = []
+        GetCurrentProcess.restype = wintypes.HANDLE
+
+        SIZE_T = ctypes.c_size_t
+
+        class PROCESS_MEMORY_COUNTERS_EX(ctypes.Structure):
+            _fields_ = [
+                ('cb', wintypes.DWORD),
+                ('PageFaultCount', wintypes.DWORD),
+                ('PeakWorkingSetSize', SIZE_T),
+                ('WorkingSetSize', SIZE_T),
+                ('QuotaPeakPagedPoolUsage', SIZE_T),
+                ('QuotaPagedPoolUsage', SIZE_T),
+                ('QuotaPeakNonPagedPoolUsage', SIZE_T),
+                ('QuotaNonPagedPoolUsage', SIZE_T),
+                ('PagefileUsage', SIZE_T),
+                ('PeakPagefileUsage', SIZE_T),
+                ('PrivateUsage', SIZE_T),
+            ]
+
+        GetProcessMemoryInfo = ctypes.windll.psapi.GetProcessMemoryInfo
+        GetProcessMemoryInfo.argtypes = [
+            wintypes.HANDLE,
+            ctypes.POINTER(PROCESS_MEMORY_COUNTERS_EX),
+            wintypes.DWORD,
+        ]
+        GetProcessMemoryInfo.restype = wintypes.BOOL
+
+        def get_current_process():
+            """Return handle to current process."""
+            return GetCurrentProcess()
+
+        def get_memory_info(process=None):
+            """Return Win32 process memory counters structure as a dict."""
+            if process is None:
+                process = get_current_process()
+            counters = PROCESS_MEMORY_COUNTERS_EX()
+            ret = GetProcessMemoryInfo(process, ctypes.byref(counters),
+                                       ctypes.sizeof(counters))
+            if not ret:
+                raise ctypes.WinError()
+            info = dict((name, getattr(counters, name))
+                        for name, _ in counters._fields_)
+            return info
+
+        def get_memory_usage(process=None):
+            """Return this process's memory usage in bytes."""
+            info = get_memory_info(process=process)
+            return info['PrivateUsage']
+
     elif os.name in ['posix', 'mac']:  # linux/mac
         import resource
         windows_flag = False
+        is_linux = True
 except:
-    is_mem = False
+    is_memory = False
+
 
 def parse_table_names_from_F06(f06Name):
     """gets the op2 names from the f06"""
@@ -121,6 +185,14 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
             op2 = OP2(make_geom=make_geom, debug=debug)
 
         op2.set_subcases(iSubcases)
+        if is_memory:
+            if is_linux: # linux
+                kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+            else: # windows
+                kb = get_memory_usage() / 1024
+            mb = kb / 1024.
+            #mbs.append(mb)
+            print "Memory usage start: %s (KB); %.2f (MB)" % (kb, mb)
 
         #op2.read_bdf(op2.bdfFileName,includeDir=None,xref=False)
         #op2.write_bdf_as_patran()
@@ -132,6 +204,16 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
             op2.write_bdf('fem.bdf.out', interspersed=True)
         #tableNamesF06 = parse_table_names_from_F06(op2.f06FileName)
         #tableNamesOP2 = op2.getTableNamesFromOP2()
+
+        if is_memory:
+            if is_linux: # linux
+                kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+            else: # windows
+                kb = get_memory_usage() / 1024
+            mb = kb / 1024.
+            #mbs.append(mb)
+            print "Memory usage     end: %s (KB); %.2f (MB)" % (kb, mb)
+
         if write_f06:
             (model, ext) = os.path.splitext(op2FileName)
             op2.write_f06(model+'.test_op2.f06', is_mag_phase=is_mag_phase)
@@ -140,6 +222,17 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
                     os.remove(model+'.test_op2.f06')
                 except:
                     pass
+
+        del op2
+        if is_memory:
+            if is_linux: # linux
+                kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+            else: # windows
+                kb = get_memory_usage() / 1024
+            mb = kb / 1024.
+            #mbs.append(mb)
+            print "Memory usage cleanup: %s (KB); %.2f (MB)" % (kb, mb)
+
 
         #print "subcases = ",op2.subcases
 
@@ -245,7 +338,7 @@ def main():
             is_vector     = data['--vector'],
             iSubcases     = data['--subcase'],
             debug         = not(data['--quiet']))
-    print("dt = %f" %(time.time() - t0))
+    print("dt = %f" % (time.time() - t0))
 
 if __name__=='__main__':  # op2
     main()

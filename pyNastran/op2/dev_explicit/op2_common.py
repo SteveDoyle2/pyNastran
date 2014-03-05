@@ -471,7 +471,9 @@ class OP2Common(Op2Codes, F06Writer):
         #assert thermal_real_obj is None
 
         #print('self.num_wide =', self.num_wide)
-        if random_code is None or random_code == 0:
+        #print('random...%s' % self.isRandomResponse())
+        if not self.isRandomResponse():
+        #if random_code is None or random_code == 0:
             #print('random_code*** =', random_code)
             if self.format_code == 1 and self.num_wide == 8:  # real/random
                 # real_obj
