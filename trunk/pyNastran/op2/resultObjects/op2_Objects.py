@@ -3,7 +3,7 @@ from __future__ import print_function
 import copy
 
 from pyNastran.op2.op2Codes import Op2Codes
-from pyNastran.utils import list_print
+#from pyNastran.utils import list_print
 
 
 class BaseScalarObject(Op2Codes):
@@ -260,7 +260,7 @@ class ScalarObject(BaseScalarObject):
                     name = name + 's'
                 else:
                     vals = getattr(self, name)
-                msg.append('%s = %s\n' % (name, list_print(vals)))
+                msg.append('%s = %s\n' % (name, str(['%s' % val for val in vals]) ))
             #except AttributeError:  # weird case...
                 #pass
         #print("***dataNames =", self.dataNames)
