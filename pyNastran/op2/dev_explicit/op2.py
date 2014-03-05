@@ -250,6 +250,7 @@ class OP2( #BDF,
         self.words = []
         self.debug = debug
         self.debug_file = debug_file
+        self.debug_file = 'debug.out'
         self.make_geom = False
 
     def _get_table_mapper(self):
