@@ -6,12 +6,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import sys
-#import warnings
 from numpy import array, unique, where
-
-#from pyNastran.utils import is_binary
-#from pyNastran.utils.gui_io import load_file_dialog
-from pyNastran.op2.dev_explicit.op2 import OP2
+from pyNastran.op2.op2 import OP2
 
 class OP2_Vectorized(OP2):
 

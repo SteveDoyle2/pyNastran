@@ -8,7 +8,7 @@ from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import (RealLoadVector
                                                                   ThermalLoadVectorObject)
 from pyNastran.op2.tables.opg_appliedLoads.opnl_forceVector import ForceVectorObject, ComplexForceVectorObject
 
-from pyNastran.op2.dev_explicit.op2_common import OP2Common
+from pyNastran.op2.op2_common import OP2Common
 
 
 class OPG(OP2Common):
