@@ -1,7 +1,4 @@
 # pylint: disable=E1101
-#import sys
-#from struct import pack
-
 from pyNastran.op2.resultObjects.tableObject import RealTableVector  #, ComplexTableVector, TableObject, ComplexTableObject
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 
