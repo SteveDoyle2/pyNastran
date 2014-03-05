@@ -24,18 +24,18 @@ from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 #from pyNastran.op2.dev_explicit.tables.geom.dynamics import DYNAMICS
 #============================
 
-from pyNastran.op2.dev_explicit.tables.lama import LAMA
-from pyNastran.op2.dev_explicit.tables.onr import ONR
-from pyNastran.op2.dev_explicit.tables.ogpf import OGPF
+from pyNastran.op2.tables.lama_eigenvalues.lama import LAMA
+from pyNastran.op2.tables.oee_energy.onr import ONR
+from pyNastran.op2.tables.opg_appliedLoads.ogpf import OGPF
 
-from pyNastran.op2.dev_explicit.tables.oef import OEF
-from pyNastran.op2.dev_explicit.tables.oes import OES
-from pyNastran.op2.dev_explicit.tables.ogs import OGS
+from pyNastran.op2.tables.oef_forces.oef import OEF
+from pyNastran.op2.tables.oes_stressStrain.oes import OES
+from pyNastran.op2.tables.ogs import OGS
 
-from pyNastran.op2.dev_explicit.tables.opg import OPG
-from pyNastran.op2.dev_explicit.tables.oqg import OQG
-from pyNastran.op2.dev_explicit.tables.oug import OUG
-from pyNastran.op2.dev_explicit.tables.ogpwg import OGPWG
+from pyNastran.op2.tables.opg_appliedLoads.opg import OPG
+from pyNastran.op2.tables.oqg_constraintForces.oqg import OQG
+from pyNastran.op2.tables.oug.oug import OUG
+from pyNastran.op2.tables.ogpwg import OGPWG
 from pyNastran.op2.fortran_format import FortranFormat
 
 #from pyNastran.bdf.bdf import BDF
