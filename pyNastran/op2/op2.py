@@ -9,7 +9,7 @@ from struct import unpack, Struct
 from numpy import array
 
 
-from pyNastran.f06.f06 import FatalError
+from pyNastran.f06.errors import FatalError
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 
 #from pyNastran.op2.dev_explicit.tables.geom.geom1 import GEOM1
