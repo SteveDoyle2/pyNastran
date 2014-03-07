@@ -8,7 +8,7 @@ def components(card, n, fieldname):
     """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(n, int), type(n)
-    assert isintance(fieldname, basestring), type(fieldname)
+    assert isinstance(fieldname, basestring), type(fieldname)
     svalue = card.field(n)
     if isinstance(svalue, int):
         pass
