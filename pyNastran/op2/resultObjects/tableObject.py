@@ -1,4 +1,4 @@
-from struct import pack
+from struct import Struct, pack
 from itertools import izip
 
 from numpy import array, zeros, sqrt, abs, angle  # dot,
@@ -112,6 +112,108 @@ class RealTableVector(TableVector):  # displacement style table
 
     def data_type(self):
         return 'float32'
+
+    def _write_op2_header(self, f, table_num, i):
+        # table 4 info
+        nnodes = self.data.shape[0]
+
+        #(2+6) => (node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i)
+        ntotal = self.ntimes * nnodes * (2 + 6)
+
+        # record 3
+        header1 = [  #4, 0, 4,
+                  #4, -n, 4,
+                  #4, 0, 4,
+
+                  4, 146, 4,
+                  4, 584, 4]
+        header_format1 = b'9i'
+
+        # end of record 3
+        header2 = [4, 584, 4]
+        header_format2 = b'3i'
+
+        for word in self.words:
+            if word in self.dataNames:
+                val = getattr(self, word + 's')[i]  # self.times[i]
+            else:
+                val = getattr(self, word)  # self.time
+
+            if isinstance(val, int):
+                header_format += b'i'
+            elif isinstance(val, float):
+                header_format += b'f'
+            else:  # I don't think strings are allowed, but if they are, it's 4s
+                raise RuntimeError('format(%r) = ???' % val)
+            header.append(val)
+        f.write(Struct(header_format1 + header_format + header_format2).pack(header1 + header + header2))
+
+    def _write_table_header(self, f):
+        header = [
+            # table 1
+            4, 0, 4,
+            4, -1, 4,
+            4, 0, 4,  # 9i
+
+            4, 2, 4,  # 3i
+            8, self.table_name, 8,  # 1i, 8s, 1i
+            4, 2, 4,  #3i
+
+            #===============
+            # table 2
+            4, 0, 4,
+            4, -2, 4,
+            4, 0, 4,  # 9i
+
+            4, 7, 4,
+            28,  # 4i -> 13i
+            'OUG1    ', 3, 6, 14, 0, 1,   # subtable,todays date 3/6/2014, 0, 1
+            28,
+            ]
+        #header_format = '13i 4s 4i' + '13i 8s 6i'
+        header_format = '13i4s4i' + '13i8s6i'
+        f.write(Struct(header_format).pack(*header))
+
+    def write_op2(self, f):
+        print('data_code =', self.data_code)
+        self._write_table_header(f)
+        if isinstance(self.nonlinear_factor, float):
+            op2_format = '%sf' % (7 * self.ntimes)
+        else:
+            op2_format = 'i6f' * self.ntimes
+        s = Struct(op2_format)
+
+        node = self.node_gridtype[:, 0]
+        gridtype = self.node_gridtype[:, 1]
+        format_table4_1 = Struct(b'12i')
+        format_table4_2 = Struct(b'3i')
+
+        table_num = 3
+        for itime in xrange(self.ntimes):
+            self._write_op2_header(f, table_num, itime)
+
+            # record 4
+            header = [4, 0, 4,
+                      4, -table_num - 1, 4,
+                      4, 4 * ntotal, 4]
+            f.write(format_table4_1.pack(header))
+
+            t1 = self.data[itime, :, 0]
+            t2 = self.data[itime, :, 1]
+            t3 = self.data[itime, :, 2]
+            r1 = self.data[itime, :, 3]
+            r2 = self.data[itime, :, 4]
+            r3 = self.data[itime, :, 5]
+
+            i = 0
+            for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in izip(node, gridtype, t1, t2, t3, r1, r2, r3):
+                vals = (node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i)
+                f.write(s.pack(op2_format))
+
+            table_num -= 2
+            header = [4, 4 * ntotal, 4]
+            f.write(format_table4_2.pack(header))
+        return n
 
     def _write_f06_block(self, words, header, page_stamp, page_num, f):
         words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']

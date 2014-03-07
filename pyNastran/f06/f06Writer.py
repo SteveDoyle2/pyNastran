@@ -586,6 +586,7 @@ class F06Writer(object):
             f06 = f06_outname
             f06_outname = f06.name
             print('f06_outname =', f06_outname)
+        op2 = open(f06_outname.replace('.f06', '.op2'), 'wb')
 
         page_stamp = self.make_stamp(self.Title, self.date)
         if self.grid_point_weight.reference_point is not None:
@@ -814,6 +815,8 @@ class F06Writer(object):
                 for res_type in res_types:
                     if isubcase in res_type:
                         result = res_type[isubcase]
+                        if hasattr(result, 'write_op2'):
+                            result.write_op2(op2)
                         res_length = max(len(result.__class__.__name__), res_length)
                         continue
                 res_format = '%%-%is SUBCASE=%%i%%s' % res_length
@@ -846,3 +849,4 @@ class F06Writer(object):
                         self.page_num += 1
         f06.write(make_end(end_flag))
         f06.close()
+        op2.close()
