@@ -175,6 +175,7 @@ class FortranFormat(object):
                                     #ntotal = record_len // (self.num_wide * 4) * self._data_factor
                                     if self.obj.ntotal == self.obj.data.shape[1]:
                                         self.obj._reset_indices()
+                                        self.obj.words = self.words
                                         self.obj.itime += 1
                                     else:
                                         print('self.obj.name=%r has itime', self.obj.__class__.__name__)
