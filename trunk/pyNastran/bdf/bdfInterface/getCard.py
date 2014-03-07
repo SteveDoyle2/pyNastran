@@ -202,8 +202,6 @@ class GetMethods(GetMethodsDeprecated):
         try:
             return self.elements[eid]
         except KeyError:
-            if self._xref == 2:
-                return eid
             raise KeyError('eid=%s not found%s.  Allowed elements=%s'
                            % (eid, msg, self.elements.keys()))
 
@@ -217,8 +215,6 @@ class GetMethods(GetMethodsDeprecated):
         try:
             return self.rigidElements[eid]
         except KeyError:
-            if self._xref == 2:
-                return eid
             raise KeyError('eid=%s not found%s.  Allowed rigidElements=%s'
                            % (pid, msg, self.rigidElements.keys()))
 
@@ -246,8 +242,6 @@ class GetMethods(GetMethodsDeprecated):
         try:
             return self.phbdys[pid]
         except KeyError:
-            if self._xref == 2:
-                return pid
             raise KeyError('pid=%s not found%s.  Allowed PHBDY Pids=%s'
                            % (pid, msg, self.phbdys.keys()))
 
@@ -358,8 +352,6 @@ class GetMethods(GetMethodsDeprecated):
         try:
             return self.caeros[eid]
         except KeyError:
-            if self._xref == 2:
-                return eid
             raise KeyError('eid=%s not found%s.  Allowed CAEROx=%s'
                            % (eid, msg, self.caeros.keys()))
 
@@ -431,8 +423,6 @@ class GetMethods(GetMethodsDeprecated):
         try:
             return self.desvars[oid]
         except KeyError:
-            if self._xref == 2:
-                return oid
             raise KeyError('oid=%s not found%s.  Allowed DESVARs=%s'
                            % (oid, msg, self.desvars.keys()))
 

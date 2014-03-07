@@ -6,7 +6,7 @@ from numpy import matrix, zeros, array, transpose, dot, ones
 from numpy import eye, allclose, cross
 from numpy.linalg import norm
 
-from pyNastran.utils import is_string, list_print
+from pyNastran.utils.dev import list_print
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element #, Mid
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -728,7 +728,7 @@ class CONROD(RodElement):
             assert isinstance(nsm, float), 'nsm=%r' % nsm
             assert isinstance(mpa, float), 'mass_per_length=%r' % mpa
             assert isinstance(mass, float), 'mass=%r' % mass
-        
+
             c = self.Centroid()
             for i in range(3):
                 assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])
@@ -918,7 +918,7 @@ class CBAR(LineElement):
             self.w3b = main[11]
         #print("offt = %s" %(self.offt))
 
-        if not is_string(self.offt):
+        if not isinstance(self.offt, basestring):
             raise SyntaxError('invalid offt expected a string of length 3 '
                               'offt=|%r|; Type=%s' % (self.offt, type(self.offt)))
 
@@ -1475,7 +1475,7 @@ class CBEAM(CBAR):
             self.isOfft = True
             self.offt = 'GGG'  # default
             self.bit = None
-        elif is_string(field8):
+        elif isinstance(field8, basestring):
             self.isOfft = True
             self.bit = None
             self.offt = field8

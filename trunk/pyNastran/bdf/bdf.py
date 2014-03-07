@@ -14,8 +14,8 @@ import warnings
 import traceback
 
 
-from pyNastran.utils import (list_print, is_string,
-                             object_attributes, print_bad_path)
+from pyNastran.utils import (object_attributes, print_bad_path)
+from pyNastran.utils.dev import list_print
 from pyNastran.utils.log import get_logger
 
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
@@ -1173,7 +1173,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #n += 1
 
             card_name = self._get_card_name(lines)
-            assert is_string(comment), type(comment)
+            if not isinstance(comment, basestring):
+                raise TypeError('comment=%s type=%s' % (comment, type(comment)))
 
             if card_name == 'INCLUDE':
                 bdf_filename = get_include_filename(lines, include_dir=self.include_dir)
