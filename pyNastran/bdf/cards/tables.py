@@ -25,7 +25,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
-from pyNastran.utils import list_print, is_string
+from pyNastran.utils.dev import list_print
 from pyNastran.bdf.bdfInterface.assign_type import (integer,  # fields,
     double, components, string, string_or_blank)
 
@@ -119,7 +119,7 @@ class TableObj(object):
 
         foundENDT = False
         for value in xy:
-            if is_string(value) and 'ENDT' in value.upper():
+            if isinstance(value, basestring) and 'ENDT' in value.upper():
                 foundENDT = True
             else:
                 xy2.append(value)

@@ -10,7 +10,7 @@ from numpy.linalg import norm
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 from pyNastran.bdf.cards.baseCard import BaseCard
-from pyNastran.utils import list_print
+from pyNastran.utils.dev import list_print
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, string_or_blank)
 

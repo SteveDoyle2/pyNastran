@@ -3,7 +3,7 @@ import unittest
 
 from itertools import izip, count
 
-from pyNastran.bdf.bdf import BDF, BDFCard, PBEAM, PBAR
+from pyNastran.bdf.bdf import BDF, BDFCard, PBEAM, PBAR, CBEAM, GRID, MAT1
 from pyNastran.bdf.fieldWriter import print_card
 
 bdf = BDF()
@@ -125,6 +125,46 @@ class TestBeams(unittest.TestCase):
                           '              0.      0.      0.      0.      0.      0.      0.      0.',]
         self._compare(fields, lines_expected)
 
+    def test_cbeam_05(self):
+        # modification of test_pbeam_05
+        model = BDF()
+        lines = ['PBEAM,3,6,2.9,3.5,5.97,0.4,3.14',
+                 '     , , ,2.0,-4.0',]
+        card = model.add_card(lines, 'PBEAM', is_list=False)
+
+        lines = ['CBEAM         10       3      1       2      0.01.000000     0.0']
+        model.add_card(lines, 'CBEAM', is_list=False)
+
+        lines = ['MAT1, 6, 1.0e7,,0.3']
+        model.add_card(lines, 'MAT1', is_list=False)
+
+        lines = ['GRID,1,,0.,0.,0.']
+        model.add_card(lines, 'GRID', is_list=False)
+
+        lines = ['GRID,2,,0.,0.,0.']
+        model.add_card(lines, 'GRID', is_list=False)
+        model.cross_reference()
+
+        cbeam = model.Element(10)
+        #cbeam = model.elements[10]
+        #print("Area = ", cbeam.Area())
+        #print("I11 = ", cbeam.I11())
+        #print("I22 = ", cbeam.I22())
+        #print("I12 = ", cbeam.I12())
+        #print("J = ", cbeam.J())
+
+        #print("Area = ", cbeam.Area())
+        print("I11 = ", cbeam.I1())
+        print("I22 = ", cbeam.I2())
+        print("I12 = ", cbeam.I12())
+        #print("J = ", cbeam.J())
+        self.assertEqual(cbeam.Area(), 2.9)
+        self.assertEqual(cbeam.I11(), 3.5)
+        self.assertEqual(cbeam.I22(), 5.97)
+        self.assertEqual(cbeam.I12(), 0.4)
+        self.assertEqual(cbeam.J(), 3.14)
+
+
     def test_pbeam_06(self):
         lines =['PBEAM   1       1       1.      60.     1.                              PBEAM1',
                 '+BEAM1  5.              -5.                                             PBEAM2',
@@ -234,6 +274,7 @@ class TestBeams(unittest.TestCase):
         pbeam = PBEAM(card2)
         fields2 = pbeam.reprFields()
         assert fields == fields
+
 
 class TestBars(unittest.TestCase):
     def test_pbar_01(self):

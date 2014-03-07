@@ -24,7 +24,6 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     string, string_or_blank,
     integer_or_double, double_string_or_blank, fields, integer_double_string_or_blank)
-from pyNastran.utils import is_string
 from pyNastran.utils.mathematics import integrate_line, integrate_positive_line
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.fieldWriter16 import print_card_16
