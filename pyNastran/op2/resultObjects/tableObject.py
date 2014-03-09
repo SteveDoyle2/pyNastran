@@ -114,12 +114,6 @@ class RealTableVector(TableVector):  # displacement style table
         return 'float32'
 
     def _write_op2_header(self, f, table_num, i):
-        # table 4 info
-        nnodes = self.data.shape[0]
-
-        #(2+6) => (node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i)
-        ntotal = self.ntimes * nnodes * (2 + 6)
-
         # record 3
         header1 = [  #4, 0, 4,
                   #4, -n, 4,
@@ -127,14 +121,19 @@ class RealTableVector(TableVector):  # displacement style table
 
                   4, 146, 4,
                   4, 584, 4]
-        header_format1 = b'9i'
+        header_format1 = b'6i '
 
         # end of record 3
         header2 = [4, 584, 4]
-        header_format2 = b'3i'
+        header_format2 = b' 3i'
 
+        #============
+        header_format = b''  # the main block
+        header = []
         for word in self.words:
-            if word in self.dataNames:
+            if word == '???':
+                val = 0
+            elif word in self.dataNames:
                 val = getattr(self, word + 's')[i]  # self.times[i]
             else:
                 val = getattr(self, word)  # self.time
@@ -143,10 +142,25 @@ class RealTableVector(TableVector):  # displacement style table
                 header_format += b'i'
             elif isinstance(val, float):
                 header_format += b'f'
+            elif isinstance(val, basestring) and word in ['Title', 'subtitle', 'label']:
+                val = 4
+                header_format += 'i'
+                #val = '%128s' % val
+                #header_format += b'128s'
             else:  # I don't think strings are allowed, but if they are, it's 4s
-                raise RuntimeError('format(%r) = ???' % val)
+                raise RuntimeError('format(%r) = %r ???' % (word, val))
             header.append(val)
-        f.write(Struct(header_format1 + header_format + header_format2).pack(header1 + header + header2))
+
+        #============
+        Formats = header_format1 + header_format + header_format2
+        headers = header1 + header + header2
+        #print('Formats =', Formats)
+        #print('headers =', headers)
+        #f.write(Struct(header_format1).pack(*header1))
+        #f.write(Struct(header_format2).pack(*header2))
+        #f.write(Struct(header_format).pack(*header))
+
+        f.write(Struct(Formats).pack(*headers))
 
     def _write_table_header(self, f):
         header = [
@@ -174,19 +188,26 @@ class RealTableVector(TableVector):  # displacement style table
         header_format = '13i4s4i' + '13i8s6i'
         f.write(Struct(header_format).pack(*header))
 
-    def write_op2(self, f):
-        print('data_code =', self.data_code)
+    def write_op2(self, f, is_mag_phase=False):
+        #print('data_code =', self.data_code)
         self._write_table_header(f)
         if isinstance(self.nonlinear_factor, float):
-            op2_format = '%sf' % (7 * self.ntimes)
+            op2_format = '%sif' % (7 * self.ntimes)
         else:
-            op2_format = 'i6f' * self.ntimes
+            op2_format = '2i6f' * self.ntimes
         s = Struct(op2_format)
 
         node = self.node_gridtype[:, 0]
         gridtype = self.node_gridtype[:, 1]
-        format_table4_1 = Struct(b'12i')
+        format_table4_1 = Struct(b'9i')
         format_table4_2 = Struct(b'3i')
+
+        # table 4 info
+        nnodes = self.data.shape[0]
+        nnodes_device = self.node_gridtype[:, 0] * 10 + self.device_code
+
+        #(2+6) => (node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i)
+        ntotal = self.ntimes * nnodes * (2 + 6)
 
         table_num = 3
         for itime in xrange(self.ntimes):
@@ -196,7 +217,7 @@ class RealTableVector(TableVector):  # displacement style table
             header = [4, 0, 4,
                       4, -table_num - 1, 4,
                       4, 4 * ntotal, 4]
-            f.write(format_table4_1.pack(header))
+            f.write(format_table4_1.pack(*header))
 
             t1 = self.data[itime, :, 0]
             t2 = self.data[itime, :, 1]
@@ -206,14 +227,16 @@ class RealTableVector(TableVector):  # displacement style table
             r3 = self.data[itime, :, 5]
 
             i = 0
-            for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in izip(node, gridtype, t1, t2, t3, r1, r2, r3):
+
+            for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in izip(nnodes_device, gridtype, t1, t2, t3, r1, r2, r3):
                 vals = (node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i)
-                f.write(s.pack(op2_format))
+                #grid = nodeID*10+device_code
+                f.write(s.pack(*vals))
 
             table_num -= 2
             header = [4, 4 * ntotal, 4]
-            f.write(format_table4_2.pack(header))
-        return n
+            f.write(format_table4_2.pack(*header))
+        #return n
 
     def _write_f06_block(self, words, header, page_stamp, page_num, f):
         words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']

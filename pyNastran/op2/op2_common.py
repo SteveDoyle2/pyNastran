@@ -6,12 +6,14 @@ from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.utils import object_attributes
 
 from pyNastran.f06.f06Writer import F06Writer
+from pyNastran.f06.op2_writer import OP2Writer
 from pyNastran.op2.op2Codes import Op2Codes
 
-class OP2Common(Op2Codes, F06Writer):
+class OP2Common(Op2Codes, F06Writer, OP2Writer):
     def __init__(self):
         Op2Codes.__init__(self)
         F06Writer.__init__(self)
+        OP2Writer.__init__(self)
 
         #: flag for vectorization
         #: 0 - no vectorization
@@ -403,6 +405,7 @@ class OP2Common(Op2Codes, F06Writer):
         #: the label of the subcase
         self.label = label.strip()
         self.data_code['label'] = self.label
+        self.data_code['Title'] = self.Title
 
         if self.debug:
             self.binary_debug.write('  Title    = %r\n' % self.Title)
