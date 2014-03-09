@@ -165,8 +165,9 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
     sys.exit(msg)
 
 
-def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
-            is_mag_phase=False, is_vector=False, delete_f06=False,
+def run_op2(op2FileName, make_geom=False, write_bdf=False,
+            write_f06=True, write_op2=True, is_mag_phase=False,
+            is_vector=False, delete_f06=False,
             iSubcases=[], debug=False, stopOnFailure=True):
     assert '.op2' in op2FileName.lower(), 'op2FileName=%s is not an OP2' % op2FileName
     isPassed = False
@@ -220,6 +221,15 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False, write_f06=True,
             if delete_f06:
                 try:
                     os.remove(model+'.test_op2.f06')
+                except:
+                    pass
+
+        if write_op2:
+            (model, ext) = os.path.splitext(op2FileName)
+            op2.write_op2(model+'.test_op2.op2', is_mag_phase=is_mag_phase)
+            if delete_f06:
+                try:
+                    os.remove(model+'.test_op2.op2')
                 except:
                     pass
 
@@ -295,7 +305,8 @@ def main():
     ver = str(pyNastran.__version__)
 
     msg  = "Usage:\n"
-    msg += "test_op2 [-q] [-g] [-w] [-f] [-z] [-t] [-s <sub>] OP2_FILENAME\n"
+    #msg += "test_op2 [-q] [-g] [-w] [-f] [-z] [-t] [-s <sub>] OP2_FILENAME\n"
+    msg += "test_op2 [-q] [-g] [-w] [-f] [-o] [-z] [-t] [-s <sub>] OP2_FILENAME\n"
     msg += "  test_op2 -h | --help\n"
     msg += "  test_op2 -v | --version\n"
     msg += "\n"
@@ -309,6 +320,7 @@ def main():
     msg += "  -g, --geometry       Reads the OP2 for geometry, which can be written out (default=False)\n"
     msg += "  -w, --write_bdf      Writes the bdf to fem.bdf.out (default=False)\n"
     msg += "  -f, --write_f06      Writes the f06 to fem.f06.out (default=True)\n"
+    msg += "  -o, --write_op2      Writes the op2 to fem.op2.out (default=True)\n"
     msg += "  -z, --is_mag_phase   F06 Writer writes Magnitude/Phase instead of\n"
     msg += "                       Real/Imaginary (still stores Real/Imag); (default=False)\n"
     msg += "  -s <sub>, --subcase  Specify a single subcase to parse\n"
@@ -334,6 +346,7 @@ def main():
             make_geom     = data['--geometry'],
             write_bdf     = data['--write_bdf'],
             write_f06     = data['--write_f06'],
+            write_op2     = data['--write_op2'],
             is_mag_phase  = data['--is_mag_phase'],
             is_vector     = data['--vector'],
             iSubcases     = data['--subcase'],

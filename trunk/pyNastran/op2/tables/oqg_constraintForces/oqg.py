@@ -19,7 +19,7 @@ class OQG(OP2Common):
     def _read_oqg1_3(self, data):
         three = self.parse_approach_code(data)
         self.words = [
-            'aCode',       'tCode',    '???',           'isubcase',
+            'analysis_code', 'table_code', '???',           'isubcase',
              '???',         '???',      '???',          'random_code'
              'format_code', 'num_wide', '11',           '???',
             'acoustic_flag','???',      '???',          '???',

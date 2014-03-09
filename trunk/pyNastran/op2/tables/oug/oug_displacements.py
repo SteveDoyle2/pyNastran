@@ -180,24 +180,24 @@ class RealDisplacement(RealTableObject):  # approach_code=1, thermal=0
         return device_code
 
 
-    def write_op2(self, header, pageStamp, f, is_mag_phase=False, packing=False):
+    def write_op2(self, f, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_op2_transient(header, pageStamp, page_num, f)
+            return self._write_op2_transient(f)
 
-        i = -1
-        marker1 = [4,  0, 4]
-        marker2 = [4,  i, 4]
-        marker3 = [4,  0, 4]
-        marker = marker1 + marker2 + marker3
-        if packing:
-            npack = len(marker)
-            p = pack('%ii' % npack, *marker)
-            f.write(p)
-        else:
-            f.write(str(marker)+'\n')
+        #i = -1
+        #marker1 = [4,  0, 4]
+        #marker2 = [4,  i, 4]
+        #marker3 = [4,  0, 4]
+        #marker = marker1 + marker2 + marker3
+        #if packing:
+            #npack = len(marker)
+            #p = pack('%ii' % npack, *marker)
+            #f.write(p)
+        #else:
+            #f.write(str(marker)+'\n')
 
-        device_code = self.write_table2(f, packing=packing)
-        return self._write_op2_block(f, header, device_code, packing=packing)
+        #device_code = self.write_table2(f, packing=packing)
+        return self._write_op2_block(f)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                             D I S P L A C E M E N T   V E C T O R\n',

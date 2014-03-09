@@ -245,6 +245,7 @@ class OP2( #BDF,
         self.grid_point_weight = GridPointWeight()
         self.words = []
         self.debug = debug
+        self.debug = True
         self.debug_file = debug_file
         self.debug_file = 'debug.out'
         self.make_geom = False
@@ -560,18 +561,16 @@ class OP2( #BDF,
                 raise FatalError("The OP2 is empty.")
             raise
 
-        if markers == [3,]:  # PARAM, POST, -2
+        if markers == [3,]:  # PARAM, POST, -1
             self.read_markers([3])
             data = self.read_block()
 
             self.read_markers([7])
             data = self.read_block()
             #self.show(100)
-
             data = self._read_record()
-
             self.read_markers([-1, 0])
-        elif markers == [2,]:  # PARAM, POST, -1
+        elif markers == [2,]:  # PARAM, POST, -2
             pass
         else:
             raise NotImplementedError(markers)
@@ -1064,6 +1063,8 @@ class OP2( #BDF,
         Reads a geometry table
         """
         self.table_name = self.read_table_name(rewind=False)
+        if self.debug:
+            self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
         self.read_markers([-1])
         data = self._read_record()
 
@@ -1120,12 +1121,17 @@ class OP2( #BDF,
         Reads a results table
         """
         if self.debug:
-            self.binary_debug.write('read_results_table\n')
+            self.binary_debug.write('read_results_table - %s\n' % self.table_name)
         self.table_name = self.read_table_name(rewind=False)
         self.read_markers([-1])
+        if self.debug:
+            self.binary_debug.write('---markers = [-1]---\n')
+            #self.binary_debug.write('marker = [4, -1, 4]\n')
         data = self._read_record()
 
         self.read_markers([-2, 1, 0])
+        if self.debug:
+            self.binary_debug.write('---markers = [-2, 1, 0]---\n')
         data = self._read_record()
         if len(data) == 8:
             subtable_name = unpack(b'8s', data)
