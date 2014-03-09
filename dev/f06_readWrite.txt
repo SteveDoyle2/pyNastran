@@ -12,53 +12,56 @@ Important calculated parameters are nice, but not required.
 Finite Element Temperature Gradients And Fluxes
 
 ----OQG - constraint forces----
-Forces Of Single-Point Constraint				done
-Forces Of Multi-Point  Constraint				done
+Forces Of Single-Point Constraint               done
+Forces Of Multi-Point  Constraint               done
 
 
 ----OES - stress/strain----
-Stresses In Bar Elements(CBAR)					done
-Stresses In Rod Elements(CROD)					done
+Stresses In Bar Elements(CBAR)                  done
+Stresses In Rod Elements(CROD)                  done
 
-Stresses In Triangular Elements(TRIA3)				done
-Stresses In Quadrilateral Elements(QUAD4)			done
-Stresses In Quadrilateral Elements(QUAD4) option=bilin		done
-Stresses In Layered Composite Elements(QUAD4)			done
+Stresses In Triangular Elements(TRIA3)              done
+Stresses In Quadrilateral Elements(QUAD4)           done
+Stresses In Quadrilateral Elements(QUAD4) option=bilin      done
+Stresses In Layered Composite Elements(QUAD4)           done
 
-Stresses In Tetrahedron Solid Elements(CTETRA)			done
-Stresses In Hexahedron  Solid Elements(HEXA)			done
-Stresses In Pentahedron Solid Elements(PENTA)			done
+Stresses In Tetrahedron Solid Elements(CTETRA)          done
+Stresses In Hexahedron  Solid Elements(HEXA)            done
+Stresses In Pentahedron Solid Elements(PENTA)           done
 
-Strains In Bar Elements(CBAR)					done
-Strains In Rod Elements(CROD)					done
+Strains In Bar Elements(CBAR)                   done
+Strains In Rod Elements(CROD)                   done
 
-Strains In Quadrilateral Elements(QUAD4)			done
-Strains In Triangular Elements(TRIA3)				done
+Strains In Quadrilateral Elements(QUAD4)            done
+Strains In Triangular Elements(TRIA3)               done
 
-Strains In Tetrahedron Solid Elements(CTETRA)			done
-Strains In Hexahedron  Solid Elements(HEXA)			done
-Strains In Pentahedron Solid Elements(PENTA)			done
+Strains In Tetrahedron Solid Elements(CTETRA)           done
+Strains In Hexahedron  Solid Elements(HEXA)         done
+Strains In Pentahedron Solid Elements(PENTA)            done
 
 
 ----LAMA - eigenvalues----
-Real Eigenvalues						done
-Complex Eigenvalue Summary					no object
+Real Eigenvalues                        done
+Complex Eigenvalue Summary                  no object
 
 ----OUG----
-Displacement Vector						done
-Real Eigenvector No.						done
-Complex Displacement Vector					done
-Temperature Vector						done
+Displacement Vector                     done
+Real Eigenvector No.                        done
+Complex Displacement Vector                 done
+Temperature Vector                      done
 
 ***OEE - energy----
-Element Strain Energies						???
+Element Strain Energies                     ???
 
 ----OGP - grid point force balance----
-Grid Point Force Balance					???
+Grid Point Force Balance                    ???
 
 ***OPG - applied loads----
-appliedLoadsObject						no
-loadVectorObject						no
+appliedLoadsObject                      no
+loadVectorObject                        no
+
+----OPGWG - grid_point_weight---
+Output From Grid Point Weight Generator  done
 
 ----not supported - main----
 Nastran File And System Parameter Echo
@@ -67,7 +70,6 @@ Case Control Echo
 Model Summary
 
 Element Geometry Test Results Summary
-Output From Grid Point Weight Generator
 OLoad Resultant
 Maximum SPC Forces
 Maximum Displacements

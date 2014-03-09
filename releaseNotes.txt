@@ -31,7 +31,8 @@ Removed BDF
 
 Overall OP2
    - added plotting support for "standard" results (***complex)
-      - ***complex results may plot in real/imag or mag/phase or PSD (power spectral density)
+      - ***complex results may plot in real/imag or mag/phase or PSD
+        (power spectral density)
       - ***no temperature, stress, element forces, energy
 
 
@@ -48,47 +49,63 @@ Solver
    - rewriting pyNastran solver (SOL 101)
       - improved support for 3D
       - uses case control deck to identify loads/BCs
-      - still uses dense matricies, but layout will be easier to add sparse matricies later
-      - still need to build Kgg/Fg/SPC/MPC matrices, partition matrices, solve, calculate responses
+      - still uses dense matricies, but layout will be easier to add sparse
+        matricies later
+      - still need to build Kgg/Fg/SPC/MPC matrices, partition matrices,
+        solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
 -----------------------v0.7.0 released 2013/05/??-----------------------
-Release notes
+Release notes:
    - added large field BDF writing
    - more OP2/F06 results (e.g. mass properties)
    - OP2 reader is faster, more robust, and catches FatalErrors
-   - vastly improved GUI that supports Cart3d, Panair, and Usm3D
-
-OP2 support
-   - rewrite of the OP2 allows for increased robustness
-   - grid point weight table is now supported (see beam_modes demo)
-
-Minor Updates:
-   - improved messages when cross-referencing
+   - improved GUI to supports Cart3d, Panair, and Usm3D and log messages
    - making bdf/f06/op2 APIs more consistent
 
-BDF API change
+BDF:
+   - MATS1, MATTx support
+   - fixed major PBEAM bug
+   - improved messages when cross-referencing
    - readBDF is now gone, replaced by read_bdf (was previously deprecated)
-   - write_bdf method now has a precision='single' or 'double' option
+   - large field format writing now supported.
+     write_bdf method now has a precision='single' or 'double' option
+   - fixed bug with SETx writing.  Nastran limits a SETx card to one THRU
+     per card, which is inconsistent with other cards that use THRU.
 
-F06 API change
+OP2:
+   - rewrite of the OP2 allows for increased robustness and speed
+   - OP2 catches fatal errors
+   - grid point weight table is now supported (see beam_modes demo)
+   - OP2 no longer defines the filename; use read_f06.
+     readOP2 is now gone, replaced by read_op2 (was previously deprecated)
+   - OP2 class names updated to be more descriptive
+     (e.g. DisplacementObject -> RealDisplacement)
+   - starting OP2 vectorized support.  It's currently slower (1.2x-1.7x),
+     which is due to array indexing being slower for non-vectorized operations.
+     However, it takes up much less memory (~5x).  Note: the F06 writing cannot
+     be vectorized, so if you do vectorize your code, it may be much faster.
+     The API and data members are still in development and should be expected
+     to change.
+
+F06:
+   - Fatal errors caught
    - F06 no longer defines the filename; use read_f06
    - readF06 is now gone, replaced by read_f06 (was previously deprecated)
-
-OP2 API change
-   - OP2 no longer defines the filename; use read_f06
-   - readOP2 is now gone, replaced by read_op2 (was previously deprecated)
+   - grid point weight table is now supported
 
 -----------------------v0.6.1 released 2013/06/13-----------------------
 BDF Bug Fixes
    - Parsing of "1.2345D+04".  It worked in Python 2.6, but not 2.7.
    - RBE2 card with alpha field.
-   - active I12 field on PBAR card now disables AssertionError if K1 or K2 are blank
-   - fixed bug in LSEQ card where table field was cross-referenced as a load (field #4)
+   - active I12 field on PBAR card now disables AssertionError if K1 or K2 are
+     blank
+   - fixed bug in LSEQ card where table field was cross-referenced as a load
+    (field #4)
 
 OP2/F06 Bug Fixes
    - improved memory usage in real plates (stress/strain) when writing F06
-      
+
 -----------------------v0.6 released 2013/05/07-----------------------
 
 Overall Notes
@@ -128,9 +145,10 @@ BDF API Changes
    - moved storage location of EIGC, EIGP to cMethod
    - grav card are now accessed using Load(lid) and not Grav(lid)
    - grav card loadID renamed from sid to lid
-   - LOAD cards now have a getReducedLoads() which gets the scale factors and load objects
-     for all sub-loads (supports LOAD, FORCEx, MOMENTx, GRAV)
-     not implemented across all load types, so having a LOAD card is still a good thing
+   - LOAD cards now have a getReducedLoads() which gets the scale factors and
+     load objects for all sub-loads (supports LOAD, FORCEx, MOMENTx, GRAV)
+     not implemented across all load types, so having a LOAD card is still a
+     good thing
    - LOAD objects now have a getReducedLoads() method that determines
      a list of scaleFactors and FORCE/MOMENT/GRAV/etc. cards
 
@@ -142,7 +160,8 @@ BDF Bug Fixes
    - PLOAD4 bug with g1 vs g3/g4
    - EIGB keeps method (INV/SINV) now (not clear if there's a default)
    - QBDY3 cross referencing fixed
-   - TSTEPNL fixed possible issue (kStep default) caused by unlisted METHOD field
+   - TSTEPNL fixed possible issue (kStep default) caused by unlisted METHOD
+     field
    - SLOAD nodes were referencing loads instead of nodes
    - PFAST kr3 was writing out as kr2
    - PSHELL now supports mid2=-1
@@ -248,17 +267,21 @@ BDF API Changes
    - added Mid1(), Mid2(), Mid3(), Mid4() methods for PSHELL.
      Mid() now returns Mid1() or Mid2() depending on the form of the PSHELL
      Mass() calculated based on mid1 (or mid2 if mid1=None) per QRG
-   - Tri-type elements are now TriShells instead of CTRIA3s (same for QUADs, QuadShells)
-   - component constraints (e.g. 123456) on GRID, SPC, SPC1 and MPC are now strings
+   - Tri-type elements are now TriShells instead of CTRIA3s (same for QUADs,
+     QuadShells)
+   - component constraints (e.g. 123456) on GRID, SPC, SPC1 and MPC are now
+     strings
      for easy looping instead of a single integer (default='')
    - added Mids() for PCOMP/PCOMPG
-   - added getNodeIDToElementIDsMap(), getPropertyIDToElementIDsMap(), getMaterialIDToPropertyIDsMap()
-     limited 0D,1D element support (e.g. CBAR, CBEAM, CELAS1, etc.) for these methods
+   - added getNodeIDToElementIDsMap(), getPropertyIDToElementIDsMap(),
+     getMaterialIDToPropertyIDsMap()
+     limited 0D,1D element support (e.g. CBAR, CBEAM, CELAS1, etc.) for these
+     methods
 
 BDF Bug Fixes
    - printCard can now handle cards with an embedded line of Nones
        with data below.  This is a rare bug but affects the NLPARM
-   - fixed minor bug with small values not printing that were slightly 
+   - fixed minor bug with small values not printing that were slightly
      above the tolerance level
    - fixed bug in CONM2 with inertia terms
    - PCOMP can now have 1 ply per line or 2 plies per line
@@ -287,7 +310,8 @@ Overall OP2
    - more results
    - integrates with F06 Writer
    - more embedded BDF reading
-   - added setTransientTimes(times) to explictly extract results at desired times
+   - added setTransientTimes(times) to explictly extract results at desired
+     times
      - OUG
      - OES
      - OEE
@@ -296,7 +320,8 @@ Overall OP2
 OP2 API Changes
    - more results in CBEAM stress/strain
    - complex displacement reworked
-   - added writeF06 method to most objects (no strain energy, shear stress/strain, celas stress/strain)
+   - added writeF06 method to most objects (no strain energy,
+     shear stress/strain, celas stress/strain)
 
 Added OP2
    - LAMA (requires an ESE = ALL to create table)
@@ -309,7 +334,7 @@ Added OP2
    - OQG (SPCFORCES=ALL, MPCFORCES=ALL)
      - SPC Forces (static/transient)
      - MPC Forces (static/transient)
-   
+
    - OES (STRESS=ALL, STRAIN=ALL)
      - stress/strain
        - CTRIAX6 (static/transient)
@@ -331,8 +356,10 @@ Overall F06 Reader/Writer
       - F06 field parsing needs more testing, so beware!
       - juat use the OP2 reader
    - F06 Writer integrates with OP2 reader
-     - transient variable names may not be correct (e.g. 'lftsfq' mean 'LOAD STEP', but it should write 'LOAD STEP')
-   - The op2 or f06 readers feed the f06 writer or another solver/user's own results.
+     - transient variable names may not be correct (e.g. 'lftsfq' mean
+       'LOAD STEP', but it should write 'LOAD STEP')
+   - The op2 or f06 readers feed the f06 writer or another solver/user's own
+     results.
    - see f06_readWrite.txt for more info
 
 Overall GUI
@@ -364,9 +391,10 @@ BDF Bug Fixes
    - Continuation markers can have more than 1 character in them for CSV cards
    - Unincluded cards at the end of an INCLUDE file won't crash the BDF reader
    - CORD2Rs can have axes that arent ijk!
-   - fixed bug in fieldWriter that caused certain values (e.g. -0.9999 and -0.0999) to be written out
-     as (-.)  They were assumed to not round up to -1.0 and -0.1 respectively so the
-     leading -0. could be replaced by (-.) to save field width.
+   - fixed bug in fieldWriter that caused certain values (e.g. -0.9999 and
+     -0.0999) to be written out as (-.)  They were assumed to not round up to
+     -1.0 and -0.1 respectively so the leading -0. could be replaced by (-.)
+     to save field width.
 
 Overall BDF
    - reorganized code files (main BDF class is in the same place)
@@ -405,7 +433,8 @@ Added OP2
 
 OP2 API Changes
    - OUG
-      - displacementObject now has self.translations (no more self.displacements) & self.rotations
+      - displacementObject now has self.translations (no more
+        self.displacements) & self.rotations
         This is standard across displacement/velocity/acceleration
 
 Overall OP2
@@ -417,9 +446,10 @@ OP2 Bug Fixes
 
 -----------------------v0.2.1 released 2011/1/2-----------------------
 BDF Bug Fixes
-   - fixed bug in fieldWriter that caused certain values (e.g. -0.9999 and -0.0999) to be written out
-     as (-.)  They were assumed to not round up to -1.0 and -0.1 respectively so the
-     leading -0. could be replaced by (-.) to save field width.
+   - fixed bug in fieldWriter that caused certain values (e.g. -0.9999 and
+     -0.0999) to be written out as (-.)  They were assumed to not round up to
+     -1.0 and -0.1 respectively so the leading -0. could be replaced by (-.)
+     to save field width.
 
 -----------------------v0.2 released 2011/12/20-----------------------
 
@@ -429,20 +459,20 @@ BDF API Changes
      read the bdf b/c it needs to initialize the bdf cards for the geomX tables)
    - renamed write to writeBDF
    - renamed writeAsPatran to writeBDFAsPatran
-   - thermal materials (MAT4, MAT5) pulled from self.materials and put into self.thermalMaterials
-     new ThermalMaterial & StructuralMaterial methods
+   - thermal materials (MAT4, MAT5) pulled from self.materials and put into
+     self.thermalMaterials new ThermalMaterial & StructuralMaterial methods
      Material method checks for either still
-   - rigid elements (RBAR, RBE2, etc.) separated out of elements to avoid overwriting cards
-     new RigidElement method
+   - rigid elements (RBAR, RBE2, etc.) separated out of elements to avoid
+     overwriting cards new RigidElement method
      Element method doesnt check for rigid elements anymore
 
 Overall BDF
    - a few more cards
-   - added extra argument to all cards to set data directly from the 
+   - added extra argument to all cards to set data directly from the
      OP2 (no data type setting as the OP2 is binary).
    - max lines in executive & case control decks is now 600
    - methods for Elements (Area, Nsm, Thicknesss)
-     
+
 
 Overall OP2
    - test_op2 can be called from the command line
@@ -453,8 +483,9 @@ Overall OP2
    - SORT2 is not supported...for example:
          use   DISPLACEMENT(PLOT,SORT1)=ALL
          not   DISPLACEMENT(PLOT,SORT2)=ALL
-   - Many examples outside of SOL 101 have been tested 
-     and dont crash.  This includes large SOL 200 models.  Verify your results first.
+   - Many examples outside of SOL 101 have been tested
+     and dont crash.  This includes large SOL 200 models.  Verify your results
+     first.
    - The user has the option to read the Geometry tables (GEOM1 (nodes/coords),
      GEOM2 (elements), GEOM3 (loads), GEOM4 (constraints),
      EPT/EPTS (properties), MPT/MPTS (materials) and can write the data to a
@@ -494,7 +525,8 @@ OP2 Tables
        - just verify you're getting the result you want, there are
          a lot of results in this table
    - OQG  table (spc/mpc forces) None
-   - OGP  table (grid point forces) works for SOL 101, untested on others (shouldnt crash)
+   - OGP  table (grid point forces) works for SOL 101, untested on others
+     (shouldnt crash)
    - OSTR table (strain) - see OES table
    - OES  table (stress) - elements that arent supported are skipped
        - Be careful about how you request the data from the object as
@@ -509,8 +541,8 @@ OP2 Tables
                   x axis)
                 - isotropic stress elements have max shear stress (maxShear)
        - All this information is contained within boolean variables such as
-         isVonMises(), isMaxShear() (stress/strain),isFiber(), isCurvature() (stress/strain)
-         which are located on the result objects.
+         isVonMises(), isMaxShear() (stress/strain),isFiber(), isCurvature()
+         (stress/strain) which are located on the result objects.
        - Elements can have different outputs depending on the
          solution and user requested output options.  For example, rods can
          contain the margin of safety in tension and compression, but they
@@ -568,7 +600,8 @@ Case Control Deck
 
 BDF Data Deck (no cross referencing required)
    - include files supported
-   - 8/16 character fields, csv format for cards is supported.  DONT USE TABS!!!
+   - 8/16 character fields, csv format for cards is supported.
+     DONT USE TABS!!!
    - Cards are written in 8-character fields and make use of Nastran-scientific
      notation to maximize precision.
    - write and writeAsPatran methods to write the bdf file after modifying it.

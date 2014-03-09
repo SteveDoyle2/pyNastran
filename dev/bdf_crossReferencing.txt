@@ -156,20 +156,20 @@ RBE3  (???)
 ----Materials----:
 CREEP (???)
 MAT1  (NA)
-MAT2  (NA)
-MAT3  (NA)
-MAT8  (NA)
-MAT9  (NA)
-MAT10 (NA)
-MATHP (NA)
+MAT2  (???)
+MAT3  (???)
+MAT8  (???)
+MAT9  (???)
+MAT10 (???)
+MATHP (???)
 
 ----Thermal Materials----:
-MAT4  (NA)
-MAT5  (NA)
+MAT4  (???)
+MAT5  (???)
 
 ----Nonlinear Materials----:
 MATS1  (done)
-MATT1
+MATT1  (done)
 MATT2
 MATT3
 MATT4

@@ -3,7 +3,7 @@
 In order for a card to be supported, it must read AND write ALL fields.
 Important calculated parameters are nice, but not required.
 
- 
+
 BDF Cards Supported Reading/Writing
 
 ----Nodes----:
@@ -154,13 +154,13 @@ MAT5  (done)
 
 ----Nonlinear Materials----:
 MATS1  (done)
-MATT1
-MATT2
-MATT3
-MATT4
-MATT5
-MATT8
-MATT9
+MATT1  (done)
+MATT2  (???)
+MATT3  (???)
+MATT4  (???)
+MATT5  (???)
+MATT8  (???)
+MATT9  (???)
 
 ----Constraints----:
 SPC     (done)
