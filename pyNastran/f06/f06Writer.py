@@ -811,7 +811,7 @@ class F06Writer(object):
                 #header[1] = '0    %-72s                                SUBCASE %-15i\n' % (label, isubcase)
                 #header[1] = '0    %-72s                                SUBCASE %-15i\n' % ('',isubcase)
 
-                res_length = 1
+                res_length = 0
                 for res_type in res_types:
                     if isubcase in res_type:
                         result = res_type[isubcase]
@@ -819,8 +819,11 @@ class F06Writer(object):
                             result.write_op2(op2)
                         res_length = max(len(result.__class__.__name__), res_length)
                         continue
+                if res_length == 0:
+                    return
                 res_format = '%%-%is SUBCASE=%%i%%s' % res_length
 
+                print("F06:")
                 for res_type in res_types:
                     #print("res_type ", res_type)
                     header = ['', '']
