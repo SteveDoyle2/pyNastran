@@ -1,7 +1,6 @@
 Most of these are ideas and not officially planned
 
 OP2
- - New OP2 reader to read PARAM,POST,-2
  - Sort2
  - HDF5
 
@@ -39,19 +38,9 @@ SOL 103 Solver
  - EIGR
 
 BDF
- - figure out how to handle MATS1, MATT1, etc.
  - HDF5
  - improved Case Control object / individual entries
  - convert MKAERO1 and MKAERO2 into type MKAero and write out as MKAERO1s
- 
-
-Qt GUI
- - add load case sidebar
- - re-add support for other formats (Panair, Cart3D, LaWGS)
- - add support for rotation in/out
- - add support for zoom in/out
- - add support for +/- x/y/z axes
-   use a +/- x button that jumps to +x the first time and -x to second time it's pressed
 
 Overall
  - better API definition

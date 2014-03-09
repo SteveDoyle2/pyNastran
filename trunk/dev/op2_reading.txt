@@ -1,6 +1,6 @@
 ------------------------------OP2 Info------------------------------
 
-In order for an OP2 card to be supported, it somewhat depends on the table.
+In order for an OP2 card to be supported, it depends on the table.
 
 For the Result Tables:
     It must read the important fields on the card.  So things like
@@ -12,13 +12,14 @@ For the BDF Tables (GEOM1/GEOM2/GEOM3/GEOM4/DIT/DYNAMICS/EPT/MPT):
     the BDF that was input.  These were going to get pushed off until
     later, but found out that it was a good way to learn defaults for
     variables that the QRG doesn't list.  For example, on the GRID card
-    there is a PS field, which is a nodal SPC.  A 0 value is now used instead of a
-    None.  A solver using this should be able to handle both, so it's not that
-    big a deal, but it makes it easier when writing the OP2 to not have to
+    there is a PS field, which is a nodal SPC.  A 0 value is now used instead
+    of a None.  A solver using this should be able to handle both, so it's not
+    a big deal, but it makes it easier when writing the OP2 to not have to
     worry about None values.
-    
-    NOTE:  just because a card is read, doesn't mean it can be used as a standard BDF card
-           so you should write it out and read it back in before using it.
+
+    NOTE:  just because a card is read, doesn't mean it can be used as a
+           standard BDF card so you should write it out and read it back in
+           before using it.
 
 The "card" notation is more for the developer than the user.
 For example, the CORD1C card is the first card listed in the
@@ -29,7 +30,7 @@ For convenience, the last card is listed as well.
 
 Added OP2
    - LAMA (requires an ESE = ALL to create table)
-     - eigenvalues (real***complex)
+     - eigenvalues (real/complex)
 
    - OUG (DISPLACMENTS=ALL)
      - displacement  (real/complex)
@@ -41,7 +42,7 @@ Added OP2
    - OQG (SPCFORCES=ALL, MPCFORCES=ALL)
      - SPC Forces (static/transient; real/complex)
      - MPC Forces (static/transient; real/complex)
-   
+
       - heat flux (approachCode=1, sortCode=1)
    - OEF Loads (ELFORCE=ALL)
      - Loads
@@ -67,7 +68,7 @@ Added OP2
        - CSHEAR
        - CBEAM
        - CTETRA, CPENTA, CHEXA
-       - CTRIA3  
+       - CTRIA3
        - CQUAD8/CQUAD4/CTRIAR/CTRIA6 (bilinear)
        - CQUAD4 (center)
        - CTRIAX6
@@ -93,7 +94,8 @@ OP2 Reader (Long Version)
 ***Results***
    - OES
    OES1X,OSTR1X,OSTR1C,
-      - all midside nodes must be included on elements (for example CQUAD8 can have 6 nodes)
+      - all midside nodes must be included on elements (for example CQUAD8
+        can have 6 nodes)
       - OES1X1/OSTR1X Table (Isotropic Stresses/Strain)
          - CROD    (1,  done)
          - CBEAM   (2,  done)
@@ -105,11 +107,11 @@ OP2 Reader (Long Version)
          - CELAS2  (12, done)
          - CELAS3  (13, done)
          - CELAS4  (14, done)
-         
+
          - CTETRA  (39, done) - 4 nodes
          - CHEXA   (67, done) - 8 nodes
          - CPENTA  (68, done) - 6 nodes
-         
+
          - CTRIAX6 (53, done) - 4 nodes
 
          - CTRIA3  (74, done) - 1 node
@@ -136,10 +138,10 @@ OP2 Reader (Long Version)
          - CHEXA  (93,verify object)
          - CBEAM  (94,***)
          - CELASx (???)
-       
+
       - OES??? (hyperelastic)
          - CQUAD4 (139,done)
-         - 
+         -
 
      - OESNLXD
          - ???
@@ -192,10 +194,10 @@ OP2 Reader (Long Version)
                - CONROD (10)
             - shearForces
                - CSHEAR (4)
-            - solidForces (***)
-               - CTETRA
-               - CPENTA
-               - CHEXA
+            - solidForces (***do these exist?)
+               - CTETRA (39)
+               - CPENTA (68)
+               - CHEXA  (69)
             - springFroces
                - CELAS1 (11)
                - CELAS2 (12)
@@ -213,8 +215,8 @@ OP2 Reader (Long Version)
                - CPENTA (77)
                - CTETRA (78)
             - ***NOT IMPLEMENTED***
-               - 
-        
+               -
+
 
    - OGF (grid point force balance)
       - real/complex
@@ -228,12 +230,13 @@ OP2 Reader (Long Version)
 
    - OGP (???)
       - real/complex
-         - appliedLoads (tableCode=; static structural forces applied at the nodes; applied/element/spc/total forces & moments)
-      
+         - appliedLoads (tableCode=; static structural forces applied at the
+           nodes; applied/element/spc/total forces & moments)
+
    - OEE Table (element energy strain/kinetic/loss)
       - real
          - strainEnergy  (tableCode=18)
-   
+
    - OQG Table (spc/mpc forces)
       - real/complex
          - spcForces (tableCode=3)
@@ -252,7 +255,7 @@ OP2 Reader (Long Version)
      - CORD3R  (7, needs integration)
      - GRID    (17,done)
      - SWLDPRM (34)
-   
+
    - GEOM1N
      - ???
 
@@ -323,7 +326,7 @@ OP2 Reader (Long Version)
      - TEMP    (32,done)
      - TEMPD   (33,done)
      - PEDGE   (42)
-   
+
    - GEOM4 / GEOM4S   (constraints; 3/63)
      - RBAR    (22)
      - RBE1    (23)
@@ -336,9 +339,9 @@ OP2 Reader (Long Version)
      - SUPORT  (59,done)
      - SUPORT1 (60)
      - USET1   (63)
-   
+
    - EPT / EPTS (element properties table; 11/63)
-   	        (properties may be created that are too large >100000000.  this is how
+            (properties may be created that are too large >100000000.  this is how
                  properties created by the solution are identified)
      - NSM     (2, done)
      - PBAR    (11,buggy)
@@ -366,7 +369,7 @@ OP2 Reader (Long Version)
      - VIEW3D  (63)
 
    - MPT / MPTS (material properties table; 12/29)
-   		(materials may be created that are too large >100000000.  this is how
+        (materials may be created that are too large >100000000.  this is how
                  materials created by the solution are identified)
      - CREEP   (1,done)
      - MAT1    (2,done)
@@ -444,7 +447,7 @@ CROD_1 (4/6)
    - tCode7=1 (Real/Imaginary)
      numWide=5 (done)
    - tCode7=2 (Random)
-     numWide=3
+     numWide=3***
 
  - sCode6=0 (Stress)
    - tCode7=0 (Real)
@@ -452,24 +455,24 @@ CROD_1 (4/6)
    - tCode7=1 (Real/Imaginary)
      numWide=5 (done)
    - tCode7=2 (Random)
-     numWide=3
+     numWide=3***
 
 CBEAM_2 (2/6)
  - sCode6=0 (Strain)
    - tCode7=0 (Real)
      numWide=11 (done)
    - tCode7=1 (Real/Imaginary)
-     numWide=11
+     numWide=11***
    - tCode7=2 (Random)
-     numWide=7
+     numWide=7***
 
  - sCode6=0 (Stress)
    - tCode7=0 (Real)
      numWide=11 (done)
    - tCode7=1 (Real/Imaginary)
-     numWide=11
+     numWide=11***
    - tCode7=2 (Random)
-     numWide=7
+     numWide=7***
 
 CTUBE_3 (see CROD_1)
 
@@ -478,17 +481,17 @@ CSHEAR_4 (2/6)
    - tCode7=0 (Real)
      numWide=3 (done)
    - tCode7=1 (Real/Imaginary)
-     numWide=5
+     numWide=5 (done)
    - tCode7=2 (Random)
-     numWide=3
+     numWide=3***
 
  - sCode6=0 (Stress)
    - tCode7=0 (Real)
      numWide=4 (done)
    - tCode7=1 (Real/Imaginary)
-     numWide=5
+     numWide=5 (done)
    - tCode7=2 (Random)
-     numWide=3
+     numWide=3***
 
 CQUAD4_33 (2/6)
  - sCode6=0 (Strain)
@@ -503,39 +506,39 @@ CQUAD4_33 (2/6)
    - tCode7=0 (Real)
      numWide=17 (done)
    - tCode7=1 (Real/Imaginary)
-     numWide=15
+     numWide=15***
 
 CBAR_34 (2/5)
  - sCode6=0 (Strain)
    - tCode7=0 (Real)
      numWide=17 (done)
    - tCode7=1 (Real/Imaginary)
-     numWide=15
+     numWide=15***
    - tCode7=2 (Random)
-     numWide=9
+     numWide=9***
 
  - sCode6=0 (Stress)
    - tCode7=0 (Real)
      numWide=17 (done)
    - tCode7=1 (Real/Imaginary)
-     numWide=15
+     numWide=15***
 
 CTRIA3_74 (2/6)
  - sCode6=0 (Strain)
    - tCode7=0 (Real)
      numWide=17 (done)
    - tCode7=1 (Real/Imaginary)
-     numWide=15
+     numWide=15 (done)
    - tCode7=2 (Random)
-     numWide=9
+     numWide=9***
 
  - sCode6=0 (Stress)
    - tCode7=0 (Real)
      numWide=17 (done)
    - tCode7=1 (Real/Imaginary)
-     numWide=15
+     numWide=15 (done)
    - tCode7=2 (Random)
-     numWide=9
+     numWide=9***
 
 CTRIA6_75 (None)
 CTRIAR_?? (None)
@@ -545,17 +548,17 @@ CTETRA_39/CHEXA_67/CPENTA_68 (2/6)
    - tCode7=0 (Real)
      numWide=25 (done)
    - tCode7=1 (Real/Imaginary)
-     numWide=17
+     numWide=17 (done)
    - tCode7=2 (Random)
-     numWide=11
+     numWide=11***
 
  - sCode6=0 (Stress)
    - tCode7=0 (Real)
      numWide=25 (done)
    - tCode7=1 (Real/Imaginary)
-     numWide=17
+     numWide=17 (done)
    - tCode7=2 (Random)
-     numWide=11
+     numWide=11***
 
 CQUAD4_95/CQUAD8_96/CTRIA3_97/CTRIA6_98 (done)
  - sCode6=0 (Strain)
@@ -569,17 +572,17 @@ CQUAD4_144 (2/6 done; 4/6 not integrated)
    - tCode7=0 (Real)
      numWide=19 (done)
    - tCode7=1 (Real/Imaginary)
-     numWide=17 (not integrated)
+     numWide=17***
    - tCode7=2 (Random)
-     numWide=11 (not integrated)
+     numWide=11***
 
  - sCode6=0 (Stress)
    - tCode7=0 (Real)
      numWide=19 (done)
    - tCode7=1 (Real/Imaginary)
-     numWide=17 (not integrated)
+     numWide=17***
    - tCode7=2 (Random)
-     numWide=11 (not integrated)
+     numWide=11***
 
 
 -------------------------------------------
