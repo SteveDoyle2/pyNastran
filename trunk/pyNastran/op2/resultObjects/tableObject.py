@@ -444,15 +444,6 @@ class RealTableObject(ScalarObject):  # displacement style table
         self.translations[dt] = {}
         self.rotations[dt] = {}
 
-    #def add_binary(self,device_code,data):
-        #(nodeID,v1,v2,v3,v4,v5,v6) = unpack('iffffff',data)
-        #msg = "nodeID=%s v1=%s v2=%s v3=%s" %(nodeID,v1,v2,v3)
-        #assert -1<nodeID<1000000000,msg
-        #assert nodeID not in self.translations
-
-        #self.translations[nodeID] = array([v1,v2,v3]) # dx,dy,dz
-        #self.rotations[nodeID]    = array([v4,v5,v6]) # rx,ry,rz
-
     def add(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
         msg = "node_id=%s gridType=%s v1=%s v2=%s v3=%s" % (
             node_id, grid_type, v1, v2, v3)
@@ -495,41 +486,6 @@ class RealTableObject(ScalarObject):  # displacement style table
         self.gridTypes[node_id] = self.recast_gridtype_as_string(grid_type)
         self.translations[dt][node_id] = array([v1, v2, v3])  # dx,dy,dz
         self.rotations[dt][node_id] = array([v4, v5, v6])  # rx,ry,rz
-
-    #def write_op2(self,block3,device_code=1):
-        #"""
-        #creates the binary data for writing the table
-        #.. warning:: hasnt been tested...
-        #"""
-        #msg = block3
-        #for nodeID,translation in sorted(self.translations.iteritems()):
-            #rotation = self.rotations[nodeID]
-            #(dx,dy,dz) = translation
-            #(rx,ry,rz) = rotation
-            #grid = nodeID*10+device_code
-            #msg += pack('iffffff',grid,dx,dy,dz,rx,ry,rz)
-        #return msg
-
-    #def write_op2_transient(self,block3,device_code=1):
-    #    """
-    #    creates the binary data for writing the table
-    #    .. warning:: hasnt been tested...
-    #    .. warning:: dt slot needs to be fixed...
-    #    """
-    #    msg = ''
-    #    for dt,displacements in sorted(self.displacements.iteritems()):
-    #        XXX = 50 ## this isnt correct... .. todo:: update dt
-    #        msg += block3[0:XXX] + pack('i',dt) + block3[XXX+4:]
-    #        #msg += '%s = %g\n' %(self.data_code['name'],dt)
-    #
-    #        for nodeID,displacement in sorted(displacements.iteritems()):
-    #            rotation = self.rotations[nodeID]
-    #            (dx,dy,dz) = displacement
-    #            (rx,ry,rz) = rotation
-    #
-    #            grid = nodeID*10+device_code
-    #            msg += pack('iffffff',grid,dx,dy,dz,rx,ry,rz)
-    #    return msg
 
     def get_as_sort1(self):
         return (self.translations, self.rotations)
@@ -884,3 +840,4 @@ class ComplexTableObject(ScalarObject):
             msg = ['']
             page_num += 1
         return page_num - 1
+
