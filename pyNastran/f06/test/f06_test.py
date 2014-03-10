@@ -4,7 +4,7 @@ import sys
 from pyNastran.op2.test.test_op2 import get_failed_files
 from pyNastran.op2.test.op2_test import get_all_files
 from pyNastran.f06.test.test_f06 import run_lots_of_files
-from pyNastran.utils import get_files_of_type
+from pyNastran.utils.dev import get_files_of_type
 
 
 def parse_skipped_cards(fname):

@@ -201,7 +201,7 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
         print("---stats for %s---" % op2FileName)
         #op2.get_op2_stats()
         print(op2.get_op2_stats())
-        if write_bdf:
+        if write_bdf and 0:
             op2.write_bdf('fem.bdf.out', interspersed=True)
         #tableNamesF06 = parse_table_names_from_F06(op2.f06FileName)
         #tableNamesOP2 = op2.getTableNamesFromOP2()
@@ -305,8 +305,15 @@ def main():
     ver = str(pyNastran.__version__)
 
     msg  = "Usage:\n"
-    #msg += "test_op2 [-q] [-g] [-w] [-f] [-z] [-t] [-s <sub>] OP2_FILENAME\n"
-    msg += "test_op2 [-q] [-g] [-w] [-f] [-o] [-z] [-t] [-s <sub>] OP2_FILENAME\n"
+
+    # all
+    #msg += "test_op2 [-q] [-g] [-w] [-f] [-o] [-z] [-t] [-s <sub>] OP2_FILENAME\n"
+
+    # release
+    #msg += "test_op2 [-q] [-f] [-z] [-t] [-s <sub>] OP2_FILENAME\n"
+
+    # current
+    msg += "test_op2 [-q] [-f] [-o] [-z] [-t] [-s <sub>] OP2_FILENAME\n"
     msg += "  test_op2 -h | --help\n"
     msg += "  test_op2 -v | --version\n"
     msg += "\n"
@@ -317,13 +324,13 @@ def main():
     msg += "\n"
     msg += "Options:\n"
     msg += "  -q, --quiet          Suppresses debug messages (default=False)\n"
-    msg += "  -g, --geometry       Reads the OP2 for geometry, which can be written out (default=False)\n"
-    msg += "  -w, --write_bdf      Writes the bdf to fem.bdf.out (default=False)\n"
-    msg += "  -f, --write_f06      Writes the f06 to fem.f06.out (default=True)\n"
-    msg += "  -o, --write_op2      Writes the op2 to fem.op2.out (default=True)\n"
+    #msg += "  -g, --geometry       Reads the OP2 for geometry, which can be written out (default=False)\n"
+    #msg += "  -w, --write_bdf      Writes the bdf to fem.test_op2.bdf (default=False)\n"
+    msg += "  -f, --write_f06      Writes the f06 to fem.test_op2.f06 (default=True)\n"
+    msg += "  -o, --write_op2      Writes the op2 to fem.test_op2.op2 (default=True)\n"
     msg += "  -z, --is_mag_phase   F06 Writer writes Magnitude/Phase instead of\n"
     msg += "                       Real/Imaginary (still stores Real/Imag); (default=False)\n"
-    msg += "  -s <sub>, --subcase  Specify a single subcase to parse\n"
+    msg += "  -s <sub>, --subcase  Specify one or more subcases to parse; (e.g. 2_5)\n"
     msg += "  -t, --vector         Vectorizes the results (default=False)\n"
     msg += "  -h, --help           Show this help message and exit\n"
     msg += "  -v, --version        Show program's version number and exit\n"
@@ -343,8 +350,8 @@ def main():
     import time
     t0 = time.time()
     run_op2(data['OP2_FILENAME'],
-            make_geom     = data['--geometry'],
-            write_bdf     = data['--write_bdf'],
+            #make_geom     = data['--geometry'],
+            #write_bdf     = data['--write_bdf'],
             write_f06     = data['--write_f06'],
             write_op2     = data['--write_op2'],
             is_mag_phase  = data['--is_mag_phase'],

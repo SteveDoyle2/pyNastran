@@ -359,7 +359,7 @@ class OP2Writer(object):
         for isubcase, result in sorted(self.eigenvectors.iteritems()):
             (subtitle, label) = self.iSubcaseNameMap[isubcase]
 
-            if has_attr(result, 'write_op2'):
+            if hasattr(result, 'write_op2'):
                 print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
                 self.page_num = result.write_f06(header, page_stamp,
                                                 self.page_num, f=f06, is_mag_phase=is_mag_phase)
