@@ -372,6 +372,7 @@ class OES(object):
                     'lsdvmn': 1,
                     }
 
+        is_sort1 = True
         if is_strain:
             dictA = self.compositePlateStrain
             class_obj = RealCompositePlateStrain
@@ -383,7 +384,7 @@ class OES(object):
             dictA[isubcase].add_f06_data(data, transient, element_name)
         else:
             assert 'nonlinear_factor' in data_code
-            dictA[isubcase] = class_obj(data_code, isubcase, transient)
+            dictA[isubcase] = class_obj(data_code, is_sort1, isubcase, transient)
             dictA[isubcase].add_f06_data(data, transient, element_name)
         self.iSubcases.append(isubcase)
     #==========================================================================
