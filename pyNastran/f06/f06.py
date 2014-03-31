@@ -14,6 +14,8 @@ from pyNastran.f06.tables.oug import OUG  # OUG
 from pyNastran.f06.tables.oqg import OQG  # OUG
 from pyNastran.f06.f06_classes import MaxDisplacement  # classes not in op2
 from pyNastran.f06.f06Writer import F06Writer
+from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import RealGridPointForcesObject
+from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealPlateForce, RealPlate2Force
 
 from pyNastran.utils import is_binary
 from pyNastran.f06.errors import FatalError
@@ -75,7 +77,7 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
             'M O D E L   S U M M A R Y' : self._executive_control_echo,
             'M O D E L   S U M M A R Y          BULK = 0' : self._executive_control_echo,
             'F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )' : self._grid_point_singularity_table,
-            'G R I D   P O I N T   F O R C E   B A L A N C E' : self._executive_control_echo,
+            'G R I D   P O I N T   F O R C E   B A L A N C E' : self._grid_point_force_balance,
             'N A S T R A N   S O U R C E   P R O G R A M   C O M P I L A T I O N             SUBDMAP  =  SESTATIC' : self._executive_control_echo,
             #====================================================================
             # useful info
@@ -195,7 +197,7 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
             'F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )' : self._executive_control_echo,
             'F O R C E S   I N   R O D   E L E M E N T S     ( C R O D )': self._executive_control_echo,
             'F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )':  self._executive_control_echo,
-            'F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN':  self._executive_control_echo,
+            'F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN':  self._forces_in_cquad4s_bilinear,
             'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 1 )': self._executive_control_echo,
             'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )': self._executive_control_echo,
             'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 3 )': self._executive_control_echo,
@@ -205,6 +207,81 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
             #'* * * END OF JOB * * *': self.end(),
         }
         self.markers = self._marker_map.keys()
+    
+    def _forces_in_cquad4s_bilinear(self):
+        """
+        ::
+
+                                  F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  
+         
+            ELEMENT                    - MEMBRANE  FORCES -                      - BENDING   MOMENTS -            - TRANSVERSE SHEAR FORCES -
+              ID       GRID-ID     FX            FY            FXY           MX            MY            MXY           QX            QY
+                  1    CEN/4  0.0           0.0           0.0          -7.371223E+01 -4.023861E+02 -2.679984E+01  1.315875E+01 -7.356985E+01
+                           1  0.0           0.0           0.0          -1.043592E+02 -3.888291E+02 -2.698050E+01  1.315875E+01 -7.356985E+01
+                           2  0.0           0.0           0.0          -1.036512E+02 -4.152917E+02 -2.731157E+01  1.315875E+01 -7.356985E+01
+                           8  0.0           0.0           0.0          -4.306526E+01 -4.159432E+02 -2.661917E+01  1.315875E+01 -7.356985E+01
+                           7  0.0           0.0           0.0          -4.377329E+01 -3.894806E+02 -2.628810E+01  1.315875E+01 -7.356985E+01
+
+        element_type = 33 b/c not bilinear
+        """
+        element_name = 'CQUAD4'
+        element_type = 95
+        print(self.stored_lines)
+        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
+        headers = self.skip(3)
+
+        lines = []
+        while 1:
+            line = self.infile.readline().rstrip('\n\r')
+            if 'PAGE' in line:
+                break
+            lines.append(line)
+            self.i += 1
+            self.fatal_check(line)
+
+        data = []
+        for line in lines:
+            eid, grid, fx, fy, fxy, mx, my, mxy, qx, qy = line[1:15], line[15:20], line[20:35], line[35:50], line[50:63], line[63:77], line[77:91], line[91:105], line[105:119], line[119:140]
+            eid = eid.strip()
+            grid = grid.strip()
+            if eid:
+                eid = int(eid)
+            if 'C' not in grid:
+                grid = int(grid)
+            fx = float(fx)
+            fy = float(fy)
+            fxy = float(fxy)
+            mx = float(mx)
+            my = float(my)
+            mxy = float(mxy)
+            qx = float(qx)
+            qy = float(qy)
+            data.append([eid, grid, fx, fy, fxy, mx, my, mxy, qx, qy])
+
+        data_code = {'analysis_code': analysis_code,
+                    'device_code': 1, 
+                    'sort_code': 0,
+                    'sort_bits': [0, 0, 0],
+
+                    'table_name': 'OEF1X', # probably wrong
+                    'table_code': 5, # wrong
+                    'num_wide': 10,
+                    
+                    'format_code': 1,
+                    'element_name': element_name, 'element_type': element_type,
+                    'nonlinear_factor': dt,
+                    'dataNames':['lsdvmn'],
+                    'lsdvmn': 1,
+                    }
+
+        is_sort1 = True
+        ngrids = 4
+        print('isubcase =', isubcase)
+        if isubcase not in self.cquad4_force:
+            assert 'nonlinear_factor' in data_code
+            self.cquad4_force[isubcase] = RealPlate2Force(data_code, is_sort1, isubcase, transient)
+        self.cquad4_force[isubcase].add_f06_data(transient, data, element_name, ngrids)
+        self.iSubcases.append(isubcase)
 
     def __init_data__(self, debug=False, log=None):
         OES.__init__(self)
@@ -550,6 +627,58 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
             sed = strain_energy_density(data, transient)
             sed.readF06Data(data, transient)
             self.strainEnergyDensity[isubcase] = sed
+
+    def _grid_point_force_balance(self):
+        (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
+        headers = self.skip(2)
+        line = ''
+        lines = []
+        #POINT-ID ELEMENT-ID SOURCE T1 T2 T3 R1 R2 R3
+        while 'PAGE' not in line:
+            line = self.infile.readline()[1:].rstrip()
+            lines.append(line)
+            self.i += 1
+            self.fatal_check(line)
+
+        data = []
+        for line in lines:
+            if 'PAGE' in line:
+                break
+            point_id, element_id, source = line[1:11], line[11:24], line[24:36]
+            t1, t2, t3, r1, r2, r3 = line[36:49], line[49:61], line[61:85], line[85:102], line[102:118], line[118:145]
+            point_id = int(point_id)
+            element_id = element_id.strip()
+            if element_id:
+                element_id = int(element_id)
+            t1 = float(t1)
+            t2 = float(t2)
+            t3 = float(t3)
+            r1 = float(r1)
+            r2 = float(r2)
+            r3 = float(r3)
+            data.append([point_id, element_id, source, t1, t2, t3, r1, r2, r3])
+
+            data_code = {'analysis_code': analysis_code,
+                        'device_code': 1, 'sort_code': 0,
+                        'sort_bits': [0, 0, 0], 'num_wide': 9,
+
+                        'table_code': 1, 
+                        'table_name': 'OES1X', 
+                        
+                        #'s_code': s_code,
+                        #'stress_bits': stress_bits, 
+                        #'element_name': element_name, 'element_type': element_type,
+
+                        'format_code': 1,
+                        'nonlinear_factor': dt,
+                        'dataNames':['lsdvmn'],
+                        'lsdvmn': 1,
+                        }
+        is_sort1 = True
+        if isubcase not in self.gridPointForces:
+            self.gridPointForces[isubcase] = RealGridPointForcesObject(data_code, is_sort1, isubcase, dt)
+        self.gridPointForces[isubcase].add_f06_data(dt, data)
+        self.iSubcases.append(isubcase)
 
     def _temperature_gradients_and_fluxes(self):
         (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
