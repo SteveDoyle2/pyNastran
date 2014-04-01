@@ -1056,8 +1056,18 @@ class RealPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         self.tx[dt] = {}
         self.ty[dt] = {}
 
+    def add_f06_data(dt, data):
+        if dt is None:
+            for (eid, grid, fx, fy, fxy, mx, my, mxy, qx, qy) in data:
+                self.mx[eid] = mx
+                
+        else:
+            if dt not in self.mx:
+                pass
+                #raise NotImplementedError()
+        
+            
     def add(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
-
         #self.eType[eid] = eType
         self.mx[eid] = mx
         self.my[eid] = my
@@ -1330,6 +1340,7 @@ class RealPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.bmxy = {}
         self.tx = {}
         self.ty = {}
+        self.eid_old = None
 
         self.dt = dt
         if is_sort1:
@@ -1370,6 +1381,40 @@ class RealPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         self.bmxy[dt] = {}
         self.tx[dt] = {}
         self.ty[dt] = {}
+
+    def add_f06_data(self, dt, data, element_name, ngrids):
+        if dt is None:
+            term = None
+            eid_old = self.eid_old
+            for (eid, grid, fx, fy, fxy, mx, my, mxy, qx, qy) in data:
+                if isinstance(eid, int):
+                    self.term[eid] = term
+                    self.ngrids[eid] = [grid]
+                    self.mx[eid] = [fx]
+                    self.my[eid] = [fy]
+                    self.mxy[eid] = [fxy]
+                    self.bmx[eid] = [mx]
+                    self.bmy[eid] = [my]
+                    self.bmxy[eid] = [mxy]
+                    self.tx[eid] = [qx]
+                    self.ty[eid] = [qy]
+                    eid_old = eid
+                else:
+                    eid = eid_old
+                    self.ngrids[eid].append(grid)
+                    self.mx[eid].append(fx)
+                    self.my[eid].append(fy)
+                    self.mxy[eid].append(fxy)
+                    self.bmx[eid].append(mx)
+                    self.bmy[eid].append(my)
+                    self.bmxy[eid].append(mxy)
+                    self.tx[eid].append(qx)
+                    self.ty[eid].append(qy)
+            self.eid_old = eid_old
+        else:
+            if dt not in self.mx:
+                pass
+                #raise NotImplementedError()
 
     def add_new_element(self, eid, dt, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         #print "eid = ",eid

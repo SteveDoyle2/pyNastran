@@ -17,7 +17,7 @@ class RealGridPointForcesObject(ScalarObject):
             if dt is not None:
                 self.add = self.add_sort1
         else:
-            assert dt is not None
+            assert dt is not None, 'is_sort1=%s' % is_sort1
             self.add = self.addSort2
 
     def get_stats(self):
@@ -56,6 +56,34 @@ class RealGridPointForcesObject(ScalarObject):
         self.elemName[eKey].append(elemName)
         self.eids[eKey].append(eid)
 
+    def add_f06_data(self, dt, data):
+        if dt is None:
+            for (nid, eid, source, f1, f2, f3, m1, m2, m3) in data:
+                if nid not in self.forces:
+                    self.eids[nid] = []
+                    self.forces[nid] = []
+                    self.moments[nid] = []
+                    self.elemName[nid] = []
+                self.forces[nid].append([f1, f2, f3])  # Mx,My,Mz
+                self.moments[nid].append([m1, m2, m3])  # Fx,Fy,Fz
+                self.elemName[nid].append(source)
+                self.eids[nid].append(eid)
+        
+        else:
+            if dt not in self.forces:
+                self.forces[dt] = {}
+                self.moments[dt] = {}
+            for (nid, eid, source, f1, f2, f3, m1, m2, m3) in data:
+                if nid not in self.forces[dt]:
+                    self.eids[nid] = []
+                    self.forces[dt][nid] = []
+                    self.moments[dt][nid] = []
+                    self.elemName[nid] = []
+                self.forces[dt][nid].append([f1, f2, f3])  # Mx,My,Mz
+                self.moments[dt][nid].append([m1, m2, m3])  # Fx,Fy,Fz
+                self.elemName[nid].append(source)
+                self.eids[nid].append(eid)
+            
     def add_sort1(self, dt, eKey, eid, elemName, f1, f2, f3, m1, m2, m3):
         if dt not in self.forces:
             #print "new transient"
