@@ -49,10 +49,10 @@ setup(name='pyNastran',
       zip_safe=False,
       install_requires=[
           # -*- Extra requirements: -*-
+          'numpy >= 1.8.0',
+          'scipy >= 0.12.0',
           'docopt == 0.6.1',
-          'numpy >= 1.6.2',
-          'scipy >= 0.6.0',
-#          'matplotlib >= 1.1.0',
+#          'matplotlib >= 1.3.0',
           'vtk >= 5.8.0',
           'pillow >= 1.1.7',
 #          'wx >= 2.8.12.0',
@@ -76,3 +76,4 @@ setup(name='pyNastran',
       },
       test_suite = 'pyNastran.all_tests',
       )
+
