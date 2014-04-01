@@ -14,7 +14,7 @@ class OQG(object):
 
     def _forces_of_single_point_constraints(self):
         (subcase_name, isubcase, transient, dt, analysis_code,
-            is_sort1) = self.readSubcaseNameID()
+            is_sort1) = self._read_f06_subcase_header()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
@@ -37,7 +37,7 @@ class OQG(object):
         self.iSubcases.append(isubcase)
 
     def _forces_of_multi_point_constraints(self):
-        (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
+        (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 

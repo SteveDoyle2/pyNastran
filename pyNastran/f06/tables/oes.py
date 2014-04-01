@@ -115,7 +115,7 @@ class OES(object):
         * s_code        = 0 (Stress)
         * num_wide      = 8 (???)
         """
-        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
+        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
@@ -234,7 +234,7 @@ class OES(object):
 
     def getBarHeader(self, isStrain):
         (subcaseName, isubcase, transient, dt, analysis_code,
-            is_sort1) = self.readSubcaseNameID()
+            is_sort1) = self._read_f06_subcase_header()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
@@ -250,7 +250,7 @@ class OES(object):
         return (isubcase, transient, dt, data_code)
 
     def getSpringHeader(self, isStrain):
-        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
+        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
@@ -346,7 +346,7 @@ class OES(object):
         self._composites_helper(element_name, element_type, is_strain)
 
     def _composites_helper(self, element_name, element_type, is_strain):
-        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
+        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
         data_types = [int, int, float, float, float, float,
@@ -441,7 +441,7 @@ class OES(object):
         * s_code        = 0 (Stress)
         * num_wide      = 8 (???)
         """
-        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
+        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
@@ -584,7 +584,7 @@ class OES(object):
         self.iSubcases.append(isubcase)
 
     def _get_quad_header(self, nHeaderLines, elementType, elementNumber, is_strain):
-        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
+        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         headers = self.skip(nHeaderLines)
         #print "headers = %s" %(headers)
 
@@ -710,7 +710,7 @@ class OES(object):
         * num_wide      = 8 (???)
         """
         (subcaseName, isubcase, transient, dt, analysis_code,
-            is_sort1) = self.readSubcaseNameID()
+            is_sort1) = self._read_f06_subcase_header()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
