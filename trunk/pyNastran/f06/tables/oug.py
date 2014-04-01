@@ -57,7 +57,7 @@ class OUG(object):
         #isubcase = self.storedLines[-2].strip()[1:]
         #isubcase = int(isubcase.strip('SUBCASE '))
         #print "subcaseName=%s isubcase=%s" %(subcaseName,isubcase)
-        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
+        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         eigenvalue_real = transient[1]
         headers = self.skip(2)
 
@@ -154,7 +154,7 @@ class OUG(object):
         * sort_code     = 0 (Sort2,Real,Sorted Results) => sort_bits = [0,0,0]
         * num_wide      = 8 (???)
         """
-        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
+        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         #print "subcaseName=%r isubcase=%s"  % (subcaseName, isubcase)
         headers = self.skip(2)
         #raise RuntimeError(headers)
@@ -199,7 +199,7 @@ class OUG(object):
         * analysis_code = 5 (Frequency)
         * sort_code     = 2 (Random Response)
         """
-        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
+        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         #print("transient =", transient)
         #print("dt =", dt)
         name = transient[0]
@@ -271,7 +271,7 @@ class OUG(object):
           s_code        = 0 (Stress)
           num_wide      = 8 (???)
         """
-        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
+        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         #print transient
 
         headers = self.skip(2)

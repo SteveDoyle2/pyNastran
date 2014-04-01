@@ -226,17 +226,17 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
         """
         element_name = 'CQUAD4'
         element_type = 95
-        print(self.stored_lines)
-        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
+        #print(self.stored_lines)
+        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         headers = self.skip(3)
 
         lines = []
         while 1:
             line = self.infile.readline().rstrip('\n\r')
+            self.i += 1
             if 'PAGE' in line:
                 break
             lines.append(line)
-            self.i += 1
             self.fatal_check(line)
 
         data = []
@@ -276,7 +276,7 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
 
         is_sort1 = True
         ngrids = 4
-        print('isubcase =', isubcase)
+        #print('isubcase =', isubcase)
         if isubcase not in self.cquad4_force:
             assert 'nonlinear_factor' in data_code
             self.cquad4_force[isubcase] = RealPlate2Force(data_code, is_sort1, isubcase, transient)
@@ -413,21 +413,27 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
         year = int(year)
         self.date = (month, day, year)
 
-    def readSubcaseNameID(self):
+    def _read_f06_subcase_header(self, n=-2):
         """
         -4 -> 1                                                     JANUARY   5, 2014  MSC.NASTRAN 11/25/11   PAGE    14
         -3 -> DEFAULT
         -2 -> xxx             subcase 1
         """
+        #print('-----------------')
         subtitle = self.stored_lines[-3].strip()
         #print(''.join(self.storedLines[-3:]))
 
         msg = ''
+        lines2 = []
         for i, line in enumerate(self.stored_lines[-4:]):
-            msg += '%i -> %s\n' % (-4 + i, line.rstrip())
+            line2 = line.rstrip()
+            if line2:
+                #msg += '%i -> %s\n' % (-4 + i, line.rstrip())
+                #print "%r" % line2.replace("  ", " ")
+                lines2.append(line2)
 
         if self.Title is None or self.Title == '' and len(self.stored_lines) > 4:
-            title_line = self.stored_lines[-4]
+            title_line = lines2[-2]
             self.Title = title_line[1:75].strip()
             date = title_line[75:93].strip()
             if date:
@@ -442,7 +448,7 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
 
         subcase_name = ''
         #print("subcaseLine = %r" % subcaseName)
-        label, isubcase = _parse_label_isubcase(self.stored_lines)
+        label, isubcase = _parse_label_isubcase(lines2)
 
         #subtitle = 'SUBCASE %s' % isubcase
         #label = 'SUBCASE %s' % isubcase
@@ -507,7 +513,7 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
             NO.       ORDER                                                                       MASS              STIFFNESS
                 1         1        6.158494E+07        7.847607E+03        1.248985E+03        1.000000E+00        6.158494E+07
         """
-        (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
+        (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         Title = None
         line1 = self.infile.readline().strip(); self.i += 1
         if line1 != 'MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED':
@@ -629,7 +635,7 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
             self.strainEnergyDensity[isubcase] = sed
 
     def _grid_point_force_balance(self):
-        (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
+        (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         headers = self.skip(2)
         line = ''
         lines = []
@@ -681,7 +687,7 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
         self.iSubcases.append(isubcase)
 
     def _temperature_gradients_and_fluxes(self):
-        (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self.readSubcaseNameID()
+        (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         #print transient
         headers = self.skip(2)
         #print "headers = %s" % (headers)
@@ -922,11 +928,13 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
         #pass
 
 def _parse_label_isubcase(stored_lines):
-    label = stored_lines[-2][1:65].strip()
-    isubcase = stored_lines[-2][65:].strip()
+    label = stored_lines[-1][1:65].strip()
+    isubcase = stored_lines[-1][65:].strip()
+    #print('stored2 = ', stored_lines[-1].strip().replace('         ', ' '))
     if isubcase:
         isubcase = int(isubcase.split()[-1])
     else:
+        #raise RuntimeError('asdf')
         isubcase = 1
     return label, isubcase
     #assert isinstance(isubcase,int),'isubcase=|%r|' % (isubcase)

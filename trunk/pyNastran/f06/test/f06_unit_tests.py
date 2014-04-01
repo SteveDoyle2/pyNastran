@@ -4,6 +4,18 @@ from math import sqrt
 
 from numpy import array, array_equiv, array_equal
 
+class DummyWriter(object):
+    def __init__(self, *args):
+        pass
+    def open(self, *args, **kwargs):
+        pass
+    def close(self):
+        pass
+    def write(self, msg):
+        raise RuntimeError('remove this')
+
+#import sys
+#sys.stdout = DummyWriter()
 import pyNastran
 from pyNastran.bdf.bdf import BDF
 from pyNastran.f06.f06 import F06, FatalError
@@ -188,6 +200,31 @@ class TestF06(unittest.TestCase):
         #print "IQ", IQ
         IQ_exact = array([[ 0.04790044, 0.9197143, 0.8740444 ]])
         self.assertTrue(array_equiv(IQ, IQ_exact))
+
+
+    def test_failure_index(self):
+        bdfname = None
+        f06name1 = os.path.join(test_path, 'failure_index_test.f06')
+        f06name2 = os.path.join(test_path, 'failure_index_test.test_f06.f06')
+        op2name = None
+        f06 = self.run_model(bdfname, f06name1, op2name, f06_has_weight=False)
+
+        #      FREQUENCY =  2.100000E-01
+        #                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R
+        #                                                          (REAL/IMAGINARY)
+        #      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+        #0           21      G      9.121415E-18   5.869901E-15  -1.456074E+02   0.0            2.171751E+02   2.631261E-13
+        #                           4.977449E-19   3.364763E-15  -6.035482E+00   0.0            2.480264E+01   2.345500E-14
+        isubcase = 1
+        assert len(f06.displacements) == 2
+        assert len(f06.spcForces) == 2
+        assert len(f06.gridPointForces) == 2
+        assert len(f06.compositePlateStress) == 2
+        assert len(f06.plateForces2) == 0 # should be 2, but unsupported
+        #disp = f06.displacements[isubcase]
+        #frequency = .21
+        #T3 = disp.translations[frequency][21][2]
+        #self.assertEquals(T3, -1.456074E+02 + -6.035482E+00j)  # T3
 
     def test_plate_openmdao(self):
         bdfname2 = os.path.join(model_path, 'plate', 'plate_openmdao.bdf')
