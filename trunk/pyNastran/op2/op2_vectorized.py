@@ -24,7 +24,8 @@ class OP2_Vectorized(OP2):
         :param debug_file: sets the filename that will be written to (default=None -> no debug)
         """
         debug = False
-        OP2.__init__(self, make_geom=make_geom,
+        assert make_geom == False, make_geom
+        OP2.__init__(self, #make_geom=make_geom,
                      debug=debug, log=log, debug_file=None)
         #print(self.binary_debug)
         #self.binary_debug = None
