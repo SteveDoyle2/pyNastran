@@ -81,17 +81,18 @@ class NastranIO(object):
         if ext.lower() in '.pch':
             punch = True
 
-        if bdf_filename.lower().endswith('.op2'):  # read the OP2
-            op2_filename = bdf_filename
-            model = OP2(op2_filename, make_geom=True,
-                       save_skipped_cards=False,
-                       debug=True, log=self.log)
-            model.read_op2(op2_filename)
-            model.cross_reference(xref=True, xref_loads=False, xref_constraints=False)
+        #if bdf_filename.lower().endswith('.op2'):  # read the OP2; requires make_geom
+            #op2_filename = bdf_filename
+            #model = OP2(# make_geom=True,
+                       #debug=True, log=self.log)
+            #model.read_op2(op2_filename)
+            #model.cross_reference(xref=True, xref_loads=False, xref_constraints=False)
+        if 0:
+            pass
         else:  # read the bdf/punch
             model = BDF(log=self.log, debug=True)
             self.modelType = model.modelType
-            model.readBDF(bdf_filename, includeDir=dirname, punch=punch)
+            model.read_bdf(bdf_filename, include_dir=dirname, punch=punch)
 
         nNodes = model.nNodes()
         assert nNodes > 0
@@ -103,7 +104,7 @@ class NastranIO(object):
 
         print "nNodes = ",self.nNodes
         self.log_info("nElements = %i" % self.nElements)
-        msg = model.card_stats(return_type='list')
+        msg = model.get_bdf_stats(return_type='list')
         #self.log_info(msg)
         for msgi in msg:
             model.log.debug(msgi)
