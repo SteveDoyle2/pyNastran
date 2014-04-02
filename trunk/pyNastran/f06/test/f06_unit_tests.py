@@ -50,7 +50,6 @@ class TestF06(unittest.TestCase):
             else:
                 assert f06.grid_point_weight.reference_point is None
 
-
         if op2_name:
             op2 = OP2(debug=False)
             op2.read_op2(op2_name)
@@ -201,6 +200,77 @@ class TestF06(unittest.TestCase):
         IQ_exact = array([[ 0.04790044, 0.9197143, 0.8740444 ]])
         self.assertTrue(array_equiv(IQ, IQ_exact))
 
+    def test_solid_shell_bar_1(self):
+        bdfname = None
+        bdfname = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.bdf')
+        f06name = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.f06')
+        op2name = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.op2')
+
+        f06name2 = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.test_f06.f06')
+        #f06name1 = os.path.join(test_path, 'static_solid_shell_bar.f06')
+        #f06name2 = os.path.join(test_path, 'static_solid_shell_bar.test_f06.f06')
+        #op2name = None
+        bdf, f06, op2 = self.run_model(bdfname, f06name, op2name, f06_has_weight=False)
+
+        print(f06.displacements)
+        assert len(f06.displacements) == 1, len(f06.displacements)
+        assert len(f06.spcForces) == 1, len(f06.spcForces)
+        assert len(f06.loadVectors) == 0, len(f06.loadVectors)
+        assert len(f06.gridPointForces) == 1, len(f06.gridPointForces)
+
+        assert len(f06.rodForces) == 0, len(f06.rodForces)
+        assert len(f06.rodStrain) == 1, len(f06.rodStrain)
+        assert len(f06.rodStress) == 1, len(f06.rodStress)
+
+        assert len(f06.plateForces) == 0, len(f06.plateForces)  # 0 is correct
+        assert len(f06.plateForces2) == 1, len(f06.plateForces2)
+        assert len(f06.plateStress) == 1, len(f06.plateStress)
+        assert len(f06.plateStrain) == 1, len(f06.plateStrain)
+
+        assert len(f06.beamForces) == 0, len(f06.beamForces)
+        assert len(f06.beamStrain) == 0, len(f06.beamStrain)
+
+        assert len(f06.barStrain) == 1, len(f06.barStrain)
+        assert len(f06.barStress) == 1, len(f06.barStress)
+
+        assert len(f06.solidStrain) == 1, len(f06.solidStrain)
+        assert len(f06.solidStress) == 1, len(f06.solidStress)
+
+    def test_solid_shell_bar_2(self):
+        bdfname = None
+        bdfname = os.path.join(model_path, 'sol_101_elements', 'mode_solid_shell_bar.bdf')
+        f06name = os.path.join(model_path, 'sol_101_elements', 'mode_solid_shell_bar.f06')
+        op2name = os.path.join(model_path, 'sol_101_elements', 'mode_solid_shell_bar.op2')
+
+        f06name2 = os.path.join(model_path, 'sol_101_elements', 'mode_solid_shell_bar.test_f06.f06')
+        #f06name1 = os.path.join(test_path, 'static_solid_shell_bar.f06')
+        #f06name2 = os.path.join(test_path, 'static_solid_shell_bar.test_f06.f06')
+        #op2name = None
+        bdf, f06, op2 = self.run_model(bdfname, f06name, op2name, f06_has_weight=False)
+
+        print(f06.displacements)
+        assert len(f06.displacements) == 1, len(f06.displacements)
+        assert len(f06.spcForces) == 1, len(f06.spcForces)
+        assert len(f06.loadVectors) == 0, len(f06.loadVectors)
+        assert len(f06.gridPointForces) == 1, len(f06.gridPointForces)
+
+        assert len(f06.rodForces) == 0, len(f06.rodForces)
+        assert len(f06.rodStrain) == 1, len(f06.rodStrain)
+        assert len(f06.rodStress) == 1, len(f06.rodStress)
+
+        assert len(f06.plateForces) == 0, len(f06.plateForces)  # 0 is correct
+        assert len(f06.plateForces2) == 1, len(f06.plateForces2)
+        assert len(f06.plateStress) == 1, len(f06.plateStress)
+        assert len(f06.plateStrain) == 1, len(f06.plateStrain)
+
+        assert len(f06.beamForces) == 0, len(f06.beamForces)
+        assert len(f06.beamStrain) == 0, len(f06.beamStrain)
+
+        assert len(f06.barStrain) == 1, len(f06.barStrain)
+        assert len(f06.barStress) == 1, len(f06.barStress)
+
+        assert len(f06.solidStrain) == 1, len(f06.solidStrain)
+        assert len(f06.solidStress) == 1, len(f06.solidStress)
 
     def test_failure_index(self):
         bdfname = None
@@ -216,11 +286,13 @@ class TestF06(unittest.TestCase):
         #0           21      G      9.121415E-18   5.869901E-15  -1.456074E+02   0.0            2.171751E+02   2.631261E-13
         #                           4.977449E-19   3.364763E-15  -6.035482E+00   0.0            2.480264E+01   2.345500E-14
         isubcase = 1
+        assert len(f06.plateForces) == 0, len(f06.plateForces)  # 0 is correct
+
         assert len(f06.displacements) == 2
         assert len(f06.spcForces) == 2
         assert len(f06.gridPointForces) == 2
         assert len(f06.compositePlateStress) == 2
-        assert len(f06.plateForces2) == 0 # should be 2, but unsupported
+        assert len(f06.plateForces2) == 2 # should be 2, but unsupported
         #disp = f06.displacements[isubcase]
         #frequency = .21
         #T3 = disp.translations[frequency][21][2]

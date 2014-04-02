@@ -58,9 +58,9 @@ class OES(object):
             ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
                14    2.514247E+04              1.758725E+02                     15    2.443757E+04              2.924619E+01
         """
-        (isubcase, transient, dt, data_code) = self.getRodHeader(False)
+        (isubcase, transient, dt, data_code) = self._get_rod_header(False)
         data_code['table_name'] = 'OES1X'
-        data = self.readRodStress()
+        data = self._read_rod_stress()
         if isubcase in self.rodStress:
             self.rodStress[isubcase].add_f06_data(data, transient)
         else:
@@ -70,9 +70,9 @@ class OES(object):
         self.iSubcases.append(isubcase)
 
     def _strains_in_crod_elements(self):
-        (isubcase, transient, dt, data_code) = self.getRodHeader(False)
+        (isubcase, transient, dt, data_code) = self._get_rod_header(False)
         data_code['table_name'] = 'OSTR1X'
-        data = self.readRodStress()
+        data = self._read_rod_stress()
         if isubcase in self.rodStrain:
             self.rodStrain[isubcase].add_f06_data(data, transient)
         else:
@@ -82,9 +82,9 @@ class OES(object):
         self.iSubcases.append(isubcase)
 
     def _stresses_in_celas2_elements(self):
-        (isubcase, transient, dt, data_code) = self.getSpringHeader(False)
+        (isubcase, transient, dt, data_code) = self._get_spring_header(False)
         data_code['table_name'] = 'OSTR1X'
-        data = self.readSpringStress()
+        data = self._read_spring_stress()
         if isubcase in self.celasStrain:
             self.celasStrain[isubcase].add_f06_data(data, transient)
         else:
@@ -94,9 +94,9 @@ class OES(object):
         self.iSubcases.append(isubcase)
 
     def _strains_in_celas2_elements(self):
-        (isubcase, transient, dt, data_code) = self.getSpringHeader(False)
+        (isubcase, transient, dt, data_code) = self._get_spring_header(False)
         data_code['table_name'] = 'OSTR1X'
-        data = self.readSpringStress()
+        data = self._read_spring_stress()
         if isubcase in self.celasStrain:
             self.celasStrain[isubcase].add_f06_data(data, transient)
         else:
@@ -105,7 +105,7 @@ class OES(object):
             self.celasStrain[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
-    def getRodHeader(self, isStrain):
+    def _get_rod_header(self, isStrain):
         """
         * analysis_code = 1 (Statics)
         * device_code   = 1 (Print)
@@ -121,7 +121,7 @@ class OES(object):
 
         (stress_bits, s_code) = self.make_stress_bits(
             isStrain=False, isRodOrSolid=True)
-        data_code = {'log': self.log, 'analysis_code': analysis_code,
+        data_code = {'analysis_code': analysis_code,
                     'device_code': 1, 'table_code': 5, 'sort_code': 0,
                     'sort_bits': [0, 0, 0], 'num_wide': 8, 's_code': s_code,
                     'stress_bits': stress_bits, 'format_code': 1,
@@ -130,7 +130,7 @@ class OES(object):
 
         return (isubcase, transient, dt, data_code)
 
-    def readRodStress(self):
+    def _read_rod_stress(self):
         """
         ::
 
@@ -153,10 +153,9 @@ class OES(object):
             if isinstance(out[5], int):
                 data.append(out[5:])
             self.i += 1
-
         return data
 
-    def readSpringStress(self):
+    def _read_spring_stress(self):
         """
         ::
 
@@ -207,9 +206,9 @@ class OES(object):
         * s_code        = 0 (Stress)
         * num_wide      = 8 (???)
         """
-        (isubcase, transient, dt, data_code) = self.getBarHeader(False)
+        (isubcase, transient, dt, data_code) = self._get_bar_header(False)
 
-        data = self.readBarStress()
+        data = self._read_bar_stress()
         data_code['table_name'] = 'OES1X'
         if isubcase in self.barStress:
             self.barStress[isubcase].add_f06_data(data, transient)
@@ -220,10 +219,10 @@ class OES(object):
         self.iSubcases.append(isubcase)
 
     def _strains_in_cbar_elements(self):
-        (isubcase, transient, dt, data_code) = self.getBarHeader(False)
+        (isubcase, transient, dt, data_code) = self._get_bar_header(False)
         data_code['table_name'] = 'OSTR1X'
 
-        data = self.readBarStress()
+        data = self._read_bar_stress()
         if isubcase in self.barStrain:
             self.barStrain[isubcase].add_f06_data(data, transient)
         else:
@@ -232,14 +231,14 @@ class OES(object):
             self.barStrain[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
-    def getBarHeader(self, isStrain):
+    def _get_bar_header(self, isStrain):
         (subcaseName, isubcase, transient, dt, analysis_code,
             is_sort1) = self._read_f06_subcase_header()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
         (stress_bits, s_code) = self.make_stress_bits(isStrain=isStrain, isRodOrSolid=True)
-        data_code = {'log': self.log, 'analysis_code': analysis_code,
+        data_code = {'analysis_code': analysis_code,
                     'device_code': 1, 'table_code': 5, 'sort_code': 0,
                     'sort_bits': [0, 0, 0], 'num_wide': 8, 's_code': s_code,
                     'stress_bits': stress_bits, 'format_code': 1,
@@ -249,13 +248,13 @@ class OES(object):
 
         return (isubcase, transient, dt, data_code)
 
-    def getSpringHeader(self, isStrain):
+    def _get_spring_header(self, isStrain):
         (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         headers = self.skip(2)
         #print "headers = %s" %(headers)
 
         (stress_bits, s_code) = self.make_stress_bits(isStrain=isStrain, isRodOrSolid=False)
-        data_code = {'log': self.log, 'analysis_code': analysis_code,
+        data_code = {'analysis_code': analysis_code,
                     'device_code': 1, 'table_code': 5, 'sort_code': 0,
                     'sort_bits': [0, 0, 0], 'num_wide': 2, 's_code': s_code,
                     'thermal': 0,
@@ -265,7 +264,7 @@ class OES(object):
                     'dataNames':['lsdvmn']}
         return (isubcase, transient, dt, data_code)
 
-    def readBarStress(self):
+    def _read_bar_stress(self):
         """
         ::
 
@@ -362,7 +361,7 @@ class OES(object):
 
         isFiberDistance = True
         (stress_bits, s_code) = self.make_stress_bits(isFiberDistance=isFiberDistance, isMaxShear=isMaxShear, isStrain=is_strain)
-        data_code = {'log': self.log, 'analysis_code': analysis_code,
+        data_code = {'analysis_code': analysis_code,
                     'device_code': 1, 'table_code': 5, 'sort_code': 0,
                     'sort_bits': [0, 0, 0], 'num_wide': 8, 's_code': s_code,
                     'stress_bits': stress_bits, 'format_code': 1,
@@ -407,9 +406,9 @@ class OES(object):
         * s_code        = 0 (Stress)
         * num_wide      = 8 (???)
         """
-        (isubcase, transient, data_code) = self.getTriHeader(False)
+        (isubcase, transient, data_code) = self._get_tri_header(False)
         data_code['table_name'] = 'OES1X'
-        data = self.readTriStress(['CTRIA3'])
+        data = self._read_tri_stress(['CTRIA3'])
         if isubcase in self.plateStress:
             self.plateStress[isubcase].add_f06_data(data, transient)
         else:
@@ -419,9 +418,9 @@ class OES(object):
         self.iSubcases.append(isubcase)
 
     def _strains_in_ctria3_elements(self):
-        (isubcase, transient, data_code) = self.getTriHeader(True)
+        (isubcase, transient, data_code) = self._get_tri_header(True)
         data_code['table_name'] = 'OST1X'
-        data = self.readTriStress(['CTRIA3'])
+        data = self._read_tri_stress(['CTRIA3'])
         if isubcase in self.plateStrain:
             self.plateStrain[isubcase].add_f06_data(data, transient)
         else:
@@ -431,7 +430,7 @@ class OES(object):
             self.plateStrain[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
-    def getTriHeader(self, isStrain):
+    def _get_tri_header(self, isStrain):
         """
         * analysis_code = 1 (Statics)
         * device_code   = 1 (Print)
@@ -462,16 +461,20 @@ class OES(object):
             raise RuntimeError(headers)
 
         (stress_bits, s_code) = self.make_stress_bits(isFiberDistance, isMaxShear, isStrain=isStrain)
-        data_code = {'log': self.log, 'analysis_code': analysis_code,
+        data_code = {'analysis_code': analysis_code,
                     'device_code': 1, 'table_code': 5, 'sort_code': 0,
                     'sort_bits': [0, 0, 0], 'num_wide': 8, 's_code': s_code,
                     'stress_bits': stress_bits, 'format_code': 1,
                     'element_name': 'CTRIA3', 'element_type': 74,
                     'nonlinear_factor': dt,
-                    'dataNames':['lsdvmn']}
+                    'dataNames':['lsdvmn'],
+                    'lsdvmn': 1,
+                    }
+        if transient is not None:
+            data_code['name'] = transient[0]
         return (isubcase, transient, data_code)
 
-    def readTriStress(self, eType):
+    def _read_tri_stress(self, eType):
         """
         ::
 
@@ -509,7 +512,7 @@ class OES(object):
         is_strain = False
         (isubcase, transient, data_code) = self._get_quad_header(2, elementType, elementNumber, is_strain)
         data_code['table_name'] = 'OES1X'
-        data = self.readTriStress(['CQUAD4'])
+        data = self._read_tri_stress(['CQUAD4'])
         if isubcase in self.plateStress:
             self.plateStress[isubcase].add_f06_data(data, transient)
         else:
@@ -525,7 +528,7 @@ class OES(object):
         is_strain = True
         (isubcase, transient, data_code) = self._get_quad_header(2, elementType, elementNumber, is_strain)
         data_code['table_name'] = 'OSTR1X'
-        data = self.readTriStress(['CQUAD4'])
+        data = self._read_tri_stress(['CQUAD4'])
         if isubcase in self.plateStrain:
             self.plateStrain[isubcase].add_f06_data(data, transient)
         else:
@@ -565,7 +568,7 @@ class OES(object):
         #print("data_code =", data_code)
 
         data_code['table_name'] = 'OES1X'
-        data = self.readQuadBilinear()
+        data = self._read_quad_bilinear()
 
         if is_strain:
             dictA = self.plateStrain
@@ -605,7 +608,7 @@ class OES(object):
             raise RuntimeError(headers)
 
         (stress_bits, s_code) = self.make_stress_bits(isFiberDistance, isMaxShear, is_strain)
-        data_code = {'log': self.log, 'analysis_code': analysis_code,
+        data_code = {'analysis_code': analysis_code,
                     'device_code': 1, 'table_code': 5, 'sort_code': 0,
                     'sort_bits': [0, 0, 0], 'num_wide': 8, 's_code': s_code,
                     'stress_bits': stress_bits, 'format_code': 1,
@@ -618,7 +621,7 @@ class OES(object):
             data_code['name'] = transient[0]
         return (isubcase, transient, data_code)
 
-    def readQuadBilinear(self):
+    def _read_quad_bilinear(self):
         data = []
         while 1:
             if 1:  # CEN/4
@@ -656,25 +659,25 @@ class OES(object):
 
     #==========================================================================
     def _stresses_in_chexa_elements(self):
-        return self.readSolidStress('CHEXA', 8)
+        return self._read_solid_stress('CHEXA', 8)
 
     def _stresses_in_cpenta_elements(self):
-        return self.readSolidStress('CPENTA', 6)
+        return self._read_solid_stress('CPENTA', 6)
 
     def _stresses_in_ctetra_elements(self):
-        return self.readSolidStress('CTETRA', 4)
+        return self._read_solid_stress('CTETRA', 4)
 
     def _strains_in_chexa_elements(self):
-        return self.readSolidStrain('CHEXA', 8)
+        return self._read_solid_strain('CHEXA', 8)
 
     def _strains_in_cpenta_elements(self):
-        return self.readSolidStrain('CPENTA', 6)
+        return self._read_solid_strain('CPENTA', 6)
 
     def _strains_in_ctetra_elements(self):
-        return self.readSolidStrain('CTETRA', 4)
+        return self._read_solid_strain('CTETRA', 4)
 
-    def readSolidStress(self, eType, n):
-        (isubcase, transient, data_code) = self.getSolidHeader(eType, n, False)
+    def _read_solid_stress(self, eType, n):
+        (isubcase, transient, data_code) = self._get_solid_header(eType, n, False)
         data_code['table_name'] = 'OES1X'
 
         data = self.read3DStress(eType, n)
@@ -686,8 +689,8 @@ class OES(object):
             self.solidStress[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
-    def readSolidStrain(self, eType, n):
-        (isubcase, transient, data_code) = self.getSolidHeader(eType, n, True)
+    def _read_solid_strain(self, eType, n):
+        (isubcase, transient, data_code) = self._get_solid_header(eType, n, True)
         data_code['table_name'] = 'OSTR1X'
 
         data = self.read3DStress(eType, n)
@@ -699,7 +702,7 @@ class OES(object):
             self.solidStrain[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
-    def getSolidHeader(self, eType, n, isStrain):
+    def _get_solid_header(self, eType, n, isStrain):
         """
         * analysis_code = 1 (Statics)
         * device_code   = 1 (Print)
@@ -720,7 +723,7 @@ class OES(object):
 
         (stress_bits, s_code) = self.make_stress_bits(
             isMaxShear=False, isStrain=isStrain, isRodOrSolid=True)
-        data_code = {'log': self.log, 'analysis_code': 1, 'device_code': 1,
+        data_code = {'analysis_code': 1, 'device_code': 1,
                     'table_code': 5, 'sort_code': 0, 'sort_bits': [0, 0, 0],
                     'num_wide': 8, 'element_name': eType, 'format_code': 1,
                     's_code': s_code, 'stress_bits': stress_bits,
