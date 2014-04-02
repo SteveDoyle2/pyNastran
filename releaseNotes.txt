@@ -93,6 +93,9 @@ F06:
    - F06 no longer defines the filename; use read_f06
    - readF06 is now gone, replaced by read_f06 (was previously deprecated)
    - grid point weight table is now supported
+   - fixed bug in subcase reading
+   - added GRID POINT FORCE BALANCE
+   - added FORCES IN CQUAD4s (bilinear)
 
 -----------------------v0.6.1 released 2013/06/13-----------------------
 BDF Bug Fixes
