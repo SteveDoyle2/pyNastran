@@ -241,7 +241,7 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
 
         data = []
         for line in lines:
-            eid, grid, fx, fy, fxy, mx, my, mxy, qx, qy = line[1:15], line[15:20], line[20:35], line[35:50], line[50:63], line[63:77], line[77:91], line[91:105], line[105:119], line[119:140]
+            eid, grid, fx, fy, fxy, mx, my, mxy, qx, qy = line[1:15], line[15:20], line[20:35], line[35:49], line[49:63], line[63:77], line[77:91], line[91:105], line[105:119], line[119:140]
             eid = eid.strip()
             grid = grid.strip()
             if eid:
@@ -277,10 +277,10 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
         is_sort1 = True
         ngrids = 4
         #print('isubcase =', isubcase)
-        if isubcase not in self.cquad4_force:
+        if isubcase not in self.plateForces2:
             assert 'nonlinear_factor' in data_code
-            self.cquad4_force[isubcase] = RealPlate2Force(data_code, is_sort1, isubcase, transient)
-        self.cquad4_force[isubcase].add_f06_data(transient, data, element_name, ngrids)
+            self.plateForces2[isubcase] = RealPlate2Force(data_code, is_sort1, isubcase, transient)
+        self.plateForces2[isubcase].add_f06_data(transient, data, element_name, ngrids)
         self.iSubcases.append(isubcase)
 
     def __init_data__(self, debug=False, log=None):
@@ -470,7 +470,13 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
         transient = self.stored_lines[-1].strip()
         is_sort1 = False
         if transient:
-            trans_word, trans_value = transient.split('=')
+            try:
+                trans_word, trans_value = transient.split('=')
+            except ValueError:
+                msg = 'transient = %r' % transient
+                msg += 'stored lines = [%r]' % '\n'.join(self.stored_lines)
+                #print(msg)
+                raise ValueError(msg)
             trans_word = trans_word.strip()
             trans_value = float(trans_value)
             transient = [trans_word, trans_value]
@@ -494,7 +500,7 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
                 #is_sort2 = True
                 analysis_code = None
             else:
-                raise NotImplementedError('transientWord=|%r| is not supported...' % trans_word)
+                raise NotImplementedError('transientWord=%r is not supported...' % trans_word)
         else:
             transient = None
             analysis_code = 1
@@ -635,7 +641,16 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
             self.strainEnergyDensity[isubcase] = sed
 
     def _grid_point_force_balance(self):
-        (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
+        try:
+            (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
+        except ValueError:
+            line = ''
+            while 'PAGE' not in line:
+                line = self.infile.readline()[1:].rstrip()
+                #lines.append(line)
+                self.i += 1
+            return
+
         headers = self.skip(2)
         line = ''
         lines = []
@@ -651,17 +666,23 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
             if 'PAGE' in line:
                 break
             point_id, element_id, source = line[1:11], line[11:24], line[24:36]
-            t1, t2, t3, r1, r2, r3 = line[36:49], line[49:61], line[61:85], line[85:102], line[102:118], line[118:145]
-            point_id = int(point_id)
-            element_id = element_id.strip()
-            if element_id:
-                element_id = int(element_id)
-            t1 = float(t1)
-            t2 = float(t2)
-            t3 = float(t3)
-            r1 = float(r1)
-            r2 = float(r2)
-            r3 = float(r3)
+            t1, t2, t3, r1, r2, r3 = line[36:55], line[55:72], line[72:87], line[87:102], line[102:117], line[117:138]
+            try:
+                point_id = int(point_id)
+                element_id = element_id.strip()
+                if element_id:
+                    element_id = int(element_id)
+                t1 = float(t1)
+                t2 = float(t2)
+                t3 = float(t3)
+                r1 = float(r1)
+                r2 = float(r2)
+                r3 = float(r3)
+            except:
+                msg = "point_id=%r, element_id=%r, source=%r\n" % (point_id, element_id, source)
+                msg += "t1=%r, t2=%r, t3=%r, r1=%r, r2=%r, r3=%r" % (t1, t2, t3, r1, r2, r3)
+                raise SyntaxError(msg)
+
             data.append([point_id, element_id, source, t1, t2, t3, r1, r2, r3])
 
             data_code = {'analysis_code': analysis_code,
