@@ -259,11 +259,54 @@ class OUG(OP2Common):
         result_name = 'eigenvectors'
         storage_obj = self.eigenvectors
         if self.thermal == 0:
-            real_obj = EigenvectorObject
-            complex_obj = ComplexEigenvectorObject
             n = self._read_table(data, result_name, storage_obj,
                                  EigenvectorObject, ComplexEigenvectorObject,
-                                 RealEigenvectorVector, ComplexEigenvectorVector, 'node', random_code=self.random_code)
+                                 RealEigenvectorVector, ComplexEigenvectorVector, 'node')
+        elif self.thermal == 1:
+            n = self._not_implemented_or_skip(data, msg='thermal=1')
+            #n = self._read_table(data, result_name, storage_obj,
+            #                     None, None,
+            #                     None, None, 'node', random_code=self.random_code)
+        else:
+            raise NotImplementedError(self.thermal)
+        return n
+
+    def _read_eigenvector_backup(self, data):
+        """
+        table_code = 7
+        """
+        result_name = 'eigenvectors'
+        storage_obj = self.eigenvectors
+        if self.thermal == 0:
+            #if self.isRandomResponse():
+            if self.isRandomResponse():
+                if self.format_code == 1 and self.num_wide == 8:  # real/random
+                    real_obj = EigenvectorObject
+                    # real_obj
+                    #assert real_obj is not None
+                    nnodes = len(data) // 32  # 8*4
+                    auto_return = self._create_table_object(result_name, nnodes, storage_obj, real_obj, real_vector)
+                    if auto_return:
+                        return len(data)
+                    n = self._read_real_table(data, result_name, node_elem)
+                elif self.format_code in [1, 2, 3] and self.num_wide == 14:  # real (fsi.op2 odd...) or real/imaginary or mag/phase
+                    complex_obj = ComplexEigenvectorObject
+                    # complex_obj
+                    #assert complex_obj is not None
+                    nnodes = len(data) // 56  # 14*4
+                    auto_return = self._create_table_object(result_name, nnodes, storage_obj, complex_obj, complex_vector)
+                    if auto_return:
+                        return len(data)
+                    n = self._read_complex_table(data, result_name, node_elem)
+                else:
+                    msg = 'only num_wide=8 or 14 is allowed  num_wide=%s' % self.num_wide
+                    n = self._not_implemented_or_skip(data, msg)
+            else:
+                msg = 'invalid random_code=%s num_wide=%s' % (self.random_code, self.num_wide)
+                n = self._not_implemented_or_skip(data, msg)
+            #n = self._read_table(data, result_name, storage_obj,
+            #                     EigenvectorObject, ComplexEigenvectorObject,
+            #                     RealEigenvectorVector, ComplexEigenvectorVector, 'node')
         elif self.thermal == 1:
             n = self._not_implemented_or_skip(data, msg='thermal=1')
             #n = self._read_table(data, result_name, storage_obj,

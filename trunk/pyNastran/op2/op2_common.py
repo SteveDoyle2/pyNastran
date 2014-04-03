@@ -475,31 +475,29 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
 
         #print('self.num_wide =', self.num_wide)
         #print('random...%s' % self.isRandomResponse())
-        if not self.isRandomResponse():
-        #if random_code is None or random_code == 0:
-            #print('random_code*** =', random_code)
-            if self.format_code == 1 and self.num_wide == 8:  # real/random
-                # real_obj
-                assert real_obj is not None
-                nnodes = len(data) // 32  # 8*4
-                auto_return = self._create_table_object(result_name, nnodes, storage_obj, real_obj, real_vector)
-                if auto_return:
-                    return len(data)
-                n = self._read_real_table(data, result_name, node_elem)
-            elif self.format_code in [2, 3] and self.num_wide == 14:  # real/imaginary or mag/phase
-                # complex_obj
-                assert complex_obj is not None
-                nnodes = len(data) // 56  # 14*4
-                auto_return = self._create_table_object(result_name, nnodes, storage_obj, complex_obj, complex_vector)
-                if auto_return:
-                    return len(data)
-                n = self._read_complex_table(data, result_name, node_elem)
-            else:
-                msg = 'only num_wide=8 or 14 is allowed  num_wide=%s' % self.num_wide
-                n = self._not_implemented_or_skip(data, msg)
+        #if not self.isRandomResponse():
+        if self.format_code == 1 and self.num_wide == 8:  # real/random
+            # real_obj
+            assert real_obj is not None
+            nnodes = len(data) // 32  # 8*4
+            auto_return = self._create_table_object(result_name, nnodes, storage_obj, real_obj, real_vector)
+            if auto_return:
+                return len(data)
+            n = self._read_real_table(data, result_name, node_elem)
+        elif self.format_code in [1, 2, 3] and self.num_wide == 14:  # real or real/imaginary or mag/phase
+            # complex_obj
+            assert complex_obj is not None
+            nnodes = len(data) // 56  # 14*4
+            auto_return = self._create_table_object(result_name, nnodes, storage_obj, complex_obj, complex_vector)
+            if auto_return:
+                return len(data)
+            n = self._read_complex_table(data, result_name, node_elem)
         else:
-            msg = 'invalid random_code=%s num_wide=%s' % (random_code, self.num_wide)
+            msg = 'only num_wide=8 or 14 is allowed  num_wide=%s' % self.num_wide
             n = self._not_implemented_or_skip(data, msg)
+        #else:
+        #msg = 'invalid random_code=%s num_wide=%s' % (random_code, self.num_wide)
+        #n = self._not_implemented_or_skip(data, msg)
         return n
 
     def _read_real_table(self, data, result_name, flag):

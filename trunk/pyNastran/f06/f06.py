@@ -203,11 +203,16 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
             'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 3 )': self._executive_control_echo,
             'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 4 )': self._executive_control_echo,
 
-            'L O A D   V E C T O R' : self._executive_control_echo,
+            # energy
+            'E L E M E N T   S T R A I N   E N E R G I E S   ( A V E R A G E )' : self._executive_control_echo,
+            'L O A D   V E C T O R' : self._load_vector,
+            
+            # complex stress
+            'C O M P L E X   S T R E S S E S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )' : self._executive_control_echo,
             #'* * * END OF JOB * * *': self.end(),
         }
         self.markers = self._marker_map.keys()
-    
+
     def _forces_in_cquad4s_bilinear(self):
         """
         ::
@@ -519,6 +524,8 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
             NO.       ORDER                                                                       MASS              STIFFNESS
                 1         1        6.158494E+07        7.847607E+03        1.248985E+03        1.000000E+00        6.158494E+07
         """
+        if not hasattr(self, '_ieigenvalue'):
+            self._ieigenvalue = 0
         (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         Title = None
         line1 = self.infile.readline().strip(); self.i += 1
@@ -541,8 +548,9 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
         #if title in self.eigenvalues:
             #self.eigenvalues[title].add_f06_data(note, data)
         #else:
-        self.eigenvalues[Title] = RealEigenvalues(Title)
-        self.eigenvalues[Title].add_f06_data(data)
+        self.eigenvalues[self._ieigenvalue] = RealEigenvalues(Title)
+        self.eigenvalues[self._ieigenvalue].add_f06_data(data)
+        self._ieigenvalue += 1
         #self.iSubcases.append(isubcase)
 
     def _complex_eigenvalue_summary(self):
@@ -913,6 +921,8 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
         #print "i=%i" % (self.i)
         self.infile.close()
         self._process_f06()
+        if hasattr(self, '_ieigenvalue'):
+            del self._ieigenvalue
 
     def _process_f06(self):
         #data = [self.disp,self.SpcForces,self.stress,self.isoStress,self.barStress,self.solidStress,self.temperature]

@@ -93,8 +93,8 @@ class StressObject(OES_Object):
         #print "data_code=",self.data_code
         self.element_name = self.data_code['element_name']
         if dt is not None:
-            self.log.debug("updating stress...%s=%s element_name=%s" %
-                           (self.data_code['name'], dt, self.element_name))
+            #print("updating stress...%s=%s element_name=%s" %
+            #     (self.data_code['name'], dt, self.element_name))
             self.dt = dt
             self.add_new_transient(dt)
 
@@ -114,8 +114,8 @@ class StrainObject(OES_Object):
         self.apply_data_code()
         self.element_name = self.data_code['element_name']
         if dt is not None:
-            self.log.debug("updating strain...%s=%s element_name=%s" %
-                           (self.data_code['name'], dt, self.element_name))
+            #print("updating strain...%s=%s element_name=%s" %
+            #     (self.data_code['name'], dt, self.element_name))
             self.dt = dt
             self.add_new_transient(dt)
 

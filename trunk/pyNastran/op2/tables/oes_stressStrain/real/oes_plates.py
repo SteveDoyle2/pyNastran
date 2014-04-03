@@ -564,6 +564,29 @@ class RealPlateStress(StressObject):
                     self.majorP[dt][eid] = {nid: [o11, o12]}
                     self.minorP[dt][eid] = {nid: [o21, o22]}
                     self.ovmShear[dt][eid] = {nid: [ovm1, ovm2]}
+                elif len(line) == 19:  # Centroid - bilinear
+                    (eType, eid, nid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
+                                      f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
+                    self.eType[eid] = eType
+                    self.fiberCurvature[eid] = {nid: [f1, f2]}
+                    self.oxx[eid] = {nid: [ox1, ox2]}
+                    self.oyy[eid] = {nid: [oy1, oy2]}
+                    self.txy[eid] = {nid: [txy1, txy2]}
+                    self.angle[eid] = {nid: [angle1, angle2]}
+                    self.majorP[eid] = {nid: [o11, o12]}
+                    self.minorP[eid] = {nid: [o21, o22]}
+                    self.ovmShear[eid] = {nid: [ovm1, ovm2]}
+                elif len(line) == 17:  # Bilinear node
+                    (nid, f1, ox1, oy1, oxy1, angle1, o11, o21, ovm1,
+                          f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
+                    self.fiberCurvature[eid][nid] = [f1, f2]
+                    self.oxx[eid][nid] = [ox1, ox2]
+                    self.oyy[eid][nid] = [oy1, oy2]
+                    self.txy[eid][nid] = [oxy1, txy2]
+                    self.angle[eid][nid] = [angle1, angle2]
+                    self.majorP[eid][nid] = [o11, o12]
+                    self.minorP[eid][nid] = [o21, o22]
+                    self.ovmShear[eid][nid] = [ovm1, ovm2]
                 else:
                     msg = 'line=%r not supported...len=%i' % (line, len(line))
                     raise NotImplementedError(msg)
@@ -883,7 +906,11 @@ class RealPlateStress(StressObject):
             kkey = self.eType.keys()[qkey]
             #print("qkey=%s kkey=%s" % (qkey, kkey))
             #print(self.oxx[dt])
-            ekey = self.oxx[dt][kkey].keys()
+            try:
+                ekey = self.oxx[dt][kkey].keys()
+            except KeyError:
+                assert dt in self.oxx, 'dt=%r not in oxx' % dt
+                assert kkey in self.oxx[dt], 'kkey=%r not in oxx[%r]' % (kkey, dt)
             isBilinear = True
             quadMsg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quadMsgTemp
             if len(ekey) == 1:
@@ -1186,9 +1213,8 @@ class RealPlateStrain(StrainObject):
                         self.minorP[eid] = {nid: [e21, e22]}
                         self.evmShear[eid] = {nid: [evm1, evm2]}
                     elif len(line) == 18:  # Centroid
-                        (
-                            eType, eid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
-                            f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
+                        (eType, eid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
+                         f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
                         nid = 'CEN/4'
                         self.eType[eid] = eType
                         self.fiberCurvature[eid] = {nid: [f1, f2]}
