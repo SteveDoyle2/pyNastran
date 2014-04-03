@@ -577,13 +577,13 @@ class OES(object):
             dictA = self.plateStress
             class_obj = RealPlateStress
 
-        if isubcase in self.plateStress:
-            self.plateStress[isubcase].add_f06_data(data, transient)
+        if isubcase in dictA:
+            dictA[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
             assert 'nonlinear_factor' in data_code
-            self.plateStress[isubcase] = RealPlateStress(data_code, is_sort1, isubcase, transient)
-            self.plateStress[isubcase].add_f06_data(data, transient)
+            dictA[isubcase] = class_obj(data_code, is_sort1, isubcase, transient)
+            dictA[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
     def _get_quad_header(self, nHeaderLines, elementType, elementNumber, is_strain):
@@ -680,7 +680,7 @@ class OES(object):
         (isubcase, transient, data_code) = self._get_solid_header(eType, n, False)
         data_code['table_name'] = 'OES1X'
 
-        data = self.read3DStress(eType, n)
+        data = self._read_3D_stress(eType, n)
         if isubcase in self.solidStress:
             self.solidStress[isubcase].add_f06_data(data, transient)
         else:
@@ -693,7 +693,7 @@ class OES(object):
         (isubcase, transient, data_code) = self._get_solid_header(eType, n, True)
         data_code['table_name'] = 'OSTR1X'
 
-        data = self.read3DStress(eType, n)
+        data = self._read_3D_stress(eType, n)
         if isubcase in self.solidStrain:
             self.solidStrain[isubcase].add_f06_data(data, transient)
         else:
@@ -729,15 +729,17 @@ class OES(object):
                     's_code': s_code, 'stress_bits': stress_bits,
                     'nonlinear_factor': dt,
                     'dataNames':['lsdvmn']}
+        if transient is not None:
+            data_code['name'] = transient[0]
         return (isubcase, transient, data_code)
 
-    def read3DStress(self, eType, n):
+    def _read_3D_stress(self, eType, n):
         data = []
         eType2 = eType + str(n)
         while 1:
             line = self.infile.readline().rstrip('\n\r')  # [1:]
                     #              CENTER         X          #          XY             #        A         #
-            sline = [line[1:17], line[17:24], line[24:28], line[28:43], line[43:47], line[47:63], line[63:66], line[66:80], line[80:83], line[83:88], line[88:93], line[93:98], line[99:113], line[113:130]]
+            sline = [line[1:17], line[17:23], line[23:28], line[28:43], line[43:47], line[47:63], line[63:66], line[66:80], line[80:83], line[83:88], line[88:93], line[93:98], line[99:113], line[113:130]]
             sline = [s.strip() for s in sline]
             if 'PAGE' in line:
                 break

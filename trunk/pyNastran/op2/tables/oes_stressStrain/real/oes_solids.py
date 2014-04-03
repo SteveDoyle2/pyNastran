@@ -378,11 +378,10 @@ class RealSolidStress(StressObject):
             dt = transient[1]
             if self._f06_data is None:
                 self._f06_data = {}
-
             if dt not in self._f06_data:
                 self._f06_data[dt] = []
-            for line in _f06_data:
-                self._f06_data[dt] += _f06_data
+            self._f06_data[dt] += _f06_data
+            assert 'name' in self.data_code, self.data_code
 
     def processF06Data(self):
         """
@@ -424,7 +423,7 @@ class RealSolidStress(StressObject):
                     (blank, nodeID, x, oxx, xy, txy, a, o1, lx, d1, d2, d3, pressure, ovmShear) = self._f06_data[n]
                     (blank, blank, y, oyy, yz, tyz, b, o2, ly, d1, d2, d3, blank, blank) = self._f06_data[n+1]
                     (blank, blank, z, ozz, zx, txz, c, o3, lz, d1, d2, d3, blank, blank) = self._f06_data[n+2]
-                    if    nodeID.strip() == 'CENTER':
+                    if nodeID.strip() == 'CENTER':
                         nodeID = 'CENTER'
                     else:
                         nodeID = int(nodeID)
@@ -441,18 +440,59 @@ class RealSolidStress(StressObject):
                     self.ovmShear[eid][nodeID] = float(ovmShear)
                     n += 3
             return
-        return
-        raise NotImplementedError()
-        #(dtName, dt) = transient
-        #self.data_code['name'] = dtName
-        #if dt not in self.gridTypes:
-            #self.add_new_transient()
 
-        #for line in data:
-            #(nodeID, grid_type, t1, t2, t3, r1, r2, r3) = line
-            #self.gridTypes[dt][nodeID] = array([t1, t2, t3])
-            #self.translations[dt][nodeID] = array([t1, t2, t3])
-            #self.rotations[dt][nodeID] = array([r1, r2, r3])
+        for dt, f06_data in sorted(self._f06_data.iteritems()):
+            n = 0
+            if dt not in self.oxx:
+                self.oxx[dt] = {}
+                self.oyy[dt] = {}
+                self.ozz[dt] = {}
+                self.txy[dt] = {}
+                self.tyz[dt] = {}
+                self.txz[dt] = {}
+                self.o1[dt] = {}
+                self.o2[dt] = {}
+                self.o3[dt] = {}
+                self.ovmShear[dt] = {}
+
+            while n < len(f06_data):
+                line = f06_data[n]
+
+                eType = line[0]
+                eid = int(line[1])
+                nNodes = eMap[eType]
+                self.eType[eid] = eType
+                self.oxx[dt][eid] = {}
+                self.oyy[dt][eid] = {}
+                self.ozz[dt][eid] = {}
+                self.txy[dt][eid] = {}
+                self.tyz[dt][eid] = {}
+                self.txz[dt][eid] = {}
+                self.o1[dt][eid] = {}
+                self.o2[dt][eid] = {}
+                self.o3[dt][eid] = {}
+                self.ovmShear[dt][eid] = {}
+                n += 1
+                for j in xrange(nNodes):
+                    (blank, nodeID, x, oxx, xy, txy, a, o1, lx, d1, d2, d3, pressure, ovmShear) = f06_data[n]
+                    (blank, blank, y, oyy, yz, tyz, b, o2, ly, d1, d2, d3, blank, blank) = f06_data[n+1]
+                    (blank, blank, z, ozz, zx, txz, c, o3, lz, d1, d2, d3, blank, blank) = f06_data[n+2]
+                    if nodeID.strip() == 'CENTER':
+                        nodeID = 'CENTER'
+                    else:
+                        nodeID = int(nodeID)
+
+                    self.oxx[dt][eid][nodeID] = float(oxx)
+                    self.oyy[dt][eid][nodeID] = float(oyy)
+                    self.ozz[dt][eid][nodeID] = float(ozz)
+                    self.txy[dt][eid][nodeID] = float(txy)
+                    self.tyz[dt][eid][nodeID] = float(tyz)
+                    self.txz[dt][eid][nodeID] = float(txz)
+                    self.o1[dt][eid][nodeID] = float(o1)
+                    self.o2[dt][eid][nodeID] = float(o2)
+                    self.o3[dt][eid][nodeID] = float(o3)
+                    self.ovmShear[dt][eid][nodeID] = float(ovmShear)
+                    n += 3
         #del self.data
 
     def delete_transient(self, dt):
@@ -936,17 +976,61 @@ class RealSolidStrain(StrainObject):
                     self.evmShear[eid][nodeID] = float(evmShear)
                     n += 3
             return
-        raise NotImplementedError()
+
         (dtName, dt) = transient
         self.data_code['name'] = dtName
-        if dt not in self.gridTypes:
-            self.add_new_transient()
+        for dt, f06_data in sorted(self._f06_data.iteritems()):
+            n = 0
+            if dt not in self.exx:
+                self.exx[dt] = {}
+                self.eyy[dt] = {}
+                self.ezz[dt] = {}
+                self.exy[dt] = {}
+                self.eyz[dt] = {}
+                self.exz[dt] = {}
+                self.e1[dt] = {}
+                self.e2[dt] = {}
+                self.e3[dt] = {}
+                self.evmShear[dt] = {}
 
-        for line in data:
-            (nodeID, grid_type, t1, t2, t3, r1, r2, r3) = line
-            self.gridTypes[dt][nodeID] = array([t1, t2, t3])
-            self.translations[dt][nodeID] = array([t1, t2, t3])
-            self.rotations[dt][nodeID] = array([r1, r2, r3])
+            while n < len(f06_data):
+                line = f06_data[n]
+
+                eType = line[0]
+                eid = int(line[1])
+                nNodes = eMap[eType]
+                self.eType[eid] = eType
+                self.exx[dt][eid] = {}
+                self.eyy[dt][eid] = {}
+                self.ezz[dt][eid] = {}
+                self.exy[dt][eid] = {}
+                self.eyz[dt][eid] = {}
+                self.exz[dt][eid] = {}
+                self.e1[dt][eid] = {}
+                self.e2[dt][eid] = {}
+                self.e3[dt][eid] = {}
+                self.evmShear[dt][eid] = {}
+                n += 1
+                for j in xrange(nNodes):
+                    (blank, nodeID, x, oxx, xy, txy, a, o1, lx, d1, d2, d3, pressure, ovmShear) = f06_data[n]
+                    (blank, blank, y, oyy, yz, tyz, b, o2, ly, d1, d2, d3, blank, blank) = f06_data[n+1]
+                    (blank, blank, z, ozz, zx, txz, c, o3, lz, d1, d2, d3, blank, blank) = f06_data[n+2]
+                    if nodeID.strip() == 'CENTER':
+                        nodeID = 'CENTER'
+                    else:
+                        nodeID = int(nodeID)
+
+                    self.exx[dt][eid][nodeID] = float(oxx)
+                    self.eyy[dt][eid][nodeID] = float(oyy)
+                    self.ezz[dt][eid][nodeID] = float(ozz)
+                    self.exy[dt][eid][nodeID] = float(txy)
+                    self.eyz[dt][eid][nodeID] = float(tyz)
+                    self.exz[dt][eid][nodeID] = float(txz)
+                    self.e1[dt][eid][nodeID] = float(o1)
+                    self.e2[dt][eid][nodeID] = float(o2)
+                    self.e3[dt][eid][nodeID] = float(o3)
+                    self.evmShear[dt][eid][nodeID] = float(ovmShear)
+                    n += 3
         del self._f06_data
 
     def delete_transient(self, dt):
