@@ -840,4 +840,3 @@ class ComplexTableObject(ScalarObject):
             msg = ['']
             page_num += 1
         return page_num - 1
-

@@ -467,7 +467,7 @@ class RealPlateStress(StressObject):
             for line in data:
                 if eType == 'CTRIA3':
                     (eType, eid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
-                     f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
+                                 f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
                     self.eType[eid] = eType
                     self.fiberCurvature[eid] = {'CEN/3': [f1, f2]}
                     self.oxx[eid] = {'CEN/3': [ox1, ox2]}
@@ -522,8 +522,6 @@ class RealPlateStress(StressObject):
                     msg = 'eType=%r not supported...' % eType
                     raise NotImplementedError(msg)
             return
-        #for line in data:
-            #print line
 
         dt = transient[1]
         if dt not in self.oxx:
@@ -540,7 +538,7 @@ class RealPlateStress(StressObject):
         for line in data:
             if eType == 'CTRIA3':
                 (eType, eid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
-                 f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
+                             f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
                 self.eType[eid] = eType
                 self.fiberCurvature[eid] = {'CEN/3': [f1, f2]}
                 self.oxx[dt][eid] = {'CEN/3': [ox1, ox2]}
@@ -569,24 +567,24 @@ class RealPlateStress(StressObject):
                                       f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
                     self.eType[eid] = eType
                     self.fiberCurvature[eid] = {nid: [f1, f2]}
-                    self.oxx[eid] = {nid: [ox1, ox2]}
-                    self.oyy[eid] = {nid: [oy1, oy2]}
-                    self.txy[eid] = {nid: [txy1, txy2]}
-                    self.angle[eid] = {nid: [angle1, angle2]}
-                    self.majorP[eid] = {nid: [o11, o12]}
-                    self.minorP[eid] = {nid: [o21, o22]}
-                    self.ovmShear[eid] = {nid: [ovm1, ovm2]}
+                    self.oxx[dt][eid] = {nid: [ox1, ox2]}
+                    self.oyy[dt][eid] = {nid: [oy1, oy2]}
+                    self.txy[dt][eid] = {nid: [txy1, txy2]}
+                    self.angle[dt][eid] = {nid: [angle1, angle2]}
+                    self.majorP[dt][eid] = {nid: [o11, o12]}
+                    self.minorP[dt][eid] = {nid: [o21, o22]}
+                    self.ovmShear[dt][eid] = {nid: [ovm1, ovm2]}
                 elif len(line) == 17:  # Bilinear node
                     (nid, f1, ox1, oy1, oxy1, angle1, o11, o21, ovm1,
                           f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
                     self.fiberCurvature[eid][nid] = [f1, f2]
-                    self.oxx[eid][nid] = [ox1, ox2]
-                    self.oyy[eid][nid] = [oy1, oy2]
-                    self.txy[eid][nid] = [oxy1, txy2]
-                    self.angle[eid][nid] = [angle1, angle2]
-                    self.majorP[eid][nid] = [o11, o12]
-                    self.minorP[eid][nid] = [o21, o22]
-                    self.ovmShear[eid][nid] = [ovm1, ovm2]
+                    self.oxx[dt][eid][nid] = [ox1, ox2]
+                    self.oyy[dt][eid][nid] = [oy1, oy2]
+                    self.txy[dt][eid][nid] = [oxy1, txy2]
+                    self.angle[dt][eid][nid] = [angle1, angle2]
+                    self.majorP[dt][eid][nid] = [o11, o12]
+                    self.minorP[dt][eid][nid] = [o21, o22]
+                    self.ovmShear[dt][eid][nid] = [ovm1, ovm2]
                 else:
                     msg = 'line=%r not supported...len=%i' % (line, len(line))
                     raise NotImplementedError(msg)
@@ -761,7 +759,6 @@ class RealPlateStress(StressObject):
             headers.append('maxShear')
         return headers
 
-
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, page_num, f, is_mag_phase)
@@ -846,23 +843,23 @@ class RealPlateStress(StressObject):
                 if eType in ['CQUAD4']:
                     if isBilinear:
                         for eid in eids:
-                            out = self.writeF06_Quad4_Bilinear(eid, 4)
+                            out = self._write_f06_quad4_bilinear(eid, 4)
                             msg.append(out)
                     else:
                         for eid in eids:
-                            out = self.writeF06_Tri3(eid)
+                            out = self._write_f06_tri3(eid)
                             msg.append(out)
                 elif eType in ['CTRIA3']:
                     for eid in eids:
-                        out = self.writeF06_Tri3(eid)
+                        out = self._write_f06_tri3(eid)
                         msg.append(out)
                 elif eType in ['CQUAD8', 'CQUADR']:
                     for eid in eids:
-                        out = self.writeF06_Quad4_Bilinear(eid, 4)
+                        out = self._write_f06_quad4_bilinear(eid, 4)
                         msg.append(out)
                 elif eType in ['CTRIAR', 'CTRIA6']:
                     for eid in eids:
-                        out = self.writeF06_Quad4_Bilinear(eid, 3)
+                        out = self._write_f06_quad4_bilinear(eid, 3)
                         msg.append(out)
                 else:
                     raise NotImplementedError('eType = %r' % eType)
@@ -904,8 +901,6 @@ class RealPlateStress(StressObject):
             qkey = eTypes.index('CQUAD4')
             #print(self.eType)
             kkey = self.eType.keys()[qkey]
-            #print("qkey=%s kkey=%s" % (qkey, kkey))
-            #print(self.oxx[dt])
             try:
                 ekey = self.oxx[dt][kkey].keys()
             except KeyError:
@@ -970,35 +965,35 @@ class RealPlateStress(StressObject):
                             header[1] = dt_msg % dt
                             msg += header + msgPack
                             for eid in eids:
-                                out = self.writeF06_Quad4_BilinearTransient(dt, eid, 4)
+                                out = self._write_f06_quad4_bilinear_transient(dt, eid, 4)
                                 msg.append(out)
                     else:
                         for dt in dts:
                             header[1] = dt_msg % dt
                             msg += header + msgPack
                             for eid in eids:
-                                out = self.writeF06_Tri3Transient(dt, eid)
+                                out = self._write_f06_tri3_transient(dt, eid)
                                 msg.append(out)
                 elif eType in ['CTRIA3']:
                     for dt in dts:
                         header[1] = dt_msg % dt
                         msg += header + msgPack
                         for eid in eids:
-                            out = self.writeF06_Tri3Transient(dt, eid)
+                            out = self._write_f06_tri3_transient(dt, eid)
                             msg.append(out)
                 elif eType in ['CTRIA6', 'CTRIAR']:
                     for dt in dts:
                         header[1] = dt_msg % dt
                         msg += header + msgPack
                         for eid in eids:
-                            out = self.writeF06_Quad4_BilinearTransient(dt, eid, 3)
+                            out = self._write_f06_quad4_bilinear_transient(dt, eid, 3)
                             msg.append(out)
                 elif eType in ['CQUAD8']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                         msg += header + msgPack
                         for eid in eids:
-                            out = self.writeF06_Quad4_BilinearTransient(dt, eid, 5)
+                            out = self._write_f06_quad4_bilinear_transient(dt, eid, 5)
                             msg.append(out)
                 else:
                     raise NotImplementedError('eType = %r' % eType)  # CQUAD8, CTRIA6
@@ -1009,7 +1004,7 @@ class RealPlateStress(StressObject):
                 page_num += 1
         return page_num - 1
 
-    def writeF06_Quad4_Bilinear(self, eid, n):
+    def _write_f06_quad4_bilinear(self, eid, n):
         msg = ['']
         k = self.oxx[eid].keys()
         cen = 'CEN/' + str(n)
@@ -1038,7 +1033,7 @@ class RealPlateStress(StressObject):
                     raise Exception('Invalid option for cquad4')
         return ''.join(msg)
 
-    def writeF06_Quad4_BilinearTransient(self, dt, eid, n):
+    def _write_f06_quad4_bilinear_transient(self, dt, eid, n):
         msg = ['']
         k = self.oxx[dt][eid].keys()
         cen = 'CEN/' + str(n)
@@ -1067,7 +1062,7 @@ class RealPlateStress(StressObject):
                     raise RuntimeError('Invalid option for cquad4')
         return ''.join(msg)
 
-    def writeF06_Tri3(self, eid):
+    def _write_f06_tri3(self, eid):
         msg = ['']
         oxxNodes = self.oxx[eid].keys()
         for nid in sorted(oxxNodes):
@@ -1089,7 +1084,7 @@ class RealPlateStress(StressObject):
                     msg.append('   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip()))
         return ''.join(msg)
 
-    def writeF06_Tri3Transient(self, dt, eid):
+    def _write_f06_tri3_transient(self, dt, eid):
         msg = ['']
         oxxNodes = self.oxx[dt][eid].keys()
         for nid in sorted(oxxNodes):
@@ -1186,7 +1181,7 @@ class RealPlateStrain(StrainObject):
             for line in data:
                 if eType == 'CTRIA3':
                     (eType, eid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
-                     f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
+                                 f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
                     self.eType[eid] = eType
                     self.fiberCurvature[eid] = {'CEN/3': [f1, f2]}
                     self.exx[eid] = {'CEN/3': [ex1, ex2]}
@@ -1202,7 +1197,7 @@ class RealPlateStrain(StrainObject):
                     if len(line) == 19:  # Centroid - bilinear
                         (
                             eType, eid, nid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
-                            f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
+                                             f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
                         self.eType[eid] = eType
                         self.fiberCurvature[eid] = {nid: [f1, f2]}
                         self.exx[eid] = {nid: [ex1, ex2]}
@@ -1214,7 +1209,7 @@ class RealPlateStrain(StrainObject):
                         self.evmShear[eid] = {nid: [evm1, evm2]}
                     elif len(line) == 18:  # Centroid
                         (eType, eid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
-                         f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
+                                     f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
                         nid = 'CEN/4'
                         self.eType[eid] = eType
                         self.fiberCurvature[eid] = {nid: [f1, f2]}
@@ -1227,7 +1222,7 @@ class RealPlateStrain(StrainObject):
                         self.evmShear[eid] = {nid: [evm1, evm2]}
                     elif len(line) == 17:  # Bilinear node
                         (nid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
-                         f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
+                              f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
                         self.fiberCurvature[eid][nid] = [f1, f2]
                         self.exx[eid][nid] = [ex1, ex2]
                         self.eyy[eid][nid] = [ey1, ey2]
@@ -1261,7 +1256,7 @@ class RealPlateStrain(StrainObject):
             eType = data[0][0]
             if eType == 'CTRIA3':
                 (eType, eid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
-                 f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
+                             f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
                 self.eType[eid] = eType
                 self.fiberCurvature[eid] = {'CEN/3': [f1, f2]}
                 self.exx[dt][eid] = {'CEN/3': [ex1, ex2]}
@@ -1272,7 +1267,20 @@ class RealPlateStrain(StrainObject):
                 self.minorP[dt][eid] = {'CEN/3': [e21, e22]}
                 self.evmShear[dt][eid] = {'CEN/3': [evm1, evm2]}
             elif eType == 'CQUAD4':
-                if len(line) == 18:  # Centroid
+                if len(line) == 19:  # Centroid - bilinear
+                    (
+                        eType, eid, nid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
+                                         f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
+                    self.eType[eid] = eType
+                    self.fiberCurvature[eid] = {nid: [f1, f2]}
+                    self.exx[dt][eid] = {nid: [ex1, ex2]}
+                    self.eyy[dt][eid] = {nid: [ey1, ey2]}
+                    self.exy[dt][eid] = {nid: [exy1, exy2]}
+                    self.angle[dt][eid] = {nid: [angle1, angle2]}
+                    self.majorP[dt][eid] = {nid: [e11, e12]}
+                    self.minorP[dt][eid] = {nid: [e21, e22]}
+                    self.evmShear[dt][eid] = {nid: [evm1, evm2]}
+                elif len(line) == 18:  # Centroid
                     (
                         eType, eid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
                         f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
@@ -1285,8 +1293,19 @@ class RealPlateStrain(StrainObject):
                     self.majorP[dt][eid] = {nid: [e11, e12]}
                     self.minorP[dt][eid] = {nid: [e21, e22]}
                     self.evmShear[dt][eid] = {nid: [evm1, evm2]}
+                elif len(line) == 17:  # Bilinear node
+                    (nid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
+                          f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
+                    self.fiberCurvature[eid][nid] = [f1, f2]
+                    self.exx[dt][eid][nid] = [ex1, ex2]
+                    self.eyy[dt][eid][nid] = [ey1, ey2]
+                    self.exy[dt][eid][nid] = [exy1, exy2]
+                    self.angle[dt][eid][nid] = [angle1, angle2]
+                    self.majorP[dt][eid][nid] = [e11, e12]
+                    self.minorP[dt][eid][nid] = [e21, e22]
+                    self.evmShear[dt][eid][nid] = [evm1, evm2]
                 else:
-                    msg = 'line=%s not supported...' % line
+                    msg = 'line=%r not supported...len=%i' % (line, len(line))
                     raise NotImplementedError(msg)
             else:
                 msg = 'eType=%r is not supported...' % eType
