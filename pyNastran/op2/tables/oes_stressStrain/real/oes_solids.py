@@ -74,7 +74,6 @@ class RealSolidVector(OES_Object):
             #nnodes = 8
         #self.element_node = zeros((self.ntotal, nnodes, 2), 'int32')
 
-
         #[oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovmShear]
         self.data = zeros((self.ntimes, self.ntotal, 10), 'float32')
         #self.data = zeros((self.ntimes, self.nelements, nnodes+1, 10), 'float32')
@@ -326,7 +325,7 @@ class RealSolidStress(StressObject):
         StressObject.__init__(self, data_code, isubcase)
 
         self.eType = {}
-        self.data = None
+        self._f06_data = None
         self._f06_data = None
         self.code = [self.format_code, self.sort_code, self.s_code]
 
@@ -370,20 +369,20 @@ class RealSolidStress(StressObject):
         msg += self.get_data_code()
         return msg
 
-    def add_f06_data(self, data, transient):
+    def add_f06_data(self, _f06_data, transient):
         if transient is None:
-            if not hasattr(self, 'data'):
-                self.data = []
-            self.data += data
+            if self._f06_data is None:
+                self._f06_data = []
+            self._f06_data += _f06_data
         else:
             dt = transient[1]
-            if not hasattr(self, 'data'):
-                self.data = {}
+            if self._f06_data is None:
+                self._f06_data = {}
 
-            if dt not in self.data:
-                self.data[dt] = []
-            for line in data:
-                self.data[dt] += data
+            if dt not in self._f06_data:
+                self._f06_data[dt] = []
+            for line in _f06_data:
+                self._f06_data[dt] += _f06_data
 
     def processF06Data(self):
         """
@@ -403,8 +402,8 @@ class RealSolidStress(StressObject):
             ipack = []
             i = 0
             n = 0
-            while n < len(self.data):
-                line = self.data[n]
+            while n < len(self._f06_data):
+                line = self._f06_data[n]
 
                 eType = line[0]
                 eid = int(line[1])
@@ -422,9 +421,9 @@ class RealSolidStress(StressObject):
                 self.ovmShear[eid] = {}
                 n += 1
                 for j in xrange(nNodes):
-                    (blank, nodeID, x, oxx, xy, txy, a, o1, lx, d1, d2, d3, pressure, ovmShear) = self.data[n]
-                    (blank, blank, y, oyy, yz, tyz, b, o2, ly, d1, d2, d3, blank, blank) = self.data[n+1]
-                    (blank, blank, z, ozz, zx, txz, c, o3, lz, d1, d2, d3, blank, blank) = self.data[n+2]
+                    (blank, nodeID, x, oxx, xy, txy, a, o1, lx, d1, d2, d3, pressure, ovmShear) = self._f06_data[n]
+                    (blank, blank, y, oyy, yz, tyz, b, o2, ly, d1, d2, d3, blank, blank) = self._f06_data[n+1]
+                    (blank, blank, z, ozz, zx, txz, c, o3, lz, d1, d2, d3, blank, blank) = self._f06_data[n+2]
                     if    nodeID.strip() == 'CENTER':
                         nodeID = 'CENTER'
                     else:
@@ -866,14 +865,14 @@ class RealSolidStrain(StrainObject):
 
     def add_f06_data(self, data, transient):
         if transient is None:
-            if not hasattr(self, '_f06_data'):
+            if self._f06_data is None:
                 self._f06_data = []
             self._f06_data += data
         else:
-            if not hasattr(self, '_f06_data'):
+            if self._f06_data is None:
                 self._f06_data = {}
             dt = transient[1]
-            if dt not in self.data:
+            if dt not in self._f06_data:
                 self._f06_data[dt] = []
             for line in data:
                 self._f06_data[dt] += data

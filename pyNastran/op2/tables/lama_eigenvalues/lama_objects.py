@@ -16,7 +16,7 @@ class RealEigenvalues(BaseScalarObject):
         self.extractionOrder = {}
         self.eigenvalues = {}
         self.radians = {}
-        #self.cycles = {}
+        self.cycles = {}
         self.generalizedMass = {}
         self.generalizedStiffness = {}
 
@@ -41,10 +41,10 @@ class RealEigenvalues(BaseScalarObject):
         self.extractionOrder[modeNum] = extractOrder
         self.eigenvalues[modeNum] = eigenvalue
         self.radians[modeNum] = radian
-        cyclei = sqrt(abs(eigenvalue)) / (2. * pi)
-        if not allclose(cycle, cyclei):
-            print('cycle=%s cyclei=%s' % (cycle, cyclei))
-        #self.cycles[modeNum] = cycle
+        #cyclei = sqrt(abs(eigenvalue)) / (2. * pi)
+        #if not allclose(cycle, cyclei):
+            #print('cycle=%s cyclei=%s' % (cycle, cyclei))
+        self.cycles[modeNum] = cycle
         self.generalizedMass[modeNum] = genM
         self.generalizedStiffness[modeNum] = genK
 
@@ -56,19 +56,19 @@ class RealEigenvalues(BaseScalarObject):
     def write_f06(self, f, header, pageStamp, page_num=1):
         title = ''
         if self.title is not None:
-            title = '%s\n' % self.title.center(72)
+            title = '%s' % str(self.title).center(124).rstrip() + '\n'
         msg = header + ['                                              R E A L   E I G E N V A L U E S\n', title,
                         '   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED\n',
                         '    NO.       ORDER                                                                       MASS              STIFFNESS\n']
         for (iMode, order) in sorted(self.extractionOrder.iteritems()):
             eigenvalue = self.eigenvalues[iMode]
-            cycle = sqrt(abs(eigenvalue)) / (2. * pi)
+            #cycle = sqrt(abs(eigenvalue)) / (2. * pi)
 
             omega = self.radians[iMode]
-            #freq = self.cycles[iMode]
+            freq = self.cycles[iMode]
             mass = self.generalizedMass[iMode]
             stiff = self.generalizedStiffness[iMode]
-            ([eigen, omega, freq, mass, stiff], is_all_zeros) = writeFloats13E([eigenvalue, omega, cycle, mass, stiff])
+            ([eigen, omega, freq, mass, stiff], is_all_zeros) = writeFloats13E([eigenvalue, omega, freq, mass, stiff])
             msg.append(' %8s  %8s       %-13s       %-13s       %-13s       %-13s       %s\n' % (iMode, order, eigen, omega, freq, mass, stiff))
         msg.append(pageStamp % page_num)
         f.write(''.join(msg))
@@ -126,7 +126,7 @@ class ComplexEigenvalues(BaseScalarObject):
     def write_f06(self, f, header, pageStamp, page_num=1):  # not proper msg start
         title = ''
         if self.title is not None:
-            title = '%s\n' % self.title.center(72)
+            title = '%s' % str(self.title).center(124).rstrip() + '\n'
         msg = header + ['                                        C O M P L E X   E I G E N V A L U E   S U M M A R Y\n', title,
                         '0                ROOT     EXTRACTION                  EIGENVALUE                     FREQUENCY              DAMPING\n',
                         '                  NO.        ORDER             (REAL)           (IMAG)                (CYCLES)            COEFFICIENT\n']
@@ -139,7 +139,7 @@ class ComplexEigenvalues(BaseScalarObject):
             damping = self.damping[iMode]
             ([eigr, eigi, freq, damping], is_all_zeros) = writeFloats13E([eigr, eigi, freq, damping])
             #            imode order      eigr     eigi          freq        damping
-            msg.append(' %22s  %10s       %-15s    %-13s         %-13s         %s\n' % (iMode, order, eigr, eigi, freq, damping))
+            msg.append(' %22s  %10s         %-15s  %-13s         %-13s         %s\n' % (iMode, order, eigr, eigi, freq, damping))
 
         msg.append(pageStamp % page_num)
         f.write(''.join(msg))

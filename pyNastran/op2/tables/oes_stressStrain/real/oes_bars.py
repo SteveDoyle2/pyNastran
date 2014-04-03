@@ -19,7 +19,6 @@ class RealBarStress(StressObject):
         self.eType = {}
 
         self.code = [self.format_code, self.sort_code, self.s_code]
-
         self.s1 = {}
         self.s2 = {}
         self.s3 = {}
@@ -277,7 +276,6 @@ class RealBarStress(StressObject):
                         ' %8s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n'
                         % (eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                             '', s1b, s2b, s3b, s4b, '', smaxb, sminb, MSc))
-
             f.write(pageStamp % page_num)
             msg = ['']
             page_num += 1
@@ -364,7 +362,7 @@ class RealBarStrain(StrainObject):
 
         (dtName, dt) = transient
         self.data_code['name'] = dtName
-        if dt not in self.s1:
+        if dt not in self.e1:
             self.update_dt(self.data_code, dt)
             self.isTransient = True
 
@@ -531,3 +529,4 @@ class RealBarStrain(StrainObject):
             page_num += 1
             i += 1
         return page_num - 1
+    

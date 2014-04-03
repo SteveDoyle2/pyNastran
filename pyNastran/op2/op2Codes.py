@@ -588,7 +588,7 @@ class Op2Codes(object):
         return msg
 
     #----
-    def isThermal(self):
+    def is_thermal(self):
         if self.thermal == 0:
             return False
         elif self.thermal == 1:
@@ -609,7 +609,7 @@ class Op2Codes(object):
             return True
         return False
 
-    def isSort2(self):
+    def is_sort2(self):
         return not(self.is_sort1())
 
     #----
@@ -636,8 +636,9 @@ class Op2Codes(object):
 
     #----
     # combos
-    def isRealOrRandom(self):
-        return self.isReal() or self.isRandom()
+    #def isRealOrRandom(self):  # been broken for a long time
+        #asfd
+        #return self.isReal() or self.isRandom()
 
     def isRealImaginaryOrMagnitudePhase(self):
         return self.is_real_imaginary or self.MagnitudePhase()

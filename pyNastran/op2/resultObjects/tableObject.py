@@ -423,9 +423,9 @@ class RealTableObject(ScalarObject):  # displacement style table
         self.data_code = data_code
         self.apply_data_code()
         if dt is not None:
-            self.log.debug("updating %s...%s=%s  isubcase=%s"
-                        % (self.data_code['name'], self.data_code['name'],
-                           dt, self.isubcase))
+            #print("updating %s...%s=%s  isubcase=%s"
+            #      % (self.data_code['name'], self.data_code['name'],
+            #         dt, self.isubcase))
             self.dt = dt
             self.add_new_transient(dt)
 
@@ -700,7 +700,7 @@ class ComplexTableObject(ScalarObject):
         self.data_code = data_code
         self.apply_data_code()
         if dt is not None:
-            self.log.debug("updating %s...%s=%s  isubcase=%s" % (self.data_code['name'], self.data_code['name'], dt, self.isubcase))
+            #print("updating %s...%s=%s  isubcase=%s" % (self.data_code['name'], self.data_code['name'], dt, self.isubcase))
             self.add_new_transient(dt)
 
     def delete_transient(self, dt):
