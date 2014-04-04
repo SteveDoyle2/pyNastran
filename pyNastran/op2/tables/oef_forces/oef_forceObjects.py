@@ -246,8 +246,8 @@ class RealRodForce(ScalarObject):  # 1-ROD
         (dtName, dt) = transient
         self.dt = dt
         self.data_code['name'] = dtName
-        if dt not in self.axial:
-            self.update_dt(self.data_code, dt)
+        #if dt not in self.axialForce:
+            #self.update_dt(self.data_code, dt)
 
         for line in data:
             (eid, axial, torsion) = line
@@ -1060,13 +1060,12 @@ class RealPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         if dt is None:
             for (eid, grid, fx, fy, fxy, mx, my, mxy, qx, qy) in data:
                 self.mx[eid] = mx
-                
+
         else:
             if dt not in self.mx:
                 pass
                 #raise NotImplementedError()
-        
-            
+
     def add(self, dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         #self.eType[eid] = eType
         self.mx[eid] = mx

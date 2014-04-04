@@ -62,7 +62,8 @@ class LAMA(OP2Common):
         if self.read_mode == 1:
             return len(data)
 
-        return len(data)  # TODO: implement buckling eigenvalues
+        msg = '_read_buckling_eigenvalue_4'
+        return self._not_implemented_or_skip(data, msg)  # TODO: implement buckling eigenvalues
 
         ntotal = 4 * 7
         nModes = len(data) // ntotal
@@ -100,6 +101,7 @@ class LAMA(OP2Common):
         self.resFlag = self.add_data_parameter(data, 'resFlag', 'i', 11, False)
         ## fluid modes Flag
         self.fldFlag = self.add_data_parameter(data, 'fldFlag', 'i', 12, False)
+        self.Title = None
 
         #print self.data_code
         #self.add_data_parameter(data,'format_code',  'i',9,False)   ## format code
@@ -113,7 +115,6 @@ class LAMA(OP2Common):
 
         #self.print_block(data)
         self._read_title(data)
-
 
     def _read_real_eigenvalue_4(self, data):
         if self.read_mode == 1:
