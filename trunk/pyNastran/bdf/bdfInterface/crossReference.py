@@ -18,13 +18,6 @@ class XrefMesh(object):
         """
         pass
 
-    def crossReference(self, xref=True):
-        """
-        .. deprecated: will be replaced in version 0.7 with :func:`cross_reference`
-        """
-        warnings.warn('crossReference is deprecated; use cross_reference')
-        self.cross_reference(xref)
-
     def cross_reference(self, xref=True, xref_loads=True, xref_constraints=True):
         """
         Links up all the cards to the cards they reference
