@@ -43,7 +43,7 @@ def make_stamp(Title, today=None):
 #        pass
 
 class OP2Writer(object):
-#class OP2Writer(F06WriterDeprecated):
+#class OP2Writer(OP2WriterDeprecated):
     def __init__(self):
         #OP2WriterDeprecated.__init__(self)
         self.card_count = {}
@@ -313,10 +313,10 @@ class OP2Writer(object):
     def write_op2(self, op2_outname, is_mag_phase=False,
                   delete_objects=True):
         """
-        Writes an F06 file based on the data we have stored in the object
+        Writes an OP2 file based on the data we have stored in the object
 
         :param self:         the F06 object
-        :param f06_outname:  the name of the F06 file to write
+        :param op2_outname:  the name of the F06 file to write
         :param is_mag_phase: should complex data be written using Magnitude/Phase
                          instead of Real/Imaginary (default=False; Real/Imag)
                          Real objects don't use this parameter.
