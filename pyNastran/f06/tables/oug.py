@@ -83,6 +83,10 @@ class OUG(object):
             self.eigenvectors[isubcase] = EigenvectorObject(data_code, is_sort1, isubcase, iMode)
             self.eigenvectors[isubcase].read_f06_data(data_code, data)
 
+    def _complex_eigenvectors(self, marker):
+        headers = self.skip(2)
+        self._read_table_dummy()
+
     def _real_f06_table_data(self, allow_blanks=False):
         """
         Reads real displacement/velocity/spc forces/mpc forces

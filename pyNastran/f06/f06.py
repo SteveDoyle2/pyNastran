@@ -5,17 +5,17 @@ from itertools import izip
 from pyNastran.utils import print_bad_path
 from pyNastran.utils.log import get_logger
 
-#ComplexEigenvalues,strainEnergyDensity,TemperatureGradientObject
-from pyNastran.op2.tables.lama_eigenvalues.lama_objects import RealEigenvalues, ComplexEigenvalues
+#strainEnergyDensity,TemperatureGradientObject
 
 
-from pyNastran.f06.tables.oes import OES  # OES
-from pyNastran.f06.tables.oug import OUG  # OUG
-from pyNastran.f06.tables.oqg import OQG  # OUG
-from pyNastran.f06.f06_classes import MaxDisplacement  # classes not in op2
+from pyNastran.f06.tables.oes import OES
+from pyNastran.f06.tables.oug import OUG
+from pyNastran.f06.tables.oqg import OQG
+from pyNastran.f06.tables.oef import OEF
+from pyNastran.f06.tables.lama import LAMA
+from pyNastran.f06.tables.max_min import MAX_MIN
 from pyNastran.f06.f06Writer import F06Writer
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import RealGridPointForcesObject
-from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealPlateForce, RealPlate2Force
 
 from pyNastran.utils import is_binary
 from pyNastran.f06.errors import FatalError
@@ -31,7 +31,7 @@ from pyNastran.f06.errors import FatalError
         #self.read_f06(self.f06_filename)
 
 
-class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
+class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
     def stop_after_reading_grid_point_weight(self, stop=True):
         self._stop_after_reading_mass = stop
 
@@ -46,8 +46,11 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
         .. seealso:: import logging
         """
         OES.__init__(self)
+        OEF.__init__(self)
         OQG.__init__(self)
         OUG.__init__(self)
+        LAMA.__init__(self)
+        MAX_MIN.__init__(self)
         #F06Deprecated.__init__(self, f06_filename)
         #F06Writer.__init__(self)
 
@@ -122,44 +125,45 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
             'R E A L   E I G E N V A L U E S': self._real_eigenvalues,
             'C O M P L E X   E I G E N V A L U E   S U M M A R Y':self._complex_eigenvalue_summary,
 
-            'E L E M E N T   S T R A I N   E N E R G I E S': self._element_strain_energies,
-            'D I S P L A C E M E N T   V E C T O R': self._displacement_vector,
-            'C O M P L E X   D I S P L A C E M E N T   V E C T O R': self._complex_displacement_vector,
-            'F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T': self._forces_of_single_point_constraints,
-            'F O R C E S   O F   M U L T I P O I N T   C O N S T R A I N T': self._forces_of_multi_point_constraints,
+            'D I S P L A C E M E N T   V E C T O R' : self._displacement_vector,
+            'C O M P L E X   D I S P L A C E M E N T   V E C T O R' : self._complex_displacement_vector,
+            'F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T' : self._forces_of_single_point_constraints,
+            'F O R C E S   O F   M U L T I P O I N T   C O N S T R A I N T' : self._forces_of_multi_point_constraints,
 
-            'T E M P E R A T U R E   V E C T O R': self._temperature_vector,
-            'F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S': self._temperature_gradients_and_fluxes,
+            'T E M P E R A T U R E   V E C T O R' : self._temperature_vector,
+            'L O A D   V E C T O R' : self._load_vector,
+            #'F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S': self._temperature_gradients_and_fluxes,
 
             #====================================================================
             # OES O-D
-            'S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )': self._stresses_in_cbar_elements,
-            'S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )': self._strains_in_cbar_elements,
+            'S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )' : self._stresses_in_cbar_elements,
+            'S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )'  : self._strains_in_cbar_elements,
 
-            'S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )'     : self._stresses_in_crod_elements,
-            'S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )': self._strains_in_crod_elements,
+            'S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )' : self._stresses_in_crod_elements,
+            'S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )'   : self._strains_in_crod_elements,
 
             'S T R E S S E S   I N   R O D   E L E M E N T S      ( C O N R O D )' : self._stresses_in_crod_elements,
-            'S T R A I N S   I N   R O D   E L E M E N T S      ( C O N R O D )': self._strains_in_crod_elements,
+            'S T R A I N S   I N   R O D   E L E M E N T S      ( C O N R O D )'   : self._strains_in_crod_elements,
             #====================================================================
             # OES 1-D
-            'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 1 )': self._stresses_in_celas2_elements,
-            'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )': self._stresses_in_celas2_elements,
-            'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 3 )': self._stresses_in_celas2_elements,
-            'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 4 )': self._stresses_in_celas2_elements,
+            'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 1 )' : self._stresses_in_celas1_elements,
+            'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )' : self._stresses_in_celas2_elements,
+            'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 3 )' : self._stresses_in_celas3_elements,
+            'S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 4 )' : self._stresses_in_celas4_elements,
 
-            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 1 )':self._strains_in_celas2_elements,
-            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 2 )':self._strains_in_celas2_elements,
-            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 3 )':self._strains_in_celas2_elements,
-            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 4 )':self._strains_in_celas2_elements,
+            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 1 )' : self._strains_in_celas1_elements,
+            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 2 )' : self._strains_in_celas2_elements,
+            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 3 )' : self._strains_in_celas3_elements,
+            'S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 4 )' : self._strains_in_celas4_elements,
             #====================================================================
             # OES 2-D (no support for CQUAD8, CQUAD, CQUADR, CTRIAR, CTRAI6, CTRIAX, CTRIAX6)
-            'S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )': self._stresses_in_ctria3_elements,
-            'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )': self._stresses_in_cquad4_elements,
-            'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN': self._stresses_in_cquad4_bilinear_elements,
+            'S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )' : self._stresses_in_ctria3_elements,
+            'S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )' : self._strains_in_ctria3_elements,
 
-            'S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )': self._strains_in_ctria3_elements,
-            'S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )': self._strains_in_cquad4_elements,
+            'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )' : self._stresses_in_cquad4_elements,
+            'S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )' : self._strains_in_cquad4_elements,
+
+            'S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN' : self._stresses_in_cquad4_bilinear_elements,
             'S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN' : self._strains_in_cquad4_bilinear_elements,
 
             #==
@@ -187,106 +191,31 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
 
             # STRESS
             'S T R E S S E S   I N   H Y P E R E L A S T I C   H E X A H E D R O N   E L E M E N T S  ( HEXA8FD )' : self._executive_control_echo,
-
             'N O N L I N E A R   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S    ( Q U A D 4 )' : self._executive_control_echo,
             'N O N L I N E A R   S T R E S S E S   I N   T E T R A H E D R O N   S O L I D   E L E M E N T S   ( T E T R A )' : self._executive_control_echo,
             'N O N L I N E A R   S T R E S S E S   I N   H Y P E R E L A S T I C   Q U A D R I L A T E R A L   E L E M E N T S  ( QUAD4FD )' : self._executive_control_echo,
             'N O N L I N E A R   S T R E S S E S  IN  H Y P E R E L A S T I C   A X I S Y M M.  Q U A D R I L A T E R A L  ELEMENTS (QUADXFD)' : self._executive_control_echo,
 
             # FORCE
-            'F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )' : self._executive_control_echo,
-            'F O R C E S   I N   R O D   E L E M E N T S     ( C R O D )': self._executive_control_echo,
-            'F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )':  self._executive_control_echo,
+            'F O R C E S   I N   R O D   E L E M E N T S     ( C R O D )': self._forces_in_crod_elements,
             'F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN':  self._forces_in_cquad4s_bilinear,
+
+            'F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )' : self._executive_control_echo,
+            'F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )':  self._executive_control_echo,
             'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 1 )': self._executive_control_echo,
             'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )': self._executive_control_echo,
             'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 3 )': self._executive_control_echo,
             'F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 4 )': self._executive_control_echo,
 
             # energy
+            'E L E M E N T   S T R A I N   E N E R G I E S' : self._element_strain_energies,
             'E L E M E N T   S T R A I N   E N E R G I E S   ( A V E R A G E )' : self._executive_control_echo,
-            'L O A D   V E C T O R' : self._load_vector,
-            
+
             # complex stress
             'C O M P L E X   S T R E S S E S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )' : self._executive_control_echo,
             #'* * * END OF JOB * * *': self.end(),
         }
         self.markers = self._marker_map.keys()
-
-    def _forces_in_cquad4s_bilinear(self):
-        """
-        ::
-
-                                  F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  
-         
-            ELEMENT                    - MEMBRANE  FORCES -                      - BENDING   MOMENTS -            - TRANSVERSE SHEAR FORCES -
-              ID       GRID-ID     FX            FY            FXY           MX            MY            MXY           QX            QY
-                  1    CEN/4  0.0           0.0           0.0          -7.371223E+01 -4.023861E+02 -2.679984E+01  1.315875E+01 -7.356985E+01
-                           1  0.0           0.0           0.0          -1.043592E+02 -3.888291E+02 -2.698050E+01  1.315875E+01 -7.356985E+01
-                           2  0.0           0.0           0.0          -1.036512E+02 -4.152917E+02 -2.731157E+01  1.315875E+01 -7.356985E+01
-                           8  0.0           0.0           0.0          -4.306526E+01 -4.159432E+02 -2.661917E+01  1.315875E+01 -7.356985E+01
-                           7  0.0           0.0           0.0          -4.377329E+01 -3.894806E+02 -2.628810E+01  1.315875E+01 -7.356985E+01
-
-        element_type = 33 b/c not bilinear
-        """
-        element_name = 'CQUAD4'
-        element_type = 95
-        #print(self.stored_lines)
-        (subcaseName, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
-        headers = self.skip(3)
-
-        lines = []
-        while 1:
-            line = self.infile.readline().rstrip('\n\r')
-            self.i += 1
-            if 'PAGE' in line:
-                break
-            lines.append(line)
-            self.fatal_check(line)
-
-        data = []
-        for line in lines:
-            eid, grid, fx, fy, fxy, mx, my, mxy, qx, qy = line[1:15], line[15:20], line[20:35], line[35:49], line[49:63], line[63:77], line[77:91], line[91:105], line[105:119], line[119:140]
-            eid = eid.strip()
-            grid = grid.strip()
-            if eid:
-                eid = int(eid)
-            if 'C' not in grid:
-                grid = int(grid)
-            fx = float(fx)
-            fy = float(fy)
-            fxy = float(fxy)
-            mx = float(mx)
-            my = float(my)
-            mxy = float(mxy)
-            qx = float(qx)
-            qy = float(qy)
-            data.append([eid, grid, fx, fy, fxy, mx, my, mxy, qx, qy])
-
-        data_code = {'analysis_code': analysis_code,
-                    'device_code': 1, 
-                    'sort_code': 0,
-                    'sort_bits': [0, 0, 0],
-
-                    'table_name': 'OEF1X', # probably wrong
-                    'table_code': 5, # wrong
-                    'num_wide': 10,
-                    
-                    'format_code': 1,
-                    'element_name': element_name, 'element_type': element_type,
-                    'nonlinear_factor': dt,
-                    'dataNames':['lsdvmn'],
-                    'lsdvmn': 1,
-                    }
-
-        is_sort1 = True
-        ngrids = 4
-        #print('isubcase =', isubcase)
-        if isubcase not in self.plateForces2:
-            assert 'nonlinear_factor' in data_code
-            self.plateForces2[isubcase] = RealPlate2Force(data_code, is_sort1, isubcase, transient)
-        self.plateForces2[isubcase].add_f06_data(transient, data, element_name, ngrids)
-        self.iSubcases.append(isubcase)
 
     def __init_data__(self, debug=False, log=None):
         OES.__init__(self)
@@ -319,40 +248,6 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
             1        G      5         0.00E+00          B        F         SB       S    *
         """
         pass
-
-    def _get_max_spc_forces(self):  # .. todo:: not done
-        headers = self.skip(2)
-        #print "headers = %s" % (headers)
-        data = self._read_f06_table([int, float, float, float, float, float, float])
-        #print "max SPC Forces   ",data
-        #self.disp[isubcase] = DisplacementObject(isubcase,data)
-        #print self.disp[isubcase]
-
-    def _get_max_mpc_forces(self):  # .. todo:: not done
-        headers = self.skip(2)
-        #print "headers = %s" % (headers)
-        data = self._read_f06_table([int, float, float, float, float, float, float])
-        #print "max SPC Forces   ", data
-        #self.disp[isubcase] = DisplacementObject(isubcase, data)
-        #print self.disp[isubcase]
-
-    def _get_max_displacements(self):  # .. todo:: not done
-        headers = self.skip(2)
-        #print "headers = %s" % (headers)
-        data = self._read_f06_table([int, float, float, float, float, float, float])
-        #print "max Displacements",data
-        disp = MaxDisplacement(data)
-        #print disp.write_f06()
-        #self.disp[isubcase] = DisplacementObject(isubcase,data)
-        #print self.disp[isubcase]
-
-    def _get_max_applied_loads(self):  # .. todo:: not done
-        headers = self.skip(2)
-        #print "headers = %s" % (headers)
-        data = self._read_f06_table([int, float, float, float, float, float, float])
-        #print "max Applied Loads",data
-        #self.disp[isubcase] = DisplacementObject(isubcase,data)
-        #print self.disp[isubcase]
 
     def _grid_point_weight_generator(self):
         line = ''
@@ -425,8 +320,11 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
         -2 -> xxx             subcase 1
         """
         #print('-----------------')
+        ### changed...
+        for iline in [-4, -3, -2, -1, 0]:
+            print('line[%s]=%r' % (iline, self.stored_lines[iline].replace("  ", " ")))
+        assert 'PAGE' in self.stored_lines[-4], self.stored_lines[-4]
         subtitle = self.stored_lines[-3].strip()
-        #print(''.join(self.storedLines[-3:]))
 
         msg = ''
         lines2 = []
@@ -515,72 +413,6 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
             dt = transient[1]
         return (subcase_name, isubcase, transient, dt, analysis_code, is_sort1)
 
-    def _real_eigenvalues(self):
-        """
-        ::
-
-                                                     R E A L   E I G E N V A L U E S
-           MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED
-            NO.       ORDER                                                                       MASS              STIFFNESS
-                1         1        6.158494E+07        7.847607E+03        1.248985E+03        1.000000E+00        6.158494E+07
-        """
-        if not hasattr(self, '_ieigenvalue'):
-            self._ieigenvalue = 0
-        (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
-        Title = None
-        line1 = self.infile.readline().strip(); self.i += 1
-        if line1 != 'MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED':
-            Title = line1
-            line1 = self.infile.readline().strip(); self.i += 1
-        line2 = self.infile.readline().strip(); self.i += 1
-
-        #MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED
-        # NO.       ORDER                                                                       MASS              STIFFNESS
-        #     1         1        1.018377E-03        3.191203E-02        5.078956E-03        1.000000E+00        1.018377E-03
-        #print line1
-        #print line2
-        #headers = self.skip(2)
-        #print headers
-
-
-        data = self._read_f06_table([int, int, float, float, float, float, float])
-
-        #if title in self.eigenvalues:
-            #self.eigenvalues[title].add_f06_data(note, data)
-        #else:
-        self.eigenvalues[self._ieigenvalue] = RealEigenvalues(Title)
-        self.eigenvalues[self._ieigenvalue].add_f06_data(data)
-        self._ieigenvalue += 1
-        #self.iSubcases.append(isubcase)
-
-    def _complex_eigenvalue_summary(self):
-        """
-        ::
-
-                                 C O M P L E X   E I G E N V A L U E   S U M M A R Y
-          ROOT     EXTRACTION                  EIGENVALUE                     FREQUENCY              DAMPING
-           NO.        ORDER             (REAL)           (IMAG)                (CYCLES)            COEFFICIENT
-               1           6          0.0              6.324555E+01          1.006584E+01          0.0
-               2           5          0.0              6.324555E+01          1.006584E+01          0.0
-        """
-        #(subcaseName,isubcase,transient,dt,analysis_code,is_sort1) = self.readSubcaseNameID()
-        isubcase = 1  # .. todo:: fix this...
-
-        headers = self.skip(2)
-        data = self._read_f06_table([int, int, float, float, float, float])
-
-        if isubcase in self.eigenvalues:
-            self.eigenvalues[isubcase].add_f06_data(data)
-        else:
-            #is_sort1 = True
-            self.eigenvalues[isubcase] = ComplexEigenvalues(isubcase)
-            self.eigenvalues[isubcase].add_f06_data(data)
-        self.iSubcases.append(isubcase)
-
-    def _complex_eigenvectors(self, marker):
-        headers = self.skip(2)
-        self._read_table_dummy()
-
     def _element_strain_energies(self):
         """
         ::
@@ -627,7 +459,6 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
             sline = line.strip().split()
             if sline == []:
                 break
-            #print sline
             eid = int(sline[0])
             strain_energy = float(sline[1])
             percent_total = float(sline[2])
@@ -638,7 +469,6 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
         if sline == []:
             line = self.infile.readline()[1:].rstrip('\r\n ')
             self.i += 1
-            #print line
 
         return
         if isubcase in self.iSubcases:
@@ -697,11 +527,11 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
                         'device_code': 1, 'sort_code': 0,
                         'sort_bits': [0, 0, 0], 'num_wide': 9,
 
-                        'table_code': 1, 
-                        'table_name': 'OES1X', 
-                        
+                        'table_code': 1,
+                        'table_name': 'OES1X',
+
                         #'s_code': s_code,
-                        #'stress_bits': stress_bits, 
+                        #'stress_bits': stress_bits,
                         #'element_name': element_name, 'element_type': element_type,
 
                         'format_code': 1,
@@ -715,44 +545,6 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
         self.gridPointForces[isubcase].add_f06_data(dt, data)
         self.iSubcases.append(isubcase)
 
-    def _temperature_gradients_and_fluxes(self):
-        (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
-        #print transient
-        headers = self.skip(2)
-        #print "headers = %s" % (headers)
-        data = self.readGradientFluxesTable()
-        #print data
-        return
-        if isubcase in self.temperatureGrad:
-            self.temperatureGrad[isubcase].addData(data)
-        else:
-            self.temperatureGrad[isubcase] = TemperatureGradientObject(isubcase, data)
-        self.iSubcases.append(isubcase)
-
-    def readGradientFluxesTable(self):
-        data = []
-        Format = [int, str, float, float, float, float, float, float]
-        while 1:
-            line = self.infile.readline()[1:].rstrip('\r\n ')
-            self.i += 1
-            if 'PAGE' in line:
-                return data
-            sline = [line[0:15], line[15:24].strip(), line[24:44], line[44:61], line[61:78], line[78:95], line[95:112], line[112:129]]
-            sline = self.parseLineGradientsFluxes(sline, Format)
-            data.append(sline)
-        return data
-
-    def parseLineGradientsFluxes(self, sline, Format):
-        out = []
-        for entry, iFormat in izip(sline, Format):
-            if entry.strip() is '':
-                out.append(0.0)
-            else:
-                #print "sline=|%r|\n entry=|%r| format=%r" % (sline, entry, iFormat)
-                entry2 = iFormat(entry)
-                out.append(entry2)
-        return out
-
     def _read_f06_table(self, Format, debug=False):
         """
         Reads displacement, spc/mpc forces
@@ -763,11 +555,13 @@ class F06(OES, OUG, OQG, F06Writer): #, F06Deprecated):
         sline = True
         data = []
         while sline:
-            sline = self.infile.readline()[1:].strip().split()
+            line = self.infile.readline()[1:].strip()
+            sline = line.split()
             if debug:
                 print sline
             self.i += 1
             if 'PAGE' in sline:
+                self.stored_lines = [line]  ## changed...
                 return data
             sline = self.parseLine(sline, Format)
             if sline is None or len(sline) == 0:
