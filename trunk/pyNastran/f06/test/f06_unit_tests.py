@@ -43,7 +43,7 @@ class TestF06(unittest.TestCase):
         if f06_name:
             f06 = F06(debug=False, log=None)
             f06.read_f06(f06_name)
-            f06.write_f06(f06_name + '.out')
+            f06.write_f06(f06_name[:-4] + '.test_f06.out')
             outputs.append(f06)
             if f06_has_weight:
                 assert f06.grid_point_weight.reference_point is not None
@@ -53,7 +53,7 @@ class TestF06(unittest.TestCase):
         if op2_name:
             op2 = OP2(debug=False)
             op2.read_op2(op2_name)
-            op2.write_f06(op2_name + '.out')
+            op2.write_f06(op2_name[:-4] + '.test_op2.out')
             outputs.append(op2)
 
         if op4_name:
@@ -215,6 +215,51 @@ class TestF06(unittest.TestCase):
         assert len(f06.solidStrain) == 0, len(f06.solidStrain)  # 1 is correct
         assert len(f06.solidStress) == 0, len(f06.solidStress)  # 1 is correct
 
+    def test_beam_modes_1(self):
+        bdfname = os.path.join(model_path, 'beam_modes', 'beam_modes.dat')
+        op2name = os.path.join(model_path, 'beam_modes', 'beam_modes_m1.op2')
+        f06name = os.path.join(model_path, 'beam_modes', 'beam_modes.f06')
+        bdf, f06, op2 = self.run_model(bdfname, f06name, op2name, f06_has_weight=True)
+
+        assert len(f06.displacements) == 0, len(f06.displacements)
+        assert len(f06.eigenvectors) == 1, len(f06.eigenvectors)
+
+        assert len(op2.displacements) == 0, len(op2.displacements)
+        assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
+
+    def test_beam_modes_2(self):
+        bdfname = None
+        op2name = os.path.join(model_path, 'beam_modes', 'beam_modes_m2.op2')
+        f06name = None
+        op2 = self.run_model(bdfname, f06name, op2name, f06_has_weight=True)
+
+        assert len(op2.displacements) == 0, len(op2.displacements)
+        assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
+
+    def test_bar3truss_1(self):
+        bdfname = None
+        op2name = None
+        for f06_filename in ['no_subcase.f06', 'subcase_no_subtitle.f06',
+            'subcase_subtitle_label.f06', 'subcase_subtitle_label_title.f06',
+            'with_subcase.f06']:
+            f06name = os.path.join(model_path, 'bar3truss', f06_filename)
+
+            #f06name2 = os.path.join(model_path, 'bar3truss', 'no_subcase.test_f06.f06')
+            f06 = self.run_model(bdfname, f06name, op2name, f06_has_weight=True)
+
+            assert len(f06.displacements) == 1, len(f06.displacements)
+            assert len(f06.spcForces) == 1, len(f06.spcForces)
+            assert len(f06.appliedLoads) == 0, len(f06.appliedLoads)  # 0 is correct
+            assert len(f06.loadVectors) == 1, len(f06.loadVectors)
+            assert len(f06.spcForces) == 1, len(f06.spcForces)
+
+            assert len(f06.rodForces) == 1, len(f06.rodForces)
+            assert len(f06.rodStrain) == 0, len(f06.rodStrain)  # 0 is correct
+            assert len(f06.rodStress) == 1, len(f06.rodStress)
+
+            assert len(f06.solidStrain) == 0, len(f06.solidStrain)  # 0 is correct
+            assert len(f06.solidStress) == 0, len(f06.solidStress)  # 0 is correct
+
     def test_cbush_1(self):
         bdfname = None
         bdfname = os.path.join(model_path, 'cbush', 'cbush.dat')
@@ -245,7 +290,7 @@ class TestF06(unittest.TestCase):
 
         assert len(f06.gridPointForces) == 1, len(f06.gridPointForces)
 
-        assert len(f06.rodForces) == 0, len(f06.rodForces)  # 1 is correct
+        assert len(f06.rodForces) == 1, len(f06.rodForces)
         assert len(f06.rodStrain) == 1, len(f06.rodStrain)
         assert len(f06.rodStress) == 1, len(f06.rodStress)
 
@@ -276,7 +321,7 @@ class TestF06(unittest.TestCase):
         assert len(f06.loadVectors) == 0, len(f06.loadVectors)
         assert len(f06.gridPointForces) == 0, len(f06.gridPointForces)  # 1 is correct
 
-        assert len(f06.rodForces) == 0, len(f06.rodForces)  # 1 is correct
+        assert len(f06.rodForces) == 1, len(f06.rodForces)
         assert len(f06.rodStrain) == 1, len(f06.rodStrain)
         assert len(f06.rodStress) == 1, len(f06.rodStress)
 

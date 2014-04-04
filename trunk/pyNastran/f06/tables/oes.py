@@ -81,7 +81,7 @@ class OES(object):
             self.rodStrain[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
-    def _stresses_in_celas2_elements(self):
+    def _stresses_in_celas1_elements(self):
         (isubcase, transient, dt, data_code) = self._get_spring_header(False)
         data_code['table_name'] = 'OSTR1X'
         data = self._read_spring_stress()
@@ -93,7 +93,16 @@ class OES(object):
             self.celasStrain[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
-    def _strains_in_celas2_elements(self):
+    def _stresses_in_celas2_elements(self):
+        self._stress_in_celas1_elements()
+
+    def _stresses_in_celas3_elements(self):
+        self._stress_in_celas1_elements()
+
+    def _stresses_in_celas4_elements(self):
+        self._stress_in_celas1_elements()
+
+    def _strains_in_celas1_elements(self):
         (isubcase, transient, dt, data_code) = self._get_spring_header(False)
         data_code['table_name'] = 'OSTR1X'
         data = self._read_spring_stress()
@@ -104,6 +113,15 @@ class OES(object):
             self.celasStrain[isubcase] = RealCelasStrain(data_code, is_sort1, isubcase, transient)
             self.celasStrain[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
+
+    def _strains_in_celas2_elements(self):
+        self._strains_in_celas1_elements()
+
+    def _strains_in_celas3_elements(self):
+        self._strains_in_celas1_elements()
+
+    def _strains_in_celas4_elements(self):
+        self._strains_in_celas1_elements()
 
     def _get_rod_header(self, isStrain):
         """
