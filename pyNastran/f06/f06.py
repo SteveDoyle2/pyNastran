@@ -322,8 +322,11 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
         #print('-----------------')
         ### changed...
         for iline in [-4, -3, -2, -1, 0]:
-            print('line[%s]=%r' % (iline, self.stored_lines[iline].replace("  ", " ")))
-        assert 'PAGE' in self.stored_lines[-4], self.stored_lines[-4]
+            if iline == -1:
+                print('***line[%s]=%r' % (iline, self.stored_lines[iline].replace("    ", " ")))
+            else:
+                print('line[%s]=%r' % (iline, self.stored_lines[iline].replace("    ", " ")))
+        #assert 'PAGE' in self.stored_lines[-4], self.stored_lines[-4]
         subtitle = self.stored_lines[-3].strip()
 
         msg = ''
@@ -336,7 +339,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
                 lines2.append(line2)
 
         if self.Title is None or self.Title == '' and len(self.stored_lines) > 4:
-            title_line = lines2[-2]
+            title_line = self.stored_lines[-4]
             self.Title = title_line[1:75].strip()
             date = title_line[75:93].strip()
             if date:
@@ -351,7 +354,13 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
 
         subcase_name = ''
         #print("subcaseLine = %r" % subcaseName)
-        label, isubcase = _parse_label_isubcase(lines2)
+
+        # hack...
+        if 'F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN' in self.stored_lines[0]:
+            label_isubcase = self.stored_lines[-3]
+        else:
+            label_isubcase = self.stored_lines[-2]
+        label, isubcase = _parse_label_isubcase(label_isubcase)
 
         #subtitle = 'SUBCASE %s' % isubcase
         #label = 'SUBCASE %s' % isubcase
@@ -362,14 +371,16 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
 #subtitle
 #label      ???
 
-        #print('------------')
-        #print("title    = %r" % self.Title)
-        #print("subtitle = %r" % subtitle)
-        #print("label    = %r" % label)
+        if 'F O R C E S' in self.stored_lines[0]:
+            print("title    = %r" % self.Title)
+            print("subtitle = %r" % subtitle)
+            print("label    = %r" % label)
+            print("isubcase = %r" % isubcase)
+        print('------------')
 
         #assert self.Title == 'MSC.NASTRAN JOB CREATED ON 12-MAR-13 AT 12:52:23', self.Title
         self._subtitle = subtitle
-        self.iSubcaseNameMap[isubcase] = [subtitle, subtitle]
+        self.iSubcaseNameMap[isubcase] = [subtitle, label]
         transient = self.stored_lines[-1].strip()
         is_sort1 = False
         if transient:
@@ -561,7 +572,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
                 print sline
             self.i += 1
             if 'PAGE' in sline:
-                self.stored_lines = [line]  ## changed...
+                #self.stored_lines = [line]  ## changed...
                 return data
             sline = self.parseLine(sline, Format)
             if sline is None or len(sline) == 0:
@@ -752,17 +763,17 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
         #"""
         #pass
 
-def _parse_label_isubcase(stored_lines):
-    label = stored_lines[-1][1:65].strip()
-    isubcase = stored_lines[-1][65:].strip()
-    #print('stored2 = ', stored_lines[-1].strip().replace('         ', ' '))
+def _parse_label_isubcase(label_isubcase):
+    label = label_isubcase[1:65].strip()
+    isubcase = label_isubcase[65:].strip()
+    #print('stored2 = ', label_isubcase.strip().replace('         ', ' '))
     if isubcase:
         isubcase = int(isubcase.split()[-1])
     else:
         #raise RuntimeError('asdf')
         isubcase = 1
     return label, isubcase
-    #assert isinstance(isubcase,int),'isubcase=|%r|' % (isubcase)
+    #assert isinstance(isubcase,int),'isubcase=%r' % isubcase
     #print "subcaseName=%s isubcase=%s" % (subcaseName, isubcase)
 
 if __name__ == '__main__':

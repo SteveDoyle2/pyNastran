@@ -331,11 +331,10 @@ class OP2Writer(object):
             op2_outname = op2.name
             print('op2_outname =', op2_outname)
 
-        #page_stamp = self.make_stamp(self.Title, self.date)
-        #if self.grid_point_weight.reference_point is not None:
-            #print("grid_point_weight")
-            #self.page_num = self.grid_point_weight.write_f06(f06, page_stamp, self.page_num)
-            #assert isinstance(self.page_num, int), self.grid_point_weight.__class__.__name__
+        if self.grid_point_weight.reference_point is not None:
+            if has_attr(result, 'write_op2'):
+                print("grid_point_weight")
+                self.grid_point_weight.write_op2(op2, page_stamp, self.page_num)
 
         #print "page_stamp = %r" % page_stamp
         #print "stamp      = %r" % stamp
@@ -347,12 +346,9 @@ class OP2Writer(object):
             header
             #print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
             if has_attr(result, 'write_op2'):
-                self.page_num = result.write_op2(op2, header, page_stamp,
-                                                page_num=self.page_num)
-                assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
+                result.write_op2(op2)
                 if delete_objects:
                     del result
-                self.page_num += 1
 
         # then eigenvectors
         # has a special header
@@ -361,12 +357,9 @@ class OP2Writer(object):
 
             if hasattr(result, 'write_op2'):
                 print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
-                self.page_num = result.write_f06(header, page_stamp,
-                                                self.page_num, f=f06, is_mag_phase=is_mag_phase)
-                assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
+                result.write_op2(op2, is_mag_phase=is_mag_phase)
                 if delete_objects:
                     del result
-                self.page_num += 1
 
         # finally, we writte all the other tables
         # nastran puts the tables in order of the Case Control deck,

@@ -3,6 +3,8 @@ import unittest
 from math import sqrt
 
 from numpy import array, array_equiv, array_equal
+from itertools import count
+
 
 class DummyWriter(object):
     def __init__(self, *args):
@@ -221,6 +223,17 @@ class TestF06(unittest.TestCase):
         f06name = os.path.join(model_path, 'beam_modes', 'beam_modes.f06')
         bdf, f06, op2 = self.run_model(bdfname, f06name, op2name, f06_has_weight=True)
 
+        assert f06.Title == 'SIMPLE BEAM EXAMPLE', '%r' % f06.Title
+        assert op2.Title == 'SIMPLE BEAM EXAMPLE', '%r' % op2.Title
+
+        subtitle_label= f06.iSubcaseNameMap[1]
+        assert subtitle_label[0] == 'MODES', subtitle_label
+        assert subtitle_label[1] == '', subtitle_label
+
+        subtitle_label = op2.iSubcaseNameMap[1]
+        assert subtitle_label[0] == 'MODES', subtitle_label
+        assert subtitle_label[1] == '', subtitle_label
+
         assert len(f06.displacements) == 0, len(f06.displacements)
         assert len(f06.eigenvectors) == 1, len(f06.eigenvectors)
 
@@ -233,19 +246,29 @@ class TestF06(unittest.TestCase):
         f06name = None
         op2 = self.run_model(bdfname, f06name, op2name, f06_has_weight=True)
 
+        assert op2.Title == 'SIMPLE BEAM EXAMPLE', '%r' % op2.Title
         assert len(op2.displacements) == 0, len(op2.displacements)
         assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
 
     def test_bar3truss_1(self):
         bdfname = None
         op2name = None
-        for f06_filename in ['no_subcase.f06', 'subcase_no_subtitle.f06',
-            'subcase_subtitle_label.f06', 'subcase_subtitle_label_title.f06',
-            'with_subcase.f06']:
+        titles = ['', '', '', 'THIS_IS_A_BAD_TITLE', '']
+        subtitles = ['UNTITLED.SC4', '', 'UNTITLED.SC4', 'UNTITLED.SC4', 'UNTITLED.SC4']
+        labels = ['', '', 'MYLABEL', 'MYLABEL', '']
+        f06_filenames = ['no_subcase.f06', 'subcase_no_subtitle.f06',
+                         'subcase_subtitle_label.f06', 'subcase_subtitle_label_title.f06',
+                         'with_subcase.f06']
+        for i, title, subtitle, label, f06_filename in zip(count(), titles, subtitles, labels, f06_filenames):
             f06name = os.path.join(model_path, 'bar3truss', f06_filename)
 
             #f06name2 = os.path.join(model_path, 'bar3truss', 'no_subcase.test_f06.f06')
             f06 = self.run_model(bdfname, f06name, op2name, f06_has_weight=True)
+
+            assert f06.Title == title, 'i=%i title=%r expected=%r' % (i, f06.Title, title)
+            subtitle_label = f06.iSubcaseNameMap[1]
+            assert subtitle_label[0] == subtitle, 'i=%i subtitle=%r expected=%r' % (i, subtitle_label[0], subtitle)
+            assert subtitle_label[1] == label, 'i=%i label=%r expected=%r' % (i, subtitle_label[1], label)
 
             assert len(f06.displacements) == 1, len(f06.displacements)
             assert len(f06.spcForces) == 1, len(f06.spcForces)
@@ -260,8 +283,16 @@ class TestF06(unittest.TestCase):
             assert len(f06.solidStrain) == 0, len(f06.solidStrain)  # 0 is correct
             assert len(f06.solidStress) == 0, len(f06.solidStress)  # 0 is correct
 
+    def test_fsi_1(self):
+        bdfname = os.path.join(model_path, 'fsi', 'fsi.bdf')
+        f06name = os.path.join(model_path, 'fsi', 'fsi.f06')
+        op2name = os.path.join(model_path, 'fsi', 'fsi.op2')
+
+        bdf, f06, op2 = self.run_model(bdfname, f06name, op2name, f06_has_weight=False)
+        assert len(f06.eigenvectors) == 0, len(f06.eigenvectors)  # 1 is correct
+        assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
+
     def test_cbush_1(self):
-        bdfname = None
         bdfname = os.path.join(model_path, 'cbush', 'cbush.dat')
         f06name = os.path.join(model_path, 'cbush', 'cbush.f06')
         op2name = os.path.join(model_path, 'cbush', 'cbush.op2')
@@ -276,7 +307,6 @@ class TestF06(unittest.TestCase):
         assert len(f06.bushStress) == 0, len(f06.barStress)  # 1 is correct
 
     def test_solid_shell_bar_1(self):
-        bdfname = None
         bdfname = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.bdf')
         f06name = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.f06')
         op2name = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.op2')
@@ -315,6 +345,17 @@ class TestF06(unittest.TestCase):
 
         f06name2 = os.path.join(model_path, 'sol_101_elements', 'mode_solid_shell_bar.test_f06.f06')
         bdf, f06, op2 = self.run_model(bdfname, f06name, op2name, f06_has_weight=False)
+
+        assert f06.Title == 'MSC.NASTRAN JOB', '%r' % f06.Title
+        assert op2.Title == 'MSC.NASTRAN JOB', '%r' % op2.Title
+
+        subtitle_label = f06.iSubcaseNameMap[1]
+        #assert subtitle_label[0] == 'DEFAULT', subtitle_label
+        #assert subtitle_label[1] == 'SUBCASE 1', subtitle_label
+
+        subtitle_label = op2.iSubcaseNameMap[1]
+        assert subtitle_label[0] == 'DEFAULT', subtitle_label
+        assert subtitle_label[1] == 'SUBCASE 1', subtitle_label
 
         assert len(f06.displacements) == 0, len(f06.displacements)  # 0 is correct
         assert len(f06.spcForces) == 1, len(f06.spcForces)
@@ -355,11 +396,11 @@ class TestF06(unittest.TestCase):
         isubcase = 1
         assert len(f06.plateForces) == 0, len(f06.plateForces)  # 0 is correct
 
-        assert len(f06.displacements) == 2
-        assert len(f06.spcForces) == 2
-        assert len(f06.gridPointForces) == 2
-        assert len(f06.compositePlateStress) == 2
-        assert len(f06.plateForces2) == 2
+        assert len(f06.displacements) == 2, len(f06.displacements)
+        assert len(f06.spcForces) == 2, len(f06.spcForces)
+        assert len(f06.gridPointForces) == 2, len(f06.gridPointForces)
+        assert len(f06.compositePlateStress) == 2, len(f06.compositePlateStress)
+        assert len(f06.plateForces2) == 2, len(f06.plateForces2)
         #disp = f06.displacements[isubcase]
         #frequency = .21
         #T3 = disp.translations[frequency][21][2]
