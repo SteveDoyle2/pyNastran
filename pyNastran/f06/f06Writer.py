@@ -578,11 +578,6 @@ class F06Writer(object):
         :param end_flag: should a dummy Nastran "END" table be made
                          (default=False)
         """
-        self._write_f06(f06_outname, is_mag_phase=is_mag_phase, delete_objects=delete_objects,
-                       end_flag=end_flag, write_op2=False)
-
-    def _write_f06(self, f06_outname, is_mag_phase=False,
-                  delete_objects=True, end_flag=False, write_op2=False):
         if isinstance(f06_outname, str):
             f06 = open(f06_outname, 'wb')
             self.write_summary(f06)
@@ -591,8 +586,6 @@ class F06Writer(object):
             f06 = f06_outname
             f06_outname = f06.name
             print('f06_outname =', f06_outname)
-        if write_op2:
-            op2 = open(f06_outname.replace('.f06', '.op2'), 'wb')
 
         page_stamp = self.make_stamp(self.Title, self.date)
         if self.grid_point_weight.reference_point is not None:
@@ -821,8 +814,6 @@ class F06Writer(object):
                 for res_type in res_types:
                     if isubcase in res_type:
                         result = res_type[isubcase]
-                        if hasattr(result, 'write_op2'):
-                            result.write_op2(op2)
                         res_length = max(len(result.__class__.__name__), res_length)
                         continue
                 if res_length == 0:
@@ -858,5 +849,3 @@ class F06Writer(object):
                         self.page_num += 1
         f06.write(make_end(end_flag))
         f06.close()
-        if write_op2:
-            op2.close()
