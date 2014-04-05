@@ -68,14 +68,16 @@ BDF:
    - fixed major PBEAM bug
    - improved messages when cross-referencing
    - readBDF is now gone, replaced by read_bdf (was previously deprecated)
-   - large field format writing now supported.
+   - large field format writing now supported
      write_bdf method now has a precision='single' or 'double' option
    - fixed bug with SETx writing.  Nastran limits a SETx card to one THRU
      per card, which is inconsistent with other cards that use THRU.
 
 OP2:
    - rewrite of the OP2 allows for increased robustness and speed
-   - OP2 catches fatal errors
+   - Most fatal errors caught
+     - BDF input errors not caught
+     - others???
    - grid point weight table is now supported (see beam_modes demo)
    - OP2 no longer defines the filename; use read_f06.
      readOP2 is now gone, replaced by read_op2 (was previously deprecated)
@@ -89,13 +91,15 @@ OP2:
      to change.
 
 F06:
-   - Fatal errors caught
+   - Most fatal errors caught
    - F06 no longer defines the filename; use read_f06
    - readF06 is now gone, replaced by read_f06 (was previously deprecated)
    - grid point weight table is now supported
    - fixed bug in subcase reading
    - added GRID POINT FORCE BALANCE
    - added FORCES IN CQUAD4s (bilinear)
+   - added LOAD VECTOR
+   - supports SPOINTs now
 
 -----------------------v0.6.1 released 2013/06/13-----------------------
 BDF Bug Fixes
