@@ -407,18 +407,28 @@ class TestF06(unittest.TestCase):
         #self.assertEquals(T3, -1.456074E+02 + -6.035482E+00j)  # T3
 
     def test_plate_openmdao(self):
-        bdfname2 = os.path.join(model_path, 'plate', 'plate_openmdao.bdf')
+        bdfname = os.path.join(model_path, 'plate', 'plate_openmdao.bdf')
+        f06name = os.path.join(model_path, 'plate', 'plate.f06')
+        op2name = os.path.join(model_path, 'plate', 'plate.op2')
         dynamic_vars = {'t' : 42.}
-        bdf2 = self.run_model(bdfname2, dynamic_vars=dynamic_vars)
-        self.assertEquals(bdf2.properties[1].t, 42., 't=%s' % bdf2.properties[1].t)
+        bdf, f06, op2 = self.run_model(bdfname, f06name, op2name, dynamic_vars=dynamic_vars, f06_has_weight=False)
+        self.assertEquals(bdf.properties[1].t, 42., 't=%s' % bdf.properties[1].t)
+
+        assert len(f06.displacements) == 1, len(f06.displacements)
+        assert len(f06.spcForces) == 1, len(f06.spcForces)
+        assert len(f06.plateStress) == 1, len(f06.plateStress)
+
+        assert len(op2.displacements) == 1, len(op2.displacements)
+        assert len(op2.spcForces) == 1, len(op2.spcForces)
+        assert len(op2.plateStress) == 1, len(op2.plateStress)
 
         dynamic_vars = {'t' : 42}
         with self.assertRaises(SyntaxError):
-            bdf3 = self.run_model(bdfname2, dynamic_vars=dynamic_vars)
+            bdf2 = self.run_model(bdfname, dynamic_vars=dynamic_vars)
 
         dynamic_vars = {'t' : 'asdddddddf'}
         with self.assertRaises(SyntaxError):
-            bdf3 = self.run_model(bdfname2, dynamic_vars=dynamic_vars)
+            bdf3 = self.run_model(bdfname, dynamic_vars=dynamic_vars)
 
     def test_complex_displacement(self):
         bdfname = None
