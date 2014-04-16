@@ -1,3 +1,8 @@
+"""
+Defines functions for double precision 16 character field writing.
+"""
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import sys
 from pyNastran.bdf.bdfInterface.BDF_Card import wipe_empty_fields
 
@@ -14,8 +19,6 @@ def print_scientific_double(value):
         Format = "%16.10e"
 
     svalue = Format % value
-    #left, right = svalue.split('e')
-    #field = '%16s' % ('%sd%s' % (left.strip('0'), right))
     field = svalue.replace('e', 'D')
 
     if field == '-0.0000000000D+00':
@@ -27,7 +30,7 @@ def print_scientific_double(value):
 
 def print_field_double(value):
     """
-    Prints a single 16-character width field
+    Prints a 16-character width field
 
     :param value:   the value to print
     :returns field: an 16-character string
@@ -41,7 +44,7 @@ def print_field_double(value):
     else:
         field = "%16s" % value
     if len(field) != 16:
-        msg = 'field=|%s| is not 16 characters long...rawValue=|%s|' % (field, value)
+        msg = 'field=%r is not 16 characters long...rawValue=%r' % (field, value)
         raise RuntimeError(msg)
     return field
 
@@ -55,19 +58,19 @@ def print_card_double(fields, wipe_fields=True):
                          that need to be there, others cannot have them.
 
     .. note:: A large field format follows the  8-16-16-16-16-8 = 80
-     format where the first 8 is the card name or blank (continuation).
-     The last 8-character field indicates an optional continuation,
-     but because it's a left-justified unneccessary field,
-     print_card doesnt use it.
+              format where the first 8 is the card name or
+              blank (continuation).  The last 8-character field indicates
+              an optional continuation, but because it's a left-justified
+              unneccessary field, print_card doesnt use it.
     """
     if wipe_fields:
         fields = wipe_empty_fields(fields)
-    nFieldsMain = len(fields) - 1  # chop off the card name
-    nBDFLines = nFieldsMain // 8
-    if nFieldsMain % 8 != 0:
-        nBDFLines += 1
-        nExtraFields = 8 * nBDFLines -  nFieldsMain
-        fields += [None] * nExtraFields
+    nfields_main = len(fields) - 1  # chop off the card name
+    nBDF_lines = nfields_main // 8
+    if nfields_main % 8 != 0:
+        nBDF_lines += 1
+        nExtra_fields = 8 * nBDF_lines -  nfields_main
+        fields += [None] * nExtra_fields
 
     try:
         out = '%-8s' % (fields[0]+'*')
@@ -92,6 +95,7 @@ def print_card_double(fields, wipe_fields=True):
     if not out.endswith('\n'):
         out += '\n'
     return out
+
 
 if __name__ == '__main__':
     field = print_scientific_double(-55.1040257079)

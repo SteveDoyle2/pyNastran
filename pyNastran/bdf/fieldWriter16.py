@@ -1,3 +1,9 @@
+# pylint: disable=C0103,R0902,R0904,R0914,C0301
+"""
+Defines functions for single precision 16 character field writing.
+"""
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import sys
 from pyNastran.bdf.bdfInterface.BDF_Card import wipe_empty_fields
 
@@ -8,18 +14,21 @@ def print_scientific_16(value):
 
     .. seealso:: print_float_16 for a better method
     """
-    pythonValue = '%16.14e' % value  # -1.e-2
-    (svalue, sExponent) = pythonValue.strip().split('e')
+    python_value = '%16.14e' % value  # -1.e-2
+    (svalue, sExponent) = python_value.strip().split('e')
     exponent = int(sExponent)  # removes 0s
 
     if abs(value) < 0.01:
         sign = '-'
     else:
         sign = '+'
-    sExp2 = str(exponent).strip('-+')  # the exponent will be added later...
+
+    # the exponent will be added later...
+    sExp2 = str(exponent).strip('-+')
     value2 = float(svalue)
 
-    lenSExp = len(sExp2) + 1  # the plus 1 is for the sign
+    # the plus 1 is for the sign
+    lenSExp = len(sExp2) + 1
     leftover = 16 - lenSExp
 
     if value < 0:
@@ -164,7 +173,7 @@ def print_float_16(value):
 
 def print_field_16(value):
     """
-    Prints a single 16-character width field
+    Prints a 16-character width field
 
     :param value:   the value to print
     :returns field: an 16-character string
@@ -178,8 +187,7 @@ def print_field_16(value):
     else:
         field = "%16s" % value
     if len(field) != 16:
-        msg = 'field=%r is not 16 characters long...rawValue=%r' % (field,
-                                                                    value)
+        msg = 'field=%r is not 16 characters long...rawValue=%r' % (field, value)
         raise RuntimeError(msg)
     return field
 
@@ -193,22 +201,22 @@ def print_card_16(fields, wipe_fields=True):
                          that need to be there, others cannot have them.
 
     .. note:: A large field format follows the  8-16-16-16-16-8 = 80
-     format where the first 8 is the card name or blank (continuation).
-     The last 8-character field indicates an optional continuation,
-     but because it's a left-justified unneccessary field,
-     print_card doesnt use it.
+              format where the first 8 is the card name or
+              blank (continuation).  The last 8-character field indicates
+              an optional continuation, but because it's a left-justified
+              unneccessary field, print_card doesnt use it.
     """
     if wipe_fields:
         fields = wipe_empty_fields(fields)
-    nFieldsMain = len(fields) - 1  # chop off the card name
-    nBDFLines = nFieldsMain // 8
-    if nFieldsMain % 8 != 0:
-        nBDFLines += 1
-        nExtraFields = 8 * nBDFLines -  nFieldsMain
-        fields += [None] * nExtraFields
+    nfields_main = len(fields) - 1  # chop off the card name
+    nBDF_lines = nfields_main // 8
+    if nfields_main % 8 != 0:
+        nBDF_lines += 1
+        nExtra_fields = 8 * nBDF_lines -  nfields_main
+        fields += [None] * nExtra_fields
 
     try:
-        out = '%-8s' % (fields[0]+'*')
+        out = '%-8s' % (fields[0] + '*')
     except:
         print("ERROR!  fields=%s" % fields)
         sys.stdout.flush()
@@ -232,7 +240,7 @@ def print_card_16(fields, wipe_fields=True):
     return out
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     field = print_float_16(-55.1040257079)
     field = print_float_16(-55.1040257078872)
     field = print_float_16(-3.76948125497534)

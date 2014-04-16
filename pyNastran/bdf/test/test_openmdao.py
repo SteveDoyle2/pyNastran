@@ -1,5 +1,5 @@
-#from __future__ import (nested_scopes, generators, division, absolute_import,
-#                        print_function, unicode_literals)
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 import os
 import unittest
 from numpy import allclose, array
@@ -27,7 +27,7 @@ class BDFUpdater(BDF):
             'MAT5': self.materials,
             'MAT8': self.materials,
             'MAT10': self.materials,
-            
+
             # shell
             'CTRIAX': self.elements,
             'CTRIA3': self.elements,
@@ -43,10 +43,10 @@ class BDFUpdater(BDF):
             # shear,
             'CSHEAR': self.elements,
             'PSHEAR': self.properties,
-            
+
             # plane
             #'PLPLANE' : self.elements,
-            
+
             # solid
             'CTETRA' : self.elements,
             'CPENTA' : self.elements,
@@ -106,7 +106,7 @@ class BDFUpdater(BDF):
             'PDAMPT': self.properties,
             'PDAMP5': self.properties,
             'PVISC' : self.properties,
-            
+
             #'CRAC2D' : self.elements,
             #'CRAC3D' : self.elements,
             #'PRAC2D' : self.properties,
@@ -164,7 +164,7 @@ class BDFUpdater(BDF):
             'GRAV'    : self.loads,
             #'ACCEL'  : self.loads,
             'ACCEL1'  : self.loads,
-            
+
             # constraints
             'SPC1'   : self.spcObject,
             'SPC'    : self.spcObject,
@@ -188,18 +188,18 @@ class BDFUpdater(BDF):
             objs = self._type_map[Type]
         except KeyError:
             raise KeyError('Updating card Type=%r is not supported' % Type)
-        
+
         # get the specific card
         try:
             card = objs[iType]
         except KeyError:
             msg = 'Could not find %s ID=%r' % (Type, iType)
             raise KeyError(msg)
-        
+
         # update the card
         card.update_field(ifield, value)
         return card
-        
+
 class TestOpenMDAO(unittest.TestCase):
 
     def test_openmdao_good_1(self):
@@ -232,14 +232,14 @@ class TestOpenMDAO(unittest.TestCase):
         #CTETRA         8       4      11      12      13      15
 
         bdf_filename = os.path.join(test_path, 'unit', 'test_mass.dat')
-        
+
         model = BDFUpdater()
         model.read_bdf(bdf_filename)
-        
+
         for iupdate in updates:
             Type, iType, ifield, value = iupdate
             card = model.update_card(Type, iType, ifield, value)
-            print card
+            #print(card)
 
     def test_openmdao_bad_1(self):
         updates = [  # KeyError
@@ -249,14 +249,14 @@ class TestOpenMDAO(unittest.TestCase):
             ['FAKECARD', 100, 3, 20],
         ]
         bdf_filename = os.path.join(test_path, 'unit', 'test_mass.dat')
-        
+
         model = BDFUpdater()
         model.read_bdf(bdf_filename)
-        
+
         for iupdate in updates:
             Type, iType, ifield, value = iupdate
             self.assertRaises(KeyError, model.update_card, Type, iType, ifield, value)
-            print "tried to apply %r=%s" % (Type, iType)
+            #print("tried to apply %r=%s" % (Type, iType))
 
     def test_openmdao_bad_2(self):
         updates = [  # IndexError
@@ -264,14 +264,15 @@ class TestOpenMDAO(unittest.TestCase):
             ['PCOMP', 1, 24, 'YES_D'],  # too many plies
         ]
         bdf_filename = os.path.join(test_path, 'unit', 'test_mass.dat')
-        
+
         model = BDFUpdater()
         model.read_bdf(bdf_filename)
-        
+
         for iupdate in updates:
             Type, iType, ifield, value = iupdate
             self.assertRaises(IndexError, model.update_card, Type, iType, ifield, value)
-            print "tried to apply %r=%s" % (Type, iType)
+            #print("tried to apply %r=%s" % (Type, iType))
+
 
 if __name__ == '__main__':
-    unittest.main()        
+    unittest.main()
