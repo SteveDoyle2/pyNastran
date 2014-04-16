@@ -1,7 +1,7 @@
 import unittest
 
-from pyNastran.bdf.bdf import BDF, BDFCard, DAREA, SUPORT, SUPORT1, CGAP, PGAP, CDAMP1, SET1, AESTAT, DMI, DMIG
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.bdf import BDF, BDFCard, DAREA, PLOAD4
+from pyNastran.bdf.bdf import SUPORT, SUPORT1, CGAP, PGAP, CDAMP1, CBUSH, SET1, AESTAT, DMI, DMIG
 
 bdf = BDF()
 
@@ -19,6 +19,26 @@ class TestLoads(unittest.TestCase):
         card.write_bdf(size, 'dummy')
         card.rawFields()
 
+    def test_pload4_01(self):
+        lines = ['PLOAD4  1000    1       -60.    -60.    60.             1']
+        card = bdf.process_card(lines)
+        card = BDFCard(card)
+
+        size = 8
+        card = PLOAD4(card)
+        card.write_bdf(size, 'dummy')
+        card.rawFields()
+
+    def test_pload4_02(self):
+        lines = ['PLOAD4  1       101     1.                              10000   10011']
+        card = bdf.process_card(lines)
+        card = BDFCard(card)
+
+        size = 8
+        card = PLOAD4(card)
+        card.write_bdf(size, 'dummy')
+        card.rawFields()
+
     def test_support_01(self):
         lines = ['SUPORT, 1,      126']
         card = bdf.process_card(lines)
@@ -26,6 +46,28 @@ class TestLoads(unittest.TestCase):
 
         size = 8
         card = SUPORT(card)
+        card.write_bdf(size, 'dummy')
+        card.rawFields()
+
+    def test_support1_01(self):
+        lines = ['SUPORT1, 1,      126']
+        card = bdf.process_card(lines)
+        card = BDFCard(card)
+
+        size = 8
+        card = SUPORT1(card)
+        card.write_bdf(size, 'dummy')
+        card.rawFields()
+
+    def test_cbush_01(self):
+        lines = ['cbush,101,102,1,,,,,0']
+        card = bdf.process_card(lines)
+        card = BDFCard(card)
+
+        size = 8
+        card = CBUSH(card)
+        self.assertEquals(card.Eid(), 101)
+        self.assertEquals(card.Pid(), 102)
         card.write_bdf(size, 'dummy')
         card.rawFields()
 

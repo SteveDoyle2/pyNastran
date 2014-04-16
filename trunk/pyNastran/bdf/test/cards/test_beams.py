@@ -29,7 +29,7 @@ class TestRods(unittest.TestCase):
         nid2 = 3
         mid = 5
         A = 27.0
-        lines = ['cord1r,2,1,4,3']
+        lines = ['conrod,%i, %i, %i, %i, %f' % (eid, nid1, nid2, mid, A)]
         card = bdf.process_card(lines)
         card = BDFCard(card)
 
@@ -37,8 +37,8 @@ class TestRods(unittest.TestCase):
         card = CONROD(card)
         card.write_bdf(size, 'dummy')
         card.rawFields()
-        self.assertEquals(card.Cid(), 2)
-        self.assertEquals(card.Rid(), 1)
+        self.assertEquals(card.Eid(), eid)
+        self.assertEquals(card.Mid(), mid)
 
 
 class TestSprings(unittest.TestCase):

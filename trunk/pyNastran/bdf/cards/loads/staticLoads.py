@@ -1445,9 +1445,14 @@ class PLOAD4(Load):
 
     def nodeIDs(self, nodes=None):
         nodeIDs = [None, None]
-        if self.g1 is not None:
+        if isinstance(self.g1, int):
+            nodeIDs[0] = self.g1
+        elif self.g1 is not None:
             nodeIDs[0] = self.g1.nid
-        if self.g34 is not None:
+
+        if isinstance(self.g34, int):
+            nodeIDs[1] = self.g34
+        elif self.g34 is not None:
             nodeIDs[1] = self.g34.nid
         return nodeIDs
 
