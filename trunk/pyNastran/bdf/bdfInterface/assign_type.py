@@ -555,6 +555,7 @@ def integer_double_or_string(card, n, fieldname):
         svalue = card.field(n)
     except IndexError:
         raise SyntaxError('%s (field #%s) on card must be an integer, float, or string, but doesnt exist.\ncard=%s' % (fieldname, n, card) )
+
     if isinstance(svalue, int) or isinstance(svalue, float):
         return svalue
 
