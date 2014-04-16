@@ -52,12 +52,12 @@ class TestMaterials(unittest.TestCase):
         size = 16
         msg = card2.write_bdf(size, 'dummy')
         #msg = f.getvalue()
-        print(msg)
+        #print(msg)
 
         lines_actual = msg.rstrip().split('\n')
         msg = '\n%s\n\n%s' % ('\n'.join(lines_expected), msg)
         msg += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
-        print msg
+        #print msg
         self.assertEqual(len(lines_actual), len(lines_expected), msg)
         for actual, expected in zip(lines_actual, lines_expected):
             msg =  'actual   = %r\n' % actual
@@ -83,12 +83,12 @@ class TestMaterials(unittest.TestCase):
         size = 8
         msg = card2.write_bdf(size, 'dummy')
         #msg = f.getvalue()
-        print(msg)
+        #print(msg)
 
         lines_actual = msg.rstrip().split('\n')
         msg = '\n%s\n\n%s' % ('\n'.join(lines_expected), msg)
         msg += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
-        print msg
+        #print msg
         self.assertEqual(len(lines_actual), len(lines_expected), msg)
         for actual, expected in zip(lines_actual, lines_expected):
             msg =  'actual   = %r\n' % actual

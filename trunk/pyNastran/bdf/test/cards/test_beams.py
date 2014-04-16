@@ -16,7 +16,7 @@ class TestBeams(unittest.TestCase):
                 '     ,   ,   ,1.1,    ,2.1,,0.21',
                 '     ,   ,   ,   ,    ,0.5,,0.0',]
         card = bdf.process_card(lines)
-        #print print_card(card)
+        #print(print_card(card))
         card = BDFCard(card)
         card2 = PBEAM(card)
         fields = card2.rawFields()
@@ -154,9 +154,9 @@ class TestBeams(unittest.TestCase):
         #print("J = ", cbeam.J())
 
         #print("Area = ", cbeam.Area())
-        print("I11 = ", cbeam.I1())
-        print("I22 = ", cbeam.I2())
-        print("I12 = ", cbeam.I12())
+        #print("I11 = ", cbeam.I1())
+        #print("I22 = ", cbeam.I2())
+        #print("I12 = ", cbeam.I12())
         #print("J = ", cbeam.J())
         self.assertEqual(cbeam.Area(), 2.9)
         self.assertEqual(cbeam.I11(), 3.5)
@@ -257,7 +257,6 @@ class TestBeams(unittest.TestCase):
                 self.assertEqual(actual, expected, msg)
 
     def test_pbeam_09(self):
-        #pid=
         fields = [u'PBEAM', 4570049, 4570010, 0.12, 0.000256, 0.005625, None,
             0.0008889, 6.4444e-07, -0.04, -0.75, 0.04, -0.75, 0.04, 0.75,
             -0.04, 0.75, 'YES', 1.0, 0.12, 0.000256, 0.005625, 0.000256,
@@ -265,7 +264,7 @@ class TestBeams(unittest.TestCase):
             0.75, -0.04, 0.853433, 0.849842]
         #fields = [u'PBAR', 1510998, 1520998, 0.0, 4.9000000000000006e-14, 4.9000000000000006e-14, 0.0, 0.0, None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None, 0.0]
         card = print_card(fields)
-        #print card
+        #print(card)
         card = print_card(fields)
         lines = card.split('\n')
         card = bdf.process_card(lines)
@@ -278,10 +277,9 @@ class TestBeams(unittest.TestCase):
 
 class TestBars(unittest.TestCase):
     def test_pbar_01(self):
-        #pid=
         fields = [u'PBAR', 1510998, 1520998, 0.0, 4.9000000000000006e-14, 4.9000000000000006e-14, 0.0, 0.0, None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None, 0.0]
         card = print_card(fields)
-        #print card
+        #print(card)
         card = print_card(fields)
         lines = card.split('\n')
         card = bdf.process_card(lines)
