@@ -6,7 +6,7 @@ from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 from pyNastran.bdf.bdfInterface.assign_type import (integer_or_blank,
     double_or_blank, string, string_or_blank,
-    integer_double_or_string)
+    integer_double_string_or_blank)
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.fieldWriter16 import print_card_16
 
@@ -76,11 +76,20 @@ class PARAM(BaseCard):
         elif self.key == 'POST':
             value = integer_or_blank(card, 2, 'value', 1)
         else:
-            value = integer_double_or_string(card, 2, 'value')
+            value1 = integer_double_string_or_blank(card, 2, 'value1')
+            value2 = integer_double_string_or_blank(card, 3, 'value2')
+            if value2 is None:
+                value = value1
 
         if value is None:
+            if isinstance(value1, basestring):
+                assert ' ' not in value1, 'PARAM value1=%r' % value1
+            if isinstance(value2, basestring):
+                assert ' ' not in value2, 'PARAM value2=%r' % value2
             self.values = [value1, value2]
         else:
+            if isinstance(value, basestring):
+                assert ' ' not in value, 'PARAM value=%r' % value
             self.values = [value]
 
         if n == 1:
