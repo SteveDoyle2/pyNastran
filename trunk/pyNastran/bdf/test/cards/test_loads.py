@@ -1,6 +1,6 @@
 import unittest
 
-from pyNastran.bdf.bdf import BDF, BDFCard, DAREA, SUPORT, SUPORT1, CGAP, PGAP, CDAMP1, SET1, AESTAT
+from pyNastran.bdf.bdf import BDF, BDFCard, DAREA, SUPORT, SUPORT1, CGAP, PGAP, CDAMP1, SET1, AESTAT, DMI, DMIG
 from pyNastran.bdf.fieldWriter import print_card
 
 bdf = BDF()
@@ -51,6 +51,25 @@ class TestLoads(unittest.TestCase):
         card.write_bdf(size, 'dummy')
         card.rawFields()
 
+    def test_dmi_01(self):
+        lines = ['DMI,Q,0,6,1,0,,4,4']
+        card = bdf.process_card(lines)
+        card = BDFCard(card)
+
+        size = 8
+        card = DMI(card)
+        card.write_bdf(size, 'dummy')
+        #card.rawFields()
+
+    def test_dmig_01(self):
+        lines = ['DMIG    ENFORCE 0       1       1       0']
+        card = bdf.process_card(lines)
+        card = BDFCard(card)
+
+        size = 8
+        card = DMIG(card)
+        card.write_bdf(size, 'dummy')
+        #card.rawFields()
 
     def test_cgap_01(self):
         lines = ['CGAP    899     90      21      99      0.      1.      0.      0']
@@ -86,7 +105,6 @@ class TestLoads(unittest.TestCase):
         card.rawFields()
 
 
-#DMI
-#DMIG
 if __name__ == '__main__':
     unittest.main()
+
