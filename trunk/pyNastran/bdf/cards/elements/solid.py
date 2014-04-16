@@ -205,7 +205,7 @@ class CHEXA8(SolidElement):
         return self._nodeIDs(allowEmptyNodes=False)
 
 
-class CHEXA20(CHEXA8):
+class CHEXA20(SolidElement):
     """
     ::
 
@@ -445,7 +445,7 @@ class CPENTA6(SolidElement):
         return self._nodeIDs(allowEmptyNodes=False)
 
 
-class CPENTA15(CPENTA6):
+class CPENTA15(SolidElement):
     """
     ::
 
@@ -687,7 +687,7 @@ class CTETRA4(SolidElement):
         return self._nodeIDs(allowEmptyNodes=False)
 
 
-class CTETRA10(CTETRA4):
+class CTETRA10(SolidElement):
     """
     ::
 
