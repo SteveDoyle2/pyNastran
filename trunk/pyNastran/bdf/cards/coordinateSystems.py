@@ -13,6 +13,7 @@ from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.utils.dev import list_print
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, string_or_blank)
+from pyNastran.bdf.fieldWriter import print_card_8
 
 
 class Coord(BaseCard):
@@ -802,6 +803,10 @@ class CORD1R(Cord1x, RectangularCoord):
         list_fields = ['CORD1R', self.cid] + self.NodeIDs()
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card)
+
 
 class CORD1C(Cord1x, CylindricalCoord):
     """
@@ -831,7 +836,7 @@ class CORD1C(Cord1x, CylindricalCoord):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return self.comment() + card_writer(card)
+        return self.comment() + print_card_8(card)
 
 
 class CORD1S(Cord1x, SphericalCoord):
@@ -862,7 +867,7 @@ class CORD1S(Cord1x, SphericalCoord):
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return self.comment() + card_writer(card)
+        return self.comment() + print_card_8(card)
 
 
 class CORD2R(Cord2x, RectangularCoord):

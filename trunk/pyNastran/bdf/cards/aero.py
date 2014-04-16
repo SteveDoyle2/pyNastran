@@ -77,6 +77,7 @@ class AEFACT(BaseCard):
         card = self.reprFields()
         return self.comment() + print_card_8(card)
 
+
 class AELINK(BaseCard):
     r"""
     Defines relationships between or among AESTAT and AESURF entries, such
@@ -125,6 +126,10 @@ class AELINK(BaseCard):
         for (ivar, ival) in izip(self.independentLabels, self.Cis):
             fields += [ivar, ival]
         return fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + print_card_8(card)
 
 
 class AELIST(BaseCard):
@@ -218,6 +223,10 @@ class AEPARM(BaseCard):
         list_fields = ['AEPARM', self.id, self.label, self.units]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + print_card_8(card)
+
 
 class AESTAT(BaseCard):
     """
@@ -250,6 +259,10 @@ class AESTAT(BaseCard):
     def rawFields(self):
         list_fields = ['AESTAT', self.id, self.label]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + print_card_8(card)
 
 
 class AESURF(BaseCard):
@@ -390,6 +403,10 @@ class AESURFS(BaseCard):  # not integrated
         list_fields = ['AESURFS', self.id, self.label, None, self.list1, None,
                   self.list2]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + print_card_8(card)
 
 
 class Aero(BaseCard):

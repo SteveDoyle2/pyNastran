@@ -304,13 +304,20 @@ class SET1(Set):
     #def rawFields(self):
         #"""gets the "raw" card without any processing as a list for printing"""
 
+    def rawFields(self):
+        skin = []
+        if self.isSkin:
+            skin = ['SKIN']
+
+        return ['SET1', self.sid] + skin + self.IDs
+
     def write_bdf(self, size, card_writer):
         skin = []
         if self.isSkin:
             skin = ['SKIN']
 
-        if 1:
-            return self.comment() + print_card_8(['SET1', self.sid] + skin + self.IDs)
+        return self.comment() + print_card_8(['SET1', self.sid] + skin + self.IDs)
+
         field_packs = []
         singles, doubles = collapse_thru_packs(self.IDs)
         if singles:

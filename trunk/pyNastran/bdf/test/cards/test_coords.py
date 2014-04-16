@@ -1,9 +1,9 @@
 from numpy import array, allclose
 import unittest
 
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf import BDF, BDFCard, CORD1R, CORD1C, CORD1S
 
-
+bdf = BDF()
 class TestCoords(unittest.TestCase):
     def test_same(self):  # passes
         grids = [
@@ -123,6 +123,42 @@ class TestCoords(unittest.TestCase):
                   #[0, [0., 0., 0.], [0., 0., 1.], [1., 0., 0.]],  # cid=3,equiv
                  ]
         self.getNodes(grids, grids_expected, coords)
+
+    def test_cord1r_01(self):
+        lines = ['cord1r,2,1,4,3']
+        card = bdf.process_card(lines)
+        card = BDFCard(card)
+
+        size = 8
+        card = CORD1R(card)
+        self.assertEquals(card.Cid(), 2)
+        #self.assertEquals(card.Rid(), 1)
+        card.write_bdf(size, 'dummy')
+        card.rawFields()
+
+    def test_cord1c_01(self):
+        lines = ['cord1c,2,1,4,3']
+        card = bdf.process_card(lines)
+        card = BDFCard(card)
+
+        size = 8
+        card = CORD1C(card)
+        self.assertEquals(card.Cid(), 2)
+        #self.assertEquals(card.Rid(), 1)
+        card.write_bdf(size, 'dummy')
+        card.rawFields()
+
+    def test_cord1s_01(self):
+        lines = ['cord1s,2,1,4,3']
+        card = bdf.process_card(lines)
+        card = BDFCard(card)
+
+        size = 8
+        card = CORD1S(card)
+        self.assertEquals(card.Cid(), 2)
+        #self.assertEquals(card.Rid(), 1)
+        card.write_bdf(size, 'dummy')
+        card.rawFields()
 
     def test_cord2r_1(self):
         grid = ['GRID       20143       7 -9.31-4  .11841 .028296']
