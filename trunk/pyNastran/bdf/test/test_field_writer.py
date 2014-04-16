@@ -330,7 +330,7 @@ class TestFieldWriter(unittest.TestCase):
         #'*                                                                       + ' - 4
         #'*                    0.0             0.0                                + ' - 5
         #'*                                                                           - 6
-        print('1')
+        #print('1')
 
 def compare(valueIn):
     #print "a = |%s|" % valueIn

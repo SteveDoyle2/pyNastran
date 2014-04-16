@@ -1,6 +1,6 @@
 # pylint: disable=C0103,R0902,R0904,R0914,C0301
 """
-BDF card writing functions
+Defines functions for single precision 8 character field writing.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -173,7 +173,7 @@ def print_float_8(value):
 
 def print_field(value):
     """
-    Prints a single 8-character width field
+    Prints a 8-character width field
 
     :param value:   the value to print
     :returns field: an 8-character string
@@ -187,7 +187,7 @@ def print_field(value):
     else:
         field = "%8s" % value
     if len(field) != 8:
-        msg = 'field=|%s| is not 8 characters long...rawValue=|%s|' % (field, value)
+        msg = 'field=%r is not 8 characters long...rawValue=%r' % (field, value)
         raise RuntimeError(msg)
     return field
 
