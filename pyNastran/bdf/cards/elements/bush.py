@@ -121,6 +121,9 @@ class CBUSH(BushElement):
             self.eid = data[0]
             raise NotImplementedError('CBUSH data...')
 
+    def Eid(self):
+        return self.eid
+
     def nodeIDs(self):
         return [self.Ga(), self.Gb()]
 
@@ -143,7 +146,7 @@ class CBUSH(BushElement):
         return self.ga.nid
 
     def Gb(self):
-        if isinstance(self.gb, int):
+        if isinstance(self.gb, int) or self.gb is None:
             return self.gb
         return self.gb.nid
 
