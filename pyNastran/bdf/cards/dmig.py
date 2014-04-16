@@ -13,6 +13,7 @@ from pyNastran.bdf.cards.baseCard import BaseCard, print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, string, blank, components, interpret_value)
 
+
 def ssq(*listA):
     """
     sum of squares
@@ -255,6 +256,29 @@ class NastranMatrix(BaseCard):
                           None, GCi[0], GCi[1], reali, None]
                 msg += print_card(list_fields)
         return msg
+
+    def write_bdf(self, size, card_writer):
+        """
+        .. todo:: support double precision
+        """
+        msg = '\n$' + '-' * 80
+        msg += '\n$ %s Matrix %s\n' % (self.type, self.name)
+        list_fields = [self.type, self.name, 0, self.ifo, self.tin,
+                  self.tout, self.polar, None, self.ncol]
+        msg += print_card(list_fields)
+
+        if self.isComplex():
+            for (GCi, GCj, reali, imagi) in izip(self.GCi, self.GCj, self.Real, self.Complex):
+                list_fields = [self.type, self.name, GCj[0], GCj[1],
+                          None, GCi[0], GCi[1], reali, imagi]
+                msg += print_card(list_fields)
+        else:
+            for (GCi, GCj, reali) in izip(self.GCi, self.GCj, self.Real):
+                list_fields = [self.type, self.name, GCj[0], GCj[1],
+                          None, GCi[0], GCi[1], reali, None]
+                msg += print_card(list_fields)
+        return msg
+
 
 def getMatrix(self, isSparse=False):
     """
@@ -570,6 +594,36 @@ class DMI(NastranMatrix):
         if self.tin in [3, 4]:
             return True
         return False
+
+    def rawFields(self):
+        list_fields = ['DMI', self.name, 0, self.form, self.tin,
+                  self.tout, None, self.nRows, self.nCols]
+
+        if self.isComplex():
+            for (GCi, GCj, reali, imagi) in izip(self.GCi, self.GCj, self.Real, self.Complex):
+                list_fields += ['DMI', self.name, GCj, GCi, reali, imagi]
+        else:
+            for (GCi, GCj, reali) in izip(self.GCi, self.GCj, self.Real):
+                list_fields += ['DMI', self.name, GCj, GCi, reali]
+        return list_fields
+
+    def write_bdf(self, size, card_writer):
+        msg = '\n$' + '-' * 80
+        msg += '\n$ %s Matrix %s\n' % ('DMI', self.name)
+        list_fields = ['DMI', self.name, 0, self.form, self.tin,
+                  self.tout, None, self.nRows, self.nCols]
+        msg += print_card(list_fields)
+        #msg += self.print_card(list_fields,size=16,isD=False)
+
+        if self.isComplex():
+            for (GCi, GCj, reali, imagi) in izip(self.GCi, self.GCj, self.Real, self.Complex):
+                list_fields = ['DMI', self.name, GCj, GCi, reali, imagi]
+                msg += print_card(list_fields)
+        else:
+            for (GCi, GCj, reali) in izip(self.GCi, self.GCj, self.Real):
+                list_fields = ['DMI', self.name, GCj, GCi, reali]
+                msg += print_card(list_fields)
+        return msg
 
     def __repr__(self):
         """

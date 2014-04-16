@@ -735,9 +735,13 @@ class FORCE2(Force):
         """
         msg = ' which is required by FORCE2 sid=%s' % self.sid
         self.node = model.Node(self.node, msg=msg)
+        self.g1 = model.Node(self.g1, msg=msg)
+        self.g2 = model.Node(self.g2, msg=msg)
+        self.g3 = model.Node(self.g3, msg=msg)
+        self.g4 = model.Node(self.g4, msg=msg)
 
-        v12 = model.Node(self.g2).Position() - model.Node(self.g1).Position()
-        v34 = model.Node(self.g4).Position() - model.Node(self.g3).Position()
+        v12 = self.g2.Position() - self.g1.Position()
+        v34 = self.g4.Position() - self.g3.Position()
         v12 /= norm(v12)
         v34 /= norm(v34)
         self.xyz = cross(v12, v34)
@@ -1427,9 +1431,9 @@ class PLOAD4(Load):
         msg = ' which is required by PLOAD4 sid=%s' % self.sid
         self.eid = model.Element(self.eid, msg=msg)
         self.cid = model.Coord(self.cid, msg=msg)
-        if self.g1:
+        if self.g1 is not None:
             self.g1 = model.Node(self.g1, msg=msg)
-        if self.g34:
+        if self.g34 is not None:
             self.g34 = model.Node(self.g34, msg=msg)
         if self.eids:
             self.eids = model.Elements(self.eids, msg=msg)
@@ -1438,6 +1442,14 @@ class PLOAD4(Load):
         if isinstance(eid, int):
             return eid
         return eid.eid
+
+    def nodeIDs(self, nodes=None):
+        nodeIDs = [None, None]
+        if self.g1 is not None:
+            nodeIDs[0] = self.g1.nid
+        if self.g34 is not None:
+            nodeIDs[1] = self.g34.nid
+        return nodeIDs
 
     def getElementIDs(self, eid=None):
         if eid:
@@ -1460,9 +1472,8 @@ class PLOAD4(Load):
 
         #print "g3=|%s| g4=%s eids=|%s|" %(self.g3,self.g4,self.eids)
         if self.g1 is not None:  # is it a SOLID element
-            (g1, g34) = self.nodeIDs([self.g1, self.g34])
-            list_fields.append(g1)
-            list_fields.append(g34)
+            nodeIDs = self.nodeIDs([self.g1, self.g34])
+            list_fields += nodeIDs
         else:
             #print "eids = %s" %(self.eids)
             if len(self.eids) > 1:
