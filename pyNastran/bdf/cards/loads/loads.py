@@ -271,6 +271,10 @@ class DAREA(BaseCard):
         list_fields = ['DAREA', self.sid, self.p, self.c, self.scale]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + print_card_8(card)
+
 
 class TabularLoad(BaseCard):
     def __init__(self, card, data):
@@ -335,9 +339,9 @@ class SLOAD(Load):
     def reprFields(self):
         return self.rawFields()
 
-    def write_bdf(self, f, size=8):
+    def write_bdf(self, size, card_writer):
         card = self.rawFields()
-        f.write(print_card_8(card))
+        return self.comment() + print_card_8(card)
 
 
 class TLOAD1(TabularLoad):

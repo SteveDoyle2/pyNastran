@@ -17,6 +17,8 @@ from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Property
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
                                        double, double_or_blank)
+from pyNastran.bdf.fieldWriter import print_card_8
+
 
 class SpringProperty(Property):
     def __init__(self, card, data):
@@ -116,6 +118,10 @@ class PELAS(SpringProperty):
         s = set_blank_if_default(self.s, 0.)
         list_fields = ['PELAS', self.pid, self.k, ge, s]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card)
 
 
 class PELAST(SpringProperty):

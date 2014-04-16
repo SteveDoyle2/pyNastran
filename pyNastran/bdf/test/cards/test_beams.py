@@ -4,9 +4,57 @@ import unittest
 from itertools import izip, count
 
 from pyNastran.bdf.bdf import BDF, BDFCard, PBEAM, PBAR, CBEAM, GRID, MAT1
+from pyNastran.bdf.bdf import CROD, CONROD
+from pyNastran.bdf.bdf import PELAS
+
 from pyNastran.bdf.fieldWriter import print_card
 
 bdf = BDF()
+class TestRods(unittest.TestCase):
+    def test_crod_01(self):
+        lines = ['CROD          10     100      10       2']
+        card = bdf.process_card(lines)
+        card = BDFCard(card)
+
+        size = 8
+        card = CROD(card)
+        card.write_bdf(size, 'dummy')
+        card.rawFields()
+        self.assertEquals(card.Eid(), 10)
+        self.assertEquals(card.Pid(), 100)
+
+    def test_conrod_01(self):
+        eid = 10
+        nid1 = 2
+        nid2 = 3
+        mid = 5
+        A = 27.0
+        lines = ['cord1r,2,1,4,3']
+        card = bdf.process_card(lines)
+        card = BDFCard(card)
+
+        size = 8
+        card = CONROD(card)
+        card.write_bdf(size, 'dummy')
+        card.rawFields()
+        self.assertEquals(card.Cid(), 2)
+        self.assertEquals(card.Rid(), 1)
+
+
+class TestSprings(unittest.TestCase):
+    def test_pelas_01(self):
+        lines = ['pelas, 201, 1.e+5']
+        card = bdf.process_card(lines)
+        card = BDFCard(card)
+
+        size = 8
+        card = PELAS(card)
+        card.write_bdf(size, 'dummy')
+        card.rawFields()
+        self.assertEquals(card.Pid(), 201)
+        self.assertEquals(card.K(), 1e5)
+
+
 class TestBeams(unittest.TestCase):
     def test_pbeam_01(self):
         lines =['PBEAM,39,6,2.9,3.5,5.97',

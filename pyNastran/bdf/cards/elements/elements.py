@@ -16,6 +16,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_blank,
     integer_double_or_blank, double_or_blank, string)  # double
+from pyNastran.bdf.fieldWriter import print_card_8
+
 
 class CFAST(Element):
     type = 'CFAST'
@@ -59,6 +61,10 @@ class CFAST(Element):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card)
 
 
 class CGAP(Element):
@@ -165,6 +171,10 @@ class CGAP(Element):
                   [self.Cid()])
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card)
+
 
 class CrackElement(Element):
     type = 'Crack'
@@ -220,6 +230,10 @@ class CRAC2D(CrackElement):
         list_fields = ['CRAC2D', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card)
+
 
 class CRAC3D(CrackElement):
     type = 'CRAC3D'
@@ -253,3 +267,7 @@ class CRAC3D(CrackElement):
     def rawFields(self):
         list_fields = ['CRAC3D', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card)

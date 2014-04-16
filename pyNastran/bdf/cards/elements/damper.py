@@ -17,6 +17,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
                                                     double)
+from pyNastran.bdf.fieldWriter import print_card_8
 
 
 class DamperElement(Element):
@@ -117,6 +118,10 @@ class CDAMP1(LineDamper):
                   nodes[1], self.c2]
         return fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + print_card_8(card)
+
 
 class CDAMP2(LineDamper):
     type = 'CDAMP2'
@@ -189,6 +194,10 @@ class CDAMP2(LineDamper):
                   nodes[1], self.c2]
         return fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + print_card_8(card)
+
 
 class CDAMP3(LineDamper):
     type = 'CDAMP3'
@@ -253,6 +262,10 @@ class CDAMP3(LineDamper):
         list_fields = ['CDAMP3', self.eid, self.pid, nodes[0], nodes[1]]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + print_card_8(card)
+
 
 class CDAMP4(LineDamper):
     type = 'CDAMP4'
@@ -312,6 +325,10 @@ class CDAMP4(LineDamper):
         nodes = self.nodeIDs()
         list_fields = ['CDAMP4', self.eid, self.b, nodes[0], nodes[1]]
         return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + print_card_8(card)
 
 
 class CDAMP5(LineDamper):
@@ -378,6 +395,10 @@ class CDAMP5(LineDamper):
         list_fields = ['CDAMP5', self.eid, self.Pid(), nodes[0], nodes[1]]
         return list_fields
 
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + print_card_8(card)
+
 
 class CVISC(LineDamper):
     type = 'CVISC'
@@ -438,3 +459,7 @@ class CVISC(LineDamper):
 
     def reprFields(self):
         return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + print_card_8(card)
