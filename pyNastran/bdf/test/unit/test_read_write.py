@@ -58,12 +58,15 @@ class TestReadWrite(unittest.TestCase):
         model2.read_bdf('test_include.bdf', include_dir=full_path, xref=True, punch=False)
 
     def test_enddata_1(self):
+        """
+        There is an ENDDATA is in the baseline BDF, so None -> ENDDATA
+        """
         model = BDF()
         full_path = os.path.join(test_path, 'include_dir')
         model2 = BDF()
         model2.read_bdf('test_include.bdf', include_dir=full_path, xref=True, punch=False)
         for out_filename, is_enddata, write_flag in [
-            ('enddata1.bdf', False, None),
+            ('enddata1.bdf', True, None),
             ('enddata2.bdf', True, True),
             ('enddata3.bdf', False, False)]:
             model2.write_bdf(out_filename=out_filename, interspersed=True, size=8,
@@ -73,25 +76,30 @@ class TestReadWrite(unittest.TestCase):
                 self.assertTrue('ENDDATA' in data)
             else:
                 self.assertFalse('ENDDATA' in data)
+            os.remove(out_filename)
 
     def test_enddata_2(self):
+        """
+        There is no ENDDATA is in the baseline BDF, so None -> no ENDDATA
+        """
         model = BDF()
         full_path = os.path.join(test_path, 'include_dir')
         model2 = BDF()
         bdf_name = os.path.join(test_path, 'test_mass.dat')
         model2.read_bdf(bdf_name, include_dir=full_path, xref=True, punch=False)
         for out_filename, is_enddata, write_flag in [
-            ('test_mass1.dat', True, None),
+            ('test_mass1.dat', False, None),
             ('test_mass2.dat', True, True),
             ('test_mass3.dat', False, False)]:
             model2.write_bdf(out_filename=out_filename, interspersed=True, size=8,
                             precision='single', enddata=write_flag)
             data = open(out_filename, 'r').read()
-            msg = 'expected=%r write_flag=%s' % (is_enddata, write_flag)
+            msg = 'outfilename=%r expected=%r write_flag=%s card_count=%r' % (out_filename, is_enddata, write_flag, model2.card_count.keys())
             if is_enddata:
                 self.assertTrue('ENDDATA' in data, msg)
             else:
                 self.assertFalse('ENDDATA' in data, msg)
+            os.remove(out_filename)
 
 if __name__ == '__main__':
     # passes if you're in the local folder, fails if you aren't
