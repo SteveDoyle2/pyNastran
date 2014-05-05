@@ -165,8 +165,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.card_count = {}
         #: stores the card_count of cards that have been rejected
         self.reject_count = {}
+
         #: was an ENDDATA card found
-        self.foundEndData = False
+        #self.foundEndData = False
 
         #: allows the BDF variables to be scoped properly (i think...)
         GetMethods.__init__(self)
@@ -177,14 +178,19 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         #: useful in debugging errors in input
         self.debug = debug
+
         #: flag that allows for OpenMDAO-style optimization syntax to be used
         self._is_dynamic_syntax = False
+
         #: lines that were rejected b/c they were for a card that isnt supported
         self.rejects = []
+
         #: cards that were created, but not processed
         self.reject_cards = []
+
         #: list of execive control deck lines
         self.executive_control_lines = []
+
         #: list of case control deck lines
         self.case_control_lines = []
 
@@ -1185,6 +1191,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 self.rejects.append([reject])
                 continue
             elif 'ENDDATA' in card_name:
+                self._increase_card_count(card_name)
                 #isEndData = True  # exits while loop
                 break
 
@@ -1535,7 +1542,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 self.add_property(prop)
 
             elif 'ENDDATA' in card_name:
-                self.foundEndData = True
+                raise RuntimeError('this should never happen...')
+                #self.foundEndData = True
             else:
                 #: ..warning:: cards with = signs in them
                 #:             are not announced when they are rejected
@@ -1639,7 +1647,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'cardsToWrite', 'solMethod', 'log', 'doneReading',
             'linesPack', 'lineNumbers', 'iSolLine',
             'reject_count', '_relpath', 'isOpened',
-            'foundEndData', 'specialCards',
+            #'foundEndData',
+            'specialCards',
             'infilesPack'])
 
         all_params = object_attributes(self)
