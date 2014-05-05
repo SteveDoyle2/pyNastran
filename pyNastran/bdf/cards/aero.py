@@ -15,7 +15,7 @@ All aero cards are defined in this file.  This includes:
  * FLUTTER
  * GUST
  * MKAERO1 / MKAERO2
- * PAERO1 / PAERO2
+ * PAERO1 / PAERO2 / PAERO3
  * SPLINE1 / SPLINE2 / SPLINE4 / SPLINE5
 
 All cards are BaseCard objects.
@@ -923,8 +923,8 @@ class CAERO3(BaseCard):
             #: Coordinate system for locating point 1.
             self.cp = integer_or_blank(card, 3, 'cp', 0)
             self.list_w = integer(card, 4, 'list_w')
-            self.list_c1 = integer(card, 5, 'list_c1')
-            self.list_c2 = integer(card, 6, 'list_c2')
+            self.list_c1 = integer_or_blank(card, 5, 'list_c1')
+            self.list_c2 = integer_or_blank(card, 6, 'list_c2')
             self.p1 = array([double_or_blank(card, 9,  'x1', 0.0),
                              double_or_blank(card, 10, 'y1', 0.0),
                              double_or_blank(card, 11, 'z1', 0.0)])
@@ -959,15 +959,15 @@ class CAERO3(BaseCard):
 
     def rawFields(self):
         list_fields = (['CAERO3', self.eid, self.Pid(), self.Cp(), self.list_w,
-                   self.list_c1, self.list_c2] + list(self.p1) + [self.x12] +
-                   list(self.p4) + [self.x34])
+                   self.list_c1, self.list_c2, None, None] + list(self.p1) + [self.x12] +
+                   list(self.p4) + [self.x43])
         return list_fields
 
     def reprFields(self):
         cp = set_blank_if_default(self.Cp(), 0)
         list_fields = (['CAERO3', self.eid, self.Pid(), cp, self.list_w,
-                   self.list_c1, self.list_c2] + list(self.p1) + [self.x12] +
-                   list(self.p4) + [self.x34])
+                   self.list_c1, self.list_c2, None, None] + list(self.p1) + [self.x12] +
+                   list(self.p4) + [self.x43])
         return list_fields
 
     def write_bdf(self, size, card_writer):
@@ -1519,6 +1519,63 @@ class PAERO2(BaseCard):
                   self.AR, self.lrsb, self.lrib, self.lth1, self.lth2]
         for (thi, thn) in izip(self.thi, self.thn):
             list_fields += [thi, thn]
+        return list_fields
+
+    def reprFields(self):
+        return self.rawFields()
+
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card)
+
+
+class PAERO3(BaseCard):
+    """
+    Defines the number of Mach boxes in the flow direction and the location of cranks and
+    control surfaces of a Mach box lifting surface.
+    """
+    type = 'PAERO3'
+    _field_map = {
+        1: 'pid', 2:'orient', 3:'width', 4:'AR', 5:'lrsb', 6:'lrib',
+        7: 'lth1', 8:'lth2',
+    }
+    def _update_field_helper(self, n, value):
+        nnew = n - 8
+        spot = nnew // 2
+        i = nnew % 2
+        if i == 0:
+            self.thi[spot] = value
+        else:
+            self.thn[spot] = value
+
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
+        if card:
+            #: Property identification number. (Integer > 0)
+            self.pid = integer(card, 1, 'pid')
+            self.nbox = integer(card, 2, 'nbox')
+            self.ncontrol_surfaces = integer(card, 3, 'ncontrol_surfaces')
+            self.x = []
+            self.y = []
+            print(type(card))
+            nfields = card.nFields()
+
+            j = 0
+            for i in xrange(6, nfields, 2):
+                x = double(card, i, 'x%i' % j)
+                y = double(card, i + 1, 'y%i' % j)
+                self.x.append(x)
+                self.y.append(y)
+                j += 1
+        else:
+            msg = '%s has not implemented data parsing' % self.type
+            raise NotImplementedError(msg)
+
+    def rawFields(self):
+        list_fields = ['PAERO3', self.pid, self.nbox, self.ncontrol_surfaces, None]
+        for (x, y) in izip(self.x, self.y):
+            list_fields += [x, y]
         return list_fields
 
     def reprFields(self):

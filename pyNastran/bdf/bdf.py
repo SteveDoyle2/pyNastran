@@ -50,9 +50,11 @@ from .cards.elements.mass import (CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4,
                                   PointElement, PointMassElement)  # CMASS5
 from .cards.properties.mass import (PMASS, NSM)
 from .cards.aero import (AEFACT, AELINK, AELIST, AEPARM, AESTAT, AESURF,
-                         AESURFS, AERO, AEROS, CSSCHD, CAERO1, CAERO2, CAERO3,
-                         CAERO4, CAERO5, FLFACT, FLUTTER, GUST, MKAERO1,
-                         MKAERO2, PAERO1, PAERO2, SPLINE1, SPLINE2, SPLINE4,
+                         AESURFS, AERO, AEROS, CSSCHD,
+                         CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
+                         PAERO1, PAERO2, PAERO3,
+                         FLFACT, FLUTTER, GUST, MKAERO1,
+                         MKAERO2, SPLINE1, SPLINE2, SPLINE4,
                          SPLINE5, TRIM)
 from .cards.constraints import (SPC, SPCADD, SPCD, SPCAX, SPC1,
                                 MPC, MPCADD, SUPORT1, SUPORT,
@@ -264,8 +266,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             # aero cards
             'AERO', 'AEROS', 'GUST', 'FLUTTER', 'FLFACT', 'MKAERO1', 'MKAERO2',
             'AEFACT', 'AELINK', 'AELIST', 'AEPARAM', 'AESTAT', 'AESURF',
-            'CAERO1', 'CAERO2', 'CAERO4', # 'CAERO3', 'CAERO5',
-            'PAERO1', 'PAERO2',  # 'PAERO3', 'PAERO4', 'PAERO5',
+            'CAERO1', 'CAERO2', 'CAERO4', 'CAERO3', # 'CAERO5',
+            'PAERO1', 'PAERO2',  'PAERO3', # 'PAERO4', 'PAERO5',
             'SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',
             #'SPLINE3', 'SPLINE6', 'SPLINE7',
             'TRIM',
@@ -1398,9 +1400,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
              'add_constraint_SPC': ['SPC', 'SPC1', 'SPCAX', 'SPCD', 'SPCADD'],
              'add_suport': ['SUPORT'],  # pseudo-constraint
              'add_constraint': ['SUPORT1'],  # pseudo-constraint
-             'add_SPLINE': ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5'],
-             'add_CAERO': ['CAERO1', 'CAERO2', 'CAERO4'], # CAERO3, CAERO5
-             'add_PAERO': ['PAERO1', 'PAERO2'],
+             'add_SPLINE': ['SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5'],
+             'add_CAERO': ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5'],
+             'add_PAERO': ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5'],
              'add_MKAERO': ['MKAERO1', 'MKAERO2'],
              'add_FREQ': ['FREQ', 'FREQ1', 'FREQ2'],
              'add_ASET': ['ASET', 'ASET1'], 'add_BSET': ['BSET', 'BSET1'],

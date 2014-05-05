@@ -154,7 +154,7 @@ class BDFMethods(BDFMethodsDeprecated):
                 if aero.IsAntiSymmetricalXZ():
                     raise NotImplementedError('%s is antisymmetric about the XZ plane' % str(aero))
         if sym_axis is not None:
-            print('Mass/MOI sym_axis = %r' % sym_axis)
+            self.log.debug('Mass/MOI sym_axis = %r' % sym_axis)
 
         scale = 1.0
         if 'WTMASS' in self.params:
