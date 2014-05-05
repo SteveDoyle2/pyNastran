@@ -64,7 +64,7 @@ Release notes:
    - making bdf/f06/op2 APIs more consistent
 
 BDF:
-   - MATS1, MATTx, TABLED4, TABDMP1 supported
+   - MATS1, MATTx, TABLED4, TABDMP1, CAERO3, PAERO3 supported
    - fixed major PBEAM bug
    - improved messages when cross-referencing
    - readBDF is now gone, replaced by read_bdf (was previously deprecated)
