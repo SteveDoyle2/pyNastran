@@ -77,6 +77,15 @@ class SolidElement(Element):
     def Eid(self):
         return self.eid
 
+    def E(self):
+        return self.pid.mid.E()
+
+    def G(self):
+        return self.pid.mid.G()
+
+    def Nu(self):
+        return self.pid.mid.Nu()
+
     def Volume(self):
         """
         Base volume method that should be overwritten

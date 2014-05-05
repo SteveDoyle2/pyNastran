@@ -60,24 +60,6 @@ class WriteMesh(object):
         self._auto_reject = True
         return self.read_bdf(infile_name)
 
-    def _write_elements_as_CTRIA3(self, outfile, size, card_writer):
-        """
-        Takes the cquad4 elements and splits them
-
-        :returns msg:  string representation of the elements
-        """
-        eids = self.elementIDs()
-        #print "eids = ",eids
-        next_eid = max(eids) + 1  # set the new ID
-        msg = '$ELEMENTS\n'
-        for unused_eid, element in sorted(self.elements.iteritems()):
-            if element.Is('CQUAD4'):
-                msg += element.writeAsCTRIA3(next_eid)
-                next_eid += 1
-            else:
-                msg += element.write_bdf(size, card_writer)
-        outfile.write(msg)
-
     def _write_dmigs(self, size, card_writer):
         """
         Writes the DMIG cards
@@ -154,13 +136,12 @@ class WriteMesh(object):
             assert size in [8, 16], size
 
         assert isinstance(interspersed, bool)
-        #size = 16
         fname = self.print_filename(out_filename)
         self.log.debug("***writing %s" % fname)
         return out_filename, card_writer
 
     def write_bdf(self, out_filename=None, interspersed=True,
-                  size=8, precision='single'):
+                  size=8, precision='single', enddata=None):
         """
         Writes the BDF.
 
@@ -174,6 +155,7 @@ class WriteMesh(object):
               more clear. (default=True)
         :param size:  the field size (8 is recommended)
         :param precision:  'single', 'double'
+        :param enddata:  Flag to enable/disable writing ENDDATA (default=None -> depends on input BDF)
         """
         out_filename, card_writer = self._output_helper(out_filename,
                                             interspersed, size, precision)
@@ -192,36 +174,8 @@ class WriteMesh(object):
 
         msg = self._write_materials(size, card_writer)
         msg += self._write_common(size, card_writer)
-        msg += 'ENDDATA\n'
-        outfile.write(msg)
-        outfile.close()
-
-    def write_as_CTRIA3(self, out_filename='fem.out.bdf',
-                        size=8, precision='single'):
-        """
-        Writes a series of CQUAD4s as CTRIA3s.  All other cards are echoed.
-
-        :param self:         the BDF object
-        :param out_filename: the name to call the output bdf
-        :param debug:        developer debug (unused)
-        .. warning:: not tested in a long time
-        """
-        interspersed = False
-        out_filename, card_writer = self._output_helper(out_filename,
-                                                interspersed, size, precision)
-
-        outfile = open(out_filename, 'wb')
-        self._write_header(outfile)
-        msg = self._write_params(size, card_writer)
-        outfile.write(msg)
-
-        self._write_nodes(outfile, size, card_writer)
-        self._write_elements_as_CTRIA3(outfile, size, card_writer)
-        self._write_properties(outfile, size, card_writer)
-
-        msg = self._write_materials(size, card_writer)
-        msg += self._write_common(size, card_writer)
-        msg += 'ENDDATA\n'
+        if (enddata is None and 'ENDDATA' in self.card_count) or enddata:
+            msg += 'ENDDATA\n'
         outfile.write(msg)
         outfile.close()
 
