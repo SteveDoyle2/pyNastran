@@ -84,9 +84,9 @@ from .cards.sets import (ASET, BSET, CSET, QSET,
 from .cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD)
 from .cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                     PHBDY, CONV, RADM, RADBC,)
-from .cards.tables import (TABLED1, TABLED2, TABLED3,
+from .cards.tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                            TABLEM1, TABLEM2, TABLEM3, TABLEM4,
-                           TABLES1, TABLEST, TABRND1, TABRNDG, TIC)
+                           TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG, TIC)
 from .cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA
 from .caseControlDeck import CaseControlDeck
 from .bdf_Methods import BDFMethods
@@ -306,8 +306,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             # tables
             #'DTABLE', 'TABLEHT', 'TABRNDG',
-            'TABLED1', 'TABLED2', 'TABLED3', # 'TABLED4',
+            'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',
             'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
+            'TABDMP1',
             'TABLES1', 'TABLEST',
             'TABRND1', 'TABRNDG',
 
@@ -331,8 +332,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         caseControlCards = set(['FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
                                 'TEMP', 'TSTEPNL', 'INCLUDE'])
-        self.uniqueBulkDataCards = self.cardsToRead.difference(
-            caseControlCards)
+        self.uniqueBulkDataCards = self.cardsToRead.difference(caseControlCards)
 
         #: / is the delete from restart card
         self.specialCards = ['DEQATN', '/']
@@ -392,8 +392,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'DESOPT': 200,
 
             # guessing
-            #'CTRAN'     : 115,
-            'CFREQ': 118,
+            #'CTRAN' : 115,
+            'CFREQ' : 118,
 
             # solution 200 names
             'STATICS': 101,
@@ -866,7 +866,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         .. seealso:: :func: `set_dynamic_syntax`
         """
         key = key[1:].strip()
-        self.log.info("dynamic key = %r" % key)
+        self.log.debug("dynamic key = %r" % key)
         #self.dict_of_vars = {'P5':0.5,'ONEK':1000.}
         if key not in self.dict_of_vars:
             msg = "key=%r not found in keys=%s" % (key, self.dict_of_vars.keys())
@@ -1409,9 +1409,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
              'add_DRESP': ['DRESP1', 'DRESP2'],
              'add_DVPREL': ['DVPREL1', 'DVPREL2'],
              'add_coord': ['CORD2R', 'CORD2C', 'CORD2S'],
-             'add_table': ['TABLED1', 'TABLED2', 'TABLED3', 'TABLEM1',
-                           'TABLEM2', 'TABLEM3', 'TABLEM4', 'TABLES1',
-                           'TABLEST'],
+             'add_table': ['TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',
+                           'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
+                           'TABLES1', 'TABLEST', 'TABDMP1'],
              'add_random_table': ['TABRND1', 'TABRNDG'],
              'add_method': ['EIGB', 'EIGR', 'EIGRL'],
              'add_cmethod': ['EIGC', 'EIGP'],

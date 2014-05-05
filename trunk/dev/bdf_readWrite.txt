@@ -309,9 +309,10 @@ DTABLE
 TABLED1  (done)
 TABLED2  (done)
 TABLED3  (done)
-TABLED4
+TABLED4  (done)
 TABLEHT
 TABLEH1
+TABDMP1  (done)
 TABLEM1  (done)
 TABLEM2  (done)
 TABLEM3  (done)

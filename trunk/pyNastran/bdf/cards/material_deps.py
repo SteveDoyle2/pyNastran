@@ -15,14 +15,11 @@ All material dependency cards are defined in this file.  This includes:
  * MATT9 (anisotropic solid) - NA
 
 All cards are Material objects.
-"""#from numpy import zeros, array
-
-#from pyNastran.bdf.fieldWriter import set_blank_if_default
+"""
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.bdf.cards.tables import Table
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank,
-    string, blank)
+    double, double_or_blank, string, blank)
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.fieldWriter16 import print_card_16
 
@@ -37,10 +34,10 @@ class MaterialDependence(BaseCard):
         return self.mid.mid  # TODO: is this something that should be supported?
 
     def _get_table(self, key):
-        slot = getattr(self, key)
-        if slot is None or isinstance(slot, int):
-            return slot
-        return slot.tid
+        table = getattr(self, key)
+        if table is None or isinstance(table, int):
+            return table
+        return table.tid
 
 
 class MATS1(MaterialDependence):
@@ -510,7 +507,7 @@ class MATT5(MaterialDependence):
             self._kyz_table = integer_or_blank(card, 7, 'T(Kyz)')
             self._kzz_table = integer_or_blank(card, 8, 'T(Kyz)')
             self._cp_table = integer_or_blank(card, 9, 'T(Kyz)')
-            self.Hgen_table = integer_or_blank(card, 11, 'T(HGEN)')
+            self._hgen_table = integer_or_blank(card, 11, 'T(HGEN)')
 
             assert len(card) <= 12, 'len(MATT5 card) = %i' % len(card)
         else:
@@ -526,7 +523,7 @@ class MATT5(MaterialDependence):
         self._xref_table(model, '_kyz_table', msg=msg)
         self._xref_table(model, '_kzz_table', msg=msg)
         self._xref_table(model, '_cp_table', msg=msg)
-        self._xref_table(model, '_Hgen_table', msg=msg)
+        self._xref_table(model, '_hgen_table', msg=msg)
 
     def _xref_table(self, model, key, msg):
         slot = getattr(self, key)
@@ -555,14 +552,13 @@ class MATT5(MaterialDependence):
         return self._get_table('_cp_table')
 
     def Hgen_table(self):
-        return self._get_table('_Hgen_table')
+        return self._get_table('_hgen_table')
 
     def rawFields(self):
         list_fields = ['MATT5', self.Mid(),
                        self.Kxx_table(), self.Kxy_table(), self.Kxz_table(),
                        self.Kyy_table(), self.Kyz_table(), self.Kzz_table(),
-                       self.Cp_table(), None, self.Hgen_table(),
-                       ]
+                       self.Cp_table(), None, self.Hgen_table()]
         return list_fields
 
     def reprFields(self):
