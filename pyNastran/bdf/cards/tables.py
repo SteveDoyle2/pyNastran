@@ -258,6 +258,93 @@ class TABLED3(Table):
         return self.rawFields()
 
 
+class TABLED4(Table):
+    type = 'TABLED4'
+    def __init__(self, card=None, data=None, comment=''):
+        Table.__init__(self, card, data)
+        if comment:
+            self._comment = comment
+        if card:
+            self.tid = integer(card, 1, 'tid')
+            self.x1 = double(card, 2, 'x1')
+            self.x2 = double(card, 3, 'x2')
+            self.x3 = double(card, 4, 'x3')
+            self.x4 = double(card, 5, 'x4')
+
+            assert self.x2 != 0.0
+            assert self.x3 < self.x4
+
+            nfields = len(card) - 1
+            nterms = (nfields - 9) // 2
+            xy = []
+            for i in range(nterms):
+                n = 9 + i * 2
+                if card.field(n) == 'ENDT':
+                    break
+                x = double(card, n, 'x' + str(i + 1))
+                y = double(card, n + 1, 'y' + str(i + 1))
+                xy += [x, y]
+            ENDT = string(card, nfields, 'ENDT')
+            isData = False
+        else:
+            self.tid = data[0]
+            self.x1 = data[1]
+            self.x2 = data[2]
+            self.x3 = data[3]
+            self.x4 = data[4]
+            xy = data[5:]
+            isData = True
+        self.parse_fields(xy, nrepeated=2, isData=isData)
+
+    def rawFields(self):
+        list_fields = ['TABLED4', self.tid, self.x1, self.x2, self.x3, self.x4,
+                       None, None, None] + self.table.fields() + ['ENDT']
+        return list_fields
+
+    def reprFields(self):
+        return self.rawFields()
+
+
+class TABDMP1(Table):
+    type = 'TABDMP1'
+    def __init__(self, card=None, data=None, comment=''):
+        Table.__init__(self, card, data)
+        if comment:
+            self._comment = comment
+        if card:
+            self.tid = integer(card, 1, 'tid')
+            self.Type = string_or_blank(card, 2, 'Type', 'G')
+            assert self.Type in ['G', 'CRIT', 'Q'], 'Type=%r' % self.Type
+
+            nfields = len(card) - 1
+            nterms = (nfields - 9) // 2
+            xy = []
+            for i in range(nterms):
+                n = 9 + i * 2
+                if card.field(n) == 'ENDT':
+                    break
+                x = double(card, n, 'x' + str(i + 1))
+                y = double(card, n + 1, 'y' + str(i + 1))
+                xy += [x, y]
+            ENDT = string(card, nfields, 'ENDT')
+            isData = False
+        else:
+            self.tid = data[0]
+            self.x1 = data[1]
+            self.Type = data[2]
+            xy = data[5:]
+            isData = True
+        self.parse_fields(xy, nrepeated=2, isData=isData)
+
+    def rawFields(self):
+        list_fields = ['TABDMP1', self.tid, self.Type, self.Type, None, None,
+                       None, None, None] + self.table.fields() + ['ENDT']
+        return list_fields
+
+    def reprFields(self):
+        return self.rawFields()
+
+
 class TABLEM1(Table):
     type = 'TABLEM1'
     def __init__(self, card=None, data=None, comment=''):
