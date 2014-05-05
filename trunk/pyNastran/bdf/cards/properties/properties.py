@@ -294,6 +294,15 @@ class PSOLID(SolidProperty):
             if self.fctn == 'SMEC':
                 self.fctn = 'SMECH'
 
+    def E(self):
+        return self.mid.E()
+
+    def G(self):
+        return self.mid.G()
+
+    def Nu(self):
+        return self.mid.Nu()
+
     def materials(self):
         return [self.mid]
 
