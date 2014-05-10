@@ -484,8 +484,15 @@ class CONM1(PointMassElement):
             m[5, 5] = m6f  # M66
         self.massMatrix = m
 
+    def _verify(self, xref=False):
+        eid = self.Eid()
+        assert isinstance(eid, int), 'eid=%r' % eid
+
     def Eid(self):
         return self.eid
+
+    def Mass(self):
+        return 0.0
 
     def nodeIDs(self):
         return [self.Nid()]

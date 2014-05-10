@@ -1,4 +1,4 @@
-#pylint: disable=E1103,C0103,C0326,C0111
+#pylint: disable=E1103,C0103,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 """
@@ -26,7 +26,7 @@ from pyNastran.bdf.fieldWriter16 import print_card_16
 
 class MaterialDependence(BaseCard):
     def __init__(self, card, data):
-        pass
+        self.mid = None
 
     def Mid(self):
         if isinstance(self.mid, int):
@@ -34,6 +34,7 @@ class MaterialDependence(BaseCard):
         return self.mid.mid  # TODO: is this something that should be supported?
 
     def _get_table(self, key):
+        """internal method for accessing tables"""
         table = getattr(self, key)
         if table is None or isinstance(table, int):
             return table

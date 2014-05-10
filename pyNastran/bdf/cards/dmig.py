@@ -129,11 +129,13 @@ class NastranMatrix(BaseCard):
             #: 0-Set by cell precision
             self.tout = integer_or_blank(card, 5, 'tout', 0)
 
+            #: nput format of Ai, Bi. (Integer=blank or 0 indicates real, imaginary format;
+            #: Integer > 0 indicates amplitude, phase format.)
             self.polar = integer_or_blank(card, 6, 'polar')
             if self.ifo in [6, 9]:
                 self.ncol = integer(card, 8, 'ncol')
-            else:
-                self.ncol = blank(card, 8, 'ncol')
+            #else:  # technically right, but commenting this will fix bad decks
+                #self.ncol = blank(card, 8, 'ncol')
         else:
             raise NotImplementedError(data)
 
@@ -162,49 +164,62 @@ class NastranMatrix(BaseCard):
         return comm
 
     def addColumn(self, card=None, data=None, comment=''):
+        print("-------------")
+        print('card =', card)
         if comment:
             if hasattr(self, '_comment'):
                 self._comment += comment
             else:
                 self._comment = comment
         Gj = integer(card, 2, 'Gj')
-        Cj = components(card, 3, 'Cj')
+        Cj = integer(card, 3, 'Cj')
+        #Cj = components(card, 3, 'Cj')
+        #assert isinstance(Cj, int), 'type(Cj)=%s not int; Cj=%s' % (type(Cj), Cj)
 
         nfields = len(card)
-        nloops = (nfields - 5) // 4
-        minLoops = nloops - 1
-        if minLoops <= 0:
-            minLoops = 1
-        #assert nFields <= 8,'nFields=%s' %(nFields)
+        #print("nfields =", nfields)
+        #print("card[5:] =", card[5:])
+        #print("(nfields - 5) % 4 =", (nfields - 5) % 4)
 
-        #print "minLoops = ",minLoops
+        nloops = (nfields - 5) // 4
+        if (nfields - 5) % 4 == 3:
+            nloops += 1
+        #assert nFields <= 8,'nFields=%s' % nFields
+
         #print "nloops   = ",nloops
-        for i in xrange(minLoops):
+        for i in xrange(nloops):
             self.GCj.append((Gj, Cj))
 
         if self.isComplex():
-            for i in xrange(minLoops):
+            for i in xrange(nloops):
                 n = 5 + 4 * i
                 Gi = integer(card, n, 'Gi')
-                Ci = components(card, n + 1, 'Ci')
+                Ci = integer(card, n + 1, 'Ci')
+                #Ci = components(card, n + 1, 'Ci')
+                #assert isinstance(Cj, int), 'type(Ci)=%s not int; Ci=%s' % (type(Ci), Ci)
                 self.GCi.append((Gi, Ci))
-                self.Real.append(double(card, n + 2, 'real'))
-                self.Complex.append(double(card, n + 3, 'complex'))
+                reali = double(card, n + 2, 'real')
+                complexi = double(card, n + 3, 'complex')
+                self.Real.append(reali)
+                self.Complex.append(complexi)
         else:
-            for i in xrange(minLoops):
+            for i in xrange(nloops):
                 n = 5 + 4 * i
                 Gi = integer(card, n, 'Gi')
-                Ci = components(card, n + 1, 'Ci')
+                Ci = integer(card, n + 1, 'Ci')
+                #Ci = components(card, n + 1, 'Ci')
+                reali = double(card, n + 2, 'real')
                 self.GCi.append((Gi, Ci))
-                self.Real.append(double(card, n + 2, 'real'))
+                self.Real.append(reali)
+                print("GC=%s,%s real=%s" % (Gi, Ci, reali))
 
-        assert len(self.GCj) == len(self.GCi), '(len(GCj)=%s len(GCi)=%s' % (
-            len(self.GCj), len(self.GCi))
+        msg = '(len(GCj)=%s len(GCi)=%s' % (len(self.GCj), len(self.GCi))
+        assert len(self.GCj) == len(self.GCi), msg
         #if self.isComplex():
             #self.Complex(double(card, v, 'complex')
 
-    def getMatrix(self, isSparse=False):
-        return getMatrix(self, isSparse)
+    def getMatrix(self, is_sparse=False, apply_symmetry=True):
+        return getMatrix(self, is_sparse=is_sparse, apply_symmetry=apply_symmetry)
 
     def rename(self, newName):
         self.name = newName
@@ -280,12 +295,15 @@ class NastranMatrix(BaseCard):
         return msg
 
 
-def getMatrix(self, isSparse=False):
+def getMatrix(self, is_sparse=False, apply_symmetry=True):
     """
     Builds the Matrix
 
     :param self:     the object pointer
-    :param isSparse: should the matrix be returned as a sparse matrix (default=True).  Slower for dense matrices.
+    :param is_sparse: should the matrix be returned as a sparse matrix (default=True).
+                      Slower for dense matrices.
+    :param apply_symmetry: If the matrix is symmetric (ifo=6), returns a symmetric matrix.
+                           Supported as there are symmetric matrix routines.
 
     :returns M:    the matrix
     :returns rows: dictionary of keys=rowID,    values=(Grid,Component) for the matrix
@@ -323,8 +341,8 @@ def getMatrix(self, isSparse=False):
     #        data.append(k)
     #        A[i,j] = k
 
-    #isSparse = False
-    if isSparse:
+    #is_sparse = False
+    if is_sparse:
         data = []
         rows2 = []
         cols2 = []
@@ -332,6 +350,7 @@ def getMatrix(self, isSparse=False):
         nrows = 0
         ncols = 0
         if self.isComplex():
+            #: no check for symmetry
             for (GCj, GCi, reali, complexi) in izip(self.GCj, self.GCi, self.Real, self.Complex):
                 i = rows[GCi]
                 j = cols[GCj]
@@ -341,6 +360,7 @@ def getMatrix(self, isSparse=False):
                 cols2.append(j)
                 data.append(complex(reali, complexi))
         else:
+            # no check for symmetry
             for (GCj, GCi) in izip(self.GCj, self.GCi):
                 i = rows[GCi]
                 j = cols[GCj]
@@ -371,16 +391,31 @@ def getMatrix(self, isSparse=False):
     else:
         if self.isComplex():
             M = zeros((i, j), dtype='complex128')
-            for (GCj, GCi, reali, complexi) in izip(self.GCj, self.GCi, self.Real, self.Complex):
-                i = rows[GCi]
-                j = cols[GCj]
-                M[i, j] = complex(reali, complexi)
+            if self.ifo == 6 and apply_symmetry:  # symmetric
+                for (GCj, GCi, reali, complexi) in izip(self.GCj, self.GCi, self.Real, self.Complex):
+                    i = rows[GCi]
+                    j = cols[GCj]
+                    M[i, j] = complex(reali, complexi)
+                    M[j, i] = complex(reali, complexi)
+            else:
+                for (GCj, GCi, reali, complexi) in izip(self.GCj, self.GCi, self.Real, self.Complex):
+                    i = rows[GCi]
+                    j = cols[GCj]
+                    M[i, j] = complex(reali, complexi)
         else:
             M = zeros((i, j), dtype='float64')
-            for (GCj, GCi, reali) in izip(self.GCj, self.GCi, self.Real):
-                i = rows[GCi]
-                j = cols[GCj]
-                M[i, j] = reali
+            if self.ifo == 6 and apply_symmetry:  # symmetric
+                for (GCj, GCi, reali) in izip(self.GCj, self.GCi, self.Real):
+                    i = rows[GCi]
+                    j = cols[GCj]
+                    M[i, j] = reali
+                    M[j, i] = reali
+            else:
+                for (GCj, GCi, reali) in izip(self.GCj, self.GCi, self.Real):
+                    i = rows[GCi]
+                    j = cols[GCj]
+                    M[i, j] = reali
+
     #print(M)
     return (M, rowsReversed, colsReversed)
 
