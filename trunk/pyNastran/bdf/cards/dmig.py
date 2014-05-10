@@ -218,11 +218,25 @@ class NastranMatrix(BaseCard):
         #if self.isComplex():
             #self.Complex(double(card, v, 'complex')
 
-    def getMatrix(self, is_sparse=False, apply_symmetry=True):
-        return getMatrix(self, is_sparse=is_sparse, apply_symmetry=apply_symmetry)
+    def getMatrix(self, isSparse=False, applySymmetry=True):
+        """
+        Builds the Matrix
 
-    def rename(self, newName):
-        self.name = newName
+        :param self:     the object pointer
+        :param isSparse: should the matrix be returned as a sparse matrix (default=True).
+                         Slower for dense matrices.
+        :param applySymmetry: If the matrix is symmetric (ifo=6), returns a symmetric matrix.
+                              Supported as there are symmetric matrix routines.
+
+        :returns M:    the matrix
+        :returns rows: dictionary of keys=rowID,    values=(Grid,Component) for the matrix
+        :returns cols: dictionary of keys=columnID, values=(Grid,Component) for the matrix
+        .. warning:: isSparse WILL fail
+        """
+        return getMatrix(self, isSparse=isSparse, applySymmetry=applySymmetry)
+
+    def rename(self, new_name):
+        self.name = new_name
 
     def isReal(self):
         return not self.isComplex()
@@ -295,15 +309,15 @@ class NastranMatrix(BaseCard):
         return msg
 
 
-def getMatrix(self, is_sparse=False, apply_symmetry=True):
+def getMatrix(self, isSparse=False, applySymmetry=True):
     """
     Builds the Matrix
 
     :param self:     the object pointer
-    :param is_sparse: should the matrix be returned as a sparse matrix (default=True).
-                      Slower for dense matrices.
-    :param apply_symmetry: If the matrix is symmetric (ifo=6), returns a symmetric matrix.
-                           Supported as there are symmetric matrix routines.
+    :param isSparse: should the matrix be returned as a sparse matrix (default=True).
+                     Slower for dense matrices.
+    :param applySymmetry: If the matrix is symmetric (ifo=6), returns a symmetric matrix.
+                          Supported as there are symmetric matrix routines.
 
     :returns M:    the matrix
     :returns rows: dictionary of keys=rowID,    values=(Grid,Component) for the matrix
@@ -342,7 +356,7 @@ def getMatrix(self, is_sparse=False, apply_symmetry=True):
     #        A[i,j] = k
 
     #is_sparse = False
-    if is_sparse:
+    if isSparse:
         data = []
         rows2 = []
         cols2 = []
@@ -391,7 +405,7 @@ def getMatrix(self, is_sparse=False, apply_symmetry=True):
     else:
         if self.isComplex():
             M = zeros((i, j), dtype='complex128')
-            if self.ifo == 6 and apply_symmetry:  # symmetric
+            if self.ifo == 6 and applySymmetry:  # symmetric
                 for (GCj, GCi, reali, complexi) in izip(self.GCj, self.GCi, self.Real, self.Complex):
                     i = rows[GCi]
                     j = cols[GCj]
@@ -404,7 +418,7 @@ def getMatrix(self, is_sparse=False, apply_symmetry=True):
                     M[i, j] = complex(reali, complexi)
         else:
             M = zeros((i, j), dtype='float64')
-            if self.ifo == 6 and apply_symmetry:  # symmetric
+            if self.ifo == 6 and applySymmetry:  # symmetric
                 for (GCj, GCi, reali) in izip(self.GCj, self.GCi, self.Real):
                     i = rows[GCi]
                     j = cols[GCj]
