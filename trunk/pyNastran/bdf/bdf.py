@@ -206,7 +206,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             # elements
             'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
-            # 'CONM1',
+            'CONM1',
             'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
             # 'CELAS5',
             'CBUSH', 'CBUSH1D', 'CBUSH2D',
