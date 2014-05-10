@@ -2,7 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import izip
-from math import log
+from math import log, sin, cos, radians, atan2
 #from math import (sin,sinh,cos,cosh,tan,tanh,sqrt,atan,atan2,acosh,acos,asin,
 #                  asinh,atanh) #,atanh2   # going to be used by DEQATN
 
@@ -129,9 +129,9 @@ class NastranMatrix(BaseCard):
             #: 0-Set by cell precision
             self.tout = integer_or_blank(card, 5, 'tout', 0)
 
-            #: nput format of Ai, Bi. (Integer=blank or 0 indicates real, imaginary format;
+            #: Input format of Ai, Bi. (Integer=blank or 0 indicates real, imaginary format;
             #: Integer > 0 indicates amplitude, phase format.)
-            self.polar = integer_or_blank(card, 6, 'polar')
+            self.polar = integer_or_blank(card, 6, 'polar', 0)
             if self.ifo in [6, 9]:
                 self.ncol = integer(card, 8, 'ncol')
             #else:  # technically right, but commenting this will fix bad decks
@@ -164,8 +164,6 @@ class NastranMatrix(BaseCard):
         return comm
 
     def addColumn(self, card=None, data=None, comment=''):
-        print("-------------")
-        print('card =', card)
         if comment:
             if hasattr(self, '_comment'):
                 self._comment += comment
@@ -191,17 +189,32 @@ class NastranMatrix(BaseCard):
             self.GCj.append((Gj, Cj))
 
         if self.isComplex():
-            for i in xrange(nloops):
-                n = 5 + 4 * i
-                Gi = integer(card, n, 'Gi')
-                Ci = integer(card, n + 1, 'Ci')
-                #Ci = components(card, n + 1, 'Ci')
-                #assert isinstance(Cj, int), 'type(Ci)=%s not int; Ci=%s' % (type(Ci), Ci)
-                self.GCi.append((Gi, Ci))
-                reali = double(card, n + 2, 'real')
-                complexi = double(card, n + 3, 'complex')
-                self.Real.append(reali)
-                self.Complex.append(complexi)
+            if self.isPolar():
+                for i in xrange(nloops):
+                    n = 5 + 4 * i
+                    Gi = integer(card, n, 'Gi')
+                    Ci = integer(card, n + 1, 'Ci')
+                    #Ci = components(card, n + 1, 'Ci')
+                    #assert isinstance(Cj, int), 'type(Ci)=%s not int; Ci=%s' % (type(Ci), Ci)
+                    self.GCi.append((Gi, Ci))
+                    magi = double(card, n + 2, 'ai')
+                    phasei = double(card, n + 3, 'bi')
+                    reali = magi*cos(radians(phasei))
+                    complexi = magi*sin(radians(phasei))
+                    self.Real.append(reali)
+                    self.Complex.append(complexi)
+            else:
+                for i in xrange(nloops):
+                    n = 5 + 4 * i
+                    Gi = integer(card, n, 'Gi')
+                    Ci = integer(card, n + 1, 'Ci')
+                    #Ci = components(card, n + 1, 'Ci')
+                    #assert isinstance(Cj, int), 'type(Ci)=%s not int; Ci=%s' % (type(Ci), Ci)
+                    self.GCi.append((Gi, Ci))
+                    reali = double(card, n + 2, 'real')
+                    complexi = double(card, n + 3, 'complex')
+                    self.Real.append(reali)
+                    self.Complex.append(complexi)
         else:
             for i in xrange(nloops):
                 n = 5 + 4 * i
@@ -211,7 +224,7 @@ class NastranMatrix(BaseCard):
                 reali = double(card, n + 2, 'real')
                 self.GCi.append((Gi, Ci))
                 self.Real.append(reali)
-                print("GC=%s,%s real=%s" % (Gi, Ci, reali))
+                #print("GC=%s,%s real=%s" % (Gi, Ci, reali))
 
         msg = '(len(GCj)=%s len(GCi)=%s' % (len(self.GCj), len(self.GCi))
         assert len(self.GCj) == len(self.GCi), msg
@@ -242,9 +255,32 @@ class NastranMatrix(BaseCard):
         return not self.isComplex()
 
     def isComplex(self):
-        if self.tin in [3, 4]:
+        if self.tin in [1, 2]: # real
+            return False
+        elif self.tin in [3, 4]: # complex
             return True
-        return False
+        raise ValueError('Matrix %r must have a value of TIN = [1, 2, 3, 4].\nTIN defines the type (real, complex) of the matrix.  TIN=%r.' % (self.name, self.tin))
+
+    def isPolar(self):
+        """
+        Used by:
+          - DMIG
+          - DMIJ
+          - DMIJI
+          - DMIK
+
+        Not used by:
+          - DMI
+          - DMIAX
+          - DMIG, UACCEL
+          - DMIGOUT
+          - DMIGROT
+        """
+        if self.polar == 0: # real, imag
+            return False
+        elif self.polar == 1: # mag, phase
+            return True
+        raise ValueError('Matrix %r must have a value of POLAR = [0, 1].\nPOLAR defines the type (real/imag or mag/phase) complex) of the matrix.  POLAR=%r.' % (self.name, self.polar))
 
     def getDType(self, Type):
         if Type == 1:
@@ -275,10 +311,21 @@ class NastranMatrix(BaseCard):
         msg += print_card(list_fields)
 
         if self.isComplex():
-            for (GCi, GCj, reali, imagi) in izip(self.GCi, self.GCj, self.Real, self.Complex):
-                list_fields = [self.type, self.name, GCj[0], GCj[1],
-                          None, GCi[0], GCi[1], reali, imagi]
-                msg += print_card(list_fields)
+            if self.isPolar():
+                for (GCi, GCj, reali, imagi) in izip(self.GCi, self.GCj, self.Real, self.Complex):
+                    magi = sqrt(reali**2 + complexi**2)
+                    if reali == 0.0:
+                        phasei = 0.0
+                    else:
+                        phasei = degrees(atan2(complexi, reali))
+                    list_fields = [self.type, self.name, GCj[0], GCj[1],
+                              None, GCi[0], GCi[1], magi, phasei]
+                    msg += print_card(list_fields)
+            else:
+                for (GCi, GCj, reali, imagi) in izip(self.GCi, self.GCj, self.Real, self.Complex):
+                    list_fields = [self.type, self.name, GCj[0], GCj[1],
+                              None, GCi[0], GCi[1], reali, imagi]
+                    msg += print_card(list_fields)
         else:
             for (GCi, GCj, reali) in izip(self.GCi, self.GCj, self.Real):
                 list_fields = [self.type, self.name, GCj[0], GCj[1],
@@ -297,10 +344,21 @@ class NastranMatrix(BaseCard):
         msg += print_card(list_fields)
 
         if self.isComplex():
-            for (GCi, GCj, reali, imagi) in izip(self.GCi, self.GCj, self.Real, self.Complex):
-                list_fields = [self.type, self.name, GCj[0], GCj[1],
-                          None, GCi[0], GCi[1], reali, imagi]
-                msg += print_card(list_fields)
+            if self.isPolar():
+                for (GCi, GCj, reali, imagi) in izip(self.GCi, self.GCj, self.Real, self.Complex):
+                    magi = sqrt(reali**2 + complexi**2)
+                    if reali == 0.0:
+                        phasei = 0.0
+                    else:
+                        phasei = degrees(atan2(complexi, reali))
+                    list_fields = [self.type, self.name, GCj[0], GCj[1],
+                              None, GCi[0], GCi[1], magi, phasei]
+                    msg += print_card(list_fields)
+            else:
+                for (GCi, GCj, reali, imagi) in izip(self.GCi, self.GCj, self.Real, self.Complex):
+                    list_fields = [self.type, self.name, GCj[0], GCj[1],
+                              None, GCi[0], GCi[1], reali, imagi]
+                    msg += print_card(list_fields)
         else:
             for (GCi, GCj, reali) in izip(self.GCi, self.GCj, self.Real):
                 list_fields = [self.type, self.name, GCj[0], GCj[1],
