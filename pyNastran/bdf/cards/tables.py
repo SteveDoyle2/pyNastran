@@ -337,8 +337,8 @@ class TABDMP1(Table):
         self.parse_fields(xy, nrepeated=2, isData=isData)
 
     def rawFields(self):
-        list_fields = ['TABDMP1', self.tid, self.Type, self.Type, None, None,
-                       None, None, None] + self.table.fields() + ['ENDT']
+        list_fields = ['TABDMP1', self.tid, self.Type, None, None, None, None,
+                       None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
     def reprFields(self):

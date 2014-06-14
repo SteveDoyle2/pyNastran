@@ -59,16 +59,6 @@ class TestLoads(unittest.TestCase):
         card.write_bdf(size, 'dummy')
         #card.rawFields()
 
-    def test_dmig_01(self):
-        lines = ['DMIG    ENFORCE 0       1       1       0']
-        card = bdf.process_card(lines)
-        card = BDFCard(card)
-
-        size = 8
-        card = DMIG(card)
-        card.write_bdf(size, 'dummy')
-        #card.rawFields()
-
     def test_set1_01(self):
         lines = ['SET1,    1100,    100,     101']
         card = bdf.process_card(lines)

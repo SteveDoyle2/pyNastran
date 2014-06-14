@@ -2,7 +2,7 @@ import unittest
 
 import os
 import pyNastran
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf import BDF, BDFCard, DMIG
 
 from numpy import array, array_equal, sqrt, sin, cos, radians
 
@@ -116,6 +116,17 @@ class TestDMIG(unittest.TestCase):
         msg += '\n%s_expected\n%s\n----' % ('POLE', POLE_expected)
         msg += '\n%s_delta\n%s\n----' % ('POLE', POLE_actual-POLE_expected)
         self.assertTrue(array_equal(POLE_expected, POLE_actual), msg)
+
+    def test_dmig_06(self):
+        lines = ['DMIG    ENFORCE 0       1       1       0']
+        bdf = BDF()
+        card = bdf.process_card(lines)
+        card = BDFCard(card)
+
+        size = 8
+        card = DMIG(card)
+        card.write_bdf(size, 'dummy')
+        #card.rawFields()
 
 
 if __name__ == '__main__':

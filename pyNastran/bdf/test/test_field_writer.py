@@ -32,7 +32,6 @@ class TestFieldWriter(unittest.TestCase):
                          print_field(.0000001))
         self.assertEqual(print_field(-5.007e-3),  '-5.007-3',
                          print_field(-5.007e-3))
-
         self.assertEqual(print_field(-0.0748662),  '-.074866',
                          print_field(-0.0748662))
 
