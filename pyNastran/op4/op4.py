@@ -4,6 +4,7 @@ __all__ = ['OP4']
 import os
 import io
 from struct import pack, unpack
+from itertools import izip
 
 from numpy import (array, zeros, float32, float64, complex64, complex128,
                   allclose)
@@ -19,6 +20,7 @@ class OP4(object):
     """
     todo:: add endian checking
     todo:: test on big matrices
+    todo:: finish write_op4
     """
     def __init__(self, log=None):
         #FortranFile.__init__(self)
@@ -464,7 +466,7 @@ class OP4(object):
 
             (ncols, nrows, form, Type, name) = unpack(
                 self.endian + '4i8s', data)
-            #print("nrows=%s ncols=%s form=%s Type=%s name=%s" % (nrows,ncols,form,Type,name))
+            #print("nrows=%s ncols=%s form=%s Type=%s name=%r" % (nrows, ncols, form, Type, name))
         else:
             msg = recordLength + self.print_block(data)
             raise NotImplementedError('recordLength=%s\n%s' % msg)
@@ -516,10 +518,10 @@ class OP4(object):
         else:
             raise TypeError("Type=%s" % Type)
 
-        try:
-            print_matrix(A.todense())
-        except:
-            pass
+        #try:
+        #    print_matrix(A.todense())
+        #except:
+        #    pass
 
         if d in ['d', 'dd']:
             f.read(8)
@@ -919,6 +921,57 @@ class OP4(object):
             raise TypeError('invalid Type, only float32, float64, complex64, complex128')
         return (Type, NWV)
 
+    def write_op4(self, op4_filename, names, matrices, forms, precisions='default', is_binary=True):
+        """
+        Writes the OP4
+
+        :param op4_filename: The filename to write
+        :type op4_filename:  String -> opens a file (closed at the end)
+                             file   -> no file is opened and it's not closed
+        :param names:    List of the names of the matrices
+        :param matrices: List of two-dimensional NUMPY.NDARRAY
+        :param precisions: List of ['single', 'double', 'default'] or string ('default'=> type of matrix)
+        :param is_binary: Should a binary file be written
+        :param forms:    Forms is defined as one of the following:
+        """
+        #if nR == nC: op4_form = 1   # square
+        #else:        op4_form = 2   # rectangular
+
+        if isinstance(op4_filename, basestring):
+            f = open(op4_filename, 'wb')
+        else:
+            f = op4_filename
+
+        assert len(names) == len(matrices)
+        assert len(names) == len(forms)
+        if isinstance(precisions, basestring):
+            precisions = [precisions] * len(names)
+        else:
+            assert len(names) == len(precisions)
+
+        if is_binary:
+            for (name, matrix, form, precisions) in izip(names, matrices, forms, precisions):
+                if isinstance(matrix, coo_matrix):
+                    #self.writeSparseMatrixAscii(f, name, matrix, form=form,
+                    #                           precision='default', isBigMat=isBigMat)
+                    #write_DMIG(f, name, matrix, form, precision='default')
+                    pass
+                else:
+                    #f.write(self.writeDenseMatrixAscii(name, matrix, 1, 'single'))
+                    f.write(self.writeDenseMatrixBinary(name, matrix, 1, 'single'))
+                pass
+        else:
+            for (name, matrix, form, precisions) in izip(names, matrices, forms, precisions):
+                if isinstance(matrix, coo_matrix):
+                    #self.writeSparseMatrixAscii(f, name, matrix, form=form,
+                    #                           precision='default', isBigMat=isBigMat)
+                    #write_DMIG(f, name, matrix, form, precision='default')
+                    pass
+                else:
+                    f.write(self.writeDenseMatrixAscii(name, matrix, 1, 'single'))
+                    #f.write(self.writeDenseMatrixBinary(name,matrix,1,'single'))
+
+
     def writeMatrixAscii(self, name, matrix, form=2, precision='default'):
         """
         Writes a real/complex matrix
@@ -1079,7 +1132,15 @@ class OP4(object):
         f.write(' 1.0000000000000000E+00\n')
 
     def writeDenseMatrixBinary(self, name, matrix, form=2, precision='default', tol=1e-15):
-        """24 is the record length"""
+        """
+        24 bytes is the record length
+          - (1) ncols
+          - (2) nrows
+          - (3) form
+          - (4) Type
+          - (5,6) name2
+          6 words * 4 bytes/word = 24 bytes
+        """
         msg = ''
         A = matrix
         (Type, NWV) = self.getTypeNWV(A[0, 0], precision)
@@ -1088,8 +1149,11 @@ class OP4(object):
         #if nrows==ncols and form==2:
         #    form = 1
 
+        name2 = '%-8s' % name
+        assert len(name2) == 8, 'name=%r is too long; 8 characters max' % name
+        print('name2 = %r' % name2)
         msg += pack(self.endian + '5i8s', 24, ncols, nrows, form,
-                    Type, '%-8s' % name)
+                    Type, name2)
         for icol in xrange(ncols):
             (iStart, iEnd) = self.getStartEndRow(A[:, icol], nrows, tol)
 
@@ -1107,8 +1171,8 @@ class OP4(object):
 
                 else:  # complex
                     for irow in xrange(iStart, iEnd):
-                        msg += pack('dd', A[irow, icol]
-                                    .real, A[irow, icol].imag)
+                        msg += pack('dd', A[irow, icol].real,
+                                          A[irow, icol].imag)
 
         msg += pack(self.endian + '4id', 24, ncols + 1, 1, 1, 1.0)
 
@@ -1321,7 +1385,7 @@ if __name__ == '__main__':  ## pragma: no cover
         print("fname=%s" % fname)
         for name, (form, matrix) in sorted(matrices.iteritems()):
             print("-----------------------------------")
-            print("name = |%s|" % name)
+            print("name = %r" % name)
             if isinstance(matrix, coo_matrix):
                 print("SPARSE")
                 #matrix = matrix.todense()
