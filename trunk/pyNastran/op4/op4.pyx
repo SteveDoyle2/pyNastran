@@ -850,7 +850,7 @@ def Save(                                                  # {{{1
             if SS.issparse(kwargs[name]): 
 #               print('b')
                 sparse_mat = 1
-            else:                             
+            else:
 #               print('c')
                 sparse_mat = 0
         except:
@@ -895,6 +895,12 @@ def Save(                                                  # {{{1
         # text with few digits; demote to single precision
         if (op4_type in [2,4]) and (2 <= digits <= 9): op4_type -= 1
 
+        # the op4 writer messes up if the matrix name has fewer than 8 characters
+        #name = '%-8s' % name  # doesn't work...
+        msg  = 'The name of the matrix must be 8 characters with 1 trailing space (total=9).\n'
+        msg += 'len(name) != 8; name=%r; len(name)=%i' % (name, len(name))
+        assert len(name) == 9, msg
+        
         op4_wrt_header(fp, endian, name, nR, nC, op4_type, 
                        op4_form, sparse_mat, digits)
 

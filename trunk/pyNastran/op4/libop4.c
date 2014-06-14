@@ -266,7 +266,7 @@ int  op4_filetype(const char *filename)    /* {{{1 */
            3 if a binary file flipped endian
            0 if none of the above or file read error
      */
-	int DEBUG = 0;
+    int DEBUG = 0;
     FILE *fp;
     int   word, type, nRead;
     char *w;
@@ -421,7 +421,7 @@ int  op4_scan_text(const char *filename  ,  /* in  {{{1                    */
        all text based numeric data has, as in
 -3.937729118E+02-4.689545312E+07 3.766712501E+07-6.581960491E+06 0.000000000E+00
      */
-	int DEBUG = 0;
+    int DEBUG = 0;
     FILE *fp;
     char  line[OP4_TXT_LINE_SIZE + 1];
     int   n_text_cols, text_col_width, mixed, nwords, start_row, nRead;
@@ -546,7 +546,7 @@ int  op4_scan_binary(const char *filename  ,  /* in  {{{1                    */
        in the text op4 file by scanning for matrix, column & string headers.
        Binary version.
      */
-	int DEBUG = 0;
+    int DEBUG = 0;
     FILE *fp;
     int   record_length, is_header, result /* = 0  causes segfault */;
     char  my_name[9], next_byte;
@@ -643,7 +643,7 @@ void op4_is_mat_header_binary(FILE *fp,        /* {{{1 */
    this routine was called.
  */
 {
-	int DEBUG = 0;
+    int DEBUG = 0;
     int   is_ascii, nCol_, nRow_, Form_, Type_, rec_len,
           column_id, start_row, n_words, header[7];
 
@@ -654,12 +654,12 @@ void op4_is_mat_header_binary(FILE *fp,        /* {{{1 */
 
     location   = ftell(fp);
     fread(record_length, BYTES_PER_WORD, 1, fp);
-	if (DEBUG)
-		printf("660 - op4_is_mat_header_binary BYTES_PER_WORD=%d endian=%s RL=%d location=%ld\n", BYTES_PER_WORD,endian,*record_length, location);
+    if (DEBUG)
+        printf("660 - op4_is_mat_header_binary BYTES_PER_WORD=%d endian=%s RL=%d location=%ld\n", BYTES_PER_WORD,endian,*record_length, location);
     if (endian)
         *record_length = flip_bytes_int(*record_length);
-	if (DEBUG)
-		printf("664 - op4_is_mat_header_binary RL=%d location=%ld\n", *record_length, location);
+    if (DEBUG)
+        printf("664 - op4_is_mat_header_binary RL=%d location=%ld\n", *record_length, location);
 
     if (*record_length == 24) {
         /* candidate for a matrix header */
@@ -683,11 +683,11 @@ void op4_is_mat_header_binary(FILE *fp,        /* {{{1 */
             Form_ = flip_bytes_int(Form_);
             Type_ = flip_bytes_int(Type_);
         }
-		if (DEBUG) {
-			printf("689 - op4_scan_binary name=[%s] ", my_name);
-			printf("690 is_ascii=%d nCols=%d nRows=%d Form=%d Type=%d\n",
-			is_ascii,nCol_,nRow_,Form_,Type_);
-		}
+        if (DEBUG) {
+            printf("689 - op4_scan_binary name=[%s] ", my_name);
+            printf("690 is_ascii=%d nCols=%d nRows=%d Form=%d Type=%d\n",
+            is_ascii,nCol_,nRow_,Form_,Type_);
+        }
         if (is_ascii && nCol_ > 0 && nRow_ && Form_ < 50 && Type_ < 10) {
             /* we have a winner; this is a matrix header */
             *is_header = 1;
@@ -733,7 +733,7 @@ int  op4_count_str_binary(FILE *fp     ,  /* in  {{{1 */
                      int  *nStr   ,  /* out */
                      int  *nNnz)     /* out */
 {
-	int DEBUG = 0;
+    int DEBUG = 0;
     int col, row, n_words, length_in_words, record_length, encoded,
         word_count, end_of_data;
 
@@ -744,8 +744,8 @@ int  op4_count_str_binary(FILE *fp     ,  /* in  {{{1 */
 
     while (col <= nCols) {
 
-		if (DEBUG)
-		printf("750 - op4_count_str_binary top of loop loc=%ld\n", ftell(fp));
+        if (DEBUG)
+        printf("750 - op4_count_str_binary top of loop loc=%ld\n", ftell(fp));
         fread(&record_length, BYTES_PER_WORD, 1, fp);
         fread(&col,           BYTES_PER_WORD, 1, fp);
         fread(&end_of_data,   BYTES_PER_WORD, 1, fp);
@@ -756,12 +756,12 @@ int  op4_count_str_binary(FILE *fp     ,  /* in  {{{1 */
             end_of_data   = flip_bytes_int(end_of_data);
             n_words       = flip_bytes_int(n_words);
         }
-		if (DEBUG) {
-		printf("762 - op4_count_str_binary record_length  =%d\n", record_length);
-		printf("763 - op4_count_str_binary col            =%d\n", col          );
-		printf("764 - op4_count_str_binary end_of_data    =%d\n", end_of_data  );
-		printf("765 - op4_count_str_binary n_words        =%d\n", n_words      );
-		}
+        if (DEBUG) {
+        printf("762 - op4_count_str_binary record_length  =%d\n", record_length);
+        printf("763 - op4_count_str_binary col            =%d\n", col          );
+        printf("764 - op4_count_str_binary end_of_data    =%d\n", end_of_data  );
+        printf("765 - op4_count_str_binary n_words        =%d\n", n_words      );
+        }
         /* make sure values aren't bogus {{{2 */
         if ((end_of_data != 0) && (end_of_data != 1)) {
             *nNnz = 0;
@@ -797,9 +797,9 @@ int  op4_count_str_binary(FILE *fp     ,  /* in  {{{1 */
             return 0;
         }
         /* 2}}} */
-		if (DEBUG)
-			printf("803 - op4_count_str_binary A RL=%d col=%d enddata=%d n_words=%d  loc=%ld\n",
-			record_length, col, end_of_data, n_words, ftell(fp));
+        if (DEBUG)
+            printf("803 - op4_count_str_binary A RL=%d col=%d enddata=%d n_words=%d  loc=%ld\n",
+            record_length, col, end_of_data, n_words, ftell(fp));
 
         if (end_of_data) {
             fseek(fp, record_length - 2*BYTES_PER_WORD, SEEK_CUR);
@@ -814,9 +814,9 @@ int  op4_count_str_binary(FILE *fp     ,  /* in  {{{1 */
                     encoded = flip_bytes_int(encoded);
                 }
                 length_in_words = (encoded/65536) -1;
-				if (DEBUG)
-					printf("820 - op4_count_str_binary B sp1 length_words=%d encoded=%d loc=%ld\n",
-					length_in_words, encoded, ftell(fp));
+                if (DEBUG)
+                    printf("820 - op4_count_str_binary B sp1 length_words=%d encoded=%d loc=%ld\n",
+                    length_in_words, encoded, ftell(fp));
             } else {  /* storage == 2 */
                 fread(&length_in_words, BYTES_PER_WORD, 1, fp);
                 fread(&row,             BYTES_PER_WORD, 1, fp); /* unused */
@@ -825,9 +825,9 @@ int  op4_count_str_binary(FILE *fp     ,  /* in  {{{1 */
                     length_in_words = flip_bytes_int(length_in_words);
                 }
                 --length_in_words;
-				if (DEBUG)
-					printf("831 - op4_count_str_binary C sp2 length_words=%d row=%d  loc=%ld\n",
-					length_in_words, row, ftell(fp));
+                if (DEBUG)
+                    printf("831 - op4_count_str_binary C sp2 length_words=%d row=%d  loc=%ld\n",
+                    length_in_words, row, ftell(fp));
             }
             if (length_in_words < 0) {
                 snprintf(error_msg, ErrStrSize,
@@ -843,15 +843,15 @@ int  op4_count_str_binary(FILE *fp     ,  /* in  {{{1 */
             /* skip numeric data */
             fseek(fp, length_in_words*BYTES_PER_WORD, SEEK_CUR);
             word_count += length_in_words;
-			if (DEBUG)
-				printf("849 - op4_count_str_binary D word_count=%d  loc=%ld\n", word_count, ftell(fp));
+            if (DEBUG)
+                printf("849 - op4_count_str_binary D word_count=%d  loc=%ld\n", word_count, ftell(fp));
         }
         fread(&record_length, BYTES_PER_WORD, 1, fp);
         if (endian) {
             record_length = flip_bytes_int(record_length);
         }
-		if (DEBUG)
-			printf("856 - op4_count_str_binary E end RL=%d  loc=%ld\n", record_length, ftell(fp));
+        if (DEBUG)
+            printf("856 - op4_count_str_binary E end RL=%d  loc=%ld\n", record_length, ftell(fp));
     }
     *nNnz /= op4_words_per_term[nType];
     return 1;
@@ -860,7 +860,7 @@ int  op4_count_str_binary(FILE *fp     ,  /* in  {{{1 */
 int  op4_line_type(const char *line) {  /* in {{{1 */
     int length, type;
 
-	int DEBUG = 0;
+    int DEBUG = 0;
     length = strlen(line);
     if (length > 2 && line[2] == '.') {  /* most common case:  numeric data */
         type = OP4_TEXT_NUMERIC;
@@ -895,7 +895,7 @@ int  op4_read_col_text(FILE   *fp         ,  /* {{{1 */
                     double *N             /* out numeric data               */
                    )
 {
-	int DEBUG = 0;
+    int DEBUG = 0;
     double      x[OP4_MAX_TEXT_COLS];
     int         nRead, j, nNum_cols, still_reading, location, col, row,
                 nNum, got_this_col, n_nnz, mixed, nwords, start_row,
@@ -1022,7 +1022,7 @@ int  op4_read_col_binary(FILE   *fp         ,  /* {{{1 */
                     double *N             /* out numeric data               */
                    )
 {
-	int DEBUG = 0;
+    int DEBUG = 0;
     int    complx, NPT, WPN, BPN, i, record_length, col, start_row,
            n_numbers, got_this_col, n_nnz, is_header, unused, mixed,
            n_w_this_col, n_w_this_str;
@@ -1030,9 +1030,9 @@ int  op4_read_col_binary(FILE   *fp         ,  /* {{{1 */
     char   unused_name[9];
     float  xs;
 
-	if (DEBUG)
-		printf("\n1036 - op4_read_col_binary 1 location=%ld  endian=%d want col %d\n",
-		ftell(fp), endian, c_in);
+    if (DEBUG)
+        printf("\n1036 - op4_read_col_binary 1 location=%ld  endian=%d want col %d\n",
+        ftell(fp), endian, c_in);
 
     complx        = nType > 2 ? 1 : 0;
     NPT           = Nm_per_term[complx]; /* numbers per term; real=1 complex=2*/
@@ -1053,12 +1053,12 @@ int  op4_read_col_binary(FILE   *fp         ,  /* {{{1 */
                        &unused          , /* out */
                        &unused          , /* out */
                        &l_unused);        /* out */
-	if (DEBUG)
-		printf("1059 - op4_read_col_binary 2 complex=%d NPT=%d WPN=%d BPN=%d RL=%d location=%ld\n", complx,NPT,WPN,BPN,record_length, ftell(fp));
+    if (DEBUG)
+        printf("1059 - op4_read_col_binary 2 complex=%d NPT=%d WPN=%d BPN=%d RL=%d location=%ld\n", complx,NPT,WPN,BPN,record_length, ftell(fp));
     if (is_header) /* yes?  skip it */
         fseek(fp, record_length+2*BYTES_PER_WORD, SEEK_CUR);
-	if (DEBUG)
-		printf("1063 - op4_read_col_binary 3 RL=%d location=%ld\n", record_length, ftell(fp));
+    if (DEBUG)
+        printf("1063 - op4_read_col_binary 3 RL=%d location=%ld\n", record_length, ftell(fp));
 
     if (!storage) {
         /* zero out dense column */
@@ -1076,22 +1076,22 @@ int  op4_read_col_binary(FILE   *fp         ,  /* {{{1 */
         start_row     = flip_bytes_int(start_row);
         n_w_this_col  = flip_bytes_int(n_w_this_col);
     }
-	if (DEBUG)
-			printf("1082 - op4_read_col_binary: requested col=%d  RL=%d got col=%d row=%d nW=%d\n",
-			c_in, record_length, col, start_row, n_w_this_col);
+    if (DEBUG)
+            printf("1082 - op4_read_col_binary: requested col=%d  RL=%d got col=%d row=%d nW=%d\n",
+            c_in, record_length, col, start_row, n_w_this_col);
     n_numbers = n_w_this_col/WPN;
     if        (c_in > col) { /* requested column ahead of me; skip record */
         fseek(fp, record_length-2*BYTES_PER_WORD, SEEK_CUR);
-		if (DEBUG) {
-			printf("1088 - op4_read_col_binary: column mismatch, advance to location %ld & exit\n",
-			ftell(fp));
-		}
+        if (DEBUG) {
+            printf("1088 - op4_read_col_binary: column mismatch, advance to location %ld & exit\n",
+            ftell(fp));
+        }
         return 0;
     } else if (c_in < col) { /* requested column behind me; back up */
         fseek(fp,              -4*BYTES_PER_WORD, SEEK_CUR);
-		if (DEBUG) {
-			printf("1095 - op4_read_col_binary: column mismatch, back up to location %ld & exit\n",ftell(fp));
-		}
+        if (DEBUG) {
+            printf("1095 - op4_read_col_binary: column mismatch, back up to location %ld & exit\n",ftell(fp));
+        }
         return 0;
     }
 
@@ -1228,7 +1228,7 @@ int  op4_wrt_header(FILE   *fp         ,  /* {{{1 */
 /*
 int DEBUG = 0;
 */
-    int width, text_cols, RL = 24, 
+    int width, text_cols, RL = 24,
         F_RL, F_nCol, F_nRow, F_Form, F_nType;
 
 
@@ -1247,6 +1247,7 @@ int DEBUG = 0;
         width     = digits + 7;
         text_cols = (int) 80/width;
         fprintf(fp, "%8d%8d%8d%8d%-8s1P,%dE%d.%d\n",
+                    //8d  8d    8d    8d     -8s 1P %dE       %d   pt  %d
                     nCol, nRow, Form, nType, name, text_cols, width, digits);
 
     } else if (digits == -1) { /* binary, opposite endian */
@@ -1395,7 +1396,7 @@ int  op4_wrt_col_sp(FILE         *fp    , /* {{{1 */
                     )
 {
 int DEBUG = 0;
-    int    i, n, s, nStr, nNums, nTerms, s_ptr, n_ptr, width, text_cols, 
+    int    i, n, s, nStr, nNums, nTerms, s_ptr, n_ptr, width, text_cols,
            RL, n_words_str, n_words_col, type, start_row,
            F_RL, F_col, F_zero, F_nnw, F_n_words_str, F_start_row,
            zero = 0;
@@ -1469,7 +1470,7 @@ printf("column header RL=%d col=%d nnw=%d\n", RL, column, n_words_col);
             n_words_str = op4_words_per_term[type]*A.S[s_ptr + s].len + 1;
             start_row   = A.S[s_ptr + s].start_row + 1;
 if (DEBUG)
-printf("string s=%d nwords=%d start_row=%d loc=%ld  Fnw=%d  Fsr=%d\n", 
+printf("string s=%d nwords=%d start_row=%d loc=%ld  Fnw=%d  Fsr=%d\n",
 s, n_words_str, start_row, ftell(fp), F_n_words_str, F_start_row);
 
             F_n_words_str = flip_bytes_int(n_words_str);
@@ -1519,12 +1520,12 @@ int  op4_wrt_trailer(FILE *fp    , /* {{{1 */
                     )
 {
 int DEBUG = 0;
-    int    RL  = 20,  /* 16 if single precision, 20 for double */ 
+    int    RL  = 20,  /* 16 if single precision, 20 for double */
            one =  1, F_RL, F_col, F_one;
     double x   = 1.0, F_x;
     char  format[10];
 
-    ++column; 
+    ++column;
     if (digits > 1) {          /* text */
         sprintf(format, "%%%d.%dE", digits+7, digits);
         fprintf(fp, "%8d%8d%8d\n", column, 1, 1);
@@ -1567,7 +1568,7 @@ void strings_in_list( /* {{{1 */
       *  and also returns the length of the longest string.  In the example
       *  the strings are   (2)  (5,6,7)  (10)  (12,13)
       *  so:
-      *      n_str                   = 4 
+      *      n_str                   = 4
       *      start_ind[0..(n_str-1)] =  0, 1, 4, 5
       *      str_len[  0..(n_str-1)] =  1, 3, 1, 2
       *      max_length              = 3
@@ -1593,7 +1594,7 @@ int DEBUG = 0;
             start_ind[*n_str] = i;
             str_len[  *n_str] = length_current;
 if (DEBUG) {
-printf("list[%d]=%d  list[%d]=%d  nstr=%d   len=%d\n", 
+printf("list[%d]=%d  list[%d]=%d  nstr=%d   len=%d\n",
 i, list[i], i-1, list[i-1], *n_str, str_len[*n_str]);
 }
             ++(*n_str);
@@ -1667,11 +1668,11 @@ int  op4_valid_name(char   *name)         /* {{{1 */
       *   -1 if the name is null
       *    0 if the name is not valid
       */
-	int DEBUG = 0;
+    int DEBUG = 0;
 
     int i, len, fixed_len;
-	if (DEBUG) printf("------------------------------------------------------\n");
-	if (DEBUG) printf("1281 - op4_valid_name with [%s]\n", name);
+    if (DEBUG) printf("------------------------------------------------------\n");
+    if (DEBUG) printf("1281 - op4_valid_name with [%s]\n", name);
 
     len = strlen(name);
 
