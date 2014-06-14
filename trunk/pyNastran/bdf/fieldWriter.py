@@ -99,7 +99,7 @@ def print_float_8(value):
         elif value < 0.1:
             field = "%8.7f" % value
         elif value < 1.:
-            field = "%8.7f" % value
+            field = "%8.7f" % value  # same as before...
         elif value < 10.:
             field = "%8.6f" % value
         elif value < 100.:

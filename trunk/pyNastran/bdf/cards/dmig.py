@@ -134,7 +134,8 @@ class NastranMatrix(BaseCard):
             self.polar = integer_or_blank(card, 6, 'polar', 0)
             if self.ifo in [6, 9]:
                 self.ncol = integer(card, 8, 'ncol')
-            #else:  # technically right, but commenting this will fix bad decks
+            else:  # technically right, but nulling this will fix bad decks
+                self.ncol = None
                 #self.ncol = blank(card, 8, 'ncol')
         else:
             raise NotImplementedError(data)
