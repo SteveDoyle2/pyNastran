@@ -12,16 +12,16 @@ from numpy import array
 from pyNastran.f06.errors import FatalError
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 
-#from pyNastran.op2.dev_explicit.tables.geom.geom1 import GEOM1
-#from pyNastran.op2.dev_explicit.tables.geom.geom2 import GEOM2
-#from pyNastran.op2.dev_explicit.tables.geom.geom3 import GEOM3
-#from pyNastran.op2.dev_explicit.tables.geom.geom4 import GEOM4
+#from pyNastran.op2.tables.geom.geom1 import GEOM1
+#from pyNastran.op2.tables.geom.geom2 import GEOM2
+#from pyNastran.op2.tables.geom.geom3 import GEOM3
+#from pyNastran.op2.tables.geom.geom4 import GEOM4
 
-#from pyNastran.op2.dev_explicit.tables.geom.ept import EPT
-#from pyNastran.op2.dev_explicit.tables.geom.mpt import MPT
+#from pyNastran.op2.tables.geom.ept import EPT
+#from pyNastran.op2.tables.geom.mpt import MPT
 
-#from pyNastran.op2.dev_explicit.tables.geom.dit import DIT
-#from pyNastran.op2.dev_explicit.tables.geom.dynamics import DYNAMICS
+#from pyNastran.op2.tables.geom.dit import DIT
+#from pyNastran.op2.tables.geom.dynamics import DYNAMICS
 #============================
 
 from pyNastran.op2.tables.lama_eigenvalues.lama import LAMA
