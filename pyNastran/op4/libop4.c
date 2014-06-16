@@ -1244,7 +1244,7 @@ int DEBUG = 0;
     }
 
     if (digits > 1) {          /* text */
-        width     = digits + 7;
+        width     = digits + 8;
         text_cols = (int) 80/width;
         fprintf(fp, "%8d%8d%8d%8d%-8s1P,%dE%d.%d\n",
                     //8d  8d    8d    8d     -8s 1P %dE       %d   pt  %d
@@ -1328,8 +1328,8 @@ printf("op4_wrt_col_dn nNums=%d 1st nonzero_row=%d last_row=%d Nm_per_term[compl
     A_start = first_nonzero_row*Nm_per_term[complx];
     if (digits > 1) {          /* text */
         fprintf(fp, "%8d%8d%8d\n", column, first_nonzero_row+1, nNums);
-        sprintf(format, "%%%d.%dE", digits+7, digits);
-        width     = digits + 7;
+        sprintf(format, "%%%d.%dE", digits+8, digits);
+        width     = digits + 8;
         text_cols = (int) 80/width;
         for (i = 0; i < nNums; i++) {
             fprintf(fp, format, A[i + A_start]);
@@ -1431,8 +1431,8 @@ printf("op4_wrt_col_sp a col=%d nStr=%d nNums=%d\n", column, nStr, nNums);
     n_words_col = op4_words_per_term[type]*nTerms + 2*nStr;
     if (digits > 1) {          /* text */
         fprintf(fp, "%8d%8d%8d\n", column, 0, n_words_col);
-        sprintf(format, "%%%d.%dE", digits+7, digits);
-        width     = digits + 7;
+        sprintf(format, "%%%d.%dE", digits+8, digits);
+        width     = digits + 8;
         text_cols = (int) 80/width;
         for (s = 0; s < nStr; s++) {
             nNums = Nm_per_term[complx]*A.S[s_ptr + s].len; /* in this string */
@@ -1527,7 +1527,7 @@ int DEBUG = 0;
 
     ++column;
     if (digits > 1) {          /* text */
-        sprintf(format, "%%%d.%dE", digits+7, digits);
+        sprintf(format, "%%%d.%dE", digits+8, digits);
         fprintf(fp, "%8d%8d%8d\n", column, 1, 1);
         fprintf(fp, format, x);
         fprintf(fp, "\n");
