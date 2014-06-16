@@ -12,10 +12,8 @@ from scipy.sparse import coo_matrix
 
 from pyNastran.utils import is_binary
 from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
-#from pyNastran.op2.fortranFile import FortranFile
 
 
-#class OP4(FortranFile):
 class OP4(object):
     """
     todo:: add endian checking
@@ -350,17 +348,14 @@ class OP4(object):
 #--------------------------------------------------------------------------
     def read_op4_binary(self, op4_filename, matrix_names=None, precision='default'):
         """matrix_names must be a list or None, but basically the same"""
-        self.op4 = io.open(op4_filename, mode = 'rb')
-
-        # these variables are set so FortranFile will work
-        self.op2 = self.op4
-        self.make_op2_debug = False
+        f = io.open(op4_filename, mode='rb')
+        self.n = 0
 
         # get the endian
-        data = self.op4.read(4)
+        data = f.read(4)
         (recordLengthBig,) = unpack('>i', data)
         (recordLengthLittle,) = unpack('<i', data)
-        #print
+
         if recordLengthBig == 24:
             self.endian = '>'
         elif recordLengthLittle == 24:
@@ -370,48 +365,53 @@ class OP4(object):
             msg += "RL_Big=%s RL_Little=%s" % (
                 recordLengthBig, recordLengthLittle)
             raise RuntimeError(msg)
-        self.op4.seek(0)
+        f.seek(0)
 
         i = 0
         matrices = {}
         name = 'dummyName'
         while name is not None:
+            #print "i =", i
             # checks for the end of the file
+            assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
             n = self.n
-            data1 = self.op4.read(1)
-            self.op4.seek(n)
+            data1 = f.read(1)
+            f.seek(n)
             if len(data1) == 0:
                 break
+            #self.show(f, 60)
 
-            (name, form, matrix) = self._read_matrix_binary(self.op4, precision, matrix_names)
+            (name, form, matrix) = self._read_matrix_binary(f, precision, matrix_names)
             #print print_matrix(matrix)
             if name is not None:
                 if matrix_names is None or name in matrix_names:  # save the matrix
                     matrices[name] = (form, matrix)
 
-            #print "not f.closed = ",not self.op4.closed,form,name
-            # if not self.op4.closed or form is not None:
-            #     data = self.op4.read(4); self.n+=4
-            #     if len(data)==0:
+            #print "not f.closed = ",not f.closed,form,name
+            # if not f.closed or form is not None:
+            #     data = f.read(4)
+            #     self.n+=4
+            #     if len(data) == 0:
             #         break
-            #     (recordLength,) = unpack(self.endian+'i',data)
+            #     (recordLength,) = unpack(self.endian+'i', data)
             #     print("RL = %s" % recordLength)
-            #     if recordLength==24:
-            #         self.n-=4; self.op4.seek(self.n)
+            #     if recordLength == 24:
+            #         self.n-=4
+            #         f.seek(self.n)
             #     else:
-            #         data = self.op4.read(4)
-            #         if len(data)==0:
+            #         data = f.read(4)
+            #         if len(data) == 0:
             #             break
-            #         (recordLength2,) = unpack(self.endian+'i',data)
-            #         assert recordLength2==24
-            #         self.op4.seek(self.n)
+            #         (recordLength2,) = unpack(self.endian+'i', data)
+            #         assert recordLength2 == 24
+            #         f.seek(self.n)
             #
             i += 1
         return matrices
 
     def read_start_marker(self, f):
         #print '--------------------------------------'
-        #print self.print_section(60)
+        #self.show(f, 60)
         data = f.read(4)
         self.n += 4
         (recordLength,) = unpack(self.endian + 'i', data)
@@ -434,7 +434,7 @@ class OP4(object):
             self.n += 4
 
         #print "$$$$$$$$ len(data) = ",len(data)
-        IS, = unpack('i', data)
+        IS, = unpack(self.endian + 'i', data)
         L = IS // 65536 - 1
         irow = IS - 65536 * (L + 1)
         #print("IS=%s L=%s irow=%s" % (IS, L, irow))
@@ -446,14 +446,14 @@ class OP4(object):
         if len(data) == 0:
             data = f.read(8)
             self.n += 8
-        (idummy, irow) = unpack('2i', data)
+        (idummy, irow) = unpack(self.endian + '2i', data)
         #print("idummy=%s irow=%s" % (idummy, irow))
         #assert irow<100
         return (irow, idummy - 1)
 
     def _read_matrix_binary(self, f, precision, matrix_names):
         """reads a matrix"""
-        #print(self.print_section(60))
+        #self.show(f, 60)
         #print("*************************")
         data = f.read(4)
         self.n += 4
@@ -461,7 +461,6 @@ class OP4(object):
         assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
         #print("RL = %s" % recordLength)
 
-        #print(self.print_section(60))
         if recordLength == 24:
             data = f.read(recordLength)
             self.n += recordLength
@@ -470,8 +469,8 @@ class OP4(object):
                 self.endian + '4i8s', data)
             #print("nrows=%s ncols=%s form=%s Type=%s name=%r" % (nrows, ncols, form, Type, name))
         else:
-            msg = recordLength + self.print_block(data)
-            raise NotImplementedError('recordLength=%s\n%s' % msg)
+            msg = recordLength #+ self.print_block(data)
+            raise NotImplementedError('recordLength=%s filename=%r' % (recordLength, f.name))
 
         name = name.strip()
         if 0:
@@ -503,12 +502,6 @@ class OP4(object):
         isSparse = False
         if _irow == 0:
             isSparse = True
-        #    rows = []
-        #    cols = []
-        #    entries = []
-        #else:
-        #    A = zeros((nrows,ncols),dType)
-        #A = zeros((nrows,ncols),dType)
 
         assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
         if Type in [1, 2]:  # real
@@ -519,9 +512,9 @@ class OP4(object):
             raise TypeError("Type=%s" % Type)
 
         #try:
-        #    print_matrix(A.todense())
+            #print_matrix(A.todense())
         #except:
-        #    pass
+            #pass
 
         if d in ['d', 'dd']:
             f.read(8)
@@ -532,14 +525,15 @@ class OP4(object):
         else:
             raise NotImplementedError(d)
         #f.read(recordLength); self.n+=recordLength
-        #self.print_section(10)
+        #self.show(f, 10)
         #f.read(4); self.n+=4
 
         #if isSparse:  # Initialize a real matrix
         #    A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dType)
         #print '------end1--------'
-        #print self.print_section(60)
+        #self.show(f, 60)
         #print '------end2--------'
+        assert self.n == f.tell(), 'n=%s f.tell=%s' % (self.n, f.tell())
         return (name, form, A)
 
     def getMatrixInfo(self, Type):
@@ -564,19 +558,12 @@ class OP4(object):
         dtype = get_dtype(Type)
         return (NWV, NBW, d, dtype)
 
-    def _read_real_binary(self, f, nrows, ncols, Type, isSparse, isBigMat):
+    def _read_real_dense_binary(self, f, nrows, ncols, Type, isSparse, isBigMat):
         (NWV, NBW, d, dType) = self.getMatrixInfo(Type)
-        if isSparse:
-            rows = []
-            cols = []
-            entries = []
-        else:
-            A = zeros((nrows, ncols), dType)
+        A = zeros((nrows, ncols), dType)
 
-        data = ''
         icol = -1  # dummy value so the loop starts
         while icol < ncols + 1:  # if isDense
-            #if recordLength==0:
             assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
             (icol, irow, nWords) = self.get_markers(f, isSparse, isBigMat)
             L = nWords
@@ -588,14 +575,6 @@ class OP4(object):
             if icol == ncols + 1:
                 #print "breaking***"
                 break
-
-            if isSparse:
-                if isBigMat:
-                    (irow, L) = self._get_irow_big(f, data[:8])
-                    data = data[8:]
-                else:
-                    (irow, L) = self._get_irow_small(f, data[:4])
-                    data = data[4:]
 
             if L == -1:
                 break
@@ -637,7 +616,116 @@ class OP4(object):
                 #assert icol==ncols+1
                 #break
 
-            strValues = '%i%s' % (nValues * len(d), d[0])
+            strValues = self.endian + '%i%s' % (nValues * len(d), d[0])
+            #print "**1 ", strValues
+            #strValues = nValues * d
+            if 0:
+                print("strValues = %s" % strValues)
+                print("nValues*NBW=%s len(data)=%s" % (nValues * NBW,
+                                                       len(data)))
+
+            #i = 0
+            n = 0
+            ndata = len(data)
+            assert irow > 0
+            nValues2 = L // NWV
+            nValues = nValues2
+            while n < ndata:
+                #assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
+                A[irow-1:irow-1+nValues, icol-1] = unpack(strValues, data[n:n + nValues * NBW])
+                #recordLength -= nValues * NBW
+                n += nValues * NBW
+                if 0:
+                    print("recordLength=%s NBW=%s len(data)=%s" %
+                          (recordLength, NBW, len(data)))
+                    #print(A)
+                    print("********")  # ,data
+                    print(self.print_block(data))
+                #i += 1
+            #print "-------------------------------"
+        assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
+        f.read(4)
+        self.n += 4
+        return A
+
+
+    def _read_real_binary(self, f, nrows, ncols, Type, isSparse, isBigMat):
+        if isSparse:
+            A = self._read_real_sparse_binary(f, nrows, ncols, Type, isSparse, isBigMat)
+        else:
+            A = self._read_real_dense_binary(f, nrows, ncols, Type, isSparse, isBigMat)
+        return A
+
+    def _read_real_sparse_binary(self, f, nrows, ncols, Type, isSparse, isBigMat):
+        (NWV, NBW, d, dType) = self.getMatrixInfo(Type)
+        rows = []
+        cols = []
+        entries = []
+
+        data = ''
+        icol = -1  # dummy value so the loop starts
+        while icol < ncols + 1:  # if isDense
+            #if recordLength==0:
+            assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
+            (icol, irow, nWords) = self.get_markers(f, isSparse, isBigMat)
+            L = nWords
+            if 0:
+                print("N=%s icol=%s irow=%s nWords=%s" % (
+                    self.n, icol, irow, nWords))
+                print("-----------")
+
+            if icol == ncols + 1:
+                #print "breaking***"
+                break
+
+            if isBigMat:
+                (irow, L) = self._get_irow_big(f, data[:8])
+                data = data[8:]
+            else:
+                (irow, L) = self._get_irow_small(f, data[:4])
+                data = data[4:]
+
+            if L == -1:
+                break
+
+            if 0:
+                print("next icol")
+                print("N=%s icol=%s irow=%s nWords=%s" % (
+                    self.n, icol, irow, nWords))
+
+            #if nWords==0 and isBigMat:
+                #self.n-=4; f.seek(self.n)
+                #break
+
+            recordLength = 4 * nWords
+            data = f.read(recordLength)
+            self.n += recordLength
+            #print("dataFormat=%s RL=%s NNext=%s" % (d, recordLength, self.n))
+            #if icol==ncols+1:
+                #break
+
+            nValues = nWords // NWV
+            #nRead = nWords//4
+
+            #print("recordLength=%s NBW=%s" % (recordLength, NBW))
+
+            nValues2 = L // NWV
+            nValues = nValues2
+            #nRead2 = (L-1)
+
+            if 0:
+                print("inner while real...")
+                print("nWords   = %s" % nWords)
+                print("nValues  = %s" % nValues)
+                print("nValues2 = %s" % nValues2)
+                print("NWV      = %s" % NWV)
+                assert nValues == nValues2
+
+            #if nValues==0:
+                #assert icol==ncols+1
+                #break
+
+            strValues = self.endian + '%i%s' % (nValues * len(d), d[0])
             #print "**1 ", strValues
             #strValues = nValues * d
             if 0:
@@ -650,43 +738,36 @@ class OP4(object):
                 if i == 0:
                     pass
                 else:
-                    if isSparse:
-                        if isBigMat:
-                            (irow, L) = self._get_irow_big(f, data[0:8])
-                            data = data[8:]
-                        else:
-                            (irow, L) = self._get_irow_small(f, data[0:4])
-                            data = data[4:]
+                    if isBigMat:
+                        (irow, L) = self._get_irow_big(f, data[0:8])
+                        data = data[8:]
+                    else:
+                        (irow, L) = self._get_irow_small(f, data[0:4])
+                        data = data[4:]
                     assert irow > 0
                     nValues2 = L // NWV
                     nValues = nValues2
 
                 valueList = unpack(strValues, data[0:nValues * NBW])
                 assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
-                #print self.print_section(4)
+                #self.show(f, 4)
                 if 0:
                     print("valueList = %s" % valueList)
 
                 #irow -= 1
                 #icol -= 1
                 #print "isSparse = ",isSparse
-                if isSparse:
-                    #cols += [icol]*nValues
-                    #rows += [i+irow for i in range(nValues)]
-                    for value in valueList:
-                        cols.append(icol - 1)
-                        rows.append(irow - 1)
-                        #if not allclose(value,1):
-                            #asdf
-                        #print("A[%s,%s] = %s" % (irow-1, icol-1, value))
-                        entries.append(value)
-                        #A[irow - 1, icol - 1] = value
-                        irow += 1
-                else:
-                    for value in valueList:
-                        #print("A[%s,%s] = %s" % (irow-1, icol-1, value))
-                        A[irow - 1, icol - 1] = value
-                        irow += 1
+                #cols += [icol]*nValues
+                #rows += [i+irow for i in range(nValues)]
+                for value in valueList:
+                    cols.append(icol - 1)
+                    rows.append(irow - 1)
+                    #if not allclose(value,1):
+                        #asdf
+                    #print("A[%s,%s] = %s" % (irow-1, icol-1, value))
+                    entries.append(value)
+                    #A[irow - 1, icol - 1] = value
+                    irow += 1
                 recordLength -= nValues * NBW
                 data = data[nValues * NBW:]
                 if 0:
@@ -698,27 +779,39 @@ class OP4(object):
                 i += 1
             #print "-------------------------------"
 
-        if isSparse:  # Initialize a real matrix
-            #if rows == []:  # NULL matrix
-                #asdf
-            A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols),
-                           dtype=dType)
+        #if rows == []:  # NULL matrix
+            #asdf
+        A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols),
+                       dtype=dType)
         f.read(4)
         self.n += 4
 
         return A
 
-    def _read_complex_binary(self, f, nrows, ncols, Type, isSparse, isBigMat):
-        (NWV, NBW, d, dType) = self.getMatrixInfo(Type)
-        if isSparse:
-            rows = []
-            cols = []
-            entries = []
-        else:
-            A = zeros((nrows, ncols), dType)
+    def show(self, f, n):
+        #assert self.n == f.tell()
+        nold = f.tell()
+        nints = n // 4
+        data = f.read(n)
+        strings, ints, floats = self._show_data(data)
+        f.seek(nold)
+        return strings, ints, floats
 
+    def _show_data(self, data):
+        n = len(data)
+        nints = n // 4
+        strings = unpack(self.endian + b'%is' % n, data)
+        ints    = unpack(self.endian + b'%ii' % nints, data)
+        floats  = unpack(self.endian + b'%if' % nints, data)
+        #print "strings =", strings
+        print "ints    =", ints
+        print "floats  =", floats
+        return strings, ints, floats
+
+    def _read_complex_dense_binary(self, f, nrows, ncols, Type, isSparse, isBigMat):
+        (NWV, NBW, d, dType) = self.getMatrixInfo(Type)
+        A = zeros((nrows, ncols), dType)
         recordLength = 0
-        data = ''
         icol = -1  # dummy value so the loop starts
         while icol < ncols + 1:  # if isDense
             #if recordLength==0:
@@ -733,14 +826,6 @@ class OP4(object):
 
             if icol == ncols + 1:
                 break
-
-            if isSparse:
-                if isBigMat:
-                    (irow, L) = self._get_irow_big(f, data[:8])
-                    data = data[8:]
-                else:
-                    (irow, L) = self._get_irow_small(f, data[:4])
-                    data = data[4:]
 
             if L == -1:
                 break
@@ -773,14 +858,14 @@ class OP4(object):
                 #if nValues==0:
                     #assert icol==ncols+1
                     #break
-                strValues = '%i%s' % (nValues * len(d), d[0])
+                strValues = self.endian + '%i%s' % (nValues * len(d), d[0])
                 if 0:
                     print("strValues = %s" % strValues)
                     print("nValues*NBW=%s len(data)=%s" %
                           (nValues * NBW, len(data)))
                 valueList = unpack(strValues, data[0:nValues * NBW])
                 assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
-                #print self.print_section(4)
+                #self.show(f, 4)
                 #print self.print_block(data)
                 if 0:
                     print("valueList = %s" % (valueList))
@@ -791,25 +876,13 @@ class OP4(object):
                 irow -= 1
                 icol -= 1
 
-                if isSparse:
-                    cols += [icol] * nValues
-                    rows += [i + irow for i in xrange(nValues)]
-                    for i, value in enumerate(valueList):
-                        if i % 2 == 0:
-                            realValue = value
-                        else:
-                            #print("A[%s,%s] = %s" % (irow, icol, complex(realValue, value)))
-                            #A[irow, icol] = complex(realValue, value)
-                            entries.append(complex(realValue, value))
-                            irow += 1
-                else:
-                    for i, value in enumerate(valueList):
-                        if i % 2 == 0:
-                            realValue = value
-                        else:
-                            #print("A[%s,%s] = %s" % (irow, icol, complex(realValue, value)))
-                            A[irow, icol] = complex(realValue, value)
-                            irow += 1
+                for i, value in enumerate(valueList):
+                    if i % 2 == 0:
+                        realValue = value
+                    else:
+                        #print("A[%s,%s] = %s" % (irow, icol, complex(realValue, value)))
+                        A[irow, icol] = complex(realValue, value)
+                        irow += 1
 
                 recordLength -= nValues * NBW
                 data = data[nValues * NBW:]
@@ -817,8 +890,112 @@ class OP4(object):
                 #print(print_matrix(A))
                 #print("********", data)
 
-        if isSparse:  # Initialize a complex matrix
-            A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dType)
+        f.read(4)
+        self.n += 4
+        return A
+
+    def _read_complex_binary(self, f, nrows, ncols, Type, isSparse, isBigMat):
+        if isSparse:
+            A = self._read_complex_sparse_binary(f, nrows, ncols, Type, isSparse, isBigMat)
+        else:
+            A = self._read_complex_dense_binary(f, nrows, ncols, Type, isSparse, isBigMat)
+        return A
+
+    def _read_complex_sparse_binary(self, f, nrows, ncols, Type, isSparse, isBigMat):
+        (NWV, NBW, d, dType) = self.getMatrixInfo(Type)
+        rows = []
+        cols = []
+        entries = []
+        recordLength = 0
+        data = ''
+        icol = -1  # dummy value so the loop starts
+        while icol < ncols + 1:  # if isDense
+            #if recordLength==0:
+            assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
+            (icol, irow, nWords) = self.get_markers(f, isSparse, isBigMat)
+            if 0:
+                print("N=%s icol=%s irow=%s nWords=%s" % (self.n, icol, irow,
+                      nWords))
+                print("-----------")
+
+            L = nWords
+
+            if icol == ncols + 1:
+                break
+
+            if isBigMat:
+                (irow, L) = self._get_irow_big(f, data[:8])
+                data = data[8:]
+            else:
+                (irow, L) = self._get_irow_small(f, data[:4])
+                data = data[4:]
+
+            if L == -1:
+                break
+
+            if 0:
+                print("next icol")
+                print("N=%s icol=%s irow=%s nWords=%s" % (
+                    self.n, icol, irow, nWords))
+
+            #if nWords==0 and isBigMat:
+                #self.n-=4; f.seek(self.n)
+                #break
+
+            recordLength = 4 * nWords
+            data = f.read(recordLength)
+            self.n += recordLength
+            #print("dataFormat=%s RL=%s NNext=%s" % (d, recordLength, self.n))
+            if icol == ncols + 1:
+                continue
+
+            nValues = nWords // NWV
+            #nRead = nWords//4
+            while recordLength >= NBW:
+                if 0:
+                    print("inner while...")
+                    print("nWords  = %s" % nWords)
+                    print("nValues = %s" % nValues)
+                    print("NWV     = %s" % NWV)
+
+                #if nValues==0:
+                    #assert icol==ncols+1
+                    #break
+                strValues = self.endian + '%i%s' % (nValues * len(d), d[0])
+                if 0:
+                    print("strValues = %s" % strValues)
+                    print("nValues*NBW=%s len(data)=%s" %
+                          (nValues * NBW, len(data)))
+                valueList = unpack(strValues, data[0:nValues * NBW])
+                assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
+                #self.show(f, 4)
+                #print self.print_block(data)
+                if 0:
+                    print("valueList = %s" % (valueList))
+
+                #irow-=1
+                #icol-=1
+                irow -= 1
+                icol -= 1
+
+                cols += [icol] * nValues
+                rows += [i + irow for i in xrange(nValues)]
+                for i, value in enumerate(valueList):
+                    if i % 2 == 0:
+                        realValue = value
+                    else:
+                        #print("A[%s,%s] = %s" % (irow, icol, complex(realValue, value)))
+                        #A[irow, icol] = complex(realValue, value)
+                        entries.append(complex(realValue, value))
+                        irow += 1
+
+                recordLength -= nValues * NBW
+                data = data[nValues * NBW:]
+                #print("recordLength=%s NBW=%s" % (recordLength, NBW))
+                #print(print_matrix(A))
+                #print("********", data)
+
+        A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dType)
         f.read(4)
         self.n += 4
         return A

@@ -11,7 +11,7 @@ import time
 import numpy as np
 import os
 import sys
-from matplotlib import pyplot
+from matplotlib import pyplot as plt
 
 import cop4          # Cython
 from op4 import OP4  # pure Python
@@ -39,11 +39,11 @@ def dense_square_test(dimension, is_binary=True):
     # create dense matrices using cop4
     pyop4 = OP4()
     for i,n in enumerate(dimension):
-        #if not os.path.exists(filenames[i]):
+        if not os.path.exists(filenames[i]):
             print('%s does not exist, will create.' % filenames[i])
 
             A = np.random.randn(n,n) #.astype(np.float32)
-            print('*****\n', A)
+            #print('*****\n', A)
             mat_name = 'matrix%-3i' % i
             if is_cyfiles:
                 start_elapsed = time.time()
@@ -100,26 +100,36 @@ def dense_square_test(dimension, is_binary=True):
         print('%6d     %8.3f       %8.3f' % (n, cop4_load[i], pop4_load[i]))
 
     if make_plot:
-        pyplot.semilogy(dimension, cop4_load, color='green')
-        pyplot.semilogy(dimension, pop4_load, color='blue' )
-        pyplot.legend(['cop4', 'op4'], 'upper left')
-        pyplot.grid(True)
-        pyplot.xlabel('Matrix Dimension')
-        pyplot.ylabel('Time [seconds]')
-        pyplot.title('Dense Square Matrix Load Performance')
+        plt.semilogy(dimension, cop4_load, color='green')
+        plt.semilogy(dimension, pop4_load, color='blue' )
+        plt.legend(['cop4', 'op4'], 'upper left')
+        plt.grid(True)
+        plt.xlabel('Matrix Dimension')
+        plt.ylabel('Time [seconds]')
+        plt.title('Dense Square Matrix Load Performance')
 
 if __name__ == '__main__':
-    is_cyfiles = False
+    #is_cyfiles = False
     is_cyfiles = True
 
     make_plot = False
+    make_plot = True
     dimension = range(1000, 15000, 1000) # 14 matrices sized 1000 x 1000 to
                                          # 14000 x 14000.  The largest will
                                          # be 1.5 GB.
     dimension = range(1000, 5000, 1000)
-    dimension = range(5, 10, 10)
+    #dimension = range(5, 10, 10)
     #print dimension
-    dense_square_test(dimension, is_binary=False)
+
+    if 1:
+        #plt.figure(1)
+        #dense_square_test(dimension, is_binary=False)
+        #plt.title('ASCII Dense Square Matrix Load Performance')
+
+        plt.figure(2)
+        dense_square_test(dimension, is_binary=True)
+        plt.title('Binary Dense Square Matrix Load Performance')
+
 
     if make_plot:
-        pyplot.show()
+        plt.show()
