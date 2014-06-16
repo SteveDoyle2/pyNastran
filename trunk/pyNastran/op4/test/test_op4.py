@@ -72,7 +72,8 @@ def run_op4(op4_filename, write_op4=True, debug=True):
             op4.write_op4(model+'.test_op4_binary.op4', matrices, is_binary=True)
             if delete_op4:
                 try:
-                    os.remove(model+'.test_op4.op4')
+                    os.remove(model+'.test_op4_ascii.op4')
+                    os.remove(model+'.test_op4_binary.op4')
                 except:
                     pass
 
