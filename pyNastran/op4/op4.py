@@ -265,7 +265,7 @@ class OP4(object):
             # which starts a new column.  We only want to continue a column.
             runLoop = True
             sline = line.strip().split()
-            while (len(sline) == 1 or len(sline) == 2) and 'E' not in line or runLoop:  # next sparse entry
+            while (len(sline) == 1 or len(sline) == 2) and 'E' not in line or runLoop:  # next dense entry
                 irow = self._get_irow_ascii(f, line, sline, nWords, irow,
                                             isSparse, isBigMat)
 
@@ -283,10 +283,10 @@ class OP4(object):
 
                     for i in range(nWordsInLine):
                         word = line[n:n + lineSize]
-                        A[irow - 1, icol - 1] = float(word)
+                        A[irow - 1, icol - 1] = word
                         n += lineSize
                         irow += 1
-                        iWord += 1
+                    iWord += nWordsInLine
                     nWords -= nWordsInLine
                 sline = line.strip().split()
                 nLoops += 1
@@ -356,7 +356,6 @@ class OP4(object):
                     nWords -= nWordsInLine
                 sline = line.strip().split()
                 nLoops += 1
-
         A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dType)
         f.readline()
         return A
@@ -374,7 +373,7 @@ class OP4(object):
         return A
 
     def _read_complex_dense_ascii(self, f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat):
-        A = zeros((nrows, ncols), dType)  # Initialize a complex matrix
+        A = zeros((nrows, ncols), dtype=dType)  # Initialize a complex matrix
 
         nLoops = 0
         wasBroken = False
@@ -414,6 +413,7 @@ class OP4(object):
                         value = float(line[n:n + lineSize])
 
                         if iWord % 2 == 0:
+                            #A[irow - 1, icol - 1].real = value
                             realValue = value
                         else:
                             A[irow - 1, icol - 1] = complex(realValue, value)
