@@ -141,7 +141,7 @@ class OP4(object):
         ncols = int(ncols)
         form = int(form)
         Type = int(Type)
-        dType = get_dtype(Type, precision)
+        dtype = get_dtype(Type, precision)
 
         name = line[32:40].strip()
         size = line[40:].strip()
@@ -150,16 +150,16 @@ class OP4(object):
 
         line = f.readline().rstrip()
         (icol, irow, nWords) = line.split()
-        irow = int(irow)
+        #irow = int(irow)
 
         isSparse = False
-        if irow == 0:
+        if irow == '0':
             isSparse = True
 
         if Type in [1, 2]:  # real
-            (A) = self._read_real_ascii(f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat)
+            (A) = self._read_real_ascii(f, nrows, ncols, lineSize, line, dtype, isSparse, isBigMat)
         elif Type in [3, 4]:  # complex
-            (A) = self._read_complex_ascii(f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat)
+            (A) = self._read_complex_ascii(f, nrows, ncols, lineSize, line, dtype, isSparse, isBigMat)
         else:
             raise RuntimeError('invalid matrix type.  Type=%s' % Type)
 
@@ -168,7 +168,7 @@ class OP4(object):
         #print("form=%s name=%s A=\n%s" % (form, name, str(A)))
         return (name, form, A)
 
-    def _read_real_sparse_ascii(self, f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat):
+    def _read_real_sparse_ascii(self, f, nrows, ncols, lineSize, line, dtype, isSparse, isBigMat):
         rows = []
         cols = []
         entries = []
@@ -200,8 +200,8 @@ class OP4(object):
             runLoop = True
             sline = line.strip().split()
             while (len(sline) == 1 or len(sline) == 2) and 'E' not in line or runLoop:  # next sparse entry
-                irow = self._get_irow_ascii(f, line, sline, nWords, irow,
-                                            isSparse, isBigMat)
+                irow = self._get_irow_sparse_ascii(f, line, sline, nWords, irow,
+                                                   isBigMat)
 
                 runLoop = False
                 i = 0
@@ -231,13 +231,13 @@ class OP4(object):
 
         #if rows == []:  # NULL matrix
             #asdf
-        A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dType)
+        A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dtype)
         #print("type = %s %s" % (type(A),type(A.todense())))
         #A = A.todense()
         return A
 
-    def _read_real_dense_ascii(self, f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat):
-        A = zeros((nrows, ncols), dType)  # Initialize a real matrix
+    def _read_real_dense_ascii(self, f, nrows, ncols, lineSize, line, dtype, isSparse, isBigMat):
+        A = zeros((nrows, ncols), dtype=dtype)  # Initialize a real matrix
         nLoops = 0
         wasBroken = False
         while 1:
@@ -266,9 +266,6 @@ class OP4(object):
             runLoop = True
             sline = line.strip().split()
             while (len(sline) == 1 or len(sline) == 2) and 'E' not in line or runLoop:  # next dense entry
-                irow = self._get_irow_ascii(f, line, sline, nWords, irow,
-                                            isSparse, isBigMat)
-
                 runLoop = False
                 i = 0
                 iWord = 0
@@ -293,17 +290,14 @@ class OP4(object):
         f.readline()
         return A
 
-    def _read_real_ascii(self, f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat):
-        """
-        Method read_real_ascii
-        """
+    def _read_real_ascii(self, f, nrows, ncols, lineSize, line, dtype, isSparse, isBigMat):
         if isSparse:
-            A = self._read_real_sparse_ascii(f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat)
+            A = self._read_real_sparse_ascii(f, nrows, ncols, lineSize, line, dtype, isSparse, isBigMat)
         else:
-            A = self._read_real_dense_ascii(f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat)
+            A = self._read_real_dense_ascii(f, nrows, ncols, lineSize, line, dtype, isSparse, isBigMat)
         return A
 
-    def _read_complex_sparse_ascii(self, f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat):
+    def _read_complex_sparse_ascii(self, f, nrows, ncols, lineSize, line, dtype, isSparse, isBigMat):
         rows = []
         cols = []
         entries = []
@@ -326,8 +320,8 @@ class OP4(object):
             runLoop = True
             sline = line.strip().split()
             while (len(sline) == 1 or len(sline) == 2) and 'E' not in line or runLoop:  # next sparse entry
-                irow = self._get_irow_ascii(f, line, sline, nWords, irow,
-                                            isSparse, isBigMat)
+                irow = self._get_irow_sparse_ascii(f, line, sline, nWords, irow,
+                                                   isBigMat)
                 runLoop = False
 
                 i = 0
@@ -356,24 +350,24 @@ class OP4(object):
                     nWords -= nWordsInLine
                 sline = line.strip().split()
                 nLoops += 1
-        A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dType)
+        A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dtype)
         f.readline()
         return A
 
-    def _read_complex_ascii(self, f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat):
+    def _read_complex_ascii(self, f, nrows, ncols, lineSize, line, dtype, isSparse, isBigMat):
         """
         Method read_complex_ascii:
         .. todo:: possibly split this into readDenseComplex and readSparseComplex
          to get rid of all the extra isSparse checks.  This would cleanup the
          runLoop condition as well."""
         if isSparse:
-            A = self._read_complex_sparse_ascii(f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat)
+            A = self._read_complex_sparse_ascii(f, nrows, ncols, lineSize, line, dtype, isSparse, isBigMat)
         else:
-            A = self._read_complex_dense_ascii(f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat)
+            A = self._read_complex_dense_ascii(f, nrows, ncols, lineSize, line, dtype, isSparse, isBigMat)
         return A
 
-    def _read_complex_dense_ascii(self, f, nrows, ncols, lineSize, line, dType, isSparse, isBigMat):
-        A = zeros((nrows, ncols), dtype=dType)  # Initialize a complex matrix
+    def _read_complex_dense_ascii(self, f, nrows, ncols, lineSize, line, dtype, isSparse, isBigMat):
+        A = zeros((nrows, ncols), dtype=dtype)  # Initialize a complex matrix
 
         nLoops = 0
         wasBroken = False
@@ -394,8 +388,6 @@ class OP4(object):
             runLoop = True
             sline = line.strip().split()
             while (len(sline) == 1 or len(sline) == 2) and 'E' not in line or runLoop:  # next sparse entry
-                irow = self._get_irow_ascii(f, line, sline, nWords, irow,
-                                            isSparse, isBigMat)
                 runLoop = False
 
                 i = 0
@@ -427,26 +419,24 @@ class OP4(object):
         f.readline()
         return A
 
-    def _get_irow_ascii(self, f, line, sline, nWords, irow,
-                        isSparse, isBigMat):
-        if isSparse:
-            #nWords = (nWords-1)//2  # TODO this cant be right...
-            sline = line.strip().split()
-            if isBigMat:
-                if len(sline) == 2:
-                    pass
-                else:
-                    sline = f.readline().strip().split()
-                assert len(sline) == 2, 'sline=%s len(sline)=%s' % (sline, len(sline))
-                (idummy, irow) = sline
-                irow = int(irow)
+    def _get_irow_sparse_ascii(self, f, line, sline, nWords, irow, isBigMat):
+        #nWords = (nWords-1)//2  # TODO this cant be right...
+        sline = line.strip().split()
+        if isBigMat:
+            if len(sline) == 2:
+                pass
             else:
-                if len(sline) == 1:
-                    IS = int(line)
-                else:
-                    IS = int(f.readline().strip())
-                L = IS // 65536 - 1
-                irow = IS - 65536 * (L + 1)
+                sline = f.readline().strip().split()
+            assert len(sline) == 2, 'sline=%s len(sline)=%s' % (sline, len(sline))
+            (idummy, irow) = sline
+            irow = int(irow)
+        else:
+            if len(sline) == 1:
+                IS = int(line)
+            else:
+                IS = int(f.readline().strip())
+            L = IS // 65536 - 1
+            irow = IS - 65536 * (L + 1)
 
         return irow
 
@@ -602,7 +592,7 @@ class OP4(object):
         f.seek(nSave)
         self.n = nSave
 
-        (NWV, NBW, d, dType) = self.getMatrixInfo(Type)
+        (NWV, NBW, d, dtype) = self.getMatrixInfo(Type)
 
         isSparse = False
         if _irow == 0:
@@ -634,7 +624,7 @@ class OP4(object):
         #f.read(4); self.n+=4
 
         #if isSparse:  # Initialize a real matrix
-        #    A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dType)
+        #    A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dtype)
         #print '------end1--------'
         #self.show(f, 60)
         #print '------end2--------'
@@ -664,8 +654,8 @@ class OP4(object):
         return (NWV, NBW, d, dtype)
 
     def _read_real_dense_binary(self, f, nrows, ncols, Type, isSparse, isBigMat):
-        (NWV, NBW, d, dType) = self.getMatrixInfo(Type)
-        A = zeros((nrows, ncols), dType)
+        (NWV, NBW, d, dtype) = self.getMatrixInfo(Type)
+        A = zeros((nrows, ncols), dtype=dtype)
 
         icol = -1  # dummy value so the loop starts
         while icol < ncols + 1:  # if isDense
@@ -762,7 +752,7 @@ class OP4(object):
         return A
 
     def _read_real_sparse_binary(self, f, nrows, ncols, Type, isSparse, isBigMat):
-        (NWV, NBW, d, dType) = self.getMatrixInfo(Type)
+        (NWV, NBW, d, dtype) = self.getMatrixInfo(Type)
         rows = []
         cols = []
         entries = []
@@ -887,7 +877,7 @@ class OP4(object):
         #if rows == []:  # NULL matrix
             #asdf
         A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols),
-                       dtype=dType)
+                       dtype=dtype)
         f.read(4)
         self.n += 4
 
@@ -914,8 +904,8 @@ class OP4(object):
         return strings, ints, floats
 
     def _read_complex_dense_binary(self, f, nrows, ncols, Type, isSparse, isBigMat):
-        (NWV, NBW, d, dType) = self.getMatrixInfo(Type)
-        A = zeros((nrows, ncols), dType)
+        (NWV, NBW, d, dtype) = self.getMatrixInfo(Type)
+        A = zeros((nrows, ncols), dtype=dtype)
         recordLength = 0
         icol = -1  # dummy value so the loop starts
         while icol < ncols + 1:  # if isDense
@@ -1007,7 +997,7 @@ class OP4(object):
         return A
 
     def _read_complex_sparse_binary(self, f, nrows, ncols, Type, isSparse, isBigMat):
-        (NWV, NBW, d, dType) = self.getMatrixInfo(Type)
+        (NWV, NBW, d, dtype) = self.getMatrixInfo(Type)
         rows = []
         cols = []
         entries = []
@@ -1100,7 +1090,7 @@ class OP4(object):
                 #print(print_matrix(A))
                 #print("********", data)
 
-        A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dType)
+        A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dtype)
         f.read(4)
         self.n += 4
         return A
@@ -1540,24 +1530,24 @@ def get_dtype(Type, precision='default'):
     """reset the type if 'default' not selected"""
     if precision == 'single':
         if Type in [1, 2]:
-            dType = 'float32'
+            dtype = 'float32'
         else:
-            dType = 'complex64'
+            dtype = 'complex64'
     elif precision == 'double':
         if Type in [1, 2]:
-            dType = 'float64'
+            dtype = 'float64'
         else:
-            dType = 'complex128'
+            dtype = 'complex128'
     else:  # default
         if Type == 1:
-            dType = 'float32'
+            dtype = 'float32'
         elif Type == 2:
-            dType = 'float64'
+            dtype = 'float64'
         elif Type == 3:
-            dType = 'complex64'
+            dtype = 'complex64'
         else:
-            dType = 'complex128'
-    return dType
+            dtype = 'complex128'
+    return dtype
 
 def letter_count(word, letter):
     """Counts the number of occurrences of a letter in a word/line."""
