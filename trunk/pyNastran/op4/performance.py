@@ -73,7 +73,7 @@ def dense_square_test(dimension, is_binary=True):
         start_elapsed = time.time()
         B = cop4.Load(filenames[i], '*')  # dictionary-based
         end_elapsed = time.time()
-        print(B.keys())
+        #print(B.keys())
         key0 = B.keys()[0]
         #print(B[key0])
         del B
@@ -85,7 +85,7 @@ def dense_square_test(dimension, is_binary=True):
         start_elapsed = time.time()
         B = pyop4.read_op4(filenames[i])
         end_elapsed = time.time()
-        print("keys = %s" % B.keys())
+        #print("keys = %s" % B.keys())
         key0 = B.keys()[0]
         #print("form = %s" % B[key0][0])
         #print(B[key0][1], '\n')

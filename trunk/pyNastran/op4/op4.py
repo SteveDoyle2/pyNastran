@@ -156,9 +156,9 @@ class OP4(object):
             isSparse = True
 
         if Type in [1, 2]:  # real
-            (A) = self._read_real_ascii(f, nrows, ncols, lineSize, line, dtype, isSparse, isBigMat)
+            A = self._read_real_ascii(f, nrows, ncols, lineSize, line, dtype, isSparse, isBigMat)
         elif Type in [3, 4]:  # complex
-            (A) = self._read_complex_ascii(f, nrows, ncols, lineSize, line, dtype, isSparse, isBigMat)
+            A = self._read_complex_ascii(f, nrows, ncols, lineSize, line, dtype, isSparse, isBigMat)
         else:
             raise RuntimeError('invalid matrix type.  Type=%s' % Type)
 
@@ -1129,9 +1129,9 @@ class OP4(object):
         :param precision: data precision ='default', 'single', 'double'
 
         :returns: Type matrix type
-                       1 = real,single precision;
-                       2 = real,double precision;
-                       3 = complex,single precision;
+                       1 = real,single precision
+                       2 = real,double precision
+                       3 = complex,single precision
                        4 = complex,double precision
         :returns: NWV Number of Words per Value
 
@@ -1182,11 +1182,9 @@ class OP4(object):
 
         Method 1:
         ---------
-        :param names:    List of the names of the matrices
-        :param matrices: List of two-dimensional NUMPY.NDARRAY
-        :param precisions: List of ['single', 'double', 'default'] or string ('default'=> type of matrix)
+        :param name_order:  List of the names of the matrices that should be
+                            written or string (default=None -> sorted based on matrices)
         :param is_binary: Should a binary file be written
-        :param forms:    Forms is defined as one of the following:
 
         Method 2:
         ---------
@@ -1200,37 +1198,28 @@ class OP4(object):
         #if nR == nC: op4_form = 1   # square
         #else:        op4_form = 2   # rectangular
 
-        #names, matrices, forms,
         if isinstance(op4_filename, basestring):
             f = open(op4_filename, 'wb')
         else:
             f = op4_filename
 
-        #Method 1
-        #assert len(names) == len(matrices)
-        #assert len(names) == len(forms)
-        #if isinstance(precisions, basestring):
-            #precisions = [precisions] * len(names)
-        #else:
-            #assert len(names) == len(precisions)
-
-        # Method 2
-        #precision = precisions
+        if name_order is None:
+            name_order = sorted(matrices.keys())
+        elif isinstance(name_order, basestring):
+            name_order = [name_order]
 
         isBigMat = False  ## ..todo:: hardcoded
-
         if is_binary:
-            #for (name, matrix, form, precisions) in izip(names, matrices, forms, precisions):  # method 1
-            for name, (form, matrix) in sorted(matrices.iteritems()):  # method 2
+            for name in name_order:
+                (form, matrix) = matrices[name]
                 if isinstance(matrix, coo_matrix):
                     self._write_sparse_matrix_ascii(f, name, matrix, form=form,
-                                                    precision='default', isBigMat=isBigMat)
+                                                    precision=precision, isBigMat=isBigMat)
                     #write_DMIG(f, name, matrix, form, precision='default')
                     pass
                 else:
-                    self._write_dense_matrix_binary(f, name, matrix, 1, 'single')
+                    self._write_dense_matrix_binary(f, name, matrix, form=form, precision=precision)
         else:
-            #for (name, matrix, form, precisions) in izip(names, matrices, forms, precisions):
             for name, (form, matrix) in sorted(matrices.iteritems()):
                 if isinstance(matrix, coo_matrix):
                     #self.write_sparse_matrix_ascii(f, name, matrix, form=form,
@@ -1238,7 +1227,7 @@ class OP4(object):
                     #write_DMIG(f, name, matrix, form, precision='default')
                     pass
                 else:
-                    self._write_dense_matrix_ascii(f, name, matrix, 1, 'single')
+                    self._write_dense_matrix_ascii(f, name, matrix, form=form, precision=precision)
 
 
     def __backup(self, name, matrix, form=2, precision='default'):
@@ -1279,6 +1268,9 @@ class OP4(object):
         assert isinstance(form, int), form
 
     def _write_sparse_matrix_ascii(self, f, name, A, form=2, isBigMat=False, precision='default', tol=1e-15):
+        """
+        ..todo:: Does this work for complex matrices?
+        """
         msg = ''
         # speed up tolerancing
         #A[where(A.real.abs() < tol)] = 0.0
@@ -1288,20 +1280,18 @@ class OP4(object):
         #print dir(A)
         (Type, NWV) = self.getTypeNWV(A.data[0], precision)
         if Type in [3, 4]:
-            complexFactor = 2
-        else:
-            complexFactor = 1
+            complex_factor = 2
+        else: # 1, 2
+            complex_factor = 1
         (nrows, ncols) = A.shape
 
         #if nrows == ncols and form == 2:
             #form = 1
         #print("Type=%s" % Type)
         if isBigMat:
-            msg += '%8i%8i%8i%8i%-8s1P,3E23.16\n' % (
-                ncols, -nrows, form, Type, name)
+            msg += '%8i%8i%8i%8i%-8s1P,3E23.16\n' % (ncols, -nrows, form, Type, name)
         else:
-            msg += '%8i%8i%8i%8i%-8s1P,3E23.16\n' % (
-                ncols, nrows, form, Type, name)
+            msg += '%8i%8i%8i%8i%-8s1P,3E23.16\n' % (ncols, nrows, form, Type, name)
 
         #print "A.row = ",A.row
         #print "A.col = ",A.col
@@ -1329,11 +1319,11 @@ class OP4(object):
             npacks = len(dpacks)
             nrows = len(irows)
             if isBigMat:
-                #L = complexFactor*(2*len(irows))+1
+                #L = complex_factor * (2 * len(irows)) + 1
                 L = 2 * npacks * NWV + nrows
                 msg = '%8i%8i%8i\n' % (j + 1, 0, L)
             else:
-                L = complexFactor * (2 * len(irows))
+                L = complex_factor * (2 * len(irows))
                 msg = '%8i%8i%8i\n' % (j + 1, 0, L + 1)
             f.write(msg)
 
@@ -1343,18 +1333,18 @@ class OP4(object):
 
                 irow = A.row[col[dpack[0]]]
                 if isBigMat:
-                    #L = complexFactor*(2*len(pack))+1
+                    #L = complexFactor * (2 * len(pack)) + 1
                     #L = (nPacks+1) + nRows*complexFactor
                     L = (len(dpack) + 1) * NWV
                     #if iPack==0:
                         #L+=1
 
-                    #L = complexFactor*(2+nPacks)+1
-                    #L = len(pack)+complexFactor*2
+                    #L = complexFactor * (2 + nPacks) + 1
+                    #L = len(pack) + complexFactor * 2
                     #msg = '%8i%8i%8i\n' % (j+1, 0, L+1)
                     msg += '%8i%8i\n' % (L, irow + 1)
                 else:
-                    #L = complexFactor*(2*len(pack))
+                    #L = complexFactor * (2 * len(pack))
                     #msg = '%8i%8i%8i\n' % (j+1, 0, L+1)
 
                     IS = irow + 65536 * (L + 1) + 1
@@ -1375,7 +1365,6 @@ class OP4(object):
                             value_str += ' 0.0000000000000000E+00'
                         if (i + 1) % 3 == 0:
                             msg += value_str + '\n'
-                            #print "adding", value_str
                             value_str = ''
                     else:
                         if abs(val.real) > tol:
@@ -1384,7 +1373,6 @@ class OP4(object):
                             value_str += ' 0.0000000000000000E+00'
                         if (i + 1) % 3 == 0:
                             msg += value_str + '\n'
-                            #print "adding", value_str
                             value_str = ''
                         i += 1
                         if abs(val.imag) > tol:
@@ -1437,7 +1425,7 @@ class OP4(object):
 
                 if Type in [1, 2]: # real
                     #nValues = iEnd-iStart+1
-                    #msg += pack('d'*nValues,A[iStart:iEnd+1,icol])
+                    #msg += pack('d'*nValues, A[iStart:iEnd+1,icol])
 
                     #for irow in xrange(iStart, iEnd):
                         #msg += pack('d', A[irow, icol])
@@ -1449,7 +1437,6 @@ class OP4(object):
                         msg += pack('dd', A[irow, icol].real,
                                           A[irow, icol].imag)
             f.write(msg)
-
         msg = pack(self.endian + '4id', 24, ncols + 1, 1, 1, 1.0)
         f.write(msg)
 
@@ -1469,7 +1456,6 @@ class OP4(object):
 
     def _write_dense_matrix_ascii(self, f, name, A, form=2, precision='default', tol=1e-15):
         (Type, NWV) = self.getTypeNWV(A[0, 0], precision)
-
         (nrows, ncols) = A.shape
         #if nrows==ncols and form==2:
             #form = 1
@@ -1487,7 +1473,7 @@ class OP4(object):
                 msg = '%8i%8i%8i\n' % (icol + 1, iStart + 1,
                                        (iEnd - iStart) * NWV)
                 f.write(msg)
-                if Type in [1, 2]:
+                if Type in [1, 2]: # real
                     #print("iStart=%s iEnd=%s" % (iStart, iEnd))
                     for i, irow in enumerate(xrange(iStart, iEnd)):
                         if abs(A[irow, icol]) > tol:
@@ -1525,7 +1511,6 @@ class OP4(object):
         msg += ' 1.0000000000000000E+00\n'
         f.write(msg)
 
-        return msg
 
 def get_dtype(Type, precision='default'):
     """reset the type if 'default' not selected"""
