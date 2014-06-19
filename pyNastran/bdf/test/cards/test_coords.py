@@ -182,6 +182,8 @@ class TestCoords(unittest.TestCase):
 
         msg = 'diff=%s' % diff
         assert allclose(diff, 0.), msg
+        coord = model.Coord(7)
+        coord.T()
 
     #def makeNodes(self, grids, coords):
         #grids2 = []

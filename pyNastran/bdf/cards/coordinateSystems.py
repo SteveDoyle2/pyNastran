@@ -311,8 +311,8 @@ class Coord(BaseCard):
         """
         (a, matrix) = self.transformToGlobal(self.e1)
         t = zeros((6, 6))  # transformation matrix
-        t[0:2, 0:2] = matrix
-        t[3:5, 3:5] = matrix
+        t[0:2, 0:2] = matrix[0:2, 0:2]
+        t[3:5, 3:5] = matrix[0:2, 0:2]
         return t
 
     def reprFields(self):
