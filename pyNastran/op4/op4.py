@@ -7,7 +7,7 @@ from struct import pack, unpack
 from itertools import izip
 
 from numpy import (array, zeros, float32, float64, complex64, complex128,
-                  allclose)
+                  allclose, ndarray)
 from scipy.sparse import coo_matrix
 
 from pyNastran.utils import is_binary
@@ -1129,10 +1129,10 @@ class OP4(object):
         :param precision: data precision ='default', 'single', 'double'
 
         :returns: Type matrix type
-                       1 = real,single precision
-                       2 = real,double precision
-                       3 = complex,single precision
-                       4 = complex,double precision
+                       1 = real, single precision
+                       2 = real, double precision
+                       3 = complex, single precision
+                       4 = complex, double precision
         :returns: NWV Number of Words per Value
 
         .. note:: a word is 4 bytes
@@ -1209,25 +1209,22 @@ class OP4(object):
             name_order = [name_order]
 
         isBigMat = False  ## ..todo:: hardcoded
-        if is_binary:
-            for name in name_order:
-                (form, matrix) = matrices[name]
-                if isinstance(matrix, coo_matrix):
+        for name in name_order:
+            (form, matrix) = matrices[name]
+            if isinstance(matrix, coo_matrix):
+                #write_DMIG(f, name, matrix, form, precision='default')
+                if is_binary:
+                    raise NotImplementedError('sparse binary op4 writing not implemented')
+                else:
                     self._write_sparse_matrix_ascii(f, name, matrix, form=form,
                                                     precision=precision, isBigMat=isBigMat)
-                    #write_DMIG(f, name, matrix, form, precision='default')
-                    pass
-                else:
+            elif isinstance(matrix, ndarray):
+                if is_binary:
                     self._write_dense_matrix_binary(f, name, matrix, form=form, precision=precision)
-        else:
-            for name, (form, matrix) in sorted(matrices.iteritems()):
-                if isinstance(matrix, coo_matrix):
-                    #self.write_sparse_matrix_ascii(f, name, matrix, form=form,
-                    #                               precision='default', isBigMat=isBigMat)
-                    #write_DMIG(f, name, matrix, form, precision='default')
-                    pass
                 else:
                     self._write_dense_matrix_ascii(f, name, matrix, form=form, precision=precision)
+            else:
+                raise NotImplementedError('Matrix Type is not supported.  types=[coo_matrix, ndarray]')
 
 
     def __backup(self, name, matrix, form=2, precision='default'):
@@ -1399,6 +1396,8 @@ class OP4(object):
           - (4) Type
           - (5,6) name2
           6 words * 4 bytes/word = 24 bytes
+
+        ..todo:: support precision
         """
         A = matrix
         #print('A =', A)
@@ -1410,7 +1409,6 @@ class OP4(object):
 
         name2 = '%-8s' % name
         assert len(name2) == 8, 'name=%r is too long; 8 characters max' % name
-        #print('name2 = %r' % name2)
         msg = pack(self.endian + '5i8s', 24, ncols, nrows, form, Type, name2)
         f.write(msg)
 
@@ -1424,13 +1422,8 @@ class OP4(object):
                             1, iStart + 1, (iEnd - iStart) * NWV)
 
                 if Type in [1, 2]: # real
-                    #nValues = iEnd-iStart+1
-                    #msg += pack('d'*nValues, A[iStart:iEnd+1,icol])
-
-                    #for irow in xrange(iStart, iEnd):
-                        #msg += pack('d', A[irow, icol])
                     fmt = '%id' % (iEnd - iStart)
-                    f.write(pack(fmt, A[iStart:iEnd+1, icol]))
+                    f.write(pack(fmt, *A[iStart:iEnd+1, icol]))
 
                 else:  # complex
                     for irow in xrange(iStart, iEnd):

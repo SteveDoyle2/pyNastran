@@ -150,6 +150,28 @@ class TestOP4(unittest.TestCase):
                 self.assertTrue(array_equal(A, E))
             del A
 
+    def test_square_matrices_1(self):
+        op4 = OP4()
+        op4_filename = os.path.join(op4Path, 'small_ascii.op4')
+        #matrices = op4.read_op4(os.path.join(op4Path, fname))
+        form1 = 1
+        form2 = 2
+        from numpy import matrix, ones
+        A1 = matrix(ones((3,3), dtype='float64'))
+        #A2 = matrix(ones((1,1), dtype='float32'))
+        matrices = {
+            'A1': (form1, A1),
+            #'A2': (form2, A2),
+        }
+        op4.write_op4(op4_filename, matrices, name_order=None, precision='defauldt',
+                     is_binary=False)
+        matrices2 = op4.read_op4(op4_filename, precision='default')
+
+        #(form1b, A1b) = matrices2['A1']
+        #(form2, A2b) = matrices2['A2']
+        #self.assertEquals(form1, form1b)
+        #self.assertEquals(form2, form2b)
+
 if __name__ == '__main__':
     #failed_test1()
     #print "*********"
