@@ -163,7 +163,7 @@ class TestOP4(unittest.TestCase):
             'A1': (form1, A1),
             #'A2': (form2, A2),
         }
-        op4.write_op4(op4_filename, matrices, name_order=None, precision='defauldt',
+        op4.write_op4(op4_filename, matrices, name_order=None, precision='default',
                      is_binary=False)
         matrices2 = op4.read_op4(op4_filename, precision='default')
 
