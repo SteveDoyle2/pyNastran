@@ -86,7 +86,9 @@ class OP4(object):
 
         .. warning:: sparse binary is buggy right now
         """
-        assert precision in ['default', 'single', 'double'], "precison=%r valid=['default','single','double']"
+        if not precision in ('default', 'single', 'double'):
+            raise ValueError("precision=%r and must be 'single', 'double', or 'default'" % precision)
+
         if op4_filename is None:
             from pyNastran.utils.gui_io import load_file_dialog
             wildcard_wx = "Nastran OP4 (*.op4)|*.op4|" \
@@ -1184,7 +1186,9 @@ class OP4(object):
         ---------
         :param name_order:  List of the names of the matrices that should be
                             written or string (default=None -> sorted based on matrices)
-        :param is_binary: Should a binary file be written
+        :param is_binary: Should a binary file be written (True, False)
+        :param precision: Overwrite the default precision ('single', 'double', 'default')
+                          Applies to all matrices
 
         Method 2:
         ---------
@@ -1195,6 +1199,10 @@ class OP4(object):
 
         ..todo::  This method is not even close to being done
         """
+        if not precision in ('single', 'double', 'default'):
+            raise ValueError("precision=%r and must be 'single', 'double', or 'default'" % precision)
+        if not is_binary in (True, False):
+            raise ValueError('is_binary=%r and must be True or False' % is_binary)
         #if nR == nC: op4_form = 1   # square
         #else:        op4_form = 2   # rectangular
 
@@ -1211,6 +1219,9 @@ class OP4(object):
         isBigMat = False  ## ..todo:: hardcoded
         for name in name_order:
             (form, matrix) = matrices[name]
+            if not form in (1, 2, 3, 6, 8, 9):
+                raise ValueError('form=%r and must be in [1, 2, 3, 6, 8, 9]' % form)
+
             if isinstance(matrix, coo_matrix):
                 #write_DMIG(f, name, matrix, form, precision='default')
                 if is_binary:
@@ -1224,7 +1235,7 @@ class OP4(object):
                 else:
                     self._write_dense_matrix_ascii(f, name, matrix, form=form, precision=precision)
             else:
-                raise NotImplementedError('Matrix Type is not supported.  types=[coo_matrix, ndarray]')
+                raise NotImplementedError('Matrix type=%r is not supported.  types=[coo_matrix, ndarray]' % type(matrix))
 
 
     def __backup(self, name, matrix, form=2, precision='default'):
@@ -1246,7 +1257,7 @@ class OP4(object):
         9.   Pseudoidentity
         ==== ===============
 
-        Not Supported by all OP4s:
+        Not Supported by all OP4s (this is not a restriction of the OP4 reader/writer):
 
         ==== ===============================
         Form Definition

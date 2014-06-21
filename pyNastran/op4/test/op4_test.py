@@ -150,6 +150,42 @@ class TestOP4(unittest.TestCase):
                 self.assertTrue(array_equal(A, E))
             del A
 
+    def test_bad_inputs_1(self):
+        op4 = OP4()
+        op4_filename = os.path.join(op4Path, 'bad_inputs.op4')
+        form1 = 1
+        from numpy import ones
+        A1 = ones((3,3), dtype='float64')
+        matrices = {
+            'A1': (form1, A1),
+            'A2': ('bad', A1),
+            'A3': (form1, 'bad'),
+        }
+        with self.assertRaises(ValueError):
+            op4.write_op4(op4_filename, matrices, name_order=None, precision='default_bad',
+                         is_binary=False)
+        with self.assertRaises(ValueError):
+            op4.write_op4(op4_filename, matrices, name_order='A1', precision='default',
+                         is_binary='bad')
+        with self.assertRaises(ValueError):
+            op4.write_op4(op4_filename, matrices, name_order='A2', precision='default',
+                         is_binary=True)
+        with self.assertRaises(NotImplementedError):
+            op4.write_op4(op4_filename, matrices, name_order='A3', precision='default',
+                         is_binary=True)
+
+        # now lets write the op4, so we can test bad reading
+        op4.write_op4(op4_filename, matrices, name_order='A1', precision='default',
+                     is_binary=False)
+        with self.assertRaises(ValueError):
+            matrices2 = op4.read_op4(op4_filename, precision='default_bad')
+        with self.assertRaises(IOError):
+            matrices2 = op4.read_op4('op4_filename', precision='default')
+
+        # now the inputs are valid, so this works
+        matrices2 = op4.read_op4(op4_filename, precision='default')
+
+
     def test_square_matrices_1(self):
         op4 = OP4()
         op4_filename = os.path.join(op4Path, 'small_ascii.op4')
