@@ -1171,7 +1171,7 @@ class OP4(object):
             else:
                 Type = 3
         else:
-            raise TypeError('invalid Type, only float32, float64, complex64, complex128')
+            raise TypeError('invalid Type, only float32, float64, complex64, complex128; dtype=%r' % A.dtype)
         return (Type, NWV)
 
     def write_op4(self, op4_filename, matrices, name_order=None, precision='default', is_binary=True):
