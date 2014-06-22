@@ -1275,14 +1275,11 @@ class OP4(object):
         assert isinstance(name, str), name
         assert isinstance(form, int), form
 
-    def _write_sparse_matrix_ascii(self, f, name, A, form=2, isBigMat=False, precision='default', tol=1e-15):
+    def _write_sparse_matrix_ascii(self, f, name, A, form=2, isBigMat=False, precision='default'):
         """
         ..todo:: Does this work for complex matrices?
         """
         msg = ''
-        # speed up tolerancing
-        #A[where(A.real.abs() < tol)] = 0.0
-
         assert isinstance(name, str), 'name=%s' % name
         #A = A.tolil() # list-of-lists sparse matrix
         #print dir(A)
@@ -1309,7 +1306,7 @@ class OP4(object):
             cols[j] = []
         for i, jcol in enumerate(A.col):
             cols[jcol].append(i)
-        #print "cols = ",cols
+        #print("cols = ", cols)
 
         f.write(msg)
         msg = ''
@@ -1367,29 +1364,19 @@ class OP4(object):
                     irow = A.row[irow]
 
                     if Type in [1, 2]:
-                        if abs(val) > tol:
-                            value_str += '%23.16E' % val
-                        else:
-                            value_str += ' 0.0000000000000000E+00'
+                        value_str += '%23.16E' % val
                         if (i + 1) % 3 == 0:
                             msg += value_str + '\n'
                             value_str = ''
                     else:
-                        if abs(val.real) > tol:
-                            value_str += '%23.16E' % val.real
-                        else:
-                            value_str += ' 0.0000000000000000E+00'
+                        value_str += '%23.16E' % val.real
                         if (i + 1) % 3 == 0:
                             msg += value_str + '\n'
                             value_str = ''
                         i += 1
-                        if abs(val.imag) > tol:
-                            value_str += '%23.16E' % val.imag
-                        else:
-                            value_str += ' 0.0000000000000000E+00'
+                        value_str += '%23.16E' % val.imag
                         if (i + 1) % 3 == 0:
                             msg += value_str + '\n'
-                            #print "adding", value_str
                             value_str = ''
                     i += 1
                 if value_str:
@@ -1398,7 +1385,7 @@ class OP4(object):
         f.write('%8i%8i%8i\n' % (ncols + 1, 1, 1))
         f.write(' 1.0000000000000000E+00\n')
 
-    def _write_dense_matrix_binary(self, f, name, matrix, form=2, precision='default', tol=1e-15):
+    def _write_dense_matrix_binary(self, f, name, matrix, form=2, precision='default'):
         """
         24 bytes is the record length
           - (1) ncols
@@ -1424,7 +1411,7 @@ class OP4(object):
         f.write(msg)
 
         for icol in xrange(ncols):
-            (iStart, iEnd) = self.getStartEndRow(A[:, icol], nrows, tol)
+            (iStart, iEnd) = self.getStartEndRow(A[:, icol], nrows)
 
             # write the column
             if iStart is not None and iEnd is not None:
@@ -1444,21 +1431,21 @@ class OP4(object):
         msg = pack(self.endian + '4id', 24, ncols + 1, 1, 1, 1.0)
         f.write(msg)
 
-    def getStartEndRow(self, A, nrows, tol=1e-15):
+    def getStartEndRow(self, A, nrows):
         """find the starting and ending points of the matrix"""
         iStart = None
         for irow in xrange(nrows):
-            if abs(A[irow]) > tol:
+            if abs(A[irow]) > 0.0:
                 iStart = irow
                 break
         iEnd = None
         for irow in reversed(range(nrows)):
-            if abs(A[irow]) > tol:
+            if abs(A[irow]) > 0.0:
                 iEnd = irow
                 break
         return (iStart, iEnd)
 
-    def _write_dense_matrix_ascii(self, f, name, A, form=2, precision='default', tol=1e-15):
+    def _write_dense_matrix_ascii(self, f, name, A, form=2, precision='default'):
         (Type, NWV) = self.getTypeNWV(A[0, 0], precision)
         (nrows, ncols) = A.shape
         #if nrows==ncols and form==2:
@@ -1469,7 +1456,7 @@ class OP4(object):
 
         for icol in xrange(ncols):
             value_str = ''
-            (iStart, iEnd) = self.getStartEndRow(A[:, icol], nrows, tol)
+            (iStart, iEnd) = self.getStartEndRow(A[:, icol], nrows)
 
             # write the column
             if iStart is not None and iEnd is not None:  # not a null column
@@ -1480,10 +1467,7 @@ class OP4(object):
                 if Type in [1, 2]: # real
                     #print("iStart=%s iEnd=%s" % (iStart, iEnd))
                     for i, irow in enumerate(xrange(iStart, iEnd)):
-                        if abs(A[irow, icol]) > tol:
-                            value_str += '%23.16E' % A[irow, icol]
-                        else:
-                            value_str += ' 0.0000000000000000E+00'
+                        value_str += '%23.16E' % A[irow, icol]
                         if (i + 1) % 3 == 0:
                             f.write(value_str + '\n')
                             value_str = ''
@@ -1491,18 +1475,12 @@ class OP4(object):
                     i = 0
                     #print("iStart=%s iEnd=%s" % (iStart, iEnd))
                     for irow in xrange(iStart, iEnd):
-                        if abs(A[irow, icol].real) > tol:
-                            value_str += '%23.16E' % A[irow, icol].real
-                        else:
-                            value_str += ' 0.0000000000000000E+00'
+                        value_str += '%23.16E' % A[irow, icol].real
                         if (i + 1) % 3 == 0:
                             f.write(value_str + '\n')
                             value_str = ''
 
-                        if abs(A[irow, icol].imag) > tol:
-                            value_str += '%23.16E' % A[irow, icol].imag
-                        else:
-                            value_str += ' 0.0000000000000000E+00'
+                        value_str += '%23.16E' % A[irow, icol].imag
                         if (i + 2) % 3 == 0:
                             f.write(value_str + '\n')
                             value_str = ''
