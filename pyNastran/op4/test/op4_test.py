@@ -185,6 +185,23 @@ class TestOP4(unittest.TestCase):
         # now the inputs are valid, so this works
         matrices2 = op4.read_op4(op4_filename, precision='default')
 
+    def test_file_obj(self):
+        op4 = OP4()
+        form1 = 1
+        from numpy import ones
+        A1 = ones((3,3), dtype='float64')
+        matrices = {
+            'A1': (form1, A1),
+        }
+        f = open(os.path.join(op4Path, 'file_ascii.op4'), 'wb')
+        op4.write_op4(f, matrices, name_order='A1', precision='default',
+                     is_binary=False)
+        f.close()
+
+        f = open(os.path.join(op4Path, 'file_binary.op4'), 'wb')
+        op4.write_op4(f, matrices, name_order='A1', precision='default',
+                     is_binary=False)
+        f.close()
 
     def test_square_matrices_1(self):
         op4 = OP4()
