@@ -74,13 +74,8 @@ class XrefMesh(object):
         for coord in self.coords.itervalues():
             coord.cross_reference(self)
 
-        # CORD1x: Since the grid points were already referenced,
-        # we can now resolve the coordinate systems.
-        # We couldnt do it in the previous step b/c
-        # the grid's coordinate system might have been
-        # unresolved
         for coord in self.coords.itervalues():
-            coord.resolveCid()
+            coord.setup(self)
 
     def _cross_reference_aero(self):
         """
