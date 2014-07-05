@@ -16,6 +16,23 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 from pyNastran.bdf.fieldWriter import print_card_8
 
 
+def normalize(v):
+    r"""
+    Normalizes v into a unit vector.
+
+    :param self: the coordinate system object
+    :param v:    the vector to normalize
+
+    :returns:  normalized v
+
+    .. math:: v_{norm} = \frac{v}{\lvert v \lvert}
+    """
+    normV = norm(v)
+    if not normV > 0.:
+        raise RuntimeError('v=%s norm(v)=%s' % (v, normV))
+    return v / normV
+
+
 class Coord(BaseCard):
     type = 'COORD'
 
@@ -58,6 +75,7 @@ class Coord(BaseCard):
 
         .. math:: i = j \times k
         """
+        #assert debug==False
         try:
             assert len(self.e1) == 3, self.e1
             assert len(self.e2) == 3, self.e2
@@ -73,27 +91,39 @@ class Coord(BaseCard):
         if not self.isResolved:
             self.rid.setup()
 
-        if self.rid == 0:
+        e1 = self.e1
+        e2 = self.e2
+        e3 = self.e3
+        if self.Rid() == 0:
             self.origin = self.e1
+            e1 = self.e1
+            e2 = self.e2
+            e3 = self.e3
         else:
             self.origin, rid_matrix = self.rid.transformToGlobal(self.e1)
+            e1 = self.origin
+            e2, rid_matrix = self.rid.transformToGlobal(self.e2)
+            e3, rid_matrix = self.rid.transformToGlobal(self.e3)
 
         try:
             # e_{13}
-            e13 = self.e3 - self.e1
+            e13 = e3 - e1
             # e_{12}
-            e12 = self.e2 - self.e1
+            e12 = e2 - e1
             #print("e13 = %s" % e13)
             #print("e12 = %s" % e12)
         except TypeError:
             msg = ''
             msg += "\ntype = %s\n" % (self.type)
             msg += "\ncid  = %s\n" % (self.Cid())
-            msg += "e1 = %s\n" % str(self.e1)
-            msg += "e2 = %s\n" % str(self.e2)
-            msg += "e3 = %s\n" % str(self.e3)
+            msg += "e1 = %s\n" % str(e1)
+            msg += "e2 = %s\n" % str(e2)
+            msg += "e3 = %s\n" % str(e3)
             raise TypeError(msg)
 
+        #if self.Rid() != 0:
+            #e12, rid_matrix = self.rid.transformToGlobal(e12)
+            #e13, rid_matrix = self.rid.transformToGlobal(e13)
         #print self
         #print "e1 = ",self.e1
         #print "e2 = ",self.e2
@@ -101,13 +131,16 @@ class Coord(BaseCard):
 
         try:
             #: k = (G3 cross G1) normalized
-            self.k = self.normalize(e12)
+            self.k = normalize(e12)
         except RuntimeError:
             print("---InvalidUnitVectorError---")
             print("Cp  = %s" % (self.Cid()))
             print("e1  = %s" % (self.e1))
             print("e2  = %s" % (self.e2))
             print("e3  = %s" % (self.e3))
+            print("e1* = %s" % (e1))
+            print("e2* = %s" % (e2))
+            print("e3* = %s" % (e3))
             print("e13 = %s" % (e13))
             print("e12 = %s" % (e12))
             print("k = normalize(e12)")
@@ -115,18 +148,43 @@ class Coord(BaseCard):
 
         try:
             # j = (k cross e13) normalized
-            self.j = self.normalize(cross(self.k, e13))
+            j = cross(self.k, e13)
         except RuntimeError:
             print("---InvalidUnitVectorError---")
             print("Cp  = %s" % (self.Cid()))
             print("e1  = %s" % (self.e1))
             print("e2  = %s" % (self.e2))
             print("e3  = %s" % (self.e3))
+            print("e1* = %s" % (e1))
+            print("e2* = %s" % (e2))
+            print("e3* = %s" % (e3))
+            print("e13 = %s" % (e13))
+            print("e12 = %s" % (e12))
+            print("k = normalize(e12)")
+            print("k   = %s" % (self.k))
+            print("j* = cross(k,e13)\n")
+            raise
+
+        try:
+            # j = (k cross e13) normalized
+            j = cross(self.k, e13)
+            self.j = normalize(j)
+        except RuntimeError:
+            print("---InvalidUnitVectorError---")
+            print("Cp  = %s" % (self.Cid()))
+            print("e1  = %s" % (self.e1))
+            print("e2  = %s" % (self.e2))
+            print("e3  = %s" % (self.e3))
+            print("e1* = %s" % (e1))
+            print("e2* = %s" % (e2))
+            print("e3* = %s" % (e3))
             print("e13 = %s" % (e13))
             print("e12 = %s" % (e12))
             print("k = norm(e12)")
             print("k   = %s\n" % (self.k))
-            print("j = norm(cross(k,e13))")
+            print("j* = cross(k,e13)")
+            print("j*  = %s" % (j))
+            print("j = norm(cross(k,e13))\n")
             raise
 
         try:
@@ -151,6 +209,9 @@ class Coord(BaseCard):
             print("e1 = %s" % (self.e1))
             print("e2 = %s" % (self.e2))
             print("e3 = %s" % (self.e3))
+            print("e1* = [%g, %g, %g]" % tuple(e1))
+            print("e2* = [%g, %g, %g]" % tuple(e2))
+            print("e3* = [%g, %g, %g]" % tuple(e3))
             print('-----')
             print("e13 = %s" % (e13))
             print("e12 = %s" % (e12))
@@ -160,7 +221,12 @@ class Coord(BaseCard):
             print("k   = %s\n" % self.k)
             print('-----')
 
-    def transformToGlobal(self, p, resolveAltCoord=True, debug=False):
+        #if self.Rid() != 0:
+            #self.i, rid_matrix = self.rid.transformToGlobal(self.i)
+            #self.j, rid_matrix = self.rid.transformToGlobal(self.j)
+            #self.k, rid_matrix = self.rid.transformToGlobal(self.k)
+
+    def transformToGlobal(self, p, debug=False):
         r"""
         Transforms a point from the local coordinate system to the reference
         coordinate frames "global" coordinate system.
@@ -185,7 +251,6 @@ class Coord(BaseCard):
 
         :param self:            the coordinate system object
         :param p:               the point to be transformed.  Type=NUMPY.NDARRAY
-        :param resolveAltCoord: should the CD field be resolved (default=True)
         :param debug:           developer debug (default=False)
 
         .. warning:: make sure you cross-reference before calling this
@@ -194,7 +259,7 @@ class Coord(BaseCard):
         """
         if debug:
             print("p = %s" % p)
-            print("p-e1 = %s" % (p - self.e1))
+            #print("p-e1 = %s" % (p - self.e1))
 
         if not self.isResolved:
             self.rid.setup()
@@ -204,32 +269,32 @@ class Coord(BaseCard):
                              [0., 0., 1.]], dtype='float64')
 
         # the ijk axes arent resolved as R-theta-z, only points
-        if resolveAltCoord:
-            #print("p* = %s" % p)
-            p = self.coordToXYZ(p)
-        #p2 = p-self.eo
+        p = self.coordToXYZ(p)
 
         # Bij = Bip*j
         i = self.i
         j = self.j
         k = self.k
-        if isinstance(self.rid, int):  # rid=0
-            gx = array([1., 0., 0.], dtype='float64')
-            gy = array([0., 1., 0.], dtype='float64')
-            gz = array([0., 0., 1.], dtype='float64')
-        else:
-            gx = self.rid.i
-            gy = self.rid.j
-            gz = self.rid.k
+        #if isinstance(self.rid, int):  # rid=0
+        gx = array([1., 0., 0.], dtype='float64')
+        gy = array([0., 1., 0.], dtype='float64')
+        gz = array([0., 0., 1.], dtype='float64')
+        #else:
+            #gx = self.rid.i
+            #gy = self.rid.j
+            #gz = self.rid.k
 
         if i is None:
             raise RuntimeError("Local unit vectors haven't been set.\nType=%r cid=%s rid=%s" % (self.type, self.cid, self.rid))
         matrix = array([[dot(gx, i), dot(gy, i), dot(gz, i)],
                         [dot(gx, j), dot(gy, j), dot(gz, j)],
                         [dot(gx, k), dot(gy, k), dot(gz, k)]], dtype='float64')
+
+        # rotate point p from the local frame to the global frame
         p2 = dot(p, matrix)
         #print('p2     = %s' % str(p2))
         #print('origin = %s' % str(self.origin))
+        # shift point p by the local xyz origin (origin is in global coordinates)
         p3 = p2 + self.origin
 
         if debug:
@@ -282,7 +347,7 @@ class Coord(BaseCard):
                   These equations need some TLC, but the methods are ok.
         """
         #pGlobal = self.transformToGlobal(p, debug=False)
-        pCoord = dot(p - self.e1, transpose(M))
+        pCoord = dot(p, transpose(M))
         pLocal = self.XYZtoCoord(pCoord)
         if debug:
             print("p      = %s" % p)
@@ -290,22 +355,6 @@ class Coord(BaseCard):
             print("pLocal = %s\n" % pLocal)
             print("pCoord = %s" % pCoord)
         return pLocal
-
-    def normalize(self, v):
-        r"""
-        Normalizes v into a unit vector.
-
-        :param self: the coordinate system object
-        :param v:    the vector to normalize
-
-        :returns:  normalized v
-
-        .. math:: v_{norm} = \frac{v}{\lvert v \lvert}
-        """
-        normV = norm(v)
-        if not normV > 0.:
-            raise RuntimeError('v=%s norm(v)=%s' % (v, normV))
-        return v / normV
 
     def T(self):
         r"""
@@ -371,9 +420,6 @@ class CylindricalCoord(object):
 
     .. _msc:  http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=
     .. seealso:: `MSC Reference Manual (pdf) <`http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=>`_.
-
-
-
     """
     def coordToXYZ(self, p):
         r"""
@@ -456,7 +502,6 @@ class SphericalCoord(object):
         return array([x, y, z], dtype='float64')
 
 
-
 class Cord2x(Coord):
     def __init__(self, card, data):
         """
@@ -484,7 +529,7 @@ class Cord2x(Coord):
                              double_or_blank(card, 7, 'e2y', 0.0),
                              double_or_blank(card, 8, 'e2z', 0.0)], dtype='float64')
             #: a point on the xz-plane relative to the rid coordinate system
-            self.e3 = array([double_or_blank(card, 9, 'e3x', 0.0),
+            self.e3 = array([double_or_blank(card, 9,  'e3x', 0.0),
                              double_or_blank(card, 10, 'e3y', 0.0),
                              double_or_blank(card, 11, 'e3z', 0.0)], dtype='float64')
             #print("card = ", card.fields())
