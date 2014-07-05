@@ -1,9 +1,9 @@
 from numpy import array, allclose
 import unittest
 
-from pyNastran.bdf.bdf import BDF, BDFCard, CORD1R, CORD1C, CORD1S
+from pyNastran.bdf.bdf import BDF, BDFCard, CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
 
-bdf = BDF()
+bdf = BDF()  # don't load this up with stuff
 class TestCoords(unittest.TestCase):
     def test_same(self):  # passes
         grids = [
@@ -135,6 +135,72 @@ class TestCoords(unittest.TestCase):
         #self.assertEquals(card.Rid(), 1)
         card.write_bdf(size, 'dummy')
         card.rawFields()
+
+    def test_cord2c_01(self):
+        lines = [
+            'CORD2C*                3               0              0.              0.',
+            '*                     0.              0.              0.              1.*',
+            '*                     1.              0.              1.'
+        ]
+        model = BDF()
+        card = model.process_card(lines)
+        card = BDFCard(card)
+        card = CORD2C(card)
+        model.add_coord(card)
+
+        lines = [
+            'CORD2R         4       3     10.      0.      5.     10.     90.      5.',
+            '             10.      0.      6.'
+        ]
+        card = model.process_card(lines)
+        card = BDFCard(card)
+        card = CORD2R(card)
+        model.add_coord(card)
+        model.cross_reference()
+
+        cord2r = model.Coord(4)
+
+        #print('i = ', cord2r.i)
+        #print('j = ', cord2r.j)
+        #print('k = ', cord2r.k)
+        self.assertTrue(allclose(cord2r.i, array([0., 0., 1.])))
+        delta = cord2r.j - array([1., 1., 0.]) / 2**0.5
+        self.assertTrue(allclose(cord2r.j, array([1., 1., 0.]) / 2**0.5), str(delta))
+        delta = cord2r.k - array([-1., 1., 0.]) / 2**0.5
+        self.assertTrue(allclose(cord2r.k, array([-1., 1., 0.]) / 2**0.5), str(delta))
+
+    def test_cord2_rcs_01(self):
+        model = BDF()
+        cards = [
+             [#'$ Femap with NX Nastran Coordinate System 10 : rectangular defined in a rectangular',
+                 'CORD2R*               10               0             10.              5.',
+                 '*                     3.   10.3420201433   4.53015368961   3.81379768136*',
+                 '*          10.7198463104   5.68767171433   3.09449287122',],
+             [#'$ Femap with NX Nastran Coordinate System 11 : cylindrical defined in rectangular',
+                 'CORD2C*               11               0              7.              3.',
+                 '*                     9.   7.64278760969   2.73799736977   9.71984631039*',
+                 '*          7.75440650673   3.37968226211   8.46454486422',],
+             [#'$ Femap with NX Nastran Coordinate System 12 : spherical defined in rectangular',
+                 'CORD2S*               12               0             12.              8.',
+                 '*                     5.   12.6427876097   7.86697777844   5.75440650673*',
+                 '*          12.6634139482   8.58906867688   4.53861076379',],
+             ['GRID*                 10              10   42.9066011565   34.2422137135',
+                 '*          28.6442730262               0',],
+             ['GRID*                 11              11   48.8014631871   78.8394787869',
+                 '*          34.6037164304               0',],
+             ['GRID*                 12              12   58.0775343829   44.7276544324',
+                 '*          75.7955331161               0',],
+            ]
+        for lines in cards:
+            card = model.process_card(lines)
+            #print('card*, ', card, type(card))
+            model.add_card(card, card[0])
+        model.cross_reference()
+        for nid in model.nodes:
+            #print(model.Node(nid).Position())
+            a = array([30.,40.,50.])
+            b = model.Node(nid).Position()
+            self.assertTrue(allclose(array([30.,40.,50.]), model.Node(nid).Position()), str(a-b))
 
     def test_cord1c_01(self):
         lines = ['cord1c,2,1,4,3']

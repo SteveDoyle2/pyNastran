@@ -75,7 +75,7 @@ class XrefMesh(object):
             coord.cross_reference(self)
 
         for coord in self.coords.itervalues():
-            coord.setup(self)
+            coord.setup()
 
     def _cross_reference_aero(self):
         """
