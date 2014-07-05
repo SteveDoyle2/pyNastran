@@ -683,20 +683,22 @@ class Cord1x(Coord):
         #: grid point 3
         self.g3 = model.Node(self.g3, msg=msg)
 
-    def resolveCid(self):
+    def setup(self):
         """
         Finds the position of the nodes used define the coordinate system
         and sets the ijk vectors
 
         :param self: the coordinate system object
         """
+        if self.isResolved:
+            return
         #: the origin
         self.e1 = self.g1.Position()
         #: a point on the z-axis
         self.e2 = self.g2.Position()
         #: a point on the xz-plane
         self.e3 = self.g3.Position()
-        self.setup()
+        self.Coord.setup()
 
     def G1(self):
         if isinstance(self.g1, int):
