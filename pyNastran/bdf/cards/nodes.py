@@ -336,11 +336,11 @@ class GRID(Node):
             #: Grid point coordinate system
             self.cp = integer_or_blank(card, 2, 'cp', 0)
 
-            x = double_or_blank(card, 3, 'x1', 0.)
-            y = double_or_blank(card, 4, 'x2', 0.)
-            z = double_or_blank(card, 5, 'x3', 0.)
             #: node location in local frame
-            self.xyz = array([x, y, z])
+            self.xyz = array([
+                double_or_blank(card, 3, 'x1', 0.),
+                double_or_blank(card, 4, 'x2', 0.),
+                double_or_blank(card, 5, 'x3', 0.)], dtype='float64')
 
             #: Analysis coordinate system
             self.cd = integer_or_blank(card, 6, 'cd', 0)
@@ -391,9 +391,6 @@ class GRID(Node):
         else:
             return self.seid.seid
 
-    #def SEid(self):
-        #return self.seid
-
     def _verify(self, xref):
         nid = self.Nid()
         cp = self.Cp()
@@ -436,9 +433,9 @@ class GRID(Node):
         :param cid:   the desired coordinate ID (int)
         :param debug: developer debug
         """
-        if cid == self.Cp():
+        if cid == self.Cp(): # same coordinate system
             return self.xyz
-        #coordA = model.Coord(cid, msg=msg)
+
         # converting the xyz point arbitrary->global
         p, matrixDum = self.cp.transformToGlobal(self.xyz, debug=debug)
         #print "wrt = ",p
@@ -516,12 +513,11 @@ class POINT(Node):
             #: Grid point coordinate system
             self.cp = integer_or_blank(card, 2, 'cp', 0)
 
-            x = double_or_blank(card, 3, 'x1', 0.)
-            y = double_or_blank(card, 4, 'x2', 0.)
-            z = double_or_blank(card, 5, 'x3', 0.)
-
             #: node location in local frame
-            self.xyz = array([x, y, z])
+            self.xyz = array([
+                double_or_blank(card, 3, 'x1', 0.),
+                double_or_blank(card, 4, 'x2', 0.),
+                double_or_blank(card, 5, 'x3', 0.)], dtype='float64')
 
             #: Analysis coordinate system
             self.cd = integer_or_blank(card, 6, 'cd', 0)
@@ -574,9 +570,9 @@ class POINT(Node):
         :returns position: the position of the GRID in an arbitrary
                            coordinate system
         """
-        if cid == self.Cp():
+        if cid == self.Cp(): # same frame
             return self.xyz
-        #coordA = model.Coord(cid)
+
         # converting the xyz point arbitrary->global
         p, matrixDum = self.cp.transformToGlobal(self.xyz, debug=debug)
         coordB = model.Coord(cid)
