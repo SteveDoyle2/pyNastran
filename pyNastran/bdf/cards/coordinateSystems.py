@@ -44,8 +44,6 @@ class Coord(BaseCard):
         :param card: a BDFCard object
         :param data: a list analogous to the card
         """
-        #: has the coordinate system been linked yet
-        self.isCrossReferenced = False
         #: have all the transformation matricies been determined
         self.isResolved = False
         self.cid = None
@@ -98,9 +96,6 @@ class Coord(BaseCard):
         if not self.isResolved:
             self.rid.setup()
 
-        e1 = self.e1
-        e2 = self.e2
-        e3 = self.e3
         if self.Rid() == 0:
             self.origin = self.e1
             e1 = self.e1
@@ -128,14 +123,6 @@ class Coord(BaseCard):
             msg += "e3 = %s\n" % str(e3)
             raise TypeError(msg)
 
-        #if self.Rid() != 0:
-            #e12, rid_matrix = self.rid.transformToGlobal(e12)
-            #e13, rid_matrix = self.rid.transformToGlobal(e13)
-        #print self
-        #print "e1 = ",self.e1
-        #print "e2 = ",self.e2
-        #print "e3 = ",self.e3
-
         try:
             #: k = (G3 cross G1) normalized
             self.k = normalize(e12)
@@ -155,27 +142,7 @@ class Coord(BaseCard):
 
         try:
             # j = (k cross e13) normalized
-            j = cross(self.k, e13)
-        except RuntimeError:
-            print("---InvalidUnitVectorError---")
-            print("Cp  = %s" % (self.Cid()))
-            print("e1  = %s" % (self.e1))
-            print("e2  = %s" % (self.e2))
-            print("e3  = %s" % (self.e3))
-            print("e1* = %s" % (e1))
-            print("e2* = %s" % (e2))
-            print("e3* = %s" % (e3))
-            print("e13 = %s" % (e13))
-            print("e12 = %s" % (e12))
-            print("k = normalize(e12)")
-            print("k   = %s" % (self.k))
-            print("j* = cross(k,e13)\n")
-            raise
-
-        try:
-            # j = (k cross e13) normalized
-            j = cross(self.k, e13)
-            self.j = normalize(j)
+            self.j = normalize(cross(self.k, e13))
         except RuntimeError:
             print("---InvalidUnitVectorError---")
             print("Cp  = %s" % (self.Cid()))
@@ -190,7 +157,7 @@ class Coord(BaseCard):
             print("k = norm(e12)")
             print("k   = %s\n" % (self.k))
             print("j* = cross(k,e13)")
-            print("j*  = %s" % (j))
+            print("j*  = %s" % (cross(self.k, e13)))
             print("j = norm(cross(k,e13))\n")
             raise
 
@@ -563,7 +530,6 @@ class Cord2x(Coord):
                     global.  This isn't a problem, it's meant to speed up the
                     code in order to resolve extra coordinate systems.
         """
-        self.isCrossReferenced = True
         if self.rid != 0:
             msg = ' which is required by %s cid=%s' % (self.type, self.cid)
             self.rid = model.Coord(self.rid, msg=msg)
@@ -577,6 +543,10 @@ class Cord2x(Coord):
 
 class Cord1x(Coord):
     rid = 0  # used only for transform to global
+
+    def Rid(self):
+        """Gets the reference coordinate system self.rid"""
+        return self.rid
 
     def __init__(self, card, nCoord, data):
         Coord.__init__(self, card, data)
@@ -659,7 +629,6 @@ class Cord1x(Coord):
         :param self:  the coordinate system object
         :param model: the BDF object
         """
-        self.isCrossReferenced = True
         msg = ' which is required by %s cid=%s' % (self.type, self.cid)
         #: grid point 1
         self.g1 = model.Node(self.g1, msg=msg)
@@ -683,6 +652,7 @@ class Cord1x(Coord):
         self.e2 = self.g2.Position()
         #: a point on the xz-plane
         self.e3 = self.g3.Position()
+        self.isResolved = True # rid is resolved b/c e1, e2, & e3 are in global coordinates
         self.Coord.setup()
 
     def G1(self):
@@ -818,7 +788,11 @@ class CORD1R(Cord1x, RectangularCoord):
     """
     ::
 
-      CORD1R CIDA G1A G2A G3A CIDB G1B G2B G3B
+    +-------+------+-----+-----+------+------+-----+------+-----+
+    |   1   |   2  |  3  |  4  |   5  |  6   |  7  |  8   |  9  |
+    +=======+======+=====+=====+======+======+=====+======+=====+
+    |CORD1R | CIDA | G1A | G2A | CIDB | G1B  | G2B | G3B  |     |
+    +-------+------+-----+-----+------+------+-----+------+-----+
     """
     type = 'CORD1R'
 
@@ -848,7 +822,11 @@ class CORD1C(Cord1x, CylindricalCoord):
     """
     ::
 
-      CORD1C CIDA G1A G2A G3A CIDB G1B G2B G3B
+    +-------+------+-----+-----+------+------+-----+------+-----+
+    |   1   |   2  |  3  |  4  |   5  |  6   |  7  |  8   |  9  |
+    +=======+======+=====+=====+======+======+=====+======+=====+
+    |CORD1C | CIDA | G1A | G2A | CIDB | G1B  | G2B | G3B  |     |
+    +-------+------+-----+-----+------+------+-----+------+-----+
     """
     type = 'CORD1C'
 
@@ -879,7 +857,11 @@ class CORD1S(Cord1x, SphericalCoord):
     """
     ::
 
-      CORD1S CIDA G1A G2A G3A CIDB G1B G2B G3B
+    +-------+------+-----+-----+------+------+-----+------+-----+
+    |   1   |   2  |  3  |  4  |   5  |  6   |  7  |  8   |  9  |
+    +=======+======+=====+=====+======+======+=====+======+=====+
+    |CORD1S | CIDA | G1A | G2A | CIDB | G1B  | G2B | G3B  |     |
+    +-------+------+-----+-----+------+------+-----+------+-----+
     """
     type = 'CORD1S'
 
@@ -914,6 +896,14 @@ class CORD2R(Cord2x, RectangularCoord):
         """
         Intilizes the CORD2R
 
+        +--------+-----+-----+-----+----+-----+----+----+-----+
+        |    1   |   2 |  3  |  4  |  5 |  6  |  7 |  8 |  9  |
+        +========+=====+=====+=====+====+=====+====+====+=====+
+        | CORD2R | CID | RID | A1  | A2 | A3  | B1 | B2 |     |
+        +--------+-----+-----+-----+----+-----+----+----+-----+
+        |        | B3  | C1  | C2  | C3 |
+        +--------+-----+-----+-----+----+
+
         :param self: the CORD2R coordinate system object
         :param card: a BDFCard object
         :param data: a list version of the fields (1 CORD2R only)
@@ -929,34 +919,20 @@ class CORD2R(Cord2x, RectangularCoord):
         return list_fields
 
 
-class CORD2S(Cord2x, SphericalCoord):
-    type = 'CORD2S'
-
-    def __init__(self, card=None, data=None, comment=''):
-        """
-        Intilizes the CORD2R
-
-        :param self: the CORD2S coordinate system object
-        :param card: a BDFCard object
-        :param data: a list version of the fields (1 CORD2S only)
-        """
-        Cord2x.__init__(self, card, data)
-        if comment:
-            self._comment = comment
-
-    def rawFields(self):
-        rid = set_blank_if_default(self.Rid(), 0)
-        list_fields = (['CORD2S', self.cid, rid] + list(self.e1) + list(self.e2) +
-                  list(self.e3))
-        return list_fields
-
-
 class CORD2C(Cord2x, CylindricalCoord):
     type = 'CORD2C'
 
     def __init__(self, card=None, data=None, comment=''):
         """
         Intilizes the CORD2C
+
+        +--------+-----+-----+-----+----+-----+----+----+-----+
+        |    1   |   2 |  3  |  4  |  5 |  6  |  7 |  8 |  9  |
+        +========+=====+=====+=====+====+=====+====+====+=====+
+        | CORD2C | CID | RID | A1  | A2 | A3  | B1 | B2 |     |
+        +--------+-----+-----+-----+----+-----+----+----+-----+
+        |        | B3  | C1  | C2  | C3 |
+        +--------+-----+-----+-----+----+
 
         :param self: the CORD2C coordinate system object
         :param card: a BDFCard object
@@ -969,5 +945,35 @@ class CORD2C(Cord2x, CylindricalCoord):
     def rawFields(self):
         rid = set_blank_if_default(self.Rid(), 0)
         list_fields = (['CORD2C', self.cid, rid] + list(self.e1) + list(self.e2) +
+                  list(self.e3))
+        return list_fields
+
+
+class CORD2S(Cord2x, SphericalCoord):
+    type = 'CORD2S'
+
+    def __init__(self, card=None, data=None, comment=''):
+        """
+        Intilizes the CORD2R
+
+        +--------+-----+-----+-----+----+-----+----+----+-----+
+        |    1   |   2 |  3  |  4  |  5 |  6  |  7 |  8 |  9  |
+        +========+=====+=====+=====+====+=====+====+====+=====+
+        | CORD2S | CID | RID | A1  | A2 | A3  | B1 | B2 |     |
+        +--------+-----+-----+-----+----+-----+----+----+-----+
+        |        | B3  | C1  | C2  | C3 |
+        +--------+-----+-----+-----+----+
+
+        :param self: the CORD2S coordinate system object
+        :param card: a BDFCard object
+        :param data: a list version of the fields (1 CORD2S only)
+        """
+        Cord2x.__init__(self, card, data)
+        if comment:
+            self._comment = comment
+
+    def rawFields(self):
+        rid = set_blank_if_default(self.Rid(), 0)
+        list_fields = (['CORD2S', self.cid, rid] + list(self.e1) + list(self.e2) +
                   list(self.e3))
         return list_fields
