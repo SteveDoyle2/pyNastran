@@ -75,9 +75,6 @@ class Coord(BaseCard):
 
         .. math:: i = j \times k
         """
-        if self.Cid() == 0:
-            return
-
         try:
             assert len(self.e1) == 3, self.e1
             assert len(self.e2) == 3, self.e2
@@ -90,6 +87,14 @@ class Coord(BaseCard):
             msg += "e2 = %s\n" % str(self.e2)
             msg += "e3 = %s\n" % str(self.e3)
             raise RuntimeError(msg)
+
+        if self.Cid() == 0:
+            self.origin = array([0.,0.,0.], dtype='float64')
+            self.i = array([1.,0.,0.], dtype='float64')
+            self.j = array([0.,1.,0.], dtype='float64')
+            self.k = array([0.,0.,1.], dtype='float64')
+            return
+
         if not self.isResolved:
             self.rid.setup()
 
@@ -304,10 +309,6 @@ class Coord(BaseCard):
 
         return (p3, matrix)
 
-    #def transformToLocal(self, p):
-        #beta = hstack([self.i,self.j,self.k])  # ???
-        #pLocal = self.XYZtoCoord(pCoord - self.origin)
-
     def transformToLocal(self, p, beta, debug=False):
         r"""
         Transforms the global point p to the local coordinate system
@@ -338,6 +339,8 @@ class Coord(BaseCard):
         """
         #betaT = hstack([self.i,self.j,self.k])  # verify
         #pGlobal = self.transformToGlobal(p, debug=False)
+        if self.origin is None:
+            raise RuntimeError('Origin=%s; Cid=%s Rid=%s' % (self.origin, self.cid, self.Rid()))
         pCoord = dot(p - self.origin, transpose(beta))
         pLocal = self.XYZtoCoord(pCoord)
         if debug:
@@ -370,9 +373,6 @@ class Coord(BaseCard):
 
     def reprFields(self):
         return self.rawFields()
-
-    #def resolveCid(self):
-        #pass
 
 
 class RectangularCoord(object):
@@ -542,51 +542,6 @@ class Cord2x(Coord):
         if self.rid == 0:
             self.isResolved = True
             self.setup()
-
-    def resolveCid(self):
-        """
-        Turns the coordinate system from being a coordinate system of
-        type 1 depending on a type 2 to a type 1 depending on nothing.
-
-        More generally, takes a coordinate system that depends on multiple
-        levels of coordinate systems and resolves them in order to resolve
-        it's coordinate frame.  So, if a coordinate system is of type 2, this
-        will effectively set rid to 0 with a type 2.
-
-        This should handle any number of coordinate systems or coordinate
-        system types assuming there is no circular references.
-        """
-        dont_call_this
-        #print str(self)
-        #print self.rid
-        #print "cid=%s rid=%s"% (self.cid, self.Rid())
-        if self.cid == 0 or isinstance(self.rid, int) or self.rid.isResolved:
-            return  # rid=0 so already resolved
-        elif self.rid.isResolved is False:  # rid
-            #msg  = ('there is a circular reference between Coord %s and '
-            #        'Coord %s' % (self.cid, self.Rid()))
-            #assert self.rid.isCrossReferenced==False,msg)
-            #print "  resolving cid=%s rid=%s" % (self.cid, self.Rid())
-            self.rid.resolveCid()
-
-        #: rid coordinate system is now resolved, time to resolve the cid
-        #: coordinate system. rid may be in a different coordinate system
-        #: than cid
-        self.isResolved = True
-        self.e1, matrix = self.transformToGlobal(self.e1)
-
-        #: the axes are normalized, so assume they're points and
-        #: resolve them in the XYZ system, but dont subtract e1 off
-        #: (hence the False)
-        self.e1, matrix = self.rid.transformToGlobal(self.e1)  # origin
-        i, matrix = self.rid.transformToGlobal(self.i, False)
-        j, matrix = self.rid.transformToGlobal(self.j, False)
-        k, matrix = self.rid.transformToGlobal(self.k, False)
-
-        #: the axes are global, so now we put them in the cid
-        self.i = i
-        self.j = j
-        self.k = k
 
     def _verify(self, xref=False):
         cid = self.Cid()
