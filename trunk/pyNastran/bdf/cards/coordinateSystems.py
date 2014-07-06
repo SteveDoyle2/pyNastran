@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from math import sqrt, degrees, radians, atan2, acos, sin, cos
 from itertools import izip
 
-from numpy import array, cross, dot, transpose, zeros
+from numpy import array, cross, dot, transpose, zeros, vstack
 from numpy.linalg import norm
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -224,11 +224,6 @@ class Coord(BaseCard):
             print("k   = %s len=%s\n" % (str(self.k), norm(self.k)))
             print('-----')
 
-        #if self.Rid() != 0:
-            #self.i, rid_matrix = self.rid.transformToGlobal(self.i)
-            #self.j, rid_matrix = self.rid.transformToGlobal(self.j)
-            #self.k, rid_matrix = self.rid.transformToGlobal(self.k)
-
     def transformToGlobal(self, p, debug=False):
         r"""
         Transforms a point from the local coordinate system to the reference
@@ -236,7 +231,7 @@ class Coord(BaseCard):
 
         .. math::
             [p_{global}]_{1\times 3} =
-            [p_{local} -p_{origin}]_{1\times 3}[\beta_{ij}]_{3\times 3}
+            [p_{local}]_{1\times 3}[\beta_{ij}]_{3\times 3} + [p_{origin}]
 
         where :math:`[\beta]_{ij}` is the transformation matrix
 
@@ -252,9 +247,11 @@ class Coord(BaseCard):
         * :math:`g` is the global directional vector (e.g. :math:`g_x = [1,0,0]`)
         * :math:`ijk` is the math:`i^{th}` direction in the local coordinate system
 
-        :param self:            the coordinate system object
-        :param p:               the point to be transformed.  Type=NUMPY.NDARRAY
-        :param debug:           developer debug (default=False)
+        :param self:    the coordinate system object
+        :param p:       the point to be transformed in the local frame.  Type=1x3 NUMPY.NDARRAY
+        :param debug:   developer debug (default=False)
+        :returns p2:  the point in the global frame.  Type=1x3 NUMPY.NDARRAY
+        :returns beta:  the rotation matrix.  Type=6x6 NUMPY.NDARRAY
 
         .. warning:: make sure you cross-reference before calling this
         .. warning:: you probably shouldnt call this, call the Node methods
@@ -262,7 +259,6 @@ class Coord(BaseCard):
         """
         if debug:
             print("p = %s" % p)
-            #print("p-e1 = %s" % (p - self.e1))
 
         if self.cid == 0:
             return p, array([[1., 0., 0.],
@@ -274,31 +270,25 @@ class Coord(BaseCard):
         # the ijk axes arent resolved as R-theta-z, only points
         p2 = self.coordToXYZ(p)
 
-        # Bij = Bip*j
-        i = self.i
-        j = self.j
-        k = self.k
-        #if isinstance(self.rid, int):  # rid=0
-        gx = array([1., 0., 0.], dtype='float64')
-        gy = array([0., 1., 0.], dtype='float64')
-        gz = array([0., 0., 1.], dtype='float64')
-        #else:
-            #gx = self.rid.i
-            #gy = self.rid.j
-            #gz = self.rid.k
-
-        if i is None:
+        if self.i is None:
             raise RuntimeError("Local unit vectors haven't been set.\nType=%r cid=%s rid=%s" % (self.type, self.cid, self.rid))
-        matrix = array([[dot(gx, i), dot(gy, i), dot(gz, i)],
-                        [dot(gx, j), dot(gy, j), dot(gz, j)],
-                        [dot(gx, k), dot(gy, k), dot(gz, k)]], dtype='float64')
+        # Bij = Bip*j
+        #i = self.i
+        #j = self.j
+        #k = self.k
+        #gx = array([1., 0., 0.], dtype='float64')
+        #gy = array([0., 1., 0.], dtype='float64')
+        #gz = array([0., 0., 1.], dtype='float64')
+
+        #matrix = array([[dot(gx, i), dot(gy, i), dot(gz, i)],
+        #                [dot(gx, j), dot(gy, j), dot(gz, j)],
+        #                [dot(gx, k), dot(gy, k), dot(gz, k)]], dtype='float64')
+        matrix = vstack([self.i,self.j,self.k])
+
         # rotate point p2 from the local frame to the global frame
-        #p3 = dot(p2, matrix)
-        p3 = p2[0]*self.i + p2[1]*self.j + p2[2]*self.k
-        #print('p2     = %s' % str(p2))
-        #print('origin = %s' % str(self.origin))
         # shift point p by the local xyz origin (origin is in global coordinates)
-        p4 = p3 + self.origin
+        #p3 = p2[0]*self.i + p2[1]*self.j + p2[2]*self.k + self.origin
+        p3 = dot(p2, matrix) + self.origin
 
         if debug:
             print("Cp = ", self.Cid())
@@ -311,22 +301,20 @@ class Coord(BaseCard):
             print("p2 = %s" % (list_print(p2)))
             print('------------------------')
             print("p3 = %s" % (list_print(p3)))
-            print("p4 = %s\n" % (list_print(p4)))
 
-        if isinstance(self.rid, int): # rid=0; xref=False can't happen
-            return (p4, matrix)
-        else:
-            #: .. todo:: do i need to multiply rid.transform(p3)[1]*matrix
-            #return (self.rid.transformToGlobal(p4)[0], matrix)
-            return (p4, matrix)
+        return (p3, matrix)
 
-    def transformToLocal(self, p, M, debug=False):
+    #def transformToLocal(self, p):
+        #beta = hstack([self.i,self.j,self.k])  # ???
+        #pLocal = self.XYZtoCoord(pCoord - self.origin)
+
+    def transformToLocal(self, p, beta, debug=False):
         r"""
         Transforms the global point p to the local coordinate system
 
         :param self:   the coordinate system object
         :param p:      the point to transform
-        :param M:      the transformation matrix to apply - created by
+        :param beta:   the transformation matrix to apply - created by
                        transformToGlobal
         :param debug:  developer debug
 
@@ -335,28 +323,26 @@ class Coord(BaseCard):
 
         .. note::  the matrix that comes in is the local to global, so we need
                    to invert the matrix. The inverse of the tranformation
-                   matrix :math:`[\phi]` is the transpose of the matrix.
+                   matrix :math:`[\beta]` is the transpose of the matrix.
 
-        .. math:: p_{Global} = (p_{Local}-e_1 )[\phi]+e_1
+        .. math:: p_{global} = (p_{coord})[\beta] + p_{origin}
 
-        .. math:: [\phi]^{-1} = [\phi]^T
+        .. math:: [\beta]^{-1} = [\beta]^T
 
-        .. math:: (p_{coord}-e_1) =(p_{Global}-e_1) [M]^T
+        .. math:: p_{coord} = (p_{global} -p_{origin}) [\beta]^T
 
-        .. math:: (p_{coord}-e_1)[M] = p_{Global}-e_1
+        .. math:: (p_{local} = transform(p_{coord})
 
-        .. math:: (p_{coord}-e_1)[M]+e_1 = p_{Global}
-
-        .. note:: Be very careful of when you apply :math:`e_1`.
-                  It gets removed whenever rotations are applied.
-                  These equations need some TLC, but the methods are ok.
+        Where transform(x) depends on the rectangular, cylindrical, or
+        spherical coordinate system
         """
+        #betaT = hstack([self.i,self.j,self.k])  # verify
         #pGlobal = self.transformToGlobal(p, debug=False)
-        pCoord = dot(p, transpose(M))
+        pCoord = dot(p - self.origin, transpose(beta))
         pLocal = self.XYZtoCoord(pCoord)
         if debug:
-            print("p      = %s" % p)
-            print("p-e1   = %s" % (p - self.e1))
+            print("p        = %s" % p)
+            print("p-origin = %s" % (p - self.origin))
             print("pLocal = %s\n" % pLocal)
             print("pCoord = %s" % pCoord)
         return pLocal
@@ -395,8 +381,6 @@ class RectangularCoord(object):
         :param self:  the coordinate system object
         :returns xyz: the point in the local coordinate system
         """
-        #print("p = %s" % p)
-        #print("e1 = %s" % self.e1)
         return p
 
     def XYZtoCoord(self, p):
@@ -444,10 +428,8 @@ class CylindricalCoord(object):
         """
         R = p[0]
         theta = radians(p[1])
-        #print('R=%g theta=%g z=%g' % tuple(p))
         x = R * cos(theta)
         y = R * sin(theta)
-        #print('x=%g y=%g' % (x,y))
         return array([x, y, p[2]], dtype='float64')# + self.e1
 
     def XYZtoCoord(self, p):
@@ -539,10 +521,6 @@ class Cord2x(Coord):
             self.e3 = array([double_or_blank(card, 9,  'e3x', 0.0),
                              double_or_blank(card, 10, 'e3y', 0.0),
                              double_or_blank(card, 11, 'e3z', 0.0)], dtype='float64')
-            #print("card = ", card.fields())
-            #print('e1 = ', self.e1)
-            #print('e2 = ', self.e2)
-            #print('e3 = ', self.e3)
         else:
             self.cid = data[0]
             self.rid = data[1]
