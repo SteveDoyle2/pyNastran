@@ -75,7 +75,9 @@ class Coord(BaseCard):
 
         .. math:: i = j \times k
         """
-        #assert debug==False
+        if self.Cid() == 0:
+            return
+
         try:
             assert len(self.e1) == 3, self.e1
             assert len(self.e2) == 3, self.e2
@@ -205,7 +207,8 @@ class Coord(BaseCard):
             raise
 
         if debug:
-            print("Cp = %s" % (self.Cid()))
+            print("\nCid = %s" % (self.Cid()))
+            print("Rid = %s" % (self.Rid()))
             print("e1 = %s" % (self.e1))
             print("e2 = %s" % (self.e2))
             print("e3 = %s" % (self.e3))
@@ -216,9 +219,9 @@ class Coord(BaseCard):
             print("e13 = %s" % (e13))
             print("e12 = %s" % (e12))
             print('-----')
-            print("i   = %s" % self.i)
-            print("j   = %s" % self.j)
-            print("k   = %s\n" % self.k)
+            print("i   = %s len=%s"   % (str(self.i), norm(self.i)))
+            print("j   = %s len=%s"   % (str(self.j), norm(self.j)))
+            print("k   = %s len=%s\n" % (str(self.k), norm(self.k)))
             print('-----')
 
         #if self.Rid() != 0:
@@ -261,15 +264,15 @@ class Coord(BaseCard):
             print("p = %s" % p)
             #print("p-e1 = %s" % (p - self.e1))
 
-        if not self.isResolved:
-            self.rid.setup()
         if self.cid == 0:
             return p, array([[1., 0., 0.],
                              [0., 1., 0.],
                              [0., 0., 1.]], dtype='float64')
+        if not self.isResolved:
+            self.rid.setup()
 
         # the ijk axes arent resolved as R-theta-z, only points
-        p = self.coordToXYZ(p)
+        p2 = self.coordToXYZ(p)
 
         # Bij = Bip*j
         i = self.i
@@ -289,13 +292,13 @@ class Coord(BaseCard):
         matrix = array([[dot(gx, i), dot(gy, i), dot(gz, i)],
                         [dot(gx, j), dot(gy, j), dot(gz, j)],
                         [dot(gx, k), dot(gy, k), dot(gz, k)]], dtype='float64')
-
-        # rotate point p from the local frame to the global frame
-        p2 = dot(p, matrix)
+        # rotate point p2 from the local frame to the global frame
+        #p3 = dot(p2, matrix)
+        p3 = p2[0]*self.i + p2[1]*self.j + p2[2]*self.k
         #print('p2     = %s' % str(p2))
         #print('origin = %s' % str(self.origin))
         # shift point p by the local xyz origin (origin is in global coordinates)
-        p3 = p2 + self.origin
+        p4 = p3 + self.origin
 
         if debug:
             print("Cp = ", self.Cid())
@@ -307,13 +310,15 @@ class Coord(BaseCard):
             print("e1 = %s" % (list_print(self.e1)))
             print("p2 = %s" % (list_print(p2)))
             print('------------------------')
-            print("p3 = %s\n" % (list_print(p3)))
+            print("p3 = %s" % (list_print(p3)))
+            print("p4 = %s\n" % (list_print(p4)))
 
-        if isinstance(self.rid, int):
-            return (p3, matrix)
+        if isinstance(self.rid, int): # rid=0; xref=False can't happen
+            return (p4, matrix)
         else:
             #: .. todo:: do i need to multiply rid.transform(p3)[1]*matrix
-            return (self.rid.transformToGlobal(p3)[0], matrix)
+            #return (self.rid.transformToGlobal(p4)[0], matrix)
+            return (p4, matrix)
 
     def transformToLocal(self, p, M, debug=False):
         r"""
@@ -439,8 +444,10 @@ class CylindricalCoord(object):
         """
         R = p[0]
         theta = radians(p[1])
+        #print('R=%g theta=%g z=%g' % tuple(p))
         x = R * cos(theta)
         y = R * sin(theta)
+        #print('x=%g y=%g' % (x,y))
         return array([x, y, p[2]], dtype='float64')# + self.e1
 
     def XYZtoCoord(self, p):

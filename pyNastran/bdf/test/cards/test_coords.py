@@ -170,6 +170,10 @@ class TestCoords(unittest.TestCase):
         self.assertTrue(allclose(cord2r.k, array([-1., 1., 0.]) / 2**0.5), str(delta))
 
     def test_cord2_rcs_01(self):
+        """
+        test created by Jeff Lyon
+        all points are located at <30,40,50>
+        """
         model = BDF()
         cards = [
              [#'$ Femap with NX Nastran Coordinate System 10 : rectangular defined in a rectangular',
