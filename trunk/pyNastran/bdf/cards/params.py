@@ -120,28 +120,28 @@ class PARAM(BaseCard):
             if value1 is None:
                 value1 = 'PEAK'
             if not isinstance(value1, str):
-                msg = 'key=%s value1=%r must be an string.' % (key, value1)
+                msg = 'key=%s value1=%r must be an string.' % (self.key, value1)
                 raise TypeError(msg)
 
         elif self.key == 'ACOWEAK':
             if value1 is None:
                 value1 = 'NO'
             if not isinstance(value1, str):
-                msg = 'key=%s value1=%r must be an string.' % (key, value1)
+                msg = 'key=%s value1=%r must be an string.' % (self.key, value1)
                 raise TypeError(msg)
 
         elif self.key == 'ACSYM':
             if value1 is None:
                 value1 = 'YES'
             if not isinstance(value1, str):
-                msg = 'key=%s value1=%r must be an string.' % (key, value1)
+                msg = 'key=%s value1=%r must be an string.' % (self.key, value1)
                 raise TypeError(msg)
 
         elif self.key == 'ADJMETH':
             if value1 is None:
                 value1 = 0
             if not isinstance(value1, int):
-                msg = 'key=%s value1=%r must be an integer.' % (key, value1)
+                msg = 'key=%s value1=%r must be an integer.' % (self.key, value1)
                 raise TypeError(msg)
 
         #elif self.key == 'ADMPOST': ## TODO: 0 is not a string
@@ -151,7 +151,7 @@ class PARAM(BaseCard):
             if value1 is None:
                 value1 = 'YES'
             if not isinstance(value1, str):
-                msg = 'key=%s value1=%r must be an string.' % (key, value1)
+                msg = 'key=%s value1=%r must be an string.' % (self.key, value1)
                 raise TypeError(msg)
 
         elif self.key in ['ALPHA1', 'ALPHA2', 'ALPHA1FL', 'ALPHA2FL']:
@@ -160,10 +160,10 @@ class PARAM(BaseCard):
             if value2 is None:
                 value2 = 0.0
             if not isinstance(value1, float):
-                msg = 'key=%s value1=%r must be an float.' % (key, value1)
+                msg = 'key=%s value1=%r must be an float.' % (self.key, value1)
                 raise TypeError(msg)
             if isinstance(value2, float):
-                msg = 'key=%s value2=%r must be an float.' % (key, value2)
+                msg = 'key=%s value2=%r must be an float.' % (self.key, value2)
                 raise TypeError(msg)
 
         elif self.key in ['CB1', 'CB2', 'CK1', 'CK2', 'CK3', 'CM1', 'CM2', 'CP1', 'CP2']:
@@ -172,16 +172,16 @@ class PARAM(BaseCard):
             if value2 is None:
                 value2 = 0.0
             if not isinstance(value1, float):
-                msg = 'key=%s value1=%r must be an float.' % (key, value1)
+                msg = 'key=%s value1=%r must be an float.' % (self.key, value1)
                 raise TypeError(msg)
             if isinstance(value2, float):
-                msg = 'key=%s value2=%r must be an float.' % (key, value2)
+                msg = 'key=%s value2=%r must be an float.' % (self.key, value2)
                 raise TypeError(msg)
 
         else:
             if not (isinstance(value1, int) or isinstance(value1, float) or
                     isinstance(value1, str)):
-                msg = 'key=%s value1=%r must be an integer, float, or string.' % (key, value1)
+                msg = 'key=%s value1=%r must be an integer, float, or string.' % (self.key, value1)
                 raise TypeError(msg)
 
         self.values = [value1]

@@ -5,7 +5,8 @@ Created on Wed Nov 28 21:32:56 2012
 @author: steve
 """
 
-from numpy import transpose, array
+from numpy import transpose, array, zeros, matrix
+from numpy.linalg import inv
 import copy
 
 from math import sin, cos, radians
@@ -25,7 +26,7 @@ class ShellPropertyBackup(Property):
         dz3 = (z1**3 - z0**3)/3
         #Qb = self.Qbar()
 
-        A = zeros((3,3), dtype='float64')
+        A = zeros((3, 3), dtype='float64')
         B = A
         D = A
 
@@ -103,7 +104,7 @@ class ShellPropertyBackup(Property):
             Qb44 = Q44*cc + Q55*ss
             Qb55 = Q44*ss + Q55*cc
             Qb45 = (Q55-Q44)*ss*cc
-            Qb = array([ [Qb11, Qb12, Qb166],
+            Qb = array([ [Qb11, Qb12, Qb16],
                          [Qb12, Qb22, Qb26],
                          [Qb16, Qb26, Qb66]], dtype='float64')
             Qb45 = array([ [Q44, 0.],
@@ -133,15 +134,15 @@ class ShellPropertyBackup(Property):
 
         iD = D.inv()
         iA = A.inv()
-        if max(B)==min(B) and B[0,0]==0.0:
+        if max(B) == min(B) and B[0,0] == 0.0:
             F = iA
             G = B
             H = iD
         else:
-            F = inv(A-B*iD*B)
-            DBiAB = D-B*iA*B
+            F = inv(A - B * iD * B)
+            DBiAB = D - B * iA * B
             iDBiAB = DBiAB.inv()
-            G = -iA*B*iDBiAB
+            G = -iA * B * iDBiAB
             H = iDBiAB
         return F, G, H
 
@@ -343,6 +344,7 @@ class ShellPropertyBackup(Property):
         Tinv[2][2] = mm - nn
         TinvT = transpose(Tinv)
         return (Tinv, TinvT)
+
 
 class PCOMP_backup(Property):
     def __init__(self):

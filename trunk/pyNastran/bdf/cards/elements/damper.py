@@ -226,7 +226,7 @@ class CDAMP3(LineDamper):
             self.eid = data[0]
             self.pid = data[1]
             nids = [data[2], data[3]]
-        self.f(nids, allowEmptyNodes=True)
+        self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 2
 
     def _verify(self, xref=True):

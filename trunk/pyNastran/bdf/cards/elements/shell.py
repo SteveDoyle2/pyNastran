@@ -1187,9 +1187,6 @@ class CSHEAR(QuadShell):
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 4
 
-    def nodeIDs(self):
-        return self._nodeIDs(allowEmptyNodes=True)
-
     def cross_reference(self, model):
         msg = ' which is required by CSHEAR eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)

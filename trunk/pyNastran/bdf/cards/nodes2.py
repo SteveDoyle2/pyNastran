@@ -32,10 +32,10 @@ class GRIDs(object):
 
         #: Superelement ID
         self.seid = []
-        
+
         # mapping dictionary from grid ID to index
         self._nidmap = {}
-        
+
         # internal counter
         self._nnodes = 0
 
@@ -55,7 +55,7 @@ class GRIDs(object):
         self.cd = array(self.cd, dtype='int32')
         self.ps = array(self.ps, dtype='string')
         self.seid = array(self.seid, dtype='int32')
-        
+
     def get_xyz(self, model, nid):
         id = self._nidmap[nid]
         return self.xyz[id]
@@ -65,30 +65,10 @@ class GRIDs(object):
         msg = 'which is required by GRID %i' % nid
         cp = self.cp[id]
         Cp = model.Coord(cp, msg)
-        
+
         xyz = self.xyz[id]
         p, matrix = Cp.transformToGlobal(xyz, debug=debug)
         return p
-
-    def resolve_grids(self, model, cid=0):
-        """
-        Puts all nodes in a common coordinate system (mainly for cid testing)
-
-        Parameters
-        ----------
-        self: the object pointer
-        cid:  the cid to resolve the nodes to (default=0)
-        
-        Notes
-        -----
-        loses association with previous coordinate systems so to go
-        back requires another fem
-        """
-        assert cid in model.coords, ('cannot resolve nodes to '
-                                     'cid=|%s| b/c it doesnt exist' % cid)
-        for (i, nid) in enumerate(self.nid):
-            p = self.PositionWRT(model, nid, cid)
-            self.UpdatePosition(p, nid, cid)
 
     def get_positions(self, model, nids):
         if not isinstance(nids, ndarray): # prevents long msg
@@ -100,12 +80,12 @@ class GRIDs(object):
         #print("ids  =", ids)
         cps = self.cp[ids]
         unique_cps = unique(cps)
-        
+
         #d = dict((key, value) for (key, value) in sequence) # <= Python 2.6
         #d = {key: value for (key, value) in sequence} Python 2.7+
         msg = 'which is required by GRIDs %s' % str(nids)
         Cps = {cid: model.Coord(Cp, msg) for cid in unique_cps}
-        
+
         positions = zeros((nnodes, 3), dtype='float32')
         for (id, cid) in zip(ids, cps):
             Cp = Cps[cid]
@@ -114,7 +94,7 @@ class GRIDs(object):
             p, matrix = Cp.transformToGlobal(xyz, debug=debug)
             positions[id, :] = p[:]
         return positions
-        
+
     def PositionWRT(self, model, nid, cid, debug=False):
         """
         Gets the point which started in some arbitrary local coordinate
@@ -130,7 +110,7 @@ class GRIDs(object):
                 the desired node ID
         debug : bool
                 developer debug (default=False)
-        
+
         Returns
         -------
         position : (3,) array
@@ -140,7 +120,7 @@ class GRIDs(object):
         id = self._nidmap[nid]
         if cid == self.cp[id]:
             return self.xyz[id]
-        
+
         msg = ' which is required by GRID nid=%s' % self.nid
         coordA = model.Coord(cid, msg=msg)
 
@@ -167,14 +147,14 @@ class GRIDs(object):
         ----------
         self: the object pointer
         cid:  the cid to resolve the nodes to (default=0)
-        
+
         Notes
         -----
         Loses association with previous coordinate systems so to go back
         requires another fem
         """
         assert cid in model.coords, ('cannot resolve nodes to '
-                                     'cid=|%s| b/c it doesnt exist' % cid)
+                                     'cid=%r b/c it doesnt exist' % cid)
         for i, nid in enumerate(self.nid):
             p = self.PositionWRT(model, nid, cid)
             self.UpdatePosition(p, nid, cid)
@@ -188,7 +168,7 @@ class GRIDs(object):
         self:      the object pointer
         model_old: the old model that hasnt lost it's connection to
                           the node cids
-        
+
         Warning
         -------
         hasnt been tested well...
@@ -222,7 +202,7 @@ class GRIDs(object):
             nid = integer(card, 1, 'nid')
 
             cp = integer_or_blank(card, 2, 'cp', 0)
-            
+
             x = double_or_blank(card, 3, 'x1', 0.)
             y = double_or_blank(card, 4, 'x2', 0.)
             z = double_or_blank(card, 5, 'x3', 0.)
@@ -247,7 +227,7 @@ class GRIDs(object):
         assert cp >= 0, 'cp=%s' % cp
         assert cd >= -1, 'cd=%s' % cd
         assert seid >= 0, 'seid=%s' % seid
-        
+
         #print("nid", self.nid)
         #print("nid", self._nidmap)
         if nid in self._nidmap:
@@ -263,22 +243,22 @@ class GRIDs(object):
         self._nnodes += 1
         #print("adding...")
         #print("%r" % self.write(nids=nid))
-    
+
     def write(self, f=None, nids=None):
         """
         Writes the BDF fields for the given set of node IDs.
-        
+
         Parameters
         ----------
         f    : file object
         nids : list/array/tuple
                write a subset of nids (default=None -> all nodes)
-        
+
         Returns
         -------
         out : string
               a message of the unwritten cards
-        
+
         Notes
         -----
           nids are useful when running interactively
@@ -315,7 +295,7 @@ class GRIDs(object):
 
         # storing the flag of whether to print or not
         file_exists = f is not None
-        
+
         msg = []
         size = 8
         for i in ids:

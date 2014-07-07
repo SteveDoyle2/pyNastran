@@ -412,7 +412,8 @@ class AESURFS(BaseCard):  # not integrated
 class Aero(BaseCard):
     """Base class for AERO and AEROS cards."""
     def __init__(self, card, data):
-        pass
+        self.symXY = None
+        self.symXZ = None
 
     def IsSymmetricalXY(self):
         if self.symXY == 1:
@@ -1536,17 +1537,18 @@ class PAERO3(BaseCard):
     """
     type = 'PAERO3'
     _field_map = {
-        1: 'pid', 2:'orient', 3:'width', 4:'AR', 5:'lrsb', 6:'lrib',
-        7: 'lth1', 8:'lth2',
+        1: 'pid', 2:'orient', 3:'width', 4:'AR',
     }
     def _update_field_helper(self, n, value):
-        nnew = n - 8
+        nnew = n - 6
+        if nnew < 0:
+            raise RuntimeError('field n=%i on PAERO3 is invalid' % n)
         spot = nnew // 2
         i = nnew % 2
         if i == 0:
-            self.thi[spot] = value
+            self.x[spot] = value
         else:
-            self.thn[spot] = value
+            self.y[spot] = value
 
     def __init__(self, card=None, data=None, comment=''):
         if comment:
