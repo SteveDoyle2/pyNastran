@@ -20,10 +20,6 @@ class Node(BaseCard):
     def __init__(self, card, data):
         assert card is None or data is None
 
-    def cross_reference(self, model):
-        msg = '%s hasnt implemented a cross_reference method' % self.type
-        raise NotImplementedError(msg)
-
 
 class RINGAX(Ring):
     """
@@ -219,6 +215,7 @@ class GRDSET(Node):
         ps = self.Ps()
         assert isinstance(cp, int), 'cp=%r' % cp
         assert isinstance(cd, int), 'cd=%r' % cd
+        assert isinstance(ps, str), 'ps=%r' % ps
         assert isinstance(seid, int), 'seid=%r' % seid
 
     def rawFields(self):
@@ -401,6 +398,8 @@ class GRID(Node):
         assert isinstance(nid, int), 'nid=%r' % nid
         assert isinstance(cp, int), 'cp=%r' % cp
         assert isinstance(cd, int), 'cd=%r' % cd
+        assert isinstance(ps, str), 'ps=%r' % ps
+        assert isinstance(seid, int), 'seid=%r' % seid
         if xref:
             pos_xyz = self.Position()
 
@@ -438,7 +437,7 @@ class GRID(Node):
 
         # converting the xyz point arbitrary->global
         p, matrixDum = self.cp.transformToGlobal(self.xyz, debug=debug)
-        #print "wrt = ",p
+        #print("wrt = ", p)
         msg = ' which is required by %s nid=%s' % (self.type, self.nid)
         coordB = model.Coord(cid, msg=msg)
 

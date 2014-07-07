@@ -1,4 +1,14 @@
 # pylint: disable=C0103,R0902,R0904,R0914
+"""
+All coordinate cards are defined in this file.  This includes:
+
+ * CORD1R
+ * CORD1C
+ * CORD1S
+ * CORD2R
+ * CORD2C
+ * CORD2S
+"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from math import sqrt, degrees, radians, atan2, acos, sin, cos
@@ -8,7 +18,6 @@ from numpy import array, cross, dot, transpose, zeros, vstack
 from numpy.linalg import norm
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.utils.dev import list_print
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -53,7 +62,7 @@ class Coord(BaseCard):
         self.i = None
         self.j = None
         self.k = None
-        #print("card = \n", card)
+        self.origin = None
 
     def Cid(self):
         """Gets the coordinate ID"""
@@ -87,10 +96,10 @@ class Coord(BaseCard):
             raise RuntimeError(msg)
 
         if self.Cid() == 0:
-            self.origin = array([0.,0.,0.], dtype='float64')
-            self.i = array([1.,0.,0.], dtype='float64')
-            self.j = array([0.,1.,0.], dtype='float64')
-            self.k = array([0.,0.,1.], dtype='float64')
+            self.origin = array([0., 0., 0.], dtype='float64')
+            self.i = array([1., 0., 0.], dtype='float64')
+            self.j = array([0., 1., 0.], dtype='float64')
+            self.k = array([0., 0., 1.], dtype='float64')
             return
 
         if not self.isResolved:
@@ -255,18 +264,15 @@ class Coord(BaseCard):
         #matrix = array([[dot(gx, i), dot(gy, i), dot(gz, i)],
         #                [dot(gx, j), dot(gy, j), dot(gz, j)],
         #                [dot(gx, k), dot(gy, k), dot(gz, k)]], dtype='float64')
-        matrix = vstack([self.i,self.j,self.k])
+        matrix = vstack([self.i, self.j, self.k])
 
         # rotate point p2 from the local frame to the global frame
-        # shift point p by the local xyz origin (origin is in global coordinates)
+        # shift point p by origin is in global coordinates
         #p3 = p2[0]*self.i + p2[1]*self.j + p2[2]*self.k + self.origin
         p3 = dot(p2, matrix) + self.origin
 
         if debug:
             print("Cp = ", self.Cid())
-            print("gx = %s" % (gx))
-            print("gy = %s" % (gy))
-            print("gz = %s" % (gz))
             print("p = %s" % (list_print(p)))
             print("matrix = \n", matrix)
             print("e1 = %s" % (list_print(self.e1)))
@@ -317,9 +323,35 @@ class Coord(BaseCard):
             print("pCoord = %s" % pCoord)
         return pLocal
 
+    def beta3(self):
+        r"""
+        Gets the 3 x 3 transformation
+
+        .. math:: [\lambda] = [B_{ij}]
+        """
+        if self.cid == 0:
+            return p, array([[1., 0., 0.],
+                             [0., 1., 0.],
+                             [0., 0., 1.]], dtype='float64')
+        matrix = vstack([self.i, self.j, self.k])
+        return matrix
+
+    def beta_n(self, n):
+        r"""
+        Gets the 3n x 3n transformation
+
+        .. math:: [\lambda] = [B_{ij}]
+        """
+        assert n < 10, 'n=%r' % n
+        matrix = self.beta3()
+        t = zeros((3*n, 3*n), dtype='float64')  # transformation matrix
+        for i in xrange(n):
+            t[i*3:i*3+2, i*3:i*3+2] = matrix[0:2, 0:2]
+        return t
+
     def T(self):
         r"""
-        Gets the 6x6 transformation
+        Gets the 6 x 6 transformation
 
         .. math:: [\lambda] = [B_{ij}]
 
@@ -332,11 +364,7 @@ class Coord(BaseCard):
             \end{array}
           \right]
         """
-        (a, matrix) = self.transformToGlobal(self.e1)
-        t = zeros((6, 6))  # transformation matrix
-        t[0:2, 0:2] = matrix[0:2, 0:2]
-        t[3:5, 3:5] = matrix[0:2, 0:2]
-        return t
+        return self.beta_n(2)
 
     def reprFields(self):
         return self.rawFields()
@@ -433,7 +461,7 @@ class SphericalCoord(object):
     def XYZtoCoord(self, p):
         """
         :param self:  the coordinate system object
-        :returns xyz: the loca XYZ point in the R,\theta,\phi coordinate system
+        :returns xyz: the loca XYZ point in the R, \theta, \phi coordinate system
         """
         (x, y, z) = p
         R = sqrt(x * x + y * y + z * z)
@@ -447,7 +475,7 @@ class SphericalCoord(object):
     def coordToXYZ(self, p):
         """
         :param self:  the coordinate system object
-        :returns xyz: the R,\theta,\phi point in the local XYZ coordinate system
+        :returns xyz: the R, \theta, \phi point in the local XYZ coordinate system
         """
         R = p[0]
         theta = radians(p[1])
@@ -479,15 +507,18 @@ class Cord2x(Coord):
             #: origin in a point relative to the rid coordinate system
             self.e1 = array([double_or_blank(card, 3, 'e1x', 0.0),
                              double_or_blank(card, 4, 'e1y', 0.0),
-                             double_or_blank(card, 5, 'e1z', 0.0)], dtype='float64')
+                             double_or_blank(card, 5, 'e1z', 0.0)],
+                            dtype='float64')
             #: z-axis in a point relative to the rid coordinate system
             self.e2 = array([double_or_blank(card, 6, 'e2x', 0.0),
                              double_or_blank(card, 7, 'e2y', 0.0),
-                             double_or_blank(card, 8, 'e2z', 0.0)], dtype='float64')
+                             double_or_blank(card, 8, 'e2z', 0.0)],
+                            dtype='float64')
             #: a point on the xz-plane relative to the rid coordinate system
             self.e3 = array([double_or_blank(card, 9,  'e3x', 0.0),
                              double_or_blank(card, 10, 'e3y', 0.0),
-                             double_or_blank(card, 11, 'e3z', 0.0)], dtype='float64')
+                             double_or_blank(card, 11, 'e3z', 0.0)],
+                            dtype='float64')
         else:
             self.cid = data[0]
             self.rid = data[1]
@@ -501,7 +532,6 @@ class Cord2x(Coord):
         assert len(self.e3) == 3
 
         #: the global axes
-        self.origin = None
         self.i = None
         self.j = None
         self.k = None
@@ -637,7 +667,7 @@ class Cord1x(Coord):
         #: grid point 3
         self.g3 = model.Node(self.g3, msg=msg)
 
-    def setup(self):
+    def setup(self, debug=False):
         """
         Finds the position of the nodes used define the coordinate system
         and sets the ijk vectors
@@ -646,14 +676,19 @@ class Cord1x(Coord):
         """
         if self.isResolved:
             return
+
         #: the origin
         self.e1 = self.g1.Position()
+
         #: a point on the z-axis
         self.e2 = self.g2.Position()
+
         #: a point on the xz-plane
         self.e3 = self.g3.Position()
-        self.isResolved = True # rid is resolved b/c e1, e2, & e3 are in global coordinates
-        self.Coord.setup()
+
+        # rid is resolved b/c e1, e2, & e3 are in global coordinates
+        self.isResolved = True
+        self.Coord.setup(debug=debug)
 
     def G1(self):
         if isinstance(self.g1, int):
@@ -679,6 +714,10 @@ class Cord1x(Coord):
         grids = [self.G1(), self.G2(), self.G3()]
         return grids
 
+    def write_bdf(self, size, card_writer):
+        card = self.reprFields()
+        return self.comment() + print_card_8(card)
+
 
 class CORD3G(Coord):  # not done
     """
@@ -693,7 +732,7 @@ class CORD3G(Coord):  # not done
 
     type = 'CORD3G'
 
-    def __init__(self, card=[0, 0, 0, 0, 0, 0, 0], data=None, comment=''):
+    def __init__(self, card=None, data=None, comment=''):
         """
         Intilizes the CORD3G
 
@@ -702,16 +741,14 @@ class CORD3G(Coord):  # not done
         """
         if comment:
             self._comment = comment
-        if isinstance(card, list):
-            assert len(card) == 8
-            card = BDFCard(card)
+
         Coord.__init__(self, card, data)
 
         self.cid = integer(card, 1, 'cid')
         method = string_or_blank(card, 2, 'E313')
         self.methodES = method[0]
         self.methodInt = int(method[1:])
-        assert self.methodES in ['E', 'S']
+        assert self.methodES in ['E', 'S'] # Euler / Space-Fixed
         assert 0 < self.methodInt < 1000
 
         self.form = string_or_blank(card, 3, 'form', 'EQN')
@@ -719,7 +756,7 @@ class CORD3G(Coord):  # not done
                        integer(card, 5, 'theta2'),
                        integer(card, 6, 'theta3')]
         assert len(self.thetas) == 3, 'thetas=%s' % (self.thetas)
-        self.cidRef = integer_or_blank(card, 7, 'cidRef')
+        self.rid = integer_or_blank(card, 7, 'cidRef')
         assert len(card) <= 8, 'len(CORD3G card) = %i' % len(card)
 
         # EQN for DEQATN, TABLE for TABLE3D
@@ -727,12 +764,12 @@ class CORD3G(Coord):  # not done
 
     def cross_reference(self, model):
         msg = ' which is required by %s cid=%s' % (self.type, self.cid)
-        self.cidRef = model.Coord(self.cidRef, msg=msg)
+        self.rid = model.Coord(self.rid, msg=msg)
 
-    def CidRef(self):
-        if isinstance(self.cidRef, int):
-            return self.cidRef
-        return self.cidRef.cid
+    def Rid(self):
+        if isinstance(self.rid, int):
+            return self.rid
+        return self.rid.cid
 
     def coord3g_transformToGlobal(self, p, debug=False):
         """
@@ -748,15 +785,23 @@ class CORD3G(Coord):  # not done
          of matrices is the opposite of the order in which they're
          applied to a vector)."
         """
-        for (rotation, theta) in izip(self.rotations, self.thetas):
-            ct = cos(radians(theta))
-            st = sin(radians(theta))
-            if   rotation == 1:
-                p = dot(self.RotationX(ct, st), p)
-            elif rotation == 2:
-                p = dot(self.RotationY(ct, st), p)
-            elif rotation == 3:
-                p = dot(self.RotationZ(ct, st), p)
+        if self.methodES == 'E':
+            rotations = [int(i) for i in str(self.methodInt)]
+            for (rotation, theta) in izip(rotations, self.thetas):
+                ct = cos(radians(theta))
+                st = sin(radians(theta))
+                if   rotation == 1:
+                    p = dot(self.RotationX(ct, st), p)
+                elif rotation == 2:
+                    p = dot(self.RotationY(ct, st), p)
+                elif rotation == 3:
+                    p = dot(self.RotationZ(ct, st), p)
+                else:
+                    raise RuntimeError('rotation=%s rotations=%s' % (rotation, rotations))
+        elif self.methodES == 'S':
+            raise RuntimeError('Space-Fixed rotation hasnt been implemented')
+        else:
+            raise RuntimeError('Invalid method; Use Euler or Space-Fixed.  MethodES=%r' % self.methodES)
         return p
 
     def RotationX(self, ct, st):
@@ -780,7 +825,7 @@ class CORD3G(Coord):  # not done
     def rawFields(self):
         method = self.methodES + str(self.methodInt)
         list_fields = (['CORD3G', self.cid, method, self.form] + self.thetas +
-                  [self.CidRef()])
+                  [self.Rid()])
         return list_fields
 
 
@@ -813,10 +858,6 @@ class CORD1R(Cord1x, RectangularCoord):
         list_fields = ['CORD1R', self.cid] + self.NodeIDs()
         return list_fields
 
-    def write_bdf(self, size, card_writer):
-        card = self.reprFields()
-        return self.comment() + print_card_8(card)
-
 
 class CORD1C(Cord1x, CylindricalCoord):
     """
@@ -848,10 +889,6 @@ class CORD1C(Cord1x, CylindricalCoord):
         list_fields = ['CORD1C', self.cid] + self.NodeIDs()
         return list_fields
 
-    def write_bdf(self, size, card_writer):
-        card = self.reprFields()
-        return self.comment() + print_card_8(card)
-
 
 class CORD1S(Cord1x, SphericalCoord):
     """
@@ -882,10 +919,6 @@ class CORD1S(Cord1x, SphericalCoord):
     def rawFields(self):
         list_fields = ['CORD1S', self.cid] + self.NodeIDs()
         return list_fields
-
-    def write_bdf(self, size, card_writer):
-        card = self.reprFields()
-        return self.comment() + print_card_8(card)
 
 
 class CORD2R(Cord2x, RectangularCoord):
@@ -944,8 +977,8 @@ class CORD2C(Cord2x, CylindricalCoord):
 
     def rawFields(self):
         rid = set_blank_if_default(self.Rid(), 0)
-        list_fields = (['CORD2C', self.cid, rid] + list(self.e1) + list(self.e2) +
-                  list(self.e3))
+        list_fields = (['CORD2C', self.cid, rid] + list(self.e1) +
+                       list(self.e2) + list(self.e3))
         return list_fields
 
 
@@ -974,6 +1007,6 @@ class CORD2S(Cord2x, SphericalCoord):
 
     def rawFields(self):
         rid = set_blank_if_default(self.Rid(), 0)
-        list_fields = (['CORD2S', self.cid, rid] + list(self.e1) + list(self.e2) +
-                  list(self.e3))
+        list_fields = (['CORD2S', self.cid, rid] + list(self.e1) +
+                       list(self.e2) + list(self.e3))
         return list_fields

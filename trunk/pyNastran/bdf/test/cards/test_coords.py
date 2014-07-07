@@ -1,4 +1,4 @@
-from numpy import array, allclose
+from numpy import array, allclose, array_equal
 import unittest
 
 from pyNastran.bdf.bdf import BDF, BDFCard, CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
@@ -329,6 +329,7 @@ class TestCoords(unittest.TestCase):
         assert allclose(diff, 0.), msg
         coord = model.Coord(7)
         coord.T()
+        self.assertTrue(array_equal(coord.T(), coord.beta_n(2)))
 
     def getNodes(self, grids, grids_expected, coords, debug=False):
         model = BDF(debug=False)
