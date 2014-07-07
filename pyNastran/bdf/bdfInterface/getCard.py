@@ -3,6 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
 
+import warnings
 from pyNastran.bdf.cards.nodes import SPOINT
 
 class GetMethodsDeprecated(object):
@@ -216,7 +217,7 @@ class GetMethods(GetMethodsDeprecated):
             return self.rigidElements[eid]
         except KeyError:
             raise KeyError('eid=%s not found%s.  Allowed rigidElements=%s'
-                           % (pid, msg, self.rigidElements.keys()))
+                           % (eid, msg, self.rigidElements.keys()))
 
     #--------------------
     # PROPERTY CARDS
@@ -272,6 +273,7 @@ class GetMethods(GetMethodsDeprecated):
         except KeyError:
             msg = '\n' + msg
             raise KeyError('Invalid Material ID:  mid=%s%s' % (mid, msg))
+        return mat
 
     def ThermalMaterial(self, mid, msg=''):
         try:
@@ -279,6 +281,7 @@ class GetMethods(GetMethodsDeprecated):
         except KeyError:
             msg = '\n' + msg
             raise KeyError('Invalid Material ID:  mid=%s%s' % (mid, msg))
+        return mat
 
     def Materials(self, mids, msg=''):
         materials = []

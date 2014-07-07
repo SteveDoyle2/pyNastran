@@ -5,8 +5,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by,
                                           collapse_thru_by)
-from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_blank,
-    double, double_or_blank,
+from pyNastran.bdf.bdfInterface.assign_type import (fields, integer,
+    integer_or_blank, double, double_or_blank,
     integer_or_string, string, blank)
 
 class ThermalCard(BaseCard):
@@ -240,8 +240,8 @@ class CHBDYG(ThermalElement):
         radMidFront = set_blank_if_default(self.radMidFront, 0)
         radMidBack = set_blank_if_default(self.radMidBack, 0)
 
-        list_fields = ['CHBDYG', self.eid, None, self.Type, iViewFront, iViewBack,
-                  radMidFront, radMidBack, None, ] + self.grids
+        list_fields = ['CHBDYG', self.eid, None, self.Type, iViewFront,
+                    iViewBack, radMidFront, radMidBack, None, ] + self.grids
         return list_fields
 
     def write_bdf(self, size, card_writer):
@@ -331,10 +331,10 @@ class CHBDYP(ThermalElement):
         return self.eid
 
     def rawFields(self):
-        list_fields = ['CHBDYP', self.eid, self.Pid(), self.Type, self.iViewFront,
-                  self.iViewBack, self.g1, self.g2, self.g0, self.radMidFront,
-                  self.radMidBack, self.gmid, self.ce, self.e1, self.e2,
-                  self.e3]
+        list_fields = ['CHBDYP', self.eid, self.Pid(), self.Type,
+                  self.iViewFront, self.iViewBack, self.g1, self.g2, self.g0,
+                  self.radMidFront, self.radMidBack, self.gmid, self.ce,
+                  self.e1, self.e2, self.e3]
         return list_fields
 
     def reprFields(self):
@@ -523,8 +523,8 @@ class PHBDY(ThermalProperty):
 
             #: Area factor of the surface used only for CHBDYP element
             #: TYPE = 'POINT', TYPE = 'LINE', TYPE = 'TUBE', or
-            #: TYPE = 'ELCYL'. For TYPE = 'TUBE', AF is the constant thickness of
-            #: the hollow tube. (Real > 0.0 or blank)
+            #: TYPE = 'ELCYL'. For TYPE = 'TUBE', AF is the constant thickness
+            #: of the hollow tube. (Real > 0.0 or blank)
             self.af = double_or_blank(card, 2, 'af')
 
             #: Diameters associated with the surface. Used with CHBDYP element

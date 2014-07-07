@@ -448,7 +448,7 @@ class AddMethods(object):
         key = paero.pid
         assert key not in self.paeros, '\npaero=\n|%s| oldPAERO=\n|%s|' % (
             paero, self.paeros[key])
-        assert key > 0, 'paero.pid = |%s|' % (key)
+        assert key > 0, 'paero.pid = %r' % (key)
         self.paeros[key] = paero
 
     def add_SPLINE(self, spline):
@@ -466,7 +466,7 @@ class AddMethods(object):
         key = trim.sid
         if not allowOverwrites:
             assert key not in self.trims, 'trim=%s oldTrim=\n%snewProperty=\n%s' % (key, self.trims[key], trim)
-        assert key > 0, 'trim=\n%s' % (key, trim)
+        assert key > 0, 'key=%r trim=\n%s' % (key, trim)
         self.trims[key] = trim
 
     def add_FLUTTER(self, flutter):
