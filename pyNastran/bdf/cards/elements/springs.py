@@ -447,13 +447,11 @@ class CELAS3(SpringElement):
         k = ki * array([[1, -1,],
                         [-1, 1]])
 
-        c1 = self.c1
-        c2 = self.c2
-        n1, n2 = node_ids
+        s1, s2 = node_ids
 
         nIJV = [
-            (n1, c1),
-            (n2, c2),
+            (s1, 0),
+            (s2, 0),
         ]
         dofs = nIJV
         return (K, dofs, nIJV)
@@ -544,23 +542,19 @@ class CELAS4(SpringElement):
         k = ki * array([[1, -1,],
                         [-1, 1]])
 
-        c1 = self.c1
-        c2 = self.c2
-        n1, n2 = node_ids
+        s1, s2 = node_ids
 
         nIJV = [
-            (n1, c1),
-            (n2, c2),
+            (s1, 0),
+            (s2, 0),
         ]
         dofs = nIJV
         return (K, dofs, nIJV)
 
     def displacement_stress(self, model, q, dofs):
-        (n1, n2) = self.nodeIDs()
-
         #print("**dofs =", dofs)
-        n11 = dofs[(n1, self.c1)]
-        n21 = dofs[(n2, self.c2)]
+        n11 = dofs[(self.s1, 0)]
+        n21 = dofs[(self.s2, 0)]
 
         u = array([
             q[n11],
@@ -577,8 +571,8 @@ class CELAS4(SpringElement):
         return (axial_strain, axial_stress, axial_force)
 
     #def reprFields(self):
-        #s1 = set_blank_if_default(self.s1,0)
-        #s2 = set_blank_if_default(self.s2,0)
+        #s1 = set_blank_if_default(self.s1, 0)
+        #s2 = set_blank_if_default(self.s2, 0)
         #list_fields = ['CELAS4',self.eid,self.Pid(),s1,s2]
         #return list_fields
 

@@ -135,9 +135,6 @@ class LineProperty(Property):
     def I22(self):
         return self.i2
 
-    def I12(self):
-        return self.i12
-
     def E(self):
         return self.mid.E
 
@@ -581,10 +578,6 @@ class PROD(LineProperty):
         assert isinstance(c, float), 'c=%r' % c
         assert isinstance(nsm, float), 'nsm=%r' % nsm
 
-    #def Radius(self):
-        #"""assumes circular cross section - probably will remove this"""
-        #return sqrt(self.A/pi)
-
     def cross_reference(self, model):
         msg = ' which is required by PROD mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
@@ -596,11 +589,11 @@ class PROD(LineProperty):
         msg += "              CARA=('R')   # radius\n"
         msg += "              VALE=(%g),),\n" % (self.Radius())
 
-        #msg += "              SECTION='GENERALE',\n"
-        #msg += "              CARA=('A','IY','IZ','JX')\n"
-        #msg += "              VALE=(%g,  %g,  %g,  %g),\n"  %(self.Area(),self.I11(),self.I22(),self.J())
-        #msg += "                    CARA='VECT_Y'),\n"
-        #msg += "                    VALE=(1.0,0.0,0.0,),),\n"
+        msg += "              SECTION='GENERALE',\n"
+        msg += "              CARA=('A', 'JX')\n"
+        msg += "              VALE=(%g, %g),\n"  %(self.Area(), self.J())
+        msg += "                    CARA='VECT_Y'),\n"
+        msg += "                    VALE=(1.0,0.0,0.0,),),\n"
         return (msg, iCut, iFace, iStart)
 
     def rawFields(self):
@@ -1143,7 +1136,7 @@ class PBARL(LineProperty):
 
         elif Type in ['I']:
             (d1, d2, d3) = dim
-            asdf
+            raise NotImplementedError('PBARL Type=%r' % Type)
 
         elif Type in ['H']:
             (d1, d2, d3, d4) = dim

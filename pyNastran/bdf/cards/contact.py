@@ -43,6 +43,7 @@ class BSURF(BaseCard):
     35 THRU 44
     67 68 70 85 92
     """
+    type = 'BSURF'
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
@@ -116,6 +117,7 @@ class BSURFS(BaseCard):
     3. The ID must be unique with respect to all other BSURFS, BSURF, and
        BCPROP entries.
     """
+    type = 'BSURFS'
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
@@ -171,6 +173,7 @@ class BCTSET(BaseCard):
                 SID2 TID2 FRIC2 MIND2 MAXD2
                 -etc-
     """
+    type = 'BCTSET'
     def __init__(self, card=None, data=None, comment='', sol=101):
         if comment:
             self._comment = comment
@@ -274,6 +277,7 @@ class BCTPARA(BaseCard):
     BCTPARA CSID Param1 Value1 Param2 Value2 Param3 Value3
             Param4 Value4 Param5 Value5 -etc-
     """
+    type = 'BCTPARA'
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
@@ -323,7 +327,7 @@ class BCTPARA(BaseCard):
                     value = double_or_blank(card, i, 'value%s' % j, 0.0)
                 elif param == 'EXTFAC':
                     value = double_or_blank(card, i, 'value%s' % j, 0.0)
-                    assert 1.0E-6 < EXTFAC < 0.1, 'EXTFAC must be 1.0E-6 < EXTFAC < 0.1'
+                    assert 1.0E-6 < value < 0.1, 'EXTFAC must be 1.0E-6 < EXTFAC < 0.1'
                 else:
                     # FRICMOD, FPARA1/2/3/4/5, EPSN, EPST, CFACTOR1, PENETOL
                     # NCMOD, TCMOD, RFORCE, LFORCE, RTPCHECK, RTPMAX, XTYPE
@@ -367,6 +371,7 @@ class BCTADD(BaseCard):
     2. Si must be unique and may not be the identification of this or any other
        BCTADD entry.
     """
+    type = 'BCTADD'
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment

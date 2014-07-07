@@ -1,4 +1,4 @@
-#pylint: disable=C0103,C0111,W0513,R0902
+#pylint: disable=C0103,C0111,R0902
 """
 All ungrouped properties are defined in this file.  This includes:
  * PFAST

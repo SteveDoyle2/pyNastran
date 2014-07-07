@@ -20,6 +20,7 @@ from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Property, Material
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, double,
     double_or_blank, string_or_blank)
+from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.fieldWriter16 import print_card_16
 
 class ShellProperty(Property):
