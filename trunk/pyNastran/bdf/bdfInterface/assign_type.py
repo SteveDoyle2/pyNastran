@@ -1,4 +1,4 @@
-from .BDF_Card import BDFCard
+from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 
 def components(card, n, fieldname):
     """
@@ -30,7 +30,7 @@ def components(card, n, fieldname):
             raise SyntaxError(msg)
     svalue2 = str(value)
     svalue3 = ''.join(sorted(svalue2))
-    for i,v in enumerate(svalue3):
+    for i, v in enumerate(svalue3):
         if v not in '0123456':
             msg = '%s = %r (field #%s) on card contains an invalid component %r.\ncard=%s' % (fieldname, svalue, n, v, card)
             raise SyntaxError(msg)
@@ -153,7 +153,7 @@ def fields_or_blank(f, card, fieldname, i, j=None, defaults=None):
     if j is None:
         j = len(card)
 
-    assert j - i == len(defaults), 'j=%s i=%s j-i=%s len(defaults)=%s\ncard=%s' % (j,i,j-i, len(defaults), card)
+    assert j - i == len(defaults), 'j=%s i=%s j-i=%s len(defaults)=%s\ncard=%s' % (j, i, j-i, len(defaults), card)
     for ii, default in enumerate(defaults):
         fs.append( f(card, ii + i, fieldname + str(ii), default) )
     return fs
@@ -647,16 +647,6 @@ def string_or_blank(card, n, fieldname, default=None):
 
 # string       - done
 # string/blank - done
-
-
-def interpretValue(valueRaw, card='', debug=False):
-    """
-    .. seealso:: interpret_value
-    .. deprecated: will be replaced in version 0.7 with interpret_value
-    """
-    warnings.warn('interpretValue has been deprecated; use '
-                  'interpret_value', DeprecationWarning, stacklevel=2)
-    return interpret_value(valueRaw, card, debug)
 
 
 def interpret_value(valueRaw, card='', debug=False):

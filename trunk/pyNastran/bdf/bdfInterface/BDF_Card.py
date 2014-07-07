@@ -25,18 +25,6 @@ class BDFCard(object):
         self.nfields -= 1
         return self.card.pop()
 
-    def Is(self, cardName):
-        """
-        Returns True if the card is of type cardName
-
-        :param self:     the object pointer
-        :param cardName: the cardName to compare against
-        :returns IsACardName: True/False
-        """
-        if self.card.field(0) == cardName.upper():
-            return True
-        return False
-
     def __setitem__(self, key, value):  # card[4] = value
         self.card.__setitem__(key, value)
 

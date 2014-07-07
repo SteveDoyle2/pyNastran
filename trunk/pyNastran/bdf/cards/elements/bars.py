@@ -322,9 +322,9 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
     def __init__(self, card, data):
         Element.__init__(self, card, data)
 
-    def Lambda(self, model, is3D=False, debug=True):
+    def Lambda(self, model, debug=True):
         (n1, n2) = self.nodeIDs()
-        return _Lambda(model, n1, n2, is3D=is3D, debug=debug)
+        return _Lambda(model, n1, n2, debug=debug)
 
     def C(self):
         """torsional constant"""
@@ -1149,9 +1149,10 @@ class CBAR(LineElement):
         #K_torsion = k_torsion * K_unit
         #K_beam = dot(dot(transpose(Lambda_beam), k_beam), Lambda)
 
-
+        Lambda_beam2 = Lambda_beam
         K_beam = dot(Lambda_beam2, k_beam)
-        K_beam = dot(dot(transpose(Lambda_beam2),k_beam),Lambda_beam2)
+        K_beam = dot(dot(transpose(Lambda_beam2), k_beam), Lambda_beam2)
+        K = K_beam
         #Fg = dot(dot(transpose(Lambda),grav),Lambda)
 
         #print('size(grav) =',grav.shape)

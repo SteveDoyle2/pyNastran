@@ -370,10 +370,11 @@ class TLOAD1(TabularLoad):
             self.exciteID = integer(card, 2, 'exciteID')
 
             #: If it is a non-zero integer, it represents the
-            #: identification number of DELAY Bulk Data entry that defines . If it
-            #: is real, then it directly defines the value of that will be used for
-            #: all degrees-of-freedom that are excited by this dynamic load entry.
-            #: See also Remark 9. (Integer >= 0, real or blank)
+            #: identification number of DELAY Bulk Data entry that defines .
+            #: If it is real, then it directly defines the value of that will
+            #: be used for all degrees-of-freedom that are excited by this
+            #: dynamic load entry.  See also Remark 9. (Integer >= 0,
+            #: real or blank)
             self.delay = integer_double_or_blank(card, 3, 'delay')
 
             #: Defines the type of the dynamic excitation. (LOAD,DISP, VELO, ACCE)
@@ -566,7 +567,6 @@ class RFORCE(Load):
         if self.nid > 0:
             self.nid = model.Node(self.nid, msg=msg)
         self.cid = model.Coord(self.cid, msg=msg)
-        pass
 
     def Nid(self):
         if isinstance(self.nid, int):

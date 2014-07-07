@@ -19,7 +19,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import izip
 
-from numpy import array, cross, allclose, ndarray
+from numpy import array, cross, allclose
 from numpy.linalg import norm
 
 from pyNastran.bdf.cards.loads.loads import Load, LoadCombination
