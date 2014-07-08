@@ -1,6 +1,9 @@
 import os
 
 def split_path(abspath):
+    """
+    Takes a path and splits it into the various components
+    """
     path = abspath
 
     basepaths = []
@@ -18,45 +21,63 @@ def split_path(abspath):
     if path:
         basepaths.append(path)
 
-    #print "basepaths = ",basepaths
-    #print "path = ",path
-    #pths = []
     basepaths.reverse()
-    #print "split_path = ",basepaths
     return basepaths
 
 def write_include(filename, is_windows=True):
+    """
+    Writes a bdf INCLUDE file line given an imported filename.
+
+    :param filename: the filename to write
+    :param is_windows: Windows has a special format for writing INCLUDE files
+                       so the format for a BDF that will run on Linux and
+                       Windows is different.
+
+    Example (Linux)
+    ---------------
+    fname = r'/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
+    write_include(fname, is_windows=False)
+
+    returns...
+    INCLUDE /opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/
+            pyNastran/bdf/writePath.py
+    """
     msg = 'INCLUDE '  # len=8
-    nmax = 72 - 8
-    
+    #nmax = 72 - 8 # 64
+
     if is_windows:
         marker = '\\'
     else:
         marker = '/'
-    
-    print "abspath = ", filename, len(filename)
-    sline = split_path(filename)
 
-    #print "**", sline
-    if len(filename) > 52:#  62
+    sline = split_path(filename)
+    print "sline =", sline
+    if len(filename) > 52: # 62
         pth = ''
         for p in sline:
             if p == '/':
                 pth += '%s' % marker
             else:
                 pth += '%s%s' % (p, marker)
-        pth = pth.rstrip(marker)
-        #pth = marker.join(sline)
+            if len(pth) > 52:
+                pth += '\n        '
+                msg += pth
+                pth = ''
+        pth = pth.rstrip(' /\\\n')
     else:
-        #asdf
-        #print abspath
         pth = marker.join(sline)
+    return msg + pth
 
-    return pth
 
 if __name__ == '__main__':  ## pragma: no cover
-    fname = r'C:\NASA\m4\formats\pynastran_v0.6\pyNastran\bdf\writePath.py'
-    print '%r' % write_include(fname, is_windows=True)
+    fname = r'C:\NASA\formats\pynastran_v0.6\pyNastran\bdf\writePath.py'
+    print '%s' % write_include(fname, is_windows=True)
 
-    fname = r'/opt/NASA/m4/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
-    print '%r' % write_include(fname, is_windows=False)
+    fname = r'/opt/NASA/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
+    print '%s' % write_include(fname, is_windows=False)
+
+    fname = r'/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
+    print '%s' % write_include(fname, is_windows=False)
+
+    fname = r'/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
+    print '%s' % write_include(fname, is_windows=True)
