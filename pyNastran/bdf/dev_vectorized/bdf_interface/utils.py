@@ -1,6 +1,3 @@
-from pyNastran.utils import is_string
-
-
 def wipe_empty_fields(card):
     """
     Removes an trailing Nones from the card.
@@ -11,7 +8,7 @@ def wipe_empty_fields(card):
     """
     cardB = []
     for field in card:
-        if is_string(field):
+        if isinstance(field, basestring):
             field = field.strip()
             if field == '':
                 field = None
