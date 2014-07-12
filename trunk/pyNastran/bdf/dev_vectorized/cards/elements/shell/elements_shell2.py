@@ -29,7 +29,7 @@ class ElementsShell(object):
         self.cquad4 = CQUAD4(self.model)
         #self.cquad8 = CQUAD8(self.model)
         #self.cquad9 = CQUAD9(self.model)
-        
+
         #self.ctriax = CTRIAX(self.model)
         self.ctriax6 = CTRIAX6(self.model)
 
@@ -37,7 +37,7 @@ class ElementsShell(object):
         types = self._get_types()
         for elems in types:
             elems.build()
-            
+
         #eid = concatenate(pshell.pid, pcomp.pid)
         #unique_eids = unique(eid)
         #if unique_eids != len(eid):
@@ -83,8 +83,8 @@ class ElementsShell(object):
     def _get_element_property_ids(self, element_ids):
         # figure out the element ids
         if self.element_ids is None:
-            property_ids = []
             element_ids = []
+            property_ids = []
             types = self._get_types()
             for element in types:
                 element_ids.extend(element.element_id)
@@ -102,14 +102,14 @@ class ElementsShell(object):
         for element in types:
             pids.extend(element.property_id)
         return unique(pids)
-        
+
     #=========================================================================
     def get_thickness(self, element_ids=None):
         (element_ids, property_ids) = self._get_element_property_ids(element_ids)
 
         # lessen the work
         unique_pids = unique(property_ids)
-        
+
         # makes searchsorted work
         unique_pids = unique_pids.sort()
 
@@ -123,13 +123,13 @@ class ElementsShell(object):
             j = searchsorted(property_id, unique_pids)
             thickness[i] = unique_thickness[j]
         return thickness
-        
+
     def get_mass(self, element_ids=None, total=False):
         (element_ids, property_ids) = self._get_element_property_ids(element_ids)
 
         # lessen the work
         unique_pids = unique(property_ids)
-        
+
         # makes searchsorted work
         unique_pids = unique_pids.sort()
 
@@ -150,7 +150,7 @@ class ElementsShell(object):
             thickness[i] = unique_thickness[j]
             nsm[i] = unique_nsm[j]
             rho[i] = unique_rho[j]
-        
+
         A = self.get_area(element_ids)
         #nsm = self.get_non_structural_mass(unique_nsm)
         #mass = thickness * area + nsm

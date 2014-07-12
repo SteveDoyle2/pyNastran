@@ -30,7 +30,7 @@ class ElementsShell(object):
         self.cquad4 = CQUAD4(self.model)
         #self.cquad8 = CQUAD8(self.model)
         #self.cquad9 = CQUAD9(self.model)
-        
+
         #self.ctriax = CTRIAX(self.model)
         self.ctriax6 = CTRIAX6(self.model)
 
@@ -40,7 +40,7 @@ class ElementsShell(object):
         for elems in types:
             elems.build()
             self.n += elems.n
-            
+
         #eid = concatenate(pshell.pid, pcomp.pid)
         #unique_eids = unique(eid)
         #if unique_eids != len(eid):
@@ -109,7 +109,7 @@ class ElementsShell(object):
             property_ids2 = array(property_ids)
             i = searchsorted(element_ids, element_ids2)
             property_ids = property_ids2[i]
-            
+
         return element_ids, property_ids
 
     def _unique_property_ids(self, element_ids=None):
@@ -131,7 +131,7 @@ class ElementsShell(object):
         unique_pids = unique(property_ids)
         if unique_pids is None:
             raise RuntimeError('there are no properties...')
-        
+
         # makes searchsorted work
         unique_pids.sort()
 
@@ -147,7 +147,6 @@ class ElementsShell(object):
             j = searchsorted(unique_pids, property_id)
             thickness[i] = unique_thickness[j]
         return thickness
-            
 
     def get_mass(self, element_ids=None, total=False):
         types = self._get_types(nlimit=True)
@@ -155,14 +154,14 @@ class ElementsShell(object):
             element_ids = []
             for etype in types:
                 element_ids.extend(etype.element_id)
-        
+
         n = len(element_ids)
         massi = zeros(n, dtype='float64')
 
         etypes = [etype.type for type in types]
         #print "etypes =", etypes
         massi = zeros(n, dtype='float64')
-        
+
         n0 = 0
         for elems in types:
             #if elems.n > 0:
@@ -175,7 +174,7 @@ class ElementsShell(object):
         else:
             mass = massi
         return mass
-    #=========================================================================
+
     def write_bdf(self, f, size=8, element_ids=None):
         f.write('$ELEMENTS\n')
         types = self._get_types(nlimit=True)

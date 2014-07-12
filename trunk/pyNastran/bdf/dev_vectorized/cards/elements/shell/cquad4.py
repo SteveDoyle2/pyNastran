@@ -66,14 +66,14 @@ class CQUAD4(object):
     def get_mass(self, element_ids=None, total=False, node_ids=None, grids_cid0=None):
         """
         Gets the mass of the CQUAD4s on a total or per element basis.
-        
+
         :param self: the CQUAD4 object
         :param element_ids: the elements to consider (default=None -> all)
         :param total: should the mass be summed (default=False)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
         :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
-        
+
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
@@ -86,18 +86,18 @@ class CQUAD4(object):
             return mass.sum()
         else:
             return mass
-    
+
     def get_area(self, element_ids=None, total=False, node_ids=None, grids_cid0=None):
         """
         Gets the area of the CQUAD4s on a total or per element basis.
-        
+
         :param self: the CQUAD4 object
         :param element_ids: the elements to consider (default=None -> all)
         :param total: should the area be summed (default=False)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
         :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
-        
+
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
@@ -114,13 +114,13 @@ class CQUAD4(object):
     def get_normal(self, element_ids=None, node_ids=None, grids_cid0=None):
         """
         Gets the normals of the CQUAD4s on per element basis.
-        
+
         :param self: the CQUAD4 object
         :param element_ids: the elements to consider (default=None -> all)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
         :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
-        
+
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
@@ -140,7 +140,7 @@ class CQUAD4(object):
         """
         Gets the mass, area, and normals of the CQUAD4s on a per
         element basis.
-        
+
         :param self: the CQUAD4 object
         :param element_ids: the elements to consider (default=None -> all)
 
@@ -150,7 +150,7 @@ class CQUAD4(object):
         :param calculate_mass: should the mass be calculated (default=True)
         :param calculate_area: should the area be calculated (default=True)
         :param calculate_normal: should the normals be calculated (default=True)
-        
+
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
@@ -162,28 +162,28 @@ class CQUAD4(object):
         p2 = self._positions(self.node_ids[:, 1])
         p3 = self._positions(self.node_ids[:, 2])
         p4 = self._positions(self.node_ids[:, 3])
-        
+
         #print p1, p1.dtype
         #print p2, p2.dtype
         v12 = p2 - p1
         v13 = p3 - p1
         v123 = cross(v12, v13)
         #print "v123", v123
-        
+
         #if calculate_normal or calculate_area or calculate_mass:
         #print "v123.shape =%s n=%s" % (v123.shape, norm(v123, axis=1).shape)
         _norm = norm(v123, axis=1)
 
         massi = None
         A = None
-        
+
         # normal = v123 / _norm
         #print _norm
         n = len(_norm)
         normal = v123.copy()
         for i in xrange(n):
             normal[i] /= _norm[i]
-        
+
         if calculate_area or calculate_mass:
             A = 0.5 * n
         if calculate_mass:
@@ -192,7 +192,7 @@ class CQUAD4(object):
             massi = A * t #+ nsm
         #print "massi =", massi
         return massi, A, normal
-        
+
     #=========================================================================
     def write_bdf(self, f, size=8, element_ids=None):
         if self.n:
@@ -214,16 +214,16 @@ class CQUAD4(object):
 
     def rebuild(self):
         raise NotImplementedError()
-    
+
     def _positions(self, nids_to_get):
         """
         Gets the positions of a list of nodes
-        
+
         :param nids_to_get:  the node IDs to get as an NDARRAY
         :param node_ids:     the node IDs that contains all the nids_to_get
                              as an NDARRAY
         :param grids_cid_0:  the GRIDs as an (N, )  NDARRAY
-        
+
         :returns grids2_cid_0 : the corresponding positins of the requested
                                 GRIDs
         """
