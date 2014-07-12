@@ -202,7 +202,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.cardsToRead = set([
             'PARAM',
             'GRID', 'GRDSET', 'SPOINT',  # 'RINGAX',
-            #'POINT',
+            #'POINT', 'POINTAX', 'RINGAX',
 
             # elements
             'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
@@ -935,7 +935,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             if 'BEGIN' in lineUpper and ('BULK' in lineUpper or 'SUPER' in lineUpper):
                 self.log.debug('found the end of the Case Control Deck!')
                 break
-        self.log.info("finished with Case Control Deck..")
+        self.log.info("finished with Case Control Deck...")
 
         #for line in self.case_control_lines:
             #print("** line=%r" % line)
@@ -1315,16 +1315,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                                           if field is not None
                                           else None for field in fields])
             else:  # leave everything as strings
-                #if 1:
-                    #card = wipe_empty_fields([interpret_value(field, fields)
-                    #                          if field is not None
-                    #                          else None for field in fields])
-                #else:
                 card = wipe_empty_fields(fields)
-                #card = fields
             card_obj = BDFCard(card)
 
-        #print(card_obj)
         if self._auto_reject:
             self.reject_cards.append(card)
             print('rejecting processed auto=rejected %s' % card)
