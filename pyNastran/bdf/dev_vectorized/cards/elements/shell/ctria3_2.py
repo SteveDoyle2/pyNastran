@@ -142,7 +142,7 @@ class CTRIA3s(object): # TriShell
     def flipNormal(self, eid):
         r"""
         ::
-        
+
                1           1
               * *   -->   * *
              *   *       *   *

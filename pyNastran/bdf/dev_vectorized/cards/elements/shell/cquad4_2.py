@@ -132,7 +132,7 @@ class CQUAD4s(object):
     def flipNormal(self, eid):
         r"""
         ::
-        
+
           1---2       1---4
           |   |  -->  |   |
           |   |       |   |

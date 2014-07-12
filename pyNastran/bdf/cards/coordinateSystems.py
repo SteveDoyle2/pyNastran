@@ -224,7 +224,6 @@ class Coord(BaseCard):
               g_z \cdot i  &  g_z \cdot j  &  g_z \cdot k
           \end{array} \right]
 
-
         * :math:`g` is the global directional vector (e.g. :math:`g_x = [1,0,0]`)
         * :math:`ijk` is the math:`i^{th}` direction in the local coordinate system
 
@@ -425,7 +424,7 @@ class CylindricalCoord(object):
         theta = radians(p[1])
         x = R * cos(theta)
         y = R * sin(theta)
-        return array([x, y, p[2]], dtype='float64')# + self.e1
+        return array([x, y, p[2]], dtype='float64')
 
     def XYZtoCoord(self, p):
         """
@@ -944,6 +943,12 @@ class CORD2R(Cord2x, RectangularCoord):
         Cord2x.__init__(self, card, data)
         if comment:
             self._comment = comment
+
+    def _verify(self, xref=False):
+        cid = self.Cid()
+        rid = self.Rid()
+        assert isinstance(cid, int), 'cid=%r' % cid
+        assert isinstance(rid, int), 'rid=%r' % rid
 
     def rawFields(self):
         rid = set_blank_if_default(self.Rid(), 0)
