@@ -135,7 +135,6 @@ class SPOINTs(Node):
         return spoints
 
     def rawFields(self):
-        #print("SPOINTi")
         spoints = list(self.spoints)
         spoints.sort()
         #print("self.spoints = %s" % self.spoints)
@@ -406,18 +405,19 @@ class GRID(Node):
     def nDOF(self):
         return 6
 
-    def UpdatePosition(self, model, xyz, cid):
+    def UpdatePosition(self, model, xyz, cid=0):
         self.xyz = xyz
         msg = ' which is required by GRID nid=%s' % self.nid
         self.cp = model.Coord(cid, msg=msg)
-        #assert cid == 0
 
     def Position(self, debug=False):
         """
         Gets the point in the global XYZ coordinate system.
 
         :param self:  the object pointer
-        :param debug: developer debug
+        :param debug: developer debug (default=False)
+        :returns position: the position of the GRID in the globaly
+                           coordinate system
         """
         p, matrix = self.cp.transformToGlobal(self.xyz, debug=debug)
         return p
@@ -430,20 +430,20 @@ class GRID(Node):
         :param self:  the object pointer
         :param model: the BDF model object
         :param cid:   the desired coordinate ID (int)
-        :param debug: developer debug
+        :param debug: developer debug (default=False)
+        :returns position: the position of the GRID in an arbitrary
+                           coordinate system
         """
         if cid == self.Cp(): # same coordinate system
             return self.xyz
 
         # converting the xyz point arbitrary->global
         p, matrixDum = self.cp.transformToGlobal(self.xyz, debug=debug)
-        #print("wrt = ", p)
         msg = ' which is required by %s nid=%s' % (self.type, self.nid)
         coordB = model.Coord(cid, msg=msg)
 
         # a matrix global->local matrix is found
-        pdum, matrix = coordB.transformToGlobal(
-            array([1., 0., 0]), debug=debug)
+        matrix = coordB.beta()
         p2 = coordB.transformToLocal(p, matrix, debug=debug)
         return p2
 
@@ -451,7 +451,6 @@ class GRID(Node):
         """
         the gridset object will only update the fields that have not been set
         """
-        #print str(self)
         if grdset:  # update using a gridset object
             if not self.cp:
                 self.cp = grdset.cp
@@ -465,7 +464,6 @@ class GRID(Node):
         self.cp = model.Coord(self.cp, msg=msg)
         if self.cd != -1:
             self.cd = model.Coord(self.cd, msg=msg)
-        #self.xyzGlobal = coord.transformToGlobal(self.xyz)
 
     def rawFields(self):
         list_fields = (['GRID', self.nid, self.Cp()] + list(self.xyz) +
@@ -496,6 +494,16 @@ class POINT(Node):
     type = 'POINT'
     _field_map = {1: 'nid', 2:'cp'}
 
+    def _update_field_helper(self, n, value):
+        if n == 3:
+            self.xyz[0] = value
+        elif n == 4:
+            self.xyz[1] = value
+        elif n == 5:
+            self.xyz[2] = value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+
     def __init__(self, card=None, data=None, comment=''):
         """
         if coming from a BDF object, card is used
@@ -519,13 +527,13 @@ class POINT(Node):
                 double_or_blank(card, 5, 'x3', 0.)], dtype='float64')
 
             #: Analysis coordinate system
-            self.cd = integer_or_blank(card, 6, 'cd', 0)
+            self.cd = blank(card, 6, 'cd', 0)
 
             #: SPC constraint
-            self.ps = str(integer_or_blank(card, 7, 'ps', ''))
+            self.ps = blank(card, 7, 'ps', '')
 
             #: Superelement ID
-            self.seid = integer_or_blank(card, 8, 'seid', 0)
+            self.seid = blank(card, 8, 'seid', 0)
             assert len(card) <= 9, 'len(POINT card) = %i' % len(card)
         else:
             #print data
@@ -533,6 +541,9 @@ class POINT(Node):
             self.cp = data[1]
             self.xyz = array(data[2:5])
             assert len(self.xyz) == 3
+            self.ps = ''
+            self.seid = 0
+            self.cd = 0
 
         assert self.nid > 0, 'nid=%s' % (self.nid)
         assert self.cp >= 0, 'cp=%s' % (self.cp)
@@ -540,45 +551,45 @@ class POINT(Node):
     def nDOF(self):
         return 6
 
-    def UpdatePosition(self, model, xyz, cid):
+    def UpdatePosition(self, model, xyz, cid=0):
         self.xyz = xyz
-        self.cp = model.Coord(cid)
-        #assert cid == 0
+        msg = ' which is required by POINT nid=%s' % self.nid
+        self.cp = model.Coord(cid, msg=msg)
 
     def Position(self, debug=False):
         """
         Gets the point in the global XYZ coordinate system.
 
         :param self:  the object pointer
-        :param debug: developer debug
+        :param debug: developer debug (default=False)
+        :returns position: the position of the POINT in the globaly
+                           coordinate system
         """
         p, matrix = self.cp.transformToGlobal(self.xyz, debug=debug)
         return p
 
     def PositionWRT(self, model, cid, debug=False):
         """
-        Gets the location of the GRID which started in some arbitrary
-        local coordinate system and returns it in the desired coordinate
-        system.
+        Gets the location of the POINT which started in some arbitrary
+        local coordinate system and returns it in the desired coordinate system
 
         :param self:  the object pointer
         :param model: the BDF model object
         :param cid:   the desired coordinate ID (int)
-        :param debug: developer debug (default=True)
-
-        :returns position: the position of the GRID in an arbitrary
+        :param debug: developer debug (default=False)
+        :returns position: the position of the POINT in an arbitrary
                            coordinate system
         """
-        if cid == self.Cp(): # same frame
+        if cid == self.Cp(): # same coordinate system
             return self.xyz
 
         # converting the xyz point arbitrary->global
         p, matrixDum = self.cp.transformToGlobal(self.xyz, debug=debug)
-        coordB = model.Coord(cid)
+        msg = ' which is required by %s nid=%s' % (self.type, self.nid)
+        coordB = model.Coord(cid, msg=msg)
 
         # a matrix global->local matrix is found
-        pdum, matrix = coordB.transformToGlobal(array([1., 0., 0]),
-                                                debug=debug)
+        matrix = coordB.beta()
         p2 = coordB.transformToLocal(p, matrix, debug=debug)
         return p2
 

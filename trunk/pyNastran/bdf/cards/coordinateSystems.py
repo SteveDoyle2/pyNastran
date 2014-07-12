@@ -305,7 +305,7 @@ class Coord(BaseCard):
 
         .. math:: p_{coord} = (p_{global} -p_{origin}) [\beta]^T
 
-        .. math:: (p_{local} = transform(p_{coord})
+        .. math:: p_{local} = transform(p_{coord})
 
         Where transform(x) depends on the rectangular, cylindrical, or
         spherical coordinate system
@@ -319,11 +319,11 @@ class Coord(BaseCard):
         if debug:
             print("p        = %s" % p)
             print("p-origin = %s" % (p - self.origin))
-            print("pLocal = %s\n" % pLocal)
             print("pCoord = %s" % pCoord)
+            print("pLocal = %s\n" % pLocal)
         return pLocal
 
-    def beta3(self):
+    def beta(self):
         r"""
         Gets the 3 x 3 transformation
 
@@ -343,7 +343,7 @@ class Coord(BaseCard):
         .. math:: [\lambda] = [B_{ij}]
         """
         assert n < 10, 'n=%r' % n
-        matrix = self.beta3()
+        matrix = self.beta()
         t = zeros((3*n, 3*n), dtype='float64')  # transformation matrix
         for i in xrange(n):
             t[i*3:i*3+2, i*3:i*3+2] = matrix[0:2, 0:2]
