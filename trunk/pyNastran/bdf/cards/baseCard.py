@@ -340,6 +340,7 @@ class Element(BaseCard):
                 face = i
         return face
 
+
 def expand_thru(fields, set_fields=True, sort_fields=False):
     """
     Expands a list of values of the form [1,5,THRU,9,13]
@@ -498,6 +499,7 @@ def collapse_thru(fields):
     #assert fields == expand_thru_by(fields2), fields2  # why doesn't this work?
     return fields2
 
+
 def collapse_thru_packs(fields):
     assert 'THRU' not in fields, fields
     fields.sort()
@@ -554,6 +556,7 @@ def condense(valueList):
         packs.append([firstVal, val, dvOld])
     return packs
 
+
 def build_thru_packs(packs, maxDV=1):
     """
     # invalid
@@ -581,6 +584,7 @@ def build_thru_packs(packs, maxDV=1):
                 for val in xrange(lastVal, firstVal+1, by):
                     singles.append(val)
     return singles, doubles
+
 
 def build_thru(packs, maxDV=None):
     """
@@ -624,8 +628,6 @@ def build_thru(packs, maxDV=None):
                 for v in xrange(firstVal, lastVal + dv, dv):
                     fields.append(v)
     return fields
-
-
 
 
 def build_thru_float(packs, maxDV=None):

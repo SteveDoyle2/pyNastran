@@ -31,6 +31,7 @@ def volume4(n1, n2, n3, n4):
     V = -dot((n1 - n4), cross(n2 - n4, n3 - n4)) / 6.
     return V
 
+
 def area_centroid(n1, n2, n3, n4):
     """
     Gets the area, :math:`A`, and centroid of a quad.::
@@ -58,6 +59,7 @@ def area_centroid(n1, n2, n3, n4):
         msg += 'c2=%r\narea2=%r' % (c2, area2)
         raise FloatingPointError(msg)
     return(area, centroid)
+
 
 class SolidElement(Element):
     _field_map = {1: 'nid', 2:'pid'}
