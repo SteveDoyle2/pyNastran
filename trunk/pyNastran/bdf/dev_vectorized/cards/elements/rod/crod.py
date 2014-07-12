@@ -2,7 +2,7 @@ from numpy import array, dot, arange, zeros, unique, searchsorted, transpose
 from numpy.linalg import norm
 
 from pyNastran.bdf.dev_vectorized.cards.elements.rod.conrod import _Lambda
-from pyNastran.utils import list_print
+from pyNastran.utils.dev import list_print
 
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
