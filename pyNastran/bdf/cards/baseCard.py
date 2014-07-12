@@ -52,13 +52,6 @@ class BaseCard(object):
         return ('# skipping %s (lid=%s) because writeCodeAsterLoad is '
                 'not implemented\n' % (self.type, self.lid))
 
-    #def verify(self, model, isubcase):
-        #"""
-        #this method checks performs checks on the cards such as
-        #that the PBEAML has a proper material type
-        #"""
-        #pass
-
     def _verify(self, xref=False):
         """
         This method checks that all the card is various methods of the card
@@ -72,16 +65,6 @@ class BaseCard(object):
             if not is_same(field1, field2):
                 return False
         return True
-
-    #def Is(self, typeCheck):
-        #"""retruns True if the card type is the same as the object"""
-        #if self.type == typeCheck:
-        #    return True
-        #return False
-
-    #def removeTrailingNones(self, fields):
-        #"""removes blank fields at the end of a card object"""
-        #wipe_empty_fields(fields)
 
     def buildTableLines(self, fields, nStart=1, nEnd=0):
         """
@@ -110,24 +93,26 @@ class BaseCard(object):
         for (i, field) in enumerate(fields):
             fieldsOut.append(field)
             if i > 0 and i % n == 0:  # beginning of line
-                #print "i=%s" %(i)
+                #print("i=%s" %(i))
                 #pad = [None]*(i+j)
                 #fieldsOut += pad
                 fieldsOut += [None] * (nStart + nEnd)
 
         # make sure they're aren't any trailing None's (from a new line)
         fieldsOut = wipe_empty_fields(fieldsOut)
-        #print "fieldsOut = ",fieldsOut,len(fieldsOut)
+        #print("fieldsOut = ",fieldsOut,len(fieldsOut))
 
         # push the next key (aka next fields[0]) onto the next line
         nSpaces = 8 - (len(fieldsOut)) % 8  # puts UM onto next line
-        #print "nSpaces[%s] = %s max=%s" %(fields[0],nSpaces,nSpaceMax)
+        #print("nSpaces[%s] = %s max=%s" %(fields[0],nSpaces,nSpaceMax))
         if nSpaces < 8:
             fieldsOut += [None] * (nSpaces)
-        #print ""
+        #print("")
         return fieldsOut
 
     def isSameCard(self, card, debug=False):
+        if self.type != card.type:
+            return False
         fields1 = self.rawFields()
         fields2 = card.rawFields()
         if debug:
@@ -165,15 +150,6 @@ class BaseCard(object):
             raise
 
 
-#def Mid(self):
-    #if isinstance(self.mid, int):
-        #return self.mid
-    #elif self.mid is None:
-        #print ("No material defined for property ", self.pid)
-        #return None
-    #else:
-        #return self.mid.mid
-
 class Property(BaseCard):
     def __init__(self, card, data):
         assert card is None or data is None
@@ -190,15 +166,6 @@ class Property(BaseCard):
         else:
             return self.mid.mid
 
-    def isSameCard(self, prop, debug=False):
-        if self.type != prop.type:
-            return False
-        fields1 = self.rawFields()
-        fields2 = prop.rawFields()
-        if debug:
-            print("fields1=%s fields2=%s" % (fields1, fields2))
-        return self.isSameFields(fields1, fields2)
-
     def cross_reference(self, model):
         msg = ' which is required by %s pid=%s' % (self.type, self.pid)
         self.mid = model.Material(self.mid, msg)
@@ -208,15 +175,6 @@ class Material(BaseCard):
     """Base Material Class"""
     def __init__(self, card, data):
         BaseCard.__init__(self)
-
-    def isSameCard(self, mat, debug=False):
-        if self.type != mat.type:
-            return False
-        fields1 = self.rawFields()
-        fields2 = mat.rawFields()
-        if debug:
-            print("fields1=%s fields2=%s" % (fields1, fields2))
-        return self.isSameFields(fields1, fields2)
 
     def cross_reference(self, model):
         pass
@@ -234,15 +192,6 @@ class Element(BaseCard):
         #: the list of node IDs for an element (default=None)
         self.nodes = None
         #self.nids = []
-
-    def isSameCard(self, element, debug=False):
-        if self.type != element.type:
-            return False
-        fields1 = self.rawFields()
-        fields2 = element.rawFields()
-        if debug:
-            print("fields1=%s fields2=%s" % (fields1, fields2))
-        return self.isSameFields(fields1, fields2)
 
     def Pid(self):
         """returns the property ID of an element"""
@@ -266,36 +215,6 @@ class Element(BaseCard):
             else:
                 positions.append(None)
         return positions
-
-    #def _nodeIDs_allowed(self, nodes=None, msg=''):
-        #if not nodes:
-            #nodes = self.nodes
-
-        #nodes2 = []
-        #for i, node in enumerate(nodes):
-            #if node == 0 or node is None:
-                #nodes2.append(None)
-            #elif isinstance(node, int):
-                #nodes2.append(node)
-            #else:
-                #nodes2.append(node.nid)
-        #return nodes2
-
-    #def _nodeIDs_restricted(self, nodes=None, msg=''):
-        #if not nodes:
-            #nodes = self.nodes
-
-        #try:
-            #if isinstance(nodes[0], int):
-                #nodeIDs = [node for node in nodes]
-            #else:
-                #nodeIDs = [node.nid for node in nodes]
-        #except:
-            #print("type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s" % (
-                  #self.type, nodes, allowEmptyNodes, msg))
-            #raise
-        #assert 0 not in nodeIDs, 'nodeIDs = %s' % nodeIDs
-        #return nodeIDs
 
     def _nodeIDs(self, nodes=None, allowEmptyNodes=False, msg=''):
         """returns nodeIDs for repr functions"""
@@ -361,7 +280,7 @@ class Element(BaseCard):
         :returns: dictionary with face number as the keys and
                   a list of nodes (integer pointers) as the values.
         ..note::  The order of the nodes are consistent with ANSYS numbering.
-        
+
         Example
         =======
         >>> print element.faces  # TODO: is this right???
@@ -431,7 +350,9 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
                         to a list? This is useful for [2, 'THRU' 5, 1] (default=True)
     :param sort_fields: should the fields be sorted at the end? (default=False)
     """
+    # ..todo:  should this be removed...is the field capitalized when read in?
     fields = [field.upper() if isinstance(field, basestring) else field for field in fields]
+
     if isinstance(fields, int):
         return [fields]
     if len(fields) == 1:
@@ -470,7 +391,9 @@ def expand_thru_by(fields, set_fields=True, sort_fields=False):
     .. todo:: not tested
     .. note:: used for QBDY3, ???
     """
+    # ..todo:  should this be removed...is the field capitalized when read in?
     fields = [field.upper() if isinstance(field, basestring) else field for field in fields]
+
     if len(fields) == 1:
         return [interpret_value(fields[0])]
     out = []
@@ -516,7 +439,9 @@ def expand_thru_exclude(self, fields):
 
     .. warning:: hasnt been tested
     """
+    # ..todo:  should this be removed...is the field capitalized when read in?
     fields = [interpret_value(field.upper()) if isinstance(field, basestring) else field for field in fields]
+
     fieldsOut = []
     nFields = len(fields)
     for i in xrange(nFields):
