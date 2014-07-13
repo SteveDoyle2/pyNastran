@@ -61,6 +61,8 @@ from .cards.elements.bar.cbar import CBAR #, CBAROR
 from .cards.elements.bar.properties_bar import PropertiesBar
 
 # beams
+from .cards.elements.beam.cbeam import CBEAM #, CBAROR
+from .cards.elements.beam.properties_beam import PropertiesBeam
 
 # mass
 from .cards.elements.mass.mass import Mass
@@ -649,6 +651,10 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.properties_bar = PropertiesBar(model)
 
         # beams
+        #: stores CBEAM
+        self.cbeam = CBEAM(model)
+        #: stores PBEAM, PBEAML
+        self.properties_beam = PropertiesBeam(model)
 
         # solids
         #: stores CTETRA4, CPENTA6, CHEXA8, CTETRA10, CPENTA15, CHEXA20
@@ -661,6 +667,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.eigrl = {}
         self.eigb = {}
         self.eigc = {}
+
+        # dynamic
+        self.nlpcis = {}
         #===================================
         # aero
 
@@ -1881,14 +1890,11 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         # beams
         elif name == 'CBEAM':
-            #self.cbeam.add(card_obj, comment=comment)
-            pass
+            self.cbeam.add(card_obj, comment=comment)
         elif name == 'PBEAM':
-            #self.pbeam.add(card_obj, comment=comment)
-            pass
+            self.properties_beam.add_pbeam(card_obj, comment=comment)
         elif name == 'PBEAML':
-            #self.pbeaml.add(card_obj, comment=comment)
-            pass
+            self.properties_beam.add_pbeaml(card_obj, comment=comment)
 
         # bend
         #========================
@@ -2059,16 +2065,20 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         # freq
         elif name == 'EIGB':
             card = EIGB(card_obj, comment=comment)
-            self.eigb[card.sid] = card
+            #self.eigb[card.sid] = card
+            self.methods[card.sid] = card
         elif name == 'EIGC':
             card = EIGC(card_obj, comment=comment)
-            self.eigc[card.sid] = card
+            #self.eigc[card.sid] = card
+            self.methods[card.sid] = card
         elif name == 'EIGR':
             card = EIGR(card_obj, comment=comment)
-            self.eigr[card.sid] = card
+            #self.eigr[card.sid] = card
+            self.methods[card.sid] = card
         elif name == 'EIGRL':
             card = EIGRL(card_obj, comment=comment)
-            self.eigrl[card.sid] = card
+            #self.eigrl[card.sid] = card
+            self.methods[card.sid] = card
 
         #elif name == 'FREQ':
             #pass

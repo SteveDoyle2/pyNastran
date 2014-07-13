@@ -181,17 +181,17 @@ def compare_card_content(fem1, fem2):
     for key in fem1.randomTables:
         card1 = fem1.randomTables[key]
         card2 = fem2.randomTables[key]
-        assert_fields(card1, card2)
+        assert_fields(card1, card2, key)
 
     for key in fem1.methods:
         card1 = fem1.methods[key]
         card2 = fem2.methods[key]
-        assert_fields(card1, card2)
+        assert_fields(card1, card2, key)
 
     for key in fem1.cMethods:
         card1 = fem1.cMethods[key]
         card2 = fem2.cMethods[key]
-        assert_fields(card1, card2)
+        assert_fields(card1, card2, key)
 
     compare_matrices(fem1, fem2)
     compare_optimization_content(fem1, fem2)

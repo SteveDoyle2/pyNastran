@@ -264,4 +264,3 @@ class CHEXA8(object):
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 card = ['CHEXA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7]]
                 f.write(print_card_8(card))
-                print print_card_8(card)
