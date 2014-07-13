@@ -1,7 +1,7 @@
 from numpy import zeros, unique
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, integer_string_or_blank,
     string_or_blank, blank)
@@ -29,9 +29,11 @@ class PSOLID(object):
         :param self: the PSOLID object
         :param cards: the list of PSOLID cards
         """
+
         cards = self._cards
         ncards = len(cards)
         self.n = ncards
+        print "N[%s] = %s" % (self.type, self.n)
         if ncards:
             float_fmt = self.model.float
             #: Property ID
@@ -43,16 +45,35 @@ class PSOLID(object):
             self.stress = zeros(ncards, dtype='|S8')
             self.isop = zeros(ncards, dtype='|S8')
             self.fctn = zeros(ncards, dtype='|S8')
+            #print "isop", self.isop
 
             for i, card in enumerate(cards):
                 self.property_id[i] = integer(card, 1, 'pid')
                 self.material_id[i] = integer(card, 2, 'mid')
                 self.cordm[i] = integer_or_blank(card, 3, 'cordm', 0)
-                self.integ[i] = integer_string_or_blank(card, 4, 'integ')
+                self.integ[i] = integer_string_or_blank(card, 4, 'integ', '')
                 #validIntegration = ['THREE', 'TWO', 'FULL', 'BUBBLE',
                 #                    2, 3, None, 'REDUCED']
-                self.stress[i] = integer_string_or_blank(card, 5, 'stress')
-                self.isop[i] = integer_string_or_blank(card, 6, 'isop')
+                # ISOP
+                # ------
+                #    1.  FULL
+                #    2.
+                #    3.
+                #    REDUCED
+
+                # IN
+                # ------
+                #    1.
+                #    2.      TWO
+                #    3.      THREE
+                #    BUBBLE - 2 for CTETRA, 3 for CHEXA/CPENTA
+
+                # STRESS
+                # ------
+                #    1.  GAUSS (no midside nodes on CPENTA/CHEXA; ok on CTETRA)
+                #    2.
+                self.stress[i] = integer_string_or_blank(card, 5, 'stress', '')
+                self.isop[i] = integer_string_or_blank(card, 6, 'isop', '')
                 self.fctn[i] = string_or_blank(card, 7, 'fctn', 'SMECH')
                 assert len(card) <= 8, 'len(PSOLID card) = %i' % len(card)
 
@@ -70,21 +91,17 @@ class PSOLID(object):
                 raise RuntimeError('There are duplicate PROD IDs...')
             self._cards = []
             self._comments = []
-        
+
     def write_bdf(self, f, size=8, property_ids=None):
         if self.n:
             for (pid, mid, cordm, integ, stress, isop, fctn) in zip(
                  self.property_id, self.material_id, self.cordm,
                  self.integ, self.stress, self.isop, self.fctn):
 
-                #self.mid = integer(card, 4, 'mid')
-                #self.A = double(card, 5, 'A')
-                #self.j = double_or_blank(card, 6, 'j', 0.0)
-                #self.c = double_or_blank(card, 7, 'c', 0.0)
-                #self.nsm = double_or_blank(card, 8, 'nsm', 0.0)
-
                 cordm = set_blank_if_default(cordm, 0)
-                #fctn = set_blank_if_default(self.fctn, 'SMECH')
+                fctn = set_blank_if_default(self.fctn, 'SMECH')
                 card = ['PSOLID', pid, mid, cordm, integ,
                         stress, isop, fctn]
-                f.write(print_card(card))
+                #print card
+                f.write(print_card_8(card))
+                #print print_card_8(card)

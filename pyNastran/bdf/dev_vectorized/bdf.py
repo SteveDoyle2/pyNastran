@@ -668,6 +668,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.caero = CAero(model)
         #: stores PAERO1, PAERO2, PAERO3, PAERO4, PAERO5
         self.paero = PAero(model)
+        self.paeros = {}
 
         #: stores TRIM
         self.trim = {}
@@ -1574,7 +1575,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         # function that gets by name the initialized object (from global scope)
 
         name = card[0]
-        print("name = %r" % name)
+        #print("name = %r" % name)
         self.write_sorted_card(card_obj, icard)
 
 

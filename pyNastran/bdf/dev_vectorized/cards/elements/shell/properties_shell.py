@@ -22,11 +22,11 @@ class PropertiesShell(object):
         self.pshell.build()
         self.pcomp.build()
         self.pcompg.build()
-        
+
         npshell = self.pshell.n
         npcomp  = self.pcomp.n
         npcompg = self.pcompg.n
-        
+
         if npshell and npcomp and npcompg:
             asdf
         if npshell and npcomp:
@@ -53,10 +53,16 @@ class PropertiesShell(object):
         self.pcompg.add(card, comment)
 
     #=========================================================================
+    def get_mid(self, property_ids):
+        types = self._get_types(nlimit=True)
+        _property_ids = concatenate([ptype.property_id for ptype in types])
+        print _property_ids
+        return _property_ids
+
     def get_thickness(self, property_ids=None):
         """
         Gets the thickness of the PSHELLs/PCOMPs.
-        
+
         :param self: the ShellProperties object
         :param property_ids: the property IDs to consider (default=None -> all)
         """
@@ -66,10 +72,10 @@ class PropertiesShell(object):
         if property_ids is None:
             return t
             #property_ids = _property_ids
-        
+
         assert isinstance(property_ids, ndarray), type(property_ids)
         i = argsort(_property_ids)
-        
+
         print(_property_ids[i])
         print(property_ids)
         j = searchsorted(property_ids, _property_ids[i])

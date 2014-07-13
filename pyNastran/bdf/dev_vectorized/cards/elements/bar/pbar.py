@@ -1,6 +1,6 @@
 from numpy import array, zeros, arange, concatenate, searchsorted, where, unique
 
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 
@@ -38,8 +38,7 @@ class PBAR(object):
             self.I2 = zeros(ncards, 'float64')
             self.J = zeros(ncards, 'float64')
             self.nsm = zeros(ncards, 'float64')
-            
-            aa
+
             for i, card in enumerate(cards):
                 #: property ID
                 self.property_id[i] = integer(card, 1, 'property_id')
@@ -87,20 +86,28 @@ class PBAR(object):
 
             i = self.property_id.argsort()
             self.property_id = self.property_id[i]
+            self.material_id = self.material_id[i]
+
+            self.area = self.area[i]
+            self.I1 = self.I1[i]
+            self.I2 = self.I2[i]
+            self.J = self.J[i]
+            self.nsm = self.nsm[i]
+
             unique_pids = unique(self.property_id)
 
             if len(unique_pids) != len(self.property_id):
                 raise RuntimeError('There are duplicate PCOMP IDs...')
             self._cards = []
             self._comments = []
-        
+
     #=========================================================================
     def get_index(self, property_ids):
         if isinstance(property_ids, int):
             property_ids = array([property_ids])
         if property_ids is None:
             return arange(self.n)
-        
+
         indexs = searchsorted(self.property_id, property_ids)
         assert len(indexs) == len(property_ids), 'indexs=%s pids=%s' % (indexs, property_ids)
         return indexs
@@ -108,15 +115,12 @@ class PBAR(object):
     #=========================================================================
     def write_bdf(self, f, size=8, property_ids=None):
         if self.n:
-            if element_ids is None:
+            if property_ids is None:
                 i = arange(self.n)
             else:
-                i = searchsorted(self.element_id, element_ids)
+                i = searchsorted(self.property_id, property_ids)
 
-            #cid = [cid if cid != 0 else '' for cid in self.coord_id]
-
-            for (eid, nid, mass, x0, x1, x2, i0, i1, i2, i3, i4, i5) in zip(self.element_id[i], self.node_id[i],
-                    cid, Mass, X0, X1, X2, I0, I1, I2, I3, I4, I5):
-                card = ['CONM2', eid, nid, cid, mass, x0, x1, x2,
-                        None, i0, i1, i2, i3, i4, i5]
-                f.write(print_card(card))
+            for (pid, mid, area, I1, I2, J) in zip(self.property_id[i], self.material_id[i],
+                    self.area[i], self.I1[i], self.I2[i], self.J[i]):
+                card = ['PBAR', pid, mid, area, I1, I2, J]
+                f.write(print_card_8(card))

@@ -60,7 +60,7 @@ class CTRIAX6(object):
             self._comments = []
 
     def get_index(self, element_ids=None):
-        if element_ids is None:    
+        if element_ids is None:
             return arange(self.n)
         return searchsorted(element_ids, self.element_id)
 
@@ -90,14 +90,14 @@ class CTRIAX6(object):
     def mass(self, element_ids=None, total=False, node_ids=None, grids_cid0=None):
         """
         Gets the mass of the CTRIAX6s on a total or per element basis.
-        
+
         :param self: the CTRIAX6 object
         :param element_ids: the elements to consider (default=None -> all)
         :param total: should the mass be summed (default=False)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
         :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
-        
+
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
@@ -110,18 +110,18 @@ class CTRIAX6(object):
             return mass.sum()
         else:
             return mass
-    
+
     def area(self, element_ids=None, total=False, node_ids=None, grids_cid0=None):
         """
         Gets the area of the CTRIAX6s on a total or per element basis.
-        
+
         :param self: the CTRIAX6 object
         :param element_ids: the elements to consider (default=None -> all)
         :param total: should the area be summed (default=False)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
         :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
-        
+
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
@@ -138,13 +138,13 @@ class CTRIAX6(object):
     def normal(self, element_ids=None, node_ids=None, grids_cid0=None):
         """
         Gets the normals of the CTRIAX6s on per element basis.
-        
+
         :param self: the CTRIAX6 object
         :param element_ids: the elements to consider (default=None -> all)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
         :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
-        
+
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
@@ -164,7 +164,7 @@ class CTRIAX6(object):
         """
         Gets the mass, area, and normals of the CTRIAX6s on a per
         element basis.
-        
+
         :param self: the CTRIAX6 object
         :param element_ids: the elements to consider (default=None -> all)
 
@@ -174,18 +174,18 @@ class CTRIAX6(object):
         :param calculate_mass: should the mass be calculated (default=True)
         :param calculate_area: should the area be calculated (default=True)
         :param calculate_normal: should the normals be calculated (default=True)
-        
+
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
         if nodes_cid0 is None:
             node_ids = self.model.grid.node_ids
-            grids_cid0 = self.model.grid.position()
+            grids_cid0 = self.model.grid.get_positions()
 
         p1 = self._positions(grids_cid0, self.node_ids[:, 0])
         p2 = self._positions(grids_cid0, self.node_ids[:, 1])
         p3 = self._positions(grids_cid0, self.node_ids[:, 2])
-        
+
         v12 = p2 - p1
         v13 = p3 - p1
         v123 = cross(v12, v13)
@@ -197,16 +197,16 @@ class CTRIAX6(object):
             t = self.model.pid.get_thickness(self.pid)
             massi = A * t
         return massi, A, normal
-    
+
     def _positions(self, nids_to_get, node_ids, grids_cid0):
         """
         Gets the positions of a list of nodes
-        
+
         :param nids_to_get:  the node IDs to get as an NDARRAY
         :param node_ids:     the node IDs that contains all the nids_to_get
                              as an NDARRAY
         :param grids_cid_0:  the GRIDs as an (N, )  NDARRAY
-        
+
         :returns grids2_cid_0 : the corresponding positins of the requested
                                 GRIDs
         """

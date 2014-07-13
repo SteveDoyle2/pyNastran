@@ -92,7 +92,7 @@ class CBAR(object):
             return 0.0
         return [0.0]
         if grid_cid0 is None:
-            grid_cid0 = self.model.grid.position()
+            grid_cid0 = self.model.grid.get_positions()
         p1 = grid_cid0[self.node_ids[:, 0]]
         p2 = grid_cid0[self.node_ids[:, 1]]
         L = p2 - p1
@@ -131,7 +131,7 @@ class CBAR(object):
             x1 = None
             x2 = None
             x3 = None
-            for (eid, pid, n, pin, wa, wb) in zip(self.element_id[i], self.property_id[i], self.node_ids[i], 
+            for (eid, pid, n, pin, wa, wb) in zip(self.element_id[i], self.property_id[i], self.node_ids[i],
                     self.pin_flags[i], self.wa[i], self.wb[i]):
 
                 pa = set_blank_if_default(pin[0], 0)

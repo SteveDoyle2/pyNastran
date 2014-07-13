@@ -1,8 +1,10 @@
-from .ctetra import CTETRA4
+from .ctetra4 import CTETRA4
 from .cpenta6 import CPENTA6
-from .chexa import CHEXA8
+from .chexa8 import CHEXA8
 
 from .ctetra10 import CTETRA10
+from .cpenta15 import CPENTA15
+from .chexa20 import CHEXA20
 
 
 class ElementsSolid(object):
@@ -19,10 +21,10 @@ class ElementsSolid(object):
         self.ctetra4 = CTETRA4(self.model)
         self.cpenta6 = CPENTA6(self.model)
         self.chexa8  = CHEXA8(self.model)
-        
+
         self.ctetra10 = CTETRA10(self.model)
-        #self.cpenta15 = CPENTA15(self.model)
-        #self.chexa20  = CHEXA20(self.model)
+        self.cpenta15 = CPENTA15(self.model)
+        self.chexa20  = CHEXA20(self.model)
 
     def build(self):
         self.n = 0
@@ -77,12 +79,11 @@ class ElementsSolid(object):
         f.write('$ELEMENTS_SOLID\n')
         types = self._get_types()
         for elems in types:
-            print "SOLID", elems.type
             elems.write_bdf(f, size=size, element_ids=element_ids)
 
     def _get_types(self):
         types = [self.ctetra4, self.cpenta6, self.chexa8,
-                 self.ctetra10, #self.cpenta15, self.chexa20]
+                 self.ctetra10, self.cpenta15, self.chexa20
                  ]
         return types
 
