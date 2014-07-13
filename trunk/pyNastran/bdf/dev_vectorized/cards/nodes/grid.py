@@ -1,4 +1,4 @@
-from numpy import zeros, arange, where, searchsorted
+from numpy import zeros, arange, where, searchsorted, argsort
 
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -147,8 +147,18 @@ class GRID(object):
 
                 #: Superelement ID
                 self.seid[i] = integer_or_blank(card, 8, 'seid', seid0)
+            i = argsort(self.node_id)
+            self.cp = self.cp[i]
+            self.xyz = self.xyz[i, :]
+            self.cd = self.cd[i]
+            self.ps = self.ps[i]
+            self.seid = self.seid[i]
 
-    def position(self, node_ids=None):
+    def index_map(self, node_ids):
+        #return searchsorted(node_ids, self.node_id)
+        return searchsorted(self.node_id, node_ids)
+
+    def get_positions(self, node_ids=None):
         if node_ids is None:
             node_ids = self.node_id
             xyz = self.xyz.copy()
@@ -171,11 +181,11 @@ class GRID(object):
                 T = self.model.coord.transform(cp)
                 xyzi = xyz[n2[i], :]
                 xyzi = dot(transpose(T), dot(xyzi, T))
-        
+
         assert len(node_ids) == len(cpn), 'n1=%s n2=%s'  %(len(node_ids), len(cpn))
         return xyz
 
-    def positions_wrt(self, node_ids=None, coord_ids=None):
+    def get_positions_wrt(self, node_ids=None, coord_ids=None):
         raise NotImplementedError()
 
     def get_stats(self):

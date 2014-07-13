@@ -1,8 +1,10 @@
 from itertools import izip
 
-from numpy import array, zeros, arange, concatenate, searchsorted, where, unique
+from numpy import (array, zeros, arange, concatenate, searchsorted, where,
+                   unique, cross)
+from numpy.linalg import norm
 
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 
@@ -70,18 +72,17 @@ class CTRIA3(object):
                 i = searchsorted(self.element_id, element_ids)
             for (eid, pid, n) in izip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 card = ['CTRIA3', eid, pid, n[0], n[1], n[2]]
-                f.write(print_card(card, size=size))
-
+                f.write(print_card_8(card))
 
     def _verify(self):
-        self.mass()
-        self.area()
-        self.normal()
+        self.get_mass()
+        self.get_area()
+        self.get_normal()
 
     def rebuild(self):
         pass
 
-    def mass(self, element_ids=None, total=False, node_ids=None, grids_cid0=None):
+    def get_mass(self, element_ids=None, total=False, xyz_cid0=None):
         """
         Gets the mass of the CTRIA3s on a total or per element basis.
 
@@ -89,14 +90,14 @@ class CTRIA3(object):
         :param element_ids: the elements to consider (default=None -> all)
         :param total: should the mass be summed (default=False)
 
-        :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
-        :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
+        :param node_ids: the GRIDs as an (N, )  NDARRAY (or None)
+        :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
 
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
         mass, _area, _normal = self._mass_area_normal(element_ids=element_ids,
-            node_ids=node_ids, grids_cid0=grids_cid0,
+            xyz_cid0=xyz_cid0,
             calculate_mass=True, calculate_area=False,
             calculate_normal=False)
 
@@ -105,7 +106,7 @@ class CTRIA3(object):
         else:
             return mass
 
-    def area(self, element_ids=None, total=False, node_ids=None, grids_cid0=None):
+    def get_area(self, element_ids=None, total=False, xyz_cid0=None):
         """
         Gets the area of the CTRIA3s on a total or per element basis.
 
@@ -113,14 +114,11 @@ class CTRIA3(object):
         :param element_ids: the elements to consider (default=None -> all)
         :param total: should the area be summed (default=False)
 
-        :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
-        :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
-
-        ..note:: If node_ids is None, the positions of all the GRID cards
-                 must be calculated
+        :param node_ids:  the GRIDs as an (N, )  NDARRAY (or None)
+        :param xyz_cid0:  the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
         """
         _mass, area, _normal = self._mass_area_normal(element_ids=element_ids,
-            node_ids=node_ids, grids_cid0=grids_cid0,
+            xyz_cid0=xyz_cid0,
             calculate_mass=False, calculate_area=True,
             calculate_normal=False)
 
@@ -129,7 +127,7 @@ class CTRIA3(object):
         else:
             return area
 
-    def normal(self, element_ids=None, node_ids=None, grids_cid0=None):
+    def get_normal(self, element_ids=None, xyz_cid0=None):
         """
         Gets the normals of the CTRIA3s on per element basis.
 
@@ -143,7 +141,7 @@ class CTRIA3(object):
                  must be calculated
         """
         _mass, area, normal = self._mass_area_normal(element_ids=element_ids,
-            node_ids=node_ids, grids_cid0=grids_cid0,
+            grids_cid0=grids_cid0,
             calculate_mass=False, calculate_area=False,
             calculate_normal=True)
 
@@ -152,7 +150,15 @@ class CTRIA3(object):
         else:
             return area
 
-    def _mass_area_normal(self, element_ids=None, node_ids=None, grids_cid0=None,
+    def _node_locations(self, xyz_cid0):
+        if xyz_cid0 is None:
+            xyz_cid0 = self.model.grid.get_positions()
+        n1 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 0]), :]
+        n2 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 1]), :]
+        n3 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 2]), :]
+        return n1, n2, n3
+
+    def _mass_area_normal(self, element_ids=None, xyz_cid0=None,
                           calculate_mass=True, calculate_area=True,
                           calculate_normal=True):
         """
@@ -162,27 +168,19 @@ class CTRIA3(object):
         :param self: the CTRIA3 object
         :param element_ids: the elements to consider (default=None -> all)
 
-        :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
-        :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
+        :param node_ids: the GRIDs as an (N, )  NDARRAY (or None)
+        :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
 
         :param calculate_mass: should the mass be calculated (default=True)
         :param calculate_area: should the area be calculated (default=True)
         :param calculate_normal: should the normals be calculated (default=True)
-
-        ..note:: If node_ids is None, the positions of all the GRID cards
-                 must be calculated
         """
-        if nodes_cid0 is None:
-            node_ids = self.model.grid.node_ids
-            grids_cid0 = self.model.grid.position()
+        n1, n2, n3 = self._node_locations(xyz_cid0)
 
-        p1 = self._positions(grids_cid0, self.node_ids[:, 0])
-        p2 = self._positions(grids_cid0, self.node_ids[:, 1])
-        p3 = self._positions(grids_cid0, self.node_ids[:, 2])
-
-        v12 = p2 - p1
-        v13 = p3 - p1
+        v12 = n2 - n1
+        v13 = n3 - n1
         v123 = cross(v12, v13)
+        n = norm(v123, axis=1)
 
         normal = v123 / n
         A = None

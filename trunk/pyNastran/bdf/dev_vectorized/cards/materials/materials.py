@@ -30,7 +30,7 @@ class Materials(object):
 
     def add_mat1(self, card, comment):
         #self.mat1.add(card, comment)
-        mid = integer(card, 1, 'materialid')
+        mid = integer(card, 1, 'material_id')
         mat = MAT1(card=card, comment=comment)
         #mat.add(card=card, comment=comment)
         self.mat1[mid] = mat
@@ -78,6 +78,35 @@ class Materials(object):
                 #msg.append('  %-8s: %i' % (mat.type, nmat))
         return msg
 
+    def get_mid(self, property_ids):
+        types = self._get_types(nlimit=True)
+        _material_ids = concatenate([ptype.material_id for ptype in types])
+        print _material_ids
+        return _material_ids
+
+    def get_rho(self, material_ids):
+        rho = zeros(len(material_ids))
+        for i, material_id in enumerate(material_ids):
+            mat = self.get_structural_material(material_id)
+            rho[i] = mat.rho
+        return rho
+
+    def get_rho_E(self, material_ids):
+        rho = zeros(len(material_ids))
+        E = zeros(len(material_ids))
+        for i, material_id in enumerate(material_ids):
+            mat = self.get_structural_material(material_id)
+            rho[i] = mat.rho
+            E[i] = mat.E()
+        return rho, E
+
+    def get_nsm(self, material_ids):
+        nsm = zeros(len(material_ids))
+        for i, material_id in enumerate(material_ids):
+            mat = self.get_structural_material(material_id)
+            nsm[i] = mat.nsm
+        return nsm
+
     def get_E(self, material_ids):
         E = zeros(len(material_ids))
         for i, material_id in enumerate(material_ids):
@@ -96,6 +125,13 @@ class Materials(object):
         #if property_ids is None:
             #return arange(self.n)
         #return searchsorted(property_ids, self.property_id)
+
+    def get_structural_material(self, material_id):
+        if material_id in self.mat1:
+            return self.mat1[material_id]
+        elif material_id in self.mat8:
+            return self.mat2[material_id]
+        raise NotImplementedError(material_id)
 
     def get_shell_material(self, material_id):
         if material_id in self.mats1:

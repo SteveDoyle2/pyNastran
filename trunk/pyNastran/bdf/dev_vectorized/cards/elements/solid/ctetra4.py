@@ -8,7 +8,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_
 def volume4(n1, n2, n3, n4):
     r"""
     Gets the volume, :math:`V`, of the tetrahedron.
-    
+
     .. math:: V = \frac{(a-d) \cdot \left( (b-d) \times (c-d) \right) }{6}
     """
     V = -dot((n1 - n4), cross(n2 - n4, n3 - n4)) / 6.
@@ -43,29 +43,33 @@ class CTETRA4(object):
             self.element_id = zeros(ncards, 'int32')
             self.property_id = zeros(ncards, 'int32')
             self.node_ids = zeros((ncards, 4), 'int32')
-            
+
             comments = {}
             for i, card in enumerate(cards):
                 comment = self._comments[i]
                 eid = integer(card, 1, 'eid')
                 #if comment:
                     #self.comments[eid] = comment
-                    
+
                 #: Element ID
                 self.element_id[i] = eid
                 #: Property ID
                 self.property_id[i] = integer(card, 2, 'pid')
                 #: Node IDs
-                self.node_ids[i, :] = fields(integer, card, 'nid', i=3, j=7)
+                self.node_ids[i, :] = [
+                    integer(card, 3, 'nid1'),
+                    integer(card, 4, 'nid2'),
+                    integer(card, 5, 'nid3'),
+                    integer(card, 6, 'nid4'),
+                ]
                 assert len(card) == 7, 'len(CTETRA4 card) = %i' % len(card)
-                
+
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
             self.property_id = self.property_id[i]
             self.node_ids = self.node_ids[i, :]
             self._cards = []
             self._comments = []
-
 
     def _verify(self, xref=True):
         eid = self.Eid()
@@ -82,56 +86,53 @@ class CTETRA4(object):
             for i in range(3):
                 assert isinstance(c[i], float)
 
-    def volume(self, element_ids=None, xyz_cid0=None, total=False):
+    def _node_locations(self, xyz_cid0):
+        if xyz_cid0 is None:
+            xyz_cid0 = self.model.grid.get_positions()
+        n1 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 0]), :]
+        n2 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 1]), :]
+        n3 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 2]), :]
+        n4 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 3]), :]
+        return n1, n2, n3, n4
+
+    def get_volume(self, element_ids=None, xyz_cid0=None, total=False):
         """
         Gets the volume for one or more CTETRA4 elements.
-        
+
         :param element_ids: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the volume be summed (default=False)
         """
         if element_ids is None:
             element_ids = self.element_id
-        if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.positions()
+        n1, n2, n3, n4 = self._node_locations(xyz_cid0)
 
-        n1 = xyz_cid0[self.node_ids[:, 0], :]
-        n2 = xyz_cid0[self.node_ids[:, 1], :]
-        n3 = xyz_cid0[self.node_ids[:, 2], :]
-        n4 = xyz_cid0[self.node_ids[:, 3], :]
-        
         n = len(element_ids)
         V = zeros(n, self.model.float)
-        
+
         i = 0
         for n1i, n2i, n3i, n4i in zip(n1, n2, n3, n4):
             V[i] = volume4(n1i, n2i, n3i, n4i)
             i += 1
         return V
-        
-    def centroid_volume(self, element_ids=None, xyz_cid0=None, total=False):
+
+    def get_centroid_volume(self, element_ids=None, xyz_cid0=None, total=False):
         """
         Gets the centroid and volume for one or more CTETRA4 elements.
-        
+
         :param element_ids: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the volume be summed (default=False)
-        
+
         ..see:: CTETRA4.volume() and CTETRA4.centroid for more information.
         """
         if element_ids is None:
             element_ids = self.element_id
-        if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.positions()
-        
-        n1 = xyz_cid0[self.node_ids[:, 0], :]
-        n2 = xyz_cid0[self.node_ids[:, 1], :]
-        n3 = xyz_cid0[self.node_ids[:, 2], :]
-        n4 = xyz_cid0[self.node_ids[:, 3], :]
-        
+
+        n1, n2, n3, n4 = self._node_locations(xyz_cid0)
         n = len(element_ids)
         volume = zeros(n, self.model.float)
-        
+
         i = 0
         for n1i, n2i, n3i, n4i in zip(n1, n2, n3, n4):
             volume[i] = volume4(n1i, n2i, n3i, n4i)
@@ -143,32 +144,27 @@ class CTETRA4(object):
         assert volume.min() > 0.0, 'volume.min() = %f' % volume.min()
         return centroid, volume
 
-    def centroid(self, element_ids=None, xyz_cid0=None, total=False):
+    def get_centroid(self, element_ids=None, xyz_cid0=None, total=False):
         """
         Gets the centroid for one or more CTETRA elements.
-        
+
         :param element_ids: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the centroid be summed (default=False)
         """
         if element_ids is None:
             element_ids = self.element_id
-        if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.positions()
 
-        n1 = xyz_cid0[self.node_ids[:, 0], :]
-        n2 = xyz_cid0[self.node_ids[:, 1], :]
-        n3 = xyz_cid0[self.node_ids[:, 2], :]
-        n4 = xyz_cid0[self.node_ids[:, 3], :]
+        n1, n2, n3, n4 = self._node_locations(xyz_cid0)
         centroid = (n1 + n2 + n3 + n4) / 4.0
         if total:
             centroid = centroid.mean()
         return centroid
 
-    def mass(self, element_ids=None, xyz_cid0=None, total=False):
+    def get_mass(self, element_ids=None, xyz_cid0=None, total=False):
         """
         Gets the mass for one or more CTETRA4 elements.
-        
+
         :param element_ids: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the centroid be summed (default=False)
@@ -176,16 +172,13 @@ class CTETRA4(object):
         if element_ids is None:
             element_ids = self.element_id
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.positions()
+            xyz_cid0 = self.model.grid.get_positions()
 
-        V = self.volume(element_ids, xyz_cid0)
-
-        mid = self.model.properties_solid.get_mid(self.pid)
+        V = self.get_volume(element_ids, xyz_cid0)
+        mid = self.model.properties_solid.get_mid(self.property_id)
         rho = self.model.materials.get_rho(mid)
-        nsm = self.model.materials.get_nsm(mid)
-        rho, nsm = self.model.materials.get_rho_nsm(mid)
-        
-        mass = V * rho + nsm
+
+        mass = V * rho
         if total:
             mass = mass.sum()
         return mass
@@ -206,4 +199,3 @@ class CTETRA4(object):
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
                 card = ['CTETRA', eid, pid, n[0], n[1], n[2], n[3]]
                 f.write(print_card(card))
-            

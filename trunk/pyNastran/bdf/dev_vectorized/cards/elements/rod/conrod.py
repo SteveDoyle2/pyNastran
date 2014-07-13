@@ -145,7 +145,7 @@ class CONROD(object):
         if self.n == 0:
             return 0.0
 
-        grid_cid0 = self.grid.position()
+        grid_cid0 = self.grid.get_positions()
         p1 = grid_cid0[self.node_ids[:, 0]]
         p2 = grid_cid0[self.node_ids[:, 1]]
         L = p2 - p1

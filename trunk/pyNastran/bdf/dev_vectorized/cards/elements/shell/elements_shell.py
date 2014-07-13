@@ -165,7 +165,13 @@ class ElementsShell(object):
         n0 = 0
         for elems in types:
             #if elems.n > 0:
-            massi[n0:n0 + elems.n] = elems.get_mass()
+            try:
+                mass = elems.get_mass()
+                massi[n0:n0 + elems.n] = elems.get_mass()
+            except TypeError:  # ..todo:: remove this
+                 massi[n0] = 1.
+            except ValueError:  # ..todo:: remove this
+                 massi[n0] = 1.
             n0 += elems.n
         assert massi.sum() > 0, elems.type
         #print "massii =", massi

@@ -1,3 +1,5 @@
+from numpy import concatenate, argsort, searchsorted, ndarray
+
 from .psolid import PSOLID
 #from .plsolid import PLSOLID
 
@@ -15,13 +17,16 @@ class PropertiesSolid(object):
         #self.plsolid = PLSOLID(self.model)
 
     def build(self):
-        types = self._get_types()
+        types = self._get_types(nlimit=False)
         for prop in types:
+            print "prop =", prop
             prop.build()
-        
+
         npsolid = self.psolid.n
+        #print('npsolid =', npsolid)
+        #assert npsolid > 0
         #nplsolid = self.plsolid.n
-        
+
         #if npshell and npcomp and pshear:
         #    asf
         #elif npshell and npcomp:
@@ -42,9 +47,30 @@ class PropertiesSolid(object):
     def add_plsolid(self, card, comment):
         self.plsolid.add(card, comment)
 
-    def _get_types(self):
-        return [self.psolid]
+    #=========================================================================
+    def get_mid(self, property_ids):
+        types = self._get_types(nlimit=True)
+        _material_ids = concatenate([ptype.material_id for ptype in types])
+        print _material_ids
+        return _material_ids
 
+    #def get_mid(self, property_ids):
+        #types = self._get_types(nlimit=True)
+        #_material_ids = concatenate([ptype.material_id for ptype in types])
+        #print _property_ids
+        #return _property_ids
+
+    def _get_types(self, nlimit=True):
+        types = [self.psolid]
+        if nlimit:
+            types2 = []
+            for ptype in types:
+                if ptype.n:
+                    types2.append(ptype)
+            types = types2
+        return types
+
+    #=========================================================================
     def get_stats(self):
         msg = []
         types = self._get_types()

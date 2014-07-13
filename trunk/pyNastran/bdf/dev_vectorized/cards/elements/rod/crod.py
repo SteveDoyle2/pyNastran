@@ -80,7 +80,14 @@ class CROD(object):
         c = self.model.prod.get_c(property_ids)
         return c
 
-    def get_mass(self, element_ids=None, total=False):
+    def _node_locations(self, xyz_cid0):
+        if xyz_cid0 is None:
+            xyz_cid0 = self.model.grid.get_positions()
+        n1 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 0]), :]
+        n2 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 1]), :]
+        return n1, n2
+
+    def get_mass(self, element_ids=None, xyz_cid0=None, total=False):
         """
         mass = rho * A * L + nsm
         """
@@ -88,18 +95,18 @@ class CROD(object):
             return 0.0
 
         assert element_ids is None
-        grid_cid0 = self.grid.position()
-        p1 = grid_cid0[self.node_ids[:, 0]]
-        p2 = grid_cid0[self.node_ids[:, 1]]
-        L = p2 - p1
-        i = self.model.prod.get_index(pid)
+        grid_cid0 = self.model.grid.get_positions()
+        n1, n2 = self._node_locations(xyz_cid0)
+        L = n2 - n1
+        i = self.model.prod.get_index(self.property_id)
         A = self.model.prod.A[i]
-        mid = self.model.prod.mid[i]
+        mid = self.model.prod.material_id[i]
+        J   = self.model.prod.get_J(mid)
 
-        rho, E, J = self.model.Materials.get_rho_E_J(self.mid)
-        rho = self.model.Materials.get_rho(self.mid)
-        E   = self.model.Materials.get_E(self.mid)
-        J   = self.model.Materials.get_J(self.mid)
+        rho, E = self.model.materials.get_rho_E(mid)
+        rho = self.model.materials.get_rho(mid)
+        E   = self.model.materials.get_E(mid)
+        return 0. if total else [0.]
 
         mass = norm(L, axis=1) * A * rho + self.nsm
         if total:
@@ -146,11 +153,11 @@ class CROD(object):
 
         print("n0", n0)
         print("n1", n1)
-        p0 = positions[n0]
-        p1 = positions[n1]
+        n0 = positions[n0]
+        n1 = positions[n1]
         #p1 = model.Node(n1).xyz
 
-        v1 = p0 - p1
+        v1 = n0 - n1
         L = norm(v1)
         if L == 0.0:
             msg = 'invalid CROD length=0.0\n%s' % (self.__repr__())

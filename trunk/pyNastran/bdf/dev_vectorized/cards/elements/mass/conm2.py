@@ -90,7 +90,7 @@ class CONM2(object):
         """
         if element_ids is None:
             element_ids = arange(self.n)
-        #grid_cid0 = self.model.grid.position()
+        #grid_cid0 = self.model.grid.get_positions()
         #p = grid_cid0[self.node_id]
 
         mass = self.mass

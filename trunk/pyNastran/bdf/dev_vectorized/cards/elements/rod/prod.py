@@ -3,7 +3,7 @@ from itertools import izip
 from numpy import array, zeros, unique, searchsorted, arange
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, integer_double_or_blank, integer_string_or_blank,
     string_or_blank, blank)
@@ -46,8 +46,8 @@ class PROD(object):
             self.nsm = zeros(ncards, float_fmt)
 
             for i, card in enumerate(cards):
-                self.property_id[i] = integer(card, 1, 'pid')
-                self.material_id[i] = integer(card, 2, 'mid')
+                self.property_id[i] = integer(card, 1, 'property_id')
+                self.material_id[i] = integer(card, 2, 'material_id')
                 self.A[i] = double(card, 3, 'A')
                 self.J[i] = double_or_blank(card, 4, 'J', 0.0)
                 self.c[i] = double_or_blank(card, 5, 'c', 0.0)
@@ -67,7 +67,7 @@ class PROD(object):
                 raise RuntimeError('There are duplicate PROD IDs...')
             self._cards = []
             self._comments = []
-        
+
     def get_stats(self):
         msg = []
         if self.n:
@@ -106,15 +106,21 @@ class PROD(object):
             property_ids = array([property_ids])
         if property_ids is None:
             return arange(self.n)
-        
+
         indexs = searchsorted(self.property_id, property_ids)
         assert len(indexs) == len(property_ids), 'indexs=%s pids=%s' % (indexs, property_ids)
         return indexs
-        
-    def write_bdf(self, f, size=8, pids=None):
+
+    def write_bdf(self, f, size=8, property_ids=None):
         if self.n:
+            if self.n:
+                if property_ids is None:
+                    i = arange(self.n)
+                else:
+                    assert len(unique(property_ids))==len(property_ids), unique(property_ids)
+                    i = searchsorted(self.property_id, property_ids)
             for (pid, mid, A, J, c, nsm) in izip(
-                 self.property_id, self.material_id, self.A, self.J, self.c, self.nsm):
+                 self.property_id, self.material_id[i], self.A[i], self.J[i], self.c[i], self.nsm[i]):
 
                 #self.mid = integer(card, 4, 'mid')
                 #self.A = double(card, 5, 'A')
@@ -123,4 +129,4 @@ class PROD(object):
                 #self.nsm = double_or_blank(card, 8, 'nsm', 0.0)
 
                 card = ['PROD', pid, mid, A, J, c, nsm]
-                f.write(print_card(card))
+                f.write(print_card_8(card))

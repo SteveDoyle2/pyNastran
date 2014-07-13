@@ -2,7 +2,7 @@ from numpy import (array, zeros, arange, concatenate, searchsorted,
     where, unique, cross, dot)
 from pyNastran.utils.mathematics import norm_axis as norm
 
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 
@@ -41,7 +41,7 @@ class CQUAD4(object):
 
                 self.property_id[i] = integer(card, 2, 'pid')
 
-                self.node_ids[i] = [integer(card, 3, 'n1'),
+                self.node_ids[i, :] = [integer(card, 3, 'n1'),
                                     integer(card, 4, 'n2'),
                                     integer(card, 5, 'n3'),
                                     integer(card, 6, 'n4')]
@@ -59,11 +59,12 @@ class CQUAD4(object):
             self.element_id = self.element_id[i]
             self.property_id = self.property_id[i]
             self.node_ids = self.node_ids[i, :]
+            assert self.node_ids.min() > 0
             self._cards = []
             self._comments = []
 
     #=========================================================================
-    def get_mass(self, element_ids=None, total=False, node_ids=None, grids_cid0=None):
+    def get_mass(self, element_ids=None, total=False, node_ids=None, xyz_cid0=None):
         """
         Gets the mass of the CQUAD4s on a total or per element basis.
 
@@ -71,14 +72,13 @@ class CQUAD4(object):
         :param element_ids: the elements to consider (default=None -> all)
         :param total: should the mass be summed (default=False)
 
-        :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
-        :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
+        :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
 
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
         mass, _area, _normal = self._mass_area_normal(element_ids=element_ids,
-            node_ids=node_ids, grids_cid0=grids_cid0,
+            xyz_cid0=xyz_cid0,
             calculate_mass=True, calculate_area=False,
             calculate_normal=False)
 
@@ -87,7 +87,7 @@ class CQUAD4(object):
         else:
             return mass
 
-    def get_area(self, element_ids=None, total=False, node_ids=None, grids_cid0=None):
+    def get_area(self, element_ids=None, total=False, xyz_cid0=None):
         """
         Gets the area of the CQUAD4s on a total or per element basis.
 
@@ -102,7 +102,7 @@ class CQUAD4(object):
                  must be calculated
         """
         _mass, area, _normal = self._mass_area_normal(element_ids=element_ids,
-            node_ids=node_ids, grids_cid0=grids_cid0,
+            xyz_cid0=xyz_cid0,
             calculate_mass=False, calculate_area=True,
             calculate_normal=False)
 
@@ -111,21 +111,20 @@ class CQUAD4(object):
         else:
             return area
 
-    def get_normal(self, element_ids=None, node_ids=None, grids_cid0=None):
+    def get_normal(self, element_ids=None, xyz_cid0=None):
         """
         Gets the normals of the CQUAD4s on per element basis.
 
         :param self: the CQUAD4 object
         :param element_ids: the elements to consider (default=None -> all)
 
-        :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
-        :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
+        :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
 
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
         _mass, area, normal = self._mass_area_normal(element_ids=element_ids,
-            node_ids=node_ids, grids_cid0=grids_cid0,
+            xyz_cid0=xyz_cid0,
             calculate_mass=False, calculate_area=False,
             calculate_normal=True)
 
@@ -134,7 +133,16 @@ class CQUAD4(object):
         else:
             return area
 
-    def _mass_area_normal(self, element_ids=None, node_ids=None, grids_cid0=None,
+    def _node_locations(self, xyz_cid0):
+        if xyz_cid0 is None:
+            xyz_cid0 = self.model.grid.get_positions()
+        n1 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 0]), :]
+        n2 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 1]), :]
+        n3 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 2]), :]
+        n4 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 3]), :]
+        return n1, n2, n3, n4
+
+    def _mass_area_normal(self, element_ids=None, node_ids=None, xyz_cid0=None,
                           calculate_mass=True, calculate_area=True,
                           calculate_normal=True):
         """
@@ -144,8 +152,7 @@ class CQUAD4(object):
         :param self: the CQUAD4 object
         :param element_ids: the elements to consider (default=None -> all)
 
-        :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
-        :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
+        :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
 
         :param calculate_mass: should the mass be calculated (default=True)
         :param calculate_area: should the area be calculated (default=True)
@@ -154,19 +161,9 @@ class CQUAD4(object):
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
-        if grids_cid0 is None:
-            node_ids = self.model.grid.node_id
-            grids_cid0 = self.model.grid.position()
-        #print(grids_cid0)
-        p1 = self._positions(self.node_ids[:, 0])
-        p2 = self._positions(self.node_ids[:, 1])
-        p3 = self._positions(self.node_ids[:, 2])
-        p4 = self._positions(self.node_ids[:, 3])
-
-        #print p1, p1.dtype
-        #print p2, p2.dtype
-        v12 = p2 - p1
-        v13 = p3 - p1
+        n1, n2, n3, n4 = self._node_locations(xyz_cid0)
+        v12 = n2 - n1
+        v13 = n3 - n1
         v123 = cross(v12, v13)
         #print "v123", v123
 
@@ -204,13 +201,13 @@ class CQUAD4(object):
 
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 card = ['CQUAD4', eid, pid, n[0], n[1], n[2], n[3]]
-                f.write(print_card(card, size=size))
+                f.write(print_card_8(card))
 
 
     def _verify(self, xref=True):
-        self.mass()
-        self.area()
-        self.normal()
+        self.get_mass()
+        self.get_area()
+        self.get_normal()
 
     def rebuild(self):
         raise NotImplementedError()
@@ -227,7 +224,7 @@ class CQUAD4(object):
         :returns grids2_cid_0 : the corresponding positins of the requested
                                 GRIDs
         """
-        positions = self.model.grid.position(nids_to_get)
+        positions = self.model.grid.get_positions(nids_to_get)
         #grids2_cid_0 = grids_cid0[searchsorted(node_ids, nids_to_get), :]
         #return grids2_cid_0
         return positions
