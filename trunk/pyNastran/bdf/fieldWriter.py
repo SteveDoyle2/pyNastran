@@ -79,7 +79,7 @@ def print_float_8(value):
     """
     value = float(value)
     if value == 0.0:
-        return '%8s' %('0.')
+        return '%8s' % '0.'
     elif value > 0.:  # positive, not perfect...
         if value < 5e-8:
             field = print_scientific_8(value)
@@ -198,8 +198,7 @@ def print_card(fields, size=8):
 
     :param fields: all the fields in the BDF card (no blanks)
     :param size:   the width of a field (size=8 or 16)
-
-    .. warning:: 8 or 16 is required, but 16 is not checked for
+    :returns card: string representation of the card in small/large field format
     """
     if size == 8:
         return print_card_8(fields)
@@ -214,7 +213,8 @@ def print_card_8(fields):
     """
     Prints a nastran-style card with 8-character width fields.
 
-    :fields all the fields in the BDF card (no blanks)
+    :param fields: all the fields in the BDF card (no blanks)
+    :returns card: string representation of the card in small field format
     .. note:: A small field format follows the  8-8-8-8-8-8-8-8 = 80
               format where the first 8 is the card name or
               blank (continuation).  The last 8-character field indicates
@@ -274,6 +274,7 @@ def print_int_card(fields):
             out += '\n        '
     out = out.rstrip(' \n+') + '\n'  # removes blank lines at the end of cards
     return out
+
 
 def print_int_card_blocks(fields_blocks):
     """
