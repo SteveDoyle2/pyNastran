@@ -79,11 +79,11 @@ class Mass(object):
             i = argsort(_element_ids)
             return _element_ids, i
         return None, None
-    
+
     def get_mass(self, element_ids=None, total=False):
         assert element_ids is None
         mass_types = self._get_types(nlimit=True)
-        
+
         element_ids, i = self.get_indexs(element_ids)
         if element_ids is None:
             return None
@@ -103,10 +103,10 @@ class Mass(object):
 
     #=========================================================================
     def write_bdf(self, f, size=8, element_ids=None):
-        f.write('$ELEMENTS_MASS\n')
-        types = self._get_types()
-        
-        print("types", types)
+        types = self._get_types(nlimit=True)
+
+        if types:
+            f.write('$ELEMENTS_MASS\n')
         for elems in types:
             print "MASS", elems.type
             elems.write_bdf(f, size=size, element_ids=element_ids)

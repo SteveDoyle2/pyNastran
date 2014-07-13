@@ -5,8 +5,8 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 
 
-class PBAR(object):
-    type = 'PBAR'
+class PBEAM(object):
+    type = 'PBEAM'
     def __init__(self, model):
         """
         Defines the PCOMP object.
@@ -48,7 +48,7 @@ class PBAR(object):
 
 
                 #: material ID
-                self.area[i] = double_or_blank(card, 3, 'area', 0.0)
+                self.area[i] = double_or_blank(card, 3, 'area')
 
                 #: I1
                 self.I1[i] = double_or_blank(card, 4, 'I1', 0.0)
@@ -123,5 +123,5 @@ class PBAR(object):
 
             for (pid, mid, area, I1, I2, J) in zip(self.property_id[i], self.material_id[i],
                     self.area[i], self.I1[i], self.I2[i], self.J[i]):
-                card = ['PBAR', pid, mid, area, I1, I2, J]
+                card = ['PBEAM', pid, mid, area, I1, I2, J]
                 f.write(print_card_8(card))

@@ -102,6 +102,4 @@ class PSOLID(object):
                 fctn = set_blank_if_default(self.fctn, 'SMECH')
                 card = ['PSOLID', pid, mid, cordm, integ,
                         stress, isop, fctn]
-                #print card
                 f.write(print_card_8(card))
-                #print print_card_8(card)

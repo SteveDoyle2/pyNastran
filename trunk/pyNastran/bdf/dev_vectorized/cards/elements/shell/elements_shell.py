@@ -182,7 +182,7 @@ class ElementsShell(object):
         return mass
 
     def write_bdf(self, f, size=8, element_ids=None):
-        f.write('$ELEMENTS\n')
+        f.write('$ELEMENTS_SHELL\n')
         types = self._get_types(nlimit=True)
         for element in types:
             if element.n:

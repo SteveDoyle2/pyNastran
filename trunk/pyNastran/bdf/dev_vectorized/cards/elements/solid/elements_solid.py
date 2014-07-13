@@ -28,7 +28,7 @@ class ElementsSolid(object):
 
     def build(self):
         self.n = 0
-        types = self._get_types()
+        types = self._get_types(nlimit=False)
         for elems in types:
             elems.build()
             self.n += elems.n
@@ -77,14 +77,21 @@ class ElementsSolid(object):
     #=========================================================================
     def write_bdf(self, f, size=8, element_ids=None):
         f.write('$ELEMENTS_SOLID\n')
-        types = self._get_types()
+        types = self._get_types(nlimit=True)
         for elems in types:
+            print elems.type
             elems.write_bdf(f, size=size, element_ids=element_ids)
 
-    def _get_types(self):
+    def _get_types(self, nlimit=True):
         types = [self.ctetra4, self.cpenta6, self.chexa8,
                  self.ctetra10, self.cpenta15, self.chexa20
                  ]
+        if nlimit:
+            types2 = []
+            for etype in types:
+                if etype.n > 0:
+                    types2.append(etype)
+            types = types2
         return types
 
     def get_stats(self):

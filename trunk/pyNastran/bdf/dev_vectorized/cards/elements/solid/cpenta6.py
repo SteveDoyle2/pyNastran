@@ -64,13 +64,22 @@ class CPENTA6(object):
                 #: Property ID
                 self.property_id[i] = integer(card, 2, 'property_id')
                 #: Node IDs
-                nids = fields(integer, card, 'nid', i=3, j=9)
+                nids = [
+                    integer(card, 3, 'nid1'),
+                    integer(card, 4, 'nid2'),
+                    integer(card, 5, 'nid3'),
+                    integer(card, 6, 'nid4'),
+                    integer(card, 7, 'nid5'),
+                    integer(card, 8, 'nid6'),
+                ]
+                self.node_ids[i, :] = nids
                 assert len(card) == 9, 'len(CPENTA6 card) = %i' % len(card)
 
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
             self.property_id = self.property_id[i]
             self.node_ids = self.node_ids[i, :]
+            assert 0 not in self.node_ids
             self._cards = []
             self._comments = []
 
