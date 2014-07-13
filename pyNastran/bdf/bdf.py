@@ -42,9 +42,11 @@ from .cards.properties.bush import PBUSH, PBUSH1D
 from .cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
                                     CDAMP5, DamperElement)
 from .cards.properties.damper import (PVISC, PDAMP, PDAMP5, PDAMPT)
-from .cards.elements.bars import (CROD, CONROD, CTUBE, CBAR, CBEAM, CBEAM3,
-                                  CBEND, LineElement, RodElement)
-from .cards.properties.bars import (PROD, PTUBE, PBAR, PBARL,
+from .cards.elements.rods import CROD, CONROD, CTUBE, RodElement
+from .cards.elements.bars import (CBAR, CBEAM, CBEAM3,
+                                  CBEND, LineElement)
+from .cards.properties.rods import PROD, PTUBE
+from .cards.properties.bars import (PBAR, PBARL,
                                     PBEAM, PBEAML, PBCOMP)  # PBEND
 from .cards.elements.mass import (CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4,
                                   PointElement, PointMassElement)  # CMASS5
