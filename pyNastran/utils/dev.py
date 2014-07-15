@@ -1,5 +1,8 @@
+import os
 from os.path import splitext, getsize
 from os.path import join as pjoin
+
+from numpy import array, ndarray
 
 from pyNastran.utils import object_attributes
 
