@@ -1,17 +1,40 @@
 import unittest
 
-from pyNastran.bdf.bdf import BDF, BDFCard, MAT8
-from pyNastran.bdf.cards.materials import MAT11
+from pyNastran.bdf.bdf import BDF, BDFCard, MAT1, MAT8, MAT11
 from pyNastran.bdf.fieldWriter import print_card
 
 bdf = BDF()
 
 class TestMaterials(unittest.TestCase):
-    def test_mat5_01(self):
+    def test_mat1_01(self):
         #
         #MAT5           1    700.    300.    900.    400.    200.    600.     90.+
         #+             .1
-        pass
+        mid = 1
+        E = 2e7
+        G = 3e7
+        nu = 0.4
+        rho = 1e-50
+        fields = ['MAT1', mid, E, G, nu, rho]
+
+        card = BDFCard(fields)
+
+        mat1 = MAT1(card)
+        self.assertEquals(mid, mat1.Mid())
+        self.assertEquals(E, mat1.E())
+        self.assertEquals(G, mat1.G())
+        self.assertEquals(nu, mat1.Nu())
+        self.assertEquals(rho, mat1.Rho())
+
+        size = 8
+        msg = mat1.write_bdf(size, 'dummy')
+        self.assertEquals(msg,
+            'MAT1           1    2.+7    3.+7      .4   1.-50\n')
+
+        size = 16
+        msg = mat1.write_bdf(size, 'dummy')
+        self.assertEquals(msg,
+            'MAT1*                  1       20000000.       30000000.              .4\n*                  1.-50\n')
 
     def test_mat5_01(self):
         #
