@@ -1,10 +1,11 @@
 import StringIO
-import unittest
-
+from math import pi, sqrt
 from itertools import izip, count
 
+import unittest
+
 from pyNastran.bdf.bdf import BDF, BDFCard
-from pyNastran.bdf.bdf import CROD, CONROD, PROD, GRID, MAT1
+from pyNastran.bdf.bdf import CROD, CONROD, PROD, CTUBE, PTUBE, GRID, MAT1
 
 from pyNastran.bdf.fieldWriter import print_card
 
@@ -78,11 +79,32 @@ class TestRods(unittest.TestCase):
         crod = CROD(card)
         model.add_element(crod)
 
+        lines = ['ctube,%i, %i, %i, %i' % (eid+2, pid+1, nid1, nid2)]
+        card = model.process_card(lines)
+        card = BDFCard(card)
+        ctube = CTUBE(card)
+        model.add_element(ctube)
+
         lines = ['prod,%i, %i, %f, %f, %f, %f' % (pid, mid, A, J, c, nsm)]
         card = model.process_card(lines)
         card = BDFCard(card)
         prod = PROD(card)
         model.add_property(prod)
+
+        #self.pid = integer(card, 1, 'pid')
+        #self.mid = integer(card, 2, 'mid')
+        #self.OD1 = double(card, 3, 'OD1')
+        #self.t = double_or_blank(card, 4, 't', self.OD1 / 2.)
+        #self.nsm = double_or_blank(card, 5, 'nsm', 0.0)
+        #self.OD2 = double_or_blank(card, 6, 'OD2', self.OD1)
+        OD1 = sqrt(4*A/pi)
+        t = 0.
+        OD2 = OD1
+        lines = ['ptube,%i, %i, %f, %f, %f, %f' % (pid+1, mid, OD1, t, nsm, OD2)]
+        card = model.process_card(lines)
+        card = BDFCard(card)
+        ptube = PTUBE(card)
+        model.add_property(ptube)
 
         lines = ['mat1,%i, %.2e, %.2e, %f, %f' % (mid, E, G, nu, rho)]
         card = model.process_card(lines)
@@ -117,6 +139,7 @@ class TestRods(unittest.TestCase):
         self.assertEquals(conrod.Area(), A)
         self.assertEquals(conrod.J(), J)
         self.assertEquals(conrod.C(), c)
+        self.assertEquals(conrod.Rho(), rho)
 
         # crod
         self.assertEquals(crod.Eid(), eid+1)
@@ -130,6 +153,7 @@ class TestRods(unittest.TestCase):
         self.assertEquals(crod.Area(), A)
         self.assertEquals(crod.J(), J)
         self.assertEquals(crod.C(), c)
+        self.assertEquals(crod.Rho(), rho)
         #self.assertEquals(crod.Nu(), nu)
 
         # prod
@@ -141,6 +165,30 @@ class TestRods(unittest.TestCase):
         self.assertEquals(prod.Area(), A)
         self.assertEquals(prod.J(), J)
         self.assertEquals(prod.C(), c)
+        self.assertEquals(prod.Rho(), rho)
+
+        # ctube
+        self.assertEquals(ctube.Eid(), eid+2)
+        self.assertEquals(ctube.Pid(), pid+1)
+        self.assertEquals(ctube.Mid(), mid)
+        self.assertEquals(ctube.Length(), L)
+        self.assertEquals(ctube.Nsm(), nsm)
+        self.assertAlmostEquals(ctube.Mass(), mass, 5)
+        self.assertEquals(ctube.E(), E)
+        self.assertEquals(ctube.G(), G)
+        self.assertAlmostEquals(ctube.Area(), A, 5)
+        ctube.J()
+        self.assertEquals(ctube.Rho(), rho)
+
+        # ptube
+        self.assertEquals(ptube.Pid(), pid+1)
+        self.assertEquals(ptube.Mid(), mid)
+        self.assertEquals(ptube.Nsm(), nsm)
+        self.assertEquals(ptube.E(), E)
+        self.assertEquals(ptube.G(), G)
+        self.assertAlmostEquals(ptube.Area(), A, 5)
+        ptube.J()
+        self.assertEquals(ptube.Rho(), rho)
 
 if __name__ == '__main__':
     unittest.main()

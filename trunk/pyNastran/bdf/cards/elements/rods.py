@@ -486,6 +486,12 @@ class CTUBE(RodElement):
         for i in range(3):
             assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])
 
+    def Eid(self):
+        return self.eid
+
+    def Mid(self):
+        return self.pid.Mid()
+
     def Mass(self):
         return self.pid.MassPerLength() * self.Length()
 
@@ -498,6 +504,21 @@ class CTUBE(RodElement):
         if isinstance(self.pid, int):
             raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.Area()
+
+    def E(self):
+        if isinstance(self.pid, int):
+            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+        return self.pid.mid.E()
+
+    def G(self):
+        if isinstance(self.pid, int):
+            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+        return self.pid.mid.G()
+
+    def J(self):
+        if isinstance(self.pid, int):
+            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+        return self.pid.J()
 
     def Centroid(self):
         return (self.nodes[0].Position() + self.nodes[1].Position()) / 2.
@@ -627,12 +648,6 @@ class CONROD(RodElement):
         if isinstance(self.mid, int):
             raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
         return self.mid.G()
-
-    def Nu(self):
-        r"""returns Poisson's Ratio, :math:`\nu`"""
-        if isinstance(self.mid, int):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
-        return self.mid.nu
 
     def Rho(self):
         r"""returns the material density, :math:`\rho`"""
