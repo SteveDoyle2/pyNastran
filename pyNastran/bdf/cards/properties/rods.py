@@ -82,6 +82,9 @@ class PROD(Property):
     def G(self):
         return self.mid.G()
 
+    def Rho(self):
+        return self.mid.Rho()
+
     def cross_reference(self, model):
         msg = ' which is required by PROD mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
@@ -131,7 +134,7 @@ class PTUBE(Property):
             self.pid = integer(card, 1, 'pid')
             self.mid = integer(card, 2, 'mid')
             self.OD1 = double(card, 3, 'OD1')
-            self.t = double_or_blank(card, 4, 't', self.OD1 / 2.)
+            self.t = double_or_blank(card, 4, 't')
             self.nsm = double_or_blank(card, 5, 'nsm', 0.0)
             self.OD2 = double_or_blank(card, 6, 'OD2', self.OD1)
             assert len(card) <= 7, 'len(PTUBE card) = %i' % len(card)
@@ -178,6 +181,19 @@ class PTUBE(Property):
         """
         return self.Area() * self.Rho() + self.nsm
 
+    def E(self):
+        return self.mid.E()
+
+    def G(self):
+        return self.mid.G()
+
+    def J(self):
+        Dout = self.OD1
+        if self.t == 0:
+            return pi / 8. * Dout**4
+        Din = Dout - 2 * self.t
+        return pi / 8. * (Dout**4 - Din**2)
+
     def Area(self):
         r"""
         Gets the area :math:`A` of the CTUBE.
@@ -209,6 +225,8 @@ class PTUBE(Property):
     def _area1(self):
         """Gets the Area of Section 1 of the CTUBE."""
         Dout = self.OD1
+        if self.t == 0:
+            return pi / 4. * Dout**2
         Din = Dout - 2 * self.t
         A1 = pi / 4. * (Dout * Dout - Din * Din)
         return A1
@@ -216,6 +234,8 @@ class PTUBE(Property):
     def _area2(self):
         """Gets the Area of Section 2 of the CTUBE."""
         Dout = self.OD2
+        if self.t == 0:
+            return pi / 4. * Dout**2
         Din = Dout - 2 * self.t
         A2 = pi / 4. * (Dout * Dout - Din * Din)
         return A2
