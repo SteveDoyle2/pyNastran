@@ -64,6 +64,24 @@ class PROD(Property):
         assert isinstance(c, float), 'c=%r' % c
         assert isinstance(nsm, float), 'nsm=%r' % nsm
 
+    def Area(self):
+        return self.A
+
+    def J(self):
+        return self.j
+
+    def C(self):
+        return self.c
+
+    def Nsm(self):
+        return self.nsm
+
+    def E(self):
+        return self.mid.E()
+
+    def G(self):
+        return self.mid.G()
+
     def cross_reference(self, model):
         msg = ' which is required by PROD mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
