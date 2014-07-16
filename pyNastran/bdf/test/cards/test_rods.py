@@ -81,8 +81,8 @@ class TestRods(unittest.TestCase):
         lines = ['prod,%i, %i, %f, %f, %f, %f' % (pid, mid, A, J, c, nsm)]
         card = model.process_card(lines)
         card = BDFCard(card)
-        card = PROD(card)
-        model.add_property(card)
+        prod = PROD(card)
+        model.add_property(prod)
 
         lines = ['mat1,%i, %.2e, %.2e, %f, %f' % (mid, E, G, nu, rho)]
         card = model.process_card(lines)
@@ -114,6 +114,9 @@ class TestRods(unittest.TestCase):
         self.assertEquals(conrod.Mass(), mass)
         self.assertEquals(conrod.E(), E)
         self.assertEquals(conrod.G(), G)
+        self.assertEquals(conrod.Area(), A)
+        self.assertEquals(conrod.J(), J)
+        self.assertEquals(conrod.C(), c)
 
         # crod
         self.assertEquals(crod.Eid(), eid+1)
@@ -124,7 +127,20 @@ class TestRods(unittest.TestCase):
         self.assertEquals(crod.Mass(), mass)
         self.assertEquals(crod.E(), E)
         self.assertEquals(crod.G(), G)
+        self.assertEquals(crod.Area(), A)
+        self.assertEquals(crod.J(), J)
+        self.assertEquals(crod.C(), c)
         #self.assertEquals(crod.Nu(), nu)
+
+        # prod
+        self.assertEquals(prod.Pid(), pid)
+        self.assertEquals(prod.Mid(), mid)
+        self.assertEquals(prod.Nsm(), nsm)
+        self.assertEquals(prod.E(), E)
+        self.assertEquals(prod.G(), G)
+        self.assertEquals(prod.Area(), A)
+        self.assertEquals(prod.J(), J)
+        self.assertEquals(prod.C(), c)
 
 if __name__ == '__main__':
     unittest.main()
