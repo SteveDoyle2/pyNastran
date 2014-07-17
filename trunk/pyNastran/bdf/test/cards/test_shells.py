@@ -3,9 +3,194 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import unittest
 from numpy import array
 
-from pyNastran.bdf.bdf import PCOMP, MAT1
+from pyNastran.bdf.bdf import PCOMP, MAT1, BDF
 
 class TestShells(unittest.TestCase):
+    def _make_cquad4(self, model, rho, nu, G, E, t, nsm):
+        eid = 10
+        pid = 20
+        mid = 30
+        n1 = 1
+        n2 = 2
+        n3 = 3
+        n4 = 4
+        A = 2.
+        mid2 = mid3 = mid4 = twelveIt3 = tst = z1 = z2 = None
+
+        mass = A * (t * rho + nsm)
+        cards = [
+            ['grid', n1, 0, 0., 0., 0.],
+            ['grid', n2, 0, 2., 0., 0.],
+            ['grid', n3, 0, 2., 1., 0.],
+            ['grid', n4, 0, 0., 1., 0.],
+            ['cquad4', eid, pid, n1, n2, n3, n4],
+            ['pshell', pid, mid, t, mid2, twelveIt3, mid3, tst, nsm, z1, z2],
+            ['mat1', mid, E, G, nu, rho],
+        ]
+        for fields in cards:
+            model.add_card(fields, fields[0], is_list=True)
+        model.cross_reference()
+        cquad4 = model.Element(eid)
+
+        # cquad4 / pshell
+        self.assertEquals(cquad4.Eid(), eid)
+        self.assertEquals(cquad4.Pid(), pid)
+        self.assertEquals(cquad4.Mid(), mid)
+        self.assertEquals(cquad4.Nsm(), nsm)
+        self.assertEquals(cquad4.Mass(), mass)
+        self.assertAlmostEquals(cquad4.MassPerArea(), mass / A)
+        self.assertEquals(cquad4.Area(), A)
+        self.assertEquals(cquad4.Thickness(), t)
+        #self.assertEquals(cquad4.Rho(), rho)  # removed because of PCOMP
+
+    def _make_ctria3(self, model, rho, nu, G, E, t, nsm):
+        eid = 10
+        pid = 20
+        mid = 30
+        n1 = 1
+        n2 = 2
+        n3 = 3
+        mid2 = mid3 = mid4 = twelveIt3 = tst = z1 = z2 = None
+        z0 = sb = ft = Tref = ge = lam = None
+        sout = None
+        theta0 = 0.
+        theta1 = 30.
+        theta2 = 60.
+        theta3 = 90.
+        A = 2.
+        cards = [
+            ['grid', n1, 0, 0., 0., 0.],
+            ['grid', n2, 0, 4., 0., 0.],
+            ['grid', n3, 0, 4., 1., 0.],
+            ['ctria3', eid, pid, n1, n2, n3],   # A = 1/2 * 4 * 1 = 2.
+            ['pshell', pid, mid, t, mid2, twelveIt3, mid3, tst, nsm, z1, z2, mid4],
+
+            ['ctria3', eid + 1, pid + 1, n1, n2, n3],   # A = 1/2 * 4 * 1 = 2.
+            ['pcomp', pid + 1, z0, nsm, sb, ft, Tref, ge, lam,
+                mid, t,     theta0, sout,
+                mid, 2 * t, theta1, sout,
+                mid, 3 * t, theta2, sout,
+                mid, 4 * t, theta3, sout,
+                ],
+            ['mat1',mid, E, G, nu, rho],
+        ]
+        for fields in cards:
+            model.add_card(fields, fields[0], is_list=True)
+        model.cross_reference()
+
+        # ctria3 / pshell
+        ctria3 = model.Element(eid)
+        mass = A * (t * rho + nsm)
+        self.assertEquals(ctria3.Eid(), eid)
+        self.assertEquals(ctria3.Pid(), pid)
+        self.assertEquals(ctria3.Mid(), mid)
+        self.assertEquals(ctria3.Nsm(), nsm)
+        self.assertEquals(ctria3.Mass(), mass)
+        self.assertAlmostEquals(ctria3.MassPerArea(), mass / A)
+        self.assertEquals(ctria3.Area(), A)
+        self.assertEquals(ctria3.Thickness(), t)
+        self.assertEquals(ctria3.MassPerArea(), mass / A)
+
+        # removed because of PCOMP
+        # also no E, G, J, Nu, for the same reason
+        # what about Mid
+        #self.assertEquals(ctria3.Rho(), rho)
+
+
+        # pshell
+        pshell = model.Property(pid)
+        self.assertEquals(pshell.Pid(), pid)
+        self.assertEquals(pshell.Mid(), mid)
+        self.assertEquals(pshell.Nsm(), nsm)
+        self.assertEquals(pshell.Thickness(), t)
+        self.assertEquals(pshell.Rho(), rho)
+        self.assertEquals(pshell.z1, -t / 2.)
+        self.assertEquals(pshell.z2,  t / 2.)
+
+        # ctria3 / pcomp
+        ctria3 = model.Element(eid + 1)
+        mass = A * (10 * t * rho + nsm)
+        self.assertEquals(ctria3.Eid(), eid + 1)
+        self.assertEquals(ctria3.Pid(), pid + 1)
+        #self.assertEquals(ctria3.Mid(), mid)
+        self.assertEquals(ctria3.Nsm(), nsm)
+        self.assertAlmostEquals(ctria3.Mass(), mass)
+        self.assertAlmostEquals(ctria3.MassPerArea(), mass / A)
+        self.assertEquals(ctria3.Area(), A)
+        self.assertEquals(ctria3.Thickness(), 10 * t)
+        #self.assertEquals(ctria3.Rho(), rho)
+
+        # pcomp
+        pcomp = model.Property(pid + 1)
+        self.assertEquals(pcomp.Pid(), pid + 1)
+        self.assertEquals(pcomp.nPlies(), 4)
+
+        self.assertEquals(pcomp.Mid(0), mid)
+        self.assertEquals(pcomp.Nsm(), nsm)
+
+        with self.assertRaises(IndexError):
+            self.assertEquals(pcomp.Mid(-1), mid)
+        self.assertEquals(pcomp.Mids(), [mid] * 4)
+        self.assertEquals(pcomp.Mid(0), mid)
+        self.assertEquals(pcomp.Mid(1), mid)
+        self.assertEquals(pcomp.Mid(2), mid)
+        self.assertEquals(pcomp.Mid(3), mid)
+        with self.assertRaises(IndexError):
+            self.assertEquals(pcomp.Mid(4), mid)
+
+        with self.assertRaises(IndexError):
+            self.assertEquals(pcomp.Thickness(-1), t)
+        self.assertEquals(pcomp.Thickness(), 10 * t)
+        self.assertEquals(pcomp.Thickness(0), t)
+        self.assertEquals(pcomp.Thickness(1), 2 * t)
+        self.assertEquals(pcomp.Thickness(2), 3 * t)
+        self.assertEquals(pcomp.Thickness(3), 4 * t)
+        with self.assertRaises(IndexError):
+            self.assertEquals(pcomp.Thickness(4), 5*t)
+
+        with self.assertRaises(IndexError):
+            self.assertEquals(pcomp.Rho(-1), rho)
+        self.assertEquals(pcomp.Rho(0), rho)
+        self.assertEquals(pcomp.Rho(1), rho)
+        self.assertEquals(pcomp.Rho(2), rho)
+        self.assertEquals(pcomp.Rho(3), rho)
+        with self.assertRaises(IndexError):
+            self.assertEquals(pcomp.Rho(4), rho)
+
+        with self.assertRaises(IndexError):
+            self.assertEquals(pcomp.Theta(-1), 0.)
+        self.assertEquals(pcomp.Theta(0), 0.)
+        self.assertEquals(pcomp.Theta(1), 30.)
+        self.assertEquals(pcomp.Theta(2), 60.)
+        self.assertEquals(pcomp.Theta(3), 90.)
+        with self.assertRaises(IndexError):
+            self.assertEquals(pcomp.Theta(4), rho)
+        self.assertEquals(pcomp.z0, -10*t/2.)
+
+    def test_PSHELL_01(self):
+        """tests a CQUAD4 and a PSHELL"""
+
+        rho = 0.1
+        nu = 0.3
+        G = None
+        E = 1e7
+        t = 0.3
+        nsm = 0.0
+
+        model = BDF()
+        self._make_cquad4(model, rho, nu, G, E, t, nsm)
+
+        model = BDF()
+        self._make_ctria3(model, rho, nu, G, E, t, nsm)
+
+        nsm = 1.0
+        model = BDF()
+        self._make_cquad4(model, rho, nu, G, E, t, nsm)
+
+        model = BDF()
+        self._make_ctria3(model, rho, nu, G, E, t, nsm)
+
+
     def test_PCOMP_01(self):
         """
         asymmetrical, nsm=0.0 and nsm=1.0
