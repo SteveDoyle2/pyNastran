@@ -142,5 +142,6 @@ class TestMass(unittest.TestCase):
         centroid = array([2/3., 1/3., 1.])
         self.verify_psolid_element(penta, mass, volume, centroid, rho, E, G, nu)
 
+
 if __name__ == '__main__':
     unittest.main()

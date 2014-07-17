@@ -398,8 +398,14 @@ class PCOMP(CompositeShellProperty):
         if card:
             #: Property ID
             self.pid = integer(card, 1, 'pid')
+
+            # z0 is field 2 and is calculated at the end because we need the
+            # thickness first
+            #self.z0 = double_or_blank(card, 1, 'pid')
+
             #: Non-Structural Mass per unit Area
             self.nsm = double_or_blank(card, 3, 'nsm', 0.0)
+
             self.sb = double_or_blank(card, 4, 'sb', 0.0)
             #: Failure Theory
             #:

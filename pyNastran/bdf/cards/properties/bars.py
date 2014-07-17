@@ -1349,7 +1349,7 @@ class PBEAM(IntegratedLineProperty):
                 #n = 1
                 so  = string(card,  nStart, 'SO%i' % nRepeated)
                 xxb = double(card,  nStart + 1, 'x/xb%i' % nRepeated)
-                A   = double_or_blank(card,  nStart + 2, 'Area%i' % nRepeated, 0.0)
+                A   = double_or_blank(card, nStart + 2, 'Area%i' % nRepeated, 0.0)
                 i1  = double_or_blank(card, nStart + 3, 'I1 %i' % nRepeated, 0.0)
                 i2  = double_or_blank(card, nStart + 4, 'I2 %i' % nRepeated, 0.0)
                 i12 = double_or_blank(card, nStart + 5, 'I12 %i' % nRepeated, 0.0)
