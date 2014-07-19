@@ -42,6 +42,7 @@ class TestMass(unittest.TestCase):
         if rho:
             self.assertAlmostEqual(element.Rho(), rho, msg='rho=%s expected=%s' % (element.Rho(), rho))
             self.assertAlmostEqual(element.pid.Rho(), rho, msg='rho=%s expected=%s' % (element.pid.Rho(), rho))
+            self.assertEqual(element.pid.mid.type, 'MAT1', msg='mass=%s expected=%s' % (element.pid.mid.type, 'MAT1'))
             self.assertAlmostEqual(element.pid.mid.Rho(), rho, msg='rho=%s expected=%s' % (element.pid.mid.Rho(), rho))
 
         self.assertAlmostEqual(element.Mass(), mass, msg='mass=%s expected=%s' % (element.Mass(), mass))
@@ -64,7 +65,7 @@ class TestMass(unittest.TestCase):
         with self.assertRaises(AttributeError):
             element.Length()
 
-    def test_mass1(self):  # passes
+    def test_mass_shell_1(self):  # passes
         model = BDF(debug=True, log=None)
         bdfname = os.path.join(testpath, 'test_mass.dat')
         model.read_bdf(bdfname, include_dir=None, xref=True)
@@ -108,6 +109,11 @@ class TestMass(unittest.TestCase):
         mass = 0.50625 # mass w/o nsm + 0.5 b/c area=0.5
         nsm = 1.
         self.verify_pshell_element(tri, mass, area, centroid, normal, nsm)
+
+    def test_mass_solid_1(self):  # passes
+        model = BDF(debug=True, log=None)
+        bdfname = os.path.join(testpath, 'test_mass.dat')
+        model.read_bdf(bdfname, include_dir=None, xref=True)
 
         # hexa - psolid - nsm = 0
         hexa = model.elements[7]

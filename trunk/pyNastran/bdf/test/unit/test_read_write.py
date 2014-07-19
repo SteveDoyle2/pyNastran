@@ -17,11 +17,11 @@ class TestReadWrite(unittest.TestCase):
 
         bdf_name = os.path.join(test_path, 'test_mass.dat')
         model.read_bdf(bdf_name)
-        model.write_bdf('test_mass1a.out', size=8)
-        model.write_bdf('test_mass2a.out', size=8)
+        model.write_bdf(os.path.join(test_path, 'test_mass1a.out'), size=8)
+        model.write_bdf(os.path.join(test_path, 'test_mass2a.out'), size=8)
 
-        model.write_bdf('test_mass1b.out', size=8, interspersed=False)
-        model.write_bdf('test_mass2b.out', size=8, interspersed=True)
+        model.write_bdf(os.path.join(test_path, 'test_mass1b.out'), size=8, interspersed=False)
+        model.write_bdf(os.path.join(test_path, 'test_mass2b.out'), size=8, interspersed=True)
         os.remove(os.path.join(test_path, 'test_mass1a.out'))
         os.remove(os.path.join(test_path, 'test_mass2a.out'))
         os.remove(os.path.join(test_path, 'test_mass1b.out'))
@@ -51,11 +51,10 @@ class TestReadWrite(unittest.TestCase):
         # passes
         full_path = os.path.join(test_path, 'include_dir')
         model2 = BDF()
-        model2.read_bdf('test_include.bdf', include_dir=full_path, xref=True, punch=False)
-
-        # repeat with slightly different calling signature - passes
-        model2 = BDF()
-        model2.read_bdf('test_include.bdf', include_dir=full_path, xref=True, punch=False)
+        bdf_filename = 'test_include.bdf'
+        if not os.path.exists(bdf_filename):
+            bdf_filename = os.path.join(test_path, 'test_include.bdf')
+        model2.read_bdf(bdf_filename, include_dir=full_path, xref=True, punch=False)
 
     def test_enddata_1(self):
         """
@@ -64,19 +63,24 @@ class TestReadWrite(unittest.TestCase):
         model = BDF()
         full_path = os.path.join(test_path, 'include_dir')
         model2 = BDF()
-        model2.read_bdf('test_include.bdf', include_dir=full_path, xref=True, punch=False)
+
+        bdf_filename = 'test_include.bdf'
+        if not os.path.exists(bdf_filename):
+            bdf_filename = os.path.join(test_path, bdf_filename)
+        model2.read_bdf(bdf_filename, include_dir=full_path, xref=True, punch=False)
         for out_filename, is_enddata, write_flag in [
             ('enddata1.bdf', True, None),
             ('enddata2.bdf', True, True),
             ('enddata3.bdf', False, False)]:
-            model2.write_bdf(out_filename=out_filename, interspersed=True, size=8,
+            out_filename = os.path.join(test_path, out_filename)
+            model2.write_bdf(out_filename=out_filename+'.out', interspersed=True, size=8,
                             precision='single', enddata=write_flag)
-            data = open(out_filename, 'r').read()
+            data = open(out_filename + '.out', 'r').read()
             if is_enddata:
                 self.assertTrue('ENDDATA' in data)
             else:
                 self.assertFalse('ENDDATA' in data)
-            os.remove(out_filename)
+            os.remove(out_filename + '.out')
 
     def test_enddata_2(self):
         """

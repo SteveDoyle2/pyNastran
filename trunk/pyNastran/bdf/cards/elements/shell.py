@@ -19,6 +19,7 @@ All quads are QuadShell, ShellElement, and Element objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
+import warnings
 
 from numpy import array, eye, cross, allclose, dot, transpose, zeros
 from numpy.linalg import det, norm  # inv
@@ -91,12 +92,16 @@ class ShellElement(Element):
     def mid(self):
         """
         Returns the material
+
+        ..todo:: possibly remove this
         """
         return self.pid.mid()
 
     def Mid(self):
         """
         Returns the material ID
+
+        ..todo:: possibly remove this
         """
         return self.pid.Mid()
 
@@ -104,6 +109,9 @@ class ShellElement(Element):
         """
         Returns the density
         """
+        #.. deprecated: will be removed in version 0.8
+        #warnings.warn('replace with self.pid.mid().rho',
+        #              DeprecationWarning, stacklevel=2)
         return self.pid.mid().rho
 
     def Nsm(self):
@@ -125,7 +133,7 @@ class ShellElement(Element):
         return self.pid.MassPerArea() * self.Area()
 
     def flipNormal(self):
-        raise NotImplementedError('flipNormal undefined for %s' % (self.type))
+        raise NotImplementedError('flipNormal undefined for %s' % self.type)
 
 
 class TriShell(ShellElement):
@@ -1456,9 +1464,6 @@ class CSHEAR(QuadShell):
             f14, f34, tau41, kick4,
              ]
         return ([tau14, tau14, margin], [exy, exy, margin/G], F)
-
-
-
 
 
 def LambdaN(L, n):

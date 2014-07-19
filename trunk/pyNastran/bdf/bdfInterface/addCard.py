@@ -231,6 +231,15 @@ class AddMethods(object):
             assert key > 0, 'mid=%s material=\n%s' % (key, material)
             self.thermalMaterials[key] = material
 
+    def add_hyperelastic_material(self, material, allowOverwrites=False):
+        key = material.mid
+        if key in self.hyperelasticMaterials and not allowOverwrites:
+            if not material.isSameCard(self.hyperelasticMaterials [key]):
+                assert key not in self.hyperelasticMaterials , 'mid=%s\noldMaterial=\n%snewMaterial=\n%s' % (key, self.hyperelasticMaterials [key], material)
+        else:
+            assert key > 0, 'mid=%s material=\n%s' % (key, material)
+            self.hyperelasticMaterials[key] = material
+
     def add_material_dependence(self, material, allowOverwrites=False):
         Type = material.type
         key = material.mid

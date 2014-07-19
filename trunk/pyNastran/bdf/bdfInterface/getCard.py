@@ -272,7 +272,7 @@ class GetMethods(GetMethodsDeprecated):
             mat = self.materials[mid]
         except KeyError:
             msg = '\n' + msg
-            raise KeyError('Invalid Material ID:  mid=%s%s' % (mid, msg))
+            raise KeyError('Invalid Structural Material ID:  mid=%s%s' % (mid, msg))
         return mat
 
     def ThermalMaterial(self, mid, msg=''):
@@ -280,7 +280,15 @@ class GetMethods(GetMethodsDeprecated):
             mat = self.thermalMaterials[mid]
         except KeyError:
             msg = '\n' + msg
-            raise KeyError('Invalid Material ID:  mid=%s%s' % (mid, msg))
+            raise KeyError('Invalid Thermal Material ID:  mid=%s%s' % (mid, msg))
+        return mat
+
+    def HyperelasticMaterial(self, mid, msg=''):
+        try:
+            mat = self.hyperelasticMaterials[mid]
+        except KeyError:
+            msg = '\n' + msg
+            raise KeyError('Invalid Hyperelastic Material ID:  mid=%s%s' % (mid, msg))
         return mat
 
     def Materials(self, mids, msg=''):
