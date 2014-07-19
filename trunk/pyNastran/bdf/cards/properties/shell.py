@@ -719,7 +719,7 @@ class PLPLANE(ShellProperty):
 
     def cross_reference(self, model):
         msg = ' which is required by PLPLANE pid=%s' % self.pid
-        self.mid = model.Material(self.mid, msg=msg)
+        self.mid = model.HyperelasticMaterial(self.mid, msg=msg)
         self.cid = model.Coord(self.cid, msg=msg)
 
     def _verify(self, xref=False):
