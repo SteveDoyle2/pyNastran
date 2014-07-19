@@ -238,7 +238,7 @@ class PLSOLID(SolidProperty):
 
     def cross_reference(self, model):
         msg = ' which is required by PLSOLID pid=%s' % self.pid
-        self.mid = model.Material(self.mid, msg)
+        self.mid = model.HyperelasticMaterial(self.mid, msg)
 
     def rawFields(self):
         stress_strain = set_blank_if_default(self.str, 'GRID')

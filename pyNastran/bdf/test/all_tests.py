@@ -23,6 +23,11 @@ from pyNastran.bdf.test.cards.test_materials import *
 
 from pyNastran.bdf.test.cards.test_tables import *
 
+# unit
+from pyNastran.bdf.test.unit.test_mass import *
+from pyNastran.bdf.test.unit.test_assign_type import *
+from pyNastran.bdf.test.unit.test_read_write import *
+
 
 if __name__ == "__main__":
     import unittest

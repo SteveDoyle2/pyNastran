@@ -481,6 +481,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         #: defines the MAT4, MAT5
         self.thermalMaterials = {}
 
+        #: defines the MATHE, MATHP
+        self.hyperelasticMaterials = {}
+
         #: stores MATSx
         self.MATS1 = {}
         self.MATS3 = {}
@@ -1378,8 +1381,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
              # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
              'add_creep_material': ['CREEP'],
              'add_structural_material': ['MAT1', 'MAT2', 'MAT3', 'MAT8',
-                                         'MAT9', 'MAT10', 'MAT11', 'MATHP',
-                                         'MATHE', 'EQUIV'],
+                                         'MAT9', 'MAT10', 'MAT11',
+                                         'EQUIV'],
+             'add_hyperelastic_material': ['MATHE', 'MATHP',],
              'add_thermal_material': ['MAT4', 'MAT5'],
              'add_material_dependence': ['MATS1', 'MATS3', 'MATS8',
                                          'MATT1', 'MATT2', 'MATT3', 'MATT4',
