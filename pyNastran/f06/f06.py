@@ -321,11 +321,11 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
         """
         #print('-----------------')
         ### changed...
-        for iline in [-4, -3, -2, -1, 0]:
-            if iline == -1:
-                print('***line[%s]=%r' % (iline, self.stored_lines[iline].replace("    ", " ")))
-            else:
-                print('line[%s]=%r' % (iline, self.stored_lines[iline].replace("    ", " ")))
+        #for iline in [-4, -3, -2, -1, 0]:
+            #if iline == -1:
+                #print('***line[%s]=%r' % (iline, self.stored_lines[iline].replace("    ", " ")))
+            #else:
+                #print('line[%s]=%r' % (iline, self.stored_lines[iline].replace("    ", " ")))
         #assert 'PAGE' in self.stored_lines[-4], self.stored_lines[-4]
         subtitle = self.stored_lines[-3].strip()
 
@@ -371,12 +371,12 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
 #subtitle
 #label      ???
 
-        if 'F O R C E S' in self.stored_lines[0]:
-            print("title    = %r" % self.Title)
-            print("subtitle = %r" % subtitle)
-            print("label    = %r" % label)
-            print("isubcase = %r" % isubcase)
-        print('------------')
+        #if 'F O R C E S' in self.stored_lines[0]:
+            #print("title    = %r" % self.Title)
+            #print("subtitle = %r" % subtitle)
+            #print("label    = %r" % label)
+            #print("isubcase = %r" % isubcase)
+        #print('------------')
 
         #assert self.Title == 'MSC.NASTRAN JOB CREATED ON 12-MAR-13 AT 12:52:23', self.Title
         self._subtitle = subtitle
