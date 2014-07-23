@@ -404,12 +404,14 @@ class WriteMesh(object):
     def _write_materials(self, size, card_writer):
         """Writes the materials in a sorted order"""
         msg = []
-        if(self.materials or self.creepMaterials or
+        if(self.materials or self.hyperelasticMaterials or self.creepMaterials or
             self.MATS1 or self.MATS3 or self.MATS8 or self.MATT1 or
             self.MATT2 or self.MATT3 or self.MATT4 or self.MATT5 or
             self.MATT8 or self.MATT9):
             msg.append('$MATERIALS\n')
             for (mid, material) in sorted(self.materials.iteritems()):
+                msg.append(material.write_bdf(size, card_writer))
+            for (mid, material) in sorted(self.hyperelasticMaterials.iteritems()):
                 msg.append(material.write_bdf(size, card_writer))
             for (mid, material) in sorted(self.creepMaterials.iteritems()):
                 msg.append(material.write_bdf(size, card_writer))

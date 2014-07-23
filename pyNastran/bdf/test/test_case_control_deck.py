@@ -61,7 +61,7 @@ class CaseControlTest(unittest.TestCase):
         bdf_filename = os.path.join(test_path, 'unit', 'case_control.dat')
         bdf_filename2 = os.path.join(test_path, 'unit', 'case_control_out.dat')
 
-        mesh = BDF(debug=True,log=None)
+        mesh = BDF(debug=False, log=None)
         mesh.read_bdf(bdf_filename, include_dir=None, xref=True)
         str(mesh.caseControlDeck)
 
