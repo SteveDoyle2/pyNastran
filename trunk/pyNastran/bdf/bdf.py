@@ -144,7 +144,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.include_dir = ''
         self.active_filename = None
         self.active_filenames = []
-        #self.used_filenames = []
         if self._isDict:
             self._stored_Is = {}
             self._stored_lines = {}
@@ -940,7 +939,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             if 'BEGIN' in lineUpper and ('BULK' in lineUpper or 'SUPER' in lineUpper):
                 self.log.debug('found the end of the Case Control Deck!')
                 break
-        self.log.info("finished with Case Control Deck...")
+        self.log.debug("finished with Case Control Deck...")
 
         #for line in self.case_control_lines:
             #print("** line=%r" % line)
@@ -1172,18 +1171,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         :param self: the BDF object
         """
-        self.log.info("reading Bulk Data Deck...")
+        self.log.debug("reading Bulk Data Deck...")
         self._break_comment = True
-        #n = 1
         #isEndData = False
-        while self.active_filename: # or self._stored_lines:
+        while self.active_filename:
             try:
                 (lines, comment) = self._card_streams[self._ifile].next()
             except StopIteration:
                 self._close_file()
                 continue
             assert len(lines) > 0
-            #n += 1
 
             card_name = self._get_card_name(lines)
             if not isinstance(comment, basestring):

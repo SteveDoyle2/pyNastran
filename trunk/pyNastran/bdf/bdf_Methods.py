@@ -222,7 +222,7 @@ class BDFMethods(BDFMethodsDeprecated):
 
         nelements = len(self.elements)
         #-----------------------------------------------------------
-        self.log.info("Creating %i-process pool!" % num_cpus)
+        self.log.debug("Creating %i-process pool!" % num_cpus)
 
         pool = mp.Pool(num_cpus)
         result = pool.imap(_mass_properties_mass_mp_func, [(element) for element in self.elements.itervalues()
@@ -238,7 +238,7 @@ class BDFMethods(BDFMethodsDeprecated):
             #self.log.info("%.3f %% Processed"% (j*100./nelements))
             mass[j] = return_values[0]
             xyz[j, :] = return_values[1]
-        self.log.info("Shutting down process pool!")
+        self.log.debug("Shutting down process pool!")
         pool.close()
         pool.join()
 

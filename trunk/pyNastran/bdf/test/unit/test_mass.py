@@ -66,7 +66,7 @@ class TestMass(unittest.TestCase):
             element.Length()
 
     def test_mass_shell_1(self):  # passes
-        model = BDF(debug=True, log=None)
+        model = BDF(debug=False, log=None)
         bdfname = os.path.join(testpath, 'test_mass.dat')
         model.read_bdf(bdfname, include_dir=None, xref=True)
 
@@ -111,7 +111,7 @@ class TestMass(unittest.TestCase):
         self.verify_pshell_element(tri, mass, area, centroid, normal, nsm)
 
     def test_mass_solid_1(self):  # passes
-        model = BDF(debug=True, log=None)
+        model = BDF(debug=False, log=None)
         bdfname = os.path.join(testpath, 'test_mass.dat')
         model.read_bdf(bdfname, include_dir=None, xref=True)
 
