@@ -7,7 +7,7 @@ from pyNastran.bdf.bdf import BDF, BDFCard, PBAR #, GRID, MAT1
 
 from pyNastran.bdf.fieldWriter import print_card
 
-bdf = BDF()
+bdf = BDF(debug=False)
 class TestBars(unittest.TestCase):
     def test_pbar_01(self):
         fields = [u'PBAR', 1510998, 1520998, 0.0, 4.9000000000000006e-14, 4.9000000000000006e-14, 0.0, 0.0, None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None, 0.0]

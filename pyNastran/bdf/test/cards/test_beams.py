@@ -9,7 +9,7 @@ from pyNastran.bdf.bdf import PELAS
 
 from pyNastran.bdf.fieldWriter import print_card
 
-bdf = BDF()
+bdf = BDF(debug=False)
 class TestBeams(unittest.TestCase):
     def test_pbeam_01(self):
         lines =['PBEAM,39,6,2.9,3.5,5.97',
@@ -130,7 +130,7 @@ class TestBeams(unittest.TestCase):
 
     def test_cbeam_05(self):
         # modification of test_pbeam_05
-        model = BDF()
+        model = BDF(debug=False)
         lines = ['PBEAM,3,6,2.9,3.5,5.97,0.4,3.14',
                  '     , , ,2.0,-4.0',]
         card = model.add_card(lines, 'PBEAM', is_list=False)
@@ -166,7 +166,6 @@ class TestBeams(unittest.TestCase):
         self.assertEqual(cbeam.I22(), 5.97)
         self.assertEqual(cbeam.I12(), 0.4)
         self.assertEqual(cbeam.J(), 3.14)
-
 
     def test_pbeam_06(self):
         lines =['PBEAM   1       1       1.      60.     1.                              PBEAM1',

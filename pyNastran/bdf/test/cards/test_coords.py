@@ -3,7 +3,7 @@ import unittest
 
 from pyNastran.bdf.bdf import BDF, BDFCard, CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
 
-bdf = BDF()  # don't load this up with stuff
+bdf = BDF(debug=False)  # don't load this up with stuff
 class TestCoords(unittest.TestCase):
     def test_same(self):  # passes
         grids = [
@@ -142,7 +142,7 @@ class TestCoords(unittest.TestCase):
             '*                     0.              0.              0.              1.*',
             '*                     1.              0.              1.'
         ]
-        model = BDF()
+        model = BDF(debug=False)
         card = model.process_card(lines)
         card = BDFCard(card)
         card = CORD2C(card)
@@ -176,7 +176,7 @@ class TestCoords(unittest.TestCase):
         """
         all points are located at <30,40,50>
         """
-        model = BDF()
+        model = BDF(debug=False)
         cards = [
             [#'$ Femap with NX Nastran Coordinate System 10 : rectangular defined in a rectangular',
             'CORD2R*               10               0             10.              5.',
@@ -211,7 +211,7 @@ class TestCoords(unittest.TestCase):
         """
         all points are located at <30,40,50>
         """
-        model = BDF()
+        model = BDF(debug=False)
         cards = [
             ['CORD2C*                1               0              0.              0.',
             '*                     0.              0.              0.              1.*       ',
@@ -248,7 +248,7 @@ class TestCoords(unittest.TestCase):
         """
         all points are located at <30,40,50>
         """
-        model = BDF()
+        model = BDF(debug=False)
         cards = [
             ['CORD2S*                2               0              0.              0.',
             '*                     0.              0.              0.              1.*       ',
@@ -310,7 +310,7 @@ class TestCoords(unittest.TestCase):
         coord = ['CORD2R         7           1.135 .089237  -.0676    .135 .089237  -.0676',
                  '           1.135 .089237   .9324']
 
-        model = BDF()
+        model = BDF(debug=False)
         card = model.process_card(grid)
         model.add_card(card, card[0])
 

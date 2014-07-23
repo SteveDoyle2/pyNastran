@@ -177,17 +177,17 @@ class TestShells(unittest.TestCase):
         t = 0.3
         nsm = 0.0
 
-        model = BDF()
+        model = BDF(debug=False)
         self._make_cquad4(model, rho, nu, G, E, t, nsm)
 
-        model = BDF()
+        model = BDF(debug=False)
         self._make_ctria3(model, rho, nu, G, E, t, nsm)
 
         nsm = 1.0
-        model = BDF()
+        model = BDF(debug=False)
         self._make_cquad4(model, rho, nu, G, E, t, nsm)
 
-        model = BDF()
+        model = BDF(debug=False)
         self._make_ctria3(model, rho, nu, G, E, t, nsm)
 
 

@@ -13,7 +13,7 @@ class TestReadWrite(unittest.TestCase):
         """
         Tests 1 read method and various write methods
         """
-        model = BDF()
+        model = BDF(debug=False)
 
         bdf_name = os.path.join(test_path, 'test_mass.dat')
         model.read_bdf(bdf_name)
@@ -31,11 +31,11 @@ class TestReadWrite(unittest.TestCase):
         """
         Tests punch file reading
         """
-        model = BDF()
+        model = BDF(debug=False)
         bdf_name = os.path.join(test_path, 'include_dir', 'include.inc')
         model.read_bdf(bdf_name, xref=False, punch=True)
 
-        model2 = BDF()
+        model2 = BDF(debug=False)
         #bdf_name = os.path.join(test_path, 'include_dir', 'include.inc')
         model2.read_bdf(bdf_name, xref=False, punch=True)
 
@@ -44,13 +44,13 @@ class TestReadWrite(unittest.TestCase):
         Tests various read methods using various include files
         """
         # fails
-        model = BDF()
+        model = BDF(debug=False)
         bdf_name = os.path.join(test_path, 'test_include.bdf')
         self.assertRaises(IOError, model.read_bdf, bdf_name, include_dir=None, xref=True, punch=False)
 
         # passes
         full_path = os.path.join(test_path, 'include_dir')
-        model2 = BDF()
+        model2 = BDF(debug=False)
         bdf_filename = 'test_include.bdf'
         if not os.path.exists(bdf_filename):
             bdf_filename = os.path.join(test_path, 'test_include.bdf')
@@ -60,9 +60,9 @@ class TestReadWrite(unittest.TestCase):
         """
         There is an ENDDATA is in the baseline BDF, so None -> ENDDATA
         """
-        model = BDF()
+        model = BDF(debug=False)
         full_path = os.path.join(test_path, 'include_dir')
-        model2 = BDF()
+        model2 = BDF(debug=False)
 
         bdf_filename = 'test_include.bdf'
         if not os.path.exists(bdf_filename):
@@ -86,9 +86,9 @@ class TestReadWrite(unittest.TestCase):
         """
         There is no ENDDATA is in the baseline BDF, so None -> no ENDDATA
         """
-        model = BDF()
+        model = BDF(debug=False)
         full_path = os.path.join(test_path, 'include_dir')
-        model2 = BDF()
+        model2 = BDF(debug=False)
         bdf_name = os.path.join(test_path, 'test_mass.dat')
         model2.read_bdf(bdf_name, include_dir=full_path, xref=True, punch=False)
         for out_filename, is_enddata, write_flag in [
@@ -107,7 +107,7 @@ class TestReadWrite(unittest.TestCase):
 
 if __name__ == '__main__':
     # passes if you're in the local folder, fails if you aren't
-    #model2 = BDF()
+    #model2 = BDF(debug=False)
     #model2.read_bdf('test_include.bdf', include_dir='include_dir', xref=True, punch=False)
 
     unittest.main()

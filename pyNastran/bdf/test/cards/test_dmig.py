@@ -15,7 +15,7 @@ class TestDMIG(unittest.TestCase):
         """
         Tests DMIG reading
         """
-        model = BDF()
+        model = BDF(debug=False)
         bdf_name = os.path.join(test_path, 'cards', 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
         out = model.dmigs['REALS'].getMatrix(isSparse=False)
@@ -32,7 +32,7 @@ class TestDMIG(unittest.TestCase):
         self.assertTrue(array_equal(REALS_expected, REALS_actual))
 
     def test_dmig_2(self):
-        model = BDF()
+        model = BDF(debug=False)
         bdf_name = os.path.join(test_path, 'cards', 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
 
@@ -51,7 +51,7 @@ class TestDMIG(unittest.TestCase):
         #model2.read_bdf(bdf_name, xref=False, punch=True)
 
     def test_dmig_3(self):
-        model = BDF()
+        model = BDF(debug=False)
         bdf_name = os.path.join(test_path, 'cards', 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
         out = model.dmigs['IMAG'].getMatrix(isSparse=False)
@@ -72,7 +72,7 @@ class TestDMIG(unittest.TestCase):
         self.assertTrue(array_equal(IMAG_expected, IMAG_actual))
 
     def test_dmig_4(self):
-        model = BDF()
+        model = BDF(debug=False)
         bdf_name = os.path.join(test_path, 'cards', 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
 
@@ -96,7 +96,7 @@ class TestDMIG(unittest.TestCase):
         self.assertTrue(array_equal(IMAGS_expected, IMAGS_actual), msg)
 
     def test_dmig_5(self):
-        model = BDF()
+        model = BDF(debug=False)
         bdf_name = os.path.join(test_path, 'cards', 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
         out = model.dmigs['POLE'].getMatrix(isSparse=False)
@@ -119,7 +119,7 @@ class TestDMIG(unittest.TestCase):
 
     def test_dmig_06(self):
         lines = ['DMIG    ENFORCE 0       1       1       0']
-        bdf = BDF()
+        bdf = BDF(debug=False)
         card = bdf.process_card(lines)
         card = BDFCard(card)
 

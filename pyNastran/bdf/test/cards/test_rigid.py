@@ -2,7 +2,7 @@ import unittest
 from pyNastran.bdf.bdf import BDF, BDFCard, RBE1, RBE2, RBE3
 from pyNastran.bdf.fieldWriter import print_card
 
-bdf = BDF()
+bdf = BDF(debug=False)
 class TestRigid(unittest.TestCase):
 
     def test_rbe3_01(self):

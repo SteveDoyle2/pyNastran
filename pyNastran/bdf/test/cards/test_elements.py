@@ -3,7 +3,7 @@ import unittest
 from pyNastran.bdf.bdf import BDF, BDFCard
 from pyNastran.bdf.bdf import CGAP, PGAP, CDAMP1, CBUSH
 
-bdf = BDF()
+bdf = BDF(debug=False)
 
 class TestElements(unittest.TestCase):
 

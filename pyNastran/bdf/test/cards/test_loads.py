@@ -3,7 +3,7 @@ import unittest
 from pyNastran.bdf.bdf import BDF, BDFCard, DAREA, PLOAD4
 from pyNastran.bdf.bdf import SET1, AESTAT, DMI, DMIG
 
-bdf = BDF()
+bdf = BDF(debug=False)
 
 class TestLoads(unittest.TestCase):
     def test_darea_01(self):
