@@ -1,7 +1,7 @@
 import unittest
 from pyNastran.bdf.bdf import BDF, BDFCard, SUPORT, SUPORT1
 
-bdf = BDF()
+bdf = BDF(debug=False)
 class TestConstraints(unittest.TestCase):
     def test_support_01(self):
         lines = ['SUPORT, 1,      126']

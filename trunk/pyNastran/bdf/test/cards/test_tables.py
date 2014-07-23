@@ -2,9 +2,8 @@ import unittest
 from pyNastran.bdf.bdf import BDF, BDFCard, TABDMP1
 from pyNastran.bdf.fieldWriter import print_card
 
-bdf = BDF()
+bdf = BDF(debug=False)
 class TestTables(unittest.TestCase):
-
 
     def test_tabdmp1_01(self):
         lines = ['TABDMP1,100,,,,,,,,+',

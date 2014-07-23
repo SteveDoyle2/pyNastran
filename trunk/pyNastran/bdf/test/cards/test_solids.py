@@ -3,7 +3,7 @@ import unittest
 from pyNastran.bdf.bdf import BDF, BDFCard
 from pyNastran.bdf.bdf import CPENTA15
 
-bdf = BDF()
+bdf = BDF(debug=False)
 
 class TestSolids(unittest.TestCase):
 
@@ -56,7 +56,7 @@ class TestSolids(unittest.TestCase):
             ['PSOLID', pid, mid, 0],
             ['MAT1',  mid, 1.0, 2.0, 3.0, rho]
         ]
-        model = BDF()
+        model = BDF(debug=False)
         for fields in cards:
             model.add_card(fields, fields[0], is_list=True)
         model.cross_reference()
@@ -123,7 +123,7 @@ class TestSolids(unittest.TestCase):
             ['PLSOLID', pid, mid, 'GRID'],
             ['MATHP', mid, None, None, None, rho],
         ]
-        model = BDF()
+        model = BDF(debug=False)
         for fields in cards:
             model.add_card(fields, fields[0], is_list=True)
         model.cross_reference()
@@ -177,7 +177,7 @@ class TestSolids(unittest.TestCase):
             ['MAT1', mid, 1.0, 2.0, 3.0, rho],
             ['MATS1', mid, None, 'PLASTIC', 0.0, 1, 1, 100000., ],
         ]
-        model = BDF()
+        model = BDF(debug=False)
         for fields in cards:
             model.add_card(fields, fields[0], is_list=True)
         model.cross_reference()
@@ -221,7 +221,7 @@ class TestSolids(unittest.TestCase):
             ['TABLES1', tableID, 1, None, None, None, None, None, None,
             1.0, 10.0, 2.0, 10.0, 'ENDT'],
         ]
-        model = BDF()
+        model = BDF(debug=False)
         for fields in cards:
             model.add_card(fields, fields[0], is_list=True)
         model.cross_reference()

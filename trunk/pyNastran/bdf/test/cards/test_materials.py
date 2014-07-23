@@ -3,7 +3,7 @@ import unittest
 from pyNastran.bdf.bdf import BDF, BDFCard, MAT1, MAT8, MAT11
 from pyNastran.bdf.fieldWriter import print_card
 
-bdf = BDF()
+bdf = BDF(debug=False)
 
 class TestMaterials(unittest.TestCase):
     def test_mat1_01(self):
