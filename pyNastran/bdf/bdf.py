@@ -1202,10 +1202,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 #isEndData = True  # exits while loop
                 break
 
-            self._increase_card_count(card_name)
             if not self.is_reject(card_name):
+                # card_count is increased in add_card function
                 self.add_card(lines, card_name, comment, is_list=False)
             else:
+                self._increase_card_count(card_name)
                 if comment:
                     self.rejects.append([comment])
                 self.rejects.append(lines)
@@ -1302,11 +1303,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                   created.
         .. warning:: cardObject is not returned
         """
+        card_name = card_name.upper()
+        self._increase_card_count(card_name)
         if card_name in ['DEQATN']:
             card_obj = card_lines
             card = card_lines
         else:
-            card_name = card_name.upper()
             if is_list:
                 fields = card_lines
             else:
