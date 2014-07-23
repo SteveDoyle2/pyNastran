@@ -1164,7 +1164,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             msg = 'card_name=%r\nline=%r in filename=%r is invalid' \
                   % (card_name, lines[0], self.active_filename)
             raise RuntimeError(msg)
-        return card_name
+        return card_name.upper()
 
     def _read_bulk_data_deck(self):
         """

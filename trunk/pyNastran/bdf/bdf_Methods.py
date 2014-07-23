@@ -11,6 +11,7 @@ from pyNastran.bdf.cards.loads.staticLoads import Moment, Force
 
 
 class BDFMethodsDeprecated(object):
+
     def MassProperties(self):
         """
         .. seealso:: mass_properties
@@ -272,20 +273,20 @@ class BDFMethods(BDFMethodsDeprecated):
             y = xyz[:, 1] - cg[1]
             z = xyz[:, 2] - cg[2]
 
-        x2 = x**2
-        y2 = y**2
-        z2 = z**2
+        x2 = x ** 2
+        y2 = y ** 2
+        z2 = z ** 2
 
         #A = y2 + z2
         #print('mass.shape', mass.shape)
         #print('A.shape', A.shape)
         I = array([
-           mass * (y2 + z2),  # Ixx
-           mass * (x2 + z2),  # Iyy
-           mass * (x2 + y2),  # Izz
-           mass * (x * y),    # Ixy
-           mass * (x * z),    # Ixz
-           mass * (y * z),    # Iyz
+            mass * (y2 + z2),  # Ixx
+            mass * (x2 + z2),  # Iyy
+            mass * (x2 + y2),  # Izz
+            mass * (x * y),    # Ixy
+            mass * (x * z),    # Ixz
+            mass * (y * z),    # Iyz
         ]).sum(axis=1)
 
         return (massi, cg, I)
@@ -429,9 +430,7 @@ class BDFMethods(BDFMethodsDeprecated):
         """
         for (key, loadCase) in self.loads.iteritems():
             F = array([0., 0., 0.])
-            #print "loadCase = ",loadCase
             for load in loadCase:
-                #print "load = ",load
                 if isinstance(load, Force):
                     f = load.mag * load.xyz
                     F += f
@@ -453,9 +452,7 @@ class BDFMethods(BDFMethodsDeprecated):
         for (key, loadCase) in self.loads.iteritems():
             M = array([0., 0., 0.])
             F = array([0., 0., 0.])
-            #print "loadCase = ",loadCase
             for load in loadCase:
-                #print "load = ",load
                 if isinstance(load, Force):
                     f = load.mag * load.xyz
                     node = self.Node(load.node)
@@ -466,5 +463,5 @@ class BDFMethods(BDFMethodsDeprecated):
                 elif isinstance(load, Moment):
                     m = load.mag * load.xyz
                     M += m
-            print("case=%s F=%s M=%s\n\n" % (key, F, M))
+            self.log.info("case=%s F=%s M=%s\n\n" % (key, F, M))
         return (M, F)
