@@ -22,7 +22,7 @@ def print_scientific_double(value):
     field = svalue.replace('e', 'D')
 
     if field == '-0.0000000000D+00':
-        field =  '0.0000000000D+00'
+        field = '0.0000000000D+00'
     assert len(field) == 16, ('value=%r field=%r is not 16 characters '
                               'long, its %s' % (value, field, len(field)))
     return field
@@ -69,11 +69,11 @@ def print_card_double(fields, wipe_fields=True):
     nBDF_lines = nfields_main // 8
     if nfields_main % 8 != 0:
         nBDF_lines += 1
-        nExtra_fields = 8 * nBDF_lines -  nfields_main
+        nExtra_fields = 8 * nBDF_lines - nfields_main
         fields += [None] * nExtra_fields
 
     try:
-        out = '%-8s' % (fields[0]+'*')
+        out = '%-8s' % (fields[0] + '*')
     except:
         print("ERROR!  fields=%s" % fields)
         sys.stdout.flush()
