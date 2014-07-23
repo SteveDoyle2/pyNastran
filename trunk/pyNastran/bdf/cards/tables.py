@@ -27,7 +27,7 @@ from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.utils.dev import list_print
 from pyNastran.bdf.bdfInterface.assign_type import (integer,  # fields,
-    double, components, string, string_or_blank)
+    integer_or_blank, double, components, string, string_or_blank)
 
 class Table(BaseCard):
     def __init__(self, card, data):
@@ -148,6 +148,8 @@ class TABLED1(Table):
 
             nfields = len(card) - 1
             nterms = (nfields - 9) // 2
+            if nterms < 0:
+                raise SyntaxError('%r card is too short' % self.type)
             xy = []
             for i in range(nterms):
                 n = 9 + i * 2
@@ -191,6 +193,8 @@ class TABLED2(Table):
 
             nfields = len(card) - 1
             nterms = (nfields - 9) // 2
+            if nterms < 0:
+                raise SyntaxError('%r card is too short' % self.type)
             xy = []
             for i in range(nterms):
                 n = 9 + i * 2
@@ -231,6 +235,8 @@ class TABLED3(Table):
 
             nfields = len(card) - 1
             nterms = (nfields - 9) // 2
+            if nterms < 0:
+                raise SyntaxError('%r card is too short' % self.type)
             xy = []
             for i in range(nterms):
                 n = 9 + i * 2
@@ -276,6 +282,8 @@ class TABLED4(Table):
 
             nfields = len(card) - 1
             nterms = (nfields - 9) // 2
+            if nterms < 0:
+                raise SyntaxError('%r card is too short' % self.type)
             xy = []
             for i in range(nterms):
                 n = 9 + i * 2
@@ -318,6 +326,8 @@ class TABDMP1(Table):
 
             nfields = len(card) - 1
             nterms = (nfields - 9) // 2
+            if nterms < 0:
+                raise SyntaxError('%r card is too short' % self.type)
             xy = []
             for i in range(nterms):
                 n = 9 + i * 2
@@ -356,6 +366,8 @@ class TABLEM1(Table):
 
             nfields = len(card) - 1
             nterms = (nfields - 9) // 2
+            if nterms < 0:
+                raise SyntaxError('%r card is too short' % self.type)
             xy = []
             for i in range(nterms):
                 n = 9 + i * 2
@@ -390,6 +402,8 @@ class TABLEM2(Table):
 
             nfields = len(card) - 1
             nterms = (nfields - 9) // 2
+            if nterms < 0:
+                raise SyntaxError('%r card is too short' % self.type)
             xy = []
             for i in range(nterms):
                 n = 9 + i * 2
@@ -430,6 +444,8 @@ class TABLEM3(Table):
 
             nfields = len(card) - 1
             nterms = (nfields - 9) // 2
+            if nterms < 0:
+                raise SyntaxError('%r card is too short' % self.type)
             xy = []
             for i in range(nterms):
                 n = 9 + i * 2
@@ -474,6 +490,8 @@ class TABLEM4(Table):
 
             nfields = len(card) - 1
             nterms = (nfields - 9) // 2
+            if nterms < 0:
+                raise SyntaxError('%r card is too short' % self.type)
             xy = []
             for i in range(nterms):
                 n = 9 + i * 2
@@ -512,9 +530,13 @@ class TABLES1(Table):
             self._comment = comment
         if card:
             self.tid = integer(card, 1, 'tid')
+            self.Type = integer_or_blank(card, 2, 'Type', 1)
+            assert self.Type in [1, 2], 'TABLES1 Type=%s' % self.Type
 
             nfields = len(card) - 1
             nterms = (nfields - 9) // 2
+            if nterms < 0:
+                raise SyntaxError('%r card is too short' % self.type)
             xy = []
             for i in range(nterms):
                 n = 9 + i * 2
@@ -532,7 +554,7 @@ class TABLES1(Table):
         self.parse_fields(xy, nrepeated=2, isData=isData)
 
     def rawFields(self):
-        list_fields = ['TABLES1', self.tid, None, None, None, None,
+        list_fields = ['TABLES1', self.tid, self.Type, None, None, None,
                   None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
@@ -552,6 +574,8 @@ class TABLEST(Table):
 
             nfields = len(card) - 1
             nterms = (nfields - 9) // 2
+            if nterms < 0:
+                raise SyntaxError('%r card is too short' % self.type)
             xy = []
             for i in range(nterms):
                 n = 9 + i * 2
@@ -598,6 +622,8 @@ class TABRND1(RandomTable):
 
             nfields = len(card) - 1
             nterms = (nfields - 9) // 2
+            if nterms < 0:
+                raise SyntaxError('%r card is too short' % self.type)
             xy = []
             for i in range(nterms):
                 n = 9 + i * 2

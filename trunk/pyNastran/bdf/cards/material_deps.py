@@ -65,6 +65,8 @@ class MATS1(MaterialDependence):
             #: or 'PLASTIC' for elastoplastic.)
             self.Type = string(card, 3, 'Type')
 
+            if self.Type not in ['NELAST', 'PLASTIC']:
+                raise ValueError('MATS1 Type must be [NELAST, PLASTIC]; Type=%r' % self.Type)
             if self.Type == 'NLELAST':
                 self.h = blank(card, 4, 'h')
                 self.hr = blank(card, 6, 'hr')
