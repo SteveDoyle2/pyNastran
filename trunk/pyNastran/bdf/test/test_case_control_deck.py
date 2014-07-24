@@ -246,5 +246,5 @@ class CaseControlTest(unittest.TestCase):
             msg += '-------------\n--Expected--\n%s' % '\n'.join(lines_expected)
             self.assertEqual(line, line_expected, msg)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

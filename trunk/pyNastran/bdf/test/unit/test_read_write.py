@@ -105,7 +105,7 @@ class TestReadWrite(unittest.TestCase):
                 self.assertFalse('ENDDATA' in data, msg)
             os.remove(out_filename)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     # passes if you're in the local folder, fails if you aren't
     #model2 = BDF(debug=False)
     #model2.read_bdf('test_include.bdf', include_dir='include_dir', xref=True, punch=False)

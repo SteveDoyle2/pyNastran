@@ -7,7 +7,6 @@ bdf = BDF(debug=False)
 
 class TestElements(unittest.TestCase):
 
-
     def test_cbush_01(self):
         lines = ['cbush,101,102,1,,,,,0']
         card = bdf.process_card(lines)
@@ -56,5 +55,5 @@ class TestElements(unittest.TestCase):
         card.rawFields()
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

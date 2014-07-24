@@ -173,6 +173,28 @@ class TestCoords(unittest.TestCase):
         delta = cord2r.k - array([-1., 1., 0.]) / 2**0.5
         self.assertTrue(allclose(cord2r.k, array([-1., 1., 0.]) / 2**0.5), str(delta))
 
+    def test_cord1_01(self):
+        model = BDF(debug=False)
+        cards = [
+            ['CORD1R', 1, 1, 2, 3],  # fails on self.k
+            ['GRID', 1, 0, 0., 0., 0.],
+            ['GRID', 2, 0, 1., 0., 0.],
+            ['GRID', 3, 0, 1., 1., 0.],
+        ]
+        for card in cards:
+            model.add_card(card, card[0], comment='comment', is_list=True)
+        c1 = model.Coord(1)
+        self.assertEquals(c1.G1(), 1)
+        self.assertEquals(c1.G2(), 2)
+        self.assertEquals(c1.G3(), 3)
+
+        model.cross_reference()
+        self.assertEquals(c1.G1(), 1)
+        self.assertEquals(c1.G2(), 2)
+        self.assertEquals(c1.G3(), 3)
+
+        self.assertEquals(c1.NodeIDs(), [1, 2, 3])
+
     def test_cord2_bad_01(self):
         model = BDF(debug=False)
         cards = [
@@ -188,6 +210,9 @@ class TestCoords(unittest.TestCase):
             ['CORD2R', 4, 0, 0., 1., 0.,
                              1., 0., 0.,
                              1., 1., 0.],  # passes
+            ['CORD2R', 5, 4, 0., 1., 0.,
+                             1., 0., 0.,
+                             1., 1., 0.],  # passes
         ]
         for card in cards:
             cid = card[1]
@@ -196,6 +221,15 @@ class TestCoords(unittest.TestCase):
                     model.add_card(card, card[0], is_list=True)
             else:
                 model.add_card(card, card[0], is_list=True)
+
+        # this runs because it's got rid=0
+        cord4 = model.Coord(4)
+        cord4.transformToGlobal([0., 0., 0.])
+
+        # this doesn't run because rid != 0
+        cord5 = model.Coord(5)
+        with self.assertRaises(RuntimeError):
+            cord5.transformToGlobal([0., 0., 0.])
         model.cross_reference()
 
     def test_cord2_rcs_01(self):
@@ -393,5 +427,5 @@ class TestCoords(unittest.TestCase):
             assert allclose(n, pos), msg
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

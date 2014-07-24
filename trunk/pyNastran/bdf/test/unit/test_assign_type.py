@@ -5,8 +5,8 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     integer_or_double, integer_double_or_blank,
     string, string_or_blank,
     integer_or_string, integer_string_or_blank, integer_double_or_string,
-    double_or_string, double_string_or_blank, 
-    blank, components, getType, interpret_value)
+    double_or_string, double_string_or_blank,
+    blank, components, components_or_blank, getType, interpret_value)
 
 class ExtendedTestCase(unittest.TestCase):
 
@@ -77,13 +77,21 @@ class Test(ExtendedTestCase):
             blank(BDFCard(['1b']), 0, 'field')
 
         # blank
-        blank(BDFCard(['']   ), 0, 'field')
-        blank(BDFCard([None] ), 0, 'field')
+        val = blank(BDFCard(['']   ), 0, 'field')
+        self.assertEquals(val, None)
+        val = blank(BDFCard([None] ), 0, 'field')
+        self.assertEquals(val, None)
+        val = blank(BDFCard([None] ), 0, 'field', 'default')
+        self.assertEquals(val, 'default')
 
     def test_double(self):
         """
         value = double(card, n, fieldname)
         """
+        # out of range
+        with self.assertRaises(SyntaxError):
+            double(BDFCard([1.]  ), 1, 'field')
+
         # integer
         with self.assertRaises(SyntaxError):
             double(BDFCard([1]  ), 0, 'field')
@@ -115,6 +123,10 @@ class Test(ExtendedTestCase):
         """
         # integer
         self.check_integer(integer)
+
+        # out of range
+        with self.assertRaises(SyntaxError):
+            integer(BDFCard([1.]  ), 1, 'field')
 
         # float
         with self.assertRaises(SyntaxError):
@@ -246,6 +258,27 @@ class Test(ExtendedTestCase):
         double_or_blank(BDFCard(['   ']), 0, 'field')
         double_or_blank(BDFCard([None]), 0, 'field')
 
+    def test_double_or_string(self):
+        # out of range
+        with self.assertRaises(SyntaxError):
+            double_or_string(BDFCard([1.]  ), 1, 'field')
+
+    def test_double_string_or_blank(self):
+        pass
+        # out of range
+        #with self.assertRaises(SyntaxError):
+            #double_string_or_blank(BDFCard([1.]  ), 1, 'field')
+
+    def test_integer_or_double(self):
+        # out of range
+        with self.assertRaises(SyntaxError):
+            integer_or_double(BDFCard([1.]  ), 1, 'field')
+
+    def test_integer_or_string(self):
+        # out of range
+        with self.assertRaises(SyntaxError):
+            integer_or_string(BDFCard([1.]  ), 1, 'field')
+
     def test_integer_double_or_blank(self):
         """
         value = double_or_blank(card, n, fieldname, default=None)
@@ -298,6 +331,10 @@ class Test(ExtendedTestCase):
     #def test_double_string_or_blank(self):
 
     def test_integer_double_or_string(self):
+        # out of range
+        with self.assertRaises(SyntaxError):
+            integer_or_double(BDFCard([1.]  ), 1, 'field')
+
         # integer
         self.check_integer(integer_double_or_string)
 
@@ -372,14 +409,153 @@ class Test(ExtendedTestCase):
             val = components(BDFCard(['-1']), 0, 'field')
 
         # blank
-        double_or_blank(BDFCard(['   ']), 0, 'field')
-        double_or_blank(BDFCard([None]), 0, 'field')
+        #components(BDFCard(['   ']), 0, 'field')
+        #components(BDFCard([None]), 0, 'field')
+
+    def test_components_or_blank_01(self):
+        # single ints
+        val = components_or_blank(BDFCard([0]), 0, 'field')
+        self.assertEquals(val, '0')
+
+        val = components_or_blank(BDFCard([1]), 0, 'field')
+        self.assertEquals(val, '1')
+
+        # single strings
+        val = components_or_blank(BDFCard(['0']), 0, 'field')
+        self.assertEquals(val, '0')
+
+        val = components_or_blank(BDFCard(['1']), 0, 'field')
+        self.assertEquals(val, '1')
+
+        # double ints
+        val = components_or_blank(BDFCard(['123']), 0, 'field')
+        self.assertEquals(val, '123')
+
+        val = components_or_blank(BDFCard([123]), 0, 'field')
+        self.assertEquals(val, '123')
+
+        val = components_or_blank(BDFCard([321]), 0, 'field')
+        self.assertEquals(val, '123')
+
+        # embedded whiteshape
+        with self.assertRaises(SyntaxError):
+            val = components_or_blank(BDFCard(['12 3']), 0, 'field')
+
+        # all numbers
+        val = components_or_blank(BDFCard(['123456']), 0, 'field')
+        self.assertEquals(val, '123456')
+
+        # invalid 0's defined with numbers
+        with self.assertRaises(SyntaxError):
+            val = components_or_blank(BDFCard(['0123456']), 0, 'field')
+
+        with self.assertRaises(SyntaxError):
+            val = components_or_blank(BDFCard(['01']), 0, 'field')
+
+        # doubles
+        with self.assertRaises(SyntaxError):
+            val = components_or_blank(BDFCard(['4524']), 0, 'field')
+
+        # only 0 to 6
+        with self.assertRaises(SyntaxError):
+            val = components_or_blank(BDFCard(['7']), 0, 'field')
+
+        with self.assertRaises(SyntaxError):
+            val = components_or_blank(BDFCard([7]), 0, 'field')
+
+        # dumb input
+        with self.assertRaises(SyntaxError):
+            val = components_or_blank(BDFCard(['4.0']), 0, 'field')
+
+        with self.assertRaises(SyntaxError):
+            val = components_or_blank(BDFCard(['-4.0']), 0, 'field')
+
+        with self.assertRaises(SyntaxError):
+            val = components_or_blank(BDFCard(['asdf']), 0, 'field')
+
+        with self.assertRaises(SyntaxError):
+            val = components_or_blank(BDFCard(['-1']), 0, 'field')
+
+        # blank
+        #components_or_blank(BDFCard(['   ']), 0, 'field')
+        #components_or_blank(BDFCard([None]), 0, 'field')
+
+    def test_components_or_blank_02(self):
+        # single ints
+        val = components_or_blank(BDFCard([0]), 0, 'field', 'default')
+        self.assertEquals(val, '0')
+
+        val = components_or_blank(BDFCard([1]), 0, 'field', 'default')
+        self.assertEquals(val, '1')
+
+        # single strings
+        val = components_or_blank(BDFCard(['0']), 0, 'field', 'default')
+        self.assertEquals(val, '0')
+
+        val = components_or_blank(BDFCard(['1']), 0, 'field', 'default')
+        self.assertEquals(val, '1')
+
+        # double ints
+        val = components_or_blank(BDFCard(['123']), 0, 'field', 'default')
+        self.assertEquals(val, '123')
+
+        val = components_or_blank(BDFCard([123]), 0, 'field', 'default')
+        self.assertEquals(val, '123')
+
+        val = components_or_blank(BDFCard([321]), 0, 'field', 'default')
+        self.assertEquals(val, '123')
+
+        # embedded whiteshape
+        with self.assertRaises(SyntaxError):
+            val = components_or_blank(BDFCard(['12 3']), 0, 'field', 'default')
+
+        # all numbers
+        val = components_or_blank(BDFCard(['123456']), 0, 'field', 'default')
+        self.assertEquals(val, '123456')
+
+        # invalid 0's defined with numbers
+        with self.assertRaises(SyntaxError):
+            val = components_or_blank(BDFCard(['0123456']), 0, 'field', 'default')
+
+        with self.assertRaises(SyntaxError):
+            val = components_or_blank(BDFCard(['01']), 0, 'field', 'default')
+
+        # doubles
+        with self.assertRaises(SyntaxError):
+            val = components_or_blank(BDFCard(['4524']), 0, 'field', 'default')
+
+        # only 0 to 6
+        with self.assertRaises(SyntaxError):
+            val = components_or_blank(BDFCard(['7']), 0, 'field', 'default')
+
+        with self.assertRaises(SyntaxError):
+            val = components_or_blank(BDFCard([7]), 0, 'field', 'default')
+
+        # dumb input
+        with self.assertRaises(SyntaxError):
+            val = components_or_blank(BDFCard(['4.0']), 0, 'field', 'default')
+
+        with self.assertRaises(SyntaxError):
+            val = components_or_blank(BDFCard(['-4.0']), 0, 'field', 'default')
+
+        with self.assertRaises(SyntaxError):
+            val = components_or_blank(BDFCard(['asdf']), 0, 'field', 'default')
+
+        with self.assertRaises(SyntaxError):
+            val = components_or_blank(BDFCard(['-1']), 0, 'field', 'default')
+
+        # blank
+        val = components_or_blank(BDFCard(['   ']), 0, 'field', 'default')
+        self.assertEquals(val, 'default')
+        val = components_or_blank(BDFCard([None]), 0, 'field', 'default')
+        self.assertEquals(val, 'default')
 
     def test_bad(self):
         val = getType('1.000000000D+00')
-        print "val = ", val
+        #print "val = ", val
         val = interpret_value('1.000000000D+00')
-        print "val = ", val
+        #print "val = ", val
 
-if __name__ == '__main__':
+
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

@@ -653,7 +653,7 @@ def interpret_value(valueRaw, card='', debug=False):
     """Converts a value from nastran format into python format."""
     #debug = True
     if debug:
-        print("v1 = |%s|" % valueRaw)
+        print("v1 = %r" % valueRaw)
     #lvalue = valueRaw.lstrip()
 
     if valueRaw is None:
@@ -668,7 +668,7 @@ def interpret_value(valueRaw, card='', debug=False):
 
     if debug:
         pass
-        #print("v2 = |%s|" % valueIn)
+        #print("v2 = %r" % valueIn)
     if len(valueIn) == 0:
         if debug:
             print("BLANK!")
@@ -708,7 +708,7 @@ def interpret_value(valueRaw, card='', debug=False):
     # if there are non-floats/scientific notation -> string
     noED = list(set(valueIn) - set('ED 1234567890+-'))
     word = ''.join(noED)
-    #print "word=|%s|" %word
+    #print "word=%r" %word
     if word.isalpha():
         if debug:
             print("WORD!")
@@ -721,15 +721,15 @@ def interpret_value(valueRaw, card='', debug=False):
         v0 = '+'  # inplied positive value
         valueLeft = valueIn
 
-    #print "valueIn = |%s|" % valueIn
-    #print "v0 = |%s|" %v0
+    #print "valueIn = %r" % valueIn
+    #print "v0 = %r" %v0
     if v0 == '-':
         vFactor = -1.
     elif v0 == '+' or v0.isdigit():
         vFactor = 1.
     else:
         msg = ('the only 2 cases for a float/scientific are +/- for v0...'
-               'valueRaw=|%s| v0=|%s| card=%s' % (valueRaw, v0, card))
+               'valueRaw=%r v0=%r card=%s' % (valueRaw, v0, card))
         raise SyntaxError(msg)
 
     # dont include the 1st character, find the exponent
@@ -743,7 +743,7 @@ def interpret_value(valueRaw, card='', debug=False):
         expFactor = 1.
     else:
         msg = ("I thought this was in scientific notation, but i can't find "
-               "the exponent sign...valueRaw=|%s| valueLeft=|%s| "
+               "the exponent sign...valueRaw=%r valueLeft=%r "
                "card=%s\nYou also might have mixed tabs/spaces/commas."
                % (valueRaw, valueLeft, card))
         raise SyntaxError(msg)
@@ -755,13 +755,13 @@ def interpret_value(valueRaw, card='', debug=False):
         s0 = vFactor * float(sline[0])
         s1 = expFactor * int(sline[1])
     except ValueError:
-        msg = "vm=%s vp=%s valueRaw=|%s| sline=%s" % (vm, vp, valueRaw, sline)
+        msg = "vm=%s vp=%s valueRaw=%r sline=%s" % (vm, vp, valueRaw, sline)
         raise SyntaxError('cannot parse sline[0] into a float and sline[1] '
                           'into an integer\n%s\nYou HAVE mixed '
                           'tabs/spaces/commas!  Fix it!' % msg)
 
     value = s0 * 10 ** (s1)
-    #print "valueOut = |%s|" %value
+    #print "valueOut = %r" %value
 
     if debug:
         print("SCIENTIFIC!")
@@ -831,7 +831,7 @@ def string_parser(stringIn):
         #return 'string'
         return stringIn
 
-    print("typeCheck = |%s|" % typeCheck)
+    print("typeCheck = %r" % typeCheck)
     raise RuntimeError('error parsing a card...this should never happen...')
 
 if __name__ == '__main__':
@@ -841,7 +841,7 @@ if __name__ == '__main__':
     print(string_parser('+.234'))
     print(string_parser('-.234'))
     print(string_parser('1+5'))
-    print("abc = |%s|" % string_parser('abc'))
-    print("eeg = |%s|" % string_parser('eeg'))
-    #print("e1 = |%s|" % string_parser('\T'))
+    print("abc = %r" % string_parser('abc'))
+    print("eeg = %r" % string_parser('eeg'))
+    #print("e1 = %r" % string_parser('\T'))
     print(string_parser('.e1'))

@@ -108,5 +108,5 @@ class TestConstraints(unittest.TestCase):
         self.assertEqual(con.Cs[1], '1235')
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

@@ -61,7 +61,7 @@ class BDFCard(object):
     def __len__(self):
         return self.nfields
 
-    def fields(self, i=0, j=None, defaults=None, debug=False):
+    def fields(self, i=0, j=None, defaults=None):
         """
         Gets multiple fields on the card
 
@@ -73,8 +73,6 @@ class BDFCard(object):
         :type j:         integer or None (default=end of card)
         :param defaults: the default value for the field (as a list)
                          len(defaults)=i-j-1
-        :param debug:    prints out the values at intermediate steps
-        :type debug:     bool
         :returns value: the values on the ith-jth fields
         """
         if defaults is None:
@@ -90,11 +88,7 @@ class BDFCard(object):
 
         d = 0
         for n in xrange(i, j):
-            if debug:
-                print("  default = %s" % defaults[d])
             value = self.field(n, defaults[d])
-            if debug:
-                print("  self.field(%s) = %s" % (n, self.field(n)))
             out.append(value)
             d += 1
         return out

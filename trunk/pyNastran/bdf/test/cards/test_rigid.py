@@ -142,5 +142,5 @@ class TestRigid(unittest.TestCase):
             self.assertEqual(actual, expected, msg)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

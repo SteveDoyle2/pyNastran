@@ -17,5 +17,6 @@ class TestSprings(unittest.TestCase):
         self.assertEquals(card.Pid(), 201)
         self.assertEquals(card.K(), 1e5)
 
-if __name__ == '__main__':
+
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

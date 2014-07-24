@@ -274,5 +274,5 @@ class TestOpenMDAO(unittest.TestCase):
             #print("tried to apply %r=%s" % (Type, iType))
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()
