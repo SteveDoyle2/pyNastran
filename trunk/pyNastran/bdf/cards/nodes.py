@@ -306,6 +306,17 @@ class GRID(Node):
     type = 'GRID'
     _field_map = {1: 'nid', 2:'cp', 6:'cd', 7:'ps', 8:'seid'}
 
+    def _get_field_helper(self, n):
+        if n == 3:
+            value = self.xyz[0]
+        elif n == 4:
+            value = self.xyz[1]
+        elif n == 5:
+            value = self.xyz[2]
+        else:
+            raise KeyError('Field %r is an invalid %s entry.' % (n, self.type))
+        return value
+
     def _update_field_helper(self, n, value):
         if n == 3:
             self.xyz[0] = value
@@ -493,6 +504,17 @@ class POINT(Node):
     """
     type = 'POINT'
     _field_map = {1: 'nid', 2:'cp'}
+
+    def _get_field_helper(self, n):
+        if n == 3:
+            value = self.xyz[0]
+        elif n == 4:
+            value = self.xyz[1]
+        elif n == 5:
+            value = self.xyz[2]
+        else:
+            raise KeyError('Field %r is an invalid %s entry.' % (n, self.type))
+        return value
 
     def _update_field_helper(self, n, value):
         if n == 3:

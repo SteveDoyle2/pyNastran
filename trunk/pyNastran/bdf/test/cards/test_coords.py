@@ -173,6 +173,45 @@ class TestCoords(unittest.TestCase):
         delta = cord2r.k - array([-1., 1., 0.]) / 2**0.5
         self.assertTrue(allclose(cord2r.k, array([-1., 1., 0.]) / 2**0.5), str(delta))
 
+    def test_grid_01(self):
+        model = BDF(debug=False)
+        cards = [
+            #['CORD1R', 1, 1, 2, 3],  # fails on self.k
+            ['GRID', 1, 0, 0., 0., 0.],
+            ['GRID', 2, 0, 1., 0., 0.],
+            ['GRID', 4, 0, 1., 2., 3.],
+        ]
+        for card in cards:
+            model.add_card(card, card[0], comment='comment', is_list=True)
+
+        #+------+-----+----+----+----+----+----+----+------+
+        #|   0  |  1  | 2  | 3  | 4  | 5  |  6 | 7  |  8   |
+        #+======+=====+====+====+====+====+====+====+======+
+        #| GRID | NID | CP | X1 | X2 | X3 | CD | PS | SEID |
+        #+------+-----+----+----+----+----+----+----+------+
+        node = model.Node(4)
+        self.assertEqual(node.get_field(1), 4)
+        self.assertEqual(node.get_field(2), 0)
+        self.assertEqual(node.get_field(3), 1.)
+        self.assertEqual(node.get_field(4), 2.)
+        self.assertEqual(node.get_field(5), 3.)
+
+        node.update_field(1, 5)
+        node.update_field(2, 6)
+        node.update_field(3, 7.)
+        node.update_field(4, 8.)
+        node.update_field(5, 9.)
+        with self.assertRaises(KeyError):
+            node.update_field(9, 'dummy')
+
+        self.assertEqual(node.get_field(1), 5)
+        self.assertEqual(node.get_field(2), 6)
+        self.assertEqual(node.get_field(3), 7.)
+        self.assertEqual(node.get_field(4), 8.)
+        self.assertEqual(node.get_field(5), 9.)
+        with self.assertRaises(KeyError):
+            node.get_field(9)
+
     def test_cord1_01(self):
         model = BDF(debug=False)
         cards = [
