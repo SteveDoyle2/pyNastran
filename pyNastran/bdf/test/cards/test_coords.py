@@ -1,3 +1,4 @@
+from __future__ import print_function
 from numpy import array, allclose, array_equal
 import unittest
 
@@ -171,6 +172,31 @@ class TestCoords(unittest.TestCase):
         self.assertTrue(allclose(cord2r.j, array([1., 1., 0.]) / 2**0.5), str(delta))
         delta = cord2r.k - array([-1., 1., 0.]) / 2**0.5
         self.assertTrue(allclose(cord2r.k, array([-1., 1., 0.]) / 2**0.5), str(delta))
+
+    def test_cord2_bad_01(self):
+        model = BDF(debug=False)
+        cards = [
+            ['CORD2R', 1, 0, 0., 0., 0.,
+                             0., 0., 0.,
+                             0., 0., 0.],  # fails on self.k
+            ['CORD2R', 2, 0, 0., 0., 0.,
+                             1., 0., 0.,
+                             0., 0., 0.],  # fails on normalize self.j
+            ['CORD2R', 3, 0, 0., 0., 0.,
+                             1., 0., 0.,
+                             1., 1., 0.],  # passes
+            ['CORD2R', 4, 0, 0., 1., 0.,
+                             1., 0., 0.,
+                             1., 1., 0.],  # passes
+        ]
+        for card in cards:
+            cid = card[1]
+            if cid in [1, 2]:
+                with self.assertRaises(RuntimeError):
+                    model.add_card(card, card[0], is_list=True)
+            else:
+                model.add_card(card, card[0], is_list=True)
+        model.cross_reference()
 
     def test_cord2_rcs_01(self):
         """
