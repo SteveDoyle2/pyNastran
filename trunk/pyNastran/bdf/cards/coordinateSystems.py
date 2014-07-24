@@ -68,7 +68,7 @@ class Coord(BaseCard):
         """Gets the coordinate ID"""
         return self.cid
 
-    def setup(self, debug=False):
+    def setup(self):
         """
         .. math:: e_{13} = e_3 - e_1
 
@@ -176,6 +176,7 @@ class Coord(BaseCard):
         except RuntimeError:
             print("---InvalidUnitVectorError---")
             print("Cp  = %s" % (self.Cid()))
+            print("Rid = %s" % (self.Rid()))
             print("e1  = %s" % (self.e1))
             print("e2  = %s" % (self.e2))
             print("e3  = %s" % (self.e3))
@@ -187,7 +188,7 @@ class Coord(BaseCard):
             print("j   = %s" % (self.j))
             raise
 
-        if debug:
+        if 0:
             print("\nCid = %s" % (self.Cid()))
             print("Rid = %s" % (self.Rid()))
             print("e1 = %s" % (self.e1))
@@ -398,9 +399,6 @@ class CylindricalCoord(object):
 
     http://en.wikipedia.org/wiki/Cylindrical_coordinate_system
 
-    .. note:: :math`\phi` and :math:`\theta` are flipped per wikipedia
-              to be consistent with nastran's documentation
-
     .. _msc:  http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=
     .. seealso:: `MSC Reference Manual (pdf) <`http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=>`_.
     """
@@ -556,7 +554,7 @@ class Cord2x(Coord):
         :param self:  the coordinate system object
         :param model: the BDF object
         ..warning:: Doesn't set rid to the coordinate system if it's in the
-                    global.  This isn't a problem, it's meant to speed up the
+                    global.  This isn't a problem.  It's meant to speed up the
                     code in order to resolve extra coordinate systems.
         """
         if self.rid != 0:
@@ -610,39 +608,41 @@ class Cord1x(Coord):
         self.j = None
         self.k = None
 
-    def to_CORD2x(self, model):
+    def to_CORD2x(self, model, rid=0):
         """
         Converts a coordinate system from a CORD1x to a CORD2x
 
         :param self:  the coordinate system object
         :param model: a BDF model
+        :param rid:
+          The relative coordinate system (default=0 -> Global);
+          TYPE = INT.
         """
-        rid1 = self.g1.cid
-        rid2 = self.g2.cid
-        rid3 = self.g2.cid
-        type1 = self.g1.type
-        #type2 = self.g2.type
-        #type3 = self.g3.type
+        rid1 = self.g1.Cid()
+        rid2 = self.g2.Cid()
+        rid3 = self.g2.Cid()
 
+        # assume the points are in rid
         p1 = self.g1.xyz
-        if rid2 == rid1 and rid3 == rid1:
-            # if all the same coordinate system, make them coord 2
-            # the types are automatically the same then
-            p2 = self.g2.xyz
-            p3 = self.g3.xyz
-        else:
-            # otherwise make them the same rid as g1
-            p2 = self.g2.PositionWRT(model, rid1)
-            p3 = self.g3.PositionWRT(model, rid1)
+        p2 = self.g2.xyz
+        p3 = self.g3.xyz
 
-        data = [type1, self.cid, rid1, list(p1) + list(p2) + list(p3)]
+        # move the nodes in necessary into rid system
+        if rid != rid1:
+            p1 = self.g1.PositionWRT(model, rid)
+        if rid != rid2:
+            p2 = self.g2.PositionWRT(model, rid)
+        if rid != rid3:
+            p3 = self.g3.PositionWRT(model, rid)
 
-        if type1 == 'CORD2R':
+        data = [self.type, self.cid, rid1, list(p1) + list(p2) + list(p3)]
+
+        if self.type == 'CORD1R':
             coord = CORD2R(card=None, data=data, comment=self.comment())
-        elif type1 == 'CORD2C':
-            coord = CORD2R(card=None, data=data, comment=self.comment())
-        elif type1 == 'CORD2C':
-            coord = CORD2R(card=None, data=data, comment=self.comment())
+        elif self.type == 'CORD1C':
+            coord = CORD2C(card=None, data=data, comment=self.comment())
+        elif self.type == 'CORD1C':
+            coord = CORD2S(card=None, data=data, comment=self.comment())
         else:
             raise RuntimeError('coordinate type of \n%s is %s' % (str(self), type1))
         model.coords[self.cid] = coord
@@ -666,7 +666,7 @@ class Cord1x(Coord):
         #: grid point 3
         self.g3 = model.Node(self.g3, msg=msg)
 
-    def setup(self, debug=False):
+    def setup(self):
         """
         Finds the position of the nodes used define the coordinate system
         and sets the ijk vectors
@@ -687,7 +687,7 @@ class Cord1x(Coord):
 
         # rid is resolved b/c e1, e2, & e3 are in global coordinates
         self.isResolved = True
-        self.Coord.setup(debug=debug)
+        self.Coord.setup()
 
     def G1(self):
         if isinstance(self.g1, int):
