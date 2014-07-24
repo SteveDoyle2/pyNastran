@@ -188,14 +188,14 @@ class TestBeams(unittest.TestCase):
         ]
         self._compare(fields, lines_expected)
 
-    def _test_pbeam_07(self):
+    def test_pbeam_07(self):
         lines = ['PBEAM   100     100     1.00    10.     1.0                             +Z1',
                  '+Z1     NO      1.0                                                     +Z4',
                  '+Z4     0.0     0.0',]
         card = bdf.process_card(lines)
         card = BDFCard(card)
-        #with self.assertRaises(RuntimeError):  # temporary RuntimeError
-        card2 = PBEAM(card)
+        with self.assertRaises(SyntaxError):  # ..todo:: is this correct?
+            card2 = PBEAM(card)
 
         if 0:
             fields = card2.rawFields()
@@ -277,5 +277,5 @@ class TestBeams(unittest.TestCase):
         assert fields == fields
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

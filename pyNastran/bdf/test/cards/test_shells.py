@@ -446,5 +446,6 @@ class TestShells(unittest.TestCase):
         with self.assertRaises(IndexError):
             p.MassPerArea(6)
 
-if __name__ == '__main__':
+
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

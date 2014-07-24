@@ -342,5 +342,5 @@ def compare(valueIn):
         if p > 0.01:
             raise ValueError('val=%s valueIn=%s' % (val, valueIn))
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     unittest.main()

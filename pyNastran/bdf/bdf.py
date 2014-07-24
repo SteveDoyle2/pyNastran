@@ -1895,6 +1895,6 @@ def clean_empty_lines(lines):
     return lines2
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     from pyNastran.bdf.test.test_bdf import main
     main()

@@ -58,5 +58,5 @@ class TestBars(unittest.TestCase):
         self.assertEqual(pbar.K2, 1e8)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

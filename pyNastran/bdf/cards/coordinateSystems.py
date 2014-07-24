@@ -45,7 +45,7 @@ def normalize(v):
 class Coord(BaseCard):
     type = 'COORD'
 
-    def __init__(self, card, data):
+    def __init__(self, card, data, comment):
         """
         Defines a general CORDxx object
 
@@ -53,6 +53,9 @@ class Coord(BaseCard):
         :param card: a BDFCard object
         :param data: a list analogous to the card
         """
+        if comment:
+            self._comment = comment
+
         #: have all the transformation matricies been determined
         self.isResolved = False
         self.cid = None
@@ -246,6 +249,8 @@ class Coord(BaseCard):
                              [0., 1., 0.],
                              [0., 0., 1.]], dtype='float64')
         if not self.isResolved:
+            if isinstance(self.rid, int) and self.rid != 0:
+                raise RuntimeError("BDF has not been cross referenced.")
             self.rid.setup()
 
         # the ijk axes arent resolved as R-theta-z, only points
@@ -330,9 +335,9 @@ class Coord(BaseCard):
         .. math:: [\lambda] = [B_{ij}]
         """
         if self.cid == 0:
-            return p, array([[1., 0., 0.],
-                             [0., 1., 0.],
-                             [0., 0., 1.]], dtype='float64')
+            return array([[1., 0., 0.],
+                          [0., 1., 0.],
+                          [0., 0., 1.]], dtype='float64')
         matrix = vstack([self.i, self.j, self.k])
         return matrix
 
@@ -484,7 +489,7 @@ class SphericalCoord(object):
 
 
 class Cord2x(Coord):
-    def __init__(self, card, data):
+    def __init__(self, card, data, comment):
         """
         Defines the CORD2x class
 
@@ -493,7 +498,7 @@ class Cord2x(Coord):
         :param data: a list analogous to the card
         """
         self.isResolved = False
-        Coord.__init__(self, card, data)
+        Coord.__init__(self, card, data, comment)
 
         if card:
             #: coordinate system ID
@@ -575,8 +580,8 @@ class Cord1x(Coord):
         """Gets the reference coordinate system self.rid"""
         return self.rid
 
-    def __init__(self, card, nCoord, data):
-        Coord.__init__(self, card, data)
+    def __init__(self, card, nCoord, data, comment):
+        Coord.__init__(self, card, data, comment)
         self.isResolved = False
         if nCoord is not None:
             assert nCoord == 0 or nCoord == 1, 'nCoord=|%s|' % (nCoord)
@@ -687,7 +692,9 @@ class Cord1x(Coord):
 
         # rid is resolved b/c e1, e2, & e3 are in global coordinates
         self.isResolved = True
-        self.Coord.setup()
+
+        # call the Coord class' setup method
+        super(Cord1x, self).setup()
 
     def G1(self):
         if isinstance(self.g1, int):
@@ -738,10 +745,7 @@ class CORD3G(Coord):  # not done
         :param self: the CORD3G coordinate system object
         :param card: a list version of the fields
         """
-        if comment:
-            self._comment = comment
-
-        Coord.__init__(self, card, data)
+        Coord.__init__(self, card, data, comment)
 
         self.cid = integer(card, 1, 'cid')
         method = string_or_blank(card, 2, 'E313')
@@ -849,9 +853,7 @@ class CORD1R(Cord1x, RectangularCoord):
                        (there are possibly 2 coordinates on 1 card)
         :param card:   a list version of the fields (1 CORD1R only)
         """
-        Cord1x.__init__(self, card, nCoord, data)
-        if comment:
-            self._comment = comment
+        Cord1x.__init__(self, card, nCoord, data, comment)
 
     def rawFields(self):
         list_fields = ['CORD1R', self.cid] + self.NodeIDs()
@@ -880,9 +882,7 @@ class CORD1C(Cord1x, CylindricalCoord):
                        (there are possibly 2 coordinates on 1 card)
         :param data:   a list version of the fields (1 CORD1R only)
         """
-        Cord1x.__init__(self, card, nCoord, data)
-        if comment:
-            self._comment = comment
+        Cord1x.__init__(self, card, nCoord, data, comment)
 
     def rawFields(self):
         list_fields = ['CORD1C', self.cid] + self.NodeIDs()
@@ -911,9 +911,7 @@ class CORD1S(Cord1x, SphericalCoord):
                        (there are possibly 2 coordinates on 1 card)
         :param data:   a list version of the fields (1 CORD1S only)
         """
-        Cord1x.__init__(self, card, nCoord, data)
-        if comment:
-            self._comment = comment
+        Cord1x.__init__(self, card, nCoord, data, comment)
 
     def rawFields(self):
         list_fields = ['CORD1S', self.cid] + self.NodeIDs()
@@ -940,9 +938,7 @@ class CORD2R(Cord2x, RectangularCoord):
         :param card: a BDFCard object
         :param data: a list version of the fields (1 CORD2R only)
         """
-        Cord2x.__init__(self, card, data)
-        if comment:
-            self._comment = comment
+        Cord2x.__init__(self, card, data, comment)
 
     def _verify(self, xref=False):
         cid = self.Cid()
@@ -976,9 +972,7 @@ class CORD2C(Cord2x, CylindricalCoord):
         :param card: a BDFCard object
         :param data: a list version of the fields (1 CORD2C only)
         """
-        Cord2x.__init__(self, card, data)
-        if comment:
-            self._comment = comment
+        Cord2x.__init__(self, card, data, comment)
 
     def rawFields(self):
         rid = set_blank_if_default(self.Rid(), 0)
@@ -1006,9 +1000,7 @@ class CORD2S(Cord2x, SphericalCoord):
         :param card: a BDFCard object
         :param data: a list version of the fields (1 CORD2S only)
         """
-        Cord2x.__init__(self, card, data)
-        if comment:
-            self._comment = comment
+        Cord2x.__init__(self, card, data, comment)
 
     def rawFields(self):
         rid = set_blank_if_default(self.Rid(), 0)

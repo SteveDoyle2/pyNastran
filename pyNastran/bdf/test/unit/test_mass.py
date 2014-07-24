@@ -149,5 +149,5 @@ class TestMass(unittest.TestCase):
         self.verify_psolid_element(penta, mass, volume, centroid, rho, E, G, nu)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()
