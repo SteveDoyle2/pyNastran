@@ -69,19 +69,25 @@ class BaseCard(object):
     def buildTableLines(self, fields, nStart=1, nEnd=0):
         """
         Builds a table of the form:
-        ::
 
-          'DESVAR' DVID1 DVID2 DVID3 DVID4 DVID5 DVID6 DVID7
-                   DVID8 -etc.-
-          'UM'     VAL1  VAL2  -etc.-
+        +--------+-------+--------+-------+--------+-------+-------+-------+
+        | DESVAR | DVID1 | DVID2  | DVID3 |DVID4   | DVID5 | DVID6 | DVID7 |
+        +--------+-------+--------+-------+--------+-------+-------+-------+
+        |        | DVID8 | -etc.- |       |        |
+        +--------+-------+--------+-------+--------+
+        |        |  UM   | VAL1   | VAL2  | -etc.- |
+        +--------+-------+--------+-------+--------+
 
         and then pads the rest of the fields with None's
 
         :param fields: the fields to enter, including DESVAR
+        :type fields:  list of values
         :param nStart: the number of blank fields at the start of the
                        line (default=1)
+        :param nStart: int
         :param nEnd:   the number of blank fields at the end of the
                        line (default=0)
+        :param nEnd:   int
 
         .. note:: will be used for DVPREL2, RBE1, RBE3
         .. warning:: only works for small field format???
@@ -100,23 +106,18 @@ class BaseCard(object):
 
         # make sure they're aren't any trailing None's (from a new line)
         fieldsOut = wipe_empty_fields(fieldsOut)
-        #print("fieldsOut = ",fieldsOut,len(fieldsOut))
 
         # push the next key (aka next fields[0]) onto the next line
         nSpaces = 8 - (len(fieldsOut)) % 8  # puts UM onto next line
-        #print("nSpaces[%s] = %s max=%s" %(fields[0],nSpaces,nSpaceMax))
         if nSpaces < 8:
-            fieldsOut += [None] * (nSpaces)
-        #print("")
+            fieldsOut += [None] * nSpaces
         return fieldsOut
 
-    def isSameCard(self, card, debug=False):
+    def isSameCard(self, card):
         if self.type != card.type:
             return False
         fields1 = self.rawFields()
         fields2 = card.rawFields()
-        if debug:
-            print("fields1=%s fields2=%s" % (fields1, fields2))
         return self.isSameFields(fields1, fields2)
 
     def printRawFields(self, size=8):
@@ -140,7 +141,6 @@ class BaseCard(object):
         Prints a card in the simplest way possible
         (default values are left blank).
         """
-        #self.rawFields()
         try:
             return self.print_card()
         except:
@@ -155,14 +155,25 @@ class Property(BaseCard):
         assert card is None or data is None
 
     def Pid(self):
+        """
+        returns the property ID of an property
+
+        :param self:  the Property pointer
+        :returns pid: the Property ID
+        :type pid:    int
+        """
         return self.pid
 
     def Mid(self):
+        """
+        returns the material ID of an element
+
+        :param self:  the Property pointer
+        :returns mid: the Material ID
+        :type mid:    int
+        """
         if isinstance(self.mid, int):
             return self.mid
-        #elif self.mid is None:
-            #print ("No material defined for property ", self.pid)
-            #return None
         else:
             return self.mid.mid
 
@@ -180,6 +191,13 @@ class Material(BaseCard):
         pass
 
     def Mid(self):
+        """
+        returns the material ID of an element
+
+        :param self:  the Property pointer
+        :returns mid: the Material ID
+        :type mid:    int
+        """
         return self.mid
 
 
@@ -194,12 +212,14 @@ class Element(BaseCard):
         #self.nids = []
 
     def Pid(self):
-        """returns the property ID of an element"""
+        """
+        returns the property ID of an element
+        :param self:  the Element pointer
+        :returns pid: the Property ID
+        :type pid:    int
+        """
         if isinstance(self.pid, int):
             return self.pid
-        #elif self.pid is None:
-            #print ("No property defined for element ", self.eid)
-            #return None
         else:
             return self.pid.pid
 

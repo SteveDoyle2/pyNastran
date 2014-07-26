@@ -47,9 +47,6 @@ class RINGAX(Ring):
         self.ps = integer_or_blank(card, 7, 'ps')
         assert len(card) <= 8, 'len(RINGAX card) = %i' % len(card)
 
-    def Position(self):
-        return array([0., 0., 0.])
-
     def rawFields(self):
         list_fields = ['RINGAX', self.nid, None, self.R, self.z, None,
                   None, self.ps]
@@ -72,9 +69,6 @@ class SPOINT(Node):
 
     def cross_reference(self, model):
         pass
-
-    def Position(self):
-        return array([0., 0., 0.])
 
     def rawFields(self):
         if isinstance(self.nid, int):
@@ -190,18 +184,36 @@ class GRDSET(Node):
         #self.seid = model.SuperElement(self.seid, msg)
 
     def Cd(self):
+        """
+        Gets the output coordinate system
+        :param self: the GRDSET object pointer
+        :returns cd: the output coordinate system
+        :type cd:    int
+        """
         if isinstance(self.cd, int):
             return self.cd
         else:
             return self.cd.cid
 
     def Cp(self):
+        """
+        Gets the analysis coordinate system
+        :param self: the GRDSET object pointer
+        :returns cp: the analysis coordinate system
+        :type cp:    int
+        """
         if isinstance(self.cp, int):
             return self.cp
         else:
             return self.cp.cid
 
     def SEid(self):
+        """
+        Gets the Superelement ID
+        :param self:   the GRDSET object pointer
+        :returns seid: the Superelement ID
+        :type seid:    int
+        """
         if isinstance(self.seid, int):
             return self.seid
         else:
@@ -271,6 +283,12 @@ class GRIDB(Node):
         pass
 
     def Cd(self):
+        """
+        Gets the output coordinate system
+        :param self: the GRIDB object pointer
+        :returns cd: the output coordinate system
+        :type cd:    int
+        """
         if isinstance(self.cd, int):
             return self.cd
         else:
@@ -282,7 +300,7 @@ class GRIDB(Node):
         return list_fields
 
     def reprFields(self):
-        #phi = set_blank_if_default(self.phi,0.0)
+        #phi = set_blank_if_default(self.phi, 0.0)
         cd = set_blank_if_default(self.Cd(), 0)
         ps = set_blank_if_default(self.ps, 0)
         idf = set_blank_if_default(self.idf, 0)
@@ -375,24 +393,53 @@ class GRID(Node):
         assert self.seid >= 0, 'seid=%s' % (self.seid)
 
     def Nid(self):
+        """
+        Gets the GRID ID
+        :param self: the GRID object pointer
+        :returns nid: node ID
+        :type nid:    int
+        """
         return self.nid
 
     def Ps(self):
+        """
+        Gets the GRID-based SPC
+        :param self: the GRID object pointer
+        :returns ps: the GRID-based SPC
+        """
         return self.ps
 
     def Cd(self):
+        """
+        Gets the output coordinate system
+        :param self: the GRID object pointer
+        :returns cd: the output coordinate system
+        :type cd:    int
+        """
         if isinstance(self.cd, int):
             return self.cd
         else:
             return self.cd.cid
 
     def Cp(self):
+        """
+        Gets the analysis coordinate system
+        :param self: the GRID object pointer
+        :returns cp: the analysis coordinate system
+        :type cp:    int
+        """
         if isinstance(self.cp, int):
             return self.cp
         else:
             return self.cp.cid
 
     def SEid(self):
+        """
+        Gets the Superelement ID
+        :param self:   the GRID object pointer
+        :returns seid: the Superelement ID
+        :type seid:    int
+        """
         if isinstance(self.seid, int):
             return self.seid
         else:
@@ -414,9 +461,23 @@ class GRID(Node):
             pos_xyz = self.Position()
 
     def nDOF(self):
+        """
+        Gets the number of degrees of freedom for the GRID
+        :param self:  the GRID object pointer
+        :returns six: the value 6
+        :type six:    int
+        """
         return 6
 
     def UpdatePosition(self, model, xyz, cid=0):
+        """
+        Updates the GRID location
+        :param self: the GRID object pointer
+        :param xyz:  the location of the node.
+        :type xyz:   TYPE = NDARRAY.  SIZE=(3,)
+        :param cp:   the analysis coordinate system.  (default=0; global)
+        :type cp:    int
+        """
         self.xyz = xyz
         msg = ' which is required by GRID nid=%s' % self.nid
         self.cp = model.Coord(cid, msg=msg)
@@ -425,25 +486,31 @@ class GRID(Node):
         """
         Gets the point in the global XYZ coordinate system.
 
-        :param self:  the object pointer
-        :param debug: developer debug (default=False)
-        :returns position: the position of the GRID in the globaly
-                           coordinate system
+        :param self:   the object pointer
+        :param debug:  developer debug (default=False)
+        :type debug:   bool
+        :returns xyz:  the position of the GRID in the globaly
+                       coordinate system
+        :type xyz:     TYPE = NDARRAY.  SIZE=(3,)
         """
-        p, matrix = self.cp.transformToGlobal(self.xyz, debug=debug)
-        return p
+        xyz, matrix = self.cp.transformToGlobal(self.xyz, debug=debug)
+        return xyz
 
     def PositionWRT(self, model, cid, debug=False):
         """
-        Gets the point which started in some arbitrary local coordinate
+        Gets the location of the GRID which started in some arbitrary
         system and returns it in the desired coordinate system
 
         :param self:  the object pointer
         :param model: the BDF model object
-        :param cid:   the desired coordinate ID (int)
+        :type model:  BDF()
+        :param cid:   the desired coordinate ID
+        :type cid:    int
         :param debug: developer debug (default=False)
-        :returns position: the position of the GRID in an arbitrary
-                           coordinate system
+        :type cid:    bool
+        :returns xyz: the position of the GRID in an arbitrary
+                      coordinate system
+        :type xyz:    TYPE = NDARRAY.  SIZE=(3,)
         """
         if cid == self.Cp(): # same coordinate system
             return self.xyz
@@ -455,12 +522,19 @@ class GRID(Node):
 
         # a matrix global->local matrix is found
         matrix = coordB.beta()
-        p2 = coordB.transformToLocal(p, matrix, debug=debug)
-        return p2
+        xyz = coordB.transformToLocal(p, matrix, debug=debug)
+        return xyz
 
     def cross_reference(self, model, grdset=None):
         """
-        the gridset object will only update the fields that have not been set
+        :param self:   the GRID object pointer
+        :param model:  the BDF object
+        :type model:   BDF()
+        :param grdset: a GRDSET if available (default=None)
+        :type grdset:  GRDSET() or None
+
+        ..note::  The gridset object will only update the fields that
+                  have not been set
         """
         if grdset:  # update using a gridset object
             if not self.cp:
@@ -558,7 +632,6 @@ class POINT(Node):
             self.seid = blank(card, 8, 'seid', 0)
             assert len(card) <= 9, 'len(POINT card) = %i' % len(card)
         else:
-            #print data
             self.nid = data[0]
             self.cp = data[1]
             self.xyz = array(data[2:5])
@@ -571,9 +644,23 @@ class POINT(Node):
         assert self.cp >= 0, 'cp=%s' % (self.cp)
 
     def nDOF(self):
+        """
+        Gets the number of degrees of freedom for the GRID
+        :param self:  the GRID object pointer
+        :returns six: the value 6
+        :type six:    int
+        """
         return 6
 
     def UpdatePosition(self, model, xyz, cid=0):
+        """
+        Updates the POINT location
+        :param self: the POINT object pointer
+        :param xyz:  the location of the node.
+        :type xyz:   TYPE = NDARRAY.  SIZE=(3,)
+        :param cp:   the analysis coordinate system.  (default=0; global)
+        :type cp:    int
+        """
         self.xyz = xyz
         msg = ' which is required by POINT nid=%s' % self.nid
         self.cp = model.Coord(cid, msg=msg)
@@ -582,7 +669,7 @@ class POINT(Node):
         """
         Gets the point in the global XYZ coordinate system.
 
-        :param self:  the object pointer
+        :param self:  the POINT object pointer
         :param debug: developer debug (default=False)
         :returns position: the position of the POINT in the globaly
                            coordinate system
@@ -593,14 +680,18 @@ class POINT(Node):
     def PositionWRT(self, model, cid, debug=False):
         """
         Gets the location of the POINT which started in some arbitrary
-        local coordinate system and returns it in the desired coordinate system
+        system and returns it in the desired coordinate system
 
-        :param self:  the object pointer
+        :param self:  the POINT object pointer
         :param model: the BDF model object
-        :param cid:   the desired coordinate ID (int)
-        :param debug: developer debug (default=False)
-        :returns position: the position of the POINT in an arbitrary
-                           coordinate system
+        :type model:  BDF()
+        :param cid:   the desired coordinate ID
+        :type cid:    int
+        :param debug: debug (default=False)
+        :type cid:    bool
+        :returns xyz: the position of the POINT in an arbitrary
+                      coordinate system
+        :type xyz:    TYPE = NDARRAY.  SIZE=(3,)
         """
         if cid == self.Cp(): # same coordinate system
             return self.xyz
@@ -612,10 +703,16 @@ class POINT(Node):
 
         # a matrix global->local matrix is found
         matrix = coordB.beta()
-        p2 = coordB.transformToLocal(p, matrix, debug=debug)
-        return p2
+        xyz = coordB.transformToLocal(p, matrix, debug=debug)
+        return xyz
 
     def Cp(self):
+        """
+        Gets the analysis coordinate system
+        :param self: the POINT object pointer
+        :returns cp: the analysis coordinate system
+        :type cp:    int
+        """
         if isinstance(self.cp, int):
             return self.cp
         else:
