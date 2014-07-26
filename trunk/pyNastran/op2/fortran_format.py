@@ -3,6 +3,9 @@ import copy
 
 class FortranFormat(object):
     def __init__(self):
+        """
+        :param self:    the OP2 object pointer
+        """
         self.n = 0
         self.f = None
         self.obj = None
@@ -16,28 +19,40 @@ class FortranFormat(object):
         self.valid_subcases = []
 
     def show(self, n):
+        """
+        :param self:    the OP2 object pointer
+        """
         assert self.n == self.f.tell()
         nints = n // 4
-        data = self.f.read(n)
+        data = self.f.read(4 * n)
         strings, ints, floats = self.show_data(data)
         self.f.seek(self.n)
         return strings, ints, floats
 
-    def show_data(self, data):
+    def show_data(self, data, types='ifs'):
+        """
+        :param self:    the OP2 object pointer
+        """
         n = len(data)
         nints = n // 4
         strings = unpack(b'%is' % n, data)
         ints    = unpack(b'%ii' % nints, data)
         floats  = unpack(b'%if' % nints, data)
-        print "strings =", strings
-        print "ints    =", ints, '\n'
-        print "floats  =", floats
+        if 's' in types:
+            print "strings =", strings
+        if 'i' in types:
+            print "ints    =", ints
+        if 'f' in types:
+            print "floats  =", floats
+        print('')
         return strings, ints, floats
 
     def skip_block(self):
         """
         Skips a block following a pattern of:
             [nbytes, data, nbytes]
+
+        :param self:    the OP2 object pointer
         :retval data: since data can never be None, a None value
                       indicates something bad happened.
         """
@@ -68,6 +83,7 @@ class FortranFormat(object):
         These are used to indicate position in the file as well as
         the number of bytes to read.
 
+        :param self:    the OP2 object pointer
         :param markers: markers to get; markers = [-10, 1]
         """
         for i, marker in enumerate(markers):
@@ -79,8 +95,9 @@ class FortranFormat(object):
         """
         Gets n markers, so if n=2, it will get 2 markers.
 
-        :param n: number of markers to get
-        :param rewind: should the file be returned to the starting point
+        :param self:    the OP2 object pointer
+        :param n:        number of markers to get
+        :param rewind:   should the file be returned to the starting point
         :retval markers: list of [1, 2, 3, ...] markers
         """
         ni = self.n
@@ -98,6 +115,9 @@ class FortranFormat(object):
         return markers
 
     def _skip_subtables(self):
+        """
+        :param self:    the OP2 object pointer
+        """
         self.isubtable = -3
         self.read_markers([-3, 1, 0])
 
@@ -118,13 +138,20 @@ class FortranFormat(object):
     def passer(self, data):
         """
         dummy function used for unsupported tables
+        :param self:    the OP2 object pointer
         """
         pass
 
     def _get_table_mapper(self):
+        """
+        :param self:    the OP2 object pointer
+        """
         raise NotImplementedError('this should be overwritten')
 
     def _read_subtables(self):
+        """
+        :param self:    the OP2 object pointer
+        """
         self._data_factor = 1
         nstart = self.n
         self.isubtable = -3
@@ -239,7 +266,7 @@ class FortranFormat(object):
         """
         Lets the code check whether or not to read a subcase
 
-        :param self: the object pointer
+        :param self:    the OP2 object pointer
         :retval is_valid: should this subcase defined by self.isubcase be read?
         """
         if not self.isAllSubcases:
@@ -252,7 +279,7 @@ class FortranFormat(object):
         """
         Jumps to position n in the file
 
-        :param self: the object pointer
+        :param self:    the OP2 object pointer
         :param n:    the position to goto
         """
         self.n = n
@@ -293,6 +320,9 @@ class FortranFormat(object):
         return record
 
     def _stream_record(self, debug=True):
+        """
+        :param self:    the OP2 object pointer
+        """
         markers0 = self.get_nmarkers(1, rewind=False)
         if self.debug and debug:
             self.binary_debug.write('_stream_record - marker = [4, %i, 4]\n' % markers0[0])
@@ -322,6 +352,9 @@ class FortranFormat(object):
                 nloop += 1
 
     def _read_record(self, stream=False, debug=True):
+        """
+        :param self:    the OP2 object pointer
+        """
         markers0 = self.get_nmarkers(1, rewind=False)
         if self.debug and debug:
             self.binary_debug.write('read_record - marker = [4, %i, 4]\n' % markers0[0])
