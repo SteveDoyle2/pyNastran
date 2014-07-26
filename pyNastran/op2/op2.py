@@ -44,12 +44,12 @@ from pyNastran.utils import is_binary
 from pyNastran.utils.log import get_logger
 
 
-class TrashWriter(file):
+class TrashWriter(object):
     """
     A dummy file that just trashes all data
     """
     def __init__(self, *args, **kwargs):
-        file.__init__(self, *args, **kwargs)
+        pass
     def open(self, *args, **kwargs):
         pass
     def write(self, *args, **kwargs):
@@ -245,9 +245,10 @@ class OP2( #BDF,
         self.grid_point_weight = GridPointWeight()
         self.words = []
         self.debug = debug
-        self.debug = True
+        self.debug = False
+        debug_file = None
         self.debug_file = debug_file
-        self.debug_file = 'debug.out'
+        #self.debug_file = 'debug.out'
         self.make_geom = False
 
     def _get_table_mapper(self):
@@ -454,7 +455,7 @@ class OP2( #BDF,
             'OVGRMS2': [self._table_passer, self._table_passer],
 
             #==================================
-            'GPL': [self._table_passer, self._table_passer],
+            #'GPL': [self._table_passer, self._table_passer],
             'OMM2': [self._table_passer, self._table_passer],
             'ERRORN': [self._table_passer, self._table_passer],
             #==================================
@@ -656,7 +657,7 @@ class OP2( #BDF,
                                   'DYNAMIC', 'DYNAMICS',
                                   'EQEXIN', 'EQEXINS',
                                   'GPDT', 'ERRORN',
-                                  'DESTAB', 'R1TABRG', 'HISADD', 'GPL',
+                                  'DESTAB', 'R1TABRG', 'HISADD',
 
                                    # eigenvalues
                                    'BLAMA', 'LAMA',
@@ -670,6 +671,8 @@ class OP2( #BDF,
                                    'KDICT', 'MONITOR',
                                   ]:
                     self._read_geom_table()  # DIT (agard)
+                elif table_name in ['GPL', ]:
+                    self._read_gpl()
                 elif table_name in ['OMM2', ]:
                     self._read_omm2()
                 elif table_name in ['DIT']:  # tables
@@ -1008,9 +1011,9 @@ class OP2( #BDF,
         Skips the majority of geometry/result tables as they follow a very standard format.
         Other tables don't follow this format.
         """
-        if self.debug:
-            self.binary_debug.write('skipping table...\n')
         self.table_name = self.read_table_name(rewind=False)
+        if self.debug:
+            self.binary_debug.write('skipping table...%r\n' % self.table_name)
         self.read_markers([-1])
         data = self._skip_record()
 
@@ -1019,6 +1022,9 @@ class OP2( #BDF,
         self._skip_subtables()
 
     def _read_omm2(self):
+        """
+        :param self:    the OP2 object pointer
+        """
         self.log.debug("table_name = %r" % self.table_name)
         self.table_name = self.read_table_name(rewind=False)
         self.read_markers([-1])
@@ -1037,6 +1043,9 @@ class OP2( #BDF,
         self._read_subtables()
 
     def _read_fol(self):
+        """
+        :param self:    the OP2 object pointer
+        """
         self.log.debug("table_name = %r" % self.table_name)
         self.table_name = self.read_table_name(rewind=False)
         self.read_markers([-1])
@@ -1058,9 +1067,51 @@ class OP2( #BDF,
             raise NotImplementedError(msg)
         self._read_subtables()
 
+    def _read_gpl(self):
+        """
+        :param self:    the OP2 object pointer
+        """
+        self.table_name = self.read_table_name(rewind=False)
+        self.log.debug('table_name = %r' % self.table_name)
+        if self.debug:
+            self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
+        self.read_markers([-1])
+        if self.debug:
+            self.binary_debug.write('---markers = [-1]---\n')
+        data = self._read_record()
+
+        markers = self.get_nmarkers(1, rewind=True)
+        self.binary_debug.write('---marker0 = %s---\n' % markers)
+        n = -2
+        while markers[0] != 0:
+            self.read_markers([n, 1, 0])
+            if self.debug:
+                self.binary_debug.write('---markers = [%i, 1, 0]---\n' % n)
+
+            markers = self.get_nmarkers(1, rewind=True)
+            if markers[0] == 0:
+                markers = self.get_nmarkers(1, rewind=False)
+                break
+            data = self._read_record()
+            #self.show_data(data, 'i')
+            n -= 1
+            markers = self.get_nmarkers(1, rewind=True)
+
+    def get_marker_n(self, n):
+        markers = []
+        s = Struct('3i')
+        for i in xrange(n):
+            block = self.f.read(12)
+            marker = s.unpack(block)
+            print('markers =', marker)
+            markers.append(marker)
+        print("markers =", markers)
+        return markers
+
     def _read_geom_table(self):
         """
         Reads a geometry table
+        :param self:    the OP2 object pointer
         """
         self.table_name = self.read_table_name(rewind=False)
         if self.debug:
@@ -1082,6 +1133,9 @@ class OP2( #BDF,
         self._read_subtables()
 
     def _read_sdf(self):
+        """
+        :param self:    the OP2 object pointer
+        """
         self.log.debug("table_name = %r" % self.table_name)
         self.table_name = self.read_table_name(rewind=False)
         self.read_markers([-1])
@@ -1111,9 +1165,6 @@ class OP2( #BDF,
 
         #data = self._read_record()
         self.read_markers([-4, 1, 0, 0])
-        self.show(100)
-
-        #sys.exit()
         #self._read_subtables()
 
     def _read_results_table(self):
