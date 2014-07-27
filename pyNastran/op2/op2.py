@@ -668,7 +668,7 @@ class OP2( #BDF,
 
                                    # other
                                    'CONTACT', 'VIEWTB',
-                                   'KDICT', 'MONITOR',
+                                   'KDICT', 'MONITOR', 'PERF',
                                   ]:
                     self._read_geom_table()  # DIT (agard)
                 elif table_name in ['GPL', ]:

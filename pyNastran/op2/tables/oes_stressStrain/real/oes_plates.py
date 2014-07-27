@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from itertools import izip, count
-from numpy import zeros, searchsorted
+from numpy import zeros, searchsorted, ravel
 
 from .oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats8p4F
@@ -193,7 +193,7 @@ class RealPlateVector(OES_Object):
         return itot
 
     def eid_to_element_node_index(self, eids):
-        ind = ravel([searchsortd(self.element_node[:, 0] == eid) for eid in eids])
+        ind = ravel([searchsorted(self.element_node[:, 0] == eid) for eid in eids])
         #ind = searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
@@ -906,6 +906,7 @@ class RealPlateStress(StressObject):
             except KeyError:
                 assert dt in self.oxx, 'dt=%r not in oxx' % dt
                 assert kkey in self.oxx[dt], 'kkey=%r not in oxx[%r]' % (kkey, dt)
+                raise
             isBilinear = True
             quadMsg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quadMsgTemp
             if len(ekey) == 1:
@@ -918,7 +919,7 @@ class RealPlateStress(StressObject):
         if 'CQUADR' in eTypes:
             qkey = eTypes.index('CQUADR')
             kkey = self.eType.keys()[qkey]
-            ekey = self.oxx[kkey].keys()
+            ekey = self.oxx[dt][kkey].keys()
             isBilinear = True
             quadrMsg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quadMsgTemp
             if len(ekey) == 1:
@@ -995,6 +996,21 @@ class RealPlateStress(StressObject):
                         for eid in eids:
                             out = self._write_f06_quad4_bilinear_transient(dt, eid, 5)
                             msg.append(out)
+                elif eType in ['CQUADR']:
+                    if isBilinear:
+                        for dt in dts:
+                            header[1] = dt_msg % dt
+                            msg += header + msgPack
+                            for eid in eids:
+                                out = self._write_f06_quad4_bilinear_transient(dt, eid, 4)
+                                msg.append(out)
+                    else:
+                        for dt in dts:
+                            header[1] = dt_msg % dt
+                            msg += header + msgPack
+                            for eid in eids:
+                                out = self._write_f06_tri3_transient(dt, eid)
+                                msg.append(out)
                 else:
                     raise NotImplementedError('eType = %r' % eType)  # CQUAD8, CTRIA6
 
@@ -1630,6 +1646,19 @@ class RealPlateStrain(StrainObject):
                 isBilinear = False
                 quadMsg = ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'] + triMsgTemp
 
+        if 'CQUAD8' in eTypes:
+            quad8Msg = ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n'] + quadMsgTemp
+
+        if 'CQUADR' in eTypes:
+            qkey = eTypes.index('CQUADR')
+            kkey = self.eType.keys()[qkey]
+            ekey = self.exx[kkey].keys()
+            isBilinear = True
+            quadrMsg = header + ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quadMsgTemp
+            if len(ekey) == 1:
+                isBilinear = False
+                quadrMsg = header + ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'] + triMsgTemp
+
         if 'CTRIA3' in eTypes:
             triMsg = ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'] + triMsgTemp
 
@@ -1670,7 +1699,7 @@ class RealPlateStrain(StrainObject):
                             header[1] = dt_msg % dt
                             msg.append('\n'.join(header + msg_pack))
                             for eid in eids:
-                                out = self.writeF06_Quad4_BilinearTransient(dt, eid, 4)
+                                out = self._write_f06_quad4_bilinear_transient(dt, eid, 4)
                                 msg.append(out)
                             msg.append(pageStamp % page_num)
                             page_num += 1
@@ -1679,7 +1708,7 @@ class RealPlateStrain(StrainObject):
                             header[1] = dt_msg % dt
                             msg.append('\n'.join(header + msg_pack))
                             for eid in eids:
-                                out = self.writeF06_Tri3Transient(dt, eid)
+                                out = self._write_f06_tri3_transient(dt, eid)
                                 msg.append(out)
                             msg.append(pageStamp % page_num)
                             page_num += 1
@@ -1688,7 +1717,7 @@ class RealPlateStrain(StrainObject):
                         header[1] = dt_msg % dt
                         msg.append('\n'.join(header + msg_pack))
                         for eid in eids:
-                            out = self.writeF06_Tri3Transient(dt, eid)
+                            out = self._write_f06_tri3_transient(dt, eid)
                             msg.append(out)
                         msg.append(pageStamp % page_num)
                         page_num += 1
@@ -1697,16 +1726,31 @@ class RealPlateStrain(StrainObject):
                         header[1] = dt_msg % dt
                         msg.append('\n'.join(header + msg_pack))
                         for eid in eids:
-                            out = self.writeF06_Quad4_BilinearTransient(dt, eid, 5)
+                            out = self._write_f06_quad4_bilinear_transient(dt, eid, 5)
                             msg.append(out)
                         msg.append(pageStamp % page_num)
                         page_num += 1
+                elif eType in ['CQUADR']:
+                    if isBilinear:
+                        for dt in dts:
+                            header[1] = dt_msg % dt
+                            msg += header + msg_pack
+                            for eid in eids:
+                                out = self._write_f06_quad4_bilinear_transient(dt, eid, 4)
+                                msg.append(out)
+                    else:
+                        for dt in dts:
+                            header[1] = dt_msg % dt
+                            msg += header + msg_pack
+                            for eid in eids:
+                                out = self._write_f06_tri3_transient(dt, eid)
+                                msg.append(out)
                 elif eType in ['CTRIA6', 'CTRIAR']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                         msg.append('\n'.join(header + msg_pack))
                         for eid in eids:
-                            out = self.writeF06_Quad4_BilinearTransient(dt, eid, 3)
+                            out = self._write_f06_quad4_bilinear_transient(dt, eid, 3)
                             msg.append(out)
                         msg.append(pageStamp % page_num)
                         page_num += 1
@@ -1744,7 +1788,7 @@ class RealPlateStrain(StrainObject):
                     raise RuntimeError('Invalid option for cquad4')
         return ''.join(msg)
 
-    def writeF06_Quad4_BilinearTransient(self, dt, eid, n):
+    def _write_f06_quad4_bilinear_transient(self, dt, eid, n):
         msg = ['']
         k = self.exx[dt][eid].keys()
         cen = 'CEN/' + str(n)
@@ -1796,7 +1840,7 @@ class RealPlateStrain(StrainObject):
                     msg.append('   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, exx, eyy, exy, angle, major, minor, evm.rstrip()))
         return ''.join(msg)
 
-    def writeF06_Tri3Transient(self, dt, eid):
+    def _write_f06_tri3_transient(self, dt, eid):
         msg = ['']
         exxNodes = self.exx[dt][eid]
         #k = exxNodes.keys()

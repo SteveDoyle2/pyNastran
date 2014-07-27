@@ -58,9 +58,10 @@ def main():
 
     iSubcases = []
     debug     = False
-    make_geom  = False
-    write_bdf  = False
-    write_f06  = True
+    make_geom = False
+    write_bdf = False
+    write_f06 = True
+    write_op2 = False
     is_vector = False
 
     delete_f06 = True
@@ -93,7 +94,7 @@ def main():
     t0 = time.time()
     run_lots_of_files(files, make_geom=make_geom, write_bdf=write_bdf,
                    write_f06=write_f06, delete_f06=delete_f06,
-                   debug=debug, saveCases=saveCases, skipFiles=skipFiles,
+                   write_op2=write_op2, debug=debug, saveCases=saveCases, skipFiles=skipFiles,
                    stopOnFailure=stopOnFailure, is_vector=is_vector,
                    nStart=nStart, nStop=nStop)
     print("dt = %f" %(time.time() - t0))

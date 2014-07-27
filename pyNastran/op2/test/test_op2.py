@@ -110,7 +110,7 @@ def get_failed_files(filename):
 
 
 def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
-                   delete_f06=True, is_vector=False,
+                   delete_f06=True, write_op2=True, is_vector=False,
                    debug=True, saveCases=True, skipFiles=[],
                    stopOnFailure=False, nStart=0, nStop=1000000000):
     n = ''
@@ -133,7 +133,7 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
             sys.stderr.write('%sfile=%s\n' %(n, op2file))
             nTotal += 1
             isPassed = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
-                               write_f06=write_f06,
+                               write_f06=write_f06, write_op2=write_op2,
                                is_mag_phase=False,
                                is_vector=is_vector,
                                delete_f06=delete_f06,
@@ -327,7 +327,7 @@ def main():
     #msg += "  -g, --geometry       Reads the OP2 for geometry, which can be written out (default=False)\n"
     #msg += "  -w, --write_bdf      Writes the bdf to fem.test_op2.bdf (default=False)\n"
     msg += "  -f, --write_f06      Writes the f06 to fem.test_op2.f06 (default=True)\n"
-    msg += "  -o, --write_op2      Writes the op2 to fem.test_op2.op2 (default=True)\n"
+    msg += "  -o, --write_op2      Writes the op2 to fem.test_op2.op2 (default=False)\n"
     msg += "  -z, --is_mag_phase   F06 Writer writes Magnitude/Phase instead of\n"
     msg += "                       Real/Imaginary (still stores Real/Imag); (default=False)\n"
     msg += "  -s <sub>, --subcase  Specify one or more subcases to parse; (e.g. 2_5)\n"
