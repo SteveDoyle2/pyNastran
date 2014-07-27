@@ -52,7 +52,7 @@ class OUG(OP2Common):
     def _read_oug1_3(self, data):
         three = self.parse_approach_code(data)
         self.words = [
-            'analysis_code', 'table_code', '???',           'isubcase',
+            'approach_code','table_code','???',         'isubcase',
              '???',         '???',      '???',          'random_code'
              'format_code', 'num_wide', '???',          '???',
             'acoustic_flag','???',      '???',          '???',

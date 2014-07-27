@@ -379,7 +379,7 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
             self.data_code[var_name] = value
 
         try:
-            self.words[field_num-1] = var_name
+            self.words[field_num - 1] = var_name
         except IndexError:
             msg = 'Trying to set word, but...len(words)=%s ifield=%s' % (len(self.words), field_num - 1)
             raise IndexError(msg)
@@ -394,7 +394,8 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
 
     def _read_title_helper(self, data):
         assert len(data) == 584, len(data)
-        Title, subtitle, label = unpack(b'128s128s128s', data[200:])  # titleSubtitleLabel
+        # titleSubtitleLabel
+        Title, subtitle, label = unpack(b'128s128s128s', data[200:])
 
         self.Title = Title.strip()
 
@@ -492,8 +493,16 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
             if auto_return:
                 return len(data)
             n = self._read_complex_table(data, result_name, node_elem)
+        elif self.format_code == 3 and self.num_wide == 8:  # real mag/phase - this is confusing...I think there is no phase?
+            # real_obj
+            assert real_obj is not None
+            nnodes = len(data) // 32  # 8*4
+            auto_return = self._create_table_object(result_name, nnodes, storage_obj, real_obj, real_vector)
+            if auto_return:
+                return len(data)
+            n = self._read_real_table(data, result_name, node_elem)
         else:
-            msg = 'only num_wide=8 or 14 is allowed  num_wide=%s' % self.num_wide
+            msg = 'only num_wide=8 or 14 is allowed;  num_wide=%s' % self.num_wide
             n = self._not_implemented_or_skip(data, msg)
         #else:
         #msg = 'invalid random_code=%s num_wide=%s' % (random_code, self.num_wide)
@@ -654,8 +663,6 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
 
         code = self._get_code()
         if hasattr(self, 'isubcase'):
-            #print('isubcase =', self.isubcase)
-            #print('code =', self.code)
             if self.code in storageObj:
                 self.obj = storageObj[code]
                 self.obj.update_data_code(copy.deepcopy(self.data_code))
@@ -665,7 +672,6 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
         else:
             if code in storageObj:
                 self.obj = storageObj[code]
-                #print "code =", code
             else:
                 storageObj[code] = self.obj
 
@@ -702,6 +708,8 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
 
         #: used to create sort_bits
         self.sort_code = tCode // 1000
+
+        #: ..todo::  sort_code2 seems to be unused...
         self.sort_code2 = ((tCode // 1000) + 2) // 2
         self.data_code['sort_code'] = self.sort_code
 
@@ -740,7 +748,6 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
 
         self._parse_sort_code()
 
-    #===================================
     def _parse_sort_code(self):
         """
         +-------------------------+
@@ -787,7 +794,6 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
             i -= 1
         #: the bytes describe the SORT information
         self.sort_bits = bits
-        #print "sort_bits =", bits
         #self.data_code['sort_bits'] = self.sort_bits
 
     def _table_specs(self):
@@ -873,7 +879,6 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
             return True
         return False
 
-    #---------------------
     def isStress(self):
         if self.stress_bits[1] == 0:
             return True
@@ -890,13 +895,11 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
 
         if is_vectorized:
             if self.read_mode == 1:
-                #print "read_mode = 1"
                 self.create_transient_object(slot, slot_vector)
                 self.result_names.add(result_name)
                 self.obj._nnodes += nnodes
                 auto_return = True
             elif self.read_mode == 2:
-                #print "read_mode = 2"
                 self.code = self._get_code()
                 self.obj = slot[self.code]
                 #self.obj.update_data_code(self.data_code)

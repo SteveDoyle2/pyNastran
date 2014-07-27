@@ -245,10 +245,11 @@ class OP2( #BDF,
         self.grid_point_weight = GridPointWeight()
         self.words = []
         self.debug = debug
-        self.debug = False
-        debug_file = None
-        self.debug_file = debug_file
-        #self.debug_file = 'debug.out'
+        #self.debug = True
+        #self.debug = False
+        #debug_file = None
+        #self.debug_file = debug_file
+        self.debug_file = 'debug.out'
         self.make_geom = False
 
     def _get_table_mapper(self):
@@ -542,6 +543,7 @@ class OP2( #BDF,
         if self.debug_file is not None:
             #: an ASCII version of the op2 (creates lots of output)
             self.binary_debug = open(self.debug_file, 'wb')
+            self.binary_debug.write(self.op2_filename + '\n')
         else:
             #self.binary_debug = open(os.devnull, 'wb')  #TemporaryFile()
             self.binary_debug = TrashWriter('debug.out', 'wb')

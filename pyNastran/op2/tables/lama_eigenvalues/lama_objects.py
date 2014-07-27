@@ -1,3 +1,4 @@
+from __future__ import print_function
 from math import sqrt
 
 from numpy import array, pi, allclose
@@ -155,3 +156,83 @@ class ComplexEigenvalues(BaseScalarObject):
             msg += '%-7s %15s %15s %10s %10s %10s\n' % (rootNum, extractOrder,
                                                         eigenvalue[0], eigenvalue[1], cycle, damping)
         return msg
+
+
+class BucklingEigenvalues(BaseScalarObject):
+    def __init__(self, title):
+        BaseScalarObject.__init__(self)
+        #self.rootNumber = []
+        self.title = title
+        self.extractionOrder = {}
+        self.eigenvalues = {}
+        self.freqs = {}
+        self.omegas = {}
+        self.generalized_mass = {}
+        self.generalized_stiffness = {}
+        #self.cycles = {}
+        #self.damping = {}
+
+    def get_stats(self):
+        neigenvalues = len(self.extractionOrder)
+        msg = []
+        msg.append('  type=%s neigenvalues=%s\n' % (self.__class__.__name__, neigenvalues))
+        msg.append('  isubcase, extractionOrder, eigenvalues, '
+                   'cycles, damping\n')
+        return msg
+
+    def isReal(self):
+        return False
+
+    def isComplex(self):
+        return False
+
+    def isBuckling(self):
+        return True
+
+    def addF06Line(self, data):
+        print('data =', data)
+         #(iMode, order, eigen, omega, freq, mass, stiff)
+        (rootNum, extractOrder, eigr, omega, freq, mass, stiff) = data
+        self.extractionOrder[rootNum] = extractOrder
+        self.eigenvalues[rootNum] = eigr
+        self.freqs[rootNum] = freq
+        self.omegas[rootNum] = omega
+        self.generalized_mass[rootNum] = mass
+        self.generalized_stiffness[rootNum] = stiff
+
+      #def add_f06_data(self, data):
+        #for line in data:
+            #self.addF06Line(line)
+
+    def write_f06(self, f, header, pageStamp, page_num=1):  # not proper msg start
+        title = ''
+        if self.title is not None:
+            title = '%s' % str(self.title).center(124).rstrip() + '\n'
+        msg = header + ['                                              R E A L   E I G E N V A L U E S\n', title,
+                        '   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED\n',
+                        '    NO.       ORDER                                                                       MASS              STIFFNESS\n']
+
+        for (iMode, order) in sorted(self.extractionOrder.iteritems()):
+            eigr = self.eigenvalues[iMode]
+
+            omega = self.omegas[iMode]
+            freq = self.freqs[iMode]
+            mass = self.generalized_mass[iMode]
+            stiff = self.generalized_stiffness[iMode]
+            ([eigr, freq, omega, mass, stiff], is_all_zeros) = writeFloats13E([eigr, freq, omega, mass, stiff])
+            #            i  ord eig ome f   m          k
+            msg.append(' %8s%10s%20s%20s%20s%20s       %s\n' % (iMode, order, eigr, omega, freq, mass, stiff))
+        msg.append(pageStamp % page_num)
+        f.write(''.join(msg))
+        return page_num
+
+    #def __repr__(self):
+        #msg = '%-7s %15s %15s %10s %10s %10s\n' % ('RootNum', 'ExtractionOrder', 'Eigenvalue', '', 'Cycles', 'Damping')
+        #msg += '%-7s %15s %15s %10s\n' % ('', '', 'Real', 'Imaginary')
+        #for rootNum, extractOrder in sorted(self.extractionOrder.iteritems()):
+            #eigenvalue = self.eigenvalues[rootNum]
+            #cycle = self.cycles[rootNum]
+            #damping = self.damping[rootNum]
+            #msg += '%-7s %15s %15s %10s %10s %10s\n' % (rootNum, extractOrder,
+                                                        #eigenvalue[0], eigenvalue[1], cycle, damping)
+        #return msg
