@@ -1617,9 +1617,13 @@ class RealPlateStrain(StrainObject):
                         for eid in eids:
                             out = self.writeF06_Tri3(eid)
                             msg.append(out)
-                elif eType in ['CTRIA6', 'CTRIAR']:
+                elif eType in ['CTRIAR']:
                     for eid in eids:
                         out = self.writeF06_Quad4_Bilinear(eid, 3, 'CEN/3')
+                        msg.append(out)
+                elif eType in ['CTRIA6']:
+                    for eid in eids:
+                        out = self.writeF06_Quad4_Bilinear(eid, 3, 'CEN/6')
                         msg.append(out)
                 else:
                     raise NotImplementedError('eType = %r' % eType)

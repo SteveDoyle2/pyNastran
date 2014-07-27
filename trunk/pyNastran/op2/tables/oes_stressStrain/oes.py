@@ -1054,7 +1054,7 @@ class OES(OP2Common):
                 msg = 'num_wide=%s' % self.num_wide
                 return self._not_implemented_or_skip(data, msg)
 
-        elif self.element_type in [64, 70, 82, 144]:  # bilinear plates
+        elif self.element_type in [64, 70, 75, 82, 144]:  # bilinear plates
         #elif self.element_type in [64, 70, 75, 82, 144]:  # bilinear plates
             # 64-CQUAD8
             # 70-CTRIAR
@@ -1548,16 +1548,16 @@ class OES(OP2Common):
                         n += 32  # 4*8
             elif self.format_code in [2, 3] and self.num_wide == 37: # imag
                 msg = 'num_wide=%s' % self.num_wide
-                return self._not_implemented_or_skip(data, msg)
+                #return self._not_implemented_or_skip(data, msg)
 
-                if self.isStress():
+                #if self.isStress():
                     #self.create_transient_object(self.ctriaxStress, ComplexTriaxStress)  # undefined
-                    raise NotImplementedError('ComplexTriaxStress')
-                else:
+                    #raise NotImplementedError('ComplexTriaxStress')
+                #else:
                     #self.create_transient_object(self.ctriaxStrain, ComplexTriaxStrain)  # undefined
-                    raise NotImplementedError('ComplexTriaxStrain')
-                s1 = Struct(b'ii7f')
-                s2 = Struct(b'i7f')
+                    #raise NotImplementedError('ComplexTriaxStrain')
+                s1 = Struct(b'ii8f')
+                s2 = Struct(b'i8f')
 
                 num_wide = 1 + 4 * 9
                 ntotal = num_wide * 4
@@ -1565,12 +1565,11 @@ class OES(OP2Common):
                 nelements = len(data) // ntotal  # (1+8*4)*4 = 33*4 = 132
 
                 for i in xrange(nelements):
-                    out = s1.unpack(data[n:n + 36])
+                    out = s1.unpack(data[n:n + 40])
                     (eid_device, loc, rsr, rsi, azsr, azsi, Asr, Asi, ssr, ssi) = out
-                    if self.debug4():
-                        self.binary_debug.write('CTRIAX6-53A - %s\n' % (str(out)))
                     eid = (eid_device - self.device_code) // 10
-                    #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs)
+                    if self.debug4():
+                        self.binary_debug.write('CTRIAX6-53 eid=%i\n    %s\n' % (eid, str(out)))
 
                     if is_magnitude_phase:
                         rs = polar_to_real_imag(rsr, rsi)
@@ -1582,14 +1581,14 @@ class OES(OP2Common):
                         azs = complex(azsr, azsi)
                         As = complex(Asr, Asi)
                         ss = complex(ssr, ssi)
-                    self.obj.add_new_eid(dt, eid, loc, rs, azs, As, ss)
+                    #self.obj.add_new_eid(dt, eid, loc, rs, azs, As, ss)
 
-                    n += 36
+                    n += 40
                     for i in xrange(3):
-                        out = s2.unpack(data[n:n + 32])
+                        out = s2.unpack(data[n:n + 36])
                         (loc, rsr, rsi, azsr, azsi, Asr, Asi, ssr, ssi) = out
                         if self.debug4():
-                            self.binary_debug.write('CTRIAX6-53B - %s\n' % (str(out)))
+                            self.binary_debug.write('    %s\n' % (str(out)))
                         #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s" % (eid,loc,rs,azs,As,ss)
 
                         if is_magnitude_phase:
@@ -1602,8 +1601,8 @@ class OES(OP2Common):
                             azs = complex(azsr, azsi)
                             As = complex(Asr, Asi)
                             ss = complex(ssr, ssi)
-                        self.obj.add(dt, eid, loc, rs, azs, As, ss)
-                        n += 32  # 4*8
+                        #self.obj.add(dt, eid, loc, rs, azs, As, ss)
+                        n += 36  # 4*8
             else:
                 msg = 'num_wide=%s' % self.num_wide
                 return self._not_implemented_or_skip(data, msg)

@@ -2,7 +2,7 @@ from struct import Struct
 
 from pyNastran.op2.op2_common import OP2Common
 from pyNastran.op2.tables.lama_eigenvalues.lama_objects import (
-    RealEigenvalues, ComplexEigenvalues)
+    RealEigenvalues, ComplexEigenvalues, BucklingEigenvalues)
 
 
 class LAMA(OP2Common):
@@ -63,13 +63,14 @@ class LAMA(OP2Common):
             return len(data)
 
         msg = '_read_buckling_eigenvalue_4'
-        return self._not_implemented_or_skip(data, msg)  # TODO: implement buckling eigenvalues
+        #return self._not_implemented_or_skip(data, msg)  # TODO: implement buckling eigenvalues
 
         ntotal = 4 * 7
         nModes = len(data) // ntotal
         n = 0
         #assert self.isubcase != 0, self.isubcase
         blama = BucklingEigenvalues(11)
+        self.eigenvalues[self.Title] = blama
         #self.eigenvalues[self.isubcase] = lama
         s = Struct(b'ii5f')
         for i in xrange(nModes):
@@ -77,10 +78,10 @@ class LAMA(OP2Common):
             out = s.unpack(edata)
             if self.debug4():
                 self.binary_debug.write('  eigenvalue%s - %s\n' % (i, str(out)))
-            #(iMode,order,eigen,omega,freq,mass,stiff) = out # BLAMA??
-            #(modeNum,extractOrder,eigenvalue,radian,cycle,genM,genK) = line  # LAMA
+            (iMode, order, eigen, omega, freq, mass, stiff) = out # BLAMA??
+            #(modeNum, extractOrder, eigenvalue, radian, cycle, genM, genK) = line  # LAMA
             #(rootNum, extractOrder, eigr, eigi, cycle, damping) = data  # CLAMA
-            #blama.addF06Line(out)
+            blama.addF06Line(out)
             n += ntotal
         return n
 
@@ -132,9 +133,9 @@ class LAMA(OP2Common):
             out = s.unpack(edata)
             if self.debug4():
                 self.binary_debug.write('  eigenvalue%s - %s\n' % (i, str(out)))
-            #(iMode,order,eigen,omega,freq,mass,stiff) = out
-            #(modeNum,extractOrder,eigenvalue,radian,cycle,genM,genK) = line
-            #print out
+            #(iMode, order, eigen, omega, freq, mass, stiff) = out
+            (modeNum, extractOrder, eigenvalue, radian, cycle, genM, genK) = line
+            #print(out)
             lama.addF06Line(out)
             n += ntotal
         return n

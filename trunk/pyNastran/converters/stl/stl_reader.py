@@ -7,7 +7,7 @@ from itertools import izip
 from docopt import docopt
 
 from numpy import array, zeros, ndarray, cross, where
-from pyNastran.utils.mathematics import norm_axis as norm
+from numpy.linalg import norm
 
 #from struct import unpack
 import pyNastran

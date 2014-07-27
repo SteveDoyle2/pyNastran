@@ -578,6 +578,7 @@ class F06Writer(object):
         :param end_flag: should a dummy Nastran "END" table be made
                          (default=False)
         """
+        print("F06:")
         if isinstance(f06_outname, str):
             f06 = open(f06_outname, 'wb')
             self.write_summary(f06)
@@ -603,7 +604,7 @@ class F06Writer(object):
         # eigenvalues are written first
         for ikey, result in sorted(self.eigenvalues.iteritems()):
             header
-            #print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
+            print('%-18s case=%r' % (result.__class__.__name__, ikey))
             self.page_num = result.write_f06(f06, header, page_stamp,
                                             page_num=self.page_num)
             assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
@@ -820,7 +821,6 @@ class F06Writer(object):
                     return
                 res_format = '%%-%is SUBCASE=%%i%%s' % res_length
 
-                print("F06:")
                 for res_type in res_types:
                     #print("res_type ", res_type)
                     header = ['', '']
