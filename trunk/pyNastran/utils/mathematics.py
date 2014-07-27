@@ -3,19 +3,15 @@
 from __future__ import print_function
 
 import sys
+from math import sqrt
 from numpy import (float32, float64, complex64, complex128, array, cross,
                    allclose, zeros, matrix, insert, diag)
-from numpy.linalg import norm  # , solve
+from numpy.linalg import norm
 
 from scipy.linalg import solve_banded
 from scipy.interpolate import splrep, splev
 from scipy.integrate import quad
 
-from math import sqrt
-
-from numpy.linalg import norm as norm
-
-import numpy
 
 if sys.version_info < (3, 0):
     """
@@ -33,34 +29,7 @@ if sys.version_info < (3, 0):
     import scipy.weave
 
 # should future proof this as it handles 1.9.0.dev-d1dbf8e, 1.10.2, and 1.6.2
-_numpy_version = [int(i) for i in numpy.__version__.split('.') if i.isdigit()]
-if _numpy_version < [1, 8]:
-    def norm_axis(x, ord=None, axis=None):
-        """A modified form of numpy.norm to work in numpy <= 1.8.0
-
-        Only supports 1D and 2D x vectors (unlike 1.8.0).
-        -------------------------
-        %s""" % norm.__doc__
-        if axis is None:
-            n = norm(x, ord)
-        else:
-            assert isinstance(axis, int), 'axis=%r' % axis
-            assert not isinstance(x, list)
-            assert len(x.shape) == 2
-            if len(x.shape) == 2:
-                if axis == 0:
-                    n = array([norm(x[:, i], ord=ord) for i in xrange(x.shape[1])])
-                elif axis == 1:
-                    n = array([norm(x[i, :], ord=ord) for i in xrange(x.shape[0])])
-                else:
-                    raise RuntimeError('invalid axis=%r' % axis)
-            else:
-                raise RuntimeError('invalid shape...upgrade numpy >= 1.8.0')
-        if n is None:
-            raise RuntimeError('invalid axis=%r' % axis)
-        return n
-else:
-    norm_axis = norm
+#_numpy_version = [int(i) for i in numpy.__version__.split('.') if i.isdigit()]
 
 def integrate_line(x, y):
     """
@@ -124,8 +93,7 @@ def reduce_matrix(matA, nids):
     takes a list of ids and removes those rows and cols
     """
     nRows = len(nids)
-    matB = matrix(zeros((nRows, nRows), 'd'))
-
+    matB = matrix(zeros((nRows, nRows), dtype='float64'))
     for i, irow in enumerate(nids):
         for j, jcol in enumerate(nids):
             matB[i, j] = matA[irow, jcol]
