@@ -571,16 +571,15 @@ class ComplexSolidStress(StressObject):
             elif eType in ['CTETRA10']:
                 tetra10_eids.append(eid)
 
-            elif eType in ['CPENTA']:
+            elif eType in ['CPENTA6']:
                 penta_eids.append(eid)
             elif eType in ['CPENTA15']:
-                penta_eids.append(eid)
+                penta15_eids.append(eid)
 
             elif eType in ['CHEXA8']:
                 hexa_eids.append(eid)
             elif eType in ['CHEXA20']:
                 hexa20_eids.append(eid)
-
             else:
                 raise NotImplementedError('eType=%r' % eType)
         return (tetra_msg, hexa_msg, penta_msg,
@@ -815,10 +814,10 @@ class ComplexSolidStrain(StrainObject):
             elif eType in ['CTETRA10']:
                 tetra10_eids.append(eid)
 
-            elif eType in ['CPENTA']:
+            elif eType in ['CPENTA6']:
                 penta_eids.append(eid)
             elif eType in ['CPENTA15']:
-                penta_eids.append(eid)
+                penta15_eids.append(eid)
 
             elif eType in ['CHEXA8']:
                 hexa_eids.append(eid)

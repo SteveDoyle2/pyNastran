@@ -664,14 +664,17 @@ class OES(OP2Common):
                     nnodes_expected = 5  # 1 centroid + 4 corner points
                     result_vector_name = 'ctetra_stress'
                     slot_vector = self.ctetra_stress
+                    element_name = 'CTETRA4'
                 elif self.element_type == 67:  # CHEXA
                     nnodes_expected = 9
                     result_vector_name = 'chexa_stress'
                     slot_vector = self.chexa_stress
+                    element_name = 'CHEXA8'
                 elif self.element_type == 68:  # CPENTA
                     nnodes_expected = 7
                     result_vector_name = 'cpenta_stress'
                     slot_vector = self.cpenta_stress
+                    element_name = 'CPENTA6'
                 else:
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
@@ -689,14 +692,17 @@ class OES(OP2Common):
                     nnodes_expected = 5  # 1 centroid + 4 corner points
                     result_vector_name = 'ctetra_strain'
                     slot_vector = self.ctetra_strain
+                    element_name = 'CTETRA4'
                 elif self.element_type == 67:  # CHEXA
                     nnodes_expected = 9
                     result_vector_name = 'chexa_strain'
                     slot_vector = self.chexa_strain
+                    element_name = 'CHEXA8'
                 elif self.element_type == 68:  # CPENTA
                     nnodes_expected = 7
                     result_vector_name = 'cpenta_strain'
                     slot_vector = self.cpenta_strain
+                    element_name = 'CPENTA6'
                 else:
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
@@ -758,7 +764,8 @@ class OES(OP2Common):
                         bCos = [b1, b2, b3]
                         cCos = [c1, c2, c3]
                         if inode == 0:
-                            self.obj.add_eid(self.element_name+str(nnodes), cid, dt, eid, grid,
+                            #element_name = self.element_name+str(nnodes) #  this is correct, but fails
+                            self.obj.add_eid(element_name, cid, dt, eid, grid,
                                              sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
                                              aCos, bCos, cCos, pressure, svm)
                         else:
@@ -795,7 +802,8 @@ class OES(OP2Common):
                         self.binary_debug.write('  eid=%i C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
                     assert eid > 0, eid
 
-                    self.obj.add_eid_sort1(self.element_type, self.element_name+str(nodef), dt, eid, cid, ctype, nodef)
+                    #element_name = self.element_name + str(nodef)  # this is correct, but has problems...
+                    self.obj.add_eid_sort1(self.element_type, element_name, dt, eid, cid, ctype, nodef)
                     for inode in xrange(nnodes_expected):
                         edata = data[n:n+52]
                         n += 52
@@ -1072,20 +1080,25 @@ class OES(OP2Common):
                 if self.element_type == 64: # CQUAD8
                     result_vector_name = 'cquad8_stress'
                     slot_vector = self.cquad8_stress
+                    gridC = 'CEN/8'
                 elif self.element_type == 70:  # CTRIAR
                     result_vector_name = 'ctriar_stress'
                     slot_vector = self.ctriar_stress
+                    gridC = 'CEN/3'
                 elif self.element_type == 75:  # CTRIA6
                     result_vector_name = 'ctria6_stress'
                     slot_vector = self.ctria6_stress
+                    gridC = 'CEN/6'
                 elif self.element_type == 82:  # CTRIA6
                     result_vector_name = 'cquadr_stress'
                     slot_vector = self.cquadr_stress
+                    gridC = 'CEN/4'
                 elif self.element_type == 144:  # CQUAD4-bilinear
                     # there's no nead to separate this with centroidal strain
                     # because you can only have one in a given OP2
                     result_vector_name = 'cquad4_stress'
                     slot_vector = self.cquad4_stress
+                    gridC = 'CEN/4'
                 else:
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
@@ -1102,20 +1115,25 @@ class OES(OP2Common):
                 if self.element_type == 64: # CQUAD8
                     result_vector_name = 'cquad8_strain'
                     slot_vector = self.cquad8_strain
+                    gridC = 'CEN/8'
                 elif self.element_type == 70:  # CTRIAR
                     result_vector_name = 'ctriar_strain'
                     slot_vector = self.ctriar_strain
+                    gridC = 'CEN/3'
                 elif self.element_type == 75:  # CTRIA6
-                    result_vector_name = 'ctria6_stress'
-                    slot_vector = self.ctria6_stress
+                    result_vector_name = 'ctria6_strain'
+                    slot_vector = self.ctria6_strain
+                    gridC = 'CEN/6'
                 elif self.element_type == 82: # CQUADR
                     result_vector_name = 'cquadr_strain'
                     slot_vector = self.cquadr_strain
+                    gridC = 'CEN/4'
                 elif self.element_type == 144: # CQUAD4-bilinear
                     # there's no nead to separate this with centroidal strain
                     # because you can only have one in a given OP2
                     result_vector_name = 'cquad4_strain'
                     slot_vector = self.cquad4_strain
+                    gridC = 'CEN/4'
                 else:
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
@@ -1133,7 +1151,7 @@ class OES(OP2Common):
 
             etype = self.element_name
             #print "result_name =", result_name, result_vector_name
-            gridC = 'CEN/%i' % nnodes
+            #gridC = 'CEN/%i' % nnodes
             if self.format_code == 1 and self.num_wide == numwide_real:  # real
                 ntotal = 4 * (2 + 17 * (nnodes + 1))
                 nelements = len(data) // ntotal
@@ -1216,7 +1234,6 @@ class OES(OP2Common):
 
                 s1 = Struct(b'ii')  # 2
                 s2 = Struct(b'i14f') # 15
-                #grid = 'CEN/' + str(nnodes)
                 for i in xrange(nelements):
                     (eid_device, _) = s1.unpack(data[n:n+8])
                     n += 8
@@ -1230,6 +1247,7 @@ class OES(OP2Common):
                         self.binary_debug.write('%s\n' % (str(out)))
                     (grid, fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
                            fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
+                    #gridC = 'CEN/%i' % grid   # this is correct, but fails
 
                     if is_magnitude_phase:
                         sx1 = polar_to_real_imag(sx1r, sx1i)
