@@ -843,7 +843,7 @@ class RealPlateStress(StressObject):
                 if eType in ['CQUAD4']:
                     if isBilinear:
                         for eid in eids:
-                            out = self._write_f06_quad4_bilinear(eid, 4)
+                            out = self._write_f06_quad4_bilinear(eid, 4, 'CEN/4')
                             msg.append(out)
                     else:
                         for eid in eids:
@@ -853,13 +853,21 @@ class RealPlateStress(StressObject):
                     for eid in eids:
                         out = self._write_f06_tri3(eid)
                         msg.append(out)
-                elif eType in ['CQUAD8', 'CQUADR']:
+                elif eType in ['CQUAD8']:
                     for eid in eids:
-                        out = self._write_f06_quad4_bilinear(eid, 4)
+                        out = self._write_f06_quad4_bilinear(eid, 4, 'CEN/8')
                         msg.append(out)
-                elif eType in ['CTRIAR', 'CTRIA6']:
+                elif eType in ['CQUADR']:
                     for eid in eids:
-                        out = self._write_f06_quad4_bilinear(eid, 3)
+                        out = self._write_f06_quad4_bilinear(eid, 4, 'CEN/4')
+                        msg.append(out)
+                elif eType in ['CTRIAR']:
+                    for eid in eids:
+                        out = self._write_f06_quad4_bilinear(eid, 3, 'CEN/3')
+                        msg.append(out)
+                elif eType in ['CTRIA6']:
+                    for eid in eids:
+                        out = self._write_f06_quad4_bilinear(eid, 3, 'CEN/6')
                         msg.append(out)
                 else:
                     raise NotImplementedError('eType = %r' % eType)
@@ -966,7 +974,7 @@ class RealPlateStress(StressObject):
                             header[1] = dt_msg % dt
                             msg += header + msgPack
                             for eid in eids:
-                                out = self._write_f06_quad4_bilinear_transient(dt, eid, 4)
+                                out = self._write_f06_quad4_bilinear_transient(dt, eid, 4, 'CEN/4')
                                 msg.append(out)
                     else:
                         for dt in dts:
@@ -982,19 +990,26 @@ class RealPlateStress(StressObject):
                         for eid in eids:
                             out = self._write_f06_tri3_transient(dt, eid)
                             msg.append(out)
-                elif eType in ['CTRIA6', 'CTRIAR']:
+                elif eType in ['CTRIAR']:
                     for dt in dts:
                         header[1] = dt_msg % dt
                         msg += header + msgPack
                         for eid in eids:
-                            out = self._write_f06_quad4_bilinear_transient(dt, eid, 3)
+                            out = self._write_f06_quad4_bilinear_transient(dt, eid, 3, 'CEN/3')
+                            msg.append(out)
+                elif eType in ['CTRIA6']:
+                    for dt in dts:
+                        header[1] = dt_msg % dt
+                        msg += header + msgPack
+                        for eid in eids:
+                            out = self._write_f06_quad4_bilinear_transient(dt, eid, 3, 'CEN/6')
                             msg.append(out)
                 elif eType in ['CQUAD8']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                         msg += header + msgPack
                         for eid in eids:
-                            out = self._write_f06_quad4_bilinear_transient(dt, eid, 5)
+                            out = self._write_f06_quad4_bilinear_transient(dt, eid, 5, 'CEN/8')
                             msg.append(out)
                 elif eType in ['CQUADR']:
                     if isBilinear:
@@ -1002,7 +1017,7 @@ class RealPlateStress(StressObject):
                             header[1] = dt_msg % dt
                             msg += header + msgPack
                             for eid in eids:
-                                out = self._write_f06_quad4_bilinear_transient(dt, eid, 4)
+                                out = self._write_f06_quad4_bilinear_transient(dt, eid, 4, 'CEN/4')
                                 msg.append(out)
                     else:
                         for dt in dts:
@@ -1020,10 +1035,10 @@ class RealPlateStress(StressObject):
                 page_num += 1
         return page_num - 1
 
-    def _write_f06_quad4_bilinear(self, eid, n):
+    def _write_f06_quad4_bilinear(self, eid, n, cen):
         msg = ['']
         k = self.oxx[eid].keys()
-        cen = 'CEN/' + str(n)
+        #cen = 'CEN/' + str(n)
         k.remove(cen)
         k.sort()
         for nid in [cen] + k:
@@ -1049,10 +1064,10 @@ class RealPlateStress(StressObject):
                     raise Exception('Invalid option for cquad4')
         return ''.join(msg)
 
-    def _write_f06_quad4_bilinear_transient(self, dt, eid, n):
+    def _write_f06_quad4_bilinear_transient(self, dt, eid, n, cen):
         msg = ['']
         k = self.oxx[dt][eid].keys()
-        cen = 'CEN/' + str(n)
+        #cen = 'CEN/' + str(n)
         k.remove(cen)
         k.sort()
         for nid in [cen] + k:
@@ -1579,7 +1594,7 @@ class RealPlateStrain(StrainObject):
                 if eType in ['CQUAD4']:
                     if isBilinear:
                         for eid in eids:
-                            out = self.writeF06_Quad4_Bilinear(eid, 4)
+                            out = self.writeF06_Quad4_Bilinear(eid, 4, 'CEN/4')
                             msg.append(out)
                     else:
                         for eid in eids:
@@ -1589,13 +1604,22 @@ class RealPlateStrain(StrainObject):
                     for eid in eids:
                         out = self.writeF06_Tri3(eid)
                         msg.append(out)
-                elif eType in ['CQUAD8', 'CQUADR']:
+                elif eType in ['CQUAD8']:
                     for eid in eids:
-                        out = self.writeF06_Quad4_Bilinear(eid, 4)  ## should this be 5 for CQUAD8
+                        out = self.writeF06_Quad4_Bilinear(eid, 4, 'CEN/8')
                         msg.append(out)
+                elif eType in ['CQUADR']:
+                    if isBilinear:
+                        for eid in eids:
+                            out = self.writeF06_Quad4_Bilinear(eid, 4, 'CEN/4')
+                            msg.append(out)
+                    else:
+                        for eid in eids:
+                            out = self.writeF06_Tri3(eid)
+                            msg.append(out)
                 elif eType in ['CTRIA6', 'CTRIAR']:
                     for eid in eids:
-                        out = self.writeF06_Quad4_Bilinear(eid, 3)
+                        out = self.writeF06_Quad4_Bilinear(eid, 3, 'CEN/3')
                         msg.append(out)
                 else:
                     raise NotImplementedError('eType = %r' % eType)
@@ -1652,7 +1676,8 @@ class RealPlateStrain(StrainObject):
         if 'CQUADR' in eTypes:
             qkey = eTypes.index('CQUADR')
             kkey = self.eType.keys()[qkey]
-            ekey = self.exx[kkey].keys()
+            dt = self.exx.keys()[0]
+            ekey = self.exx[dt][kkey].keys()
             isBilinear = True
             quadrMsg = header + ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quadMsgTemp
             if len(ekey) == 1:
@@ -1699,7 +1724,7 @@ class RealPlateStrain(StrainObject):
                             header[1] = dt_msg % dt
                             msg.append('\n'.join(header + msg_pack))
                             for eid in eids:
-                                out = self._write_f06_quad4_bilinear_transient(dt, eid, 4)
+                                out = self._write_f06_quad4_bilinear_transient(dt, eid, 4, 'CEN/4')
                                 msg.append(out)
                             msg.append(pageStamp % page_num)
                             page_num += 1
@@ -1726,7 +1751,7 @@ class RealPlateStrain(StrainObject):
                         header[1] = dt_msg % dt
                         msg.append('\n'.join(header + msg_pack))
                         for eid in eids:
-                            out = self._write_f06_quad4_bilinear_transient(dt, eid, 5)
+                            out = self._write_f06_quad4_bilinear_transient(dt, eid, 5, 'CEN/8')
                             msg.append(out)
                         msg.append(pageStamp % page_num)
                         page_num += 1
@@ -1736,7 +1761,7 @@ class RealPlateStrain(StrainObject):
                             header[1] = dt_msg % dt
                             msg += header + msg_pack
                             for eid in eids:
-                                out = self._write_f06_quad4_bilinear_transient(dt, eid, 4)
+                                out = self._write_f06_quad4_bilinear_transient(dt, eid, 4, 'CEN/4')
                                 msg.append(out)
                     else:
                         for dt in dts:
@@ -1745,12 +1770,21 @@ class RealPlateStrain(StrainObject):
                             for eid in eids:
                                 out = self._write_f06_tri3_transient(dt, eid)
                                 msg.append(out)
-                elif eType in ['CTRIA6', 'CTRIAR']:
+                elif eType in ['CTRIAR']:
                     for dt in dts:
                         header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
                         msg.append('\n'.join(header + msg_pack))
                         for eid in eids:
-                            out = self._write_f06_quad4_bilinear_transient(dt, eid, 3)
+                            out = self._write_f06_quad4_bilinear_transient(dt, eid, 3, 'CEN/3')
+                            msg.append(out)
+                        msg.append(pageStamp % page_num)
+                        page_num += 1
+                elif eType in ['CTRIA6']:
+                    for dt in dts:
+                        header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
+                        msg.append('\n'.join(header + msg_pack))
+                        for eid in eids:
+                            out = self._write_f06_quad4_bilinear_transient(dt, eid, 3, 'CEN/6')
                             msg.append(out)
                         msg.append(pageStamp % page_num)
                         page_num += 1
@@ -1759,10 +1793,10 @@ class RealPlateStrain(StrainObject):
                 f.write(''.join(msg))
         return page_num - 1
 
-    def writeF06_Quad4_Bilinear(self, eid, n):
+    def writeF06_Quad4_Bilinear(self, eid, n, cen):
         msg = ['']
         k = self.exx[eid].keys()
-        cen = 'CEN/' + str(n)
+        #cen = 'CEN/' + str(n)
         k.remove(cen)
         k.sort()
         for nid in [cen] + k:
@@ -1788,10 +1822,10 @@ class RealPlateStrain(StrainObject):
                     raise RuntimeError('Invalid option for cquad4')
         return ''.join(msg)
 
-    def _write_f06_quad4_bilinear_transient(self, dt, eid, n):
+    def _write_f06_quad4_bilinear_transient(self, dt, eid, n, cen):
         msg = ['']
         k = self.exx[dt][eid].keys()
-        cen = 'CEN/' + str(n)
+        #cen = 'CEN/' + str(n)
         k.remove(cen)
         k.sort()
         for nid in [cen] + k:
