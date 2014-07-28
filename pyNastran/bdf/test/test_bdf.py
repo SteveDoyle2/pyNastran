@@ -207,6 +207,9 @@ def divide(value1, value2):
 def compare_card_count(fem1, fem2, print_stats=False):
     cards1 = fem1.card_count
     cards2 = fem2.card_count
+    for key in cards1:
+        if key != key.upper():
+            raise RuntimeError('Proper capitalization wasnt determined')
     if print_stats:
         print(fem1.get_bdf_stats())
     else:
