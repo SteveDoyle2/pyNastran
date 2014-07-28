@@ -32,10 +32,10 @@ def get_flo_files(dirname, model_name, nstart=0, nlimit=None, include_dirname_in
         nlimit = n_list[-1]  # inclusive
 
     # handles case of user didn't define every data point
-    n_list2 = []
-    for ni in n_list:
-        if nstart <= ni <= nlimit:
-            n_list2.append(ni)
+    n_list2 = n_list[nstart:nlimit+1]
+    #for ni in n_list:
+        #if nstart <= ni <= nlimit:
+            #n_list2.append(ni)
 
     if include_dirname_in_path:
         flo_filenames = [os.path.join(dirname, '%s_%i.flo' % (model_name, n)) for n in n_list2]
@@ -89,7 +89,7 @@ def run_time_acc(dirname, model_name, node_ids, nstart=0, nlimit=None, num_cpus=
         rhoU[node_id] = zeros(nlimit, 'float64')
 
     #flo_filenames = flo_filenames[:10]
-
+    #num_cpus = 1
     if num_cpus == 1:
         model = Usm3dReader()
         for flo_filename in flo_filenames:
@@ -107,20 +107,24 @@ def run_time_acc(dirname, model_name, node_ids, nstart=0, nlimit=None, num_cpus=
         pool = mp.Pool(num_cpus)
         result = pool.imap(_loads_func, [(flo_filename, node_ids) for flo_filename in flo_filenames])
         n = 0
-        for j, loads in enumerate(result):
-            if j % 500 == 0:
-                print "n =", j, flo_filenames[j]
-            for i, node_id in enumerate(node_ids):
-                #print "Cp[node=%s] =%s" % (node_id, loads['Cp'][i])
-                Cp[node_id][j] = loads['Cp'][i]
-                Mach[node_id][j] = loads['Mach'][i]
-                T[node_id][j] = loads['T'][i]
-                U[node_id][j] = loads['U'][i]
-                V[node_id][j] = loads['V'][i]
-                W[node_id][j] = loads['W'][i]
-                p[node_id][j] = loads['p'][i]
-                rhoU[node_id][j] = loads['rhoU'][i]
-                n += 1
+        #try:
+        if 1:
+            for j, loads in enumerate(result):
+                if j % 500 == 0:
+                    print "n =", j, flo_filenames[j]
+                for i, node_id in enumerate(node_ids):
+                    #print "Cp[node=%s] =%s" % (node_id, loads['Cp'][i])
+                    Cp[node_id][j] = loads['Cp'][i]
+                    Mach[node_id][j] = loads['Mach'][i]
+                    T[node_id][j] = loads['T'][i]
+                    U[node_id][j] = loads['U'][i]
+                    V[node_id][j] = loads['V'][i]
+                    W[node_id][j] = loads['W'][i]
+                    p[node_id][j] = loads['p'][i]
+                    rhoU[node_id][j] = loads['rhoU'][i]
+                    n += 1
+        #except ValueError:  # no idea what causes this..
+            #pass
         pool.close()
         pool.join()
     return n_list, Cp, Mach, T, U, V, W, p, rhoU

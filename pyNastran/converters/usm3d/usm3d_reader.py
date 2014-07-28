@@ -421,6 +421,8 @@ class Usm3dReader(object):
         Also, stupid Nastran-esque float formatting is sometimes used,
         so 5.0-100 exists, which is 5.0E-100.  We just assume it's 0.
         """
+        result_names = ['Mach', 'U', 'V', 'W', 'T', 'rho', 'rhoU', 'rhoV', 'rhoW', 'p', 'Cp']
+
         is_sparse = None
         if n is None:
             assert node_ids is not None, node_ids
@@ -431,18 +433,24 @@ class Usm3dReader(object):
             assert node_ids is None, node_ids
             is_sparse = False
 
-        formatCode = 2
-
-        flo_file = open(flo_filename, 'r')
-        line = flo_file.readline().strip()
-        mach = float(line)
-
+        #formatCode = 2
         node_id = zeros(n, 'int32')
         rho = zeros(n, 'float32')
         rhoU = zeros(n, 'float32')
         rhoV = zeros(n, 'float32')
         rhoW = zeros(n, 'float32')
         e = zeros(n, 'float32')
+
+        flo_file = open(flo_filename, 'r')
+        line = flo_file.readline().strip()
+        try:
+            #file is messsed up
+            mach = float(line)
+        except:
+            raise
+            loads['Cp'] = e  # it's 0 anyways...
+            return node_id, loads
+
 
         # determine the number of variables on each line
         sline1 = flo_file.readline().strip().split()
@@ -572,7 +580,6 @@ class Usm3dReader(object):
             return node_id, loads
 
         # standard outputs
-        result_names = ['Mach', 'U', 'V', 'W', 'T', 'rho', 'rhoU', 'rhoV', 'rhoW', 'p', 'Cp']
         gamma = 1.4
         two_over_Mach2 = 2.0 / mach ** 2
         one_over_gamma = 1.0 / gamma
