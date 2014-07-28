@@ -493,7 +493,7 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
             if auto_return:
                 return len(data)
             n = self._read_complex_table(data, result_name, node_elem)
-        elif self.format_code == 3 and self.num_wide == 8:  # real mag/phase - this is confusing...I think there is no phase?
+        elif self.format_code in [2, 3] and self.num_wide == 8:  # real mag/phase - this is confusing...I think there is no phase?
             # real_obj
             assert real_obj is not None
             nnodes = len(data) // 32  # 8*4

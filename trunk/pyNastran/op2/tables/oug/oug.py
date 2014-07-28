@@ -198,8 +198,19 @@ class OUG(OP2Common):
             n = self._read_table(data, result_name, storage_obj,
                                  RealTemperature, None,
                                  RealTemperatureVector, None, 'node', random_code=self.random_code)
+        elif self.thermal == 2:
+            result_name = 'displacement_scaled_response_spectra_ABS'
+            storage_obj = self.displacement_scaled_response_spectra_ABS
+            n = self._read_table(data, result_name, storage_obj,
+                                 RealDisplacement, ComplexDisplacement,
+                                 RealDisplacementVector, ComplexDisplacementVector, 'node', random_code=self.random_code)
         elif self.thermal == 4:
-            return self._not_implemented_or_skip(data, msg='thermal=4')
+            result_name = 'displacement_scaled_response_spectra_NRL'
+            storage_obj = self.displacement_scaled_response_spectra_NRL
+            n = self._read_table(data, result_name, storage_obj,
+                                 RealDisplacement, ComplexDisplacement,
+                                 RealDisplacementVector, ComplexDisplacementVector, 'node', random_code=self.random_code)
+            #return self._not_implemented_or_skip(data, msg='thermal=4')
         else:
             n = self._not_implemented_or_skip(data, 'bad thermal=%r table' % self.thermal)
         #else:
@@ -217,7 +228,8 @@ class OUG(OP2Common):
             complex_obj = ComplexVelocity
             n = self._read_table(data, result_name, storage_obj,
                                  RealVelocity, ComplexVelocity,
-                                 RealVelocityVector, ComplexVelocityVector, 'node', random_code=self.random_code)
+                                 RealVelocityVector, ComplexVelocityVector,
+                                 'node', random_code=self.random_code)
         elif self.thermal == 1:
             real_obj = ThermalVelocityVectorObject
             complex_obj = None
@@ -225,7 +237,13 @@ class OUG(OP2Common):
                                  ThermalVelocityVectorObject, None,
                                  None, None, 'node', random_code=self.random_code)
         elif self.thermal == 2:
-            n = self._not_implemented_or_skip(data, msg='thermal=2')
+            result_name = 'velocity_scaled_response_spectra_ABS'
+            storage_obj = self.velocity_scaled_response_spectra_ABS
+            n = self._read_table(data, result_name, storage_obj,
+                                 RealVelocity, ComplexVelocity,
+                                 RealVelocityVector, ComplexVelocityVector,
+                                 'node', random_code=self.random_code)
+            #n = self._not_implemented_or_skip(data, msg='thermal=2')
         else:
             raise NotImplementedError(self.thermal)
         return n
@@ -234,20 +252,35 @@ class OUG(OP2Common):
         """
         table_code = 11
         """
-        result_name = 'accelerations'
-        storage_obj = self.accelerations
         if self.thermal == 0:
+            result_name = 'accelerations'
+            storage_obj = self.accelerations
             n = self._read_table(data, result_name, storage_obj,
                                  RealAcceleration, ComplexAcceleration,
-                                 RealAccelerationVector, ComplexAccelerationVector, 'node', random_code=self.random_code)
+                                 RealAccelerationVector, ComplexAccelerationVector,
+                                 'node', random_code=self.random_code)
         elif self.thermal == 1:
+            result_name = 'accelerations'
+            storage_obj = self.accelerations
             n = self._read_table(data, result_name, storage_obj,
                                  None, None,
                                  None, None, 'node', random_code=self.random_code)
         elif self.thermal == 2:
-            n = self._not_implemented_or_skip(data, msg='thermal=2')
+            result_name = 'acceleration_scaled_response_spectra_ABS'
+            storage_obj = self.acceleration_scaled_response_spectra_ABS
+            n = self._read_table(data, result_name, storage_obj,
+                                 RealAcceleration, ComplexAcceleration,
+                                 RealAccelerationVector, ComplexAccelerationVector,
+                                 'node', random_code=self.random_code)
+            #n = self._not_implemented_or_skip(data, msg='thermal=2')
         elif self.thermal == 4:
-            n = self._not_implemented_or_skip(data, msg='thermal=4')
+            result_name = 'acceleration_scaled_response_spectra_NRL'
+            storage_obj = self.acceleration_scaled_response_spectra_NRL
+            n = self._read_table(data, result_name, storage_obj,
+                                 RealAcceleration, ComplexAcceleration,
+                                 RealAccelerationVector, ComplexAccelerationVector,
+                                 'node', random_code=self.random_code)
+            #n = self._not_implemented_or_skip(data, msg='thermal=4')
         else:
             raise NotImplementedError(self.thermal)
         return n
