@@ -425,11 +425,46 @@ class OES(OP2Common):
                         # (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
                         self.obj.add(dt, eid, out)
                     #print "eid=%i axial=%i torsion=%i" % (eid, axial, torsion)
-            #elif self.format_code in [2, 3] and self.num_wide == 111:  # imag and random?
-                #ntotal = 444 # 44 + 10*40  (11 nodes)
-                #msg = 'num_wide=%s' % self.num_wide
-                #return self._not_implemented_or_skip(data, msg)
-                #return len(data)
+            elif self.format_code in [2, 3] and self.num_wide == 111:  # imag and random?
+                ntotal = 444 # 44 + 10*40  (11 nodes)
+                #if self.isStress():
+                    #self.create_transient_object(self.beamStress, RealBeamStress)
+                #else:
+                    #self.create_transient_object(self.beamStrain, RealBeamStrain)
+
+                nelements = len(data) // ntotal
+                s = Struct(b'i')
+
+                nnodes = 10  # 11-1
+                #ntotal = self.obj.getLengthTotal()
+                ntotal = self.num_wide * 4
+                n1 = 44
+                n2 = 40
+                s1 = Struct(b'ii9f')
+                s2 = Struct(b'i9f')
+
+                nelements = len(data) // ntotal
+                for i in xrange(nelements):
+                    edata = data[n:n+n1]
+                    n += n1
+
+                    out = s1.unpack(edata)
+                    eid_device = out[0]
+                    eid = (eid_device - self.device_code) // 10
+                    if self.debug4():
+                        self.binary_debug.write('CBEAM-2 - eid=%i out=%s\n' % (eid, str(out)))
+
+                    #(grid, sd, ercr, exdr, exer, exfr,
+                    #           exci, exdi, exei, exfi) = out
+                    #self.obj.add_new_eid(dt, eid, out[1:])
+
+                    for inode in xrange(nnodes):
+                        edata = data[n:n+n2]
+                        n += n2
+                        out = s2.unpack(edata)
+                        #self.obj.add(dt, eid, out)
+                    #print "eid=%i axial=%i torsion=%i" % (eid, axial, torsion)
+                return len(data)
             else:
                 msg = 'num_wide=%s' % self.num_wide
                 return self._not_implemented_or_skip(data, msg)

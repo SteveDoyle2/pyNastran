@@ -256,8 +256,34 @@ class F06Writer(object):
         self.displacementsATO = {}        # random
         self.displacementsRMS = {}        # random
         self.displacementsCRM = {}        # random
-        self.displacementsNO = {}        # random
+        self.displacementsNO = {}         # random
         self.scaledDisplacements = {}     # tCode=1 thermal=8
+
+        #: OUP
+
+        self.displacement_scaled_response_spectra_NRL = {}
+        self.displacement_scaled_response_spectra_ABS = {}
+        #self.displacement_scaled_response_spectra_PSD = {}
+        #self.displacement_scaled_response_spectra_ATO = {}
+        #self.displacement_scaled_response_spectra_RMS = {}
+        #self.displacement_scaled_response_spectra_CRM = {}
+        #self.displacement_scaled_response_spectra_NO = {}
+
+        #self.velocity_scaled_response_spectra_NRL = {}
+        self.velocity_scaled_response_spectra_ABS = {}
+        #self.velocity_scaled_response_spectra_PSD = {}
+        #self.velocity_scaled_response_spectra_ATO = {}
+        #self.velocity_scaled_response_spectra_RMS = {}
+        #self.velocity_scaled_response_spectra_CRM = {}
+        #self.velocity_scaled_response_spectra_NO = {}
+
+        self.acceleration_scaled_response_spectra_NRL = {}
+        self.acceleration_scaled_response_spectra_ABS = {}
+        #self.acceleration_scaled_response_spectra_PSD = {}
+        #self.acceleration_scaled_response_spectra_ATO = {}
+        #self.acceleration_scaled_response_spectra_RMS = {}
+        #self.acceleration_scaled_response_spectra_CRM = {}
+        #self.acceleration_scaled_response_spectra_NO = {}
 
         #: OUG - temperatures
         self.temperatures = {}           # tCode=1 thermal=1
