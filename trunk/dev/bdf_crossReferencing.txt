@@ -16,7 +16,7 @@ nodes and property do not have to be linked.
 
 Notations
  - done - finished
- - NA   - card doesn't have any cross-referencing (e.g. a MAT1 card) and is done
+ - NA   - card doesn't have any cross-referencing (e.g. an SPOINT card) and is done
  - ??? no check has been done on this card
  - any other note means a card isn't done
  - no label means the card isnt done and probably isnt even added in readWrite
@@ -155,7 +155,7 @@ RBE3  (???)
 
 ----Materials----:
 CREEP (???)
-MAT1  (NA)
+MAT1  (done)
 MAT2  (???)
 MAT3  (???)
 MAT8  (???)
@@ -198,6 +198,7 @@ FORCE1  (done)
 FORCE2  (done)
 RFORCE  (no)
 
+ACCEL   (done)
 ACCEL1  (done)
 GRAV    (done)
 
@@ -385,13 +386,13 @@ RINGAX (not integrated)
 POINTAX
 
 ----Axial Elements----:
-CCONEAX
 CTRIAX  (done)
 CTRIAX6 (done)
 CQUADX  (done)
 RINGAX
 
-----Axial Properties----:
+----Axial Cone Element/Properties----:
+CCONEAX
 PCONEAX
 
 ----Axial Loads----:
@@ -410,6 +411,13 @@ SUPAX
 AXIC
 OMITAX
 SECTAX
+
+----Contact----:
+BCRPARA (???)
+BCTADD  (???)
+BCTSET  (???)
+BSURF   (???)
+BSURFS  (???)
 
 -----------------------------------------------
 
