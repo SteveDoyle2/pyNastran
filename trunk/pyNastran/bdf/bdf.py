@@ -68,7 +68,7 @@ from .cards.dynamic import (FREQ, FREQ1, FREQ2, FREQ4, TSTEP, TSTEPNL, NLPARM,
                             NLPCI)
 from .cards.loads.loads import (LSEQ, SLOAD, DLOAD, DAREA, TLOAD1, TLOAD2,
                                 RLOAD1, RLOAD2, RANDPS, RFORCE)
-from .cards.loads.staticLoads import (LOAD, GRAV, ACCEL1, FORCE,
+from .cards.loads.staticLoads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
                                       FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
                                       PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1)
 
@@ -260,7 +260,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'DLOAD', 'SLOAD', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
             'FORCE', 'FORCE1', 'FORCE2',
             'MOMENT', 'MOMENT1', 'MOMENT2',
-            'GRAV', 'ACCEL1',
+            'GRAV', 'ACCEL', 'ACCEL1',
             'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
             'PLOADX1', 'RFORCE',
 
@@ -1388,7 +1388,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                                          'MATT1', 'MATT2', 'MATT3', 'MATT4',
                                          'MATT5', 'MATT8', 'MATT9'],
              'add_load': ['FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1',
-                          'MOMENT2', 'GRAV', 'ACCEL1', 'LOAD', 'PLOAD',
+                          'MOMENT2', 'GRAV', 'ACCEL', 'ACCEL1', 'LOAD', 'PLOAD',
                               'PLOAD1', 'PLOAD2', 'PLOAD4', 'PLOADX1',
                               'RFORCE', 'DLOAD', 'SLOAD', 'TLOAD1', 'TLOAD2',
                               'RLOAD1', 'RLOAD2', 'RANDPS'],
