@@ -56,7 +56,9 @@ CQUADR  (done)
 PSHELL  (done)
 PCOMP   (done)
 PCOMPG  (done)
+PLPLANE (done)
 
+----Shear (Elements/Properties)----:
 CSHEAR  (done)
 PSHEAR  (done)
 
@@ -127,7 +129,6 @@ PGAP    (done)
 
 PBCOMP  (done)
 
-PLPLANE (done)
 
 ----Rigid Elements----:
 RROD
@@ -146,7 +147,10 @@ MAT3  (done)
 MAT8  (done)
 MAT9  (done)
 MAT10 (done)
+
+----Hyperelastic Materials----:
 MATHP (done)
+MATHE (???)
 
 ----Thermal Materials----:
 MAT4  (done)
@@ -155,11 +159,11 @@ MAT5  (done)
 ----Nonlinear Materials----:
 MATS1  (done)
 MATT1  (done)
-MATT2  (???)
+MATT2  (done)
 MATT3  (???)
-MATT4  (???)
-MATT5  (???)
-MATT8  (???)
+MATT4  (done)
+MATT5  (done)
+MATT8  (done)
 MATT9  (???)
 
 ----Constraints----:
@@ -183,6 +187,7 @@ FORCE1  (done)
 FORCE2  (done)
 RFORCE  (done)
 
+ACCEL   (done)
 ACCEL1  (done)
 GRAV    (done)
 
@@ -370,13 +375,13 @@ RINGAX (not integrated)
 POINTAX
 
 ----Axial Elements----:
-CCONEAX
 CTRIAX  (done)
 CTRIAX6 (done)
 CQUADX  (done)
 RINGAX
 
-----Axial Properties----:
+----Axial Cone Elements/Properties----:
+CCONEAX
 PCONEAX
 
 ----Axial Loads----:
@@ -395,6 +400,13 @@ SUPAX
 AXIC
 OMITAX
 SECTAX
+
+----Contact----:
+BCRPARA (done)
+BCTADD  (done)
+BCTSET  (done)
+BSURF   (done)
+BSURFS  (done)
 
 -----------------------------------------------
 
