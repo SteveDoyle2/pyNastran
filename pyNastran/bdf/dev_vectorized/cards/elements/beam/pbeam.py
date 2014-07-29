@@ -106,8 +106,8 @@ class PBEAM(object):
                 raise RuntimeError('There are duplicate PBEAM IDs...')
             self._cards = []
             self._comments = []
-        import sys
-        sys.exit()
+        #import sys
+        #sys.exit()
 
     #=========================================================================
     def add_card(self, card, i):

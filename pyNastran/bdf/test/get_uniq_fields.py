@@ -59,7 +59,6 @@ class BDFuniqCard(BDF):
 
     def is_reject(self, cardName):
         """Can the card be read"""
-        #cardName = self._get_card_name(card)
         if cardName.startswith('='):
             return False
         elif not cardName in self.cardsToRead:
@@ -78,7 +77,6 @@ class BDFuniqCard(BDF):
 
 if __name__ == '__main__':
     print("enter list of filenames at the command line...")
-    #newBDF = BDF()
     card_fingerprint_set = set()
     infilenames = sys.argv[1:]
     assert len(infilenames) > 0, infilenames
