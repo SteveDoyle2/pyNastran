@@ -13,6 +13,7 @@ from pyNastran.bdf.test.cards.test_dmig import *
 from pyNastran.bdf.test.cards.test_springs import *
 from pyNastran.bdf.test.cards.test_solids import *
 from pyNastran.bdf.test.cards.test_shells import *
+from pyNastran.bdf.test.cards.test_contact import *
 
 # other elements
 from pyNastran.bdf.test.cards.test_rigid import *

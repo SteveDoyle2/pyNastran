@@ -66,9 +66,10 @@ class BSURF(BaseCard):
             raise NotImplementedError(msg)
 
     def rawFields(self):
-        fields = ['BSURF', self.sid, None, None, None, None, None, None, None]
+        fields = ['BSURF', self.sid]
         return fields + list(self.eids)
 
+        fields = ['BSURF', self.sid, None, None, None, None, None, None, None]
         # is this right???
         packs = collapse_thru_by(self.eids, get_packs=True)
 
@@ -91,7 +92,7 @@ class BSURF(BaseCard):
                 else:
                     fields += [minv, 'THRU', maxv, 'BY',   dv, None, None]
             else:
-                fields += pack + [None]* (8 - len(pack))
+                fields += pack + [None] * (8 - len(pack))
         #for sid, tid, fric, mind, maxd in zip(self.sids, self.tids, self.frictions,
         #                                      self.min_distances, self.max_distances):
         #    fields += [sid, tid, fric, mind, maxd, None, None]
