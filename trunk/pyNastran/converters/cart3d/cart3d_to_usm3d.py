@@ -20,7 +20,7 @@ def cart3d_to_usm3d_bc(cart3d, log=None, debug=False):
     #stl.write_stl(stl_filename)
     #return stl
 
-def cart3d_to__usm3d_bc_filename(cart3d_filename, usm3d_bc_filename, log=None, debug=False):
+def cart3d_to_usm3d_bc_filename(cart3d_filename, usm3d_bc_filename, log=None, debug=False):
     """
     Converts a Cart3D file to STL format.
 
@@ -51,4 +51,4 @@ def cart3d_to__usm3d_bc_filename(cart3d_filename, usm3d_bc_filename, log=None, d
 if __name__ == '__main__':
     cart3d_filename = 'threePlugs.a.tri'
     usm3d_bc_filename = 'threePlugs.bc'
-    cart3d_to__usm3d_bc_filename(cart3d_filename, usm3d_bc_filename)
+    cart3d_to_usm3d_bc_filename(cart3d_filename, usm3d_bc_filename)
