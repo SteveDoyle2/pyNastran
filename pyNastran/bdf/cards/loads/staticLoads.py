@@ -4,6 +4,7 @@ All static loads are defined in this file.  This includes:
 
  * LOAD
  * GRAV
+ * ACCEL
  * ACCEL1
  * FORCE1
  * FORCE2
@@ -380,6 +381,80 @@ class GRAV(BaseCard):
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
 
+
+class ACCEL(BaseCard):
+    """
+    Acceleration Load
+
+    Defines static acceleration loads, which may vary over a region of
+    the structural model. The load variation is based upon the tabular
+    input defined on this Bulk Data entry.
+
+    +-------+------+------+------+------+-----+-----+--------+-----+
+    |   1   |   2  |   3  |  4   |   5  |  6  |  7  | 8      |  9  |
+    +-------+------+------+------+------+-----+-----+--------+-----+
+    | ACCEL | SID  | CID  | N1   | N2   | N3  | DIR |        |     |
+    +-------+------+------+------+------+-----+-----+--------+-----+
+    |       | LOC1 | VAL1 | LOC2 | VAL2 | Continues in Groups of 2 |
+    +-------+------+------+------+------+------------------------- +
+    """
+    type = 'ACCEL'
+
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
+        if card:
+            #: Load set identification number (Integer>0)
+            self.sid = integer(card, 1, 'sid')
+
+            #: Coordinate system identification number. (Integer>0: Default=0)
+            self.cid = integer_or_blank(card, 2, 'cid', 0)
+
+            #: Components of the acceleration vector measured in coordinate system
+            #: CID. (Real; at least one Ni != 0)
+            self.N = array([double_or_blank(card, 3, 'N1', 0.0),
+                            double_or_blank(card, 4, 'N2', 0.0),
+                            double_or_blank(card, 5, 'N3', 0.0)])
+            assert max(abs(self.N)) > 0.
+
+            #: Acceleration vector scale factor. (Real)
+            self.dir = string(card, 6, 'dir')
+            assert self.dir in ['X', 'Y', 'Z'], 'dir=%r' % self.dir
+
+            i = 9
+            locs = []
+            vals = []
+            j = 0
+            while i < len(card):
+                loc = double(card, i, 'loc%i' % j)
+                val = double(card, i, 'loc%i' % j)
+                j += 1
+                i += 2
+            self.locs = array(locs)
+            self.vals = array(vals)
+        else:
+            raise NotImplementedError(data)
+
+    def cross_reference(self, model):
+        msg = ' which is required by ACCEL sid=%s' % self.sid
+        self.cid = model.Coord(self.cid, msg=msg)
+
+    def Cid(self):
+        if isinstance(self.cid, int):
+            return self.cid
+        return self.cid.cid
+
+    def rawFields(self):
+        list_fields = ['ACCEL', self.sid, self.Cid(),
+                  self.N[0], self.N[1], self.N[2], self.dir, None, None,
+        ]
+        for loc, val in zip(self.locs, self.vals):
+            list_fields += [loc, val]
+        return list_fields
+
+    def write_bdf(self, size, card_writer):
+        card = self.rawFields()
+        return self.comment() + card_writer(card)
 
 class ACCEL1(BaseCard):
     """
