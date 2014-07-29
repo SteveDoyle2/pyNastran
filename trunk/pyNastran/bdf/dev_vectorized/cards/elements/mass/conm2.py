@@ -1,8 +1,8 @@
 import StringIO
 
 from numpy import array, dot, arange, zeros, unique, searchsorted
+from numpy.linalg import norm
 
-from pyNastran.utils.mathematics import norm_axis as norm
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)

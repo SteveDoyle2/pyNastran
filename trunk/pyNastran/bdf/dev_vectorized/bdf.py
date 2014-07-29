@@ -1448,7 +1448,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
             self._increase_card_count(card_name)
             if not self.is_reject(card_name):
-                self.add_card(icard, lines, card_name, comment, is_list=False)
+                self.add_card(lines, card_name, comment, is_list=False)
                 icard += 1
             else:
                 if comment:
@@ -1537,7 +1537,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.f06.write('%-110s\n' % msg)
         #return msg
 
-    def add_card(self, icard, card_lines, card_name, comment='', is_list=True):
+    def add_card(self, card_lines, card_name, comment='', is_list=True):
         """
         Adds a card object to the BDF object.
 
@@ -1584,12 +1584,12 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         # function that gets by name the initialized object (from global scope)
 
         name = card[0]
-        #print("name = %r" % name)
-        self.write_sorted_card(card_obj, icard)
+        ##print("name = %r" % name)
+        #self.write_sorted_card(card_obj, icard)
 
 
-        if icard % 10000 == 0:
-            self.log.debug('icard = %i' % icard)
+        #if icard % 10000 == 0:
+            #self.log.debug('icard = %i' % icard)
 
         if name == 'PARAM':
             param = PARAM(card_obj, comment=comment)
@@ -2113,18 +2113,24 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             pass
         #========================
         elif name == 'CORD1R':
-            self.cord1r.add(card, comment)
+            card = CORD1R(card_obj, nCoord=0, comment=comment)
+            self.coords[card.cid] = card
         elif name == 'CORD1C':
-            self.cord1c.add(card, comment)
+            card = CORD1C(card_obj, nCoord=0, comment=comment)
+            self.coords[card.cid] = card
         elif name == 'CORD1S':
-            self.cord1s.add(card, comment)
+            card = CORD1S(card_obj, nCoord=0, comment=comment)
+            self.coords[card.cid] = card
 
         elif name == 'CORD2R':
-            self.cord2r.add(card, comment)
+            card = CORD2R(card_obj, comment=comment)
+            self.coords[card.cid] = card
         elif name == 'CORD2C':
-            self.cord2c.add(card, comment)
+            card = CORD2C(card_obj, comment=comment)
+            self.coords[card.cid] = card
         elif name == 'CORD2S':
-            self.cord2s.add(card, comment)
+            card = CORD2S(card_obj, comment=comment)
+            self.coords[card.cid] = card
 
         #========================
         elif name == 'ACMODL':

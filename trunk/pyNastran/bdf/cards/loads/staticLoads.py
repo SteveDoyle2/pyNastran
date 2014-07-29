@@ -548,10 +548,8 @@ class Force(Load):
                 raise FloatingPointError(msg)
 
     def transformLoad(self):
-        #print("self.xyz = ",self.xyz)
         (xyz, matrix) = self.cid.transformToGlobal(self.xyz)
         if self.mag > 0.:
-            #print("mag=%s xyz=%s" % (self.mag, xyz))
             return (True, self.node, self.mag * xyz)  # load
         return (False, self.node, xyz)  # enforced displacement
 

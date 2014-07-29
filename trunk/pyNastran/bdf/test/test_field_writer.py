@@ -332,9 +332,9 @@ class TestFieldWriter(unittest.TestCase):
         #print('1')
 
 def compare(valueIn):
-    #print "a = |%s|" % valueIn
+    #print "a = %r" % valueIn
     field = print_field(valueIn)
-    #print("a = |%s|" % field)
+    #print("a = %r" % field)
 
     val = interpret_value(field)
     if val != 0:

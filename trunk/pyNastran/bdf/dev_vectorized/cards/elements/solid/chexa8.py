@@ -1,5 +1,5 @@
 from numpy import zeros, arange, dot, cross, abs, unique, searchsorted
-from pyNastran.utils.mathematics import norm_axis as norm
+from numpy.linalg import norm
 
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
