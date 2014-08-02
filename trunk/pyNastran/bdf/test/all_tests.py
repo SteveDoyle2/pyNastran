@@ -4,6 +4,7 @@ from pyNastran.bdf.test.test_case_control_deck import CaseControlTest
 
 from pyNastran.bdf.test.cards.test_coords import *
 from pyNastran.bdf.test.cards.test_constraints import *
+from pyNastran.bdf.test.cards.test_sets import *
 
 # standard elements
 from pyNastran.bdf.test.cards.test_rods import *
