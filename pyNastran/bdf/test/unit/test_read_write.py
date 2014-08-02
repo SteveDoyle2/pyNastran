@@ -105,6 +105,26 @@ class TestReadWrite(unittest.TestCase):
                 self.assertFalse('ENDDATA' in data, msg)
             os.remove(out_filename)
 
+    def test_include_end(self):
+        f = open('a.bdf', 'wb')
+        f.write('CEND\n')
+        f.write('BEGIN BULK\n')
+        f.write('GRID,1\n')
+        f.write("INCLUDE 'b.bdf'\n\n")
+
+        f = open('b.bdf', 'wb')
+        f.write('GRID,2\n')
+        f.write("INCLUDE 'c.bdf'\n\n")
+
+        f = open('c.bdf', 'wb')
+        f.write('GRID,3\n\n')
+        f.write("ENDDATA\n")
+
+        model = BDF()
+        model.read_bdf('a.bdf')
+        print('nodes =', model.nodes)
+        self.assertEquals(len(model.nodes), 3)
+
 if __name__ == '__main__':  # pragma: no cover
     # passes if you're in the local folder, fails if you aren't
     #model2 = BDF(debug=False)
