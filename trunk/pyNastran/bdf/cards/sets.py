@@ -336,11 +336,18 @@ class SET3(Set):
     """
     Defines a list of grids, elements or points.::
 
-      SET3 SID DES ID1 ID2 ID3 ID4 ID5 ID6
-      ID7 ID8 -etc-
-      SET3 1 POINT 11 12
+    +------+-----+-------+-----+-----+-----+-----+-----+-----+
+    | SET3 | SID |  DES  | ID1 | ID2 | ID3 | ID4 | ID5 | ID6 |
+    +------+-----+-------+-----+-----+-----+-----+-----+-----+
+    |      | ID7 |  ID8  | etc |
+    +------+-----+-------+-----+
+
+    Example
+    +------+-----+-------+-----+----+
+    | SET3 |  1  | POINT | 11  | 12 |
+    +------+-----+-------+-----+----+
     """
-    type = 'SET1'
+    type = 'SET3'
 
     def __init__(self, card=None, data=None, comment=''):
         Set.__init__(self, card, data)
@@ -352,7 +359,7 @@ class SET3(Set):
         #:  Set description (Character). Valid options are 'GRID', 'ELEM',
         #:  'POINT' and 'PROP'.
         self.desc = string(card, 2, 'desc')
-        assert self.desc in ['GRID', 'POINT', 'ELEM', 'PROP']
+        assert self.desc in ['GRID', 'POINT', 'ELEM', 'PROP'], 'desc = %r' % self.desc
 
         #:  Identifiers of grids points, elements, points or properties.
         #:  (Integer > 0)
@@ -389,7 +396,7 @@ class SET3(Set):
 
     def __repr__(self):
         fields_blocks = [
-            'SET1',
+            'SET3',
             [[self.sid, self.desc], False], # these are not all integers
             [self.SetIDs(), True], # these are all integers
         ]

@@ -290,12 +290,13 @@ def print_int_card_blocks(fields_blocks):
 
     :param fields_blocks:
       The fields written in "block" notation.
+    :type msg:
+      list or tuple
 
-    fields_blocks = [
-        'SET1',
-        [['a', 1.0, 3], False], # these are not all integers
-        [[1, 2, 3], True], # these are all integers
-    ]
+    :returns msg:
+      the field blocks as a 8-character width Nastran card
+    :type msg:
+      str
 
     ..note::
       Blanks are allowed in the False block.
@@ -307,6 +308,10 @@ def print_int_card_blocks(fields_blocks):
         [['a', 1.0, 3], False], # these are not all integers
         [[1, 2, 3], True],      # these are all integers
     ]
+    msg = print_int_card_blocks(fields_blocks)
+    print msg
+    >>> 'SET1           a      1.       3       1       2       3\n'
+
     """
     card_name = fields_blocks[0]
     try:
@@ -316,27 +321,26 @@ def print_int_card_blocks(fields_blocks):
         sys.stdout.flush()
         raise
 
-    out2 = []
-    i = 1
+    i = 0
     for block in fields_blocks[1:]:
         (fields, is_all_ints) = block
         if is_all_ints is True:
             for field in fields:
                 out += "%8i" % field
-                if i % 8 == 0:  # allow 1+8 fields per line
-                    out = out.rstrip(' ')
-                    out += '\n        '
                 i += 1
+                if i == 8:  # allow 1+8 fields per line
+                    out += '\n        '
+                    i = 0
         elif is_all_ints is False:
             for field in fields:
                 out += print_field(field)
-                if i % 8 == 0:  # allow 1+8 fields per line
-                    out = out.rstrip(' ')
-                    out += '\n        '
                 i += 1
+                if i == 8:  # allow 1+8 fields per line
+                    out += '\n        '
+                    i = 0
         else:
             raise SyntaxError('is_all_ints must be a boolean.  is_all_ints=%r' % is_all_ints)
-    out = out.rstrip(' \n+') + '\n'  # removes blank lines at the end of cards
+    out = out.rstrip(' \n') + '\n'  # removes blank lines at the end of cards
     return out
 
 
