@@ -250,10 +250,16 @@ def print_int_card(fields):
     All fields (other than the first field) must be integers.
     This is used to speed up SET cards.
 
-    :param fields: The list of fields to write to a nastran card.
-                   The first field is a word, all other fields are integers.
+    :param fields:
+      The list of fields to write to a nastran card.
 
-    .. warning:: Blanks are not allowed!
+    .. warning::
+      Blanks are not allowed!
+      Floats and strings are not allowed.
+
+    Example
+    -------
+    fields = ['SET', 1, 2, 3, 4, 5, 6, ..., n]
     """
     try:
         out = '%-8s' % fields[0]
@@ -282,16 +288,27 @@ def print_int_card_blocks(fields_blocks):
     All fields other than the card name must be written in "block" format.
     This is used to speed up SET cards.
 
-    :param fields_blocks: The fields written in "block" notation.
+    :param fields_blocks:
+      The fields written in "block" notation.
 
     fields_blocks = [
         'SET1',
         [['a', 1.0, 3], False], # these are not all integers
         [[1, 2, 3], True], # these are all integers
     ]
-    ..note:: Blanks are allowed in the False block.
+
+    ..note::
+      Blanks are allowed in the False block.
+
+    Example
+    -------
+    fields_blocks = [
+        'SET1',
+        [['a', 1.0, 3], False], # these are not all integers
+        [[1, 2, 3], True],      # these are all integers
+    ]
     """
-    card_name = blocks[0]
+    card_name = fields_blocks[0]
     try:
         out = '%-8s' % card_name
     except:
@@ -301,7 +318,7 @@ def print_int_card_blocks(fields_blocks):
 
     out2 = []
     i = 1
-    for block in blocks[1:]:
+    for block in fields_blocks[1:]:
         (fields, is_all_ints) = block
         if is_all_ints is True:
             for field in fields:
