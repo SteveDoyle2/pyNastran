@@ -32,35 +32,108 @@ class RINGAX(Ring):
     +-------+-----+-----+-----+----+-----+-----+------+-----+
     """
     type = 'RINGAX'
+
+    #: allows the get_field method and update_field methods to be used
     _field_map = {1: 'mid', 3:'R', 4:'z', 7:'ps'}
 
     def __init__(self, card=None, data=None, comment=''):  # this card has missing fields
+        """
+        Creates the RINGAX card
+        :param self:
+          the RINGAX object pointer
+        :param card:
+          a BDFCard object
+        :type card:
+          BDFCard
+        :param data:
+          a list with the RINGAX fields defined in OP2 format
+        :type data:
+          LIST
+        :param comment:
+          a comment for the card
+        :type comment:
+          string
+        """
         Ring.__init__(self, card, data)
         if comment:
             self._comment = comment
-        self.nid = integer(card, 1, 'nid')
-        blank(card, 2, 'blank')
-        self.R = double(card, 3, 'R')
-        self.z = double(card, 4, 'z')
-        blank(card, 5, 'blank')
-        blank(card, 6, 'blank')
-        self.ps = integer_or_blank(card, 7, 'ps')
-        assert len(card) <= 8, 'len(RINGAX card) = %i' % len(card)
+        if card:
+            #: Node ID
+            self.nid = integer(card, 1, 'nid')
+            blank(card, 2, 'blank')
+
+            #: Radius
+            self.R = double(card, 3, 'R')
+            self.z = double(card, 4, 'z')
+            blank(card, 5, 'blank')
+            blank(card, 6, 'blank')
+
+            #: local SPC constraint
+            self.ps = integer_or_blank(card, 7, 'ps')
+            assert len(card) <= 8, 'len(RINGAX card) = %i' % len(card)
+        else:  # hasn't been validated
+            self.nid = data[0]
+            self.R = data[1]
+            self.z = data[2]
+            self.ps = data[3]
+            assert len(data) == 4, data
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the RINGAX object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = ['RINGAX', self.nid, None, self.R, self.z, None,
                   None, self.ps]
         return list_fields
 
-    def write_bdf(self, f, method):
+    def write_bdf(self, size, card_writer):
+        """
+        The writer method used by BDF.write_bdf
+
+        :param self:
+          the RINGAX object pointer
+        :param size:
+          the size of the card (8/16)
+        :type size:
+          int
+        :param card_writer:
+          a writer method for large field cards
+        :type card_writer:
+          function
+        """
         card = self.reprFields()
-        f.write(method(card))
+        f.write(card_writer(card))
 
 
 class SPOINT(Node):
     type = 'SPOINT'
 
     def __init__(self, nid, comment=''):
+        """
+        Creates the SPOINT card
+
+        :param self:
+          the SPOINT object pointer
+        :param card:
+          a BDFCard object
+        :type card:
+          BDFCard
+        :param data:
+          a list with the SPOINT fields defined in OP2 format
+        :type data:
+          LIST
+        :param comment:
+          a comment for the card
+        :type comment:
+          string
+        """
         Node.__init__(self, card=None, data=None)
         if comment:
             self._comment = comment
@@ -68,9 +141,29 @@ class SPOINT(Node):
         assert isinstance(nid, int), nid
 
     def cross_reference(self, model):
+        """
+        Cross links the card
+
+        :param self:
+          the SPOINT object pointer
+        :param model:
+          the BDF object
+        :type model:
+          BDF
+        """
         pass
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the SPOINT object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         if isinstance(self.nid, int):
             list_fields = ['SPOINT', self.nid]
         else:
@@ -78,6 +171,20 @@ class SPOINT(Node):
         return list_fields
 
     def write_bdf(self, size, card_writer):
+        """
+        The writer method used by BDF.write_bdf
+
+        :param self:
+          the SPOINT object pointer
+        :param size:
+          the size of the card (8/16)
+        :type size:
+          int
+        :param card_writer:
+          a writer method for large field cards
+        :type card_writer:
+          function
+        """
         card = self.reprFields()
         return self.comment() + print_card_8(card)
 
@@ -97,6 +204,23 @@ class SPOINTs(Node):
     type = 'SPOINT'
 
     def __init__(self, card=None, data=None, comment=''):
+        """
+        Creates the SPOINTs card that contains many SPOINTs
+        :param self:
+          the SPOINTs object pointer
+        :param card:
+          a BDFCard object
+        :type card:
+          BDFCard
+        :param data:
+          a list with the SPOINT fields defined in OP2 format
+        :type data:
+          LIST
+        :param comment:
+          a comment for the card
+        :type comment:
+          string
+        """
         if comment:
             self._comment = comment
         Node.__init__(self, card, data)
@@ -113,34 +237,85 @@ class SPOINTs(Node):
         self.spoints = set(expand_thru(fields))
 
     def nDOF(self):
+        """
+        Returns the number of degrees of freedom for the SPOINTs class
+
+        :param self:
+          the SPOINT object pointer
+        :returns ndofs:
+          the number of degrees of freedom
+        :type ndofs:
+          int
+        """
         return len(self.spoints)
 
     def addSPoints(self, sList):
-        #print('old=%s new=%s' % (self.spoints, sList))
+        """
+        Adds more SPOINTs to this object
+
+        :param self:
+          the SPOINT object pointer
+        """
         self.spoints = self.spoints.union(set(sList))
 
     def cross_reference(self, model):
+        """
+        Cross links the card
+
+        :param self:
+          the SPOINT object pointer
+        :param model:
+          the BDF object
+        :type model:
+          BDF
+        """
         pass
 
     def createSPOINTi(self):
+        """
+        Creates individal SPOINT objects
+
+        :param self:
+          the SPOINT object pointer
+        """
         spoints = []
         for nid in self.spoints:
             spoints.append(SPOINT(nid))
         return spoints
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the SPOINT object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         spoints = list(self.spoints)
         spoints.sort()
-        #print("self.spoints = %s" % self.spoints)
         spoints = collapse_thru(spoints)
         list_fields = ['SPOINT'] + spoints
         return list_fields
 
-    def reprFields(self):
-        return self.rawFields()
-
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        """
+        The writer method used by BDF.write_bdf
+
+        :param self:
+          the SPOINT object pointer
+        :param size:
+          the size of the card (8/16)
+        :type size:
+          int
+        :param card_writer:
+          a writer method for large field cards
+        :type card_writer:
+          function
+        """
+        card = self.rawFields()
         return self.comment() + print_card_8(card)
 
 
@@ -155,13 +330,36 @@ class GRDSET(Node):
     +--------+-----+----+----+----+----+----+----+------+
     """
     type = 'GRDSET'
+
+    #: allows the get_field method and update_field methods to be used
     _field_map = {1: 'nid', 2:'cp', 6:'cd', 7:'ps', 8:'seid'}
 
     def __init__(self, card=None, data=None, comment=''):
+        """
+        Creates the GRDSET card
+
+        :param self:
+          the GRDSET object pointer
+        :param card:
+          a BDFCard object
+        :type card:
+          BDFCard
+        :param data:
+          a list with the GRDSET fields defined in OP2 format
+        :type data:
+          LIST
+        :param comment:
+          a comment for the card
+        :type comment:
+          string
+        """
         if comment:
             self._comment = comment
+
         #: Grid point coordinate system
         blank(card, 1, 'blank')
+
+        #: Output Coordinate System
         self.cp = integer_or_blank(card, 2, 'cp', 0)
         blank(card, 3, 'blank')
         blank(card, 4, 'blank')
@@ -178,6 +376,16 @@ class GRDSET(Node):
         assert len(card) <= 9, 'len(GRDSET card) = %i' % len(card)
 
     def cross_reference(self, model):
+        """
+        Cross links the card
+
+        :param self:
+          the SPOINT object pointer
+        :param model:
+          the BDF object
+        :type model:
+          BDF
+        """
         msg = ' which is required by the GRDSET'
         self.cp = model.Coord(self.cp, msg=msg)
         self.cd = model.Coord(self.cd, msg=msg)
@@ -186,6 +394,7 @@ class GRDSET(Node):
     def Cd(self):
         """
         Gets the output coordinate system
+
         :param self: the GRDSET object pointer
         :returns cd: the output coordinate system
         :type cd:    int
@@ -198,6 +407,7 @@ class GRDSET(Node):
     def Cp(self):
         """
         Gets the analysis coordinate system
+
         :param self: the GRDSET object pointer
         :returns cp: the analysis coordinate system
         :type cp:    int
@@ -210,6 +420,7 @@ class GRDSET(Node):
     def SEid(self):
         """
         Gets the Superelement ID
+
         :param self:   the GRDSET object pointer
         :returns seid: the Superelement ID
         :type seid:    int
@@ -219,7 +430,14 @@ class GRDSET(Node):
         else:
             return self.seid.seid
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        :param self: the GRDSET object pointer
+        :param xref: has this model been cross referenced
+        :type xref:  bool
+        """
         cp = self.Cp()
         seid = self.SEid()
         cd = self.Cd()
@@ -230,11 +448,31 @@ class GRDSET(Node):
         assert isinstance(seid, int), 'seid=%r' % seid
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the GRDSET object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = ['GRDSET', None, self.Cp(), None, None, None,
                   self.Cd(), self.ps, self.SEid()]
         return list_fields
 
     def reprFields(self):
+        """
+        Gets the fields in their simplified form
+
+        :param self:
+          the GRDSET object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         cp = set_blank_if_default(self.Cp(), 0)
         cd = set_blank_if_default(self.Cd(), 0)
         ps = set_blank_if_default(self.ps, 0)
@@ -242,29 +480,66 @@ class GRDSET(Node):
         list_fields = ['GRDSET', None, cp, None, None, None, cd, ps, seid]
         return list_fields
 
-    def write_bdf(self, f, method):
+    def write_bdf(self, size, card_writer):
+        """
+        The writer method used by BDF.write_bdf
+
+        :param self:
+          the SPOINT object pointer
+        :param size:
+          the size of the card (8/16)
+        :type size:
+          int
+        :param card_writer:
+          a writer method for large field cards
+        :type card_writer:
+          function
+        """
         card = self.reprFields()
         f.write(print_card_8(card))
 
 
 class GRIDB(Node):
     type = 'GRIDB'
+
+    #: allows the get_field method and update_field methods to be used
     _field_map = {1: 'nid', 4:'phi', 6:'cd', 7:'ps', 8:'idf'}
 
     def __init__(self, card=None, data=None, comment=''):
         """
-        if coming from a BDF object, card is used
-        if coming from the OP2, data is used
+        Creates the GRIDB card
+
+        :param self:
+          the GRIDB object pointer
+        :param card:
+          a BDFCard object
+        :type card:
+          BDFCard
+        :param data:
+          a list with the GRIDB fields defined in OP2 format
+        :type data:
+          LIST
+        :param comment:
+          a comment for the card
+        :type comment:
+          string
         """
         if comment:
             self._comment = comment
         Node.__init__(self, card, data)
 
         if card:
+            #: node ID
             self.nid = integer(card, 1, 'nid')
+
             self.phi = double(card, 4, 'phi')
+
+            # analysis coordinate system
             self.cd = integer(card, 6, 'cd')
+
+            #: local SPC constraint
             self.ps = integer(card, 7, 'ps')
+
             self.idf = integer(card, 8, 'idf')
         else:
             self.nid = data[0]
@@ -279,12 +554,20 @@ class GRIDB(Node):
         assert self.ps >= 0, 'ps=%s' % self.ps
         assert self.idf >= 0, 'idf=%s' % self.idf
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        :param self: the GRIDB object pointer
+        :param xref: has this model been cross referenced
+        :type xref:  bool
+        """
         pass
 
     def Cd(self):
         """
         Gets the output coordinate system
+
         :param self: the GRIDB object pointer
         :returns cd: the output coordinate system
         :type cd:    int
@@ -295,11 +578,31 @@ class GRIDB(Node):
             return self.cd.cid
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the GRIDB object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = ['GRIDB', self.nid, None, None, self.phi, None,
                   self.Cd(), self.ps, self.idf]
         return list_fields
 
     def reprFields(self):
+        """
+        Gets the fields in their simplified form
+
+        :param self:
+          the GRIDB object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         #phi = set_blank_if_default(self.phi, 0.0)
         cd = set_blank_if_default(self.Cd(), 0)
         ps = set_blank_if_default(self.ps, 0)
@@ -309,6 +612,20 @@ class GRIDB(Node):
         return list_fields
 
     def write_bdf(self, size, card_writer):
+        """
+        The writer method used by BDF.write_bdf
+
+        :param self:
+          the GRIDB object pointer
+        :param size:
+          the size of the card (8/16)
+        :type size:
+          int
+        :param card_writer:
+          a writer method for large field cards
+        :type card_writer:
+          function
+        """
         card = self.reprFields()
         return self.comment() + card_writer(card)
 
@@ -322,9 +639,20 @@ class GRID(Node):
     +------+-----+----+----+----+----+----+----+------+
     """
     type = 'GRID'
+
+    #: allows the get_field method and update_field methods to be used
     _field_map = {1: 'nid', 2:'cp', 6:'cd', 7:'ps', 8:'seid'}
 
     def _get_field_helper(self, n):
+        """
+        Gets complicated parameters on the GRID card
+
+        :param self:  the GRID object pointer
+        :param n:     the field number to update
+        :type n:      int
+        :param value: the value for the appropriate field
+        :type field:  varies
+        """
         if n == 3:
             value = self.xyz[0]
         elif n == 4:
@@ -336,6 +664,15 @@ class GRID(Node):
         return value
 
     def _update_field_helper(self, n, value):
+        """
+        Updates complicated parameters on the GRID card
+
+        :param self:  the GRID object pointer
+        :param n:     the field number to update
+        :type n:      int
+        :param value: the value for the appropriate field
+        :type field:  varies
+        """
         if n == 3:
             self.xyz[0] = value
         elif n == 4:
@@ -347,8 +684,22 @@ class GRID(Node):
 
     def __init__(self, card=None, data=None, comment=''):
         """
-        if coming from a BDF object, card is used
-        if coming from the OP2, data is used
+        Creates the GRID card
+
+        :param self:
+          the GRID object pointer
+        :param card:
+          a BDFCard object
+        :type card:
+          BDFCard
+        :param data:
+          a list with the GRID fields defined in OP2 format
+        :type data:
+          LIST
+        :param comment:
+          a comment for the card
+        :type comment:
+          string
         """
         if comment:
             self._comment = comment
@@ -395,6 +746,7 @@ class GRID(Node):
     def Nid(self):
         """
         Gets the GRID ID
+
         :param self: the GRID object pointer
         :returns nid: node ID
         :type nid:    int
@@ -404,6 +756,7 @@ class GRID(Node):
     def Ps(self):
         """
         Gets the GRID-based SPC
+
         :param self: the GRID object pointer
         :returns ps: the GRID-based SPC
         """
@@ -412,7 +765,9 @@ class GRID(Node):
     def Cd(self):
         """
         Gets the output coordinate system
+
         :param self: the GRID object pointer
+
         :returns cd: the output coordinate system
         :type cd:    int
         """
@@ -424,6 +779,7 @@ class GRID(Node):
     def Cp(self):
         """
         Gets the analysis coordinate system
+
         :param self: the GRID object pointer
         :returns cp: the analysis coordinate system
         :type cp:    int
@@ -436,6 +792,7 @@ class GRID(Node):
     def SEid(self):
         """
         Gets the Superelement ID
+
         :param self:   the GRID object pointer
         :returns seid: the Superelement ID
         :type seid:    int
@@ -446,6 +803,13 @@ class GRID(Node):
             return self.seid.seid
 
     def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        :param self: the GRID object pointer
+        :param xref: has this model been cross referenced
+        :type xref:  bool
+        """
         nid = self.Nid()
         cp = self.Cp()
         cd = self.Cd()
@@ -463,6 +827,7 @@ class GRID(Node):
     def nDOF(self):
         """
         Gets the number of degrees of freedom for the GRID
+
         :param self:  the GRID object pointer
         :returns six: the value 6
         :type six:    int
@@ -472,6 +837,7 @@ class GRID(Node):
     def UpdatePosition(self, model, xyz, cid=0):
         """
         Updates the GRID location
+
         :param self: the GRID object pointer
         :param xyz:  the location of the node.
         :type xyz:   TYPE = NDARRAY.  SIZE=(3,)
@@ -486,7 +852,7 @@ class GRID(Node):
         """
         Gets the point in the global XYZ coordinate system.
 
-        :param self:   the object pointer
+        :param self:   the GRID object pointer
         :param debug:  developer debug (default=False)
         :type debug:   bool
         :returns xyz:  the position of the GRID in the globaly
@@ -527,6 +893,8 @@ class GRID(Node):
 
     def cross_reference(self, model, grdset=None):
         """
+        Cross links the card
+
         :param self:   the GRID object pointer
         :param model:  the BDF object
         :type model:   BDF()
@@ -551,11 +919,31 @@ class GRID(Node):
             self.cd = model.Coord(self.cd, msg=msg)
 
     def rawFields(self):
-        list_fields = (['GRID', self.nid, self.Cp()] + list(self.xyz) +
-                       [self.Cd(), self.ps, self.SEid()])
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the GRID object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
+        list_fields = ['GRID', self.nid, self.Cp()] + list(self.xyz) + \
+                      [self.Cd(), self.ps, self.SEid()]
         return list_fields
 
     def reprFields(self):
+        """
+        Gets the fields in their simplified form
+
+        :param self:
+          the GRID object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         cp = set_blank_if_default(self.Cp(), 0)
         cd = set_blank_if_default(self.Cd(), 0)
         seid = set_blank_if_default(self.SEid(), 0)
@@ -564,6 +952,20 @@ class GRID(Node):
         return list_fields
 
     def write_bdf(self, size, card_writer):
+        """
+        The writer method used by BDF.write_bdf
+
+        :param self:
+          the GRID object pointer
+        :param size:
+          the size of the card (8/16)
+        :type size:
+          int
+        :param card_writer:
+          a writer method for large field cards
+        :type card_writer:
+          function
+        """
         card = self.reprFields()
         return self.comment() + card_writer(card)
 
@@ -580,6 +982,15 @@ class POINT(Node):
     _field_map = {1: 'nid', 2:'cp'}
 
     def _get_field_helper(self, n):
+        """
+        Gets complicated parameters on the POINT card
+
+        :param self:  the POINT object pointer
+        :param n:     the field number to update
+        :type n:      int
+        :param value: the value for the appropriate field
+        :type field:  varies
+        """
         if n == 3:
             value = self.xyz[0]
         elif n == 4:
@@ -591,6 +1002,15 @@ class POINT(Node):
         return value
 
     def _update_field_helper(self, n, value):
+        """
+        Updates complicated parameters on the POINT card
+
+        :param self:  the POINT object pointer
+        :param n:     the field number to update
+        :type n:      int
+        :param value: the value for the appropriate field
+        :type field:  varies
+        """
         if n == 3:
             self.xyz[0] = value
         elif n == 4:
@@ -602,8 +1022,22 @@ class POINT(Node):
 
     def __init__(self, card=None, data=None, comment=''):
         """
-        if coming from a BDF object, card is used
-        if coming from the OP2, data is used
+        Creates the POINT card
+
+        :param self:
+          the POINT object pointer
+        :param card:
+          a BDFCard object
+        :type card:
+          BDFCard
+        :param data:
+          a list with the POINT fields defined in OP2 format
+        :type data:
+          LIST
+        :param comment:
+          a comment for the card
+        :type comment:
+          string
         """
         if comment:
             self._comment = comment
@@ -645,8 +1079,9 @@ class POINT(Node):
 
     def nDOF(self):
         """
-        Gets the number of degrees of freedom for the GRID
-        :param self:  the GRID object pointer
+        Gets the number of degrees of freedom for the POINT
+
+        :param self:  the POINT object pointer
         :returns six: the value 6
         :type six:    int
         """
@@ -655,6 +1090,7 @@ class POINT(Node):
     def UpdatePosition(self, model, xyz, cid=0):
         """
         Updates the POINT location
+
         :param self: the POINT object pointer
         :param xyz:  the location of the node.
         :type xyz:   TYPE = NDARRAY.  SIZE=(3,)
@@ -709,6 +1145,7 @@ class POINT(Node):
     def Cp(self):
         """
         Gets the analysis coordinate system
+
         :param self: the POINT object pointer
         :returns cp: the analysis coordinate system
         :type cp:    int
@@ -719,17 +1156,58 @@ class POINT(Node):
             return self.cp.cid
 
     def cross_reference(self, model):
+        """
+        Cross links the card
+
+        :param self:   the GRID object pointer
+        :param model:  the BDF object
+        :type model:   BDF()
+        """
         self.cp = model.Coord(self.cp)
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the GRID object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = ['POINT', self.nid, self.Cp()] + list(self.xyz)
         return list_fields
 
     def reprFields(self):
+        """
+        Gets the fields in their simplified form
+
+        :param self:
+          the GRID object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         cp = set_blank_if_default(self.Cp(), 0)
         list_fields = ['POINT', self.nid, cp] + list(self.xyz)
         return list_fields
 
     def write_bdf(self, size, card_writer):
+        """
+        The writer method used by BDF.write_bdf
+
+        :param self:
+          the GRID object pointer
+        :param size:
+          the size of the card (8/16)
+        :type size:
+          int
+        :param card_writer:
+          a writer method for large field cards
+        :type card_writer:
+          function
+        """
         card = self.reprFields()
         return self.comment() + card_writer(card)
