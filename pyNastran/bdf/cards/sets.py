@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from itertools import izip
 
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru, collapse_thru_packs
-from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter import print_card_8, print_int_card_blocks
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     components, components_or_blank, fields,
     integer_or_string, string, string_or_blank,
@@ -388,8 +388,12 @@ class SET3(Set):
         return list_fields
 
     def __repr__(self):
-        list_fields = ['SET3', self.sid, self.desc] + self.SetIDs()
-        return self.comment() + print_card_8(list_fields)
+        fields_blocks = [
+            'SET1',
+            [[self.sid, self.desc], False], # these are not all integers
+            [self.SetIDs(), True], # these are all integers
+        ]
+        return self.comment() + print_int_card_blocks(fields_blocks )
 
 
 class SESET(SetSuper):
