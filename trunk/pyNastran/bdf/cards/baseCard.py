@@ -52,10 +52,13 @@ class BaseCard(object):
         return ('# skipping %s (lid=%s) because writeCodeAsterLoad is '
                 'not implemented\n' % (self.type, self.lid))
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
         """
-        This method checks that all the card is various methods of the card
-        work properly.  It's only used in testing.
+        Verifies all methods for this object work
+
+        :param self: the object pointer
+        :param xref: has this model been cross referenced
+        :type xref:  bool
         """
         print('# skipping _verify (type=%s) because _verify is '
               'not implemented\n' % self.type)

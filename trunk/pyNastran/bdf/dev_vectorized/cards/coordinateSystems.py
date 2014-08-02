@@ -539,7 +539,14 @@ class Cord2x(Coord):
             self.isResolved = True
             self.setup()
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        :param self: the CORD2x object pointer
+        :param xref: has this model been cross referenced
+        :type xref:  bool
+        """
         cid = self.Cid()
         rid = self.Rid()
         assert isinstance(cid, int), 'cid=%r' % cid
@@ -647,7 +654,14 @@ class Cord1x(Coord):
             raise RuntimeError('coordinate type of \n%s is %s' % (str(self), type1))
         model.coords[self.cid] = coord
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        :param self: the CORD1x object pointer
+        :param xref: has this model been cross referenced
+        :type xref:  bool
+        """
         cid = self.Cid()
         assert isinstance(cid, int), 'cid=%r' % cid
 
@@ -944,7 +958,14 @@ class CORD2R(Cord2x, RectangularCoord):
         if comment:
             self._comment = comment
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        :param self: the CORD2R object pointer
+        :param xref: has this model been cross referenced
+        :type xref:  bool
+        """
         cid = self.Cid()
         rid = self.Rid()
         assert isinstance(cid, int), 'cid=%r' % cid

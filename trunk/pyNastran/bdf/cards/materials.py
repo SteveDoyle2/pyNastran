@@ -180,7 +180,14 @@ class MAT1(IsotropicMaterial):
             self.Ss = data[10]
             self.Mcsid = data[11]
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        :param self: the MAT1 object pointer
+        :param xref: has this model been cross referenced
+        :type xref:  bool
+        """
         mid = self.Mid()
         E = self.E()
         G = self.G()
@@ -413,7 +420,14 @@ class MAT2(AnisotropicMaterial):
         if self.mid in model.MATT2:
             self.matt2 = model.MATT2[self.mid]  # not using a method...
 
-    def _verify(self, xref=True):
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        :param self: the MAT2 object pointer
+        :param xref: has this model been cross referenced
+        :type xref:  bool
+        """
         pass
 
     def Dsolid(self):
@@ -854,7 +868,14 @@ class MAT8(OrthotropicMaterial):
         if self.mid in model.MATT8:
             self.matt8 = model.MATT8[self.mid]  # not using a method...
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        :param self: the MAT8 object pointer
+        :param xref: has this model been cross referenced
+        :type xref:  bool
+        """
         mid = self.Mid()
         E11 = self.E11()
         E22 = self.E22()
@@ -1027,7 +1048,14 @@ class MAT9(AnisotropicMaterial):
 
         assert len(self.A) == 6
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        :param self: the MAT9 object pointer
+        :param xref: has this model been cross referenced
+        :type xref:  bool
+        """
         mid = self.Mid()
         #E11 = self.E11()
         #E22 = self.E22()
@@ -1110,7 +1138,14 @@ class MAT10(Material):
             self.c = data[3]
             self.ge = data[4]
 
-    def _verify(self, xref=False):
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        :param self: the MAT10 object pointer
+        :param xref: has this model been cross referenced
+        :type xref:  bool
+        """
         mid = self.Mid()
         bulk = self.bulk
         rho = self.rho
