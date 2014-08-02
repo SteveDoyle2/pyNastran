@@ -312,7 +312,7 @@ def print_int_card_blocks(fields_blocks):
     try:
         out = '%-8s' % card_name
     except:
-        print("ERROR!  fields=%s" % fields)
+        print("ERROR!  fields_blocks=%s" % fields_blocks)
         sys.stdout.flush()
         raise
 
