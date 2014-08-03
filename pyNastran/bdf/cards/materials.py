@@ -117,6 +117,16 @@ class CREEP(Material):
         return list_fields
 
     def reprFields(self):
+        """
+        Gets the fields in their simplified form
+
+        :param self:
+          the CREEP object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         thresh = set_blank_if_default(self.thresh, 1e-5)
         exp = set_blank_if_default(self.exp, 4.1e-9)
         T0 = set_blank_if_default(self.T0, 0.0)
@@ -324,6 +334,16 @@ class MAT1(IsotropicMaterial):
         return G
 
     def reprFields(self):
+        """
+        Gets the fields in their simplified form
+
+        :param self:
+          the MAT1 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         Gdefault = self.getG_default()
         G = set_blank_if_default(self.g, Gdefault)
 
@@ -345,7 +365,6 @@ class MAT1(IsotropicMaterial):
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
-        #return self.comment() + card_writer(card)
 
 
 class MAT2(AnisotropicMaterial):
@@ -520,6 +539,16 @@ class MAT2(AnisotropicMaterial):
         return list_fields
 
     def reprFields(self):
+        """
+        Gets the fields in their simplified form
+
+        :param self:
+          the MAT2 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         G11 = set_blank_if_default(self.G11, 0.0)
         G12 = set_blank_if_default(self.G12, 0.0)
         G13 = set_blank_if_default(self.G13, 0.0)
@@ -611,6 +640,16 @@ class MAT3(OrthotropicMaterial):
         return list_fields
 
     def reprFields(self):
+        """
+        Gets the fields in their simplified form
+
+        :param self:
+          the MAT3 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         ax = set_blank_if_default(self.ax, 0.0)
         ath = set_blank_if_default(self.ath, 0.0)
         az = set_blank_if_default(self.az, 0.0)
@@ -691,6 +730,16 @@ class MAT4(ThermalMaterial):
         return list_fields
 
     def reprFields(self):
+        """
+        Gets the fields in their simplified form
+
+        :param self:
+          the MAT4 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         rho = set_blank_if_default(self.rho, 1.0)
         hgen = set_blank_if_default(self.hgen, 1.0)
         cp = set_blank_if_default(self.cp, 0.0)
@@ -772,6 +821,16 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         return list_fields
 
     def reprFields(self):
+        """
+        Gets the fields in their simplified form
+
+        :param self:
+          the MAT5 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         kxx = set_blank_if_default(self.kxx, 0.0)
         kyy = set_blank_if_default(self.kyy, 0.0)
         kzz = set_blank_if_default(self.kzz, 0.0)
@@ -925,6 +984,16 @@ class MAT8(OrthotropicMaterial):
         return list_fields
 
     def reprFields(self):
+        """
+        Gets the fields in their simplified form
+
+        :param self:
+          the MAT8 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         G12 = set_blank_if_default(self.g12, 0.)
         G1z = set_blank_if_default(self.g1z, 1e8)
         G2z = set_blank_if_default(self.g2z, 1e8)
@@ -1086,6 +1155,16 @@ class MAT9(AnisotropicMaterial):
         return list_fields
 
     def reprFields(self):
+        """
+        Gets the fields in their simplified form
+
+        :param self:
+          the MAT9 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         A = []
         for a in self.A:
             a = set_blank_if_default(a, 0.0)
@@ -1193,6 +1272,16 @@ class MAT10(Material):
         return list_fields
 
     def reprFields(self):
+        """
+        Gets the fields in their simplified form
+
+        :param self:
+          the MAT10 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         ge = set_blank_if_default(self.ge, 0.0)
         list_fields = ['MAT10', self.mid, self.bulk, self.rho, self.c, ge]
         return list_fields
@@ -1286,6 +1375,16 @@ class MAT11(Material):
         return list_fields
 
     def reprFields(self):
+        """
+        Gets the fields in their simplified form
+
+        :param self:
+          the MAT11 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         a1 = set_blank_if_default(self.a1, 0.0)
         a2 = set_blank_if_default(self.a2, 0.0)
         a3 = set_blank_if_default(self.a3, 0.0)
@@ -1436,6 +1535,16 @@ class MATHP(HyperelasticMaterial):
         return list_fields
 
     def reprFields(self):
+        """
+        Gets the fields in their simplified form
+
+        :param self:
+          the MATHP object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         av = set_blank_if_default(self.av, 0.0)
         na = set_blank_if_default(self.na, 0.0)
         nd = set_blank_if_default(self.nd, 0.0)
@@ -1514,6 +1623,3 @@ class EQUIV(Material):
         list_fields = ['EQUIV', self.Mid(), self.field2, self.field3,
                        self.field4, self.field5, self.field6, self.field7]
         return list_fields
-
-    def reprFields(self):
-        return self.rawFields()

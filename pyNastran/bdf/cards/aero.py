@@ -67,11 +67,18 @@ class AEFACT(BaseCard):
             raise NotImplementedError(msg)
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the AEFACT object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         fields = ['AEFACT', self.sid] + self.Di
         return fields
-
-    def reprFields(self):
-        return self.rawFields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -122,6 +129,16 @@ class AELINK(BaseCard):
             raise NotImplementedError(msg)
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the AELINK object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         fields = ['AELINK', self.id, self.label]
         for (ivar, ival) in izip(self.independentLabels, self.Cis):
             fields += [ivar, ival]
@@ -180,6 +197,16 @@ class AELIST(BaseCard):
         self.elements.sort()
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the AELIST object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = ['AELIST', self.sid] + self.elements
         return list_fields
 
@@ -220,6 +247,16 @@ class AEPARM(BaseCard):
             assert len(data) == 3, 'data = %s' % data
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the AEPARM object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = ['AEPARM', self.id, self.label, self.units]
         return list_fields
 
@@ -257,6 +294,16 @@ class AESTAT(BaseCard):
             assert len(data) == 2, 'data = %s' % data
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the AESTAT object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = ['AESTAT', self.id, self.label]
         return list_fields
 
@@ -338,6 +385,16 @@ class AESURF(BaseCard):
             raise NotImplementedError(msg)
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the AESURF object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = ['AESURF', self.aesid, self.label, self.cid1, self.alid1,
                   self.cid2, self.alid2, self.eff, self.ldw,
                   self.crefc, self.crefs, self.pllim, self.pulim, self.hmllim,
@@ -345,6 +402,16 @@ class AESURF(BaseCard):
         return list_fields
 
     def reprFields(self):
+        """
+        Gets the fields in their simplified form
+
+        :param self:
+          the AESURF object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         eff = set_blank_if_default(self.eff, 1.0)
         ldw = set_blank_if_default(self.ldw, 'LDW')
         crefc = set_blank_if_default(self.crefc, 1.0)
@@ -400,6 +467,16 @@ class AESURFS(BaseCard):  # not integrated
             assert len(data) == 4, 'data = %s' % data
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the AESURFS object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = ['AESURFS', self.id, self.label, None, self.list1, None,
                   self.list2]
         return list_fields
@@ -485,11 +562,31 @@ class AERO(Aero):
         #angle = self.wg*self.t*(t-(x-self.x0)/self.V)
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the AERO object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = ['AERO', self.acsid, self.velocity, self.cRef,
                   self.rhoRef, self.symXZ, self.symXY]
         return list_fields
 
     def reprFields(self):
+        """
+        Gets the fields in their simplified form
+
+        :param self:
+          the AERO object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         symXZ = set_blank_if_default(self.symXZ, 0)
         symXY = set_blank_if_default(self.symXY, 0)
         list_fields = ['AERO', self.acsid, self.velocity, self.cRef,
@@ -544,11 +641,31 @@ class AEROS(Aero):
             assert len(data) == 7, 'data = %s' % data
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the AEROS object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = ['AEROS', self.acsid, self.rcsid, self.cRef,
                   self.bRef, self.Sref, self.symXZ, self.symXY]
         return list_fields
 
     def reprFields(self):
+        """
+        Gets the fields in their simplified form
+
+        :param self:
+          the AEROS object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         symXZ = set_blank_if_default(self.symXZ, 0)
         symXY = set_blank_if_default(self.symXY, 0)
         list_fields = ['AEROS', self.acsid, self.rcsid, self.cRef,
@@ -595,6 +712,13 @@ class CSSCHD(BaseCard):
             self.lSchd = data[4]  # AEFACT
 
     def cross_reference(self, model):
+        """
+        Cross links the card
+
+        :param self:   the CSSCHD object pointer
+        :param model:  the BDF object
+        :type model:   BDF()
+        """
         msg = ' which is required by ASSCHD sid=%s' % self.sid
         self.aesid = model.AESurf(self.aesid, msg=msg)
         self.lAlpha = model.AEFact(self.lAlpha, msg=msg)
@@ -622,12 +746,19 @@ class CSSCHD(BaseCard):
         return self.lSchd.sid
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the CSSCHD object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = ['CSSCHD', self.sid, self.AESid(), self.LAlpha(),
                   self.LMach(), self.LSchd()]
         return list_fields
-
-    def reprFields(self):
-        return self.rawFields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -653,7 +784,42 @@ class CAERO1(BaseCard):
         1: 'sid', 2:'pid', 3:'cp', 4:'nspan', 5:'nchord',
         6:'lspan', 7:'lchord', 8:'igid', 12:'x12', 16:'x43',
     }
+    def _get_field_helper(self, n):
+        """
+        Gets complicated parameters on the CAERO1 card
+
+        :param self:  the CAERO1 object pointer
+        :param n:     the field number to update
+        :type n:      int
+        :param value: the value for the appropriate field
+        :type field:  varies
+        """
+        if n == 9:
+            return self.p1[0]
+        elif n == 10:
+            return self.p1[1]
+        elif n == 11:
+            return self.p1[2]
+
+        elif n == 13:
+            return self.p4[0]
+        elif n == 14:
+            return self.p4[1]
+        elif n == 15:
+            return self.p4[2]
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+
     def _update_field_helper(self, n, value):
+        """
+        Updates complicated parameters on the CAERO1 card
+
+        :param self:  the CAERO1 object pointer
+        :param n:     the field number to update
+        :type n:      int
+        :param value: the value for the appropriate field
+        :type field:  varies
+        """
         if n == 9:
             self.p1[0] = value
         elif n == 10:
@@ -731,6 +897,13 @@ class CAERO1(BaseCard):
         return self.pid.pid
 
     def cross_reference(self, model):
+        """
+        Cross links the card
+
+        :param self:   the CAERO1 object pointer
+        :param model:  the BDF object
+        :type model:   BDF()
+        """
         msg = ' which is required by CAERO1 eid=%s' % self.eid
         self.pid = model.PAero(self.pid, msg=msg)
         self.cp = model.Coord(self.cp, msg=msg)
@@ -753,12 +926,32 @@ class CAERO1(BaseCard):
         self.x43 = x43[0]
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the CAERO1 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = ['CAERO1', self.eid, self.Pid(), self.Cp(), self.nspan,
                   self.nchord, self.lspan, self.lchord, self.igid,
                   ] + list(self.p1) + [self.x12] + list(self.p4) + [self.x43]
         return list_fields
 
     def reprFields(self):
+        """
+        Gets the fields in their simplified form
+
+        :param self:
+          the CAERO1 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         cp = set_blank_if_default(self.Cp(), 0)
         nspan = set_blank_if_default(self.nspan, 0)
         nchord = set_blank_if_default(self.nchord, 0)
@@ -783,7 +976,35 @@ class CAERO2(BaseCard):
         1: 'sid', 2:'pid', 3:'cp', 4:'nsb', 5:'lsb',
         6:'nint', 7:'lint', 8:'igid', 12:'x12',
     }
+    def _get_field_helper(self, n):
+        """
+        Gets complicated parameters on the CAERO2 card
+
+        :param self:  the CAERO2 object pointer
+        :param n:     the field number to update
+        :type n:      int
+        :param value: the value for the appropriate field
+        :type field:  varies
+        """
+        if n == 9:
+            return self.p1[0]
+        elif n == 10:
+            return self.p1[1]
+        elif n == 11:
+            return self.p1[2]
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+
     def _update_field_helper(self, n, value):
+        """
+        Updates complicated parameters on the CAERO2 card
+
+        :param self:  the CAERO2 object pointer
+        :param n:     the field number to update
+        :type n:      int
+        :param value: the value for the appropriate field
+        :type field:  varies
+        """
         if n == 9:
             self.p1[0] = value
         elif n == 10:
@@ -875,6 +1096,13 @@ class CAERO2(BaseCard):
         return self.lsb.sid
 
     def cross_reference(self, model):
+        """
+        Cross links the card
+
+        :param self:   the CAERO2 object pointer
+        :param model:  the BDF object
+        :type model:   BDF()
+        """
         msg = ' which is required by CAERO2 eid=%s' % self.eid
         self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO2
         self.cp = model.Coord(self.cp, msg=msg)
@@ -894,12 +1122,32 @@ class CAERO2(BaseCard):
         self.x12 = x12[0]
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the CAERO2 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = (['CAERO2', self.eid, self.Pid(), self.Cp(), self.nsb,
                   self.nint, self.lsb, self.lint, self.igid, ] + list(self.p1)
                   + [self.x12])
         return list_fields
 
     def reprFields(self):
+        """
+        Gets the fields in their simplified form
+
+        :param self:
+          the CAERO2 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         cp = set_blank_if_default(self.Cp(), 0)
         list_fields = (['CAERO2', self.eid, self.Pid(), cp, self.nsb, self.nint,
                   self.lsb, self.lint, self.igid, ] + list(self.p1) +
@@ -941,6 +1189,13 @@ class CAERO3(BaseCard):
             raise NotImplementedError(msg)
 
     def cross_reference(self, model):
+        """
+        Cross links the card
+
+        :param self:   the CAERO3 object pointer
+        :param model:  the BDF object
+        :type model:   BDF()
+        """
         msg = ' which is required by CAERO3 eid=%s' % self.eid
         self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO3
         self.cp = model.Coord(self.cp, msg=msg)
@@ -959,12 +1214,32 @@ class CAERO3(BaseCard):
         return self.pid.pid
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the CAERO3 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = (['CAERO3', self.eid, self.Pid(), self.Cp(), self.list_w,
                    self.list_c1, self.list_c2, None, None] + list(self.p1) + [self.x12] +
                    list(self.p4) + [self.x43])
         return list_fields
 
     def reprFields(self):
+        """
+        Gets the fields in their simplified form
+
+        :param self:
+          the CAERO3 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         cp = set_blank_if_default(self.Cp(), 0)
         list_fields = (['CAERO3', self.eid, self.Pid(), cp, self.list_w,
                    self.list_c1, self.list_c2, None, None] + list(self.p1) + [self.x12] +
@@ -1007,6 +1282,13 @@ class CAERO4(BaseCard):
             raise NotImplementedError(msg)
 
     def cross_reference(self, model):
+        """
+        Cross links the card
+
+        :param self:   the CAERO4 object pointer
+        :param model:  the BDF object
+        :type model:   BDF()
+        """
         msg = ' which is required by CAERO4 eid=%s' % self.eid
         #self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO4
         self.cp = model.Coord(self.cp, msg=msg)
@@ -1022,12 +1304,32 @@ class CAERO4(BaseCard):
         return self.pid.pid
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the CAERO4 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = (['CAERO4', self.eid, self.Pid(), self.Cp(), self.nspan,
                         self.lspan, None, None, None,] + list(self.p1) + [self.x12] +
                         list(self.p4) + [self.x43])
         return list_fields
 
     def reprFields(self):
+        """
+        Gets the fields in their simplified form
+
+        :param self:
+          the CAERO4 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         cp = set_blank_if_default(self.Cp(), 0)
         list_fields = (['CAERO4', self.eid, self.Pid(), cp, self.nspan,
                         self.lspan, None, None, None,] + list(self.p1) + [self.x12] +
@@ -1105,12 +1407,18 @@ class FLFACT(BaseCard):
             self.factors = data[1:]
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the FLFACT object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = ['FLFACT', self.sid] + self.factors
         return list_fields
-
-    def __repr__(self):
-        list_fields = self.rawFields()
-        return self.print_card(list_fields)
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -1134,7 +1442,37 @@ class FLUTTER(BaseCard):
         1: 'sid', 2:'method', 3:'density', 4:'mach', 5:'rfreq_vel', 6:'imethod',
         8:'epsilon',
     }
+    def _get_field_helper(self, n):
+        """
+        Gets complicated parameters on the FLUTTER card
+
+        :param self:  the FLUTTER object pointer
+        :param n:     the field number to update
+        :type n:      int
+        :param value: the value for the appropriate field
+        :type field:  varies
+        """
+        if n == 7:
+            if self.method in ['K', 'KE']:
+                value = self.nValue
+            elif self.method in ['PKS', 'PKNLS']:
+                value = self.omax
+            else:
+                value = self.nValue
+            return value
+        else:
+            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+
     def _update_field_helper(self, n, value):
+        """
+        Updates complicated parameters on the FLUTTER card
+
+        :param self:  the FLUTTER object pointer
+        :param n:     the field number to update
+        :type n:      int
+        :param value: the value for the appropriate field
+        :type field:  varies
+        """
         if n == 7:
             if self.method in ['K', 'KE']:
                 self.nValue = value
@@ -1190,6 +1528,13 @@ class FLUTTER(BaseCard):
         assert self.method in ['K', 'PK', 'PKNL', 'PKS', 'PKNLS', 'KE'], 'method = %s' % self.method
 
     def cross_reference(self, model):
+        """
+        Cross links the card
+
+        :param self:   the FLUTTER object pointer
+        :param model:  the BDF object
+        :type model:   BDF()
+        """
         msg = ' which is required by FLUTTER sid=%s' % self.sid
         self.density = model.FLFACT(self.density, msg=msg)
         self.mach = model.FLFACT(self.density, msg=msg)
@@ -1230,6 +1575,16 @@ class FLUTTER(BaseCard):
             return(self.imethod, self.nValue)
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the FLUTTER object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         (imethod, nValue) = self._rawNValueOMax()
         list_fields = ['FLUTTER', self.sid, self.method, self.get_density(),
                   self.get_mach(), self.get_rfreq_vel(), imethod, nValue, self.epsilon]
@@ -1287,6 +1642,16 @@ class GUST(BaseCard):
         #return angle
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the GUST object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = ['GUST', self.sid, self.dload, self.wg, self.x0, self.V]
         return list_fields
 
@@ -1338,9 +1703,19 @@ class MKAERO1(BaseCard):
             self.rFreqs.append(f)
 
     def rawFields(self):
-        #list_fields = ['MKAERO2']
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the MKAERO1 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
+        #list_fields = ['MKAERO1']
         #for (i, mach, rfreq) in izip(count(), self.machs, self.rFreqs):
-        #    list_fields += [mach,rfreq]
+        #    list_fields += [mach, rfreq]
         machs = [None] * 8
         freqs = [None] * 8
         for i, mach in enumerate(self.machs):
@@ -1351,10 +1726,7 @@ class MKAERO1(BaseCard):
         return list_fields
 
     def getMach_rFreqs(self):
-        return (self.machs, self.rFreqs)
-
-    def reprFields(self):
-        return self.rawFields()
+        return self.machs, self.rFreqs
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -1397,16 +1769,23 @@ class MKAERO2(BaseCard):
             self.rFreqs.append(f)
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the MKAERO2 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = ['MKAERO2']
         for (i, mach, rfreq) in izip(count(), self.machs, self.rFreqs):
             list_fields += [mach, rfreq]
         return list_fields
 
     def getMach_rFreqs(self):
-        return (self.machs, self.rFreqs)
-
-    def reprFields(self):
-        return self.rawFields()
+        return self.machs, self.rFreqs
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -1420,6 +1799,32 @@ class PAERO1(BaseCard):
       PAERO1 PID B1 B2 B3 B4 B5 B6
     """
     type = 'PAERO1'
+    _field_map = {1: 'pid'}
+
+    def _get_field_helper(self, n):
+        """
+        Gets complicated parameters on the PAERO1 card
+
+        :param self:  the PAERO1 object pointer
+        :param n:     the field number to update
+        :type n:      int
+        :param value: the value for the appropriate field
+        :type field:  varies
+        """
+        return self.Bi[n - 1]
+
+    def _update_field_helper(self, n, value):
+        """
+        Updates complicated parameters on the PAERO1 card
+
+        :param self:  the PAERO1 object pointer
+        :param n:     the field number to update
+        :type n:      int
+        :param value: the value for the appropriate field
+        :type field:  varies
+        """
+        self.Bi[n - 1] = value
+
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
@@ -1443,11 +1848,18 @@ class PAERO1(BaseCard):
         return self.Bi
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the PAERO1 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = ['PAERO1', self.pid] + self.Bi
         return list_fields
-
-    def reprFields(self):
-        return self.rawFields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -1466,7 +1878,36 @@ class PAERO2(BaseCard):
         1: 'pid', 2:'orient', 3:'width', 4:'AR', 5:'lrsb', 6:'lrib',
         7: 'lth1', 8:'lth2',
     }
+
+    def _get_field_helper(self, n):
+        """
+        Gets complicated parameters on the PAERO2 card
+
+        :param self:  the PAERO2 object pointer
+        :param n:     the field number to update
+        :type n:      int
+        :param value: the value for the appropriate field
+        :type field:  varies
+        """
+        nnew = n - 8
+        spot = nnew // 2
+        i = nnew % 2
+        if i == 0:
+            value = self.thi[spot]
+        else:
+            value = self.thn[spot]
+        return value
+
     def _update_field_helper(self, n, value):
+        """
+        Updates complicated parameters on the PAERO2 card
+
+        :param self:  the PAERO2 object pointer
+        :param n:     the field number to update
+        :type n:      int
+        :param value: the value for the appropriate field
+        :type field:  varies
+        """
         nnew = n - 8
         spot = nnew // 2
         i = nnew % 2
@@ -1516,14 +1957,21 @@ class PAERO2(BaseCard):
             raise NotImplementedError(msg)
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the PAERO2 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = ['PAERO2', self.pid, self.orient, self.width,
                   self.AR, self.lrsb, self.lrib, self.lth1, self.lth2]
         for (thi, thn) in izip(self.thi, self.thn):
             list_fields += [thi, thn]
         return list_fields
-
-    def reprFields(self):
-        return self.rawFields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -1539,7 +1987,38 @@ class PAERO3(BaseCard):
     _field_map = {
         1: 'pid', 2:'orient', 3:'width', 4:'AR',
     }
+
+    def _get_field_helper(self, n):
+        """
+        Gets complicated parameters on the PAERO3 card
+
+        :param self:  the PAERO3 object pointer
+        :param n:     the field number to update
+        :type n:      int
+        :param value: the value for the appropriate field
+        :type field:  varies
+        """
+        nnew = n - 6
+        if nnew < 0:
+            raise RuntimeError('field n=%i on PAERO3 is invalid' % n)
+        spot = nnew // 2
+        i = nnew % 2
+        if i == 0:
+            value = self.x[spot]
+        else:
+            value = self.y[spot]
+        return value
+
     def _update_field_helper(self, n, value):
+        """
+        Updates complicated parameters on the PAERO3 card
+
+        :param self:  the PAERO3 object pointer
+        :param n:     the field number to update
+        :type n:      int
+        :param value: the value for the appropriate field
+        :type field:  varies
+        """
         nnew = n - 6
         if nnew < 0:
             raise RuntimeError('field n=%i on PAERO3 is invalid' % n)
@@ -1575,13 +2054,20 @@ class PAERO3(BaseCard):
             raise NotImplementedError(msg)
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the PAERO3 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = ['PAERO3', self.pid, self.nbox, self.ncontrol_surfaces, None]
         for (x, y) in izip(self.x, self.y):
             list_fields += [x, y]
         return list_fields
-
-    def reprFields(self):
-        return self.rawFields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -1657,11 +2143,28 @@ class SPLINE1(Spline):
         return self.setg.sid
 
     def cross_reference(self, model):
+        """
+        Cross links the card
+
+        :param self:   the SPLINE1 object pointer
+        :param model:  the BDF object
+        :type model:   BDF()
+        """
         msg = ' which is required by SPLINE1 eid=%s' % self.eid
         self.caero = model.CAero(self.caero, msg=msg)
         self.setg = model.Set(self.setg, msg=msg)
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the SPLINE1 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = ['SPLINE1', self.eid, self.CAero(), self.box1, self.box2,
                   self.Set(), self.dz, self.method, self.usage, self.nelements,
                   self.melements]
@@ -1726,6 +2229,13 @@ class SPLINE2(Spline):
             raise NotImplementedError(msg)
 
     def cross_reference(self, model):
+        """
+        Cross links the card
+
+        :param self:   the SPLINE2 object pointer
+        :param model:  the BDF object
+        :type model:   BDF()
+        """
         msg = ' which is required by SPLINE2 sid=%s' % self.eid
         self.caero = model.CAero(self.caero, msg=msg)
         self.setg = model.Set(self.setg, msg=msg)
@@ -1746,6 +2256,16 @@ class SPLINE2(Spline):
         return self.setg.sid
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the SPLINE2 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = ['SPLINE2', self.eid, self.CAero(), self.id1, self.id2,
                   self.Set(), self.dz, self.dtor, self.Cid(), self.dthx,
                   self.dthy, None, self.usage]
@@ -1828,12 +2348,29 @@ class SPLINE4(Spline):
         return self.setg.sid
 
     def cross_reference(self, model):
+        """
+        Cross links the card
+
+        :param self:   the SPLINE4 object pointer
+        :param model:  the BDF object
+        :type model:   BDF()
+        """
         msg = ' which is required by SPLINE4 eid=%s' % self.eid
         self.caero = model.CAero(self.caero, msg=msg)
         self.setg = model.Set(self.setg, msg=msg)
         self.aelist = model.AEList(self.aelist, msg=msg)
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the SPLINE4 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = ['SPLINE4', self.eid, self.CAero(), self.AEList(), None,
                   self.Set(), self.dz, self.method, self.usage, self.nelements,
                   self.melements]
@@ -1916,12 +2453,29 @@ class SPLINE5(Spline):
         return self.setg.sid
 
     def cross_reference(self, model):
+        """
+        Cross links the card
+
+        :param self:   the SPLINE5 object pointer
+        :param model:  the BDF object
+        :type model:   BDF()
+        """
         msg = ' which is required by SPLINE5 eid=%s' % self.eid
         self.caero = model.CAero(self.caero, msg=msg)
         self.setg = model.Set(self.setg, msg=msg)
         self.aelist = model.AEList(self.aelist, msg=msg)
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the SPLINE5 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = ['SPLINE5', self.eid, self.CAero(), self.AEList(), None,
                   self.Set(), self.dz, self.dtor, self.Cid(), self.thx,
                   self.thy, None, self.usage]
@@ -1946,7 +2500,41 @@ class TRIM(BaseCard):
         1: 'sid', 2:'mach', 3:'q', 8:'aeqr',
     }
 
+    def _get_field_helper(self, n):
+        """
+        Gets complicated parameters on the TRIM card
+
+        :param self:  the TRIM object pointer
+        :param n:     the field number to update
+        :type n:      int
+        :param value: the value for the appropriate field
+        :type field:  varies
+        """
+        ni = 4
+        for (i, label, ux) in izip(count(), self.labels, self.uxs):
+            if n == ni:
+                value = self.labels[i]
+                return value
+            elif n + 1 == ni:
+                value = self.uxs[i]
+                return value
+
+            #list_fields += [label, ux]
+            if i == 1:
+                #list_fields += [self.aeqr]
+                ni += 1
+        raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+
     def _update_field_helper(self, n, value):
+        """
+        Updates complicated parameters on the TRIM card
+
+        :param self:  the TRIM object pointer
+        :param n:     the field number to update
+        :type n:      int
+        :param value: the value for the appropriate field
+        :type field:  varies
+        """
         ni = 4
         for (i, label, ux) in izip(count(), self.labels, self.uxs):
             if n == ni:
@@ -2010,6 +2598,16 @@ class TRIM(BaseCard):
             raise NotImplementedError(msg)
 
     def rawFields(self):
+        """
+        Gets the fields in their unmodified form
+
+        :param self:
+          the TRIM object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
         list_fields = ['TRIM', self.sid, self.mach, self.q]
         for (i, label, ux) in izip(count(), self.labels, self.uxs):
             list_fields += [label, ux]
