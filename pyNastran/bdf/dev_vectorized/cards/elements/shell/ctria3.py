@@ -210,23 +210,29 @@ class CTRIA3(object):
     def displacement_stress(self):
         pass
 
-    def stiffness(self, positions):
+    #def get_property_by_index(self, i):
+        #pid = self.property_id[i]
+        #return self.model.property_shell.get_property_by_index[pid]
+
+    def get_stiffness(self, i, model, positions, index0s):
         # Mindlin-Reissner (thick plate)
 
         # Kirchoff-Love (thin plate)
 
         eid = self.element_id[i]
         pid = self.property_id[i]
-        prop = self.get_property_by_index(i)
+        #prop = self.get_property_by_index(i)
         n1, n2, n3 = self.node_ids[i, :]
         p1 = positions[n1]
         p2 = positions[n2]
         p3 = positions[n3]
 
-        mat = prop.get_material(pid)
+        #mat = prop.get_material(pid)
+        mat = model.properties_shell.get_material(pid)
         E = mat.E()
         nu = mat.Nu()
-        t = prop.get_thickness(pid)
+        #t = prop.get_thickness(pid)
+        t = model.properties_shell.get_thickness(pid)
 
 
         #====

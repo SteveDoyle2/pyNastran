@@ -15,7 +15,7 @@ from scipy.sparse import coo_matrix
 
 # pyNastran
 from pyNastran.f06.f06Writer import sorted_bulk_data_header
-from pyNastran.utils import list_print
+from pyNastran.utils.dev import list_print
 from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
 #from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.dev_vectorized.bdf import BDF, SPC, SPC1
@@ -226,7 +226,7 @@ class Solver(F06, OP2):
     """
     def __init__(self, fargs):
         F06.__init_data__(self)
-        OP2.__init__(self, '')
+        OP2.__init__(self, make_geom=False, debug=False, log=None, debug_file=None)
 
         self.page_num = 1
         self.fargs = fargs
@@ -579,23 +579,23 @@ class Solver(F06, OP2):
         #print("case = ", case)
         assert model.sol == 101, 'model.sol=%s is not 101' % (model.sol)
 
-        if 'WTMASS' in self.params:
-            wtmass = self.params['WTMASS'].value1
+        if 'WTMASS' in model.params:
+            wtmass = model.params['WTMASS'].value1
         else:
             wtmass = 1.0
 
-        if 'COUPMASS' in self.params:
-            coupmass = self.params['COUPMASS'].value1
+        if 'COUPMASS' in model.params:
+            coupmass = model.params['COUPMASS'].value1
         else:
             coupmass = -1
 
         if case.has_parameter('FMETHOD'):
-            iflutter = self.subcase.get_parameter('FMETHOD')
+            iflutter = model.subcase.get_parameter('FMETHOD')
             self.flutter[iflutter]
             self.flfact[iflutter]
 
         if case.has_parameter('METHOD'):
-            imethod = self.subcase.get_parameter('METHOD')
+            imethod = model.subcase.get_parameter('METHOD')
             self.eigb[imethod]
             self.eigc[imethod]
             self.eigr[imethod]
@@ -1459,11 +1459,11 @@ class Solver(F06, OP2):
 
         # shells
         for i in xrange(model.elements_shell.ctria3.n):
-            K, dofs, nijv = model.ctria3.get_stiffness(i, model, self.positions, index0s)
+            K, dofs, nijv = model.elements_shell.ctria3.get_stiffness(i, model, self.positions, index0s)
             self.add_stiffness(K, dofs, nijv)
 
         for i in xrange(model.elements_shell.cquad4.n):
-            K, dofs, nijv = model.cquad4.get_stiffness(i, model, self.positions, index0s)
+            K, dofs, nijv = model.elements_shell.cquad4.get_stiffness(i, model, self.positions, index0s)
             self.add_stiffness(K, dofs, nijv)
 
         #Kgg_sparse = coo_matrix((entries, (rows, cols)), shape=(i, i))
@@ -1848,7 +1848,7 @@ def get_cards():
     return cardsToRead
 
 def main():
-    from pyNastran.bdf2.solver.solver_args import run_arg_parse
+    from pyNastran.bdf.dev_vectorized.solver.solver_args import run_arg_parse
     fargs = run_arg_parse()
 
     s = Solver(fargs)
