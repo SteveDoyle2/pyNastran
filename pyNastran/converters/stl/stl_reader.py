@@ -103,7 +103,7 @@ class STLReader(object):
         :param self: The STL object
         :param i:    NDARRAY of the indicies to flip (default=None -> all)
         """
-        self.log.info("---flip_normals...%r---" % self.infilename)
+        self.log.info("---flip_normals---")
         if i is None:
             elements = self.elements
         else:
@@ -299,7 +299,7 @@ class STLReader(object):
         nelements, three = elements.shape
         #print "write nelements=%s" % nelements
         normals = self.get_normals(elements)
-        for element in elements:
+        for element, normal in zip(elements, normals):
             #msg = ''
             try:
                 p1, p2, p3 = nodes[element]
