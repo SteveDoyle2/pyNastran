@@ -4,7 +4,7 @@ from pyNastran.converters.stl.stl_reader import STLReader
 def cart3d_to_stl(cart3d, log=None, debug=False):
     """
     Converts a Cart3DReader object to STL format.
-    
+
     :param cart3d: a Cart3DReader object
     :param log:    a logger object (or None)
     :param debug:  True/False (used if log is not defined)
@@ -21,18 +21,18 @@ def cart3d_to_stl(cart3d, log=None, debug=False):
 def cart3d_to_stl_filename(cart3d_filename, stl_filename, log=None, debug=False):
     """
     Converts a Cart3D file to STL format.
-    
+
     :param cart3d_filename: path to the input Cart3D file
     :param stl_filename:    path to the output STL file
     :param log:             a logger object (or None)
     :param debug:           True/False (used if log is not defined)
     """
     cart3d = Cart3DReader(log=log, debug=debug)
-    cart3d.read_cart3d(cart3d_filename)
+    (nodes, elements, regions, loads) = cart3d.read_cart3d(cart3d_filename)
 
     stl = STLReader()
-    stl.nodes = cart3d.nodes
-    stl.elements = cart3d.elements
+    stl.nodes = nodes - 1
+    stl.elements = elements - 1
     stl.write_stl(stl_filename)
     return
     if 0:
