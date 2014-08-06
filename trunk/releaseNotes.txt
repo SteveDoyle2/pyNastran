@@ -79,7 +79,7 @@ OP2:
      - BDF input errors not caught
      - others???
    - grid point weight table is now supported (see beam_modes demo)
-   - OP2 no longer defines the filename; use read_f06.
+   - OP2 no longer defines the filename; use read_op2.
      readOP2 is now gone, replaced by read_op2 (was previously deprecated)
    - OP2 class names updated to be more descriptive
      (e.g. DisplacementObject -> RealDisplacement)

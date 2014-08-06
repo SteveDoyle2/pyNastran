@@ -166,7 +166,7 @@ class OP2( #BDF,
 
             'grid_point_stresses' : ['OGS1'],
 
-            'grid_point_weight': ['OGPWG'],
+            'grid_point_weight': ['OGPWG', 'OGPWGM'],
 
             'spcForces' : ['OQG1', 'OQGV1'],
             'mpcForces' : ['OQMG1'],
@@ -317,6 +317,7 @@ class OP2( #BDF,
             # OGPWG
             # grid point weight
             'OGPWG' : [self._read_ogpwg_3, self._read_ogpwg_4],
+            'OGPWGM' : [self._read_ogpwg_3, self._read_ogpwg_4],
 
             #=======================
             # OGS
@@ -666,7 +667,7 @@ class OP2( #BDF,
                                    # strain energy
                                    'ONRGY1',
                                    # grid point weight
-                                   'OGPWG',
+                                   'OGPWG', 'OGPWGM',
 
                                    # other
                                    'CONTACT', 'VIEWTB',
@@ -675,6 +676,8 @@ class OP2( #BDF,
                     self._read_geom_table()  # DIT (agard)
                 elif table_name in ['GPL', ]:
                     self._read_gpl()
+                elif table_name in ['MEFF', ]:
+                    self._read_meff()
                 elif table_name in ['OMM2', ]:
                     self._read_omm2()
                 elif table_name in ['DIT']:  # tables
@@ -1098,6 +1101,37 @@ class OP2( #BDF,
             #self.show_data(data, 'i')
             n -= 1
             markers = self.get_nmarkers(1, rewind=True)
+
+    def _read_meff(self):
+        """
+        :param self:    the OP2 object pointer
+        """
+        raise NotImplementedError(self.table_name)
+        self.table_name = self.read_table_name(rewind=False)
+        self.log.debug('table_name = %r' % self.table_name)
+        if self.debug:
+            self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
+        self.read_markers([-1])
+        if self.debug:
+            self.binary_debug.write('---markers = [-1]---\n')
+        data = self._read_record()
+
+        markers = self.get_nmarkers(1, rewind=True)
+        self.binary_debug.write('---marker0 = %s---\n' % markers)
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+
+        for n in [-3, -4, -5, -6, -7, -8, ]:
+            self.read_markers([n, 1, 1])
+            markers = self.get_nmarkers(1, rewind=False)
+            print('markers =', markers)
+            self.f.read(markers[0]*4+12)
+            self.n += markers[0]*4+12
+
+        n = -9
+        self.read_markers([n, 1, 0, 0])
+        #data = self._read_record()
+        self.show(50)
 
     def get_marker_n(self, n):
         markers = []
