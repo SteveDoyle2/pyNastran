@@ -1069,23 +1069,13 @@ class QuadShell(ShellElement):
            A=area
         """
         (n1, n2, n3, n4) = self.nodePositions()
-        a = n1 - n2
-        b = n2 - n4
-        area1 = Area(a, b)
-        c1 = centroid_triangle(n1, n2, n4)
-
-        a = n2 - n4
-        b = n2 - n3
-        area2 = Area(a, b)
-        c2 = centroid_triangle(n2, n3, n4)
-
-        area = area1 + area2
-        centroid = (c1 * area1 + c2 * area2) / area
+        area = 0.5 * norm(cross(n3-n1, n4-n2))
+        centroid = (n1 + n2 + n3 + n4) / 4.
         return(area, centroid)
 
     def Centroid(self):
-        #nodes = self.nodePositions()
-        (area, centroid) = self.AreaCentroid()
+        (n1, n2, n3, n4) = self.nodePositions()
+        centroid = (n1 + n2 + n3 + n4) / 4.
         return centroid
 
     def Area(self):
@@ -1094,9 +1084,7 @@ class QuadShell(ShellElement):
         where a and b are the quad's cross node point vectors
         """
         (n1, n2, n3, n4) = self.nodePositions()
-        a = n1 - n3
-        b = n2 - n4
-        area = Area(a, b)
+        area = 0.5 * norm(cross(n3-n1, n4-n2))
         return area
 
     def MassMatrix(self, isLumped=True, gauss=1):
