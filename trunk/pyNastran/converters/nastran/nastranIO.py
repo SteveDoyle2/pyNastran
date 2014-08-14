@@ -429,9 +429,10 @@ class NastranIO(object):
         self.iSubcaseNameMap = {1: ['Nastran', '']}
 
         # subcaseID, resultType, vectorSize, location, dataFormat
-        if 1:
+        if len(model.properties):
                 cases[(0, 'Pid', 1, 'centroid', '%.0f')] = pids
 
+        if 0:
             # if not a flat plate???
             #if min(nxs) == max(nxs) and min(nxs) != 0.0:
                 # subcaseID, resultType, vectorSize, location, dataFormat
