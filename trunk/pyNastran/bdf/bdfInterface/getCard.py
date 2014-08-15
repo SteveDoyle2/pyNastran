@@ -306,7 +306,7 @@ class GetMethods(GetMethodsDeprecated):
         if sid in self.loads:
             load = self.loads[sid]
         else:
-            raise KeyError('cannot find LoadID=%r%s.' % (sid, msg))
+            raise KeyError('cannot find LoadID=%r%s.\nLoadIDs=%s\n' % (sid, msg, sorted(self.loads.keys())))
         return load
 
     #--------------------
