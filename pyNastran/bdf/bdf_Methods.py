@@ -1,3 +1,19 @@
+"""
+This file contains additional methods that do not directly relate to the
+reading/writing/accessing of BDF data.  Such methods include:
+  - Mass
+      get the mass of the model
+  - Mass Poperties
+      get the mass & moment of inertia of the model
+  - sumMoments / sum_moments
+      find the net force/moment on the model
+  - sumForces / sum_forces
+      find the net force on the model
+  - resolve_grids
+      change all nodes to a specific coordinate system
+  - unresolve_grids
+      puts all nodes back to original coordinate system
+"""
 # pylint: disable=R0904,R0902
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
