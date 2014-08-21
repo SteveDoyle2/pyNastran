@@ -58,7 +58,7 @@ valid_formats = [
 ]
 
 assert is_nastran == True, is_nastran
-print('is_nastran = %r' % is_nastran)
+#print('is_nastran = %r' % is_nastran)
 
 pkgPath = pyNastran.gui.__path__[0]
 #print "pkgPath = %r" % pkgPath
@@ -447,18 +447,18 @@ class AppFrame(wx.Frame):
 
             'export'    : [ID_EXPORT,  None, None,  'Export to...' 'Export the Model to Another Format'],
             'Save'      : [wx.ID_SAVE, None, None, '&Save', 'does nothing'],
-            
+
             # ---View---
             'camera'     : [ID_CAMERA,    None,           os.path.join(iconPath, 'tcamera.png'),    'Take a Screenshot', 'Take a Screenshot', self.frmPanel.widget.onTakePicture],
             'wireframe'  : [ID_WIREFRAME, None,           os.path.join(iconPath, 'twireframe.png'), 'Wireframe Model', 'Show Model as a Wireframe Model', self.frmPanel.onSetToWireframe],
             'edges'      : [ID_EDGES,     None,           os.path.join(iconPath, 'tedges.png'),     'Show/Hide Edges', 'Show/Hide Edges', self.frmPanel.onFlipEdges],
             'surface'    : [ID_SURFACE,   None,           os.path.join(iconPath, 'tsolid.png'),     'Surface Model', 'Show Model as a Surface Model', self.frmPanel.onSetToSurface],
             'color'      : [wx.ID_ANY,    'bkgColorView', os.path.join(iconPath, 'tcolorpick.png'), 'Change Background Color', 'Change Background Color', events.onBackgroundColor],
-            
+
             # ---Help---
             'about' : [ID_ABOUT, None, os.path.join(iconPath, 'tabout.png'), '&About', 'About pyNastran', events.onAbout],
         }
-        
+
         toolbar_buttons = ['load_geometry', 'camera', 'wireframe', 'surface', 'edges', '', 'exit']
         menu_order = ['&File', '&View', '&Help']
         menus = {
@@ -466,7 +466,7 @@ class AppFrame(wx.Frame):
             '&View' : ['camera', '', 'wireframe', 'surface', 'edges', '', 'color'],
             '&Help' : ['about'],
         }
-        
+
         self.toolbar1 = self.CreateToolBar()
         for button_name in toolbar_buttons:
             if button_name == '':
@@ -625,7 +625,7 @@ class EventsHandler(object):
     def _load_geometry(self, fname, dirname):
         basename, ext = os.path.splitext(fname)
         ext = ext.lower()
-        
+
         Format_to_load = {
             '.tri' : (self.parent.frmPanel.load_cart3d_geometry, 'cart3d'),
             '.triq' : (self.parent.frmPanel.load_cart3d_geometry, 'cart3d'),
