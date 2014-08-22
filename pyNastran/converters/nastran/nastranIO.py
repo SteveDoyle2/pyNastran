@@ -142,10 +142,31 @@ class NastranIO(object):
                 i += 1
 
         # add the nodes
+        node0 = model.nodes.keys()[0]
+        position0 = model.nodes[node0].Position()
+        xmin = position0[0]
+        xmax = position0[0]
+
+        ymin = position0[1]
+        ymax = position0[1]
+
+        zmin = position0[2]
+        zmax = position0[2]
         for i, (nid, node) in enumerate(sorted(model.nodes.iteritems())):
             point = node.Position()
+            xmin = min(xmin, point[0])
+            xmax = max(xmax, point[0])
+
+            ymin = min(ymin, point[1])
+            ymax = max(ymax, point[1])
+
+            zmin = min(zmin, point[2])
+            zmax = max(zmax, point[2])
             points.InsertPoint(i, *point)
             self.nidMap[nid] = i
+        self.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
+        self.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
+        self.log_info("zmin=%s xmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
 
         # add the CAERO/CONM2 elements
         j = 0
