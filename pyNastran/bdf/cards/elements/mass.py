@@ -645,14 +645,36 @@ class CONM2(PointMassElement):
             return A2  # correct for offset using dx???
 
     def Centroid(self):
+        """
+        This method seems way more complicated than it needs to be thanks
+        to all these little caveats that don't seem to be supported.
+        There are no changes for now.
+        """
         if self.Cid() == 0:
+            # no transform needed
             X2 = self.nid.Position() + self.X
         elif self.Cid() == -1:
+            # case X1, X2, X3 are the coordinates, not offsets, of the center of gravity of
+            # the mass in the basic coordinate system.
+
+            # 4. If CID = -1, offsets are internally computed as the difference between the grid
+            # point location and X1, X2, X3.
+            # this statement is not supported...
             return self.X
         else:
+            # Offset distances from the grid point to the center of gravity of the mass
+            # in the coordinate system
+
+            # If CID > 0, then X1, X2, and X3 are defined by a local Cartesian system, even
+            # if CID references a spherical or cylindrical coordinate system. This is similar
+            # to the manner in which displacement coordinate systems are defined.
+            # this statement is not supported...
+
             dx, matrix = self.cid.transformToGlobal(self.X)
-            #print "dx = ",dx
-            #print "X  = ",self.nid.Position()
+            # if you want to plot this like Patran, you need to leave off the dx
+            # but I disagree with how that's presented as it doesn't tell you
+            # where the CONM2 actually is
+            #print("dx =", dx)
             X2 = self.nid.Position() + dx
         return X2
 
