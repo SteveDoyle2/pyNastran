@@ -12,7 +12,7 @@ import os
 import sys
 import warnings
 import traceback
-
+from numpy import unique
 
 from pyNastran.utils import (object_attributes, print_bad_path)
 from pyNastran.utils.dev import list_print
@@ -1873,6 +1873,40 @@ def parse_executive_control_deck(executive_control_lines):
                                  '|SOL %s| new =|%s|' % (sol, uline))
             iSolLine = i
     return sol, method, iSolLine
+
+
+def parse_patran_syntax(node_sets):
+    """
+    :param node_sets: the node_set to parse
+    :returns nodes: list of integers
+
+    Patran has a short syntax of the form:
+      "n 1 2 3"  -> nodes 1 2 3
+      "n 5:10"   -> nodes 5,6,7,8,9,10
+      "n 12:20:2" -> nodes 12,14,16,18,20
+
+    don't include the n/node or e/element or any other identifier, just a string of:
+      "1 2 3 5:10 12:20:2"
+
+    doesn't support "1:#"
+    """
+    snodes = node_sets.split()
+    nodes = []
+    for snode in snodes:
+        if ':' in snode:
+            ssnode = snode.split(':')
+            if len(ssnode) == 2:
+                nmin, nmax = int(ssnode[0]), int(ssnode[1])
+                new_set = list(range(nmin, nmax+1))
+            elif len(ssnode) == 3:
+                nmin, nmax, delta = int(ssnode[0]), int(ssnode[1]), int(ssnode[2])
+                new_set = list(range(nmin, nmax+1, delta))
+            else:
+                raise NotImplementedError(snode)
+            nodes += new_set
+        else:
+            nodes.append(int(snode))
+    return unique(nodes)
 
 
 def clean_empty_lines(lines):
