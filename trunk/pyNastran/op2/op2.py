@@ -591,6 +591,8 @@ class OP2( #BDF,
         self.binary_debug.close()
         if self._close_op2:
             self.f.close()
+            del self.binary_debug
+            del self.f
         #self.remove_unpickable_data()
         return table_names
 
