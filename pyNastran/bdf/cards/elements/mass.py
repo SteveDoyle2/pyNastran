@@ -98,9 +98,52 @@ class CMASS1(PointMassElement):
 
     def cross_reference(self, model):
         msg = ' which is required by CMASS1 eid=%s' % self.eid
-        #self.g1 = model.Node(self.g1, msg=msg)
-        #self.g2 = model.Node(self.g2, msg=msg)
+        if isinstance(self.g1, int):
+            self.g1 = model.Node(self.g1, msg=msg)
+        if isinstance(self.g2, int):
+            self.g2 = model.Node(self.g2, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
+
+    def G1(self):
+        if isinstance(self.g1, int):
+            return self.g1
+        elif self.g1 is None:
+            return self.g1
+        return self.g1.nid
+
+    def G2(self):
+        if isinstance(self.g2, int):
+            return self.g2
+        elif self.g2 is None:
+            return self.g2
+        return self.g2.nid
+
+    def Centroid(self):
+        """
+        Centroid is assumed to be c=(g1+g2)/2.
+        If g2 is blank, then the centroid is the location of g1.
+        """
+        f = 0.
+        p1 = array([0., 0., 0.])
+        p2 = array([0., 0., 0.])
+        if self.g1 is not None:
+            p1 = self.g1.Position()
+            f += 1.
+        if self.g2 is not None:
+            p2 = self.g2.Position()
+            f += 1.
+        c = (p1 + p2) / f
+        return c
+
+    def nodeIDs(self):
+        g1 = self.G1()
+        g2 = self.G2()
+        nodes = []
+        if g1:
+            nodes.append(g1)
+        if g2:
+            nodes.append(g2)
+        return nodes
 
     def Pid(self):
         if isinstance(self.pid, int):
@@ -539,18 +582,6 @@ class CONM1(PointMassElement):
 
 
 class CONM2(PointMassElement):
-    """
-    :param self: the CONM2 object
-    :param eid:  element ID
-    :param nid:  node ID
-    :param cid:  coordinate frame of the offset (-1=absolute coordinates)
-    :param X:    offset vector
-    :param I:    mass moment of inertia matrix about the CG
-
-    ::
-
-      CONM2    501274  11064          132.274
-    """
     type = 'CONM2'
     _field_map = {
         1: 'eid', 2:'nid', 3:'cid', 4:'mass',
@@ -579,18 +610,53 @@ class CONM2(PointMassElement):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
+        """
+        :param self: the CONM2 object
+        :param eid:  element ID
+        :param nid:  node ID
+        :param cid:  coordinate frame of the offset (-1=absolute coordinates)
+        :param X:    offset vector relative to nid
+        :param I:    mass moment of inertia matrix about the CG
+
+        +-------+--------+-------+-------+---------+------+------+------+------+
+        | CONM2 | EID    | NID   |  CID  |  MASS   |  X1  |  X2  |  X3  |      |
+        +-------+--------+-------+-------+---------+------+------+------+------+
+        |       |   I11  |   I21 |  I22  |   I31   |  I32 |  I33 |
+        +-------+--------+-------+-------+---------+------+------+
+
+        +-------+--------+-------+-------+---------+
+        | CONM2 | 501274 | 11064 |       | 132.274 |
+        +-------+--------+-------+-------+---------+
+        """
         PointMassElement.__init__(self, card, data)
         if comment:
             self._comment = comment
         if card:
+            #: Element identification number. (0 < Integer < 100,000,000)
             self.eid = integer(card, 1, 'eid')
+
+            #: Grid point identification number. (Integer > 0)
             self.nid = integer(card, 2, 'nid')
+            #: Coordinate system identification number.
+            #: For CID of -1; see X1, X2, X3 below.
+            #: (Integer > -1; Default = 0)
             self.cid = integer_or_blank(card, 3, 'cid', 0)
+
+            #: Mass value. (Real)
             self.mass = double_or_blank(card, 4, 'mass', 0.)
+
+            #: Offset distances from the grid point to the center of gravity of
+            # the mass in the coordinate system defined in field 4, unless
+            # CID = -1, in which case X1, X2, X3 are the coordinates, not
+            # offsets, of the center of gravity of the mass in the basic
+            #: coordinate system. (Real)
             self.X = array([double_or_blank(card, 5, 'x1', 0.0),
                             double_or_blank(card, 6, 'x2', 0.0),
                             double_or_blank(card, 7, 'x3', 0.0)])
 
+            #: Mass moments of inertia measured at the mass center of gravity in
+            # the coordinate system defined by field 4. If CID = -1, the basic
+            # coordinate system is implied. (Real)
             self.I = array([double_or_blank(card, 9, 'I11', 0.0),
                             double_or_blank(card, 10, 'I21', 0.0),
                             double_or_blank(card, 11, 'I22', 0.0),
@@ -603,8 +669,8 @@ class CONM2(PointMassElement):
             self.nid = data[1]
             self.cid = data[2]
             self.mass = data[3]
-            self.X = data[4:7]
-            self.I = data[7:]
+            self.X = array(data[4:7])
+            self.I = array(data[7:])
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -618,7 +684,7 @@ class CONM2(PointMassElement):
         assert isinstance(cid, int), 'cid=%r' % cid
         assert isinstance(mass, float), 'mass=%r' % mass
         for i in range(3):
-            assert isinstance(c[i], float), 'centroid[%i]=%r' %(i, c[i])
+            assert isinstance(c[i], float), 'centroid[%i]=%r' % (i, c[i])
 
     def Eid(self):
         return self.eid
@@ -632,10 +698,10 @@ class CONM2(PointMassElement):
         .. warning:: doesnt handle offsets or coordinate systems
         """
         I = self.I
-        A = [[I[0], I[1], I[3]],
-             [I[1], I[2], I[4]],
-             [I[3], I[4], I[5]]]
-        if self.Cid() == -1:
+        A = [[ I[0], -I[1], -I[3]],
+             [-I[1],  I[2], -I[4]],
+             [-I[3], -I[4],  I[5]]]
+        if self.Cid() in [0, -1]:
             return A
         else:
             # transform to global
@@ -648,7 +714,6 @@ class CONM2(PointMassElement):
         """
         This method seems way more complicated than it needs to be thanks
         to all these little caveats that don't seem to be supported.
-        There are no changes for now.
         """
         if self.Cid() == 0:
             # no transform needed
@@ -670,10 +735,13 @@ class CONM2(PointMassElement):
             # to the manner in which displacement coordinate systems are defined.
             # this statement is not supported...
 
-            dx, matrix = self.cid.transformToGlobal(self.X)
-            # if you want to plot this like Patran, you need to leave off the dx
-            # but I disagree with how that's presented as it doesn't tell you
-            # where the CONM2 actually is
+            # convert self.X into the global frame
+            x, matrix = self.cid.transformToGlobal(self.X)
+
+            # self.X is an offset
+            dx = x - self.cid.e1
+
+            # the actual position of the CONM2
             #print("dx =", dx)
             X2 = self.nid.Position() + dx
         return X2
@@ -734,4 +802,3 @@ class CONM2(PointMassElement):
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
-        #return self.comment() + card_writer(card)
