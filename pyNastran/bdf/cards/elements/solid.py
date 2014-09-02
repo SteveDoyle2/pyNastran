@@ -361,6 +361,67 @@ class CPENTA6(SolidElement):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=False, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
+    def getFaceAreaCentroidNormal(self, nidOpposite, nid):
+        nids = self.nodeIDs()[:6]
+        indx1 = nids.index(nid)
+        indx2 = nids.index(nidOpposite)
+
+        #  offset so it's easier to map the nodes with the QRG
+        pack = [indx1 + 1, indx2 + 1]
+        pack.sort()
+        mapper = {  # reverse points away from the element
+                    [1, 2]: [1, 2, 3],  # close
+                    [2, 3]: [1, 2, 3],
+                    [1, 3]: [1, 2, 3],
+
+                    [4, 5]: [4, 5, 6],  # far-reverse
+                    [5, 6]: [4, 5, 6],
+                    [4, 6]: [4, 5, 6],
+
+                    [1, 5]: [1, 2, 5, 4],  # bottom
+                    [2, 4]: [1, 2, 5, 4],
+
+                    [1, 6]: [1, 3, 6, 4],  # left-reverse
+                    [3, 4]: [1, 3, 6, 4],
+
+                    [2, 6]: [2, 5, 6, 3],  # right
+                    [3, 5]: [2, 3, 6, 5], }
+
+        pack2 = mapper[pack]
+        if len(pack2) == 3:
+            (n1, n2, n3) = pack2
+            faceNodeIDs = [n1, n2, n3]
+            n1i = nids.index(n1 - 1)
+            n2i = nids.index(n2 - 1)
+            n3i = nids.index(n3 - 1)
+            p1 = self.nodes[n1i].Position()
+            p2 = self.nodes[n2i].Position()
+            p3 = self.nodes[n3i].Position()
+            a = p1 - p2
+            b = p1 - p3
+            normal = cross(a, b)
+            n = norm(normal)
+            A = 0.5 * n
+            centroid = (p1 + p2 + p3) / 3.
+        else:
+            (n1, n2, n3, n4) = pack2
+            n1i = nids.index(n1 - 1)
+            n2i = nids.index(n2 - 1)
+            n3i = nids.index(n3 - 1)
+            n4i = nids.index(n4 - 1)
+            faceNodeIDs = [n1, n2, n3, n4]
+            p1 = self.nodes[n1i].Position()
+            p2 = self.nodes[n2i].Position()
+            p3 = self.nodes[n3i].Position()
+            p4 = self.nodes[n4i].Position()
+            a = p1 - p3
+            b = p2 - p4
+            normal = cross(a, b)
+            n = norm(normal)
+            A = 0.5 * n
+            centroid = (p1 + p2 + p3 + p4) / 4.
+        return area, centroid, normal / n
+
     def getFaceNodesAndArea(self, nidOpposite, nid):
         nids = self.nodeIDs()[:6]
         indx1 = nids.index(nid)
@@ -615,11 +676,26 @@ class CTETRA4(SolidElement):
         (n1, n2, n3, n4) = self.nodePositions()
         return (n1 + n2 + n3 + n4) / 4.
 
-    def getFaceNodes(self, nidOpposite, nid=None):
+    def getFaceNodes(self, nid_opposite, nid=None):
+        assert nid is None, nid
         nids = self.nodeIDs()[:4]
-        indx = nids.index(nidOpposite)
+        indx = nids.index(nid_opposite)
         nids.pop(indx)
         return nids
+
+    def getFaceAreaCentroidNormal(self, nid_opposite, nid=None):
+        n1, n2, n3 = getFaceNodes(nid_opposite)
+        faceNodeIDs = [n1, n2, n3]
+        p1 = self.nodes[n1].Position()
+        p2 = self.nodes[n2].Position()
+        p3 = self.nodes[n3].Position()
+        a = p1 - p2
+        b = p1 - p3
+        normal = cross(a, b)
+        n = norm(normal)
+        A = 0.5 * n
+        centroid = (p1 + p2 + p3) / 3.
+        return A, centroid, normal / n
 
     def Stiffness(self):
         ng = 1
