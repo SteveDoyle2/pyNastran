@@ -16,7 +16,7 @@
 #VTK_QUADRATIC_HEXAHEDRON = 25
 
 import os
-from numpy import zeros
+from numpy import zeros, abs
 
 import vtk
 from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
@@ -171,7 +171,20 @@ class NastranIO(object):
         # add the CAERO/CONM2 elements
         j = 0
         points2 = vtk.vtkPoints()
-        points2.SetNumberOfPoints(nCAeros * 4 + nCONM2)
+
+        nsprings = 0
+        for (eid, element) in sorted(model.elements.iteritems()):
+            if (isinstance(element, LineElement) or
+                  isinstance(element, SpringElement) or
+                  element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
+                      'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                      'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):
+
+                    nodeIDs = element.nodeIDs()
+                    if None in nodeIDs:
+                        nsprings += 1
+
+        points2.SetNumberOfPoints(nCAeros * 4 + nCONM2 + nsprings)
         for (eid, element) in sorted(model.caeros.iteritems()):
             if (isinstance(element, CAERO1) or isinstance(element, CAERO3) or
                 isinstance(element, CAERO4) or isinstance(element, CAERO5)):
@@ -187,7 +200,7 @@ class NastranIO(object):
                 points2.InsertPoint(j + 3, *cpoints[3])
                 self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 j += 4
-            #elif isinstance(element,CAERO2): # cylinder
+            #elif isinstance(element, CAERO2): # cylinder
                 #pass
             else:
                 self.log_info("skipping %s" % element.type)
@@ -350,7 +363,6 @@ class NastranIO(object):
                                          elem.GetPointIds())
             elif isinstance(element, CHEXA20):
                 nodeIDs = element.nodeIDs()
-                #print "nodeIDs = ",nodeIDs
                 if None not in nodeIDs:
                     elem = vtkQuadraticHexahedron()
                     elem.GetPointIds().SetId(8, nidMap[nodeIDs[8]])
@@ -385,7 +397,22 @@ class NastranIO(object):
                       'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):
 
                     nodeIDs = element.nodeIDs()
-                    if None not in nodeIDs:  # used to be 0...
+                    if None in nodeIDs:  # used to be 0...
+                        if nodeIDs[0] != None:
+                            slot = 0
+                        elif nodeIDs[1] != None:
+                            slot = 1
+                        else:
+                            continue
+
+                        c = nidMap[nodeIDs[slot]]
+                        elem = vtk.vtkVertex()
+                        points2.InsertPoint(j, *c)
+                        elem.GetPointIds().SetId(0, j)
+                        self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                        i -= 1
+                        j += 1
+                    else:
                         elem = vtk.vtkLine()
                         try:
                             elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
@@ -397,7 +424,6 @@ class NastranIO(object):
                         self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, CONM2):  # not perfectly located
                 del self.eidMap[eid]
-                i -= 1
 
                 #nid = element.Nid()
                 c = element.Centroid()
@@ -410,6 +436,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(0, j)
                 #elem.SetCenter(points.GetPoint(nidMap[nid]))
                 self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                i -= 1
                 j += 1
             else:
                 del self.eidMap[eid]
@@ -453,6 +480,8 @@ class NastranIO(object):
         if len(model.properties):
                 cases[(0, 'Pid', 1, 'centroid', '%.0f')] = pids
 
+        #self._plot_pressures(model, cases)
+
         if 0:
             # if not a flat plate???
             #if min(nxs) == max(nxs) and min(nxs) != 0.0:
@@ -462,6 +491,36 @@ class NastranIO(object):
                 cases[(0, 'Normal_z', 1, 'centroid', '%.1f')] = nzs
         self.log.info(cases.keys())
         self.finish_io(cases)
+
+    def _plot_pressures(self, model, cases):
+        if 1:
+            load_case_id = 3
+            loadCase = model.loads[load_case_id]
+
+            pressures = zeros(len(model.elements), dtype='float32')
+            eids = sorted(model.elements.keys())
+            for load in loadCase:
+                if load.type == 'PLOAD4':
+                    elem = load.eid
+                    eid = elem.eid
+                    if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
+                                     'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
+                        pressures[eids.index(eid)] = load.pressures[0]
+                    #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
+                        #A, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
+                        #r = centroid - p
+                elif load.type == 'LOAD':
+                    scale_factors, loads = load.getReducedLoads()
+                    for scale_factor, loadi in zip(scale_factors, loads):
+                        if loadi.type == 'PLOAD4':
+                            elem = loadi.eid
+                            eid = elem.eid
+                            if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
+                                             'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
+                                pressures[eids.index(eid)] = loadi.pressures[0] * scale_factor
+            if abs(pressures).max():
+                # subcaseID, resultType, vectorSize, location, dataFormat
+                cases[(0, 'Pressure LC=%i' % load_case_id, 1, 'centroid', '%.1f')] = pressures
 
     def load_nastran_results(self, op2FileName, dirname):
         #gridResult.SetNumberOfComponents(self.nElements)
@@ -582,22 +641,22 @@ class NastranIO(object):
             self.scalarBar.VisibilityOn()
             self.scalarBar.Modified()
 
-    def _finish_io(self, cases):
-        #self.finish()
-        ncases = len(cases)
-        self.resultCases = cases
-        self.caseKeys = sorted(cases.keys())
-        #print "caseKeys = ",self.caseKeys
-        #print "type(caseKeys) = ",type(self.caseKeys)
-        #self.nCases = (ncases - 1) if (ncases - 1) > 0 else 0  # number of keys in dictionary
-        self.nCases = ncases #if self.ncases == 0
-        if self.nCases:
-            self.scalarBar.VisibilityOn()
-            self.scalarBar.Modified()
+    #def _finish_io(self, cases):
+        ##self.finish()
+        #ncases = len(cases)
+        #self.resultCases = cases
+        #self.caseKeys = sorted(cases.keys())
+        ##print "caseKeys = ",self.caseKeys
+        ##print "type(caseKeys) = ",type(self.caseKeys)
+        ##self.nCases = (ncases - 1) if (ncases - 1) > 0 else 0  # number of keys in dictionary
+        #self.nCases = ncases #if self.ncases == 0
+        #if self.nCases:
+            #self.scalarBar.VisibilityOn()
+            #self.scalarBar.Modified()
 
-        self.iCase = 0 if self.nCases == 0 else -1
-        self.cycleResults()  # start at nCase=0
-        self.log.info('end of finish io')
+        #self.iCase = 0 if self.nCases == 0 else -1
+        #self.cycleResults()  # start at nCase=0
+        #self.log.info('end of finish io')
 
     def fill_stress_case(self, cases, model, subcaseID, eKey):
         print("fill_stress_case")
