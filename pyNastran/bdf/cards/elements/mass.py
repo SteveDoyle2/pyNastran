@@ -739,10 +739,9 @@ class CONM2(PointMassElement):
             x, matrix = self.cid.transformToGlobal(self.X)
 
             # self.X is an offset
-            dx = x - self.cid.e1
+            dx = x - self.cid.origin
 
             # the actual position of the CONM2
-            #print("dx =", dx)
             X2 = self.nid.Position() + dx
         return X2
 
