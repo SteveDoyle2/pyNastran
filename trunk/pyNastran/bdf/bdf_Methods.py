@@ -444,13 +444,8 @@ class BDFMethods(BDFMethodsDeprecated):
         :returns Forces: the forces as a numpy array
         .. warning:: not validated
         """
-        for (key, loadCase) in self.loads.iteritems():
-            F = array([0., 0., 0.])
-            for load in loadCase:
-                if isinstance(load, Force):
-                    f = load.mag * load.xyz
-                    F += f
-            self.log.info("case=%s F=%s\n\n" % (key, F))
+        p0 = [0., 0., 0.]
+        M, F = self.sum_moments(p0)
         return F
 
     def sum_moments(self, p0):
@@ -459,10 +454,22 @@ class BDFMethods(BDFMethodsDeprecated):
         load cases.
         Considers FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2.
 
-        :param p0:        the reference point
-        :returns Moments: the moments as a numpy array
-        :returns Forces:  the forces as a numpy array
+        :param p0:
+          the reference point
+        :returns Moments:
+          the moments
+        :returns Forces:
+          the forces
+
+        :type p0:
+          NUMPY.NDARRAY shape=(3,)
+        :type Moments:
+          NUMPY.NDARRAY shape=(3,)
+        :type Forces:
+          NUMPY.NDARRAY shape=(3,)
+
         ..warning:: not validated
+        ..todo:: does this consider load scaling???
         """
         p = array(p0)
         for (key, loadCase) in self.loads.iteritems():
@@ -474,10 +481,48 @@ class BDFMethods(BDFMethodsDeprecated):
                     node = self.Node(load.node)
                     r = node.Position() - p
                     m = cross(r, f)
-                    M += m
-                    F += f
                 elif isinstance(load, Moment):
+                    f = array([0., 0., 0.])
                     m = load.mag * load.xyz
-                    M += m
+                elif load.type == 'PLOAD1':
+                    f = array([0., 0., 0.])
+                    m = array([0., 0., 0.])
+                    #elem = self.elements[load.eid]
+                    #if elem.type in ['CBAR',]:
+                        #pass
+                    continue
+                elif load.type == 'PLOAD2':
+                    for eid in load.eids:
+                        elem = self.elements[eid]
+                        if elem.type in ['CTRIA3',
+                                         'CQUAD4', 'CSHEAR']:
+                            n = elem.Normal()
+                            A = elem.Area()
+                            f = load.pressures[0] * n * A  # there are 4 pressures, but we assume p0
+                            r = elm.Centroid() - p
+                            m = cross(r, f)
+                            F += f
+                            M += m
+                        else:
+                            continue
+                    continue
+                elif load.type == 'PLOAD4':
+                    elem = load.eid
+                    if elem.type in ['CTRIA3', 'CTRIA', 'CTRIA6', 'CTRIAR',
+                                     'CQUAD4', 'CQUAD', 'CQUAD8', 'CQUADR', 'CSHEAR']:
+                        n = elem.Normal()
+                        A = elem.Area()
+                        r = elem.Centroid() - p
+                    elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
+                        A, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
+                        f = load.pressures[0] * n * A  # there are 4 pressures, but we assume p0
+                        r = centroid - p
+                    else:
+                        continue
+                    f = load.pressures[0] * n * A  # there are 4 possible pressures, but we assume p0
+                    m = cross(r, f)
+
+            F += f
+            M += m
             self.log.info("case=%s F=%s M=%s\n\n" % (key, F, M))
         return (M, F)
