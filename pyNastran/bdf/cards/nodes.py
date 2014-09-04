@@ -873,7 +873,7 @@ class GRID(Node):
         :param cid:   the desired coordinate ID
         :type cid:    int
         :param debug: developer debug (default=False)
-        :type cid:    bool
+        :type debug:  bool
         :returns xyz: the position of the GRID in an arbitrary
                       coordinate system
         :type xyz:    TYPE = NDARRAY.  SIZE=(3,)
@@ -1124,7 +1124,7 @@ class POINT(Node):
         :param cid:   the desired coordinate ID
         :type cid:    int
         :param debug: debug (default=False)
-        :type cid:    bool
+        :type debug:  bool
         :returns xyz: the position of the POINT in an arbitrary
                       coordinate system
         :type xyz:    TYPE = NDARRAY.  SIZE=(3,)
