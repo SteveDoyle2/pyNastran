@@ -23,9 +23,6 @@ def parse_csv(sline):
 
     for (i, s) in enumerate(slineA):
         sline2[i] = s
-    #sline = sline2
-    #print "sline2 = ",sline2
-    #sline = sline2
     #sline = sline.split(',')[0:9]  # doesnt fill all fields on line
     return sline2
 
@@ -47,7 +44,6 @@ def make_single_streamed_card(log, card, debug=False):
         else:
             cardOut.append(field)
         n += 1
-    #print "cardOut = ",cardOut
     return cardOut
 
 
