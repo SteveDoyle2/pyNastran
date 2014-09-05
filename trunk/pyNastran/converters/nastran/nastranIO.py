@@ -497,27 +497,34 @@ class NastranIO(object):
             load_case_id = 3
             loadCase = model.loads[load_case_id]
 
-            pressures = zeros(len(model.elements), dtype='float32')
-            eids = sorted(model.elements.keys())
+            # account for scale factors
+            loads2 = []
+            scale_factors2 = []
             for load in loadCase:
+                if isinstance(load, LOAD):
+                    scale_factors, loads = load.getReducedLoads()
+                    scale_factors2 += scale_factors
+                    loads2 += loads
+                else:
+                    scale_factors2.append(1.)
+                    loads2.append(load)
+
+            eids = sorted(model.elements.keys())
+            pressures = zeros(len(model.elements), dtype='float32')
+
+            # loop thru scaled loads and plot the pressure
+            for load, scale in zip(loads2, scale_factors2):
                 if load.type == 'PLOAD4':
                     elem = load.eid
-                    eid = elem.eid
                     if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
                                      'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
-                        pressures[eids.index(eid)] = load.pressures[0]
+                        eid = elem.eid
+                        pressures[eids.index(eid)] = load.pressures[0] * scale
                     #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
                         #A, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
                         #r = centroid - p
-                elif load.type == 'LOAD':
-                    scale_factors, loads = load.getReducedLoads()
-                    for scale_factor, loadi in zip(scale_factors, loads):
-                        if loadi.type == 'PLOAD4':
-                            elem = loadi.eid
-                            eid = elem.eid
-                            if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
-                                             'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
-                                pressures[eids.index(eid)] = loadi.pressures[0] * scale_factor
+
+            # if there is no applied pressure, don't make a plot
             if abs(pressures).max():
                 # subcaseID, resultType, vectorSize, location, dataFormat
                 cases[(0, 'Pressure LC=%i' % load_case_id, 1, 'centroid', '%.1f')] = pressures
