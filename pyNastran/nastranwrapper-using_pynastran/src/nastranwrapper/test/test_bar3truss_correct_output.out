@@ -1,0 +1,1023 @@
+1
+ 
+ 
+ 
+ 
+                      Warning: This computer program is protected by copyright law and international treaties.       
+                  Unauthorized use, reproduction or distribution of this computer program, or any portion of it, may 
+                                          result in severe civil and criminal penalties.                             
+                         Copyright (C) 2011 MSC.Software Corporation and its licensors. All rights reserved.         
+ 
+ 
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * *                                 * *
+                                              * *           MSC.SOFTWARE          * *
+                                              * *               CORP              * *
+                                              * *                                 * *
+                                              * *      M S C   N a s t r a n      * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *     Version 2012.1.0-CL127214   * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *          NOV 25, 2011           * *
+                                              * *                                 * *
+                                              * *       x86-64 Based System       * *
+                                              * *        MODEL Intel x8664        * *
+                                              * *     Linux 3.2.0-53-generic      * *
+                                              * *       Compiled for x8664        * *
+                                              * *                                 * *
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * * * * * * * * * * * * * * * * * * * *
+11News file -  (December 1, 2011):
+  
+               Welcome to MSC Nastran 2012
+  
+   Details of the release can be found in the Release Guide available
+   electronically in the installation documentation sub-directory.
+   Additional information can be found at the Nastran Product Support page:
+  
+      http://simcompanion.mscsoftware.com
+  
+   The support page provides links to this valuable information:
+      * A searchable Knowledge Base containing examples and answers to thousands
+        of frequently asked questions written by MSC.Software subject-matter
+        experts.
+      * Peer-to-peer Discussion Forums enabling you to post questions for your
+        MSC.Software products and receive answers from other users worldwide.
+      * A list of known issues with the product and any workarounds.
+      * Instructions on how to contact technical support
+      * A mechanism for sending us product feedback or enhancement requests.
+      * Hardware and software requirements.
+      * Examples and Tutorials
+      * and much more.
+  
+   For information on training, please visit our Training web site
+  
+      http://www.mscsoftware.com/Contents/Services/Training/
+  
+   MSC Nastran brings powerful new features and enhancements for engineering
+   solutions. For a detailed description of features added to MSC Nastran 2012
+   Release Guide.
+   The highlights for this release include:
+      * MD and MSC Products have been consolidated into one release.
+      * Improved Performance when using ACMS especially with Parallel Processing
+      * A New Method for Complex Eigenvalue Analysis which has Greater Accuracy
+      * Improved performance for the Solution of Nonsymmetric systems encounted
+        with Exterior Acoustics, Friction and complex Lanczos
+      * Support of GPU computing
+      * Structural Interior - Exterior Acoustics can be performed using Weakly
+        Coupled Procedure which is Faster in SOL 111 and SOL 200
+      * Complex stress recovery for Shells  in SOL 108,109, 111 and 112.
+      * Improved coupling with ACTRAN for modeling of Trimming material in
+        SOL 108 and SOL 111
+      * Panel Participation Factor may be obtained for the Structural Response
+        and may be utilized in optimization.
+      * Easier to use Linear Contact Capability in SOL 400
+      * Improved Time Stepping procedure in SOL 400
+      * Coupled Thermal-Structural Analysis with SOL 700
+      * Wood and Ice Model in SOL 700
+      * Improved Computational Performance for FSI simulations utilizing
+        Parallel Processing
+1     * Improved Splining techniques in Aeroelastic calculations
+  
+  
+  
+  
+1                                                                           JANUARY  26, 2014  MSC.NASTRAN 11/25/11   PAGE     1
+                                                                                                                                    
+0        N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O                                           
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     NASTRAN SYSTEM(444)=0 $(/OPT/MSC_NASTRAN/20121/CONF/NAST20121RC[1])             
+     NASTRAN BUFFSIZE=8193 $(/OPT/MSC_NASTRAN/20121/CONF/NAST20121RC[5])             
+     $EXECUTIVE CONTROL DECK                                                         
+     $ NASTRAN INPUT FILE CREATED BY THE MSC MSC.NASTRAN INPUT FILE                  
+     $ TRANSLATOR ( MSC.PATRAN 13.1.116 ) ON NOVEMBER  30, 2009 AT 13:30:13.         
+     $ DIRECT TEXT INPUT FOR NASTRAN SYSTEM CELL SECTION                             
+     $ LINEAR STATIC ANALYSIS, DATABASE                                              
+1                                                                           JANUARY  26, 2014  MSC.NASTRAN 11/25/11   PAGE     2
+                                                                                                                                    
+0        N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O                                                             
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     SOL 101                                                                                 
+     CEND                                                                                    
+1                                                                           JANUARY  26, 2014  MSC.NASTRAN 11/25/11   PAGE     3
+                                                                                                                                    
+0                                                                                                                                   
+0                                        C A S E    C O N T R O L    E C H O                                                        
+                 COMMAND                                                                                                            
+                 COUNT                                                                                                              
+                  1      $CASE CONTROL DECK                                                                      
+                  2      ECHO = NONE                                                                             
+                  3      SUBCASE 1                                                                               
+                  4          DISPLACEMENT(PLOT, SORT1,REAL) = ALL                                                
+                  5          FORCE(SORT1,REAL,BILIN) = ALL                                                       
+                  6          LOAD = 3                                                                            
+                  7          SPC = 2                                                                             
+                  8          SPCFORCES(SORT1,REAL) = ALL                                                         
+                  9          STRESS(SORT1,REAL,VONMISES,BILIN) = ALL                                             
+                 10          SUBTITLE = UNTITLED.SC4                                                             
+                 11      BEGIN BULK                                                                              
+0                             INPUT BULK DATA ENTRY COUNT =      59
+0                       TOTAL COUNT=        34
+ ^^^     
+ ^^^ >>> IFP OPERATIONS COMPLETE <<< 
+ ^^^     
+ *** USER WARNING MESSAGE 4124 (IFS3P)
+     THE SPCADD OR MPCADD UNION CONSISTS OF A SINGLE SET.
+
+
+                                        M O D E L   S U M M A R Y
+
+                                   NUMBER OF GRID     POINTS   =        4
+  
+                                   NUMBER OF CROD     ELEMENTS =        3
+  
+ *** USER INFORMATION MESSAGE 4109 (OUTPX2)
+     THE LABEL IS XXXXXXXX FOR FORTRAN UNIT 12
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          7 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          8 RECORDS.)
+                (TOTAL DATA WRITTEN FOR LABEL =         17 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK PVT0     WRITTEN ON FORTRAN UNIT  12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR PV, TRL =
+                    101                22                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS PVT0    
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          22 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          46 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK CASECC   WRITTEN ON FORTRAN UNIT  12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR CASEC, TRL =
+                    101                 1                 0              1000                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS CASECC  
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1000 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1024 WORDS.)
+1                                                                           JANUARY  26, 2014  MSC.NASTRAN 11/25/11   PAGE     4
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM1X   WRITTEN ON FORTRAN UNIT  12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR GEOM16, TRL =
+                    101                 0                 0                 8                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS GEOM1   
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          35 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          66 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM2X   WRITTEN ON FORTRAN UNIT  12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR GEOM20, TRL =
+                    102                 0                 4                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS GEOM2   
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          46 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM3X   WRITTEN ON FORTRAN UNIT  12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR GEOM30, TRL =
+                    103                 0                 0                64                 8                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS GEOM3   
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          17 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          25 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          63 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM4X   WRITTEN ON FORTRAN UNIT  12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR GEOM470, TRL =
+                    104                 0                 0                 0                96                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS GEOM4   
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          23 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          25 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          64 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK EPTX     WRITTEN ON FORTRAN UNIT  12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR EPT0, TRL =
+                    105               128                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS EPT     
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          21 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          52 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK MPTS     WRITTEN ON FORTRAN UNIT  12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR MPT, TRL =
+                    101             32768                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS MPTS    
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          46 WORDS.)
+1                                                                           JANUARY  26, 2014  MSC.NASTRAN 11/25/11   PAGE     5
+                                                                                                                                    
+0                                                                                                                                   
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK BGPDTX   WRITTEN ON FORTRAN UNIT  12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR BGPDT6, TRL =
+                    101                 4                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS BGPDT   
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          16 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          40 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK EQEXINS  WRITTEN ON FORTRAN UNIT  12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR EQEXIN, TRL =
+                    101                 4                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS EQEXINS 
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =           8 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          44 WORDS.)
+1                                                                           JANUARY  26, 2014  MSC.NASTRAN 11/25/11   PAGE     6
+                                                                                                                                    
+0                                                                                                                                   
+                           O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R
+0                                                     REFERENCE POINT =        0
+                                                                M O
+                      *  1.186137E+05  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00 -5.930686E+06 *
+                      *  0.000000E+00  1.186137E+05  0.000000E+00  0.000000E+00  0.000000E+00  5.790957E+06 *
+                      *  0.000000E+00  0.000000E+00  1.186137E+05  5.930686E+06 -5.790957E+06  0.000000E+00 *
+                      *  0.000000E+00  0.000000E+00  5.930686E+06  5.930686E+08 -5.790957E+08  0.000000E+00 *
+                      *  0.000000E+00  0.000000E+00 -5.790957E+06 -5.790957E+08  5.866786E+08  0.000000E+00 *
+                      * -5.930686E+06  5.790957E+06  0.000000E+00  0.000000E+00  0.000000E+00  1.179747E+09 *
+                                                                 S
+                                           *  1.000000E+00  0.000000E+00  0.000000E+00 *
+                                           *  0.000000E+00  1.000000E+00  0.000000E+00 *
+                                           *  0.000000E+00  0.000000E+00  1.000000E+00 *
+                               DIRECTION
+                          MASS AXIS SYSTEM (S)     MASS              X-C.G.        Y-C.G.        Z-C.G.
+                                  X            1.186137E+05      0.000000E+00  5.000000E+01  0.000000E+00
+                                  Y            1.186137E+05      4.882198E+01  0.000000E+00  0.000000E+00
+                                  Z            1.186137E+05      4.882198E+01  5.000000E+01  0.000000E+00
+                                                                I(S)
+                                           *  2.965343E+08  2.895479E+08  0.000000E+00 *
+                                           *  2.895479E+08  3.039526E+08  0.000000E+00 *
+                                           *  0.000000E+00  0.000000E+00  6.004869E+08 *
+                                                                I(Q)
+                                           *  5.898151E+08                             *
+                                           *                1.067184E+07               *
+                                           *                              6.004869E+08 *
+                                                                 Q
+                                           *  7.025635E-01  7.116210E-01  0.000000E+00 *
+                                           * -7.116210E-01  7.025635E-01  0.000000E+00 *
+                                           *  0.000000E+00  0.000000E+00  1.000000E+00 *
+
+1                                                                           JANUARY  26, 2014  MSC.NASTRAN 11/25/11   PAGE     7
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OGPWG    WRITTEN ON FORTRAN UNIT  12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR OGPW, TRL =
+                    101                 0                 0                 0                 0                 0                 1
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OGPWG   
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         146 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =         252 WORDS.)
+1                                                                           JANUARY  26, 2014  MSC.NASTRAN 11/25/11   PAGE     8
+                                                                                                                                    
+0                                                                                                                                   
+0 RESULTANTS ABOUT ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM IN SUPERELEMENT BASIC SYSTEM COORDINATES.
+
+0                                                  OLOAD    RESULTANT       
+  SUBCASE/    LOAD
+  DAREA ID    TYPE       T1            T2            T3            R1            R2            R3
+0        1     FX    5.000000E+04     ----          ----          ----       0.000000E+00  0.000000E+00                             
+               FY       ----      -1.000000E+05     ----       0.000000E+00     ----       0.000000E+00                             
+               FZ       ----          ----       0.000000E+00  0.000000E+00  0.000000E+00     ----                                  
+               MX       ----          ----          ----       0.000000E+00     ----          ----                                  
+               MY       ----          ----          ----          ----       0.000000E+00     ----                                  
+               MZ       ----          ----          ----          ----          ----       0.000000E+00                             
+             TOTALS  5.000000E+04 -1.000000E+05  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    1.506945E+01
+1                                                                           JANUARY  26, 2014  MSC.NASTRAN 11/25/11   PAGE     9
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+                1          3.0938296E-15          5.2379791E+02
+1                                                                           JANUARY  26, 2014  MSC.NASTRAN 11/25/11   PAGE    10
+                                                                                                                                    
+0                                                                                                                                   
+0 RESULTANTS ABOUT ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM IN SUPERELEMENT BASIC SYSTEM COORDINATES.
+
+0                                                  SPCFORCE RESULTANT       
+  SUBCASE/    LOAD
+  DAREA ID    TYPE       T1            T2            T3            R1            R2            R3
+0        1     FX   -5.000000E+04     ----          ----          ----       0.000000E+00  5.000000E+06                             
+               FY       ----       1.000000E+05     ----       0.000000E+00     ----      -5.000000E+06                             
+               FZ       ----          ----       0.000000E+00  0.000000E+00  0.000000E+00     ----                                  
+               MX       ----          ----          ----       0.000000E+00     ----          ----                                  
+               MY       ----          ----          ----          ----       0.000000E+00     ----                                  
+               MZ       ----          ----          ----          ----          ----       0.000000E+00                             
+             TOTALS -5.000000E+04  1.000000E+05  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00
+1                                                                           JANUARY  26, 2014  MSC.NASTRAN 11/25/11   PAGE    11
+                                                                                                                                    
+0                                                                                                                                   
+0                                                  MAXIMUM  SPCFORCES       
+  SUBCASE/
+  DAREA ID        T1             T2             T3             R1             R2             R3
+0        1   2.8018836E+04  9.3962328E+04  0.0000000E+00  0.0000000E+00  0.0000000E+00  0.0000000E+00
+1                                                                           JANUARY  26, 2014  MSC.NASTRAN 11/25/11   PAGE    12
+                                                                                                                                    
+0                                                                                                                                   
+0                                                  MAXIMUM  DISPLACEMENTS   
+  SUBCASE/
+  DAREA ID        T1             T2             T3             R1             R2             R3
+0        1   7.0315716E-03  6.9601727E-03  0.0000000E+00  0.0000000E+00  0.0000000E+00  0.0000000E+00
+1                                                                           JANUARY  26, 2014  MSC.NASTRAN 11/25/11   PAGE    13
+                                                                                                                                    
+0                                                                                                                                   
+0                                                  MAXIMUM  APPLIED LOADS   
+  SUBCASE/
+  DAREA ID        T1             T2             T3             R1             R2             R3
+0        1   5.0000000E+04  1.0000000E+05  0.0000000E+00  0.0000000E+00  0.0000000E+00  0.0000000E+00
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OQG1     WRITTEN ON FORTRAN UNIT  12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR OQG, TRL =
+                    101                 0                32                 0                 0                 0                 1
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OQG1    
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         146 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =         211 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OUG1     WRITTEN ON FORTRAN UNIT  12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR OUG, TRL =
+                    101                 0                32                 0                 0                 0                 2
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OUG1    
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         146 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =         211 WORDS.)
+1                                                                           JANUARY  26, 2014  MSC.NASTRAN 11/25/11   PAGE    14
+      UNTITLED.SC4                                                                                                                  
+0                                                                                                            SUBCASE 1              
+ 
+                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+             2      G     -2.801884E+04   2.801884E+04   0.0            0.0            0.0            0.0
+             3      G      0.0            9.396233E+04   0.0            0.0            0.0            0.0
+             4      G     -2.198116E+04  -2.198116E+04   0.0            0.0            0.0            0.0
+1                                                                           JANUARY  26, 2014  MSC.NASTRAN 11/25/11   PAGE    15
+      UNTITLED.SC4                                                                                                                  
+0                                                                                                            SUBCASE 1              
+ 
+                                           F O R C E S   I N   R O D   E L E M E N T S     ( C R O D )
+       ELEMENT           AXIAL                                     ELEMENT           AXIAL
+         ID.             FORCE          TORQUE                       ID.             FORCE          TORQUE
+             1        3.962462E+04   0.0                                 2        9.396233E+04   0.0
+             3       -3.108606E+04   0.0
+1                                                                           JANUARY  26, 2014  MSC.NASTRAN 11/25/11   PAGE    16
+      UNTITLED.SC4                                                                                                                  
+0                                                                                                            SUBCASE 1              
+ 
+                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
+       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
+         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
+             1    2.098762E+03   8.5E+00    0.0                               2    2.088052E+03   8.6E+00    0.0           
+             3   -1.070988E+01   1.9E+03    0.0           
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OEF1X    WRITTEN ON FORTRAN UNIT  12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR OEF1, TRL =
+                    101                63                 1                26                14                 0                 1
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OEF1X   
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         146 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =         188 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OES1X1   WRITTEN ON FORTRAN UNIT  12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR OES1X, TRL =
+                    101                63                 1                26                14                 0                 1
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OES1X1  
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         146 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =         194 WORDS.)
+ *** USER INFORMATION MESSAGE 4110 (OUTPX2)
+                                 END-OF-DATA SIMULATION ON FORTRAN UNIT 12
+                                 (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      1 WORDS.)
+                                       (NUMBER OF FORTRAN RECORDS WRITTEN =      1 RECORDS.)
+                                       (TOTAL DATA WRITTEN FOR EOF MARKER =      1 WORDS.)
+1                                                                           JANUARY  26, 2014  MSC.NASTRAN 11/25/11   PAGE    17
+                                                                                                                                    
+0                                                                                                                                   
+ * * * *  D B D I C T   P R I N T  * * * *      SUBDMAP = PRTSUM  ,  DMAP STATEMENT NO.     41
+
+
+
+0                                   * * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *
+0 SEID  PEID PROJ VERS APRCH      SEMG SEMR SEKR SELG SELR MODES DYNRED SOLLIN PVALID SOLNL LOOPID DESIGN CYCLE SENSITIVITY
+ --------------------------------------------------------------------------------------------------------------------------
+     0     0    1    1 '        '    T    T    T    T    T     F      F      T      0     F     -1            0           F
+0SEID = SUPERELEMENT ID.
+ PEID = PRIMARY SUPERELEMENT ID OF IMAGE SUPERELEMENT.
+ PROJ = PROJECT ID NUMBER.
+ VERS = VERSION ID.
+ APRCH = BLANK FOR STRUCTURAL ANALYSIS.  HEAT FOR HEAT TRANSFER ANALYSIS.
+ SEMG = STIFFNESS AND MASS MATRIX GENERATION STEP.
+ SEMR = MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES).
+ SEKR = STIFFNESS MATRIX REDUCTION STEP.
+ SELG = LOAD MATRIX GENERATION STEP.
+ SELR = LOAD MATRIX REDUCTION STEP. 
+ MODES = T (TRUE) IF NORMAL MODES OR BUCKLING MODES CALCULATED.
+ DYNRED = T (TRUE) MEANS GENERALIZED DYNAMIC AND/OR COMPONENT MODE REDUCTION PERFORMED.
+ SOLLIN = T (TRUE) IF LINEAR SOLUTION EXISTS IN DATABASE.
+ PVALID = P-DISTRIBUTION ID OF P-VALUE FOR P-ELEMENTS
+ LOOPID = THE LAST LOOPID VALUE USED IN THE NONLINEAR ANALYSIS.  USEFUL FOR RESTARTS.
+ SOLNL = T (TRUE) IF NONLINEAR SOLUTION EXISTS IN DATABASE.
+ DESIGN CYCLE = THE LAST DESIGN CYCLE (ONLY VALID IN OPTIMIZATION).
+ SENSITIVITY = SENSITIVITY MATRIX GENERATION FLAG.
+ 
+ No PARAM values were set in the Control File.
+ 
+1                                        * * * END OF JOB * * *
+ 
+ 
+ No Symbolic Replacement variables or values were specified.
+  
+1
+ MACHINE                          MODEL                 OPERATING SYSTEM       MSC Nastran       BUILD DATE         RUN DATE
+     x86-64 Based Sys             Intel x8664           Linux 3.2.0-53-gener   VERSION 2012.1.0  NOV 25, 2011       JAN 26, 2014
+
+ 
+                               ===    M S C . N a s t r a n           E X E C U T I O N   S U M M A R Y    ===
+
+ Day_Time  Elapsed     I/O_Mb      Del_Mb     CPU_Sec    Del_CPU    Subroutine
+ 
+ 17:34:39     0:00        0.0         0.0         0.0        0.0    SEMTRN   BGN
+ 17:34:39     0:00        0.0         0.0         0.0        0.0    SEMTRN   END
+ 17:34:39     0:00        0.0         0.0         0.0        0.0    DBINIT   BGN
+      ** CURRENT PROJECT ID = ' "BLANK" '  ** CURRENT VERSION ID =          1
+
+     S U M M A R Y   O F   F I L E   A S S I G N M E N T   F O R   T H E   P R I M A R Y   D A T A B A S E     ( DBSNO   1, V2012.1 )
+
+    ASSIGNED PHYSICAL FILE NAME (/ORIGINAL)      LOGICAL NAME     DBSET        STATUS    BUFFSIZE     CLUSTER SIZE      TIME STAMP
+    ---------------------------------------      ------------     -----        ------    --------     ------------     ------------
+    /tmp/tmpIMg1Kb/input.MASTER                  MASTER           MASTER       NEW           8193           1          140126173439
+    /tmp/tmpIMg1Kb/input.DBALL                   DBALL            DBALL        NEW           8193           1          140126173440
+    /scratch/input.T29816_39.OBJSCR              OBJSCR           OBJSCR       NEW           8193           1          140126173441
+               **** MEM FILE ****                * N/A *          SCRATCH 
+    /scratch/input.T29816_39.SCRATCH             SCRATCH          SCRATCH      NEW           8193           1          140126173442
+    /scratch/input.T29816_39.SCR300              SCR300           SCRATCH      NEW           8193           1          140126173443
+ 17:34:39     0:00        1.0         1.0         0.0        0.0    DBINIT   END
+ 17:34:39     0:00        1.0         0.0         0.0        0.0    XCSA     BGN
+
+     S U M M A R Y   O F   F I L E   A S S I G N M E N T   F O R   T H E   D E L I V E R Y   D A T A B A S E   ( DBSNO   2, V2012.1 )
+
+    ASSIGNED PHYSICAL FILE NAME (/ORIGINAL)      LOGICAL NAME     DBSET        STATUS    BUFFSIZE     CLUSTER SIZE      TIME STAMP
+    ---------------------------------------      ------------     -----        ------    --------     ------------     ------------
+    /opt/.../msc20121/linux64/SSS.MASTERA        MASTERA          MASTER       OLD           8193           1          111125113119
+   /./SSS.MASTERA                           
+    /opt/.../msc20121/linux64/SSS.MSCOBJ         MSCOBJ           MSCOBJ       OLD           8193           1          111125113124
+   /./SSS.MSCOBJ                            
+    /opt/.../msc20121/linux64/SSS.MSCSOU         MSCSOU           MSCSOU       OLD           8193           1          111125113125
+   /./SSS.MSCSOU                            
+ 17:34:39     0:00       86.0        85.0         0.2        0.2    XCSA     END
+ 17:34:39     0:00       86.0         0.0         0.2        0.0    CGPI     BGN
+ 17:34:39     0:00       86.0         0.0         0.2        0.0    CGPI     END
+ 17:34:39     0:00       86.0         0.0         0.2        0.0    LINKER   BGN
+ 17:34:39     0:00      142.0        56.0         0.2        0.1    LINKER   END
+
+                    S U M M A R Y   O F   P H Y S I C A L   F I L E   I N F O R M A T I O N
+
+    ASSIGNED PHYSICAL FILE NAME                                   RECL (BYTES)  MODE  FLAGS  WSIZE  (WNUM)
+    ------------------------------------------------------------  ------------  ----  -----  -------------
+    /scratch/input.T29816_39.SCRATCH                                     32768   R/W    L      N/A        
+    /scratch/input.T29816_39.OBJSCR                                      32768   R/W    L      N/A        
+    /tmp/tmpIMg1Kb/input.MASTER                                          32768   R/W    L      N/A        
+    /tmp/tmpIMg1Kb/input.DBALL                                           32768   R/W    L      N/A        
+    /scratch/input.T29816_39.SCR300                                      32768   R/W    L      N/A        
+    /opt/MSC_Nastran/20121/msc20121/linux64/SSS.MASTERA                  32768   R/O           N/A        
+    /opt/MSC_Nastran/20121/msc20121/linux64/SSS.MSCOBJ                   32768   R/O           N/A        
+
+    FLAG VALUES ARE --
+      A   ASYNCHRONOUS I/O USED TO PROCESS FILE
+      B   BUFFERED I/O USED TO PROCESS FILE
+      L   FILE HAS BEEN LOCKED
+ 
+    ASSIGNED PHYSICAL FILE NAME                                   LOGICAL   UNIT  STATUS   ACCESS   RECL  FORM    FLAGS
+    ------------------------------------------------------------  --------  ----  -------  ------  -----  ------  -----
+    /tmp/tmpIMg1Kb/input.f04                                      LOGFL        4  NEW      SEQ      N/A   FMTD         
+    /tmp/tmpIMg1Kb/input.f06                                      PRINT        6  NEW      SEQ      N/A   FMTD         
+    /opt/MSC_Nastran/20121/msc20121/nast/news.txt                 INCLD1       9  OLD      SEQ      N/A   FMTD      R N
+    /tmp/tmpIMg1Kb/input.plt                                      PLOT        14  NEW      SEQ      N/A   UNFMTD   Z   
+    /tmp/tmpIMg1Kb/input.op2                                      OP2         12  NEW      SEQ      N/A   UNFMTD   Z   
+    /tmp/tmpIMg1Kb/input                                          OPCASE      22  UNKNOWN  SEQ      N/A   FMTD        N
+    /tmp/tmpIMg1Kb/input                                          OUTPUT2F    19           SEQ      N/A   UNFMTD      P
+    /tmp/tmpIMg1Kb/input.des                                      TOPDES      21  UNKNOWN  SEQ      N/A   FMTD        N
+    /tmp/tmpIMg1Kb/input.mnf                                      MNF             NEW      SEQ      N/A   UNFMTD       
+    /tmp/tmpIMg1Kb/input.pch                                      PUNCH        7  NEW      SEQ      N/A   FMTD     Z   
+    /tmp/tmpIMg1Kb/input.xdb                                      DBC         40  NEW      DIRECT   1024  UNFMTD       
+    /tmp/tmpIMg1Kb/input.asm                                      ASM         16  NEW      SEQ      N/A   FMTD     Z   
+    /tmp/tmpIMg1Kb/input.becho                                    BULKECHO    18  NEW      SEQ      N/A   FMTD     Z   
+    /tmp/tmpIMg1Kb/input.aeso                                     AESO        23  NEW      SEQ      N/A   FMTD     Z   
+
+    FLAG VALUES ARE --
+      A   FILE HAS BEEN DEFINED BY AN 'ASSIGN' STATEMENT
+      D   FILE IS TO BE DELETED BEFORE RUN, IF IT EXISTS
+      N   'DEFER' SPECIFIED ON 'ASSIGN' STATEMENT OR FORCED FOR 'SLAVE' PROCESSES
+      P   PREFIX FILE NAME FOR OUTPUT2F FILE(S)
+      R   FILE IS READ-ONLY
+      T   FILE IS TEMPORARY AND WILL BE DELETED AT END OF RUN
+      Z   FILE WILL BE DELETED AT END OF RUN IF ZERO-LENGTH
+
+    ** THE NATIVE MODE FOR SEQUENTIAL UNFORMATTED FILES ON THIS PLATFORM IS LITTLE-ENDIAN (LTLEND)
+
+    ** PHYSICAL FILES LARGER THAN 2GB ARE SUPPORTED ON THIS PLATFORM
+ 
+0    ** MASTER DIRECTORIES ARE LOADED IN MEMORY.
+        USER OPENCORE (HICORE)         =    31184768  WORDS
+        EXECUTIVE SYSTEM WORK AREA     =      940215  WORDS
+        MASTER(RAM)                    =      200000  WORDS
+        SCRATCH(MEM) AREA              =      819300  WORDS (     100 BUFFERS)
+        BUFFER POOL AREA (GINO/EXEC)   =      410150  WORDS (      50 BUFFERS)
+
+        TOTAL MSC.NASTRAN MEMORY LIMIT =    33554432  WORDS
+
+
+ Day_Time  Elapsed     I/O_Mb      Del_Mb     CPU_Sec    Del_CPU    SubDMAP Line (S)SubDMAP/Module
+ 
+ 17:34:39     0:00      144.0         2.0         0.3        0.0    XSEMDR   BGN
+ 17:34:39     0:00      145.0         1.0         0.3        0.0    SESTATIC37   (S)IFPL    BEGN *  
+ 17:34:39     0:00      145.0         0.0         0.3        0.0    IFPL    56      IFP1    BEGN    
+ 17:34:39     0:00      145.0         0.0         0.3        0.0    IFPL    109     XSORT   BEGN    
+ 17:34:39     0:00      145.0         0.0         0.3        0.1    IFPL    121     RMDUPBLKBEGN    
+ 17:34:39     0:00      145.0         0.0         0.3        0.0    IFPL    285  (S)IFPS    BEGN    
+ 17:34:39     0:00      145.0         0.0         0.3        0.0    IFPS    32      IFP     BEGN    
+ 17:34:39     0:00      145.0         0.0         0.3        0.0    IFP     
+ *       COUNT:ENTRY          COUNT:ENTRY          COUNT:ENTRY          COUNT:ENTRY          COUNT:ENTRY          COUNT:ENTRY     *
+ *           3:CROD               2:FORCE              4:GRID               1:LOAD               1:MAT1               5:PARAM     *
+ *           3:PROD               4:SPC1               1:SPCADD  
+ *    PARAM:  GRDPNT    K6ROT     POST      POSTEXT   PRTMAXIM                                                                    *
+ 17:34:39     0:00      145.0         0.0         0.3        0.0    IFPS    80      IFPLC   BEGN    
+ 17:34:39     0:00      145.0         0.0         0.3        0.0    IFPS    82      PVT     BEGN    
+ 17:34:39     0:00      145.0         0.0         0.3        0.0    IFPS    191     MODGM2  BEGN    
+ 17:34:39     0:00      145.0         0.0         0.3        0.0    IFPS    227     M3DCONT1BEGN    
+ 17:34:39     0:00      146.0         1.0         0.3        0.0    IFPS    265     DSGRDM  BEGN    
+ 17:34:39     0:00      146.0         0.0         0.3        0.0    IFPS    272     GP1     BEGN    
+ 17:34:39     0:00      146.0         0.0         0.3        0.0    IFPS    330     DYNCXPNTBEGN    
+ 17:34:39     0:00      146.0         0.0         0.3        0.0    IFPS    343  (S)TESTBIT BEGN    
+ 17:34:39     0:00      146.0         0.0         0.3        0.0    IFPS    416  (S)TESTBIT BEGN    
+ 17:34:39     0:00      146.0         0.0         0.3        0.0    IFPS    417  (S)TESTBIT BEGN    
+ 17:34:39     0:00      146.0         0.0         0.3        0.0    IFPS    418  (S)TESTBIT BEGN    
+ 17:34:39     0:00      149.0         3.0         0.3        0.0    IFPS    448     DBEQUIV BEGN *  
+ 17:34:39     0:00      150.0         1.0         0.3        0.0    IFPL    296     SEPR1   BEGN *  
+ 17:34:39     0:00      150.0         0.0         0.3        0.0    IFPL    301     SEPR1   BEGN    
+ 17:34:39     0:00      150.0         0.0         0.3        0.0    IFPL    302     DBDELETEBEGN    
+ 17:34:39     0:00      150.0         0.0         0.3        0.0    IFPL    336     PROJVER BEGN    
+ 17:34:39     0:00      150.0         0.0         0.3        0.0    IFPL    341     PVT     BEGN    
+ 17:34:39     0:00      151.0         1.0         0.3        0.0    IFPL    376     PVT     BEGN    
+ 17:34:39     0:00      151.0         0.0         0.3        0.0    IFPL    387  (S)IFPS1   BEGN    
+ 17:34:39     0:00      151.0         0.0         0.3        0.0    IFPS1   15      SOLVIT  BEGN    
+ 17:34:39     0:00      151.0         0.0         0.3        0.0    IFPS1   23      DTIIN   BEGN    
+ 17:34:39     0:00      151.0         0.0         0.3        0.0    IFPS1   57      PLTSET  BEGN    
+ 17:34:39     0:00      151.0         0.0         0.3        0.0    IFPS1   60      MSGHAN  BEGN    
+ 17:34:39     0:00      151.0         0.0         0.3        0.0    IFPS1   61      MSGHAN  BEGN    
+ 17:34:39     0:00      151.0         0.0         0.3        0.0    IFPS1   62      GP0     BEGN    
+ 17:34:39     0:00      151.0         0.0         0.3        0.0    IFPS1   63      MSGHAN  BEGN    
+ 17:34:39     0:00      151.0         0.0         0.3        0.0    IFPS1   114     DSGRDM  BEGN    
+ 17:34:39     0:00      151.0         0.0         0.3        0.0    IFPL    390  (S)TESTBIT BEGN *  
+ 17:34:39     0:00      151.0         0.0         0.3        0.0    IFPL    431     DTIIN   BEGN    
+ 17:34:39     0:00      152.0         1.0         0.3        0.0    SESTATIC40      HADAPARMBEGN *  
+ 17:34:40     0:01      152.0         0.0         0.6        0.3    SESTATIC40      HADAPARMEND     
+ 17:34:40     0:01      152.0         0.0         0.6        0.0    SESTATIC72   (S)PHASE0  BEGN    
+ 17:34:40     0:01      152.0         0.0         0.6        0.0    PHASE0  95      PVT     BEGN    
+ 17:34:40     0:01      152.0         0.0         0.6        0.0    PHASE0  97      PROJVER BEGN    
+ 17:34:40     0:01      152.0         0.0         0.6        0.0    PHASE0  99      PROJVER BEGN    
+ 17:34:40     0:01      152.0         0.0         0.6        0.0    PHASE0  130     DTIIN   BEGN    
+ 17:34:40     0:01      152.0         0.0         0.6        0.0    PHASE0  143     OUTPUT2 BEGN    
+ 17:34:40     0:01      152.0         0.0         0.6        0.0    PHASE0  149     OUTPUT2 BEGN    
+ 17:34:40     0:01      152.0         0.0         0.6        0.0    PHASE0  150     OUTPUT2 BEGN    
+ 17:34:40     0:01      152.0         0.0         0.6        0.0    PHASE0  154  (S)TESTBIT BEGN    
+ 17:34:40     0:01      152.0         0.0         0.6        0.0    PHASE0  155  (S)TESTBIT BEGN    
+ 17:34:40     0:01      152.0         0.0         0.6        0.0    PHASE0  156  (S)TESTBIT BEGN    
+ 17:34:40     0:01      152.0         0.0         0.6        0.0    PHASE0  157  (S)TESTBIT BEGN    
+ 17:34:40     0:01      152.0         0.0         0.6        0.0    PHASE0  158  (S)TESTBIT BEGN    
+ 17:34:40     0:01      152.0         0.0         0.6        0.0    PHASE0  193     SEPR1   BEGN    
+ 17:34:40     0:01      153.0         1.0         0.6        0.0    PHASE0  359     COPY    BEGN *  
+ 17:34:40     0:01      153.0         0.0         0.6        0.0    PHASE0  360  (S)PBULK   BEGN    
+ 17:34:40     0:01      153.0         0.0         0.6        0.0    PHASE0  362     SEP1X   BEGN    
+ 17:34:40     0:01      153.0         0.0         0.6        0.0    PHASE0  397     GP1     BEGN    
+ 17:34:40     0:01      153.0         0.0         0.6        0.0    PHASE0  402     GP2     BEGN    
+ 17:34:40     0:01      154.0         1.0         0.6        0.0    PHASE0  477     TA1     BEGN    
+ 17:34:40     0:01      154.0         0.0         0.6        0.0    PHASE0  478     TASNP2  BEGN    
+ 17:34:40     0:01      154.0         0.0         0.7        0.0    PHASE0  483     SEP1    BEGN    
+ 17:34:40     0:01      154.0         0.0         0.7        0.0    PHASE0  594     TABPRT  BEGN *  
+ 17:34:40     0:01      154.0         0.0         0.7        0.0    PHASE0  595     SEP3    BEGN    
+ 17:34:40     0:01      155.0         1.0         0.7        0.0    PHASE0  796     PVT     BEGN    
+ 17:34:40     0:01      157.0         2.0         0.7        0.0    PHASE0  877     PVT     BEGN *  
+ 17:34:40     0:01      157.0         0.0         0.7        0.0    PHASE0  879     PVT     BEGN    
+ 17:34:40     0:01      157.0         0.0         0.7        0.0    PHASE0  1296 (S)DMPGROUPBEGN    
+ 17:34:40     0:01      158.0         1.0         0.7        0.0    PHASE0  1480 (S)SETQ    BEGN    
+ 17:34:40     0:01      158.0         0.0         0.7        0.0    PHASE0  1488 (S)PHASE0R BEGN    
+ 17:34:40     0:01      158.0         0.0         0.7        0.0    PHASE0R 154     MRGCSTM BEGN    
+ 17:34:40     0:01      159.0         1.0         0.7        0.0    PHASE0R 186     GP2     BEGN *  
+ 17:34:40     0:01      160.0         1.0         0.7        0.0    PHASE0R 216     GPJAC   BEGN    
+ 17:34:40     0:01      160.0         0.0         0.7        0.0    PHASE0R 262     GP3     BEGN    
+ 17:34:40     0:01      160.0         0.0         0.7        0.0    PHASE0R 266     LCGEN   BEGN    
+ 17:34:40     0:01      160.0         0.0         0.7        0.0    PHASE0  1544    VECPLOT BEGN    
+ 17:34:40     0:01      160.0         0.0         0.7        0.0    PHASE0  1623    BCDR    BEGN    
+ 17:34:40     0:01      160.0         0.0         0.7        0.0    PHASE0  1628    CASE    BEGN    
+ 17:34:40     0:01      160.0         0.0         0.7        0.0    PHASE0  1630    PVT     BEGN    
+ 17:34:40     0:01      160.0         0.0         0.7        0.0    PHASE0  1735    GP4     BEGN    
+ 17:34:40     0:01      161.0         1.0         0.7        0.0    PHASE0  1876    MATGEN  BEGN    
+ 17:34:40     0:01      161.0         0.0         0.7        0.0    PHASE0  1877    APPEND  BEGN    
+ 17:34:40     0:01      161.0         0.0         0.7        0.0    PHASE0  1932    BCDR    BEGN    
+ 17:34:40     0:01      161.0         0.0         0.7        0.0    PHASE0  1991 (S)SELA1   BEGN    
+ 17:34:40     0:01      161.0         0.0         0.7        0.0    PHASE0  1993    UPARTN  BEGN    
+ 17:34:40     0:01      161.0         0.0         0.7        0.0    PHASE0  2104 (S)OUT2GEOMBEGN *  
+ 17:34:40     0:01      161.0         0.0         0.7        0.0    OUT2GEOM18      MAKEOLD BEGN    
+ 17:34:40     0:01      161.0         0.0         0.7        0.0    OUT2GEOM19      MAKEOLD BEGN    
+ 17:34:40     0:01      161.0         0.0         0.7        0.0    OUT2GEOM20      MAKEOLD BEGN    
+ 17:34:40     0:01      161.0         0.0         0.7        0.0    OUT2GEOM67      OUTPUT2 BEGN    
+ 17:34:40     0:01      162.0         1.0         0.7        0.0    OUT2GEOM68      OUTPUT2 BEGN    
+ 17:34:40     0:01      162.0         0.0         0.7        0.0    OUT2GEOM69      OUTPUT2 BEGN    
+ 17:34:40     0:01      162.0         0.0         0.7        0.0    PHASE0  2109    OUTPUT2 BEGN    
+ 17:34:40     0:01      162.0         0.0         0.7        0.0    PHASE0  2264    MKCSTMA BEGN    
+ 17:34:40     0:01      162.0         0.0         0.7        0.0    PHASE0  2374    OUTPUT2 BEGN    
+ 17:34:40     0:01      162.0         0.0         0.7        0.0    PHASE0  2391    OUTPUT2 BEGN    
+ 17:34:40     0:01      162.0         0.0         0.7        0.0    SESTATIC93   (S)SETQ    BEGN    
+ 17:34:40     0:01      162.0         0.0         0.7        0.0    SESTATIC96      MATGEN  BEGN    
+ 17:34:40     0:01      162.0         0.0         0.7        0.0    SESTATIC97      RESTART BEGN    
+ Data block TEMPALL  has changed.
+ 17:34:40     0:01      162.0         0.0         0.7        0.0    SESTATIC99      SORTCASEBEGN    
+ 17:34:40     0:01      162.0         0.0         0.7        0.0    SESTATIC107     DTIIN   BEGN    
+ 17:34:40     0:01      162.0         0.0         0.7        0.0    SESTATIC142  (S)PHASE1DRBEGN    
+ 17:34:40     0:01      163.0         1.0         0.7        0.0    PHASE1DR141     PVT     BEGN *  
+ 17:34:40     0:01      163.0         0.0         0.7        0.0    PHASE1DR244  (S)SETQ    BEGN    
+ 17:34:40     0:01      163.0         0.0         0.7        0.0    PHASE1DR269  (S)DBSETOFFBEGN    
+ 17:34:40     0:01      163.0         0.0         0.7        0.0    PHASE1DR271  (S)PHASE1A BEGN    
+ 17:34:40     0:01      163.0         0.0         0.7        0.0    PHASE1A 49      SEPR1   BEGN    
+ 17:34:40     0:01      163.0         0.0         0.7        0.0    PHASE1A 109     TA1     BEGN    
+ 17:34:40     0:01      164.0         1.0         0.7        0.0    PHASE1A 122     MSGHAN  BEGN *  
+ 17:34:40     0:01      164.0         0.0         0.7        0.0    PHASE1A 123  (S)SEMG    BEGN    
+ 17:34:40     0:01      164.0         0.0         0.7        0.0    SEMG    37      ELTPRT  BEGN    
+ 17:34:40     0:01      164.0         0.0         0.7        0.0    SEMG    48      EMG     BEGN    
+ 17:34:40     0:01      165.0         1.0         0.7        0.0    SEMG    166     EMA     BEGN    
+ 17:34:40     0:01      165.0         0.0         0.7        0.0    SEMG    179     EMA     BEGN    
+ 17:34:40     0:01      165.0         0.0         0.7        0.0    SEMG    189  (S)XMTRXIN BEGN    
+ 17:34:40     0:01      165.0         0.0         0.7        0.0    SEMG    202     MGEN    BEGN    
+ 17:34:40     0:01      165.0         0.0         0.7        0.0    SEMG    220  (S)SEMG1   BEGN    
+ 17:34:40     0:01      165.0         0.0         0.7        0.0    SEMG1   19      GPWG    BEGN    
+ 17:34:40     0:01      165.0         0.0         0.7        0.0    SEMG1   20      OFP     BEGN    
+ 17:34:40     0:01      165.0         0.0         0.7        0.0    SEMG1   23      OUTPUT2 BEGN    
+ 17:34:40     0:01      166.0         1.0         0.7        0.0    SEMG1   38   (S)SEDAMP  BEGN *  
+ 17:34:40     0:01      166.0         0.0         0.7        0.0    SEMG    223     PROJVER BEGN *  
+ 17:34:40     0:01      167.0         1.0         0.7        0.0    PHASE1A 125     MSGHAN  BEGN    
+ 17:34:40     0:01      167.0         0.0         0.7        0.0    PHASE1A 126     MSGHAN  BEGN    
+ 17:34:40     0:01      167.0         0.0         0.7        0.0    PHASE1A 127  (S)SESUM   BEGN    
+ 17:34:40     0:01      167.0         0.0         0.7        0.0    PHASE1A 233     VECPLOT BEGN *  
+ 17:34:40     0:01      168.0         1.0         0.7        0.0    PHASE1A 287  (S)SELA1   BEGN    
+ 17:34:40     0:01      168.0         0.0         0.7        0.0    PHASE1A 336     MSGHAN  BEGN    
+ 17:34:40     0:01      168.0         0.0         0.7        0.0    PHASE1A 339  (S)SELG    BEGN    
+ 17:34:40     0:01      168.0         0.0         0.7        0.0    SELG    31      SSG1    BEGN    
+ 17:34:40     0:01      169.0         1.0         0.7        0.0    SELG    118     VECPLOT BEGN *  
+ 17:34:40     0:01      169.0         0.0         0.7        0.0    PHASE1A 340     MSGHAN  BEGN    
+ 17:34:40     0:01      169.0         0.0         0.7        0.0    PHASE1A 341  (S)SESUM   BEGN    
+ 17:34:40     0:01      169.0         0.0         0.7        0.0    PHASE1A 367  (S)SELA1   BEGN *  
+ 17:34:40     0:01      170.0         1.0         0.7        0.0    PHASE1A 368  (S)SELA1   BEGN *  
+ 17:34:40     0:01      172.0         2.0         0.7        0.0    PHASE1DR460     BCDR    BEGN *  
+ 17:34:40     0:01      172.0         0.0         0.7        0.0    PHASE1DR466     PVT     BEGN    
+ 17:34:40     0:01      172.0         0.0         0.7        0.0    PHASE1DR476  (S)PMLUSET BEGN    
+ 17:34:40     0:01      172.0         0.0         0.7        0.0    PHASE1DR528  (S)PHASE1B BEGN    
+ 17:34:40     0:01      172.0         0.0         0.7        0.0    PHASE1B 33   (S)SEKR0   BEGN    
+ 17:34:40     0:01      173.0         1.0         0.7        0.0    SEKR0   90      VECPLOT BEGN *  
+ 17:34:40     0:01      173.0         0.0         0.7        0.0    SEKR0   98      GPSP    BEGN *  
+ 17:34:40     0:01      174.0         1.0         0.7        0.0    PHASE1B 62   (S)SEKMR   BEGN    
+ 17:34:40     0:01      174.0         0.0         0.7        0.0    SEKMR   15   (S)PMLUSET BEGN    
+ 17:34:40     0:01      174.0         0.0         0.7        0.0    SEKMR   31   (S)SEKR    BEGN    
+ 17:34:40     0:01      174.0         0.0         0.7        0.0    SEKR    15   (S)PMLUSET BEGN    
+ 17:34:40     0:01      174.0         0.0         0.7        0.0    SEKR    18      UPARTN  BEGN *  
+ 17:34:40     0:01      175.0         1.0         0.7        0.0    SEKR    21      VECPLOT BEGN    
+ 17:34:40     0:01      176.0         1.0         0.7        0.0    SEKR    149  (S)SESUM   BEGN *  
+ 17:34:40     0:01      176.0         0.0         0.7        0.0    SEKMR   32   (S)SESUM   BEGN *  
+ 17:34:40     0:01      177.0         1.0         0.7        0.0    SEKMR   136  (S)SELA1   BEGN *  
+ 17:34:40     0:01      177.0         0.0         0.7        0.0    SEKMR   137  (S)SELA1   BEGN    
+ 17:34:40     0:01      177.0         0.0         0.7        0.0    SEKMR   138  (S)SELA1   BEGN    
+ 17:34:40     0:01      177.0         0.0         0.7        0.0    PHASE1B 63   (S)PMLUSET BEGN    
+ 17:34:40     0:01      178.0         1.0         0.7        0.0    PHASE1B 313  (S)SEGOA   BEGN    
+ 17:34:40     0:01      178.0         0.0         0.7        0.0    PHASE1B 346  (S)SELR    BEGN    
+ 17:34:40     0:01      179.0         1.0         0.7        0.0    SELR    106     SSG2    BEGN *  
+ 17:34:40     0:01      180.0         1.0         0.7        0.0    SELR    107     SSG2    BEGN *  
+ 17:34:40     0:01      180.0         0.0         0.7        0.0    PHASE1B 348  (S)SESUM   BEGN    
+ 17:34:40     0:01      181.0         1.0         0.7        0.0    PHASE1B 733     SSG2    BEGN *  
+ 17:34:40     0:01      181.0         0.0         0.7        0.0    PHASE1B 734     SSG2    BEGN    
+ 17:34:40     0:01      181.0         0.0         0.7        0.0    PHASE1B 735     SSG2    BEGN    
+ 17:34:40     0:01      182.0         1.0         0.7        0.0    PHASE1B 882  (S)SEGOA   BEGN *  
+ 17:34:40     0:01      182.0         0.0         0.7        0.0    PHASE1B 883     MATREDU BEGN    
+ 17:34:40     0:01      182.0         0.0         0.7        0.0    PHASE1B 890     TRNSP   BEGN    
+ 17:34:40     0:01      182.0         0.0         0.7        0.0    PHASE1B 891     ADD5    BEGN    
+ 17:34:40     0:01      182.0         0.0         0.7        0.0    PHASE1B 892     UPARTN  BEGN    
+ 17:34:40     0:01      183.0         1.0         0.7        0.0    PHASE1B 984  (S)SEGOA   BEGN    
+ 17:34:40     0:01      183.0         0.0         0.7        0.0    PHASE1B 985     SSG2    BEGN    
+ 17:34:40     0:01      183.0         0.0         0.7        0.0    PHASE1DR730  (S)PMLUSET BEGN    
+ 17:34:40     0:01      183.0         0.0         0.7        0.0    PHASE1DR735  (S)PHASE1C BEGN    
+ 17:34:40     0:01      183.0         0.0         0.7        0.0    PHASE1C 19      MATMOD  BEGN    
+ 17:34:40     0:01      184.0         1.0         0.7        0.0    PHASE1C 48   (S)SEKRRS  BEGN *  
+ 17:34:40     0:01      184.0         0.0         0.8        0.0    SEKRRS  83      DCMP    BEGN    
+ *** USER INFORMATION MESSAGE 4157 (DFMSYM)
+     PARAMETERS FOR SPARSE DECOMPOSITION OF DATA BLOCK  KLL     ( TYPE=RDP ) FOLLOW
+                      MATRIX SIZE =         2 ROWS             NUMBER OF NONZEROES =         3 TERMS
+           NUMBER OF ZERO COLUMNS =         0        NUMBER OF ZERO DIAGONAL TERMS =         0
+           ELIMINATION TREE DEPTH =         2
+                CPU TIME ESTIMATE =         0 SEC                I/O TIME ESTIMATE =         0 SEC
+       MINIMUM MEMORY REQUIREMENT =         0 K WORDS             MEMORY AVAILABLE =     31174 K WORDS
+     MEMORY REQR'D TO AVOID SPILL =        33 K WORDS         MEMORY USED BY BEND  =         1 K WORDS
+     EST. INTEGER WORDS IN FACTOR =         1 K WORDS           EST. NONZERO TERMS =         1 K TERMS
+     ESTIMATED MAXIMUM FRONT SIZE =         2 TERMS                 RANK OF UPDATE =        64
+ *** USER INFORMATION MESSAGE 6439 (DFMSA)
+     ACTUAL MEMORY AND DISK SPACE REQUIREMENTS FOR SPARSE SYM. DECOMPOSITION
+        SPARSE DECOMP MEMORY USED =        33 K WORDS           MAXIMUM FRONT SIZE =         2 TERMS  
+          INTEGER WORDS IN FACTOR =         1 K WORDS      NONZERO TERMS IN FACTOR =         1 K TERMS
+   SPARSE DECOMP SUGGESTED MEMORY =        85 K WORDS
+ 17:34:40     0:01      184.0         0.0         0.8        0.0    PHASE1C 52   (S)SESUM   BEGN    
+ 17:34:40     0:01      185.0         1.0         0.8        0.0    PHASE1C 61   (S)SESUM   BEGN *  
+ 17:34:40     0:01      185.0         0.0         0.8        0.0    PHASE1C 65   (S)SELRRS  BEGN *  
+ 17:34:40     0:01      185.0         0.0         0.8        0.0    PHASE1C 66   (S)SESUM   BEGN    
+ 17:34:40     0:01      186.0         1.0         0.8        0.0    PHASE1DR743     BCDR    BEGN *  
+ 17:34:40     0:01      187.0         1.0         0.8        0.0    SESTATIC190     BCDR    BEGN *  
+ 17:34:40     0:01      187.0         0.0         0.8        0.0    SESTATIC191     PVT     BEGN    
+ 17:34:40     0:01      187.0         0.0         0.8        0.0    SESTATIC201  (S)PMLUSET BEGN    
+ 17:34:40     0:01      187.0         0.0         0.8        0.0    SESTATIC213  (S)PHASE1C BEGN    
+ 17:34:40     0:01      187.0         0.0         0.8        0.0    PHASE1C 19      MATMOD  BEGN    
+ 17:34:40     0:01      187.0         0.0         0.8        0.0    PHASE1C 52   (S)SESUM   BEGN    
+ 17:34:40     0:01      187.0         0.0         0.8        0.0    PHASE1C 61   (S)SESUM   BEGN *  
+ 17:34:40     0:01      188.0         1.0         0.8        0.0    SESTATIC229  (S)STATRS  BEGN *  
+ 17:34:40     0:01      188.0         0.0         0.8        0.0    STATRS  113     MSGHAN  BEGN    
+ 17:34:40     0:01      188.0         0.0         0.8        0.0    STATRS  122     SSG3    BEGN    
+ *** USER INFORMATION MESSAGE 4153 (DFNSB)
+     FBS METHOD S2 TIME ESTIMATE TO FORM ULX      - CPU=     0, I/O=     0, TOTAL=     0, PASSES=   1
+ 17:34:40     0:01      188.0         0.0         0.8        0.0    STATRS  143     MSGHAN  BEGN    
+ 17:34:40     0:01      189.0         1.0         0.8        0.0    SESTATIC351     PVT     BEGN *  
+ 17:34:40     0:01      189.0         0.0         0.8        0.0    SESTATIC352     APPEND  BEGN    
+ 17:34:40     0:01      189.0         0.0         0.8        0.0    SESTATIC353     PVT     BEGN    
+ 17:34:40     0:01      189.0         0.0         0.8        0.0    SESTATIC355     PVT     BEGN    
+ 17:34:40     0:01      189.0         0.0         0.8        0.0    SESTATIC390     COPY    BEGN    
+ 17:34:40     0:01      189.0         0.0         0.8        0.0    SESTATIC399     BCDR    BEGN    
+ 17:34:40     0:01      189.0         0.0         0.8        0.0    SESTATIC400  (S)SESUM   BEGN    
+ 17:34:40     0:01      190.0         1.0         0.8        0.0    SESTATIC414  (S)SUPER3  BEGN *  
+ 17:34:40     0:01      190.0         0.0         0.8        0.0    SUPER3  224     SEP4    BEGN    
+ 17:34:40     0:01      190.0         0.0         0.8        0.0    SUPER3  268     GP1     BEGN    
+ 17:34:40     0:01      190.0         0.0         0.8        0.0    SUPER3  284     OUTPUT2 BEGN    
+ 17:34:40     0:01      190.0         0.0         0.8        0.0    SUPER3  359     SEDRDR  BEGN    
+ 17:34:40     0:01      190.0         0.0         0.8        0.0                            
+ 17:34:40     0:01      190.0         0.0         0.8        0.0    SUPER3  378     PVT     BEGN    
+ 17:34:40     0:01      190.0         0.0         0.8        0.0    SUPER3  390     SEDR    BEGN    
+ 17:34:40     0:01      190.0         0.0         0.8        0.0    SUPER3  452     PVT     BEGN    
+ 17:34:40     0:01      190.0         0.0         0.8        0.0    SUPER3  541  (S)DBSETOFFBEGN    
+ 17:34:40     0:01      190.0         0.0         0.8        0.0    SUPER3  557     PVT     BEGN    
+ 17:34:40     0:01      191.0         1.0         0.8        0.0    SUPER3  559     PVT     BEGN    
+ 17:34:40     0:01      191.0         0.0         0.8        0.0    SUPER3  587     LCGEN   BEGN    
+ 17:34:40     0:01      191.0         0.0         0.8        0.0    SUPER3  638     DTIIN   BEGN    
+ 17:34:40     0:01      191.0         0.0         0.8        0.0    SUPER3  661  (S)PBULK   BEGN    
+ 17:34:40     0:01      191.0         0.0         0.8        0.0    SUPER3  662  (S)PBULK   BEGN    
+ 17:34:40     0:01      191.0         0.0         0.8        0.0    SUPER3  663  (S)PBULK   BEGN    
+ 17:34:40     0:01      191.0         0.0         0.8        0.0    SUPER3  664  (S)PBULK   BEGN    
+ 17:34:40     0:01      191.0         0.0         0.8        0.0    SUPER3  665  (S)PBULK   BEGN    
+ 17:34:40     0:01      191.0         0.0         0.8        0.0    SUPER3  716  (S)SEDISP  BEGN    
+ 17:34:40     0:01      191.0         0.0         0.8        0.0    SEDISP  116     BCDR    BEGN    
+ 17:34:40     0:01      191.0         0.0         0.8        0.0    SEDISP  117     PVT     BEGN    
+ 17:34:40     0:01      191.0         0.0         0.8        0.0    SEDISP  276  (S)SEGOA   BEGN *  
+ 17:34:40     0:01      191.0         0.0         0.8        0.0    SEDISP  305     SDR1    BEGN    
+ 17:34:40     0:01      192.0         1.0         0.8        0.0    SEDISP  402     BCDR    BEGN    
+ 17:34:40     0:01      192.0         0.0         0.8        0.0    SEDISP  415     COPY    BEGN    
+ 17:34:40     0:01      192.0         0.0         0.8        0.0    SEDISP  431     COPY    BEGN    
+ 17:34:40     0:01      192.0         0.0         0.8        0.0    SEDISP  743  (S)SESUM   BEGN    
+ 17:34:40     0:01      193.0         1.0         0.8        0.0    SUPER3  745     PVT     BEGN *  
+ 17:34:40     0:01      193.0         0.0         0.8        0.0    SUPER3  1190    SDR2    BEGN *  
+ 17:34:40     0:01      193.0         0.0         0.8        0.0    SUPER3  1232    MATMOD  BEGN    
+ 17:34:40     0:01      193.0         0.0         0.8        0.0    SUPER3  1240    MODCASE BEGN    
+ 17:34:40     0:01      193.0         0.0         0.8        0.0    SUPER3  1268 (S)SEDRCVR BEGN    
+ 17:34:40     0:01      194.0         1.0         0.8        0.0    SEDRCVR 84      VECPLOT BEGN    
+ 17:34:40     0:01      194.0         0.0         0.8        0.0    SEDRCVR 94      VECPLOT BEGN    
+ 17:34:40     0:01      194.0         0.0         0.8        0.0    SEDRCVR 102     VECPLOT BEGN *  
+ 17:34:40     0:01      194.0         0.0         0.8        0.0    SEDRCVR 104     VECPLOT BEGN    
+ 17:34:40     0:01      195.0         1.0         0.8        0.0    SEDRCVR 206  (S)TESTBIT BEGN    
+ 17:34:40     0:01      195.0         0.0         0.8        0.0    SEDRCVR 216  (S)TESTBIT BEGN    
+ 17:34:40     0:01      195.0         0.0         0.8        0.0    SEDRCVR 226  (S)TESTBIT BEGN    
+ 17:34:40     0:01      195.0         0.0         0.8        0.0    SEDRCVR 310     SDR2    BEGN    
+ 17:34:40     0:01      195.0         0.0         0.8        0.0    SEDRCVR 399     SDRX    BEGN    
+ 17:34:40     0:01      195.0         0.0         0.8        0.0    SEDRCVR 609     OUTPUT2 BEGN    
+ 17:34:40     0:01      195.0         0.0         0.8        0.0    SEDRCVR 624     OUTPUT2 BEGN    
+ 17:34:40     0:01      195.0         0.0         0.8        0.0    SEDRCVR 724     OUTPUT2 BEGN    
+ 17:34:40     0:01      195.0         0.0         0.8        0.0    SEDRCVR 866     OFP     BEGN    
+ 17:34:40     0:01      195.0         0.0         0.8        0.0    SEDRCVR 875     OFP     BEGN    
+ 17:34:40     0:01      195.0         0.0         0.8        0.0    SEDRCVR 877     OFP     BEGN    
+ 17:34:40     0:01      195.0         0.0         0.8        0.0    SEDRCVR 881     OFP     BEGN    
+ 17:34:40     0:01      195.0         0.0         0.8        0.0    SEDRCVR 882     OFP     BEGN    
+ 17:34:40     0:01      196.0         1.0         0.8        0.0    SEDRCVR 891     OFP     BEGN *  
+ 17:34:40     0:01      196.0         0.0         0.8        0.0    SEDRCVR 951     OFP     BEGN    
+ 17:34:40     0:01      196.0         0.0         0.8        0.0    SEDRCVR 1041    OUTPUT2 BEGN    
+ 17:34:40     0:01      196.0         0.0         0.8        0.0    SEDRCVR 1046    OUTPUT2 BEGN    
+ 17:34:40     0:01      196.0         0.0         0.8        0.0    SEDRCVR 1055    OUTPUT2 BEGN    
+ 17:34:40     0:01      196.0         0.0         0.8        0.0    SEDRCVR 1060    OUTPUT2 BEGN    
+ 17:34:40     0:01      196.0         0.0         0.8        0.0    SEDRCVR 1064    OUTPUT2 BEGN    
+ 17:34:40     0:01      197.0         1.0         0.8        0.0    SESTATIC497  (S)PRTSUM  BEGN *  
+ 17:34:40     0:01      197.0         0.0         0.8        0.0    PRTSUM  38      OUTPUT2 BEGN    
+ 17:34:40     0:01      197.0         0.0         0.8        0.0    PRTSUM  40      PROJVER BEGN    
+ 17:34:40     0:01      197.0         0.0         0.8        0.0    PRTSUM  41      DBDICT  BEGN    
+ 17:34:40     0:01      197.0         0.0         0.8        0.0    PRTSUM  42      PRTPARM BEGN    
+ 17:34:40     0:01      197.0         0.0         0.8        0.0    SESTATIC498     MSGHAN  BEGN    
+ 17:34:40     0:01      197.0         0.0         0.8        0.0    SESTATIC500     EXIT    BEGN    
+
+*** SUMMARY OF COMPONENT SERVICES USAGE ACTIVITY ***
+
+           SERVICE                         LOAD  IMPLEMENTATION    GENERIC             COMPONENT  
+            NAME                           COUNT    LANGUAGE     LIBRARY NAME         LIBRARY NAME 
+
+SCA.Framework.MessageDispatcher              1       C++         SCA/...ispatcher_7_3 /opt...mework/libMessageDispatcher_7_3.so 
+SCA.Framework.ResourceManager                1       C++         SCAKernel            SCAKernel                                 
+SCA.Framework.ServiceManager                 8       C++         SCAKernel            SCAKernel                                 
+SCA.Framework.SharedLibraryManager           4       C++         SCAKernel            SCAKernel                                 
+SCA.Framework.TextTranslation                2       C++         SCAKernel            SCAKernel                                 
+SCA.MDSolver.System.PrintServer              2       C++         SCA/...intServer_2_0 /opt...olver/System/libPrintServer_2_0.so 
+
+ *** TOTAL MEMORY AND DISK USAGE STATISTICS ***
+
+ +---------- SPARSE SOLUTION MODULES -----------+         +------------- MAXIMUM DISK USAGE -------------+
+    HIWATER               SUB_DMAP        DMAP               HIWATER               SUB_DMAP        DMAP
+    (WORDS)   DAY_TIME      NAME         MODULE                 (MB)   DAY_TIME      NAME         MODULE
+    2414183   17:34:40    SEKRRS     83  DCMP                 16.125   17:34:40    SESTATIC  500  EXIT    
+
+
+ *** DATABASE USAGE STATISTICS ***
+ 
+ +---------------- LOGICAL DBSETS ----------------+   +------------------------------ DBSET FILES -----------------------------+
+  DBSET     ALLOCATED  BLOCKSIZE       USED   USED     FILE      ALLOCATED  ALLOCATED    HIWATER       HIWATER  I/O TRANSFERRED
+             (BLOCKS)    (WORDS)   (BLOCKS)      %                (BLOCKS)       (GB)   (BLOCKS)          (GB)             (GB)
+ 
+  MASTER         5000       8192         82   1.64     MASTER         5000       0.15         82         0.003            0.108
+  DBALL        500000       8192         91   0.02     DBALL        500000      15.26         91         0.003            0.022
+  OBJSCR         5000       8192        341   6.82     OBJSCR         5000       0.15        341         0.010            0.041
+  SCRATCH     1000100       8192         16   0.00    (MEMFILE         100       0.00         48         0.001            0.000)
+                                                       SCRATCH      500000      15.26          1         0.000            0.000
+                                                       SCR300       500000      15.26          1         0.000            0.000
+                                                                                                                 ==============
+                                                                                                          TOTAL:          0.171
+ 
+ *** BUFFER POOL AND SCRATCH 300 USAGE STATISTICS ***
+ 
+ +----------------- BUFFER POOL -----------------+      +-------------------------- SCRATCH 300 --------------------------+ 
+   OPTION        BLOCKS      BLOCKS      BLOCKS           OPTION    HIWATER               SUB_DMAP        DMAP     OPN/CLS
+  SELECTED     ALLOCATED     REUSED     RELEASED         SELECTED  (BLOCKS)   DAY_TIME      NAME         MODULE    COUNTER
+  GINO,EXEC          50       14279        1524              2           1    17:34:39    PREFACE     0  PREFACE       0
+
+
+ *** SUMMARY OF PHYSICAL FILE I/O ACTIVITY ***
+
+ ASSIGNED PHYSICAL FILE NAME                                   RECL (BYTES)  READ/WRITE COUNTS   WSIZE  (WNUM)   I/O COUNT 
+ ------------------------------------------------------------  -----------  -------------------  -------------  -----------
+ /scratch/input.T29816_39.SCRATCH                                    32768          0/1            N/A            N/A          
+ /scratch/input.T29816_39.OBJSCR                                     32768        130/1206         N/A            N/A          
+ /tmp/tmpIMg1Kb/input.MASTER                                         32768         81/3465         N/A            N/A          
+ /tmp/tmpIMg1Kb/input.DBALL                                          32768        158/564          N/A            N/A          
+ /scratch/input.T29816_39.SCR300                                     32768          0/1            N/A            N/A          
+ /opt/MSC_Nastran/20121/msc20121/linux64/SSS.MASTERA                 32768         95/0            N/A            N/A          
+ /opt/MSC_Nastran/20121/msc20121/linux64/SSS.MSCOBJ                  32768        631/0            N/A            N/A          
+ 
+MSC.Nastran V2012.1 (Intel Linux 3.2.0-53-generic) Control File:
+-----------------------------------------------------------------
+Nastran SYSTEM(444)=0 $(/opt/MSC_Nastran/20121/conf/nast20121rc[1])
+Nastran BUFFSIZE=8193 $(/opt/MSC_Nastran/20121/conf/nast20121rc[5])
+JID=/tmp/tmpIMg1Kb/input.bdf
+OUT=/tmp/tmpIMg1Kb/input
+MEM=33554432      $ WORDS
+MACH='Intel'
+OPER='Linux'
+OSV='3.2.0-53-generic'
+MODEL='2660 MHz (havoc)'
+CONFIG=86640
+NPROC=4
+symbol=DELDIR='/opt/MSC_Nastran/20121/msc20121/nast/del' $(program default)
+symbol=DEMODIR='/opt/MSC_Nastran/20121/msc20121/nast/demo' $(program default)
+symbol=NASD_PATH=/msc20121/dyna/ $(/opt/MSC_Nastran/20121/conf/nast20121rc[9])
+symbol=NASM_PATH=/msc20121/marc/tools $(/opt/MSC_Nastran/20121/conf/nast20121rc[8])
+symbol=SSSALTERDIR='/opt/MSC_Nastran/20121/msc20121/nast/sssalter' $(program default)
+symbol=TPLDIR='/opt/MSC_Nastran/20121/msc20121/nast/tpl' $(program default)
+SDIR=/scratch/input.T29816_39
+DBS=/tmp/tmpIMg1Kb/input
+SCR=no
+NEWDEL=/opt/MSC_Nastran/20121/msc20121/linux64/SSS
+DEL=MSCDEF
+DML=MSCDEF
+SDL=MSCDEF
+AUTH=37070@ndgrlic01
+AUTHQUE=20
+MSGCAT=/opt/MSC_Nastran/20121/msc20121/linux64/analysis.msg
+MSGDEST='f06'
+NEWS=/opt/MSC_Nastran/20121/msc20121/nast/news.txt
+-----------------------------------------------------------------
+MSC_ISHELLPATH=/tmp/tmpIMg1Kb
+MSC_JIDPATH=
+PATH=/opt/MSC_Nastran/20121/msc20121/linux64:/OpenMDAO/dev/hschilli/P62235526-speed-up-nastran-wrapper/devenv/bin::/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/jdk/bin:/usr/local/vsp:/opt/MSC_Nastran/20121/msc20121/linux64/:/home/hschilli/bin:/home/hschilli/local/bin
+LD_LIBRARY_PATH=/opt/MSC_Nastran/20121/msc20121/linux64/lib:/opt/MSC_Nastran/20121/msc20121/linux64:/home/hschilli/local/lib/coin/ThirdParty:/home/hschilli/local/lib/coin::/home/hschilli/local/lib
+SCA_SERVICE_CATALOG=/opt/MSC_Nastran/20121/msc20121/res/SCAServiceCatalog.xml
+SCA_RESOURCE_DIR=/opt/MSC_Nastran/20121/msc20121/res
+Cmd Line:    nastran /tmp/tmpIMg1Kb/input.bdf batch=no out=/tmp/tmpIMg1Kb dbs=/tmp/tmpIMg1Kb
+Current Dir: /OpenMDAO/dev/hschilli/nastranwrapper_mod/src/nastranwrapper/test
+Time Cmd:    time 
+Executable:  /opt/MSC_Nastran/20121/msc20121/linux64/analysis
+Arch= Kywd:  [Not specified]
+MSC_MSG:     stderr
+-----------------------------------------------------------------
+Current resource limits:
+ CPU time:                       unlimited
+ Virtual address space:          unlimited
+ Working set size:               unlimited
+ Data segment size:              unlimited
+ Stack size:                          8192 KB
+ Number of open files:                1024 (hard limit: 4096)
+ File size:                      unlimited
+ Core dump file size:                    0 MB
+-----------------------------------------------------------------
+System configuration:
+ Hostname:         havoc.grc.nasa.gov
+ Architecture:     linux64
+ Platform:         Intel Linux 3.2.0-53-generic
+ Model:            2660 MHz
+ CPU:              GenuineIntel 
+ Clock freq.:      2660 MHz
+ Number of CPUs:   4
+ Executable:       standard
+ Raw model ID:     8664
+ Config number:    86640
+ Physical memory:  3954 MB
+ Virtual memory:   507 MB
+ Numeric format:   32-bit little-endian IEEE.
+ Bytes per word:   4
+ Disk block size:  512 bytes (128 words)
+ Remote shell cmd: /opt/MSC_Nastran/20121/msc20121/linux64/MSCRmtCmd (Windows, UNIX)
+                   /usr/bin/ssh (UNIX)
+-----------------------------------------------------------------
+MSC.Nastran started Sun Jan 26 17:34:39 EST 2014
+ 17:34:39  Beginning Analysis
+SCA Kernel 7.3.119418 successfully initialized
+BLAS/LAPACK shared object "/opt/MSC_Nastran/20121/msc20121/linux64/libmkl_core.so" has been loaded.
+BLAS/LAPACK shared object "/opt/MSC_Nastran/20121/msc20121/linux64/libmkl_intel_thread.so" has been loaded.
+BLAS/LAPACK shared object "/opt/MSC_Nastran/20121/msc20121/linux64/libmkl_intel_lp64.so" has been loaded.
+BLAS/LAPACK shared object "/opt/MSC_Nastran/20121/msc20121/linux64/libMSCblas.so" has been loaded.
+
+ 17:34:39  MSC Authorization Information - System Attributes (1004, 0)
+ 17:34:39  -----------------------------------------------------------
+  Date:          Sun Jan 26 17:34:39 2014
+  MSC Id:        005056000100 (ethernet) (Linux)
+  Hostname:      havoc (user hschilli, display )
+  License files: 37070@ndgrlic01
+  CEID:          09665F89-E314431F
+  User:          hschilli
+  Display:
+  LAPI Version:  LAPI 9.3.1-2109 (FLEXlm 11.9.0.0)
+
+  * * * * * * * * * * * * * * * * * * * *
+  * * * * * * * * * * * * * * * * * * * *
+  * *                                 * *
+  * *   MSC Customer Entitlement ID   * *
+  * *        09665F89-E314431F        * *
+  * *                                 * *
+  * * * * * * * * * * * * * * * * * * * *
+  * * * * * * * * * * * * * * * * * * * *
+
+ 17:34:39  MSC Authorization Information - Checkout Successful (1016, 0)
+ 17:34:39  -------------------------------------------------------------
+ 17:34:39  Acquired 250 licenses for Group CAMPUS (MSC.Nastran) from license server on host ndgrlic01
+
+ 17:34:39  Analysis started.
+ 17:34:39  Geometry access/verification to CAD part initiated (if needed).
+ 17:34:39  Geometry access/verification to CAD part successfully completed (if needed).
+ 17:34:40  Finite element model generation started.
+
+             allocated         42 words of memory due to user subroutines
+
+
+             allocated         42 words of memory due to user subroutines
+
+
+             allocated         42 words of memory due to user subroutines
+
+
+             allocated         42 words of memory due to user subroutines
+
+
+             allocated         42 words of memory due to user subroutines
+
+ 17:34:40  Finite element model generated 24 degrees of freedom.
+ 17:34:40  Finite element model generation successfully completed.
+ 17:34:40  Application of Loads and Boundary Conditions to the finite element model started.
+ 17:34:40  Application of Loads and Boundary Conditions to the finite element model successfully completed.
+ 17:34:40  Solution of the system equations for linear statics started.
+ 17:34:40  Solution of the system equations for linear statics successfully completed.
+ 17:34:40  Linear static analysis completed.
+ 17:34:40  77 records read from JID file "/tmp/tmpIMg1Kb/input.bdf"
+ 17:34:40  NSEXIT: EXIT(0)
+ 17:34:40  Analysis complete  0
+0.43user 0.54system 0:01.10elapsed 88%CPU (0avgtext+0avgdata 619648maxresident)k
+744inputs+33224outputs (4major+40296minor)pagefaults 0swaps
+-----------------------------------------------------------------
+MSC.Nastran finished Sun Jan 26 17:34:40 EST 2014

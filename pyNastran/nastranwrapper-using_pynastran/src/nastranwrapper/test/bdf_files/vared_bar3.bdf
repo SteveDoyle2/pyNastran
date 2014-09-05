@@ -1,0 +1,60 @@
+$ NASTRAN input file created by the MSC MSC.Nastran input file
+$ translator ( MSC.Patran 13.1.116 ) on November  30, 2009 at 13:30:13.
+$ Direct Text Input for Nastran System Cell Section
+$ Linear Static Analysis, Database
+SOL 101
+CEND
+ECHO = NONE
+SUBCASE 1
+$ Subcase name : Untitled.SC4
+   SUBTITLE=Untitled.SC4
+   SPC = 2
+   LOAD = 13
+   DISPLACEMENT(SORT1,REAL)=ALL
+   SPCFORCES(SORT1,REAL)=ALL
+   OLOAD(SORT1,REAL)=ALL
+   FORCE(SORT1,REAL,BILIN)=ALL
+   STRESS(SORT1,REAL,VONMISES,BILIN)=ALL
+BEGIN BULK
+PARAM    POST    0
+PARAM    K6ROT  40.
+$PARAM    WTMASS .00259
+PARAM    GRDPNT  0
+PARAM   PRTMAXIM YES
+$2345678123456781234567812345678123456781234567812345678
+$ Elements and Element Properties for region : prod.11
+PROD     11      5      !bar1_a
+$ Pset: "prod.11" will be imported as: "prod.11"
+CROD     1       11      1       2
+$ Elements and Element Properties for region : prod.12
+PROD     12      5      !bar2_a
+$ Pset: "prod.12" will be imported as: "prod.12"
+CROD     2       12      1       3
+$ Elements and Element Properties for region : prod.13
+PROD     13      5      !bar3_a
+$ Pset: "prod.13" will be imported as: "prod.13"
+CROD     3       13      1       4
+$ Referenced Material Records
+$ Material Record : mat1.5
+$ Description of Material :
+$23456781234567812345678123456781234567812345678123456781234567812345678123456
+MAT1     5      !youngs         .3      !rho                            +RC1
++RC1    20000.  20000.  20000.
+$ Nodes of the Entire Model
+GRID     1               0.      0.      0.
+GRID     2              -100.   100.     0.
+GRID     3               0.     100.     0.
+GRID     4              100.    100.     0.
+$ Loads for Load Case : Untitled.SC4
+SPCADD   2       11
+LOAD     13     1.      1.       8
+$ Displacement Constraints of Load Set : spc.11.SC4
+SPC1     11      3456    1
+SPC1     11      123456  2
+SPC1     11      123456  3
+SPC1     11      123456  4
+$ Nodal Forces of Load Set : force.8
+$2345678123456781234567812345678123456781234567812345678
+FORCE    8       1       0      !loadmag !loadx !loady   0.
+$ Referenced Coordinate Frames
+ENDDATA 13664a4e

@@ -1,0 +1,10 @@
+
+
+graft src/nastranwrapper/sphinx_build/html
+recursive-include src/nastranwrapper/test *.py
+recursive-include src/nastranwrapper/test *.out
+recursive-include src/nastranwrapper/test/bar3truss *
+recursive-include src/nastranwrapper/test/bdf_files *
+recursive-include src/nastranwrapper/test/nastran_models *
+recursive-include src/nastranwrapper/test/practice_grids *
+
