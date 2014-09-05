@@ -725,7 +725,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.include_dir = include_dir
 
         if not os.path.exists(bdf_filename):
-            msg = 'cannot find bdf_filename=%r' % print_bad_path(bdf_filename)
+            msg = 'cannot find bdf_filename=%r%s' % (bdf_filename, print_bad_path(bdf_filename))
             raise IOError(msg)
         if bdf_filename.lower().endswith('.pch'):
             punch = True
