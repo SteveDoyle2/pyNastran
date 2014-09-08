@@ -2,7 +2,7 @@
 from itertools import izip
 
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacement, ComplexDisplacement
-from pyNastran.op2.tables.oug.oug_eigenvectors import EigenvectorObject  # ,ComplexEigenVectorObject
+from pyNastran.op2.tables.oug.oug_eigenvectors import Eigenvector  # ,ComplexEigenVector
 from pyNastran.op2.tables.oug.oug_temperatures import RealTemperature
 
 

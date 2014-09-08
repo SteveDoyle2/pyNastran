@@ -30,7 +30,7 @@ class OGPF(object):
         if self.thermal == 0:
             result_name = 'gridPointForces'
             if self.num_wide == 10:
-                self.create_transient_object(self.gridPointForces, RealGridPointForcesObject)
+                self.create_transient_object(self.gridPointForces, RealGridPointForces)
                 s = Struct(b'ii8s6f')
                 ntotal = 40
                 nnodes = len(data) // ntotal

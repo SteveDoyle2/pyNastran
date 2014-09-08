@@ -3,17 +3,18 @@ from __future__ import division, unicode_literals, print_function
 
 # Qt
 try:
-    from PySide import QtCore, QtGui
+    from PyQt4 import QtCore, QtGui
+    print("Using PyQt4")
     fmode = 1
 except ImportError:
     try:
-        from PyQt4 import QtCore, QtGui
+        from PySide import QtCore, QtGui
+        print("Using PySide")
         fmode = 2
     except ImportError:
         msg = 'Failed to import PySide or PyQt4'
         raise ImportError(msg)
 assert fmode in [1, 2]
-
 # standard library
 import sys
 import os.path
@@ -301,7 +302,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         # windows title and aplication icon
         self.setWindowTitle('Statusbar')
         self.setWindowIcon(QtGui.QIcon(os.path.join(icon_path, 'logo.png')))
-        self.set_window_title('')
+        self.set_window_title("pyNastran v%s"  % pyNastran.__version__)
 
         #=========== Results widget ===================
         self.res_dock = QtGui.QDockWidget("Results", self)
@@ -392,11 +393,11 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
           ('X', 'Flips to -X Axis', os.path.join(icon_path, 'minus_x.png'), 'X', 'Flips to -X Axis', lambda: self.update_camera('-x')),
           ('Y', 'Flips to -Y Axis', os.path.join(icon_path, 'minus_y.png'), 'Y', 'Flips to -Y Axis', lambda: self.update_camera('-y')),
           ('Z', 'Flips to -Z Axis', os.path.join(icon_path, 'minus_z.png'), 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
-          ('script', 'Run Python script', os.path.join(icon_path, 'python.png'), None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
+          ('script', 'Run Python script', os.path.join(icon_path, 'python48.png'), None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
         ]
         for script in scripts:
             fname = os.path.join(script_path, script)
-            tool = (script, script, os.path.join(icon_path, 'python.png'), None, '', self.on_run_script )
+            tool = (script, script, os.path.join(icon_path, 'python48.png'), None, '', self.on_run_script )
             tools.append(tool)
 
         for (nam, txt, icon, shortcut, tip, func) in tools:
@@ -460,7 +461,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         vtk_hbox.setContentsMargins(2, 2, 2, 2)
 
         #Qt VTK RenderWindowInteractor
-        self.vtk_interactor = QVTKRenderWindowInteractor(parent = vtk_frame)
+        self.vtk_interactor = QVTKRenderWindowInteractor(parent=vtk_frame)
         vtk_hbox.addWidget(self.vtk_interactor)
         vtk_frame.setLayout(vtk_hbox)
         vtk_frame.setFrameStyle(QtGui.QFrame.NoFrame | QtGui.QFrame.Plain)
@@ -687,6 +688,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
 
         msg = '%s - %s - %s' % (self.format, self.infile_name, self.out_filename)
         self.set_window_title(msg)
+        self.log_command('on_reload()')
         #self.cycleResults(Title)
         for i in xrange(10):  #  limit on number of cycles
             if self.Title != Title:
@@ -839,7 +841,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         if self.out_filename is not None:
             msg = '%s - %s - %s' % (self.format, self.infile_name, self.out_filename)
         else:
-            msg = '%s - %s - %s' % (self.format, self.infile_name)
+            msg = '%s - %s' % (self.format, self.infile_name)
         self.set_window_title(msg)
 
         self.log_command("on_load_geometry(%r, %r)" % (infile_name, self.format))
@@ -995,14 +997,15 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 Title = self.Title
 
             if self.out_filename is None:
-                base, ext = os.path.splitext(os.path.basename(self.infile_name))
-                #default_filename = base
-                default_filename = self.infile_name
+                default_filename = ''
+                if self.infile_name is not None:
+                    base, ext = os.path.splitext(os.path.basename(self.infile_name))
+                    default_filename = self.infile_name
             else:
                 base, ext = os.path.splitext(os.path.basename(self.out_filename))
                 default_filename = Title + '_' + base
 
-            fname = str(QtGui.QFileDialog.getSaveFileName(self, ('Choose a file name'
+            fname = str(QtGui.QFileDialog.getSaveFileName(self, ('Choose a filename '
                         'and type'), default_filename, ('PNG Image *.png (*.png);; JPEG Image '
                         '*.jpg *.jpeg (*.jpg, *.jpeg);; TIFF Image *.tif *.tiff '
                         '(*.tif, *.tiff);; BMP Image *.bmp (*.bmp);; PostScript '
@@ -1012,7 +1015,11 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 return
             flt = str(filt).split()[0]
         else:
-            flt = 'png'
+            base, ext = os.path.splitext(os.path.basename(fname))
+            if ext.lower() in ['png', 'jpg', 'jpeg', 'tif', 'tiff', 'bmp', 'ps']:
+                flt = ext.lower()
+            else:
+                flt = 'png'
 
         if fname:
             renderLarge = vtk.vtkRenderLargeImage()
@@ -1036,7 +1043,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             writer.SetInputConnection(renderLarge.GetOutputPort())
             writer.SetFileName(fname)
             writer.Write()
-            self.log_info("Saved screenshot: " + fname)
+            #self.log_info("Saved screenshot: " + fname)
+            self.log_command('on_take_screenshot(%r' % fname)
 
     def closeEvent(self, event):
         """

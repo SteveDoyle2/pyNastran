@@ -314,8 +314,7 @@ class OUG(OP2Common):
             #if self.isRandomResponse():
             if self.isRandomResponse():
                 if self.format_code == 1 and self.num_wide == 8:  # real/random
-                    real_obj = EigenvectorObject
-                    # real_obj
+                    real_obj = Eigenvector
                     #assert real_obj is not None
                     nnodes = len(data) // 32  # 8*4
                     auto_return = self._create_table_object(result_name, nnodes, storage_obj, real_obj, real_vector)
@@ -323,8 +322,7 @@ class OUG(OP2Common):
                         return len(data)
                     n = self._read_real_table(data, result_name, node_elem)
                 elif self.format_code in [1, 2, 3] and self.num_wide == 14:  # real (fsi.op2 odd...) or real/imaginary or mag/phase
-                    complex_obj = ComplexEigenvectorObject
-                    # complex_obj
+                    complex_obj = ComplexEigenvector
                     #assert complex_obj is not None
                     nnodes = len(data) // 56  # 14*4
                     auto_return = self._create_table_object(result_name, nnodes, storage_obj, complex_obj, complex_vector)

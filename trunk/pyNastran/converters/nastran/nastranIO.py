@@ -537,11 +537,11 @@ class NastranIO(object):
 
         print("tring to read...", op2FileName)
         if '.op2' in op2FileName:
-            model = OP2(op2FileName, log=self.log, debug=True)
-            model.read_op2()
+            model = OP2(log=self.log, debug=True)
+            model.read_op2(op2FileName)
         elif '.f06' in op2FileName:
-            model = F06(op2FileName, log=self.log, debug=True)
-            model.read_f06()
+            model = F06(log=self.log, debug=True)
+            model.read_f06(op2FileName)
         else:
             print("error...")
             raise NotImplementedError(op2FileName)
@@ -679,16 +679,16 @@ class NastranIO(object):
 
     def _fill_stress_case_centroidal(self, cases, model, subcaseID, eKey):
         nElements = self.nElements
-        oxx = zeros(nElements)
-        oyy = zeros(nElements)
-        ozz = zeros(nElements)
+        oxx = zeros(nElements, dtype='float32')
+        oyy = zeros(nElements, dtype='float32')
+        ozz = zeros(nElements, dtype='float32')
 
-        o1 = zeros(nElements)
-        o2 = zeros(nElements)
-        o3 = zeros(nElements)
-        ovm = zeros(nElements)
+        o1 = zeros(nElements, dtype='float32')
+        o2 = zeros(nElements, dtype='float32')
+        o3 = zeros(nElements, dtype='float32')
+        ovm = zeros(nElements, dtype='float32')
 
-        vmWord = 'N/A'
+        vmWord = None
         if subcaseID in model.rodStress:
             case = model.rodStress[subcaseID]
             for eid in case.axial:
@@ -708,10 +708,6 @@ class NastranIO(object):
                 o3[eid2] = min(axial, torsion)
 
         if subcaseID in model.barStress:
-            #self.s1    = {}
-            #self.s2    = {}
-            #self.s3    = {}
-            #self.s4    = {}
             case = model.barStress[subcaseID]
             for eid in case.axial:
                 eid2 = self.eidMap[eid]
@@ -743,17 +739,20 @@ class NastranIO(object):
                 cases[eKey][eid2] = 1.
 
                 #print "plate eid=%s" %(eid)
-                oxxi = case.oxx[eid]['C']
+                eType = case.eType[eid]
+                if eType in ['CQUAD4', 'CQUAD8', 'CTRIA3', 'CTRIA6']:
+                    cen = 'CEN/%s' % eType[-1]
+                oxxi = case.oxx[eid][cen]
                 #self.oyy[eid][nid][iLayer]
 
-                oxxi = max(case.oxx[eid]['C'])
-                oyyi = max(case.oyy[eid]['C'])
-                ozzi = min(case.oxx[eid]['C'], min(case.oyy[eid]['C']))
+                oxxi = max(case.oxx[eid][cen])
+                oyyi = max(case.oyy[eid][cen])
+                ozzi = min(case.oxx[eid][cen], min(case.oyy[eid][cen]))
 
-                o1i = max(case.majorP[eid]['C'])
-                o2i = max(case.minorP[eid]['C'])
-                o3i = min(case.majorP[eid]['C'], min(case.minorP[eid]['C']))
-                ovmi = max(case.ovmShear[eid]['C'])
+                o1i = max(case.majorP[eid][cen])
+                o2i = max(case.minorP[eid][cen])
+                o3i = min(case.majorP[eid][cen], min(case.minorP[eid][cen]))
+                ovmi = max(case.ovmShear[eid][cen])
 
                 oxx[eid2] = oxxi
                 oyy[eid2] = oyyi
@@ -771,26 +770,18 @@ class NastranIO(object):
             else:
                 vmWord = 'maxShear'
             for eid in case.ovmShear:
+                #print('solid eid', eid)
                 eid2 = self.eidMap[eid]
                 cases[eKey][eid2] = 1.
 
-                oxxi = case.oxx[eid]['C']
-                oyyi = case.oyy[eid]['C']
-                ozzi = case.ozz[eid]['C']
+                oxx[eid2] = case.oxx[eid]['CENTER']
+                oyy[eid2] = case.oyy[eid]['CENTER']
+                ozz[eid2] = case.ozz[eid]['CENTER']
 
-                o1i = case.o1[eid]['C']
-                o2i = case.o2[eid]['C']
-                o3i = case.o3[eid]['C']
-                ovmi = case.ovmShear[eid]['C']
-
-                oxx[eid2] = oxxi
-                oyy[eid2] = oyyi
-                ozz[eid2] = ozzi
-
-                o1[eid2] = o1i
-                o2[eid2] = o2i
-                o3[eid2] = o3i
-                ovm[eid2] = ovmi
+                o1[eid2] = case.o1[eid]['CENTER']
+                o2[eid2] = case.o2[eid]['CENTER']
+                o3[eid2] = case.o3[eid]['CENTER']
+                ovm[eid2] = case.ovmShear[eid]['CENTER']
 
         # subcaseID,resultType,vectorSize,location,dataFormat
         cases[(subcaseID, 'StressXX', 1, 'centroid', '%.3f')] = oxx
@@ -800,5 +791,6 @@ class NastranIO(object):
         cases[(subcaseID, 'Stress1', 1, 'centroid', '%.3f')] = o1
         cases[(subcaseID, 'Stress2', 1, 'centroid', '%.3f')] = o2
         cases[(subcaseID, 'Stress3', 1, 'centroid', '%.3f')] = o3
-        cases[(subcaseID, vmWord, 1, 'centroid', '%.3f')] = ovm
+        if vmWord is not None:
+            cases[(subcaseID, vmWord, 1, 'centroid', '%.3f')] = ovm
         return cases
