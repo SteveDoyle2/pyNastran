@@ -148,6 +148,8 @@ class OPG(OP2Common):
         if self.thermal == 0:
             result_name = 'loadVectors'
             storage_obj = self.loadVectors
+            if result_name not in self._saved_results:
+                return len(data)
             n = self._read_table(data, result_name, storage_obj,
                                  RealLoadVector, ComplexLoadVector,
                                  RealLoadVectorArray, ComplexLoadVectorArray,
@@ -159,6 +161,8 @@ class OPG(OP2Common):
             ComplexThermalLoadVectorObject = None
             RealThermalLoadVectorVector = None
             ComplexThermalLoadVectorVector = None
+            if result_name not in self._saved_results:
+                return len(data)
             n = self._read_table(data, result_name, storage_obj,
                                  RealThermalLoadVector, ComplexThermalLoadVector,
                                  RealThermalLoadVectorArray, ComplexThermalLoadVectorArray,
@@ -176,6 +180,8 @@ class OPG(OP2Common):
             storage_obj = self.forceVectors
             ForceVectorVector = None
             ComplexForceVectorVector = None
+            if result_name not in self._saved_results:
+                return len(data)
             n = self._read_table(data, result_name, storage_obj,
                                  RealForceVector, ComplexForceVector,
                                  RealForceVectorArray, ComplexForceVector,

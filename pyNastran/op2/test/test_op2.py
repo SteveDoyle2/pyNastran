@@ -168,7 +168,7 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
 def run_op2(op2FileName, make_geom=False, write_bdf=False,
             write_f06=True, write_op2=True, is_mag_phase=False,
             is_vector=False, delete_f06=False,
-            iSubcases=[], debug=False, stopOnFailure=True):
+            iSubcases=[], exclude=[], debug=False, stopOnFailure=True):
     assert '.op2' in op2FileName.lower(), 'op2FileName=%s is not an OP2' % op2FileName
     isPassed = False
     if isinstance(iSubcases, basestring):
@@ -186,6 +186,8 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
             op2 = OP2(make_geom=make_geom, debug=debug)
 
         op2.set_subcases(iSubcases)
+        op2.remove_results(exclude)
+
         if is_memory:
             if is_linux: # linux
                 kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
@@ -313,7 +315,7 @@ def main():
     #msg += "test_op2 [-q] [-f] [-z] [-t] [-s <sub>] OP2_FILENAME\n"
 
     # current
-    msg += "test_op2 [-q] [-f] [-o] [-z] [-t] [-s <sub>] OP2_FILENAME\n"
+    msg += "test_op2 [-q] [-f] [-o] [-z] [-t] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
     msg += "  test_op2 -h | --help\n"
     msg += "  test_op2 -v | --version\n"
     msg += "\n"
@@ -332,6 +334,7 @@ def main():
     msg += "                       Real/Imaginary (still stores Real/Imag); (default=False)\n"
     msg += "  -s <sub>, --subcase  Specify one or more subcases to parse; (e.g. 2_5)\n"
     msg += "  -t, --vector         Vectorizes the results (default=False)\n"
+    msg += "  -x <arg>, --exclude  Exclude specific results\n"
     msg += "  -h, --help           Show this help message and exit\n"
     msg += "  -v, --version        Show program's version number and exit\n"
 
@@ -357,6 +360,7 @@ def main():
             is_mag_phase  = data['--is_mag_phase'],
             is_vector     = data['--vector'],
             iSubcases     = data['--subcase'],
+            exclude       = data['--exclude'],
             debug         = not(data['--quiet']))
     print("dt = %f" % (time.time() - t0))
 
