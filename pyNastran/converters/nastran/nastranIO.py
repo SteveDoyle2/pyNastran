@@ -17,6 +17,7 @@
 
 import os
 from numpy import zeros, abs
+from numpy.linalg import norm
 
 import vtk
 from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
@@ -604,13 +605,24 @@ class NastranIO(object):
                     case = model.displacements[subcaseID]
                     nnodes = self.nNodes
                     displacements = zeros((nnodes, 3), dtype='float32')
+                    x_displacements = zeros(nnodes, dtype='float32')
+                    y_displacements = zeros(nnodes, dtype='float32')
+                    z_displacements = zeros(nnodes, dtype='float32')
+                    xyz_displacements = zeros(nnodes, dtype='float32')
                     for (nid, txyz) in case.translations.iteritems():
                         nid2 = self.nidMap[nid]
                         displacements[nid2] = txyz
-                    print("disp =", displacements)
-                    key = (subcaseID, 'DisplacementX', 3, 'node', '%g')
-                    print('adding case=%s' % str(key))
-                    cases[key] = displacements
+                        x_displacements[nid2] = txyz[0]
+                        y_displacements[nid2] = txyz[1]
+                        z_displacements[nid2] = txyz[2]
+                        xyz_displacements[nid2] = norm(txyz)
+                    #cases[(subcaseID, 'DisplacementTotal', 3, 'node', '%g')] = displacements
+                    cases[(subcaseID, 'DisplacementX', 1, 'nodal', '%g')] = x_displacements
+                    cases[(subcaseID, 'DisplacementY', 1, 'nodal', '%g')] = y_displacements
+                    cases[(subcaseID, 'DisplacementZ', 1, 'nodal', '%g')] = z_displacements
+                    cases[(subcaseID, 'DisplacementXYZ', 1, 'nodal', '%g')] = xyz_displacements
+                    #key = (subcaseID, 'DisplacementXYZ', 1, 'node', '%g')
+
 
             if 0:
                 if subcaseID in model.temperatures:
