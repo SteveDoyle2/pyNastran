@@ -11,7 +11,7 @@ from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStress, RealBarStrain
 from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import RealBeamStress, RealBeamStrain
-from pyNastran.op2.tables.oes_stressStrain.real.oes_bush import BushStress, BushStrain
+from pyNastran.op2.tables.oes_stressStrain.real.oes_bush import RealBushStress, RealBushStrain
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush1d import RealBush1DStress  # unused
 from pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates import (RealCompositePlateStress, RealCompositePlateStrain,
                                                                             RealCompositePlateStressArray, RealCompositePlateStrainArray)
@@ -1647,9 +1647,9 @@ class OES(OP2Common):
                 return len(data)
             if self.format_code == 1 and self.num_wide == 7:  # real
                 if self.isStress():
-                    self.create_transient_object(self.bushStress, BushStress)
+                    self.create_transient_object(self.bushStress, RealBushStress)
                 else:
-                    self.create_transient_object(self.bushStrain, BushStrain)
+                    self.create_transient_object(self.bushStrain, RealBushStrain)
                 assert self.num_wide == 7, "num_wide=%s not 7" % self.num_wide
                 ntotal = 28  # 4*7
 
