@@ -72,6 +72,9 @@ class OP2( #BDF,
             msg = 'OP2 class doesnt support ask.'
             raise RuntimeError(msg)
 
+    def remove_results(self, results):
+        pass
+
     def set_subcases(self, subcases=None):
         """
         Allows you to read only the subcases in the list of iSubcases
@@ -202,6 +205,8 @@ class OP2( #BDF,
          (.. seealso:: import logging)
         :param debug_file: sets the filename that will be written to (default=None -> no debug)
         """
+        self._saved_results = ['stress', 'element_forces', 'constraint_forces'] + self.get_table_types()
+
         assert isinstance(make_geom, bool), 'make_geom=%r' % make_geom
         assert isinstance(debug, bool), 'debug=%r' % debug
 
@@ -1271,10 +1276,9 @@ class OP2( #BDF,
                     delattr(self, word)
         self.obj = None
 
-    def get_op2_stats(self):
+    def get_table_types(self):
         """
-        Gets info about the contents of the different attributes of the
-        OP2 class.
+        Gets the names of the results.
         """
         table_types = [
             # OUG - displacement
@@ -1463,6 +1467,14 @@ class OP2( #BDF,
             # OEE - strain energy density
             'strainEnergy',  # tCode=18
         ]
+        return table_types
+
+    def get_op2_stats(self):
+        """
+        Gets info about the contents of the different attributes of the
+        OP2 class.
+        """
+        table_types = self.get_table_types()
         msg = []
         for table_type in table_types:
             table = getattr(self, table_type)
