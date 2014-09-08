@@ -538,6 +538,16 @@ class NastranIO(object):
         print("tring to read...", op2FileName)
         if '.op2' in op2FileName:
             model = OP2(log=self.log, debug=True)
+            model._saved_results = set([])
+            all_results = model.get_all_results()
+            desired_results = [
+                'displacements',
+                'stress', 'solidStress', 'plateStress', 'barStress', 'rodStress',
+            ]
+            for result in desired_results:
+                if result in all_results:
+                    model._saved_results.add(result)
+
             model.read_op2(op2FileName)
         elif '.f06' in op2FileName:
             model = F06(log=self.log, debug=True)
@@ -774,6 +784,7 @@ class NastranIO(object):
                 eid2 = self.eidMap[eid]
                 cases[eKey][eid2] = 1.
 
+                #print('case.oxx[%i].keys() = %s' % (eid, case.oxx[eid].keys()))
                 oxx[eid2] = case.oxx[eid]['CENTER']
                 oyy[eid2] = case.oyy[eid]['CENTER']
                 ozz[eid2] = case.ozz[eid]['CENTER']
@@ -784,13 +795,19 @@ class NastranIO(object):
                 ovm[eid2] = case.ovmShear[eid]['CENTER']
 
         # subcaseID,resultType,vectorSize,location,dataFormat
-        cases[(subcaseID, 'StressXX', 1, 'centroid', '%.3f')] = oxx
-        cases[(subcaseID, 'StressYY', 1, 'centroid', '%.3f')] = oyy
-        cases[(subcaseID, 'StressZZ', 1, 'centroid', '%.3f')] = ozz
+        if oxx.min() != oxx.max():
+            cases[(subcaseID, 'StressXX', 1, 'centroid', '%.3f')] = oxx
+        if oyy.min() != oyy.max():
+            cases[(subcaseID, 'StressYY', 1, 'centroid', '%.3f')] = oyy
+        if ozz.min() != ozz.max():
+            cases[(subcaseID, 'StressZZ', 1, 'centroid', '%.3f')] = ozz
 
-        cases[(subcaseID, 'Stress1', 1, 'centroid', '%.3f')] = o1
-        cases[(subcaseID, 'Stress2', 1, 'centroid', '%.3f')] = o2
-        cases[(subcaseID, 'Stress3', 1, 'centroid', '%.3f')] = o3
+        if o1.min() != o1.max():
+            cases[(subcaseID, 'Stress1', 1, 'centroid', '%.3f')] = o1
+        if o2.min() != o2.max():
+            cases[(subcaseID, 'Stress2', 1, 'centroid', '%.3f')] = o2
+        if o3.min() != o3.max():
+            cases[(subcaseID, 'Stress3', 1, 'centroid', '%.3f')] = o3
         if vmWord is not None:
             cases[(subcaseID, vmWord, 1, 'centroid', '%.3f')] = ovm
         return cases
