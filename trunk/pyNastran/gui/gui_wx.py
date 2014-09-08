@@ -58,7 +58,6 @@ valid_formats = [
 ]
 
 assert is_nastran == True, is_nastran
-#print('is_nastran = %r' % is_nastran)
 
 pkgPath = pyNastran.gui.__path__[0]
 #print "pkgPath = %r" % pkgPath
