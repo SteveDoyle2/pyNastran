@@ -264,6 +264,14 @@ class OES(OP2Common):
         is_magnitude_phase = self.is_magnitude_phase()
         dt = self.nonlinear_factor
 
+        if self.isStress():
+            result_name = 'stress'
+        else:
+            result_name = 'strain'
+
+        if result_name not in self._saved_results:
+            return len(data)
+
         if self.element_type in [1, 3, 10]:  # rods
             # 1-CROD
             # 3-CTUBE
@@ -314,6 +322,8 @@ class OES(OP2Common):
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
 
+            if result_name not in self._saved_results:
+                return len(data)
             if self.format_code == 1 and self.num_wide == 5:  # real
                 ntotal = 5 * 4
                 nelements = len(data) // ntotal
@@ -384,6 +394,7 @@ class OES(OP2Common):
 
         elif self.element_type == 2: # CBEAM
             # 2-CBEAM
+            ## TODO: fix method to follow correct pattern...
             if self.read_mode == 1:
                 return len(data)
             if self.format_code == 1 and self.num_wide == 111:  # real
@@ -497,6 +508,8 @@ class OES(OP2Common):
                 result_vector_name = 'cshear_strain'
                 slot_vector = self.cshear_strain
 
+            if result_name not in self._saved_results:
+                return len(data)
             if self.format_code == 1 and self.num_wide == 4:  # real
                 ntotal = 16  # 4*4
                 nelements = len(data) // ntotal
@@ -557,6 +570,8 @@ class OES(OP2Common):
             # 14-CELAS4
             if self.read_mode == 1:
                 return len(data)
+            if result_name not in self._saved_results:
+                return len(data)
             if self.format_code == 1 and self.num_wide == 2:  # real
                 if self.isStress():
                     self.create_transient_object(self.celasStress, RealCelasStress)
@@ -605,6 +620,7 @@ class OES(OP2Common):
             if self.read_mode == 1:
                 return len(data)
             if self.format_code == 1 and self.num_wide == 16:  # real
+                ## TODO: fix to follow correct pattern
                 if self.isStress():
                     self.create_transient_object(self.barStress, RealBarStress)
                 else:
@@ -742,6 +758,8 @@ class OES(OP2Common):
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
 
+            if result_name not in self._saved_results:
+                return len(data)
             numwide_real = 4 + 21 * nnodes_expected
             numwide_imag = 4 + (17 - 4) * nnodes_expected
             preline1 = '%s-%s' % (self.element_name, self.element_type)
@@ -1009,6 +1027,8 @@ class OES(OP2Common):
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
 
+            if result_name not in self._saved_results:
+                return len(data)
             if self.format_code == 1 and self.num_wide == 17:  # real
                 ntotal = 68  # 4*17
                 nelements = len(data) // ntotal
@@ -1173,6 +1193,8 @@ class OES(OP2Common):
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
 
+            if result_name not in self._saved_results:
+                return len(data)
             if self.element_type in [64, 82, 144]:
                 nnodes = 4 # + 1 centroid
             elif self.element_type in [70, 75]:
@@ -1453,6 +1475,8 @@ class OES(OP2Common):
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
 
+            if result_name not in self._saved_results:
+                return len(data)
             etype = self.element_name
             if self.format_code == 1 and self.num_wide == 11:  # real
                 ntotal = 44
@@ -1771,7 +1795,11 @@ class OES(OP2Common):
             if self.read_mode == 1:
                 return len(data)
 
-            slot = self.nonlinearRodStress if self.isStress() else self.nonlinearRodStrain
+            if self.isStress():
+                slot = self.nonlinearRodStress
+            else:
+                slot = self.nonlinearRodStrain
+
             if self.element_type == 87:
                 name = 'CTUBENL-87'
             elif self.element_type == 89:
