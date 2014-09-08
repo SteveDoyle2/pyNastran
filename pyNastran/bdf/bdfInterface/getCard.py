@@ -65,7 +65,6 @@ class GetMethods(GetMethodsDeprecated):
         return nids2
 
     def Node(self, nid, allowEmptyNodes=False, msg=''):
-        #print('nid=', nid, allowEmptyNodes)
         if (nid == 0 or nid is None) and allowEmptyNodes:
             return None
         elif nid in self.nodes:

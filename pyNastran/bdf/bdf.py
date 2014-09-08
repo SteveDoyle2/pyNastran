@@ -266,7 +266,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             # aero cards
             'AERO', 'AEROS', 'GUST', 'FLUTTER', 'FLFACT', 'MKAERO1', 'MKAERO2',
             'AEFACT', 'AELINK', 'AELIST', 'AEPARAM', 'AESTAT', 'AESURF',
-            'CAERO1', 'CAERO2', 'CAERO4', 'CAERO3', # 'CAERO5',
+            'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', # 'CAERO5',
             'PAERO1', 'PAERO2',  'PAERO3', # 'PAERO4', 'PAERO5',
             'SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',
             #'SPLINE3', 'SPLINE6', 'SPLINE7',

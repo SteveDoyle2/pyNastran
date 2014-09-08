@@ -592,7 +592,7 @@ class MATT8(MaterialDependence):
     |       |  T(GE) | T(F12) |
     +-------+--------+--------+
     """
-    type = 'MATT4'
+    type = 'MATT8'
 
     def __init__(self, card=None, data=None, comment=''):
         MaterialDependence.__init__(self, card, data)

@@ -569,7 +569,7 @@ class Cord2x(Coord):
                     global.  This isn't a problem.  It's meant to speed up the
                     code in order to resolve extra coordinate systems.
         """
-        if self.rid != 0:
+        if self.Rid() != 0:
             msg = ' which is required by %s cid=%s' % (self.type, self.cid)
             self.rid = model.Coord(self.rid, msg=msg)
 
@@ -647,7 +647,8 @@ class Cord1x(Coord):
         if rid != rid3:
             p3 = self.g3.PositionWRT(model, rid)
 
-        data = [self.type, self.cid, rid1, list(p1) + list(p2) + list(p3)]
+        type1 = self.type.replace('1', '2')
+        data = [type1, self.cid, rid1, list(p1) + list(p2) + list(p3)]
 
         if self.type == 'CORD1R':
             coord = CORD2R(card=None, data=data, comment=self.comment())
@@ -695,7 +696,7 @@ class Cord1x(Coord):
         if self.isResolved:
             return
 
-        #: the origin
+        #: the origin in the local frame
         self.e1 = self.g1.Position()
 
         #: a point on the z-axis
