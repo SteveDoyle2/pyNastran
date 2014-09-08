@@ -149,18 +149,20 @@ class OPG(OP2Common):
             result_name = 'loadVectors'
             storage_obj = self.loadVectors
             n = self._read_table(data, result_name, storage_obj,
-                                 RealLoadVectorObject, ComplexLoadVectorObject,
-                                 RealLoadVectorVector, ComplexLoadVectorVector, 'node', random_code=self.random_code)
+                                 RealLoadVector, ComplexLoadVector,
+                                 RealLoadVectorArray, ComplexLoadVectorArray,
+                                 'node', random_code=self.random_code)
         elif self.thermal == 1:
             result_name = 'thermalLoadVectors'
             storage_obj = self.thermalLoadVectors
 
             ComplexThermalLoadVectorObject = None
-            ThermalLoadVectorVector = None
+            RealThermalLoadVectorVector = None
             ComplexThermalLoadVectorVector = None
             n = self._read_table(data, result_name, storage_obj,
-                                 ThermalLoadVectorObject, ComplexThermalLoadVectorObject,
-                                 ThermalLoadVectorVector, ComplexThermalLoadVectorVector, 'node', random_code=self.random_code)
+                                 RealThermalLoadVector, ComplexThermalLoadVector,
+                                 RealThermalLoadVectorArray, ComplexThermalLoadVectorArray,
+                                 'node', random_code=self.random_code)
         else:
             raise NotImplementedError(self.thermal)
         return n
@@ -175,18 +177,20 @@ class OPG(OP2Common):
             ForceVectorVector = None
             ComplexForceVectorVector = None
             n = self._read_table(data, result_name, storage_obj,
-                                 ForceVectorObject, ComplexForceVectorObject,
-                                 ForceVectorVector, ComplexForceVectorVector, 'node', random_code=self.random_code)
+                                 RealForceVector, ComplexForceVector,
+                                 RealForceVectorArray, ComplexForceVector,
+                                 'node', random_code=self.random_code)
         #elif self.thermal == 1:
             #result_name = 'thermalForceVectors'
             #storage_obj = self.thermalForceVectors
-            #ThermalForceVectorObject = None
-            #ComplexThermalForceVectorObject = None
-            #ThermalForceVectorVector = None
-            #ComplexThermalForceVectorVector = None
+            #RealThermalForceVector = None
+            #ComplexThermalForceVector = None
+            #RealThermalForceVectorVector = None
+            #ComplexThermalForceVectorArray = None
             #n = self._read_table(data, result_name, storage_obj,
-                                 #ThermalForceVectorObject, ComplexThermalForceVectorObject,
-                                 #ThermalForceVectorVector, ComplexThermalForceVectorVector, 'node', random_code=self.random_code)
+                                 #RealThermalForceVector, ComplexThermalForceVector,
+                                 #RealThermalForceVectorArray, ComplexThermalForceVectorArray,
+                                 #'node', random_code=self.random_code)
         else:
             raise NotImplementedError(self.thermal)
         return n

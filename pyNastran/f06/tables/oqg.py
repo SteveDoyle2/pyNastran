@@ -1,7 +1,7 @@
 #pylint: disable=C0301,C0103,C0111
 from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import RealSPCForces  # ,ComplexSPCForcesObject
 from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import RealMPCForces  # ,ComplexMPCForcesObject
-from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import RealLoadVectorObject
+from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import RealLoadVector
 
 class OQG(object):
     def _read_f06_table(self, data_types, debug=False):
