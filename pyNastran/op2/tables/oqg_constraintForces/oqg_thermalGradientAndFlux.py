@@ -2,11 +2,11 @@ from pyNastran.op2.resultObjects.tableObject import RealTableObject, ComplexTabl
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 
-from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTableVector, RealTableObject, ComplexTableObject
+from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray, RealTableObject, ComplexTableObject
 
-class RealTemperatureGradientAndFluxArray(RealTableVector):
+class RealTemperatureGradientAndFluxArray(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         msg = header + ['                   F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S\n',

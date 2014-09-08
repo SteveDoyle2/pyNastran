@@ -1,10 +1,10 @@
-from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTableVector, RealTableObject, ComplexTableObject
+from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray, RealTableObject, ComplexTableObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
 
-class RealMPCForcesArray(RealTableVector):
+class RealMPCForcesArray(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                               F O R C E S   O F   M U L T I - P O I N T   C O N S T R A I N T\n', ]
@@ -16,9 +16,9 @@ class RealMPCForcesArray(RealTableVector):
         return self._write_f06_block(words, header, pageStamp, page_num, f)
 
 
-class ComplexMPCForcesArray(ComplexTableVector):
+class ComplexMPCForcesArray(ComplexTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ComplexTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                         C O M P L E X   F O R C E S   O F   M U L T I   P O I N T   C O N S T R A I N T\n', ]

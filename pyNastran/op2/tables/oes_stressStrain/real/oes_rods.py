@@ -234,7 +234,7 @@ class RealRodStrainArray(RealRodArray, StrainObject):
         return crod_msg, conrod_msg, ctube_msg
 
 
-class RodDamperObject(StressObject):
+class RodDamper(StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = 'CBUSH'
