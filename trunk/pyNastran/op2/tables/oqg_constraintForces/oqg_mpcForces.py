@@ -2,7 +2,7 @@ from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTabl
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
 
-class RealMPCForcesVector(RealTableVector):
+class RealMPCForcesArray(RealTableVector):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
 
@@ -16,7 +16,7 @@ class RealMPCForcesVector(RealTableVector):
         return self._write_f06_block(words, header, pageStamp, page_num, f)
 
 
-class ComplexMPCForcesVector(ComplexTableVector):
+class ComplexMPCForcesArray(ComplexTableVector):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
 

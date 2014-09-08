@@ -7,7 +7,7 @@ from .oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 
-class RealRodVector(OES_Object):
+class RealRodArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         self.eType = {}
@@ -170,9 +170,9 @@ class RealRodVector(OES_Object):
         return page_num - 1
 
 
-class RealBushStressVector(RealRodVector, StressObject):
+class RealBushStressArray(RealRodArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealRodVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
     def get_headers(self):
@@ -193,9 +193,9 @@ class RealBushStressVector(RealRodVector, StressObject):
         return crod_msg, conrod_msg, ctube_msg
 
 
-class RealRodStressVector(RealRodVector, StressObject):
+class RealRodStressArray(RealRodArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealRodVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
     def get_headers(self):
@@ -213,9 +213,9 @@ class RealRodStressVector(RealRodVector, StressObject):
         ctube_msg += base_msg
         return crod_msg, conrod_msg, ctube_msg
 
-class RealRodStrainVector(RealRodVector, StrainObject):
+class RealRodStrainArray(RealRodArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealRodVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
     def get_headers(self):

@@ -12,36 +12,36 @@ from struct import unpack
 from pyNastran.op2.op2_common import OP2Common
 
 from pyNastran.op2.tables.oug.oug_displacements import (
-    RealDisplacementVector,
-    ComplexDisplacementVector,
+    RealDisplacementArray,
+    ComplexDisplacementArray,
     RealDisplacement,          # table_code=1     format_code=1 sort_code=0
     ComplexDisplacement)       # analysis_code=5  format_code=3 sort_code=1
 
 # table_code=10 format_code=1 sort_code=0
 from pyNastran.op2.tables.oug.oug_velocities import (
-    RealVelocityVector, ComplexVelocityVector,
+    RealVelocityArray, ComplexVelocityArray,
     RealVelocity, ComplexVelocity)
 
 # table_code=11 format_code=1 sort_code=0
 from pyNastran.op2.tables.oug.oug_accelerations import (
-    RealAccelerationVector, ComplexAccelerationVector,
+    RealAccelerationArray, ComplexAccelerationArray,
     RealAcceleration, ComplexAcceleration)
 
 # table_code=1 format_code=1 sort_code=0
 from pyNastran.op2.tables.oug.oug_temperatures import (
-    RealTemperatureVector, RealTemperature)
+    RealTemperatureArray, RealTemperature)
 
 from pyNastran.op2.tables.oug.oug_eigenvectors import (
-    RealEigenvectorVector,
-    ComplexEigenvectorVector,
+    RealEigenvectorArray,
+    ComplexEigenvectorArray,
 
-    #ComplexEigenvectorObject,              # analysis_code=5, sort_code=1 format_code=1 table_code=7
-     EigenvectorObject,                     # analysis_code=2, sort_code=0 format_code   table_code=7
-     ComplexEigenvectorObject,              # analysis_code=5, sort_code=1 format_code=1 table_code=7
-    #RealEigenvectorObject,                 # analysis_code=9, sort_code=1 format_code=1 table_code=7
+    #ComplexEigenvector              # analysis_code=5, sort_code=1 format_code=1 table_code=7
+     Eigenvector,                    # analysis_code=2, sort_code=0 format_code   table_code=7
+     ComplexEigenvector,             # analysis_code=5, sort_code=1 format_code=1 table_code=7
+    #RealEigenvector,                # analysis_code=9, sort_code=1 format_code=1 table_code=7
 )
 
-from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import ThermalVelocityVectorObject
+from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import RealThermalVelocityVector
 
 
 class OUG(OP2Common):
@@ -191,25 +191,25 @@ class OUG(OP2Common):
             storage_obj = self.displacements
             n = self._read_table(data, result_name, storage_obj,
                                  RealDisplacement, ComplexDisplacement,
-                                 RealDisplacementVector, ComplexDisplacementVector, 'node', random_code=self.random_code)
+                                 RealDisplacementArray, ComplexDisplacementArray, 'node', random_code=self.random_code)
         elif self.thermal == 1:
             result_name = 'temperatures'
             storage_obj = self.temperatures
             n = self._read_table(data, result_name, storage_obj,
                                  RealTemperature, None,
-                                 RealTemperatureVector, None, 'node', random_code=self.random_code)
+                                 RealTemperatureArray, None, 'node', random_code=self.random_code)
         elif self.thermal == 2:
             result_name = 'displacement_scaled_response_spectra_ABS'
             storage_obj = self.displacement_scaled_response_spectra_ABS
             n = self._read_table(data, result_name, storage_obj,
                                  RealDisplacement, ComplexDisplacement,
-                                 RealDisplacementVector, ComplexDisplacementVector, 'node', random_code=self.random_code)
+                                 RealDisplacementArray, ComplexDisplacementArray, 'node', random_code=self.random_code)
         elif self.thermal == 4:
             result_name = 'displacement_scaled_response_spectra_NRL'
             storage_obj = self.displacement_scaled_response_spectra_NRL
             n = self._read_table(data, result_name, storage_obj,
                                  RealDisplacement, ComplexDisplacement,
-                                 RealDisplacementVector, ComplexDisplacementVector, 'node', random_code=self.random_code)
+                                 RealDisplacementArray, ComplexDisplacementArray, 'node', random_code=self.random_code)
             #return self._not_implemented_or_skip(data, msg='thermal=4')
         else:
             n = self._not_implemented_or_skip(data, 'bad thermal=%r table' % self.thermal)
@@ -228,20 +228,20 @@ class OUG(OP2Common):
             complex_obj = ComplexVelocity
             n = self._read_table(data, result_name, storage_obj,
                                  RealVelocity, ComplexVelocity,
-                                 RealVelocityVector, ComplexVelocityVector,
+                                 RealVelocityArray, ComplexVelocityArray,
                                  'node', random_code=self.random_code)
         elif self.thermal == 1:
-            real_obj = ThermalVelocityVectorObject
+            real_obj = RealThermalVelocityVector
             complex_obj = None
             n = self._read_table(data, result_name, storage_obj,
-                                 ThermalVelocityVectorObject, None,
+                                 RealThermalVelocityVector, None,
                                  None, None, 'node', random_code=self.random_code)
         elif self.thermal == 2:
             result_name = 'velocity_scaled_response_spectra_ABS'
             storage_obj = self.velocity_scaled_response_spectra_ABS
             n = self._read_table(data, result_name, storage_obj,
                                  RealVelocity, ComplexVelocity,
-                                 RealVelocityVector, ComplexVelocityVector,
+                                 RealVelocityArray, ComplexVelocityArray,
                                  'node', random_code=self.random_code)
             #n = self._not_implemented_or_skip(data, msg='thermal=2')
         else:
@@ -257,7 +257,7 @@ class OUG(OP2Common):
             storage_obj = self.accelerations
             n = self._read_table(data, result_name, storage_obj,
                                  RealAcceleration, ComplexAcceleration,
-                                 RealAccelerationVector, ComplexAccelerationVector,
+                                 RealAccelerationArray, ComplexAccelerationArray,
                                  'node', random_code=self.random_code)
         elif self.thermal == 1:
             result_name = 'accelerations'
@@ -270,7 +270,7 @@ class OUG(OP2Common):
             storage_obj = self.acceleration_scaled_response_spectra_ABS
             n = self._read_table(data, result_name, storage_obj,
                                  RealAcceleration, ComplexAcceleration,
-                                 RealAccelerationVector, ComplexAccelerationVector,
+                                 RealAccelerationArray, ComplexAccelerationArray,
                                  'node', random_code=self.random_code)
             #n = self._not_implemented_or_skip(data, msg='thermal=2')
         elif self.thermal == 4:
@@ -278,7 +278,7 @@ class OUG(OP2Common):
             storage_obj = self.acceleration_scaled_response_spectra_NRL
             n = self._read_table(data, result_name, storage_obj,
                                  RealAcceleration, ComplexAcceleration,
-                                 RealAccelerationVector, ComplexAccelerationVector,
+                                 RealAccelerationArray, ComplexAccelerationArray,
                                  'node', random_code=self.random_code)
             #n = self._not_implemented_or_skip(data, msg='thermal=4')
         else:
@@ -293,8 +293,8 @@ class OUG(OP2Common):
         storage_obj = self.eigenvectors
         if self.thermal == 0:
             n = self._read_table(data, result_name, storage_obj,
-                                 EigenvectorObject, ComplexEigenvectorObject,
-                                 RealEigenvectorVector, ComplexEigenvectorVector, 'node')
+                                 Eigenvector, ComplexEigenvector,
+                                 RealEigenvectorArray, ComplexEigenvectorArray, 'node')
         elif self.thermal == 1:
             n = self._not_implemented_or_skip(data, msg='thermal=1')
             #n = self._read_table(data, result_name, storage_obj,
@@ -338,8 +338,8 @@ class OUG(OP2Common):
                 msg = 'invalid random_code=%s num_wide=%s' % (self.random_code, self.num_wide)
                 n = self._not_implemented_or_skip(data, msg)
             #n = self._read_table(data, result_name, storage_obj,
-            #                     EigenvectorObject, ComplexEigenvectorObject,
-            #                     RealEigenvectorVector, ComplexEigenvectorVector, 'node')
+            #                     Eigenvector, ComplexEigenvector,
+            #                     RealEigenvectorArray, ComplexEigenvectorArray, 'node')
         elif self.thermal == 1:
             n = self._not_implemented_or_skip(data, msg='thermal=1')
             #n = self._read_table(data, result_name, storage_obj,

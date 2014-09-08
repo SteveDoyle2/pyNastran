@@ -2,7 +2,7 @@ from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTabl
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 
-class RealLoadVectorVector(RealTableVector):  # table_code=2, sort_code=0, thermal=0
+class RealLoadVectorArray(RealTableVector):  # table_code=2, sort_code=0, thermal=0
 
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
@@ -15,7 +15,7 @@ class RealLoadVectorVector(RealTableVector):  # table_code=2, sort_code=0, therm
         return self._write_f06_block(words, header, pageStamp, page_num, f)
 
 
-class ComplexLoadVectorVector(ComplexTableVector):
+class ComplexLoadVectorArray(ComplexTableVector):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
 
@@ -24,7 +24,7 @@ class ComplexLoadVectorVector(ComplexTableVector):
         return self._write_f06_transient_block(words, header, pageStamp, page_num, f, is_mag_phase)
 
 
-class RealLoadVectorObject(RealTableObject):  # table_code=2, sort_code=0, thermal=0
+class RealLoadVector(RealTableObject):  # table_code=2, sort_code=0, thermal=0
 
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
@@ -75,7 +75,7 @@ class RealLoadVectorObject(RealTableObject):  # table_code=2, sort_code=0, therm
         return page_num - 1
 
 
-class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_code=???
+class ComplexLoadVector(ComplexTableObject):  # table_code=11, approach_code=???
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
@@ -196,7 +196,7 @@ class ComplexLoadVectorObject(ComplexTableObject):  # table_code=11, approach_co
         return page_num - 1
 
 
-class RealThermalVectorObject(RealTableObject):
+class RealThermalVector(RealTableObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
@@ -248,11 +248,11 @@ class RealThermalVectorObject(RealTableObject):
         return page_num - 1
 
 
-class ThermalLoadVectorObject(RealThermalVectorObject):     # table_code=2, thermal=1
+class RealThermalLoadVector(RealThermalVector):     # table_code=2, thermal=1
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealThermalVectorObject.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealThermalVector.__init__(self, data_code, is_sort1, isubcase, dt)
 
 
-class ThermalVelocityVectorObject(RealThermalVectorObject):  # table_code=10, thermal=1
+class RealThermalVelocityVector(RealThermalVector):  # table_code=10, thermal=1
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealThermalVectorObject.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealThermalVector.__init__(self, data_code, is_sort1, isubcase, dt)

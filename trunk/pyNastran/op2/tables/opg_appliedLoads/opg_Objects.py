@@ -3,7 +3,7 @@ from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
 
-class AppliedLoadsVector(ScalarObject):
+class AppliedLoadsVectorArray(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
         #self.dt = dt
@@ -66,9 +66,9 @@ class AppliedLoadsVector(ScalarObject):
         self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
 
 
-class RealAppliedLoadsVector(AppliedLoadsVector):
+class RealAppliedLoadsVectorArray(AppliedLoadsVectorArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        AppliedLoadsVector.__init__(self, data_code, isubcase, dt)
+        AppliedLoadsVectorArray.__init__(self, data_code, isubcase, dt)
 
     def data_type(self):
         raise 'float32'
@@ -103,9 +103,9 @@ class RealAppliedLoadsVector(AppliedLoadsVector):
         return page_num-1
 
 
-class ComplexAppliedLoadsVector(AppliedLoadsVector):
+class ComplexAppliedLoadsVectorArray(AppliedLoadsVectorArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        AppliedLoadsVector.__init__(self, data_code, isubcase, dt)
+        AppliedLoadsVectorArray.__init__(self, data_code, isubcase, dt)
 
     def data_type(self):
         raise 'float32'
@@ -141,7 +141,7 @@ class ComplexAppliedLoadsVector(AppliedLoadsVector):
             page_num += 1
         return page_num-1
 
-class AppliedLoadsObject(ScalarObject):  # approach_code=1, sort_code=0
+class RealAppliedLoads(ScalarObject):  # approach_code=1, sort_code=0
 
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
@@ -185,7 +185,7 @@ class AppliedLoadsObject(ScalarObject):  # approach_code=1, sort_code=0
         self.moments[nodeID].append(array([v4, v5, v6]))  # Mx,My,Mz
 
     def addTransient(self, nodeID, eid, source, v1, v2, v3, v4, v5, v6):
-        raise NotImplementedError('AppliedLoadsObject')
+        raise NotImplementedError('AppliedLoads')
         msg = "nodeID=%s v1=%s v2=%s v3=%s" % (nodeID, v1, v2, v3)
         assert 0 < nodeID < 1000000000, msg
         assert nodeID not in self.forces

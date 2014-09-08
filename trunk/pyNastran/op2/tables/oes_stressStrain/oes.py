@@ -14,16 +14,16 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import RealBeamStress,
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush import BushStress, BushStrain
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush1d import RealBush1DStress  # unused
 from pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates import (RealCompositePlateStress, RealCompositePlateStrain,
-                                                                            RealCompositePlateStressVector, RealCompositePlateStrainVector)
-from pyNastran.op2.tables.oes_stressStrain.real.oes_gap import NonlinearGapStressObject
+                                                                            RealCompositePlateStressArray, RealCompositePlateStrainArray)
+from pyNastran.op2.tables.oes_stressStrain.real.oes_gap import NonlinearGapStress
 from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import (RealPlateStress, RealPlateStrain,
-                                                                   RealPlateStressVector, RealPlateStrainVector)
+                                                                   RealPlateStressArray, RealPlateStrainArray)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import (RealRodStress, RealRodStrain,
-                                                                 RealRodStressVector, RealRodStrainVector)
+                                                                 RealRodStressArray, RealRodStrainArray)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import (RealShearStress, RealShearStrain,
-                                                                  RealShearStrainVector, RealShearStressVector)
+                                                                  RealShearStrainArray, RealShearStressArray)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import (RealSolidStress, RealSolidStrain,
-                                                                   RealSolidStrainVector, RealSolidStressVector)
+                                                                   RealSolidStrainArray, RealSolidStressArray)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealCelasStress, RealCelasStrain, NonlinearSpringStress
 from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import RealTriaxStress, RealTriaxStrain
 
@@ -32,10 +32,10 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush import ComplexBushSt
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexBush1DStress
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStress, ComplexPlateStrain
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import (ComplexRodStress, ComplexRodStrain)
-                                                                    #ComplexRodStressVector, ComplexRodStrainVector)
+                                                                    #ComplexRodStressArray, ComplexRodStrainArray)
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShearStress, ComplexShearStrain
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import (ComplexSolidStress, ComplexSolidStrain,
-                                                                      ComplexSolidStressVector, ComplexSolidStrainVector)
+                                                                      ComplexSolidStressArray, ComplexSolidStrainArray)
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexCelasStress, ComplexCelasStrain
 
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import NonlinearRod, NonlinearQuad, HyperelasticQuad
@@ -276,9 +276,9 @@ class OES(OP2Common):
                 obj_complex = ComplexRodStress
 
                 #result_vector_name
-                ComplexRodStressVector = None
-                obj_vector_real = RealRodStressVector
-                obj_vector_complex = ComplexRodStressVector
+                ComplexRodStressArray = None
+                obj_vector_real = RealRodStressArray
+                obj_vector_complex = ComplexRodStressArray
                 if self.element_type == 1: # CROD
                     result_vector_name = 'crod_stress'
                     slot_vector = self.crod_stress
@@ -298,9 +298,9 @@ class OES(OP2Common):
                 obj_complex = ComplexRodStrain
 
                 #result_vector_name
-                ComplexRodStrainVector = None
-                obj_vector_real = RealRodStrainVector
-                obj_vector_complex = ComplexRodStrainVector
+                ComplexRodStrainArray = None
+                obj_vector_real = RealRodStrainArray
+                obj_vector_complex = ComplexRodStrainArray
                 if self.element_type == 1: # CROD
                     result_vector_name = 'crod_strain'
                     slot_vector = self.crod_strain
@@ -478,9 +478,9 @@ class OES(OP2Common):
                 obj_complex = ComplexShearStress
 
                 #result_vector_name
-                ComplexShearStressVector = None
-                obj_vector_real = RealShearStressVector
-                obj_vector_complex = ComplexShearStressVector
+                ComplexShearStressArray = None
+                obj_vector_real = RealShearStressArray
+                obj_vector_complex = ComplexShearStressArray
                 result_vector_name = 'cshear_stress'
                 slot_vector = self.cshear_stress
             else:
@@ -491,9 +491,9 @@ class OES(OP2Common):
 
                 #result_vector_name
                 #slot_vector
-                ComplexShearStrainVector = None
-                obj_vector_real = RealShearStrainVector
-                obj_vector_complex = ComplexShearStrainVector
+                ComplexShearStrainArray = None
+                obj_vector_real = RealShearStrainArray
+                obj_vector_complex = ComplexShearStrainArray
                 result_vector_name = 'cshear_strain'
                 slot_vector = self.cshear_strain
 
@@ -693,8 +693,8 @@ class OES(OP2Common):
 
                 #result_vector_name
                 #slot_vector
-                obj_vector_real = RealSolidStressVector
-                obj_vector_complex = ComplexSolidStressVector
+                obj_vector_real = RealSolidStressArray
+                obj_vector_complex = ComplexSolidStressArray
                 if self.element_type == 39: # CTETRA
                     nnodes_expected = 5  # 1 centroid + 4 corner points
                     result_vector_name = 'ctetra_stress'
@@ -721,8 +721,8 @@ class OES(OP2Common):
 
                 #result_vector_name
                 #slot_vector
-                obj_vector_real = RealSolidStrainVector
-                obj_vector_complex = ComplexSolidStrainVector
+                obj_vector_real = RealSolidStrainArray
+                obj_vector_complex = ComplexSolidStrainArray
                 if self.element_type == 39: # CTETRA
                     nnodes_expected = 5  # 1 centroid + 4 corner points
                     result_vector_name = 'ctetra_strain'
@@ -983,9 +983,9 @@ class OES(OP2Common):
                 obj_complex = ComplexPlateStress
 
                 #result_vector_name
-                ComplexPlateStressVector = None
-                obj_vector_real = RealPlateStressVector
-                obj_vector_complex = ComplexPlateStressVector
+                ComplexPlateStressArray = None
+                obj_vector_real = RealPlateStressArray
+                obj_vector_complex = ComplexPlateStressArray
                 if self.element_type == 74: # CTRIA3
                     result_vector_name = 'ctria3_stress'
                     slot_vector = self.ctria3_stress
@@ -999,9 +999,9 @@ class OES(OP2Common):
                 obj_complex = ComplexPlateStrain
 
                 #result_vector_name
-                ComplexPlateStrainVector = None
-                obj_vector_real = RealPlateStrainVector
-                obj_vector_complex = ComplexPlateStrainVector
+                ComplexPlateStrainArray = None
+                obj_vector_real = RealPlateStrainArray
+                obj_vector_complex = ComplexPlateStrainArray
                 if self.element_type == 74: # CTRIA3
                     result_vector_name = 'ctria3_strain'
                     slot_vector = self.ctria3_strain
@@ -1104,9 +1104,9 @@ class OES(OP2Common):
                 obj_complex = ComplexPlateStrain
 
                 #result_vector_name
-                ComplexPlateStressVector = None
-                obj_vector_real = RealPlateStressVector
-                obj_vector_complex = ComplexPlateStressVector
+                ComplexPlateStressArray = None
+                obj_vector_real = RealPlateStressArray
+                obj_vector_complex = ComplexPlateStressArray
                 # 64-CQUAD8
                 # 70-CTRIAR
                 # 75-CTRIA6
@@ -1144,9 +1144,9 @@ class OES(OP2Common):
                 obj_complex = ComplexPlateStrain
 
                 #result_vector_name
-                ComplexPlateStrainVector = None
-                obj_vector_real = RealPlateStrainVector
-                obj_vector_complex = ComplexPlateStrainVector
+                ComplexPlateStrainArray = None
+                obj_vector_real = RealPlateStrainArray
+                obj_vector_complex = ComplexPlateStrainArray
                 if self.element_type == 64: # CQUAD8
                     result_vector_name = 'cquad8_strain'
                     slot_vector = self.cquad8_strain
@@ -1403,9 +1403,9 @@ class OES(OP2Common):
                 obj_complex = ComplexCompositePlateStress
 
                 #result_vector_name
-                ComplexCompositePlateStressVector = None
-                obj_vector_real = RealCompositePlateStressVector
-                obj_vector_complex = ComplexCompositePlateStressVector
+                ComplexCompositePlateStressArray = None
+                obj_vector_real = RealCompositePlateStressArray
+                obj_vector_complex = ComplexCompositePlateStressArray
                 if self.element_type == 95: # CQUAD4
                     result_vector_name = 'cquad4_composite_stress'
                     slot_vector = self.cquad4_composite_stress
@@ -1434,9 +1434,9 @@ class OES(OP2Common):
                 obj_complex = ComplexCompositePlateStrain
 
                 #result_vector_name
-                ComplexCompositePlateStrainVector = None
-                obj_vector_real = RealCompositePlateStrainVector
-                obj_vector_complex = ComplexCompositePlateStrainVector
+                ComplexCompositePlateStrainArray = None
+                obj_vector_real = RealCompositePlateStrainArray
+                obj_vector_complex = ComplexCompositePlateStrainArray
                 if self.element_type == 95: # CQUAD4
                     result_vector_name = 'cquad4_composite_strain'
                     slot_vector = self.cquad4_composite_strain
@@ -2247,12 +2247,12 @@ class OES(OP2Common):
         Since that's confusing, let's say we have real CTETRA stress data.
         We're going to fill self.solidStress with the class
         RealSolidStressObject.  If it were vectorized, we'd fill
-        self.ctetra_stress. with RealSolidStressVector.  So we call:
+        self.ctetra_stress. with RealSolidStressArray.  So we call:
 
         auto_return = self._create_oes_object2(self, nelements,
                             'solidStress', 'ctetra_stress',
                             self.solidStress, self.ctetra_stress,
-                            RealSolidStressObject, RealSolidStressVector)
+                            RealSolidStress, RealSolidStressArray)
         if auto_return:
             return nelements * ntotal
         """

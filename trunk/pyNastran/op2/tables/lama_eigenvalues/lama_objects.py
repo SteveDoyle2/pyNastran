@@ -50,7 +50,6 @@ class RealEigenvalues(BaseScalarObject):
         self.generalizedStiffness[modeNum] = genK
 
     def add_f06_data(self, data):
-        #print('real eigenvalues')
         for line in data:
             self.addF06Line(line)
 

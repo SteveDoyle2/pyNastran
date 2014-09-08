@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from .oes_objects import StressObject
 
 
-class NonlinearGapStressObject(StressObject):
+class NonlinearGapStress(StressObject):
 
     def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)

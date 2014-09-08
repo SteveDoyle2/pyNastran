@@ -6,7 +6,7 @@ from numpy import zeros
 
 from .oes_objects import StressObject, StrainObject, OES_Object
 
-class RealShearVector(OES_Object):
+class RealShearArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         self.eType = {}
@@ -165,9 +165,9 @@ class RealShearVector(OES_Object):
         return page_num - 1
 
 
-class RealShearStressVector(RealShearVector, StressObject):
+class RealShearStressArray(RealShearArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealShearVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealShearArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
     def get_headers(self):
@@ -184,9 +184,9 @@ class RealShearStressVector(RealShearVector, StressObject):
         return msg
 
 
-class RealShearStrainVector(RealShearVector, StrainObject):
+class RealShearStrainArray(RealShearArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealShearVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealShearArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
     def get_headers(self):

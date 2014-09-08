@@ -272,7 +272,7 @@ class ComplexSolid(OES_Object):
         return page_num - 1
 
 
-class ComplexSolidStressVector(ComplexSolid, StressObject):
+class ComplexSolidStressArray(ComplexSolid, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexSolid.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
@@ -305,7 +305,7 @@ class ComplexSolidStressVector(ComplexSolid, StressObject):
         return tetra_msg, penta_msg, hexa_msg
 
 
-class ComplexSolidStrainVector(ComplexSolid, StressObject):
+class ComplexSolidStrainArray(ComplexSolid, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexSolid.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)

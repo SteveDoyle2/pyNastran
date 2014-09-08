@@ -1,12 +1,12 @@
 #pylint: disable=C0301,C0103
 from struct import unpack
 
-from pyNastran.op2.tables.opg_appliedLoads.opg_Objects import (AppliedLoadsObject,  #ComplexAppliedLoadsObject,
-                                                               AppliedLoadsVector, ComplexAppliedLoadsVector)
-from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import (RealLoadVectorObject, ComplexLoadVectorObject,
-                                                                  RealLoadVectorVector, ComplexLoadVectorVector,
-                                                                  ThermalLoadVectorObject)
-from pyNastran.op2.tables.opg_appliedLoads.opnl_forceVector import ForceVectorObject, ComplexForceVectorObject
+from pyNastran.op2.tables.opg_appliedLoads.opg_Objects import (RealAppliedLoads,  #ComplexAppliedLoads,
+                                                               RealAppliedLoadsVectorArray, ComplexAppliedLoadsVectorArray)
+from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import (RealLoadVector, ComplexLoadVector,
+                                                                  RealLoadVectorArray, ComplexLoadVectorArray,
+                                                                  RealThermalLoadVector)
+from pyNastran.op2.tables.opg_appliedLoads.opnl_forceVector import RealForceVector, ComplexForceVector
 
 from pyNastran.op2.op2_common import OP2Common
 

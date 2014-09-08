@@ -7,11 +7,11 @@ from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTableVector, RealTableObject, ComplexTableObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
-class ComplexEigenvectorVector(ComplexTableVector):
+class ComplexEigenvectorArray(ComplexTableVector):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
 
-class RealEigenvectorVector(RealTableVector):
+class RealEigenvectorArray(RealTableVector):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
 
@@ -55,7 +55,7 @@ class RealEigenvectorVector(RealTableVector):
         return page_num - 1
 
 
-class EigenvectorObject(RealTableObject):  # approach_code=2, sort_code=0, thermal=0
+class Eigenvector(RealTableObject):  # approach_code=2, sort_code=0, thermal=0
     """
     ::
 
@@ -180,7 +180,7 @@ class EigenvectorObject(RealTableObject):  # approach_code=2, sort_code=0, therm
         return page_num - 1
 
 
-class RealEigenvectorObject(ScalarObject):  # approach_code=2, sort_code=0, thermal=0
+class RealEigenvector(ScalarObject):  # approach_code=2, sort_code=0, thermal=0
     """
     ::
 
@@ -289,7 +289,7 @@ class RealEigenvectorObject(ScalarObject):  # approach_code=2, sort_code=0, ther
         return page_num - 1
 
 
-class ComplexEigenvectorObject(ComplexTableObject):  # approach_code=2, sort_code=0, thermal=0
+class ComplexEigenvector(ComplexTableObject):  # approach_code=2, sort_code=0, thermal=0
     def __init__(self, data_code, is_sort1, isubcase, iMode):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, iMode)
         self.caseVal = iMode

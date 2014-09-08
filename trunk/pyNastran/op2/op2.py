@@ -8,7 +8,6 @@ from struct import unpack, Struct
 
 from numpy import array
 
-
 from pyNastran.f06.errors import FatalError
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 

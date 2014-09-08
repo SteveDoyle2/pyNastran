@@ -10,7 +10,7 @@ from .oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 
-class RealSolidVector(OES_Object):
+class RealSolidArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         self.eType = {}
@@ -236,9 +236,9 @@ class RealSolidVector(OES_Object):
         return page_num - 1
 
 
-class RealSolidStressVector(RealSolidVector, StressObject):
+class RealSolidStressArray(RealSolidArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealSolidVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealSolidArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
     def get_headers(self):
@@ -268,9 +268,9 @@ class RealSolidStressVector(RealSolidVector, StressObject):
         hexa_msg += base_msg
         return tetra_msg, penta_msg, hexa_msg
 
-class RealSolidStrainVector(RealSolidVector, StrainObject):
+class RealSolidStrainArray(RealSolidArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealSolidVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealSolidArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
     def get_headers(self):
@@ -325,7 +325,6 @@ class RealSolidStress(StressObject):
         StressObject.__init__(self, data_code, isubcase)
 
         self.eType = {}
-        self._f06_data = None
         self._f06_data = None
         self.code = [self.format_code, self.sort_code, self.s_code]
 

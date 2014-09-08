@@ -4,7 +4,7 @@ from pyNastran.f06.f06_formatting import writeFloats13E
 
 from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTableVector, RealTableObject, ComplexTableObject
 
-class RealTemperatureGradientAndFluxVector(RealTableVector):
+class RealTemperatureGradientAndFluxArray(RealTableVector):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
 
@@ -18,7 +18,7 @@ class RealTemperatureGradientAndFluxVector(RealTableVector):
         return self._write_f06_block(words, header, pageStamp, page_num, f)
 
 
-class RealTemperatureGradientAndFluxObject(RealTableObject):
+class RealTemperatureGradientAndFlux(RealTableObject):
 
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
@@ -51,7 +51,7 @@ class RealTemperatureGradientAndFluxObject(RealTableObject):
         return self._write_f06_transient_block(words, header, pageStamp, page_num, f)
 
 
-class ComplexTemperatureGradientAndFluxObject(ComplexTableObject):
+class ComplexTemperatureGradientAndFlux(ComplexTableObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         asdf
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
