@@ -264,6 +264,8 @@ class OEF(OP2Common):
     def _read_oef1_thermal(self, data):
         if self.read_mode == 1:
             return len(data)
+        if 'element_forces' not in self._saved_results:
+            return len(data)
         n = 0
         is_magnitude_phase = self.is_magnitude_phase()
         dt = self.nonlinear_factor
@@ -547,6 +549,8 @@ class OEF(OP2Common):
 
     @print_obj_name_on_crash
     def _read_oef1_loads(self, data):
+        if 'element_forces' not in self._saved_results:
+            return len(data)
         (num_wide_real, num_wide_imag) = self.OEF_ForceCode()
         if self.debug4():
             self.binary_debug.write('  num_wide_real = %r\n' % num_wide_real)

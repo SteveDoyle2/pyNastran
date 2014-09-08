@@ -68,7 +68,7 @@ class RealGridPointForces(ScalarObject):
                 self.moments[nid].append([m1, m2, m3])  # Fx,Fy,Fz
                 self.elemName[nid].append(source)
                 self.eids[nid].append(eid)
-        
+
         else:
             if dt not in self.forces:
                 self.forces[dt] = {}
@@ -83,7 +83,7 @@ class RealGridPointForces(ScalarObject):
                 self.moments[dt][nid].append([m1, m2, m3])  # Fx,Fy,Fz
                 self.elemName[nid].append(source)
                 self.eids[nid].append(eid)
-            
+
     def add_sort1(self, dt, eKey, eid, elemName, f1, f2, f3, m1, m2, m3):
         if dt not in self.forces:
             #print "new transient"
@@ -138,7 +138,7 @@ class RealGridPointForces(ScalarObject):
             for iLoad, force in enumerate(Force):
                 (f1, f2, f3) = force
                 (m1, m2, m3) = self.moments[eKey][iLoad]
-                (elemName) = self.elemName[eKey][iLoad]
+                elemName = self.elemName[eKey][iLoad]
                 eid = self.eids[eKey][iLoad]
                 vals = [f1, f2, f3, m1, m2, m3]
                 (vals2, is_all_zeros) = writeFloats13E(vals)

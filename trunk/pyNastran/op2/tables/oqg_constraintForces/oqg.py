@@ -117,6 +117,9 @@ class OQG(OP2Common):
         self._write_debug_bits()
 
     def _read_oqg1_4(self, data):
+        if 'constraint_forces' not in self._saved_results:
+            return len(data)
+        return len(data)
         if self.table_code == 3:   # SPC Forces
             assert self.table_name in ['OQG1', 'OQGV1', 'OQP1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_spc_forces(data)
@@ -137,12 +140,16 @@ class OQG(OP2Common):
         if self.thermal == 0:
             result_name = 'spcForces'
             storage_obj = self.spcForces
+            if result_name not in self._saved_results:
+                return len(data)
             n = self._read_table(data, result_name, storage_obj,
                                  RealSPCForces, ComplexSPCForces,
                                  RealSPCForcesArray, ComplexSPCForcesArray, 'node', random_code=self.random_code)
         elif self.thermal == 1:
             result_name = 'thermalGradientAndFlux' #'finite element temperature gradients and fluxes'
             storage_obj =  self.thermalGradientAndFlux
+            if result_name not in self._saved_results:
+                return len(data)
             n = self._read_table(data, result_name, storage_obj,
                                  RealTemperatureGradientAndFlux, None,
                                  RealTemperatureGradientAndFluxArray, None, 'node', random_code=self.random_code)
@@ -158,6 +165,8 @@ class OQG(OP2Common):
         result_name = 'mpcForces'
         storage_obj = self.mpcForces
         if self.thermal == 0:
+            if result_name not in self._saved_results:
+                return len(data)
             n = self._read_table(data, result_name, storage_obj,
                                  RealMPCForces, ComplexMPCForces,
                                  RealMPCForcesArray, ComplexMPCForcesArray, 'node', random_code=self.random_code)
