@@ -72,8 +72,22 @@ class OP2( #BDF,
             msg = 'OP2 class doesnt support ask.'
             raise RuntimeError(msg)
 
+    def get_all_results(self):
+        all_results = ['stress', 'strain', 'element_forces', 'constraint_forces'] + self.get_table_types()
+        return all_results
+
     def remove_results(self, results):
-        pass
+        all_results = self.get_all_results()
+        for result in results:
+            if result not in all_results:
+                raise RuntimeError('%r is not a valid result to remove' % result)
+
+        for result in results:
+            if result in self._saved_results:
+                self._saved_results.remove(result)
+        #disable_set = set(results)
+        #self._saved_results.difference(disable_set)
+        #print(self._saved_results)
 
     def set_subcases(self, subcases=None):
         """
@@ -205,7 +219,7 @@ class OP2( #BDF,
          (.. seealso:: import logging)
         :param debug_file: sets the filename that will be written to (default=None -> no debug)
         """
-        self._saved_results = ['stress', 'element_forces', 'constraint_forces'] + self.get_table_types()
+        self._saved_results = set(self.get_all_results())
 
         assert isinstance(make_geom, bool), 'make_geom=%r' % make_geom
         assert isinstance(debug, bool), 'debug=%r' % debug
