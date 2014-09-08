@@ -7,7 +7,7 @@ from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
 
-class TableVector(ScalarObject):  # displacement style table
+class TableArray(ScalarObject):  # displacement style table
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.nonlinear_factor = None
         self.table_name = None
@@ -106,9 +106,9 @@ class TableVector(ScalarObject):  # displacement style table
         self.itotal += 1
 
 
-class RealTableVector(TableVector):  # displacement style table
+class RealTableArray(TableArray):  # displacement style table
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        TableVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        TableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def data_type(self):
         return 'float32'
@@ -297,9 +297,9 @@ class RealTableVector(TableVector):  # displacement style table
         return page_num - 1
 
 
-class ComplexTableVector(TableVector):  # displacement style table
+class ComplexTableArray(TableArray):  # displacement style table
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        TableVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        TableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def data_type(self):
         return 'complex64'

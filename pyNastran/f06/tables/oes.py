@@ -1,8 +1,8 @@
 #pylint: disable=C0301,C0111,C0103
 from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RealRodStress, RealRodStrain
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStress, RealBarStrain
-#from pyNastran.op2.tables.oes_stressStrain.real.oes_beams   import beamStressObject
-#from pyNastran.op2.tables.oes_stressStrain.real.oes_shear   import shearStressObject
+#from pyNastran.op2.tables.oes_stressStrain.real.oes_beams   import RealBeamStress
+#from pyNastran.op2.tables.oes_stressStrain.real.oes_shear   import RealShearStress
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStress, RealSolidStrain
 from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateStress, RealPlateStrain
 from pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates import RealCompositePlateStress, RealCompositePlateStrain
