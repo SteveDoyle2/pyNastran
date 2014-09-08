@@ -8,10 +8,10 @@ from pyNastran.op2.tables.oef_forces.oef_thermalObjects import (HeatFlux_CHBDYx,
                                  HeatFlux_VU, HeatFlux_VUBEAM, HeatFlux_VU_3D,
                                  HeatFlux_CONV)
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
-    RealRodForce, RealRodForceVector,
+    RealRodForce, RealRodForceArray,
     RealCBeamForce, RealCShearForce,
     RealSpringForce, RealDamperForce, RealViscForce,
-    RealPlateForce, RealPlateForceVector,
+    RealPlateForce, RealPlateForceArray,
     RealConeAxForce, RealPlate2Force,
     RealCBar100Force, RealCGapForce, RealBendForce,
     RealPentaPressureForce, RealCBushForce,
@@ -565,8 +565,8 @@ class OEF(OP2Common):
             obj_real = RealRodForce
             obj_complex = ComplexRodForce
 
-            obj_vector_real = RealRodForceVector
-            obj_vector_complex = None  #ComplexRodForceVector
+            obj_vector_real = RealRodForceArray
+            obj_vector_complex = None  #ComplexRodForceArray
             if self.element_type == 1: # CROD
                 result_vector_name = 'crod_force'
                 slot_vector = self.crod_force
@@ -954,9 +954,9 @@ class OEF(OP2Common):
             obj_complex = ComplexPlateForce
 
             #result_vector_name
-            ComplexPlateForceVector = None
-            obj_vector_real = RealPlateForceVector
-            obj_vector_complex = ComplexPlateForceVector
+            ComplexPlateForceArray = None
+            obj_vector_real = RealPlateForceArray
+            obj_vector_complex = ComplexPlateForceArray
             if self.element_type == 33: # CQUAD4
                 result_vector_name = 'cquad4_force'
                 slot_vector = self.cquad4_force
@@ -1061,10 +1061,10 @@ class OEF(OP2Common):
                 obj_complex = ComplexPlate2Force
 
                 #result_vector_name
-                RealPlateForce2Vector = None
-                ComplexPlateForce2Vector = None
-                obj_vector_real = RealPlateForce2Vector
-                obj_vector_complex = ComplexPlateForce2Vector
+                RealPlateForce2Array = None
+                ComplexPlateForce2Array = None
+                obj_vector_real = RealPlateForce2Array
+                obj_vector_complex = ComplexPlateForce2Array
                 if self.element_type == 144: # CQUAD4
                     result_vector_name = 'cquad4_force'
                     slot_vector = self.cquad4_force

@@ -1,9 +1,9 @@
 from pyNastran.f06.f06_formatting import writeFloats13E
-from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTableVector, RealTableObject, ComplexTableObject
+from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray, RealTableObject, ComplexTableObject
 
-class RealSPCForcesArray(RealTableVector):
+class RealSPCForcesArray(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                               F O R C E S   O F   S I N G L E - P O I N T   C O N S T R A I N T\n', ]
@@ -15,9 +15,9 @@ class RealSPCForcesArray(RealTableVector):
         return self._write_f06_block(words, header, pageStamp, page_num, f)
 
 
-class ComplexSPCForcesArray(ComplexTableVector):
+class ComplexSPCForcesArray(ComplexTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ComplexTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                         C O M P L E X   F O R C E S   O F   S I N G L E   P O I N T   C O N S T R A I N T\n']

@@ -8,7 +8,7 @@ from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats12E
 
 
-class RealRodForceVector(ScalarObject):
+class RealRodForceArray(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
         self.eType = {}
@@ -1133,7 +1133,7 @@ class RealPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
             f.write(Fmt % (eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty))
         return page_num
 
-class RealPlateForceVector(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
+class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
 

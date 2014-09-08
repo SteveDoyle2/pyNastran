@@ -4,16 +4,16 @@ from numpy import array, pi
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 
-from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTableVector, RealTableObject, ComplexTableObject
+from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray, RealTableObject, ComplexTableObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
-class ComplexEigenvectorArray(ComplexTableVector):
+class ComplexEigenvectorArray(ComplexTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ComplexTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-class RealEigenvectorArray(RealTableVector):
+class RealEigenvectorArray(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         #if self.nonlinear_factor is not None:

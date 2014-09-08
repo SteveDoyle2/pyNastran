@@ -1,11 +1,11 @@
 # pylint: disable=E1101
-from pyNastran.op2.resultObjects.tableObject import RealTableVector  #, ComplexTableVector, TableObject, ComplexTableObject
+from pyNastran.op2.resultObjects.tableObject import RealTableArray  #, ComplexTableArray, TableObject, ComplexTableObject
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 
 
-class RealTemperatureArray(RealTableVector):
+class RealTemperatureArray(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         asdf

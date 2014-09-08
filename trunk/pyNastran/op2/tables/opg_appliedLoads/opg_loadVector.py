@@ -1,11 +1,11 @@
-from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTableVector, RealTableObject, ComplexTableObject
+from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray, RealTableObject, ComplexTableObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 
-class RealLoadVectorArray(RealTableVector):  # table_code=2, sort_code=0, thermal=0
+class RealLoadVectorArray(RealTableArray):  # table_code=2, sort_code=0, thermal=0
 
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                                     L O A D   V E C T O R\n', ]
@@ -15,9 +15,9 @@ class RealLoadVectorArray(RealTableVector):  # table_code=2, sort_code=0, therma
         return self._write_f06_block(words, header, pageStamp, page_num, f)
 
 
-class ComplexLoadVectorArray(ComplexTableVector):
+class ComplexLoadVectorArray(ComplexTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ComplexTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                               C O M P L E X   L O A D   V E C T O R\n', ]

@@ -1,10 +1,10 @@
 from struct import pack
-from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTableVector, RealTableObject, ComplexTableObject
+from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray, RealTableObject, ComplexTableObject
 
 
-class RealVelocityArray(RealTableVector):
+class RealVelocityArray(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                                   V E L O C I T Y   V E C T O R\n', ]
@@ -17,9 +17,9 @@ class RealVelocityArray(RealTableVector):
         return self._write_f06_block(words, header, pageStamp, page_num, f)
 
 
-class ComplexVelocityArray(ComplexTableVector):
+class ComplexVelocityArray(ComplexTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ComplexTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                       C O M P L E X   V E L O C I T Y   V E C T O R\n']
