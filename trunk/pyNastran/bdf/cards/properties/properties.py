@@ -17,8 +17,7 @@ from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Property, Material
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
-    string_or_blank, integer_string_or_blank,
-    fields, blank)
+    string_or_blank, integer_string_or_blank, blank)
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.fieldWriter16 import print_card_16
 
@@ -83,10 +82,10 @@ class PFAST(Property):
         return self.mass
 
     def rawFields(self):
-        _fields = ['PFAST', self.pid, self.d, self.Mcid(), self.mflag, self.kt1,
-                   self.kt2, self.kt3, self.kr1, self.kr2, self.kr3, self.mass,
-                   self.ge]
-        return _fields
+        fields = ['PFAST', self.pid, self.d, self.Mcid(), self.mflag, self.kt1,
+                  self.kt2, self.kt3, self.kr1, self.kr2, self.kr3, self.mass,
+                  self.ge]
+        return fields
 
     def reprFields(self):
         mcid = set_blank_if_default(self.mcid, -1)
@@ -97,9 +96,9 @@ class PFAST(Property):
 
         mass = set_blank_if_default(self.mass, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
-        _fields = ['PFAST', self.pid, self.d, mcid, mflag, self.kt1, self.kt2,
-                   self.kt3, kr1, kr2, kr3, mass, ge]
-        return _fields
+        fields = ['PFAST', self.pid, self.d, mcid, mflag, self.kt1, self.kt2,
+                  self.kt3, kr1, kr2, kr3, mass, ge]
+        return fields
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -166,9 +165,9 @@ class PGAP(Property):
         pass
 
     def rawFields(self):
-        _fields = ['PGAP', self.pid, self.u0, self.f0, self.ka, self.kb,
-                   self.kt, self.mu1, self.mu2, self.tmax, self.mar, self.trmin]
-        return _fields
+        fields = ['PGAP', self.pid, self.u0, self.f0, self.ka, self.kb,
+                  self.kt, self.mu1, self.mu2, self.tmax, self.mar, self.trmin]
+        return fields
 
     def reprFields(self):
         u0 = set_blank_if_default(self.u0, 0.)
@@ -182,9 +181,9 @@ class PGAP(Property):
         mar = set_blank_if_default(self.mar, 100.)
         trmin = set_blank_if_default(self.trmin, 0.001)
 
-        _fields = ['PGAP', self.pid, u0, f0, ka, kb, kt, mu1, mu2,
-                   tmax, mar, trmin]
-        return _fields
+        fields = ['PGAP', self.pid, u0, f0, ka, kb, kt, mu1, mu2,
+                  tmax, mar, trmin]
+        return fields
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -242,8 +241,8 @@ class PLSOLID(SolidProperty):
 
     def rawFields(self):
         stress_strain = set_blank_if_default(self.str, 'GRID')
-        _fields = ['PLSOLID', self.pid, self.Mid(), stress_strain]
-        return _fields
+        fields = ['PLSOLID', self.pid, self.Mid(), stress_strain]
+        return fields
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -323,16 +322,16 @@ class PSOLID(SolidProperty):
         return msg
 
     def rawFields(self):
-        _fields = ['PSOLID', self.pid, self.Mid(), self.cordm, self.integ,
+        fields = ['PSOLID', self.pid, self.Mid(), self.cordm, self.integ,
                   self.stress, self.isop, self.fctn]
-        return _fields
+        return fields
 
     def reprFields(self):
         cordm = set_blank_if_default(self.cordm, 0)
         fctn = set_blank_if_default(self.fctn, 'SMECH')
-        _fields = ['PSOLID', self.pid, self.Mid(), cordm, self.integ,
-                   self.stress, self.isop, fctn]
-        return _fields
+        fields = ['PSOLID', self.pid, self.Mid(), cordm, self.integ,
+                  self.stress, self.isop, fctn]
+        return fields
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -402,17 +401,17 @@ class PRAC2D(CrackProperty):
         self.mid = model.Material(self.mid, msg)  # MAT1, MAT2, MAT8
 
     def rawFields(self):
-        list_fields = ['PRAC2D', self.pid, self.Mid(), self.thick,
+        fields = ['PRAC2D', self.pid, self.Mid(), self.thick,
                   self.iPlane, self.nsm, self.gamma, self.phi]
-        return list_fields
+        return fields
 
     def reprFields(self):
         nsm = set_blank_if_default(self.nsm, 0.)
         gamma = set_blank_if_default(self.gamma, 0.5)
         phi = set_blank_if_default(self.phi, 180.)
-        list_fields = ['PRAC2D', self.pid, self.Mid(), self.thick,
+        fields = ['PRAC2D', self.pid, self.Mid(), self.thick,
                   self.iPlane, nsm, gamma, phi]
-        return list_fields
+        return fields
 
 
 class PRAC3D(CrackProperty):
@@ -450,14 +449,14 @@ class PRAC3D(CrackProperty):
         self.mid = model.Material(self.mid, msg)  # MAT1, MAT9
 
     def rawFields(self):
-        list_fields = ['PRAC3D', self.pid, self.Mid(), self.gamma, self.phi]
-        return list_fields
+        fields = ['PRAC3D', self.pid, self.Mid(), self.gamma, self.phi]
+        return fields
 
     def reprFields(self):
         gamma = set_blank_if_default(self.gamma, 0.5)
         phi = set_blank_if_default(self.phi, 180.)
-        list_fields = ['PRAC3D', self.pid, self.Mid(), gamma, phi]
-        return list_fields
+        fields = ['PRAC3D', self.pid, self.Mid(), gamma, phi]
+        return fields
 
 
 class PCONEAX(Property):
@@ -500,7 +499,13 @@ class PCONEAX(Property):
             self.nsm = double(card, 8, 'nsm')
             self.z1 = double(card, 9, 'z1')
             self.z2 = double(card, 10, 'z2')
-            self.phi = fields(double, card, 'phi', i=11, j=len(card))
+            
+            j = 1
+            self.phi = []
+            for i in xrange(11, len(card)):
+                phii = double(card, i, 'phi' % j)
+                self.phi.append(phii)
+                j += 1
         else:
             raise NotImplementedError(data)
 
@@ -529,10 +534,10 @@ class PCONEAX(Property):
         return self.mid3
 
     def rawFields(self):
-        list_fields = ['PCONEAX', self.pid, self.Mid1(), self.t1,
+        fields = ['PCONEAX', self.pid, self.Mid1(), self.t1,
                   self.Mid2(), self.i, self.Mid3(), self.t2,
                   self.nsm, self.z1, self.z2] + self.phi
-        return list_fields
+        return fields
 
     def reprFields(self):
         nsm = set_blank_if_default(self.nsm, 0.0)
@@ -542,9 +547,9 @@ class PCONEAX(Property):
         i = set_blank_if_default(self.i, 0.0)
         t1 = set_blank_if_default(self.t1, 0.0)
         t2 = set_blank_if_default(self.t2, 0.0)
-        list_fields = ['PCONEAX', self.pid, mid1, t1, mid2, i, mid3, t2,
+        fields = ['PCONEAX', self.pid, mid1, t1, mid2, i, mid3, t2,
                   nsm, self.z1, self.z2] + self.phi
-        return list_fields
+        return fields
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
