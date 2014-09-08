@@ -309,13 +309,10 @@ class ScalarObject(BaseScalarObject):
             raise NotImplementedError(msg + self.code_information())
 
         for name in self.data_code['dataNames']:
-            #print("name = ",name)
             self.append_data_member(name + 's', name)
 
         if 'element_name' in self.data_code:
-            #self.element_names = [self.element_name]
             self.element_names = [self.data_code['element_name']]
-
 
     def update_data_code(self, data_code):
         if not self.data_code or (data_code['nonlinear_factor'] != self.data_code['nonlinear_factor']):

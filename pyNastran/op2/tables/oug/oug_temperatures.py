@@ -3,7 +3,7 @@ from pyNastran.op2.resultObjects.tableObject import RealTableVector  #, ComplexT
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 
 
-class RealTemperatureVector(RealTableVector):
+class RealTemperatureArray(RealTableVector):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
 

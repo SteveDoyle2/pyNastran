@@ -5,7 +5,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from ..real.oes_objects import StressObject, StrainObject
 
 
-class ComplexRodDamperObject(StressObject):
+class ComplexRodDamper(StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = 'CBUSH'

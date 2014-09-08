@@ -44,7 +44,7 @@ class GridPointStressesVector(ScalarObject):
         msg.append('  nx, ny, txy, angle, majorP, minorP, tmax, ovm\n')
         return msg
 
-class GridPointStressesObject(ScalarObject):
+class GridPointStresses(ScalarObject):
 
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
@@ -243,7 +243,7 @@ class GridPointStressesObject(ScalarObject):
         return page_num - 1
 
 
-class GridPointStressesVolumeObject(ScalarObject):
+class GridPointStressesVolume(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
         self.nx = {}
@@ -408,7 +408,7 @@ class GridPointStressesVolumeObject(ScalarObject):
         return page_num
 
     def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
-        f.write('GridPointStressesVolumeObject _write_f06_transient is not implemented...\n')
+        f.write('GridPointStressesVolume _write_f06_transient is not implemented...\n')
         return page_num
         #raise NotImplementedError()
         msg = header + ['                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',

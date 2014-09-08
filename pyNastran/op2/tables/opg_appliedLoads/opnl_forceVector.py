@@ -2,7 +2,7 @@ from pyNastran.op2.resultObjects.tableObject import RealTableVector, ComplexTabl
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 
-class RealForceVectorVector(RealTableVector):  # table_code=2, sort_code=0, thermal=0
+class RealForceVectorArray(RealTableVector):  # table_code=2, sort_code=0, thermal=0
 
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
@@ -24,7 +24,7 @@ class ComplexForceVectorVector(ComplexTableVector):
         return self._write_f06_transient_block(words, header, pageStamp, page_num, f, is_mag_phase)
 
 
-class ForceVectorObject(RealTableObject):  # table_code=12, sort_code=0, thermal=0
+class RealForceVector(RealTableObject):  # table_code=12, sort_code=0, thermal=0
 
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
@@ -81,7 +81,7 @@ class ForceVectorObject(RealTableObject):  # table_code=12, sort_code=0, thermal
         return page_num - 1
 
 
-class ComplexForceVectorObject(ComplexTableObject):  # table_code=12, approach_code=???
+class ComplexForceVector(ComplexTableObject):  # table_code=12, approach_code=???
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 

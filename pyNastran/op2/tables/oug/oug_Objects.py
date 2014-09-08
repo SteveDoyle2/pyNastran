@@ -2,10 +2,10 @@ from struct import pack
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 
 
-#class staticFluxObj(scalarObject): # approach_code=1, table_code=3 - whatever the static version of this is...
+#class staticFlux(scalarObject): # approach_code=1, table_code=3 - whatever the static version of this is...
 
 
-class FluxObject(ScalarObject):  # approach_code=1, table_code=3, thermal=1
+class Flux(ScalarObject):  # approach_code=1, table_code=3, thermal=1
     def __init__(self, data_code, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
 

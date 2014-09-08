@@ -3,7 +3,7 @@ from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 
-class RealGridPointForcesObject(ScalarObject):
+class RealGridPointForces(ScalarObject):
 
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
@@ -186,7 +186,7 @@ class RealGridPointForcesObject(ScalarObject):
         return page_num - 1
 
 
-class ComplexGridPointForcesObject(ScalarObject):
+class ComplexGridPointForces(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, freq=None):
         ScalarObject.__init__(self, data_code, isubcase)
         raise NotImplementedError()

@@ -1,7 +1,7 @@
 from struct import Struct
 
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import (
-    RealGridPointForcesObject, ComplexGridPointForcesObject)
+    RealGridPointForces, ComplexGridPointForces)
 
 
 class OGPF(object):

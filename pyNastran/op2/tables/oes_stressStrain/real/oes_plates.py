@@ -8,7 +8,7 @@ from numpy import zeros, searchsorted, ravel
 from .oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats8p4F
 
-class RealPlateVector(OES_Object):
+class RealPlateArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         self.eType = {}
@@ -261,9 +261,9 @@ class RealPlateVector(OES_Object):
         return page_num - 1
 
 
-class RealPlateStressVector(RealPlateVector, StressObject):
+class RealPlateStressArray(RealPlateArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealPlateVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
     def isStress(self):
@@ -331,9 +331,9 @@ class RealPlateStressVector(RealPlateVector, StressObject):
         return msg, nnodes, is_bilinear
 
 
-class RealPlateStrainVector(RealPlateVector, StrainObject):
+class RealPlateStrainArray(RealPlateArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealPlateVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
     def isStress(self):

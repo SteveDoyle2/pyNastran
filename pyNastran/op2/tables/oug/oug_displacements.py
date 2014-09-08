@@ -33,7 +33,7 @@ def make_pack_form(data):
     return form
 
 
-class RealDisplacementVector(RealTableVector):
+class RealDisplacementArray(RealTableVector):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
 
@@ -47,7 +47,7 @@ class RealDisplacementVector(RealTableVector):
         return self._write_f06_block(words, header, pageStamp, page_num, f)
 
 
-class ComplexDisplacementVector(ComplexTableVector):
+class ComplexDisplacementArray(ComplexTableVector):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableVector.__init__(self, data_code, is_sort1, isubcase, dt)
 

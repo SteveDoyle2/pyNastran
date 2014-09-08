@@ -3,13 +3,13 @@ from struct import unpack
 from pyNastran.op2.op2_common import OP2Common
 
 from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import (
-    RealSPCForcesVector, ComplexSPCForcesVector,
+    RealSPCForcesArray, ComplexSPCForcesArray,
     RealSPCForces, ComplexSPCForces)
 from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import (
-    RealMPCForcesVector, ComplexMPCForcesVector,
+    RealMPCForcesArray, ComplexMPCForcesArray,
     RealMPCForces, ComplexMPCForces)
 from pyNastran.op2.tables.oqg_constraintForces.oqg_thermalGradientAndFlux import (
-    RealTemperatureGradientAndFluxObject, RealTemperatureGradientAndFluxVector)
+    RealTemperatureGradientAndFlux, RealTemperatureGradientAndFluxArray)
 
 
 class OQG(OP2Common):
@@ -139,13 +139,13 @@ class OQG(OP2Common):
             storage_obj = self.spcForces
             n = self._read_table(data, result_name, storage_obj,
                                  RealSPCForces, ComplexSPCForces,
-                                 RealSPCForcesVector, ComplexSPCForcesVector, 'node', random_code=self.random_code)
+                                 RealSPCForcesArray, ComplexSPCForcesArray, 'node', random_code=self.random_code)
         elif self.thermal == 1:
             result_name = 'thermalGradientAndFlux' #'finite element temperature gradients and fluxes'
             storage_obj =  self.thermalGradientAndFlux
             n = self._read_table(data, result_name, storage_obj,
-                                 RealTemperatureGradientAndFluxObject, None,
-                                 RealTemperatureGradientAndFluxVector, None, 'node', random_code=self.random_code)
+                                 RealTemperatureGradientAndFlux, None,
+                                 RealTemperatureGradientAndFluxArray, None, 'node', random_code=self.random_code)
         else:
             msg = 'thermal=%s' % self.thermal
             return self._not_implemented_or_skip(data, msg)
@@ -160,7 +160,7 @@ class OQG(OP2Common):
         if self.thermal == 0:
             n = self._read_table(data, result_name, storage_obj,
                                  RealMPCForces, ComplexMPCForces,
-                                 RealMPCForcesVector, ComplexMPCForcesVector, 'node', random_code=self.random_code)
+                                 RealMPCForcesArray, ComplexMPCForcesArray, 'node', random_code=self.random_code)
         #elif self.thermal == 1:
             #raise NotImplementedError(self.thermal)
             #n = self._read_table(data, result_name, storage_obj,

@@ -8,7 +8,7 @@ from .oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import writeFloats12E
 
 
-class RealCompositePlateVector(OES_Object):
+class RealCompositePlateArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         self.eType = {}
@@ -251,9 +251,9 @@ class RealCompositePlateVector(OES_Object):
         return page_num - 1
 
 
-class RealCompositePlateStressVector(RealCompositePlateVector, StressObject):
+class RealCompositePlateStressArray(RealCompositePlateArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealCompositePlateVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealCompositePlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
     def isStress(self):
@@ -270,9 +270,9 @@ class RealCompositePlateStressVector(RealCompositePlateVector, StressObject):
         return headers
 
 
-class RealCompositePlateStrainVector(RealCompositePlateVector, StrainObject):
+class RealCompositePlateStrainArray(RealCompositePlateArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealCompositePlateVector.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealCompositePlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
     def isStress(self):
