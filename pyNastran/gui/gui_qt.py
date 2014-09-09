@@ -359,6 +359,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
           ('load_geometry', 'Load &Geometry', os.path.join(icon_path, 'load_geometry.png'), 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),  ## @todo no picture...
           ('load_results', 'Load &Results',   os.path.join(icon_path, 'load_results.png'), 'Ctrl+R', 'Loads a results file', self.on_load_results),  ## @todo no picture...
           ('back_col', 'Change background color', os.path.join(icon_path, 'tcolorpick.png'), None, 'Choose a background color', self.change_background_col),
+          ('legend', 'Modify legend', os.path.join(icon_path, 'legend.png'), None, 'Set Legend', self.set_legend),
 
           ('wireframe', 'Wireframe Model', os.path.join(icon_path, 'twireframe.png'), 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
           ('surface', 'Surface Model', os.path.join(icon_path, 'tsolid.png'), 's', 'Show Model as a Surface Model', self.on_surface),
@@ -437,7 +438,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         actions['logwidget'].setStatusTip("Show/Hide application log")
 
         menu_items = [(self.menu_file, ('load_geometry', 'load_results', 'script', '', 'exit')),
-                      (self.menu_view,  ('scshot', '', 'wireframe', 'surface', 'creset', '', 'back_col', '', 'show_info', 'show_debug', 'show_gui', 'show_command')),
+                      (self.menu_view,  ('scshot', '', 'wireframe', 'surface', 'creset', '', 'back_col', 'legend', '', 'show_info', 'show_debug', 'show_gui', 'show_command')),
                       (self.menu_window,('toolbar', 'reswidget', 'logwidget' )),
                       (self.menu_help,  ('about',)),
                       (self.menu_scripts, scripts),
@@ -501,6 +502,44 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
     #def _script_helper(self, python_file=False):
         #if python_file in [None, False]:
             #self.on_run_script(python_file)
+
+    def set_legend(self):
+        """
+        Opens a dialog box to set:
+
+        +--------+----------+
+        |  Name  |  String  |
+        +--------+----------+
+        |  Min   |  Float   |
+        +--------+----------+
+        |  Max   |  Float   |
+        +--------+----------+
+        | Format | pyString |
+        +--------+----------+
+        """
+        def validate_name(data):
+            return True
+        def validate_min(data):
+            return True
+        def validate_max(data):
+            return True
+        def validate_format(data):
+            return True
+
+        data = {
+            'title' : 'Legend Properties',
+            'table' : [
+                           ['Name', str, validate_name],
+                           ['Min', float, validate_min],
+                           ['Max', float, validate_max],
+                           ['Format', str, validate_format],
+                           ['FlipAxis', 'checkbox'],
+                      ],
+            'close' : 'OK_Cancel',
+        }
+        #q = QtPopUp(
+            #data
+        #)
 
     def on_run_script(self, python_file=False):
         print('python_file =', python_file)
@@ -910,8 +949,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                     load_function = self.load_nastran_results
                 elif geometry_format == 'cart3d':
                     load_function = self.load_cart3d_results
-                #elif geometry_format == 'panair':
-                    #load_function = self.load_panair_results
+                elif geometry_format == 'panair':
+                    load_function = self.load_panair_results
                 #elif geometry_format == 'lawgs':
                     #load_function = None
                 #elif geometry_format == 'stl':
