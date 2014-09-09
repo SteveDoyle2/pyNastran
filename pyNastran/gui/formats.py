@@ -19,6 +19,8 @@ except ImportError:
     class LaWGS_IO(object):
         def __init__(self):
             pass
+        def load_lawgs_geometry(self, infile_name, dirname):
+            pass
     is_lawgs = False
 
 

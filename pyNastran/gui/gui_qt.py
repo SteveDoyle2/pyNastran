@@ -713,7 +713,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 load_function = self.load_panair_geometry
             elif geometry_format == 'lawgs':
                 has_results = False
-                load_function = None
+                load_function = self.load_lawgs_geometry
             elif geometry_format == 'stl':
                 has_results = False
                 load_function = self.load_stl_geometry
@@ -755,7 +755,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 has_results_list.append(True)
                 load_functions.append(self.load_panair_geometry)
             if is_lawgs:
-                wildcard_list.append("LaWGS (*.inp)")
+                wildcard_list.append("LaWGS (*.inp; *.wgs)")
                 formats.append('LaWGS')
                 has_results_list.append(False)
                 load_functions.append(None)
@@ -1128,12 +1128,13 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 #allocationSize = vectorSize*location (where location='centroid'-> self.nElements)
                 gridResult.Allocate(self.nElements, 1000)
             #elif location == 'nodal' and self.is_nodal:
-            elif location == 'nodal':
+            elif location == 'node':
                 #allocationSize = vectorSize*self.nNodes # (where location='node'-> self.nNodes)
                 gridResult.Allocate(self.nNodes * vectorSize, 1000)
                 #gridResult.SetNumberOfComponents(vectorSize)
             else:
-                print("***%s skipping" % location)
+                raise RuntimeError(location)
+                #print("***%s skipping" % location)
 
             #self.iSubcaseNameMap[self.isubcase] = [Subtitle,Label]
             try:
@@ -1226,7 +1227,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                     point_data.Reset()
                 self.grid.GetCellData().SetScalars(gridResult)
                 self.log_info("***centroidal plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
-            elif location == 'nodal':
+            elif location == 'node':
             #elif location == 'nodal' and self.is_nodal:
                 if ncells:
                     cell_data = self.grid.GetCellData()
@@ -1240,6 +1241,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                     self.grid.GetPointData().SetScalars(gridResult)
                 #print("***nodal skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label))
             else:
+                raise RuntimeError(location)
                 self.log_info("***D%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (location, subcaseID, resultType, subtitle, label))
                 self.scalarBar.SetVisibility(False)
             self.grid.Modified()

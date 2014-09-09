@@ -60,7 +60,7 @@ class Cart3dIO(object):
         self.nElements = model.nElementsRead
 
         #print("nNodes = ",self.nNodes)
-        print("nElements = ", self.nElements)
+        #print("nElements = ", self.nElements)
 
         self.grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)
@@ -131,7 +131,7 @@ class Cart3dIO(object):
         ID = 1
 
         #print "nElements = ",nElements
-        cases = self.fillCart3dCase(cases, ID, elements, regions, loads)
+        cases = self.fillCart3dCase(cases, ID, nodes, elements, regions, loads)
 
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
@@ -141,24 +141,20 @@ class Cart3dIO(object):
         self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
         self.cycleResults()  # start at nCase=0
 
-    def fillCart3dCase(self, cases, ID, elements, regions, loads):
-        #print "regions**** = ",regions
-        #nNodes = self.nNodes
-        #nElements = self.nElements
-
+    def fillCart3dCase(self, cases, ID, nodes, elements, regions, loads):
         print "is_centroidal=%s isNodal=%s" % (self.is_centroidal, self.is_nodal)
         assert self.is_centroidal!= self.is_nodal
 
         result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
                                       'rhoU', 'rhoV', 'rhoW', 'rhoE']
+        nelements, three = elements.shape
+        nnodes, three = nodes.shape
         if self.is_centroidal:
-            nelements, three = elements.shape
             cases[(ID, 'Region', 1, 'centroid', '%.0f')] = regions
-            cases[(ID, 'Eids', 1, 'centroid', '%.0f')] = arange(1, nelements+1)
+            cases[(ID, 'ElementID', 1, 'centroid', '%.0f')] = arange(1, nelements+1)
 
-            #print("load.keys() = ", loads.keys())
-            #print("type(loads)", type(loads))
-            for key in result_names:
+            # these are actually nodal results
+            for key in result_names: 
                 if key in loads:
                     nodal_data = loads[key]
                     n1 = elements[:, 0]
@@ -168,9 +164,9 @@ class Cart3dIO(object):
                     cases[(ID, key, 1, 'centroid', '%.3f')] = elemental_result
 
         elif self.is_nodal:
-            #print("load.keys() = ", loads.keys())
+            cases[(ID, 'NodeID', 1, 'node', '%.0f')] = arange(1, nnodes+1)
             for key in result_names:
                 if key in loads:
                     nodal_data = loads[key]
-                    cases[(ID, key, 1, 'nodal', '%.3f')] = nodal_data
+                    cases[(ID, key, 1, 'node', '%.3f')] = nodal_data
         return cases

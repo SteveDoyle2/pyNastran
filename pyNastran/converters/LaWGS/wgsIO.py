@@ -10,7 +10,7 @@ class LaWGS_IO(object):
 #    lawgs = LaWGS('tmx1242.wgs')
 #    lawgs.run()
 
-    def load_LaWGS_geometry(self, lawgsFileName, dirname):
+    def load_lawgs_geometry(self, lawgsFileName, dirname):
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
 
@@ -27,7 +27,7 @@ class LaWGS_IO(object):
         self.nElements = len(elements)
 
         #print("nNodes = ",self.nNodes)
-        print("nElements = ", self.nElements)
+        #print("nElements = ", self.nElements)
 
         self.grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)
@@ -65,7 +65,7 @@ class LaWGS_IO(object):
             elem.GetPointIds().SetId(3, p4)
             self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
-        print("eid = ", eid)
+        #print("eid = ", eid)
         self.grid.SetPoints(points)
         #self.grid2.SetPoints(points2)
         #self.grid.GetPointData().SetScalars(self.gridResult)
@@ -110,4 +110,4 @@ if __name__ == '__main__':
     test = LaWGS_IO()
     test.removeOldGeometry = removeOldGeometry
 
-    test.load_LaWGS_geometry('tmx1242.wgs', '', True, True)
+    test.load_lawgs_geometry('tmx1242.wgs', '', True, True)

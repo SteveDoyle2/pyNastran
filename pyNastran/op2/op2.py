@@ -526,7 +526,7 @@ class OP2( #BDF,
     def readFake(self, data, n):
         return n
 
-    def read_op2(self, op2_filename):
+    def read_op2(self, op2_filename=None):
         """
         Starts the OP2 file reading
 
