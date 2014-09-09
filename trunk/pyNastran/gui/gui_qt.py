@@ -274,16 +274,16 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             'Right Mouse - Zoom',
             '',
             'Keyboard Controls',
-            'r   - reset camera view',
-            'X/x - snap to x axis',
-            'Y/y - snap to y axis',
-            'Z/z - snap to z axis',
-            '',
+            #'r   - reset camera view',
+            #'X/x - snap to x axis',
+            #'Y/y - snap to y axis',
+            #'Z/z - snap to z axis',
+            #'',
             #'h   - show/hide legend & info',
             'CTRL+I - take a screenshot (image)',
-            #'L     - cycle op2 results',
-            'm/M    - scale up/scale down by 1.1 times',
-            'o/O    - rotate counter-clockwise/clockwise 5 degrees',
+            'L     - cycle op2 results',
+            #'m/M    - scale up/scale down by 1.1 times',
+            #'o/O    - rotate counter-clockwise/clockwise 5 degrees',
             's      - view model as a surface',
             'w      - view model as a wireframe',
         ]
@@ -336,7 +336,6 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
 
         # prepare actions that will  be used in application
         actions = {}
-        #pth = os.path.join(icon_path, 'tbdf.png')
         pth = os.path.join(icon_path, 'tbdf.png')
         #print print_bad_path(pth)
 
@@ -397,7 +396,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         ]
         for script in scripts:
             fname = os.path.join(script_path, script)
-            tool = (script, script, os.path.join(icon_path, 'python48.png'), None, '', self.on_run_script )
+            tool = (script, script, os.path.join(icon_path, 'python48.png'), None, '', lambda: self.on_run_script(fname) )
             tools.append(tool)
 
         for (nam, txt, icon, shortcut, tip, func) in tools:
@@ -504,6 +503,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             #self.on_run_script(python_file)
 
     def on_run_script(self, python_file=False):
+        print('python_file =', python_file)
         if python_file in [None, False]:
             Title = 'Choose a Python Script to Run'
             wildcard = "Python (*.py)"
@@ -853,20 +853,6 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         #fname = str(QtGui.QFileDialog.getOpenFileName(self, Title, self.last_dir, wildcard))
         return str(wildcard_level), str(fname)
 
-    def import_nastran_geometry(self, infile_name, geometry_format):
-        """
-        Load BDF file.
-        """
-        # getOpenFileName return QString and we want Python string
-        fname = str(QtGui.QFileDialog.getOpenFileName(self, 'Open BDF file', self.last_dir,
-        'Nastran BDF (*.bdf *.dat *.nas)'))
-
-        if fname:
-            self.last_dir = os.path.split(fname)[0]
-            self.load_nastran_geometry(fname, self.last_dir)
-            self.rend.ResetCamera()
-            #self.set_window_title_msg(fname)
-
     def on_load_results(self, out_filename=None):
             geometry_format = self.format
             if self.format is None:
@@ -876,6 +862,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
 
             if out_filename in [None, False]:
                 Title = 'Select a Results File for %s' % self.format
+                wildcard = None
                 if geometry_format == 'nastran':
                     has_results = True
                     #wildcard = "Nastran OP2 (*.op2);;Nastran PCH (*.pch);;Nastran F06 (*.f06)"
@@ -913,7 +900,10 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 #n = len(load_functions)
                 #wildcard = ';;'.join(scard[:n])
                 load_function = load_functions[0]
-
+                if wildcard is None:
+                    msg = 'format=%r has no method to load results' % geometry_format
+                    self.log_error(msg)
+                    return
                 wildcard_index, out_filename = self._create_load_file_dialog(wildcard, Title)
             else:
                 if geometry_format == 'nastran':
@@ -953,34 +943,6 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             print("on_load_results(%r)" % out_filename)
             self.out_filename = out_filename
             self.log_command("on_load_results(%r)" % out_filename)
-
-    def load_op2(self):
-        """
-        Load OP2 file.
-        @todo not done...
-        """
-        return self.on_load_results()
-
-        # getOpenFileName return QString and we want Python string
-        fname = str(QtGui.QFileDialog.getOpenFileName(self, 'Open OP2 file', self.last_dir, 'Nastran OP2 (*.op2)'))
-
-        if fname:
-            self.last_dir = os.path.split(fname)[0]
-            self.load_nastran_results(fname, self.last_dir)
-            self.rend.ResetCamera()
-
-    def load_f06(self):
-        """
-        Load F06 file.
-        @todo not done...
-        """
-        # getOpenFileName return QString and we want Python string
-        fname = str(QtGui.QFileDialog.getOpenFileName(self, 'Open F06 file', self.last_dir, 'Nastran F06 (*.f06)'))
-
-        if fname:
-            self.last_dir = os.path.split(fname)[0]
-            self.load_nastran_results(fname, self.last_dir)
-            self.rend.ResetCamera()
 
     def take_screenshot(self):
         """ Take a screenshot of a current view and save as a file"""
@@ -1105,7 +1067,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             return
 
         print('cycling...')
-        print("is_nodal=%s is_centroidal=%s" % (self.is_nodal,self.is_centroidal))
+        print("is_nodal=%s is_centroidal=%s" % (self.is_nodal, self.is_centroidal))
 
         foundCases = self.incrementCycle(result_name)
         if foundCases:
@@ -1127,7 +1089,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             #if location == 'centroid' and self.is_centroidal:
                 #allocationSize = vectorSize*location (where location='centroid'-> self.nElements)
                 gridResult.Allocate(self.nElements, 1000)
-            #elif location == 'nodal' and self.is_nodal:
+            #elif location == 'node' and self.is_nodal:
             elif location == 'node':
                 #allocationSize = vectorSize*self.nNodes # (where location='node'-> self.nNodes)
                 gridResult.Allocate(self.nNodes * vectorSize, 1000)
@@ -1228,18 +1190,18 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 self.grid.GetCellData().SetScalars(gridResult)
                 self.log_info("***centroidal plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
             elif location == 'node':
-            #elif location == 'nodal' and self.is_nodal:
+            #elif location == 'node' and self.is_nodal:
                 if ncells:
                     cell_data = self.grid.GetCellData()
                     print(dir(cell_data))
                     cell_data.Reset()
                 if vectorSize == 1:
-                    self.log_info("***nodal plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
+                    self.log_info("***node plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
                     self.grid.GetPointData().SetScalars(gridResult)
                 else:
-                    self.log_info("***nodal plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
+                    self.log_info("***node plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
                     self.grid.GetPointData().SetScalars(gridResult)
-                #print("***nodal skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label))
+                #print("***node skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label))
             else:
                 raise RuntimeError(location)
                 self.log_info("***D%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (location, subcaseID, resultType, subtitle, label))

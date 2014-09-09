@@ -253,6 +253,6 @@ class Usm3dIO(object):
         ID = 2
         if self.is_nodal and len(loads):
             for key, load in loads.iteritems():
-                cases[(ID, key, 1, 'nodal', '%.3f')] = load
+                cases[(ID, key, 1, 'node', '%.3f')] = load
             self.scalarBar.VisibilityOn()
         return cases

@@ -103,8 +103,7 @@ class NastranIO(object):
         self.nNodes = nNodes
         self.nElements = nElements
 
-        print "nNodes = ",self.nNodes
-        self.log_info("nElements = %i" % self.nElements)
+        self.log_info("nNodes=%i nElements=%i" % (self.nNodes, self.nElements))
         msg = model.get_bdf_stats(return_type='list')
         #self.log_info(msg)
         for msgi in msg:
@@ -542,8 +541,11 @@ class NastranIO(object):
             model._saved_results = set([])
             all_results = model.get_all_results()
             desired_results = [
-                'displacements',
-                'stress', 'solidStress', 'plateStress', 'barStress', 'rodStress',
+                'displacements', 'velocities', 'accelerations', 'temperatures',
+                'constraint_forces', 'spcForces', 'mpcForces',
+                'gridPointForces',
+                'stress', 'solidStress', 'plateStress', 'compositePlateStress', 'barStress', 'rodStress',
+                #'strain','solidStrain', 'plateStrain', 'compositePlateStrain', 'barStrain', 'rodStrain',
             ]
             for result in desired_results:
                 if result in all_results:
@@ -597,40 +599,45 @@ class NastranIO(object):
             eKey = None
 
         print('is_nodal =', self.is_nodal)
-
-        print('model.displacements.keys()', model.displacements.keys())
         for subcaseID in subcaseIDs:
-            if self.is_nodal: # nodal results don't work
-                if subcaseID in model.displacements:  # not correct?
-                    case = model.displacements[subcaseID]
-                    nnodes = self.nNodes
-                    displacements = zeros((nnodes, 3), dtype='float32')
-                    x_displacements = zeros(nnodes, dtype='float32')
-                    y_displacements = zeros(nnodes, dtype='float32')
-                    z_displacements = zeros(nnodes, dtype='float32')
-                    xyz_displacements = zeros(nnodes, dtype='float32')
-                    for (nid, txyz) in case.translations.iteritems():
-                        nid2 = self.nidMap[nid]
-                        displacements[nid2] = txyz
-                        x_displacements[nid2] = txyz[0]
-                        y_displacements[nid2] = txyz[1]
-                        z_displacements[nid2] = txyz[2]
-                        xyz_displacements[nid2] = norm(txyz)
-                    #cases[(subcaseID, 'DisplacementTotal', 3, 'node', '%g')] = displacements
-                    cases[(subcaseID, 'DisplacementX', 1, 'nodal', '%g')] = x_displacements
-                    cases[(subcaseID, 'DisplacementY', 1, 'nodal', '%g')] = y_displacements
-                    cases[(subcaseID, 'DisplacementZ', 1, 'nodal', '%g')] = z_displacements
-                    cases[(subcaseID, 'DisplacementXYZ', 1, 'nodal', '%g')] = xyz_displacements
-                    #key = (subcaseID, 'DisplacementXYZ', 1, 'node', '%g')
-
+            if self.is_nodal: # nodal results don't work with centroidal ones
+                displacement_like = [
+                    [model.displacements,   'Displacement',]
+                    [model.velocities,      'Velocity',]
+                    [model.accelerations,   'Acceleration',]
+                    [model.spcForces,       'SPC Forces',]
+                    [model.mpcForces,       'MPC Forces',]
+                    [model.gridPointForces, 'GridPointForces',]
+                    [model.temperatures,    'Temperature',]
+                ]
+                nnodes = self.nNodes
+                for (result, name) in displacement_like:
+                    if subcaseID in result:
+                        case = result[subcaseID]
+                        displacements = zeros((nnodes, 3), dtype='float32')
+                        x_displacements = zeros(nnodes, dtype='float32')
+                        y_displacements = zeros(nnodes, dtype='float32')
+                        z_displacements = zeros(nnodes, dtype='float32')
+                        xyz_displacements = zeros(nnodes, dtype='float32')
+                        for (nid, txyz) in case.translations.iteritems():
+                            nid2 = self.nidMap[nid]
+                            displacements[nid2] = txyz
+                            x_displacements[nid2] = txyz[0]
+                            y_displacements[nid2] = txyz[1]
+                            z_displacements[nid2] = txyz[2]
+                            xyz_displacements[nid2] = norm(txyz)
+                        #cases[(subcaseID, name + 'Vector', 3, 'node', '%g')] = displacements
+                        cases[(subcaseID, name + 'X', 1, 'node', '%g')] = x_displacements
+                        cases[(subcaseID, name + 'Y', 1, 'node', '%g')] = y_displacements
+                        cases[(subcaseID, name + 'Z', 1, 'node', '%g')] = z_displacements
+                        cases[(subcaseID, name + 'XYZ', 1, 'node', '%g')] = xyz_displacements
+                        #key = (subcaseID, name + 'XYZ', 1, 'node', '%g')
 
             if 0:
                 if subcaseID in model.temperatures:
                     case = model.temperatures[subcaseID]
-                    #print case
                     temps = zeros(self.nNodes, dtype='float32')
                     for (nid, T) in case.temperatures.iteritems():
-                        #print T
                         nid2 = self.nidMap[nid]
                         temperatures[nid2] = T
 
@@ -716,7 +723,6 @@ class NastranIO(object):
             for eid in case.axial:
                 eid2 = self.eidMap[eid]
                 cases[eKey][eid2] = 1.
-                #print "bar eid=%s" %(eid)
 
                 axial = case.axial[eid]
                 torsion = case.torsion[eid]
@@ -728,6 +734,7 @@ class NastranIO(object):
                 #oyy[eid2] = torsion
                 #o2[eid2] = 0.  #(o1i+o3i)/2.
                 o3[eid2] = min(axial, torsion)
+                ovm[eid2] = max(abs(axial), abs(torsion))
 
         if subcaseID in model.barStress:
             case = model.barStress[subcaseID]
@@ -735,22 +742,37 @@ class NastranIO(object):
                 eid2 = self.eidMap[eid]
                 cases[eKey][eid2] = 1.
 
-                #print "bar eid=%s" %(eid)
-                oxxi = case.axial[eid]
-                o1i = max(case.smax[eid])
-                o3i = min(case.smin[eid])
-
-                oxx[eid2] = oxxi
+                #print("bar eid=%s" % eid)
+                oxx[eid2] = case.axial[eid]
                 #oyy[eid2] = oyyi
                 #ozz[eid2] = ozzi
 
-                o1[eid2] = o1i
+                o1[eid2] = max(case.smax[eid])
                 #o2[eid2] = 0.  #(o1i+o3i)/2.
-                o3[eid2] = o3i
-                #ovm[eid2] = ovmi
+                o3[eid2] = min(case.smin[eid])
+                ovm[eid2] = max(    max(case.smax[eid]),
+                                abs(min(case.smin[eid])))
+
+        if subcaseID in model.beamStress:
+            case = model.beamStress[subcaseID]
+            for eid in case.smax:
+                eid2 = self.eidMap[eid]
+                cases[eKey][eid2] = 1.
+
+                oxx[eid2] = max(max(case.sxc[eid]),
+                                max(case.sxd[eid]),
+                                max(case.sxe[eid]),
+                                max(case.sxf[eid]))
+                #oyy[eid2] = oyyi
+                #ozz[eid2] = ozzi
+
+                o1[eid2] = max(case.smax[eid])
+                #o2[eid2] = 0.  #(o1i+o3i)/2.
+                o3[eid2] = min(case.smin[eid])
+                ovm[eid2] = max(    max(case.smax[eid]),
+                                abs(min(case.smin[eid])))
 
         if subcaseID in model.plateStress:
-            #self.txy    = {}
             case = model.plateStress[subcaseID]
             if case.isVonMises():
                 vmWord = 'vonMises'
@@ -760,7 +782,6 @@ class NastranIO(object):
                 eid2 = self.eidMap[eid]
                 cases[eKey][eid2] = 1.
 
-                #print "plate eid=%s" %(eid)
                 eType = case.eType[eid]
                 if eType in ['CQUAD4', 'CQUAD8', 'CTRIA3', 'CTRIA6']:
                     cen = 'CEN/%s' % eType[-1]
@@ -785,6 +806,44 @@ class NastranIO(object):
                 o3[eid2] = o3i
                 ovm[eid2] = ovmi
 
+        if 0:
+            if subcaseID in model.compositePlateStress:
+                # not done...
+                case = model.compositePlateStress[subcaseID]
+                if case.isVonMises():
+                    vmWord = 'vonMises'
+                else:
+                    vmWord = 'maxShear'
+                for eid in case.ovmShear:
+                    eid2 = self.eidMap[eid]
+                    cases[eKey][eid2] = 1.
+
+                    #print "plate eid=%s" %(eid)
+                    eType = case.eType[eid]
+                    if eType in ['CQUAD4', 'CQUAD8', 'CTRIA3', 'CTRIA6']:
+                        cen = 'CEN/%s' % eType[-1]
+                    print('composite keys =', case.oxx[eid].keys())
+                    oxxi = case.oxx[eid][cen]
+                    #self.oyy[eid][nid][iLayer]
+
+                    oxxi = max(case.oxx[eid][cen])
+                    oyyi = max(case.oyy[eid][cen])
+                    ozzi = min(case.oxx[eid][cen], min(case.oyy[eid][cen]))
+
+                    o1i = max(case.majorP[eid][cen])
+                    o2i = max(case.minorP[eid][cen])
+                    o3i = min(case.majorP[eid][cen], min(case.minorP[eid][cen]))
+                    ovmi = max(case.ovmShear[eid][cen])
+
+                    oxx[eid2] = oxxi
+                    oyy[eid2] = oyyi
+                    #ozz[eid2] = ozzi
+
+                    o1[eid2] = o1i
+                    #o2[eid2] = 0.  #(o1i+o3i)/2.
+                    o3[eid2] = o3i
+                    ovm[eid2] = ovmi
+
         if subcaseID in model.solidStress:
             case = model.solidStress[subcaseID]
             if case.isVonMises():
@@ -792,7 +851,6 @@ class NastranIO(object):
             else:
                 vmWord = 'maxShear'
             for eid in case.ovmShear:
-                #print('solid eid', eid)
                 eid2 = self.eidMap[eid]
                 cases[eKey][eid2] = 1.
 

@@ -128,7 +128,7 @@ class STL_IO(object):
         #nElements = self.nElements
 
         print "is_centroidal=%s isNodal=%s" % (self.is_centroidal, self.is_nodal)
-        assert self.is_centroidal!= self.is_nodal
+        assert self.is_centroidal != self.is_nodal
 
         if self.is_centroidal:
             nelements, three = elements.shape
@@ -140,5 +140,5 @@ class STL_IO(object):
             for key in result_names:
                 if key in loads:
                     nodal_data = loads[key]
-                    cases[(ID, key, 1, 'nodal', '%.3f')] = nodal_data
+                    cases[(ID, key, 1, 'node', '%.3f')] = nodal_data
         return cases

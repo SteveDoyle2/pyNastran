@@ -1,7 +1,10 @@
+from numpy import zeros, array, cross, dot
+from numpy.linalg import det, norm
+
 import vtk
 from vtk import vtkQuad
-from pyNastran.converters.panair.panairGrid import PanairGrid
 
+from pyNastran.converters.panair.panairGrid import PanairGrid
 
 class PanairIO(object):
     def __init__(self):
@@ -122,9 +125,6 @@ class PanairIO(object):
         #print regions
         cases[(ID, 'Region', 1, 'centroid', '%.0f')] = regions
 
-        from numpy import zeros, array, cross, dot
-        from numpy.linalg import det, norm
-        # centroidal
         if self.is_centroidal:
             Xc = zeros(len(elements), 'float64')
             Yc = zeros(len(elements), 'float64')
@@ -150,7 +150,6 @@ class PanairIO(object):
             cases[(ID, 'centroid_z', 1, 'centroid', '%.2f')] = Zc
             cases[(ID, 'Area', 1, 'centroid', '%.2f')] = area
         elif self.is_nodal:
-            # nodal
             Xn = zeros(len(nodes), 'float64')
             Yn = zeros(len(nodes), 'float64')
             Zn = zeros(len(nodes), 'float64')
@@ -158,9 +157,9 @@ class PanairIO(object):
                 Xn[i] = node[0]
                 Yn[i] = node[1]
                 Zn[i] = node[2]
-            cases[(ID, 'node_x', 1, 'nodal', '%.2f')] = Xn
-            cases[(ID, 'node_y', 1, 'nodal', '%.2f')] = Yn
-            cases[(ID, 'node_z', 1, 'nodal', '%.2f')] = Zn
+            cases[(ID, 'node_x', 1, 'node', '%.2f')] = Xn
+            cases[(ID, 'node_y', 1, 'node', '%.2f')] = Yn
+            cases[(ID, 'node_z', 1, 'node', '%.2f')] = Zn
 
 
         #elif self.is_nodal:
@@ -170,7 +169,7 @@ class PanairIO(object):
             #for key in result_names:
                 #if key in loads:
                     #nodal_data = loads[key]
-                    #cases[(ID, key, 1, 'nodal', '%.3f')] = nodal_data
+                    #cases[(ID, key, 1, 'node', '%.3f')] = nodal_data
         return cases
 
     def load_panair_results(self, panairFileName, dirname):
