@@ -1,10 +1,12 @@
-from numpy import zeros, array, cross, dot
+import os
+from numpy import zeros, array, cross, dot, ravel
 from numpy.linalg import det, norm
 
 import vtk
 from vtk import vtkQuad
 
 from pyNastran.converters.panair.panairGrid import PanairGrid
+from pyNastran.converters.panair.agps import AGPS
 
 class PanairIO(object):
     def __init__(self):
@@ -125,11 +127,12 @@ class PanairIO(object):
         #print regions
         cases[(ID, 'Region', 1, 'centroid', '%.0f')] = regions
 
+        self.elements = elements
         if self.is_centroidal:
-            Xc = zeros(len(elements), 'float64')
-            Yc = zeros(len(elements), 'float64')
-            Zc = zeros(len(elements), 'float64')
-            area = zeros(len(elements), 'float64')
+            Xc = zeros(len(elements), 'float32')
+            Yc = zeros(len(elements), 'float32')
+            Zc = zeros(len(elements), 'float32')
+            area = zeros(len(elements), 'float32')
             for i,element in enumerate(elements):
                 p1, p2, p3, p4 = element
                 P1 = array(nodes[p1])
@@ -150,9 +153,9 @@ class PanairIO(object):
             cases[(ID, 'centroid_z', 1, 'centroid', '%.2f')] = Zc
             cases[(ID, 'Area', 1, 'centroid', '%.2f')] = area
         elif self.is_nodal:
-            Xn = zeros(len(nodes), 'float64')
-            Yn = zeros(len(nodes), 'float64')
-            Zn = zeros(len(nodes), 'float64')
+            Xn = zeros(len(nodes), 'float32')
+            Yn = zeros(len(nodes), 'float32')
+            Zn = zeros(len(nodes), 'float32')
             for i, node in enumerate(nodes):
                 Xn[i] = node[0]
                 Yn[i] = node[1]
@@ -173,8 +176,55 @@ class PanairIO(object):
         return cases
 
     def load_panair_results(self, panairFileName, dirname):
+        #print "panairFileName =", panairFileName
+        if os.path.basename(panairFileName) == 'agps':
+            model = AGPS(log=self.log, debug=self.debug)
+            model.read_agps(panairFileName)
+        else:
+            raise RuntimeError('only files named "agps" files are supported')
         #self.resultCases = {}
-        pass
+        if self.is_centroidal and 0:
+            Cp_array = zeros(self.nElements, dtype='float32')
+            for i,element in enumerate(elements):
+                Cpv = ravel()
+                p1, p2, p3, p4 = element
+                P1 = array(nodes[p1])
+                P2 = array(nodes[p2])
+                P3 = array(nodes[p3])
+                P4 = array(nodes[p4])
+                a = P3 - P1
+                b = P4 - P2
+                A = 0.5 * norm(cross(a, b))
+                #assert -1 > 0, 'A =%s' % str(A)
+                x, y, z = (P1 + P2 + P3 + P4) / 4.0
+                Xc[i] = x
+                Yc[i] = y
+                Zc[i] = z
+                area[i] = A
+            cases[(ID, 'Cp', 1, 'centroid', '%.3f')] = Cp
+
+        elif self.is_nodal:
+            Cp_array = zeros(self.nNodes, dtype='float32')
+            imin = 0
+            print('len(Cpall) =', Cp_array.shape)
+            for ipatch, Cp in sorted(model.pressures.iteritems()):
+                print('len(Cp) =', len(ravel(Cp)))
+                Cpv = ravel(Cp)
+                nCp = len(Cpv)
+                try:
+                    Cp_array[imin:imin+nCp] = Cpv
+                except ValueError:
+                    pass
+                imin += nCp
+            key = (1, 'Cp', 1, 'node', '%.3f')
+            self.resultCases[key] = Cp_array
+
+        #self.resultCases = cases
+        self.caseKeys = sorted(self.resultCases.keys())
+        self.iCase = -1
+        self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
+        #self.nCases = 1
+        self.cycleResults()  # start at nCase=0
 
 if __name__ == '__main__':
     print('')
