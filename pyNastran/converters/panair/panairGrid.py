@@ -911,6 +911,7 @@ class PanairGrid(object):
         pointI = 0
         for name, panel in sorted(self.patches.iteritems()):
             #panel = self.patches[2]
+            #self.log.debug("size(X) = %s" %( str( panel.x.shape ) ))
             (pointsI, pointi) = panel.get_points()
             (elementsI) = panel.get_elements(pointI)
             #print 'panel.iNetwork=%r' % (panel.iNetwork + 1)

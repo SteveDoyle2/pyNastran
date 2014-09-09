@@ -1,9 +1,11 @@
 from numpy import array
 
 class AGPS(object):
-    def __init__(self, log=None):
+    def __init__(self, log=None, debug=False):
         self.infilename = None
         self.pressures = {}
+        self.log = log
+        self.debug = False
 
     def read_agps(self, infilename):
         self.infilename = infilename
@@ -55,7 +57,8 @@ class AGPS(object):
         #for ipatch, patch in enumerate(patches):
 
         for ipatch, patch in enumerate(patches):
-            print "ipatch=%s" % ipatch
+            if self.debug:
+                print "ipatch=%s" % ipatch
             #print "ipatch =", ipatch
             #print patch
             X = []
@@ -83,16 +86,19 @@ class AGPS(object):
                 Cp.append(cp)
                 #print "len(cp) =", len(cp)
             #print X
-            print len(X)
-            for x in X:
-                print x, len(x)
+            if self.debug:
+                print len(X)
+                for x in X:
+                    print x, len(x)
 
             X = array(X, dtype='float32')
             Y = array(Y, dtype='float32')
             Z = array(Z, dtype='float32')
             Cp = array(Cp, dtype='float32')
             self.pressures[ipatch] = Cp
-            print ""
+            print Cp.shape
+            if self.debug:
+                print ""
         #for ipatch, Cp in sorted(self.pressures.iteritems()):
             #print Cp
 
