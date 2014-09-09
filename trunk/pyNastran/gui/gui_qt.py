@@ -362,7 +362,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
 
           ('wireframe', 'Wireframe Model', os.path.join(icon_path, 'twireframe.png'), 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
           ('surface', 'Surface Model', os.path.join(icon_path, 'tsolid.png'), 's', 'Show Model as a Surface Model', self.on_surface),
-          ('edges', 'Show/Hide Edges', os.path.join(icon_path, 'tedges.png'), 'e', 'Show/Hide Model Edges', self.onFlipEdges),
+          ('edges', 'Show/Hide Edges', os.path.join(icon_path, 'tedges.png'), 'e', 'Show/Hide Model Edges', self.on_flip_edges),
 
           ('show_info', 'Show INFO', os.path.join(icon_path, 'show_info.png'), None, 'Show "INFO" messages', self.on_show_info),
           ('show_debug', 'Show DEBUG', os.path.join(icon_path, 'show_debug.png'), None, 'Show "DEBUG" messages', self.on_show_debug),
@@ -574,7 +574,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
     def on_decrease_magnification(self):
         self.zoom(1.0/1.1)
 
-    def onFlipEdges(self):
+    def on_flip_edges(self):
         self.is_edges = not(self.is_edges)
         self.edgeActor.SetVisibility(self.is_edges)
         #self.edgeActor.GetProperty().SetColor(0, 0, 0)  # cart3d edge color isn't black...
@@ -582,7 +582,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         #self.widget.Update()
         self._update_camera()
         #self.refresh()
-        self.log_command('onFlipEdges()')
+        self.log_command('on_flip_edges()')
 
     def get_edges(self):
         """
@@ -1038,7 +1038,11 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
     def addGeometry(self):
         self.aQuadMapper = vtk.vtkDataSetMapper()
         self.aQuadMapper.SetInput(self.grid)
+
+        #self.warpVector = vtk.vtkWarpVector()
+        #self.warpVector.SetInput(self.aQuadMapper.GetUnstructuredGridOutput())
         #aQuadMapper.SetInput(Filter.GetOutput())
+
         geometryActor = vtk.vtkActor()
         geometryActor.SetMapper(self.aQuadMapper)
         #geometryActor.AddPosition(2, 0, 2)
@@ -1079,7 +1083,11 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             self.rend.Modified()
             #emptyResult = vtk.vtkFloatArray()
 
-            key = self.caseKeys[self.iCase]
+            try:
+                key = self.caseKeys[self.iCase]
+            except:
+                print('iCase=%s caseKeys=%s' % (self.iCase, self.caseKeys))
+                raise
             case = self.resultCases[key]
             print("len(case) = %i" % len(case))
             (subcaseID, resultType, vectorSize, location, data_format) = key
@@ -1233,6 +1241,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                     self.iCase = icase
 
         if not found_case:
+            #print('iCase=%s nCases=%s' % (self.iCase, self.nCases))
             if self.iCase is not self.nCases:
                 self.iCase += 1
             else:
@@ -1253,7 +1262,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         else:
             self.log_error("No Results found.  Many results are not supported in the GUI.\n")
             foundCases = False
-        #print "next key = ",key
+        #print("next iCase=%s key=%s" % (self.iCase, key))
         return foundCases
 
     def on_update_scalar_bar(Title, min_value, max_value, data_format):
