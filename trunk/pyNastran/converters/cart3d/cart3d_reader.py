@@ -538,7 +538,7 @@ class Cart3DReader(object):
         p = 0
         data = []
         assert self.nPoints > 0, 'nPoints=%s' % self.nPoints
-        points = zeros((self.nPoints, 3), 'float64')
+        points = zeros((self.nPoints, 3), dtype='float32')
         while p < self.nPoints:
             data += self.infile.readline().strip().split()
             while len(data) > 2:
@@ -573,7 +573,7 @@ class Cart3DReader(object):
         """
         assert bypass == False, 'bypass=%r' % bypass
         assert self.nElementsRead > 0, 'nPoints=%s' % self.nPoints
-        elements = zeros((self.nElementsRead, 3), 'int64')
+        elements = zeros((self.nElementsRead, 3), dtype='int32')
 
         self.log.info("nElementsRead=%s nElementsSkip=%s" % (self.nElementsRead, self.nElementsSkip))
 
@@ -599,7 +599,7 @@ class Cart3DReader(object):
         return elements
 
     def read_regions_ascii(self, bypass=True):
-        regions = zeros(self.nElementsRead, 'int32')
+        regions = zeros(self.nElementsRead, dtype='int32')
         if bypass:
             for i in xrange(self.nElements):
                 self.infile.readline()
@@ -647,7 +647,7 @@ class Cart3DReader(object):
                             'Mach', 'U', 'V', 'W', 'E']
         self.log.info('---starting read_results---')
 
-        results = zeros((self.nPoints, 6), 'float64')
+        results = zeros((self.nPoints, 6), dtype='float32')
 
         nResultLines = int(ceil(self.nResults / 5.)) - 1
         for ipoint in xrange(self.nPoints):
@@ -862,7 +862,7 @@ class Cart3DReader(object):
         size = npoints * 12  # 12=3*4 all the points
 
         n = 0
-        points = zeros(npoints * 3, 'float64')
+        points = zeros(npoints * 3, dtype='float32')
         s = Struct(b'>3000f') # 3000 floats; 1000 points
         while size > 12000:  # 12k = 4 bytes/float*3 floats/point*1000 points
             data = self.infile.read(4 * 3000)
@@ -903,7 +903,7 @@ class Cart3DReader(object):
         #isBuffered = True
         size = nelements * 12  # 12=3*4 all the elements
 
-        elements = zeros(self.nElements*3, 'int32')
+        elements = zeros(self.nElements*3, dtype='int32')
 
         n = 0
         s = Struct(b'>3000i')
@@ -938,7 +938,7 @@ class Cart3DReader(object):
         size = nelements * 4  # 12=3*4 all the elements
         s = Struct(b'>3000i')
 
-        regions = zeros(self.nElementsRead, 'int32')
+        regions = zeros(self.nElementsRead, dtype='int32')
 
         nr = 0
         while size > 12000:  # 12k is 3000 elements
