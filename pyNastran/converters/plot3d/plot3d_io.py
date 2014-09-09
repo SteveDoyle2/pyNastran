@@ -176,9 +176,9 @@ class Plot3d_io(object):
                 Xn[i] = node[0]
                 Yn[i] = node[1]
                 Zn[i] = node[2]
-            cases[(ID, 'node_x', 1, 'nodal', '%.2f')] = Xn
-            cases[(ID, 'node_y', 1, 'nodal', '%.2f')] = Yn
-            cases[(ID, 'node_z', 1, 'nodal', '%.2f')] = Zn
+            cases[(ID, 'node_x', 1, 'node', '%.2f')] = Xn
+            cases[(ID, 'node_y', 1, 'node', '%.2f')] = Yn
+            cases[(ID, 'node_z', 1, 'node', '%.2f')] = Zn
 
 
         #elif self.is_nodal:
@@ -188,7 +188,7 @@ class Plot3d_io(object):
             #for key in result_names:
                 #if key in loads:
                     #nodal_data = loads[key]
-                    #cases[(ID, key, 1, 'nodal', '%.3f')] = nodal_data
+                    #cases[(ID, key, 1, 'node', '%.3f')] = nodal_data
         return cases
 
     def load_panair_results(self, panairFileName, dirname):

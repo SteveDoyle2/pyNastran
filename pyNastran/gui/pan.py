@@ -464,7 +464,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO, TetgenIO, U
             if location == 'centroid' and plotCentroidal:
                 #allocationSize = vectorSize*location (where location='centroid'-> self.nElements)
                 gridResult.Allocate(self.nElements, 1000)
-            elif location == 'nodal' and plotNodal:
+            elif location == 'node' and plotNodal:
                 #allocationSize = vectorSize*self.nNodes # (where location='node'-> self.nNodes)
                 gridResult.Allocate(self.nNodes * vectorSize, 1000)
                 gridResult.SetNumberOfComponents(vectorSize)
@@ -540,20 +540,20 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO, TetgenIO, U
             if location == 'centroid' and plotCentroidal:
                 #self.grid.GetPointData().Reset()
                 self.grid.GetCellData().SetScalars(gridResult)
-                print("***plotting vector=%s skipping (centroid/nodal) - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
+                print("***plotting vector=%s skipping (centroid/node) - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
                 self.grid.Modified()
-            elif location == 'nodal' and plotNodal:
+            elif location == 'node' and plotNodal:
                 self.grid.GetCellData().Reset()
                 if vectorSize == 1:
-                    print("***plotting vector=%s skipping (centroid/nodal) - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
+                    print("***plotting vector=%s skipping (centroid/node) - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
                     self.grid.GetPointData().SetScalars(gridResult)
                     self.grid.Modified()
                 else:
-                    print("***nodal vector=%s skipping (centroid/nodal) - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
+                    print("***node vector=%s skipping (centroid/node) - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
                     self.grid.GetPointData().SetVectors(gridResult)
-                    #print("***nodal skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label))
+                    #print("***node skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label))
             else:
-                print("***%s skipping (centroid/nodal) - subcaseID=%s resultType=%s subtitle=%s label=%s" % (location, subcaseID, resultType, subtitle, label))
+                print("***%s skipping (centroid/node) - subcaseID=%s resultType=%s subtitle=%s label=%s" % (location, subcaseID, resultType, subtitle, label))
                 self.scalarBar.SetVisibility(False)
 
     def onKeyPress(self, obj, event):
