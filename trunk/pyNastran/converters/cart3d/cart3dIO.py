@@ -154,7 +154,7 @@ class Cart3dIO(object):
             cases[(ID, 'ElementID', 1, 'centroid', '%.0f')] = arange(1, nelements+1)
 
             # these are actually nodal results
-            for key in result_names: 
+            for key in result_names:
                 if key in loads:
                     nodal_data = loads[key]
                     n1 = elements[:, 0]
