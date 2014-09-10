@@ -1410,6 +1410,252 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         #self.vtk_interactor.ResetCamera()
         self.log_command('update_camera(%r)' % code)
 
+class HelloWindow(QtGui.QMainWindow):
+
+    def __init__(self, win_parent = None):
+        #Init the base class
+        self._default_name = 'this is a name'
+        self._default_min = 0.0
+        self._default_max = 1.0
+        self._default_format = '%g'
+
+        QtGui.QMainWindow.__init__(self, win_parent)
+        self.setWindowTitle('Legend Properties')
+        self.create_widgets()
+
+
+    def create_widgets(self):
+        #Widgets
+
+        # Name
+        self.name = QtGui.QLabel("Legend Name:")
+        self.name_edit = QtGui.QLineEdit(str(self._default_name))
+        self.name_button = QtGui.QPushButton("Default")
+
+        # Min
+        self.min = QtGui.QLabel("Min:")
+        self.min_edit = QtGui.QLineEdit(str(self._default_min))
+        self.min_button = QtGui.QPushButton("Default")
+
+        # Max
+        self.max = QtGui.QLabel("Max:")
+        self.max_edit = QtGui.QLineEdit(str(self._default_max))
+        self.max_button = QtGui.QPushButton("Default")
+
+        # Format
+        self.format = QtGui.QLabel("Format (e.g. %s, %f, %i, %g):")
+        self.format_edit = QtGui.QLineEdit(str(self._default_format))
+        #self.format_edit.setText()
+        self.format_button = QtGui.QPushButton("Default")
+        #tip = QtGui.QToolTip()
+        #tip.setTe
+        #self.format_edit.toolTip(tip)
+
+        # red/blue or blue/red
+        checkbox1 = QtGui.QCheckBox("Min -> Blue; Max -> Red")
+        checkbox2 = QtGui.QCheckBox("Min -> Red; Max -> Blue")
+        checkbox1.setChecked(True)
+        checkbox1.setChecked(False)
+
+        # closing
+        self.ok_button = QtGui.QPushButton("OK")
+        self.cancel_button = QtGui.QPushButton("Cancel")
+
+
+
+        #checkbox = QtGui.QCheckBox("name")
+
+        #self.label = QtGui.QLabel("Say hello:")
+        #self.hello_edit = QtGui.QLineEdit()
+        #self.hello_button = QtGui.QPushButton("Push Me!")
+
+        #connect signal
+        #QtCore.QObject.connect(self.hello_button,
+                #QtCore.SIGNAL("clicked()"),
+                #self.on_hello_clicked)
+
+        # Layout
+        grid = QtGui.QGridLayout()
+        grid.addWidget(self.name, 0, 0)
+        grid.addWidget(self.name_edit, 0, 1)
+        grid.addWidget(self.name_button, 0, 2)
+
+        grid.addWidget(self.min, 1, 0)
+        grid.addWidget(self.min_edit, 1, 1)
+        grid.addWidget(self.min_button, 1, 2)
+
+        grid.addWidget(self.max, 2, 0)
+        grid.addWidget(self.max_edit, 2, 1)
+        grid.addWidget(self.max_button, 2, 2)
+
+        grid.addWidget(self.format, 3, 0)
+        grid.addWidget(self.format_edit, 3, 1)
+        grid.addWidget(self.format_button, 3, 2)
+
+        #grid.addWidget(min_max)
+
+        #checkbox_widget = QtGui.QWidget(self)
+        checkboxs = QtGui.QButtonGroup(self)
+        checkboxs.addButton(checkbox1)
+        checkboxs.addButton(checkbox2)
+
+        ok_cancel_box = QtGui.QHBoxLayout()
+        ok_cancel_box.addWidget(self.ok_button)
+        ok_cancel_box.addWidget(self.cancel_button)
+
+        vbox = QtGui.QVBoxLayout()
+        vbox.addLayout(grid)
+        #vbox.addWidget(checkboxs)
+        vbox.addWidget(checkbox1)
+        vbox.addWidget(checkbox2)
+        vbox.addLayout(ok_cancel_box)
+
+        #Create central widget, add layout and set
+        central_widget = QtGui.QWidget()
+        central_widget.setLayout(vbox)
+        self.setCentralWidget(central_widget)
+
+        self.connect(self.name_button, QtCore.SIGNAL('clicked()'), self.on_default_name)
+        self.connect(self.min_button, QtCore.SIGNAL('clicked()'), self.on_default_min)
+        self.connect(self.max_button, QtCore.SIGNAL('clicked()'), self.on_default_max)
+        self.connect(self.format_button, QtCore.SIGNAL('clicked()'), self.on_default_format)
+
+        self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
+        self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
+
+    def closeEvent(self, event):
+        event.accept()
+
+    def on_default_name(self):
+        self.name_edit.setText(str(self._default_name))
+
+    def on_default_min(self):
+        self.min_edit.setText(str(self._default_min))
+
+    def on_default_max(self):
+        self.max_edit.setText(str(self._default_max))
+
+    def on_default_format(self):
+        self.format_edit.setText(str(self._default_format))
+
+    def check_float(self, cell):
+        text = cell.text()
+        try:
+            value = float(text)
+            cell.setStyleSheet("QLineEdit{background: white;}")
+            return True
+        except ValueError:
+            cell.setStyleSheet("QLineEdit{background: red;}")
+            return False
+
+    def check_format(self, cell):
+        text = str(cell.text())
+        is_valid = True
+        if len(text) < 2:
+            is_valid = False
+            #print("A")
+        if text[0] != '%':
+            is_valid = False
+            #print("B")
+        if text.count('%') != 1:
+            is_valid = False
+            #print("C")
+
+        if text[-1].lower() not in ['f', 'g', 's', 'e', 'i']:
+            is_valid = False
+            #print("D %r" % text[-1])
+
+        # end of int/string
+        if text[-1].lower() in ['s', 'i']:
+            if len(val) != 0:
+                cell.setStyleSheet("QLineEdit{background: white;}")
+                return True
+            is_valid = False
+
+        if not is_valid:
+            cell.setStyleSheet("QLineEdit{background: red;}")
+            return False
+
+        val = text[1:-1]
+        if len(val) == 0:
+            cell.setStyleSheet("QLineEdit{background: white;}")
+            return True
+
+        # %4.4g, %.4f, %3.1e
+        if '.' in val:
+            if text.count('.') != 1:
+                is_valid = False
+                cell.setStyleSheet("QLineEdit{background: red;}")
+                return False
+                #print("E")
+            else:
+                sline = val.split('.')
+                if sline[0] == '':
+                    sline = sline[1:]
+        else:
+            sline = [val]
+
+
+        #print("sline", sline)
+        for slot in sline:
+            try:
+                int(slot)
+            except:
+                is_valid = False
+                #print("F")
+
+        if is_valid:
+            cell.setStyleSheet("QLineEdit{background: white;}")
+            return True
+        else:
+            cell.setStyleSheet("QLineEdit{background: red;}");
+            return False
+
+    def on_validate(self):
+        print("name = %r" % self.name_edit.text())
+        #self.min_edit.setAutoFillBackground('red')
+
+        #QtGui.QPalette= label->palette();
+        #self.min_edit.setStyleSheet("QLineEdit{background: red;}");
+
+        #self.check_string(self.name_edit)
+        self.check_float(self.min_edit)
+        self.check_float(self.max_edit)
+        self.check_format(self.format_edit)
+        #self.check_float(self.min_edit, self._final_min)
+
+        print("min = %r" % self.min_edit.text())
+        print("max = %r" % self.max_edit.text())
+        print("format = %r" % self.format_edit.text())
+
+    def on_ok(self):
+        print("OK")
+        passed = self.on_validate()
+        if passed:
+            self.close()
+
+    def on_cancel(self):
+        print("Cancel")
+        #self.destroy()
+        self.close()
+
+    #def on_hello_clicked(self):
+        #QtGui.QMessageBox.information(self,
+                #"Hello!",
+                #"Hello %s" % self.hello_edit.displayText(),
+                #QtGui.QMessageBox.Ok)
+
+
+def main2():
+    # Someone is launching this directly
+    # Create the QApplication
+    app = QtGui.QApplication(sys.argv)
+    #The Main window
+    main_window = HelloWindow()
+    main_window.show()
+    # Enter the main loop
+    app.exec_()
+
 def main():
     app = QtGui.QApplication(sys.argv)
     QtGui.QApplication.setOrganizationName("pyNastran")
