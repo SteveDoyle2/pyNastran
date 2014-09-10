@@ -934,6 +934,9 @@ class PanairGrid(object):
                         print(element)
                         print(points[n1], points[n2], points[n3], points[n4])
                         print("")
+        points = array(points, dtype='float32')
+        elements = array(elements, dtype='int32')
+        regions = array(regions, dtype='int32')
         return points, elements, regions
 
     def _read_cases(self, section):
