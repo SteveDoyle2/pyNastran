@@ -11,9 +11,6 @@ from pyNastran.converters.panair.agps import AGPS
 class PanairIO(object):
     def __init__(self):
         pass
-#if __name__=='__main__':
-#    lawgs = LaWGS('tmx1242.wgs')
-#    lawgs.run()
 
     def load_panair_geometry(self, panairFileName, dirname):
         self.nidMap = {}
@@ -237,3 +234,8 @@ if __name__ == '__main__':
 
     #test.load_panair_geometry('SWB.INP','',True,True)
     test.load_panair_geometry('models/NAC6.INP', '', True, True)
+
+
+#if __name__=='__main__':
+#    lawgs = LaWGS('tmx1242.wgs')
+#    lawgs.run()
