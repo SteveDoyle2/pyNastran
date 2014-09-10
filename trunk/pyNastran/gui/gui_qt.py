@@ -14,7 +14,9 @@ except ImportError:
     except ImportError:
         msg = 'Failed to import PySide or PyQt4'
         raise ImportError(msg)
+
 assert fmode in [1, 2]
+
 # standard library
 import sys
 import os.path
@@ -25,7 +27,7 @@ import traceback
 #webbrowser.open("http://xkcd.com/353/")
 
 # 3rd party
-from numpy import ndarray, amax, amin
+from numpy import ndarray
 import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
@@ -36,6 +38,7 @@ from pyNastran.utils.log import SimpleLogger
 from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, Plot3d_io,
     is_nastran, is_cart3d, is_panair, is_lawgs, is_stl, is_tetgen, is_usm3d, is_plot3d)
 from pyNastran.gui.arg_handling import get_inputs
+from pyNastran.gui.qt_legend import LegendPropertiesWindow
 
 pkg_path = pyNastran.__path__[0]
 script_path = os.path.join(pkg_path, 'gui', 'scripts')
@@ -517,29 +520,42 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         | Format | pyString |
         +--------+----------+
         """
-        def validate_name(data):
-            return True
-        def validate_min(data):
-            return True
-        def validate_max(data):
-            return True
-        def validate_format(data):
-            return True
+        key = self.caseKeys[self.iCase]
+        case = self.resultCases[key]
+        #print("len(case) = %i" % len(case))
+        (subcaseID, resultType, vectorSize, location, data_format) = key
 
         data = {
-            'title' : 'Legend Properties',
-            'table' : [
-                           ['Name', str, validate_name],
-                           ['Min', float, validate_min],
-                           ['Max', float, validate_max],
-                           ['Format', str, validate_format],
-                           ['FlipAxis', 'checkbox'],
-                      ],
-            'close' : 'OK_Cancel',
+            'name' : resultType,
+            'min' : case.min(),
+            'max' : case.max(),
+            'format' : data_format,
+            'is_blue_to_red' : True,
+            'is_discrete': True,
         }
-        #q = QtPopUp(
-            #data
-        #)
+        legend = LegendPropertiesWindow(data, win_parent=self)
+        legend.show()
+        legend.exec_()
+        #print("out_data", data)
+
+        Title = data['name']
+        min_value = data['min']
+        max_value = data['max']
+        data_format = data['format']
+        is_blue_to_red = data['is_blue_to_red']
+        is_discrete = data['is_discrete']
+
+        try:
+            caseName = self.iSubcaseNameMap[subcaseID]
+        except KeyError:
+            caseName = ('case=NA', 'label=NA')
+        (subtitle, label) = caseName
+
+        gridResult = self.build_grid_result(vectorSize, location)
+        norm_value, nValueSet = self.set_grid_values(gridResult, case, vectorSize, min_value, max_value, is_blue_to_red=is_blue_to_red)
+        self.UpdateScalarBar(Title, min_value, max_value, norm_value, data_format, is_blue_to_red=is_blue_to_red)
+        self.final_grid_update(gridResult, key, subtitle, label)
+
 
     def on_run_script(self, python_file=False):
         print('python_file =', python_file)
@@ -1115,12 +1131,6 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         foundCases = self.incrementCycle(result_name)
         if foundCases:
             print("incremented case")
-            #gridResult.Reset()
-            gridResult = vtk.vtkFloatArray()
-            #gridResult.Reset()
-            #gridResult.Modified()
-            self.rend.Modified()
-            #emptyResult = vtk.vtkFloatArray()
 
             try:
                 key = self.caseKeys[self.iCase]
@@ -1131,21 +1141,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             print("len(case) = %i" % len(case))
             (subcaseID, resultType, vectorSize, location, data_format) = key
 
-            gridResult.SetNumberOfComponents(vectorSize)
-            if location == 'centroid':
-            #if location == 'centroid' and self.is_centroidal:
-                #allocationSize = vectorSize*location (where location='centroid'-> self.nElements)
-                gridResult.Allocate(self.nElements, 1000)
-            #elif location == 'node' and self.is_nodal:
-            elif location == 'node':
-                #allocationSize = vectorSize*self.nNodes # (where location='node'-> self.nNodes)
-                gridResult.Allocate(self.nNodes * vectorSize, 1000)
-                #gridResult.SetNumberOfComponents(vectorSize)
-            else:
-                raise RuntimeError(location)
-                #print("***%s skipping" % location)
-
-            #self.iSubcaseNameMap[self.isubcase] = [Subtitle,Label]
+            #================================================
+            #self.iSubcaseNameMap[self.isubcase] = [Subtitle, Label]
             try:
                 caseName = self.iSubcaseNameMap[subcaseID]
             except KeyError:
@@ -1164,41 +1161,21 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
 
             print("subcaseID=%s resultType=%r subtitle=%r label=%r" % (subcaseID, resultType, subtitle, label))
 
+            #================================================
+            gridResult = self.build_grid_result(vectorSize, location)
+            #================================================
             if isinstance(case, ndarray):
-                max_value = amax(case)
-                min_value = amin(case)
+                max_value = case.max()
+                min_value = case.min()
             else:
+                print('resultType=%r should really use numpy arrays...' % resultType)
                 min_value = case[0]
                 max_value = case[0]
                 for value in case:
                     max_value = max(value, max_value)
                     min_value = min(value, min_value)
 
-            # flips sign to make colors go from blue -> red
-            norm_value = max_value - min_value
-            print('max_value=%s min_value=%r norm_value=%r' % (max_value, min_value, norm_value))
-            #print "case = ",case
-            #if norm_value==0.: # avoids division by 0.
-            #    norm_value = 1.
-
-            if 1:
-                valueSet = set()
-                if vectorSize == 1:
-                    #print "min_value = ",min(case)
-                    for i, value in enumerate(case):
-                        #gridResult.InsertValue(i, value)
-                        gridResult.InsertNextValue(1.0-(value - min_value)/norm_value)
-                        #if len(valueSet) < 20:
-                            #valueSet.add(value)
-                else:  # vectorSize=3
-                    pass
-                    #for value in case:
-                    #    .gridResult.InsertNextTuple3(value)  # x,y,z
-                print("value_range", gridResult.GetValueRange())
-
-            print("max=%g min=%g norm=%g\n" % (max_value, min_value, norm_value))
-
-            nValueSet = len(valueSet)
+            norm_value, nValueSet = self.set_grid_values(gridResult, case, vectorSize, min_value, max_value)
             if 1:
                 self.textActors[0].SetInput('Max:  %g' % max_value)  # max
                 self.textActors[1].SetInput('Min:  %g' % min_value)  # min
@@ -1210,7 +1187,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 else:
                     self.textActors[3].VisibilityOff()
 
-            self.UpdateScalarBar(resultType, min_value, max_value, norm_value, data_format)
+            self.UpdateScalarBar(resultType, min_value, max_value, norm_value, data_format, is_blue_to_red=True)
             #self.scalarBar.SetNumberOfLabels(nValueSet)
             #self.scalarBar.SetMaximumNumberOfColors(nValueSet)
             #prop = self.scalarBar.GetLabelTextProperty()
@@ -1224,37 +1201,94 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             #self.grid.Reset()
             #print('gridResult', dir(gridResult))
             #print('gridResult', gridResult)
-            print("location =", location)
+            #print("location =", location)
 
-            npoints = self.nPoints()
-            ncells = self.nCells()
+            self.final_grid_update(gridResult, key, subtitle, label)
 
-            if location == 'centroid':
-            #if location == 'centroid' and self.is_centroidal:
-                if npoints:
-                    point_data = self.grid.GetPointData()
-                    point_data.Reset()
-                self.grid.GetCellData().SetScalars(gridResult)
-                self.log_info("***centroidal plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
-            elif location == 'node':
-            #elif location == 'node' and self.is_nodal:
-                if ncells:
-                    cell_data = self.grid.GetCellData()
-                    print(dir(cell_data))
-                    cell_data.Reset()
-                if vectorSize == 1:
-                    self.log_info("***node plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
-                    self.grid.GetPointData().SetScalars(gridResult)
-                else:
-                    self.log_info("***node plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
-                    self.grid.GetPointData().SetScalars(gridResult)
-                #print("***node skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label))
+    def final_grid_update(self, gridResult, key, subtitle, label):
+        (subcaseID, resultType, vectorSize, location, data_format) = key
+        npoints = self.nPoints()
+        ncells = self.nCells()
+
+        if location == 'centroid':
+        #if location == 'centroid' and self.is_centroidal:
+            if npoints:
+                point_data = self.grid.GetPointData()
+                point_data.Reset()
+            self.grid.GetCellData().SetScalars(gridResult)
+            self.log_info("***centroidal plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
+        elif location == 'node':
+        #elif location == 'node' and self.is_nodal:
+            if ncells:
+                cell_data = self.grid.GetCellData()
+                print(dir(cell_data))
+                cell_data.Reset()
+            if vectorSize == 1:
+                self.log_info("***node plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
+                self.grid.GetPointData().SetScalars(gridResult)
             else:
-                raise RuntimeError(location)
-                self.log_info("***D%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (location, subcaseID, resultType, subtitle, label))
-                self.scalarBar.SetVisibility(False)
-            self.grid.Modified()
-            self.vtk_interactor.Render()
+                self.log_info("***node plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
+                self.grid.GetPointData().SetScalars(gridResult)
+            #print("***node skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label))
+        else:
+            raise RuntimeError(location)
+            self.log_info("***D%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (location, subcaseID, resultType, subtitle, label))
+            self.scalarBar.SetVisibility(False)
+        self.grid.Modified()
+        self.vtk_interactor.Render()
+
+    def build_grid_result(self, vectorSize, location):
+        #gridResult.Reset()
+        gridResult = vtk.vtkFloatArray()
+        #gridResult.Reset()
+        #gridResult.Modified()
+        self.rend.Modified()
+        #emptyResult = vtk.vtkFloatArray()
+
+        gridResult.SetNumberOfComponents(vectorSize)
+        if location == 'centroid':
+        #if location == 'centroid' and self.is_centroidal:
+            #allocationSize = vectorSize*location (where location='centroid'-> self.nElements)
+            gridResult.Allocate(self.nElements, 1000)
+        #elif location == 'node' and self.is_nodal:
+        elif location == 'node':
+            #allocationSize = vectorSize*self.nNodes # (where location='node'-> self.nNodes)
+            gridResult.Allocate(self.nNodes * vectorSize, 1000)
+            #gridResult.SetNumberOfComponents(vectorSize)
+        else:
+            raise RuntimeError(location)
+            #print("***%s skipping" % location)
+        return gridResult
+
+    def set_grid_values(self, gridResult, case, vectorSize, min_value, max_value, is_blue_to_red=True):
+        # flips sign to make colors go from blue -> red
+        #if is_blue_to_red:
+        norm_value = max_value - min_value
+        #else:
+            #norm_value = min_value - max_value
+        print('max_value=%s min_value=%r norm_value=%r' % (max_value, min_value, norm_value))
+        #print "case = ",case
+        #if norm_value==0.: # avoids division by 0.
+        #    norm_value = 1.
+
+        valueSet = set()
+        if vectorSize == 1:
+            #print "min_value = ",min(case)
+            if is_blue_to_red:
+                for i, value in enumerate(case):
+                    gridResult.InsertNextValue(1.0 - (value - min_value) / norm_value)
+            else:
+                for i, value in enumerate(case):
+                    gridResult.InsertNextValue((value - min_value) / norm_value)
+        else:  # vectorSize=3
+            pass
+            #for value in case:
+            #    .gridResult.InsertNextTuple3(value)  # x,y,z
+        #print("value_range", gridResult.GetValueRange())
+
+        print("max=%g min=%g norm=%g\n" % (max_value, min_value, norm_value))
+        nValueSet = len(valueSet)
+        return norm_value, nValueSet
 
     def nCells(self):
         try:
@@ -1321,7 +1355,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             return True
         return False
 
-    def UpdateScalarBar(self, Title, min_value, max_value, norm_value, data_format):
+    def UpdateScalarBar(self, Title, min_value, max_value, norm_value, data_format, is_blue_to_red=True):
         """
         :param Title the:   scalar bar title
         :param min_value:   the blue value
@@ -1338,18 +1372,22 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             #min_value = self.min_value
         #if self.max_value is not None:
             #max_value = self.max_value
-        #if not self.blue_to_red:
+        #if not self.is_blue_to_red:
             #min_value, max_value = max_value, min_value
 
-        self.colorFunction.AddRGBPoint(min_value, 0.0, 0.0, 1.0)  # blue
-        self.colorFunction.AddRGBPoint(max_value, 1.0, 0.0, 0.0)  # red
+        if is_blue_to_red:
+            self.colorFunction.AddRGBPoint(min_value, 0.0, 0.0, 1.0)  # blue
+            self.colorFunction.AddRGBPoint(max_value, 1.0, 0.0, 0.0)  # red
+        else:
+            self.colorFunction.AddRGBPoint(min_value, 1.0, 0.0, 0.0)  # red
+            self.colorFunction.AddRGBPoint(max_value, 0.0, 0.0, 1.0)  # blue
         #self.scalarBar.SetLookupTable(self.colorFunction)
 
         self.scalarBar.SetTitle(Title)
         self.scalarBar.SetLabelFormat(data_format)
 
         nvalues = 11
-        if (Title in ['Element_ID', 'Eids', 'Region'] and norm_value < 11):
+        if (Title in ['ElementID', 'Eids', 'Region'] and norm_value < 11):
             nvalues = int(max_value - min_value) + 1
             #print "need to adjust axes...max_value=%s" % max_value
 
@@ -1410,251 +1448,6 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         #self.vtk_interactor.ResetCamera()
         self.log_command('update_camera(%r)' % code)
 
-class HelloWindow(QtGui.QMainWindow):
-
-    def __init__(self, win_parent = None):
-        #Init the base class
-        self._default_name = 'this is a name'
-        self._default_min = 0.0
-        self._default_max = 1.0
-        self._default_format = '%g'
-
-        QtGui.QMainWindow.__init__(self, win_parent)
-        self.setWindowTitle('Legend Properties')
-        self.create_widgets()
-
-
-    def create_widgets(self):
-        #Widgets
-
-        # Name
-        self.name = QtGui.QLabel("Legend Name:")
-        self.name_edit = QtGui.QLineEdit(str(self._default_name))
-        self.name_button = QtGui.QPushButton("Default")
-
-        # Min
-        self.min = QtGui.QLabel("Min:")
-        self.min_edit = QtGui.QLineEdit(str(self._default_min))
-        self.min_button = QtGui.QPushButton("Default")
-
-        # Max
-        self.max = QtGui.QLabel("Max:")
-        self.max_edit = QtGui.QLineEdit(str(self._default_max))
-        self.max_button = QtGui.QPushButton("Default")
-
-        # Format
-        self.format = QtGui.QLabel("Format (e.g. %s, %f, %i, %g):")
-        self.format_edit = QtGui.QLineEdit(str(self._default_format))
-        #self.format_edit.setText()
-        self.format_button = QtGui.QPushButton("Default")
-        #tip = QtGui.QToolTip()
-        #tip.setTe
-        #self.format_edit.toolTip(tip)
-
-        # red/blue or blue/red
-        checkbox1 = QtGui.QCheckBox("Min -> Blue; Max -> Red")
-        checkbox2 = QtGui.QCheckBox("Min -> Red; Max -> Blue")
-        checkbox1.setChecked(True)
-        checkbox1.setChecked(False)
-
-        # closing
-        self.ok_button = QtGui.QPushButton("OK")
-        self.cancel_button = QtGui.QPushButton("Cancel")
-
-
-
-        #checkbox = QtGui.QCheckBox("name")
-
-        #self.label = QtGui.QLabel("Say hello:")
-        #self.hello_edit = QtGui.QLineEdit()
-        #self.hello_button = QtGui.QPushButton("Push Me!")
-
-        #connect signal
-        #QtCore.QObject.connect(self.hello_button,
-                #QtCore.SIGNAL("clicked()"),
-                #self.on_hello_clicked)
-
-        # Layout
-        grid = QtGui.QGridLayout()
-        grid.addWidget(self.name, 0, 0)
-        grid.addWidget(self.name_edit, 0, 1)
-        grid.addWidget(self.name_button, 0, 2)
-
-        grid.addWidget(self.min, 1, 0)
-        grid.addWidget(self.min_edit, 1, 1)
-        grid.addWidget(self.min_button, 1, 2)
-
-        grid.addWidget(self.max, 2, 0)
-        grid.addWidget(self.max_edit, 2, 1)
-        grid.addWidget(self.max_button, 2, 2)
-
-        grid.addWidget(self.format, 3, 0)
-        grid.addWidget(self.format_edit, 3, 1)
-        grid.addWidget(self.format_button, 3, 2)
-
-        #grid.addWidget(min_max)
-
-        #checkbox_widget = QtGui.QWidget(self)
-        checkboxs = QtGui.QButtonGroup(self)
-        checkboxs.addButton(checkbox1)
-        checkboxs.addButton(checkbox2)
-
-        ok_cancel_box = QtGui.QHBoxLayout()
-        ok_cancel_box.addWidget(self.ok_button)
-        ok_cancel_box.addWidget(self.cancel_button)
-
-        vbox = QtGui.QVBoxLayout()
-        vbox.addLayout(grid)
-        #vbox.addWidget(checkboxs)
-        vbox.addWidget(checkbox1)
-        vbox.addWidget(checkbox2)
-        vbox.addLayout(ok_cancel_box)
-
-        #Create central widget, add layout and set
-        central_widget = QtGui.QWidget()
-        central_widget.setLayout(vbox)
-        self.setCentralWidget(central_widget)
-
-        self.connect(self.name_button, QtCore.SIGNAL('clicked()'), self.on_default_name)
-        self.connect(self.min_button, QtCore.SIGNAL('clicked()'), self.on_default_min)
-        self.connect(self.max_button, QtCore.SIGNAL('clicked()'), self.on_default_max)
-        self.connect(self.format_button, QtCore.SIGNAL('clicked()'), self.on_default_format)
-
-        self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
-        self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
-
-    def closeEvent(self, event):
-        event.accept()
-
-    def on_default_name(self):
-        self.name_edit.setText(str(self._default_name))
-
-    def on_default_min(self):
-        self.min_edit.setText(str(self._default_min))
-
-    def on_default_max(self):
-        self.max_edit.setText(str(self._default_max))
-
-    def on_default_format(self):
-        self.format_edit.setText(str(self._default_format))
-
-    def check_float(self, cell):
-        text = cell.text()
-        try:
-            value = float(text)
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return True
-        except ValueError:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return False
-
-    def check_format(self, cell):
-        text = str(cell.text())
-        is_valid = True
-        if len(text) < 2:
-            is_valid = False
-            #print("A")
-        if text[0] != '%':
-            is_valid = False
-            #print("B")
-        if text.count('%') != 1:
-            is_valid = False
-            #print("C")
-
-        if text[-1].lower() not in ['f', 'g', 's', 'e', 'i']:
-            is_valid = False
-            #print("D %r" % text[-1])
-
-        # end of int/string
-        if text[-1].lower() in ['s', 'i']:
-            if len(val) != 0:
-                cell.setStyleSheet("QLineEdit{background: white;}")
-                return True
-            is_valid = False
-
-        if not is_valid:
-            cell.setStyleSheet("QLineEdit{background: red;}")
-            return False
-
-        val = text[1:-1]
-        if len(val) == 0:
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return True
-
-        # %4.4g, %.4f, %3.1e
-        if '.' in val:
-            if text.count('.') != 1:
-                is_valid = False
-                cell.setStyleSheet("QLineEdit{background: red;}")
-                return False
-                #print("E")
-            else:
-                sline = val.split('.')
-                if sline[0] == '':
-                    sline = sline[1:]
-        else:
-            sline = [val]
-
-
-        #print("sline", sline)
-        for slot in sline:
-            try:
-                int(slot)
-            except:
-                is_valid = False
-                #print("F")
-
-        if is_valid:
-            cell.setStyleSheet("QLineEdit{background: white;}")
-            return True
-        else:
-            cell.setStyleSheet("QLineEdit{background: red;}");
-            return False
-
-    def on_validate(self):
-        print("name = %r" % self.name_edit.text())
-        #self.min_edit.setAutoFillBackground('red')
-
-        #QtGui.QPalette= label->palette();
-        #self.min_edit.setStyleSheet("QLineEdit{background: red;}");
-
-        #self.check_string(self.name_edit)
-        self.check_float(self.min_edit)
-        self.check_float(self.max_edit)
-        self.check_format(self.format_edit)
-        #self.check_float(self.min_edit, self._final_min)
-
-        print("min = %r" % self.min_edit.text())
-        print("max = %r" % self.max_edit.text())
-        print("format = %r" % self.format_edit.text())
-
-    def on_ok(self):
-        print("OK")
-        passed = self.on_validate()
-        if passed:
-            self.close()
-
-    def on_cancel(self):
-        print("Cancel")
-        #self.destroy()
-        self.close()
-
-    #def on_hello_clicked(self):
-        #QtGui.QMessageBox.information(self,
-                #"Hello!",
-                #"Hello %s" % self.hello_edit.displayText(),
-                #QtGui.QMessageBox.Ok)
-
-
-def main2():
-    # Someone is launching this directly
-    # Create the QApplication
-    app = QtGui.QApplication(sys.argv)
-    #The Main window
-    main_window = HelloWindow()
-    main_window.show()
-    # Enter the main loop
-    app.exec_()
 
 def main():
     app = QtGui.QApplication(sys.argv)

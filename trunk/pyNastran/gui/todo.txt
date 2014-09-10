@@ -1,24 +1,27 @@
 ---DONE---
 
 both
+====
  - cart3d input/output
  - nastran input/output
+ - lawgs input
  - panair input
  - usm3d volume (postgrid) and results (.flo)
  - tetgen input
  - edges
  - nodal or centroidal
  - window title
- - auto-importing
+ - auto-importing (meaning...)
  - loading of geometry/results from command line
  - implicit pulldown for formats
 
 wx unique
- - hotkeys
- - lawgs input (broken for qt???)
+=========
+ - hotkeys for zoom/rotate/snap
  - explcit pulldown for formats
 
 PySide/PyQt4 unique
+===================
  - logger
  - auto-reload button.  Useful for:
     - modifying Panair file
@@ -26,9 +29,17 @@ PySide/PyQt4 unique
     - incrementing files for Usm3d (e.g. running a job and want to watch the
       flow develop without having to click load_results)
  - zoom/rotate/snap buttons
- - default filename for pictues
+ - default filename for pictures
  - python scripting
  - pretty title that tells you your "format - infile - outfile"
+ - legend menu to edit properties for:
+   - title
+   - min value
+   - max value
+   - data format (%f, %e, %g, %i, %.4f)
+   - red to blue; blue to red
+   - continuous to discrete (doesn't work)***
+   - doesn't save results***
 
 ----------------------------------------------------
 ---NOT DONE---
@@ -39,13 +50,10 @@ both
  - marker plots (arrows) & scale
  - displacement plots & scale
  - cell picker to get element/node info
- - panair results
  - plot3d input/output
  - tecplot structured input/output
  - tecplot unstructured input/output
  - usm3d surface/boundary layer/incomplete volume
- - scalar bar flipping
- - scalar bar limit setting
 
 --------------
 wx
@@ -56,6 +64,10 @@ wx
  - default filename for pictues
  - python scripting
  - pretty title that tells you your "format - infile - outfile"
+ - scalar bar flipping
+ - scalar bar limit setting
+ - panair results (probably close)
+ - legend menu
 
 --------------
 qt
@@ -67,7 +79,7 @@ qt
 ---Format Specific---
 
 Nastran
- - SOL 101 stress
+ - SOL 101 stress, displacement, velocity, acceleration, gridPointForces, spcForces, mpcForces
  - load geometry -> .bdf/nas/dat
  - load results -> op2/f06
 
@@ -88,6 +100,7 @@ Cart3d
 
 Panair
  - load geometry -> inp
+ - load results -> agps
  - supports auto-reload
 
 LaWGS
