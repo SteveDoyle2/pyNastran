@@ -116,6 +116,8 @@ class AppFrame(wx.Frame):
         #print("*format =", self.format)
 
     def load_batch_inputs(self, inputs):
+        if not inputs['format']:
+            return
         format = inputs['format']
         input = inputs['input']
         output = inputs['output']
@@ -128,14 +130,24 @@ class AppFrame(wx.Frame):
             return
             #raise IOError(msg)
             #sys.exit(msg)
-        elif format and input is not None:
+        elif format in valid_formats:
             format = format.lower()
+            if input is None:
+                events = self.eventsHandler
+                maps = {
+                    'nastran' : events.onLoadBDF,
+                    'cart3d' : events.onLoadCart3d,
+                }
+                maps[format](wx.EVT_ACTIVATE)
+                return
+
             dirname = os.path.dirname(input)
             inputbase = input
 
             if not os.path.exists(input):
                 msg = 'input=%r does not exist' % input
                 print msg
+                aaaa
                 self.frmPanel.scalarBar.VisibilityOff()
                 self.frmPanel.scalarBar.Modified()
                 return
@@ -153,7 +165,7 @@ class AppFrame(wx.Frame):
                 self.frmPanel.load_cart3d_geometry(inputbase, dirname)
             elif format=='lawgs' and is_lawgs:
                 print("loading lawgs")
-                self.frmPanel.load_LaWGS_geometry(inputbase, dirname)
+                self.frmPanel.load_lawgs_geometry(inputbase, dirname)
             elif format=='stl' and is_stl:
                 print("loading stl")
                 self.frmPanel.load_stl_geometry(inputbase, dirname)
@@ -639,7 +651,7 @@ class EventsHandler(object):
             '.p3da' : (self.parent.frmPanel.load_plot3d_geometry, 'plot3d'),
             '.xyz' : (self.parent.frmPanel.load_plot3d_geometry, 'plot3d'),
 
-            '.wgs' : (self.parent.frmPanel.load_LaWGS_geometry, 'lawgs'),
+            '.wgs' : (self.parent.frmPanel.load_lawgs_geometry, 'lawgs'),
             '.stl' : (self.parent.frmPanel.load_stl_geometry, 'stl'),
             '.smesh' : (self.parent.frmPanel.load_tetgen_geometry, 'tetgen'),
 
@@ -714,7 +726,7 @@ class EventsHandler(object):
             "All files (*.*)|*.*"
 
         Title = 'Choose a LaWGS File to Load'
-        loadFunction = self.parent.frmPanel.load_LaWGS_geometry
+        loadFunction = self.parent.frmPanel.load_lawgs_geometry
         #fname = r'C:\Users\steve\Desktop\pyNastran\pyNastran\converters\cart3d\Cart3d_35000_0.825_10_0_0_0_0.i.triq'
         #dirname = ''
         #loadFunction(fname,dirname)
