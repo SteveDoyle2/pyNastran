@@ -297,34 +297,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         msg2 += msg
         self.setWindowTitle(msg)
 
-    def init_ui(self):
-        """ Initialize user iterface"""
-        self.resize(800, 600)
-        self.statusBar().showMessage('Ready')
-
-        # windows title and aplication icon
-        self.setWindowTitle('Statusbar')
-        self.setWindowIcon(QtGui.QIcon(os.path.join(icon_path, 'logo.png')))
-        self.set_window_title("pyNastran v%s"  % pyNastran.__version__)
-
-        #=========== Results widget ===================
-        self.res_dock = QtGui.QDockWidget("Results", self)
-        self.res_dock.setObjectName("results_obj")
-        self.res_widget = QtGui.QTextEdit()
-        self.res_widget.setReadOnly(True)
-        self.res_dock.setWidget(self.res_widget)
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.res_dock)
-        #=========== Logging widget ===================
-        self.log_dock = QtGui.QDockWidget("Application log", self)
-        self.log_dock.setObjectName("application_log")
-        self.log_widget = QtGui.QTextEdit()
-        self.log_widget.setReadOnly(True)
-        self.log_dock.setWidget(self.log_widget)
-        self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock)
-        #===============================================
-
-        # right sidebar
-
+    def _build_menubar(self):
         ## menubar
         self.menubar = self.menuBar()
         self.menu_file = self.menubar.addMenu('&File')
@@ -456,6 +429,36 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                     menu.addSeparator()
                 else:
                     menu.addAction(actions[i] if isinstance(i, basestring) else i())
+
+    def init_ui(self):
+        """ Initialize user iterface"""
+        self.resize(800, 600)
+        self.statusBar().showMessage('Ready')
+
+        # windows title and aplication icon
+        self.setWindowTitle('Statusbar')
+        self.setWindowIcon(QtGui.QIcon(os.path.join(icon_path, 'logo.png')))
+        self.set_window_title("pyNastran v%s"  % pyNastran.__version__)
+
+        #=========== Results widget ===================
+        self.res_dock = QtGui.QDockWidget("Results", self)
+        self.res_dock.setObjectName("results_obj")
+        self.res_widget = QtGui.QTextEdit()
+        self.res_widget.setReadOnly(True)
+        self.res_dock.setWidget(self.res_widget)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.res_dock)
+        #=========== Logging widget ===================
+        self.log_dock = QtGui.QDockWidget("Application log", self)
+        self.log_dock.setObjectName("application_log")
+        self.log_widget = QtGui.QTextEdit()
+        self.log_widget.setReadOnly(True)
+        self.log_dock.setWidget(self.log_widget)
+        self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock)
+        #===============================================
+
+        self._build_menubar()
+
+        # right sidebar
         self.res_dock.hide()
 
         #Frame that VTK will render on
@@ -556,7 +559,6 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         self.UpdateScalarBar(Title, min_value, max_value, norm_value, data_format, is_blue_to_red=is_blue_to_red)
         self.final_grid_update(gridResult, key, subtitle, label)
 
-
     def on_run_script(self, python_file=False):
         print('python_file =', python_file)
         if python_file in [None, False]:
@@ -607,8 +609,6 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         camera.Modified()
         self.vtk_interactor.Render()
         self.log_command('zoom(%s)' % value)
-        #except Exception as e:
-            #self.log_error(str(e))
 
     def rotate(self, rotate_deg):
         camera = self.GetCamera()
@@ -1263,7 +1263,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
     def set_grid_values(self, gridResult, case, vectorSize, min_value, max_value, is_blue_to_red=True):
         # flips sign to make colors go from blue -> red
         #if is_blue_to_red:
-        norm_value = max_value - min_value
+        norm_value = float(max_value - min_value)
         #else:
             #norm_value = min_value - max_value
         print('max_value=%s min_value=%r norm_value=%r' % (max_value, min_value, norm_value))
@@ -1368,12 +1368,6 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         if self.Title_overwrite is not None:
             Title = self.Title
         self.Title = Title
-        #if self.min_value is not None:
-            #min_value = self.min_value
-        #if self.max_value is not None:
-            #max_value = self.max_value
-        #if not self.is_blue_to_red:
-            #min_value, max_value = max_value, min_value
 
         if is_blue_to_red:
             self.colorFunction.AddRGBPoint(min_value, 0.0, 0.0, 1.0)  # blue
@@ -1405,7 +1399,6 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         self.GetCamera().ResetCamera()
 
     def GetCamera(self):
-        #print "getting camera..."
         return self.rend.GetActiveCamera()
 
     def update_camera(self, code):
