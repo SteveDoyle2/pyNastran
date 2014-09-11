@@ -244,11 +244,20 @@ class LegendPropertiesWindow(QtGui.QDialog):
 
 
 def main():
+    import sys
     # Someone is launching this directly
     # Create the QApplication
     app = QtGui.QApplication(sys.argv)
     #The Main window
-    main_window = LegendPropertiesWindow()
+    d = {
+        'name' : 'asdf',
+        'min' : 0.,
+        'max' : 10,
+        'format' : '%g',
+        'is_blue_to_red': True,
+        'is_discrete' : False,
+    }
+    main_window = LegendPropertiesWindow(d)
     main_window.show()
     # Enter the main loop
     app.exec_()
