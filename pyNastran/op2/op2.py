@@ -76,6 +76,29 @@ class OP2( #BDF,
         all_results = ['stress', 'strain', 'element_forces', 'constraint_forces'] + self.get_table_types()
         return all_results
 
+    def _clear_results(self):
+        self._saved_results = set([])
+
+    def add_results(self, results):
+        all_results = self.get_all_results()
+        for result in results:
+            if result not in all_results:
+                raise RuntimeError('%r is not a valid result to remove' % result)
+            if 'stress' in result.lower():
+                self._saved_results.add('stress')
+            elif 'strain' in result.lower():
+                self._saved_results.add('strain')
+            elif 'spcForces' == result or 'mpcForces' == result or 'constraint_forces' == result:
+                self._saved_results.add('constraint_forces')
+            elif 'force' in result.lower(): # could use more validation...
+                self._saved_results.add('element_forces')
+            # thermalLoad_VU_3D, thermalLoad_1D, thermalLoad_CONV, thermalLoad_2D_3D
+            self._saved_results.add(result)
+
+    def set_results(self, results):
+        self._clear_results()
+        self.add_results(results)
+
     def remove_results(self, results):
         all_results = self.get_all_results()
         for result in results:
@@ -536,6 +559,9 @@ class OP2( #BDF,
             init=None,  op2_filename=None   -> a dialog is popped up  (not implemented; crash)
             init=fname, op2_filename=fname  -> fname is used
         """
+        sr = list(self.__saved_results)
+        sr.sort()
+        self.log.debug('_saved_results = %s' % str(sr))
         if op2_filename is None:
             from pyNastran.utils.gui_io import load_file_dialog
             wildcard_wx = "Nastran OP2 (*.op2)|*.op2|" \
