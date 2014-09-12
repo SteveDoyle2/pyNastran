@@ -38,7 +38,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self.max_button = QtGui.QPushButton("Default")
 
         # Format
-        self.format = QtGui.QLabel("Format (e.g. %s, %.3f, %i, %g, %.6e):")
+        self.format = QtGui.QLabel("Format (e.g. %.3f, %g, %.6e):")
         self.format_edit = QtGui.QLineEdit(str(self._default_format))
         self.format_button = QtGui.QPushButton("Default")
         #tip = QtGui.QToolTip()
@@ -217,6 +217,8 @@ class LegendPropertiesWindow(QtGui.QDialog):
         min_value, flag1 = self.check_float(self.min_edit)
         max_value, flag2 = self.check_float(self.max_edit)
         format_value, flag3 = self.check_format(self.format_edit)
+        if 'i' in format_value:
+            format_value = '%.0f'
 
         if flag0 and flag1 and flag2 and flag3:
             self.out_data['name'] = name_value
@@ -226,10 +228,10 @@ class LegendPropertiesWindow(QtGui.QDialog):
             self.out_data['is_blue_to_red'] = self.checkbox_blue_to_red.isChecked()
             self.out_data['is_discrete'] = self.checkbox_discrete.isChecked()
 
-            print("name = %r" % self.name_edit.text())
-            print("min = %r" % self.min_edit.text())
-            print("max = %r" % self.max_edit.text())
-            print("format = %r" % self.format_edit.text())
+            #print("name = %r" % self.name_edit.text())
+            #print("min = %r" % self.min_edit.text())
+            #print("max = %r" % self.max_edit.text())
+            #print("format = %r" % self.format_edit.text())
             return True
         return False
 

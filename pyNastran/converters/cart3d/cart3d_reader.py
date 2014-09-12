@@ -38,6 +38,7 @@ class Cart3DReader(object):
         self.log = get_logger(log, 'debug' if debug else 'info')
 
     def make_quads(self, nodes, elements):
+        raise NotImplementedError()
         segments, lengths = self._get_segments(nodes, elements)
         for eid, e in elements.iteritems():
             a = tuple(sorted([e[0], e[1]]))  # segments of e
@@ -297,7 +298,6 @@ class Cart3DReader(object):
                 # something like this should be faster since we know inodes_save is sorted
                 #if inode != inodes_save[searchsorted(inodes_save, inode)]:
                     #print "bad...", ielement, element, inode
-                    #aaa
                     #save_element = False
                     #break
                 if inode not in inodes_save:
@@ -306,11 +306,7 @@ class Cart3DReader(object):
                     break
 
             if save_element:
-                #print "saving %s" % ielement
                 ielements_save.add(ielement)
-            #if ielement == 73560:
-                #print element
-                #aaa
 
         ielements_save = list(ielements_save)
         ielements_save.sort()
@@ -385,7 +381,6 @@ class Cart3DReader(object):
         f = open(outfilename, 'wb')
 
         int_fmt = self.write_header(f, points, elements, is_loads, is_binary)
-        #print "int_fmt =", int_fmt
         self.write_points(f, points, is_binary, float_fmt)
         self.write_elements(f, elements, is_binary, int_fmt)
         self.write_regions(f, regions, is_binary)
@@ -424,9 +419,7 @@ class Cart3DReader(object):
             f.write(four)
 
             npoints, three = points.shape
-            #points2 = ravel(points)
-            #print points2
-            floats = pack('>' + 'f'*npoints*3, *ravel(points) )
+            floats = pack('>%%%if' % (npoints*3), *ravel(points) )
 
             f.write(floats)
             f.write(four)
@@ -440,7 +433,7 @@ class Cart3DReader(object):
             four = pack('>i', 4)
             f.write(four)
             nelements, three = elements.shape
-            ints = pack('>' + 'i'*nelements*3, *ravel(elements) )
+            ints = pack('>%%%ii' % (nelements*3), *ravel(elements) )
 
             f.write(ints)
             f.write(four)
@@ -455,7 +448,7 @@ class Cart3DReader(object):
             f.write(four)
 
             nregions = len(regions)
-            ints = pack('>' + 'i'*nregions, *regions)
+            ints = pack('>%%%ii' % (nregions), *regions)
             f.write(ints)
 
             f.write(four)
@@ -488,7 +481,6 @@ class Cart3DReader(object):
 
         self.infilename = infilename
         if is_binary(infilename):
-            #print "***is_binary"
             self.infile = open(infilename, 'rb')
             (self.nPoints, self.nElements) = self.read_header_binary()
             points = self.read_points_binary(self.nPoints)
@@ -607,17 +599,16 @@ class Cart3DReader(object):
             r = 0
             data = []
             while r < self.nElementsRead:
-                data += self.infile.readline().strip().split()
-                while len(data) > 0:
-                    regions[r] = int(data.pop(0))
-                    r += 1
+                data = self.infile.readline().strip().split()
+                ndata = len(data)
+                regions[r : r + ndata] = data
+                r += ndata
 
             r = 0
             while r < self.nElementsSkip:
-                data += self.infile.readline().strip().split()
-                while len(data) > 0:
-                    data.pop()
-                    r += 1
+                data = self.infile.readline().strip().split()
+                ndata = len(data)
+                r += ndata
         return regions
 
     def read_results_ascii(self, i, infile, result_names=None):
@@ -651,7 +642,6 @@ class Cart3DReader(object):
 
         nResultLines = int(ceil(self.nResults / 5.)) - 1
         for ipoint in xrange(self.nPoints):
-            #print "pointNum = ", pointNum
             # rho rhoU,rhoV,rhoW,pressure/rhoE/E
             sline = infile.readline().strip().split()
             i += 1
@@ -684,7 +674,6 @@ class Cart3DReader(object):
             #print "pt=%s i=%s Cp=%s p=%s" %(pointNum,i,sline[0],p)
         del sline
 
-        #print "shpae =", results.shape
         return self._calculate_results(result_names, results)
 
     def _calculate_results(self, result_names, results):
@@ -856,8 +845,6 @@ class Cart3DReader(object):
         return (nPoints, nElements)
 
     def read_points_binary(self, npoints):
-        #print "starting read_points"
-        #print self.infile.tell(), 'points'
         #isBuffered = True
         size = npoints * 12  # 12=3*4 all the points
 
@@ -898,8 +885,6 @@ class Cart3DReader(object):
     def read_elements_binary(self, nelements):
         self.nElementsRead = nelements
         self.nElementsSkip = 0
-        #print "starting read_elements"
-        #print self.infile.tell(), 'elements'
         #isBuffered = True
         size = nelements * 12  # 12=3*4 all the elements
 

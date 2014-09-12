@@ -22,9 +22,9 @@ class PanairIO(object):
         if skipReading:
             return
 
-        model = PanairGrid(panairFileName, log=self.log, debug=self.debug)
+        model = PanairGrid(log=self.log, debug=self.debug)
         self.modelType = model.modelType
-        model.read_panair()
+        model.read_panair(panairFileName)
 
         nodes, elements, regions = model.getPointsElementsRegions()
         #for nid,node in enumerate(nodes):
@@ -34,7 +34,7 @@ class PanairIO(object):
         self.nElements = len(elements)
 
         #print("nNodes = ",self.nNodes)
-        print("nElements = ", self.nElements)
+        #print("nElements = ", self.nElements)
 
         self.grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)
@@ -57,10 +57,11 @@ class PanairIO(object):
                 #self.aQuadGrid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 #vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
 
+        assert len(nodes) > 0
         for nid, node in enumerate(nodes):
             points.InsertPoint(nid, *node)
-        #print "nid = ",nid
 
+        assert len(elements) > 0
         for eid, element in enumerate(elements):
             (p1, p2, p3, p4) = element
             #print "element = ",element
@@ -71,7 +72,7 @@ class PanairIO(object):
             elem.GetPointIds().SetId(3, p4)
             self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
-        print("eid = ", eid)
+        #print("eid = ", eid)
         self.grid.SetPoints(points)
         #self.grid2.SetPoints(points2)
         #self.grid.GetPointData().SetScalars(self.gridResult)
@@ -102,34 +103,26 @@ class PanairIO(object):
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
         print "caseKeys = ",self.caseKeys
-        #print "type(caseKeys) = ",type(self.caseKeys)
         self.iCase = -1
         self.nCases = len(self.resultCases) #- 1  # number of keys in dictionary
         if self.nCases > 1:
             self.nCases -= 1
         self.cycleResults()  # start at nCase=0
 
+    def clear_panair(self):
+        del self.elements
+
     def fillPanairGeometryCase(self, cases, ID, nodes, elements, regions, loads):
-        #print "regions**** = ",regions
-        #nNodes = self.nNodes
-        #nElements = self.nElements
-
-        print "is_centroidal=%s isNodal=%s" % (self.is_centroidal, self.is_nodal)
-        assert self.is_centroidal!= self.is_nodal
-
-        #result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
-                                      #'rhoU', 'rhoV', 'rhoW', 'rhoE']
-        #if self.is_centroidal:
-        #nelements, three = elements.shape
-        #print regions
-        cases[(ID, 'Region', 1, 'centroid', '%.0f')] = regions
+        assert self.is_centroidal != self.is_nodal
 
         self.elements = elements
+        cases[(ID, 'Region', 1, 'centroid', '%.0f')] = regions
         if self.is_centroidal:
-            Xc = zeros(len(elements), 'float32')
-            Yc = zeros(len(elements), 'float32')
-            Zc = zeros(len(elements), 'float32')
-            area = zeros(len(elements), 'float32')
+            Xc = zeros(len(elements), dtype='float32')
+            Yc = zeros(len(elements), dtype='float32')
+            Zc = zeros(len(elements), dtype='float32')
+            area = zeros(len(elements), dtype='float32')
+
             for i,element in enumerate(elements):
                 p1, p2, p3, p4 = element
                 P1 = array(nodes[p1])
@@ -139,7 +132,6 @@ class PanairIO(object):
                 a = P3 - P1
                 b = P4 - P2
                 A = 0.5 * norm(cross(a, b))
-                #assert -1 > 0, 'A =%s' % str(A)
                 x, y, z = (P1 + P2 + P3 + P4) / 4.0
                 Xc[i] = x
                 Yc[i] = y
@@ -150,9 +142,9 @@ class PanairIO(object):
             cases[(ID, 'centroid_z', 1, 'centroid', '%.2f')] = Zc
             cases[(ID, 'Area', 1, 'centroid', '%.2f')] = area
         elif self.is_nodal:
-            Xn = zeros(len(nodes), 'float32')
-            Yn = zeros(len(nodes), 'float32')
-            Zn = zeros(len(nodes), 'float32')
+            Xn = zeros(len(nodes), dtype='float32')
+            Yn = zeros(len(nodes), dtype='float32')
+            Zn = zeros(len(nodes), dtype='float32')
             for i, node in enumerate(nodes):
                 Xn[i] = node[0]
                 Yn[i] = node[1]
@@ -160,59 +152,38 @@ class PanairIO(object):
             cases[(ID, 'node_x', 1, 'node', '%.2f')] = Xn
             cases[(ID, 'node_y', 1, 'node', '%.2f')] = Yn
             cases[(ID, 'node_z', 1, 'node', '%.2f')] = Zn
-
-
-        #elif self.is_nodal:
-            #pass
-            #print("load.keys() = ", loads.keys())
-            #break
-            #for key in result_names:
-                #if key in loads:
-                    #nodal_data = loads[key]
-                    #cases[(ID, key, 1, 'node', '%.3f')] = nodal_data
         return cases
 
     def load_panair_results(self, panairFileName, dirname):
-        #print "panairFileName =", panairFileName
         if os.path.basename(panairFileName) == 'agps':
             model = AGPS(log=self.log, debug=self.debug)
             model.read_agps(panairFileName)
         else:
             raise RuntimeError('only files named "agps" files are supported')
-        #self.resultCases = {}
-        if self.is_centroidal and 0:
-            Cp_array = zeros(self.nElements, dtype='float32')
-            for i,element in enumerate(elements):
-                Cpv = ravel()
-                p1, p2, p3, p4 = element
-                P1 = array(nodes[p1])
-                P2 = array(nodes[p2])
-                P3 = array(nodes[p3])
-                P4 = array(nodes[p4])
-                a = P3 - P1
-                b = P4 - P2
-                A = 0.5 * norm(cross(a, b))
-                #assert -1 > 0, 'A =%s' % str(A)
-                x, y, z = (P1 + P2 + P3 + P4) / 4.0
-                Xc[i] = x
-                Yc[i] = y
-                Zc[i] = z
-                area[i] = A
-            cases[(ID, 'Cp', 1, 'centroid', '%.3f')] = Cp
+
+        # get the Cp on the nodes
+        Cp_array = zeros(self.nNodes, dtype='float32')
+        imin = 0
+        for ipatch, Cp in sorted(model.pressures.iteritems()):
+            Cpv = ravel(Cp)
+            nCp = len(Cpv)
+            try:
+                Cp_array[imin:imin + nCp] = Cpv
+            except ValueError:
+                # agps stores implicit and explicit wakes
+                # we're skipping all wakes
+                pass
+            imin += nCp
+
+        if self.is_centroidal:
+            Cp_array2 = (Cp_array[self.elements[:, 0]] +
+                         Cp_array[self.elements[:, 1]] +
+                         Cp_array[self.elements[:, 2]] +
+                         Cp_array[self.elements[:, 3]]) / 4.
+            key = (1, 'Cp', 1, 'centroid', '%.3f')
+            self.resultCases[key] = Cp_array2
 
         elif self.is_nodal:
-            Cp_array = zeros(self.nNodes, dtype='float32')
-            imin = 0
-            print('len(Cpall) =', Cp_array.shape)
-            for ipatch, Cp in sorted(model.pressures.iteritems()):
-                print('len(Cp) =', len(ravel(Cp)))
-                Cpv = ravel(Cp)
-                nCp = len(Cpv)
-                try:
-                    Cp_array[imin:imin+nCp] = Cpv
-                except ValueError:
-                    pass
-                imin += nCp
             key = (1, 'Cp', 1, 'node', '%.3f')
             self.resultCases[key] = Cp_array
 
@@ -223,17 +194,23 @@ class PanairIO(object):
         #self.nCases = 1
         self.cycleResults()  # start at nCase=0
 
-if __name__ == '__main__':
-    print('')
-
+def main():
     def removeOldGeometry(self):
+        pass
+    def cycleResults(self):
         pass
 
     test = PanairIO()
+    test.is_nodal = True
+    test.is_centroidal = False
     test.removeOldGeometry = removeOldGeometry
+    test.cycleResults = cycleResults
 
-    #test.load_panair_geometry('SWB.INP','',True,True)
-    test.load_panair_geometry('models/NAC6.INP', '', True, True)
+    #test.load_panair_geometry('SWB.INP','')
+    test.load_panair_geometry('models/NAC6.INP', '')
+
+if __name__ == '__main__':
+    main()
 
 
 #if __name__=='__main__':
