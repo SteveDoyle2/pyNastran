@@ -30,6 +30,12 @@ class PanairPatch(object):
 
         #self.log.debug("shape = %s" % (str(shape)))
 
+    def is_wake(self):
+        print('is_wake %s %s' % (self.netName, self.kt))
+        if self.kt in [18]:
+            return True
+        return False
+
     def write_plot3d(self, f, dim):
         """
         ..todo: is the normal defined correctly?
@@ -443,6 +449,9 @@ class PanairWakePatch(PanairPatch):
         self.tWake = tWake
         #self.log.debug("matchw = %s" % (self.matchw))
         #self.log.debug("wake patch")
+
+    def is_wake(self):
+        return True
 
     def __repr__(self):
         header = '$trailing wakes\n'

@@ -677,6 +677,9 @@ class NastranIO(object):
             self.scalarBar.VisibilityOn()
             self.scalarBar.Modified()
 
+    def clear_nastran(self):
+        pass
+
     #def _finish_io(self, cases):
         ##self.finish()
         #ncases = len(cases)

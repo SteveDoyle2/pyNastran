@@ -26,10 +26,7 @@ def fortran_value(value):
 class PanairGrid(object):
     modelType = 'panair'
 
-    def __init__(self, infileName, log=None, debug=True):
-        assert os.path.exists(infileName), print_bad_path(infileName)
-
-        self.infileName = infileName
+    def __init__(self, log=None, debug=True):
         self.nNetworks = 0
         self.patches = {}
         self.lines = []
@@ -890,7 +887,10 @@ class PanairGrid(object):
             #print "section[0] = ",section[0]
         return (sections, sectionNames)
 
-    def read_panair(self):
+    def read_panair(self, infileName):
+        assert os.path.exists(infileName), print_bad_path(infileName)
+        self.infileName = infileName
+    
         infile = open(self.infileName, 'r')
         self.lines = infile.readlines()
         infile.close()
@@ -904,12 +904,15 @@ class PanairGrid(object):
         #    points = readPoints()
         #print "self.msg = ",self.msg
 
-    def getPointsElementsRegions(self):
+    def getPointsElementsRegions(self, get_wakes=False):
         points = []
         elements = []
         regions = []
         pointI = 0
         for name, panel in sorted(self.patches.iteritems()):
+            if not get_wakes:
+                if panel.is_wake():
+                    continue
             #panel = self.patches[2]
             #self.log.debug("size(X) = %s" %( str( panel.x.shape ) ))
             (pointsI, pointi) = panel.get_points()

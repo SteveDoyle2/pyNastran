@@ -66,6 +66,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         TetgenIO.__init__(self)
         Usm3dIO.__init__(self)
         Plot3d_io.__init__(self)
+        self.modelType = None
 
         settings = QtCore.QSettings()
 
@@ -868,7 +869,20 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 msg = 'input file=%r does not exist' % infile_name
                 self.log_error(msg)
                 return
-
+            
+            if self.modelType is not None:
+                # clear out old data
+                #'self.clear_nastran()'
+                #'self.clear_panair()'
+                #'self.clear_cart3d()'
+                name = 'clear_' + self.modelType
+                
+                # call the clear method
+                try:
+                    dy_method = getattr(self, 'clear_' + self.modelType)
+                    dy_method()
+                except:
+                    print("method %r does not exist" % name)
             self.log_info("reading %s file %r" % (geometry_format, infile_name))
             try:
                 has_results = load_function(infile_name, self.last_dir)

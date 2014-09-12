@@ -197,6 +197,9 @@ class Usm3dIO(object):
         #cases = self.resultCases
         self._fill_usm3d_results(cases, bcs, mapbc, bcmap_to_bc_name, loads)
 
+    def clear_usm3d(self):
+        pass
+
     def _fill_usm3d_results(self, cases, bcs, mapbc, bcmap_to_bc_name, loads):
         if 'Mach' in loads:
             avgMach = loads['Mach'].mean()

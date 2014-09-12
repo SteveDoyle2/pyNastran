@@ -45,17 +45,18 @@ class Cart3dIO(object):
         self.scalarBar.Modified()
         return skipReading
 
-    def load_cart3d_geometry(self, cart3dFileName, dirname):
+    def load_cart3d_geometry(self, cart3d_filename, dirname):
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
 
-        skipReading = self.removeOldGeometry(cart3dFileName)
+        skipReading = self.removeOldGeometry(cart3d_filename)
         if skipReading:
             return
 
         model = Cart3DReader(log=self.log, debug=False)
-        self.modelType = model.modelType
-        (nodes, elements, regions, loads) = model.read_cart3d(cart3dFileName)
+        self.modelType = 'cart3d'
+        #self.modelType = model.modelType
+        (nodes, elements, regions, loads) = model.read_cart3d(cart3d_filename)
         self.nNodes = model.nPoints
         self.nElements = model.nElementsRead
 
@@ -131,17 +132,50 @@ class Cart3dIO(object):
         ID = 1
 
         #print "nElements = ",nElements
-        cases = self.fillCart3dCase(cases, ID, nodes, elements, regions, loads)
+        cases = self._fill_cart3d_case(cases, ID, nodes, elements, regions, loads)
+        #self.finish_io(cases)
 
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
-        #print "caseKeys = ",self.caseKeys
-        #print "type(caseKeys) = ",type(self.caseKeys)
-        self.iCase = -1
-        self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
+        if len(self.caseKeys) > 1:
+            self.iCase = -1
+            self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
+        elif len(self.caseKeys) == 1:
+            self.iCase = -1
+            self.nCases = 1
+        else:
+            
+            self.iCase = -1
+            self.nCases = 0
         self.cycleResults()  # start at nCase=0
 
-    def fillCart3dCase(self, cases, ID, nodes, elements, regions, loads):
+    def clear_cart3d(self):
+        pass
+
+    def load_cart3d_results(self, cart3d_filename, dirname):
+        model = Cart3DReader(log=self.log, debug=False)
+        #self.modelType = model.modelType
+        #(nodes, elements, regions, loads) = model.read_cart3d(cart3dFileName)
+
+        model.infilename = cart3d_filename
+        if is_binary(infilename):
+            model.infile = open(cart3d_filename, 'rb')
+            (model.nPoints, model.nElements) = self.read_header_binary()
+            points = model.read_points_binary(self.nPoints)
+            elements = model.read_elements_binary(self.nElements)
+            regions = model.read_regions_binary(self.nElements)
+            #loads = {}
+        else:
+            model.infile = open(cart3d_filename, 'r')
+            model.read_header_ascii()
+            points = model.read_points_ascii(bypass=True)
+            elements = model.read_elements_ascii(bypass=True)
+            regions = model.read_regions_ascii(bypass=True)
+            loads = model.read_results_ascii(0, model.infile, result_names=result_names)
+        self.load_cart3d_geometry(cart3d_filename, dirname)
+
+
+    def _fill_cart3d_case(self, cases, ID, nodes, elements, regions, loads):
         print "is_centroidal=%s isNodal=%s" % (self.is_centroidal, self.is_nodal)
         assert self.is_centroidal!= self.is_nodal
 
@@ -153,7 +187,8 @@ class Cart3dIO(object):
             cases[(ID, 'Region', 1, 'centroid', '%.0f')] = regions
             cases[(ID, 'ElementID', 1, 'centroid', '%.0f')] = arange(1, nelements+1)
 
-            # these are actually nodal results
+            # these are actually nodal results, so we convert to the centroid
+            # by averaging the data (e.g. the Cp data)
             for key in result_names:
                 if key in loads:
                     nodal_data = loads[key]
@@ -162,7 +197,6 @@ class Cart3dIO(object):
                     n3 = elements[:, 2]
                     elemental_result = (nodal_data[n1] + nodal_data[n2] + nodal_data[n3])/3.0
                     cases[(ID, key, 1, 'centroid', '%.3f')] = elemental_result
-
         elif self.is_nodal:
             cases[(ID, 'NodeID', 1, 'node', '%.0f')] = arange(1, nnodes+1)
             for key in result_names:

@@ -96,7 +96,7 @@ class AGPS(object):
             Z = array(Z, dtype='float32')
             Cp = array(Cp, dtype='float32')
             self.pressures[ipatch] = Cp
-            print Cp.shape
+            #print Cp.shape
             if self.debug:
                 print ""
         #for ipatch, Cp in sorted(self.pressures.iteritems()):
