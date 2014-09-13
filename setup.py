@@ -38,7 +38,10 @@ setup(name='pyNastran',
                    'Intended Audience :: Science/Research',
                    'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
                    'Programming Language :: Python :: 2',
-                   'Programming Language :: Python :: 3'], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+                   'Programming Language :: Python :: 2.7',
+                   'Programming Language :: Python :: 3',
+                   'Programming Language :: Python :: 3.3',
+                   ], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
       keywords='',
       author=pyNastran.__author__,
       author_email=pyNastran.__email__,
