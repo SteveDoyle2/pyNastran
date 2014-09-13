@@ -24,11 +24,17 @@ class GetMethodsDeprecated(object):
                       'getElementIDsWithPIDs', DeprecationWarning, stacklevel=2)
         return self.getElementIDsWithPIDs([pid], mode='list')
 
-    def Grav(self, sid, msg=''):
-        raise DeprecationWarning('use Load(sid) instead of Grav(sid)')
-        return self.Load(sid, msg)
+    #def Grav(self, sid, msg=''):
+        #"""
+        #.. deprecated:: will be removed in version 0.7
+        #"""
+        #raise DeprecationWarning('use Load(sid) instead of Grav(sid)')
+        #return self.Load(sid, msg)
 
     def Flfact(self, sid, msg):
+        """
+        .. deprecated:: will be removed in version 0.8
+        """
         raise DeprecationWarning('use FLFACT(sid) instead of Flfact(sid)')
         return self.FLFACT(sid, msg)
 

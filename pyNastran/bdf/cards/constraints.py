@@ -161,9 +161,11 @@ class Constraint(BaseCard):
 
 class SUPORT1(Constraint):
     """
-    ::
-
-      SUPORT1 SID ID1 C1 ID2 C2 ID3 C3
+    +---------+-----+-----+----+-----+----+-----+----+
+    | SUPORT1 | SID | ID1 | C1 | ID2 | C2 | ID3 | C3 |
+    +---------+-----+-----+----+-----+----+-----+----+
+    | SUPORT1 |  1  |  2  | 23 |  4  | 15 |  5  |  0 |
+    +---------+-----+-----+----+-----+----+-----+----+
     """
     type = 'SUPORT1'
 
@@ -274,23 +276,33 @@ class MPC(Constraint):
             self.enforced = []
 
             fields = card.fields(0)
-            nFields = len(fields) - 1
-            for iField in xrange(2, nFields, 8):
-                grid = integer(card, iField, 'gid'),
-                component = components_or_blank(card, iField + 1, 'constraint', 0)  # scalar point
-                value = double_or_blank(card, iField + 2, 'enforced', 0.0)
-                self.gids.append(grid)
-                self.constraints.append(component)
-                self.enforced.append(value)
+            nfields = len(fields)
 
-                if iField + 3 > nFields:
-                    break
-                grid = integer(card, iField + 3, 'gid')
-                component = components_or_blank(card, iField + 4, 'constraint', 0)  # scalar point
-                value = double_or_blank(card, iField + 5, 'enforced')
+            i = 1
+            for ifield in xrange(2, nfields, 8):
+                grid = integer(card, ifield, 'G%i' % i)
+                component = components_or_blank(card, ifield + 1, 'constraint%i' % i, 0)  # scalar point
+                if i == 1:
+                    value = double(card, ifield + 2, 'enforced%i' % i)
+                    if value == 0.0:
+                        raise RuntimeError('enforced1 must be nonzero; value=%r' % value)
+                else:
+                    value = double_or_blank(card, ifield + 2, 'enforced%i' % i, 0.0)
                 self.gids.append(grid)
                 self.constraints.append(component)
                 self.enforced.append(value)
+                i += 1
+
+                if ifield + 4 > nfields and i != 2:
+                    # if G2 is empty (it's ifield+4 because nfields is length based and not loop friendly)
+                    break
+                grid = integer(card, ifield + 3, 'G%i' % i)
+                component = components_or_blank(card, ifield + 4, 'constraint%i' % i, 0)  # scalar point
+                value = double_or_blank(card, ifield + 5, 'enforced%i' % i)
+                self.gids.append(grid)
+                self.constraints.append(component)
+                self.enforced.append(value)
+                i += 1
 
             # reduce the size if there are duplicate Nones
             #nConstraints = max(len(self.gids       ),
@@ -303,11 +315,13 @@ class MPC(Constraint):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
+    def nodeIDs(self):
+        return self.gids
+
     def rawFields(self):  # MPC
         fields = ['MPC', self.conid]
         for (i, gid, constraint, enforced) in izip(count(), self.gids,
              self.constraints, self.enforced):
-            #print [gid,constraint,enforced]
             fields += [gid, constraint, enforced]
             if i % 2 == 1 and i > 0:
                 fields.append(None)
@@ -324,8 +338,11 @@ class SPC(Constraint):
     Defines enforced displacement/temperature (static analysis)
     velocity/acceleration (dynamic analysis).::
 
-      SPC SID G1 C1 D1   G2 C2 D2
-      SPC 2   32 3  -2.6  5
+     +-----+-----+----+----+------+----+----+----+
+     | SPC | SID | G1 | C1 |  D1  | G2 | C2 | D2 |
+     +-----+-----+----+----+------+----+----+----+
+     | SPC |  2  | 32 | 3  | -2.6 |  5 |    |    |
+     +-----+-----+----+----+------+----+----+----+
     """
     type = 'SPC'
 
@@ -358,7 +375,10 @@ class SPC(Constraint):
 
     def getNodeDOFs(self, model):
         pass
-        #return conid,dofs
+        #return conid, dofs
+
+    def nodeIDs(self):
+        return self.gids
 
     def cross_reference(self, i, node):
         dofCount = 0
@@ -389,8 +409,11 @@ class SPCD(SPC):
     Defines an enforced displacement value for static analysis and an enforced
     motion value (displacement, velocity or acceleration) in dynamic analysis.::
 
-      SPCD SID G1  C1   D1 G2 C2  D2
-      SPCD 100 32 436 -2.6  5    2.9
+     +------+-----+-----+-----+------+----+---+----+
+     | SPCD | SID |  G1 | C1  |  D1  | G2 |C2 | D2 |
+     +------+-----+-----+-----+------+----+---+----+
+     | SPCD | 100 | 32  | 436 | -2.6 | 5  | 2 | .9 |
+     +------+-----+-----+-----+------+----+---+----+
     """
     type = 'SPCD'
 
@@ -418,8 +441,11 @@ class SPCAX(Constraint):
     Defines a set of single-point constraints or enforced displacements
     for conical shell coordinates.::
 
-      SPCAX SID RID HID C    D
-      SPCAX 2   3     4 13 6.0
+     +-------+-----+-----+-----+----+-----+
+     | SPCAX | SID | RID | HID |  C |  D  |
+     +-------+-----+-----+-----+----+-----+
+     | SPCAX |  2  |  3  |  4  | 13 | 6.0 |
+     +-------+-----+-----+-----+----+-----+
     """
     type = 'SPCAX'
 
@@ -492,11 +518,11 @@ class SPC1(Constraint):
         self.nodes[i] = node
 
     def rawFields(self):  # SPC1
-        #test = [i for i in xrange(self.nodes[0],self.nodes[-1]+1)]
+        #test = [i for i in xrange(self.nodes[0], self.nodes[-1]+1)]
         #print "self.nodes = ",self.nodes
         #print "test       = ",test
-        #if self.nodes==test:
-        #    nodes = [self.nodes[0],'THRU',self.nodes[-1]]
+        #if self.nodes == test:
+        #    nodes = [self.nodes[0], 'THRU', self.nodes[-1]]
         #else:
         #print "SPC1 self.nodes = ",self.nodes
         nodes = [int(i) for i in self.nodes]  # SPC1
@@ -529,12 +555,11 @@ class ConstraintADD(Constraint):
                 #outSPCs += str(spcsets)
                 fields.append(spcsets)
             elif isinstance(spcsets, list):
-                #print 'list'
                 for spcset in sorted(spcsets):
                     fieldSets.append(spcset.conid)
                     outSPCs += str(spcset)
             else:
-                #print 'dict'
+                # dict
                 #outSPCs += str(spcsets.conid)
                 for (key, spcset) in sorted(spcsets.iteritems()):
                     fieldSets.append(spcsets.conid)
@@ -576,14 +601,12 @@ class SPCADD(ConstraintADD):
         return (typesFound, positionSPCs)
 
     def cross_reference(self, i, node):
-        #dofCount = 0
         self.sets.sort()
         self.sets[i] = node
 
     def rawFields(self):
         fields = ['SPCADD', self.conid]  # +self.sets
         for setID in self.sets:
-            #print "setID = ",setID
             fields.append(setID)
         return fields
         #return self._reprSpcMpcAdd(fields)
@@ -616,12 +639,10 @@ class MPCADD(ConstraintADD):
             raise NotImplementedError(msg)
 
     def cross_reference(self, i, node):
-        #dofCount = 0
         self.sets.sort()
         self.sets[i] = node
 
     def rawFields(self):
-        #outSPCs = ''
         fields = ['MPCADD', self.conid]  # +self.sets
         for setID in self.sets:
             fields.append(setID)
