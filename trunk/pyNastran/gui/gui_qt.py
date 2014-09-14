@@ -266,7 +266,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             'pyNastran QT GUI',
             '',
             'pyNastran v%s' % pyNastran.__version__,
-            pyNastran.__copyright__,
+            pyNastran.__pyqt_copyright__,
             pyNastran.__author__,
             '',
             '%s' % pyNastran.__website__,
@@ -869,14 +869,14 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 msg = 'input file=%r does not exist' % infile_name
                 self.log_error(msg)
                 return
-            
+
             if self.modelType is not None:
                 # clear out old data
                 #'self.clear_nastran()'
                 #'self.clear_panair()'
                 #'self.clear_cart3d()'
                 name = 'clear_' + self.modelType
-                
+
                 # call the clear method
                 try:
                     dy_method = getattr(self, 'clear_' + self.modelType)
