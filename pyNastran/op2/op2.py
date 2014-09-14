@@ -559,7 +559,7 @@ class OP2( #BDF,
             init=None,  op2_filename=None   -> a dialog is popped up  (not implemented; crash)
             init=fname, op2_filename=fname  -> fname is used
         """
-        sr = list(self.__saved_results)
+        sr = list(self._saved_results)
         sr.sort()
         self.log.debug('_saved_results = %s' % str(sr))
         if op2_filename is None:
