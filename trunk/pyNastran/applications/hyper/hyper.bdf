@@ -41,8 +41,8 @@ CBAR     13      1       15      19      0.     1.       0.
 CROD     14      3       16      20
 CROD     15      3       17      21
 
-FLOW,1, VELO, 1., 0., 0.
-FLOW,2, VELO, 1., 0., 0.
+FLOW,1, MACH, 1., 10., 0.
+$FLOW,2, VELO, 1., 0., 0.
 
 $     pid,  set, TYPE, gamma, _cp, 
 HYPER,1,    1,   NEWTON, 1.4, 2.0,
