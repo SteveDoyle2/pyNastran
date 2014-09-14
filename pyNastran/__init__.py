@@ -23,6 +23,7 @@ __email__   = 'mesheb82@gmail.com'
 __desc__    = 'Nastran BDF/F06/OP2/OP4 File reader/editor/writer/viewer'
 __license__     = 'LGPLv3'
 __copyright__   = 'Copyright %s; 2011-2014' % __license__
+__pyqt_copyright__ = 'Copyright GPLv3; 2011-2014'
 __releaseDate__ = '2014/3/xx'
 __releaseDate2__ = 'MARCH xx, 2014'
 __version__     = '0.7.0_%s' % revision
