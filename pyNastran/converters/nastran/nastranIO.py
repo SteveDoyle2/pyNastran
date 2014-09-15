@@ -17,7 +17,7 @@ from __future__ import print_function
 #VTK_QUADRATIC_HEXAHEDRON = 25
 
 import os
-from numpy import zeros, abs
+from numpy import zeros, abs, mean, where, nan_to_num
 from numpy.linalg import norm
 
 import vtk
@@ -210,12 +210,14 @@ class NastranIO(object):
     def mapElements(self, points, points2, nidMap, model, j):
         #self.eidMap = {}
         i = 0
+        self.eid_to_nid_map = {}
         for (eid, element) in sorted(model.elements.iteritems()):
             self.eidMap[eid] = i
             #print(element.type)
             if isinstance(element, CTRIA3) or isinstance(element, CTRIAR):
                 elem = vtkTriangle()
                 nodeIDs = element.nodeIDs()
+                self.eid_to_nid_map[eid] = nodeIDs
                 elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
                 elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
                 elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
@@ -223,6 +225,7 @@ class NastranIO(object):
                                          elem.GetPointIds())
             elif isinstance(element, CTRIA6):
                 nodeIDs = element.nodeIDs()
+                self.eid_to_nid_map[eid] = nodeIDs[:3]
                 if None not in nodeIDs:
                     elem = vtkQuadraticTriangle()
                     elem.GetPointIds().SetId(3, nidMap[nodeIDs[3]])
@@ -248,6 +251,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
                 elem.GetPointIds().SetId(1, nidMap[nodeIDs[2]])
                 elem.GetPointIds().SetId(2, nidMap[nodeIDs[4]])
+                self.eid_to_nid_map[eid] = [nodeIDs[0], nodeIDs[2], nodeIDs[4]]
                 #a = [0,2,4]
                 #msg = "CTRIAX6 %i %i %i" %(nidMap[nodeIDs[a[0]]],
                 #                           nidMap[nodeIDs[a[1]]],
@@ -264,6 +268,7 @@ class NastranIO(object):
             elif (isinstance(element, CQUAD4) or isinstance(element, CSHEAR) or
                   isinstance(element, CQUADR)):
                 nodeIDs = element.nodeIDs()
+                self.eid_to_nid_map[eid] = nodeIDs[:4]
                 elem = vtkQuad()
                 elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
                 elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
@@ -273,6 +278,7 @@ class NastranIO(object):
                                          elem.GetPointIds())
             elif isinstance(element, CQUAD8):
                 nodeIDs = element.nodeIDs()
+                self.eid_to_nid_map[eid] = nodeIDs[:4]
                 if None not in nodeIDs:
                     elem = vtkQuadraticQuad()
                     elem.GetPointIds().SetId(4, nidMap[nodeIDs[4]])
@@ -290,6 +296,7 @@ class NastranIO(object):
             elif isinstance(element, CTETRA4):
                 elem = vtkTetra()
                 nodeIDs = element.nodeIDs()
+                self.eid_to_nid_map[eid] = nodeIDs[:4]
                 elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
                 elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
                 elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
@@ -298,6 +305,7 @@ class NastranIO(object):
                                          elem.GetPointIds())
             elif isinstance(element, CTETRA10):
                 nodeIDs = element.nodeIDs()
+                self.eid_to_nid_map[eid] = nodeIDs[:4]
                 if None not in nodeIDs:
                     elem = vtkQuadraticTetra()
                     elem.GetPointIds().SetId(4, nidMap[nodeIDs[4]])
@@ -317,6 +325,7 @@ class NastranIO(object):
             elif isinstance(element, CPENTA6):
                 elem = vtkWedge()
                 nodeIDs = element.nodeIDs()
+                self.eid_to_nid_map[eid] = nodeIDs[:6]
                 elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
                 elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
                 elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
@@ -328,6 +337,7 @@ class NastranIO(object):
 
             elif isinstance(element, CPENTA15):
                 nodeIDs = element.nodeIDs()
+                self.eid_to_nid_map[eid] = nodeIDs[:6]
                 if None not in nodeIDs:
                     elem = vtkQuadraticWedge()
                     elem.GetPointIds().SetId(6, nidMap[nodeIDs[6]])
@@ -351,6 +361,7 @@ class NastranIO(object):
                                          elem.GetPointIds())
             elif isinstance(element, CHEXA8):
                 nodeIDs = element.nodeIDs()
+                self.eid_to_nid_map[eid] = nodeIDs[:8]
                 elem = vtkHexahedron()
                 elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
                 elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
@@ -381,6 +392,7 @@ class NastranIO(object):
                 else:
                     elem = vtkHexahedron()
 
+                self.eid_to_nid_map[eid] = nodeIDs[:8]
                 elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
                 elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
                 elem.GetPointIds().SetId(2, nidMap[nodeIDs[2]])
@@ -406,6 +418,7 @@ class NastranIO(object):
                         else:
                             continue
 
+                        self.eid_to_nid_map[eid] = nodeIDs[slot]
                         c = nidMap[nodeIDs[slot]]
                         elem = vtk.vtkVertex()
                         points2.InsertPoint(j, *c)
@@ -414,6 +427,7 @@ class NastranIO(object):
                         i -= 1
                         j += 1
                     else:
+                        self.eid_to_nid_map[eid] = nodeIDs
                         elem = vtk.vtkLine()
                         try:
                             elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
@@ -459,7 +473,6 @@ class NastranIO(object):
 
         cases = {}
         nelements = len(model.elements)
-        print("len(elements) =", nelements)
         pids = [] # zeros(nelements, 'int32')
         nxs = []
         nys = []
@@ -634,7 +647,6 @@ class NastranIO(object):
                     z_displacements = zeros(nnodes, dtype='float32')
                     xyz_displacements = zeros(nnodes, dtype='float32')
 
-                    print('ERROR!!!!', case.__dict__.keys())
                     if hasattr(case, 'translations'):
                         word = 'translations'
                     elif hasattr(case, 'forces'):
@@ -697,7 +709,9 @@ class NastranIO(object):
             self.scalarBar.Modified()
 
     def clear_nastran(self):
-        pass
+        self.eidMap = {}
+        self.nidMap = {}
+        self.eid_to_nid_map = {}
 
     #def _finish_io(self, cases):
         ##self.finish()
@@ -717,16 +731,209 @@ class NastranIO(object):
         #self.log.info('end of finish io')
 
     def fill_stress_case(self, cases, model, subcaseID):
-        print("fill_stress_case")
+        #print("fill_stress_case")
         if self.is_centroidal:
-            cases = self._fill_stress_case_centroidal(cases, model, subcaseID)
+            self._fill_stress_case_centroidal(cases, model, subcaseID)
+        elif self.is_nodal:
+            self._fill_stress_case_nodal(cases, model, subcaseID)
         else:
-            #cases = self._fill_stress_case_nodal(cases, model, subcaseID)
-            pass
+            raise RuntimeError('this shouldnt happen...')
         return cases
 
     def _fill_stress_case_nodal(self, cases, model, subcaseID):
+        oxx_dict = {}
+        oyy_dict = {}
+        ozz_dict = {}
+        o1_dict = {}
+        o2_dict = {}
+        o3_dict = {}
+        ovm_dict = {}
+        for nid in self.nidMap:
+            oxx_dict[nid] = []
+            oyy_dict[nid] = []
+            ozz_dict[nid] = []
+            o1_dict[nid] = []
+            o2_dict[nid] = []
+            o3_dict[nid] = []
+            ovm_dict[nid] = []
+
+        if subcaseID in model.rodStress:
+            case = model.rodStress[subcaseID]
+            for eid in case.axial:
+                axial = case.axial[eid]
+                torsion = case.torsion[eid]
+                node_ids = self.eid_to_nid_map[eid]
+                o1i = max(axial, torsion)  # not really
+                #o2i = 0.  #(o1i+o3i)/2.
+                o3i = min(axial, torsion)
+                ovmi = max(abs(axial), abs(torsion))
+                for nid in node_ids:
+                    oxx_dict[nid].append(axial)
+                    oyy_dict[nid].append(torsion)
+                    #ozz_dict[nid].append(ozzi)
+                    o1_dict[nid].append(o1i)
+                    #o2_dict[nid].append(o2i)
+                    o3_dict[nid].append(o3i)
+                    ovm_dict[nid].append(ovmi)
+
+        if subcaseID in model.barStress:
+            case = model.barStress[subcaseID]
+            for eid in case.axial:
+                node_ids = self.eid_to_nid_map[eid]
+                oxxi = case.axial[eid]
+                o1i = max(case.smax[eid])
+                #o2i = (o1i+o3i)/2.
+                o3i = min(case.smin[eid])
+                ovmi = max(    max(case.smax[eid]),
+                           abs(min(case.smin[eid])))
+                for nid in node_ids:
+                    #print("bar eid=%s" % eid)
+                    oxx_dict[nid].append(oxxi)
+                    #oyy_dict[nid].append(oyyi)
+                    #ozz_dict[nid].append(ozzi)
+                    o1_dict[nid].append(o1i)
+                    #o2_dict[nid].append(o2i)
+                    o3_dict[nid].append(o3i)
+                    ovm_dict[nid].append(ovmi)
+
+        if subcaseID in model.beamStress:
+            case = model.beamStress[subcaseID]
+            for eid in case.smax:
+                node_ids = self.eid_to_nid_map[eid]
+                oxxi = max(max(case.sxc[eid]),
+                           max(case.sxd[eid]),
+                           max(case.sxe[eid]),
+                           max(case.sxf[eid]))
+                o1i = max(case.smax[eid])
+                #o2i = (o1i+o3i)/2. # 0.
+                o3i =min(case.smin[eid])
+                ovmi =max(    max(case.smax[eid]),
+                          abs(min(case.smin[eid])))
+                for nid in node_ids:
+                    oxx_dict[nid].append(oxxi)
+                    #oyy_dict[nid].append(oyyi)
+                    #ozz_dict[nid].append(ozzi)
+                    o1_dict[nid].append(o1i)
+                    #o2_dict[nid].append(o2i)
+                    o3_dict[nid].append(o3i)
+                    ovm_dict[nid].append(ovmi)
+
+        if subcaseID in model.plateStress:
+            case = model.plateStress[subcaseID]
+            if case.isVonMises():
+                vmWord = 'vonMises'
+            else:
+                vmWord = 'maxShear'
+            for eid in case.ovmShear:
+                node_ids = self.eid_to_nid_map[eid]
+
+                eType = case.eType[eid]
+                if eType in ['CQUAD4', 'CQUAD8']:
+                    #cen = 'CEN/%s' % eType[-1]
+                    for nid in node_ids:
+                        oxxi = max(case.oxx[eid][nid])
+                        oyyi = max(case.oyy[eid][nid])
+                        ozzi = min(case.oxx[eid][nid], min(case.oyy[eid][nid]))
+
+                        o1i = max(case.majorP[eid][nid])
+                        o2i = max(case.minorP[eid][nid])
+                        o3i = min(case.majorP[eid][nid], min(case.minorP[eid][nid]))
+                        ovmi = max(case.ovmShear[eid][nid])
+
+                        oxx_dict[nid].append(oxxi)
+                        oyy_dict[nid].append(oyyi)
+                        #ozz_dict[eid].append(ozzi)
+                        o1_dict[nid].append(o1i)
+                        #o2_dict[nid].append(0.)  #(o1i+o3i)/2.
+                        o3_dict[nid].append(o3i)
+                        ovm_dict[nid].append(ovmi)
+
+                elif eType in ['CTRIA3', 'CTRIA6']:
+                    cen = 'CEN/%s' % eType[-1]
+                    oxxi = case.oxx[eid][cen]
+                    #self.oyy[eid][nid][iLayer]
+
+                    oxxi = max(case.oxx[eid][cen])
+                    oyyi = max(case.oyy[eid][cen])
+                    ozzi = min(case.oxx[eid][cen], min(case.oyy[eid][cen]))
+
+                    o1i = max(case.majorP[eid][cen])
+                    o2i = max(case.minorP[eid][cen])
+                    o3i = min(case.majorP[eid][cen], min(case.minorP[eid][cen]))
+                    ovmi = max(case.ovmShear[eid][cen])
+
+                    for nid in node_ids:
+                        oxx_dict[nid].append(oxxi)
+                        oyy_dict[nid].append(oyyi)
+                        #ozz_dict[eid].append(ozzi)
+                        o1_dict[nid].append(o1i)
+                        #o2_dict[nid].append(0.)  #(o1i+o3i)/2.
+                        o3_dict[nid].append(o3i)
+                        ovm_dict[nid].append(ovmi)
+
+        if subcaseID in model.solidStress:
+            case = model.solidStress[subcaseID]
+            if case.isVonMises():
+                vmWord = 'vonMises'
+            else:
+                vmWord = 'maxShear'
+            for eid in case.ovmShear:
+                node_ids = self.eid_to_nid_map[eid]
+                oxxi = case.oxx[eid]['CENTER']
+                oyyi = case.oyy[eid]['CENTER']
+                ozzi = case.ozz[eid]['CENTER']
+                o1i = case.o1[eid]['CENTER']
+                o2i = case.o2[eid]['CENTER']
+                o3i = case.o3[eid]['CENTER']
+                ovmi = case.ovmShear[eid]['CENTER']
+                for nid in node_ids:
+                    oxx_dict[nid].append(oxxi)
+                    oyy_dict[nid].append(oyyi)
+                    ozz_dict[nid].append(ozzi)
+                    o1_dict[nid].append(o1i)
+                    o2_dict[nid].append(o2i)
+                    o3_dict[nid].append(o3i)
+                    ovm_dict[nid].append(ovmi)
+
         nnodes = self.nNodes
+        oxx = zeros(nnodes, dtype='float32')
+        oyy = zeros(nnodes, dtype='float32')
+        ozz = zeros(nnodes, dtype='float32')
+        o1 = zeros(nnodes, dtype='float32')
+        o2 = zeros(nnodes, dtype='float32')
+        o3 = zeros(nnodes, dtype='float32')
+        ovm = zeros(nnodes, dtype='float32')
+        for i, nid in enumerate(sorted(self.nidMap)):
+            oxx[i] = mean(oxx_dict[nid])
+            oyy[i] = mean(oyy_dict[nid])
+            ozz[i] = mean(ozz_dict[nid])
+            o1[i] = mean(o1_dict[nid])
+            o2[i] = mean(o2_dict[nid])
+            o3[i] = mean(o3_dict[nid])
+            ovm[i] = mean(ovm_dict[nid])
+
+        oxx = nan_to_num(oxx)
+        oyy = nan_to_num(oyy)
+        ozz = nan_to_num(ozz)
+        o1 = nan_to_num(o1)
+        o2 = nan_to_num(o2)
+        o3 = nan_to_num(o3)
+        ovm = nan_to_num(ovm)
+        if oxx.min() != oxx.max():
+            cases[(subcaseID, 'StressXX', 1, 'node', '%.3f')] = oxx
+        if oyy.min() != oyy.max():
+            cases[(subcaseID, 'StressYY', 1, 'node', '%.3f')] = oyy
+        if ozz.min() != ozz.max():
+            cases[(subcaseID, 'StressZZ', 1, 'node', '%.3f')] = ozz
+
+        if o1.min() != o1.max():
+            cases[(subcaseID, 'Stress1', 1, 'node', '%.3f')] = o1
+        if o2.min() != o2.max():
+            cases[(subcaseID, 'Stress2', 1, 'node', '%.3f')] = o2
+        if o3.min() != o3.max():
+            cases[(subcaseID, 'Stress3', 1, 'node', '%.3f')] = o3
+        if vmWord is not None:
+            cases[(subcaseID, vmWord, 1, 'node', '%.3f')] = ovm
 
     def _fill_stress_case_centroidal(self, cases, model, subcaseID):
         nElements = self.nElements
@@ -907,3 +1114,4 @@ class NastranIO(object):
         if vmWord is not None:
             cases[(subcaseID, vmWord, 1, 'centroid', '%.3f')] = ovm
         return cases
+
