@@ -1,3 +1,4 @@
+from numpy import array
 from struct import pack
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E
@@ -51,8 +52,8 @@ class RealGridPointForces(ScalarObject):
             self.forces[eKey] = []
             self.moments[eKey] = []
             self.elemName[eKey] = []
-        self.forces[eKey].append([f1, f2, f3])  # Fx,Fy,Fz
-        self.moments[eKey].append([m1, m2, m3])  # Mx,My,Mz
+        self.forces[eKey].append(array([f1, f2, f3], dtype='float32'))  # Fx,Fy,Fz
+        self.moments[eKey].append(array([m1, m2, m3], dtype='float32'))  # Mx,My,Mz
         self.elemName[eKey].append(elemName)
         self.eids[eKey].append(eid)
 
@@ -64,8 +65,8 @@ class RealGridPointForces(ScalarObject):
                     self.forces[nid] = []
                     self.moments[nid] = []
                     self.elemName[nid] = []
-                self.forces[nid].append([f1, f2, f3])  # Mx,My,Mz
-                self.moments[nid].append([m1, m2, m3])  # Fx,Fy,Fz
+                self.forces[nid].append(array([f1, f2, f3], dtype='float32'))  # Mx,My,Mz
+                self.moments[nid].append(array([m1, m2, m3], dtype='float32'))  # Fx,Fy,Fz
                 self.elemName[nid].append(source)
                 self.eids[nid].append(eid)
 
@@ -79,8 +80,8 @@ class RealGridPointForces(ScalarObject):
                     self.forces[dt][nid] = []
                     self.moments[dt][nid] = []
                     self.elemName[nid] = []
-                self.forces[dt][nid].append([f1, f2, f3])  # Mx,My,Mz
-                self.moments[dt][nid].append([m1, m2, m3])  # Fx,Fy,Fz
+                self.forces[dt][nid].append(array([f1, f2, f3], dtype='float32'))  # Mx,My,Mz
+                self.moments[dt][nid].append(array([m1, m2, m3], dtype='float32'))  # Fx,Fy,Fz
                 self.elemName[nid].append(source)
                 self.eids[nid].append(eid)
 
@@ -95,8 +96,8 @@ class RealGridPointForces(ScalarObject):
             self.forces[dt][eKey] = []
             self.moments[dt][eKey] = []
             self.elemName[eKey] = []
-        self.forces[dt][eKey].append([f1, f2, f3])  # Mx,My,Mz
-        self.moments[dt][eKey].append([m1, m2, m3])  # Fx,Fy,Fz
+        self.forces[dt][eKey].append(array([f1, f2, f3], dtype='float32'))  # Mx,My,Mz
+        self.moments[dt][eKey].append(array([m1, m2, m3], dtype='float32'))  # Fx,Fy,Fz
         self.elemName[eKey].append(elemName)
         self.eids[eKey].append(eid)
 
