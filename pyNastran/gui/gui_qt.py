@@ -54,6 +54,10 @@ import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 
+class VTKWindow():
+    def __init__(self):
+        pass
+
 class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, Plot3d_io):
     def __init__(self, inputs):
         QtGui.QMainWindow.__init__(self)
@@ -117,27 +121,6 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         self.nNodes = 0
         self.nElements = 0
 
-        #-------
-        # vtk actors
-
-        self.grid = vtk.vtkUnstructuredGrid()
-        #gridResult = vtk.vtkFloatArray()
-
-        self.grid2 = vtk.vtkUnstructuredGrid()
-        #self.emptyResult = vtk.vtkFloatArray()
-        #self.vectorResult = vtk.vtkFloatArray()
-
-        # edges
-        self.edgeActor = vtk.vtkActor()
-        self.edgeMapper = vtk.vtkPolyDataMapper()
-
-        # cell picker
-        self.cell_picker = vtk.vtkCellPicker()
-        self.cell_picker.SetTolerance(0.0005)
-
-        # scalar bar
-        self.scalarBar = vtk.vtkScalarBarActor()
-
         #-------------
         # logging
 
@@ -147,6 +130,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         self.log_mutex = QtCore.QReadWriteLock()
 
         #-------------
+        self.create_vtk_actors()
+
         # build GUI and restore saved application state
         self.restoreGeometry(settings.value("mainWindowGeometry").toByteArray())
         self.background_col = settings.value("backgroundColor", (0.1, 0.2, 0.4)).toPyObject()
@@ -262,11 +247,16 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
 
     def about_dialog(self):
         """ Display about dialog """
+        if fmode == 1:  # PyQt
+            copyright = pyNastran.__pyqt_copyright__
+        else:
+            copyright = pyNastran.__copyright__
+
         about = [
             'pyNastran QT GUI',
             '',
             'pyNastran v%s' % pyNastran.__version__,
-            pyNastran.__pyqt_copyright__,
+            copyright,
             pyNastran.__author__,
             '',
             '%s' % pyNastran.__website__,
@@ -305,7 +295,6 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         self.menu_view = self.menubar.addMenu('&View')
         self.menu_window = self.menubar.addMenu('&Window')
         self.menu_help = self.menubar.addMenu('&Help')
-        self.menu_scripts = self.menubar.addMenu('&Scripts')
 
         ## toolbar
         self.toolbar = self.addToolBar('Show toolbar')
@@ -328,8 +317,6 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         checkables = ['show_info', 'show_debug', 'show_gui', 'show_command']
         scripts = [script for script in os.listdir(script_path) if '.py' in script ]
         scripts = tuple(scripts)
-        print('script_path =', script_path)
-        print('scripts =', scripts)
 
         tools = [
           ('exit', '&Exit', os.path.join(icon_path, 'texit.png'), 'Ctrl+Q', 'Exit application', QtGui.qApp.quit),
@@ -355,7 +342,6 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
           ('rotate_clockwise', 'Rotate Clockwise', os.path.join(icon_path, 'tclock.png'), 'o', 'Rotate Clockwise', self.on_rotate_clockwise),
           ('rotate_cclockwise', 'Rotate Counter-Clockwise', os.path.join(icon_path, 'tcclock.png'), 'O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
 
-
           ('scshot', 'Take a Screenshot', os.path.join(icon_path, 'tcamera.png'), 'CTRL+I', 'Take a Screenshot of current view', self.take_screenshot),
           ('about', 'About pyNastran GUI', os.path.join(icon_path, 'tabout.png'), 'CTRL+H', 'About pyNastran GUI and help on shortcuts', self.about_dialog),
           ('creset', 'Reset camera view', os.path.join(icon_path, 'trefresh.png'), 'r', 'Reset the camera view to default', self.on_reset_camera),
@@ -372,10 +358,17 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
           ('Z', 'Flips to -Z Axis', os.path.join(icon_path, 'minus_z.png'), 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
           ('script', 'Run Python script', os.path.join(icon_path, 'python48.png'), None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
         ]
-        for script in scripts:
-            fname = os.path.join(script_path, script)
-            tool = (script, script, os.path.join(icon_path, 'python48.png'), None, '', lambda: self.on_run_script(fname) )
-            tools.append(tool)
+
+        if 0:
+            print('script_path =', script_path)
+            print('scripts =', scripts)
+            self.menu_scripts = self.menubar.addMenu('&Scripts')
+            for script in scripts:
+                fname = os.path.join(script_path, script)
+                tool = (script, script, os.path.join(icon_path, 'python48.png'), None, '', lambda: self.on_run_script(fname) )
+                tools.append(tool)
+        else:
+            self.menu_scripts = None
 
         for (nam, txt, icon, shortcut, tip, func) in tools:
             #print "name=%s txt=%s icon=%s short=%s tip=%s func=%s" % (nam, txt, icon, short, tip, func)
@@ -425,6 +418,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                                       'wireframe', 'surface', 'edges', 'creset', 'scshot', '', 'exit'))]
         # populate menus and toolbar
         for menu, items in menu_items:
+            if menu is None:
+                continue
             for i in items:
                 if not i:
                     menu.addSeparator()
@@ -462,6 +457,29 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         # right sidebar
         self.res_dock.hide()
 
+        self.build_vtk_frame()
+
+    def create_vtk_actors(self):
+        # vtk actors
+        self.grid = vtk.vtkUnstructuredGrid()
+        #gridResult = vtk.vtkFloatArray()
+
+        self.grid2 = vtk.vtkUnstructuredGrid()
+        #self.emptyResult = vtk.vtkFloatArray()
+        #self.vectorResult = vtk.vtkFloatArray()
+
+        # edges
+        self.edgeActor = vtk.vtkActor()
+        self.edgeMapper = vtk.vtkPolyDataMapper()
+
+        # cell picker
+        self.cell_picker = vtk.vtkCellPicker()
+        self.cell_picker.SetTolerance(0.0005)
+
+        # scalar bar
+        self.scalarBar = vtk.vtkScalarBarActor()
+
+    def build_vtk_frame(self):
         #Frame that VTK will render on
         vtk_frame = QtGui.QFrame()
         vtk_hbox  = QtGui.QHBoxLayout()
@@ -1190,17 +1208,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                     min_value = min(value, min_value)
 
             norm_value, nValueSet = self.set_grid_values(gridResult, case, vectorSize, min_value, max_value)
-            if 1:
-                self.textActors[0].SetInput('Max:  %g' % max_value)  # max
-                self.textActors[1].SetInput('Min:  %g' % min_value)  # min
-                self.textActors[2].SetInput('Subcase=%s Subtitle: %s' % (subcaseID, subtitle))  # info
-
-                if label:
-                    self.textActors[3].SetInput('Label: %s' % label)  # info
-                    self.textActors[3].VisibilityOn()
-                else:
-                    self.textActors[3].VisibilityOff()
-
+            self.update_text_actors(case, subcaseID, subtitle, min_value, max_value, label)
             self.UpdateScalarBar(resultType, min_value, max_value, norm_value, data_format, is_blue_to_red=True)
             #self.scalarBar.SetNumberOfLabels(nValueSet)
             #self.scalarBar.SetMaximumNumberOfColors(nValueSet)
@@ -1219,6 +1227,17 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
 
             self.final_grid_update(gridResult, key, subtitle, label)
 
+    def update_text_actors(self, case, subcaseID, subtitle, min_value, max_value, label):
+        self.textActors[0].SetInput('Max:  %g' % max_value)  # max
+        self.textActors[1].SetInput('Min:  %g' % min_value)  # min
+        self.textActors[2].SetInput('Subcase=%s Subtitle: %s' % (subcaseID, subtitle))  # info
+
+        if label:
+            self.textActors[3].SetInput('Label: %s' % label)  # info
+            self.textActors[3].VisibilityOn()
+        else:
+            self.textActors[3].VisibilityOff()
+
     def final_grid_update(self, gridResult, key, subtitle, label):
         (subcaseID, resultType, vectorSize, location, data_format) = key
         npoints = self.nPoints()
@@ -1235,15 +1254,17 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         #elif location == 'node' and self.is_nodal:
             if ncells:
                 cell_data = self.grid.GetCellData()
-                print(dir(cell_data))
+                #print(dir(cell_data))
                 cell_data.Reset()
             if vectorSize == 1:
                 self.log_info("***node plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
                 self.grid.GetPointData().SetScalars(gridResult)
-            else:
+            elif vectorSize == 3:
                 self.log_info("***node plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
                 self.grid.GetPointData().SetScalars(gridResult)
-            #print("***node skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label))
+            else:
+                #print("***node skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID, resultType, subtitle, label))
+                raise RuntimeError(vectorSize)
         else:
             raise RuntimeError(location)
             self.log_info("***D%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (location, subcaseID, resultType, subtitle, label))
@@ -1276,12 +1297,9 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
 
     def set_grid_values(self, gridResult, case, vectorSize, min_value, max_value, is_blue_to_red=True):
         # flips sign to make colors go from blue -> red
-        #if is_blue_to_red:
         norm_value = float(max_value - min_value)
-        #else:
-            #norm_value = min_value - max_value
         print('max_value=%s min_value=%r norm_value=%r' % (max_value, min_value, norm_value))
-        #print "case = ",case
+        #print("case = ",case)
         #if norm_value==0.: # avoids division by 0.
         #    norm_value = 1.
 
@@ -1295,9 +1313,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 for i, value in enumerate(case):
                     gridResult.InsertNextValue((value - min_value) / norm_value)
         else:  # vectorSize=3
-            pass
-            #for value in case:
-            #    .gridResult.InsertNextTuple3(value)  # x,y,z
+            for value in case:
+                gridResult.InsertNextTuple3(value)  # x,y,z
         #print("value_range", gridResult.GetValueRange())
 
         print("max=%g min=%g norm=%g\n" % (max_value, min_value, norm_value))
@@ -1343,8 +1360,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 return foundCases
 
             print("key = %s" % str(key))
-            if key[2] == 3:  # vector size=3 -> vector, skipping ???
-                self.incrementCycle()
+            #if key[2] == 3:  # vector size=3 -> vector, skipping ???
+                #self.incrementCycle()
             foundCases = True
         else:
             self.log_error("No Results found.  Many results are not supported in the GUI.\n")
@@ -1389,8 +1406,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         else:
             self.colorFunction.AddRGBPoint(min_value, 1.0, 0.0, 0.0)  # red
             self.colorFunction.AddRGBPoint(max_value, 0.0, 0.0, 1.0)  # blue
-        #self.scalarBar.SetLookupTable(self.colorFunction)
 
+        #self.scalarBar.SetLookupTable(self.colorFunction)
         self.scalarBar.SetTitle(Title)
         self.scalarBar.SetLabelFormat(data_format)
 
@@ -1402,8 +1419,6 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
         if self.nvalues is not None:
             if not self._is_int_result(data_format):  # don't change nvalues for int results
                 nvalues = self.nvalues
-
-        #if data_format=='%.0f' and maxValue>
 
         self.scalarBar.SetNumberOfLabels(nvalues)
         self.scalarBar.SetMaximumNumberOfColors(nvalues)
@@ -1469,3 +1484,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
