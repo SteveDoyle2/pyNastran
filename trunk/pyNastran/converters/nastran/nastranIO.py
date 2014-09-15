@@ -1,4 +1,5 @@
 # pylint: disable=C0103,C0111,E1101
+from __future__ import print_function
 
 #VTK_TRIANGLE = 5
 #VTK_QUADRATIC_TRIANGLE = 22
@@ -73,7 +74,7 @@ class NastranIO(object):
             if hasattr(self, i):
                 del i
 
-            #print dir(self)
+            #print(dir(self))
         self.scalarBar.VisibilityOff()
         self.scalarBar.Modified()
 
@@ -211,7 +212,7 @@ class NastranIO(object):
         i = 0
         for (eid, element) in sorted(model.elements.iteritems()):
             self.eidMap[eid] = i
-            #print element.type
+            #print(element.type)
             if isinstance(element, CTRIA3) or isinstance(element, CTRIAR):
                 elem = vtkTriangle()
                 nodeIDs = element.nodeIDs()
@@ -418,8 +419,8 @@ class NastranIO(object):
                             elem.GetPointIds().SetId(0, nidMap[nodeIDs[0]])
                             elem.GetPointIds().SetId(1, nidMap[nodeIDs[1]])
                         except KeyError:
-                            print "nodeIDs =", nodeIDs
-                            print str(element)
+                            print("nodeIDs =", nodeIDs)
+                            print(str(element))
                             continue
                         self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, CONM2):  # not perfectly located
@@ -430,7 +431,7 @@ class NastranIO(object):
                 elem = vtk.vtkVertex()
                 #elem = vtk.vtkSphere()
                 #elem.SetRadius(1.0)
-                #print str(element)
+                #print(str(element))
 
                 points2.InsertPoint(j, *c)
                 elem.GetPointIds().SetId(0, j)
@@ -447,7 +448,7 @@ class NastranIO(object):
         self.grid.SetPoints(points)
         self.grid2.SetPoints(points2)
         #self.grid.GetPointData().SetScalars(self.gridResult)
-        #print dir(self.grid) #.SetNumberOfComponents(0)
+        #print(dir(self.grid)) #.SetNumberOfComponents(0)
         #self.grid.GetCellData().SetNumberOfTuples(1);
         #self.grid.GetCellData().SetScalars(self.gridResult)
         self.grid.Modified()
@@ -458,7 +459,7 @@ class NastranIO(object):
 
         cases = {}
         nelements = len(model.elements)
-        print "len(elements) =", nelements
+        print("len(elements) =", nelements)
         pids = [] # zeros(nelements, 'int32')
         nxs = []
         nys = []
@@ -559,12 +560,12 @@ class NastranIO(object):
             print("error...")
             raise NotImplementedError(op2FileName)
 
-        #print model.print_results()
+        #print(model.print_results())
 
         #case = model.displacements[1]
-        #print "case = ",case
+        #print("case = ",case)
         #for nodeID,translation in sorted(case.translations.iteritems()):
-            #print "nodeID=%s t=%s" %(nodeID,translation)
+            #print("nodeID=%s t=%s" %(nodeID,translation))
         #self.iSubcaseNameMap[self.isubcase] = [Subtitle,Label]
 
         cases = {}
@@ -572,7 +573,7 @@ class NastranIO(object):
         self.iSubcaseNameMap = model.iSubcaseNameMap
 
         nElements = len(self.eidMap)
-        print "nElements = ", nElements
+        print("nElements = ", nElements)
 
         # set to True to enable nodeIDs as an result
         nidsSet = False
@@ -587,80 +588,98 @@ class NastranIO(object):
         # set to True to enable elementIDs as a result
         eidsSet = True
         if eidsSet and self.is_centroidal:
-            eids = zeros(nElements, 'd')
+            eids = zeros(nElements, dtype='int32')
             for (eid, eid2) in self.eidMap.iteritems():
                 eids[eid2] = eid
-
-            eKey = (subcaseID, 'isElementOn', 1, 'centroid', '%.0g')
             cases[(subcaseID, 'Element_ID', 1, 'centroid', '%.0f')] = eids
-            cases[eKey] = zeros(nElements)  # is the element supported
             eidsSet = True
-        else:
-            eKey = None
 
         print('is_nodal =', self.is_nodal)
         for subcaseID in subcaseIDs:
-            if self.is_nodal: # nodal results don't work with centroidal ones
-                displacement_like = [
-                    [model.displacements,   'Displacement',]
-                    [model.velocities,      'Velocity',]
-                    [model.accelerations,   'Acceleration',]
-                    [model.spcForces,       'SPC Forces',]
-                    [model.mpcForces,       'MPC Forces',]
-                    [model.gridPointForces, 'GridPointForces',]
-                    [model.temperatures,    'Temperature',]
-                ]
-                nnodes = self.nNodes
-                for (result, name) in displacement_like:
-                    if subcaseID in result:
-                        case = result[subcaseID]
-                        displacements = zeros((nnodes, 3), dtype='float32')
-                        x_displacements = zeros(nnodes, dtype='float32')
-                        y_displacements = zeros(nnodes, dtype='float32')
-                        z_displacements = zeros(nnodes, dtype='float32')
-                        xyz_displacements = zeros(nnodes, dtype='float32')
-                        for (nid, txyz) in case.translations.iteritems():
-                            nid2 = self.nidMap[nid]
-                            displacements[nid2] = txyz
-                            x_displacements[nid2] = txyz[0]
-                            y_displacements[nid2] = txyz[1]
-                            z_displacements[nid2] = txyz[2]
-                            xyz_displacements[nid2] = norm(txyz)
-                        #cases[(subcaseID, name + 'Vector', 3, 'node', '%g')] = displacements
-                        cases[(subcaseID, name + 'X', 1, 'node', '%g')] = x_displacements
-                        cases[(subcaseID, name + 'Y', 1, 'node', '%g')] = y_displacements
-                        cases[(subcaseID, name + 'Z', 1, 'node', '%g')] = z_displacements
-                        cases[(subcaseID, name + 'XYZ', 1, 'node', '%g')] = xyz_displacements
-                        #key = (subcaseID, name + 'XYZ', 1, 'node', '%g')
-
-            if 0:
-                if subcaseID in model.temperatures:
-                    case = model.temperatures[subcaseID]
-                    temps = zeros(self.nNodes, dtype='float32')
-                    for (nid, T) in case.temperatures.iteritems():
-                        nid2 = self.nidMap[nid]
-                        temperatures[nid2] = T
-
-                    key = (subcaseID, 'Temperature', 1, 'node', '%g')
-                    #cases[key] = temperatures
-
-            cases = self.fill_stress_case(cases, model, subcaseID, eKey)
+            cases = self.fill_oug_oqg_case(cases, model, subcaseID)
+            cases = self.fill_stress_case(cases, model, subcaseID)
 
         #self.resultCases = cases
         self.finish_io(cases)
         #return
         #self.caseKeys = sorted(cases.keys())
-        #print "caseKeys = ",self.caseKeys
-        #print "type(caseKeys) = ",type(self.caseKeys)
+        #print("caseKeys = ",self.caseKeys)
+        #print("type(caseKeys) = ",type(self.caseKeys))
         #self.iCase = -1
         #self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
         #self.cycleResults()  # start at nCase=0
+
+    def fill_oug_oqg_case(self, cases, model, subcaseID):
+        if self.is_nodal: # nodal results don't work with centroidal ones
+            displacement_like = [
+                [model.displacements, 'Displacement'],
+                [model.velocities,    'Velocity'],
+                [model.accelerations, 'Acceleration'],
+                [model.spcForces,     'SPC Forces'],
+                [model.mpcForces,     'MPC Forces'],
+                #[model.gridPointForces, 'GridPointForces'],  # TODO: this is buggy...
+            ]
+            temperature_like = [
+                [model.temperatures,    'Temperature']
+            ]
+            nnodes = self.nNodes
+
+            # size = 3
+            for (result, name) in displacement_like:
+                if subcaseID in result:
+                    case = result[subcaseID]
+                    displacements = zeros((nnodes, 3), dtype='float32')
+                    x_displacements = zeros(nnodes, dtype='float32')
+                    y_displacements = zeros(nnodes, dtype='float32')
+                    z_displacements = zeros(nnodes, dtype='float32')
+                    xyz_displacements = zeros(nnodes, dtype='float32')
+
+                    print('ERROR!!!!', case.__dict__.keys())
+                    if hasattr(case, 'translations'):
+                        word = 'translations'
+                    elif hasattr(case, 'forces'):
+                        word = 'forces'
+                    else:
+                        print('ERROR!!!!', case.__dict__.keys())
+                        raise RuntimeError(case.__dict__.keys())
+
+                    res = getattr(case, word)
+
+                    print('case.type =', case.__class__.__name__)
+                    for (nid, txyz) in res.iteritems():
+                        nid2 = self.nidMap[nid]
+                        displacements[nid2] = txyz
+                        xyz_displacements[nid2] = norm(txyz)
+                        x_displacements[nid2] = txyz[0]
+                        y_displacements[nid2] = txyz[1]
+                        z_displacements[nid2] = txyz[2]
+
+                        #cases[(subcaseID, name + 'Vector', 3, 'node', '%g')] = displacements
+                        cases[(subcaseID, name + 'X', 1, 'node', '%g')] = x_displacements
+                        cases[(subcaseID, name + 'Y', 1, 'node', '%g')] = y_displacements
+                        cases[(subcaseID, name + 'Z', 1, 'node', '%g')] = z_displacements
+                        cases[(subcaseID, name + 'XYZ', 1, 'node', '%g')] = xyz_displacements
+                    del res, word
+
+            # size = 1
+            for (result, name) in temperature_like:
+                if subcaseID in result:
+                    case = result[subcaseID]
+                    temperatures = zeros(nnodes, dtype='float32')
+                    for (nid, txyz) in case.translations.iteritems():
+                        nid2 = self.nidMap[nid]
+                        displacements[nid2] = txyz
+                        temperatures[nid2] = norm(txyz)
+
+                        #cases[(subcaseID, name + 'Vector', 3, 'node', '%g')] = displacements
+                        cases[(subcaseID, name, 1, 'node', '%g')] = temperatures
+        return cases
 
     def finish_io(self, cases):
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
         print("caseKeys = ",self.caseKeys)
-        #print "type(caseKeys) = ",type(self.caseKeys)
+        #print("type(caseKeys) = ",type(self.caseKeys))
 
         if len(self.resultCases) == 0:
             self.nCases = 1
@@ -685,8 +704,8 @@ class NastranIO(object):
         #ncases = len(cases)
         #self.resultCases = cases
         #self.caseKeys = sorted(cases.keys())
-        ##print "caseKeys = ",self.caseKeys
-        ##print "type(caseKeys) = ",type(self.caseKeys)
+        #print("caseKeys = ",self.caseKeys)
+        #print("type(caseKeys) = ",type(self.caseKeys))
         ##self.nCases = (ncases - 1) if (ncases - 1) > 0 else 0  # number of keys in dictionary
         #self.nCases = ncases #if self.ncases == 0
         #if self.nCases:
@@ -697,20 +716,22 @@ class NastranIO(object):
         #self.cycleResults()  # start at nCase=0
         #self.log.info('end of finish io')
 
-    def fill_stress_case(self, cases, model, subcaseID, eKey):
+    def fill_stress_case(self, cases, model, subcaseID):
         print("fill_stress_case")
         if self.is_centroidal:
-            cases = self._fill_stress_case_centroidal(cases, model, subcaseID, eKey)
+            cases = self._fill_stress_case_centroidal(cases, model, subcaseID)
         else:
-            #cases = self._fill_stress_case_nodal(cases, model, subcaseID, eKey)
+            #cases = self._fill_stress_case_nodal(cases, model, subcaseID)
             pass
         return cases
 
-    def _fill_stress_case_nodal(self, cases, model, subcaseID, eKey):
+    def _fill_stress_case_nodal(self, cases, model, subcaseID):
         nnodes = self.nNodes
 
-    def _fill_stress_case_centroidal(self, cases, model, subcaseID, eKey):
+    def _fill_stress_case_centroidal(self, cases, model, subcaseID):
         nElements = self.nElements
+        isElementOn = zeros(nElements)  # is the element supported
+
         oxx = zeros(nElements, dtype='float32')
         oyy = zeros(nElements, dtype='float32')
         ozz = zeros(nElements, dtype='float32')
@@ -725,7 +746,7 @@ class NastranIO(object):
             case = model.rodStress[subcaseID]
             for eid in case.axial:
                 eid2 = self.eidMap[eid]
-                cases[eKey][eid2] = 1.
+                isElementOn[eid2] = 1.
 
                 axial = case.axial[eid]
                 torsion = case.torsion[eid]
@@ -743,7 +764,7 @@ class NastranIO(object):
             case = model.barStress[subcaseID]
             for eid in case.axial:
                 eid2 = self.eidMap[eid]
-                cases[eKey][eid2] = 1.
+                isElementOn[eid2] = 1.
 
                 #print("bar eid=%s" % eid)
                 oxx[eid2] = case.axial[eid]
@@ -760,7 +781,7 @@ class NastranIO(object):
             case = model.beamStress[subcaseID]
             for eid in case.smax:
                 eid2 = self.eidMap[eid]
-                cases[eKey][eid2] = 1.
+                isElementOn[eid2] = 1.
 
                 oxx[eid2] = max(max(case.sxc[eid]),
                                 max(case.sxd[eid]),
@@ -783,7 +804,7 @@ class NastranIO(object):
                 vmWord = 'maxShear'
             for eid in case.ovmShear:
                 eid2 = self.eidMap[eid]
-                cases[eKey][eid2] = 1.
+                isElementOn[eid2] = 1.
 
                 eType = case.eType[eid]
                 if eType in ['CQUAD4', 'CQUAD8', 'CTRIA3', 'CTRIA6']:
@@ -819,13 +840,13 @@ class NastranIO(object):
                     vmWord = 'maxShear'
                 for eid in case.ovmShear:
                     eid2 = self.eidMap[eid]
-                    cases[eKey][eid2] = 1.
+                    isElementOn[eid2] = 1.
 
-                    #print "plate eid=%s" %(eid)
+                    #print("plate eid=%s" % eid)
                     eType = case.eType[eid]
                     if eType in ['CQUAD4', 'CQUAD8', 'CTRIA3', 'CTRIA6']:
                         cen = 'CEN/%s' % eType[-1]
-                    print('composite keys =', case.oxx[eid].keys())
+                    #print('composite keys =', case.oxx[eid].keys())
                     oxxi = case.oxx[eid][cen]
                     #self.oyy[eid][nid][iLayer]
 
@@ -855,7 +876,7 @@ class NastranIO(object):
                 vmWord = 'maxShear'
             for eid in case.ovmShear:
                 eid2 = self.eidMap[eid]
-                cases[eKey][eid2] = 1.
+                isElementOn[eid2] = 1.
 
                 #print('case.oxx[%i].keys() = %s' % (eid, case.oxx[eid].keys()))
                 oxx[eid2] = case.oxx[eid]['CENTER']
@@ -868,6 +889,8 @@ class NastranIO(object):
                 ovm[eid2] = case.ovmShear[eid]['CENTER']
 
         # subcaseID,resultType,vectorSize,location,dataFormat
+        if isElementOn.min() != isElementOn.max():
+            cases[(1, 'isElementOn', 1, 'centroid', '%.0f')] = isElementOn
         if oxx.min() != oxx.max():
             cases[(subcaseID, 'StressXX', 1, 'centroid', '%.3f')] = oxx
         if oyy.min() != oyy.max():
