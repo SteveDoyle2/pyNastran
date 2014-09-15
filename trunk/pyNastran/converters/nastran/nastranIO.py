@@ -879,14 +879,14 @@ class NastranIO(object):
                 vmWord = 'maxShear'
             for eid in case.ovmShear:
                 node_ids = self.eid_to_nid_map[eid]
-                oxxi = case.oxx[eid]['CENTER']
-                oyyi = case.oyy[eid]['CENTER']
-                ozzi = case.ozz[eid]['CENTER']
-                o1i = case.o1[eid]['CENTER']
-                o2i = case.o2[eid]['CENTER']
-                o3i = case.o3[eid]['CENTER']
-                ovmi = case.ovmShear[eid]['CENTER']
                 for nid in node_ids:
+                    oxxi = case.oxx[eid][nid]
+                    oyyi = case.oyy[eid][nid]
+                    ozzi = case.ozz[eid][nid]
+                    o1i = case.o1[eid][nid]
+                    o2i = case.o2[eid][nid]
+                    o3i = case.o3[eid][nid]
+                    ovmi = case.ovmShear[eid][nid]
                     oxx_dict[nid].append(oxxi)
                     oyy_dict[nid].append(oyyi)
                     ozz_dict[nid].append(ozzi)
