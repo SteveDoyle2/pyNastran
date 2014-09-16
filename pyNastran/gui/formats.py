@@ -1,4 +1,14 @@
 try:
+    from pyNastran.converters.cart3d.cart3dIO import Cart3dIO
+    is_cart3d = True
+except ImportError:
+    raise
+    class Cart3dIO(object):
+        def __init__(self):
+            pass
+    is_cart3d = False
+
+try:
     from pyNastran.converters.nastran.nastranIO import NastranIO
     is_nastran = True
 except ImportError:
@@ -35,14 +45,24 @@ except ImportError:
     is_panair = False
 
 try:
-    from pyNastran.converters.cart3d.cart3dIO import Cart3dIO
-    is_cart3d = True
+    from pyNastran.converters.plot3d.plot3d_io import Plot3d_io
+    is_plot3d = True
 except ImportError:
-    raise
-    class Cart3dIO(object):
+    class Plot3d_io(object):
         def __init__(self):
             pass
-    is_cart3d = False
+    is_plot3d = False
+    raise
+
+try:
+    from pyNastran.converters.shabp.shabp_io import ShabpIO
+    is_tecplot = True
+except ImportError:
+    #raise
+    class ShabpIO(object):
+        def __init__(self):
+            pass
+    is_shabp = False
 
 try:
     from pyNastran.converters.stl.stl_io import STL_IO
@@ -54,6 +74,16 @@ except ImportError:
             pass
     is_stl = False
 
+
+try:
+    from pyNastran.converters.tecplot.tecplot_io import TecplotIO
+    is_tecplot = True
+except ImportError:
+    #raise
+    class TecplotIO(object):
+        def __init__(self):
+            pass
+    is_tecplot = False
 
 try:
     from pyNastran.converters.tetgen.tetgen_io import TetgenIO
@@ -75,21 +105,3 @@ except ImportError:
             pass
     is_usm3d = False
 
-try:
-    from pyNastran.converters.tecplot.tecplot_io import TecplotIO
-    is_tecplot = True
-except ImportError:
-    #raise
-    class TecplotIO(object):
-        def __init__(self):
-            pass
-    is_tecplot = False
-try:
-    from pyNastran.converters.plot3d.plot3d_io import Plot3d_io
-    is_plot3d = True
-except ImportError:
-    class Plot3d_io(object):
-        def __init__(self):
-            pass
-    is_plot3d = False
-    raise
