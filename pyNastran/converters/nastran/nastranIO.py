@@ -478,8 +478,16 @@ class NastranIO(object):
         #nys = []
         #nzs = []
         i = 0
+
+        # what about MPCs, RBE2s (rigid elements)?
+        #   are they plotted as elements?
+        #   and thus do they need a property?
         for eid, element in sorted(model.elements.iteritems()):
+            #try:
             pids[i] = element.Pid()
+            #except AttributeError:  # CONM1, CONM2, ???
+            #   pass
+            i += 1
             #if isinstance(element, ShellElement):
                 #(nx, ny, nz) = element.Normal()
             #else:
@@ -504,7 +512,31 @@ class NastranIO(object):
                 cases[(0, 'Normal_y', 1, 'centroid', '%.1f')] = nys
                 cases[(0, 'Normal_z', 1, 'centroid', '%.1f')] = nzs
         self.log.info(cases.keys())
-        self.finish_io(cases)
+        #self.finish_io(cases)
+
+        self.finish_nastran_io(cases)
+
+    def finish_nastran_io(self, cases):  # same as Cart3d version
+        self.resultCases = cases
+        self.caseKeys = sorted(cases.keys())
+        print("ncases =", len(cases))
+        if len(self.caseKeys) > 1:
+            print("finish_io case A")
+            self.iCase = -1
+            self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
+        elif len(self.caseKeys) == 1:
+            print("finish_io case B")
+            self.iCase = -1
+            self.nCases = 1
+        else:
+            print("finish_io case C")
+            self.iCase = -1
+            self.nCases = 0
+
+        self.cycleResults()  # start at nCase=0
+        if self.nCases:
+            self.scalarBar.VisibilityOn()
+            self.scalarBar.Modified()
 
     def _plot_pressures(self, model, cases):
         if 1:
