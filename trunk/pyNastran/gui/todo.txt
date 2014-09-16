@@ -16,20 +16,24 @@ both
  - auto-importing (meaning...)
  - loading of geometry/results from command line
  - implicit pulldown for formats
+ - zoom/rotate/snap to axis
+ - screenshot
 
 wx unique
 =========
- - hotkeys for zoom/rotate/snap
+ - hotkeys for zoom/rotate/snap to axis
  - explcit pulldown for formats
 
-PySide/PyQt4 unique
-===================
+PyQt4 unique (PySide is broken)
+===============================
  - logger
  - auto-reload button.  Useful for:
     - modifying Panair file
     - dynamically updating files
     - incrementing files for Usm3d (e.g. running a job and want to watch the
       flow develop without having to click load_results)
+ - S/HABP input
+ - Panair output
  - zoom/rotate/snap buttons
  - default filename for pictures
  - python scripting
@@ -42,6 +46,8 @@ PySide/PyQt4 unique
    - red to blue; blue to red
    - continuous to discrete (doesn't work)***
    - doesn't save results***
+   - can't move legend***
+   - can't show/hide legend***
 
 ----------------------------------------------------
 ---NOT DONE---
@@ -52,10 +58,8 @@ both
  - marker plots (arrows) & scale
  - displacement plots & scale
  - cell picker to get element/node info
- - plot3d input/output
- - tecplot structured input/output
- - tecplot unstructured input/output
  - usm3d surface/boundary layer/incomplete volume
+ - results selector window rather than cycling
 
 --------------
 wx
@@ -66,9 +70,8 @@ wx
  - default filename for pictues
  - python scripting
  - pretty title that tells you your "format - infile - outfile"
- - scalar bar flipping
- - scalar bar limit setting
  - panair results (probably close)
+ - shabp input
  - legend menu
 
 --------------
@@ -81,9 +84,18 @@ qt
 ---Format Specific---
 
 Nastran
- - SOL 101 stress, displacement, velocity, acceleration, gridPointForces, spcForces, mpcForces
  - load geometry -> .bdf/nas/dat
+   - shows CAERO panels
  - load results -> op2/f06
+   - SOL 101
+     - (nodal/centroidal) stress
+     - (nodal) displacement, velocity, acceleration, spcForces, mpcForces, temperatures
+ - ***multiple op2 files
+ - ***show/hide elements based on picking
+
+Tecplot
+ - ***tecplot structured input/output
+ - ***tecplot unstructured input/output
 
 Usm3d
  - load geometry -> cogsg/front
@@ -99,20 +111,35 @@ Usm3d
 
 Cart3d
  - load geometry -> tri/triq
+ - results
+   - Mach, Cp, rho, rhoU, rhoV, rhoW, rhoE, U, V, W, E (nodal/centroidal)
+ - ***show/hide elements based on picking
 
 Panair
  - load geometry -> inp
+   - patch number, area
+ - supports auto-reload of geometry
  - load results -> agps
- - supports auto-reload
+   - Cp (nodal/centroidal)
+ - ***show/hide panels based on menu/picking
 
 LaWGS
  - load geometry -> wgs
 
 Plot3d
- - I don't think this is right...
+ - ***plot3d input/output
+ - ***show/hide panels based on menu/picking
+ - ***2d vs 3d
 
 Tetgen
  - load geometry -> smesh
 
 STL
  - load geometry -> STL
+
+SHABP
+ - geometry (mk5/geo/inp)
+   - location, patch number, component, impact, shadow
+ - ***full trailer parsing
+ - ***results parsing
+ - ***show/hide panels based on menu/picking
