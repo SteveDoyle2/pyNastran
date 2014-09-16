@@ -37,6 +37,7 @@ from pyNastran.utils import print_bad_path
 from pyNastran.utils.log import SimpleLogger
 from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, Plot3d_io,
     is_nastran, is_cart3d, is_panair, is_lawgs, is_stl, is_tetgen, is_usm3d, is_plot3d)
+from pyNastran.converters.shabp.shabp_io import ShabpIO, is_shabp
 from pyNastran.gui.arg_handling import get_inputs
 from pyNastran.gui.qt_legend import LegendPropertiesWindow
 
@@ -58,13 +59,14 @@ class VTKWindow():
     def __init__(self):
         pass
 
-class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, Plot3d_io):
+class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, Plot3d_io):
     def __init__(self, inputs):
         QtGui.QMainWindow.__init__(self)
 
         NastranIO.__init__(self)
         Cart3dIO.__init__(self)
         PanairIO.__init__(self)
+        ShabpIO.__init__(self)
         LaWGS_IO.__init__(self)
         STL_IO.__init__(self)
         TetgenIO.__init__(self)
@@ -275,7 +277,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             #'',
             #'h   - show/hide legend & info',
             'CTRL+I - take a screenshot (image)',
-            'L     - cycle op2 results',
+            'CTRL+L - cycle op2 results',
             #'m/M    - scale up/scale down by 1.1 times',
             #'o/O    - rotate counter-clockwise/clockwise 5 degrees',
             's      - view model as a surface',
@@ -785,6 +787,9 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
             elif geometry_format == 'panair':
                 has_results = False
                 load_function = self.load_panair_geometry
+            elif geometry_format == 'shabp':
+                has_results = False
+                load_function = self.load_shabp_geometry
             elif geometry_format == 'lawgs':
                 has_results = False
                 load_function = self.load_lawgs_geometry
@@ -828,6 +833,11 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                 formats.append('Panair')
                 has_results_list.append(True)
                 load_functions.append(self.load_panair_geometry)
+            if is_shabp:
+                wildcard_list.append("Shabp (*.geo; *.mk5; *.inp)")
+                formats.append('Shabp')
+                has_results_list.append(True)
+                load_functions.append(self.load_shabp_geometry)
             if is_lawgs:
                 wildcard_list.append("LaWGS (*.inp; *.wgs)")
                 formats.append('LaWGS')
@@ -963,6 +973,10 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL
                     has_results = False
                     wildcard = "Panair (*.agps);;Panair (*.out)"
                     load_functions = [self.load_panair_results]
+                elif geometry_format == 'shabp':
+                    has_results = False
+                    wildcard = "Panair (*.out)"
+                    load_functions = [self.load_shabp_results]
                 elif geometry_format == 'lawgs':
                     has_results = False
                     load_functions = [None]
