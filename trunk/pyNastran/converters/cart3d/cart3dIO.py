@@ -144,7 +144,6 @@ class Cart3dIO(object):
             self.iCase = -1
             self.nCases = 1
         else:
-            
             self.iCase = -1
             self.nCases = 0
         self.cycleResults()  # start at nCase=0
