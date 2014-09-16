@@ -473,20 +473,20 @@ class NastranIO(object):
 
         cases = {}
         nelements = len(model.elements)
-        pids = [] # zeros(nelements, 'int32')
-        nxs = []
-        nys = []
-        nzs = []
+        pids = zeros(nelements, 'int32')
+        #nxs = []
+        #nys = []
+        #nzs = []
         i = 0
         for eid, element in sorted(model.elements.iteritems()):
-            pids.append(element.Pid())
-            if isinstance(element, ShellElement):
-                (nx, ny, nz) = element.Normal()
-            else:
-                nx = ny = nz = 0.0
-            nxs.append(nx)
-            nys.append(ny)
-            nzs.append(nz)
+            pids[i] = element.Pid()
+            #if isinstance(element, ShellElement):
+                #(nx, ny, nz) = element.Normal()
+            #else:
+                #nx = ny = nz = 0.0
+            #nxs.append(nx)
+            #nys.append(ny)
+            #nzs.append(nz)
 
         self.iSubcaseNameMap = {1: ['Nastran', '']}
 
