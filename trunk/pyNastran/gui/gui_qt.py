@@ -35,9 +35,10 @@ from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import pyNastran
 from pyNastran.utils import print_bad_path
 from pyNastran.utils.log import SimpleLogger
-from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, Plot3d_io,
-    is_nastran, is_cart3d, is_panair, is_lawgs, is_stl, is_tetgen, is_usm3d, is_plot3d)
-from pyNastran.converters.shabp.shabp_io import ShabpIO, is_shabp
+from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO,
+    STL_IO, TecplotIO, TetgenIO, Usm3dIO, Plot3d_io, ShabpIO,
+    is_nastran, is_cart3d, is_panair, is_lawgs,
+    is_shabp, is_stl, is_tecplot, is_tetgen, is_usm3d, is_plot3d)
 from pyNastran.gui.arg_handling import get_inputs
 from pyNastran.gui.qt_legend import LegendPropertiesWindow
 
@@ -75,6 +76,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWG
         self.modelType = None
 
         settings = QtCore.QSettings()
+        self.supported_formats = []
+        self._setup_supported_formats()
 
         self.Title = None
         self.Title_overwrite = None
@@ -170,6 +173,23 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWG
         self.log_info("worldPosition = %s" % str(worldPosition))
         self.log_info("cell_id = %s" % cell_id)
         self.log_info("data_set = %s" % ds)
+
+    def _setup_supported_formats(self):
+        self.formats = {
+            'nastran' : is_nastran,
+            'panair' : is_panair,
+            'cart3d' : is_cart3d,
+            'lawgs' : is_lawgs,
+            'plot3d' : is_plot3d,
+            'shabp' : is_shabp,
+            'stl' : is_stl,
+            'tecplot' : is_tecplot,
+            'usm3d' : is_usm3d,
+        }
+        for (name, is_on) in sorted(self.formats.iteritems()):
+            if is_on:
+                self.supported_formats.append(name)
+        print("formats =", self.supported_formats)
 
     def load_batch_inputs(self, inputs):
         if not inputs['format']:
@@ -775,34 +795,45 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWG
     def on_load_geometry(self, infile_name=None, geometry_format=None):
         wildcard = ''
         is_failed = False
+
+        if geometry_format and geometry_format.lower() not in self.supported_formats:
+            is_failed = True
+            if geometry_format in self.formats:
+                msg = 'The import for the %r module failed.\n' % geometry_format
+            else:
+                msg = '%r is not a enabled format; enabled_formats=%s\n' % (geometry_format, self.supported_formats)
+                msg += str("formats = %s" % str(self.formats))
+            self.log_error(msg)
+            return is_failed
+
         if infile_name:
             geometry_format = geometry_format.lower()
             print("geometry_format = %r" % geometry_format)
-            if geometry_format == 'nastran':
+            if geometry_format == 'nastran' and is_nastran:
                 has_results = True
                 load_function = self.load_nastran_geometry
-            elif geometry_format == 'cart3d':
+            elif geometry_format == 'cart3d' and is_cart3d:
                 has_results = True
                 load_function = self.load_cart3d_geometry
-            elif geometry_format == 'panair':
+            elif geometry_format == 'panair' and is_panair:
                 has_results = False
                 load_function = self.load_panair_geometry
-            elif geometry_format == 'shabp':
+            elif geometry_format == 'shabp' and is_shabp:
                 has_results = False
                 load_function = self.load_shabp_geometry
-            elif geometry_format == 'lawgs':
+            elif geometry_format == 'lawgs' and is_lawgs:
                 has_results = False
                 load_function = self.load_lawgs_geometry
-            elif geometry_format == 'stl':
+            elif geometry_format == 'stl' and is_stl:
                 has_results = False
                 load_function = self.load_stl_geometry
-            elif geometry_format == 'tetgen':
+            elif geometry_format == 'tetgen' and is_tetgen:
                 has_results = False
                 load_function = self.load_tetgen_geometry
-            elif geometry_format == 'usm3d':
+            elif geometry_format == 'usm3d' and is_usm3d:
                 has_results = False
                 load_function = self.load_usm3d_geometry
-            elif geometry_format == 'plot3d':
+            elif geometry_format == 'plot3d' and is_plot3d:
                 has_results = False
                 load_function = self.load_plot3d_geometry
             else:
@@ -863,6 +894,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWG
                 formats.append('Plot3D')
                 has_results_list.append(False)
                 load_functions.append(self.load_plot3d_geometry)
+
             wildcard = ';;'.join(wildcard_list)
 
             # get the filter index and filename
@@ -1498,4 +1530,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
