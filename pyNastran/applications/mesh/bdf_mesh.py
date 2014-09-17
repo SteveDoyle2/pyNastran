@@ -5,6 +5,32 @@ class MeshTools(BDF):
     def __init__(self, log=None, debug=False):
         BDF.__init__(self, debug=debug, log=log)
 
+    def project_node_to_plane(self, xyz, v, cid):
+        """
+        http://en.wikipedia.org/wiki/Line%E2%80%93plane_intersection
+        [[xa-x0, ya-y0, za-z0]] = A * [[t,u,v]]
+        """
+        raise NotImplementedError('hasnt been validated')
+        Ia = xyz
+        Ib = Ia + v
+
+        #v1 = cid.i
+        #v2 = cid.j
+        #v0 = cid.origin
+        A = hstack([Ia-Ib, cid.i, cid.j])
+        b = xa - cid.origin
+        #A = [
+        #    [xa-xb, x1-x0, x2-x0],
+        #    [ya-yb, y1-y0, y2-y0],
+        #    [za-zb, z1-z0, z2-z0]
+        #]
+        #b = [[xa-x0, ya-y0, za-z0]]
+        # Ax=b
+        x = solve(A, b)
+        t = x[0]
+        p_intersect = (Ia + Ib-Ia) * t
+        return p_intersect
+
     def get_elemental_nodeids(self):
         nid_to_eids = defaultdict(list)
         eid_to_nids = {}
