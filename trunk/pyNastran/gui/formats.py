@@ -25,7 +25,7 @@ try:
     from pyNastran.converters.LaWGS.wgsIO import LaWGS_IO
     is_lawgs = True
 except ImportError:
-    #raise
+    raise
     class LaWGS_IO(object):
         def __init__(self):
             pass
@@ -56,9 +56,9 @@ except ImportError:
 
 try:
     from pyNastran.converters.shabp.shabp_io import ShabpIO
-    is_tecplot = True
+    is_shabp = True
 except ImportError:
-    #raise
+    raise
     class ShabpIO(object):
         def __init__(self):
             pass
