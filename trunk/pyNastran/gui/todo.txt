@@ -165,20 +165,28 @@ Usm3d
 
 - qt
 -------
+ - Qt
+   =======
+   - cycleResults shouldn't cycle if the next result is the same as the current result
+   - what do elements with pid=0 correspond to?
+
  - nastran
    =======
    - single results (e.g. pid) can't have their legends edited
  
  - panair
-   ======
+   =======
  
  - cart3d
-   ======
+   =======
  
  - shabp
-   =====
+   =======
    - trailer doesn't always parse properly
 
  - plot3d
-   ======
-   doesn't work at all
+   =======
+   - doesn't work at all
+
+- wx
+-------
