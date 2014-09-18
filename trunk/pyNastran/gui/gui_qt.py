@@ -84,6 +84,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWG
         self.min_value = None
         self.max_value = None
         self.blue_to_red = False
+        self._is_axes_shown = True
         self.nvalues = 9
 
         #-------------
@@ -346,6 +347,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWG
           ('load_results', 'Load &Results',   os.path.join(icon_path, 'load_results.png'), 'Ctrl+R', 'Loads a results file', self.on_load_results),  ## @todo no picture...
           ('back_col', 'Change background color', os.path.join(icon_path, 'tcolorpick.png'), None, 'Choose a background color', self.change_background_col),
           ('legend', 'Modify legend', os.path.join(icon_path, 'legend.png'), None, 'Set Legend', self.set_legend),
+          ('axis', 'Show/Hide Axis', os.path.join(icon_path, 'axis.png'), None, 'Show/Hide Global Axis', self.on_show_hide_axes),
 
           ('wireframe', 'Wireframe Model', os.path.join(icon_path, 'twireframe.png'), 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
           ('surface', 'Surface Model', os.path.join(icon_path, 'tsolid.png'), 's', 'Show Model as a Surface Model', self.on_surface),
@@ -430,7 +432,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWG
         actions['logwidget'].setStatusTip("Show/Hide application log")
 
         menu_items = [(self.menu_file, ('load_geometry', 'load_results', 'script', '', 'exit')),
-                      (self.menu_view,  ('scshot', '', 'wireframe', 'surface', 'creset', '', 'back_col', 'legend', '', 'show_info', 'show_debug', 'show_gui', 'show_command')),
+                      (self.menu_view,  ('scshot', '', 'wireframe', 'surface', 'creset', '', 'back_col', 'legend','axis', '', 'show_info', 'show_debug', 'show_gui', 'show_command')),
                       (self.menu_window,('toolbar', 'reswidget', 'logwidget' )),
                       (self.menu_help,  ('about',)),
                       (self.menu_scripts, scripts),
@@ -500,6 +502,41 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWG
 
         # scalar bar
         self.scalarBar = vtk.vtkScalarBarActor()
+        self.create_axes()
+
+    def create_axes(self):
+        self.transform = vtk.vtkTransform()
+        #self.transform.Translate(0.0, 0.0, 0.0)
+
+        self.axes = vtk.vtkAxesActor()
+
+        # kind of a silly default, but it's obvious
+        #self.axes.SetTotalLength(10., 20., 30.)
+
+        #  The axes are positioned with a user transform
+        self.axes.SetUserTransform(self.transform)
+
+        # properties of the axes labels can be set as follows
+        # this sets the x axis label to red
+        #self.axes.GetXAxisCaptionActor2D().GetCaptionTextProperty().SetColor(1,0,0)
+
+        # the actual text of the axis label can be changed:
+        # self.axes.SetXAxisLabelText("test")
+
+    def update_axes_length(self, dim_max):
+        # scale based on model length
+        dim_max *= 0.10
+        if hasattr(self, 'axes'):
+            self.axes.SetTotalLength(dim_max, dim_max, dim_max)
+
+    def on_show_hide_axes(self):
+        # this method should handle all the coords when
+        # there are more then one
+        if self._is_axes_shown:
+            self.axes.VisibilityOff()
+        else:
+            self.axes.VisibilityOn()
+        self._is_axes_shown = not(self._is_axes_shown)
 
     def build_vtk_frame(self):
         #Frame that VTK will render on
@@ -522,6 +559,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWG
         #self.load_nastran_geometry(None, None)
         self.textActors = {}
 
+
+        self.rend.AddActor(self.axes)
         self.addGeometry()
         self.addAltGeometry()
         self.rend.GetActiveCamera().ParallelProjectionOn()
@@ -1196,13 +1235,12 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWG
         vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
 
     def cycleResults(self, result_name=None):
-        self.log_command('cycleResults(result_name=%r)' % result_name)
-        #print("nCases = %i" %(self.nCases+1))
-        if self.nCases == 0:
-            self.log.warning('nCases=0')
+        if self.nCases <= 1:
+            self.log.warning('cycleResults(result_name=%r); nCases=%i' % (result_name, self.nCases))
             self.scalarBar.SetVisibility(False)
             return
 
+        self.log_command('cycleResults(result_name=%r)' % result_name)
         print('cycling...')
         print("is_nodal=%s is_centroidal=%s" % (self.is_nodal, self.is_centroidal))
 
