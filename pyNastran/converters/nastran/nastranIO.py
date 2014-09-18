@@ -17,7 +17,7 @@ from __future__ import print_function
 #VTK_QUADRATIC_HEXAHEDRON = 25
 
 import os
-from numpy import zeros, abs, mean, where, nan_to_num
+from numpy import zeros, abs, mean, where, nan_to_num, amax, amin
 from numpy.linalg import norm
 
 import vtk
@@ -165,6 +165,10 @@ class NastranIO(object):
             zmax = max(zmax, point[2])
             points.InsertPoint(i, *point)
             self.nidMap[nid] = i
+
+        dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
+        self.update_axes_length(dim_max)
+
         self.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
         self.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
         self.log_info("zmin=%s xmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
@@ -500,7 +504,7 @@ class NastranIO(object):
 
         # subcaseID, resultType, vectorSize, location, dataFormat
         if len(model.properties):
-                cases[(0, 'Pid', 1, 'centroid', '%.0f')] = pids
+            cases[(0, 'Pid', 1, 'centroid', '%.0f')] = pids
 
         #self._plot_pressures(model, cases)
 

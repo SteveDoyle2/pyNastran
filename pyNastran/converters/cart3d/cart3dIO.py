@@ -1,6 +1,6 @@
 #VTK_TRIANGLE = 5
 
-from numpy import zeros, arange, mean
+from numpy import zeros, arange, mean, amax, amin
 
 import vtk
 from vtk import vtkTriangle
@@ -90,6 +90,11 @@ class Cart3dIO(object):
 
         nid = 0
         print "nnodes=%s" % nnodes
+        mmax = amax(nodes, axis=0)
+        mmin = amin(nodes, axis=0)
+        dim_max = (mmax - mmin).max()
+        self.update_axes_length(dim_max)
+
         for i in xrange(nnodes):
             points.InsertPoint(nid, nodes[i, :])
             nid += 1
@@ -134,7 +139,10 @@ class Cart3dIO(object):
         #print "nElements = ",nElements
         cases = self._fill_cart3d_case(cases, ID, nodes, elements, regions, loads)
         #self.finish_io(cases)
+        self.finish_cart3d_io(cases)
 
+
+    def finish_cart3d_io(self, cases):
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
         if len(self.caseKeys) > 1:
