@@ -27,6 +27,8 @@ wx unique
 PyQt4 unique (PySide is broken)
 ===============================
  - logger
+ - global axis
+   - hide support
  - auto-reload button.  Useful for:
     - modifying Panair file
     - dynamically updating files
@@ -63,6 +65,7 @@ both
 
 --------------
 wx
+ - axis
  - zoom/rotate/snap buttons
  - reload button
  - logging
@@ -93,7 +96,11 @@ Nastran
      - (nodal) displacement, velocity, acceleration, spcForces, mpcForces, temperatures
  - ***multiple op2 files
  - ***show/hide elements based on picking
-
+ - ***coordinate systems include Coord ID
+ - ***multiple coordinate systems shown
+ - ***transient-style results (need a results sidebar for that)
+ - ***different nodal averaging methods (e.g.derive/avg, avg/derive)
+ - ***interface loads
 
 Cart3d
 ======
@@ -118,26 +125,30 @@ Panair
 LaWGS
 =====
  - load geometry -> wgs
-
+ - ***Coordinate System
 Plot3d
 ======
  - ***plot3d input/output
  - ***show/hide panels based on menu/picking
       (wakes can be confusing otherwise)
  - ***2d vs 3d
+ - ***Coordinate System
 
 Tecplot
 =======
  - ***tecplot structured input/output
  - ***tecplot unstructured input/output
+ - ***Coordinate System
 
 Tetgen
 ======
  - load geometry -> smesh
+ - ***Coordinate System
 
 STL
 ===
  - load geometry -> STL
+ - ***Coordinate System
 
 SHABP
 =====
@@ -159,6 +170,7 @@ Usm3d
    - model_%i.flo will be found on load_geometry; where %i is the biggest number
      - supports autoreload
    - specific results file can be loaded with load results
+ - ***Coordinate System
 
 #-------------------------
 #BUGS
@@ -167,12 +179,12 @@ Usm3d
 -------
  - Qt
    =======
-   - cycleResults shouldn't cycle if the next result is the same as the current result
    - what do elements with pid=0 correspond to?
 
  - nastran
    =======
    - single results (e.g. pid) can't have their legends edited
+   - the Isat model seems to have something wrong with the Pid
  
  - panair
    =======
