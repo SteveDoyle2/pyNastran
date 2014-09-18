@@ -1,5 +1,5 @@
 import os
-from numpy import zeros, array, cross, dot, ravel
+from numpy import zeros, array, cross, dot, ravel, amax, amin
 from numpy.linalg import det, norm
 
 import vtk
@@ -60,6 +60,10 @@ class ShabpIO(object):
                 #vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
 
         assert len(nodes) > 0
+        mmax = amax(nodes, axis=0)
+        mmin = amin(nodes, axis=0)
+        dim_max = (mmax - mmin).max()
+        self.update_axes_length(dim_max)
         for nid, node in enumerate(nodes):
             points.InsertPoint(nid, *node)
 
@@ -100,7 +104,10 @@ class ShabpIO(object):
 
         #print "nElements = ",nElements
         cases = self.fillShabpGeometryCase(cases, ID, nodes, elements, components, impact, shadow)
+        self.finish_shabp_io(cases)
 
+
+    def finish_shabp_io(self, cases):
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
         print "caseKeys = ",self.caseKeys
@@ -198,6 +205,7 @@ class ShabpIO(object):
         self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
         #self.nCases = 1
         self.cycleResults()  # start at nCase=0
+
 
 def main():
     def removeOldGeometry(self):
