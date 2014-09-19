@@ -319,6 +319,7 @@ class NastranIO(object):
                                          elem.GetPointIds())
             elif isinstance(element, CTETRA10):
                 nodeIDs = element.nodeIDs()
+                pid = element.Pid()
                 self.eid_to_nid_map[eid] = nodeIDs[:4]
                 if None not in nodeIDs:
                     elem = vtkQuadraticTetra()
