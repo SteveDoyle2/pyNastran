@@ -104,18 +104,7 @@ class ShabpIO(object):
 
         #print "nElements = ",nElements
         cases = self.fillShabpGeometryCase(cases, ID, nodes, elements, components, impact, shadow)
-        self.finish_shabp_io(cases)
-
-
-    def finish_shabp_io(self, cases):
-        self.resultCases = cases
-        self.caseKeys = sorted(cases.keys())
-        print "caseKeys = ",self.caseKeys
-        self.iCase = -1
-        self.nCases = len(self.resultCases) #- 1  # number of keys in dictionary
-        if self.nCases > 1:
-            self.nCases -= 1
-        self.cycleResults()  # start at nCase=0
+        self.finish_nastran_io(cases)
 
     def clear_shabp(self):
         del self.elements
@@ -199,12 +188,7 @@ class ShabpIO(object):
             key = (1, 'Cp', 1, 'node', '%.3f')
             self.resultCases[key] = Cp_array
 
-        #self.resultCases = cases
-        self.caseKeys = sorted(self.resultCases.keys())
-        self.iCase = -1
-        self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
-        #self.nCases = 1
-        self.cycleResults()  # start at nCase=0
+        self.finish_nastran_io(cases)
 
 
 def main():

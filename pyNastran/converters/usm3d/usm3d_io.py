@@ -196,6 +196,7 @@ class Usm3dIO(object):
         cases = {}
         #cases = self.resultCases
         self._fill_usm3d_results(cases, bcs, mapbc, bcmap_to_bc_name, loads)
+        self.finish_nastran_io(cases)
 
     def clear_usm3d(self):
         pass
@@ -214,19 +215,6 @@ class Usm3dIO(object):
 
         #ID = 1
         cases = self._fill_usm3d_case(cases, bcs, mapbc, bcmap_to_bc_name, loads)
-        self.resultCases = cases
-        self.caseKeys = sorted(cases.keys())
-        print("caseKeys = ",self.caseKeys)
-        #print "type(caseKeys) = ",type(self.caseKeys)
-        if len(self.resultCases) == 0:
-            self.nCases = 1
-        elif len(self.resultCases) == 1:
-            self.nCases = 1
-        else:
-            self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
-
-        self.iCase = 0 if self.nCases == 0 else -1
-        self.cycleResults()  # start at nCase=0
 
     def _fill_usm3d_case(self, cases, bcs, mapbc, bcmap_to_bc_name, loads):
         self.scalarBar.VisibilityOff()

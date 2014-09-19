@@ -91,14 +91,7 @@ class LaWGS_IO(object):
 
         #print "nElements = ",nElements
         #cases = self._fill_lawgs_case(cases, ID, regions, loads)
-
-        self.resultCases = cases
-        self.caseKeys = sorted(cases.keys())
-        #print "caseKeys = ",self.caseKeys
-        #print "type(caseKeys) = ",type(self.caseKeys)
-        self.iCase = -1
-        self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
-        self.cycleResults()  # start at nCase=0
+        self.finish_nastran_io(cases)
 
     def _fill_lawgs_case(self, cases, ID, regions, loads):
         pass

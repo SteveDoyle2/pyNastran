@@ -112,14 +112,7 @@ class TetgenIO(object):
         ID = 1
 
         #cases = self._fill_tetgen_case(cases, ID, elements)
-
-        self.resultCases = cases
-        self.caseKeys = sorted(cases.keys())
-        #print "caseKeys = ",self.caseKeys
-        #print "type(caseKeys) = ",type(self.caseKeys)
-        self.nCases = min(0, len(self.resultCases) - 1)  # number of keys in dictionary
-        self.iCase = 0 if self.nCases == 0 else -1
-        self.cycleResults()  # start at nCase=0
+        self.finish_nastran_io(cases)
 
     def _fill_tetgen_case(self, cases, ID, elements):
         return cases
