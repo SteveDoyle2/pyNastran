@@ -766,6 +766,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWG
             text.VisibilityOn()
 
     def build_lookup_table(self):
+        """TODO: add support for NanColors"""
         self.colorFunction = vtk.vtkColorTransferFunction()
         self.colorFunction.SetColorSpaceToHSV()
         self.colorFunction.HSVWrapOff()
@@ -779,6 +780,10 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWG
         self.scalarBar.SetTitle("Title1")
         self.scalarBar.SetLookupTable(self.colorFunction)
         self.scalarBar.SetOrientationToVertical()
+        #print(dir(self.scalarBar))
+        #print(dir(self.colorFunction))
+        #self.scalarBar.SetNanColor(0., 0., 0.) # RGB color - black
+        #self.scalarBar.SetNanColor(1., 1., 1., 0.) # RGBA color - white
 
         self.scalarBar.SetHeight(0.9)
         self.scalarBar.SetWidth(0.20)  # the width is set first
@@ -1201,6 +1206,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWG
         :param key: a key that VTK should be informed about, e.g. 't'
         """
         print("key = ", key)
+        if key == 'f':  # change focal point
+            return
         self.vtk_interactor._Iren.SetEventInformation(0, 0, 0, 0, key, 0, None)
         self.vtk_interactor._Iren.KeyPressEvent()
         self.vtk_interactor._Iren.CharEvent()
