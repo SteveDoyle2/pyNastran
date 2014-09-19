@@ -967,6 +967,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWG
             if not os.path.exists(infile_name) and geometry_format:
                 msg = 'input file=%r does not exist' % infile_name
                 self.log_error(msg)
+                self.log_error(print_bad_path(infile_name))
                 return
 
             if self.modelType is not None:
