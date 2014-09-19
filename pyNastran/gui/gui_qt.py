@@ -1245,9 +1245,12 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWG
     def cycleResults(self, result_name=None):
         if self.nCases <= 1:
             self.log.warning('cycleResults(result_name=%r); nCases=%i' % (result_name, self.nCases))
-            self.scalarBar.SetVisibility(False)
+            if self.nCases == 0:
+                self.scalarBar.SetVisibility(False)
             return
+        self.cycleResults_explicit(result_name)
 
+    def cycleResults_explicit(self, result_name=None):
         self.log_command('cycleResults(result_name=%r)' % result_name)
         print('cycling...')
         print("is_nodal=%s is_centroidal=%s" % (self.is_nodal, self.is_centroidal))
