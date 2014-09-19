@@ -579,14 +579,14 @@ class NastranIO(object):
                 # subcaseID, resultType, vectorSize, location, dataFormat
                 cases[(0, 'Pressure LC=%i' % load_case_id, 1, 'centroid', '%.1f')] = pressures
 
-    def load_nastran_results(self, op2FileName, dirname):
+    def load_nastran_results(self, op2_filename, dirname):
         #gridResult.SetNumberOfComponents(self.nElements)
         self.TurnTextOn()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
-        print("tring to read...", op2FileName)
-        if '.op2' in op2FileName:
+        print("tring to read...", op2_filename)
+        if '.op2' in op2_filename:  # TODO: do this based on lower & file extension
             model = OP2(log=self.log, debug=True)
             model._saved_results = set([])
             all_results = model.get_all_results()
@@ -600,14 +600,14 @@ class NastranIO(object):
             for result in desired_results:
                 if result in all_results:
                     model._saved_results.add(result)
+            model.read_op2(op2_filename)
 
-            model.read_op2(op2FileName)
-        elif '.f06' in op2FileName:
+        elif '.f06' in op2_filename:  # TODO: do this based on lower & file extension
             model = F06(log=self.log, debug=True)
-            model.read_f06(op2FileName)
+            model.read_f06(op2_filename)
         else:
             print("error...")
-            raise NotImplementedError(op2FileName)
+            raise NotImplementedError(op2_filename)
 
         #print(model.print_results())
 
@@ -648,15 +648,7 @@ class NastranIO(object):
             cases = self.fill_oug_oqg_case(cases, model, subcaseID)
             cases = self.fill_stress_case(cases, model, subcaseID)
 
-        #self.resultCases = cases
-        self.finish_io(cases)
-        #return
-        #self.caseKeys = sorted(cases.keys())
-        #print("caseKeys = ",self.caseKeys)
-        #print("type(caseKeys) = ",type(self.caseKeys))
-        #self.iCase = -1
-        #self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
-        #self.cycleResults()  # start at nCase=0
+        self.finish_nastran_io(cases)
 
     def fill_oug_oqg_case(self, cases, model, subcaseID):
         if self.is_nodal: # nodal results don't work with centroidal ones
