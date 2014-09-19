@@ -103,18 +103,7 @@ class PanairIO(object):
         #print "nElements = ",nElements
         loads = []
         cases = self.fillPanairGeometryCase(cases, ID, nodes, elements, regions, loads)
-        self.finish_panair_io(cases)
-
-
-    def finish_panair_io(self, cases):
-        self.resultCases = cases
-        self.caseKeys = sorted(cases.keys())
-        print "caseKeys = ",self.caseKeys
-        self.iCase = -1
-        self.nCases = len(self.resultCases) #- 1  # number of keys in dictionary
-        if self.nCases > 1:
-            self.nCases -= 1
-        self.cycleResults()  # start at nCase=0
+        self.finish_nastran_io(cases)
 
     def clear_panair(self):
         del self.elements

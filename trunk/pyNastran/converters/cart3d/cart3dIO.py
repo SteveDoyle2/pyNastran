@@ -138,23 +138,7 @@ class Cart3dIO(object):
 
         #print "nElements = ",nElements
         cases = self._fill_cart3d_case(cases, ID, nodes, elements, regions, loads)
-        #self.finish_io(cases)
-        self.finish_cart3d_io(cases)
-
-
-    def finish_cart3d_io(self, cases):
-        self.resultCases = cases
-        self.caseKeys = sorted(cases.keys())
-        if len(self.caseKeys) > 1:
-            self.iCase = -1
-            self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
-        elif len(self.caseKeys) == 1:
-            self.iCase = -1
-            self.nCases = 1
-        else:
-            self.iCase = -1
-            self.nCases = 0
-        self.cycleResults()  # start at nCase=0
+        self.finish_nastran_io(cases)
 
     def clear_cart3d(self):
         pass
