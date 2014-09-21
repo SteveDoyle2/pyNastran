@@ -119,7 +119,7 @@ class OQG(OP2Common):
     def _read_oqg1_4(self, data):
         if 'constraint_forces' not in self._saved_results:
             return len(data)
-        return len(data)
+
         if self.table_code == 3:   # SPC Forces
             assert self.table_name in ['OQG1', 'OQGV1', 'OQP1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_spc_forces(data)
@@ -166,6 +166,7 @@ class OQG(OP2Common):
         storage_obj = self.mpcForces
         if self.thermal == 0:
             if result_name not in self._saved_results:
+                asdf
                 return len(data)
             n = self._read_table(data, result_name, storage_obj,
                                  RealMPCForces, ComplexMPCForces,
