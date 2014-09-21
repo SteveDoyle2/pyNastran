@@ -80,7 +80,7 @@ class OUG(object):
             self.eigenvectors[isubcase].read_f06_data(data_code, data)
         else:
             is_sort1 = True
-            self.eigenvectors[isubcase] = EigenvectorObject(data_code, is_sort1, isubcase, iMode)
+            self.eigenvectors[isubcase] = Eigenvector(data_code, is_sort1, isubcase, iMode)
             self.eigenvectors[isubcase].read_f06_data(data_code, data)
 
     def _complex_eigenvectors(self, marker):

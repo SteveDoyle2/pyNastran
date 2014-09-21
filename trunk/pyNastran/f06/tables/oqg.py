@@ -22,23 +22,23 @@ class OQG(object):
 
         data_code = {'analysis_code': analysis_code,
                     'device_code': 1,
-                    
+
                     'table_code': 1, # ???
                     'table_name': 'OPG',
                     'format_code': 1, # ???
-                    
+
                     'sort_code': 0,
-                    'sort_bits': [0, 0, 0], 'num_wide': 8, 
+                    'sort_bits': [0, 0, 0], 'num_wide': 8,
                     'nonlinear_factor': dt,
                     'dataNames':['lsdvmn'],
-                    'lsdvmn': 1, 
+                    'lsdvmn': 1,
                     }
 
         if isubcase in self.loadVectors:
             self.loadVectors[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
-            spc = RealLoadVectorObject(data_code, is_sort1, isubcase, dt)
+            spc = RealLoadVector(data_code, is_sort1, isubcase, dt)
             spc.add_f06_data(data, transient)
             self.loadVectors[isubcase] = spc
         self.iSubcases.append(isubcase)
