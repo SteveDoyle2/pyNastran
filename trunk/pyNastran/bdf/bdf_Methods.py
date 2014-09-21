@@ -119,43 +119,46 @@ class BDFMethods(BDFMethodsDeprecated):
             mass = 0.
             # precompute the CG location and make it the reference point
             if reference_point == 'cg':
-                for element in self.elements.itervalues():
-                    try:
-                        p = element.Centroid()
-                        m = element.Mass()
-                        mass += m
-                        cg += m * p
-                    except:
-                        pass
+                for pack in [self.elements, self.masses]:
+                    for element in pack.itervalues():
+                        try:
+                            p = element.Centroid()
+                            m = element.Mass()
+                            mass += m
+                            cg += m * p
+                        except:
+                            pass
+
                 if mass == 0.0:
                     return (mass, cg, I)
                 reference_point = cg / mass
 
             cg = array([0., 0., 0.])
             mass = 0.
-            for element in self.elements.itervalues():
-                try:
-                    p = element.Centroid()
-                except:
-                    continue
+            for pack in [self.elements, self.masses]:
+                for element in pack.itervalues():
+                    try:
+                        p = element.Centroid()
+                    except:
+                        continue
 
-                try:
-                    m = element.Mass()
-                    (x, y, z) = p - reference_point
-                    x2 = x * x
-                    y2 = y * y
-                    z2 = z * z
-                    I[0] += m * (y2 + z2)  # Ixx
-                    I[1] += m * (x2 + z2)  # Iyy
-                    I[2] += m * (x2 + y2)  # Izz
-                    I[3] += m * x * y      # Ixy
-                    I[4] += m * x * z      # Ixz
-                    I[5] += m * y * z      # Iyz
-                    mass += m
-                    cg += m * p
-                except:
-                    self.log.warning("could not get the inertia for element\n%s" % element)
-                    continue
+                    try:
+                        m = element.Mass()
+                        (x, y, z) = p - reference_point
+                        x2 = x * x
+                        y2 = y * y
+                        z2 = z * z
+                        I[0] += m * (y2 + z2)  # Ixx
+                        I[1] += m * (x2 + z2)  # Iyy
+                        I[2] += m * (x2 + y2)  # Izz
+                        I[3] += m * x * y      # Ixy
+                        I[4] += m * x * z      # Ixz
+                        I[5] += m * y * z      # Iyz
+                        mass += m
+                        cg += m * p
+                    except:
+                        self.log.warning("could not get the inertia for element\n%s" % element)
+                        continue
             if mass:
                 cg = cg / mass
 
@@ -236,17 +239,17 @@ class BDFMethods(BDFMethodsDeprecated):
         if num_cpus <= 1:
             raise RuntimeError('num_proc must be > 1; num_cpus=%s' % num_cpus)
 
-        nelements = len(self.elements)
+        nelements = len(self.elements) + len(self.masses)
         #-----------------------------------------------------------
         self.log.debug("Creating %i-process pool!" % num_cpus)
 
         pool = mp.Pool(num_cpus)
-        result = pool.imap(_mass_properties_mass_mp_func, [(element) for element in self.elements.itervalues()
+        result  = pool.imap(_mass_properties_mass_mp_func, [(element) for element in self.elements.itervalues()
                            if element.type not in ['CBUSH', 'CBUSH1D',
                                'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
                                'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
                            ]])
-        #result = [_mass_properties_mass_mp_func(element) for element in self.elements.itervalues()]
+        result2 = pool.imap(_mass_properties_mass_mp_func, [(element) for element in self.masses.itervalues() ])
 
         mass = zeros((nelements), 'float64')
         xyz = zeros((nelements, 3), 'float64')
@@ -254,7 +257,14 @@ class BDFMethods(BDFMethodsDeprecated):
             #self.log.info("%.3f %% Processed"% (j*100./nelements))
             mass[j] = return_values[0]
             xyz[j, :] = return_values[1]
-        self.log.debug("Shutting down process pool!")
+        pool.close()
+        pool.join()
+
+        pool = mp.Pool(num_cpus)
+        for j2, return_values in enumerate(result2):
+            #self.log.info("%.3f %% Processed"% (j*100./nelements))
+            mass[j+j2] = return_values[0]
+            xyz[j+j2, :] = return_values[1]
         pool.close()
         pool.join()
 
@@ -325,85 +335,15 @@ class BDFMethods(BDFMethodsDeprecated):
     def mass(self):
         """Calculates mass in the global coordinate system"""
         mass = 0.
-        for element in self.elements.itervalues():
-            try:
-                m = element.Mass()
-                mass += m
-            except:
-                self.log.warning("could not get the mass for element"
-                                 "...\n%s" % element)
+        for pack in [self.elements, self.masses]:
+            for element in pack.itervalues():
+                try:
+                    m = element.Mass()
+                    mass += m
+                except:
+                    self.log.warning("could not get the mass for element"
+                                     "...\n%s" % element)
         return mass
-
-    # def flip_normals(self, starterEid, eids=None, flipStarter=False):
-    #     """
-    #     Takes the normals of SHELL elements and flips it to a common direction
-    #     This method follows the contour of the body, so assuming
-    #     no internal elements, all the normals on the outside will point
-    #     outwards (or inwards).
-    #
-    #     :param starterEid:  the element to copy the normal of
-    #     :param eids:        the element IDs to flip to the common direction (default=None -> all)
-    #     :param flipStarter: should the staring element be flipped (default=False)
-    #
-    #     .. todo:: finish method...think i need to build a edge list...
-    #               that'd be a lot easier to loop through stuff...
-    #     """
-    #     raise NotImplementedError()
-    #     normals = {}
-    #     validNids = set([])
-    #     isCorrectNormal = set([])
-    #
-    #     allEids = eids
-    #     if allEids is None:
-    #         allEids = self.elements.keys()
-    #     setAllEids = set(allEids)
-    #
-    #     if flipStarter:
-    #         elem = self.Element(starterEid)
-    #         elem.flipNormal()
-    #     normals[starterEid] = elem.Normal()
-    #
-    #     for eid in allEids:
-    #         element = self.elements[eid]
-    #         if isinstance(element, ShellElement):
-    #             elem = self.Element(starterEid)
-    #             normals[starterEid] = elem.Normal()
-    #             validNids = validNids.union(set(elem.nodeIDs()))
-    #
-    #     # clean up the elements that will be considered
-    #     elemsToCheck = set([])
-    #     nidToEidMap = self.getNodeIDToElementIDsMap()
-    #     for (nid, eidsMap) in sorted(nidToEidMap.iteritems()):
-    #         if nid not in validNids:  # clean up extra nodes
-    #             del nidToEidMap[nid]
-    #         else:
-    #             eids = list(set(eids))  # do i need this?
-    #             for eid in eids:  # clean up ROD/SOLID elements
-    #                 eids2 = []
-    #                 if eid in setAllEids:
-    #                     eids2.append(eid)
-    #                 elemsToCheck = elemsToCheck.union(set(eids2))
-    #             nidToEidMap[nid] = eids2
-    #
-    #     # starts with the starter element, loops thru adjacent elements
-    #     # and checks to see if the normal is 'close' to the elements
-    #     # normal from before
-    #     goEid = starterEid
-    #
-    #     # no recursion to avoid recursion limit
-    #     while 1:
-    #         elem = self.Element(goEid)
-    #         nids = elem.getNodeIDs()
-    #         normals = self._get_adjacent_normals(nids, nidToEidMap)
-    #         normal = normals[goEid]
-    #
-    # def _get_adjacent_elements(self, nids, nidToEidMap):
-    #     """
-    #     .. todo:: doesnt work...
-    #     """
-    #     raise NotImplementedError()
-    #     normals = {}
-    #     #for nid in
 
     def resolve_grids(self, cid=0):
         """

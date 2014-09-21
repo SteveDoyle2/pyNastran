@@ -204,9 +204,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'GRID', 'GRDSET', 'SPOINT',  # 'RINGAX',
             #'POINT', 'POINTAX', 'RINGAX',
 
+            # mass
+            'CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
+
             # elements
-            'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
-            'CONM1',
             'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
             # 'CELAS5',
             'CBUSH', 'CBUSH1D', 'CBUSH2D',
@@ -466,10 +467,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         #: stores elements (CQUAD4, CTRIA3, CHEXA8, CTETRA4, CROD, CONROD,
         #: etc.)
         self.elements = {}
+
         #: stores rigid elements (RBE2, RBE3, RJOINT, etc.)
         self.rigidElements = {}
-        #: store CMASS1,CMASS2,CMASS3,CMASS4,CMASS5
-        #self.massElements = {}
+
+        #: store CONM1, CONM2, CMASS1,CMASS2, CMASS3, CMASS4, CMASS5
+        self.masses = {}
+        self.properties_mass = {} # PMASS
+
         #: stores LOTS of propeties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
         self.properties = {}
 
@@ -1360,15 +1365,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             # 'MAT8':  # note there is no MAT6 or MAT7
             _cards = {
              'add_node': ['GRID'],
+             'add_mass': ['CONM1', 'CONM2', 'CMASS1',
+                          'CMASS2', 'CMASS3', 'CMASS4', ],
              'add_element': ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CQUADX',
                              'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
                              'CBAR', 'CBEAM', 'CBEAM3', 'CROD', 'CONROD',
                              'CTUBE', 'CBEND', 'CELAS1', 'CELAS2', 'CELAS3',
-                             'CELAS4', 'CONM1', 'CONM2', 'CMASS1', 'CMASS2',
-                             'CMASS3', 'CMASS4', 'CVISC', 'CSHEAR', 'CGAP',
+                             'CELAS4', 'CVISC', 'CSHEAR', 'CGAP',
                              'CRAC2D', 'CRAC3D'],
-             'add_damper_element': ['CBUSH', 'CBUSH1D', 'CFAST', 'CDAMP1',
-                                    'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5'],
+             'add_damper': ['CBUSH', 'CBUSH1D', 'CFAST', 'CDAMP1',
+                            'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5'],
              'add_rigid_element': ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3'],
              'add_property': ['PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR', 'PSOLID',
                               'PBAR', 'PBARL', 'PBEAM', 'PBCOMP', 'PBEAML',
@@ -1500,11 +1506,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                                                    comment=comment))
 
             elif card_name == 'PMASS':
-                self.add_property(PMASS(card_obj, nOffset=0, comment=comment))
+                self.add_property_mass(PMASS(card_obj, nOffset=0, comment=comment))
                 for (i, j) in enumerate([3, 5, 7]):
                     if card_obj.field(j) is not None:
-                        self.add_property(PMASS(card_obj, nOffset=i+1,
-                                                comment=comment))
+                        self.add_property_mass(PMASS(card_obj, nOffset=i+1,
+                                                     comment=comment))
 
             elif card_name == 'CONV':
                 bc = CONV(card_obj, comment=comment)
@@ -1734,7 +1740,8 @@ def _clean_comment(comment, end=-1):
             '$LOADS', '$AERO', '$AERO CONTROL SURFACES',
             '$FLUTTER', '$DYNAMIC', '$OPTIMIZATION',
             '$COORDS', '$THERMAL', '$TABLES', '$RANDOM TABLES',
-            '$SETS', '$CONTACT', '$REJECTS', '$REJECT_LINES']:
+            '$SETS', '$CONTACT', '$REJECTS', '$REJECT_LINES',
+            '$PROPERTIES_MASS', '$MASSES']:
         comment = ''
     return comment
 

@@ -542,7 +542,7 @@ class Cord2x(Coord):
             self.isResolved = True
             self.setup()
 
-    def _verify(self):
+    def _verify(self, xref):
         """
         Verifies all methods for this object work
 

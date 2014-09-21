@@ -103,18 +103,18 @@ class AddMethods(object):
                 assert elem.eid not in self.elements, msg
         self.elements[key] = elem
 
-    def add_mass_element(self, elem, allowOverwrites=False):
-        key = elem.eid
-        if key in self.massElements and not allowOverwrites:
-            if not elem.isSameCard(self.massElements[key]):
-                elem.isSameCard(self.elements[key], debug=True)
-                #print 'eid=%s\noldElement=\n%snewElement=\n%s' %(key,self.elements[key],elem)
-                assert elem.eid not in self.massElements, 'eid=%s\noldElement=\n%snewElement=\n%s' % (elem.eid, self.massElements[elem.eid], elem)
+    def add_mass(self, mass, allowOverwrites=False):
+        key = mass.eid
+        if key in self.masses and not allowOverwrites:
+            if not mass.isSameCard(self.masses[key]):
+                mass.isSameCard(self.masses[key], debug=True)
+                #print 'eid=%s\noldMass=\n%snewMass=\n%s' %(key, self.masses[key], mass)
+                assert mass.eid not in self.masses, 'eid=%s\noldMass=\n%snewMass=\n%s' % (mass.eid, self.masses[mass.eid], mass)
         else:
-            assert key > 0, 'eid=%s elem=%s' % (key, elem)
-            self.massElements[key] = elem
+            assert key > 0, 'eid=%s mass=%s' % (key, mass)
+            self.masses[key] = mass
 
-    def add_damper_element(self, elem, allowOverwrites=False):
+    def add_damper(self, elem, allowOverwrites=False):
         """..warning:: can dampers have the same ID as a standard element?"""
         return self.add_element(elem, allowOverwrites)
         # key = elem.eid
@@ -160,6 +160,16 @@ class AddMethods(object):
         else:
             assert key > 0, 'pid=%s prop=%s' % (key, prop)
             self.properties[key] = prop
+
+    def add_property_mass(self, prop, allowOverwrites=False):
+        key = prop.pid
+        if key in self.properties_mass and not allowOverwrites:
+            if not prop.isSameCard(self.properties_mass[key]):
+                #print 'pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.properties_mass[key],prop)
+                assert key not in self.properties_mass, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, self.properties_mass[key], prop)
+        else:
+            assert key > 0, 'pid=%s prop=%s' % (key, prop)
+            self.mass_properties[key] = prop
 
     def add_PBUSHT(self, prop, allowOverwrites=False):
         key = prop.pid
