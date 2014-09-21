@@ -110,9 +110,11 @@ class TestBDF(Tester):
             assert len(fem.coords) == 1, 'len(coords) = %i' % len(fem.coords)
             assert len(fem.nodes) == 12, 'len(nodes) = %i' % len(fem.nodes)
             assert len(fem.materials) == 1, 'len(materials) = %i' % len(fem.materials)
-            assert len(fem.elements) == 11, 'len(elements) = %i' % len(fem.elements)
+            assert len(fem.elements) == 10, 'len(elements) = %i' % len(fem.elements)
+            assert len(fem.masses) == 1, 'len(masses) = %i' % len(fem.elements)
             assert len(fem.methods) == 1, 'len(methods) = %i' % len(fem.methods)
             assert len(fem.properties) == 3, 'len(properties) = %i' % len(fem.properties)  # PBEAML issue
+            assert len(fem.properties_mass) == 0, 'len(properties_mass) = %i' % len(fem.properties_mass)
         self._compare_mass_cg_I(fem1)
         #self._compare_mass_cg_I(fem1, reference_point=u'cg')
 
