@@ -134,7 +134,7 @@ class LAMA(OP2Common):
             if self.debug4():
                 self.binary_debug.write('  eigenvalue%s - %s\n' % (i, str(out)))
             #(iMode, order, eigen, omega, freq, mass, stiff) = out
-            (modeNum, extractOrder, eigenvalue, radian, cycle, genM, genK) = line
+            (modeNum, extractOrder, eigenvalue, radian, cycle, genM, genK) = out
             #print(out)
             lama.addF06Line(out)
             n += ntotal
