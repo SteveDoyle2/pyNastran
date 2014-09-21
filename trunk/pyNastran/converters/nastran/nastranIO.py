@@ -117,7 +117,7 @@ class NastranIO(object):
             nCONM2 = model.card_count['CONM2']
         else:
             nCONM2 = 0
-        self.grid.Allocate(self.nElements - nCONM2, 1000)
+        self.grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)
         self.grid2.Allocate(nCAeros + nCONM2, 1000)
 
@@ -179,16 +179,17 @@ class NastranIO(object):
         points2 = vtk.vtkPoints()
 
         nsprings = 0
-        for (eid, element) in sorted(model.elements.iteritems()):
-            if (isinstance(element, LineElement) or
-                  isinstance(element, SpringElement) or
-                  element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
-                      'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                      'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):
+        if 0:
+            for (eid, element) in sorted(model.elements.iteritems()):
+                if (isinstance(element, LineElement) or
+                      isinstance(element, SpringElement) or
+                      element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
+                          'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                          'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):
 
-                    nodeIDs = element.nodeIDs()
-                    if None in nodeIDs:
-                        nsprings += 1
+                        nodeIDs = element.nodeIDs()
+                        if None in nodeIDs:
+                            nsprings += 1
 
         points2.SetNumberOfPoints(nCAeros * 4 + nCONM2 + nsprings)
         for (eid, element) in sorted(model.caeros.iteritems()):
@@ -210,13 +211,54 @@ class NastranIO(object):
                 #pass
             else:
                 self.log_info("skipping %s" % element.type)
-        self.mapElements(points, points2, self.nidMap, model, j)
 
-    def mapElements(self, points, points2, nidMap, model, j):
+        sphere_size = self._get_sphere_size(dim_max)
+        for (eid, element) in sorted(model.masses.iteritems()):
+            if isinstance(element, CONM2):
+                #del self.eidMap[eid]
+
+                print("element", element)
+                print("element.nid", element.nid)
+                print('nodeIDs', model.nodes.keys())
+                xyz = element.nid.Position()
+                c = element.Centroid()
+                d = norm(xyz-c)
+                elem = vtk.vtkVertex()
+                #elem = vtk.vtkSphere()
+
+                if d == 0.:
+                    d = sphere_size
+                #elem.SetRadius(d)
+                #elem.SetCenter(points.GetPoint(self.nidMap[nid]))
+                #print(str(element))
+
+                points2.InsertPoint(j, *c)
+                elem.GetPointIds().SetId(0, j)
+                self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                j += 1
+            else:
+                self.log_info("skipping %s" % element.type)
+
+        self.mapElements(points, points2, self.nidMap, model, j, dim_max)
+
+    def _get_sphere_size(self, dim_max):
+        return 0.05 * dim_max
+
+    def mapElements(self, points, points2, nidMap, model, j, dim_max):
+        sphere_size = self._get_sphere_size(dim_max)
         #self.eidMap = {}
+
+        # :param i: the element id in grid
+        # :param j: the element id in grid2
         i = 0
+
+        #nids = self.eid_to_nid_map[eid]
         self.eid_to_nid_map = {}
+
+        # the list of all pids
         pids = []
+
+        # pid = pids_dict[eid]
         pids_dict = {}
         for (eid, element) in sorted(model.elements.iteritems()):
             self.eidMap[eid] = i
@@ -434,7 +476,8 @@ class NastranIO(object):
                 if hasattr(element, 'pid'):
                     pid = element.Pid()
                 else:
-                    # CONROD, CELAS2, CELAS4
+                    # CONROD
+                    # CELAS2, CELAS4?
                     pid = 0
                 nodeIDs = element.nodeIDs()
                 if None in nodeIDs:  # used to be 0...
@@ -448,12 +491,15 @@ class NastranIO(object):
                     self.eid_to_nid_map[eid] = nodeIDs[slot]
                     c = nidMap[nodeIDs[slot]]
                     elem = vtk.vtkVertex()
-                    points2.InsertPoint(j, *c)
                     elem.GetPointIds().SetId(0, j)
-                    self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                    i -= 1
-                    j += 1
+
+                    elem = vtk.vtkSphere()
+                    if d == 0.:
+                        d = sphere_size
+                    elem.SetRadius(d)
                 else:
+                    # 2 points
+                    #d = norm(element.nodes[0].Position() - element.nodes[1].Position())
                     self.eid_to_nid_map[eid] = nodeIDs
                     elem = vtk.vtkLine()
                     try:
@@ -463,24 +509,8 @@ class NastranIO(object):
                         print("nodeIDs =", nodeIDs)
                         print(str(element))
                         continue
-                    self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-            elif isinstance(element, CONM2):  # not perfectly located
-                del self.eidMap[eid]
 
-                #nid = element.Nid()
-                c = element.Centroid()
-                elem = vtk.vtkVertex()
-                #elem = vtk.vtkSphere()
-                #elem.SetRadius(1.0)
-                #print(str(element))
-
-                points2.InsertPoint(j, *c)
-                elem.GetPointIds().SetId(0, j)
-                #elem.SetCenter(points.GetPoint(nidMap[nid]))
-                self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                #i -= 1
-                j += 1
-                continue
+                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             else:
                 del self.eidMap[eid]
                 self.log_info("skipping %s" % element.type)
@@ -532,6 +562,27 @@ class NastranIO(object):
 
         self.iSubcaseNameMap = {1: ['Nastran', '']}
 
+        nElements = len(self.eidMap)
+        print("nElements = ", nElements)
+
+        # set to True to enable nodeIDs as an result
+        nidsSet = True
+        if nidsSet and self.is_nodal:
+            nids = zeros(self.nNodes, 'd')
+            for (nid, nid2) in self.nidMap.iteritems():
+                nids[nid2] = nid
+            cases[(0, 'Node_ID', 1, 'node', '%.0f')] = nids
+            nidsSet = True
+
+        # set to True to enable elementIDs as a result
+        eidsSet = True
+        if eidsSet and self.is_centroidal:
+            eids = zeros(nElements, dtype='int32')
+            for (eid, eid2) in self.eidMap.iteritems():
+                eids[eid2] = eid
+            cases[(0, 'Element_ID', 1, 'centroid', '%.0f')] = eids
+            eidsSet = True
+
         # subcaseID, resultType, vectorSize, location, dataFormat
         if len(model.properties):
             cases[(0, 'Pid', 1, 'centroid', '%.0f')] = pids
@@ -558,7 +609,7 @@ class NastranIO(object):
         if len(self.caseKeys) > 1:
             print("finish_io case A")
             self.iCase = -1
-            self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
+            self.nCases = len(self.resultCases)  # number of keys in dictionary
         elif len(self.caseKeys) == 1:
             print("finish_io case B")
             self.iCase = -1
@@ -652,29 +703,6 @@ class NastranIO(object):
         subcaseIDs = model.iSubcaseNameMap.keys()
         self.iSubcaseNameMap = model.iSubcaseNameMap
 
-        nElements = len(self.eidMap)
-        print("nElements = ", nElements)
-
-        # set to True to enable nodeIDs as an result
-        nidsSet = False
-        subcaseID = subcaseIDs[0]
-        if nidsSet:
-            nids = zeros(self.nNodes, 'd')
-            for (nid, nid2) in self.nidMap.iteritems():
-                nids[nid2] = nid
-            cases[(0, 'Node_ID', 1, 'node', '%.0f')] = nids
-            nidsSet = True
-
-        # set to True to enable elementIDs as a result
-        eidsSet = True
-        if eidsSet and self.is_centroidal:
-            eids = zeros(nElements, dtype='int32')
-            for (eid, eid2) in self.eidMap.iteritems():
-                eids[eid2] = eid
-            cases[(subcaseID, 'Element_ID', 1, 'centroid', '%.0f')] = eids
-            eidsSet = True
-
-        print('is_nodal =', self.is_nodal)
         for subcaseID in subcaseIDs:
             cases = self.fill_oug_oqg_case(cases, model, subcaseID)
             cases = self.fill_stress_case(cases, model, subcaseID)
@@ -817,6 +845,8 @@ class NastranIO(object):
 
         if subcaseID in model.rodStress:
             case = model.rodStress[subcaseID]
+            if case.isTransient():
+                return
             for eid in case.axial:
                 axial = case.axial[eid]
                 torsion = case.torsion[eid]
@@ -836,6 +866,8 @@ class NastranIO(object):
 
         if subcaseID in model.barStress:
             case = model.barStress[subcaseID]
+            if case.isTransient():
+                return
             for eid in case.axial:
                 node_ids = self.eid_to_nid_map[eid]
                 oxxi = case.axial[eid]
@@ -856,6 +888,8 @@ class NastranIO(object):
 
         if subcaseID in model.beamStress:
             case = model.beamStress[subcaseID]
+            if case.isTransient():
+                return
             for eid in case.smax:
                 node_ids = self.eid_to_nid_map[eid]
                 oxxi = max(max(case.sxc[eid]),
@@ -878,6 +912,8 @@ class NastranIO(object):
 
         if subcaseID in model.plateStress:
             case = model.plateStress[subcaseID]
+            if case.isTransient():
+                return
             if case.isVonMises():
                 vmWord = 'vonMises'
             else:
@@ -931,6 +967,8 @@ class NastranIO(object):
 
         if subcaseID in model.solidStress:
             case = model.solidStress[subcaseID]
+            if case.isTransient():
+                return
             if case.isVonMises():
                 vmWord = 'vonMises'
             else:
@@ -1028,6 +1066,8 @@ class NastranIO(object):
 
         if subcaseID in model.barStress:
             case = model.barStress[subcaseID]
+            if case.nonlinear_factor is not None:
+                return
             for eid in case.axial:
                 eid2 = self.eidMap[eid]
                 isElementOn[eid2] = 1.
@@ -1045,6 +1085,8 @@ class NastranIO(object):
 
         if subcaseID in model.beamStress:
             case = model.beamStress[subcaseID]
+            if case.isTransient():
+                return
             for eid in case.smax:
                 eid2 = self.eidMap[eid]
                 isElementOn[eid2] = 1.
@@ -1064,6 +1106,8 @@ class NastranIO(object):
 
         if subcaseID in model.plateStress:
             case = model.plateStress[subcaseID]
+            if case.isTransient():
+                return
             if case.isVonMises():
                 vmWord = 'vonMises'
             else:
@@ -1100,6 +1144,8 @@ class NastranIO(object):
             if subcaseID in model.compositePlateStress:
                 # not done...
                 case = model.compositePlateStress[subcaseID]
+                if case.isTransient():
+                    return
                 if case.isVonMises():
                     vmWord = 'vonMises'
                 else:
@@ -1136,6 +1182,8 @@ class NastranIO(object):
 
         if subcaseID in model.solidStress:
             case = model.solidStress[subcaseID]
+            if case.isTransient():
+                return
             if case.isVonMises():
                 vmWord = 'vonMises'
             else:
