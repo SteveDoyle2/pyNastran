@@ -552,7 +552,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
                         }
         is_sort1 = True
         if isubcase not in self.gridPointForces:
-            self.gridPointForces[isubcase] = RealGridPointForcesObject(data_code, is_sort1, isubcase, dt)
+            self.gridPointForces[isubcase] = RealGridPointForces(data_code, is_sort1, isubcase, dt)
         self.gridPointForces[isubcase].add_f06_data(dt, data)
         self.iSubcases.append(isubcase)
 
@@ -604,7 +604,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
             try:
                 entry2 = iFormat(entry)
             except:
-                #print "sline=|%s|\n entry=|%s| format=%s" % (sline, entry, iFormat)
+                #print "sline=%r\n entry=%r format=%s" % (sline, entry, iFormat)
                 #raise
                 return None
             out.append(entry2)
@@ -623,7 +623,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
                     raise
             else:
                 entry2 = None
-                #print "sline=|%s|\n entry=|%s| format=%s" % (sline, entry, iFormat)
+                #print "sline=%r\n entry=%r format=%s" % (sline, entry, iFormat)
             out.append(entry2)
         return out
 
