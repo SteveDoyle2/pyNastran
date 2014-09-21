@@ -1434,7 +1434,6 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWG
         found_case = False
         if result_name is not False and result_name is not None:
             for icase, cases in sorted(self.resultCases.iteritems()):
-                #cases[(ID, 'Region', 1, 'centroid', '%.0f')] = bcs
                 if result_name == cases[1]:
                     found_case = True
                     self.iCase = icase
@@ -1445,14 +1444,16 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWG
                 self.iCase += 1
             else:
                 self.iCase = 0
+        if self.iCase == len(self.caseKeys):
+            self.iCase = 0
 
         if len(self.caseKeys) > 0:
             #print('caseKeys =', self.caseKeys)
             try:
                 key = self.caseKeys[self.iCase]
             except IndexError:
-                foundCases = False
-                return foundCases
+                foundCase = False
+                return foundCase
 
             print("key = %s" % str(key))
             #if key[2] == 3:  # vector size=3 -> vector, skipping ???
