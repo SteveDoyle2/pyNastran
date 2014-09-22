@@ -1052,7 +1052,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWG
                     load_functions = [self.load_panair_results]
                 elif geometry_format == 'shabp':
                     has_results = False
-                    wildcard = "Panair (*.out)"
+                    wildcard = "Shabp (*.out)"
                     load_functions = [self.load_shabp_results]
                 elif geometry_format == 'lawgs':
                     has_results = False
@@ -1090,6 +1090,8 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWG
                     load_function = self.load_cart3d_results
                 elif geometry_format == 'panair':
                     load_function = self.load_panair_results
+                elif geometry_format == 'shabp':
+                    load_function = self.load_shabp_results
                 #elif geometry_format == 'lawgs':
                     #load_function = None
                 #elif geometry_format == 'stl':
