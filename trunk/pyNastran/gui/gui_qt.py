@@ -1254,12 +1254,12 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWG
 
     def cycleResults_explicit(self, result_name=None):
         self.log_command('cycleResults(result_name=%r)' % result_name)
-        print('cycling...')
+        #print('cycling...')
         print("is_nodal=%s is_centroidal=%s" % (self.is_nodal, self.is_centroidal))
 
         foundCases = self.incrementCycle(result_name)
         if foundCases:
-            print("incremented case")
+            #print("incremented case")
 
             try:
                 key = self.caseKeys[self.iCase]
@@ -1267,7 +1267,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWG
                 print('iCase=%s caseKeys=%s' % (self.iCase, self.caseKeys))
                 raise
             case = self.resultCases[key]
-            print("len(case) = %i" % len(case))
+            #print("len(case) = %i" % len(case))
             (subcaseID, resultType, vectorSize, location, data_format) = key
 
             #================================================
@@ -1327,7 +1327,7 @@ class MainWindow(QtGui.QMainWindow, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWG
     def update_text_actors(self, case, subcaseID, subtitle, min_value, max_value, label):
         self.textActors[0].SetInput('Max:  %g' % max_value)  # max
         self.textActors[1].SetInput('Min:  %g' % min_value)  # min
-        self.textActors[2].SetInput('Subcase=%s Subtitle: %s' % (subcaseID, subtitle))  # info
+        self.textActors[2].SetInput('Subcase: %s Subtitle: %s' % (subcaseID, subtitle))  # info
 
         if label:
             self.textActors[3].SetInput('Label: %s' % label)  # info
