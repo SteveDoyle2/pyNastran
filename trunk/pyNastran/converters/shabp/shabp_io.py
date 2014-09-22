@@ -24,11 +24,11 @@ class ShabpIO(object):
         if skipReading:
             return
 
-        model = SHABP(log=self.log, debug=self.debug)
+        self.model = SHABP(log=self.log, debug=self.debug)
         self.modelType = 'shabp' # model.modelType
-        model.read_shabp(shabpFilename)
+        self.model.read_shabp(shabpFilename)
 
-        nodes, elements, components, impact, shadow = model.getPointsElementsRegions()
+        nodes, elements, patches, components, impact, shadow = self.model.getPointsElementsRegions()
         #for nid,node in enumerate(nodes):
             #print "node[%s] = %s" %(nid,str(node))
 
@@ -102,25 +102,26 @@ class ShabpIO(object):
         cases = {}
         ID = 1
 
-        #print "nElements = ",nElements
-        cases = self.fillShabpGeometryCase(cases, ID, nodes, elements, components, impact, shadow)
+        self.log.debug("nNodes=%i nElements=%i" % (self.nNodes, self.nElements))
+        cases = self.fillShabpGeometryCase(cases, ID, nodes, elements, patches, components, impact, shadow)
         self.finish_nastran_io(cases)
 
     def clear_shabp(self):
         del self.elements
+        del self.model
 
-    def fillShabpGeometryCase(self, cases, ID, nodes, elements, regions, impact, shadow):
+    def fillShabpGeometryCase(self, cases, ID, nodes, elements, patches, components, impact, shadow):
         assert self.is_centroidal != self.is_nodal
 
         self.elements = elements
         if self.is_centroidal:
-            cases[(ID, 'Component', 1, 'centroid', '%.0f')] = regions
+            cases[(ID, 'Component', 1, 'centroid', '%.0f')] = components
+            cases[(ID, 'PatchID', 1, 'centroid', '%.0f')] = patches
             cases[(ID, 'Impact', 1, 'centroid', '%.0f')] = impact
             cases[(ID, 'Shadow', 1, 'centroid', '%.0f')] = shadow
 
-            Xc = zeros(len(elements), dtype='float32')
-            Yc = zeros(len(elements), dtype='float32')
-            Zc = zeros(len(elements), dtype='float32')
+            XYZc = zeros((len(elements),3), dtype='float32')
+            #Normal = zeros((len(elements),3), dtype='float32')
             area = zeros(len(elements), dtype='float32')
 
             for i,element in enumerate(elements):
@@ -131,15 +132,21 @@ class ShabpIO(object):
                 P4 = array(nodes[p4])
                 a = P3 - P1
                 b = P4 - P2
-                A = 0.5 * norm(cross(a, b))
-                x, y, z = (P1 + P2 + P3 + P4) / 4.0
-                Xc[i] = x
-                Yc[i] = y
-                Zc[i] = z
+                n = cross(a, b)
+                nnorm = norm(n)
+                #normal = n / nnorm
+                A = 0.5 * nnorm
+
+                XYZc[i,:] = (P1 + P2 + P3 + P4) / 4.0
+                Normal[i, :] = normal
                 area[i] = A
-            cases[(ID, 'centroid_x', 1, 'centroid', '%.2f')] = Xc
-            cases[(ID, 'centroid_y', 1, 'centroid', '%.2f')] = Yc
-            cases[(ID, 'centroid_z', 1, 'centroid', '%.2f')] = Zc
+            cases[(ID, 'centroid_x', 1, 'centroid', '%.2f')] = XYZc[:,0]
+            cases[(ID, 'centroid_y', 1, 'centroid', '%.2f')] = XYZc[:,1]
+            cases[(ID, 'centroid_z', 1, 'centroid', '%.2f')] = XYZc[:,2]
+
+            #cases[(ID, 'normal_x', 1, 'centroid', '%.2f')] = Normal[:,0]
+            #cases[(ID, 'normal_y', 1, 'centroid', '%.2f')] = Normal[:,1]
+            #cases[(ID, 'normal_z', 1, 'centroid', '%.2f')] = Normal[:,2]
             cases[(ID, 'Area', 1, 'centroid', '%.2f')] = area
         elif self.is_nodal:
             Xn = zeros(len(nodes), dtype='float32')
@@ -155,41 +162,16 @@ class ShabpIO(object):
         return cases
 
     def load_shabp_results(self, shabp_filename, dirname):
-        return
-        if os.path.basename(panairFileName) == 'agps':
-            model = AGPS(log=self.log, debug=self.debug)
-            model.read_agps(shabp_filename)
-        else:
-            raise RuntimeError('only files named "agps" files are supported')
-
-        # get the Cp on the nodes
-        Cp_array = zeros(self.nNodes, dtype='float32')
-        imin = 0
-        for ipatch, Cp in sorted(model.pressures.iteritems()):
-            Cpv = ravel(Cp)
-            nCp = len(Cpv)
-            try:
-                Cp_array[imin:imin + nCp] = Cpv
-            except ValueError:
-                # agps stores implicit and explicit wakes
-                # we're skipping all wakes
-                pass
-            imin += nCp
+        Cp, delta = self.model.read_shabp_out(shabp_filename)
 
         if self.is_centroidal:
-            Cp_array2 = (Cp_array[self.elements[:, 0]] +
-                         Cp_array[self.elements[:, 1]] +
-                         Cp_array[self.elements[:, 2]] +
-                         Cp_array[self.elements[:, 3]]) / 4.
-            key = (1, 'Cp', 1, 'centroid', '%.3f')
-            self.resultCases[key] = Cp_array2
-
+            self.resultCases[(1, 'Cp', 1, 'centroid', '%.3f')] = Cp
+            self.resultCases[(1, 'delta', 1, 'centroid', '%.3f')] = delta
         elif self.is_nodal:
-            key = (1, 'Cp', 1, 'node', '%.3f')
-            self.resultCases[key] = Cp_array
-
-        self.finish_nastran_io(cases)
-
+            #key = (1, 'Cp', 1, 'node', '%.3f')
+            #self.resultCases[key] = Cp_array
+            pass
+        self.finish_nastran_io(self.resultCases)
 
 def main():
     def removeOldGeometry(self):

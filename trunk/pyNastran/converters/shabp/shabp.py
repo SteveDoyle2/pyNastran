@@ -1,8 +1,11 @@
 from numpy import array, zeros, arange, ravel, ones, cross
 from numpy.linalg import norm
 
-class SHABP(object):
+from pyNastran.converters.shabp.shabp_results import ShabpOut
+
+class SHABP(ShabpOut):
     def __init__(self, log=None, debug=False):
+        ShabpOut.__init__(self, log, debug)
         self.X = {}
         self.Y = {}
         self.Z = {}
@@ -11,6 +14,8 @@ class SHABP(object):
         self.component_name_to_patch = {}
         self.patch_to_component_num = {}
         self.component_to_params = {}
+        self.component_num_to_name = {}
+        self.component_name_to_num = {}
 
     def write_shabp(self, out_filename):
         pass
@@ -234,6 +239,7 @@ class SHABP(object):
         XYZ = zeros((npoints, 3), dtype='float32')
         elements2 = zeros((nelements, 4), dtype='float32')
         components = ones(nelements, dtype='int32')
+        patches = ones(nelements, dtype='int32')
         impact = ones(nelements, dtype='int32')
         shadow = ones(nelements, dtype='int32')
 
@@ -244,7 +250,7 @@ class SHABP(object):
                 #raise RuntimeError('ipatch=%s keys=%s' % (ipatch, sorted(self.patch_to_component_num)))
                 impact_val = 0
                 shadow_val = 0
-                continue
+                #continue
             else:
                 comp_num = self.patch_to_component_num[ipatch]
                 data = self.component_to_params[comp_num-1]
@@ -264,21 +270,23 @@ class SHABP(object):
             for irow in xrange(nrows-1):
                 for jcol in xrange(ncols-1):
                     element = [
-                         irow*ncols +jcol,
-                         (irow+1)*ncols +(jcol  ),
-                         (irow+1)*ncols +(jcol+1),
-                         irow*ncols +(jcol+1),
+                         irow*ncols + jcol,
+                         (irow+1)*ncols + (jcol  ),
+                         (irow+1)*ncols + (jcol+1),
+                         irow*ncols + (jcol+1),
                          ]
                     elements.append(element)
             elements = array(elements, dtype='int32')
 
+            patches[ielement:ielement+nelementsi] *= (ipatch+1)
             components[ielement:ielement+nelementsi] *= comp_num
             impact[ielement:ielement+nelementsi] *= impact_val
             shadow[ielement:ielement+nelementsi] *= shadow_val
             elements2[ielement:ielement+nelementsi,:] = elements[:,:] + ipoint
+            #print "  ipatch=%i Cp[%i:%i]" % (ipatch+1, ielement, ielement+nelementsi)
             ipoint += npointsi
             ielement += nelementsi
-        return XYZ, elements2, components, impact, shadow
+        return XYZ, elements2, patches, components, impact, shadow
 
     def parse_trailer(self):
         #for line in self.trailer:
@@ -306,12 +314,12 @@ class SHABP(object):
         i = 4
         for n in xrange(nalpha_beta):
             alpha_line = self.trailer[i+n].rstrip()
-            print "alpha_line =", alpha_line
+            #print "alpha_line =", alpha_line
             i += 1
 
         #self.getMethods()
         ncomponents_line = self.trailer[i].rstrip()
-        print "comp line =", ncomponents_line
+        #print "comp line =", ncomponents_line
         ncomponents = int(ncomponents_line[:2])
         zero = ncomponents_line[2:3]
         assert zero == '0', 'zero=%r; %s' %(zero, ncomponents_line)
@@ -394,6 +402,8 @@ class SHABP(object):
                 self.patch_to_component_num[int_ipatch-1] = icomp+1
             print "patches =", patches, '\n'
             self.component_name_to_patch[name] = patches
+            self.component_num_to_name[icomp] = name
+            self.component_name_to_num[name] = icomp
             i += 2
 
         # 2noseconeright
@@ -404,6 +414,7 @@ if __name__ == '__main__':
     import sys
     s = SHABP()
     s.read_shabp(sys.argv[1])
-    s.get_area_by_component()
-    s.get_area_xlength_by_component()
+    s.read_shabp_out('SHABP.OUT')
+    #s.get_area_by_component()
+    #s.get_area_xlength_by_component()
 
