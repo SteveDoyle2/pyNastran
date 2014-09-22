@@ -72,6 +72,9 @@ BDF:
      write_bdf method now has a precision='single' or 'double' option
    - fixed bug with SETx writing.  Nastran limits a SETx card to one THRU
      per card, which is inconsistent with other cards that use THRU.
+   - fixed GRID Position bug when using referenced cylindrical/spherical
+     coordinate systems
+   - fixed CONM2 offset bug for coordinate systems
 
 OP2:
    - rewrite of the OP2 allows for increased robustness and speed
