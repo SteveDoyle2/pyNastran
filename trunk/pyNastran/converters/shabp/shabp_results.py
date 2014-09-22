@@ -25,38 +25,50 @@ class ShabpOut(object):
             istart[ipatch] = nelements
             nelements += nelementsi
 
-        print "istart =", istart
-        print "nelements =", nelements
-        Cp = zeros(nelements, dtype='float32')
-        delta = zeros(nelements, dtype='float32')
 
-        Cp_dict, delta_dict = self._parse_results(out_filename)
+        #print "istart =", istart
+        #print "nelements =", nelements
+        Cp_out = {}
+        delta_out = {}
+
+        # all of case 1, then all of case 2
+        Cp_dict, delta_dict, ncases = self._parse_results(out_filename)
         ncomps = len(self.component_num_to_name)
 
+        #print "  istart=%s" % istart
+
         components = self.component_name_to_patch.keys()
-        print "  istart=%s" % istart
-        for name in sorted(components):
-            #name = 'nosecone'
-            icomp = self.component_name_to_num[name]
-            print "Comp %r; num=%i" % (name, icomp)
-            patches = self.component_name_to_patch[name]
+        for icase in xrange(ncases):
+            Cp = zeros(nelements, dtype='float32')
+            delta = zeros(nelements, dtype='float32')
+            for name in sorted(components):
+                icomp = self.component_name_to_num[name]
+                #print "Comp %r; num=%i" % (name, icomp)
+                patches = self.component_name_to_patch[name]
 
-            Cp_array = Cp_dict[icomp]
-            delta_array = delta_dict[icomp]
-            print "  len(CpArray) =", len(Cp_array)
-            jelement_start = 0
-            for i, ipatch in enumerate(patches):  # ipatch starts at 1
-                X = self.X[ipatch-1]
-                iistart = istart[ipatch-1]
+                Cp_array = Cp_dict[icomp]
+                delta_array = delta_dict[icomp]
+                ndata = len(Cp_array) // ncases
+                #print "  len(CpArray) =", ndata
+                #print "  jcomp = ", jcomp_start[name]
+                jelement_start = ndata * icase
+                for i, ipatch in enumerate(patches):  # ipatch starts at 1
+                    X = self.X[ipatch-1]
+                    iistart = istart[ipatch-1]
 
-                nrows, ncols = X.shape
-                nelementsi = (nrows-1) * (ncols-1)
-                Cp[   iistart:iistart+nelementsi] = Cp_array[   jelement_start:jelement_start+nelementsi]
-                delta[iistart:iistart+nelementsi] = delta_array[jelement_start:jelement_start+nelementsi]
-                print "  ipatch=%i Cp[%i:%i]=CpArray[%i:%i]" % (ipatch, iistart, iistart+nelementsi, jelement_start, jelement_start+nelementsi)
-                jelement_start += nelementsi
-            #break
-        return Cp, delta
+                    nrows, ncols = X.shape
+                    nelementsi = (nrows-1) * (ncols-1)
+                    #print "  ipatch=%i Cp[%i:%i]=CpArray[%i:%i]" % (ipatch, iistart, iistart+nelementsi, jelement_start, jelement_start+nelementsi)
+                    Cp[   iistart:iistart+nelementsi] = Cp_array[   jelement_start:jelement_start+nelementsi]
+                    delta[iistart:iistart+nelementsi] = delta_array[jelement_start:jelement_start+nelementsi]
+                    jelement_start += nelementsi
+                #break
+            Cp_out[icase] = Cp
+            delta_out[icase] = delta
+            #istart += nelements
+            #print "--------------------------"
+        #assert ncases == 1, ncases
+        return Cp_out, delta_out
 
     def _parse_results(self, out_filename):
         f = open(out_filename, 'r')
@@ -78,27 +90,37 @@ class ShabpOut(object):
 
         Cp_dict_components = {}
         delta_dict_components = {}
+        _line, i = self.readline_n(f, i, 5)
         for icomponent in xrange(npatches):
-            print "icomponent =", icomponent
-            mach_line, i = self.readline_n(f, i, 6)
-            #print "*mach_line = ", mach_line.rstrip()
+            #print "icomponent =", icomponent
+            mach_line, i = self.readline(f, i)
             if 'Summation Number' in mach_line:
                 break
+            if 'MACH' not in mach_line:
+                raise RuntimeError('couldnt find MACH in line[%i]=%r' % (i, mach_line.strip()))
+            #print "*mach_line = ", mach_line.rstrip()
             #if ipatch == 1:
                 #asfdfsadfas
             xcg_line,i   = self.readline(f, i)
             alpha_line,i = self.readline(f, i)
+            #print "*alpha_line = ", alpha_line.rstrip()
 
             xcent_line, i = self.readline_n(f, i, 3)
             #0  L      DEL CA        DEL CY        DEL CN       DEL CLL       DEL CLM       DEL CLN       CP             AREA
             #            CA            CY            CN           CLL           CLM            CLN        DELTA
             #           XCENT         YCENT         ZCENT      NX             NY             NZ
-            #if ipatch == 1:
-                #aaa
+
             line,i = self.readline(f, i)
             Cp = []
             Delta = []
             while 1:
+                #j = line[1:8]
+                #try:
+                    #j = int(j)
+                    #if j == 1:
+                        #one
+                #except:
+                    #raise
                 while line[0] == '0':
                     del_ca, del_cy, del_cn, del_cll, del_clm, del_cln, cp, area = (
                         line[8 :20], line[21:33],
@@ -134,13 +156,16 @@ class ShabpOut(object):
                 #print '---%r' % line.strip()
                 if '*AIR' in line:
                     # keep going
+                    #line,i = self.readline_n(f, i, 3)
+                    #print "**alpha_line = ", line.strip()
+                    #line,i = self.readline_n(f, i, 4)
                     line,i = self.readline_n(f, i, 7)
                 elif 'COMPONENT' in line:
                     #npanels = None
                     while 1:
                         #PANELS:  patch32             patch33             patch41
                         #patch44
-                        print line.strip()
+                        #print line.strip()
                         line, i = self.readline(f, i)
                         panels = line.strip().split()
                         #npanels = len(panels)
@@ -152,19 +177,25 @@ class ShabpOut(object):
 
                     while 'Mach   Velocity   Reynolds #   Altitude   -Freestream Conditions-   Gas' not in line:
                         line, i = self.readline(f, i)
-                    #nskip = 0
-                    #if npanels_old == 3:
-                        #nskip = -2
-                    line,i = self.readline_n(f, i, 9)
+
+                    while 'ALPHA  BETA     C N        C A        C M        C L        C D        L/D        C Y        C LN       C LL' not in line:
+                        line, i = self.readline(f, i)
+
+                    ncases = 0
+                    while 'S/HABP' not in line:
+                        ncases += 1
+                        line, i = self.readline(f, i)
+                    ncases -= 2  # correct for reading too many lines
+
+                    line,i = self.readline_n(f, i, 3)
                     #print line
                     break
                     #print '%r' % line
-                    #aaaa
             Cp_dict_components[icomponent] = Cp
             delta_dict_components[icomponent] = Delta
             #print '^%r' % line.strip()
-        print "done"
-        return Cp_dict_components, delta_dict_components
+        #print "done"
+        return Cp_dict_components, delta_dict_components, ncases
 
 
 if __name__ == '__main__':

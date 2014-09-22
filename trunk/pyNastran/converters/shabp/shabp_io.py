@@ -138,7 +138,7 @@ class ShabpIO(object):
                 A = 0.5 * nnorm
 
                 XYZc[i,:] = (P1 + P2 + P3 + P4) / 4.0
-                Normal[i, :] = normal
+                #Normal[i, :] = normal
                 area[i] = A
             cases[(ID, 'centroid_x', 1, 'centroid', '%.2f')] = XYZc[:,0]
             cases[(ID, 'centroid_y', 1, 'centroid', '%.2f')] = XYZc[:,1]
@@ -162,11 +162,19 @@ class ShabpIO(object):
         return cases
 
     def load_shabp_results(self, shabp_filename, dirname):
-        Cp, delta = self.model.read_shabp_out(shabp_filename)
+        Cpd, deltad = self.model.read_shabp_out(shabp_filename)
 
         if self.is_centroidal:
-            self.resultCases[(1, 'Cp', 1, 'centroid', '%.3f')] = Cp
-            self.resultCases[(1, 'delta', 1, 'centroid', '%.3f')] = delta
+            self.resultCases = {}
+            for case_id, Cp in sorted(Cpd.iteritems()):
+                Cp = Cpd[case_id]
+                #delta = deltad[case_id]
+
+                mach, alpha, beta = self.model.shabp_cases[case_id]
+                #name = 'Mach=%g Alpha=%g' % (mach, alpha)
+                name = 'Mach=%g Alpha=%g' % (mach, alpha)
+                self.resultCases[(name, 'Cp', 1, 'centroid', '%.3f')] = Cp
+                #self.resultCases[(name, 'delta', 1, 'centroid', '%.3f')] = delta
         elif self.is_nodal:
             #key = (1, 'Cp', 1, 'node', '%.3f')
             #self.resultCases[key] = Cp_array
