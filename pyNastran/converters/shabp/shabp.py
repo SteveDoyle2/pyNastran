@@ -65,8 +65,8 @@ class SHABP(ShabpOut):
 
             areas[name] = A
             lengths[name] = xmax - xmin
-        print "areas =", areas
-        print "lengths =", lengths
+        #print "areas =", areas
+        #print "lengths =", lengths
         return areas
 
     def get_area_by_component(self, components=None):
@@ -81,7 +81,7 @@ class SHABP(ShabpOut):
             patches = self.component_name_to_patch[name]
             A = self.get_area_by_patch(patches)
             areas[name] = A.sum()
-        print "areas =", areas
+        #print "areas =", areas
         return areas
 
     def get_area_by_patch(self, ipatches=None):
@@ -220,7 +220,7 @@ class SHABP(ShabpOut):
         self.X = X
         self.Y = Y
         self.Z = Z
-        print "npatches = ", len(self.X)
+        #print "npatches = ", len(self.X)
 
 
     def getPointsElementsRegions(self):
@@ -312,9 +312,13 @@ class SHABP(ShabpOut):
         Zcg = float(ref_line[50:60].strip())
 
         i = 4
+        self.shabp_cases = {}
         for n in xrange(nalpha_beta):
-            alpha_line = self.trailer[i+n].rstrip()
+            alpha_line = self.trailer[i].rstrip()
             #print "alpha_line =", alpha_line
+            alpha = float(alpha_line[0:10])
+            beta = float(alpha_line[10:20])
+            self.shabp_cases[n] = [mach, alpha, beta]
             i += 1
 
         #self.getMethods()
@@ -345,33 +349,33 @@ class SHABP(ShabpOut):
                 ipin, isave, pdata1, pdata2, pdata3, pdata4, pdata5, pdata6]
             i += 2
 
-        print "ncomps =", len(self.component_to_params)
-        print "keys =", sorted(self.component_to_params.keys())
-        print "**lines[%i] = %s\n" % (i+1, self.trailer[i].rstrip())
+        #print "ncomps =", len(self.component_to_params)
+        #print "keys =", sorted(self.component_to_params.keys())
+        #print "**lines[%i] = %s\n" % (i+1, self.trailer[i].rstrip())
         #i += 1
 
         methods = []
-        print "methods ", self.trailer[i].strip()
+        #print "methods ", self.trailer[i].strip()
         for v in self.trailer[i].strip():
             v2 = int(v)
             if v2 > 0:
                 methods.append(v2)
-        print "methods =", methods
+        #print "methods =", methods
 
         val1 = self.trailer[i][0:2]
-        print "val1 = ", val1
+       #print "val1 = ", val1
         i += 1
         if val1 == '10':
-            print "****10****"
+            #print "****10****"
             pass
             i += 1
         elif val1 == '13':
-            print "****13****"
+            #print "****13****"
             val2 = int(self.trailer[i][2:4])
             assert val2 == ncomponents, 'val2=%r ncomponents=%r' % (val2, ncomponents)
             i += 1
             for v in xrange(val2):
-                print "  lines[%i] = %s" % (i+1, self.trailer[i].rstrip())
+                #print "  lines[%i] = %s" % (i+1, self.trailer[i].rstrip())
                 i += 1
         else:
             print "*lines[%i] = %s\n" % (i+1, self.trailer[i].rstrip())
@@ -379,13 +383,13 @@ class SHABP(ShabpOut):
 
         # component names   7
         comp_names_line = self.trailer[i].rstrip()
-        print "comp_names_line = %r" % comp_names_line
+        #print "comp_names_line = %r" % comp_names_line
         ncomps = int(comp_names_line.strip().split()[2])
         i += 1
 
         for icomp in xrange(ncomps):
             line = self.trailer[i]
-            print "line =", line.strip()
+            #print "line =", line.strip()
             npatches = int(line[:2])
             name = line[2:].strip()
 
@@ -400,7 +404,7 @@ class SHABP(ShabpOut):
                 #print "int_ipatch =", int_ipatch
                 patches.append(int_ipatch)
                 self.patch_to_component_num[int_ipatch-1] = icomp+1
-            print "patches =", patches, '\n'
+            #print "patches =", patches, '\n'
             self.component_name_to_patch[name] = patches
             self.component_num_to_name[icomp] = name
             self.component_name_to_num[name] = icomp
@@ -408,7 +412,7 @@ class SHABP(ShabpOut):
 
         # 2noseconeright
         #3142
-        print 'done with trailer'
+        #print 'done with trailer'
 
 if __name__ == '__main__':
     import sys
