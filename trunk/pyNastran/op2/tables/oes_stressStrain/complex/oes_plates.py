@@ -135,9 +135,9 @@ class ComplexPlateStress(StressObject):
         #if eid in self.oxx[dt]:
         #    return self.add(eid,nodeID,fd,oxx,oyy,txy)
 
-        if 1:
+        if 1: # this is caused by superelements
             if dt in self.oxx and eid in self.oxx[dt]:  # SOL200, erase the old result
-                nid = nodeID
+                #nid = nodeID
                 #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s" %(dt,eid,nodeID,str(self.fiberCurvature[eid][nid]),str(self.oxx[dt][eid][nid])))
                 self.delete_transient(dt)
                 self.add_new_transient(dt)
@@ -177,21 +177,6 @@ class ComplexPlateStress(StressObject):
         self.txy[dt][eid][nodeID].append(txy)
         if nodeID == 0:
             raise ValueError(msg)
-
-    def addNewNode(self, dt, eid, nodeID, fd, oxx, oyy, txy):
-        #print "***addNewNode"
-        #print self.oxx
-        assert eid is not None
-        #assert nodeID not in self.oxx[eid]
-        self.fiberCurvature[eid][nodeID] = [fd]
-        self.oxx[eid][nodeID] = [oxx]
-        self.oyy[eid][nodeID] = [oyy]
-        self.txy[eid][nodeID] = [txy]
-        msg = "eid=%s nodeID=%s fd=%g oxx=%s oyy=%s txy=%s" % (
-            eid, nodeID, fd, oxx, oyy, txy)
-        #print msg
-        if nodeID == 0:
-            raise Exception(msg)
 
     def addNewNodeSort1(self, dt, eid, nodeID, fd, oxx, oyy, txy):
         #print "***addNewNodeTransient_Sort1"
@@ -630,10 +615,12 @@ class ComplexPlateStrain(StrainObject):
             if dt is not None:
                 self.add = self.add_sort1
                 self.add_new_eid = self.add_new_eid_sort1
+                self.addNewNode = self.add_sort1
         else:
             assert dt is not None
             self.add = self.addSort2
             self.add_new_eid = self.add_new_eid_sort2
+            self.addNewNode = self.addNewNodeSort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -712,30 +699,10 @@ class ComplexPlateStrain(StrainObject):
         """
         initializes the transient variables
         """
-        #self.fiberCurvature[dt] = {}
+        #self.fiberCurvature = {}
         self.exx[dt] = {}
         self.eyy[dt] = {}
         self.exy[dt] = {}
-
-    def add_new_eid(self, eType, dt, eid, nodeID, curvature, exx, eyy, exy):
-        #print "Plate add..."
-        msg = "eid=%s nodeID=%s curvature=%g exx=%s eyy=%s exy=%s" % (
-            eid, nodeID, curvature, exx, eyy, exy)
-
-        #if nodeID != 'C':  # centroid
-            #assert 0 < nodeID < 1000000000, 'nodeID=%s %s' % (nodeID, msg)
-
-        #if eid in self.exx:
-            #return self.add(eid,nodeID,curvature,exx,eyy,exy)
-        #assert eid not in self.exx
-        self.eType[eid] = eType
-        self.fiberCurvature[eid] = {nodeID: [curvature]}
-        self.exx[eid] = {nodeID: [exx]}
-        self.eyy[eid] = {nodeID: [eyy]}
-        self.exy[eid] = {nodeID: [exy]}
-        #print msg
-        if nodeID == 0:
-            raise ValueError(msg)
 
     def add_new_eid_sort1(self, eType, dt, eid, nodeID, curvature, exx, eyy, exy):
         msg = "eid=%s nodeID=%s curvature=%g exx=%s eyy=%s exy=%s" % (
@@ -744,8 +711,13 @@ class ComplexPlateStrain(StrainObject):
         #if nodeID != 'C':  # centroid
             #assert 0 < nodeID < 1000000000, 'nodeID=%s %s' % (nodeID, msg)
 
-        if dt not in self.exx:
-            self.add_new_transient(dt)
+        if 1: # this is caused by superelements
+            if dt in self.exx and eid in self.exx[dt]:  # SOL200, erase the old result
+                #nid = nodeID
+                #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s" %(dt,eid,nodeID,str(self.fiberCurvature[eid][nid]),str(self.exx[dt][eid][nid])))
+                self.delete_transient(dt)
+                self.add_new_transient(dt)
+
         #if eid in self.exx[dt]:  # SOL200, erase the old result
             #nid = nodeID
             #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s" %(dt,eid,nodeID,str(self.fiberCurvature[eid][nid]),str(self.oxx[dt][eid][nid]))
@@ -761,25 +733,10 @@ class ComplexPlateStrain(StrainObject):
         if nodeID == 0:
             raise ValueError(msg)
 
-    def add(self, dt, eid, nodeID, curvature, exx, eyy, exy):
-        msg = "eid=%s nodeID=%s curvature=%g exx=%s eyy=%s exy=%s" % (
-            eid, nodeID, curvature, exx, eyy, exy)
-        #print msg
-        #print self.oxx
-        #print self.fiberCurvature
-        #if nodeID != 'C':  # centroid
-            #assert 0 < nodeID < 1000000000, 'nodeID=%s' % (nodeID)
-        self.fiberCurvature[eid][nodeID].append(curvature)
-        self.exx[eid][nodeID].append(exx)
-        self.eyy[eid][nodeID].append(eyy)
-        self.exy[eid][nodeID].append(exy)
-        if nodeID == 0:
-            raise ValueError(msg)
-
     def add_sort1(self, dt, eid, nodeID, curvature, exx, eyy, exy):
         msg = "eid=%s nodeID=%s curvature=%g exx=%s eyy=%s exy=%s" % (
             eid, nodeID, curvature, exx, eyy, exy)
-        #print msg
+        #print(msg)
         #if nodeID != 'C':  # centroid
             #assert 0 < nodeID < 1000000000, 'nodeID=%s' % (nodeID)
 
@@ -790,17 +747,6 @@ class ComplexPlateStrain(StrainObject):
         if nodeID == 0:
             raise ValueError(msg)
 
-    def addNewNode(self, dt, eid, nodeID, curvature, exx, eyy, exy):
-        msg = "eid=%s nodeID=%s curvature=%g exx=%s eyy=%s exy=%s" % (
-            eid, nodeID, curvature, exx, eyy, exy)
-        #assert nodeID not in self.exx[eid], msg
-        self.fiberCurvature[eid][nodeID] = [curvature]
-        self.exx[eid][nodeID] = [exx]
-        self.eyy[eid][nodeID] = [eyy]
-        self.exy[eid][nodeID] = [exy]
-        #print msg
-        if nodeID == 0:
-            raise ValueError(msg)
 
     def getHeaders(self):
         if self.isFiberDistance():
@@ -821,119 +767,8 @@ class ComplexPlateStrain(StrainObject):
             raise RuntimeError('The result object is empty')
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, page_num, f)
+        raise RuntimeError('this can never happen')
 
-        if self.isVonMises():
-            vonMises = 'VON MISES'
-        else:
-            vonMises = 'MAX SHEAR'
-
-        if self.isFiberDistance():
-            quadMsgTemp = ['    ELEMENT              FIBER                STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)\n',
-                           '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % (vonMises)]
-            triMsgTemp = ['  ELEMENT      FIBER               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)\n',
-                          '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % (vonMises)]
-        else:
-            quadMsgTemp = ['    ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)\n',
-                           '      ID      GRID-ID   CURVATURE       NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % (vonMises)]
-            triMsgTemp = ['  ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)\n',
-                          '    ID.       CURVATURE          NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % (vonMises)]
-
-        quadMsg = None
-        quad8Msg = None
-        quadrMsg = None
-        triMsg = None
-        tri6Msg = None
-        trirMsg = None
-
-        eTypes = self.eType.values()
-        if 'CQUAD4' in eTypes:
-            qkey = eTypes.index('CQUAD4')
-            kkey = self.eType.keys()[qkey]
-            ekey = self.exx[kkey].keys()
-            isBilinear = True
-            quadMsg = header + ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quadMsgTemp
-            if len(ekey) == 1:
-                isBilinear = False
-                quadMsg = header + ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'] + triMsgTemp
-
-        if 'CQUAD8' in eTypes:
-            qkey = eTypes.index('CQUAD8')
-            kkey = self.eType.keys()[qkey]
-            ekey = self.exx[kkey].keys()
-            isBilinear = True
-            quad8Msg = header + ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )        OPTION = BILIN  \n \n'] + quadMsgTemp
-            if len(ekey) == 1:
-                isBilinear = False
-                quad8Msg = header + ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n'] + triMsgTemp
-
-        if 'CQUADR' in eTypes:
-            qkey = eTypes.index('CQUADR')
-            kkey = self.eType.keys()[qkey]
-            ekey = self.exx[kkey].keys()
-            isBilinear = True
-            quadrMsg = header + ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quadMsgTemp
-            if len(ekey) == 1:
-                isBilinear = False
-                quadrMsg = header + ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'] + triMsgTemp
-
-        if 'CTRIA3' in eTypes:
-            triMsg = header + ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'] + triMsgTemp
-
-        if 'CTRIA6' in eTypes:
-            tri6Msg = header + ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + triMsgTemp
-
-        if 'CTRIAR' in eTypes:
-            trirMsg = header + ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + triMsgTemp
-
-        msgPacks = {'CTRIA3': triMsg,
-                    'CTRIA6': tri6Msg,
-                    'CTRIAR': trirMsg,
-                    'CQUAD4': quadMsg,
-                    'CQUAD8': quad8Msg,
-                    'CQUADR': quadrMsg, }
-
-        validTypes = ['CTRIA3', 'CTRIA6', 'CTRIAR', 'CQUAD4',
-                      'CQUAD8', 'CQUADR']
-        (typesOut, orderedETypes) = self.getOrderedETypes(validTypes)
-
-        msg = []
-        for eType in typesOut:
-            eids = orderedETypes[eType]
-            if eids:
-                #print "eids = ",eids
-                #print "eType = ",eType
-                msgPack = msgPacks[eType]
-                eids.sort()
-                msg += header + msgPack
-                if eType in ['CQUAD4']:
-                    if isBilinear:
-                        for eid in eids:
-                            out = self.writeF06_Quad4_Bilinear(eid, 4, is_mag_phase, 'CEN/4')
-                    else:
-                        for eid in eids:
-                            out = self.writeF06_Tri3(eid, 4, is_mag_phase)
-                elif eType in ['CTRIA3']:
-                    for eid in eids:
-                        out = self.writeF06_Tri3(eid, 3, is_mag_phase)
-                elif eType in ['CQUAD8']:
-                    for eid in eids:
-                        out = self.writeF06_Quad4_Bilinear(eid, 5, is_mag_phase, 'CEN/8')
-                elif eType in ['CTRIAR']:
-                    for eid in eids:
-                        out = self.writeF06_Quad4_Bilinear(eid, 3, is_mag_phase, 'CEN/3')
-                elif eType in ['CTRIA6']:
-                    for eid in eids:
-                        out = self.writeF06_Quad4_Bilinear(eid, 3, is_mag_phase, 'CEN/6')
-                else:
-                    raise NotImplementedError('eType = |%r|' % eType)  # CQUAD8, CTRIA6
-
-                msg.append(out)
-                msg.append(pageStamp % page_num)
-                f.write(''.join(msg))
-                msg = ['']
-                page_num += 1
-
-        return page_num - 1
 
     def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.isVonMises():
@@ -1076,31 +911,6 @@ class ComplexPlateStrain(StrainObject):
                                               eType)  # CQUAD8, CTRIA6
         return page_num - 1
 
-    def writeF06_Quad4_Bilinear(self, eid, n, is_mag_phase, cen):
-        msg = ''
-        k = self.exx[eid].keys()
-        #cen = 'CEN/' + str(n)
-        k.remove(cen)
-        k.sort()
-        for nid in [cen] + k:
-            for iLayer in xrange(len(self.exx[eid][nid])):
-                fd = self.fiberCurvature[eid][nid][iLayer]
-                exx = self.exx[eid][nid][iLayer]
-                eyy = self.eyy[eid][nid][iLayer]
-                exy = self.exy[eid][nid][iLayer]
-                ([fd, exxr, eyyr, exyr,
-                  fdi, exxi, eyyi, exyi], is_all_zeros) = writeImagFloats13E([fd, exx, eyy, exy], is_mag_phase)
-
-                if nid == cen and iLayer == 0:
-                    msg += '0  %8i %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s /   %s\n' % (eid, cen, fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
-                elif iLayer == 0:
-                    msg += '   %8s %8i  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s /   %s\n' % ('', nid, fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
-                elif iLayer == 1:
-                    msg += '   %8s %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s /   %s\n\n' % ('', '', fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
-                else:
-                    raise Exception('Invalid option for cquad4')
-        return msg
-
     def writeF06_Quad4_BilinearTransient(self, dt, eid, n, is_mag_phase, cen):
         msg = ''
         k = self.exx[dt][eid].keys()
@@ -1124,27 +934,6 @@ class ComplexPlateStrain(StrainObject):
                     msg += '   %8s %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s /   %s\n\n' % ('', '', fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
                 else:
                     raise Exception('Invalid option for cquad4')
-        return msg
-
-    def writeF06_Tri3(self, eid, n, is_mag_phase):
-        msg = ''
-        k = self.exx[eid].keys()
-        cen = 'CEN/' + str(n)
-        k.remove(cen)
-        k.sort()
-        for nid in [cen] + k:
-            for iLayer in xrange(len(self.exx[eid][nid])):
-                fd = self.fiberCurvature[eid][nid][iLayer]
-                exx = self.exx[eid][nid][iLayer]
-                eyy = self.eyy[eid][nid][iLayer]
-                exy = self.exy[eid][nid][iLayer]
-
-                ([fd, exxr, eyyr, exyr,
-                  fdi, exxi, eyyi, exyi], is_all_zeros) = writeImagFloats13E([fd, exx, eyy, exy], is_mag_phase)
-                if iLayer == 0:
-                    msg += '0  %6i   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (eid, fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
-                else:
-                    msg += '   %6s   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % ('', fd, exxr, exxi, eyyr, eyyi, exyr, exyi)
         return msg
 
     def writeF06_Tri3Transient(self, dt, eid, n, is_mag_phase):
