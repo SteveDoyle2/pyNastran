@@ -55,7 +55,7 @@ class ABCQSet(Set):
     """
     Generic Class ASET, BSET, CSET, QSET cards inherit from.
 
-    Defines degrees-of-freedom in the analysis set (a-set)::
+    Defines degrees-of-freedom in the analysis set (A-set)
 
     +------+-----+----+-----+------+-----+----+-----+----+
     | ASET | ID1 | C1 | ID2 |  C2  | ID3 | C3 | ID4 | C4 |
@@ -94,7 +94,7 @@ class ABCQSet(Set):
 
 class ASET(ABCQSet):
     """
-    Defines degrees-of-freedom in the analysis set (a-set).::
+    Defines degrees-of-freedom in the analysis set (A-set).
 
     +------+-----+----+-----+------+-----+----+-----+----+
     | ASET | ID1 | C1 | ID2 |  C2  | ID3 | C3 | ID4 | C4 |
@@ -111,7 +111,7 @@ class ASET(ABCQSet):
 class BSET(ABCQSet):
     """
     Defines analysis set (a-set) degrees-of-freedom to be fixed (b-set) during
-    generalized dynamic reduction or component mode synthesis calculations.::
+    generalized dynamic reduction or component mode synthesis calculations.
 
     +------+-----+----+-----+------+-----+----+-----+----+
     | BSET | ID1 | C1 | ID2 |  C2  | ID3 | C3 | ID4 | C4 |
@@ -128,7 +128,7 @@ class BSET(ABCQSet):
 class CSET(ABCQSet):
     """
     Defines analysis set (a-set) degrees-of-freedom to be fixed (b-set) during
-    generalized dynamic reduction or component mode synthesis calculations.::
+    generalized dynamic reduction or component mode synthesis calculations.
 
     +------+-----+----+-----+------+-----+----+-----+----+
     | CSET | ID1 | C1 | ID2 |  C2  | ID3 | C3 | ID4 | C4 |
@@ -145,7 +145,7 @@ class CSET(ABCQSet):
 class QSET(ABCQSet):
     """
     Defines generalized degrees-of-freedom (q-set) to be used for dynamic
-    reduction or component mode synthesis.::
+    reduction or component mode synthesis.
 
     +------+-----+----+-----+------+-----+----+-----+----+
     | QSET | ID1 | C1 | ID2 |  C2  | ID3 | C3 | ID4 | C4 |
@@ -163,7 +163,7 @@ class ABQSet1(Set):
     """
     Generic Class ASET1, BSET1, QSET1 cards inherit from.
 
-    Defines degrees-of-freedom in the analysis set (a-set).::
+    Defines degrees-of-freedom in the analysis set (a-set).
 
     +--=----+-----+-----+------+------+-----+-----+-----+-----+
     | ASET1 |  C  | ID1 | ID2  | ID3  | ID4 | ID5 | ID6 | ID7 |
@@ -207,7 +207,7 @@ class ABQSet1(Set):
 
 class ASET1(ABQSet1):
     """
-    Defines degrees-of-freedom in the analysis set (a-set)::
+    Defines degrees-of-freedom in the analysis set (a-set)
 
     +-------+-----+-----+------+-----+-----+-----+-----+-----+
     | ASET1 |  C  | ID1 |  ID2 | ID3 | ID4 | ID5 | ID6 | ID7 |
@@ -233,7 +233,7 @@ class BSET1(ABQSet1):
 class CSET1(Set):
     """
     Defines analysis set (a-set) degrees-of-freedom to be fixed (b-set) during
-    generalized dynamic reduction or component mode synthesis calculations.::
+    generalized dynamic reduction or component mode synthesis calculations.
 
     +-------+-----+-----+------+-----+-----+-----+-----+-----+
     | CSET1 |  C  | ID1 |  ID2 | ID3 | ID4 | ID5 | ID6 | ID7 |
@@ -285,7 +285,7 @@ class QSET1(ABQSet1):
 class SET1(Set):
     """
     Defines a list of structural grid points or element identification
-    numbers.::
+    numbers.
 
     +------+--------+--------+-----+------+-----+-----+------+-----+
     | SET1 | SID    |   ID1  | ID2 | ID3  | ID4 | ID5 | ID6  | ID7 |
@@ -369,7 +369,7 @@ class SET1(Set):
 
 class SET3(Set):
     """
-    Defines a list of grids, elements or points.::
+    Defines a list of grids, elements or points.
 
     +------+-----+-------+-----+-----+-----+-----+-----+-----+
     | SET3 | SID |  DES  | ID1 | ID2 | ID3 | ID4 | ID5 | ID6 |
@@ -489,7 +489,7 @@ class SESET(SetSuper):
 class SEBSET(Set):
     """
     Defines boundary degrees-of-freedom to be fixed (b-set) during generalized
-    dynamic reduction or component mode calculations.::
+    dynamic reduction or component mode calculations.
 
     +--------+------+-----+------+-----+----+-----+----+
     | SEBSET | SEID | ID1 |  C1  | ID2 | C2 | ID3 | C3 |
@@ -527,7 +527,7 @@ class SEBSET(Set):
 class SEBSET1(Set):
     """
     Defines boundary degrees-of-freedom to be fixed (b-set) during generalized
-    dynamic reduction or component mode calculations.::
+    dynamic reduction or component mode calculations.
 
     +---------+-----+-----+--------+-----+-----+-----+-----+-----+
     | SEBSET1 |  C  | ID1 |  ID2   | ID3 | ID4 | ID5 | ID6 | ID7 |
@@ -560,7 +560,7 @@ class SEBSET1(Set):
 class SEQSET1(Set):
     """
     Defines the generalized degrees-of-freedom of the superelement to be used in
-    generalized dynamic reduction or component mode synthesis.::
+    generalized dynamic reduction or component mode synthesis.
 
     +--------+-----+-----+--------+-----+-----+-----+-----+-----+
     |SEQSET1 | C   | ID1 | ID2    | ID3 | ID4 | ID5 | ID6 | ID7 |
@@ -619,7 +619,7 @@ class SEQSEP(SetSuper):  # not integrated...is this an SESET ???
 class RADSET(Set):  # not integrated
     """
     Specifies which radiation cavities are to be included for
-    radiation enclosure analysis.::
+    radiation enclosure analysis.
 
     +--------+----------+----------+----------+----------+----------+----------+----------+
     | RADSET | ICAVITY1 | ICAVITY2 | ICAVITY3 | ICAVITY4 | ICAVITY5 | ICAVITY6 | ICAVITY7 |
