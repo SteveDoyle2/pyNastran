@@ -1737,7 +1737,7 @@ class OES(OP2Common):
                 if self.isStress():
                     self.create_transient_object(self.bush1dStressStrain, RealBush1DStress)  # undefined
                 else:
-                    #self.create_transient_object(self.bush1dStressStrain, Bush1DStrainObject)  # undefined
+                    #self.create_transient_object(self.bush1dStressStrain, Bush1DStrain)  # undefined
                     raise NotImplementedError('self.bush1dStressStrain; numwide=8')
 
                 ntotal = 32  # 4*8
@@ -1843,8 +1843,8 @@ class OES(OP2Common):
                 if self.isStress():
                     self.create_transient_object(self.nonlinearSpringStress, NonlinearSpringStress)
                 else:
-                    #self.create_transient_object(self.nonlinearSpringStrain, NonlinearSpringStrainObject)  # undefined
-                    raise NotImplementedError('NonlinearSpringStrainObject')
+                    #self.create_transient_object(self.nonlinearSpringStrain, NonlinearSpringStrain)  # undefined
+                    raise NotImplementedError('NonlinearSpringStrain')
 
                 assert self.num_wide == 3, "num_wide=%s not 3" % self.num_wide
                 ntotal = 12  # 4*3
@@ -1879,10 +1879,10 @@ class OES(OP2Common):
                 return len(data)
             if self.format_code == 1 and self.num_wide == 11:  # real?
                 if self.isStress():
-                    self.create_transient_object(self.nonlinearGapStress, NonlinearGapStressObject)
+                    self.create_transient_object(self.nonlinearGapStress, NonlinearGapStress)
                 else:
-                    #self.create_transient_object(self.nonlinearGapStrain, NonlinearGapStrainObject)  # undefined
-                    raise NotImplementedError('NonlinearGapStrainObject')
+                    #self.create_transient_object(self.nonlinearGapStrain, NonlinearGapStrain)  # undefined
+                    raise NotImplementedError('NonlinearGapStrain')
                 ntotal = 44  # 4*11
                 s = Struct(b'i8f4s4s')
                 nelements = len(data) // ntotal
@@ -1903,7 +1903,62 @@ class OES(OP2Common):
             return len(data)
         elif self.element_type in [94]:
             # 94-BEAMNL
-            return len(data)
+            numwide_real = 51
+            numwide_random = 0
+            if self.format_code == 1 and self.num_wide == numwide_real:
+                if self.isStress():
+                    #raise NotImplementedError('Nonlinear CBEAM Stress')
+                    pass
+                    self.create_transient_object(self.nonlinearBeamStress, NonlinearGapStress)
+                else:
+                    self.create_transient_object(self.nonlinearBeamStrain, NonlinearGapStrain)  # undefined
+                    raise NotImplementedError('Nonlinear CBEAM Strain')
+
+                ntotal = numwide_real * 4
+                # 2 + 6*4 = 26
+                # 26*4 = 104
+                #s1 = Struct(b'2i') # 2*4 = 8
+                #s2 = Struct(b'4s5f 4s5f 4s5f 4s5f 4s5f 4s5f 4s5f 4s5f')  # (8*6)*4
+                s = Struct(b'2i 4s5f 4s5f 4s5f 4s5f i 4s5f 4s5f 4s5f 4s5f')  # 2 + 6*8 + 1 = 51
+                # 204 = 51 * 4
+                nelements = len(data) // ntotal
+                for i in xrange(nelements):  # num_wide=51
+                    #edata = data[n:n + 8]
+                    #out1 = s1.unpack(edata)
+                    #n += 8
+                    #edata = data[n:n + 48*4]
+                    #out2 = s2.unpack(edata)
+
+                    edata = data[n:n + 204]
+                    out = s.unpack(edata)
+                    n += 204
+
+                    if self.debug4():
+                        self.binary_debug.write('BEAMNL-94 - %s\n' % str(out))
+
+                    # A
+                    assert out[3-1] == '   C', out[3-1]
+                    assert out[9-1] == '   D', out[9-1]
+                    assert out[15-1] == '   E', out[15-1]
+                    assert out[21-1] == '   F', out[21-1]
+
+                    # B
+                    assert out[28-1] == '   C', out[28-1]
+                    assert out[34-1] == '   D', out[34-1]
+                    assert out[40-1] == '   E', out[40-1]
+                    assert out[46-1] == '   F', out[46-1]
+
+                    eid_device = out[0]
+                    eid = (eid_device - self.device_code) // 10
+                    #self.obj.add_new_eid(dt, eid, out)
+
+            elif self.format_code == 1 and self.num_wide == numwide_random:  # random
+                msg = 'num_wide=%s' % self.num_wide
+                return self._not_implemented_or_skip(data, msg)
+            else:
+                msg = 'num_wide=%s' % self.num_wide
+                return self._not_implemented_or_skip(data, msg)
+
         elif self.element_type in [85, 91, 93]:
             # 85-TETRANL
             # 91-PENTANL
@@ -2059,7 +2114,7 @@ class OES(OP2Common):
                 if self.isStress():
                     self.create_transient_object(self.hyperelasticPlateStrain, HyperelasticQuad)
                 else:
-                    msg = 'HyperelasticQuadObject???'
+                    msg = 'HyperelasticQuad???'
                     return self._not_implemented_or_skip(data, msg)
 
                 n = 0
@@ -2222,8 +2277,8 @@ class OES(OP2Common):
         assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
         #assert len(data) % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, len(data) % ntotal, len(data) % self.num_wide, len(data), ntotal)
         assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
-        assert self.thermal == 0, self.thermal
-        assert n > 0, n
+        assert self.thermal == 0,  "thermal = %%s" % self.thermal
+        assert n > 0, "n = %s" % n
         return n
 
     def OESRT_CQUAD4_95(self, data):
@@ -2272,9 +2327,10 @@ class OES(OP2Common):
         :param obj_vector: a pointer to the vectorized class
         :returns auto_return: a flag indicating a return n should be called
         :type auto_return: bool
+
         Since that's confusing, let's say we have real CTETRA stress data.
         We're going to fill self.solidStress with the class
-        RealSolidStressObject.  If it were vectorized, we'd fill
+        RealSolidStress.  If it were vectorized, we'd fill
         self.ctetra_stress. with RealSolidStressArray.  So we call:
 
         auto_return = self._create_oes_object2(self, nelements,
