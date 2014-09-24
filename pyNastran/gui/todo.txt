@@ -94,6 +94,9 @@ Nastran
    - SOL 101
      - (nodal/centroidal) stress
      - (nodal) displacement, velocity, acceleration, spcForces, mpcForces, temperatures
+   - Stress
+     - rodStress, barStress, beamStress, plateStress, solidStress, compositePlateStress (centroidal only)
+
  - ***multiple op2 files
  - ***show/hide elements based on picking
  - ***coordinate systems include Coord ID
@@ -179,12 +182,12 @@ Usm3d
 -------
  - Qt
    =======
-   - what do elements with pid=0 correspond to?
 
  - nastran
    =======
    - single results (e.g. pid) can't have their legends edited
    - the Isat model seems to have something wrong with the Pid
+   - what do elements with pid=0 correspond to?
  
  - panair
    =======

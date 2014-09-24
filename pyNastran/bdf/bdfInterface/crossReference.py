@@ -32,6 +32,7 @@ class XrefMesh(object):
 
             self._cross_reference_elements()
             self._cross_reference_properties()
+            self._cross_reference_masses()
             self._cross_reference_materials()
 
             self._cross_reference_aero()
@@ -112,6 +113,19 @@ class XrefMesh(object):
                 elem.cross_reference(self)
             except:
                 msg = "Couldn't cross reference Element.\n%s" % str(elem)
+                self.log.error(msg)
+                raise
+
+    def _cross_reference_masses(self):
+        """
+        Links the mass to nodes, properties (and materials depending on
+        the card).
+        """
+        for mass in self.masses.itervalues():
+            try:
+                mass.cross_reference(self)
+            except:
+                msg = "Couldn't cross reference Mass.\n%s" % str(mass)
                 self.log.error(msg)
                 raise
 
