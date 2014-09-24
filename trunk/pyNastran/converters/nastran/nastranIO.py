@@ -32,7 +32,8 @@ from pyNastran.bdf.bdf import (BDF, CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
                                CTETRA4, CTETRA10, CPENTA6, CPENTA15,
                                CHEXA8, CHEXA20,
                                CONM2,
-                               ShellElement, LineElement, SpringElement)
+                               ShellElement, LineElement, SpringElement,
+                               LOAD)
 from pyNastran.op2.test.test_op2 import OP2
 from pyNastran.f06.f06 import F06
 
@@ -95,7 +96,7 @@ class NastranIO(object):
         else:  # read the bdf/punch
             model = BDF(log=self.log, debug=True)
             self.modelType = model.modelType
-            model.read_bdf(bdf_filename, include_dir=dirname, punch=punch)
+            model.read_bdf(bdf_filename, include_dir=dirname, punch=punch, xref=True)
 
         nNodes = model.nNodes()
         assert nNodes > 0
@@ -217,9 +218,9 @@ class NastranIO(object):
             if isinstance(element, CONM2):
                 #del self.eidMap[eid]
 
-                print("element", element)
-                print("element.nid", element.nid)
-                print('nodeIDs', model.nodes.keys())
+                #print("element", element)
+                #print("element.nid", element.nid)
+                #print('nodeIDs', model.nodes.keys())
                 xyz = element.nid.Position()
                 c = element.Centroid()
                 d = norm(xyz-c)
@@ -563,7 +564,7 @@ class NastranIO(object):
         self.iSubcaseNameMap = {1: ['Nastran', '']}
 
         nElements = len(self.eidMap)
-        print("nElements = ", nElements)
+        #print("nElements = ", nElements)
 
         # set to True to enable nodeIDs as an result
         nidsSet = True
@@ -587,6 +588,7 @@ class NastranIO(object):
         if len(model.properties):
             cases[(0, 'Pid', 1, 'centroid', '%.0f')] = pids
         #self._plot_pressures(model, cases)
+        #self._plot_applied_loads(model, cases)
 
         if 0:
             # if not a flat plate???
@@ -660,6 +662,51 @@ class NastranIO(object):
             if abs(pressures).max():
                 # subcaseID, resultType, vectorSize, location, dataFormat
                 cases[(0, 'Pressure LC=%i' % load_case_id, 1, 'centroid', '%.1f')] = pressures
+
+    def _plot_applied_loads(self, model, cases):
+        #print(dir(model.caseControlDeck))
+        #print("load_case_id =", load_case_id)
+        #print('subcases = ', model.caseControlDeck.get_subcase_list())
+
+        sucaseIDs = model.caseControlDeck.get_subcase_list()
+        for subcaseID in sucaseIDs:
+            if subcaseID == 0:
+                continue
+            load_case_id, options = model.caseControlDeck.get_subcase_parameter(subcaseID, 'LOAD')
+            loadCase = model.loads[load_case_id]
+
+            # account for scale factors
+            loads2 = []
+            scale_factors2 = []
+            for load in loadCase:
+                if isinstance(load, LOAD):
+                    scale_factors, loads = load.getReducedLoads()
+                    scale_factors2 += scale_factors
+                    loads2 += loads
+                else:
+                    scale_factors2.append(1.)
+                    loads2.append(load)
+
+            eids = sorted(model.elements.keys())
+            nids = sorted(model.nodes.keys())
+            loads = zeros((self.nNodes, 3), dtype='float32')
+
+            # loop thru scaled loads and plot the pressure
+            for load, scale in zip(loads2, scale_factors2):
+                if load.type == 'FORCE':
+                    scale2 = load.mag * scale  # does this need a magnitude?
+                    nid = load.node
+                    loads[nids.index(nid)] = load.xyz * scale2
+                elif load.type == 'PLOAD4':  # centrodial, skipping
+                    continue
+                    elem = load.eid
+                    if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
+                                     'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
+                        eid = elem.eid
+                        pressures[eids.index(eid)] = load.pressures[0] * scale
+            cases[(subcaseID, 'LoadX Case=%i' % subcaseID, 1, 'node', '%.1f')] = loads[:,0]
+            cases[(subcaseID, 'LoadY Case=%i' % subcaseID, 1, 'node', '%.1f')] = loads[:,1]
+            cases[(subcaseID, 'LoadZ Case=%i' % subcaseID, 1, 'node', '%.1f')] = loads[:,2]
 
     def load_nastran_results(self, op2_filename, dirname):
         #gridResult.SetNumberOfComponents(self.nElements)
@@ -864,7 +911,8 @@ class NastranIO(object):
         vmWord = None
         if subcaseID in model.rodStress:
             case = model.rodStress[subcaseID]
-            if case.isTransient():
+            if case.nonlinear_factor is not None: # transient
+            #if case.isTransient():
                 return
             for eid in case.axial:
                 axial = case.axial[eid]
@@ -885,7 +933,8 @@ class NastranIO(object):
 
         if subcaseID in model.barStress:
             case = model.barStress[subcaseID]
-            if case.isTransient():
+            if case.nonlinear_factor is not None: # transient
+            #if case.isTransient():
                 return
             for eid in case.axial:
                 node_ids = self.eid_to_nid_map[eid]
@@ -907,7 +956,8 @@ class NastranIO(object):
 
         if subcaseID in model.beamStress:
             case = model.beamStress[subcaseID]
-            if case.isTransient():
+            if case.nonlinear_factor is not None: # transient
+            #if case.isTransient():
                 return
             for eid in case.smax:
                 node_ids = self.eid_to_nid_map[eid]
@@ -931,7 +981,8 @@ class NastranIO(object):
 
         if subcaseID in model.plateStress:
             case = model.plateStress[subcaseID]
-            if case.isTransient():
+            if case.nonlinear_factor is not None: # transient
+            #if case.isTransient():
                 return
             if case.isVonMises():
                 vmWord = 'vonMises'
@@ -986,7 +1037,8 @@ class NastranIO(object):
 
         if subcaseID in model.solidStress:
             case = model.solidStress[subcaseID]
-            if case.isTransient():
+            if case.nonlinear_factor is not None: # transient
+            #if case.isTransient():
                 return
             if case.isVonMises():
                 vmWord = 'vonMises'
@@ -1104,7 +1156,8 @@ class NastranIO(object):
 
         if subcaseID in model.beamStress:
             case = model.beamStress[subcaseID]
-            if case.isTransient():
+            if case.nonlinear_factor is not None: # transient
+            #if case.isTransient():
                 return
             for eid in case.smax:
                 eid2 = self.eidMap[eid]
@@ -1125,7 +1178,8 @@ class NastranIO(object):
 
         if subcaseID in model.plateStress:
             case = model.plateStress[subcaseID]
-            if case.isTransient():
+            if case.nonlinear_factor is not None: # transient
+            #if case.isTransient():
                 return
             if case.isVonMises():
                 vmWord = 'vonMises'
@@ -1162,7 +1216,7 @@ class NastranIO(object):
         if 1:
             if subcaseID in model.compositePlateStress:
                 # not done...
-                print("compositePlateStress...")
+                #print("compositePlateStress...")
                 case = model.compositePlateStress[subcaseID]
                 #print('dir(case) =', dir(case))
                 #if case.isTransient():
@@ -1203,7 +1257,8 @@ class NastranIO(object):
 
         if subcaseID in model.solidStress:
             case = model.solidStress[subcaseID]
-            if case.isTransient():
+            if case.nonlinear_factor is not None: # transient
+            #if case.isTransient():
                 return
             if case.isVonMises():
                 vmWord = 'vonMises'
