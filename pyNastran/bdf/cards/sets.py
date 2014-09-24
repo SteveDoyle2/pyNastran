@@ -57,8 +57,11 @@ class ABCQSet(Set):
 
     Defines degrees-of-freedom in the analysis set (a-set)::
 
-      ASET ID1 C1 ID2 C2   ID3 C3 ID4 C4
-      ASET 16  2  23  3516 1   4
+    +------+-----+----+-----+------+-----+----+-----+----+
+    | ASET | ID1 | C1 | ID2 |  C2  | ID3 | C3 | ID4 | C4 |
+    +------+-----+----+-----+------+-----+----+-----+----+
+    | ASET | 16  |  2 |  23 | 3516 |  1  | 4  |
+    +------+-----+----+-----+------+-----+----+
     """
     def __init__(self, card=None, data=None, comment=''):
         Set.__init__(self, card, data)
@@ -93,8 +96,11 @@ class ASET(ABCQSet):
     """
     Defines degrees-of-freedom in the analysis set (a-set).::
 
-      ASET ID1 C1 ID2 C2   ID3 C3 ID4 C4
-      ASET 16  2  23  3516 1   4
+    +------+-----+----+-----+------+-----+----+-----+----+
+    | ASET | ID1 | C1 | ID2 |  C2  | ID3 | C3 | ID4 | C4 |
+    +------+-----+----+-----+------+-----+----+-----+----+
+    | ASET | 16  |  2 |  23 | 3516 |  1  | 4  |
+    +------+-----+----+-----+------+-----+----+
     """
     type = 'ASET'
 
@@ -107,8 +113,11 @@ class BSET(ABCQSet):
     Defines analysis set (a-set) degrees-of-freedom to be fixed (b-set) during
     generalized dynamic reduction or component mode synthesis calculations.::
 
-      BSET ID1 C1 ID2 C2   ID3 C3 ID4 C4
-      BSET 16  2  23  3516 1   4
+    +------+-----+----+-----+------+-----+----+-----+----+
+    | BSET | ID1 | C1 | ID2 |  C2  | ID3 | C3 | ID4 | C4 |
+    +------+-----+----+-----+------+-----+----+-----+----+
+    | BSET | 16  |  2 |  23 | 3516 |  1  | 4  |
+    +------+-----+----+-----+------+-----+----+
     """
     type = 'BSET'
 
@@ -121,8 +130,11 @@ class CSET(ABCQSet):
     Defines analysis set (a-set) degrees-of-freedom to be fixed (b-set) during
     generalized dynamic reduction or component mode synthesis calculations.::
 
-      CSET ID1 C1 ID2 C2   ID3 C3 ID4 C4
-      CSET 16  2  23  3516 1   4
+    +------+-----+----+-----+------+-----+----+-----+----+
+    | CSET | ID1 | C1 | ID2 |  C2  | ID3 | C3 | ID4 | C4 |
+    +------+-----+----+-----+------+-----+----+-----+----+
+    | CSET | 16  |  2 |  23 | 3516 |  1  | 4  |
+    +------+-----+----+-----+------+-----+----+
     """
     type = 'CSET'
 
@@ -135,8 +147,11 @@ class QSET(ABCQSet):
     Defines generalized degrees-of-freedom (q-set) to be used for dynamic
     reduction or component mode synthesis.::
 
-      QSET ID1 C1 ID2 C2   ID3 C3 ID4 C4
-      QSET 16  2  23  3516 1   4
+    +------+-----+----+-----+------+-----+----+-----+----+
+    | QSET | ID1 | C1 | ID2 |  C2  | ID3 | C3 | ID4 | C4 |
+    +------+-----+----+-----+------+-----+----+-----+----+
+    | QSET | 16  | 2  | 23  | 3516 |  1  |  4 |
+    +------+-----+----+-----+------+-----+----+-----+----+
     """
     type = 'QSET'
 
@@ -150,9 +165,13 @@ class ABQSet1(Set):
 
     Defines degrees-of-freedom in the analysis set (a-set).::
 
-      ASET1 C ID1 ID2 ID3 ID4 ID5 ID6 ID7
-      ID8 ID9
-      ASET1 C ID1 'THRU' ID2
+    +--=----+-----+-----+------+------+-----+-----+-----+-----+
+    | ASET1 |  C  | ID1 | ID2  | ID3  | ID4 | ID5 | ID6 | ID7 |
+    +-------+-----+-----+------+------+-----+-----+-----+-----+
+    |       | ID8 | ID9 |
+    +-------+-----+-----+------+------+
+    | ASET1 |  C  | ID1 | THRU | ID2  |
+    +-------+-----+-----+------+------+
     """
 
     def __init__(self, card=None, data=None, comment=''):
@@ -190,9 +209,13 @@ class ASET1(ABQSet1):
     """
     Defines degrees-of-freedom in the analysis set (a-set)::
 
-      ASET1 C ID1 ID2 ID3 ID4 ID5 ID6 ID7
-      ID8 ID9
-      ASET1 C ID1 'THRU' ID2
+    +-------+-----+-----+------+-----+-----+-----+-----+-----+
+    | ASET1 |  C  | ID1 |  ID2 | ID3 | ID4 | ID5 | ID6 | ID7 |
+    +-------+-----+-----+------+-----+-----+-----+-----+-----+
+    |       | ID8 | ID9 |
+    +-------+-----+-----+------+-----+
+    | ASET1 |  C  | ID1 | THRU | ID2 |
+    +-------+-----+-----+------+-----+
     """
     type = 'ASET1'
 
@@ -212,10 +235,15 @@ class CSET1(Set):
     Defines analysis set (a-set) degrees-of-freedom to be fixed (b-set) during
     generalized dynamic reduction or component mode synthesis calculations.::
 
-      CSET1 C ID1 ID2 ID3 ID4 ID5 ID6 ID7
-      ID8 ID9
-      CSET1 C ID1 'THRU' ID2
-      CSET1,,'ALL'
+    +-------+-----+-----+------+-----+-----+-----+-----+-----+
+    | CSET1 |  C  | ID1 |  ID2 | ID3 | ID4 | ID5 | ID6 | ID7 |
+    +-------+-----+-----+------+-----+-----+-----+-----+-----+
+    |       | ID8 | ID9 |
+    +-------+-----+-----+------+-----+
+    | CSET1 |  C  | ID1 | THRU | ID2 |
+    +-------+-----+-----+------+-----+
+    | CSET1 |  ,, | ALL |
+    +-------+-----+-----+
     """
     type = 'CSET1'
 
@@ -259,12 +287,19 @@ class SET1(Set):
     Defines a list of structural grid points or element identification
     numbers.::
 
-      SET1 SID ID1 ID2 ID3 ID4 ID5 ID6 ID7
-      ID8 -etc.-
-      SET1 3 31 62 93 124 16 17 18
-      19
-      SET1 6 29 32 THRU 50 61 THRU 70
-      17 57
+    +------+--------+--------+-----+------+-----+-----+------+-----+
+    | SET1 | SID    |   ID1  | ID2 | ID3  | ID4 | ID5 | ID6  | ID7 |
+    +------+--------+--------+-----+------+-----+-----+------+-----+
+    |      |  ID8   | -etc.- |
+    +------+--------+--------+-----+------+-----+-----+------+-----+
+    | SET1 |  3     |   31   | 62  |  93  | 124 | 16  |  17  | 18  |
+    +------+--------+--------+-----+------+-----+-----+------+-----+
+    |      |   19   |
+    +------+--------+--------+-----+------+-----+-----+------+-----+
+    | SET1 |  6     |  29    | 32  | THRU | 50  | 61  | THRU | 70  |
+    +------+--------+--------+-----+------+-----+-----+------+-----+
+    |      |   17   |  57    |
+    +------+--------+--------+
     """
     type = 'SET1'
 
@@ -456,8 +491,11 @@ class SEBSET(Set):
     Defines boundary degrees-of-freedom to be fixed (b-set) during generalized
     dynamic reduction or component mode calculations.::
 
-      SEBSET SEID ID1 C1 ID2 C2 ID3 C3
-      SEBSET C ID1 'THRU' ID2
+    +--------+------+-----+------+-----+----+-----+----+
+    | SEBSET | SEID | ID1 |  C1  | ID2 | C2 | ID3 | C3 |
+    +--------+------+-----+------+-----+----+-----+----+
+    | SEBSET |  C   | ID1 | THRU | ID2 |
+    +--------+------+-----+------+-----+
     """
     def __init__(self, card=None, data=None, comment=''):
         Set.__init__(self, card, data)
@@ -481,7 +519,7 @@ class SEBSET(Set):
         """
         gets the "raw" card without any processing as a list for printing
         """
-        list_fields = ['SEBSET1']
+        list_fields = ['SEBSET']
         for (component, ID) in zip(self.components, self.IDs):
             list_fields += [component, ID]
         return list_fields
@@ -491,9 +529,13 @@ class SEBSET1(Set):
     Defines boundary degrees-of-freedom to be fixed (b-set) during generalized
     dynamic reduction or component mode calculations.::
 
-      SEBSET1 C ID1 ID2 ID3 ID4 ID5 ID6 ID7
-      ID8 ID9
-      SEBSET1 C ID1 'THRU' ID2
+    +---------+-----+-----+--------+-----+-----+-----+-----+-----+
+    | SEBSET1 |  C  | ID1 |  ID2   | ID3 | ID4 | ID5 | ID6 | ID7 |
+    +---------+-----+-----+--------+-----+-----+-----+-----+-----+
+    |         | ID8 | ID9 |
+    +---------+-----+-----+--------+-----+
+    | SEBSET1 |  C  | ID1 | 'THRU' | ID2 |
+    +---------+-----+-----+--------+-----+
     """
     def __init__(self, card=None, data=None, comment=''):
         Set.__init__(self, card, data)
@@ -520,9 +562,13 @@ class SEQSET1(Set):
     Defines the generalized degrees-of-freedom of the superelement to be used in
     generalized dynamic reduction or component mode synthesis.::
 
-      SEQSET1 C ID1 ID2 ID3 ID4 ID5 ID6 ID7
-      ID8 ID9
-      SEQSET1 C ID1 'THRU' ID2
+    +--------+-----+-----+--------+-----+-----+-----+-----+-----+
+    |SEQSET1 | C   | ID1 | ID2    | ID3 | ID4 | ID5 | ID6 | ID7 |
+    +--------+-----+-----+--------+-----+-----+-----+-----+-----+
+    |        | ID8 | ID9 |
+    +--------+-----+-----+--------+-----+
+    |SEQSET1 | C   | ID1 | 'THRU' | ID2 |
+    +--------+-----+-----+--------+-----+
     """
     def __init__(self, card=None, data=None, comment=''):
         Set.__init__(self, card, data)
@@ -575,8 +621,11 @@ class RADSET(Set):  # not integrated
     Specifies which radiation cavities are to be included for
     radiation enclosure analysis.::
 
-      RADSET ICAVITY1 ICAVITY2 ICAVITY3 ICAVITY4 ICAVITY5 ICAVITY6 ICAVITY7
-      ICAVITY8 ICAVITY9 -etc.-
+    +--------+----------+----------+----------+----------+----------+----------+----------+
+    | RADSET | ICAVITY1 | ICAVITY2 | ICAVITY3 | ICAVITY4 | ICAVITY5 | ICAVITY6 | ICAVITY7 |
+    +--------+----------+----------+----------+----------+----------+----------+----------+
+    |        | ICAVITY8 | ICAVITY9 | -etc.-   |
+    +--------+----------+----------+----------+
     """
     type = 'RADSET'
 
