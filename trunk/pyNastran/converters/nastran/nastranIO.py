@@ -1159,11 +1159,14 @@ class NastranIO(object):
                 o3[eid2] = o3i
                 ovm[eid2] = ovmi
 
-        if 0:
+        if 1:
             if subcaseID in model.compositePlateStress:
                 # not done...
+                print("compositePlateStress...")
                 case = model.compositePlateStress[subcaseID]
-                if case.isTransient():
+                #print('dir(case) =', dir(case))
+                #if case.isTransient():
+                if case.nonlinear_factor is not None: # transient
                     return
                 if case.isVonMises():
                     vmWord = 'vonMises'
@@ -1178,17 +1181,16 @@ class NastranIO(object):
                     if eType in ['CQUAD4', 'CQUAD8', 'CTRIA3', 'CTRIA6']:
                         cen = 'CEN/%s' % eType[-1]
                     #print('composite keys =', case.oxx[eid].keys())
-                    oxxi = case.oxx[eid][cen]
+                    #o11i = case.o11[eid][cen]
                     #self.oyy[eid][nid][iLayer]
 
-                    oxxi = max(case.oxx[eid][cen])
-                    oyyi = max(case.oyy[eid][cen])
-                    ozzi = min(case.oxx[eid][cen], min(case.oyy[eid][cen]))
+                    #print('oxxi =', case.o11[eid][0])
+                    oxxi = max(case.o11[eid])
+                    oyyi = max(case.o22[eid])
 
-                    o1i = max(case.majorP[eid][cen])
-                    o2i = max(case.minorP[eid][cen])
-                    o3i = min(case.majorP[eid][cen], min(case.minorP[eid][cen]))
-                    ovmi = max(case.ovmShear[eid][cen])
+                    o1i = max(case.majorP[eid])
+                    o3i = min(case.minorP[eid])
+                    ovmi = max(case.ovmShear[eid])
 
                     oxx[eid2] = oxxi
                     oyy[eid2] = oyyi
@@ -1241,3 +1243,20 @@ class NastranIO(object):
             cases[(subcaseID, vmWord, 1, 'centroid', '%.3f')] = ovm
         return cases
 
+def main():
+    from pyNastran.gui.testing_methods import add_dummy_gui_functions
+    test = NastranIO()
+    test.is_nodal = False
+    test.is_centroidal = True
+
+    add_dummy_gui_functions(test)
+
+    #test.load_panair_geometry('SWB.INP','')
+    test.load_nastran_geometry('bottle_shell_w_holes_pmc.bdf', '')
+    test.load_nastran_results('bottle_shell_w_holes_pmc.op2', '')
+
+    keys = test.resultCases.keys()
+    assert (1, 'Stress1', 1, 'centroid', '%.3f') in keys, keys
+
+if __name__ == '__main__':
+    main()
