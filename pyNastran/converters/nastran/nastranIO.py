@@ -672,13 +672,19 @@ class NastranIO(object):
             model = OP2(log=self.log, debug=True)
             model._saved_results = set([])
             all_results = model.get_all_results()
-            desired_results = [
-                'displacements', 'velocities', 'accelerations', 'temperatures',
-                'constraint_forces', 'spcForces', 'mpcForces',
-                'gridPointForces',
-                'stress', 'solidStress', 'plateStress', 'compositePlateStress', 'barStress', 'rodStress',
-                #'strain','solidStrain', 'plateStrain', 'compositePlateStrain', 'barStrain', 'rodStrain',
-            ]
+            if self.is_nodal:
+                desired_results = [
+                    'displacements', 'velocities', 'accelerations', 'temperatures',
+                    'constraint_forces', 'spcForces', 'mpcForces',
+                    #'gridPointForces',
+                    'stress', 'solidStress', 'plateStress', 'compositePlateStress', 'barStress', 'rodStress',
+                    #'strain','solidStrain', 'plateStrain', 'compositePlateStrain', 'barStrain', 'rodStrain',
+                ]
+            else:
+                desired_results = [
+                    'stress', 'solidStress', 'plateStress', 'compositePlateStress', 'barStress', 'rodStress',
+                    #'strain','solidStrain', 'plateStrain', 'compositePlateStrain', 'barStrain', 'rodStrain',
+                ]
             for result in desired_results:
                 if result in all_results:
                     model._saved_results.add(result)
