@@ -676,9 +676,15 @@ class NastranIO(object):
                 desired_results = [
                     'displacements', 'velocities', 'accelerations', 'temperatures',
                     'constraint_forces', 'spcForces', 'mpcForces',
+
                     #'gridPointForces',
                     'stress', 'solidStress', 'plateStress', 'compositePlateStress', 'barStress', 'rodStress',
                     #'strain','solidStrain', 'plateStrain', 'compositePlateStrain', 'barStrain', 'rodStrain',
+
+                    # untested
+                    'loadVectors',
+                    'appliedLoads',
+                    'forceVectors',
                 ]
             else:
                 desired_results = [
@@ -723,6 +729,11 @@ class NastranIO(object):
                 [model.accelerations, 'Acceleration'],
                 [model.spcForces,     'SPC Forces'],
                 [model.mpcForces,     'MPC Forces'],
+
+                # untested
+                [model.loadVectors, 'loadVectors'],
+                [model.appliedLoads, 'appliedLoads'],
+                [model.forceVectors, 'forceVectors'],
                 #[model.gridPointForces, 'GridPointForces'],  # TODO: this is buggy...
             ]
             temperature_like = [
@@ -840,6 +851,7 @@ class NastranIO(object):
         o2_dict = {}
         o3_dict = {}
         ovm_dict = {}
+
         for nid in self.nidMap:
             oxx_dict[nid] = []
             oyy_dict[nid] = []
@@ -849,6 +861,7 @@ class NastranIO(object):
             o3_dict[nid] = []
             ovm_dict[nid] = []
 
+        vmWord = None
         if subcaseID in model.rodStress:
             case = model.rodStress[subcaseID]
             if case.isTransient():
