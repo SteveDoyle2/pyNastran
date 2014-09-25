@@ -80,10 +80,12 @@ class OP2( #BDF,
         self._saved_results = set([])
 
     def add_results(self, results):
+        if isinstance(results, basestring):
+            results = [results]
         all_results = self.get_all_results()
         for result in results:
             if result not in all_results:
-                raise RuntimeError('%r is not a valid result to remove' % result)
+                raise RuntimeError('%r is not a valid result to remove; all_results=%s' % (result, all_results))
             if 'stress' in result.lower():
                 self._saved_results.add('stress')
             elif 'strain' in result.lower():
@@ -96,6 +98,8 @@ class OP2( #BDF,
             self._saved_results.add(result)
 
     def set_results(self, results):
+        if isinstance(results, basestring):
+            results = [results]
         self._clear_results()
         self.add_results(results)
 

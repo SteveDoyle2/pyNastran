@@ -1,4 +1,5 @@
 import copy
+import numpy
 from struct import Struct, unpack
 
 from pyNastran import isRelease
@@ -525,16 +526,23 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
         assert nnodes > 0
         #assert len(data) % ntotal == 0
         s = Struct(format1)
-        for inode in xrange(nnodes):
-            edata = data[n:n+ntotal]
-            out = s.unpack(edata)
-            (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
+        if 1:
+            for inode in xrange(nnodes):
+                edata = data[n:n+ntotal]
+                out = s.unpack(edata)
+                (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
 
-            eid = (eid_device - self.device_code) // 10
-            if self.debug4():
-                self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
-            self.obj.add(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
-            n += ntotal
+                eid = (eid_device - self.device_code) // 10
+                #if self.debug4():
+                    #self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
+                self.obj.add(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
+                n += ntotal
+        if 0:
+            dt = numpy.dtype([('nid', '<i4',), ('gridType', '<i4'),
+                              ('tx', '<f4'), ('ty', '<f4'), ('tz', '<f4'),
+                              ('rx', '<f4'), ('ry', '<f4'), ('rz', '<f4'),
+                             ])
+            #numpy.fromfile(data, dtype=dt)
         return n
 
     def _read_complex_table(self, data, result_name, flag):
