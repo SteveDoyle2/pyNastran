@@ -439,6 +439,7 @@ class BDFMethods(BDFMethodsDeprecated):
                 m = load.mag * load.xyz
                 M += m * scale
             elif load.type == 'PLOAD1':
+                pass
                 #elem = self.elements[load.eid]
                 #if elem.type in ['CBAR',]:
                     #pass
