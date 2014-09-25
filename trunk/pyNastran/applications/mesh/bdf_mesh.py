@@ -139,3 +139,31 @@ class MeshTools(BDF):
         #all_eids = set(self.elements.keys())
         return used_free_eids, used_free_nids, free_eids, free_nids
 
+    def find_volume_from_surface_elements(self):
+        """
+        untested
+        """
+        #p0 = array([0., 0., 0.])
+        data = ['GRID', 1000000, 0., 0., 0.]
+        p0 = GRID(data=data)
+        pid = 100 # doesn't matter
+
+        for element in self.elements:
+            c = element.Centroid()
+            if element.type in ['CQUAD4']:
+                (n1, n2, n3) = element.nodes
+                data = ['CPYRAM', p0, n1, n2, n3, n4]
+                tet = CPYRAMID5(data=data)
+                v = tet.Volume()
+            elif element.type in ['CTRIA3']:
+                (n1, n2, n3) = element.nodes
+                data = ['CTETRA', pid, p0, n1, n2, n3]
+                tet = CTETRA4(data=data)
+                v = tet.Volume()  # this needs to be a signed volume
+            else:
+                raise RuntimeError('not implemented; %r' % element.type)
+            V += v
+        return v
+
+    def get_cutting_plane_from_surface_elements(self):
+        pass
