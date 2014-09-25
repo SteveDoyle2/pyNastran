@@ -129,6 +129,14 @@ class XrefMesh(object):
                 self.log.error(msg)
                 raise
 
+        for prop in self.properties_mass.itervalues():
+            try:
+                prop.cross_reference(self)
+            except:
+                msg = "Couldn't cross reference PropertyMass.\n%s" % (str(prop))
+                self.log.error(msg)
+                raise
+
     def _cross_reference_properties(self):
         """
         Links the properties to materials
