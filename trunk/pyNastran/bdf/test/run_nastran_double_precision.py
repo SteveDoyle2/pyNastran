@@ -37,8 +37,8 @@ def main(bdf_name, run_first_nastran=True, debug=True):
 
         f06_name = base + '.f06'
         try:
-            model2 = F06(f06_name)
-            model2.read_f06()
+            model2 = F06()
+            model2.read_f06(f06_name)
         except FatalError as e:
             print(e)
             #return
@@ -48,32 +48,36 @@ def main(bdf_name, run_first_nastran=True, debug=True):
     # read/write the model in double precision
     out_bdf_8 = base + '_8.bdf'
     out_bdf_16 = base + '_16.bdf'
+    out_bdf_16s = base + '_16s.bdf'
     model3 = BDF()
     model3.read_bdf(bdf_name)
     update_bdf(model3)
 
     model3.write_bdf(out_bdf_8, size=8, precision='single')
+    model3.write_bdf(out_bdf_16s, size=16, precision='single')
     model3.write_bdf(out_bdf_16, size=16, precision='double')
     if debug:
         print "---wrote the bdf---"
     #===========================
     # run nastran again
+    aaa
     os.system('nastran scr=yes bat=no news=no old=no %s' % out_bdf_8)
     os.system('nastran scr=yes bat=no news=no old=no %s' % out_bdf_16)
     #===========================
     # verify it's correct
     out_f06_8 = base + '_8.f06'
     out_f06_16 = base + '_16.f06'
+    out_f06_16 = base + '_16.f06'
     out_op2_16 = base + '_16.op2'
 
-    model4 = F06(out_f06_8, debug=False)
-    model4.read_f06()
+    model4 = F06(debug=False)
+    model4.read_f06(out_f06_8)
 
-    model5 = F06(out_f06_16, debug=False)
-    model5.read_f06()
+    model5 = F06(debug=False)
+    model5.read_f06(out_f06_16)
 
-    model6 = OP2(out_op2_16, debug=False)
-    model6.read_op2()
+    model6 = OP2(debug=False)
+    model6.read_op2(out_op2_16)
     print('\n\npassed!!')
 
 
