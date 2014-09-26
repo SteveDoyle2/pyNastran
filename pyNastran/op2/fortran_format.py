@@ -1,4 +1,6 @@
+from __future__ import print_function
 from struct import unpack
+from numpy import fromfile
 import copy
 
 class FortranFormat(object):
@@ -39,11 +41,11 @@ class FortranFormat(object):
         ints    = unpack(b'%ii' % nints, data)
         floats  = unpack(b'%if' % nints, data)
         if 's' in types:
-            print "strings =", strings
+            print("strings =", strings)
         if 'i' in types:
-            print "ints    =", ints
+            print("ints    =", ints)
         if 'f' in types:
-            print "floats  =", floats
+            print("floats  =", floats)
         print('')
         return strings, ints, floats
 
@@ -72,6 +74,21 @@ class FortranFormat(object):
         ndata, = unpack(b'i', data)
 
         data_out = self.f.read(ndata)
+        data = self.f.read(4)
+        self.n += 8 + ndata
+        return data_out
+
+    def read_block_numpy(self, ntotal, dt):
+        """
+        Reads a block following a pattern of:
+            [nbytes, data, nbytes]
+        :retval data: the data in binary
+        """
+        data = self.f.read(4)
+        ndata, = unpack(b'i', data)
+
+        nnodes = ndata // ntotal
+        data_out = fromfile(self.f, dtype=dt, count=nnodes)
         data = self.f.read(4)
         self.n += 8 + ndata
         return data_out
@@ -152,6 +169,7 @@ class FortranFormat(object):
         """
         :param self:    the OP2 object pointer
         """
+        self._use_data = True
         self._data_factor = 1
         nstart = self.n
         self.isubtable = -3
@@ -326,13 +344,18 @@ class FortranFormat(object):
         markers0 = self.get_nmarkers(1, rewind=False)
         if self.debug and debug:
             self.binary_debug.write('_stream_record - marker = [4, %i, 4]\n' % markers0[0])
-        record = self.read_block()
-
-        if self.debug and debug:
-            nrecord = len(record)
-            self.binary_debug.write('_stream_record - record = [%i, recordi, %i]\n' % (nrecord, nrecord))
-        assert (markers0[0]*4) == len(record), 'markers0=%s*4 len(record)=%s' % (markers0[0]*4, len(record))
-        yield record
+        if self._use_data:
+            record = self.read_block()
+            if self.debug and debug:
+                nrecord = len(record)
+                self.binary_debug.write('_stream_record - record = [%i, recordi, %i]\n' % (nrecord, nrecord))
+            assert (markers0[0]*4) == len(record), 'markers0=%s*4 len(record)=%s' % (markers0[0]*4, len(record))
+            yield record
+        else:
+            record = self.f
+            self._len_data = markers0[0] * 4
+            #print('len_data =', self._len_data)
+            yield 'cat' # record
 
         markers1 = self.get_nmarkers(1, rewind=True)
         if self.debug and debug:
@@ -341,6 +364,8 @@ class FortranFormat(object):
         # handling continuation blocks
         if markers1[0] > 0:
             nloop = 0
+            if self._use_data == False:
+                raise NotImplementedError('use_data = False')
             while markers1[0] > 0:
                 markers1 = self.get_nmarkers(1, rewind=False)
                 if self.debug and debug:
@@ -350,6 +375,7 @@ class FortranFormat(object):
                 yield record
                 markers1 = self.get_nmarkers(1, rewind=True)
                 nloop += 1
+        #print('tell2 =', self.f.tell())
 
     def _read_record(self, stream=False, debug=True):
         """
