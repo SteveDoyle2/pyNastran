@@ -157,11 +157,17 @@ class WriteMesh(object):
         """
         out_filename, card_writer = self._output_helper(out_filename,
                                             interspersed, size, precision)
+
+        if precision == 'double':
+            double = True
+        elif precision == 'single':
+            double = False
+
         outfile = open(out_filename, 'wb')
         self._write_header(outfile)
         self._write_params(outfile, size, card_writer)
 
-        self._write_nodes(outfile, size, card_writer)
+        self._write_nodes(outfile, size, card_writer, double)
 
         if interspersed:
             self._write_elements_properties(outfile, size, card_writer)
@@ -230,7 +236,7 @@ class WriteMesh(object):
                 msg.append(param.write_bdf(size, card_writer))
             outfile.write(''.join(msg))
 
-    def _write_nodes(self, outfile, size, card_writer):
+    def _write_nodes(self, outfile, size, card_writer, double):
         """
         Writes the NODE-type cards
 
@@ -239,7 +245,7 @@ class WriteMesh(object):
         if self.spoints:
             msg = []
             msg.append('$SPOINTS\n')
-            msg.append(str(self.spoints))
+            msg.append(self.spoints.write_bdf2(size, double))
             outfile.write(''.join(msg))
 
         if self.nodes:
@@ -248,7 +254,7 @@ class WriteMesh(object):
             if self.gridSet:
                 msg.append(self.gridSet.print_card(size))
             for (nid, node) in sorted(self.nodes.iteritems()):
-                msg.append(node.write_bdf(size, card_writer))
+                msg.append(node.write_bdf2(size, double))
             outfile.write(''.join(msg))
         if 0:  # not finished
             self._write_nodes_associated(outfile, size, card_writer)

@@ -9,6 +9,10 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, blank, integer_or_string)
 from pyNastran.bdf.fieldWriter import print_card_8
 
+from pyNastran.bdf.fieldWriter import print_float_8, print_int_card
+from pyNastran.bdf.fieldWriter16 import print_float_16
+from pyNastran.bdf.field_writer_double import print_scientific_double
+
 class Ring(BaseCard):
     """Generic Ring base class"""
     def __init__(self, card, data):
@@ -170,23 +174,16 @@ class SPOINT(Node):
             list_fields = ['SPOINT'] + collapse_thru(self.nid)
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf2(self, size=8, double=False):
         """
         The writer method used by BDF.write_bdf
 
-        :param self:
-          the SPOINT object pointer
-        :param size:
-          the size of the card (8/16)
-        :type size:
-          int
-        :param card_writer:
-          a writer method for large field cards
-        :type card_writer:
-          function
+        :param self:   the SPOINT object pointer
+        :param size:   unused
+        :param double: unused
         """
         card = self.reprFields()
-        return self.comment() + print_card_8(card)
+        return self.comment() + print_int_card(card)
 
 
 class SPOINTs(Node):
@@ -300,23 +297,16 @@ class SPOINTs(Node):
         list_fields = ['SPOINT'] + spoints
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf2(self, size=8, double=False):
         """
         The writer method used by BDF.write_bdf
 
-        :param self:
-          the SPOINT object pointer
-        :param size:
-          the size of the card (8/16)
-        :type size:
-          int
-        :param card_writer:
-          a writer method for large field cards
-        :type card_writer:
-          function
+        :param self:   the SPOINT object pointer
+        :param size:   unused
+        :param double: unused
         """
         card = self.rawFields()
-        return self.comment() + print_card_8(card)
+        return self.comment() + print_int_card(card)
 
 
 class GRDSET(Node):
@@ -951,6 +941,55 @@ class GRID(Node):
                                                                  seid]
         return list_fields
 
+    def write_bdf2(self, size=8, double=False):
+        """
+        The writer method used by BDF.write_bdf
+
+        :param self:
+          the GRID object pointer
+        :param size:
+          the size of the card (8/16)
+        :type size:
+          int
+        :param double
+          should this card be written with double precision (default=False)
+        :type double
+          bool
+        """
+        xyz = self.xyz
+        if size == 8:
+            cp   = set_string8_blank_if_default(self.Cp(), 0)
+            cd   = set_string8_blank_if_default(self.Cd(), 0)
+            seid = set_string8_blank_if_default(self.SEid(), 0)
+            msg = '%-8s%8i%8s%s%s%s%s%8s%s\n' % ('GRID', self.nid, cp,
+                    print_float_8(xyz[0]),
+                    print_float_8(xyz[1]),
+                    print_float_8(xyz[2]),
+                    cd, self.ps, seid)
+        else:
+            cp   = set_string16_blank_if_default(self.Cp(), 0)
+            cd   = set_string16_blank_if_default(self.Cd(), 0)
+            seid = set_string16_blank_if_default(self.SEid(), 0)
+            if double:
+                msg = ('%-8s%16i%16s%16s%16s\n'
+                       '%-8s%16s%16s%16s%16s\n' % ('GRID', self.nid,
+                        cp,
+                        print_scientific_double(xyz[0]),
+                        print_scientific_double(xyz[1]),
+                        '*',
+                        print_scientific_double(xyz[2]),
+                        cd, self.ps, seid))
+            else:
+                msg = ('%-8s%16i%16s%16s%16s\n'
+                       '%-8s%16s%16s%16s%16s\n' % ('GRID', self.nid,
+                        cp,
+                        print_float_16(xyz[0]),
+                        print_float_16(xyz[1]),
+                        '*',
+                        print_float_16(xyz[2]),
+                        cd, self.ps, seid))
+        return self.comment() + msg
+
     def write_bdf(self, size, card_writer):
         """
         The writer method used by BDF.write_bdf
@@ -969,6 +1008,17 @@ class GRID(Node):
         card = self.reprFields()
         return self.comment() + card_writer(card)
 
+def set_string8_blank_if_default(value, default):
+    val = set_blank_if_default(value, default)
+    if val is None:
+        return '        '
+    return val
+
+def set_string16_blank_if_default(value, default):
+    val = set_blank_if_default(value, default)
+    if val is None:
+        return '                '
+    return val
 
 class POINT(Node):
     """
