@@ -141,6 +141,8 @@ class OUG(OP2Common):
             self.binary_debug.write('  isubcase = %r\n' % self.isubcase)
         self._read_title(data)
         self._write_debug_bits()
+        self._use_data = True  # old method
+        #self._use_data = False  # new method
 
     def _read_oug1_4(self, data):
         if self.is_sort2():
@@ -190,7 +192,10 @@ class OUG(OP2Common):
             result_name = 'displacements'
             storage_obj = self.displacements
             if result_name not in self._saved_results:
-                return len(data)
+                if self._use_data is True:
+                    return len(data)
+                else:
+                    raise NotImplementedError('skipping not implemented for _use_data=False')
             n = self._read_table(data, result_name, storage_obj,
                                  RealDisplacement, ComplexDisplacement,
                                  RealDisplacementArray, ComplexDisplacementArray, 'node', random_code=self.random_code)

@@ -1,5 +1,5 @@
+from __future__ import print_function
 import copy
-import numpy
 from struct import Struct, unpack
 
 from pyNastran import isRelease
@@ -454,9 +454,9 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
             func = mapper[keys]
             if isinstance(func, list):
                 name, func = func
-                print "found keys=(%5s,%4s,%4s) name=%s" % (keys[0], keys[1], keys[2], name)
+                print("found keys=(%5s,%4s,%4s) name=%s" % (keys[0], keys[1], keys[2], name))
             else:
-                print "found keys=(%5s,%4s,%4s)" % (keys[0], keys[1], keys[2])
+                print("found keys=(%5s,%4s,%4s)" % (keys[0], keys[1], keys[2]))
             n = func(data, n)  # gets all the grid/mat cards
         else:
             raise NotImplementedError('keys=%s not found' % str(keys))
@@ -511,38 +511,74 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
         return n
 
     def _read_real_table(self, data, result_name, flag):
-        #return
         if self.debug4():
             self.binary_debug.write('  _read_real_table\n')
         assert flag in ['node', 'elem'], flag
-        dt = self.nonlinear_factor
-        format1 = '2i6f' # 8
-
         n = 0
         ntotal = 32 # 8 * 4
-        nnodes = len(data) // ntotal
-
+        dt = self.nonlinear_factor
         assert self.obj is not None
-        assert nnodes > 0
-        #assert len(data) % ntotal == 0
-        s = Struct(format1)
-        if 1:
+
+        if self._use_data:
+            format1 = '2i6f' # 8
+
+            nnodes = len(data) // ntotal
+
+            assert nnodes > 0
+            #assert len(data) % ntotal == 0
+            s = Struct(format1)
             for inode in xrange(nnodes):
                 edata = data[n:n+ntotal]
                 out = s.unpack(edata)
                 (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
 
                 eid = (eid_device - self.device_code) // 10
-                #if self.debug4():
-                    #self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
+                if self.debug4():
+                    self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
                 self.obj.add(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
                 n += ntotal
-        if 0:
-            dt = numpy.dtype([('nid', '<i4',), ('gridType', '<i4'),
-                              ('tx', '<f4'), ('ty', '<f4'), ('tz', '<f4'),
-                              ('rx', '<f4'), ('ry', '<f4'), ('rz', '<f4'),
-                             ])
-            #numpy.fromfile(data, dtype=dt)
+        else:
+            #assert nnodes > 0
+
+            dt = [
+                ('eid_device', 'int32'),
+                ('grid_type', 'int32'),
+                ('tx', 'float32'),
+                ('ty', 'float32'),
+                ('tz', 'float32'),
+                ('rx', 'float32'),
+                ('ry', 'float32'),
+                ('rz', 'float32'),
+            ]
+            #print('tell_1 =', self.f.tell())
+            nnodes = self._len_data // ntotal
+            #print('nnodes =', nnodes)
+            if 0:  # doesn't work because leading/trailing blocks haven't been read
+                s = Struct(format1)
+                data = self.f.read(self._len_data)
+                for inode in xrange(nnodes):
+                    edata = data[n:n+ntotal]
+                    out = s.unpack(edata)
+                    (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
+
+                    eid = (eid_device - self.device_code) // 10
+                    print('  %s=%i; %s\n' % (flag, eid, str(out)))
+                    n += ntotal
+            else:
+                # doesn't handle file streaming
+                ndata = self.read_block_numpy(ntotal, dt)
+                for datai in ndata:
+                    (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = datai
+
+                    eid = (eid_device - self.device_code) // 10
+                    #if self.debug4():
+                        #self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(datai)))
+                    self.obj.add(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
+                    n += ntotal
+                    if eid < 0:
+                        raise RuntimeError('there is an error...')
+            self._use_data = False
+            #print("self.f.tell() =", self.f.tell())
         return n
 
     def _read_complex_table(self, data, result_name, flag):
