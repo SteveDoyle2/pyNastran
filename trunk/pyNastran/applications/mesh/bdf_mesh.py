@@ -143,6 +143,7 @@ class MeshTools(BDF):
         """
         untested
         """
+        raise NotImplementedError('hasnt been tested')
         #p0 = array([0., 0., 0.])
         data = ['GRID', 1000000, 0., 0., 0.]
         p0 = GRID(data=data)
@@ -165,5 +166,127 @@ class MeshTools(BDF):
             V += v
         return v
 
+    def get_cutting_plane_from_surface_elements_x_cone(self):
+        raise NotImplementedError('hasnt been implemented')
+
     def get_cutting_plane_from_surface_elements(self):
-        pass
+        raise NotImplementedError('hasnt been validated')
+        cid = 1
+        rid = 0
+        z = 1.
+        y = 2.
+
+        ##====================================================================
+        ## setup
+
+        # transform coordinates into cutting plane coordinate system
+        # where 0,0,0 is the origin
+        # z is normal to the cutting plane
+        # TODO: these nodes are probably wrong...
+        origin = [x, 0, 0]
+        z_axis = [x, 0, z]
+        xz_plane = [x, y, z]
+        data = ['CORD2R', cid, rid] + origin + z_axis + xz_plane
+        coordA = CORD2R(data)
+
+        # get the location of all the nodes in the model in the
+        # local coordinate frame
+        xyz = {}
+        for grid in self.nodes:
+            xyz[grid.nid] = grid.PositionWRT(xyz, coordA)
+
+        ##====================================================================
+        ## get the intersecting elements
+
+        # find nodes with z < tol
+        nids_tol = []
+        for nid, xyz in xyz2.iteritems():
+            if xyz[2] < ztol:
+                nids_tol.append(nid)
+
+        # find elements associated with nodes
+        eids = self.get_x_associated_with_y(self.elements, ['nodes', 'nid'])
+
+        ##====================================================================
+        ## create areal elements
+        for eid in eids:
+            elem = self.elements[eid]
+            if element.type == 'CQUAD4':
+                #edges = element.get_edges()
+                pass
+            elif element.type == 'CTRIA3':
+                if 0:
+                    edges = element.get_edges()
+
+                    iedges = []
+                    p_planes = []
+                    for iedge, edge in enumerate(edges):
+                        n1, n2 = edge
+                        if xyz[n2] == 0.: # on the plane
+                            p_plane = xyz
+                            iedges.append(iedge)
+                            p_planes.append(p_plane)
+                        elif xyz[n1] / xyz[n2] < 0.: # different signs
+                            t = xyz[n1] / xyz[n2]
+                            p_plane = t * p2 + p1
+                            iedges.append(iedge)
+                            p_planes.append(p_plane)
+
+                # find subelement where positive element
+                # TODO: do I need this?
+
+                # get common node
+                # TODO: do I need this?
+                #common_node = union(edges[iedges[0]], edges[iedges[1]])
+
+                #vector = (p_planes[0] + p_planes[1])
+                #if common_node
+                #for ip in p_planes:
+
+            else:
+                raise RuntimeError('not implemented; %r' % element.type)
+
+            edges = element.get_edges()
+
+            # find the two intersection points
+            # TODO: what if there is only 1???
+            iedges = []
+            p_planes = []
+            for iedge, edge in enumerate(edges):
+                n1, n2 = edge
+                if xyz[n2] == 0.: # on the plane
+                    p_plane = xyz
+                    iedges.append(iedge)
+                    p_planes.append(p_plane)
+                elif xyz[n1] / xyz[n2] < 0.: # different signs
+                    t = xyz[n1] / xyz[n2]
+                    p_plane = t * p2 + p1
+                    iedges.append(iedge)
+                    p_planes.append(p_plane)
+
+            # make a CTRIA3 that connects the 2 intersecting nodes with the origin
+            g1 = ['GRID', 1, 0] + p_planes[0]
+            g2 = ['GRID', 2, 0] + p_planes[1]
+
+            g1 = GRID(data=g1)
+            g2 = GRID(data=g2)
+
+            el = ['CTRIA3', 1, 1, nid0, g1, g2]
+            element = CTRIA3(data=e1)
+
+        ##====================================================================
+        ## find grouped elements
+        ## we can have two independent regions of elements
+
+        # nodal equivalencing
+
+        # find touching elements
+
+        ##====================================================================
+        ## sum area based on normals
+        ## we can have two independent regions of elements
+        A = 0.0
+        for group in groups:
+            for elem in group:
+                    A += A
+        return A
