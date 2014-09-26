@@ -7,13 +7,14 @@ from pyNastran.bdf.bdf import BDF
 root_path = pyNastran.__path__[0]
 test_path = os.path.join(root_path, 'bdf', 'test', 'unit')
 
+log = None
 class TestReadWrite(unittest.TestCase):
 
     def test_write_1(self):
         """
         Tests 1 read method and various write methods
         """
-        model = BDF(debug=False)
+        model = BDF(log=log, debug=False)
 
         bdf_name = os.path.join(test_path, 'test_mass.dat')
         model.read_bdf(bdf_name)
@@ -106,6 +107,7 @@ class TestReadWrite(unittest.TestCase):
             os.remove(out_filename)
 
     def test_include_end(self):
+        """this test fails"""
         f = open('a.bdf', 'wb')
         f.write('CEND\n')
         f.write('BEGIN BULK\n')
@@ -120,9 +122,9 @@ class TestReadWrite(unittest.TestCase):
         f.write('GRID,3\n\n')
         f.write("ENDDATA\n")
 
-        model = BDF()
+        model = BDF(log=log, debug=False)
         model.read_bdf('a.bdf')
-        print('nodes =', model.nodes)
+        #print('nodes =', model.nodes)
         self.assertEquals(len(model.nodes), 3)
 
 if __name__ == '__main__':  # pragma: no cover

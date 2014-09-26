@@ -31,7 +31,7 @@ from pyNastran.utils.dev import list_print
 from pyNastran.utils.mathematics import Area, norm, centroid_triangle
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
-from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter import print_card_8, print_field_8
 from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.BDF_Card import wipe_empty_fields
 
@@ -551,10 +551,11 @@ class CTRIA3(TriShell):
 
         #return self.write_bdf(size, double)
         nodes = self.nodeIDs()
-        row2_data = [thetaMcid, zOffset, TFlag, T1, T2, T3]
+        row2_data = [thetaMcid, zOffset,
+            TFlag, T1, T2, T3]
         row2 = [print_field_8(field) for field in row2_data]
-        data = [self.eid, self.Pid()] + nodes2 + row2
-        msg = ('CTRIA3  %8i%8i%8i%8i%8i%8i%8i\n'
+        data = [self.eid, self.Pid()] + nodes + row2
+        msg = ('CTRIA3  %8i%8i%8i%8i%8i%8s%8s\n'
                '                %8s%8s%8s%8s\n' % tuple(data))
         return self.comment() + msg.rstrip() + '\n'
 
@@ -1670,8 +1671,8 @@ class CQUAD4(QuadShell):
         row2_data = [thetaMcid, zOffset,
                 TFlag, T1, T2, T3, T4]
         row2 = [print_field_8(field) for field in row2_data]
-        data = [self.eid, self.Pid()] + nodes2 + row2
-        msg = ('CQUAD4  %8i%8i%8i%8i%8i%8i%8i%8s\n'
+        data = [self.eid, self.Pid()] + nodes + row2
+        msg = ('CQUAD4  %8i%8i%8i%8i%8i%8i%8s%8s\n'
                '                %8s%8s%8s%8s%8s\n' % tuple(data))
         return self.comment() + msg.rstrip() + '\n'
 
@@ -1867,11 +1868,17 @@ class CQUAD(QuadShell):
         list_fields = ['CQUAD', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
 
+    def write_bdf2(self, size=8, double=False):
+        data = [self.eid, self.Pid()] + self.nodeIDs()
+        msg = ('CQUAD   %8i%8i%8i%8i%8i%8i%8s%8s\n'  # 6 nodes
+               '        %8s%8s%8s\n' % tuple(data))
+        return self.comment() + msg.rstrip() + '\n'
+
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
         msg = self.comment() + print_card_8(card)
-        #msg2 = self.write_bdf2(size)
-        #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
+        msg2 = self.write_bdf2(size)
+        assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
         return msg
 
 
@@ -2103,6 +2110,17 @@ class CQUADX(QuadShell):
     def reprFields(self):
         return self.rawFields()
 
+    def write_bdf2(self, size=8, double=False):
+        nodes = self.nodeIDs()
+        data = [eid, self.Pid()] + nodes[:4]
+        row2 = ['        ' if node is None else '%8i' % node for node in nodes[4:]]
+        msg = ('CQUADX  %8i%8i %8i%8i%8i%8i%8s%8s\n'
+               '        %8s%8s' % tuple(data + row2))
+        return self.comment() + msg.rstrip() + '\n'
+
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        return self.comment() + print_card_8(card)
+        msg = self.comment() + print_card_8(card)
+        msg2 = self.write_bdf2(size)
+        assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
+        return msg

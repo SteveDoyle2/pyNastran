@@ -368,6 +368,7 @@ class WriteMesh(object):
         pid_eids = self.getElementIDsWithPIDs(pids, mode='dict')
 
         msg = []
+        #failed_element_types = set([])
         for (pid, eids) in sorted(pid_eids.iteritems()):
             prop = self.properties[pid]
             if eids:
