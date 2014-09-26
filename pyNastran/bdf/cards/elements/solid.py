@@ -132,9 +132,11 @@ class SolidElement(Element):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
-        return self.comment() + print_card_8(card)
-
+        card = self.rawFields()
+        msg1 = self.comment() + print_card_8(card)
+        msg2 = self.write_bdf2()
+        assert msg1 == msg2, '\n%s---\n%s\n%r\n%r' % (msg1, msg2, msg1, msg2)
+        return msg2
 
 class CHEXA8(SolidElement):
     """
@@ -146,6 +148,13 @@ class CHEXA8(SolidElement):
     type = 'CHEXA'
     asterType = 'HEXA8'
     calculixType = 'C3D8'
+
+    def write_bdf2(self, size=8, double=False):
+        nodes = self.nodeIDs()
+        data = [self.eid, self.Pid()] + nodes
+        msg = ('CHEXA   %8i%8i%8i%8i%8i%8i%8i%8i\n'
+               '        %8i%8i\n' % tuple(data))
+        return self.comment() + msg
 
     def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
@@ -218,15 +227,27 @@ class CHEXA8(SolidElement):
 
 class CHEXA20(SolidElement):
     """
-    ::
-
-      CHEXA EID PID G1 G2 G3 G4 G5 G6
-      G7 G8 G9 G10 G11 G12 G13 G14
-      G15 G16 G17 G18 G19 G20
+    +-------+-----+-----+-----+-----+-----+-----+-----+-----+
+    | CHEXA | EID | PID | G1  | G2  | G3  | G4  | G5  | G6  |
+    +-------+-----+-----+-----+-----+-----+-----+-----+-----+
+    |       | G7  | G8  | G9  | G10 | G11 | G12 | G13 | G14 |
+    +-------+-----+-----+-----+-----+-----+-----+-----+-----+
+    |       | G15 | G16 | G17 | G18 | G19 | G20 |
+    +-------+-----+-----+-----+-----+-----+-----+
     """
     type = 'CHEXA'
     asterType = 'HEXA20'
     calculixType = 'C3D20'
+
+    def write_bdf2(self, size=8, double=False):
+        nodes = self.nodeIDs()
+        nodes2 = ['' if node is None else '%8i' % node for node in nodes[7:]]
+
+        data = [self.type, self.eid, self.Pid()] + nodes[:7] + nodes2
+        msg = ('CHEXA   %8i%8i%8i%8i%8i%8i%8i%8i\n'
+               '        %8i%8i%8s%8s%8s%8s%8s%8s\n'
+               '        %8s%8s%8s%8s%8s%8s\n' % tuple(data))
+        return self.comment() + msg + '\n'
 
     def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
@@ -328,6 +349,12 @@ class CPENTA6(SolidElement):
     type = 'CPENTA'
     asterType = 'PENTA6'
     calculixType = 'C3D6'
+
+    def write_bdf2(self, size=8, double=False):
+        nodes = self.nodeIDs()
+        data = [self.eid, self.Pid()] + nodes
+        msg = 'CHEXA   %8i%8i%8i%8i%8i%8i%8i%8i\n' % tuple(data)
+        return self.comment() + msg
 
     def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
@@ -521,13 +548,22 @@ class CPENTA15(SolidElement):
     """
     ::
 
-      CPENTA EID PID G1 G2 G3 G4 G5 G6
-      G7 G8 G9 G10 G11 G12 G13 G14
-      G15
+      CPENTA EID PID G1 G2  G3  G4  G5  G6
+             G7  G8  G9 G10 G11 G12 G13 G14
+             G15
     """
     type = 'CPENTA'
     asterType = 'PENTA15'
     calculixType = 'C3D15'
+
+    def write_bdf2(self, size=8, double=False):
+        nodes = self.nodeIDs()
+        nodes2 = ['' if node is None else '%8i' % node for node in nodes[6:]]
+        data = [self.eid, self.Pid()] + nodes[:6] + nodes2
+        msg = ('CPENTA  %8i%8i%8i%8i%8i%8i%8i%8i\n'
+               '        %8s%8s%8s%8s%8s%8s%8s%8s\n'
+               '        %8s\n' % tuple(data))
+        return self.comment() + msg.rstrip() + '\n'
 
     def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
@@ -625,6 +661,12 @@ class CTETRA4(SolidElement):
     type = 'CTETRA'
     asterType = 'TETRA4'
     calculixType = 'C3D4'
+
+    def write_bdf2(self, size=8, double=False):
+        nodes = self.nodeIDs()
+        data = [self.eid, self.Pid()] + nodes
+        msg = 'CTETRA  %8i%8i%8i%8i%8i%8i\n' % tuple(data)
+        return self.comment() + msg
 
     def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
@@ -778,14 +820,23 @@ class CTETRA10(SolidElement):
     """
     ::
 
-      CTETRA EID PID G1 G2 G3 G4 G5 G6
-      G7 G8 G9 G10
+      CTETRA EID PID G1 G2  G3 G4 G5 G6
+             G7   G8 G9 G10
       CTETRA   1       1       239     229     516     99      335     103
                265     334     101     102
     """
     type = 'CTETRA'
     asterType = 'TETRA10'
     calculixType = 'C3D10'
+
+    def write_bdf2(self, size=8, double=False):
+        nodes = self.nodeIDs()
+        nodes2 = ['' if node is None else '%8i' % node for node in nodes[4:]]
+
+        data = [self.eid, self.Pid()] + nodes[:4] + nodes2
+        msg = ('CTETRA  %8i%8i%8i%8i%8i%8i%8s%8s\n'
+               '        %8s%8s%8s%8s\n' % tuple(data))
+        return self.comment() + msg + '\n'
 
     def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)

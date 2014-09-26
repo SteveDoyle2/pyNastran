@@ -140,6 +140,14 @@ class TriShell(ShellElement):
     def __init__(self, card, data):
         ShellElement.__init__(self, card, data)
 
+    def get_edges(self):
+        """
+        Returns the edges
+        """
+        return [(self.nodes[0], self.nodes[1]),
+                (self.nodes[1], self.nodes[2]),
+                (self.nodes[2], self.nodes[0])]
+
     def Thickness(self):
         """
         Returns the thickness
@@ -1034,6 +1042,16 @@ class CTRIAX6(TriShell):
 class QuadShell(ShellElement):
     def __init__(self, card, data):
         ShellElement.__init__(self, card, data)
+
+    def get_edges(self):
+        """
+        Returns the edges
+        """
+        return [(self.nodes[0], self.nodes[1]),
+                (self.nodes[1], self.nodes[2]),
+                (self.nodes[2], self.nodes[3]),
+                (self.nodes[3], self.nodes[0]),
+                ]
 
     def Thickness(self):
         """
