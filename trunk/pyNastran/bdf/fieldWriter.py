@@ -58,13 +58,12 @@ def print_scientific_8(value):
     sExp2 = str(exponent).strip('-+')  # the exponent will be added later...
     value2 = float(svalue)
 
-    lenSExp = len(sExp2) + 1  # the plus 1 is for the sign
-    leftover = 8 - lenSExp
+    leftover = 5 - len(sExp2)
 
     if value < 0:
-        Format = "%%1.%sf" % (leftover - 3)
+        Format = "%%1.%sf" % (leftover - 1)
     else:
-        Format = "%%1.%sf" % (leftover - 2)
+        Format = "%%1.%sf" % leftover
 
     svalue3 = Format % value2
     svalue4 = svalue3.strip('0')
@@ -172,6 +171,9 @@ def print_float_8(value):
 
 
 def print_field(value):
+    return print_field_8(value)
+
+def print_field_8(value):
     """
     Prints a 8-character width field
 

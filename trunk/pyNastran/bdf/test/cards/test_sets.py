@@ -28,7 +28,7 @@ class TestSets(unittest.TestCase):
             [[1, 2, 3, 5, 4, 6], True], # these are all integers
         ]
         msg3 = print_int_card_blocks(fields_blocks)
-        print '%r' % msg3
+        #print '%r' % msg3
         self.assertEqual('SET1           a      1.       3       1       2       3       5       4\n'
                          '               6\n', msg3)
 

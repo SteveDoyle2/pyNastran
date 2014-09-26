@@ -353,7 +353,7 @@ class CPENTA6(SolidElement):
     def write_bdf2(self, size=8, double=False):
         nodes = self.nodeIDs()
         data = [self.eid, self.Pid()] + nodes
-        msg = 'CHEXA   %8i%8i%8i%8i%8i%8i%8i%8i\n' % tuple(data)
+        msg = 'CPENTA  %8i%8i%8i%8i%8i%8i%8i%8i\n' % tuple(data)
         return self.comment() + msg
 
     def __init__(self, card=None, data=None, comment=''):
@@ -582,8 +582,8 @@ class CPENTA15(SolidElement):
                 integer(card, 6, 'nid4'),
                 integer(card, 7, 'nid5'),
                 integer(card, 8, 'nid6'),
-                integer(card, 9, 'nid7'),
-                integer(card, 10, 'nid8'),
+                integer_or_blank(card, 9, 'nid7'),
+                integer_or_blank(card, 10, 'nid8'),
                 integer_or_blank(card, 11, 'nid9'),
                 integer_or_blank(card, 12, 'nid10'),
                 integer_or_blank(card, 13, 'nid11'),

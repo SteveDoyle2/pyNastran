@@ -311,7 +311,6 @@ class SET1(Set):
         self.sid = integer(card, 1, 'sid')
 
         self.IDs = []
-
         IDs = []
         i = 1
         for ifield in range(2, len(card)):
