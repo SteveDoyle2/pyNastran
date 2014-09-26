@@ -1,0 +1,31 @@
+Release 0.7
+===========
+ Tasks
+ -----
+ - various BDF/OP2/F06 tests
+ - sphinx documention on all relevant functions
+ - bug fix wx gui
+ - move relevant mesh.py functions to bdf_methods.py
+ - tests for op2 results request
+ - cleanup outdated op2 table skipping
+
+ Completed
+ ---------
+ - 
+
+ Remove
+ ------
+ - files
+   - tetgen / tecplot / plot3d  / iges / calculix / toCodeAster / toSfepy
+   - nastranwrapper-using_pynastran
+   - pch
+   - applications
+   - bdf_vectorized
+
+ - functions
+   - 
+ 
+Release 0.8
+===========
+ Tasks
+ -----
