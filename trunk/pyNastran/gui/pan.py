@@ -15,7 +15,7 @@ from pyNastran.gui.actionsControl import pyWidget
 
 from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, Plot3d_io,
     is_nastran, is_cart3d, is_panair, is_lawgs, is_stl, is_tetgen, is_usm3d, is_plot3d)
-
+from pyNastran.gui.gui_wx_common import GuiCommon
 
 def getScreenCorner(x, y):
     #print "wx.GetDisplaySize() = ",wx.GetDisplaySize()
@@ -25,7 +25,7 @@ def getScreenCorner(x, y):
     return(xCorner, yCorner)
 
 
-class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO, TetgenIO, Usm3dIO, Plot3d_io):
+class Pan(wx.Panel, GuiCommon, NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO, TetgenIO, Usm3dIO, Plot3d_io):
     def __init__(self, *args, **kwargs):
 
         self.grid = vtk.vtkUnstructuredGrid()
@@ -55,6 +55,7 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO, TetgenIO, U
         del kwargs['magnify']
         #del kwargs['rotation']
         wx.Panel.__init__(self, *args, **kwargs)
+        GuiCommon.__init__(self)
         NastranIO.__init__(self)
         Cart3dIO.__init__(self)
         LaWGS_IO.__init__(self)
@@ -272,37 +273,6 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO, TetgenIO, U
         self.rend.AddActor(self.scalarBar)
         #return scalarBar
 
-    def UpdateScalarBar(self, Title, min_value, max_value, dataFormat):
-        """
-        @param Title the scalar bar title
-        @param min_value the blue value
-        @param max_value the red value
-        @param dataFormat '%g','%f','%i',etc.
-        """
-        #drange = [10.,20.]
-        self.colorFunction.RemoveAllPoints()
-        self.colorFunction.AddRGBPoint(min_value, 0.0, 0.0, 1.0)
-        self.colorFunction.AddRGBPoint(max_value, 1.0, 0.0, 0.0)
-        #self.scalarBar.SetLookupTable(self.colorFunction)
-
-        self.scalarBar.SetTitle(Title)
-        self.scalarBar.SetLabelFormat(dataFormat)
-
-        nvalues = 11
-        if (Title in ['Element_ID', 'Eids', 'Region'] and (max_value - min_value + 1) < 11):
-            nvalues = int(max_value - min_value) + 1
-            #ncolors = nvalues
-            #if nvalues < 5:
-                #ncolors = 5
-            #print "need to adjust axes...max_value=%s" %(max_value)
-        #if dataFormat=='%.0f' and maxValue>
-
-        #print("Title =", Title)
-        #print("nvalues =", nvalues)
-        self.scalarBar.SetNumberOfLabels(nvalues)
-        self.scalarBar.SetMaximumNumberOfColors(nvalues)
-        self.scalarBar.Modified()
-
     def Update(self):
         #print '\n'.join(dir(self.widget))
         window = self.widget.GetRenderWindow()
@@ -434,127 +404,6 @@ class Pan(wx.Panel, NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO, TetgenIO, U
             foundCases = False
         #print "next key = ",key
         return foundCases
-
-    def cycleResults(self):
-        plotNodal = self.is_nodal
-        plotCentroidal = self.is_centroidal
-        #print("plotNodal=%s plotCentroidal=%s" %(plotNodal,plotCentroidal))
-        #print("nCases = %i" %(self.nCases+1))
-        if self.nCases == 0:
-            self.scalarBar.SetVisibility(False)
-            return
-
-        foundCases = self.incrementCycle()
-        if foundCases:
-        #if 1:
-            print("incremented case")
-            #gridResult.Reset()
-            gridResult = vtk.vtkFloatArray()
-            emptyResult = vtk.vtkFloatArray()
-
-            try:
-                key = self.caseKeys[self.iCase]
-            except:
-                print('icase=%s caseKeys=%s' % (self.iCase, str(self.caseKeys)))
-                raise
-            case = self.resultCases[key]
-            print("len(case) = %i" % len(case))
-            (subcaseID, resultType, vectorSize, location, dataFormat) = key
-
-            if location == 'centroid' and plotCentroidal:
-                #allocationSize = vectorSize*location (where location='centroid'-> self.nElements)
-                gridResult.Allocate(self.nElements, 1000)
-            elif location == 'node' and plotNodal:
-                #allocationSize = vectorSize*self.nNodes # (where location='node'-> self.nNodes)
-                gridResult.Allocate(self.nNodes * vectorSize, 1000)
-                gridResult.SetNumberOfComponents(vectorSize)
-            else:
-                print("***%s skipping" % location)
-
-            try:
-                #self.iSubcaseNameMap[self.isubcase] = [Subtitle, Label]
-                caseName = self.iSubcaseNameMap[subcaseID]
-            except KeyError:
-                #print "cant find subcaseID=%s" % subcaseID
-                caseName = ('case=NA', 'label=NA')
-            (subtitle, label) = caseName
-
-            print("subcaseID=%s resultType=%s subtitle=%r label=%r" % (subcaseID, resultType, subtitle, label))
-
-            if isinstance(case, ndarray):
-                maxValue = amax(case)
-                minValue = amin(case)
-            else:
-                maxValue = case[0]
-                minValue = case[0]
-                for value in case:
-                    maxValue = max(value, maxValue)
-                    minValue = min(value, minValue)
-
-            # flips sign to make colors go from blue -> red
-            try:
-                normValue = maxValue - minValue
-            except:
-                raise RuntimeError(resultType)
-            #print "case = ",case
-            #if normValue==0.: # avoids division by 0.
-            #    normValue = 1.
-
-            #valueSet = set()
-            if vectorSize == 1:
-                #print "minValue = ",min(case)
-                for value in case:
-                    gridResult.InsertNextValue(value)
-                    #if len(valueSet) < 20:
-                        #valueSet.add(value)
-            else:  # vectorSize=3
-                pass
-                #for value in case:
-                #    gridResult.InsertNextTuple3(value)  # x,y,z
-
-            print("max=%g min=%g norm=%g\n" % (maxValue, minValue, normValue))
-
-            #nValueSet = len(valueSet)
-            self.textActors[0].SetInput('Max:  %g' % maxValue)  # max
-            self.textActors[1].SetInput('Min:  %g' % minValue)  # min
-            self.textActors[2].SetInput('Subcase=%s Subtitle: %s' % (subcaseID, subtitle))  # info
-
-            if label:
-                self.textActors[3].SetInput('Label: %s' % label)  # info
-                self.textActors[3].VisibilityOn()
-            else:
-                self.textActors[3].VisibilityOff()
-
-            self.UpdateScalarBar(resultType, minValue, maxValue, dataFormat)
-            #self.scalarBar.SetNumberOfLabels(nValueSet)
-            #self.scalarBar.SetMaximumNumberOfColors(nValueSet)
-            #prop = self.scalarBar.GetLabelTextProperty()
-            #fontSize = prop.GetFontSize()
-            #print "fontSize = ",fontSize
-            #prop.SetFontSize(40)
-
-            # TODO results can only go from centroid->node and not back to
-            ## centroid
-            #print dir(self.grid)
-            #self.grid.Reset()
-            if location == 'centroid' and plotCentroidal:
-                #self.grid.GetPointData().Reset()
-                self.grid.GetCellData().SetScalars(gridResult)
-                print("***plotting vector=%s skipping (centroid/node) - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
-                self.grid.Modified()
-            elif location == 'node' and plotNodal:
-                self.grid.GetCellData().Reset()
-                if vectorSize == 1:
-                    print("***plotting vector=%s skipping (centroid/node) - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
-                    self.grid.GetPointData().SetScalars(gridResult)
-                    self.grid.Modified()
-                else:
-                    print("***node vector=%s skipping (centroid/node) - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
-                    self.grid.GetPointData().SetVectors(gridResult)
-                    #print("***node skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label))
-            else:
-                print("***%s skipping (centroid/node) - subcaseID=%s resultType=%s subtitle=%s label=%s" % (location, subcaseID, resultType, subtitle, label))
-                self.scalarBar.SetVisibility(False)
 
     def onKeyPress(self, obj, event):
         rwi = obj
