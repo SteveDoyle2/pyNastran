@@ -78,20 +78,54 @@ class FortranFormat(object):
         self.n += 8 + ndata
         return data_out
 
-    def read_block_numpy(self, ntotal, dt):
+    def read_block_numpy(self, ntotal, struc, numpy_fmt):
         """
         Reads a block following a pattern of:
             [nbytes, data, nbytes]
         :retval data: the data in binary
+
+        :param ntotal: the length of a single data entry, so (nid, cid, x, y, z) => 5*4=20
+        :param struc:  a struct.Struct('2i3f')
+        :param numpy_fmt:  [('nid', 'int32'), ('cid', 'int32'),
+                            ('x', 'float32'), ('z', 'float32'), ('z', 'float32')]
         """
         data = self.f.read(4)
         ndata, = unpack(b'i', data)
 
-        nnodes = ndata // ntotal
-        data_out = fromfile(self.f, dtype=dt, count=nnodes)
+        # there may be some leftover data from the previous block
+        if len(self._data_extra) > 0:
+            delta = ntotal - len(self._data_extra)
+            data1 = self._data_extra + self.f.read(delta)
+            data_out1 = struc.unpack(data1)
+        else:
+            delta = 0
+            data_out1 = []
+
+        # we calculate the number of nodes/elements as ndata // ntotal,
+        # but we need to account for the offset from the previous block
+        nnodes = (ndata - delta) // ntotal
+
+        # this is just a simple amount of leftover data in the current block
+        # that will spill over to the next block and make delta > 0
+        nextra = ndata - nnodes * ntotal - delta
+
+        # read 99.9% of the data using the fast numpy streaming routine
+        assert isinstance(numpy_fmt, basestring), numpy_fmt
+        from numpy import dtype
+        dtypes = dtype(numpy_fmt)
+        data_out2 = fromfile(self.f, dtype=dtypes, count=nnodes)
+
+        # read the leftover data
+        if nextra > 0:
+            self._data_extra = self.f.read(nextra)
+        elif nextra == 0:
+            self._data_extra = ''
+        else:
+            raise RuntimeError('nextra=%s < 0' % nextra)
+
         data = self.f.read(4)
         self.n += 8 + ndata
-        return data_out
+        return data_out1, data_out2
 
     def read_markers(self, markers):
         """
@@ -169,7 +203,10 @@ class FortranFormat(object):
         """
         :param self:    the OP2 object pointer
         """
+        # these parameters are used for numpy streaming
         self._use_data = True
+        self._data_extra = ''
+
         self._data_factor = 1
         nstart = self.n
         self.isubtable = -3
@@ -213,6 +250,7 @@ class FortranFormat(object):
                             self.ntotal = 0
                             for data in self._stream_record():
                                 data = datai + data
+
                                 n = table4_parser(data)
                                 assert isinstance(n, int), self.table_name
                                 datai = data[n:]
@@ -350,12 +388,10 @@ class FortranFormat(object):
                 nrecord = len(record)
                 self.binary_debug.write('_stream_record - record = [%i, recordi, %i]\n' % (nrecord, nrecord))
             assert (markers0[0]*4) == len(record), 'markers0=%s*4 len(record)=%s' % (markers0[0]*4, len(record))
-            yield record
         else:
-            record = self.f
             self._len_data = markers0[0] * 4
-            #print('len_data =', self._len_data)
-            yield 'cat' # record
+            record = ''
+        yield record
 
         markers1 = self.get_nmarkers(1, rewind=True)
         if self.debug and debug:
@@ -364,18 +400,21 @@ class FortranFormat(object):
         # handling continuation blocks
         if markers1[0] > 0:
             nloop = 0
-            if self._use_data == False:
-                raise NotImplementedError('use_data = False')
             while markers1[0] > 0:
                 markers1 = self.get_nmarkers(1, rewind=False)
                 if self.debug and debug:
                     self.binary_debug.write('_stream_record - markers1 = [4, %s, 4]\n' % str(markers1))
 
-                record = self.read_block()
+                if self._use_data:
+                    record = self.read_block()
+                else:
+                    record = self.f
+                    self._len_data = markers0[0] * 4
+                    record = ''
                 yield record
+
                 markers1 = self.get_nmarkers(1, rewind=True)
                 nloop += 1
-        #print('tell2 =', self.f.tell())
 
     def _read_record(self, stream=False, debug=True):
         """

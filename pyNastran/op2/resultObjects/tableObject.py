@@ -446,7 +446,7 @@ class RealTableObject(ScalarObject):  # displacement style table
     def add(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
         msg = "node_id=%s gridType=%s v1=%s v2=%s v3=%s" % (
             node_id, grid_type, v1, v2, v3)
-        #print msg
+        #print(msg)
         assert -1 < node_id < 1000000000, msg
         assert isinstance(node_id, int), msg
         #assert nodeID not in self.translations,'displacementObject - static failure'
@@ -456,11 +456,11 @@ class RealTableObject(ScalarObject):  # displacement style table
         self.rotations[node_id] = array([v4, v5, v6], dtype='float32')  # rx,ry,rz
 
     def add_sort1(self, dt, node_id, grid_type, v1, v2, v3, v4, v5, v6):
+        msg = "node_id=%8i v1=%s v2=%s v3=%s\n" % (node_id, v1, v2, v3)
+        msg += "                 v4=%s v5=%s v6=%s" % (v4, v5, v6)
+        #print(msg)
         if dt not in self.translations:
             self.add_new_transient(dt)
-        msg = "node_id=%s v1=%s v2=%s v3=%s\n" % (node_id, v1, v2, v3)
-        msg += "          v4=%s v5=%s v6=%s" % (v4, v5, v6)
-        #print msg
         assert -1 < node_id < 1000000000, msg
         #assert isinstance(node_id,int),msg
         #assert node_id not in self.translations[self.dt],'displacementObject - transient failure'
@@ -722,7 +722,7 @@ class ComplexTableObject(ScalarObject):
         #assert isinstance(nodeID,int),nodeID
         msg = "nodeID=%s v1=%s v2=%s v3=%s\n" % (nodeID, v1, v2, v3)
         msg += "          v4=%s v5=%s v6=%s" % (v4, v5, v6)
-        #print msg
+        #print(msg)
         assert 0 < nodeID < 1000000000, msg  # -1
         assert -0.5 < dt, msg              # remove
         assert isinstance(nodeID, int), msg
