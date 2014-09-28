@@ -952,7 +952,6 @@ class OP2( #BDF,
 
         #print "n=%s" % (self.n)
         #strings, ints, floats = self.show(100)
-
         pass
 
     def _skip_pcompts(self):
