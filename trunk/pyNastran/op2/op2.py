@@ -107,7 +107,7 @@ class OP2( #BDF,
         all_results = self.get_all_results()
         for result in results:
             if result not in all_results:
-                raise RuntimeError('%r is not a valid result to remove' % result)
+                raise RuntimeError('%r is not a valid result to remove; all_results=%s' % (result, all_results))
 
         for result in results:
             if result in self._saved_results:
@@ -568,7 +568,7 @@ class OP2( #BDF,
         """
         sr = list(self._saved_results)
         sr.sort()
-        self.log.debug('_saved_results = %s' % str(sr))
+        #self.log.debug('_saved_results = %s' % str(sr))
         if op2_filename is None:
             from pyNastran.utils.gui_io import load_file_dialog
             wildcard_wx = "Nastran OP2 (*.op2)|*.op2|" \

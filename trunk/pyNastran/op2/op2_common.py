@@ -519,6 +519,7 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
         dt = self.nonlinear_factor
         assert self.obj is not None
 
+        obj = self.obj
         if self._use_data:
             format1 = '2i6f' # 8
 
@@ -535,54 +536,36 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
                 eid = (eid_device - self.device_code) // 10
                 if self.debug4():
                     self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
-                self.obj.add(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
+                obj.add(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
                 n += ntotal
         else:
-            #assert nnodes > 0
+            #dtypes = [
+                #('eid_device', 'int32'),
+                #('grid_type', 'int32'),
+                #('tx', 'float32'),
+                #('ty', 'float32'),
+                #('tz', 'float32'),
+                #('rx', 'float32'),
+                #('ry', 'float32'),
+                #('rz', 'float32'),
+            #]
+            dtypes = 'i,i,f,f,f,f,f,f'
+            format1 = '2i6f'
+            s = Struct(format1)
 
-            dt = [
-                ('eid_device', 'int32'),
-                ('grid_type', 'int32'),
-                ('tx', 'float32'),
-                ('ty', 'float32'),
-                ('tz', 'float32'),
-                ('rx', 'float32'),
-                ('ry', 'float32'),
-                ('rz', 'float32'),
-            ]
-            #print('tell_1 =', self.f.tell())
-            nnodes = self._len_data // ntotal
-            #print('nnodes =', nnodes)
-            if 0:  # doesn't work because leading/trailing blocks haven't been read
-                s = Struct(format1)
-                data = self.f.read(self._len_data)
-                for inode in xrange(nnodes):
-                    edata = data[n:n+ntotal]
-                    out = s.unpack(edata)
-                    (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
+            # TODO: doesn't handle data1
+            data1, data2 = self.read_block_numpy(ntotal, s, dtypes)
 
-                    eid = (eid_device - self.device_code) // 10
-                    print('  %s=%i; %s\n' % (flag, eid, str(out)))
-                    n += ntotal
-            else:
-                # doesn't handle file streaming
-                ndata = self.read_block_numpy(ntotal, dt)
-                for datai in ndata:
-                    (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = datai
-
-                    eid = (eid_device - self.device_code) // 10
-                    #if self.debug4():
-                        #self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(datai)))
-                    self.obj.add(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
-                    n += ntotal
-                    if eid < 0:
-                        raise RuntimeError('there is an error...')
-            self._use_data = False
-            #print("self.f.tell() =", self.f.tell())
+            for datai in data2:
+                (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = datai
+                eid = (eid_device - self.device_code) // 10
+                #if self.debug4():
+                    #self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(datai)))
+                obj.add(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
+                n += ntotal
         return n
 
     def _read_complex_table(self, data, result_name, flag):
-        #return
         if self.debug4():
             self.binary_debug.write('  _read_complex_table\n')
         assert flag in ['node', 'elem'], flag
@@ -593,42 +576,96 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
 
         n = 0
         ntotal = 56  # 14 * 4
-        nnodes = len(data) // ntotal
-        s = Struct(format1)
 
-        assert self.obj is not None
-        assert nnodes > 0
-        #assert len(data) % ntotal == 0
+        obj = self.obj
+        if self._use_data:
+            nnodes = len(data) // ntotal
+            s = Struct(format1)
 
-        for inode in xrange(nnodes):
-            edata = data[n:n+ntotal]
-            out = s.unpack(edata)
+            assert self.obj is not None
+            assert nnodes > 0
+            #assert len(data) % ntotal == 0
 
-            (eid_device, grid_type, txr, tyr, tzr, rxr, ryr, rzr,
-             txi, tyi, tzi, rxi, ryi, rzi) = out
-            eid = (eid_device - self.device_code) // 10
+            for inode in xrange(nnodes):
+                edata = data[n:n+ntotal]
+                out = s.unpack(edata)
 
-            if self.debug4():
-                self.binary_debug.write('  %s=%i %s\n' % (flag, eid, str(out)))
-            if is_magnitude_phase:
-                tx = polar_to_real_imag(txr, txi)
-                ty = polar_to_real_imag(tyr, tyi)
-                tz = polar_to_real_imag(tzr, tzi)
+                (eid_device, grid_type, txr, tyr, tzr, rxr, ryr, rzr,
+                 txi, tyi, tzi, rxi, ryi, rzi) = out
+                eid = (eid_device - self.device_code) // 10
 
-                rx = polar_to_real_imag(rxr, rxi)
-                ry = polar_to_real_imag(ryr, ryi)
-                rz = polar_to_real_imag(rzr, rzi)
-            else:
-                tx = complex(txr, txi)
-                ty = complex(tyr, tyi)
-                tz = complex(tzr, tzi)
+                if self.debug4():
+                    self.binary_debug.write('  %s=%i %s\n' % (flag, eid, str(out)))
+                if is_magnitude_phase:
+                    tx = polar_to_real_imag(txr, txi)
+                    ty = polar_to_real_imag(tyr, tyi)
+                    tz = polar_to_real_imag(tzr, tzi)
 
-                rx = complex(rxr, rxi)
-                ry = complex(ryr, ryi)
-                rz = complex(rzr, rzi)
+                    rx = polar_to_real_imag(rxr, rxi)
+                    ry = polar_to_real_imag(ryr, ryi)
+                    rz = polar_to_real_imag(rzr, rzi)
+                else:
+                    tx = complex(txr, txi)
+                    ty = complex(tyr, tyi)
+                    tz = complex(tzr, tzi)
 
-            self.obj.add(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
-            n += ntotal
+                    rx = complex(rxr, rxi)
+                    ry = complex(ryr, ryi)
+                    rz = complex(rzr, rzi)
+
+                obj.add(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
+                n += ntotal
+        else:
+            dtypes = [
+                ('eid_device', 'int32'),
+                ('grid_type', 'int32'),
+
+                ('txr', 'float32'),
+                ('tyr', 'float32'),
+                ('tzr', 'float32'),
+                ('rxr', 'float32'),
+                ('ryr', 'float32'),
+                ('rzr', 'float32'),
+
+                ('txi', 'float32'),
+                ('tyi', 'float32'),
+                ('tzi', 'float32'),
+                ('rxi', 'float32'),
+                ('ryi', 'float32'),
+                ('rzi', 'float32'),
+            ]
+            format1 = '2i6f'
+            s = Struct(format1)
+
+            # doesn't handle file streaming???
+            data1, data2 = self.read_block_numpy(ntotal, s, dtypes)
+
+            # TODO: doesn't handle data1
+            for datai in data2:
+                (eid_device, grid_type, txr, tyr, tzr, rxr, ryr, rzr,
+                 txi, tyi, tzi, rxi, ryi, rzi) = datai
+                eid = (eid_device - self.device_code) // 10
+
+                if self.debug4():
+                    self.binary_debug.write('  %s=%i %s\n' % (flag, eid, str(out)))
+                if is_magnitude_phase:
+                    tx = polar_to_real_imag(txr, txi)
+                    ty = polar_to_real_imag(tyr, tyi)
+                    tz = polar_to_real_imag(tzr, tzi)
+
+                    rx = polar_to_real_imag(rxr, rxi)
+                    ry = polar_to_real_imag(ryr, ryi)
+                    rz = polar_to_real_imag(rzr, rzi)
+                else:
+                    tx = complex(txr, txi)
+                    ty = complex(tyr, tyi)
+                    tz = complex(tzr, tzi)
+
+                    rx = complex(rxr, rxi)
+                    ry = complex(ryr, ryi)
+                    rz = complex(rzr, rzi)
+                obj.add(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
+                n += ntotal
         return n
 
     def _read_complex_table2(self, data, result_name, flag):
