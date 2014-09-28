@@ -8,32 +8,26 @@ class KdTree(object):
     def __init__(self,treeType,pointList,nClose=0):
         self.nClose = nClose
         self.treeType = treeType
-        if treeType!='node' and treeType!='element':  # verifies you're calling the right
+        if treeType != 'node' and treeType != 'element':
+            # verifies you're calling the right
             msg = 'Error!  Invalid treeType\n'
-            msg += "treeType=|%s| valid='node','element'" %(treeType)
+            msg += "treeType=|%s| valid='node','element'" % treeType
             raise Exception(msg)
-        
+
         nodes = []
         for nid,nodeLoc in sorted(pointList.items()):
-            #print "nid     = ",nid
-            #print "nodeLoc = ",nodeLoc
             #print "pointList[15] = ",pointList[15]
             n = list(nodeLoc)+[nid]
-            #print "n = ",n
             nodes.append(n)
         self.tree = self.buildTree(nodes,nClose)
 
     def getCloseElementIDs(self,point):
-        #print "point = ",point
         closeNodesDists = self.nNearestPoints(point,self.nClose)
-        #print "closeNodesDists = ",closeNodesDists
-        
         closeIDs = []
         dists    = []
         for nodeDist in closeNodesDists:
             ID = nodeDist[0][3]
             dist = nodeDist[1]
-            #print "ID = ",ID
             closeIDs.append(ID)  # nid
             dists.append(dist)
         return closeIDs,dists
@@ -74,14 +68,8 @@ class KdTree(object):
 
     def PointsInSphere(self,tree,p,radius,depth=0,ptlist=[]):
         if depth==0:
-            #print "PointsInSphere"
-            #print tree
-            #print p
-            #print radius
-            #print depth
-            #print ptlist
             ptlist = []
-        
+
         k = len(p)
         axis = depth%k
         distance = self.Distance(p,tree.location)
@@ -95,7 +83,6 @@ class KdTree(object):
                 self.PointsInSphere(tree.rightChild,p,radius,depth+1,ptlist)
         return ptlist
 
-
     def nNearestPoints(self,p,n):
         tree = self.tree
         ptlist = None
@@ -106,11 +93,8 @@ class KdTree(object):
                 self.radius_guess = self.radius_guess*2.
             else:
                 self.radius_guess = 0.001
-            #print "radius_guess = ",self.radius_guess
             ptlist = self.PointsInSphere(tree,p,self.radius_guess)
             npts = len(ptlist)
-            #print "npts = ",npts
         ptlist.sort(key=lambda x: x[1])
         self.radius_guess = ptlist[n-1][1]
         return ptlist[:n]
-

@@ -41,7 +41,6 @@ def run_mapping():
     print "xref =", xref
     #print "locals2 =", locals2
     #print "globals()", globals()
-    asfd
 
 
     workpath    = os.path.join(basepath, 'outputsFinal')
@@ -92,7 +91,7 @@ def run_mapping():
             os.remove('Components.i.tri') # verifies new Components.i.tri gets created
             sys.stdout.flush()
 
-        # map deflections
+        # map loads
         run_map_loads(cart3dLoads, bdfModel, bdfModelOut)  # maps loads
         copyFile(bdfModelOut, bdfModelOut + strI)
 

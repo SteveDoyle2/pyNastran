@@ -185,7 +185,7 @@ class LoadMapping(object):
             msg += "%s " %(id)
         log.info(msg + '\n')
 
-        self.centroidTree = KdTree('element',sCentroids,nClose=self.nCloseElements)
+        self.centroidTree = KdTree('element', sCentroids, nClose=self.nCloseElements)
         log.info("---finish buildCentroidTree---")
         sys.stdout.flush()
 
@@ -297,9 +297,13 @@ class LoadMapping(object):
         log.info("---start piercing---")
         nAeroElements = float(len(aElementIDs))
         log.info("nAeroElements = %s" % nAeroElements)
+        tEst = 1.
+        tLeft = 1.
+        percent_done = 0.
         for (i, aEID) in enumerate(aElementIDs):
             if i % 1000 == 0:
-                log.info('  piercing %sth element' % i)
+                log.debug('  piercing %sth element' % i)
+                log.debug("tEst=%g minutes; tLeft=%g minutes; %.3f%% done" %(tEst, tLeft, percent_done))
                 sys.stdout.flush()
 
             aElement = aModel.Element(aEID)
@@ -316,7 +320,7 @@ class LoadMapping(object):
             dt = (time() - t0) / 60.
             tEst = dt * nAeroElements / (i + 1)  # dtPerElement*nElements
             tLeft = tEst - dt
-            log.debug("tEst=%g minutes; tLeft=%g minutes; %.3f%% done" %(tEst, tLeft, dt/tEst*100.))
+            percent_done = dt / tEst * 100.
 
         mapFile.close()
         log.info("---finish piercing---")
@@ -332,9 +336,9 @@ class LoadMapping(object):
         based on distance
         """
         (sElements, sDists) = self.centroidTree.getCloseElementIDs(aCentroid)
-        log.info("aCentroid = %s" % aCentroid)
-        log.info("sElements = %s" % sElements)
-        log.info("sDists    = %s" % ListPrint(sDists))
+        log.debug("aCentroid = %s" % aCentroid)
+        log.debug("sElements = %s" % sElements)
+        log.debug("sDists    = %s" % ListPrint(sDists))
 
         setNodes = set([])
         sModel = self.structuralModel
@@ -346,7 +350,7 @@ class LoadMapping(object):
         sNodes = sModel.getNodeIDLocations(nIDs)
         weights = self.get_weights(closePoint, sNodes)
         distribution = self.create_distribution(nIDs, weights)
-        return (distribution)
+        return distribution
 
 
     def pierce_elements(self, aCentroid, aEID, pSource, normal):
@@ -383,11 +387,11 @@ class LoadMapping(object):
                 (sA, sB, sC) = sNodes
                 #pEnd = pSource+normal*10.
                 tuv  = pierce_plane_vector(sA, sB, sC, pSource, pEnd, piercedElements)
-                #tuv2= piercePlaneVector(sA, sB, sC, pSource, pEnd2, piercedElements)
+                #tuv2= pierce_plane_vector(sA, sB, sC, pSource, pEnd2, piercedElements)
             elif nNodes == 4:
                 (sA, sB, sC, sD) = sNodes
                 tuv  = pierce_plane_vector(sA, sB, sC, pSource, pEnd,  piercedElements)
-                #tuv2= piercePlaneVector(sA, sB, sC, pSource, pEnd2, piercedElements)
+                #tuv2= pierce_plane_vector(sA, sB, sC, pSource, pEnd2, piercedElements)
                 #self.pierceTriangle(sA, sB, sC, sCentroid, sNormal, piercedElements)
                 #self.pierceTriangle(sA, sC, sD, sCentroid, sNormal, piercedElements)
             else:
@@ -498,12 +502,12 @@ class LoadMapping(object):
         if nPiercings == 0:
             #assert len(nPiercings)==1,'fix me...'
             #print "nPiercings=0 distributing load to closest nodes...u=%g v=%g" %(-1,-1)
-            log.info("nPiercings=0 distributing load to closest nodes...")
+            log.debug("nPiercings=0 distributing load to closest nodes...")
             for sEID in piercedElements:
                 nIDs += sModel.get_element_node_ids(sEID)
             #print "nIDs1 = ",nIDs
             nIDs = list(set(nIDs))
-            log.info("nIDs2 = %s" % nIDs)
+            log.debug("nIDs2 = %s" % nIDs)
             aCentroid = aModel.Centroid(aEID)
             nodes = sModel.getNodeIDLocations(nIDs)
 
@@ -511,7 +515,7 @@ class LoadMapping(object):
             weights = self.get_weights(aCentroid, nodes)
             distribution = self.create_distribution(nIDs, weights)
 
-            log.info("element aEID=%s sEID=%s weights=%s" % (aEID, sEID, ListPrint(weights)))
+            log.debug("element aEID=%s sEID=%s weights=%s" % (aEID, sEID, ListPrint(weights)))
             #print "distribution = ", distribution
             #print "nIDs         = ", nIDs
             #print "weights      = ", weights
