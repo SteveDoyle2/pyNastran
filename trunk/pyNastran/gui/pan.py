@@ -79,6 +79,9 @@ class Pan(wx.Panel, GuiCommon, NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO, 
         self.iText = 0
         self.textActors = {}
 
+    def log_command(self, msg):
+        pass
+
     def get_renderer(self):
         return self.rend
 
@@ -376,34 +379,6 @@ class Pan(wx.Panel, GuiCommon, NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO, 
 
     def log_debug(self, msg):
         print(msg)
-
-    def incrementCycle(self):
-        if self.iCase is not self.nCases:
-            self.iCase += 1
-        else:
-            self.iCase = 0
-
-        if len(self.caseKeys) > 0:
-            try:
-                key = self.caseKeys[self.iCase]
-            except IndexError:
-                #print("No Results found.  Many results are not supported "
-                #      "in the GUI.\n")
-                #self.scalarBar.SetVisibility(False)
-                foundCases = False
-                return foundCases
-
-            print("key = %s" % str(key))
-            if key[2] == 3:  # vector size=3 -> vector, skipping ???
-                self.incrementCycle()
-            foundCases = True
-        else:
-            print("No Results found.  Many results are not supported "
-                  "in the GUI.\n")
-            self.scalarBar.SetVisibility(False)
-            foundCases = False
-        #print "next key = ",key
-        return foundCases
 
     def onKeyPress(self, obj, event):
         rwi = obj

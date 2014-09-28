@@ -51,88 +51,45 @@ class GuiCommon(object):
         self.cycleResults_explicit(result_name)
 
     def cycleResults_explicit(self, result_name=None):
-        plotNodal = self.is_nodal
-        plotCentroidal = self.is_centroidal
-        #print("plotNodal=%s plotCentroidal=%s" %(plotNodal,plotCentroidal))
-        #print("nCases = %i" %(self.nCases+1))
-        if self.nCases == 0:
-            self.scalarBar.SetVisibility(False)
-            return
+        self.log_command('cycleResults(result_name=%r)' % result_name)
+        #print('cycling...')
+        print("is_nodal=%s is_centroidal=%s" % (self.is_nodal, self.is_centroidal))
 
-        foundCases = self.incrementCycle()
+        foundCases = self.incrementCycle(result_name)
         if foundCases:
-        #if 1:
-            print("incremented case")
-            #gridResult.Reset()
-            gridResult = vtk.vtkFloatArray()
-            emptyResult = vtk.vtkFloatArray()
-
             try:
                 key = self.caseKeys[self.iCase]
             except:
                 print('icase=%s caseKeys=%s' % (self.iCase, str(self.caseKeys)))
                 raise
             case = self.resultCases[key]
-            print("len(case) = %i" % len(case))
-            (subcaseID, resultType, vectorSize, location, dataFormat) = key
-
-            if location == 'centroid' and plotCentroidal:
-                #allocationSize = vectorSize*location (where location='centroid'-> self.nElements)
-                gridResult.Allocate(self.nElements, 1000)
-            elif location == 'node' and plotNodal:
-                #allocationSize = vectorSize*self.nNodes # (where location='node'-> self.nNodes)
-                gridResult.Allocate(self.nNodes * vectorSize, 1000)
-                gridResult.SetNumberOfComponents(vectorSize)
-            else:
-                print("***%s skipping" % location)
+            (subcaseID, resultType, vectorSize, location, data_format) = key
 
             try:
-                #self.iSubcaseNameMap[self.isubcase] = [Subtitle, Label]
                 caseName = self.iSubcaseNameMap[subcaseID]
             except KeyError:
-                #print "cant find subcaseID=%s" % subcaseID
                 caseName = ('case=NA', 'label=NA')
             (subtitle, label) = caseName
 
-            print("subcaseID=%s resultType=%s subtitle=%r label=%r" % (subcaseID, resultType, subtitle, label))
+            print("subcaseID=%s resultType=%r subtitle=%r label=%r" % (subcaseID, resultType, subtitle, label))
 
+            #================================================
+            gridResult = self.build_grid_result(vectorSize, location)
+            #================================================
             if isinstance(case, ndarray):
                 max_value = case.max()
                 min_value = case.min()
             else:
+                print('resultType=%r should really use numpy arrays...' % resultType)
                 max_value = case[0]
                 min_value = case[0]
                 for value in case:
                     max_value = max(value, max_value)
                     min_value = min(value, min_value)
 
-            # flips sign to make colors go from blue -> red
-            try:
-                norm_value = max_value - min_value
-            except:
-                raise RuntimeError(resultType)
-            #print "case = ",case
-            #if normValue==0.: # avoids division by 0.
-            #    normValue = 1.
-
-            #valueSet = set()
-            if vectorSize == 1:
-                #print "minValue = ",min(case)
-                for value in case:
-                    gridResult.InsertNextValue(value)
-                    #if len(valueSet) < 20:
-                        #valueSet.add(value)
-            else:  # vectorSize=3
-                pass
-                #for value in case:
-                #    gridResult.InsertNextTuple3(value)  # x,y,z
-
-            print("max=%g min=%g norm=%g\n" % (max_value, min_value, norm_value))
-
-            #nValueSet = len(valueSet)
+            norm_value, nValueSet = self.set_grid_values(gridResult, case, vectorSize, min_value, max_value)
             self.update_text_actors(case, subcaseID, subtitle, min_value, max_value, label)
-
-            self.UpdateScalarBar(resultType, min_value, max_value, dataFormat)
+            self.UpdateScalarBar(resultType, min_value, max_value, norm_value, data_format, is_blue_to_red=True)
             #self.scalarBar.SetNumberOfLabels(nValueSet)
             #self.scalarBar.SetMaximumNumberOfColors(nValueSet)
             #prop = self.scalarBar.GetLabelTextProperty()
@@ -144,40 +101,130 @@ class GuiCommon(object):
             ## centroid
             #print dir(self.grid)
             #self.grid.Reset()
-            if location == 'centroid' and plotCentroidal:
-                #self.grid.GetPointData().Reset()
-                self.grid.GetCellData().SetScalars(gridResult)
-                print("***plotting vector=%s skipping (centroid/node) - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
+            self.final_grid_update(gridResult, key, subtitle, label)
+
+    def set_grid_values(self, gridResult, case, vectorSize, min_value, max_value, is_blue_to_red=True):
+        # flips sign to make colors go from blue -> red
+        norm_value = float(max_value - min_value)
+        print('max_value=%s min_value=%r norm_value=%r' % (max_value, min_value, norm_value))
+        #print "case = ",case
+        #if normValue==0.: # avoids division by 0.
+        #    normValue = 1.
+
+        valueSet = set()
+        if vectorSize == 1:
+            for value in case:
+                gridResult.InsertNextValue(value)
+                #if len(valueSet) < 20:
+                    #valueSet.add(value)
+        else:  # vectorSize=3
+            for value in case:
+                gridResult.InsertNextTuple3(value)  # x,y,z
+
+        nValueSet = len(valueSet)
+        return norm_value, nValueSet
+
+    def final_grid_update(self, gridResult, key, subtitle, label):
+        (subcaseID, resultType, vectorSize, location, data_format) = key
+        npoints = self.nPoints()
+        ncells = self.nCells()
+
+        if location == 'centroid' and self.is_centroidal:
+            #self.grid.GetPointData().Reset()
+            self.grid.GetCellData().SetScalars(gridResult)
+            print("***centroidal plotting vector=%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
+            self.grid.Modified()
+        elif location == 'node' and self.is_nodal:
+            self.grid.GetCellData().Reset()
+            if vectorSize == 1:
+                print("***node plotting vector=%s skipping (centroid/node) - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
+                self.grid.GetPointData().SetScalars(gridResult)
                 self.grid.Modified()
-            elif location == 'node' and plotNodal:
-                self.grid.GetCellData().Reset()
-                if vectorSize == 1:
-                    print("***plotting vector=%s skipping (centroid/node) - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
-                    self.grid.GetPointData().SetScalars(gridResult)
-                    self.grid.Modified()
-                else:
-                    print("***node vector=%s skipping (centroid/node) - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
-                    self.grid.GetPointData().SetVectors(gridResult)
-                    #print("***node skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label))
+            elif vectorSize == 3:
+                print("***node vector=%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
+                self.grid.GetPointData().SetVectors(gridResult)
+                #print("***node skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label))
             else:
-                print("***%s skipping (centroid/node) - subcaseID=%s resultType=%s subtitle=%s label=%s" % (location, subcaseID, resultType, subtitle, label))
-                self.scalarBar.SetVisibility(False)
+                #print("***node skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID, resultType, subtitle, label))
+                raise RuntimeError(vectorSize)
+        else:
+            raise RuntimeError(location)
+            self.log_info("***D%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (location, subcaseID, resultType, subtitle, label))
+            self.scalarBar.SetVisibility(False)
 
-    def UpdateScalarBar(self, Title, min_value, max_value, dataFormat):
+    def incrementCycle(self, result_name=False):
+        found_case = False
+        if result_name is not False and result_name is not None:
+            for icase, cases in sorted(self.resultCases.iteritems()):
+                if result_name == cases[1]:
+                    found_case = True
+                    self.iCase = icase
+
+        if not found_case:
+            #print('iCase=%s nCases=%s' % (self.iCase, self.nCases))
+            if self.iCase is not self.nCases:
+                self.iCase += 1
+            else:
+                self.iCase = 0
+        if self.iCase == len(self.caseKeys):
+            self.iCase = 0
+
+        if len(self.caseKeys) > 0:
+            #print('caseKeys =', self.caseKeys)
+            try:
+                key = self.caseKeys[self.iCase]
+            except IndexError:
+                foundCases = False
+                return foundCases
+
+            print("key = %s" % str(key))
+            #if key[2] == 3:  # vector size=3 -> vector, skipping ???
+                #self.incrementCycle()
+            foundCases = True
+        else:
+            self.log_error("No Results found.  Many results are not supported in the GUI.\n")
+            self.scalarBar.SetVisibility(False)
+            foundCases = False
+        #print "next key = ",key
+        return foundCases
+
+    def build_grid_result(self, vectorSize, location):
+        gridResult = vtk.vtkFloatArray()
+        #emptyResult = vtk.vtkFloatArray()
+
+        gridResult.SetNumberOfComponents(vectorSize)
+        if location == 'centroid' and self.is_centroidal:
+            #allocationSize = vectorSize*location (where location='centroid'-> self.nElements)
+            gridResult.Allocate(self.nElements, 1000)
+        elif location == 'node' and self.is_nodal:
+            #allocationSize = vectorSize*self.nNodes # (where location='node'-> self.nNodes)
+            gridResult.Allocate(self.nNodes * vectorSize, 1000)
+            #gridResult.SetNumberOfComponents(vectorSize)
+        else:
+            raise RuntimeError(location)
+            #print("***%s skipping" % location)
+        return gridResult
+
+    def UpdateScalarBar(self, Title, min_value, max_value, norm_value, data_format, is_blue_to_red=True):
         """
-        @param Title the scalar bar title
-        @param min_value the blue value
-        @param max_value the red value
-        @param dataFormat '%g','%f','%i',etc.
+        :param Title the:   scalar bar title
+        :param min_value:   the blue value
+        :param max_value:   the red value
+        :param data_format: '%g','%f','%i', etc.
         """
-        #drange = [10.,20.]
+        print("UpdateScalarBar min=%s max=%s norm=%s" % (min_value, max_value, norm_value))
         self.colorFunction.RemoveAllPoints()
-        self.colorFunction.AddRGBPoint(min_value, 0.0, 0.0, 1.0)
-        self.colorFunction.AddRGBPoint(max_value, 1.0, 0.0, 0.0)
-        #self.scalarBar.SetLookupTable(self.colorFunction)
 
+        if is_blue_to_red:
+            self.colorFunction.AddRGBPoint(min_value, 0.0, 0.0, 1.0)  # blue
+            self.colorFunction.AddRGBPoint(max_value, 1.0, 0.0, 0.0)  # red
+        else:
+            self.colorFunction.AddRGBPoint(min_value, 1.0, 0.0, 0.0)  # red
+            self.colorFunction.AddRGBPoint(max_value, 0.0, 0.0, 1.0)  # blue
+
+        #self.scalarBar.SetLookupTable(self.colorFunction)
         self.scalarBar.SetTitle(Title)
-        self.scalarBar.SetLabelFormat(dataFormat)
+        self.scalarBar.SetLabelFormat(data_format)
 
         nvalues = 11
         if (Title in ['Element_ID', 'Eids', 'Region'] and (max_value - min_value + 1) < 11):
@@ -186,10 +233,8 @@ class GuiCommon(object):
             #if nvalues < 5:
                 #ncolors = 5
             #print "need to adjust axes...max_value=%s" %(max_value)
-        #if dataFormat=='%.0f' and maxValue>
+        #if data_format=='%.0f' and maxValue>
 
-        #print("Title =", Title)
-        #print("nvalues =", nvalues)
         self.scalarBar.SetNumberOfLabels(nvalues)
         self.scalarBar.SetMaximumNumberOfColors(nvalues)
         self.scalarBar.Modified()
