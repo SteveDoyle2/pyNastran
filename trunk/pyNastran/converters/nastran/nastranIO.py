@@ -585,7 +585,7 @@ class NastranIO(object):
             eidsSet = True
 
         # subcaseID, resultType, vectorSize, location, dataFormat
-        if len(model.properties):
+        if len(model.properties) and self.is_centroidal:
             cases[(0, 'Pid', 1, 'centroid', '%.0f')] = pids
 
         #self._plot_pressures(model, cases)
@@ -834,11 +834,11 @@ class NastranIO(object):
                         y_displacements[nid2] = txyz[1]
                         z_displacements[nid2] = txyz[2]
 
-                        #cases[(subcaseID, name + 'Vector', 3, 'node', '%g')] = displacements
-                        cases[(subcaseID, name + 'X', 1, 'node', '%g')] = x_displacements
-                        cases[(subcaseID, name + 'Y', 1, 'node', '%g')] = y_displacements
-                        cases[(subcaseID, name + 'Z', 1, 'node', '%g')] = z_displacements
-                        cases[(subcaseID, name + 'XYZ', 1, 'node', '%g')] = xyz_displacements
+                    #cases[(subcaseID, name + 'Vector', 3, 'node', '%g')] = displacements
+                    cases[(subcaseID, name + 'X', 1, 'node', '%g')] = x_displacements
+                    cases[(subcaseID, name + 'Y', 1, 'node', '%g')] = y_displacements
+                    cases[(subcaseID, name + 'Z', 1, 'node', '%g')] = z_displacements
+                    cases[(subcaseID, name + 'XYZ', 1, 'node', '%g')] = xyz_displacements
                     del res, word
 
             # size = 1
@@ -883,6 +883,7 @@ class NastranIO(object):
         self.eid_to_nid_map = {}
 
     def fill_stress_case(self, cases, model, subcaseID):
+        return cases
         if self.is_centroidal:
             self._fill_stress_case_centroidal(cases, model, subcaseID)
         elif self.is_nodal:
