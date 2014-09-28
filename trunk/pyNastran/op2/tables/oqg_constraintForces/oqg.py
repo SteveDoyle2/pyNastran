@@ -115,8 +115,6 @@ class OQG(OP2Common):
             self.binary_debug.write('  isubcase = %r\n' % self.isubcase)
         self._read_title(data)
         self._write_debug_bits()
-        self._use_data = True  # old method
-        #self._use_data = False  # new method
 
     def _read_oqg1_4(self, data):
         if 'constraint_forces' not in self._saved_results:
