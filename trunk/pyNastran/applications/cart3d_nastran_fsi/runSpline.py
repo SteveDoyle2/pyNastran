@@ -8,32 +8,26 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
 from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
 
-#from mapping.f06 import F06Reader
-
 from pyNastran.utils.log import get_logger
 debug = True
 log = get_logger(None, 'debug' if debug else 'info')
 
-def read_op2(op2_filename):
+def read_op2(op2_filename, isubcase=1):
     log.info('---starting deflectionReader.init of %s---' % op2_filename)
-    op2 = OP2(op2_filename)
-    #terms = ['force','stress','stress_comp','strain','strain_comp','displacement','grid_point_forces']
-    op2.read_op2()
-
-    subcase0 = op2.displacements.keys()[0]  # get the 0th subcase
-    displacment_obj = op2.displacements[subcase0]
+    op2 = OP2()
+    op2.set_results('displacements')
+    op2.read_op2(op2_filename)
+    displacment_obj = op2.displacements[isubcase]
 
     log.info('---finished deflectionReader.init of %s---' % op2_filename)
     return displacment_obj.translations
 
-def read_f06(f06_filename):
+def read_f06(f06_filename, isubcase=1):
     log.info('---starting deflectionReader.init of %s---' % f06_filename)
-    f06 = F06(f06_filename)
+    f06 = F06()
     #terms = ['force','stress','stress_comp','strain','strain_comp','displacement','grid_point_forces']
-    f06.read_f06()
-
-    subcase0 = f06.displacements.keys()[0]  # get the 0th subcase
-    displacment_obj = f06.displacements[subcase0]
+    f06.read_f06(f06_filename)
+    displacment_obj = f06.displacements[isubcase]
 
     #op2.nastranModel.printDisplacement()
     #displacements = convertDisplacements(displacements)
@@ -75,7 +69,7 @@ def remove_duplicate_nodes(nodeList,mesh):
     """
     Removes nodes that have the same (x,y) coordinate.
     Note that if 2 nodes with different z values are found, only 1 is returned.
-    This is intentional.   splineSurface = f(x,y)
+    This is intentional.
     """
     nodeList.sort()
     log.info("nodeListA = %s" % nodeList)
@@ -109,11 +103,10 @@ def run_map_deflections(nodeList, bdf_filename, out_filename, cart3d, cart3d2, l
     aPoints = read_cart3d_points(cart3d)
     wA = get_WA(nodeList, C, wS, mesh, aPoints)
     del C
-    #del wS
     del mesh
 
     write_new_cart3d_mesh(cart3d, cart3d2, wA)
-    return (wA,wS)
+    return (wA, wS)
 
 def get_WA(nodeList, C, wS, mesh, aPoints):
     log.info('---starting get_WA---')

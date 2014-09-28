@@ -79,11 +79,7 @@ def pierce_plane_vector(p0, p1, p2, pA, pB, piercedElements):
     #             [ya-y0],
     #             [za-z0]])
     xa0 = pA-p0  # numpy array
-    #print "mat = ",mat
-    #print "xa0 = ",xa0
-
     tuv = solve(mat, xa0)
-    #print "t,u,v = ",tuv
     return tuv
 
 def distance(x, y):
@@ -171,7 +167,7 @@ def get_triangle_weights(n, n1, n2, n3):
     weights = shepard_weight(n, [n1, n2, n3])
     (w1, w2, w3) = weights
     #(w1, w2, w3) = areaWeight(n, n1, n2, n3)
-    return(w1,w2,w3)
+    return(w1, w2, w3)
 
 def Area(a, b):
     return 0.5 * norm(cross(a, b))
@@ -187,14 +183,14 @@ def AreaNormal(nodes):
     Area = 0.5 * |n|
     unitNormal = n/|n|
     """
-    (n0,n1,n2) = nodes
-    a = n0-n1
-    b = n0-n2
+    (n0, n1, n2) = nodes
+    a = n0 - n1
+    b = n0 - n2
     vector = cross(a, b)
     length = norm(vector)
     normal = vector / length
     area = 0.5 * length
-    if allclose(norm(normal), 1.)==False:
+    if allclose(norm(normal), 1.) == False:
         print "a = ",a
         print "b = ",b
         print "normal = ",normal
@@ -204,22 +200,21 @@ def AreaNormal(nodes):
 
 def Triangle_AreaCentroidNormal(nodes):
     """Returns area,centroid,unitNormal"""
-    (area,normal) = AreaNormal(nodes)
+    (area, normal) = AreaNormal(nodes)
     centroid = Centroid(*nodes)
-    return (area,centroid,normal)
+    return (area, centroid, normal)
 
 def Normal(a, b):
     """finds the unit normal vector of 2 vectors"""
-    vector = cross(a,b)
+    vector = cross(a, b)
     length = norm(vector)
-    normal = vector/length
-    assert allclose(norm(normal),1.)
+    normal = vector / length
+    assert allclose(norm(normal), 1.)
     return normal
 
 def Centroid(A, B, C):
     """returns the centroid of a triangle"""
-    #print "type(A,B,C) = ",type(A),type(C),type(B)
-    centroid = (A + B + C)/3.
+    centroid = (A + B + C) / 3.
     return centroid
 
 #------------------------------------------------------------------

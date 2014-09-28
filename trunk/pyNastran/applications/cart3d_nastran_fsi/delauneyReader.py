@@ -153,7 +153,7 @@ class Tet4(object):
     def isInternalNode(self,pAero):
         """
         If there is an internal node, than the sum of the internal volumes without
-        an absolute value will equatl the volume of the local tet
+        an absolute value will equal the volume of the local tet
           *   3
          /  \
         *---*  0 1
@@ -371,10 +371,8 @@ class DelauneyReader(object):
         outfile = open(tetFilename,'wb')
         msg = ''
         mid = 1 # material id
-        for ID,node in nodes.items():
-            #print "node = ",node
+        for nid,node in nodes.items():
             card = ['GRID',ID,0,node[0],node[1],node[2]]
-            #print "card = ",card
             msg += self.oneCard(card)
         outfile.write(msg)
 
@@ -385,7 +383,6 @@ class DelauneyReader(object):
             if i%1000==0:
                 outfile.write(msg)
                 msg = ''
-
         outfile.write(msg)
 
         outfile.close()

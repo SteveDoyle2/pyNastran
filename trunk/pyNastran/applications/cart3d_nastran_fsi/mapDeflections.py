@@ -25,24 +25,22 @@ log = get_logger(None, 'debug' if debug else 'info')
 #------------------------------------------------------------------
 
 class DeflectionReader(object):
-    def __init__(self, infilename='fem.op2'):
-        log.info('---starting deflectionReader.init of %s---' % infilename)
-        op2 = OP2Reader(infilename)
-        terms = ['force', 'stress', 'stress_comp', 'strain', 'strain_comp', 'displacement', 'grid_point_forces']
-        op2.read(terms)
-        self.displacement = op2.nastranModel.displacement
-        #op2.nastranModel.printDisplacement()
-        self.convertDisplacements()
+    def __init__(self, op2_filename='fem.op2'):
+        log.info('---starting deflectionReader.init of %s---' % op2_filename)
+        op2 = OP2()
+        op2.set_results('displacements')
+        op2.read_op2(infilename)
+        self.deflections = op2.displacements.translations
         log.info('---finished deflectionReader.init of %s---' % infilename)
 
-    def getDeflections(self,ID,n0,n1,n2,n3):
+    def getDeflections(self, ID, n0, n1, n2, n3):
         defs = [
         self.getDeflection(n0),
         self.getDeflection(n1),
         self.getDeflection(n2),
         self.getDeflection(n3),
         ]
-        #print "defs[%s]-[%s,%s,%s,%s] = %s" %(ID,n0,n1,n2,n3,defs)
+        #print "defs[%s]-[%s,%s,%s,%s] = %s" %(ID, n0, n1, n2, n3, defs)
         return defs
 
     def getDeflection(self,gridID):
@@ -51,38 +49,6 @@ class DeflectionReader(object):
             #return [float(gridID),]*3 # test
         else:
             return [0.,0.,0.]
-
-    def convertDisplacements(self):
-        """
-        converts the deflecions from the op2reader to the format used for mapping
-        """
-        case = '_SUBCASE 1'
-        log.info("self.displacement.keys() = %s" %(self.displacement.keys()))
-        results = self.displacement[case]
-        #sys.exit('stopping...')
-        self.deflections = {}
-        for gridID,result in results.items():
-            #print "gridID = %s" %(gridID)
-            layers = result.getLayers()
-
-            for layer in layers:
-                #print "layer = ",layer
-                #print "  disp.mag = ",layer.mag
-                self.deflections[gridID] = array(layer.mag)
-        return self.deflections
-
-    def printDisplacement(self):
-        log.info("printing Displacement")
-        for case,results in self.displacement.items():
-            log.info("case = |%s|" %(case))
-            for gid,result in results.items():
-                log.info("gid = %s" %(gid))
-                layers = result.getLayers()
-
-                for layer in layers:
-                    #print "layer = ",layer
-                    log.info("  disp.mag = %s" %(layer.mag))
-        log.info("")
 
 #------------------------------------------------------------------
 
@@ -447,7 +413,7 @@ if __name__=='__main__':
     configpath = os.path.join(basepath,'inputs')
     workpath   = os.path.join(basepath,'outputs')
     bdfModel   = os.path.join(configpath,'fem3.bdf')
-    assert os.path.exists(bdfModel),'|%s| doesnt exist' %(bdfModel)
+    assert os.path.exists(bdfModel),'%r doesnt exist' %(bdfModel)
 
     os.chdir(workpath)
     log.info("basepath = %s" %(basepath))
@@ -470,7 +436,7 @@ if __name__=='__main__':
     defMapper = DeflectionMapper(aeroModel,structuralModel)
     for i in iteration:
         defMapper.setStructuralOutfile('fem.f06')
-        aeroFile = 'cart3d_%s.tri' %(i)
+        aeroFile = 'cart3d_%s.tri' % i
         defMapper.setAeroInfile(aeroFile)
         defMapper.buildTetrahedralization()
         #defMapper.buildMappingMatrix()
