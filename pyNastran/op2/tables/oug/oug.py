@@ -190,10 +190,7 @@ class OUG(OP2Common):
             result_name = 'displacements'
             storage_obj = self.displacements
             if result_name not in self._saved_results:
-                if self._use_data is True:
-                    return len(data)
-                else:
-                    raise NotImplementedError('skipping not implemented for _use_data=False')
+                return len(data)
             n = self._read_table(data, result_name, storage_obj,
                                  RealDisplacement, ComplexDisplacement,
                                  RealDisplacementArray, ComplexDisplacementArray, 'node', random_code=self.random_code)
