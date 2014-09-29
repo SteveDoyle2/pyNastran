@@ -60,7 +60,6 @@ def main(bdf_name, run_first_nastran=True, debug=True):
         print "---wrote the bdf---"
     #===========================
     # run nastran again
-    aaa
     os.system('nastran scr=yes bat=no news=no old=no %s' % out_bdf_8)
     os.system('nastran scr=yes bat=no news=no old=no %s' % out_bdf_16)
     #===========================
