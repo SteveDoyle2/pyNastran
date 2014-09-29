@@ -1,6 +1,7 @@
 # standard python modules
 import os
 import sys
+import multiprocessing as mp
 import cPickle
 from time import time
 
@@ -9,16 +10,26 @@ from numpy import argsort, mean, array, cross
 # my code
 from mathFunctions import pierce_plane_vector, shepard_weight, Normal, ListPrint
 #from mathFunctions import get_triangle_weights
-from models import StructuralModel, AeroModel
-from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
-from pyNastran.bdf.bdf import BDF
+from structural_model import StructuralModel
+from aero_model import AeroModel
 from kdtree import KdTree
 
+# pyNastran
+from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
+from pyNastran.bdf.bdf import BDF
 from pyNastran.utils.log import get_logger
+
 debug = True
 log = get_logger(None, 'debug' if debug else 'info')
 
 #------------------------------------------------------------------
+
+def entryExit(f):
+    def new_f(*args, **kwargs):
+        log.info("Entering", f.__name__)
+        f(*args, **kwargs)
+        log.info("Exited", f.__name__)
+    return new_f
 
 class LoadMapping(object):
     def __init__(self, aeroModel, structuralModel, configpath='', workpath=''):
@@ -37,25 +48,30 @@ class LoadMapping(object):
         self.Lref = 623.  # inch
         self.xref = 268.
 
+    #@entryExit
     def setOutput(self,bdffile='fem.bdf', loadCase=1):
         self.bdffile = bdffile
         self.loadCase = loadCase
 
+    #@entryExit
     def set_flight_condition(self, pInf=499.3, qInf=237.885):
         self.pInf = pInf
         self.qInf = qInf  #1.4/2.*pInf*Mach**2.
 
+    #@entryExit
     def loadMappingMatrix(self):
         infile = open(self.mapfile,'r')
         self.mappingMatrix = cPickle.loads(infile)
         infile.close()
 
+    #@entryExit
     def save_mapping_matrix(self):
         outString = cPickle.dumps(self.mappingMatrix)
         outfile = open(self.mapfile, 'wb')
         outfile.write(outString)
         outfile.close()
 
+    #@entryExit
     def getPressure(self, Cp):
         """
         Caculates the pressure based on:
@@ -65,6 +81,7 @@ class LoadMapping(object):
         #p = Cp*self.qInf # TODO:  for surface with atmospheric pressure inside
         return p
 
+    #@entryExit
     def mapLoads(self):
         """
         Loops thru the unitLoad mappingMatrix and multiplies by the
@@ -133,6 +150,7 @@ class LoadMapping(object):
         log.info("wrote loads to %r" % self.bdffile)
         log.info("---finished mapLoads---")
 
+    #@entryExit
     def writeLoads(self):
         """writes the load in BDF format"""
         log.info("---starting writeLoads---")
@@ -151,9 +169,9 @@ class LoadMapping(object):
         except KeyError:
             self.loadCases[self.loadCase][sNID] = Fxyz
 
+    #@entryExit
     def buildCentroids(self, model, eids=None):
         centroids = {}
-
         if eids is None:
             eids = model.ElementIDs()
         for eid in eids:
@@ -162,6 +180,7 @@ class LoadMapping(object):
                 centroids[eid] = centroid
         return centroids
 
+    #@entryExit
     def buildNodalTree(self, sNodes):
         log.info("---start buildNodalTree---")
         raise Exception('DEPRECATED...buildNodalTree in mapLoads.py')
@@ -171,6 +190,7 @@ class LoadMapping(object):
         log.info("---finish buildNodalTree---")
         sys.stdout.flush()
 
+    #@entryExit
     def buildCentroidTree(self, sCentroids):
         """
         sCentroids - dict of structural centroids
@@ -182,13 +202,14 @@ class LoadMapping(object):
 
         msg = 'Element '
         for (id,sCentroid) in sorted(sCentroids.iteritems()):
-            msg += "%s " %(id)
+            msg += "%s " % id
         log.info(msg + '\n')
 
         self.centroidTree = KdTree('element', sCentroids, nClose=self.nCloseElements)
         log.info("---finish buildCentroidTree---")
         sys.stdout.flush()
 
+    #@entryExit
     def parseMapFile(self, mapFilename='mappingMatrix.new.out'):
         """
         This is used for rerunning an analysis quickly (cuts out building the mapping matrix ~1.5 hours).
@@ -223,6 +244,7 @@ class LoadMapping(object):
         log.info("---finished parseMapFile---")
         return mappingMatrix
 
+    #@entryExit
     def runMapTest(self, mappingMatrix, mapTestFilename='mapTest.out'):
         """
         Checks to see what elements loads were mapped to.
@@ -243,6 +265,17 @@ class LoadMapping(object):
             mapOut.write("%s %s\n" % (sEID, weight))
         mapOut.close()
 
+    def map_loads_mp_func(self, aEID, aModel):
+        aElement = aModel.Element(aEID)
+        (aArea, aCentroid, aNormal) = aModel.get_element_properties(aEID)
+        percentDone = i / nAeroElements * 100
+
+        pSource = aCentroid
+        distribution = self.pierce_elements(aCentroid, aEID, pSource, aNormal)
+        #distribution = self.poorMansMapping(aCentroid, aEID, pSource, aNormal)
+        self.mappingMatrix[aEID] = distribution
+
+    #@entryExit
     def build_mapping_matrix(self, debug=False):
         """
         Skips building the matrix if it already exists
@@ -281,46 +314,59 @@ class LoadMapping(object):
         assert sElementIDs != sElementIDs2, msg
         log.info("maxAeroID=%s maxStructuralID=%s sElements=%s" % (max(aElementIDs), max(sElementIDs),len(sElementIDs2)))
 
+        log.info("buildCentroids - structural")
         sCentroids = self.buildCentroids(sModel, sElementIDs)
-        #print "sCentroids = ",sCentroids
-
         self.buildCentroidTree(sCentroids)
         #self.buildNodalTree(sNodes)
 
+        log.info("buildCentroids - aero")
         aCentroids = self.buildCentroids(aModel)
-        #print "aCentroids = ",aCentroids
 
         mapFile = open('mappingMatrix.out', 'wb')
         mapFile.write('# aEID distribution (sEID:  weight)\n')
 
         t0 = time()
-        log.info("---start piercing---")
         nAeroElements = float(len(aElementIDs))
-        log.info("nAeroElements = %s" % nAeroElements)
+        log.info("---start piercing---")
+        if debug:
+            log.info("nAeroElements = %s" % nAeroElements)
         tEst = 1.
         tLeft = 1.
         percent_done = 0.
-        for (i, aEID) in enumerate(aElementIDs):
-            if i % 1000 == 0:
-                log.debug('  piercing %sth element' % i)
-                log.debug("tEst=%g minutes; tLeft=%g minutes; %.3f%% done" %(tEst, tLeft, percent_done))
-                sys.stdout.flush()
 
-            aElement = aModel.Element(aEID)
-            (aArea, aCentroid, aNormal) = aModel.get_element_properties(aEID)
-            percentDone = i / nAeroElements * 100
-            log.info('aEID=%s percentDone=%.2f aElement=%s aArea=%s aCentroid=%s aNormal=%s' %(aEID,percentDone,aElement,aArea,aCentroid,aNormal))
-            pSource = aCentroid
-            (distribution) = self.pierce_elements(aCentroid, aEID, pSource, aNormal)
-            #(distribution)  = self.poorMansMapping(aCentroid, aEID, pSource, aNormal)
-            self.mappingMatrix[aEID] = distribution
-            mapFile.write('%s %s\n' % (aEID, distribution))
-            #break
+        if 1:
+            num_cpus = 4
+            pool = mp.Pool(num_cpus)
+            result = pool.imap(self.map_loads_mp_func, [(aEID, aModel) for aEID in aElementIDs ])
 
-            dt = (time() - t0) / 60.
-            tEst = dt * nAeroElements / (i + 1)  # dtPerElement*nElements
-            tLeft = tEst - dt
-            percent_done = dt / tEst * 100.
+            for j, return_values in enumerate(result):
+                aEID, distribution = return_values
+                #self.mappingMatrix[aEID] = distribution
+                mapFile.write('%s %s\n' % (aEID, distribution))
+            pool.close()
+            pool.join()
+        else:
+            for (i, aEID) in enumerate(aElementIDs):
+                if i % 1000 == 0 and debug:
+                    log.debug('  piercing %sth element' % i)
+                    log.debug("tEst=%g minutes; tLeft=%g minutes; %.3f%% done" %(tEst, tLeft, percent_done))
+                    sys.stdout.flush()
+
+                aElement = aModel.Element(aEID)
+                (aArea, aCentroid, aNormal) = aModel.get_element_properties(aEID)
+                percentDone = i / nAeroElements * 100
+                if debug:
+                    log.info('aEID=%s percentDone=%.2f aElement=%s aArea=%s aCentroid=%s aNormal=%s' %(aEID,percentDone,aElement,aArea,aCentroid,aNormal))
+                pSource = aCentroid
+                (distribution) = self.pierce_elements(aCentroid, aEID, pSource, aNormal)
+                #(distribution)  = self.poorMansMapping(aCentroid, aEID, pSource, aNormal)
+                self.mappingMatrix[aEID] = distribution
+                mapFile.write('%s %s\n' % (aEID, distribution))
+
+                dt = (time() - t0) / 60.
+                tEst = dt * nAeroElements / (i + 1)  # dtPerElement*nElements
+                tLeft = tEst - dt
+                percent_done = dt / tEst * 100.
 
         mapFile.close()
         log.info("---finish piercing---")
@@ -351,7 +397,6 @@ class LoadMapping(object):
         weights = self.get_weights(closePoint, sNodes)
         distribution = self.create_distribution(nIDs, weights)
         return distribution
-
 
     def pierce_elements(self, aCentroid, aEID, pSource, normal):
         """
@@ -559,27 +604,50 @@ class LoadMapping(object):
 
 #------------------------------------------------------------------
 
-def run_map_loads(cart3dGeom='Components.i.triq', bdfModel='fem.bdf', bdfModelOut='fem.loads.out'):
+def run_map_loads(inputs, cart3dGeom='Components.i.triq', bdfModel='fem.bdf', bdfModelOut='fem.loads.out'):
     assert os.path.exists(bdfModel), '%r doesnt exist' % bdfModel
 
     t0 = time()
-    mesh = Cart3DReader()
-    half_model = cart3dGeom+'_half'
+    aero_format = inputs['aero_format'].lower()
 
-    result_names = ['Cp', 'rho', 'rhoU', 'rhoV', 'rhoW', 'E']
-    (nodes, elements, regions, loads) = mesh.read_cart3d(cart3dGeom, result_names=result_names)
-    #Cp = loads['Cp']
-    (nodes, elements, regions, loads) = mesh.make_half_model(nodes, elements, regions, loads, axis='y')
+    # the property regions to map elements to
+    propertyRegions = [1, 1101, 1501, 1601, 1701, 1801, 1901, 2101, 2501, 2601, 2701, 2801, 2901, 10103, 10201, 10203, 10301, 10401, 10501, 10601, 10701, 10801, 10901, 20103, 20203, 20301, 20401, 20501, 20601, 20701, 20801, 20901, 701512, 801812]
+    if inputs is None:
+        inputs = {
+            'aero_format' : 'Cart3d',
+            'Mach' : 0.825,
+            'pInf' : 499.3,        # psf, alt=35k (per Schaufele p. 11)
+            'pInf' : pInf / 144.,  # convert to psi
+            'qInf' : 1.4 / 2. * pInf * Mach**2.,
+            'Sref' : 1582876.,  # inch^2
+            'Lref' : 623.,  # inch
+            'xref' : 268.,  # inch
+            'isubcase' : 1,
+        }
 
-    Cp = loads['Cp']
-    #(nodes, elements, regions, Cp) = mesh.renumber_mesh(nodes, elements, regions, Cp)
-    mesh.write_cart3d(half_model, nodes, elements, regions, loads)
+    isubcase = inputs['isubcase']
+    pInf = inputs['pInf']
+    qInf = inputs['qInf']
 
-    Mach = 0.825
-    pInf = 499.3        # psf, alt=35k (per Schaufele p. 11)
-    pInf = pInf / 144.  # convert to psi
-    qInf = 1.4 / 2. * pInf * Mach**2.
-    aeroModel = AeroModel(nodes, elements, Cp, pInf, qInf)
+    if aero_format == 'cart3d':
+        mesh = Cart3DReader()
+        half_model = cart3dGeom + '_half'
+        result_names = ['Cp', 'rho', 'rhoU', 'rhoV', 'rhoW', 'E']
+
+        if not os.path.exists(half_model):
+            (nodes, elements, regions, loads) = mesh.read_cart3d(cart3dGeom, result_names=result_names)
+            #Cp = loads['Cp']
+            (nodes, elements, regions, loads) = mesh.make_half_model(nodes, elements, regions, loads, axis='y')
+            Cp = loads['Cp']
+            #(nodes, elements, regions, Cp) = mesh.renumber_mesh(nodes, elements, regions, Cp)
+            mesh.write_cart3d(half_model, nodes, elements, regions, loads)
+        else:
+            (nodes, elements, regions, loads) = mesh.read_cart3d(half_model, result_names=['Cp'])
+        Cp = loads['Cp']
+    else:
+        raise NotImplementedError('aero_format=%r' % aero_format)
+
+    aeroModel = AeroModel(inputs, nodes, elements, Cp)
     log.info("elements[1] = %s" % elements[1])
     del elements, nodes, Cp
 
@@ -587,8 +655,6 @@ def run_map_loads(cart3dGeom='Components.i.triq', bdfModel='fem.bdf', bdfModelOu
     fem = BDF(debug=True, log=log)
     fem.read_bdf(bdfModel)
     sys.stdout.flush()
-
-    propertyRegions = [1, 1101, 1501, 1601, 1701, 1801, 1901, 2101, 2501, 2601, 2701, 2801, 2901, 10103, 10201, 10203, 10301, 10401, 10501, 10601, 10701, 10801, 10901, 20103, 20203, 20301, 20401, 20501, 20601, 20701, 20801, 20901, 701512, 801812]
 
     # 1 inboard
     # 1000s upper - lower inboard
@@ -600,7 +666,7 @@ def run_map_loads(cart3dGeom='Components.i.triq', bdfModel='fem.bdf', bdfModelOu
     mapper = LoadMapping(aeroModel, structuralModel)
     t1 = time()
     mapper.set_flight_condition(pInf, qInf)
-    mapper.setOutput(bdffile=bdfModelOut, loadCase=1)
+    mapper.setOutput(bdffile=bdfModelOut, loadCase=isubcase)
     log.info("setup time = %g sec; %g min" % (t1-t0, (t1-t0)/60.))
 
     mapper.build_mapping_matrix(debug=False)
@@ -624,5 +690,6 @@ if __name__=='__main__':
     log.info("basepath = %s" % basepath)
 
     bdfModelOut = os.path.join(workpath, 'fem_loads_3.bdf')
-    run_map_loads(cart3dGeom, bdfModel, bdfModelOut)
+    inputs = None
+    run_map_loads(inputs, cart3dGeom, bdfModel, bdfModelOut)
 

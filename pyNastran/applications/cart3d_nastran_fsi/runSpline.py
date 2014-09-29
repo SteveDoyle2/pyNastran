@@ -6,7 +6,9 @@ from numpy.linalg import inv
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
+from pyNastran.f06.f06 import F06
 from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
+from mathFunctions import printMatrix
 
 from pyNastran.utils.log import get_logger
 debug = True
@@ -26,6 +28,7 @@ def read_f06(f06_filename, isubcase=1):
     log.info('---starting deflectionReader.init of %s---' % f06_filename)
     f06 = F06()
     #terms = ['force','stress','stress_comp','strain','strain_comp','displacement','grid_point_forces']
+    f06.set_results('displacements')
     f06.read_f06(f06_filename)
     displacment_obj = f06.displacements[isubcase]
 
@@ -34,7 +37,7 @@ def read_f06(f06_filename, isubcase=1):
     log.info('---finished deflectionReader.init of %s---' % f06_filename)
     return displacment_obj.translations
 
-def read_cart3d_points(cfdGridFile):
+def read_half_cart3d_points(cfdGridFile):
     """return half model points to shrink xK matrix"""
     cart = Cart3DReader()
     (points, elements, regions, loads) = cart.read_cart3d(cfdGridFile)
@@ -100,7 +103,7 @@ def run_map_deflections(nodeList, bdf_filename, out_filename, cart3d, cart3d2, l
     wS = get_WS(nodeList, deflections)
     del deflections
 
-    aPoints = read_cart3d_points(cart3d)
+    aPoints = read_half_cart3d_points(cart3d)
     wA = get_WA(nodeList, C, wS, mesh, aPoints)
     del C
     del mesh
@@ -110,7 +113,7 @@ def run_map_deflections(nodeList, bdf_filename, out_filename, cart3d, cart3d2, l
 
 def get_WA(nodeList, C, wS, mesh, aPoints):
     log.info('---starting get_WA---')
-    MatPrint(sys.stdout,C)
+    print printMatrix(C)
 
     C  = inv(C) * wS  # Cws matrix, P matrix
     #P = solve(C, wS)
