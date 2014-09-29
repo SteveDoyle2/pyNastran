@@ -1,12 +1,13 @@
 from __future__ import print_function
-from numpy import array, allclose, array_equal
+from numpy import array, allclose, array_equal, cross
 import unittest
 
 from pyNastran.bdf.bdf import BDF, BDFCard, CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
+from pyNastran.bdf.utils import TransformLoadWRT
 
 bdf = BDF(debug=False)  # don't load this up with stuff
 class TestCoords(unittest.TestCase):
-    def test_same(self):  # passes
+    def test_same(self):
         grids = [
             [1, 0, 0., 0., 1.],
             [2, 0, 0., 1., 0.],
@@ -18,7 +19,7 @@ class TestCoords(unittest.TestCase):
         coords = []
         self.getNodes(grids, grids_expected, coords)
 
-    def test_shift(self):  # passes
+    def test_shift(self):
         grids = [
             [1, 1, 0., 0., 1.],
             [2, 1, 0., 1., 0.],
@@ -39,7 +40,7 @@ class TestCoords(unittest.TestCase):
         ]
         self.getNodes(grids, grids_expected, coords)
 
-    def test_rotate(self):  # passes
+    def test_rotate(self):
         grids = [
                      [1, 1, 0., 0., 1.],
                      [2, 1, 0., 1., 0.],
@@ -61,7 +62,7 @@ class TestCoords(unittest.TestCase):
                  ]
         self.getNodes(grids, grids_expected, coords)
 
-    def test_rotate2(self):   # passes
+    def test_rotate2(self):
         grids = [
                      [1, 1, 0., 0., 1.],  # nid, cid, x,y,z
                      [2, 1, 0., 1., 0.],
@@ -82,8 +83,7 @@ class TestCoords(unittest.TestCase):
                  ]
         self.getNodes(grids, grids_expected, coords)
 
-    def test_rotate3(self):  # passes
-        #print('test_rotate3')
+    def test_rotate3(self):
         grids = [
                      [1, 1, 0., 0., 1.],
                      [2, 1, 0., 1., 0.],
@@ -105,7 +105,6 @@ class TestCoords(unittest.TestCase):
         self.getNodes(grids, grids_expected, coords)
 
     def test_rid_1(self):
-        #print('test_rid_1')
         grids = [
                     [1, 2, 10., 5., 3.],  # nid, cid, x,y,z
                     [2, 3, 10., 5., 3.],
@@ -430,7 +429,7 @@ class TestCoords(unittest.TestCase):
         coord.T()
         self.assertTrue(array_equal(coord.T(), coord.beta_n(2)))
 
-    def getNodes(self, grids, grids_expected, coords, debug=False):
+    def getNodes(self, grids, grids_expected, coords):
         model = BDF(debug=False)
 
         debug = False
@@ -438,16 +437,11 @@ class TestCoords(unittest.TestCase):
             (nid, cid, x, y, z) = grid
             model.add_card(['GRID', nid, cid, x, y, z], 'GRID')
             gridObj = model.Node(nid)
-            if debug:
-                print(gridObj)
 
         for coord in coords:
-            #print coord
             (cid, rid, x, y, z) = coord
             model.add_card(['CORD2R', cid, rid] + x + y + z, 'CORD2R')
             coordObj = model.Coord(cid)
-            if debug:
-                print(coordObj)
 
         model.cross_reference()
 
@@ -465,6 +459,58 @@ class TestCoords(unittest.TestCase):
                 msg += 'n=%s rcoord=\n%s' % (node.nid, coord.rid)
                 coord = coord.rid
             assert allclose(n, pos), msg
+
+
+    def test_A(self):
+        cid0 = CORD2R()
+        Lx = 2.
+        Ly = 0.
+        Lz = 3.
+        Fy = 1.
+        origin = array([-Lx, 0., -Lz])
+        z_axis = origin + array([0., 0., 1.])
+        xz_plane = origin + array([1., 0., 1.])
+        rid = 0
+        data = [1, rid] + list(origin) + list(z_axis) + list(xz_plane)
+
+        Fxyz = [0., -Fy, 0.]
+        Mxyz = [0., 0., 0.]
+        cid_new = CORD2R(data=data)
+        model = None
+
+        Fxyz_local, Mxyz_local = TransformLoadWRT(Fxyz, Mxyz, cid0, cid_new,
+                                                  model, is_cid_int=False)
+
+        r = array([Lx, Ly, Lz])
+        F = array([0., -Fy, 0.])
+        M = cross(r, F)
+        self.assertTrue(array_equal(Fxyz_local,           F)), "expected=%s actual=%s" % (F, Fxyz_local)
+        self.assertTrue(array_equal(Mxyz_local, cross(r, F))), "expected=%s actual=%s" % (M, Mxyz_local)
+
+    def test_B(self):
+        cid0 = CORD2R()
+        Lx = 2.
+        Ly = 3.
+        Lz = 5.
+        Fy = 1.5
+        origin = array([-Lx, -Ly, -Lz])
+        z_axis = origin + array([0., 0., 1.])
+        xz_plane = origin + array([1., 0., 1.])
+        rid = 0
+        data = [1, rid] + list(origin) + list(z_axis) + list(xz_plane)
+
+        Fxyz = [0., -Fy, 0.]
+        Mxyz = [0., 0., 0.]
+        cid_new = CORD2R(data=data)
+        model = None
+
+        Fxyz_local, Mxyz_local = TransformLoadWRT(Fxyz, Mxyz, cid0, cid_new,
+                                                  model, is_cid_int=False)
+        r = array([Lx, Ly, Lz])
+        F = array([0., -Fy, 0.])
+        M = cross(r, F)
+        self.assertTrue(array_equal(Fxyz_local,           F)), "expected=%s actual=%s" % (F, Fxyz_local)
+        self.assertTrue(array_equal(Mxyz_local, cross(r, F))), "expected=%s actual=%s" % (M, Mxyz_local)
 
 
 if __name__ == '__main__':  # pragma: no cover
