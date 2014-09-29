@@ -11,9 +11,31 @@ from pyNastran.utils.log import get_logger
 debug = True
 log = get_logger(None, 'debug' if debug else 'info')
 
-def run_mapping():
+def validate_inputs(inputs):
+    Mach = inputs['Mach']
+    pInf = inputs['pInf']
+    qInf = inputs['qInf']
+    Sref = inputs['Sref']
+    Lref = inputs['Lref']
+    xref = inputs['xref']
+    isubcase = inputs['isubcase']
+    aero_format = inputs['aero_format']
+
+    if not isinstance(isubcase, int):
+        raise RuntimeError("isubcase=%r is not an integer greater than 1" % isubcase)
+    if not isubcase > 0:
+        raise RuntimeError("isubcase=%i is not an greater than 1" % isubcase)
+
+    if not aero_format.lower() in ['cart3d']:
+        raise RuntimeError("aero_format=%r is invalid; allowed='cart3d'")
+    return True
+
+def load_inputs():
     basepath    = os.path.normpath(os.getcwd())
     configpath  = os.path.join(basepath, 'inputs')
+    workpath    = os.path.join(basepath, 'outputsFinal')
+
+    log.info("basepath = %s" % basepath)
     print "os.getcwd()", os.getcwd()
     globals2 = {}
     locals2 = {}
@@ -23,27 +45,34 @@ def run_mapping():
 
     required_inputs = {
         'xref' : None,
-        'nastran_call' :  None,
+        'structural_call' :  None,
+        'qInf' : None,
     }
+    for key, value in command_module.__dict__.iteritems():
+        required_inputs[key] = value
+
     for key in required_inputs:
         if key not in command_module.__dict__:
             msg = 'fname=%r doesnt contain %r' % (fname, key)
         value = command_module.__dict__[key]
         required_inputs[key] = value
         #print key, value
+    required_inputs['configpath'] = configpath
+    required_inputs['workpath'] = workpath
 
 
-    nastran_call = required_inputs['nastran_call']
-    xref = required_inputs['xref']
+    validate_inputs(required_inputs)
+    return required_inputs
 
-    print "nastran_call = %r" % nastran_call
-    #print "globals2 =", globals2
-    print "xref =", xref
-    #print "locals2 =", locals2
-    #print "globals()", globals()
+def run_mapping():
+    required_inputs = load_inputs()
+    structural_call = required_inputs['structural_call']
+    isubcase = required_inputs['isubcase']
 
+    configpath = required_inputs['configpath']
+    workpath = required_inputs['workpath']
 
-    workpath    = os.path.join(basepath, 'outputsFinal')
+    print "structural_call = %r" % structural_call
 
     # load mapping
     cart3dLoads = os.path.join(workpath,  'Cart3d_35000_0.825_10_0_0_0_0.i.triq')
@@ -55,13 +84,12 @@ def run_mapping():
     cart3dGeom  = os.path.join(configpath, 'Cart3d_bwb.i.tri')
     cart3dGeom2 = os.path.join(workpath, 'Components.i.tri')
     bdf = os.path.join(workpath, 'fem3.bdf')
-    op2 = os.path.join(workpath, 'fem3.op2')
+    #op2 = os.path.join(workpath, 'fem3.op2')
     f06 = os.path.join(workpath, 'fem3.f06')
 
     assert os.path.exists(bdf), '%r doesnt exist' % bdf
     assert os.path.exists(bdfModel), '%r doesnt exist' % bdfModel
     assert os.path.exists(cart3dGeom), '%r doesnt exist' % cart3dGeom
-    log.info("basepath = %s" % basepath)
 
     os.chdir(workpath)
     copyFile(cart3dGeom, 'Components.i.tri')
@@ -92,7 +120,7 @@ def run_mapping():
             sys.stdout.flush()
 
         # map loads
-        run_map_loads(cart3dLoads, bdfModel, bdfModelOut)  # maps loads
+        run_map_loads(required_inputs, cart3dLoads, bdfModel, bdfModelOut)  # maps loads
         copyFile(bdfModelOut, bdfModelOut + strI)
 
         # run nastran
@@ -100,25 +128,28 @@ def run_mapping():
         sys.stdout.flush()
         #failFlag = os.system('nastran scr=yes bat=no fem3.bdf') # runs fem3.bdf with fem_loads_3.bdf
         #assert failFlag == 0,'nastran failed on iteration #%s' % i
-        copyFile('fem3.op2', 'fem3.op2' + strI)
+        #copyFile('fem3.op2', 'fem3.op2' + strI)
         copyFile('fem3.f06', 'fem3.f06' + strI)
-        os.remove(bdfModelOut) # cleans up fem_loads.bdf
 
         # map deflections
-        (wA, wS) = run_map_deflections(nodeList, bdf, op2, cart3dGeom, cart3dGeom2, log=log)
+        (wA, wS) = run_map_deflections(nodeList, bdf, f06, cart3dGeom, cart3dGeom2, log=log)
+        #(wA, wS) = run_map_deflections(nodeList, bdf, op2, cart3dGeom, cart3dGeom2, log=log)
         assert os.path.exists('Components.i.tri')
-        os.remove(op2) # verifies new fem3.op2 was created
-        os.remove(f06) # verifies new fem3.f06 was created
+
+        os.remove(bdfModelOut) # cleans up fem_loads.bdf
+        if 0:  # disabled b/c nastran isn't on this computer
+            os.remove(op2) # verifies new fem3.op2 was created
+            os.remove(f06) # verifies new fem3.f06 was created
 
         # post-processing
         (maxAID, maxADeflection) = maxDict(wA)
         maxSID = '???'
         maxADeflection = wA[maxAID]
         maxSDeflection = max(wS)[0,0]
-        log.info(     "AERO      - i=%s maxAID=%s maxADeflection=%s"   %(i, maxAID, maxADeflection))
-        log.info(     "STRUCTURE - i=%s maxSID=%s maxSDeflection=%s"   %(i, maxSID, maxSDeflection))
-        outfile.write("AERO      - i=%s maxAID=%s maxADeflection=%s\n" %(i, maxAID, maxADeflection))
-        outfile.write("STRUCTURE - i=%s maxSID=%s maxSDeflection=%s\n" %(i, maxSID, maxSDeflection))
+        log.info(     "AERO      - i=%s maxAID=%s maxADeflection=%s"   % (i, maxAID, maxADeflection))
+        log.info(     "STRUCTURE - i=%s maxSID=%s maxSDeflection=%s"   % (i, maxSID, maxSDeflection))
+        outfile.write("AERO      - i=%s maxAID=%s maxADeflection=%s\n" % (i, maxAID, maxADeflection))
+        outfile.write("STRUCTURE - i=%s maxSID=%s maxSDeflection=%s\n" % (i, maxSID, maxSDeflection))
 
         msg  = '\n'+'*'*80+'\n'
         msg += 'finished iteration #%s\n' %(i)

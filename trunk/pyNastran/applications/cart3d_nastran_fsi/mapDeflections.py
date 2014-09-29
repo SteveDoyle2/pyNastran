@@ -249,7 +249,7 @@ class DeflectionMapper(object):
         #print "type(aeroNodes)=%s" %(type(aeroNodes))
 
         for i,aeroNode in aeroNodes.iteritems():
-            if aeroNode[1]<0:
+            if aeroNode[1] < 0:
                 log.info('skipping aeroNode=%s bc y<0.' % i)
                 continue
             log.info("aeroNode[%s]  = %s" % (i, ListPrint(aeroNode)))
@@ -352,7 +352,10 @@ def test_deflections():
     runPremorph(args,bdfModel,premorphPath)
 
 
-def mapDeflectionsStructures_Aero(bdfModel='test_tet10.bdf',op2Filename='test_tet10.op2',tetFilename='geometry.morph.in',cart3dGeom='bJet.a.tri',cart3dOut='bJet.a.tri2',properTetFilename='properTets.in'):
+def mapDeflectionsStructures_Aero(bdfModel='test_tet10.bdf',op2Filename='test_tet10.op2',
+                                  tetFilename='geometry.morph.in',
+                                  cart3dGeom='bJet.a.tri',cart3dOut='bJet.a.tri2',
+                                  properTetFilename='properTets.in'):
     t0 = time()
     properTets = loadProperTets(properTetFilename)
     #makeGeometryMorphIn(basepath,bdfModel)
@@ -416,7 +419,7 @@ if __name__=='__main__':
     assert os.path.exists(bdfModel),'%r doesnt exist' %(bdfModel)
 
     os.chdir(workpath)
-    log.info("basepath = %s" %(basepath))
+    log.info("basepath = %r" % basepath)
     tetFilename = os.path.join(configpath,'geometry.morph.in')
     op2Filename = os.path.join(configpath,'fem3.op2')
     cart3dGeom  = os.path.join(configpath,'Cart3d_bwb.i.tri')

@@ -1,36 +1,60 @@
 #imort sys
 #from math import sqrt
+from scipy.spatial import KDTree as scipyKDTree
 
 class Node(object):
     pass
 
+class KdTree2(object):
+    def __init__(self, treeType, pointsList, nClose=0):
+        self.treeType = treeType
+        self.nclose = nClose
+        if treeType != 'node' and treeType != 'element':
+            # verifies you're calling the right
+            msg = 'Error!  Invalid treeType\n'
+            msg += "treeType=%r valid='node','element'" % treeType
+            raise RuntimeError(msg)
+        npoints = len(pointsList)
+        nodes = array((npoints, 3), dtype='float64')
+        self.node_ids = array(npoints, dtype='int32')
+
+        i = 0
+        for node_id, xyz in sorted(pointList.iteritems()):
+            nodes[i, :] = xyz
+            self.node_ids[i] = nid
+        self.tree = scipyKDTree(pointList)
+
+    def getCloseElementIDs(self, point):
+        dists, i = self.tree.query(point, k=self.nclose)
+        close_ids = self.node_ids[i]
+        return close_ids, dists
+
 class KdTree(object):
-    def __init__(self,treeType,pointList,nClose=0):
+    def __init__(self, treeType, pointsList, nClose=0):
         self.nClose = nClose
         self.treeType = treeType
         if treeType != 'node' and treeType != 'element':
             # verifies you're calling the right
             msg = 'Error!  Invalid treeType\n'
-            msg += "treeType=|%s| valid='node','element'" % treeType
-            raise Exception(msg)
+            msg += "treeType=%r valid='node','element'" % treeType
+            raise RuntimeError(msg)
 
         nodes = []
-        for nid,nodeLoc in sorted(pointList.items()):
-            #print "pointList[15] = ",pointList[15]
-            n = list(nodeLoc)+[nid]
+        for node_id,xyz in sorted(pointsList.iteritems()):
+            n = list(xyz) + [node_id]
             nodes.append(n)
         self.tree = self.buildTree(nodes,nClose)
 
     def getCloseElementIDs(self,point):
         closeNodesDists = self.nNearestPoints(point,self.nClose)
-        closeIDs = []
-        dists    = []
+        close_ids = []
+        dists = []
         for nodeDist in closeNodesDists:
             ID = nodeDist[0][3]
             dist = nodeDist[1]
-            closeIDs.append(ID)  # nid
+            close_ids.append(ID)  # nid
             dists.append(dist)
-        return closeIDs,dists
+        return close_ids, dists
 
     def buildTree(self,pointList, depth=0):
         if not pointList:
