@@ -1,4 +1,4 @@
-from numpy import unique, cross
+from numpy import unique, cross, dot
 
 def parse_patran_syntax(node_sets):
     """
@@ -95,7 +95,7 @@ def parse_patran_syntax_dict(node_sets):
         data[key] = unique(ints)
     return data
 
-def Position(xyz, cid, model):
+def Position(xyz, cid, model, is_cid_int=True):
     """
     Gets the point in the global XYZ coordinate system.
 
@@ -110,11 +110,14 @@ def Position(xyz, cid, model):
     :returns xyz2:  the position of the GRID in an arbitrary coordinate system
     :type xyz2:     TYPE = NDARRAY.  SIZE=(3,)
     """
-    cp = model.Coord(cid)
+    if is_cid_int:
+        cp = model.Coord(cid)
+    else:
+        cp = cid
     xyz2, matrix = cp.transformToGlobal(xyz)
     return xyz2
 
-def TransformLoadWRT(Fxyz, Mxyz, cid, cid_new, model):
+def TransformLoadWRT(F, M, cid, cid_new, model, is_cid_int=0):
     """
     Transforms a force/moment from an arbitrary coordinate system to another
     coordinate system.
@@ -129,6 +132,8 @@ def TransformLoadWRT(Fxyz, Mxyz, cid, cid_new, model):
     :type cid_new:   int
     :param model:    the BDF model object
     :type model:     BDF()
+    :param is_cid_int:  is cid/cid_new an integer or a Coord object
+    :type is_cid_int:  bool
 
     :returns Fxyz_local:  the force in an arbitrary coordinate system
     :type Fxyz_local:     TYPE = NDARRAY.  SIZE=(3,)
@@ -136,30 +141,46 @@ def TransformLoadWRT(Fxyz, Mxyz, cid, cid_new, model):
     :type MxyMxyz_local:  TYPE = NDARRAY.  SIZE=(3,)
     """
     if cid == cid_new: # same coordinate system
-        return Fxyz, Mxyz
+        return F, M
 
     # find the vector r for doing:
     #     M = r x F
-    cp = model.Coord(cid)
-    coordB = model.Coord(cid_new)
+    if is_cid_int:
+        cp = model.Coord(cid)
+        coordB = model.Coord(cid_new)
+    else:
+        cp = cid
+        coordB = cid_new
     r = cp.origin - coordB.origin
 
-    Fxyz_global = Position(Fxyz, cid, model)
-    Fxyz_local = PositionWRT(Fxyz_global, 0, cid_new, model)
-    Mxyz_local = PositionWRT(Mxyz, cid, cid_new, model)
+    # change R-theta-z to xyz
+    Fxyz_local_1 = cp.coordToXYZ(F)
+    Mxyz_local_1 = cp.coordToXYZ(M)
+
+    # pGlobal = pLocal1 * beta1 + porigin1
+    # pGlobal = pLocal2 * beta2 + porigin2
+    # pLocal1 * beta1 + porigin1 = pLocal2 * beta2 + porigin2
+    # plocal1 * beta1 + porigin1 - porigin2 = plocal2 * beta2
+    # (plocal1 * beta1 + porigin1 - porigin2) * beta2.T = plocal2
+    #
+    # origin transforms only apply to nodes, so...
+    # Fglobal = Flocal1 * beta1
+    # Flocal2 = (Flocal1 * beta1) * beta2.T
+
+    Fxyz_global  = dot(Fxyz_local_1, cp.beta())
+    Fxyz_local_2 = dot(dot(Fxyz_local_1, cp.beta()), coordB.beta().T)
 
     # find the moment about the new origin due to the force
-    Mxyz_global_delta += cross(r, Fxyz_global)
+    Mxyz_global = cross(r, Fxyz_global)
+    dMxyz_local_2 = cross(r, Fxyz_local_2)
+    Mxyz_local_2 = Mxyz_local_1 + dMxyz_local_2
 
     # rotate the delta moment into the local frame
-    Mxyz_local_delta = PositionWRT(Mxyz_global_delta, cid, cid_new, model)
+    M_local = coordB.XYZtoCoord(Mxyz_local_2)
 
-    # add the delta load
-    Mxyz_local += Mxyz_local_delta
+    return Fxyz_local_2, Mxyz_local_2
 
-    return Fxyz_local, Mxyz_local
-
-def PositionWRT(xyz, cid, cid_new, model):
+def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
     """
     Gets the location of the GRID which started in some arbitrary system and
     returns it in the desired coordinate system
@@ -180,12 +201,33 @@ def PositionWRT(xyz, cid, cid_new, model):
     if cid == cid_new: # same coordinate system
         return xyz
 
-    # converting the xyz point arbitrary->global
-    cp = model.Coord(cid)
-    xyz_global, matrixDum = cp.transformToGlobal(xyz)
-    coordB = model.Coord(cid_new)
+    if is_cid_int:
+        cp = model.Coord(cid)
+        coordB = model.Coord(cid_new)
+    else:
+        cp = cid
+        coordB = cid_new
 
-    # a matrix global->local matrix is found
-    matrix = coordB.beta()
-    xyz_local = coordB.transformToLocal(xyz_global, matrix)
+    if 0:
+        # pGlobal = pLocal1 * beta1 + porigin1
+        # pGlobal = pLocal2 * beta2 + porigin2
+        # pLocal1 * beta1 + porigin1 = pLocal2 * beta2 + porigin2
+        # plocal1 * beta1 + porigin1 - porigin2 = plocal2 * beta2
+        # (plocal1 * beta1 + porigin1 - porigin2) * beta2.T = plocal2
+
+        # convert R-Theta-Z_1 to xyz_1
+        p1_local = cp.coordToXYZ(xyz)
+
+        # transform xyz_1 to xyz_2
+        p2_local = dot(dot(p1_local, cp.beta()) + cp.origin - coordB.origin, coordB.beta().T)
+
+        # convert xyz_2 to R-Theta-Z_2
+        xyz_local = coordB.XYZtoCoord(p2_local)
+    else:
+        # converting the xyz point arbitrary->global
+        xyz_global, matrixDum = cp.transformToGlobal(xyz)
+
+        # a matrix global->local matrix is found
+        matrix = coordB.beta()
+        xyz_local = coordB.transformToLocal(xyz_global, matrix)
     return xyz_local
