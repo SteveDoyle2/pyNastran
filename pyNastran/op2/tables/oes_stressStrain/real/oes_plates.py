@@ -1817,11 +1817,11 @@ class RealPlateStrain(StrainObject):
                 ([angle], is_all_zeros) = writeFloats8p4F([angle])
 
                 if nid == cen and iLayer == 0:
-                    msg.append('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n' % (eid, cen, fd, exx, eyy, exy, angle, major, minor, evm))
+                    msg.append('0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %s\n' % (eid, cen, fd, exx, eyy, exy, angle, major, minor, evm))
                 elif iLayer == 0:
-                    msg.append('   %8s %8i  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n' % ('', nid, fd, exx, eyy, exy, angle, major, minor, evm))
+                    msg.append('   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %s\n' % ('', nid, fd, exx, eyy, exy, angle, major, minor, evm))
                 elif iLayer == 1:
-                    msg.append('   %8s %8s  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n\n' % ('', '', fd, exx, eyy, exy, angle, major, minor, evm))
+                    msg.append('   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %s\n\n' % ('', '', fd, exx, eyy, exy, angle, major, minor, evm))
                 else:
                     raise RuntimeError('Invalid option for cquad4')
         return ''.join(msg)

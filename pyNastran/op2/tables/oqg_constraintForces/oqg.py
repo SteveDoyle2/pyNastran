@@ -142,6 +142,7 @@ class OQG(OP2Common):
             storage_obj = self.spcForces
             if result_name not in self._saved_results:
                 return len(data)
+            self._found_results.add(result_name)
             n = self._read_table(data, result_name, storage_obj,
                                  RealSPCForces, ComplexSPCForces,
                                  RealSPCForcesArray, ComplexSPCForcesArray, 'node', random_code=self.random_code)
@@ -150,6 +151,7 @@ class OQG(OP2Common):
             storage_obj =  self.thermalGradientAndFlux
             if result_name not in self._saved_results:
                 return len(data)
+            self._found_results.add(result_name)
             n = self._read_table(data, result_name, storage_obj,
                                  RealTemperatureGradientAndFlux, None,
                                  RealTemperatureGradientAndFluxArray, None, 'node', random_code=self.random_code)
@@ -166,8 +168,8 @@ class OQG(OP2Common):
         storage_obj = self.mpcForces
         if self.thermal == 0:
             if result_name not in self._saved_results:
-                asdf
                 return len(data)
+            self._found_results.add(result_name)
             n = self._read_table(data, result_name, storage_obj,
                                  RealMPCForces, ComplexMPCForces,
                                  RealMPCForcesArray, ComplexMPCForcesArray, 'node', random_code=self.random_code)

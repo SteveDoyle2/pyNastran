@@ -142,6 +142,7 @@ class ONR(OP2Common):
         result_name = 'strainEnergy'
         if self.read_mode == 1:
             return len(data)
+        self._found_results.add(result_name)
 
         if self.num_wide == 4:
             self.create_transient_object(self.strainEnergy, StrainEnergyObject)
