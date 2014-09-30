@@ -671,8 +671,8 @@ class ComplexTableObject(ScalarObject):
                     print('line = %r' % line)
                     raise
                 self.gridTypes[nodeID] = grid_type
-                self.translations[self.dt][nodeID] = array([v1, v2, v3], dtype='float32')  # dx,dy,dz
-                self.rotations[self.dt][nodeID] = array([v4, v5, v6], dtype='float32')  # rx,ry,rz
+                self.translations[self.dt][nodeID] = array([v1, v2, v3], dtype='complex64')  # dx,dy,dz
+                self.rotations[self.dt][nodeID] = array([v4, v5, v6], dtype='complex64')  # rx,ry,rz
             return
 
         (dtName, dt) = transient
@@ -688,8 +688,8 @@ class ComplexTableObject(ScalarObject):
                 raise
             #print "*dt=%s line=%s" % (self.dt, str(line))
             self.gridTypes[nodeID] = grid_type
-            self.translations[dt][nodeID] = array([v1, v2, v3], dtype='float32')  # dx,dy,dz
-            self.rotations[dt][nodeID] = array([v4, v5, v6], dtype='float32')  # rx,ry,rz
+            self.translations[dt][nodeID] = array([v1, v2, v3], dtype='complex64')  # dx,dy,dz
+            self.rotations[dt][nodeID] = array([v4, v5, v6], dtype='complex64')  # rx,ry,rz
         #print("------")
 
     def add_complex_f06_data(self, data, transient):
@@ -729,8 +729,8 @@ class ComplexTableObject(ScalarObject):
         #assert nodeID not in self.translations,'complexDisplacementObject - static failure'
 
         self.gridTypes[nodeID] = self.recast_gridtype_as_string(grid_type)
-        self.translations[nodeID] = array([v1, v2, v3], dtype='float32')  # dx,dy,dz
-        self.rotations[nodeID] = array([v4, v5, v6], dtype='float32')  # rx,ry,rz
+        self.translations[nodeID] = array([v1, v2, v3], dtype='complex64')  # dx,dy,dz
+        self.rotations[nodeID] = array([v4, v5, v6], dtype='complex64')  # rx,ry,rz
 
     def add_sort1(self, dt, nodeID, grid_type, v1, v2, v3, v4, v5, v6):
         #msg = "dt=%s nodeID=%s v1=%s v2=%s v3=%s" %(dt,nodeID,v1,v2,v3)
@@ -752,8 +752,8 @@ class ComplexTableObject(ScalarObject):
         #assert nodeID not in self.translations,'complexDisplacementObject - static failure'
 
         self.gridTypes[nodeID] = self.recast_gridtype_as_string(grid_type)
-        self.translations[dt][nodeID] = array([v1, v2, v3], dtype='float32')  # dx,dy,dz
-        self.rotations[dt][nodeID] = array([v4, v5, v6], dtype='float32')  # rx,ry,rz
+        self.translations[dt][nodeID] = array([v1, v2, v3], dtype='complex64')  # dx,dy,dz
+        self.rotations[dt][nodeID] = array([v4, v5, v6], dtype='complex64')  # rx,ry,rz
 
     def add_sort2(self, nodeID, data):
         [dt, grid_type, v1, v2, v3, v4, v5, v6] = data
@@ -769,8 +769,8 @@ class ComplexTableObject(ScalarObject):
         assert isinstance(nodeID, int), msg
 
         self.gridTypes[nodeID] = self.recast_gridtype_as_string(grid_type)
-        self.translations[dt][nodeID] = array([v1, v2, v3], dtype='float32')  # dx,dy,dz
-        self.rotations[dt][nodeID] = array([v4, v5, v6], dtype='float32')  # rx,ry,rz
+        self.translations[dt][nodeID] = array([v1, v2, v3], dtype='complex64')  # dx,dy,dz
+        self.rotations[dt][nodeID] = array([v4, v5, v6], dtype='complex64')  # rx,ry,rz
 
     def _write_f06_block(self, words, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         raise RuntimeError('is this function used???')

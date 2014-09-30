@@ -2,7 +2,7 @@ import os
 import unittest
 from math import sqrt
 
-from numpy import array, array_equiv, array_equal
+from numpy import array, array_equiv, array_equal, allclose
 from itertools import count
 
 
@@ -447,7 +447,8 @@ class TestF06(unittest.TestCase):
         disp = f06.displacements[isubcase]
         frequency = .21
         T3 = disp.translations[frequency][21][2]
-        self.assertEquals(T3, -1.456074E+02 + -6.035482E+00j)  # T3
+        self.assertTrue(allclose(T3.real, -1.456074E+02))
+        self.assertTrue(allclose(T3.imag, -6.035482E+00))
 
         #f06.write_f06(f06name2)
         #os.remove(f06name2)
