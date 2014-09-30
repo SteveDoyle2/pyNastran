@@ -568,7 +568,7 @@ class OP2( #BDF,
         """
         sr = list(self._saved_results)
         sr.sort()
-        #self.log.debug('_saved_results = %s' % str(sr))
+        self.log.debug('_saved_results = %s' % str(sr))
         if op2_filename is None:
             from pyNastran.utils.gui_io import load_file_dialog
             wildcard_wx = "Nastran OP2 (*.op2)|*.op2|" \
