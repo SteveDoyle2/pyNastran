@@ -202,8 +202,6 @@ class OP2( #BDF,
          (.. seealso:: import logging)
         :param debug_file: sets the filename that will be written to (default=None -> no debug)
         """
-        self._saved_results = set(self.get_all_results())
-
         assert isinstance(make_geom, bool), 'make_geom=%r' % make_geom
         assert isinstance(debug, bool), 'debug=%r' % debug
 

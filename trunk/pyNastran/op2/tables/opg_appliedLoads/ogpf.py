@@ -31,6 +31,7 @@ class OGPF(object):
             result_name = 'gridPointForces'
             if result_name not in self._saved_results:
                 return len(data)
+            self._found_results.add(result_name)
             if self.num_wide == 10:
                 self.create_transient_object(self.gridPointForces, RealGridPointForces)
                 s = Struct(b'ii8s6f')

@@ -1079,6 +1079,7 @@ class OEF(OP2Common):
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
 
+            self._found_results.add('plateForces2')
             if self.format_code == 1 and self.num_wide == numwide_real:  # real
                 if self.read_mode == 1:
                     return len(data)
@@ -1254,6 +1255,7 @@ class OEF(OP2Common):
             # 68-CPENTA
             if self.read_mode == 1:
                 return len(data)
+            self._found_results.add('solidForces')
             if self.format_code == 1 and self.num_wide == 0:  # real
                 #self.create_transient_object(self.solidForces, RealCSolidForce)
                 pass
@@ -1265,6 +1267,7 @@ class OEF(OP2Common):
             # 53-CTRIAX6
             if self.read_mode == 1:
                 return len(data)
+            self._found_results.add('ctriaxForce')
             if self.format_code == 1 and self.num_wide == 0:  # real
                 pass
                 #self.create_transient_object(self.ctriaxForce, RealCTriaxForce)  # undefined
@@ -1276,6 +1279,7 @@ class OEF(OP2Common):
             # 4-CSHEAR
             if self.read_mode == 1:
                 return len(data)
+            self._found_results.add('shearForces')
             if self.format_code == 1 and self.num_wide == 17:  # real
                 self.create_transient_object(self.shearForces, RealCShearForce)
                 s = Struct(b'i16f')
@@ -1363,6 +1367,7 @@ class OEF(OP2Common):
             if self.read_mode == 1:
                 return len(data)
 
+            self._found_results.add('coneAxForces')
             if self.format_code == 1 and self.num_wide == 7:  # real
                 self.create_transient_object(self.coneAxForces, RealConeAxForce)
                 ntotal = 28  # 7*4
@@ -1390,6 +1395,7 @@ class OEF(OP2Common):
             # 38-GAP
             if self.read_mode == 1:
                 return len(data)
+            self._found_results.add('gapForces')
             if self.format_code == 1 and self.num_wide == 9:  # real
                 self.create_transient_object(self.gapForces, RealCGapForce)
                 s = Struct(b'i8f')
@@ -1417,6 +1423,7 @@ class OEF(OP2Common):
             # 69-CBEND
             if self.read_mode == 1:
                 return len(data)
+            self._found_results.add('bendForces')
             if self.format_code == 1 and self.num_wide == 15:  # real
                 self.create_transient_object(self.bendForces, RealBendForce)
                 s = Struct(b'ii13f')
@@ -1504,6 +1511,7 @@ class OEF(OP2Common):
             if self.read_mode == 1:
                 return len(data)
 
+            self._found_results.add('solidPressureForces')
             if self.format_code == 1 and self.num_wide == 10:  # real
                 ntotal = 40
                 nelements = len(data) // ntotal
@@ -1566,6 +1574,7 @@ class OEF(OP2Common):
             # 100-BARS
             if self.read_mode == 1:
                 return len(data)
+            self._found_results.add('bar100Forces')
             if self.format_code == 1 and self.num_wide == 8:
                 self.create_transient_object(self.bar100Forces, RealCBar100Force)
                 format1 = bytes(b'i7f')
@@ -1591,6 +1600,7 @@ class OEF(OP2Common):
                 return self._not_implemented_or_skip(data, msg)
         elif self.element_type in [102]:  # cbush
             # 102-CBUSH
+            self._found_results.add('bushForces')
             if self.format_code == 1 and self.num_wide == 7:  # real
                 self.create_transient_object(self.bushForces, RealCBushForce)
                 s = Struct(b'i6f')
@@ -1660,6 +1670,7 @@ class OEF(OP2Common):
             if self.read_mode == 1:
                 return len(data)
 
+            self._found_results.add('force_VU_2D')
             if self.element_type in [189]:  # VUQUAD
                 nNodes = 4
                 eType = 'VUQUAD4'
@@ -1769,6 +1780,7 @@ class OEF(OP2Common):
             # 191-VUBEAM
             if self.read_mode == 1:
                 return len(data)
+            self._found_results.add('force_VU')
 
             if self.format_code == 1 and self.num_wide == 20:  # real
                 self.create_transient_object(self.force_VU, RealForce_VU)

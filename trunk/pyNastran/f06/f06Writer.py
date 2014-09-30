@@ -186,7 +186,8 @@ class F06Writer(object):
         self.iSubcases = []
         self.__objects_vector_init__()
         self.__objects_init__()
-
+        self._found_results = set([])
+        self._saved_results = set(self.get_all_results())
 
     def get_all_results(self):
         all_results = ['stress', 'strain', 'element_forces', 'constraint_forces'] + self.get_table_types()
