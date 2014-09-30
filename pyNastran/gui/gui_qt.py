@@ -40,8 +40,8 @@ from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO,
     is_nastran, is_cart3d, is_panair, is_lawgs,
     is_shabp, is_stl, is_tecplot, is_tetgen, is_usm3d, is_plot3d)
 from pyNastran.gui.arg_handling import get_inputs
-from pyNastran.gui.qt_legend import LegendPropertiesWindow
-from pyNastran.gui.gui_common import GuiCommon
+from pyNastran.gui.qt_files.qt_legend import LegendPropertiesWindow
+from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 
 pkg_path = pyNastran.__path__[0]
 script_path = os.path.join(pkg_path, 'gui', 'scripts')

@@ -11,11 +11,11 @@ import pyNastran
 version = pyNastran.__version__
 
 #from pyNastran.gui.mouseStyle import MouseStyle
-from pyNastran.gui.actionsControl import pyWidget
+from pyNastran.gui.wx_files.actionsControl import pyWidget
+from pyNastran.gui.wx_files.gui_wx_common import GuiCommon
 
 from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, Plot3d_io,
     is_nastran, is_cart3d, is_panair, is_lawgs, is_stl, is_tetgen, is_usm3d, is_plot3d)
-from pyNastran.gui.gui_wx_common import GuiCommon
 
 def getScreenCorner(x, y):
     #print "wx.GetDisplaySize() = ",wx.GetDisplaySize()
