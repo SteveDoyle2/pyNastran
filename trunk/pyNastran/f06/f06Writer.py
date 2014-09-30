@@ -188,6 +188,65 @@ class F06Writer(object):
         self.__objects_init__()
 
 
+    def get_all_results(self):
+        all_results = ['stress', 'strain', 'element_forces', 'constraint_forces'] + self.get_table_types()
+        return all_results
+
+    def _clear_results(self):
+        self._saved_results.clear()
+
+    def add_results(self, results):
+        if isinstance(results, basestring):
+            results = [results]
+        all_results = self.get_all_results()
+        for result in results:
+            result = str(result)
+            if result not in all_results:
+                raise RuntimeError('%r is not a valid result to remove; all_results=%s' % (result, all_results))
+            if 'stress' == result:
+                stress_results = []
+                for result in all_results:
+                    if 'stress' in result.lower():
+                        stress_results.append(result)
+                #stress_results = [result if 'stress' in result.lower() for result in all_results]
+                self._saved_results.update(stress_results)
+            elif 'strain' == result:
+                strain_results = []
+                for result in all_results:
+                    if 'strain' in result.lower():
+                        strain_results.append(result)
+                #strain_results = [result if 'strain' in result.lower() for result in all_results]
+                self._saved_results.update(strain_results)
+            elif 'stress' in result.lower():
+                self._saved_results.add('stress')
+            elif 'strain' in result.lower():
+                self._saved_results.add('strain')
+            elif 'spcForces' == result or 'mpcForces' == result or 'constraint_forces' == result:
+                self._saved_results.add('constraint_forces')
+            elif 'force' in result.lower(): # could use more validation...
+                self._saved_results.add('element_forces')
+            # thermalLoad_VU_3D, thermalLoad_1D, thermalLoad_CONV, thermalLoad_2D_3D
+            self._saved_results.add(result)
+
+    def set_results(self, results):
+        if isinstance(results, basestring):
+            results = [results]
+        self._clear_results()
+        self.add_results(results)
+
+    def remove_results(self, results):
+        all_results = self.get_all_results()
+        for result in results:
+            if result not in all_results:
+                raise RuntimeError('%r is not a valid result to remove; all_results=%s' % (result, all_results))
+
+        for result in results:
+            if result in self._saved_results:
+                self._saved_results.remove(result)
+        #disable_set = set(results)
+        #self._saved_results.difference(disable_set)
+        #print(self._saved_results)
+
     def __objects_vector_init__(self):
         """
         All OUG table is simple to vectorize, so we declere it in __objects_init__
@@ -453,6 +512,199 @@ class F06Writer(object):
 
         #: OEE - strain energy density
         self.strainEnergy = {}  # tCode=18
+
+    def get_table_types(self):
+        """
+        Gets the names of the results.
+        """
+        table_types = [
+            # OUG - displacement
+            'displacements',
+            'displacementsPSD',
+            'displacementsATO',
+            'displacementsRMS',
+            'displacementsCRM',
+            'displacementsNO',
+            'scaledDisplacements',
+
+            # OUG - temperatures
+            'temperatures',
+
+            # OUG - eigenvectors
+            'eigenvectors',
+
+            # OUG - velocity
+            'velocities',
+
+            # OUG - acceleration
+            'accelerations',
+
+            # OQG - spc/mpc forces
+            'spcForces',
+            'mpcForces',
+            'thermalGradientAndFlux',
+
+            # OGF - grid point forces
+            'gridPointForces',
+
+            # OPG - summation of loads for each element
+            'loadVectors',
+            'thermalLoadVectors',
+            'appliedLoads',
+            'forceVectors',
+
+            # OES - tCode=5 thermal=0 s_code=0,1 (stress/strain)
+            # OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
+            'celasStress',  # non-vectorized
+            'celas1_stress',  # vectorized
+            'celas2_stress',
+            'celas3_stress',
+            'celas4_stress',
+
+            # OES - CELAS1/CELAS2/CELAS3/CELAS4 strain
+            'celasStrain',  # non-vectorized
+            'celas1_strain',  # vectorized
+            'celas2_strain',
+            'celas3_strain',
+            'celas4_strain',
+
+            # OES - isotropic CROD/CONROD/CTUBE stress
+            'rodStress',  # non-vectorized
+            'crod_stress',  # vectorized
+            'conrod_stress',
+            'ctube_stress',
+
+            # OES - isotropic CROD/CONROD/CTUBE strain
+            'rodStrain',  # non-vectorized
+            'crod_strain',  # vectorized
+            'conrod_strain',
+            'ctube_strain',
+
+            # OES - isotropic CBAR stress
+            'barStress',
+            # OES - isotropic CBAR strain
+            'barStrain',
+            # OES - isotropic CBEAM stress
+            'beamStress',
+            # OES - isotropic CBEAM strain
+            'beamStrain',
+
+            # OES - isotropic CTRIA3/CQUAD4 stress
+            'plateStress',
+            'ctria3_stress',
+            'cquad4_stress',
+
+            # OES - isotropic CTRIA3/CQUAD4 strain
+            'plateStrain',
+            'ctria3_strain',
+            'cquad4_strain',
+
+            # OES - isotropic CTETRA/CHEXA/CPENTA stress
+            'solidStress',  # non-vectorized
+            'ctetra_stress',  # vectorized
+            'chexa_stress',
+            'cpenta_stress',
+
+            # OES - isotropic CTETRA/CHEXA/CPENTA strain
+            'solidStrain',  # non-vectorized
+            'ctetra_strain',  # vectorized
+            'chexa_strain',
+            'cpenta_strain',
+
+            # OES - CSHEAR stress
+            'shearStress',
+            # OES - CSHEAR strain
+            'shearStrain',
+            # OES - CEALS1 224, CELAS3 225
+            'nonlinearSpringStress',
+            # OES - GAPNL 86
+            'nonlinearGapStress',
+            # OES - CBUSH 226
+            'nolinearBushStress',
+        ]
+
+        table_types += [
+            # LAMA
+            'eigenvalues',
+
+            # OEF - Forces - tCode=4 thermal=0
+            'rodForces',  # non-vectorized
+            'crod_force',  # vectorized
+            'conrod_force',
+            'ctube_force',
+
+            'barForces',
+            'bar100Forces',
+            'beamForces',
+            'bendForces',
+            'bushForces',
+            'coneAxForces',
+            'damperForces',
+            'gapForces',
+
+            'plateForces',
+            'ctria3_force',
+            'cquad4_force',
+
+            'plateForces2',
+            'shearForces',
+            'solidPressureForces',
+            'springForces',
+            'viscForces',
+
+            'force_VU',
+            'force_VU_2D',
+
+            #OEF - Fluxes - tCode=4 thermal=1
+            'thermalLoad_CONV',
+            'thermalLoad_CHBDY',
+            'thermalLoad_1D',
+            'thermalLoad_2D_3D',
+            'thermalLoad_VU',
+            'thermalLoad_VU_3D',
+            'thermalLoad_VUBeam',
+            #self.temperatureForces
+        ]
+        table_types += [
+            # OES - CTRIAX6
+            'ctriaxStress',
+            'ctriaxStrain',
+
+            'bushStress',
+            'bushStrain',
+            'bush1dStressStrain',
+
+            # OES - nonlinear CROD/CONROD/CTUBE stress
+            'nonlinearRodStress',
+            'nonlinearRodStrain',
+
+            # OESNLXR - CTRIA3/CQUAD4 stress
+            'nonlinearPlateStress',
+            'nonlinearPlateStrain',
+            'hyperelasticPlateStress',
+            'hyperelasticPlateStrain',
+
+            # OES - composite CTRIA3/CQUAD4 stress
+            'compositePlateStress',
+            'cquad4_composite_stress',
+            'cquad8_composite_stress',
+            'ctria3_composite_stress',
+            'ctria6_composite_stress',
+
+            'compositePlateStrain',
+            'cquad4_composite_strain',
+            'cquad8_composite_strain',
+            'ctria3_composite_strain',
+            'ctria6_composite_strain',
+
+            # OGS1 - grid point stresses
+            'gridPointStresses',        # tCode=26
+            'gridPointVolumeStresses',  # tCode=27
+
+            # OEE - strain energy density
+            'strainEnergy',  # tCode=18
+        ]
+        return table_types
 
     def make_f06_header(self):
         """If this class is inherited, the F06 Header may be overwritten"""
