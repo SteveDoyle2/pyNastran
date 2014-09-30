@@ -119,7 +119,8 @@ class GuiCommon(object):
                     #valueSet.add(value)
         else:  # vectorSize=3
             for value in case:
-                gridResult.InsertNextTuple3(value)  # x,y,z
+                print(value)
+                gridResult.InsertNextTuple3(*value)  # x,y,z
 
         nValueSet = len(valueSet)
         return norm_value, nValueSet
@@ -141,8 +142,9 @@ class GuiCommon(object):
                 self.grid.GetPointData().SetScalars(gridResult)
                 self.grid.Modified()
             elif vectorSize == 3:
-                print("***node vector=%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
+                #print("***node vector=%s skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
                 self.grid.GetPointData().SetVectors(gridResult)
+                self.grid.Modified()
                 #print("***node skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID,resultType,subtitle,label))
             else:
                 #print("***node skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID, resultType, subtitle, label))

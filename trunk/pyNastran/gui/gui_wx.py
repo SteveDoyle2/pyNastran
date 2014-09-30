@@ -13,7 +13,7 @@ import sys
 #from vtk.wx.wxVTKRenderWindowInteractor import wxVTKRenderWindowInteractor
 
 import pyNastran.gui
-from pyNastran.gui.pan import Pan
+from pyNastran.gui.wx_files.pan import Pan
 from pyNastran.gui.arg_handling import get_inputs
 from pyNastran.utils.log import SimpleLogger
 
