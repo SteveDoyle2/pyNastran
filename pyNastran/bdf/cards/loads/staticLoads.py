@@ -1441,7 +1441,6 @@ class PLOAD4(Load):
             self.ldir = string_or_blank(card, 14, 'ldir', 'NORM')
             assert len(card) <= 15, 'len(PLOAD4 card) = %i' % len(card)
         else:
-            #print "PLOAD4 = ",data
             self.sid = data[0]
             self.eid = data[1]
             self.pressures = data[2]
@@ -1458,6 +1457,12 @@ class PLOAD4(Load):
             self.g1 = self.g1
             self.g34 = self.g34
             self.eids = [self.eid]
+
+        if self.sorl not in ['SURF', 'LINE']:
+            raise RuntimeError(self.sorl)
+        if self.ldir not in ['LINE', 'X', 'Y', 'Z', 'TANG', 'NORM']:
+            raise RuntimeError(self.ldir)
+
 
     def getLoads(self):
         return [self]
