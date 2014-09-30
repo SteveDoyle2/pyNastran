@@ -1096,7 +1096,8 @@ class F06Writer(object):
                         res_length = max(len(result.__class__.__name__), res_length)
                         continue
                 if res_length == 0:
-                    return
+                    # skipped subcase
+                    continue
                 res_format = '%%-%is SUBCASE=%%i%%s' % res_length
 
                 for res_type in res_types:
