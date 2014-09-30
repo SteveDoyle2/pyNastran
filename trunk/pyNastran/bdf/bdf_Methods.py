@@ -466,6 +466,9 @@ class BDFMethods(BDFMethodsDeprecated):
             elif load.type == 'PLOAD4':
                 #elem = load.eid
                 p = load.pressures[0] * scale  # there are 4 possible pressures, but we assume p0
+                assert load.Cid() == 0, 'Cid() = %s' % (load.Cid())
+                assert load.sorl == 'NORM', 'sorl = %s' % (load.sorl)
+                assert load.ldir == 'SURF', 'ldir = %s' % (load.ldir)
 
                 for elem in load.eids:
                     eid = elem.eid
@@ -481,7 +484,6 @@ class BDFMethods(BDFMethodsDeprecated):
                         continue
                     r = centroid - p
                     f = p * A * n
-                    assert load.Cid() == 0, 'Cid() = %s' % (load.Cid())
                     #load.cid.transformToGlobal()
                     m = cross(r, f)
                     F += f
