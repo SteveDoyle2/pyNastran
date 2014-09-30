@@ -381,7 +381,7 @@ class BDFMethods(BDFMethodsDeprecated):
         gi = gravity_i.N * gravity_i.scale
         mass, cg, I = model.mass_properties(reference_point=p0, sym_axis=None, num_cpus=6)
 
-    def sum_forces_moments(self, p0, load_case_id):
+    def sum_forces_moments(self, p0, load_case_id, include_grav=False):
         """
         Sums applied forces & moments about a reference point p0 for all
         load cases.
@@ -481,11 +481,22 @@ class BDFMethods(BDFMethodsDeprecated):
                         continue
                     r = centroid - p
                     f = p * A * n
+                    assert load.Cid() == 0, 'Cid() = %s' % (load.Cid())
+                    #load.cid.transformToGlobal()
                     m = cross(r, f)
                     F += f
                     M += m
             elif load.type == 'GRAV':
-                pass
+                if include_grav:
+                    assert load.Cid() == 0, 'Cid() = %s' % (load.Cid())
+                    g = load.N * load.scale * scale
+                    for eid, elem in self.elements.iteritems():
+                        m = elem.Centroid()
+                        r = centroid - p
+                        f = m * g
+                        m = cross(r, f)
+                        F += f
+                        M += m
             else:
                 self.log.debug('case=%s loadtype=%r not supported' % (load_case_id, load.type))
         #self.log.info("case=%s F=%s M=%s\n" % (load_case_id, F, M))

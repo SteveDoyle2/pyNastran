@@ -137,20 +137,20 @@ class LOAD(LoadCombination):
             if nid in forceLoads:
                 force = forceLoads[nid]
                 if abs(force[0]) > 0.:
-                    msg += spaces + "  FX=%s,\n" % (force[0])
+                    msg += spaces + "  FX=%s,\n" % force[0]
                 if abs(force[1]) > 0.:
-                    msg += spaces + "  FY=%s,\n" % (force[1])
+                    msg += spaces + "  FY=%s,\n" % force[1]
                 if abs(force[2]) > 0.:
-                    msg += spaces + "  FZ=%s,\n" % (force[2])
+                    msg += spaces + "  FZ=%s,\n" % force[2]
 
             if nid in momentLoads:
                 moment = momentLoads[nid]
                 if abs(moment[0]) > 0.:
-                    msg += spaces + "  MX=%s,\n" % (moment[0])
+                    msg += spaces + "  MX=%s,\n" % moment[0]
                 if abs(moment[1]) > 0.:
-                    msg += spaces + "  MY=%s,\n" % (moment[1])
+                    msg += spaces + "  MY=%s,\n" % moment[1]
                 if abs(moment[2]) > 0.:
-                    msg += spaces + "  MZ=%s,\n" % (moment[2])
+                    msg += spaces + "  MZ=%s,\n" % moment[2]
             msg = msg[:-2]
             msg += '),\n'
             # finish the load
@@ -357,7 +357,8 @@ class GRAV(BaseCard):
 
     def GravityVector(self):
         """returns the gravity vector in absolute coordinates"""
-        (p, matrix) = self.cid.transformToGlobal(self.N)
+        ## TODO: shouldn't be scaled by the
+        p = self.cid.transformVectorToGlobal(self.N)
         return self.scale * p
 
     def rawFields(self):
@@ -1548,7 +1549,7 @@ class PLOAD4(Load):
         p4 = set_blank_if_default(self.pressures[3], p1)
         list_fields = ['PLOAD4', self.sid, eid, self.pressures[0], p2, p3, p4]
 
-        #print "g3=|%s| g4=%s eids=|%s|" %(self.g3,self.g4,self.eids)
+        #print "g3=%r g4=%s eids=%r" %(self.g3, self.g4, self.eids)
         if self.g1 is not None:  # is it a SOLID element
             nodeIDs = self.nodeIDs([self.g1, self.g34])
             list_fields += nodeIDs
@@ -1585,7 +1586,6 @@ class PLOAD4(Load):
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
-        #return self.comment() + card_writer(card)
 
 
 class PLOADX1(Load):

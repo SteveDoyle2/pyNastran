@@ -210,6 +210,47 @@ class Coord(BaseCard):
             print('-----')
 
     def transformToGlobal(self, p, debug=False):
+        if self.cid == 0:
+            return p, array([[1., 0., 0.],
+                             [0., 1., 0.],
+                             [0., 0., 1.]], dtype='float64')
+
+        p = self.transformNodeToGlobal(p)
+        m = self.beta()
+        return p, m
+
+    def transformForceToGlobal(self, F, M):
+        raise NotImplementedError('transformForceToGlobal')
+        Fg = self.transformVectorToGlobal(self, F)
+        Mg = self.transformVectorToGlobal(self, M)
+
+        r = self.origin #  maybe a minus sign?
+        Mdelta = cross(r, Fg)
+        return Fg, Mg + Mdelta
+
+    def transformVectorToGlobal(self, p):
+        if self.cid == 0:
+            return p
+
+        if not self.isResolved:
+            if isinstance(self.rid, int) and self.rid != 0:
+                raise RuntimeError("BDF has not been cross referenced.")
+            self.rid.setup()
+
+        # the ijk axes arent resolved as R-theta-z, only points
+        p2 = self.coordToXYZ(p)
+
+        if self.i is None:
+            raise RuntimeError("Local unit vectors haven't been set.\nType=%r cid=%s rid=%s" % (self.type, self.cid, self.rid))
+        matrix = vstack([self.i, self.j, self.k])
+
+        # rotate point p2 from the local frame to the global frame
+        # shift point p by origin is in global coordinates
+        p3 = dot(p2, matrix)
+
+        return p3
+
+    def transformNodeToGlobal(self, p):
         r"""
         Transforms a point from the local coordinate system to the reference
         coordinate frames "global" coordinate system.
@@ -241,51 +282,9 @@ class Coord(BaseCard):
         .. warning:: you probably shouldnt call this, call the Node methods
                      Position and PositionWRT
         """
-        if debug:
-            print("p = %s" % p)
-
         if self.cid == 0:
-            return p, array([[1., 0., 0.],
-                             [0., 1., 0.],
-                             [0., 0., 1.]], dtype='float64')
-        if not self.isResolved:
-            if isinstance(self.rid, int) and self.rid != 0:
-                raise RuntimeError("BDF has not been cross referenced.")
-            self.rid.setup()
-
-        # the ijk axes arent resolved as R-theta-z, only points
-        p2 = self.coordToXYZ(p)
-
-        if self.i is None:
-            raise RuntimeError("Local unit vectors haven't been set.\nType=%r cid=%s rid=%s" % (self.type, self.cid, self.rid))
-        # Bij = Bip*j
-        #i = self.i
-        #j = self.j
-        #k = self.k
-        #gx = array([1., 0., 0.], dtype='float64')
-        #gy = array([0., 1., 0.], dtype='float64')
-        #gz = array([0., 0., 1.], dtype='float64')
-
-        #matrix = array([[dot(gx, i), dot(gy, i), dot(gz, i)],
-        #                [dot(gx, j), dot(gy, j), dot(gz, j)],
-        #                [dot(gx, k), dot(gy, k), dot(gz, k)]], dtype='float64')
-        matrix = vstack([self.i, self.j, self.k])
-
-        # rotate point p2 from the local frame to the global frame
-        # shift point p by origin is in global coordinates
-        #p3 = p2[0]*self.i + p2[1]*self.j + p2[2]*self.k + self.origin
-        p3 = dot(p2, matrix) + self.origin
-
-        if debug:
-            print("Cp = ", self.Cid())
-            print("p = %s" % (list_print(p)))
-            print("matrix = \n", matrix)
-            print("e1 = %s" % (list_print(self.e1)))
-            print("p2 = %s" % (list_print(p2)))
-            print('------------------------')
-            print("p3 = %s" % (list_print(p3)))
-
-        return (p3, matrix)
+            return p
+        return self.transformVectorToGlobal(p) + self.origin
 
     def transformToLocal(self, p, beta, debug=False):
         r"""
