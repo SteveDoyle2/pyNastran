@@ -135,7 +135,7 @@ class SolidElement(Element):
         card = self.rawFields()
         msg1 = self.comment() + print_card_8(card)
         msg2 = self.write_bdf2()
-        assert msg1 == msg2, '\n%s---\n%s\n%r\n%r' % (msg1, msg2, msg1, msg2)
+        assert msg1 == msg2, 'write_bdf != write_bdf2\n%s---\n%s\n%r\n%r' % (msg1, msg2, msg1, msg2)
         return msg2
 
 class CHEXA8(SolidElement):
@@ -246,8 +246,8 @@ class CHEXA20(SolidElement):
         data = [self.type, self.eid, self.Pid()] + nodes[:7] + nodes2
         msg = ('CHEXA   %8i%8i%8i%8i%8i%8i%8i%8i\n'
                '        %8i%8i%8s%8s%8s%8s%8s%8s\n'
-               '        %8s%8s%8s%8s%8s%8s\n' % tuple(data))
-        return self.comment() + msg + '\n'
+               '        %8s%8s%8s%8s%8s%8s' % tuple(data))
+        return self.comment() + msg.rstrip() + '\n'
 
     def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
@@ -562,7 +562,7 @@ class CPENTA15(SolidElement):
         data = [self.eid, self.Pid()] + nodes[:6] + nodes2
         msg = ('CPENTA  %8i%8i%8i%8i%8i%8i%8i%8i\n'
                '        %8s%8s%8s%8s%8s%8s%8s%8s\n'
-               '        %8s\n' % tuple(data))
+               '        %8s' % tuple(data))
         return self.comment() + msg.rstrip() + '\n'
 
     def __init__(self, card=None, data=None, comment=''):
@@ -835,8 +835,8 @@ class CTETRA10(SolidElement):
 
         data = [self.eid, self.Pid()] + nodes[:4] + nodes2
         msg = ('CTETRA  %8i%8i%8i%8i%8i%8i%8s%8s\n'
-               '        %8s%8s%8s%8s\n' % tuple(data))
-        return self.comment() + msg + '\n'
+               '        %8s%8s%8s%8s' % tuple(data))
+        return self.comment() + msg.rstrip() + '\n'
 
     def __init__(self, card=None, data=None, comment=''):
         SolidElement.__init__(self, card, data)
