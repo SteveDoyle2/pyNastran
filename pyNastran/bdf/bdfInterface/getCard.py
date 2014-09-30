@@ -229,10 +229,12 @@ class GetMethods(GetMethodsDeprecated):
         if mode not in ['list', 'dict']:
             msg = "mode=%r is not supported.  Use 'list' or 'dict'\n" % mode
             raise ValueError(msg)
+        assert isinstance(pids, list), pids
         if mode == 'list':
             eids2 = []
-            for eid, element in self.elements.iteritems():
-                if element.Pid() in pids:
+            for eid, element in sorted(self.elements.iteritems()):
+                pid = element.Pid()
+                if pid in pids:
                     eids2.append(eid)
         else:
             eids2 = {}

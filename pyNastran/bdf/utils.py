@@ -117,7 +117,7 @@ def Position(xyz, cid, model, is_cid_int=True):
     xyz2, matrix = cp.transformToGlobal(xyz)
     return xyz2
 
-def TransformLoadWRT(F, M, cid, cid_new, model, is_cid_int=0):
+def TransformLoadWRT(F, M, cid, cid_new, model, is_cid_int=True):
     """
     Transforms a force/moment from an arbitrary coordinate system to another
     coordinate system.

@@ -376,6 +376,11 @@ class BDFMethods(BDFMethodsDeprecated):
             p2 = coord.transformToLocal(p, matrix, debug=debug)
             self.nodes[nid].UpdatePosition(self, p2, coord.cid)
 
+    def __gravity_load(loadcase_id):
+        gravity_i = model.loads[2][0]
+        gi = gravity_i.N * gravity_i.scale
+        mass, cg, I = model.mass_properties(reference_point=p0, sym_axis=None, num_cpus=6)
+
     def sum_forces_moments(self, p0, load_case_id):
         """
         Sums applied forces & moments about a reference point p0 for all
@@ -464,7 +469,6 @@ class BDFMethods(BDFMethodsDeprecated):
 
                 for elem in load.eids:
                     eid = elem.eid
-                    pressures[eids.index(eid)] = p
                     if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
                                      'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
                         n = elem.Normal()
@@ -480,7 +484,9 @@ class BDFMethods(BDFMethodsDeprecated):
                     m = cross(r, f)
                     F += f
                     M += m
+            elif load.type == 'GRAV':
+                pass
             else:
                 self.log.debug('case=%s loadtype=%r not supported' % (load_case_id, load.type))
-        self.log.info("case=%s F=%s M=%s\n" % (load_case_id, F, M))
+        #self.log.info("case=%s F=%s M=%s\n" % (load_case_id, F, M))
         return (F, M)
