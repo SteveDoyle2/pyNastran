@@ -19,8 +19,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import multiprocessing as mp
 
-from numpy import array, cross, zeros, dot
-from numpy.linalg import det
+from numpy import array, cross, zeros, dot, allclose
+from numpy.linalg import norm
 
 
 from pyNastran.bdf.cards.loads.staticLoads import Moment, Force, LOAD
@@ -459,14 +459,14 @@ class BDFMethods(BDFMethodsDeprecated):
                 #if elem.type in ['CBAR',]:
                     #pass
             elif load.type == 'PLOAD2':
-                p = load.pressures[0] * scale  # there are 4 pressures, but we assume p0
+                pressure = load.pressures[0] * scale  # there are 4 pressures, but we assume p0
                 for eid in load.eids:
                     elem = self.elements[eid]
                     if elem.type in ['CTRIA3',
                                      'CQUAD4', 'CSHEAR']:
                         n = elem.Normal()
                         A = elem.Area()
-                        f = p * n * A
+                        f = pressure * n * A
                         r = elm.Centroid() - p
                         m = cross(r, f)
                         F += f
@@ -475,11 +475,10 @@ class BDFMethods(BDFMethodsDeprecated):
                         self.log.debug('case=%s etype=%r loadtype=%r not supported' % (load_case_id, elem.type, load.type))
             elif load.type == 'PLOAD4':
                 #elem = load.eid
-                p = load.pressures[0] * scale  # there are 4 possible pressures, but we assume p0
+                pressure = load.pressures[0] * scale  # there are 4 possible pressures, but we assume p0
                 assert load.Cid() == 0, 'Cid() = %s' % (load.Cid())
                 assert load.sorl == 'SURF', 'sorl = %s' % (load.sorl)
                 assert load.ldir == 'NORM', 'ldir = %s' % (load.ldir)
-
                 for elem in load.eids:
                     eid = elem.eid
                     if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',]:
@@ -487,32 +486,32 @@ class BDFMethods(BDFMethodsDeprecated):
                         nodes = elem.nodeIDs()
                         n1, n2, n3 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]]
                         axb = cross(n1 - n2, n1 - n3)
-                        nunit = det(axb)
+                        nunit = norm(axb)
                         A = 0.5 * nunit
                         n = axb / nunit
                         centroid = (n1 + n2 + n3) / 3.
 
-                        n2 = elem.Normal()
-                        assert n == n2
+                        #n2 = elem.Normal()
+                        #assert allclose(n, n2), 'n=%s n2=%s' % (n, n2)
                     elif elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
                         # quads
                         nodes = elem.nodeIDs()
                         n1, n2, n3, n4 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]], xyz[nodes[3]]
-                        axb = cross(n1 - n3, n2 - n4) # buggy
-                        nunit = det(axb)
+                        axb = cross(n1 - n3, n2 - n4)
+                        nunit = norm(axb)
                         A = 0.5 * nunit
                         n = axb / nunit
-                        centroid = (n1 + n2 + n3 + n4) / 4.
 
+                        centroid = (n1 + n2 + n3 + n4) / 4.
                         n2 = elem.Normal()
-                        assert n == n2
+                        assert allclose(n, n2), 'n=%s n2=%s' % (n, n2)
                     elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
                         A, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
                     else:
                         self.log.debug('case=%s eid=%s etype=%r loadtype=%r not supported' % (load_case_id, eid, elem.type, load.type))
                         continue
                     r = centroid - p
-                    f = p * A * n
+                    f = pressure * A * n
                     #load.cid.transformToGlobal()
                     m = cross(r, f)
                     F += f

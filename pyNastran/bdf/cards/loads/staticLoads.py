@@ -20,7 +20,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import izip
 
-from numpy import array, cross, allclose
+from numpy import array, cross, allclose, unique
 from numpy.linalg import norm
 
 from pyNastran.bdf.cards.loads.loads import Load, LoadCombination
@@ -1418,8 +1418,8 @@ class PLOAD4(Load):
                 integer_or_blank(card, 8, 'eid2')):  # plates
                 eid2 = integer(card, 8, 'eid2')
                 if eid2:
-                    self.eids = expand_thru([self.eid, 'THRU', eid2],
-                                            set_fields=False, sort_fields=False)
+                    self.eids = list(unique(expand_thru([self.eid, 'THRU', eid2],
+                                            set_fields=False, sort_fields=False)))
                 self.g1 = None
                 self.g34 = None
             else:
