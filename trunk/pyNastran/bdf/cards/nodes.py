@@ -956,15 +956,6 @@ class GRID(Node):
         :type double
           bool
         """
-        fields = self.reprFields()
-        if size == 8:
-            return print_card_8(fields)
-        else:
-            if double:
-                return print_card_double(fields)
-            else:
-                return print_card_16(fields)
-
         xyz = self.xyz
         if size == 8:
             cp   = set_string8_blank_if_default(self.Cp(), 0)
