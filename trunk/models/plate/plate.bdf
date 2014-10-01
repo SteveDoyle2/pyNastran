@@ -94,6 +94,10 @@ GRID     36             10.     10.      0.
 $ Loads for Load Case : Default
 SPCADD   2       1
 LOAD     2      1.      1.       1
+LOAD     3      1.      1.       10
+LOAD     4      1.      5.       10
+LOAD     5      7.      1.       10
+LOAD     6      7.      5.       10
 $ Displacement Constraints of Load Set : disp
 SPC1     1       123456  1       7       13      19      25      31
 $ Nodal Forces of Load Set : force
@@ -103,5 +107,7 @@ FORCE    1       18      0      100.    1.       0.      0.
 FORCE    1       24      0      100.    1.       0.      0.
 FORCE    1       30      0      100.    1.       0.      0.
 FORCE    1       36      0      100.    1.       0.      0.
+PLOAD4,10,1,3.,,,,THRU,25
+PLOAD4,11,1,3.
 $ Referenced Coordinate Frames
 ENDDATA ea1281a2
