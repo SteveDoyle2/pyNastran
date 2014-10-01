@@ -14,6 +14,7 @@ def print_scientific_16(value):
 
     .. seealso:: print_float_16 for a better method
     """
+    print('sval =', value)
     python_value = '%16.14e' % value  # -1.e-2
     (svalue, sExponent) = python_value.strip().split('e')
     exponent = int(sExponent)  # removes 0s
@@ -49,7 +50,9 @@ def print_float_16(value):
     .. seealso:: print_float_8
     .. warning:: completely unimplemented & untested
     """
-    if value > 0.:  # positive, not perfect...
+    if value == 0.0:
+        return '%16s' % '0.'
+    elif value > 0.:  # positive, not perfect...
 
         if value < 5e-16:
             field = print_scientific_16(value)

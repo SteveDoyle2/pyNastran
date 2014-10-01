@@ -18,6 +18,8 @@ class TestNodes(unittest.TestCase):
         print msg
         msg = n1.write_bdf2(size=16)
         print msg
+        msg = n1.write_bdf2(size=16, double=True)
+        print msg
         if 0:
             msg = n1.write_bdf2(size=8)
             #print '%r' % msg
