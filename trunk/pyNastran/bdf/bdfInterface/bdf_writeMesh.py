@@ -153,7 +153,8 @@ class WriteMesh(object):
               more clear. (default=True)
         :param size:  the field size (8 is recommended)
         :param precision:  'single', 'double'
-        :param enddata:  Flag to enable/disable writing ENDDATA (default=None -> depends on input BDF)
+        :param enddata:  Flag to enable/disable writing ENDDATA
+                         (default=None -> depends on input BDF)
         """
         out_filename, card_writer = self._output_helper(out_filename,
                                             interspersed, size, precision)
