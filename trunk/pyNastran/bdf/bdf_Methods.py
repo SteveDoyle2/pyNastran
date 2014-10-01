@@ -20,6 +20,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import multiprocessing as mp
 
 from numpy import array, cross, zeros, dot
+from numpy.linalg import det
 
 
 from pyNastran.bdf.cards.loads.staticLoads import Moment, Force, LOAD
@@ -389,6 +390,7 @@ class BDFMethods(BDFMethodsDeprecated):
           - FORCE, FORCE1, FORCE2
           - MOMENT, MOMENT1, MOMENT2
           - PLOAD2, PLOAD4
+          - LOAD
 
         :param p0:
           the reference point
@@ -405,7 +407,9 @@ class BDFMethods(BDFMethodsDeprecated):
           NUMPY.NDARRAY shape=(3,)
 
         ..warning:: not validated
-        ..todo:: does this consider load scaling???
+        ..todo:: It's super slow for cid != 0.   We can speed this up a lot
+                 if we calculate the normal, area, centroid based on
+                 precomputed node locations.
         """
         if not isinstance(load_case_id, int):
             raise RuntimeError('load_case_id must be an integer; load_case_id=%r' % load_case_id)
@@ -432,11 +436,17 @@ class BDFMethods(BDFMethodsDeprecated):
 
         F = array([0., 0., 0.])
         M = array([0., 0., 0.])
+
+        xyz = {}
+        for nid, node in self.nodes.iteritems():
+            xyz[nid] = node.Position()
+
+        unsupported_types = set([])
         for load, scale in zip(loads2, scale_factors2):
             if isinstance(load, Force):  # FORCE, FORCE1, FORCE2
                 f = load.mag * load.xyz
                 node = self.Node(load.node)
-                r = node.Position() - p
+                r = xyz[node.nid] - p
                 m = cross(r, f)
                 F += f * scale
                 M += m * scale
@@ -467,16 +477,35 @@ class BDFMethods(BDFMethodsDeprecated):
                 #elem = load.eid
                 p = load.pressures[0] * scale  # there are 4 possible pressures, but we assume p0
                 assert load.Cid() == 0, 'Cid() = %s' % (load.Cid())
-                assert load.sorl == 'NORM', 'sorl = %s' % (load.sorl)
-                assert load.ldir == 'SURF', 'ldir = %s' % (load.ldir)
+                assert load.sorl == 'SURF', 'sorl = %s' % (load.sorl)
+                assert load.ldir == 'NORM', 'ldir = %s' % (load.ldir)
 
                 for elem in load.eids:
                     eid = elem.eid
-                    if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
-                                     'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
-                        n = elem.Normal()
-                        A = elem.Area()
-                        centroid = elem.Centroid()
+                    if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',]:
+                        # triangles
+                        nodes = elem.nodeIDs()
+                        n1, n2, n3 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]]
+                        axb = cross(n1 - n2, n1 - n3)
+                        nunit = det(axb)
+                        A = 0.5 * nunit
+                        n = axb / nunit
+                        centroid = (n1 + n2 + n3) / 3.
+
+                        n2 = elem.Normal()
+                        assert n == n2
+                    elif elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
+                        # quads
+                        nodes = elem.nodeIDs()
+                        n1, n2, n3, n4 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]], xyz[nodes[3]]
+                        axb = cross(n1 - n3, n2 - n4) # buggy
+                        nunit = det(axb)
+                        A = 0.5 * nunit
+                        n = axb / nunit
+                        centroid = (n1 + n2 + n3 + n4) / 4.
+
+                        n2 = elem.Normal()
+                        assert n == n2
                     elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
                         A, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
                     else:
@@ -489,17 +518,22 @@ class BDFMethods(BDFMethodsDeprecated):
                     F += f
                     M += m
             elif load.type == 'GRAV':
-                if include_grav:
+                if include_grav:  # this will be super slow
                     assert load.Cid() == 0, 'Cid() = %s' % (load.Cid())
                     g = load.N * load.scale * scale
                     for eid, elem in self.elements.iteritems():
-                        m = elem.Centroid()
+                        cenntroid = elem.Centroid()
+                        mass = elem.Mass()
                         r = centroid - p
-                        f = m * g
+                        f = mass * g
                         m = cross(r, f)
                         F += f
                         M += m
             else:
-                self.log.debug('case=%s loadtype=%r not supported' % (load_case_id, load.type))
+                # we collect them so we only get one print
+                unsupported_types.add(load.type)
+
+        for Type in unsupported_types:
+            self.log.debug('case=%s loadtype=%r not supported' % (load_case_id, Type))
         #self.log.info("case=%s F=%s M=%s\n" % (load_case_id, F, M))
         return (F, M)
