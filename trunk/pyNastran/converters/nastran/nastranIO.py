@@ -628,6 +628,9 @@ class NastranIO(object):
             self.scalarBar.Modified()
 
     def _plot_pressures(self, model, cases):
+        """
+        does pressure act normal or antinormal?
+        """
         if not self.is_centroidal:
             return
         sucaseIDs = model.caseControlDeck.get_subcase_list()
@@ -666,7 +669,7 @@ class NastranIO(object):
 
                         # multiple elements
                         for el in load.eids:
-                            pressures[eids.index(el.eid)] = p
+                            pressures[eids.index(el.eid)] += p
                     #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
                         #A, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
                         #r = centroid - p
@@ -707,14 +710,22 @@ class NastranIO(object):
                 if load.type == 'FORCE':
                     scale2 = load.mag * scale  # does this need a magnitude?
                     nid = load.node
-                    loads[nids.index(nid)] = load.xyz * scale2
+                    loads[nids.index(nid)] += load.xyz * scale2
                 elif load.type == 'PLOAD4':  # centrodial, skipping
                     continue
                     elem = load.eid
-                    if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
-                                     'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
+                    if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',]:
                         eid = elem.eid
-                        pressures[eids.index(eid)] = load.pressures[0] * scale
+                        node_ids = elem.nodeIDs()
+                        k = load.pressures[0] * scale / 3.
+                        for nid in node_ids[3:]:
+                            pressures[eids.index(nid)] += k
+                    if elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
+                        eid = elem.eid
+                        node_ids = elem.nodeIDs()
+                        k = load.pressures[0] * scale / 4.
+                        for nid in node_ids[4:]:
+                            pressures[eids.index(nid)] += k
             if loads[:, 0].min() != loads[:, 0].max():
                 cases[(subcaseID, 'LoadX Case=%i' % subcaseID, 1, 'node', '%.1f')] = loads[:,0]
             if loads[:, 1].min() != loads[:, 1].max():
