@@ -31,6 +31,7 @@ from pyNastran.bdf.test.cards.test_tables import *
 from pyNastran.bdf.test.unit.test_mass import *
 from pyNastran.bdf.test.unit.test_assign_type import *
 from pyNastran.bdf.test.unit.test_read_write import *
+from pyNastran.bdf.test.unit.test_sum_loads import *
 
 
 if __name__ == "__main__":
