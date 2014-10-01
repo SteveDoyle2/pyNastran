@@ -10,8 +10,8 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 from pyNastran.bdf.fieldWriter import print_card_8
 
 from pyNastran.bdf.fieldWriter import print_float_8, print_int_card
-from pyNastran.bdf.fieldWriter16 import print_float_16
-from pyNastran.bdf.field_writer_double import print_scientific_double
+from pyNastran.bdf.fieldWriter16 import print_float_16, print_card_16
+from pyNastran.bdf.field_writer_double import print_scientific_double, print_card_double
 
 class Ring(BaseCard):
     """Generic Ring base class"""
@@ -956,6 +956,15 @@ class GRID(Node):
         :type double
           bool
         """
+        fields = self.reprFields()
+        if size == 8:
+            return print_card_8(fields)
+        else:
+            if double:
+                return print_card_double(fields)
+            else:
+                return print_card_16(fields)
+
         xyz = self.xyz
         if size == 8:
             cp   = set_string8_blank_if_default(self.Cp(), 0)
@@ -972,7 +981,7 @@ class GRID(Node):
             seid = set_string16_blank_if_default(self.SEid(), 0)
             if double:
                 msg = ('%-8s%16i%16s%16s%16s\n'
-                       '%-8s%16s%16s%16s%16s\n' % ('GRID', self.nid,
+                       '%-8s%16s%16s%16s%16s\n' % ('GRID*', self.nid,
                         cp,
                         print_scientific_double(xyz[0]),
                         print_scientific_double(xyz[1]),
@@ -981,7 +990,7 @@ class GRID(Node):
                         cd, self.ps, seid))
             else:
                 msg = ('%-8s%16i%16s%16s%16s\n'
-                       '%-8s%16s%16s%16s%16s\n' % ('GRID', self.nid,
+                       '%-8s%16s%16s%16s%16s\n' % ('GRID*', self.nid,
                         cp,
                         print_float_16(xyz[0]),
                         print_float_16(xyz[1]),
