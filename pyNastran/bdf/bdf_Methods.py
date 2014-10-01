@@ -410,6 +410,7 @@ class BDFMethods(BDFMethodsDeprecated):
         ..todo:: It's super slow for cid != 0.   We can speed this up a lot
                  if we calculate the normal, area, centroid based on
                  precomputed node locations.
+        ..todo:: Does pressure act normal or antinormal?
         """
         if not isinstance(load_case_id, int):
             raise RuntimeError('load_case_id must be an integer; load_case_id=%r' % load_case_id)
@@ -503,8 +504,8 @@ class BDFMethods(BDFMethodsDeprecated):
                         n = axb / nunit
 
                         centroid = (n1 + n2 + n3 + n4) / 4.
-                        n2 = elem.Normal()
-                        assert allclose(n, n2), 'n=%s n2=%s' % (n, n2)
+                        #n2 = elem.Normal()
+                        #assert allclose(n, n2), 'n=%s n2=%s' % (n, n2)
                     elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
                         A, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
                     else:
