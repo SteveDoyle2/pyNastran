@@ -10,6 +10,8 @@ class BDFReplacer(BDF):
     """
     This class demonstates OpenMDAO find-replace streaming coupled with some
     Python black magic (see _read_bulk_data_deck).
+
+    TODO: this needs to be tested with include files...
     """
     def __init__(self, bdf_out_filename, debug=True, log=None):
         BDF.__init__(self, debug=debug, log=log)
@@ -21,14 +23,13 @@ class BDFReplacer(BDF):
 
     def _start_writing(self):
         self.bdf_out_file = open(self.bdf_out_filename, 'wb')
-        msg = self._write_header()
-        self.bdf_out_file.write(msg)
+        self._write_header(self.bdf_out_file)
 
     def _read_bulk_data_deck(self):
         """
         Hacks the _read_bulk_data_deck method to do some pre/post processing,
         but still calls the orignal function.
-        
+
         ..see::  BDF._read_bulk_data_deck()
         """
         self._start_writing()
@@ -80,7 +81,7 @@ class BDFReplacer(BDF):
             if self._is_dynamic_syntax:
                 fields = [self._parse_dynamic_syntax(field) if '%' in
                           field[0:1] else field for field in fields]
-                
+
             card = wipe_empty_fields([interpret_value(field, fields) if field is not None
                                       else None for field in fields])
             #print(card)
