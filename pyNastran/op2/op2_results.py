@@ -26,6 +26,7 @@ def get_nodal_averaged_stress(model, eid_to_nid_map, isubcase, options=None):
     TODO: this isn't part of OP2() because it's not done
     TODO: doesn't support transient, frequency, real/imaginary data
     TODO: add 'sum', 'difference' for 'layers'?
+    TODO: hasn't been tested
     """
     assert options['mode'] in ['derive/avg', 'avg/derive'], options['mode']
     assert options['layers'] in ['max', 'min', 'avg'], options['layers']
@@ -53,6 +54,7 @@ def get_nodal_averaged_stress(model, eid_to_nid_map, isubcase, options=None):
         'maxP': defaultdict(list),
         'minP': defaultdict(list),
         'vonMises': defaultdict(list),  # 3D von mises
+        'vonMises2D': defaultdict(list),  # 3D von mises
     }
     if isubcase in model.solidStress:
         case = model.solidStress[isubcase]
@@ -156,6 +158,55 @@ def get_nodal_averaged_stress(model, eid_to_nid_map, isubcase, options=None):
         else:
             raise RuntimeError('location=%r' % location)
 
+    if isubcase in model.compositePlateStress:
+        case = model.compositePlateStress[isubcase]
+        if case.nonlinear_factor is not None: # transient
+            return
+        if case.isVonMises():
+            vmWord = 'vonMises'
+        else:
+            vmWord = 'maxShear'
+
+        assert vmWord == 'vonMises', vmWord
+        if location == 'node':
+            for eid in case.ovmShear:
+                node_ids = eid_to_nid_map[eid]
+                eType = case.eType[eid]
+                if eType in ['CQUAD4', 'CQUAD8']:
+                    assert len(node_ids[:4]) == 4, len(node_ids[:4])
+                    for nid in node_ids[:4]:
+                        results['x'   ][nid].append(layer_func(case.o11[eid]))
+                        results['y'   ][nid].append(layer_func(case.o22[eid]))
+                        results['xy'  ][nid].append(layer_func(case.t12[eid]))
+                        results['maxP'][nid].append(layer_func(case.majorP[eid]))
+                        results['minP'][nid].append(layer_func(case.minorP[eid]))
+                        results['vonMises'][nid].append(layer_func(case.ovmShear[eid]))
+                elif eType in ['CTRIA3', 'CTRIA6']:
+                    cen = 'CEN/%s' % eType[-1]
+                    assert len(node_ids[:3]) == 3, len(node_ids[:3])
+                    for nid in node_ids[:3]:
+                        results['x'   ][nid].append(layer_func(case.o11[eid]))
+                        results['y'   ][nid].append(layer_func(case.o22[eid]))
+                        results['xy'  ][nid].append(layer_func(case.t12[eid]))
+                        results['maxP'][nid].append(layer_func(case.majorP[eid]))
+                        results['minP'][nid].append(layer_func(case.minorP[eid]))
+                        results['vonMises'][nid].append(layer_func(case.ovmShear[eid]))
+                else:
+                    raise NotImplementedError(eType)
+        elif location == 'centroid':
+            for eid in case.ovmShear:
+                node_ids = eid_to_nid_map[eid]
+                eType = case.eType[eid]
+                for nid in node_ids:
+                    results['x'   ][nid].append(layer_func(case.o11[eid]))
+                    results['y'   ][nid].append(layer_func(case.o22[eid]))
+                    results['xy'  ][nid].append(layer_func(case.t12[eid]))
+                    results['maxP'][nid].append(layer_func(case.majorP[eid]))
+                    results['minP'][nid].append(layer_func(case.minorP[eid]))
+                    results['vonMises'][nid].append(layer_func(case.ovmShear[eid]))
+        else:
+            raise RuntimeError('location=%r' % location)
+
     if mode == 'derive/avg':
         for result_name, result in results.iteritems():
             for nid, datai in result.iteritems():
@@ -190,19 +241,22 @@ def get_nodal_averaged_stress(model, eid_to_nid_map, isubcase, options=None):
                 [ 0.,  0., ozz],
             ])
             eigs = eigvalsh(A, UPLO='U')
-
-            # 2D
-            #A2 = array([
-                #[oxx, txy],
-                #[ 0., oyy],
-            #])
-            #eigs = eigvalsh(A2, UPLO='U')
-
             maxP = eigs.max()
             minP = eigs.min()
             results['maxP'][nid] = maxP
             results['minP'][nid] = minP
+
+            # 2D
+            A2 = array([
+                [oxx, txy],
+                [ 0., oyy],
+            ])
+            eigs2 = eigvalsh(A2, UPLO='U')
+            maxP2 = eigs2.max()
+            minP2 = eigs2.min()
+
             results['vonMises'][nid] = vonMises3D(*eigs)
+            results['vonMises2D'][nid] = vonMises2D(*eigs2)
     else:
         raise RuntimeError('mode=%r' % mode)
     return results
@@ -238,7 +292,7 @@ def sol_101_elements():
     options1 = {
         'location': 'centroid',
         'mode': 'derive/avg',
-        'layers': 'avg',
+        'layers': 'min',
     }
     isubcase = 1
     eid_to_nid_map, model = setup(bdf_filename, op2_filename)
@@ -247,7 +301,7 @@ def sol_101_elements():
     options2 = {
         'location': 'centroid',
         'mode': 'avg/derive',
-        'layers': 'avg',
+        'layers': 'min',
     }
     vm_avg_derive = get_nodal_averaged_stress(model, eid_to_nid_map, isubcase, options2)['vonMises']
     for nid, stressi in sorted(vm_derive_avg.iteritems()):
