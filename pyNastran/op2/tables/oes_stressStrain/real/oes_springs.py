@@ -115,6 +115,7 @@ class RealCelasStress(StressObject):
             if len(stresses) == 3:
                 stresses = []
                 msg.append(line.rstrip() + '\n')
+                line = '   '
 
         if stresses:
             msg.append(line.rstrip() + '\n')
@@ -203,6 +204,7 @@ class RealCelasStrain(StrainObject):
             if len(strains) == 3:
                 strains = []
                 msg.append(line.rstrip() + '\n')
+                line = '   '
 
         if strains:
             msg.append(line.rstrip() + '\n')
