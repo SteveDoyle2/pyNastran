@@ -30,7 +30,7 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
         #: the storage dictionary that is passed to OP2 objects (e.g. DisplacementObject)
         #: the key-value pairs are extracted and used to generate dynamic self
         #: variables for the OP2 objects
-        self.data_code = {}  # 'log': self.log,
+        self.data_code = {}
 
         #: current subcase ID
         #: non-transient (SOL101) cases have isubcase set to None
@@ -63,10 +63,6 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
         #: the list/set/tuple of times/modes/frequencies that should be read
         #: currently unused
         self.expected_times = None
-
-        #: None -> all tables are read
-        #: list/set/tuple : ['OES1'] -> only the specified tables ar read
-        self.tables_to_read = None
 
         self.show_table3_map = [
             #'OUGV1',

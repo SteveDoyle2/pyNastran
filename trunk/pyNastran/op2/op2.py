@@ -108,89 +108,6 @@ class OP2( #BDF,
             expected_times[isubcase] = array(eTimes)
         self.expected_times = expected_times
 
-    def set_result_types(self, result_types):
-        """
-        Method for setting the tables to read based on the results you want.
-
-        :param result_types: allows a user to reduce the amount of data that's
-                             extracted
-
-        Example
-        =======
-        op2 = OP2(op2_filename)
-        op2.set_result_types(['displacements', 'solidStress'])
-        """
-        table_mapper = {  # very incomplete list
-            #"grids_coords" : ['GEOM1', 'GEOM1S'],
-            #"geometry" : [],  # includes materials/properties
-            #"loads_constraints" : [],
-
-            'displacements' : ['OUG1', 'OUGV1', 'BOUGV1', 'OUPV1', ],
-            'velocities'    : ['OUG1', 'OUGV1', 'BOUGV1', 'OUPV1', ],
-            'accelerations' : ['OUG1', 'OUGV1', 'BOUGV1', 'OUPV1', ],
-            'eigenvectors'  : ['OUG1', 'OUGV1', 'BOUGV1', 'OUPV1', ],
-            'temperatures'  : ['OUG1', 'OUGV1', 'BOUGV1', 'OUPV1', ],
-
-            # applied loads
-            'appliedLoads' : ['OPG1', 'OPGV1', 'OPNL1', ],
-            'loadVectors' : ['OPG1', 'OPGV1', 'OPNL1', ],
-            'thermalLoadVectors' : ['OPG1', 'OPGV1', 'OPNL1', ],
-
-            'barStress'    : ['OES1X1', 'OES1', 'OES1X'],
-            'rodStress'    : ['OES1X1', 'OES1', 'OES1X'],
-            'beamStress'   : ['OES1X1', 'OES1', 'OES1X'],
-            'solidStress'  : ['OES1X1', 'OES1', 'OES1X'],
-            'plateStress'  : ['OES1X1', 'OES1', 'OES1X'],
-            'shearStress'  : ['OES1X1', 'OES1', 'OES1X'],
-            'compositePlateStress': ['OES1C', 'OESCP'],
-            # nonlinear stress?
-            #, 'OESNLXR', 'OESNLXD', 'OESNLBR',  'OESNL1X', 'OESRT',
-
-            'barStrain'    : ['OSTR1X'],
-            'rodStrain'    : ['OSTR1X'],
-            'beamStrain'   : ['OSTR1X'],
-            'solidStrain'  : ['OSTR1X'],
-            'plateStrain'  : ['OSTR1X'],
-            'shearStrain'  : ['OSTR1X'],
-            'compositePlateStrain': ['OSTR1C'],
-            # nonlinear strain?
-            #'OESTRCP',
-
-            'barForces'    : ['OEFIT', 'OEF1X', 'OEF1', 'DOEF1'],
-            'beamForces'   : ['OEFIT', 'OEF1X', 'OEF1', 'DOEF1'],
-            'rodForces'    : ['OEFIT', 'OEF1X', 'OEF1', 'DOEF1'],
-            'plateForces'  : ['OEFIT', 'OEF1X', 'OEF1', 'DOEF1'],
-            'bar100Forces' : ['OEFIT', 'OEF1X', 'OEF1', 'DOEF1'],
-            'solidForces'  : ['OEFIT', 'OEF1X', 'OEF1', 'DOEF1'],
-
-            'grid_point_stresses' : ['OGS1'],
-
-            'grid_point_weight': ['OGPWG', 'OGPWGM'],
-
-            'spcForces' : ['OQG1', 'OQGV1'],
-            'mpcForces' : ['OQMG1'],
-        }
-
-        table_names_set = set([])
-        for result_type in result_types:
-            if not hasattr(self, result_type):
-                raise RuntimeError('result_type=%r is invalid')
-            if not result_type in table_mapper:
-                raise NotImplementedError('result_type=%r is not supported by set_result_types')
-
-            itables = table_mapper[result_type]
-            for itable in itables:
-                table_names_set.add(itable)
-        self.set_tables_to_read(table_names_set)  # is this the right function name???
-
-    def set_tables_to_read(self, table_names):
-        """
-        Specifies the explicit tables to read.
-
-        :param table_names: list/set of tables as strings
-        """
-        self.tables_to_read = table_names
-
     def __init__(self, make_geom=False,
                  debug=False, log=None, debug_file=None):
         """
@@ -207,7 +124,6 @@ class OP2( #BDF,
 
         self.make_geom = make_geom
 
-        #self.tables_to_read = []
         #BDF.__init__(self, debug=debug, log=log)
         self.log = get_logger(log, 'debug' if debug else 'info')
 
@@ -648,7 +564,6 @@ class OP2( #BDF,
                 self.binary_debug.write('table_name = %r; f.tell()=%s\n' % (table_name, self.f.tell()))
 
             self.table_name = table_name
-            #if table_name in self.tables_to_read:
             if 0:
                 self._skip_table(table_name)
             else:
