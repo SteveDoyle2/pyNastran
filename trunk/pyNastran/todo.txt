@@ -4,14 +4,13 @@ Release 0.7
  -----
  - various BDF/OP2/F06 tests
  - sphinx documention on all relevant functions
- - bug fix wx gui
  - move relevant mesh.py functions to bdf_methods.py
- - tests for op2 results request
- - cleanup outdated op2 table skipping
 
  Completed
  ---------
- - 
+ - bug fix wx gui
+ - tests for op2 results request
+ - cleanup outdated op2 table skipping
 
  Remove
  ------
@@ -21,6 +20,7 @@ Release 0.7
    - pch
    - applications
    - bdf_vectorized
+   - converters???
 
  - functions
    - 
@@ -29,3 +29,12 @@ Release 0.8
 ===========
  Tasks
  -----
+
+Future
+===========
+ Tasks
+ -----
+ - make op2 able to skip user specified parameters (e.g. get maxP or oVM from solidStresses)
+ - vectorize op2 fully
+ - add op2 writing
+ - vectorize bdf

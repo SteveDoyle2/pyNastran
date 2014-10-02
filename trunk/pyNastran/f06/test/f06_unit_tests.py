@@ -499,7 +499,7 @@ class TestF06(unittest.TestCase):
         self.assertEquals(len(bdf.elements), 25, bdf.elements)
         self.assertEquals(len(bdf.properties), 1, bdf.properties)
         self.assertEquals(len(bdf.materials), 1, bdf.materials)
-        self.assertEquals(len(bdf.loads), 2, bdf.loads)  # FORCE, LOAD
+        self.assertEquals(len(bdf.loads), 9, 'nloads=%s\n%s' % (len(bdf.loads), bdf.loads))  # FORCE, LOAD
         self.assertEquals(len(bdf.params), 2, bdf.params)
         self.assertEquals(bdf.sol, 101, bdf.sol)
 
