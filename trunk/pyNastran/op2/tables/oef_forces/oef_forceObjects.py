@@ -799,6 +799,7 @@ class RealSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
                 if len(forces) == 3:
                     forces = []
                     msg.append(line.rstrip() + '\n')
+                    line = '   '
 
             if forces:
                 msg.append(line.rstrip() + '\n')
@@ -827,6 +828,7 @@ class RealSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
             if len(forces) == 3:
                 forces = []
                 msg.append(line.rstrip() + '\n')
+                line = '   '
 
         if forces:
             msg.append(line.rstrip() + '\n')
