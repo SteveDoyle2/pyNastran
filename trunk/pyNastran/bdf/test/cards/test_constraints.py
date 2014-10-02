@@ -1,5 +1,5 @@
 import unittest
-from pyNastran.bdf.bdf import BDF, BDFCard, SUPORT, SUPORT1
+from pyNastran.bdf.bdf import BDF, BDFCard, SUPORT, SUPORT1, MPC
 
 bdf = BDF(debug=False)
 class TestConstraints(unittest.TestCase):
@@ -106,6 +106,32 @@ class TestConstraints(unittest.TestCase):
         con = SUPORT1(card) # default
         self.assertEqual(con.IDs[1], 3)
         self.assertEqual(con.Cs[1], '1235')
+
+    def test_mpc_01(self):
+        card = ['MPC', 1, 1002, 1, 1., 1000, 1, -3.861003861]
+        card = BDFCard(card)
+        mpc = MPC(card)
+        #print ' %r' % str(mpc)
+        #print '%r' % mpc.write_bdf2(size=8)
+        #msg = mpc.write_bdf2(size=8, double=False)
+        self.assertEqual('MPC            1    1002       1      1.    1000       1  -3.861\n', mpc.write_bdf2(size=8))
+
+        model = BDF()
+
+        card = ['MPC            1    1002       4      1.    1000       4-.129394',
+                '                    1000       5-7.152-3    1000       6-.013655']
+        msgA = ('MPC            1    1002       4      1.    1000       4-.129394\n'
+                '                    1000       5-7.152-3    1000       6-.013655\n')
+
+        card = model.add_card(card, 'MPC', is_list=False)
+        mpc = MPC(card)
+        print 'u%r' % msgA
+        print '%r' % mpc.write_bdf2(size=8)
+        self.assertEqual(msgA, mpc.write_bdf2(size=8))
+        print mpc, type(mpc)
+
+        card = []
+
 
 
 if __name__ == '__main__':  # pragma: no cover

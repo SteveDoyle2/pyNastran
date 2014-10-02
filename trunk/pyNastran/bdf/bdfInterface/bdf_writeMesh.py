@@ -484,15 +484,11 @@ class WriteMesh(object):
 
         if self.mpcs or self.mpcadds:
             msg = ['$MPCs\n']
-            str_mpc = str(self.mpcObject)
-            if str_mpc:
-                msg.append(str_mpc)
-            else:
-                for (unused_id, mpcadd) in sorted(self.mpcadds.iteritems()):
-                    msg.append(str(mpcadd))
-                for (unused_id, mpcs) in sorted(self.mpcs.iteritems()):
-                    for mpc in mpcs:
-                        msg.append(str(mpc))
+            for (unused_id, mpcadd) in sorted(self.mpcadds.iteritems()):
+                msg.append(str(mpcadd))
+            for (unused_id, mpcs) in sorted(self.mpcs.iteritems()):
+                for mpc in mpcs:
+                    msg.append(mpc.write_bdf(size, card_writer))
             outfile.write(''.join(msg))
 
     def _write_loads(self, outfile, size, card_writer):
