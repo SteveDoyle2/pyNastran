@@ -91,7 +91,10 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
 
 def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False,
             cid=None, meshForm='combined', isFolder=False, print_stats=False,
+            double=False, large=False,
             reject=False, dynamic_vars={}):
+    if double:
+        large = True
     bdfModel = str(bdfFilename)
     print("bdfModel = %r" % bdfModel)
     if isFolder:
@@ -111,8 +114,8 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
     fem2 = None
     diffCards = []
     try:
-        (outModel) = run_fem1(fem1, bdfModel, meshForm, xref, punch, cid)
-        (fem2) = run_fem2(bdfModel, outModel, xref, punch, reject, debug=debug, log=None)
+        (outModel) = run_fem1(fem1, bdfModel, meshForm, xref, punch, large, double, cid)
+        (fem2) = run_fem2(bdfModel, outModel, xref, punch, large, double, reject, debug=debug, log=None)
         (diffCards) = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
 
     except KeyboardInterrupt:
@@ -139,7 +142,7 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
     return (fem1, fem2, diffCards)
 
 
-def run_fem1(fem1, bdfModel, meshForm, xref, punch, cid):
+def run_fem1(fem1, bdfModel, meshForm, xref, punch, large, double, cid):
     assert os.path.exists(bdfModel), print_bad_path(bdfModel)
     try:
         if '.pch' in bdfModel:
@@ -147,10 +150,20 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, cid):
         else:
             fem1.read_bdf(bdfModel, xref=xref, punch=punch)
     except:
-        print("failed reading |%s|" % (bdfModel))
+        print("failed reading %r" % bdfModel)
         raise
     #fem1.sumForces()
-    #fem1.sumMoments()
+
+    if large:
+        size = 16
+        if double:
+            precision = 'double'
+        else:
+            precision = 'single'
+    else:
+        size = 8
+        precision = 'single'
+
     if fem1._auto_reject:
         outModel = bdfModel + '.rej'
     else:
@@ -158,9 +171,9 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, cid):
         if cid is not None and xref:
             fem1.resolveGrids(cid=cid)
         if meshForm == 'combined':
-            fem1.write_bdf(outModel, interspersed=True)
+            fem1.write_bdf(outModel, interspersed=True, size=size, precision=precision)
         elif meshForm == 'separate':
-            fem1.write_bdf(outModel, interspersed=False)
+            fem1.write_bdf(outModel, interspersed=False, size=size, precision=precision)
         else:
             msg = "meshForm=%r allowedForms=['combined','separate']" % (meshForm)
             raise NotImplementedError(msg)
@@ -168,7 +181,8 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, cid):
     return (outModel)
 
 
-def run_fem2(bdfModel, outModel, xref, punch, reject, debug=False, log=None):
+def run_fem2(bdfModel, outModel, xref, punch, large, double,
+             reject, debug=False, log=None):
     assert os.path.exists(bdfModel), bdfModel
     assert os.path.exists(outModel), outModel
 
@@ -187,7 +201,16 @@ def run_fem2(bdfModel, outModel, xref, punch, reject, debug=False, log=None):
     #fem2.sumForces()
     #fem2.sumMoments()
     outModel2 = bdfModel + '_out2'
-    fem2.write_bdf(outModel2, interspersed=True)
+    if large:
+        size = 16
+        if double:
+            precision = 'double'
+        else:
+            precision = 'single'
+    else:
+        size = 8
+        precision = 'single'
+    fem2.write_bdf(outModel2, interspersed=True, size=size, precision=precision)
     #fem2.writeAsCTRIA3(outModel2)
     os.remove(outModel2)
     return (fem2)
@@ -386,6 +409,8 @@ def main():
     from docopt import docopt
     msg  = "Usage:\n"
     msg += "  test_bdf [-q] [-x] [-p] [-c] BDF_FILENAME\n" #
+    msg += "  test_bdf [-q] [-x] [-p] [-c] [-d] BDF_FILENAME\n" #
+    msg += "  test_bdf [-q] [-x] [-p] [-c] [-l] BDF_FILENAME\n" #
     msg += "  test_bdf [-q] [-p] [-r] BDF_FILENAME\n" #
     #msg += "  test_bdf [-q] [-p] [-o [<VAR=VAL>]...] BDF_FILENAME\n" #
     msg += '  test_bdf -h | --help\n'
@@ -404,8 +429,10 @@ def main():
     msg += '                 (default=False -> reads entire deck)\n'
     msg += '  -c, --check    disables BDF checks.  Checks run the methods on \n'
     msg += '                 every element/property to test them.  May fails if a \n'
-    msg += '                 card is fully not supported (default=False).\n'
-    msg += '  -r, --reject   rejects all cards with the appropriate values applied (default=False).\n'
+    msg += '                 card is fully not supported (default=False)\n'
+    msg += '  -l, --large    writes the BDF in large field, single precision format (default=False)\n'
+    msg += '  -d, --double   writes the BDF in large field, double precision format (default=False)\n'
+    msg += '  -r, --reject   rejects all cards with the appropriate values applied (default=False)\n'
     #msg += '  -o <VAR_VAL>, --openmdao <VAR_VAL>   rejects all cards with the appropriate values applied;\n'
     #msg += '                 Uses the OpenMDAO %var syntax to replace it with value.\n'
     #msg += '                 So test_bdf -r var1=val1 var2=val2\n'
@@ -430,6 +457,8 @@ def main():
                  check=not(data['--check']),
                  punch=data['--punch'],
                  reject=data['--reject'],
+                 double=data['--double'],
+                 large=data['--large'],
     )
     print("total time:  %.2f sec" % (time.time() - t0))
 

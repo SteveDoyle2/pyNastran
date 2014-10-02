@@ -25,7 +25,9 @@ from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     components, components_or_blank)
-from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter import print_card_8, print_float_8
+from pyNastran.bdf.fieldWriter16 import print_float_16
+from pyNastran.bdf.field_writer_double import print_scientific_double
 
 
 class ConstraintObject(object):
@@ -328,9 +330,34 @@ class MPC(Constraint):
                 fields.append(None)
         return fields
 
+    def write_bdf2(self, size=8, double=False):
+        if size == 8:
+            msg = 'MPC     %8s' % self.conid
+            for (i, grid, component, enforced) in izip(count(), self.gids,
+                 self.constraints, self.enforced):
+                msg += '%8i%8s%8s' % (grid, component, print_float_8(enforced))
+                if i % 2 == 1 and i > 0:
+                    msg += '\n%8s%8s' % ('', '')
+        elif size == 16:
+            # TODO: we're sure MPCs support double precision?
+            msg = 'MPC*    %16s' % self.conid
+            if double:
+                for (i, grid, component, enforced) in izip(count(), self.gids,
+                     self.constraints, self.enforced):
+                    msg += '%16i%16s%16s' % (grid, component, print_scientific_double(enforced))
+                    if i % 2 == 1 and i > 0:
+                        msg += '\n%8s%16s' % ('*', '')
+            else:
+                for (i, grid, component, enforced) in izip(count(), self.gids,
+                     self.constraints, self.enforced):
+                    msg += '%16i%16s%16s' % (grid, component, print_float_16(enforced))
+                    if i % 2 == 1 and i > 0:
+                        msg += '\n%8s%16s' % ('*', '')
+        return self.comment() + msg.rstrip() + '\n'
+
     def write_bdf(self, size, card_writer):
         card = self.rawFields()
-        return self.comment() + print_card_8(card)
+        return self.comment() + card_writer(card)
 
 
 class SPC(Constraint):

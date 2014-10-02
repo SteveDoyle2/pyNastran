@@ -14,7 +14,6 @@ def print_scientific_16(value):
 
     .. seealso:: print_float_16 for a better method
     """
-    print('sval =', value)
     python_value = '%16.14e' % value  # -1.e-2
     (svalue, sExponent) = python_value.strip().split('e')
     exponent = int(sExponent)  # removes 0s
