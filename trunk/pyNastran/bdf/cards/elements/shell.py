@@ -192,7 +192,17 @@ class TriShell(ShellElement):
              {\lvert (n_0-n_1) \times (n_0-n_2) \lvert}
         """
         (n0, n1, n2) = self.nodePositions()
-        return _normal(n0 - n1, n0 - n2)
+        try:
+            n = _normal(n0 - n1, n0 - n2)
+
+        except:
+            msg = 'ERROR computing normal vector for eid=%i.\n' % self.eid
+            msg += '  nid1=%i n1=%s\n' % (self.nodes[0].nid, n1)
+            msg += '  nid2=%i n2=%s\n' % (self.nodes[1].nid, n2)
+            msg += '  nid3=%i n3=%s\n' % (self.nodes[2].nid, n3)
+            raise RuntimeError(msg)
+
+        return n
 
     def Centroid(self):
         r"""
@@ -1100,7 +1110,16 @@ class QuadShell(ShellElement):
 
     def Normal(self):
         (n1, n2, n3, n4) = self.nodePositions()
-        return _normal(n1 - n3, n2 - n4)
+        try:
+            n = _normal(n1 - n3, n2 - n4)
+        except:
+            msg = 'ERROR computing normal vector for eid=%i.\n' % self.eid
+            msg += '  nid1=%i n1=%s\n' % (self.nodes[0].nid, n1)
+            msg += '  nid2=%i n2=%s\n' % (self.nodes[1].nid, n2)
+            msg += '  nid3=%i n3=%s\n' % (self.nodes[2].nid, n3)
+            msg += '  nid4=%i n4=%s\n' % (self.nodes[3].nid, n4)
+            raise RuntimeError(msg)
+        return n
 
     def AreaCentroidNormal(self):
         (area, centroid) = self.AreaCentroid()

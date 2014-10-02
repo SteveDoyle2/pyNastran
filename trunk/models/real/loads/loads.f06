@@ -1,0 +1,295 @@
+1
+ 
+ 
+ 
+ 
+                     THIS PROGRAM IS CONFIDENTIAL AND A TRADE SECRET OF MSC.SOFTWARE CORPORATION.  THE RECEIPT OR    
+                  POSSESSION OF THIS PROGRAM DOES NOT CONVEY ANY RIGHTS TO REPRODUCE OR DISCLOSE ITS CONTENTS, OR TO 
+                 MANUFACTURE, USE, OR SELL ANYTHING HEREIN, IN WHOLE OR IN PART, WITHOUT THE SPECIFIC WRITTEN CONSENT
+                                                    OF MSC.SOFTWARE CORPORATION.                                     
+ 
+ 
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * *                                 * *
+                                              * *           MSC.SOFTWARE          * *
+                                              * *               CORP              * *
+                                              * *                                 * *
+                                              * *      M S C . N a s t r a n      * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *        Version 2005.1.0         * *
+                                              * *             2005R2              * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *          JUN 17, 2005           * *
+                                              * *                                 * *
+                                              * *              Intel              * *
+                                              * *MODEL PentiumIII/2525 (sdoyle-de * *
+                                              * *   Windows XP 6.1 (Build 7601)   * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * * * * * * * * * * * * * * * * * * * *
+1News file - (6/03/05):
+  
+ Thank you for choosing MSC.Nastran, the industry standard in FEA, and Welcome
+ to MSC.Nastran 2005 r2.
+  
+ You can find version-specific online documentation, and online technical support
+ at:
+  
+    http://www.mscsoftware.com/support/prod_support/nastran/
+  
+ Also at the technical support location is a searchable list of technical
+ application notes and the current error/avoidance list. Please don't hesitate
+ to contact your nearest technical support representative if you require
+ assistance.
+  
+    http://www.mscsoftware.com/about/locate/
+  
+ The arbitrary beam cross section, explicit nonlinear (SOL 700), and the new
+ nonlinear (SOL 400) solution sequences, are regarded as pre-release capabilities
+ and are still undergoing testing and verification.  These capabilities should
+ not be employed in any analysis except for the purpose of testing and verifying
+ the functionality and working of the capabilities themselves.
+  
+ MSC.Nastran 2005 r2 is mainly focused on improving quality, accuracy and
+ ease-of-use, but also introduces new capabilities, some of which were made
+ available as pre-release functionality in MSC.Nastran 2005 r1. In addition,
+ significant advancements have been made regarding performance and scalability of
+ the program.  Some of the new features and enhancements are listed below.
+  
+ Nonlinear
+ - MSC.Nastran Implicit Nonlinear (SOL 600) - We have addressed many known
+   issues, improved memory usage, improved output options, added beam, bar, and
+   shell offsets, and thermal contact
+ - MSC.Nastran Explicit Nonlinear (SOL 700) pre-release - you can now
+   execute LS-Dyna from inside MSC.Nastran to perform crash and impact
+   analyses
+  
+ Numeric Enhancements
+ - Multi-level DMP - an enhanced Lanczos modal extraction methodology that
+   improves scalability and efficiently handles large normal modes analyses with
+   very frequency ranges
+ - MDACMS enhanced robustness, improved handling of large masses, and improved
+   performance
+ - Distributed memory parallel MPYAD
+  
+ Elements
+ - CFAST - a new fastener element based on user defined stiffness values.
+ - Arbitrary beam cross section pre-release capability - you can specify cross
+   section shapes using POINT entries, and optimize them in SOL 200
+ - Enhanced nonstructural mass element summary printout - ELSUM
+1- spatially dependent heat transfer coefficient
+ - Heat transfer coefficient as a function of two variables
+ - Thermal analysis flux output
+  
+ Optimization
+ - MSC.Nastran Topology Optimization - this addition to the existing SOL 200
+   optimization solution sequence allows optimization analyses to be performed
+   that require many design variables
+  
+ Further Enhancements
+ - Larger XDB database support
+ - MATMOD option 16 - we have removed many previous limitations with this
+   matrix output capability
+1                                                                           OCTOBER   2, 2014  MSC.NASTRAN  6/17/05   PAGE     1
+                                                                                                                                    
+0        N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O                                           
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     NASTRAN OP2NEW=0 $ MSC.NASTRAN .LCL FILE                                        
+     NASTRAN BUFFSIZE=8193 $(C:/MSC.SOFTWARE/MSC.NASTRAN/CONF/NAST20051.RCF[2])      
+     NASTRAN REAL=2144075776 $(PROGRAM DEFAULT)                                      
+1                                                                           OCTOBER   2, 2014  MSC.NASTRAN  6/17/05   PAGE     2
+                                                                                                                                    
+0        N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O                                                             
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     SOL 101                                                                                 
+     CEND                                                                                    
+1                                                                           OCTOBER   2, 2014  MSC.NASTRAN  6/17/05   PAGE     3
+                                                                                                                                    
+0                                                                                                                                   
+0                                        C A S E    C O N T R O L    E C H O                                                        
+                 COMMAND                                                                                                            
+                 COUNT                                                                                                              
+                  1      SUBCASE 1                                                                               
+                  2        LOAD = 1                                                                              
+                  3        $SPC = 1                                                                              
+                  4        DISP = ALL                                                                            
+                  5      SUBCASE 2                                                                               
+                  6        LOAD = 2                                                                              
+                  7        $SPC = 1                                                                              
+                  8        DISP = ALL                                                                            
+                  9      BEGIN BULK                                                                              
+ *** USER WARNING MESSAGE 324 (XSORSO)
+     BLANK ENTRIES ENCOUNTERED WILL BE IGNORED.
+0                             INPUT BULK DATA ENTRY COUNT =      34
+1                                                                           OCTOBER   2, 2014  MSC.NASTRAN  6/17/05   PAGE     4
+                                                                                                                                    
+0                                                                                                                                   
+0                                                 S O R T E D   B U L K   D A T A   E C H O                                         
+                 ENTRY                                                                                                              
+                 COUNT        .   1  ..   2  ..   3  ..   4  ..   5  ..   6  ..   7  ..   8  ..   9  ..  10  .                      
+                    1-        CQUAD4  100     1000    1       2       7       6                               
+                    2-        CQUAD4  200     1000    2       3       8       7                               
+                    3-        CQUAD4  300     1000    3       4       9       8                               
+                    4-        CQUAD4  400     1000    4       5       10      9                               
+                    5-        CQUAD4  500     1000    6       7       12      11                              
+                    6-        CQUAD4  600     1000    7       8       13      12                              
+                    7-        CQUAD4  700     1000    8       9       14      13                              
+                    8-        CQUAD4  800     1000    9       10      15      14                              
+                    9-        FORCE   1002    15      0       1.      0.      0.      1.                      
+                   10-        GRID    1       0       0.      0.      0.              123456                  
+                   11-        GRID    2       0       1.      0.      0.                                      
+                   12-        GRID    3       0       2.      0.      0.                                      
+                   13-        GRID    4       0       3.      0.      0.                                      
+                   14-        GRID    5       0       4.      0.      0.                                      
+                   15-        GRID    6       0       0.      1.      0.              123456                  
+                   16-        GRID    7       0       1.      1.      0.                                      
+                   17-        GRID    8       0       2.      1.      0.                                      
+                   18-        GRID    9       0       3.      1.      0.                                      
+                   19-        GRID    10      0       4.      1.      0.                                      
+                   20-        GRID    11      0       0.      2.      0.              123456                  
+                   21-        GRID    12      0       1.      2.      0.                                      
+                   22-        GRID    13      0       2.      2.      0.                                      
+                   23-        GRID    14      0       3.      2.      0.                                      
+                   24-        GRID    15      0       4.      2.      0.                                      
+                   25-        LOAD    1       1.      1.      1001                                            
+                   26-        LOAD    2       1.      1.      1001    1.      1002                            
+                   27-        MAT1    10000   1E7             0.3                                             
+                   28-        PLOAD4  1001    500     3.                                                      
+                   29-        PSHELL  1000    10000   0.1     10000                                           
+                              ENDDATA 
+0                       TOTAL COUNT=        30
+
+
+                                        M O D E L   S U M M A R Y
+
+                                   NUMBER OF GRID     POINTS   =       15
+ 
+                                   NUMBER OF CQUAD4   ELEMENTS =        8
+ 
+1                                                                           OCTOBER   2, 2014  MSC.NASTRAN  6/17/05   PAGE     5
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 7310 (VECPRN)
+     ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM WILL BE USED AS REFERENCE LOCATION.
+     RESULTANTS ABOUT ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM IN SUPERELEMENT BASIC SYSTEM COORDINATES.
+0                                                  OLOAD    RESULTANT       
+  SUBCASE/    LOAD
+  DAREA ID    TYPE       T1            T2            T3            R1            R2            R3
+0        1     FX    0.000000E+00     ----          ----          ----       0.000000E+00  0.000000E+00                             
+               FY       ----       0.000000E+00     ----       0.000000E+00     ----       0.000000E+00                             
+               FZ       ----          ----       3.000000E+00  4.500000E+00 -1.500000E+00     ----                                  
+               MX       ----          ----          ----       0.000000E+00     ----          ----                                  
+               MY       ----          ----          ----          ----       0.000000E+00     ----                                  
+               MZ       ----          ----          ----          ----          ----       0.000000E+00                             
+             TOTALS  0.000000E+00  0.000000E+00  3.000000E+00  4.500000E+00 -1.500000E+00  0.000000E+00
+0        2     FX    0.000000E+00     ----          ----          ----       0.000000E+00  0.000000E+00                             
+               FY       ----       0.000000E+00     ----       0.000000E+00     ----       0.000000E+00                             
+               FZ       ----          ----       4.000000E+00  6.500000E+00 -5.500000E+00     ----                                  
+               MX       ----          ----          ----       0.000000E+00     ----          ----                                  
+               MY       ----          ----          ----          ----       0.000000E+00     ----                                  
+               MZ       ----          ----          ----          ----          ----       0.000000E+00                             
+             TOTALS  0.000000E+00  0.000000E+00  4.000000E+00  6.500000E+00 -5.500000E+00  0.000000E+00
+1                                                                           OCTOBER   2, 2014  MSC.NASTRAN  6/17/05   PAGE     6
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: BEND, ORDERING METHOD USED: BEND
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    4.770392E+02
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+                1          5.8258621E-14          2.3769632E-04
+                2          2.3487744E-13          8.7328516E-03
+1                                                                           OCTOBER   2, 2014  MSC.NASTRAN  6/17/05   PAGE     7
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ 
+                                             D I S P L A C E M E N T   V E C T O R
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+             1      G      0.0            0.0            0.0            0.0            0.0            0.0
+             2      G      0.0            0.0            1.849060E-04   1.075903E-04  -2.509050E-04   0.0
+             3      G      0.0            0.0            5.306318E-04   1.832569E-04  -4.374550E-04   0.0
+             4      G      0.0            0.0            9.584964E-04   1.487853E-04  -4.184279E-04   0.0
+             5      G      0.0            0.0            1.380235E-03   1.570397E-04  -4.250277E-04   0.0
+             6      G      0.0            0.0            0.0            0.0            0.0            0.0
+             7      G      0.0            0.0            2.813293E-04   8.587944E-05  -4.250264E-04   0.0
+             8      G      0.0            0.0            6.961219E-04   1.454361E-04  -4.052585E-04   0.0
+             9      G      0.0            0.0            1.112496E-03   1.578502E-04  -4.273860E-04   0.0
+            10      G      0.0            0.0            1.535674E-03   1.526156E-04  -4.189996E-04   0.0
+            11      G      0.0            0.0            0.0            0.0            0.0            0.0
+            12      G      0.0            0.0            3.525276E-04   5.364261E-05  -5.532264E-04   0.0
+            13      G      0.0            0.0            8.446214E-04   1.490672E-04  -4.326534E-04   0.0
+            14      G      0.0            0.0            1.269062E-03   1.534545E-04  -4.162818E-04   0.0
+            15      G      0.0            0.0            1.690097E-03   1.547270E-04  -4.257477E-04   0.0
+1                                                                           OCTOBER   2, 2014  MSC.NASTRAN  6/17/05   PAGE     8
+                                                                                                                                    
+0                                                                                                            SUBCASE 2              
+ 
+                                             D I S P L A C E M E N T   V E C T O R
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+             1      G      0.0            0.0            0.0            0.0            0.0            0.0
+             2      G      0.0            0.0            9.307887E-04   5.894791E-04  -1.678897E-03   0.0
+             3      G      0.0            0.0            3.590639E-03   1.178617E-03  -3.556803E-03   0.0
+             4      G      0.0            0.0            7.601524E-03   1.288297E-03  -4.385871E-03   0.0
+             5      G      0.0            0.0            1.219667E-02   1.453738E-03  -4.723647E-03   0.0
+             6      G      0.0            0.0            0.0            0.0            0.0            0.0
+             7      G      0.0            0.0            1.375760E-03   3.174964E-04  -2.514474E-03   0.0
+             8      G      0.0            0.0            4.547941E-03   7.410450E-04  -3.742055E-03   0.0
+             9      G      0.0            0.0            8.822020E-03   1.155476E-03  -4.715918E-03   0.0
+            10      G      0.0            0.0            1.369313E-02   1.536985E-03  -4.937798E-03   0.0
+            11      G      0.0            0.0            0.0            0.0            0.0            0.0
+            12      G      0.0            0.0            1.511560E-03  -6.297494E-05  -2.769890E-03   0.0
+            13      G      0.0            0.0            5.115516E-03   3.748528E-04  -4.333689E-03   0.0
+            14      G      0.0            0.0            9.914829E-03   1.000341E-03  -5.160409E-03   0.0
+            15      G      0.0            0.0            1.530021E-02   1.630788E-03  -5.504145E-03   0.0
+1                                                                           OCTOBER   2, 2014  MSC.NASTRAN  6/17/05   PAGE     9
+                                                                                                                                    
+0                                                                                                                                   
+1                                                                           OCTOBER   2, 2014  MSC.NASTRAN  6/17/05   PAGE    10
+                                                                                                                                    
+0                                                                                                                                   
+ * * * *  D B D I C T   P R I N T  * * * *      SUBDMAP = PRTSUM  ,  DMAP STATEMENT NO.     30
+
+
+
+0                                   * * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *
+0 SEID  PEID PROJ VERS APRCH      SEMG SEMR SEKR SELG SELR MODES DYNRED SOLLIN PVALID SOLNL LOOPID DESIGN CYCLE SENSITIVITY
+ --------------------------------------------------------------------------------------------------------------------------
+     0     0    1    1 '        '    T    T    T    T    T     F      F      T      0     F     -1            0           F
+0SEID = SUPERELEMENT ID.
+ PEID = PRIMARY SUPERELEMENT ID OF IMAGE SUPERELEMENT.
+ PROJ = PROJECT ID NUMBER.
+ VERS = VERSION ID.
+ APRCH = BLANK FOR STRUCTURAL ANALYSIS.  HEAT FOR HEAT TRANSFER ANALYSIS.
+ SEMG = STIFFNESS AND MASS MATRIX GENERATION STEP.
+ SEMR = MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES).
+ SEKR = STIFFNESS MATRIX REDUCTION STEP.
+ SELG = LOAD MATRIX GENERATION STEP.
+ SELR = LOAD MATRIX REDUCTION STEP. 
+ MODES = T (TRUE) IF NORMAL MODES OR BUCKLING MODES CALCULATED.
+ DYNRED = T (TRUE) MEANS GENERALIZED DYNAMIC AND/OR COMPONENT MODE REDUCTION PERFORMED.
+ SOLLIN = T (TRUE) IF LINEAR SOLUTION EXISTS IN DATABASE.
+ PVALID = P-DISTRIBUTION ID OF P-VALUE FOR P-ELEMENTS
+ LOOPID = THE LAST LOOPID VALUE USED IN THE NONLINEAR ANALYSIS.  USEFUL FOR RESTARTS.
+ SOLNL = T (TRUE) IF NONLINEAR SOLUTION EXISTS IN DATABASE.
+ DESIGN CYCLE = THE LAST DESIGN CYCLE (ONLY VALID IN OPTIMIZATION).
+ SENSITIVITY = SENSITIVITY MATRIX GENERATION FLAG.
+ 
+ No PARAM values were set in the Control File.
+ 
+1                                        * * * END OF JOB * * *
+ 
+ 
