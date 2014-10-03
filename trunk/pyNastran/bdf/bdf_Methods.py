@@ -57,19 +57,19 @@ class BDFMethodsDeprecated(object):
         """
         return self.unresolve_grids(femOld)
 
-    def sumForces(self):
-        """
-        .. seealso:: sum_forces
-        .. deprecated: will be replaced in version 0.7 with sum_forces
-        """
-        return self.sum_forces()
+    #def sumForces(self):
+        #"""
+        #.. seealso:: sum_forces
+        #.. deprecated: will be replaced in version 0.7 with sum_forces
+        #"""
+        #return self.sum_forces()
 
-    def sumMoments(self, p0):
-        """
-        .. seealso:: sum_moments
-        .. deprecated: will be replaced in version 0.7 with sum_moments
-        """
-        return self.sum_moments(p0)
+    #def sumMoments(self, p0):
+        #"""
+        #.. seealso:: sum_moments
+        #.. deprecated: will be replaced in version 0.7 with sum_moments
+        #"""
+        #return self.sum_moments(p0)
 
 
 def _mass_properties_mass_mp_func(element):
@@ -382,25 +382,33 @@ class BDFMethods(BDFMethodsDeprecated):
         gi = gravity_i.N * gravity_i.scale
         mass, cg, I = model.mass_properties(reference_point=p0, sym_axis=None, num_cpus=6)
 
-    def sum_forces_moments(self, p0, load_case_id, include_grav=False):
+    def sum_forces_moments(self, p0, loadcase_id, include_grav=False):
         """
         Sums applied forces & moments about a reference point p0 for all
         load cases.
         Considers:
           - FORCE, FORCE1, FORCE2
           - MOMENT, MOMENT1, MOMENT2
-          - PLOAD2, PLOAD4
+          - PLOAD, PLOAD2, PLOAD4
           - LOAD
 
         :param p0:
           the reference point
+        :param loadcase_id:
+          the LOAD=? ID to analyze
+        :param include_grav:
+          includes gravity in the summation (not supported)
         :returns Forces:
           the forces
         :returns Moments:
           the moments
 
         :type p0:
-          NUMPY.NDARRAY shape=(3,) or integer
+          NUMPY.NDARRAY shape=(3,) or integer (node ID)
+         :type loadcase_id:
+          integer
+         :type include_grav:
+          bool
         :type Forces:
           NUMPY.NDARRAY shape=(3,)
         :type Moments:
@@ -410,18 +418,19 @@ class BDFMethods(BDFMethodsDeprecated):
         ..todo:: It's super slow for cid != 0.   We can speed this up a lot
                  if we calculate the normal, area, centroid based on
                  precomputed node locations.
-        ..todo:: Does pressure act normal or antinormal?
+
+        Pressure acts in the normal direction per model/real/loads.bdf and loads.f06
         """
-        if not isinstance(load_case_id, int):
-            raise RuntimeError('load_case_id must be an integer; load_case_id=%r' % load_case_id)
+        if not isinstance(loadcase_id, int):
+            raise RuntimeError('loadcase_id must be an integer; loadcase_id=%r' % loadcase_id)
         if isinstance(p0, int):
             p = self.model.nodes[p0].Position()
         else:
             p = array(p0)
 
-        loadCase = self.loads[load_case_id]
+        loadCase = self.loads[loadcase_id]
         #for (key, loadCase) in self.loads.iteritems():
-            #if key != load_case_id:
+            #if key != loadcase_id:
                 #continue
 
         scale_factors2 = []
@@ -454,6 +463,38 @@ class BDFMethods(BDFMethodsDeprecated):
             elif isinstance(load, Moment):  # MOMENT, MOMENT1, MOMENT2
                 m = load.mag * load.xyz
                 M += m * scale
+            elif load.type == 'PLOAD':
+                nodes = load.nodeIDs()
+                nnodes = len(nodes)
+                if nnodes == 3:
+                    n1, n2, n3 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]]
+                    axb = cross(n1 - n2, n1 - n3)
+                    centroid = (n1 + n2 + n3) / 3.
+                elif nnodes == 4:
+                    n1, n2, n3, n4 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]], xyz[nodes[3]]
+                    axb = cross(n1 - n3, n2 - n4)
+                    centroid = (n1 + n2 + n3 + n4) / 4.
+                else:
+                    raise RuntimeError('invalid number of nodes on PLOAD card; nodes=%s' % str(nodes))
+
+                nunit = norm(axb)
+                A = 0.5 * nunit
+                try:
+                    n = axb / nunit
+                except FloatingPointError:
+                    msg = ''
+                    for i, nid in enumerate(nodes):
+                        msg += 'nid%i=%i node=%s\n' % (i+1, nid, xyz[nodes[i]])
+                    msg += 'a x b = %s\n' % axb
+                    msg += 'nunit = %s\n' % nunit
+                    raise FloatingPointError(msg)
+                r = centroid - p
+                f = load.p * A * n * scale
+                m = cross(r, f)
+
+                F += f
+                M += m
+
             elif load.type == 'PLOAD1':
                 pass
                 #elem = self.elements[load.eid]
@@ -473,7 +514,7 @@ class BDFMethods(BDFMethodsDeprecated):
                         F += f
                         M += m
                     else:
-                        self.log.debug('case=%s etype=%r loadtype=%r not supported' % (load_case_id, elem.type, load.type))
+                        self.log.debug('case=%s etype=%r loadtype=%r not supported' % (loadcase_id, elem.type, load.type))
             elif load.type == 'PLOAD4':
                 #elem = load.eid
                 pressure = load.pressures[0] * scale  # there are 4 possible pressures, but we assume p0
@@ -489,11 +530,16 @@ class BDFMethods(BDFMethodsDeprecated):
                         axb = cross(n1 - n2, n1 - n3)
                         nunit = norm(axb)
                         A = 0.5 * nunit
-                        n = axb / nunit
+                        try:
+                            n = axb / nunit
+                        except FloatingPointError:
+                            msg = ''
+                            for i, nid in enumerate(nodes):
+                                msg += 'nid%i=%i node=%s\n' % (i+1, nid, xyz[nodes[i]])
+                            msg += 'a x b = %s\n' % axb
+                            msg += 'nunit = %s\n' % nunit
+                            raise FloatingPointError(msg)
                         centroid = (n1 + n2 + n3) / 3.
-
-                        #n2 = elem.Normal()
-                        #assert allclose(n, n2), 'n=%s n2=%s' % (n, n2)
                     elif elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
                         # quads
                         nodes = elem.nodeIDs()
@@ -501,15 +547,21 @@ class BDFMethods(BDFMethodsDeprecated):
                         axb = cross(n1 - n3, n2 - n4)
                         nunit = norm(axb)
                         A = 0.5 * nunit
-                        n = axb / nunit
+                        try:
+                            n = axb / nunit
+                        except FloatingPointError:
+                            msg = ''
+                            for i, nid in enumerate(nodes):
+                                msg += 'nid%i=%i node=%s\n' % (i+1, nid, xyz[nodes[i]])
+                            msg += 'a x b = %s\n' % axb
+                            msg += 'nunit = %s\n' % nunit
+                            raise FloatingPointError(msg)
 
                         centroid = (n1 + n2 + n3 + n4) / 4.
-                        #n2 = elem.Normal()
-                        #assert allclose(n, n2), 'n=%s n2=%s' % (n, n2)
                     elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
                         A, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
                     else:
-                        self.log.debug('case=%s eid=%s etype=%r loadtype=%r not supported' % (load_case_id, eid, elem.type, load.type))
+                        self.log.debug('case=%s eid=%s etype=%r loadtype=%r not supported' % (loadcase_id, eid, elem.type, load.type))
                         continue
                     r = centroid - p
                     f = pressure * A * n
@@ -534,6 +586,6 @@ class BDFMethods(BDFMethodsDeprecated):
                 unsupported_types.add(load.type)
 
         for Type in unsupported_types:
-            self.log.debug('case=%s loadtype=%r not supported' % (load_case_id, Type))
-        #self.log.info("case=%s F=%s M=%s\n" % (load_case_id, F, M))
+            self.log.debug('case=%s loadtype=%r not supported' % (loadcase_id, Type))
+        #self.log.info("case=%s F=%s M=%s\n" % (loadcase_id, F, M))
         return (F, M)

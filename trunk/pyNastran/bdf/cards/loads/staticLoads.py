@@ -1102,7 +1102,7 @@ class PLOAD(Load):
             nodes = [integer(card, 3, 'n1'),
                      integer(card, 4, 'n2'),
                      integer(card, 5, 'n3')]
-            n4 = integer_or_blank(card, 6, 'n5', 0)
+            n4 = integer_or_blank(card, 6, 'n4', 0)
             if n4:
                 nodes.append(n4)
             #self.nodes = self._wipeEmptyFields(nodes)
