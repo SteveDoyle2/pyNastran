@@ -68,6 +68,7 @@ def print_float_16(value):
             if len(field2) <= 16 and float(field1) == float(field2):
                 field = field2
                 field = field.strip(' 0')
+            return '%16s' % field
         elif value < 0.1:
             field = "%16.15f" % value
         elif value < 1.:
@@ -123,6 +124,7 @@ def print_float_16(value):
             if len(field2) <= 16 and float(field1) == float(field2):
                 field = field2.rstrip(' 0')
                 field = field.replace('-0.', '-.')
+            return '%16s' % field
         elif value > -0.1:
             field = "%16.14f" % value   # -0.01 >x>-0.1...should be 5 (maybe scientific...)
             field = field.replace('-0.', '-.')
@@ -130,33 +132,31 @@ def print_float_16(value):
             field = "%16.14f" % value   # -0.1  >x>-1.....should be 6, but the baseline 0 is kept...
             field = field.replace('-0.', '-.')
         elif value > -10.:
-            field = "%16.14f" % value   # -1    >x>-10
+            field = "%16.13f" % value   # -1    >x>-10
         elif value > -100.:
-            field = "%16.13f" % value  #       -1 > x >      -10
+            field = "%16.12f" % value  #       -1 > x >      -10
         elif value > -1000.:
-            field = "%16.12f" % value  #      -10 > x >     -100
+            field = "%16.11f" % value  #      -10 > x >     -100
         elif value > -10000.:
-            field = "%16.11f" % value  #     -100 > x >    -1000
+            field = "%16.10f" % value  #     -100 > x >    -1000
         elif value > -100000.:
-            field = "%16.10f" % value  #    -1000 > x >   -10000
+            field = "%16.9f" % value  #    -1000 > x >   -10000
         elif value > -1000000.:
-            field = "%16.9f" % value   #  -10,000 > x > -100,000
+            field = "%16.8f" % value   #  -10,000 > x > -100,000
         elif value > -10000000.:
-            field = "%16.8f" % value   #           -100,000 > x >          -1,000,000
+            field = "%16.7f" % value   #           -100,000 > x >          -1,000,000
         elif value > -100000000.:
-            field = "%16.7f" % value   #         -1,000,000 > x >         -10,000,000
+            field = "%16.6f" % value   #         -1,000,000 > x >         -10,000,000
         elif value > -1000000000.:
-            field = "%16.6f" % value   #        -10,000,000 > x >        -100,000,000
+            field = "%16.5f" % value   #        -10,000,000 > x >        -100,000,000
         elif value > -10000000000.:
-            field = "%16.5f" % value   #       -100,000,000 > x >      -1,000,000,000
+            field = "%16.4f" % value   #       -100,000,000 > x >      -1,000,000,000
         elif value > -100000000000.:
-            field = "%16.4f" % value   #     -1,000,000,000 > x >     -10,000,000,000
+            field = "%16.3f" % value   #     -1,000,000,000 > x >     -10,000,000,000
         elif value > -1000000000000.:
-            field = "%16.3f" % value   #    -10,000,000,000 > x >    -100,000,000,000
+            field = "%16.2f" % value   #    -10,000,000,000 > x >    -100,000,000,000
         elif value > -10000000000000.:
-            field = "%16.2f" % value   #   -100,000,000,000 > x >  -1,000,000,000,000
-        elif value > -100000000000000.:
-            field = "%16.1f" % value   # -1,000,000,000,000 > x > -10,000,000,000,000
+            field = "%16.1f" % value   #   -100,000,000,000 > x >  -1,000,000,000,000
         else:
             field = "%16.1f" % value
             if field.index('.') < 16:
