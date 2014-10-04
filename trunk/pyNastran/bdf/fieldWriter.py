@@ -49,11 +49,14 @@ def print_scientific_8(value):
 
     .. seealso:: :func: `print_float_8` for a better method
     """
+    if value == 0.0:
+        return '%8s' % '0.'
+
     python_value = '%8.11e' % value
     (svalue, sExponent) = python_value.strip().split('e')
     exponent = int(sExponent)  # removes 0s
 
-    sign = '-' if abs(value) < 0.01 else '+'
+    sign = '-' if abs(value) < 1. else '+'
 
     sExp2 = str(exponent).strip('-+')  # the exponent will be added later...
     value2 = float(svalue)

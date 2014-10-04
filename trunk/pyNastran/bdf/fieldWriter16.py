@@ -14,11 +14,14 @@ def print_scientific_16(value):
 
     .. seealso:: print_float_16 for a better method
     """
+    if value == 0.0:
+        return '%16s' % '0.'
+
     python_value = '%16.14e' % value  # -1.e-2
     (svalue, sExponent) = python_value.strip().split('e')
     exponent = int(sExponent)  # removes 0s
 
-    if abs(value) < 0.01:
+    if abs(value) < 1.:
         sign = '-'
     else:
         sign = '+'
