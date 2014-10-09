@@ -6,6 +6,7 @@ from numpy import zeros, searchsorted
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats12E
+from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import _write_f06_springs
 
 
 class RealRodForceArray(ScalarObject):
@@ -818,22 +819,10 @@ class RealSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
                         '      ELEMENT         FORCE            ELEMENT         FORCE            ELEMENT         FORCE            ELEMENT         FORCE\n',
                         '        ID.                              ID.                              ID.                              ID.\n',
                         ]
-        forces = []
-        #elements = []
-        line = '   '
-        for eid, force in sorted(self.force.iteritems()):
-            #elements.append(eid)
-            forces.append(force)
-            line += '%10s  %10.6E     ' % (eid, force)
-            if len(forces) == 3:
-                forces = []
-                msg.append(line.rstrip() + '\n')
-                line = '   '
-
-        if forces:
-            msg.append(line.rstrip() + '\n')
-        msg.append(pageStamp % page_num)
         f.write(''.join(msg))
+        _write_f06_springs(f, self.force)
+        f.write(pageStamp % page_num)
+
         return page_num
 
 

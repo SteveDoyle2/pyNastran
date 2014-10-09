@@ -2,6 +2,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from .oes_objects import StressObject, StrainObject
+from pyNastran.f06.f06_formatting import writeFloats13E
 
 
 class RealCelasStress(StressObject):
@@ -105,24 +106,71 @@ class RealCelasStress(StressObject):
                         '      ELEMENT         STRESS           ELEMENT         STRESS           ELEMENT         STRESS           ELEMENT         STRESS\n',
                         '        ID.                              ID.                              ID.                              ID.\n',
                         ]
+        f.write(''.join(msg))
+
+        _write_f06_springs(f, self.stress)
+        #_write_f06_springs_transient(f, self.stress)
+        f.write(pageStamp % page_num)
+        return page_num
+
+def _write_f06_springs_transient(f, stress, header, words, name):
+    for dt, datai in sorted(data.iteritems()):
+        header[1] = ' %s = %10.4E\n' % (name, dt)
+        msg += header + words
+        f.write(''.join(msg))
+
+        eids = []
         stresses = []
-        #elements = []
-        line = '   '
-        for eid, stress in sorted(self.stress.iteritems()):
-            #elements.append(eid)
+        for eid, stress in sorted(datai.iteritems()):
+            eids.append(eid)
             stresses.append(stress)
-            line += '%10s  %10.6E     ' % (eid, stress)
-            if len(stresses) == 3:
+            if len(stresses) == 4:
+                stresses, is_all_zeros = writeFloats13E(stresses)
+                f.write('    %10i  %13s    %10i  %13s    %10i  %13s    %10i  %13s\n' % (
+                    eids[0], stresses[0],
+                    eids[1], stresses[1],
+                    eids[2], stresses[2],
+                    eids[3], stresses[3]))
+                eids = []
                 stresses = []
-                msg.append(line.rstrip() + '\n')
-                line = '   '
 
         if stresses:
-            msg.append(line.rstrip() + '\n')
-        msg.append(pageStamp % page_num + '\n')
+            line = '    '
+            stresses, is_all_zeros = writeFloats13E(stresses)
+            for eid, stress in zip(eids, stresses):
+                line += '%10i  %13s    ' % (eid, stress)
+            f.write(line.rstrip() + '\n')
 
-        f.write(''.join(msg))
-        return page_num
+            msg.append(pageStamp % page_num)
+            f.write(''.join(msg))
+            msg = ['']
+        page_num += 1
+
+    return page_num - 1
+
+
+def _write_f06_springs(f, data):
+    eids = []
+    stresses = []
+    for eid, stress in sorted(data.iteritems()):
+        eids.append(eid)
+        stresses.append(stress)
+        if len(stresses) == 4:
+            stresses, is_all_zeros = writeFloats13E(stresses)
+            f.write('    %10i  %13s    %10i  %13s    %10i  %13s    %10i  %13s\n' % (
+                eids[0], stresses[0],
+                eids[1], stresses[1],
+                eids[2], stresses[2],
+                eids[3], stresses[3]))
+            eids = []
+            stresses = []
+
+    if stresses:
+        line = '    '
+        stresses, is_all_zeros = writeFloats13E(stresses)
+        for eid, stress in zip(eids, stresses):
+            line += '%10i  %13s    ' % (eid, stress)
+        f.write(line.rstrip() + '\n')
 
 
 class RealCelasStrain(StrainObject):
@@ -194,23 +242,9 @@ class RealCelasStrain(StrainObject):
                         '      ELEMENT         STRAIN           ELEMENT         STRAIN           ELEMENT         STRAIN           ELEMENT         STRAIN\n',
                         '        ID.                              ID.                              ID.                              ID.\n',
                         ]
-        strains = []
-        #elements = []
-        line = '   '
-        for eid, strain in sorted(self.strain.iteritems()):
-            #elements.append(eid)
-            strains.append(strain)
-            line += '%10s  %10.6E     ' % (eid, strain)
-            if len(strains) == 3:
-                strains = []
-                msg.append(line.rstrip() + '\n')
-                line = '   '
-
-        if strains:
-            msg.append(line.rstrip() + '\n')
-        msg.append(pageStamp % page_num + '\n')
-
         f.write(''.join(msg))
+        _write_f06_springs(f, self.strain)
+        f.write(pageStamp % page_num)
         return page_num
 
 
