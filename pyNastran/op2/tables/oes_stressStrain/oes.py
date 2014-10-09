@@ -398,15 +398,23 @@ class OES(OP2Common):
             ## TODO: fix method to follow correct pattern...
             if self.read_mode == 1:
                 return len(data)
+
+            if self.isStress():
+                result_name = 'beamStress'
+            else:
+                result_name = 'beamStrain'
+            if result_name not in self._saved_results:
+                return len(data)
+            self._found_results.add(result_name)
+
             if self.format_code == 1 and self.num_wide == 111:  # real
                 ntotal = 444 # 44 + 10*40  (11 nodes)
                 if self.isStress():
-                    result_name = 'beamStress'
+                    #result_name = 'beamStress'
                     self.create_transient_object(self.beamStress, RealBeamStress)
                 else:
-                    result_name = 'beamStrain'
+                    #result_name = 'beamStrain'
                     self.create_transient_object(self.beamStrain, RealBeamStrain)
-                self._found_results.add(result_name)
 
                 nelements = len(data) // ntotal
                 s = Struct(b'i')

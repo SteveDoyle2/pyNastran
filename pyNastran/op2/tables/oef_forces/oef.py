@@ -639,6 +639,11 @@ class OEF(OP2Common):
             #2-CBEAM
             if self.read_mode == 1:
                 return len(data)
+
+            result_name = 'beamForces'
+            if result_name not in self._saved_results:
+                return len(data)
+            self._found_results.add(result_name)
             if self.format_code == 1 and self.num_wide == 9:  # real centroid ???
                 self.create_transient_object(self.beamForces, RealCBeamForce)
                 s = Struct(b'i8f')  # 36
@@ -1079,7 +1084,10 @@ class OEF(OP2Common):
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
 
-            self._found_results.add('plateForces2')
+            result_name = 'plateForces2'
+            if result_name not in self._saved_results:
+                return len(data)
+            self._found_results.add(result_name)
             if self.format_code == 1 and self.num_wide == numwide_real:  # real
                 if self.read_mode == 1:
                     return len(data)
