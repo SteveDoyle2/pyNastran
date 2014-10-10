@@ -193,6 +193,9 @@ class LOAD(LoadCombination):
                     loads += reduced_loads
                     scale_factors += [scale * j_scale for j_scale
                                       in reduced_scale_factors]
+                elif load.type in ['PLOAD']:
+                    loads.append(load)
+                    scale_factors.append(scale)
                 else:
                     msg = ('%s isnt supported in getReducedLoads method'
                            % load.__class__.__name__)
@@ -283,8 +286,11 @@ class GRAV(BaseCard):
     """
     Defines acceleration vectors for gravity or other acceleration loading.::
 
-      GRAV SID CID A     N1  N2 N3    MB
-      GRAV 1   3   32.2 0.0 0.0 -1.0
+    +------+-----+-----+------+-----+-----+------+-----+
+    | GRAV | SID | CID | A    | N1  | N2  | N3   |  MB |
+    +------+-----+-----+------+-----+-----+------+-----+
+    | GRAV | 1   | 3   | 32.2 | 0.0 | 0.0 | -1.0 |
+    +------+-----+-----+------+-----+-----+------+
     """
     type = 'GRAV'
 
@@ -320,7 +326,7 @@ class GRAV(BaseCard):
             assert len(data) == 7
 
         assert not allclose(max(abs(self.N)), 0.), ('GRAV N is a zero vector, '
-                                                   'N=%s' % (str(self.N)))
+                                                   'N=%s' % str(self.N))
 
     def getLoads(self):
         return [self]
@@ -1167,7 +1173,10 @@ class PLOAD1(Load):
             self.x2 = data[6]
             self.p2 = data[7]
         if self.Type not in self.validTypes:
-            msg = '%s is an invalid type on the PLOAD1 card' % self.Type
+            msg = '%s is an invalid type on the PLOAD1 card; validTypes=[%s]' % (self.Type, ', '.join(self.validTypes).rstrip(', '))
+            raise RuntimeError(msg)
+        if self.scale not in self.validScales:
+            msg = '%s is an invalid scale on the PLOAD1 card; validScales=[%s]' % (self.scale, ', '.join(self.validScales).rstrip(', '))
             raise RuntimeError(msg)
 
         assert 0.0 <= self.x1 <= self.x2

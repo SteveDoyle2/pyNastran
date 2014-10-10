@@ -1,6 +1,6 @@
 import os
 import unittest
-from numpy import array, allclose
+from numpy import array, allclose, cross
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF
@@ -155,6 +155,127 @@ class TestLoadSum(unittest.TestCase):
         M_expected = array([12., -12.,  0.])
         self.assertTrue(allclose(F_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F_expected, F))
         self.assertTrue(allclose(M_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M_expected, M))
+
+    def test_loads_sum_05(self):
+        model = BDF(log=log)
+        bdf_filename = os.path.join(model_path, 'real', 'loads', 'loads.bdf')
+        model.read_bdf(bdf_filename)
+
+        p = 3.
+        A = 1.
+        n = array([0., 0., 1.])
+        F1001_expected = p * A * n
+        r = array([0.5, 1.5, 0.])
+        p0 = array([0., 0., 0.])
+        M1001_expected = cross(r, F1001_expected)
+
+        loadcase_id = 1001
+        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+        self.assertTrue(allclose(F1001_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F1001_expected, F))
+        self.assertTrue(allclose(M1001_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M1001_expected, M))
+
+        loadcase_id = 1002
+        r = array([4., 2., 0.])
+        F1002_expected = array([0., 0., 1.])
+        M1002_expected = cross(r, F1002_expected)
+        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+        self.assertTrue(allclose(F1002_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F1002_expected, F))
+        self.assertTrue(allclose(M1002_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M1002_expected, M))
+
+        loadcase_id = 1
+        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+        self.assertTrue(allclose(F1001_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F1001_expected, F))
+        self.assertTrue(allclose(M1001_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M1001_expected, M))
+
+        loadcase_id = 2
+        F2_expected = F1001_expected + F1002_expected
+        M2_expected = M1001_expected + M1002_expected
+        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+        self.assertTrue(allclose(F2_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F2_expected, F))
+        self.assertTrue(allclose(M2_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M2_expected, M))
+
+        loadcase_id = 6
+        F6_expected = 2. * (3. * F1001_expected + 13. * F1002_expected)
+        M6_expected = 2. * (3. * M1001_expected + 13. * M1002_expected)
+        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+        self.assertTrue(allclose(F6_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F6_expected, F))
+        self.assertTrue(allclose(M6_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M6_expected, M))
+
+        loadcase_id = 7
+        F7_expected = 7. * 11. * F6_expected
+        M7_expected = 7. * 11. * M6_expected
+        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+        self.assertTrue(allclose(F7_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F7_expected, F))
+        self.assertTrue(allclose(M7_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M7_expected, M))
+
+
+        loadcase_id = 1003
+        p = 9.
+        A = 1.
+        n = array([0., 0., 1.])
+        F1003_expected = p * A * n
+        r = array([0.5, 0.5, 0.])
+        M1003_expected = cross(r, F1003_expected)
+        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+        self.assertTrue(allclose(F1003_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F1003_expected, F))
+        self.assertTrue(allclose(M1003_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M1003_expected, M))
+
+        loadcase_id = 8
+        F8_expected = 2. * (3. * F7_expected + 2. * F1003_expected)
+        M8_expected = 2. * (3. * M7_expected + 2. * M1003_expected)
+        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+        self.assertTrue(allclose(F8_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F8_expected, F))
+        self.assertTrue(allclose(M8_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M8_expected, M))
+
+        loadcase_id = 800
+        p = 3.5
+        A = 1.
+        n = array([0., 0., 1.])
+        F800_expected = p * A * n
+        r = array([3.5, 1.5, 0.])
+        M800_expected = cross(r, F800_expected)
+        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+        self.assertTrue(allclose(F800_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F800_expected, F))
+        self.assertTrue(allclose(M800_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M800_expected, M))
+
+        loadcase_id = 801
+        F801_expected = F800_expected
+        M801_expected = M800_expected
+        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+        self.assertTrue(allclose(F801_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F801_expected, F))
+        self.assertTrue(allclose(M801_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M801_expected, M))
+
+        loadcase_id = 802
+        p = 3.5
+        A = 0.5
+        n = array([0., 0., 1.])
+        F802_expected = p * A * n
+        rx = (3. + 4. + 4.) / 3.
+        ry = (1. + 1. + 2.) / 3.
+        r = array([rx, ry, 0.])
+        M802_expected = cross(r, F802_expected)
+        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+        self.assertTrue(allclose(F802_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F802_expected, F))
+        self.assertTrue(allclose(M802_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M802_expected, M))
+
+    def test_loads_sum_06(self):
+        model = BDF(log=log)
+        bdf_filename = os.path.join(model_path, 'real', 'loads', 'bars.bdf')
+        model.read_bdf(bdf_filename)
+        p0 = array([0., 0., 0.])
+
+        loadcase_id = 1
+        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+        if 0:
+
+            loadcase_id = 1
+            r = array([0., 0., 0.])
+            F1_expected = array([0., 0., 1.])
+            M1_expected = cross(r, F1_expected)
+
+            F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            self.assertTrue(allclose(F1_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F1_expected, F))
+            self.assertTrue(allclose(M1_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M1_expected, M))
 
 if __name__ == '__main__':
     unittest.main()

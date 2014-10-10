@@ -218,15 +218,19 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
 
 class CBAR(LineElement):
     """
-    ::
+    +------+-----+-----+-----+-----+-----+-----+-----+------+
+    | CBAR | EID | PID | GA  | GB  | X1  | X2  | X3  | OFFT |
+    +------+-----+-----+-----+-----+-----+-----+-----+------+
+    | PA   | PB  | W1A | W2A | W3A | W1B | W2B | W3B |
+    +------+-----+-----+-----+-----+-----+-----+-----+
 
-      CBAR EID PID GA GB X1 X2 X3 OFFT
-      PA PB W1A W2A W3A W1B W2B W3B
+    or
 
-    or::
-
-      CBAR EID PID GA GB G0 OFFT
-      PA PB W1A W2A W3A W1B W2B W3B
+    +------+-----+-----+-----+-----+-----+------+
+    | CBAR | EID | PID | GA  | GB  | G0  | OFFT |
+    +------+-----+-----+-----+-----+-----+------+-----+
+    | PA   | PB  | W1A | W2A | W3A | W1B | W2B  | W3B |
+    +------+-----+-----+-----+-----+-----+------+-----+
 
     ::
 
@@ -237,25 +241,37 @@ class CBAR(LineElement):
     asterType = 'CBAR'
     _field_map = {
         1: 'eid', 2:'pid', 3:'ga', 4:'gb',
-        8:'offt', 9:'pa', 10:'pb', 11:'w1a', 12:'w2a', 13:'w3a',
-        14:'w1b', 15:'w2b', 16:'w3b',
+        8:'offt', 9:'pa', 10:'pb',
     }
 
     def _update_field_helper(self, n, value):
-        if self.g0 is not None:
-            if n == 5:
-                self.g0 = value
-            else:
-                raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+        if n == 11:
+            self.wa[0] = value
+        elif n == 12:
+            self.wa[1] = value
+        elif n == 13:
+            self.wa[2] = value
+        elif n == 14:
+            self.wb[0] = value
+        elif n == 15:
+            self.wb[1] = value
+        elif n == 16:
+            self.wb[2] = value
         else:
-            if n == 5:
-                self.x1 = value
-            elif n == 6:
-                self.x2 = value
-            elif n == 7:
-                self.x3 = value
+            if self.g0 is not None:
+                if n == 5:
+                    self.g0 = value
+                else:
+                    raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
             else:
-                raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+                if n == 5:
+                    self.x[0] = value
+                elif n == 6:
+                    self.x[1] = value
+                elif n == 7:
+                    self.x[2] = value
+                else:
+                    raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         LineElement.__init__(self, card, data)
@@ -274,13 +290,13 @@ class CBAR(LineElement):
             self.pa = integer_or_blank(card, 9, 'pa', 0)
             self.pb = integer_or_blank(card, 10, 'pb', 0)
 
-            self.w1a = double_or_blank(card, 11, 'w1a', 0.0)
-            self.w2a = double_or_blank(card, 12, 'w2a', 0.0)
-            self.w3a = double_or_blank(card, 13, 'w3a', 0.0)
+            self.wa = array([double_or_blank(card, 11, 'w1a', 0.0),
+                             double_or_blank(card, 12, 'w2a', 0.0),
+                             double_or_blank(card, 13, 'w3a', 0.0)], dtype='float64')
 
-            self.w1b = double_or_blank(card, 14, 'w1b', 0.0)
-            self.w2b = double_or_blank(card, 15, 'w2b', 0.0)
-            self.w3b = double_or_blank(card, 16, 'w3b', 0.0)
+            self.wb = array([double_or_blank(card, 14, 'w1b', 0.0),
+                             double_or_blank(card, 15, 'w2b', 0.0),
+                             double_or_blank(card, 16, 'w3b', 0.0)], dtype='float64')
             assert len(card) <= 17, 'len(CBAR card) = %i' % len(card)
         else:  #: .. todo:: verify
             #data = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,g0]]
@@ -290,14 +306,12 @@ class CBAR(LineElement):
             flag = data[1][0]
             if flag in [0, 1]:
                 self.g0 = None
-                self.x1 = data[1][1]
-                self.x2 = data[1][2]
-                self.x3 = data[1][3]
+                self.x = array([data[1][1],
+                                data[1][2],
+                                data[1][3]], dtype='float64')
             else:
                 self.g0 = data[1][1]
-                self.x1 = None
-                self.x2 = None
-                self.x3 = None
+                self.x = None
 
             self.eid = main[0]
             self.pid = main[1]
@@ -308,13 +322,8 @@ class CBAR(LineElement):
             self.pa = main[4]
             self.pb = main[5]
 
-            self.w1a = main[6]
-            self.w2a = main[7]
-            self.w3a = main[8]
-
-            self.w1b = main[9]
-            self.w2b = main[10]
-            self.w3b = main[11]
+            self.wa = array([main[6], main[7], main[8]], dtype='float64')
+            self.wb = array([main[9], main[10], main[11]], dtype='float64')
         #print("offt = %s" %(self.offt))
 
         if not isinstance(self.offt, basestring):
@@ -393,39 +402,25 @@ class CBAR(LineElement):
         field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
         if isinstance(field5, int):
             self.g0 = field5
-            self.x1 = None
-            self.x2 = None
-            self.x3 = None
+            self.x = None
         elif isinstance(field5, float):
             self.g0 = None
-            self.x1 = field5
-            self.x2 = double_or_blank(card, 6, 'x2', 0.0)
-            self.x3 = double_or_blank(card, 7, 'x3', 0.0)
-            if norm([self.x1, self.x2, self.x3]) == 0.0:
+            self.x = array([field5,
+                            double_or_blank(card, 6, 'x2', 0.0),
+                            double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
+            if norm(self.x) == 0.0:
                 msg = 'G0 vector defining plane 1 is not defined.\n'
                 msg += 'G0 = %s\n' % self.g0
-                msg += 'X1 = %s\n' % self.x1
-                msg += 'X2 = %s\n' % self.x2
-                msg += 'X3 = %s\n' % self.x3
+                msg += 'X  = %s\n' % self.x
                 raise RuntimeError(msg)
         else:
             msg = ('field5 on %s (G0/X1) is the wrong type...id=%s field5=%s '
-                   'type=%s' %(self.type, self.eid, field5, type(field5)))
+                   'type=%s' % (self.type, self.eid, field5, type(field5)))
             raise RuntimeError(msg)
-            self.g0 = None
-            self.x1 = 0.
-            self.x2 = 0.
-            self.x3 = 0.
-        #if self.eid==14100238:
-            #print "g0=%s x1=%s x2=%s x3=%s" %(self.g0, self.x1, self.x2,
-            #                                  self.x3)
 
     def cross_reference(self, model):
         #if self.g0:
-        #    v = nodes[self.g0].Position()-nodes[self.ga].Position()
-        #    self.x1 = v[0]
-        #    self.x2 = v[1]
-        #    self.x3 = v[2]
+        #    self.x = nodes[self.g0].Position() - nodes[self.ga].Position()
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.ga = model.Node(self.ga, msg=msg)
         self.gb = model.Node(self.gb, msg=msg)
@@ -453,10 +448,18 @@ class CBAR(LineElement):
         if self.g0:
             return (self.g0, None, None)
         else:
-            #x1 = set_blank_if_default(self.x1, 0.0)
-            #x2 = set_blank_if_default(self.x2, 0.0)
-            #x3 = set_blank_if_default(self.x3, 0.0)
-            return (self.x1, self.x2, self.x3)
+            #x1 = set_blank_if_default(self.x[0], 0.0)
+            #x2 = set_blank_if_default(self.x[1], 0.0)
+            #x3 = set_blank_if_default(self.x[2], 0.0)
+            return list(self.x)
+
+    def get_orientation_vector(self, xyz):
+        if self.g0:
+            v = xyz[self.g0] - xyz[self.Ga()]
+        else:
+            v = self.x
+        assert self.offt == 'GGG', self.offt
+        return v
 
     def nodeIDs(self):
         return [self.Ga(), self.Gb()]
@@ -636,25 +639,25 @@ class CBAR(LineElement):
 
     def rawFields(self):
         """
-        .. todo:: not perfectly accurate
+        .. todo:: not perfectly accurate b/c ???
         """
         (x1, x2, x3) = self.getX_G0_defaults()
         offt = set_blank_if_default(self.offt, 'GGG')
         list_fields = ['CBAR', self.eid, self.Pid(), self.Ga(), self.Gb(), x1, x2,
-                  x3, offt, self.pa, self.pb, self.w1a, self.w2a, self.w3a,
-                  self.w1b, self.w2b, self.w3b]
+                  x3, offt, self.pa, self.pb] + list(self.wa) + list(self.wb)
         return list_fields
 
     def reprFields(self):
         pa = set_blank_if_default(self.pa, 0)
         pb = set_blank_if_default(self.pb, 0)
 
-        w1a = set_blank_if_default(self.w1a, 0.0)
-        w2a = set_blank_if_default(self.w2a, 0.0)
-        w3a = set_blank_if_default(self.w3a, 0.0)
-        w1b = set_blank_if_default(self.w1b, 0.0)
-        w2b = set_blank_if_default(self.w2b, 0.0)
-        w3b = set_blank_if_default(self.w3b, 0.0)
+        w1a = set_blank_if_default(self.wa[0], 0.0)
+        w2a = set_blank_if_default(self.wa[1], 0.0)
+        w3a = set_blank_if_default(self.wa[2], 0.0)
+
+        w1b = set_blank_if_default(self.wb[0], 0.0)
+        w2b = set_blank_if_default(self.wb[1], 0.0)
+        w3b = set_blank_if_default(self.wb[2], 0.0)
         (x1, x2, x3) = self.getX_G0_defaults()
         offt = set_blank_if_default(self.offt, 'GGG')
         list_fields = ['CBAR', self.eid, self.Pid(), self.Ga(), self.Gb(), x1, x2,
@@ -688,17 +691,17 @@ class CBEAM3(CBAR):
 
             self.initX_G0(card)
 
-            self.w1a = double_or_blank(card, 9, 'w1a', 0.0)
-            self.w2a = double_or_blank(card, 10, 'w2a', 0.0)
-            self.w3a = double_or_blank(card, 11, 'w3a', 0.0)
+            self.wa = array([double_or_blank(card, 9, 'w1a', 0.0),
+                             double_or_blank(card, 10, 'w2a', 0.0),
+                             double_or_blank(card, 11, 'w3a', 0.0)], 'float64')
 
-            self.w1b = double_or_blank(card, 12, 'w1b', 0.0)
-            self.w2b = double_or_blank(card, 13, 'w2b', 0.0)
-            self.w3b = double_or_blank(card, 14, 'w3b', 0.0)
+            self.wb = array([double_or_blank(card, 12, 'w1b', 0.0),
+                             double_or_blank(card, 13, 'w2b', 0.0),
+                             double_or_blank(card, 14, 'w3b', 0.0)], 'float64')
 
-            self.w1c = double_or_blank(card, 15, 'w1c', 0.0)
-            self.w2c = double_or_blank(card, 16, 'w2c', 0.0)
-            self.w3c = double_or_blank(card, 17, 'w3c', 0.0)
+            self.wc = array([double_or_blank(card, 15, 'w1c', 0.0),
+                             double_or_blank(card, 16, 'w2c', 0.0),
+                             double_or_blank(card, 17, 'w3c', 0.0)], 'float64')
 
             self.twa = double_or_blank(card, 18, 0., 'twa')
             self.twb = double_or_blank(card, 19, 0., 'twb')
@@ -723,28 +726,26 @@ class CBEAM3(CBAR):
         .. math:: L = g_b - g_a
         """
         L = norm(self.gb.Position() - self.ga.Position())
-        assert isinstance(L, float)
         return L
 
     def rawFields(self):
         (x1, x2, x3) = self.getX_G0_defaults()
         (ga, gb, gc) = self.nodeIDs()
-        list_fields = ['CBEAM3', self.eid, self.Pid(), ga, gb, gc, x1, x2, x3,
-                  self.w1a, self.w2a, self.w3a, self.w1b, self.w2b, self.w3b,
-                  self.w1c, self.w2c, self.w3c, self.twa, self.twb, self.twc,
-                  self.sa, self.sb, self.sc]
+        list_fields = ['CBEAM3', self.eid, self.Pid(), ga, gb, gc, x1, x2, x3] + \
+                  list(self.wa) + list(self.wb) + list(self.wc) + [self.twa,
+                  self.twb, self.twc, self.sa, self.sb, self.sc]
         return list_fields
 
     def reprFields(self):
-        w1a = set_blank_if_default(self.w1a, 0.0)
-        w2a = set_blank_if_default(self.w2a, 0.0)
-        w3a = set_blank_if_default(self.w3a, 0.0)
-        w1b = set_blank_if_default(self.w1b, 0.0)
-        w2b = set_blank_if_default(self.w2b, 0.0)
-        w3b = set_blank_if_default(self.w3b, 0.0)
-        w1c = set_blank_if_default(self.w1c, 0.0)
-        w2c = set_blank_if_default(self.w2c, 0.0)
-        w3c = set_blank_if_default(self.w3c, 0.0)
+        w1a = set_blank_if_default(self.wa[0], 0.0)
+        w2a = set_blank_if_default(self.wa[1], 0.0)
+        w3a = set_blank_if_default(self.wa[2], 0.0)
+        w1b = set_blank_if_default(self.wb[0], 0.0)
+        w2b = set_blank_if_default(self.wb[1], 0.0)
+        w3b = set_blank_if_default(self.wb[2], 0.0)
+        w1c = set_blank_if_default(self.wc[0], 0.0)
+        w2c = set_blank_if_default(self.wc[1], 0.0)
+        w3c = set_blank_if_default(self.wc[2], 0.0)
 
         twa = set_blank_if_default(self.twa, 0.0)
         twb = set_blank_if_default(self.twb, 0.0)
@@ -780,25 +781,39 @@ class CBEAM(CBAR):
     _field_map = {
         1: 'eid', 2:'pid', 3:'ga', 4:'gb', #5:'x_g0', 6:'g1', 7:'g2',
         #8:'offt',
-        9:'pa', 10:'pb', 11:'w1a', 12:'w2a', 13:'w3a',
-        14:'w1b', 15:'w2b', 16:'w3b', 17:'sa', 18:'sb',
+        9:'pa', 10:'pb',
+        17:'sa', 18:'sb',
     }
 
     def _update_field_helper(self, n, value):
-        if self.g0 is not None:
-            if n == 5:
-                self.g0 = value
-            else:  # offt
-                raise KeyError('Field %r=%r is an invalid %s entry or is unsupported.' % (n, value, self.type))
+        if n == 11:
+            self.wa[0] = value
+        elif n == 12:
+            self.wa[1] = value
+        elif n == 13:
+            self.wa[2] = value
+
+        elif n == 14:
+            self.wb[0] = value
+        elif n == 15:
+            self.wb[1] = value
+        elif n == 16:
+            self.wb[2] = value
         else:
-            if n == 5:
-                self.x1 = value
-            elif n == 6:
-                self.x2 = value
-            elif n == 7:
-                self.x3 = value
+            if self.g0 is not None:
+                if n == 5:
+                    self.g0 = value
+                else:  # offt
+                    raise KeyError('Field %r=%r is an invalid %s entry or is unsupported.' % (n, value, self.type))
             else:
-                raise KeyError('Field %r=%r is an invalid %s entry or is unsupported.' % (n, value, self.type))
+                if n == 5:
+                    self.x[0] = value
+                elif n == 6:
+                    self.x[1] = value
+                elif n == 7:
+                    self.x[2] = value
+                else:
+                    raise KeyError('Field %r=%r is an invalid %s entry or is unsupported.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
         LineElement.__init__(self, card, data)
@@ -815,13 +830,13 @@ class CBEAM(CBAR):
             self.pa = integer_or_blank(card, 9, 'pa')
             self.pb = integer_or_blank(card, 10, 'pb')
 
-            self.w1a = double_or_blank(card, 11, 'w1a', 0.0)
-            self.w2a = double_or_blank(card, 12, 'w2a', 0.0)
-            self.w3a = double_or_blank(card, 13, 'w3a', 0.0)
+            self.wa = array([double_or_blank(card, 11, 'w1a', 0.0),
+                             double_or_blank(card, 12, 'w2a', 0.0),
+                             double_or_blank(card, 13, 'w3a', 0.0)], 'float64')
 
-            self.w1b = double_or_blank(card, 14, 'w1b', 0.0)
-            self.w2b = double_or_blank(card, 15, 'w2b', 0.0)
-            self.w3b = double_or_blank(card, 16, 'w3b', 0.0)
+            self.wb = array([double_or_blank(card, 14, 'w1b', 0.0),
+                             double_or_blank(card, 15, 'w2b', 0.0),
+                             double_or_blank(card, 16, 'w3b', 0.0)], 'float64')
 
             self.sa = integer_or_blank(card, 17, 'sa')
             self.sb = integer_or_blank(card, 18, 'sb')
@@ -837,14 +852,12 @@ class CBEAM(CBAR):
             flag = data[1][0]
             if flag in [0, 1]:
                 self.g0 = None
-                self.x1 = data[1][1]
-                self.x2 = data[1][2]
-                self.x3 = data[1][3]
+                self.x = array([data[1][1],
+                                data[1][2],
+                                data[1][3]], dtype='float64')
             else:
                 self.g0 = data[1][1]
-                self.x1 = None
-                self.x2 = None
-                self.x3 = None
+                self.x = None
 
             self.eid = main[0]
             self.pid = main[1]
@@ -929,7 +942,7 @@ class CBEAM(CBAR):
         if self.g0:
             self.g0_vector = model.nodes[self.g0].Position() - self.ga.Position()
         else:
-            self.g0_vector = array([self.x1, self.x2, self.x3])
+            self.g0_vector = self.x
 
     def Lambda(self, model, is3D=False, debug=True):  # CBAR from CROD/CONROD
         """
@@ -1299,17 +1312,16 @@ class CBEAM(CBAR):
         offt = self.getOfft_Bit_defaults()
         ga, gb = self.nodeIDs()
         list_fields = ['CBEAM', self.eid, self.Pid(), ga, gb, x1, x2, x3, offt,
-                  self.pa, self.pb, self.w1a, self.w2a, self.w3a,
-                  self.w1b, self.w2b, self.w3b, self.sa, self.sb]
+                  self.pa, self.pb] + list(self.wa) + list(self.wb) + [self.sa, self.sb]
         return list_fields
 
     def reprFields(self):
-        w1a = set_blank_if_default(self.w1a, 0.0)
-        w2a = set_blank_if_default(self.w2a, 0.0)
-        w3a = set_blank_if_default(self.w3a, 0.0)
-        w1b = set_blank_if_default(self.w1b, 0.0)
-        w2b = set_blank_if_default(self.w2b, 0.0)
-        w3b = set_blank_if_default(self.w3b, 0.0)
+        w1a = set_blank_if_default(self.wa[0], 0.0)
+        w2a = set_blank_if_default(self.wa[1], 0.0)
+        w3a = set_blank_if_default(self.wa[2], 0.0)
+        w1b = set_blank_if_default(self.wb[0], 0.0)
+        w2b = set_blank_if_default(self.wb[1], 0.0)
+        w3b = set_blank_if_default(self.wb[2], 0.0)
         (x1, x2, x3) = self.getX_G0_defaults()
         offt = self.getOfft_Bit_defaults()
         ga, gb = self.nodeIDs()
@@ -1340,11 +1352,11 @@ class CBEND(LineElement):
                 raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
         else:
             if n == 5:
-                self.x1 = value
+                self.x[0] = value
             elif n == 6:
-                self.x2 = value
+                self.x[1] = value
             elif n == 7:
-                self.x3 = value
+                self.x[2] = value
             else:
                 raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
@@ -1360,20 +1372,16 @@ class CBEND(LineElement):
             x1Go = integer_double_or_blank(card, 5, 'x1_g0', 0.0)
             if isinstance(x1Go, int):
                 self.g0 = x1Go
-                self.x1 = None
-                self.x2 = None
-                self.x3 = None
+                self.x = None
             elif isinstance(x1Go, float):
                 self.g0 = None
-                self.x1 = double_or_blank(card, 5, 'x1', 0.0)
-                self.x2 = double_or_blank(card, 6, 'x2', 0.0)
-                self.x3 = double_or_blank(card, 7, 'x3', 0.0)
-                if norm([self.x1, self.x2, self.x3]) == 0.0:
+                self.x = array([double_or_blank(card, 5, 'x1', 0.0),
+                                double_or_blank(card, 6, 'x2', 0.0),
+                                double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
+                if norm(self.x) == 0.0:
                     msg = 'G0 vector defining plane 1 is not defined.\n'
                     msg += 'G0 = %s\n' % self.g0
-                    msg += 'X1 = %s\n' % self.x1
-                    msg += 'X2 = %s\n' % self.x2
-                    msg += 'X3 = %s\n' % self.x3
+                    msg += 'X  = %s\n' % self.x
                     raise RuntimeError(msg)
             else:
                 raise ValueError('invalid x1Go=|%s| on CBEND' % x1Go)
