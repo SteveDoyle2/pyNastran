@@ -237,6 +237,9 @@ class MAT1(IsotropicMaterial):
     def Rho(self):
         return self.rho
 
+    def get_density(self):
+        return self.rho
+
     def E_stress(self, stress):
         if self.mats1 is not None:
             E = self.matt1.E(self.e, stress)
