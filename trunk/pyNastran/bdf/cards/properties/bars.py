@@ -20,7 +20,7 @@ from pyNastran.bdf.fieldWriter import (set_blank_if_default,
 from pyNastran.bdf.cards.baseCard import Property
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
-    string, string_or_blank,
+    string, string_or_blank, blank,
     integer_or_double, double_string_or_blank, fields, integer_double_string_or_blank)
 from pyNastran.utils.mathematics import integrate_line, integrate_positive_line
 from pyNastran.bdf.fieldWriter import print_card_8
@@ -547,6 +547,14 @@ class PBAR(LineProperty):
             support solution 600 default
             do a check for mid -> MAT1      for structural
             do a check for mid -> MAT4/MAT5 for thermal
+
+        +------+-----+-----+-----+----+----+----+-----+
+        | PBAR | PID | MID | A   | I1 | I2 | J  | NSM |
+        +------+-----+-----+-----+----+----+----+-----+-----+
+        |      | C1  | C2  | D1  | D2 | E1 | E2 | F1  | F2  |
+        +------+-----+-----+-----+----+----+----+-----+-----+
+        |      | K1  | K2  | I12 |
+        +------+-----+-----+-----+
         """
         LineProperty.__init__(self, card, data)
         if comment:
@@ -579,15 +587,28 @@ class PBAR(LineProperty):
             self.F1 = double_or_blank(card, 15, 'F1', 0.0)
             self.F2 = double_or_blank(card, 16, 'F2', 0.0)
 
-            #: default=infinite; assume 1e8
-            self.K1 = double_or_blank(card, 17, 'K1', 1e8)
-            #: default=infinite; assume 1e8
-            self.K2 = double_or_blank(card, 18, 'K2', 1e8)
+            if self.i1 < 0.:
+                raise RuntimeError('I1=%r must be greater than or equal to 0.0' % self.i1)
+            if self.i2 < 0.:
+                raise RuntimeError('I2=%r must be greater than or equal to 0.0' % self.i2)
+            if self.j < 0.:
+                raise RuntimeError('J=%r must be greater than or equal to 0.0' % self.j)
+            if self.A == 0.0:
+                #: default=infinite; assume 1e8
+                self.K1 = blank(card, 17, 'K1')
+                #: default=infinite; assume 1e8
+                self.K2 = blank(card, 18, 'K2')
+            else:
+                #: default=infinite; assume 1e8
+                self.K1 = double_or_blank(card, 17, 'K1', 1e8)
+                #: default=infinite; assume 1e8
+                self.K2 = double_or_blank(card, 18, 'K2', 1e8)
+
             #: I12 -> use I12()
             self.i12 = double_or_blank(card, 19, 'I12', 0.0)
-            if self.A == 0.0 and self.i12 == 0.0:
-                assert self.K1 is None, 'K1 must be blank if A=0.0 and I12=0.0; A=%r I12=%r K1=%r' % (self.A, self.i12, self.K1)
-                assert self.K2 is None, 'K2 must be blank if A=0.0 and I12=0.0; A=%r I12=%r K2=%r' % (self.A, self.i12, self.K2)
+            #if self.A == 0.0 and self.i12 == 0.0:
+                #assert self.K1 is None, 'K1 must be blank if A=0.0 and I12=0.0; A=%r I12=%r K1=%r' % (self.A, self.i12, self.K1)
+                #assert self.K2 is None, 'K2 must be blank if A=0.0 and I12=0.0; A=%r I12=%r K2=%r' % (self.A, self.i12, self.K2)
             assert len(card) <= 20, 'len(PBAR card) = %i' % len(card)
         else:
             self.pid = data[0]

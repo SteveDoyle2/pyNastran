@@ -496,10 +496,134 @@ class BDFMethods(BDFMethodsDeprecated):
                 M += m
 
             elif load.type == 'PLOAD1':
-                pass
                 #elem = self.elements[load.eid]
-                #if elem.type in ['CBAR',]:
-                    #pass
+                elem = load.eid
+
+                p1 = load.p1 * scale
+                p2 = load.p2 * scale
+                if elem.type not in ['CBAR', 'CBEAM', 'CBEND']:
+                    raise RuntimeError('element.type=%r is not a CBAR, CBEAM, or CBEND' % elem.type)
+
+                nodes = elem.nodeIDs()
+                n1, n2 = xyz[nodes[0]], xyz[nodes[1]]
+                n1 += elem.wa
+                n2 += elem.wb
+
+                deltaL = n2 - n1
+                L = norm(deltaL)
+                Ldir = deltaL / L
+                if load.scale == 'FR':  # x1, x2 are fractional lengths
+                    x1 = load.x1
+                    x2 = load.x2
+                    compute_fx = False
+                elif load.scale == 'LE': # x1, x2 are actual lengths
+                    x1 = load.x1 / L
+                    x2 = load.x2 / L
+                elif load.scale == 'LEPR':
+                    print('LEPR continue')
+                    continue
+                    raise NotImplementedError('scale=%r is not supported.  Use "FR", "LE".' % load.scale)
+                elif load.scale == 'FRPR':
+                    print('FRPR continue')
+                    continue
+                    raise NotImplementedError('scale=%r is not supported.  Use "FR", "LE".' % load.scale)
+                else:
+                    raise NotImplementedError('scale=%r is not supported.  Use "FR", "LE".' % load.scale)
+
+                if x1 != x2:
+                    print('x1 != x2 continue')
+                    continue
+
+                #print(load)
+                v = elem.get_orientation_vector(xyz)
+                i = Ldir
+                ki = cross(i, v)
+                k = ki / norm(ki)
+                j = cross(k, i)
+
+                if load.Type in ['FX', 'FY', 'FZ']:
+                    #deltaL = n2 - n1
+                    r = (1 - x1) * n1 + x1 * n2
+                    #print('    r =', r)
+                    #print('    n1 =', n1)
+                    #print('    n2 =', n2)
+                    #print('    x1 =', x1)
+                    #print('    1-x1 =', 1-x1)
+                    #print('    deltaL =', deltaL)
+                    if load.Type == 'FX':
+                        if x1 == x2:
+                            Fdir = array([1., 0., 0.])
+                    elif load.Type == 'FY':
+                        if x1 == x2:
+                            Fdir = array([0., 1., 0.])
+                    elif load.Type == 'FZ':
+                        if x1 == x2:
+                            Fdir = array([0., 0., 1.])
+                    F += p1 * Fdir
+                    M += cross(r - p, F)
+                elif load.Type in ['MX', 'MY', 'MZ']:
+                    if load.Type == 'MX':
+                        if x1 == x2:
+                            Mdir = array([1., 0., 0.])
+                    elif load.Type == 'MY':
+                        if x1 == x2:
+                            Mdir = array([0., 1., 0.])
+                    elif load.Type == 'MZ':
+                        if x1 == x2:
+                            Mdir = array([0., 0., 1.])
+                    M += p1 * Mdir
+                elif load.Type in ['FXE', 'FYE', 'FZE']:
+                    r = (1 - x1) * n1 + x1 * n2
+                    #print('\n    r =', r)
+                    #print('    n1 =', n1)
+                    #print('    n2 =', n2)
+                    #print('    x1 =', x1)
+                    #print('    1-x1 =', 1-x1)
+                    #print('    i    =', i)
+                    #print('    j    =', j)
+                    #print('    k    =', k)
+                    if load.Type == 'FXE':
+                        if x1 == x2:
+                            Fdir = i
+                    elif load.Type == 'FYE':
+                        if x1 == x2:
+                            Fdir = j
+                    elif load.Type == 'FZE':
+                        if x1 == x2:
+                            Fdir = k
+                    #print('    Fdir =', Fdir, load.Type)
+                    try:
+                        F += p1 * Fdir
+                    except FloatingPointError:
+                        msg = 'eid = %s\n' % elem.eid
+                        msg += 'i = %s\n' % Ldir
+                        msg += 'Fdir = %s\n' % Fdir
+                        msg += 'load = \n%s' % str(load)
+                        raise FloatingPointError(msg)
+                    M += cross(r - p, F)
+                    del Fdir
+
+                elif load.Type in ['MXE', 'MYE', 'MZE']:
+                    if load.Type == 'MXE':
+                        if x1 == x2:
+                            Mdir = i
+                    elif load.Type == 'MYE':
+                        if x1 == x2:
+                            Mdir = j
+                    elif load.Type == 'MZE':
+                        if x1 == x2:
+                            Mdir = k
+                    try:
+                        M += p1 * Mdir
+                    except FloatingPointError:
+                        msg = 'eid = %s\n' % elem.eid
+                        msg += 'Mdir = %s\n' % Mdir
+                        msg += 'load = \n%s' % str(load)
+                        raise FloatingPointError(msg)
+                    del Mdir
+                else:
+                    raise NotImplementedError('Type=%r is not supported.  Use "FX", "FXE".' % load.Type)
+
             elif load.type == 'PLOAD2':
                 pressure = load.pressures[0] * scale  # there are 4 pressures, but we assume p0
                 for eid in load.eids:
@@ -571,8 +695,7 @@ class BDFMethods(BDFMethodsDeprecated):
                     M += m
             elif load.type == 'GRAV':
                 if include_grav:  # this will be super slow
-                    assert load.Cid() == 0, 'Cid() = %s' % (load.Cid())
-                    g = load.N * load.scale * scale
+                    g = load.GravityVector() * scale
                     for eid, elem in self.elements.iteritems():
                         cenntroid = elem.Centroid()
                         mass = elem.Mass()
