@@ -26,7 +26,7 @@ class TestMass(unittest.TestCase):
     def verify_pshell_element(self, element, mass, area, centroid, normal, nsm):
         #print object_methods(element, 'all')
         self.assertAlmostEqual(element.Mass(), mass, msg='mass=%s expected=%s' % (element.Mass(), mass))
-        self.assertAlmostEqual(element.Mass(), mass, msg='area=%s expected=%s' % (element.Area(), area))
+        self.assertAlmostEqual(element.Area(), area, msg='area=%s expected=%s' % (element.Area(), area))
         self.assertAlmostEqual(element.Nsm(), nsm, msg='nsm=%s expected=%s' % (element.Nsm(), nsm))
         self.assertTrue(all(element.Centroid() == centroid), msg='centroid=%s expected=%s' % (element.Centroid(), centroid))
         self.assertTrue(all(element.Normal() == normal), msg='normal=%s expected=%s' % (element.Normal(), normal))

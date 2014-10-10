@@ -432,11 +432,9 @@ class TestCoords(unittest.TestCase):
     def getNodes(self, grids, grids_expected, coords):
         model = BDF(debug=False)
 
-        debug = False
         for grid in grids:
             (nid, cid, x, y, z) = grid
             model.add_card(['GRID', nid, cid, x, y, z], 'GRID')
-            gridObj = model.Node(nid)
 
         for coord in coords:
             (cid, rid, x, y, z) = coord
