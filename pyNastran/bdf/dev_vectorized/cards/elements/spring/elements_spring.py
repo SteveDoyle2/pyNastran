@@ -14,16 +14,18 @@ class ElementsSpring(object):
         """
         self.model = model
 
+        self.n = 0
         self.celas1 = CELAS1(self.model)
         self.celas2 = CELAS2(self.model)
         self.celas3 = CELAS3(self.model)
         self.celas4 = CELAS4(self.model)
 
     def build(self):
-        types = self._get_types()
+        types = self._get_types(nlimit=False)
         for elems in types:
             elems.build()
-            
+            self.n += elems.n
+
         #eid = concatenate(pshell.pid, pcomp.pid)
         #unique_eids = unique(eid)
         #if unique_eids != len(eid):
@@ -52,12 +54,19 @@ class ElementsSpring(object):
         for element in types:
             element.write_bdf(f, size=size, eids=eids)
 
-    def _get_types(self):
+    def _get_types(self, nlimit=True):
         types = [self.celas1,
                  self.celas2,
                  self.celas3,
                  self.celas4,
                  ]
+        if nlimit:
+            types2 = []
+            for etype in types:
+                if etype.n > 0:
+                    #print "etype.Type =", etype.Type
+                    types2.append(etype)
+            types = types2
         return types
 
     def get_stats(self):

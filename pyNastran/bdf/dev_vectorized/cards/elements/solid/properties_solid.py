@@ -15,28 +15,32 @@ class PropertiesSolid(object):
 
         self.psolid = PSOLID(self.model)
         #self.plsolid = PLSOLID(self.model)
+        self.n = 0
 
     def build(self):
+        #print "building solid properties"
         types = self._get_types(nlimit=False)
         for prop in types:
-            print "prop =", prop
+            #print "prop =", prop
             prop.build()
+            self.n += prop.n
 
         npsolid = self.psolid.n
+        self.property_id = self.psolid.property_id
         #print('npsolid =', npsolid)
         #assert npsolid > 0
         #nplsolid = self.plsolid.n
 
         #if npshell and npcomp and pshear:
-        #    asf
+            #asf
         #elif npshell and npcomp:
-        #    pid = concatenate(self.pshell.pid, self.pcomp.pid)
-        #    unique_pids = unique(pid)
-        #    print unique_pids
-        #    if len(unique_pids) != len(pid):
-        #        raise RuntimeError('There are duplicate PSHELL/PCOMP IDs...')
+            #pid = concatenate(self.pshell.pid, self.pcomp.pid)
+            #unique_pids = unique(pid)
+            #print unique_pids
+            #if len(unique_pids) != len(pid):
+                #raise RuntimeError('There are duplicate PSHELL/PCOMP IDs...')
         #else:
-        #    pass
+            #pass
 
     def rebuild(self):
         raise NotImplementedError()
@@ -51,7 +55,7 @@ class PropertiesSolid(object):
     def get_mid(self, property_ids):
         types = self._get_types(nlimit=True)
         _material_ids = concatenate([ptype.material_id for ptype in types])
-        print _material_ids
+        #print _material_ids
         return _material_ids
 
     #def get_mid(self, property_ids):

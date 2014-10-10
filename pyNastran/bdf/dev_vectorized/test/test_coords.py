@@ -430,23 +430,17 @@ class TestCoords(unittest.TestCase):
         coord.T()
         self.assertTrue(array_equal(coord.T(), coord.beta_n(2)))
 
-    def getNodes(self, grids, grids_expected, coords, debug=False):
+    def getNodes(self, grids, grids_expected, coords):
         model = BDF(debug=False)
 
         for grid in grids:
             (nid, cid, x, y, z) = grid
             model.add_card(['GRID', nid, cid, x, y, z], 'GRID')
-            #gridObj = model.Node(nid)
-            #if debug:
-                #print(gridObj)
 
         for coord in coords:
-            #print coord
             (cid, rid, x, y, z) = coord
             model.add_card(['CORD2R', cid, rid] + x + y + z, 'CORD2R')
             coordObj = model.Coord(cid)
-            if debug:
-                print(coordObj)
 
         model.cross_reference()
 

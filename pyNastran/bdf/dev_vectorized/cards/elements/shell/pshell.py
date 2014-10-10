@@ -98,7 +98,7 @@ class PSHELL(object):
             self.z1 = self.z1[i]
             self.z2 = self.z2[i]
             self.material_id4 = self.material_id4[i]
-        
+
             if len(unique(self.property_id)) != len(self.property_id):
                 raise RuntimeError('There are duplicate PSHELL IDs...')
             self._cards = []
@@ -107,7 +107,7 @@ class PSHELL(object):
     def write_bdf(self, f, size=8, property_ids=None):
         """
         Writes the PSHELL properties.
-        
+
         :param self:  the PSHELL object
         :param f:     file object
         :param size:  the bdf field size (8/16; default=8)
@@ -134,14 +134,14 @@ class PSHELL(object):
                 f.write(print_card(card, size=size))
 
     def get_index(self, property_ids=None):
-        if property_ids is None:    
+        if property_ids is None:
             return arange(self.n)
         return searchsorted(property_ids, self.property_id)
 
     def get_thickness(self, property_ids=None):
         """
         Gets the thickness of the PHSELLs.
-        
+
         :param self: the PSHELL object
         :param property_ids: the property IDs to consider (default=None -> all)
         """
@@ -155,7 +155,7 @@ class PSHELL(object):
     def get_material_id(self, property_ids=None):
         """
         Gets the material IDs of the PSHELLs.
-        
+
         :param self: the PSHELL object
         :param property_ids: the property IDs to consider (default=None -> all)
         """
@@ -165,3 +165,6 @@ class PSHELL(object):
             i = self.get_index(property_ids)
             mid = self.material_id[i]
         return mid
+
+    def __repr__(self):
+        asdf

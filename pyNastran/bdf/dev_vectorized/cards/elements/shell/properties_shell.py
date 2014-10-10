@@ -1,4 +1,4 @@
-from numpy import concatenate, argsort, searchsorted, ndarray
+from numpy import concatenate, hstack, argsort, searchsorted, ndarray, unique
 
 from .pshell import PSHELL
 from .pcomp import PCOMP
@@ -17,6 +17,7 @@ class PropertiesShell(object):
         self.pshell = PSHELL(self.model)
         self.pcomp = PCOMP(self.model)
         self.pcompg = PCOMPG(self.model)
+        self.n = 0
 
     def build(self):
         self.pshell.build()
@@ -27,16 +28,12 @@ class PropertiesShell(object):
         npcomp  = self.pcomp.n
         npcompg = self.pcompg.n
 
-        if npshell and npcomp and npcompg:
-            asdf
-        if npshell and npcomp:
-            pid = concatenate(self.pshell.property_id, self.pcomp.property_id)
-            unique_pids = unique(pid)
-            print unique_pids
-            if len(unique_pids) != len(pid):
-                raise RuntimeError('There are duplicate PSHELL/PCOMP IDs...')
-        else:
-            pass
+        self.n = npshell + npcomp + npcompg
+        pid = hstack([self.pshell.property_id, self.pcomp.property_id, self.pcompg.property_id])
+        unique_pids = unique(pid)
+        #print unique_pids
+        if len(unique_pids) != len(pid):
+            raise RuntimeError('There are duplicate PSHELL/PCOMP IDs...')
 
     def rebuild(self):
         raise NotImplementedError()
@@ -56,7 +53,7 @@ class PropertiesShell(object):
     def get_mid(self, property_ids):
         types = self._get_types(nlimit=True)
         _property_ids = concatenate([ptype.property_id for ptype in types])
-        print _property_ids
+        #print _property_ids
         return _property_ids
 
     def get_thickness(self, property_ids=None):
@@ -76,8 +73,8 @@ class PropertiesShell(object):
         assert isinstance(property_ids, ndarray), type(property_ids)
         i = argsort(_property_ids)
 
-        print(_property_ids[i])
-        print(property_ids)
+        #print(_property_ids[i])
+        #print(property_ids)
         j = searchsorted(property_ids, _property_ids[i])
         t2 = t[j]
         return t2

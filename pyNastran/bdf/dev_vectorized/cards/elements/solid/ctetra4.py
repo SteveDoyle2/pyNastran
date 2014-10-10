@@ -1,4 +1,5 @@
-from numpy import zeros, arange, dot, cross, searchsorted
+import cStringIO
+from numpy import zeros, arange, dot, cross, searchsorted, array, where
 from numpy.linalg import norm
 
 from pyNastran.bdf.fieldWriter import print_card
@@ -70,6 +71,8 @@ class CTETRA4(object):
             self.node_ids = self.node_ids[i, :]
             self._cards = []
             self._comments = []
+        else:
+            self.element_id = array([], dtype='int32')
 
     def _verify(self, xref=True):
         eid = self.Eid()
@@ -122,7 +125,7 @@ class CTETRA4(object):
 
         :param element_ids: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the volume be summed (default=False)
+        :param total: should the volume be summed; centroid be averaged (default=False)
 
         ..see:: CTETRA4.volume() and CTETRA4.centroid for more information.
         """
@@ -150,7 +153,7 @@ class CTETRA4(object):
 
         :param element_ids: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the centroid be summed (default=False)
+        :param total: should the centroid be averaged (default=False)
         """
         if element_ids is None:
             element_ids = self.element_id
@@ -158,7 +161,7 @@ class CTETRA4(object):
         n1, n2, n3, n4 = self._node_locations(xyz_cid0)
         centroid = (n1 + n2 + n3 + n4) / 4.0
         if total:
-            centroid = centroid.mean()
+            centroid = centroid.mean(axis=0)
         return centroid
 
     def get_mass(self, element_ids=None, xyz_cid0=None, total=False):
@@ -199,3 +202,31 @@ class CTETRA4(object):
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
                 card = ['CTETRA', eid, pid, n[0], n[1], n[2], n[3]]
                 f.write(print_card(card))
+
+    def get_density(self, element_ids=None):
+        if element_ids is None:
+            element_ids = self.element_id
+
+        rho = []
+        i = where(element_ids == self.element_id)[0]
+        for pid in self.property_id[i]:
+            rhoi = self.model.properties_solid.psolid.get_density(pid)
+            rho += rhoi
+        return rho
+
+    def __getitem__(self, index):
+        obj = CTETRA4(self.model)
+        obj.n = len(index)
+        #obj._cards = self._cards[index]
+        #obj._comments = obj._comments[index]
+        #obj.comments = obj.comments[index]
+        obj.element_id = self.element_id[index]
+        obj.property_id = self.property_id[index]
+        obj.node_ids = self.node_ids[index, :]
+        return obj
+
+    def __repr__(self):
+        f = cStringIO.StringIO()
+        f.write('<CTETRA4 object> n=%s\n' % self.n)
+        self.write_bdf(f)
+        return f.getvalue()

@@ -24,15 +24,15 @@ class PropertiesShell(object):
         #self.pshell.build()
         #self.pcomp.build()
         #self.pcompg.build()
-        
+
         #npshell = self.pshell.n
         #npcomp  = self.pcomp.n
         #npcompg = self.pcompg.n
-        
+
         #if npshell and npcomp and npcompg:
             #asdf
         #if npshell and npcomp:
-            #pid = concatenate(self.pshell.pid, self.pcomp.pid)
+            #pid = concatenate(self.pshell.property_ids, self.pcomp.property_ids)
             #unique_pids = unique(pid)
             #print unique_pids
             #if len(unique_pids) != len(pid):
@@ -60,7 +60,7 @@ class PropertiesShell(object):
     def get_thickness(self, property_ids=None):
         """
         Gets the thickness of the PSHELLs/PCOMPs.
-        
+
         :param self: the ShellProperties object
         :param property_ids: the property IDs to consider (default=None -> all)
         """
@@ -73,7 +73,7 @@ class PropertiesShell(object):
             self.pcomp.get_thickness(),
             self.pcompg.get_thickness(), )
         i = argsort(_pids)
-        
+
         t2 = t[searchsorted(property_ids, _property_ids)]
         return t2
 

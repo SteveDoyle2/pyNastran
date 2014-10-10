@@ -169,7 +169,7 @@ class GRID(object):
             n = searchsorted(self.node_id, node_ids)
             assert len(node_ids) == len(n), 'n1=%s n2=%s'  %(len(node_ids), len(n))
             xyz = self.xyz[n, :].copy()
-            print "n =", n
+            #print "n =", n
 
         cpn = self.cp[n]
         i = where(cpn != 0)[0]

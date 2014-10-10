@@ -1,3 +1,4 @@
+import cStringIO
 from itertools import izip
 
 from numpy import arange, array, dot, zeros, unique, searchsorted, transpose
@@ -64,7 +65,7 @@ class CELAS4(object):
         cards = self._cards
         ncards = len(cards)
         self.n = ncards
-        
+
         if ncards:
             float_fmt = self.model.float
             self.element_id = array(self.element_id, 'int32')
@@ -80,7 +81,7 @@ class CELAS4(object):
             self.element_id = zeros(ncards, 'int32')
             #: Property ID
             self.property_id = zeros(ncards, 'int32')
-            
+
             # Node IDs
             self.node_ids = zeros((ncards, 2), 'int32')
 
@@ -89,7 +90,7 @@ class CELAS4(object):
 
             #: component number
             self.components = zeros((ncards, 2), 'int32')
-            
+
             #: damping coefficient
             self.ge = zeros(ncards, float_fmt)
 
@@ -120,6 +121,8 @@ class CELAS4(object):
                 raise RuntimeError('There are duplicate CELAS4 IDs...')
             self._cards = []
             self._comments = []
+        else:
+            self.element_id = array([], dtype='int32')
 
     def get_stats(self):
         msg = []
@@ -145,7 +148,7 @@ class CELAS4(object):
 
     def get_stiffness(self, i, model, positions, index0s, fnorm=1.0):  # CELAS4
         ki = self.K[i]
-        
+
         k = ki * array([[1, -1,],
                         [-1, 1]])
 
@@ -153,7 +156,7 @@ class CELAS4(object):
 
         p0 = positions[n0]
         p1 = positions[n1]
-        
+
         v1 = p0 - p1
         L = norm(v1)
         if L == 0.0:
@@ -223,3 +226,20 @@ class CELAS4(object):
         o1[ni : ni+n] = f1[ni: ni+n] * s
 
         #return (axial_strain, axial_stress, axial_force)
+
+    def __getitem__(self, index):
+        obj = CELAS4(self.model)
+        obj.n = len(index)
+        #obj._cards = self._cards[index]
+        #obj._comments = obj._comments[index]
+        #obj.comments = obj.comments[index]
+        obj.element_id = self.element_id[index]
+        obj.property_id = self.property_id[index]
+        obj.node_ids = self.node_ids[index, :]
+        return obj
+
+    def __repr__(self):
+        f = cStringIO.StringIO()
+        f.write('<CELAS4 object> n=%s\n' % self.n)
+        self.write_bdf(f)
+        return f.getvalue()

@@ -5,7 +5,7 @@ from .chexa8 import CHEXA8
 from .ctetra10 import CTETRA10
 from .cpenta15 import CPENTA15
 from .chexa20 import CHEXA20
-
+from numpy import hstack
 
 class ElementsSolid(object):
     def __init__(self, model):
@@ -33,6 +33,14 @@ class ElementsSolid(object):
             elems.build()
             self.n += elems.n
 
+        self.element_id = hstack([
+            self.ctetra4.element_id,
+            self.cpenta6.element_id,
+            self.chexa8.element_id,
+            self.ctetra10.element_id,
+            self.cpenta15.element_id,
+            self.chexa20.element_id,
+        ])
         #eid = concatenate(pshell.pid, pcomp.pid)
         #unique_eids = unique(eid)
         #if unique_eids != len(eid):
@@ -79,19 +87,21 @@ class ElementsSolid(object):
         f.write('$ELEMENTS_SOLID\n')
         types = self._get_types(nlimit=True)
         for elems in types:
-            print elems.type
+            #print elems.type
             elems.write_bdf(f, size=size, element_ids=element_ids)
 
     def _get_types(self, nlimit=True):
         types = [self.ctetra4, self.cpenta6, self.chexa8,
-                 self.ctetra10, self.cpenta15, self.chexa20
+                 self.ctetra10, self.cpenta15, self.chexa20,
                  ]
         if nlimit:
             types2 = []
             for etype in types:
                 if etype.n > 0:
+                    #print "etype.Type =", etype.Type
                     types2.append(etype)
             types = types2
+        #print "solid nlimit=%s" % nlimit
         return types
 
     def get_stats(self):

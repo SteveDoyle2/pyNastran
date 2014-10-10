@@ -15,6 +15,7 @@ class PropertiesBeam(object):
 
         self.pbeam = PBEAM(self.model)
         self.pbeaml = PBEAML(self.model)
+        self.n = 0
 
     def build(self):
         self.pbeam.build()
@@ -22,6 +23,7 @@ class PropertiesBeam(object):
 
         npbeam = self.pbeam.n
         npbeaml = self.pbeaml.n
+        self.n = npbeam + npbeaml
 
         #if npshell and npcomp and npcompg:
             #asdf

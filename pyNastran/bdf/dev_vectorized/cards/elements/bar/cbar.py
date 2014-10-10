@@ -1,3 +1,4 @@
+import cStringIO
 from numpy import array, dot, arange, zeros, unique, searchsorted
 
 from pyNastran.bdf.fieldWriter import print_card
@@ -82,6 +83,8 @@ class CBAR(object):
                 raise RuntimeError('There are duplicate CBAR IDs...')
             self._cards = []
             self._comments = []
+        else:
+            self.element_id = array([], dtype='int32')
 
     #=========================================================================
     def get_mass(self, grid_cid0=None, total=False):

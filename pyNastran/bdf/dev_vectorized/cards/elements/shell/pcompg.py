@@ -14,7 +14,10 @@ class PCOMPG(object):
         pass
 
     def build(self):
-        pass
-    
+        self.property_id = array([], dtype='int32')
+
     def write_bdf(self, f, size=8, property_ids=None):
         pass
+
+    def __repr__(self):
+        asdf

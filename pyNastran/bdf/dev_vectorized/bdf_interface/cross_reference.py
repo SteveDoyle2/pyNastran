@@ -34,30 +34,35 @@ class XRefMesh(object):
 
     def _build_elements_properties(self):
         #self.elements_rod.build()
-        self.crod.build()
-        self.conrod.build()
 
-        self.elements_spring.build()
+        if 1:
+            self.elements.build()
+        else:
+            self.crod.build()
+            self.conrod.build()
 
-        #self.elements_bar.build()
-        self.cbar.build()
-        self.properties_bar.build()
+            self.elements_spring.build()
 
-        #self.elements_beam.build()
-        self.cbeam.build()
-        self.properties_beam.build()
+            #self.elements_bar.build()
+            self.cbar.build()
+            self.properties_bar.build()
 
-        self.elements_shell.build()
-        self.elements_solid.build()
+            #self.elements_beam.build()
+            self.cbeam.build()
+            self.properties_beam.build()
 
-        self.pelas.build()
-        #self.properties_rod.build()
-        self.prod.build()
-        #self.properties_bar.build()
-        self.properties_shell.build()
-        self.properties_solid.build()
+            self.elements_shell.build()
+            self.elements_solid.build()
+            ddc
 
-        self.mass.build()
+            self.pelas.build()
+            #self.properties_rod.build()
+            self.prod.build()
+            #self.properties_bar.build()
+            self.properties_shell.build()
+            self.properties_solid.build()
+
+            self.mass.build()
 
     def _build_constraints(self):
         for t in [self.spcadd, self.spc, self.spc1, self.spcd]:
