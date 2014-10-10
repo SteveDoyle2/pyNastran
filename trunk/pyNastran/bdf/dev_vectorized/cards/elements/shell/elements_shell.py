@@ -1,4 +1,4 @@
-from numpy import array, zeros, searchsorted, unique, concatenate, argsort
+from numpy import array, zeros, searchsorted, unique, concatenate, argsort, hstack
 
 from .ctria3 import CTRIA3
 #from .ctria6 import CTRIA6
@@ -35,13 +35,14 @@ class ElementsShell(object):
         self.ctriax6 = CTRIAX6(self.model)
 
     def build(self):
+        #print('elements_shell')
         types = self._get_types(nlimit=False)
         self.n = 0
         for elems in types:
             elems.build()
             self.n += elems.n
 
-        #eid = concatenate(pshell.pid, pcomp.pid)
+        #eid = hstack(ctria3.element_id, cquad4.element_id)
         #unique_eids = unique(eid)
         #if unique_eids != len(eid):
         #    raise RuntimeError('There are duplicate CTRIA3/CQUAD4 IDs...')
@@ -186,7 +187,7 @@ class ElementsShell(object):
         types = self._get_types(nlimit=True)
         for element in types:
             if element.n:
-                print element.type
+                #print element.type
                 element.write_bdf(f, size=size, element_ids=element_ids)
 
     def _get_types(self, nlimit=True):

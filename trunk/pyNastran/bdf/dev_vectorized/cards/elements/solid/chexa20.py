@@ -1,4 +1,5 @@
-from numpy import zeros, arange, dot, cross, searchsorted
+import cStringIO
+from numpy import zeros, arange, dot, cross, searchsorted, array
 from numpy.linalg import norm
 
 from pyNastran.bdf.fieldWriter import print_card_8
@@ -56,6 +57,8 @@ class CHEXA20(object):
             self.node_ids = self.node_ids[i, :]
             self._cards = []
             self._comments = []
+        else:
+            self.element_id = array([], dtype='int32')
 
 
     def _verify(self, xref=True):
@@ -173,3 +176,20 @@ class CHEXA20(object):
                 card = ['CHEXA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7], n[8], n[9],
                         n[10], n[11], n[12], n[13], n[14], n[15], n[16], n[17], n[18], n[19]]
                 f.write(print_card_8(card))
+
+    def __getitem__(self, index):
+        obj = CHEXA20(self.model)
+        obj.n = len(index)
+        #obj._cards = self._cards[index]
+        #obj._comments = obj._comments[index]
+        #obj.comments = obj.comments[index]
+        obj.element_id = self.element_id[index]
+        obj.property_id = self.property_id[index]
+        obj.node_ids = self.node_ids[index, :]
+        return obj
+
+    def __repr__(self):
+        f = cStringIO.StringIO()
+        f.write('<CHEXA20 object> n=%s\n' % self.n)
+        self.write_bdf(f)
+        return f.getvalue()

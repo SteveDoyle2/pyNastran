@@ -602,16 +602,11 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         self.coords = {0 : CORD2R() }
 
-        #: stores elements (CQUAD4, CTRIA3, CHEXA8, CTETRA4, CROD, CONROD,
-        #: etc.)
-        self.elements = {}
         #: stores rigid elements (RBE2, RBE3, RJOINT, etc.)
         self.rigidElements = {}
-        #: stores LOTS of propeties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
-        self.properties = {}
 
         #self.properties_spring = PropertiesSpring(model)
-        #self.proeprties_rod = PropertiesRod(v)
+        #self.properties_rod = PropertiesRod(v)
         #self.properties_bar = PropertiesBar(model)
         #self.properties_solid = PropertiesSolid(model)
 
@@ -661,6 +656,10 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.elements_solid = ElementsSolid(self)
         #: stores PSOLID, PLSOLID
         self.properties_solid = PropertiesSolid(self)
+
+        # control structure
+        from pyNastran.bdf.dev_vectorized.cards.elements.elements import Elements
+        self.elements = Elements(self)
 
         #===================================
         # methods

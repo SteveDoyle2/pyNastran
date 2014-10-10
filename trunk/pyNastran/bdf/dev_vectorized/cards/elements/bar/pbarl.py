@@ -47,14 +47,16 @@ class PBARL(object):
                 raise RuntimeError('There are duplicate PCOMP IDs...')
             self._cards = []
             self._comments = []
-        
+        else:
+            self.property_id = array([], dtype='int32')
+
     #=========================================================================
     def get_index(self, property_ids):
         if isinstance(property_ids, int):
             property_ids = array([property_ids])
         if property_ids is None:
             return arange(self.n)
-        
+
         indexs = searchsorted(self.property_id, property_ids)
         assert len(indexs) == len(property_ids), 'indexs=%s pids=%s' % (indexs, property_ids)
         return indexs

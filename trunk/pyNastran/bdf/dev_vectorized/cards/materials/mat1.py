@@ -28,7 +28,7 @@ class MAT1(object):
     def add(self, card, comment):
         self._cards.append(card)
         self._comments.append(comment)
-        
+
     def build(self):
         cards = self._cards
         ncards = len(cards)
@@ -77,7 +77,7 @@ class MAT1(object):
             self.mcsid = self.mcsid[i]
             self._cards = []
             self._comments = []
-    
+
     def _G_default(self, E, G, nu):
         if G == 0.0 or nu == 0.0:
             pass
@@ -85,13 +85,17 @@ class MAT1(object):
             G = E / 2. / (1 + nu)
         return G
 
+    def get_density(self):
+        i = where(mid == self.material_id)[0]
+        return self.rho[i]
+
     def write_bdf(self, f, size=8, material_ids=None):
         if self.n:
             if material_ids is None:
                 i = arange(self.n)
             else:
                 i = searchsorted(self.material_id, material_ids)
-            
+
             assert material_ids is None
             #print "n = ", self.n
             #print "mids MAT1", self.material_id
@@ -99,7 +103,7 @@ class MAT1(object):
             A    = ['' if ai    == 0.0 else ai    for ai    in self.a[i]]
             TRef = ['' if trefi == 0.0 else trefi for trefi in self.TRef[i]]
             ge   = ['' if gei   == 0.0 else gei   for gei   in self.ge[i]]
-            
+
             St   = ['' if st    == 0.0 else st    for st    in self.St[i]]
             Sc   = ['' if sc    == 0.0 else sc    for sc    in self.Sc[i]]
             Ss   = ['' if ss    == 0.0 else ss    for ss    in self.Ss[i]]
@@ -125,7 +129,7 @@ class MAT1(object):
                 mcsid = set_blank_if_default(mcsid, 0)
                 card = ['MAT1', mid, E, G, nu, rho, a, TRef, ge, st, sc, ss, mcsid]
                 f.write(print_card(card, size=size))
-        
+
     def reprFields(self, material_id):
         i = where(self.material_id == material_id)[0]
         i = i[0]
@@ -133,7 +137,7 @@ class MAT1(object):
                         self.rho[i], self.a[i], self.TRef[i], self.ge[i],
                         self.St[i], self.Sc[i], self.Ss[i], self.mcsid[i]]
         return card
-        
+
     def _verify(self, xref=True):
         pass
 

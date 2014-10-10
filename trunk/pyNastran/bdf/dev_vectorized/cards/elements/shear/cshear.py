@@ -49,6 +49,8 @@ class CSHEAR(object):
             self.node_ids = self.node_ids[i, :]
             self._cards = []
             self._comments = []
+        else:
+            self.element_id = array([], dtype='int32')
 
     def write_bdf(self, f, size=8, eids=None):
         if self.n:

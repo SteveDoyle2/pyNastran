@@ -1,3 +1,4 @@
+import cStringIO
 from numpy import (array, zeros, arange, concatenate, searchsorted,
     where, unique, cross, dot)
 from numpy.linalg import norm
@@ -228,3 +229,23 @@ class CQUAD4(object):
         #grids2_cid_0 = grids_cid0[searchsorted(node_ids, nids_to_get), :]
         #return grids2_cid_0
         return positions
+
+    def __getitem__(self, index):
+        obj = CQUAD4(self.model)
+        obj.n = len(index)
+        #obj._cards = self._cards[index]
+        #obj._comments = obj._comments[index]
+        #obj.comments = obj.comments[index]
+        obj.element_id = self.element_id[index]
+        obj.property_id = self.property_id[index]
+        obj.node_ids = self.node_ids[index, :]
+        obj.zoffset = self.zoffset[index]
+        obj.t_flag = self.t_flag[index]
+        obj.thickness = self.thickness[index, :]
+        return obj
+
+    def __repr__(self):
+        f = cStringIO.StringIO()
+        f.write('<CPENTA6 object> n=%s\n' % self.n)
+        self.write_bdf(f)
+        return f.getvalue()

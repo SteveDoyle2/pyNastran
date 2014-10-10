@@ -101,6 +101,8 @@ class PBAR(object):
                 raise RuntimeError('There are duplicate PCOMP IDs...')
             self._cards = []
             self._comments = []
+        else:
+            self.property_id = array([], dtype='int32')
 
     #=========================================================================
     def get_index(self, property_ids):

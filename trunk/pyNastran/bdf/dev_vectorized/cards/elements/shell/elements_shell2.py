@@ -34,11 +34,12 @@ class ElementsShell(object):
         self.ctriax6 = CTRIAX6(self.model)
 
     def build(self):
+        #print('elements_shell2')
         types = self._get_types()
         for elems in types:
             elems.build()
 
-        #eid = concatenate(pshell.pid, pcomp.pid)
+        #eid = concatenate(pshell.element_ids, pcomp.element_ids)
         #unique_eids = unique(eid)
         #if unique_eids != len(eid):
         #    raise RuntimeError('There are duplicate CTRIA3/CQUAD4 IDs...')
@@ -170,8 +171,8 @@ class ElementsShell(object):
         f.write('$ELEMENTS\n')
         types = self._get_types()
         for element in types:
-            if element.n:
-                print element.type
+            #if element.n:
+                #print element.type
             element.write_bdf(f, size=size, element_ids=element_ids)
 
     def _get_types(self):

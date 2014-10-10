@@ -1,3 +1,4 @@
+import cStringIO
 from itertools import izip
 
 from numpy import arange, array, dot, zeros, unique, searchsorted, transpose
@@ -64,7 +65,7 @@ class CELAS3(object):
         cards = self._cards
         ncards = len(cards)
         self.n = ncards
-        
+
         if ncards:
             float_fmt = self.model.float
             self.element_id = array(self.element_id, 'int32')
@@ -80,7 +81,7 @@ class CELAS3(object):
             self.element_id = zeros(ncards, 'int32')
             #: Property ID
             self.property_id = zeros(ncards, 'int32')
-            
+
             # Node IDs
             self.node_ids = zeros((ncards, 2), 'int32')
 
@@ -89,7 +90,7 @@ class CELAS3(object):
 
             #: component number
             self.components = zeros((ncards, 2), 'int32')
-            
+
             #: damping coefficient
             self.ge = zeros(ncards, float_fmt)
 
@@ -120,6 +121,8 @@ class CELAS3(object):
                 raise RuntimeError('There are duplicate CELAS3 IDs...')
             self._cards = []
             self._comments = []
+        else:
+            self.element_id = array([], dtype='int32')
 
     def get_stats(self):
         msg = []
@@ -145,7 +148,7 @@ class CELAS3(object):
 
     def get_stiffness(self, i, model, positions, index0s, fnorm=1.0):  # CELAS3
         ki = self.K[i]
-        
+
         k = ki * array([[1, -1,],
                         [-1, 1]])
 
@@ -153,7 +156,7 @@ class CELAS3(object):
 
         p0 = positions[n0]
         p1 = positions[n1]
-        
+
         v1 = p0 - p1
         L = norm(v1)
         if L == 0.0:

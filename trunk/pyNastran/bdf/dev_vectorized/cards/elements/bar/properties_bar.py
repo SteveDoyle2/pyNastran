@@ -15,14 +15,16 @@ class PropertiesBar(object):
 
         self.pbar = PBAR(self.model)
         self.pbarl = PBARL(self.model)
+        self.n = 0
+
 
     def build(self):
         self.pbar.build()
         self.pbarl.build()
-        
+
         npbar = self.pbar.n
         npbarl = self.pbarl.n
-        
+        self.n = npbar + npbarl
         #if npshell and npcomp and npcompg:
             #asdf
         #if npshell and npcomp:
@@ -49,7 +51,7 @@ class PropertiesBar(object):
         return 0.0
     def get_mass(self):
         return 0.0
-    
+
     #=========================================================================
     def _get_types(self, nlimit=True):
         types = [self.pbar, self.pbarl]

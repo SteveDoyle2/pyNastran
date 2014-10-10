@@ -67,6 +67,8 @@ class PROD(object):
                 raise RuntimeError('There are duplicate PROD IDs...')
             self._cards = []
             self._comments = []
+        else:
+            self.property_id = array([], dtype='int32')
 
     def get_stats(self):
         msg = []

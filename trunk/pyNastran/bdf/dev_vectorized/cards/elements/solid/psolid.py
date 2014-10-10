@@ -1,4 +1,5 @@
-from numpy import zeros, unique
+import cStringIO
+from numpy import zeros, unique, where
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.fieldWriter import print_card_8
@@ -33,7 +34,7 @@ class PSOLID(object):
         cards = self._cards
         ncards = len(cards)
         self.n = ncards
-        print "N[%s] = %s" % (self.type, self.n)
+        #print "N[%s] = %s" % (self.type, self.n)
         if ncards:
             float_fmt = self.model.float
             #: Property ID
@@ -79,6 +80,7 @@ class PSOLID(object):
 
             i = self.property_id.argsort()
             self.property_id = self.property_id[i]
+            #print "PSOLID.property_id =", self.property_id
             self.material_id = self.material_id[i]
             self.cordm = self.cordm[i]
             self.integ = self.integ[i]
@@ -88,12 +90,27 @@ class PSOLID(object):
 
             unique_pids = unique(self.property_id)
             if len(unique_pids) != len(self.property_id):
-                raise RuntimeError('There are duplicate PROD IDs...')
+                raise RuntimeError('There are duplicate PSOLID IDs...')
             self._cards = []
             self._comments = []
+        else:
+            self.property_id = array([], dtype='int32')
+            aaa
+
+    def get_density(self, property_ids=None):
+        if property_ids is None:
+            property_ids = self.property_id
+
+        rho = []
+        i = where(property_ids == self.property_id)[0]
+        for mid in self.material_id[i]:
+            rhoi = self.model.materials.mat1[mid].get_density()
+            rho.append(rhoi)
+        return rho
 
     def write_bdf(self, f, size=8, property_ids=None):
         if self.n:
+            #print "PSOLID.property_id =", self.property_id
             for (pid, mid, cordm, integ, stress, isop, fctn) in zip(
                  self.property_id, self.material_id, self.cordm,
                  self.integ, self.stress, self.isop, self.fctn):
@@ -102,4 +119,13 @@ class PSOLID(object):
                 fctn = set_blank_if_default(self.fctn, 'SMECH')
                 card = ['PSOLID', pid, mid, cordm, integ,
                         stress, isop, fctn]
+                #print card
                 f.write(print_card_8(card))
+
+    def __repr__(self):
+        f = cStringIO.StringIO()
+        f.write('<PSOLID object> n=%s\n' % self.n)
+        self.write_bdf(f)
+        #print f
+        return f.getvalue()
+

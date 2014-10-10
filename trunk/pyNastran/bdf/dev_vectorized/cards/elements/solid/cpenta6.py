@@ -1,4 +1,5 @@
-from numpy import zeros, arange, unique, dot, cross, abs, searchsorted
+import cStringIO
+from numpy import zeros, arange, unique, dot, cross, abs, searchsorted, array, where
 from numpy.linalg import norm
 
 from pyNastran.bdf.fieldWriter import print_card_8
@@ -72,6 +73,7 @@ class CPENTA6(object):
                     integer(card, 7, 'nid5'),
                     integer(card, 8, 'nid6'),
                 ]
+                assert 0 not in nids, '%s\n%s' % (nids, card)
                 self.node_ids[i, :] = nids
                 assert len(card) == 9, 'len(CPENTA6 card) = %i' % len(card)
 
@@ -79,9 +81,10 @@ class CPENTA6(object):
             self.element_id = self.element_id[i]
             self.property_id = self.property_id[i]
             self.node_ids = self.node_ids[i, :]
-            assert 0 not in self.node_ids
             self._cards = []
             self._comments = []
+        else:
+            self.element_id = array([], dtype='int32')
 
     def _verify(self, xref=True):
         eid = self.Eid()
@@ -109,7 +112,7 @@ class CPENTA6(object):
         n6 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 5]), :]
         return n1, n2, n3, n4, n5, n6
 
-    def _area_centroid(self, element_ids, xyz_cid0):
+    def _get_area_centroid(self, element_ids, xyz_cid0):
         n1, n2, n3, n4, n5, n6 = self._node_locations(xyz_cid0)
         (A1, c1) = area_centroid(n1, n2, n3)
         (A2, c2) = area_centroid(n4, n5, n6)
@@ -126,7 +129,7 @@ class CPENTA6(object):
         ..note:: Volume for a CPENTA is the average area of two opposing faces
         times the length between the centroids of those points
         """
-        (A1, A2, c1, c2) = self._area_centroid(element_ids, xyz_cid0)
+        (A1, A2, c1, c2) = self._get_area_centroid(element_ids, xyz_cid0)
         volume = (A1 + A2) / 2. * norm(c1 - c2, axis=1)
         if total:
             volume = abs(volume).sum()
@@ -140,7 +143,7 @@ class CPENTA6(object):
 
         :param element_ids: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the volume be summed (default=False)
+        :param total: should the volume be summed; centroid be averaged (default=False)
 
         ..see:: CPENTA6.get_volume() and CPENTA6.get_centroid() for more information.
         """
@@ -166,15 +169,14 @@ class CPENTA6(object):
 
         :param element_ids: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the centroid be summed (default=False)
+        :param total: should the centroid be averaged (default=False)
         """
         if element_ids is None:
             element_ids = self.element_id
-        (A1, A2, c1, c2) = self._area_centroid(self, element_ids, xyz_cid0)
-
+        (A1, A2, c1, c2) = self._get_area_centroid(element_ids, xyz_cid0)
         centroid = (c1 * A1 + c2 * A2) / (A1 + A2)
         if total:
-            centroid = centroid.mean()
+            centroid = centroid.mean(axis=0)
         return centroid
 
     def get_mass(self, element_ids=None, xyz_cid0=None, total=False):
@@ -242,3 +244,31 @@ class CPENTA6(object):
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
                 card = ['CPENTA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5]]
                 f.write(print_card_8(card))
+
+    def get_density(self, element_ids=None):
+        if element_ids is None:
+            element_ids = self.element_id
+
+        rho = []
+        i = where(element_ids == self.element_id)[0]
+        for pid in self.property_id[i]:
+            rhoi = self.model.properties_solid.psolid.get_density(pid)
+            rho += rhoi
+        return rho
+
+    def __getitem__(self, index):
+        obj = CPENTA6(self.model)
+        obj.n = len(index)
+        #obj._cards = self._cards[index]
+        #obj._comments = obj._comments[index]
+        #obj.comments = obj.comments[index]
+        obj.element_id = self.element_id[index]
+        obj.property_id = self.property_id[index]
+        obj.node_ids = self.node_ids[index, :]
+        return obj
+
+    def __repr__(self):
+        f = cStringIO.StringIO()
+        f.write('<CPENTA6 object> n=%s\n' % self.n)
+        self.write_bdf(f)
+        return f.getvalue()

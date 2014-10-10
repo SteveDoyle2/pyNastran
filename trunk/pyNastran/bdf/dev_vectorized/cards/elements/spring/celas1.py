@@ -1,3 +1,4 @@
+import cStringIO
 from numpy import dot, array, zeros, unique, searchsorted, transpose, where
 from numpy.linalg import norm
 
@@ -62,6 +63,8 @@ class CELAS1(object):
                 raise RuntimeError('There are duplicate CELAS1 IDs...')
             self._cards = []
             self._comments = []
+        else:
+            self.element_id = array([], dtype='int32')
 
     def get_stats(self):
         msg = []

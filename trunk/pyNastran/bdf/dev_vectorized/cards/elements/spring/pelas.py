@@ -51,7 +51,7 @@ class PELAS(object):
             #: Stress coefficient. (Real)
             self.s = array(self._s)
             self.n = len(self.K)
-            
+
             i = self.property_id.argsort()
             self.property_id = self.property_id[i]
             self.K = self.K[i]
@@ -62,6 +62,8 @@ class PELAS(object):
             self._K = []
             self._ge = []
             self._s = []
+        else:
+            self.property_id = array([], dtype='int32')
 
     def write_bdf(self, f, size=8, pids=None):
         if self.n:

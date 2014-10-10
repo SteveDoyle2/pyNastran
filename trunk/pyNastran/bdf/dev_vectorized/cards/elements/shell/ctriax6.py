@@ -58,6 +58,8 @@ class CTRIAX6(object):
             self.theta = self.theta[i]
             self._cards = []
             self._comments = []
+        else:
+            self.element_id = array([], dtype='int32')
 
     def get_index(self, element_ids=None):
         if element_ids is None:

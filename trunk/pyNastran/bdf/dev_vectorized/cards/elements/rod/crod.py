@@ -1,3 +1,4 @@
+import cStringIO
 from numpy import array, dot, arange, zeros, unique, searchsorted, transpose
 from numpy.linalg import norm
 
@@ -58,6 +59,8 @@ class CROD(object):
                 raise RuntimeError('There are duplicate CROD IDs...')
             self._cards = []
             self._comments = []
+        else:
+            self.element_id = array([], dtype='int32')
 
     #=========================================================================
     def get_Area(self, property_ids):
