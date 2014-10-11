@@ -1,5 +1,5 @@
 import cStringIO
-from numpy import zeros, arange, dot, cross, searchsorted, array
+from numpy import zeros, arange, dot, cross, searchsorted, array, asarray
 from numpy.linalg import norm
 
 from pyNastran.bdf.fieldWriter import print_card
@@ -18,6 +18,7 @@ def volume4(n1, n2, n3, n4):
 
 class CTETRA10(object):
     type = 'CTETRA10'
+    op2_id = 61
     def __init__(self, model):
         """
         Defines the CTETRA10 object.
@@ -69,6 +70,7 @@ class CTETRA10(object):
             self._comments = []
         else:
             self.element_id = array([], dtype='int32')
+            self.property_id = array([], dtype='int32')
 
     def _verify(self, xref=True):
         eid = self.Eid()
@@ -208,15 +210,20 @@ class CTETRA10(object):
                 card = ['CTETRA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7], n[8], n[9]]
                 f.write(print_card(card))
 
-    def __getitem__(self, index):
+    def __getitem__(self, element_ids):
+        i = searchsorted(self.element_id, element_ids)
+        return self.slice_by_index(i)
+
+    def slice_by_index(self, i):
+        i = asarray(i)
         obj = CTETRA10(self.model)
-        obj.n = len(index)
-        #obj._cards = self._cards[index]
-        #obj._comments = obj._comments[index]
-        #obj.comments = obj.comments[index]
-        obj.element_id = self.element_id[index]
-        obj.property_id = self.property_id[index]
-        obj.node_ids = self.node_ids[index, :]
+        obj.n = len(i)
+        #obj._cards = self._cards[i]
+        #obj._comments = obj._comments[i]
+        #obj.comments = obj.comments[i]
+        obj.element_id = self.element_id[i]
+        obj.property_id = self.property_id[i]
+        obj.node_ids = self.node_ids[i, :]
         return obj
 
     def __repr__(self):

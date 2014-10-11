@@ -12,6 +12,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 
 class CELAS3(object):
     type = 'CELAS3'
+    op2_id = 12
     def __init__(self, model):
         """
         Defines the CELAS3 object.
@@ -123,6 +124,7 @@ class CELAS3(object):
             self._comments = []
         else:
             self.element_id = array([], dtype='int32')
+            self.property_id = array([], dtype='int32')
 
     def get_stats(self):
         msg = []

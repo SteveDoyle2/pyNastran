@@ -9,6 +9,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 
 class CBEAM(object):
     type = 'CBEAM'
+    op2_id = 2
     def __init__(self, model):
         """
         Defines the CBAR object.
@@ -86,6 +87,7 @@ class CBEAM(object):
             self._comments = []
         else:
             self.element_id = array([], dtype='int32')
+            self.property_id = array([], dtype='int32')
 
     #=========================================================================
     def get_mass(self, grid_cid0=None, total=False):

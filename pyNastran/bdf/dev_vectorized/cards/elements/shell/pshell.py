@@ -1,12 +1,22 @@
 import cStringIO
-from numpy import array, zeros, argsort, concatenate, searchsorted, unique, where, nan, arange
+from numpy import array, zeros, argsort, concatenate, searchsorted, unique, where, nan, arange, asarray
 
+from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, double,
     double_or_blank, string_or_blank)
 
 
 class PSHELL(object):
+    """
+    +--------+-------+------+--------+------+----------+------+------+---------+
+    | PSHELL |  PID  | MID1 |   T    | MID2 | 12I/T**3 | MID3 | TS/T |   NSM   |
+    +--------+-------+------+--------+------+----------+------+------+---------+
+    |        |  Z1   |  Z2  |  MID4  |
+    +--------+-------+------+--------+------+----------+------+------+---------+
+    | PSHELL | 41111 |  1   | 1.0000 |  1   |          |   1  |      | 0.02081 |
+    +--------+-------+------+--------+------+----------+------+------+---------+
+    """
     type = 'PSHELL'
     def __init__(self, model):
         """
@@ -222,8 +232,11 @@ class PSHELL(object):
         return mid
 
     def __getitem__(self, property_ids):
+        property_ids, int_flag = slice_to_iter(property_ids)
+        print('looking for %s property_ids' % str(property_ids))
         i = searchsorted(self.property_id, property_ids)
 
+        i = asarray(i)
         obj = PSHELL(self.model)
         obj.n = len(i)
         #obj._cards = self._cards[i]

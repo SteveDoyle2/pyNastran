@@ -86,6 +86,11 @@ class TestMass(unittest.TestCase):
         bdfname = os.path.join(testpath, 'test_mass.dat')
         model.read_bdf(bdfname, include_dir=None, xref=True)
 
+        ###########
+        # QUADS
+        centroid = array([.5, .5, 0.])
+        normal = array([.0, .0, 1.])
+        ###########
         # quad - pcomp
         quad = model.elements[1]
         prop = model.properties_shell.pcomp[quad.property_id]
@@ -102,20 +107,24 @@ class TestMass(unittest.TestCase):
         mpa = (2. * rho1 * t1 + rho10 * t10) + nsm
         mass2 = mpa * area
         assert allclose(mass, mass2), 'mass=%s mass2=%s diff=%s' % (mass, mass2, abs(mass - mass2))
-
-        centroid = array([.5, .5, 0.])
-        normal = array([.0, .0, 1.])
         self.verify_pcomp_element(quad, prop, nsm, thickness, mass, area, centroid, normal)
 
         rho = None
 
         # quad - pshell, nsm=0
-        quad = model.elements[3]
-        prop = model.properties_shell.pshell[quad.property_id]
+        eid = 3
+        pid = 2
+        quad = model.elements[eid]
+        prop = model.properties_shell.pshell[pid]
         mat = model.materials[prop.material_id]
+        rho = 0.1
         mass = 0.0125
+        t = 0.125
         nsm = 0.
         area = 1.
+        mass2 = area * (rho * t + nsm)
+        assert allclose(mass, mass2), 'eid=%s pid=%s mass=%s mass2=%s diff=%s\n%s%s%s\nrho=%s A=%s t=%s nsm=%s' % (
+            eid, pid, mass, mass2, abs(mass - mass2), quad, prop, mat, rho, area, t, nsm)
         centroid = array([.5, .5, 0.])
         normal = array([.0, .0, 1.])
         self.verify_pshell_element(quad, prop, mat, rho, mass, area, centroid, normal, nsm)
@@ -128,17 +137,19 @@ class TestMass(unittest.TestCase):
         nsm = 1.
         self.verify_pshell_element(quad, prop, mat, rho, mass, area, centroid, normal, nsm)
 
+        ###########
+        # TRIS
+        centroid = array([2., 1., 0.]) / 3.
+        normal   = array([.0, .0, 1.])
+        ###########
         # tri - pcomp
         tri = model.elements[2]
-        #print('tri =', tri)
         prop = model.properties_shell.pcomp[tri.property_id]
         #mat = model.properties_shell.pshell[prop.material_id]
         mass = 0.06
         area = 0.5
         nsm = 0.
         thickness = 0.7
-        centroid = array([2/3., 1/3., 0.])
-        normal = array([.0,  .0,    1.])
         self.verify_pcomp_element(tri, prop, nsm, thickness, mass, area, centroid, normal)
 
         # tri - pshell, nsm=0
@@ -164,11 +175,19 @@ class TestMass(unittest.TestCase):
 
         # this passes silently
         print model.elements[['cat']]
-        print model.elements[None]
+
+        # this does not
+        with self.assertRaises(TypeError):
+            print model.elements[None]
 
         #print model.get_elements('cat')
         with self.assertRaises(KeyError):
             model.get_elements('cat')
+
+    def test_combo_1(self):
+        #mass = model.elements.get_mass([8, 9])
+        #mass = model.elements.get_mass(range(1, 10))
+        pass
 
     def test_mass_solid_1(self):  # passes
         model = BDF(debug=False, log=None)
