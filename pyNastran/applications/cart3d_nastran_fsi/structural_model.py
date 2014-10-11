@@ -15,7 +15,7 @@ class StructuralModel(Model):
 
         self.debug = debug
         if self.debug:
-            print "*StructuralModel.init"
+            print("*StructuralModel.init")
         self.fem = fem
         #nodes    = fem.getNodes()
         #elements = fem.getElements()
@@ -72,12 +72,6 @@ class StructuralModel(Model):
         e = self.fem.Element(eid)
         nodes = self.get_element_nodes(eid)
         centroid = e.Centroid()
-
-        if isinstance(centroid, float):
-            print "nodes = ",nodes
-            print "*centroid[%s] = %s" %(eid, centroid)
-            centroid = e.Centroid(debug=True)
-            raise Exception('bad length')
         return centroid
 
     def Centroid_Area(self, eid, nodes):
@@ -99,7 +93,7 @@ class StructuralModel(Model):
 
     def Properties(self, eid):
         e = self.fem.Element(eid)
-        (area,centroid,normal) = e.getAreaCentroidNormal()
+        (area, centroid, normal) = e.getAreaCentroidNormal()
         return (normal, centroid)
 
     def write_load(self, bdf, loadCase, nid, Fx, Fy, Fz, comment=''):

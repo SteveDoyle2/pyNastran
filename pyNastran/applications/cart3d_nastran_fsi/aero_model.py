@@ -116,13 +116,13 @@ class AeroModel(Model):
         try:
             element = self.elements[eid-1]
         except IndexError:
-            print "eid=%s len(elements)=%s" % (eid, len(self.elements))
+            print("eid=%s len(elements)=%s" % (eid, len(self.elements)))
             raise
         except TypeError:
-            print "eid=%s len(elements)=%s" % (eid, len(self.elements))
+            print("eid=%s len(elements)=%s" % (eid, len(self.elements)))
             raise
         except KeyError:
-            print "eid=%s len(elements)=%s" % (eid, len(self.elements))
+            print("eid=%s len(elements)=%s" % (eid, len(self.elements)))
             raise
         return element
 

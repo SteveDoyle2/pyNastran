@@ -36,7 +36,7 @@ def load_inputs():
     workpath    = os.path.join(basepath, 'outputsFinal')
 
     log.info("basepath = %s" % basepath)
-    print "os.getcwd()", os.getcwd()
+    print("os.getcwd() = %s" % os.getcwd())
     globals2 = {}
     locals2 = {}
 
@@ -72,7 +72,7 @@ def run_mapping():
     configpath = required_inputs['configpath']
     workpath = required_inputs['workpath']
 
-    print "structural_call = %r" % structural_call
+    print("structural_call = %r" % structural_call)
 
     # load mapping
     cart3dLoads = os.path.join(workpath,  'Cart3d_35000_0.825_10_0_0_0_0.i.triq')

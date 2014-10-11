@@ -113,7 +113,7 @@ def run_map_deflections(nodeList, bdf_filename, out_filename, cart3d, cart3d2, l
 
 def get_WA(nodeList, C, wS, mesh, aPoints):
     log.info('---starting get_WA---')
-    print printMatrix(C)
+    #print printMatrix(C)
 
     C  = inv(C) * wS  # Cws matrix, P matrix
     #P = solve(C, wS)
@@ -178,12 +178,12 @@ def get_WS(nodeList,deflections):
         Wcolumn[i]=dz
         log.info("wS[%s=%s]=%s" %(iNode,i,dz))
         i+=1
-    print max(Wcolumn)
+    print(max(Wcolumn))
     log.info('---finished get_WS---')
     sys.stdout.flush()
 
     wSmax = max(Wcolumn)
-    print "wSmax = ",wSmax[0,0]
+    print("wSmax = %s" % wSmax[0,0])
     return Wcolumn
 
 def getCmatrix(nodeList, mesh):
@@ -249,6 +249,6 @@ if __name__=='__main__':
     cart3d2 = cart3d + '_deflected'
 
     (wA,wS) = run_map_deflections(nodeList, bdf_name, op2_name, cart3d, cart3d2, log=log)
-    print "wAero=", wA
+    print("wAero = %s" % wA)
     wSmax = max(wS)
-    print "wSmax = ", wSmax[0,0]
+    print("wSmax = %s" % wSmax[0,0])
