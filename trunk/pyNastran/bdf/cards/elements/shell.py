@@ -366,7 +366,7 @@ class CTRIA3(TriShell):
     def Stiffness(self, model, node_ids, index0s, gravLoad, is3D, fnorm):
         assert is3D == True
 
-        print("node_ids =", node_ids)
+        #print("node_ids =", node_ids)
         n1, n2, n3 = self.nodes
         p1 = n1.Position()
         p2 = n2.Position()

@@ -27,7 +27,32 @@ class ShellProperty(Property):
     def __init__(self, card, data):
         Property.__init__(self, card, data)
 
-class CompositeShellProperty(ShellProperty):
+class DeprecatedCompositeShellProperty(object):
+    def MassPerArea(self, iply='all', method='nplies'):
+        return self.get_mass_per_area(iply, method)
+
+    def Thickness(self, iply='all'):
+        return self.get_thickness(iply)
+
+    def nPlies(self):
+        return self.get_nplies()
+
+    def Nsm(self):
+        return self.get_nonstructural_mass()
+
+    def isSymmetrical(self):
+        return self.is_symmetrical()
+
+    def Rho(self, iply):
+        return self.get_density(iply)
+
+    def Theta(self, iply):
+        return self.get_theta()
+
+    def sout(self, iply):
+        return self.get_sout()
+
+class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
     def __init__(self, card, data):
         ShellProperty.__init__(self, card, data)
 
@@ -43,7 +68,7 @@ class CompositeShellProperty(ShellProperty):
             msg = ' which is required by PLPCOMP/G pid=%s iply=%s' % (self.pid, iply)
             self.plies[iply][0] = model.Material(mid, msg)  # mid
 
-    def isSymmetrical(self):
+    def is_symmetrical(self):
         """
         Is the laminate symmetrical?
 
@@ -95,7 +120,7 @@ class CompositeShellProperty(ShellProperty):
 
         nplies = len(self.plies)
         if iply >= nplies:
-            if iply < self.nPlies():
+            if iply < self.get_nplies():
                 iply = iply - nplies
             else:
                 raise IndexError('invalid value for iply=%r' % iply)
@@ -103,7 +128,7 @@ class CompositeShellProperty(ShellProperty):
             raise IndexError('invalid value for iply=%r' % iply)
         return iply
 
-    def Thickness(self, iply='all'):
+    def get_thickness(self, iply='all'):
         """
         Gets the thickness of the :math:`i^{th}` ply.
 
@@ -115,7 +140,7 @@ class CompositeShellProperty(ShellProperty):
         if iply == 'all':  # get all layers
             t = 0.
             for iply in xrange(nplies):
-                t += self.Thickness(iply)
+                t += self.get_thickness(iply)
 
             if self.isSymmetrical():
                 return t * 2.
@@ -125,7 +150,7 @@ class CompositeShellProperty(ShellProperty):
             t = self.plies[iply][1]
             return t
 
-    def nPlies(self):
+    def get_nplies(self):
         r"""
         Gets the number of plies including the core.
 
@@ -137,11 +162,11 @@ class CompositeShellProperty(ShellProperty):
             returns nPlies
         """
         nplies = len(self.plies)
-        if self.isSymmetrical():
+        if self.is_symmetrical():
             return nplies * 2
         return nplies
 
-    def Nsm(self):
+    def get_nonstructural_mass(self):
         """
         Gets the non-structural mass :math:`i^{th}` ply
 
@@ -162,6 +187,9 @@ class CompositeShellProperty(ShellProperty):
             return Mid
         return Mid.mid
 
+    def get_material_ids(self):
+        return self.Mids()
+
     def Mids(self):
         """
         Gets the material IDs of all the plies
@@ -172,11 +200,11 @@ class CompositeShellProperty(ShellProperty):
         mids = []
         for iply in xrange(self.nPlies()):
             mids.append(self.Mid(iply))
-            #theta = self.Theta(iply)
-            #sout = self.sout(iply)
+            #theta = self.get_theta(iply)
+            #sout = self.get_sout(iply)
         return mids
 
-    def Rho(self, iply):
+    def get_density(self, iply):
         """
         Gets the density of the :math:`i^{th}` ply
 
@@ -200,7 +228,7 @@ class CompositeShellProperty(ShellProperty):
         Mid = self.plies[iply][0]
         return Mid
 
-    def Theta(self, iply):
+    def get_theta(self, iply):
         """
         Gets the ply angle of the :math:`i^{th}` ply (not the ID)
 
@@ -211,7 +239,7 @@ class CompositeShellProperty(ShellProperty):
         Theta = self.plies[iply][2]
         return Theta
 
-    def sout(self, iply):
+    def get_sout(self, iply):
         """
         Gets the the flag identifying stress/strain outpur of the
         :math:`i^{th}` ply (not the ID).  default='NO'.
@@ -220,8 +248,8 @@ class CompositeShellProperty(ShellProperty):
         :param iply: the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
-        Sout = self.plies[iply][3]
-        return Sout
+        sout = self.plies[iply][3]
+        return sout
 
     def get_z_locations(self):
         """
@@ -237,13 +265,64 @@ class CompositeShellProperty(ShellProperty):
         """
         zi = self.z0
         z = [zi]
-        for i in range(self.nPlies()):
-            t = self.Thickness(i)
+        for i in range(self.get_nplies()):
+            t = self.get_thickness(i)
             zi += t
             z.append(zi)
         return array(z)
 
-    def MassPerArea(self, iply='all', method='nplies'):
+    def get_mass_per_area(self, iply='all', method='nplies'):
+        r"""
+        Gets the Mass/Area for the property.
+
+        .. math:: \frac{m}{A} = \sum(\rho t) + nsm
+
+        or
+
+        .. math:: \frac{m}{A} - nsm = \sum(\rho t)
+
+        and
+
+        .. math:: \frac{m_i}{A} = rho_i t_i + nsm_i
+
+        where :math:`nsm_i` is the non-structural mass of the
+        :math:`i^{th}` ply
+
+        :param self:   the PCOMP object
+        :param iply:   the string 'all' (default) or the mass per area of
+                       the :math:`i^{th}` ply
+        :param method: the method to compute MassPerArea
+
+           * **Case 1 (iply = all)**
+
+             method has no effect because the total nsm is defined
+
+           * **Case 2 (iply != all)**
+
+             method **'nplies'** smear the nsm based on :math:`n_{plies}` (default)
+
+             :math:`nsm_i = nsm / n_{plies}`  # smear based on nplies
+
+           * **Case 3 (iply != all)**
+
+             method **'rho*t'** smear the nsm based on the mass distribution
+
+             .. math:: nsm_i = \rho_i t_i \frac{nsm}{\sum(\rho_i t_i)}
+
+             .. math:: nsm_i = \rho_i t_i \frac{nsm}{\frac{m}{A} - nsm}
+
+           * **Case 4 (iply != all)**
+
+             method **'t'** smear the nsm based on the thickness distribution
+
+             .. math:: nsm_i = t_i \frac{nsm}{\sum(t_i)}
+
+        .. note:: final mass calculation will be done later
+        """
+        rhos = [ply[0].get_density() for ply in self.plies]
+        self.get_mass_per_area_rho(rhos, iply, method)
+
+    def get_mass_per_area_rho(self, rhos, iply='all', method='nplies'):
         r"""
         Gets the Mass/Area for the property.
 
@@ -302,38 +381,40 @@ class CompositeShellProperty(ShellProperty):
             massPerArea = 0.
             nplies = len(self.plies)
             for iply in xrange(nplies):
-                rho = self.Rho(iply)
+                #rho = self.get_density(iply)
+                rho = rhos[iply]
                 t = self.plies[iply][1]
                 massPerArea += rho * t
 
-            if self.isSymmetrical():
+            if self.is_symmetrical():
                 return 2. * massPerArea + self.nsm
             return massPerArea + self.nsm
         else:
             assert isinstance(iply, int), 'iply must be an integer; iply=%r' % iply
-            rho = self.Rho(iply)
+            #rho = self.get_density(iply)
+            rho = rhos[iply]
             t = self.plies[iply][1]
 
             if method == 'nplies':
                 # we divide by nplies b/c it's nsm per area and
                 # we're working on a per ply basis
                 # nsmi = nsmi/n  # smear based on nplies
-                massPerArea = rho * t + self.nsm / self.nPlies()
+                massPerArea = rho * t + self.nsm / self.get_nplies()
             elif method == 'rho*t':
                 # assume you smear the nsm mass based on rho*t distribution
                 #nsmi = rho*t / sum(rho*t) * nsm
                 #rho*t + nsmi = rho*t + rho*t/(sum(rho*t) + nsm - nsm) * nsm
                 #rho*t + nsmi = rho*t + rho*t/(massPerAreaTotal - nsm) * nsm
                 #             = rho*t * (1 + nsm/(massPerAreaTotal-nsm))
-                massPerAreaTotal = self.MassPerArea()
-                massPerArea = rho * t * (1.0 + self.nsm / (massPerAreaTotal-self.nsm))
+                massPerAreaTotal = self.get_mass_per_area_rho(rhos, iply='all', method='nplies')
+                massPerArea = rho * t * (1.0 + self.nsm / (massPerAreaTotal - self.nsm))
             elif method == 't':
                 # assume you smear the nsm mass based on t distribution
                 #nsmi = t / sum(t) * nsm
                 #rho*t + nsmi = rho*t + t/sum(t) * nsm
                 #rho*t + nsmi = rho*t + t/thicknessTotal * nsm
                 #             = t * (rho + nsm/thicknessTotal)
-                thicknessTotal = self.Thickness()
+                thicknessTotal = self.get_thickness()
                 massPerArea = t * (rho + self.nsm / thicknessTotal)
             else:
                 raise NotImplementedError('method=%r is not supported' % method)
@@ -544,7 +625,7 @@ class PCOMP(CompositeShellProperty):
         sb = set_blank_if_default(self.sb, 0.0)
         TRef = set_blank_if_default(self.TRef, 0.0)
         ge = set_blank_if_default(self.ge, 0.0)
-        z0 = set_blank_if_default(self.z0, -0.5 * self.Thickness())
+        z0 = set_blank_if_default(self.z0, -0.5 * self.get_thickness())
 
         list_fields = ['PCOMP', self.pid, z0, nsm, sb, self.ft, TRef, ge, self.lam]
         for (iply, ply) in enumerate(self.plies):

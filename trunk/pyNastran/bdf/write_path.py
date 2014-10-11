@@ -51,7 +51,7 @@ def write_include(filename, is_windows=True):
         marker = '/'
 
     sline = split_path(filename)
-    print "sline =", sline
+    print("sline = %s" % sline)
     if len(filename) > 52: # 62
         pth = ''
         for p in sline:
