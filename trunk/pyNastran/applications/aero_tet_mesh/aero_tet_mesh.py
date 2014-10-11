@@ -29,7 +29,7 @@ def run_arg_parse():
 
     #format  = data['--format']
     input = data['INPUT']
-    print "input =", input
+    print("input = %s" % input)
     output = data['--output']
 
     reverse_normals = data['--normal']
@@ -70,12 +70,12 @@ def main():
     #e = execfile(bc_file, globals(), locals())
     #print globals()
     #print dir(e)
-    
+
     pid_map
     boundary_conditions
     assert isinstance(pid_map, dict)
     assert isinstance(boundary_conditions, dict)
-    
+
     get_bcs(bdf_filename, pid_map, boundary_conditions, log=None)
     #if flip_normals:
     #    bdf = BDF()
@@ -92,7 +92,7 @@ def main():
     else:
         nastran_to_stl_filename(bdf_filename, stl_filename, log=log)
         stl_to_nastran_filename(stl_filename, bdf_filename2, log=log)
-    print "----------"
+    print("----------")
     #nastran_to_cart3d(bdf_filename2, cart3d_filename)
     #cart3d = Cart3dReader()
     #cart3d.read_cart3d(cart3d_filename)
@@ -108,11 +108,11 @@ def main():
 def get_bcs(bdf_filename, pid_map, boundary_conditions, log=None):
     bdf = BDF(log=log)
     bdf.read_bdf(bdf_filename)
-    
+
     ntris = len(bdf.elements)
     boundary_condition_ids = zeros(ntris, 'int32')
     i = 0
-    
+
     for eid, element in sorted(bdf.elements.iteritems()):
         assert element.type == 'CTRIA3', element.type
         boundary_condition_ids[i] = pid_map[element.Pid()]

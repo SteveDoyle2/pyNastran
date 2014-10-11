@@ -24,7 +24,7 @@ def Grid(object):
 
         # Li = [1, 1, 2, 2]
         L = array([len(di) for di in d])
-        print "L =", L
+        print("L = %s" % L)
         i = where(L==2)[0]
         assert len(i) == 2, 'eid=%s is not a corner' % starting_eid
         x = i[0]
