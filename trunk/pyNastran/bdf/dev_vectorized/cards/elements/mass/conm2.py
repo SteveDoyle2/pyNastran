@@ -39,7 +39,7 @@ class CONM2(object):
         #assert self.n > 0
         print('CONM2 self.n=%s' % self.n)
         if ncards:
-            print "CONM2", self.n
+            print("CONM2" % self.n)
             float_fmt = self.model.float
 
             #: Element ID

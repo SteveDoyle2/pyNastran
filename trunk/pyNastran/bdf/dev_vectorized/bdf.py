@@ -2093,13 +2093,12 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             #self.mat1.add(card_obj, comment=comment)
         elif name == 'MATS1':
             self.materials.add_mats1(card_obj, comment=comment)
-            pass
         elif name == 'MAT4':
-            #self.materials.add_mat4(card_obj, comment=comment)
-            pass
+            self.materials.add_mat4(card_obj, comment=comment)
+        elif name == 'MAT5':
+            self.materials.add_mat5(card_obj, comment=comment)
         elif name == 'MAT8':
-            #self.materials.add_mat8(card_obj, comment=comment)
-            pass
+            self.materials.add_mat8(card_obj, comment=comment)
         elif name == 'MAT10':
             self.materials.add_mat10(card_obj, comment=comment)
 

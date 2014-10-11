@@ -1,7 +1,7 @@
 import unittest
 
 import os
-from numpy import array
+from numpy import array, allclose
 import pyNastran
 from pyNastran.bdf.dev_vectorized.bdf import BDF
 from pyNastran.utils import object_methods
@@ -12,26 +12,38 @@ testpath = os.path.join(rootpath, 'bdf', 'test', 'unit')
 
 class TestMass(unittest.TestCase):
 
-    def verify_pcomp_element(self, element, mass, area, centroid, normal):
+    def verify_pcomp_element(self, element, prop, nsm, thickness, mass, area, centroid, normal):
+        #prop = str(prop)
+        #print('----------------------------')
         assert not isinstance(element, list), element
         #print object_methods(element, 'all')
-        self.assertAlmostEqual(element.get_mass()[0], mass, msg='mass=%s expected=%s' % (element.get_mass()[0], mass))
-        self.assertAlmostEqual(element.get_area()[0], area, msg='area=%s expected=%s' % (element.get_area()[0], area))
-        self.assertTrue(all(element.get_centroid()[0] == centroid), msg='centroid=%s expected=%s' % (element.get_centroid()[0], centroid))
-        self.assertTrue(all(element.get_normal()[0] == normal), msg='normal=%s expected=%s' % (element.get_normal()[0], normal))
+        self.assertAlmostEqual(element.get_area()[0], area, msg='PCOMP: area=%s expected=%s\n%s%s' % (element.get_area(), area, element, prop))
+        self.assertAlmostEqual(element.get_thickness()[0], thickness, msg='PCOMP: thickness=%s expected=%s\n%s%s' % (element.get_thickness(), thickness, element, prop))
+        self.assertAlmostEqual(element.get_nonstructural_mass()[0], nsm, msg='PCOMP: nsm=%s expected=%s\n%s%s' % (element.get_nonstructural_mass(), nsm, element, prop))
+        self.assertTrue(all(element.get_centroid()[0] == centroid), msg='PCOMP: centroid=%s expected=%s\n%s%s' % (element.get_centroid(), centroid, element, prop))
+        self.assertTrue(all(element.get_normal()[0] == normal), msg='PCOMP: normal=%s expected=%s\n%s%s' % (element.get_normal(), normal, element, prop))
+        self.assertAlmostEqual(element.get_mass()[0], mass, msg='PCOMP: mass=%s expected=%s\n%s%s' % (element.get_mass(), mass, element, prop))
         with self.assertRaises(AttributeError):
             element.Volume()
         with self.assertRaises(AttributeError):
             element.Length()
 
-    def verify_pshell_element(self, element, mass, area, centroid, normal, nsm):
+    def verify_pshell_element(self, element, prop, mat, rho, mass, area, centroid, normal, nsm):
+        #print('----------------------------')
         assert not isinstance(element, list), element
         #print object_methods(element, 'all')
-        self.assertAlmostEqual(element.get_mass()[0], mass, msg='mass=%s expected=%s' % (element.get_mass()[0], mass))
-        self.assertAlmostEqual(element.get_area()[0], area, msg='area=%s expected=%s' % (element.get_area()[0], area))
-        self.assertAlmostEqual(element.get_nsm()[0], nsm, msg='nsm=%s expected=%s' % (element.get_nsm()[0], nsm))
-        self.assertTrue(all(element.get_centroid()[0] == centroid), msg='centroid=%s expected=%s' % (element.get_centroid()[0], centroid))
-        self.assertTrue(all(element.get_normal()[0] == normal), msg='normal=%s expected=%s' % (element.get_normal()[0], normal))
+        #print(element)
+        #print(prop)
+        #print(mat)
+        #print("nsm = %s" % element.get_nonstructural_mass()[0])
+        #print("density = %s" % element.get_density())
+        if rho is not None:
+            self.assertAlmostEqual(element.get_density()[0], rho, msg='PSHELL: rho=%s expected=%s\n%s%s%s' % (element.get_density(), rho, element, prop, mat))
+        self.assertAlmostEqual(element.get_area()[0], area, msg='PSHELL: area=%s expected=%s\n%s%s%s' % (element.get_area(), area, element, prop, mat))
+        self.assertAlmostEqual(element.get_nonstructural_mass()[0], nsm, msg='PSHELL: nsm=%s expected=%s\n%s%s%s' % (element.get_nonstructural_mass(), nsm, element, prop, mat))
+        self.assertAlmostEqual(element.get_mass()[0], mass, msg='PSHELL: mass=%s expected=%s\n%s%s%s' % (element.get_mass()[0], mass, element, prop, mat))
+        self.assertTrue(all(element.get_centroid()[0] == centroid), msg='PSHELL: centroid=%s expected=%s\n%s%s%s' % (element.get_centroid(), centroid, element, prop, mat))
+        self.assertTrue(all(element.get_normal()[0] == normal), msg='PSHELL: normal=%s expected=%s\n%s%s%s' % (element.get_normal(), normal, element, prop, mat))
         with self.assertRaises(AttributeError):
             element.Volume()
         with self.assertRaises(AttributeError):
@@ -76,43 +88,87 @@ class TestMass(unittest.TestCase):
 
         # quad - pcomp
         quad = model.elements[1]
+        prop = model.properties_shell.pcomp[quad.property_id]
+        #mat = model.properties_shell.pshell[prop.material_id]
         mass = 0.12
         area = 1.0
+        nsm = 0.
+        thickness = 0.7
+        rho1 = 0.1
+        rho10 = 0.2
+        t1 = 0.1
+        t10 = 0.5
+        # there are two layers of t1
+        mpa = (2. * rho1 * t1 + rho10 * t10) + nsm
+        mass2 = mpa * area
+        assert allclose(mass, mass2), 'mass=%s mass2=%s diff=%s' % (mass, mass2, abs(mass - mass2))
+
         centroid = array([.5, .5, 0.])
         normal = array([.0, .0, 1.])
-        self.verify_pcomp_element(quad, mass, area, centroid, normal)
+        self.verify_pcomp_element(quad, prop, nsm, thickness, mass, area, centroid, normal)
+
+        rho = None
 
         # quad - pshell, nsm=0
         quad = model.elements[3]
+        prop = model.properties_shell.pshell[quad.property_id]
+        mat = model.materials[prop.material_id]
         mass = 0.0125
         nsm = 0.
-        self.verify_pshell_element(quad, mass, area, centroid, normal, nsm)
+        area = 1.
+        centroid = array([.5, .5, 0.])
+        normal = array([.0, .0, 1.])
+        self.verify_pshell_element(quad, prop, mat, rho, mass, area, centroid, normal, nsm)
 
         # quad - pshell, nsm=1
         quad = model.elements[5]
+        prop = model.properties_shell.pshell[quad.property_id]
+        mat = model.properties_shell.pshell[prop.material_id]
         mass = 1.0125 # mass w/o nsm + 1.0 b/c area=1
         nsm = 1.
-        self.verify_pshell_element(quad, mass, area, centroid, normal, nsm)
+        self.verify_pshell_element(quad, prop, mat, rho, mass, area, centroid, normal, nsm)
 
         # tri - pcomp
         tri = model.elements[2]
+        #print('tri =', tri)
+        prop = model.properties_shell.pcomp[tri.property_id]
+        #mat = model.properties_shell.pshell[prop.material_id]
         mass = 0.06
         area = 0.5
+        nsm = 0.
+        thickness = 0.7
         centroid = array([2/3., 1/3., 0.])
         normal = array([.0,  .0,    1.])
-        self.verify_pcomp_element(tri, mass, area, centroid, normal)
+        self.verify_pcomp_element(tri, prop, nsm, thickness, mass, area, centroid, normal)
 
         # tri - pshell, nsm=0
         tri = model.elements[4]
+        prop = model.properties_shell.pshell[tri.property_id]
+        mat = model.properties_shell.pshell[prop.material_id]
         mass = 0.00625
         nsm = 0.
-        self.verify_pshell_element(tri, mass, area, centroid, normal, nsm)
+        self.verify_pshell_element(tri, prop, mat, rho, mass, area, centroid, normal, nsm)
 
         # tri - pshell, nsm=1
         tri = model.elements[6]
+        prop = model.properties_shell.pshell[tri.property_id]
+        mat = model.properties_shell.pshell[prop.material_id]
         mass = 0.50625 # mass w/o nsm + 0.5 b/c area=0.5
         nsm = 1.
-        self.verify_pshell_element(tri, mass, area, centroid, normal, nsm)
+        self.verify_pshell_element(tri, prop, mat, rho, mass, area, centroid, normal, nsm)
+
+    def test_bad_01(self):
+        model = BDF(debug=False, log=None)
+        bdfname = os.path.join(testpath, 'test_mass.dat')
+        model.read_bdf(bdfname, include_dir=None, xref=True)
+
+        # this passes silently
+        print model.elements[['cat']]
+        print model.elements[None]
+
+        #print model.get_elements('cat')
+        with self.assertRaises(KeyError):
+            model.get_elements('cat')
 
     def test_mass_solid_1(self):  # passes
         model = BDF(debug=False, log=None)
@@ -125,8 +181,6 @@ class TestMass(unittest.TestCase):
         model.elements[7:9]
         model.elements[7:9:2]
         model.elements[1:100]
-        print model.elements['cat']
-        print model.get_elements('cat')
         #hexa = model.get_elements(7)
         #hexa = model.get_elements(7)
         #print hexa

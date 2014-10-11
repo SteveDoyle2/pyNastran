@@ -1,14 +1,15 @@
-from numpy import zeros
+from numpy import zeros, where, array
 
 #from .mat1 import MAT1
 #from .mats1 import MATS1
 #from .mat4 import MAT4
 #from .mat10 import MAT10
 
+from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
+
 from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT4, MAT5, MAT8,
     MAT10, MAT11) #, MATS1)
 from pyNastran.bdf.bdfInterface.assign_type import integer
-
 class Materials(object):
     def __init__(self, model):
         self.model = model
@@ -21,6 +22,7 @@ class Materials(object):
         #==================
         self.mat2 = {}
         self.mat4 = {}
+        self.mat5 = {}
         self.mat8 = {}
         self.mat10 = {}
         #self.mat2 = MAT1(model)
@@ -37,22 +39,33 @@ class Materials(object):
 
     def add_mats1(self, card, comment):
         #self.mats1.add(card, comment)
-        mid = integer(card, 1, 'materialid')
+        mid = integer(card, 1, 'material_id')
         mat = MATS1(card=card, comment=comment)
-        #mat.add()
         self.mats1[mid] = mat
 
     def add_mat2(self, card, comment):
-        self.mat2.add(card, comment)
+        #self.mat2.add(card, comment)
+        mid = integer(card, 1, 'material_id')
+        mat = MAT2(card=card, comment=comment)
+        self.mat2[mid] = mat
 
     def add_mat4(self, card, comment):
-        self.mat4.add(card, comment)
+        #self.mat4.add(card, comment)
+        mid = integer(card, 1, 'material_id')
+        mat = MAT4(card=card, comment=comment)
+        self.mat4[mid] = mat
 
     def add_mat8(self, card, comment):
-        self.mat8.add(card, comment)
+        #self.mat8.add(card, comment)
+        mid = integer(card, 1, 'material_id')
+        mat = MAT8(card=card, comment=comment)
+        self.mat8[mid] = mat
 
     def add_mat10(self, card, comment):
-        self.mat10.add(card, comment)
+        #self.mat10.add(card, comment)
+        mid = integer(card, 1, 'material_id')
+        mat = MAT10(card=card, comment=comment)
+        self.mat10[mid] = mat
 
     def build(self):
         pass
@@ -170,7 +183,44 @@ class Materials(object):
             return self.mat5[material_id]
         raise RuntimeError('Could not find material_id=%r' % material_id)
 
-    def __getitem__(self, material_id):
+    def get_density(self, material_ids):
+        mats = self[material_ids]
+        density = array([mid.get_density() for mid in mats])
+        #print('material_ids = %s' % material_ids)
+        #print("  density mats = %s" % mats)
+        #print('  density = %s' % density)
+        return density
+
+    def __getitem__(self, material_ids):
+        TypeMap = {
+            'MAT1'  : (self.mat1, self.mat1.keys()),
+            'MAT2'  : (self.mat2, self.mat2.keys()),
+            'MAT4'  : (self.mat4, self.mat4.keys()),
+            'MAT5'  : (self.mat5, self.mat5.keys()),
+            'MAT8'  : (self.mat8, self.mat8.keys()),
+            'MAT10' : (self.mat10, self.mat10.keys()),
+            'MATS1' : (self.mats1, self.mats1.keys()),
+        }
+        material_ids, int_flag = slice_to_iter(material_ids)
+        out = []
+        #print('material_ids = %s' % material_ids)
+        for mid in material_ids:
+            obj = None
+            for Type, (mdict, mids) in TypeMap.iteritems():
+                if mids:
+                    #print('mids = %s' % mids)
+                    if mid in mids:
+                        #print(' *mid=%i Type=%s was found' % (mid, Type))
+                        i = where(mid == mids)[0]
+                        obj = mdict[mid]  #[i]
+                        break
+                    else:
+                        #print('  mid=%i Type=%s was not found' % (mid, Type))
+                        pass
+            out.append(obj)
+        return out[0] if int_flag else out
+
+    def __getitem2__(self, material_id):
         assert isinstance(material_id, int), 'material_id=%r' % material_id
         types = self._get_types()
         for mat in types:

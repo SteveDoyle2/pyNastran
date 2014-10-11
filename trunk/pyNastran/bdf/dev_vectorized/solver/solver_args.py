@@ -28,7 +28,7 @@ def run_arg_parse(mode=''):
     ver = str(pyNastran.__version__)
     data = docopt(msg, version=ver)
 
-    print data
+    print(data)
 
 
     bdf_filename = data['BDFNAME']

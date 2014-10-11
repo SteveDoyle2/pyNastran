@@ -1,4 +1,4 @@
-from numpy import concatenate, hstack, argsort, searchsorted, ndarray, unique
+from numpy import concatenate, hstack, argsort, searchsorted, ndarray, unique, array
 
 from .pshell import PSHELL
 from .pcomp import PCOMP
@@ -13,7 +13,6 @@ class PropertiesShell(object):
         :param model: the BDF object
         """
         self.model = model
-
         self.pshell = PSHELL(self.model)
         self.pcomp = PCOMP(self.model)
         self.pcompg = PCOMPG(self.model)
@@ -56,6 +55,12 @@ class PropertiesShell(object):
         #print _property_ids
         return _property_ids
 
+    def get_nonstructural_mass(self, property_ids=None):
+        return self._getmethod(property_ids, 'get_nonstructural_mass')
+
+    def get_mass_per_area(self, property_ids=None):
+        return self._getmethod(property_ids, 'get_mass_per_area')
+
     def get_thickness(self, property_ids=None):
         """
         Gets the thickness of the PSHELLs/PCOMPs.
@@ -63,21 +68,62 @@ class PropertiesShell(object):
         :param self: the ShellProperties object
         :param property_ids: the property IDs to consider (default=None -> all)
         """
-        types = self._get_types(nlimit=True)
-        _property_ids = concatenate([ptype.property_id for ptype in types])
-        t = concatenate([ptype.get_thickness() for ptype in types] )
-        if property_ids is None:
-            return t
-            #property_ids = _property_ids
+        return self._getmethod(property_ids, 'get_thickness')
 
-        assert isinstance(property_ids, ndarray), type(property_ids)
-        i = argsort(_property_ids)
+    def get_density(self, property_ids=None):
+        """
+        Gets the density of the PSHELLs/PCOMPs.
 
-        #print(_property_ids[i])
-        #print(property_ids)
-        j = searchsorted(property_ids, _property_ids[i])
-        t2 = t[j]
-        return t2
+        :param self: the ShellProperties object
+        :param property_ids: the property IDs to consider (default=None -> all)
+        """
+        return self._getmethod(property_ids, 'get_density')
+
+    def _getattr(self, property_ids, method):
+        TypeMap = {
+            'PSHELL': (self.pshell, self.pshell.property_id),
+            'PCOMP' : (self.pcomp, self.pcomp.property_id),
+            'PCOMPG': (self.pcompg, self.pcompg.property_id),
+        }
+        out = array([])
+        for Type, (ptype, pids) in sorted(TypeMap.iteritems()):
+            for pid in pids:
+                if pid in property_ids:
+                    value = getattr(ptype, method)
+                    #assert len(value) == 1, value
+                    #print('pid =', pid, value)
+                    out = hstack([out, value])
+        #print("out = %s" % out)
+        return out
+
+    def _getmethod(self, property_ids, method):
+        #types = self._get_types(nlimit=True)
+        #data = hstack([getattr(ptype, method)() for ptype in types] )
+        #if property_ids is None:
+            #return data
+
+        TypeMap = {
+            'PSHELL': (self.pshell, self.pshell.property_id),
+            'PCOMP' : (self.pcomp, self.pcomp.property_id),
+            'PCOMPG': (self.pcompg, self.pcompg.property_id),
+        }
+        #print('property_ids = %s' % property_ids)
+        out = array([])
+        for Type, (ptype, pids) in sorted(TypeMap.iteritems()):
+            for pid in pids:
+                if pid in property_ids:
+                    value = getattr(ptype, method)([pid])
+                    #assert len(value) == 1, value
+                    #print('pid = %s %s' % (pid, value))
+                    out = hstack([out, value])
+        #print("out = %s" % out)
+        return out
+        #_property_ids = hstack([ptype.property_id for ptype in types])
+        #assert isinstance(property_ids, ndarray), type(property_ids)
+        #i = argsort(_property_ids)
+        #j = searchsorted(property_ids, _property_ids[i])
+        #data_short = data[j]
+        #return data_short
 
     #=========================================================================
     def _get_types(self, nlimit=True):

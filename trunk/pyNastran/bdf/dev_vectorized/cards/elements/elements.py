@@ -1,4 +1,5 @@
 from numpy import array, zeros, searchsorted, unique, concatenate, argsort, hstack, where
+from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 
 
 class Elements(object):
@@ -90,17 +91,54 @@ class Elements(object):
             group_data = getattr(Type, name)
             if len(group_data):
                 groups[Type.type] = group_data
-        print "groups", groups
+        #print("groups = %s" % groups)
         return groups
 
     def get_elements(self, element_ids):
         TypeMap = {
+            'CELAS1'  : self.elements_spring.celas1,
+            'CELAS2'  : self.elements_spring.celas2,
+            'CELAS3'  : self.elements_spring.celas3,
+            'CELAS4'  : self.elements_spring.celas4,
+
+            'CROD'  : self.crod,
+            'CONROD'  : self.conrod,
+            'CSHEAR'  : self.cshear,
+
             'CQUAD4'  : self.elements_shell.cquad4,
-            'CTRIA3'  : self.elements_shell.cquad4,
+            'CTRIA3'  : self.elements_shell.ctria3,
 
             'CTETRA4' : self.elements_solid.ctetra4,
             'CPENTA6' : self.elements_solid.cpenta6,
             'CHEXA8'  : self.elements_solid.chexa8,
+
+            'CTETRA10' : self.elements_solid.ctetra10,
+            'CPENTA15' : self.elements_solid.cpenta15,
+            'CHEXA20'  : self.elements_solid.chexa20,
+        }
+        out = []
+        for eid in element_ids:
+            obj = None
+            for Type, eids in self.element_groups.iteritems():
+                if eid in eids:
+                    i = where(eid == eids)[0]
+                    obj = TypeMap[Type][i]
+                    out.append(obj)
+        return out
+
+    def get_properties(self, property_ids):
+        TypeMap = {
+            'PELAS'  : self.pelas,
+            'PROD'  : self.prod,
+            'PSHEAR'  : self.pshear,
+
+            #'PBUSH'  : self.pbush,
+
+            'PSHELL'  : self.properties_shell.pshell,
+            'PCOMP'  : self.properties_shell.pcomp,
+            'PCOMPG'  : self.properties_shell.pcompg,
+
+            'PSOLID' : self.properties_solid.psolid,
         }
         out = []
         for eid in element_ids:
@@ -140,33 +178,29 @@ class Elements(object):
     def __getitem__(self, element_ids):
         TypeMap = {
             'CQUAD4'  : self.elements_shell.cquad4,
-            'CTRIA3'  : self.elements_shell.cquad4,
+            'CTRIA3'  : self.elements_shell.ctria3,
 
             'CTETRA4' : self.elements_solid.ctetra4,
             'CPENTA6' : self.elements_solid.cpenta6,
             'CHEXA8'  : self.elements_solid.chexa8,
         }
-        int_flag = False
-        if isinstance(element_ids, int):
-            element_ids2 = [element_ids]
-            int_flag = True
-        elif isinstance(element_ids, slice):
-            if element_ids.step is None:
-                element_ids2 = xrange(element_ids.start, element_ids.stop)
-            else:
-                element_ids2 = xrange(element_ids.start, element_ids.stop, element_ids.step)
-        else: # list, ndarray
-            element_ids2 = element_ids
+        element_ids2, int_flag = slice_to_iter(element_ids)
 
         out = []
+        #print('element_ids = %s' % element_ids2)
         for eid in element_ids2:
+            obj = None
             for Type, eids in self.element_groups.iteritems():
                 if eid in eids:
+                    #print('  found Type=%s' % Type)
                     i = where(eid == eids)[0]
                     obj = TypeMap[Type][i]
-                    out.append(obj)
-                else:
-                    out.append(None)
+                    #out.append(obj)
+                    break
+                #else:
+                    #out.append(None)
+            #print('*obj = %s' % obj)
+            out.append(obj)
         return out[0] if int_flag else out
 
 def check_duplicate(name, objs):

@@ -1,3 +1,4 @@
+import cStringIO
 from numpy import array, zeros, argsort, concatenate, searchsorted, unique, where, nan, arange
 
 from pyNastran.bdf.fieldWriter import print_card
@@ -136,7 +137,23 @@ class PSHELL(object):
     def get_index(self, property_ids=None):
         if property_ids is None:
             return arange(self.n)
-        return searchsorted(property_ids, self.property_id)
+        return searchsorted(self.property_id, property_ids)
+
+    def get_nonstructural_mass(self, property_ids=None):
+        """
+        Gets the nonstructural mass of the PHSELLs.
+
+        :param self: the PSHELL object
+        :param property_ids: the property IDs to consider (default=None -> all)
+        """
+        #print('get_nonstructural_mass; pids = %s' % property_ids)
+        if property_ids is None:
+            nsm = self.nsm
+        else:
+            i = self.get_index(property_ids)
+            #print('i = %s' % i)
+            nsm = self.nsm[i]
+        return nsm
 
     def get_thickness(self, property_ids=None):
         """
@@ -152,6 +169,44 @@ class PSHELL(object):
             t = self.thickness[i]
         return t
 
+    def get_mass_per_area(self, property_ids=None):
+        """
+        Gets the mass per area of the PHSELLs.
+
+        :param self: the PSHELL object
+        :param property_ids: the property IDs to consider (default=None -> all)
+        """
+        #massPerArea = self.nsm + self.Rho() * self.t
+        if property_ids is None:
+            t = self.thickness
+            nsm = self.nsm
+        else:
+            i = self.get_index(property_ids)
+            t = self.thickness[i]
+            nsm = self.nsm[i]
+
+        density = self.get_density(property_ids)
+        return nsm + density * t
+
+    def get_density(self, property_ids=None):
+        """
+        Gets the density of the PHSELLs.
+
+        :param self: the PSHELL object
+        :param property_ids: the property IDs to consider (default=None -> all)
+        """
+        material_id = self.material_id
+        j = where(material_id == 0)[0]
+        material_ids = material_id.copy()
+        material_ids[j] = self.material_id2
+
+        if property_ids is not None:
+            i = self.get_index(property_ids)
+            material_ids = material_ids[i]
+
+        density = self.model.materials.get_density(material_ids)
+        return density
+
     def get_material_id(self, property_ids=None):
         """
         Gets the material IDs of the PSHELLs.
@@ -166,5 +221,29 @@ class PSHELL(object):
             mid = self.material_id[i]
         return mid
 
+    def __getitem__(self, property_ids):
+        i = searchsorted(self.property_id, property_ids)
+
+        obj = PSHELL(self.model)
+        obj.n = len(i)
+        #obj._cards = self._cards[i]
+        #obj._comments = obj._comments[i]
+        #obj.comments = obj.comments[i]
+        obj.property_id = self.property_id[i]
+        obj.material_id = self.material_id[i]
+        obj.thickness = self.thickness[i]
+        obj.material_id2 = self.material_id2[i]
+        obj.twelveIt3 = self.twelveIt3[i]
+        obj.material_id3 = self.material_id3[i]
+        obj.tst = self.tst[i]
+        obj.nsm = self.nsm[i]
+        obj.z1 = self.z1[i]
+        obj.z2 = self.z2[i]
+        obj.material_id4 = self.material_id4[i]
+        return obj
+
     def __repr__(self):
-        asdf
+        f = cStringIO.StringIO()
+        f.write('<PSHELL object> n=%s\n' % self.n)
+        self.write_bdf(f)
+        return f.getvalue()

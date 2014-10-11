@@ -172,3 +172,17 @@ class MAT1(object):
         self.E[i] = E
         self.G[i] = G
         self.nu[i] = nu
+
+    def __getitem__(self, i):
+        obj = CQUAD4(self.model)
+        obj.n = len(i)
+        #obj._cards = self._cards[i]
+        #obj._comments = obj._comments[i]
+        #obj.comments = obj.comments[i]
+        obj.element_id = self.element_id[i]
+        obj.property_id = self.property_id[i]
+        obj.node_ids = self.node_ids[i, :]
+        obj.zoffset = self.zoffset[i]
+        obj.t_flag = self.t_flag[i]
+        obj.thickness = self.thickness[i, :]
+        return obj

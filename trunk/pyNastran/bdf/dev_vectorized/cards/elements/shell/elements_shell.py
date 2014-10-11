@@ -127,6 +127,7 @@ class ElementsShell(object):
 
     def get_thickness(self, element_ids=None):
         element_ids, property_ids = self._get_element_property_ids(element_ids)
+        assert len(element_ids) == 1, element_ids
 
         # lessen the work
         unique_pids = unique(property_ids)
@@ -157,6 +158,8 @@ class ElementsShell(object):
                 element_ids.extend(etype.element_id)
 
         n = len(element_ids)
+        #print 'element_ids =', element_ids
+        #print 'property_ids =', property_ids
         massi = zeros(n, dtype='float64')
 
         etypes = [etype.type for type in types]

@@ -15,7 +15,7 @@ class GetMethods(object):
             eids = set([element.element_id if element is not None else None for element in elements])
             diff = set(element_ids).difference(eids)
             msg = 'The following element IDs could not be found %s' % list(diff)
-            raise RuntimeError(msg)
+            raise KeyError(msg)
         return elements
 
     def get_properties(self, *property_ids):
@@ -24,5 +24,5 @@ class GetMethods(object):
             pids = set([prop.property_id if prop is not None else None for prop in properties])
             diff = set(property_ids).difference(pids)
             msg = 'The following property IDs could not be found %s' % list(diff)
-            raise RuntimeError(msg)
+            raise KeyError(msg)
         return properties

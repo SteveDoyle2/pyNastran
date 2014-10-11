@@ -7,9 +7,7 @@ from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 
-
-class CQUAD4(object):
-    type = 'CQUAD4'
+class ShellElement(object):
     def __init__(self, model):
         self.model = model
         self.n = 0
@@ -19,6 +17,114 @@ class CQUAD4(object):
     def add(self, card, comment):
         self._cards.append(card)
         self._comments.append(comment)
+
+    def get_mass(self, element_ids=None, total=False, node_ids=None, xyz_cid0=None):
+        """
+        Gets the mass of the CQUAD4s on a total or per element basis.
+
+        :param self: the CQUAD4 object
+        :param element_ids: the elements to consider (default=None -> all)
+        :param total: should the mass be summed (default=False)
+
+        :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
+
+        ..note:: If node_ids is None, the positions of all the GRID cards
+                 must be calculated
+        """
+        mass, _area, _normal = self._mass_area_normal(element_ids=element_ids,
+            xyz_cid0=xyz_cid0,
+            calculate_mass=True, calculate_area=False,
+            calculate_normal=False)
+
+        if total:
+            return mass.sum()
+        else:
+            #print('mass.shape = %s' % mass.shape)
+            return mass
+
+    def get_normal(self, element_ids=None, xyz_cid0=None):
+        """
+        Gets the normals of the CQUAD4s on per element basis.
+
+        :param self: the CQUAD4 object
+        :param element_ids: the elements to consider (default=None -> all)
+
+        :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
+
+        ..note:: If node_ids is None, the positions of all the GRID cards
+                 must be calculated
+        """
+        _mass, area, normal = self._mass_area_normal(element_ids=element_ids,
+            xyz_cid0=xyz_cid0,
+            calculate_mass=False, calculate_area=False,
+            calculate_normal=True)
+        return normal
+
+    def get_area(self, element_ids=None, total=False, xyz_cid0=None):
+        """
+        Gets the area of the CQUAD4s on a total or per element basis.
+
+        :param self: the CQUAD4 object
+        :param element_ids: the elements to consider (default=None -> all)
+        :param total: should the area be summed (default=False)
+
+        :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
+        :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
+
+        ..note:: If node_ids is None, the positions of all the GRID cards
+                 must be calculated
+        """
+        _mass, area, _normal = self._mass_area_normal(element_ids=element_ids,
+            xyz_cid0=xyz_cid0,
+            calculate_mass=False, calculate_area=True,
+            calculate_normal=False)
+        if total:
+            return area.sum()
+        else:
+            return area
+
+    def get_thickness(self, element_ids=None):
+        if element_ids is None:
+            element_ids = self.element_id
+            property_id = self.property_id
+            i = None
+        else:
+            i = searchsorted(self.element_id, element_ids)
+            property_id = self.property_id[i]
+        #print 'element_ids =', element_ids
+        #print 'property_ids =', property_id
+        t = self.model.properties_shell.get_thickness(property_id)
+        return t
+
+    def get_nonstructural_mass(self, element_ids=None):
+        if element_ids is None:
+            element_ids = self.element_id
+            property_id = self.property_id
+            i = None
+        else:
+            i = searchsorted(self.element_id, element_ids)
+            property_id = self.property_id[i]
+        nsm = self.model.properties_shell.get_nonstructural_mass(property_id)
+        return nsm
+
+    def get_density(self, element_ids=None):
+        if element_ids is None:
+            element_ids = self.element_id
+            property_id = self.property_id
+            i = None
+        else:
+            i = searchsorted(self.element_id, element_ids)
+            property_id = self.property_id[i]
+        #print('density - element_ids = %s' % element_ids)
+        density = self.model.properties_shell.get_density(property_id)
+        #print('density_out = %s' % density)
+        return density
+
+
+class CQUAD4(ShellElement):
+    type = 'CQUAD4'
+    def __init__(self, model):
+        ShellElement.__init__(self, model)
 
     def build(self):
         cards = self._cards
@@ -65,82 +171,19 @@ class CQUAD4(object):
             self._comments = []
 
     #=========================================================================
-    def get_mass(self, element_ids=None, total=False, node_ids=None, xyz_cid0=None):
-        """
-        Gets the mass of the CQUAD4s on a total or per element basis.
-
-        :param self: the CQUAD4 object
-        :param element_ids: the elements to consider (default=None -> all)
-        :param total: should the mass be summed (default=False)
-
-        :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
-
-        ..note:: If node_ids is None, the positions of all the GRID cards
-                 must be calculated
-        """
-        mass, _area, _normal = self._mass_area_normal(element_ids=element_ids,
-            xyz_cid0=xyz_cid0,
-            calculate_mass=True, calculate_area=False,
-            calculate_normal=False)
-
-        if total:
-            return mass.sum()
-        else:
-            return mass
-
-    def get_area(self, element_ids=None, total=False, xyz_cid0=None):
-        """
-        Gets the area of the CQUAD4s on a total or per element basis.
-
-        :param self: the CQUAD4 object
-        :param element_ids: the elements to consider (default=None -> all)
-        :param total: should the area be summed (default=False)
-
-        :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
-        :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
-
-        ..note:: If node_ids is None, the positions of all the GRID cards
-                 must be calculated
-        """
-        _mass, area, _normal = self._mass_area_normal(element_ids=element_ids,
-            xyz_cid0=xyz_cid0,
-            calculate_mass=False, calculate_area=True,
-            calculate_normal=False)
-
-        if total:
-            return area.sum()
-        else:
-            return area
-
-    def get_normal(self, element_ids=None, xyz_cid0=None):
-        """
-        Gets the normals of the CQUAD4s on per element basis.
-
-        :param self: the CQUAD4 object
-        :param element_ids: the elements to consider (default=None -> all)
-
-        :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
-
-        ..note:: If node_ids is None, the positions of all the GRID cards
-                 must be calculated
-        """
-        _mass, area, normal = self._mass_area_normal(element_ids=element_ids,
-            xyz_cid0=xyz_cid0,
-            calculate_mass=False, calculate_area=False,
-            calculate_normal=True)
-
-        if total:
-            return area.sum()
-        else:
-            return area
-
-    def _node_locations(self, xyz_cid0):
+    def _node_locations(self, xyz_cid0, i=None):
         if xyz_cid0 is None:
             xyz_cid0 = self.model.grid.get_positions()
-        n1 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 0]), :]
-        n2 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 1]), :]
-        n3 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 2]), :]
-        n4 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 3]), :]
+        if i is None:
+            n1 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 0]), :]
+            n2 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 1]), :]
+            n3 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 2]), :]
+            n4 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 3]), :]
+        else:
+            n1 = xyz_cid0[self.model.grid.index_map(self.node_ids[i, 0]), :]
+            n2 = xyz_cid0[self.model.grid.index_map(self.node_ids[i, 1]), :]
+            n3 = xyz_cid0[self.model.grid.index_map(self.node_ids[i, 2]), :]
+            n4 = xyz_cid0[self.model.grid.index_map(self.node_ids[i, 3]), :]
         return n1, n2, n3, n4
 
     def _mass_area_normal(self, element_ids=None, node_ids=None, xyz_cid0=None,
@@ -162,34 +205,64 @@ class CQUAD4(object):
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
-        n1, n2, n3, n4 = self._node_locations(xyz_cid0)
-        v12 = n2 - n1
-        v13 = n3 - n1
-        v123 = cross(v12, v13)
-        #print "v123", v123
+        if element_ids is None:
+            element_ids = self.element_id
+            property_id = self.property_id
+            i = None
+        else:
+            i = searchsorted(self.element_id, element_ids)
+            property_id = self.property_id[i]
+
+        n1, n2, n3, n4 = self._node_locations(xyz_cid0, i)
+        #print('n1 = %s' % n1)
+        #print('n2 = %s' % n2)
+        #print('n3 = %s' % n3)
+        #print('n4 = %s' % n4)
+        v13 = n1 - n3
+        v24 = n2 - n4
+        normal = cross(v13, v24)
 
         #if calculate_normal or calculate_area or calculate_mass:
-        #print "v123.shape =%s n=%s" % (v123.shape, norm(v123, axis=1).shape)
-        _norm = norm(v123, axis=1)
+        _norm = norm(normal, axis=1)
 
         massi = None
         A = None
 
-        # normal = v123 / _norm
-        #print _norm
         n = len(_norm)
-        normal = v123.copy()
         for i in xrange(n):
             normal[i] /= _norm[i]
 
         if calculate_area or calculate_mass:
-            A = 0.5 * n
+            A = 0.5 * _norm
+        #print "A =", A
         if calculate_mass:
-            t = self.model.elements_shell.get_thickness(self.property_id)
-            assert t is not None
-            massi = A * t #+ nsm
+            #t = self.model.properties_shell.get_thickness(property_id)  # PSHELL
+            #nsm = self.model.properties_shell.get_nonstructural_mass(property_id)  # PSHELL
+            #rho = self.model.properties_shell.get_density(property_id)  # MAT1
+            mpa = self.model.properties_shell.get_mass_per_area(property_id)
+            assert mpa is not None
+            #assert t is not None
+            #assert nsm is not None
+            #assert rho is not None
+            #print type(nsm)
+            #print "nsm =", nsm
+            #print("A  =%s" % A)
+            #print("rho=%s" % rho)
+            #print("t  =%s" % t)
+            #print("nsm=%s" % nsm)
+            #massi = rho * A * t + nsm
+            massi = mpa * A
         #print "massi =", massi
         return massi, A, normal
+
+    def get_centroid(self, element_ids=None, node_ids=None, xyz_cid0=None):
+        if element_ids is None:
+            element_ids = self.element_id
+            i = None
+        else:
+            i = searchsorted(self.element_id, element_ids)
+        n1, n2, n3, n4 = self._node_locations(xyz_cid0, i)
+        return (n1 + n2 + n3 + n4) / 4.
 
     #=========================================================================
     def write_bdf(self, f, size=8, element_ids=None):
@@ -203,7 +276,6 @@ class CQUAD4(object):
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 card = ['CQUAD4', eid, pid, n[0], n[1], n[2], n[3]]
                 f.write(print_card_8(card))
-
 
     def _verify(self, xref=True):
         self.get_mass()
@@ -230,22 +302,22 @@ class CQUAD4(object):
         #return grids2_cid_0
         return positions
 
-    def __getitem__(self, index):
+    def __getitem__(self, i):
         obj = CQUAD4(self.model)
-        obj.n = len(index)
-        #obj._cards = self._cards[index]
-        #obj._comments = obj._comments[index]
-        #obj.comments = obj.comments[index]
-        obj.element_id = self.element_id[index]
-        obj.property_id = self.property_id[index]
-        obj.node_ids = self.node_ids[index, :]
-        obj.zoffset = self.zoffset[index]
-        obj.t_flag = self.t_flag[index]
-        obj.thickness = self.thickness[index, :]
+        obj.n = len(i)
+        #obj._cards = self._cards[i]
+        #obj._comments = obj._comments[i]
+        #obj.comments = obj.comments[i]
+        obj.element_id = self.element_id[i]
+        obj.property_id = self.property_id[i]
+        obj.node_ids = self.node_ids[i, :]
+        obj.zoffset = self.zoffset[i]
+        obj.t_flag = self.t_flag[i]
+        obj.thickness = self.thickness[i, :]
         return obj
 
     def __repr__(self):
         f = cStringIO.StringIO()
-        f.write('<CPENTA6 object> n=%s\n' % self.n)
+        f.write('<QUAD4 object> n=%s\n' % self.n)
         self.write_bdf(f)
         return f.getvalue()
