@@ -28,7 +28,7 @@ def test_1():
     f = open(infileName, 'wb')
     f.write(lines)
     f.close()
-    
+
     cart3d = Cart3DReader(log=None, debug=False)
     (points, elements, regions, loads) = cart3d.read_cart3d(infileName)
     assert len(points) == 7, 'npoints=%s' % len(points)
@@ -65,20 +65,20 @@ def test_2():
     f = open(infileName, 'wb')
     f.write(lines)
     f.close()
-    
+
     cart3d = generic_cart3d_reader(infileName, log=None, debug=False)
     (points, elements, regions, loads) = cart3d.read_cart3d(infileName)
-    
+
     assert len(points) == 5, 'npoints=%s' % len(points)
     assert len(elements) == 3, 'nelements=%s' % len(elements)
     assert len(regions) == 3, 'nregions=%s' % len(regions)
-    
+
     assert len(loads) == 10, 'nloads=%s' % len(loads)
     assert len(loads['Cp']) == 5, 'nCp=%s' % len(loads['Cp'])
 
     outfileName = 'flat.bin.tri'
     cart3d.write_cart3d(outfileName, points, elements, regions, loads=None, is_binary=True)
-    
+
 def test_3():
     infileName = 'threePlugs.tri'
     outfileName = 'threePlugs_out.tri'
@@ -97,7 +97,7 @@ def test_3():
     check(points, points2)
 
     cart3d.write_cart3d(outfileName_bin_out, points2, elements2, regions2, loads2, is_binary=False)
-    
+
 
 def check(points, points2):
     nnodes, three = points.shape
@@ -107,7 +107,7 @@ def check(points, points2):
             p2 = points2[nid]
             abs_sum_delta = sum(abs(p1-p2))
             assert allclose(abs_sum_delta, 0.0, atol=1e-6), 'n=%s p1=%s p2=%s diff=%s\nsum(abs(p1-p2))=%s' % (nid, str(p1), str(p2), str(p1-p2), abs_sum_delta)
-    
+
 
 if __name__ == '__main__':
     import time
@@ -115,4 +115,4 @@ if __name__ == '__main__':
     #test_1()
     #test_2()
     test_3()
-    print "dt =", time.time()-t0
+    print("dt = %s" % (time.time() - t0))

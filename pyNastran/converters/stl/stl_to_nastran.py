@@ -54,7 +54,7 @@ if __name__ == '__main__':
 
     import pyNastran
     root_path = pyNastran.__path__[0]
-    print "root_path =",  root_path
+    print("root_path = %s" % root_path)
 
     from pyNastran.converters.cart3d.cart3d_to_stl import cart3d_to_stl_filename
 

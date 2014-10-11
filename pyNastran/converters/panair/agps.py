@@ -58,7 +58,7 @@ class AGPS(object):
 
         for ipatch, patch in enumerate(patches):
             if self.debug:
-                print "ipatch=%s" % ipatch
+                print("ipatch=%s" % ipatch)
             #print "ipatch =", ipatch
             #print patch
             X = []
@@ -84,12 +84,12 @@ class AGPS(object):
                 Y.append(y)
                 Z.append(z)
                 Cp.append(cp)
-                #print "len(cp) =", len(cp)
+                #print("len(cp) = %s" % len(cp))
             #print X
             if self.debug:
-                print len(X)
+                print(len(X))
                 for x in X:
-                    print x, len(x)
+                    print('%s %s' % (x, len(x))
 
             X = array(X, dtype='float32')
             Y = array(Y, dtype='float32')
@@ -98,9 +98,9 @@ class AGPS(object):
             self.pressures[ipatch] = Cp
             #print Cp.shape
             if self.debug:
-                print ""
+                print("")
         #for ipatch, Cp in sorted(self.pressures.iteritems()):
-            #print Cp
+            #print(Cp)
 
 if __name__ == '__main__':
     a = AGPS()

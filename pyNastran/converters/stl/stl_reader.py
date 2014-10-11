@@ -260,11 +260,11 @@ class STLReader(object):
             mid += 1
             ni += 1
         bdf.close()
-        #print elements2
+        #print(elements2)
         #for node in nodes:
             #normal = normals_elements[nid]
             #nid += 1
-        #print deltaN
+        #print(deltaN)
 
         #----------- make far field---------------
         nodes3 = nodes2[nnbase : , :]
@@ -297,14 +297,14 @@ class STLReader(object):
         out.write(msg)
 
         nelements, three = elements.shape
-        #print "write nelements=%s" % nelements
+        #print("write nelements=%s" % nelements)
         normals = self.get_normals(elements)
         for element, normal in zip(elements, normals):
             #msg = ''
             try:
                 p1, p2, p3 = nodes[element]
             except IndexError:
-                print element
+                print(element)
                 raise
 
             #msg  += '  facet normal -6.601157e-001 6.730213e-001 3.336009e-001\n'
@@ -315,7 +315,7 @@ class STLReader(object):
             msg += vFormat % tuple(p3)
             msg += '    endloop\n'
             msg += '  endfacet\n'
-            #print msg
+            #print(msg)
             out.write(msg)
         msg = 'endsolid\n'
         out.write(msg)
@@ -329,7 +329,7 @@ class STLReader(object):
         nodes_dict = {}
         elements = []
         while line:
-            print "**line = %r" % line
+            print("**line = %r" % line)
             if 'solid' in line[:6]:
                 line = f.readline()  # facet
                 #print "line = %r" % line
@@ -443,7 +443,7 @@ def run_arg_parse():
 
     #format  = data['--format']
     input = data['INPUT']
-    print "input =", input
+    print("input = %s" % input)
     output = data['--output']
     if output is None:
         input_base, ext = os.path.splitext(input)

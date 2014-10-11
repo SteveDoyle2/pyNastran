@@ -27,7 +27,7 @@ def readAirfoil(filename):
     lines = infile.readlines()
     (nUpper,nLower) = lines[1].split()
     nUpper=int(float(nUpper)); nLower=int(float(nLower))
-    print "nUpper=%s nLower=%s" %(nUpper,nLower)
+    print("nUpper=%s nLower=%s" % (nUpper,nLower))
 
     upperSurface=[]; lowerSurface=[]
     upperLines = lines[3:3+nUpper]

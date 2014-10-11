@@ -89,7 +89,7 @@ class Cart3dIO(object):
         nnodes, three = nodes.shape
 
         nid = 0
-        print "nnodes=%s" % nnodes
+        print("nnodes=%s" % nnodes)
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
@@ -167,7 +167,7 @@ class Cart3dIO(object):
 
 
     def _fill_cart3d_case(self, cases, ID, nodes, elements, regions, loads):
-        print "is_centroidal=%s isNodal=%s" % (self.is_centroidal, self.is_nodal)
+        print("is_centroidal=%s isNodal=%s" % (self.is_centroidal, self.is_nodal))
         assert self.is_centroidal!= self.is_nodal
 
         result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
