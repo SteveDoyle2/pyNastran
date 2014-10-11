@@ -1,6 +1,6 @@
 import cStringIO
 from numpy import (array, zeros, arange, concatenate, searchsorted,
-    where, unique, cross, dot)
+    where, unique, cross, dot, asarray)
 from numpy.linalg import norm
 
 from pyNastran.bdf.fieldWriter import print_card_8
@@ -123,6 +123,7 @@ class ShellElement(object):
 
 class CQUAD4(ShellElement):
     type = 'CQUAD4'
+    op2_id = 144
     def __init__(self, model):
         ShellElement.__init__(self, model)
 
@@ -267,13 +268,19 @@ class CQUAD4(ShellElement):
     #=========================================================================
     def write_bdf(self, f, size=8, element_ids=None):
         if self.n:
+            print('    self.n = %s' % self.n)
             if element_ids is None:
                 i = arange(self.n)
             else:
                 assert len(unique(element_ids))==len(element_ids), unique(element_ids)
                 i = searchsorted(self.element_id, element_ids)
+            #if len(i) == 1:
+                #i = i[0]
+            print('    iwrite = %s' % i)
+            print('    all_nodes = %s' % str(self.node_ids))
 
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
+                #print('    n = %s' % n)
                 card = ['CQUAD4', eid, pid, n[0], n[1], n[2], n[3]]
                 f.write(print_card_8(card))
 
@@ -302,7 +309,15 @@ class CQUAD4(ShellElement):
         #return grids2_cid_0
         return positions
 
-    def __getitem__(self, i):
+    def __getitem__(self, element_ids):
+        print('element_ids = %s' % (element_ids))
+        i = searchsorted(self.element_id, element_ids)
+        return self.slice_by_index(i)
+
+    def slice_by_index(self, i):
+        print('isliceA = %s %s' % (i, type(i)))
+        i = asarray(i)
+        print('isliceB = %s %s %s' % (i, type(i), str(i.shape)))
         obj = CQUAD4(self.model)
         obj.n = len(i)
         #obj._cards = self._cards[i]

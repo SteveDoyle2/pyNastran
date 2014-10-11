@@ -12,6 +12,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 
 class CROD(object):
     type = 'CROD'
+    op2_id = 1
     def __init__(self, model):
         """
         Defines the CROD object.
@@ -61,6 +62,7 @@ class CROD(object):
             self._comments = []
         else:
             self.element_id = array([], dtype='int32')
+            self.property_id = array([], dtype='int32')
 
     #=========================================================================
     def get_Area(self, property_ids):

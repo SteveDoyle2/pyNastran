@@ -2,7 +2,7 @@ import cStringIO
 from itertools import izip
 
 from numpy import (array, zeros, arange, concatenate, searchsorted, where,
-                   unique, cross)
+                   unique, cross, asarray)
 from numpy.linalg import norm
 
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad4 import ShellElement
@@ -13,6 +13,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 
 class CTRIA3(ShellElement):
     type = 'CTRIA3'
+    op2_id = 73
     def __init__(self, model):
         ShellElement.__init__(self, model)
         #self.model = model
@@ -65,6 +66,9 @@ class CTRIA3(ShellElement):
             self.node_ids = self.node_ids[i, :]
             self._cards = []
             self._comments = []
+        else:
+            self.element_id = zeros([], 'int32')
+            self.property_id = array([], dtype='int32')
 
     def write_bdf(self, f, size=8, element_ids=None):
         if self.n:
@@ -281,18 +285,23 @@ class CTRIA3(ShellElement):
         n1, n2, n3 = self._node_locations(xyz_cid0, i)
         return (n1 + n2 + n3) / 3.
 
-    def __getitem__(self, index):
+    def __getitem__(self, element_ids):
+        i = searchsorted(self.element_id, element_ids)
+        return self.slice_by_index(i)
+
+    def slice_by_index(self, i):
+        i = asarray(i)
         obj = CTRIA3(self.model)
-        obj.n = len(index)
-        #obj._cards = self._cards[index]
-        #obj._comments = obj._comments[index]
-        #obj.comments = obj.comments[index]
-        obj.element_id = self.element_id[index]
-        obj.property_id = self.property_id[index]
-        obj.node_ids = self.node_ids[index, :]
-        obj.zoffset = self.zoffset[index]
-        obj.t_flag = self.t_flag[index]
-        obj.thickness = self.thickness[index, :]
+        obj.n = len(i)
+        #obj._cards = self._cards[i]
+        #obj._comments = obj._comments[i]
+        #obj.comments = obj.comments[i]
+        obj.element_id = self.element_id[i]
+        obj.property_id = self.property_id[i]
+        obj.node_ids = self.node_ids[i, :]
+        obj.zoffset = self.zoffset[i]
+        obj.t_flag = self.t_flag[i]
+        obj.thickness = self.thickness[i, :]
         return obj
 
     def __repr__(self):

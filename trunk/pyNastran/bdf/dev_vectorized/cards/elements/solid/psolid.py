@@ -1,5 +1,5 @@
 import cStringIO
-from numpy import zeros, unique, where
+from numpy import zeros, unique, where, searchsorted
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.fieldWriter import print_card_8
@@ -121,6 +121,22 @@ class PSOLID(object):
                         stress, isop, fctn]
                 #print card
                 f.write(print_card_8(card))
+
+    def __getitem__(self, property_ids):
+        i = searchsorted(self.property_id, property_ids)
+        obj = PSOLID(self.model)
+        obj.n = len(property_ids)
+        #obj._cards = self._cards[i]
+        #obj._comments = obj._comments[i]
+        #obj.comments = obj.comments[i]
+        obj.property_id = self.property_id[i]
+        obj.material_id = self.material_id[i]
+        obj.cordm = self.cordm[i]
+        obj.integ = self.integ[i]
+        obj.stress = self.stress[i]
+        obj.isop = self.isop[i]
+        obj.fctn = self.fctn[i]
+        return obj
 
     def __repr__(self):
         f = cStringIO.StringIO()

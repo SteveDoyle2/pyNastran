@@ -51,6 +51,7 @@ class CSHEAR(object):
             self._comments = []
         else:
             self.element_id = array([], dtype='int32')
+            self.property_id = array([], dtype='int32')
 
     def write_bdf(self, f, size=8, eids=None):
         if self.n:
