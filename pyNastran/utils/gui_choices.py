@@ -23,7 +23,7 @@ def get_string_width(name):
 
 def bold(obj):
     f = obj.GetFont()
-    f.SetWeight(wx.BOLD) 
+    f.SetWeight(wx.BOLD)
     obj.SetFont(f)
 
 class GetChoices(wx.Dialog):
@@ -41,7 +41,7 @@ class GetChoices(wx.Dialog):
             width = get_string_width(name)
             widths.append(width)
         width = max(widths)
-        
+
         height = 200 + 20 * n_names
         max_height = 400
         if height > max_height:
@@ -60,10 +60,10 @@ class GetChoices(wx.Dialog):
         self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
 
         bSizer1 = wx.BoxSizer( wx.VERTICAL )
-        
+
         self.checkboxes = []
         #self.staticTexts= []
-        
+
         #gSizer1 = wx.GridSizer(n_names + 1, 2, 0, 0 )
         gSizer1 = wx.GridSizer(n_names, 1, 0, 0 )
 
@@ -77,7 +77,7 @@ class GetChoices(wx.Dialog):
 
         self.m_scrolledWindow1 = wx.ScrolledWindow( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.EXPAND|wx.HSCROLL|wx.VSCROLL)
         self.m_scrolledWindow1.SetScrollRate( 5, 5 )
-        
+
         for name in names:
             checkbox = wx.CheckBox( self.m_scrolledWindow1, wx.ID_ANY, name, wx.DefaultPosition, wx.DefaultSize, 0)
             checkbox.SetValue(True)
@@ -141,7 +141,7 @@ class GetChoices(wx.Dialog):
 
 def main(names):
     ex = wx.App()
-    
+
     args = {
         'names' : names,
         'selected' : None,
@@ -150,7 +150,7 @@ def main(names):
     ex.MainLoop()
     #print "****args = ", args
     selected = args['selected']
-    print "****selected = ", selected 
+    print("****selected = %s" % selected)
     if selected is None:
         selected = names
     return selected

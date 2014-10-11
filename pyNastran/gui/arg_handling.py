@@ -108,7 +108,7 @@ def get_inputs(mode='wx'):
     if is_centroidal == is_nodal:
         is_nodal = not(is_centroidal)
 
-    print "is_centroidal =", is_centroidal
+    print("is_centroidal = %s" % is_centroidal)
     inputs = {
         'is_edges' : is_edges,
         'is_nodal' : is_nodal,

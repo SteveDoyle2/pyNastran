@@ -195,7 +195,7 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
                 kb = get_memory_usage() / 1024
             mb = kb / 1024.
             #mbs.append(mb)
-            print "Memory usage start: %s (KB); %.2f (MB)" % (kb, mb)
+            print("Memory usage start: %s (KB); %.2f (MB)" % (kb, mb))
 
         #op2.read_bdf(op2.bdfFileName,includeDir=None,xref=False)
         #op2.write_bdf_as_patran()
@@ -215,7 +215,7 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
                 kb = get_memory_usage() / 1024
             mb = kb / 1024.
             #mbs.append(mb)
-            print "Memory usage     end: %s (KB); %.2f (MB)" % (kb, mb)
+            print("Memory usage     end: %s (KB); %.2f (MB)" % (kb, mb))
 
         if write_f06:
             (model, ext) = os.path.splitext(op2FileName)
@@ -243,7 +243,7 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
                 kb = get_memory_usage() / 1024
             mb = kb / 1024.
             #mbs.append(mb)
-            print "Memory usage cleanup: %s (KB); %.2f (MB)" % (kb, mb)
+            print("Memory usage cleanup: %s (KB); %.2f (MB)" % (kb, mb))
 
 
         #print "subcases = ",op2.subcases

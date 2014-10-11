@@ -569,7 +569,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
             line = self.infile.readline()[1:].strip()
             sline = line.split()
             if debug:
-                print sline
+                print(sline)
             self.i += 1
             if 'PAGE' in sline:
                 #self.stored_lines = [line]  ## changed...
