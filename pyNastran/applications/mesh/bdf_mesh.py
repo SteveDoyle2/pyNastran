@@ -185,13 +185,16 @@ class MeshTools(BDF):
         # TODO: these nodes are probably wrong...
         origin = [x, 0, 0]
         z_axis = [x, 0, z]
-        xz_plane = [x, y, z]
+        xz_plane = [2*x, 0,0.]
         data = ['CORD2R', cid, rid] + origin + z_axis + xz_plane
         coordA = CORD2R(data)
 
         # get the location of all the nodes in the model in the
         # local coordinate frame
-        xyz = {}
+        g0 = ['GRID', -1, coordA, 0., 0., 0.]
+        grid0 = GRID(g0)
+
+        xyz = {-1: grid0.xyz, }
         for grid in self.nodes:
             xyz[grid.nid] = grid.PositionWRT(xyz, coordA)
 
@@ -215,23 +218,7 @@ class MeshTools(BDF):
                 #edges = element.get_edges()
                 pass
             elif element.type == 'CTRIA3':
-                if 0:
-                    edges = element.get_edges()
-
-                    iedges = []
-                    p_planes = []
-                    for iedge, edge in enumerate(edges):
-                        n1, n2 = edge
-                        if xyz[n2] == 0.: # on the plane
-                            p_plane = xyz
-                            iedges.append(iedge)
-                            p_planes.append(p_plane)
-                        elif xyz[n1] / xyz[n2] < 0.: # different signs
-                            t = xyz[n1] / xyz[n2]
-                            p_plane = t * p2 + p1
-                            iedges.append(iedge)
-                            p_planes.append(p_plane)
-
+                pass
                 # find subelement where positive element
                 # TODO: do I need this?
 
@@ -271,7 +258,7 @@ class MeshTools(BDF):
             g1 = GRID(data=g1)
             g2 = GRID(data=g2)
 
-            el = ['CTRIA3', 1, 1, nid0, g1, g2]
+            el = ['CTRIA3', 1, 1, grid0, g1, g2]
             element = CTRIA3(data=e1)
 
         ##====================================================================
@@ -290,3 +277,51 @@ class MeshTools(BDF):
             for elem in group:
                     A += A
         return A
+
+    def equivalence_nodes(self, xyz=None, tol=1e-6):
+        """
+        Collapses nodes within a tolerance
+        :param xyz: dictionary of node locations by nodeID
+        :param tol: the distance between nodes
+
+        ..warning:: doesn't handle SPOINTs
+        """
+        if xyz is None:
+            #xyz = {}
+            xyz_data = zeros((len(self.nodes), 3), dtype='float64')
+
+            i = 0
+            for nid, node in sorted(self.nodes.iteritems()):
+                point, M = grid.Position(xyz)
+                #xyz[nid] = point
+                xyz_data[i, :] = point
+
+        from scipy.spatial import KDTree
+        tree = KDTree(xyz_data, leafsize=10)
+
+        # find the non-unique nodes
+        i = 0
+        all_ids = set([])
+        for nid, node in sorted(self.nodes.iteritems()):
+            point = xyz_data[i]
+
+            # find the nodes at the current location
+            nclose_nodes = 5
+            while 1:
+                dist, i_collapse = tree.query(point, k=nclose_nodes, p=2)
+                if len(dist) < nclose_nodes:
+                    break
+                nclose_nodes += 15
+
+            # if we have 2 or more nodes at this point
+            if len(i_collapse) > 1:
+                collapse_nodes = set(i_collapse)
+                for ID in collapse_nodes:
+                    if ID > i:
+                        all_ids.add(ID)
+            i += 1
+
+        # how do I destroy nodes efficiently...
+        # lets destroy nodes
+        for ID in all_ids:
+            self.nodes[ID] = None
