@@ -169,7 +169,7 @@ class WriteMesh(object):
 
                 for t in ptypes:
                     if t.n and pid in t.property_id:
-                        print "prop.type =", t.type
+                        print("prop.type = %s" % t.type)
                         t.write_bdf(f, size=size, property_ids=[pid])
                         pids_set.remove(pid)
                 n = 0
@@ -194,7 +194,7 @@ class WriteMesh(object):
                     try:
                         t.write_bdf(f, size=size, element_ids=eids3)
                     except TypeError:
-                        print "t.type =", t.type
+                        print("t.type = %s" % t.type)
                         raise
                     del eids3
             #for pid, elements in elements_by_pid.items():

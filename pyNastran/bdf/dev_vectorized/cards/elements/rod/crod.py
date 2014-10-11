@@ -49,7 +49,7 @@ class CROD(object):
                 assert len(card) == 5, 'len(CROD card) = %i' % len(card)
 
             i = self.element_id.argsort()
-            print "i", i, type(i)
+            print("i %s %s" % (i, type(i)))
             self.element_id = self.element_id[i]
             self.property_id = self.property_id[i]
             self.node_ids = self.node_ids[i, :]

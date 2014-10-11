@@ -158,11 +158,11 @@ class CELAS1(object):
             u_axial = dot(Lambda, q_axial)
             du_axial[i] = u_axial[0] - u_axial[1]
 
-        print "len(pelas) =", self.model.pelas.n
+        print("len(pelas) = %s" % self.model.pelas.n)
         i = searchsorted(self.model.pelas.property_id, self.property_id)
         k = self.model.pelas.K[i]
         s = self.model.pelas.s[i]
-        print "k=%s s=%s du_axial=%s" % (k, s, du_axial)
+        print("k=%s s=%s du_axial=%s" % (k, s, du_axial))
 
         e1[ni: ni+n] = du_axial * s
         f1[ni: ni+n] = k * du_axial

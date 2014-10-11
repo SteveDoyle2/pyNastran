@@ -5,15 +5,15 @@ from collections import defaultdict
 class LoadCase(object):
     def __init__(self):
         self.loads = defaultdict(list)
-    
+
     def __getitem__(self, key):
-        print "loadcase", key
+        print("loadcase %s" % key)
         aaa
         return self.resolve(key)
 
     def add(self, load):
         if load.n:
-            print "n = ", load.n
+            #print("load.n = %s" % load.n)
             load_ids = unique(load.load_id)
             for load_id in load_ids:
                 if load.type in ['FORCE', 'FORCE1', 'FORCE2',
@@ -44,7 +44,7 @@ class LoadCase(object):
             load.write_bdf(f)
         #print f.getvalue()
         #print "**********"
-            
+
         all_loads_out = []
         all_loads_loop = all_loads
 

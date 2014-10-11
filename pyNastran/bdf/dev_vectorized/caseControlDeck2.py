@@ -259,7 +259,7 @@ class CaseControlDeck(object):
             elif line.startswith('ANALYSIS'):
                 obj = ANALYSIS(line)
             else:
-                print "*line =", line
+                print("*line = %s" % line)
                 raise NotImplementedError(line)
             self._add_obj_to_subcase(subcase_id, obj)
         else:
@@ -276,7 +276,7 @@ class CaseControlDeck(object):
                 obj = OUTPUT(line)
                 self._add_obj_to_subcase(subcase_id, obj)
             else:
-                print "***line =", line
+                print("***line = %s" % line)
                 #raise NotImplementedError(line)
         return subcase_id
 
@@ -371,7 +371,7 @@ class ANALYSIS(object):
 class KeyParenKeyiEqValParenEqVal(object):
     def __init__(self, line):
         self.line = line
-        print "line =", line
+        print("line = %s" % line)
 
         if ')' in line:
             # KEY(OPTION) = 5
