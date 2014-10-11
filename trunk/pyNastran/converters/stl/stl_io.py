@@ -41,7 +41,7 @@ class STL_IO(object):
         return skipReading
 
     def load_stl_geometry(self, stl_filename, dirname):
-        print "load_stl_geometry..."
+        print("load_stl_geometry...")
         skipReading = self.removeOldGeometry(stl_filename)
         if skipReading:
             return
@@ -54,8 +54,8 @@ class STL_IO(object):
         self.nNodes, three = nodes.shape
         self.nElements, three = elements.shape
 
-        print("nNodes = ",self.nNodes)
-        print("nElements = ", self.nElements)
+        print("nNodes = %s" % self.nNodes)
+        print("nElements = %s" % self.nElements)
 
         self.grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)
@@ -83,7 +83,7 @@ class STL_IO(object):
         nnodes, three = nodes.shape
 
         nid = 0
-        print "nnodes=%s" % nnodes
+        print("nnodes=%s" % nnodes)
         for i in xrange(nnodes):
             points.InsertPoint(nid, nodes[i, :])
             nid += 1
@@ -116,11 +116,11 @@ class STL_IO(object):
 
     def _fill_stl_case(self, cases, ID, elements):
         return cases
-        #print "regions**** = ",regions
+        #print("regions**** = %s" % regions)
         #nNodes = self.nNodes
         #nElements = self.nElements
 
-        print "is_centroidal=%s isNodal=%s" % (self.is_centroidal, self.is_nodal)
+        print("is_centroidal=%s isNodal=%s" % (self.is_centroidal, self.is_nodal))
         assert self.is_centroidal != self.is_nodal
 
         if self.is_centroidal:
@@ -129,7 +129,7 @@ class STL_IO(object):
             cases[(ID, 'Eids', 1, 'centroid', '%.0f')] = arange(1, nelements+1)
 
         elif self.is_nodal:
-            #print("load.keys() = ", loads.keys())
+            #print("load.keys() = %s" % loads.keys())
             for key in result_names:
                 if key in loads:
                     nodal_data = loads[key]
