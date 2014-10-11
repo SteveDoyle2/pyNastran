@@ -29,7 +29,7 @@ def update_bdf(model):
 def main(bdf_name, run_first_nastran=True, debug=True):
     base, ext = os.path.splitext(bdf_name)
 
-    print "len(sys.argv) =", len(sys.argv)
+    print("len(sys.argv) = %s" % len(sys.argv))
     #===========================
     if run_first_nastran:
         # run nastran and verify the starting model is correct
@@ -57,7 +57,7 @@ def main(bdf_name, run_first_nastran=True, debug=True):
     model3.write_bdf(out_bdf_16s, size=16, precision='single')
     model3.write_bdf(out_bdf_16, size=16, precision='double')
     if debug:
-        print "---wrote the bdf---"
+        print("---wrote the bdf---")
     #===========================
     # run nastran again
     os.system('nastran scr=yes bat=no news=no old=no %s' % out_bdf_8)

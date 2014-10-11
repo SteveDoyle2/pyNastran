@@ -981,10 +981,13 @@ class MAT8(OrthotropicMaterial):
 
     def rawFields(self):
         list_fields = ['MAT8', self.mid, self.e11, self.e22, self.nu12, self.g12,
-                  self.g1z, self.g2z, self.rho, self.a1, self.a2, self.TRef,
-                  self.Xt, self.Xc, self.Yt, self.Yc, self.S, self.ge,
-                  self.F12, self.strn]
+                       self.g1z, self.g2z, self.rho, self.a1, self.a2, self.TRef,
+                       self.Xt, self.Xc, self.Yt, self.Yc, self.S, self.ge,
+                       self.F12, self.strn]
         return list_fields
+
+    def get_density(self):
+        return self.rho
 
     def reprFields(self):
         """
