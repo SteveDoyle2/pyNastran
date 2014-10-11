@@ -108,7 +108,7 @@ class AppFrame(wx.Frame):
         #if rotation:
             #if rotation == '-x':
 
-        print 'shots = %r' % shots
+        print('shots = %r' % shots)
         if shots:
         #for shot in shots:
             self.frmPanel.widget.onTakePicture(ID_CAMERA, shots)
@@ -124,7 +124,7 @@ class AppFrame(wx.Frame):
         print('format=%r input=%r output=%r' % (format, input, output))
         if format is not None and format.lower() not in valid_formats:
             msg = '\n---invalid format=%r' % format
-            print msg
+            print(msg)
             self.frmPanel.scalarBar.VisibilityOff()
             self.frmPanel.scalarBar.Modified()
             return
@@ -146,7 +146,7 @@ class AppFrame(wx.Frame):
 
             if not os.path.exists(input):
                 msg = 'input=%r does not exist' % input
-                print msg
+                print(msg)
                 aaaa
                 self.frmPanel.scalarBar.VisibilityOff()
                 self.frmPanel.scalarBar.Modified()
@@ -181,7 +181,7 @@ class AppFrame(wx.Frame):
                 self.frmPanel.load_plot3d_geometry(inputbase, dirname)
             else:
                 msg = '\n---unsupported format=%r' % format
-                print msg
+                print(msg)
                 return
                 #raise IOError(msg)
                 #sys.exit(msg)
@@ -190,8 +190,8 @@ class AppFrame(wx.Frame):
 
             if output:
                 if os.path.exists(output):
-                    print "format=%r" % format
-                    print "output=%r" % output
+                    print("format=%r" % format)
+                    print("output=%r" % output)
                     load_results(output, dirname)
                 else:
                     msg = 'output=%r does not exist' % output

@@ -131,7 +131,7 @@ def _main():  # pragma: no conver
     wildcard_qt = "Nastran BDF (*.bdf *.dat *.pch);;All files (*)"
     stitle = 'Please select a BDF/DAT/PCH to load'
     fname = load_file_dialog(stitle, wildcard_wx, wildcard_qt)
-    print "fname2 = ", fname
+    print("fname2 = %s" % fname)
 
 
 if __name__ == '__main__':  # pragma: no conver
