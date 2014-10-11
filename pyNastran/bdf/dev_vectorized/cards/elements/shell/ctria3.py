@@ -196,16 +196,11 @@ class CTRIA3(ShellElement):
             property_id = self.property_id[i]
 
         n1, n2, n3 = self._node_locations(xyz_cid0)
-        v12 = n2 - n1
-        v13 = n3 - n1
-        v123 = cross(v12, v13)
-        n = norm(v123, axis=1)
+        if calculate_mass:
+            calculate_area = True
+        normal, A = _ctria3_normal_A(n1, n2, n3, calculate_area=calculate_area, normalize=True)
 
-        normal = v123 / n
-        A = None
         massi = None
-        if calculate_area or calculate_mass:
-            A = 0.5 * n
         if calculate_mass:
             #t = self.model.properties_shell.get_thickness(property_id)  # PSHELL
             #nsm = self.model.properties_shell.get_nonstructural_mass(property_id)  # PSHELL
@@ -309,3 +304,22 @@ class CTRIA3(ShellElement):
         f.write('<CTRIA3 object> n=%s\n' % self.n)
         self.write_bdf(f)
         return f.getvalue()
+
+def _ctria3_normal_A(n1, n2, n3, calculate_area=True, normalize=True):
+    v12 = n2 - n1
+    v13 = n3 - n1
+    normal = cross(v12, v13)
+
+    A = None
+    if calculate_area:
+        n = norm(normal, axis=1)
+        A = 0.5 * n
+    elif normalize:
+        n = norm(normal, axis=1)
+
+    if normalize:
+        #n = len(_norm)
+        #for i in xrange(n):
+            #normal[i] /= n
+        normal /= n
+    return normal, A

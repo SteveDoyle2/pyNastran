@@ -2,7 +2,8 @@ from numpy import array, zeros, searchsorted, unique, concatenate, argsort, hsta
 from numpy.linalg import norm
 
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter, unique2d
-
+from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad4 import _cquad4_normal_A
+from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctria3 import _ctria3_normal_A
 
 class Elements(object):
     def __init__(self, model):
@@ -248,24 +249,20 @@ class Elements(object):
                 if eType == 'CTRIA3':
                     print('all_pid/nodes =\n%s' % vstack([elements.element_id, elements.node_ids]))
                     n1, n2, n3 = elements.node_ids[i, 0], elements.node_ids[i, 1], elements.node_ids[i, 2]
-
                     n1 = xyz_cid0[self.model.grid.index_map(n1), :]
                     n2 = xyz_cid0[self.model.grid.index_map(n2), :]
                     n3 = xyz_cid0[self.model.grid.index_map(n3), :]
-                    normal = cross(n2 - n1, n3 - n1)
+                    normal, A = _ctria3_normal_A(n1, n2, n3, calculate_area=True, normalize=True)
                 elif eType == 'CQUAD4':
                     n1, n2, n3, n4 = elements.node_ids[i, :]
                     n1 = xyz_cid0[self.model.grid.index_map(n1), :]
                     n2 = xyz_cid0[self.model.grid.index_map(n2), :]
                     n3 = xyz_cid0[self.model.grid.index_map(n3), :]
                     n4 = xyz_cid0[self.model.grid.index_map(n4), :]
-                    normal = cross(n3 - n1, n4 - n2)
+                    normal, A = _cquad4_normal_A(n1, n2, n3, calculate_area=True, normalize=True)
                 else:
                     print("Element.get_mass doesn't support %s; try %s.get_mass" % (eType, eType))
                     continue
-                n = norm(normal, axis=0)
-                #normal /= n
-                A = 0.5 * n
                 print('prop = %s' % prop)
                 print('calling get_mass_per_area for pid=%s' % (pid))
                 mpa = prop.get_mass_per_area()
@@ -330,7 +327,7 @@ class Elements(object):
 
     def get_element_typemap(self):
         TypeMap = {
-            'CONROD'  : self.conrod,
+            'CONROD' : self.conrod,
             'CROD' : self.crod,
             'CBAR' : self.cbar,
             'CBEAM' : self.cbeam,
