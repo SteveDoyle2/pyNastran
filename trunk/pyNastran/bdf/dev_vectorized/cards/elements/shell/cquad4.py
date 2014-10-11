@@ -215,27 +215,11 @@ class CQUAD4(ShellElement):
             property_id = self.property_id[i]
 
         n1, n2, n3, n4 = self._node_locations(xyz_cid0, i)
-        #print('n1 = %s' % n1)
-        #print('n2 = %s' % n2)
-        #print('n3 = %s' % n3)
-        #print('n4 = %s' % n4)
-        v13 = n1 - n3
-        v24 = n2 - n4
-        normal = cross(v13, v24)
-
-        #if calculate_normal or calculate_area or calculate_mass:
-        _norm = norm(normal, axis=1)
+        if calculate_mass:
+            calculate_area = True
+        normal, A = _cquad4_normal_A(n1, n2, n3, n4, calculate_area=calculate_area, normalize=True)
 
         massi = None
-        A = None
-
-        n = len(_norm)
-        for i in xrange(n):
-            normal[i] /= _norm[i]
-
-        if calculate_area or calculate_mass:
-            A = 0.5 * _norm
-        #print "A =", A
         if calculate_mass:
             #t = self.model.properties_shell.get_thickness(property_id)  # PSHELL
             #nsm = self.model.properties_shell.get_nonstructural_mass(property_id)  # PSHELL
@@ -336,3 +320,22 @@ class CQUAD4(ShellElement):
         f.write('<QUAD4 object> n=%s\n' % self.n)
         self.write_bdf(f)
         return f.getvalue()
+
+def _cquad4_normal_A(n1, n2, n3, n4, calculate_area=True, normalize=True):
+    v13 = n1 - n3
+    v24 = n2 - n4
+    normal = cross(v13, v24)
+
+    A = None
+    if calculate_area:
+        n = norm(normal, axis=1)
+        A = 0.5 * n
+    elif normalize:
+        n = norm(normal, axis=1)
+
+    if normalize:
+        #n = len(_norm)
+        #for i in xrange(n):
+            #normal[i] /= _norm[i]
+        normal /= n
+    return normal, A
