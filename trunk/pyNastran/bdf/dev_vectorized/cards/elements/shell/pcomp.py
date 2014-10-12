@@ -1,6 +1,8 @@
 import cStringIO
 from numpy import array, zeros, arange, searchsorted, where, unique, hstack, concatenate
 
+from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
+
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -105,7 +107,14 @@ class PCOMP(object):
             for pid, pcomp in sorted(self.properties.iteritems()):
                 f.write(pcomp.write_bdf(size, print_card_16))
 
+
+    #def slice_by_index(self, i):
+        #i = asarray(i)
+        #return self.__getitem__()
+
+
     def __getitem__(self, property_ids):
+        property_ids, int_flag = slice_to_iter(property_ids)
         obj = PCOMP(self.model)
 
         properties = {}
@@ -117,6 +126,7 @@ class PCOMP(object):
         #obj._comments = obj._comments[index]
         #obj.comments = obj.comments[index]
         return obj
+
 
     def __repr__(self):
         f = cStringIO.StringIO()

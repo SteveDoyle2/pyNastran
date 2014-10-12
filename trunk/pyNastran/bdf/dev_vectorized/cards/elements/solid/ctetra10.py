@@ -41,7 +41,7 @@ class CTETRA10(object):
 
         self.n = ncards
         if ncards:
-            print('tet10')
+            #print('tet10')
             float_fmt = self.model.float
             self.element_id = zeros(ncards, 'int32')
             self.property_id = zeros(ncards, 'int32')

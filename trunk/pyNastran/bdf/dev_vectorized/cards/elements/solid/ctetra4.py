@@ -6,6 +6,8 @@ from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.solid_element import SolidElement
+
 def volume4(n1, n2, n3, n4):
     r"""
     Gets the volume, :math:`V`, of the tetrahedron.
@@ -16,7 +18,7 @@ def volume4(n1, n2, n3, n4):
     return V
 
 
-class CTETRA4(object):
+class CTETRA4(SolidElement):
     type = 'CTETRA4'
     op2_id = 60
     def __init__(self, model):
@@ -26,14 +28,7 @@ class CTETRA4(object):
         :param self: the CTETRA4 object
         :param model: the BDF object
         """
-        self.model = model
-        self.n = 0
-        self._cards = []
-        self._comments = []
-
-    def add(self, card, comment):
-        self._cards.append(card)
-        self._comments.append(comment)
+        SolidElement.__init__(self, model)
 
     def build(self):
         cards = self._cards
@@ -166,28 +161,6 @@ class CTETRA4(object):
             centroid = centroid.mean(axis=0)
         return centroid
 
-    def get_mass(self, element_ids=None, xyz_cid0=None, total=False):
-        """
-        Gets the mass for one or more CTETRA4 elements.
-
-        :param element_ids: the elements to consider (default=None -> all)
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the centroid be summed (default=False)
-        """
-        if element_ids is None:
-            element_ids = self.element_id
-        if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_positions()
-
-        V = self.get_volume(element_ids, xyz_cid0)
-        mid = self.model.properties_solid.get_mid(self.property_id)
-        rho = self.model.materials.get_rho(mid)
-
-        mass = V * rho
-        if total:
-            mass = mass.sum()
-        return mass
-
     def get_face_nodes(self, nid, nid_opposite):
         raise NotImplementedError()
         nids = self.nodeIDs()[:4]
@@ -204,21 +177,6 @@ class CTETRA4(object):
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
                 card = ['CTETRA', eid, pid, n[0], n[1], n[2], n[3]]
                 f.write(print_card(card))
-
-    def get_density(self, element_ids=None):
-        if element_ids is None:
-            element_ids = self.element_id
-
-        rho = []
-        i = where(element_ids == self.element_id)[0]
-        for pid in self.property_id[i]:
-            rhoi = self.model.properties_solid.psolid.get_density(pid)
-            rho += rhoi
-        return rho
-
-    def __getitem__(self, element_ids):
-        i = searchsorted(self.element_id, element_ids)
-        return self.slice_by_index(i)
 
     def slice_by_index(self, i):
         i = asarray(i)

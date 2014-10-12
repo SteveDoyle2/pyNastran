@@ -5,7 +5,7 @@ from numpy import (array, zeros, arange, concatenate, searchsorted, where,
                    unique, cross, asarray)
 from numpy.linalg import norm
 
-from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad4 import ShellElement
+from pyNastran.bdf.dev_vectorized.cards.elements.shell.shell_element import ShellElement
 
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -16,14 +16,6 @@ class CTRIA3(ShellElement):
     op2_id = 73
     def __init__(self, model):
         ShellElement.__init__(self, model)
-        #self.model = model
-        #self.n = 0
-        #self._cards = []
-        #self._comments = []
-
-    #def add(self, card, comment):
-        #self._cards.append(card)
-        #self._comments.append(comment)
 
     def build(self):
         cards = self._cards
@@ -279,10 +271,6 @@ class CTRIA3(ShellElement):
             i = searchsorted(self.element_id, element_ids)
         n1, n2, n3 = self._node_locations(xyz_cid0, i)
         return (n1 + n2 + n3) / 3.
-
-    def __getitem__(self, element_ids):
-        i = searchsorted(self.element_id, element_ids)
-        return self.slice_by_index(i)
 
     def slice_by_index(self, i):
         i = asarray(i)
