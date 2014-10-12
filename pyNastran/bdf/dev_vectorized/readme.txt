@@ -12,7 +12,7 @@ Approach
      - Element slice methods to get eids 1,2,3 (model.elements[3],
        model.elements[[1,2,3]] and model.elements[1:10:2])
        For missing elements/properties, it returns:
-         - Option A:  None if values don't exist
+         - Option A:  NaN / None if values don't exist
          - Option B:  No entry
          - Option C:  Crash
          - no decision has been made on this, but leaning towards Option B
@@ -29,6 +29,11 @@ Approach
          - Why C?
            - best option for developer time.  
            - a crash flag might be good
+         - What about?
+           - request for elements that don't exist (maybe Option B)
+             - use case:  user requests mass from elements 1:10, but 5 doesn't exist
+           - request for elements that have no properties/materials (maybe option A)
+             - use case:  user didn't define material ID for element 5
          - Note
            - It's been specifically requested that code doesn't crash on
              missing references and that None may be a valid option
@@ -52,6 +57,17 @@ Approach
      - it requires extra checks; speed
      - if you as Patran/Femap to show elements 1-10 and only element 1 exists,
        it shows you element 1 and (hopefully :) doesn't crash
+   - Interface
+     - 2D arrays will iterate over the rows to indicate different elements/properties
+     - column 2/3/etc. will refer to column 1
+       - yes [eid1, mass1]
+             [eid2, mass2]
+             [eid3, mass3]
+             [eid4, mass4]
+       - no  [eid1,   eid2,  eid3,  eid4]
+             [mass1, mass2, mass3, mass4]
+     - Why?
+       - I'll forget which is which
 
   - Easily vectorizable and/or high payoff cards
     - These include:

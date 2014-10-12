@@ -1,7 +1,7 @@
 import unittest
 
 import os
-from numpy import array, allclose
+from numpy import array, allclose, vstack
 import pyNastran
 from pyNastran.bdf.dev_vectorized.bdf import BDF
 from pyNastran.utils import object_methods
@@ -190,23 +190,28 @@ class TestMass(unittest.TestCase):
         model.read_bdf(bdfname, include_dir=None, xref=True)
 
         # these are valid
-        mass = model.elements.get_mass([8, 9])
+        mass, eids = model.elements.get_mass([8, 9])
         print('massA = %s' % mass)
-        mass = model.elements.get_mass(range(1, 10))
+        mass, eids = model.elements.get_mass(range(1, 10))
         print('massB = %s' % mass)
 
         # no analysis - out of range
         elements = model.elements[[100000, 100001]]
         print('elementsC = %s' % elements)
-        mass = model.elements.get_mass(range(100000, 100005))
+        mass, eids = model.elements.get_mass(range(100000, 100005))
 
-        mass = model.elements.get_mass(range(-10, -5))
+        mass, eids = model.elements.get_mass(range(-10, -5))
         print('massC = %s' % mass)
 
         print('-------------------------')
-        mass = model.elements.get_mass(range(-100, 1000))
+        mass, eids = model.elements.get_mass(range(-100, 1000))
         print('massC = %s' % mass)
-        pass
+        print('eidsC = %s' % eids)
+        print('\neid   mass')
+        print('----------')
+        for eidi, massi in zip(eids, mass):
+            print('%-5s %-5s' % (eidi, massi))
+        #print vstack([mass, eids])
 
     def test_mass_solid_1(self):  # passes
         model = BDF(debug=False, log=None)
