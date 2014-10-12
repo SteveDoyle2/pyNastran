@@ -1,6 +1,6 @@
 from itertools import izip
 
-from numpy import array, zeros, unique, searchsorted, arange
+from numpy import array, zeros, unique, searchsorted, arange, asarray
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.fieldWriter import print_card_8
@@ -76,6 +76,20 @@ class PROD(object):
             msg.append('  %-8s: %i' % ('PROD', self.n))
         return msg
 
+
+    def get_mass_per_length(self, property_ids=None):
+        # L * (A * rho + nsm)
+        if property_ids is None:
+            i = arange(self.n)
+        else:
+            i = self.get_index(property_ids)
+        A = self.A[i]
+        mid = self.material_id[i]
+        #mat = self.model.materials.get_material(mid)
+        rho = self.model.materials.get_density(mid)
+        nsm = self.nsm[i]
+        return A * rho + nsm
+
     def get_Area(self, property_ids):
         i = self.get_index(property_ids)
         A = self.A[i]
@@ -132,3 +146,30 @@ class PROD(object):
 
                 card = ['PROD', pid, mid, A, J, c, nsm]
                 f.write(print_card_8(card))
+
+    def __getitem__(self, property_ids):
+        """
+        Allows for slicing:
+         - elements[1:10]
+         - elements[4]
+         - elements[1:10:2]
+         - elements[[1,2,5]]
+         - elements[array([1,2,5])]
+        """
+        i = searchsorted(self.property_id, property_ids)
+        return self.slice_by_index(i)
+
+    def slice_by_index(self, i):
+        i = asarray(i)
+        obj = PROD(self.model)
+        obj.n = len(i)
+        #obj._cards = self._cards[i]
+        #obj._comments = obj._comments[i]
+        #obj.comments = obj.comments[i]
+        obj.property_id = self.property_id[i]
+        obj.material_id = self.material_id[i]
+        obj.A = self.A[i]
+        obj.J = self.J[i]
+        obj.c = self.c[i]
+        obj.nsm = self.nsm[i]
+        return obj

@@ -70,7 +70,7 @@ class CBAR(object):
                 assert len(card) <= 17, 'len(CBAR card) = %i' % len(card)
 
             i = self.element_id.argsort()
-            print("i %s %s" % (i, type(i)))
+            #print("i %s %s" % (i, type(i)))
             self.element_id = self.element_id[i]
             self.property_id = self.property_id[i]
             self.node_ids = self.node_ids[i, :]

@@ -154,8 +154,11 @@ class GRID(object):
             self.ps = self.ps[i]
             self.seid = self.seid[i]
 
-    def index_map(self, node_ids):
+    def index_map(self, node_ids, msg=''):
         #return searchsorted(node_ids, self.node_id)
+        #i_too_large = where(self.node_id[-1] < node_ids)[0]
+        #if len(i_too_large):
+            #raise RuntimeError('Cannot find GRID %s, %s' % (node_ids[i_too_large], msg))
         return searchsorted(self.node_id, node_ids)
 
     def get_positions(self, node_ids=None):
