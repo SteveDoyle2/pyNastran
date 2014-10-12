@@ -130,7 +130,13 @@ class ShellElement(Element):
         r"""
         .. math:: m = \frac{m}{A} A  \f]
         """
-        return self.pid.MassPerArea() * self.Area()
+        A = self.Area()
+        mpa = self.pid.MassPerArea()
+        try:
+            return mpa * A
+        except TypeError:
+            msg = 'mass/area=%s area=%s pidType=%s' % (mpa, A, self.pid.type)
+            raise TypeError(msg)
 
     def flipNormal(self):
         raise NotImplementedError('flipNormal undefined for %s' % self.type)

@@ -47,10 +47,10 @@ class DeprecatedCompositeShellProperty(object):
         return self.get_density(iply)
 
     def Theta(self, iply):
-        return self.get_theta()
+        return self.get_theta(iply)
 
     def sout(self, iply):
-        return self.get_sout()
+        return self.get_sout(iply)
 
 class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
     def __init__(self, card, data):
@@ -320,7 +320,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         .. note:: final mass calculation will be done later
         """
         rhos = [ply[0].get_density() for ply in self.plies]
-        self.get_mass_per_area_rho(rhos, iply, method)
+        return self.get_mass_per_area_rho(rhos, iply, method)
 
     def get_mass_per_area_rho(self, rhos, iply='all', method='nplies'):
         r"""
@@ -892,11 +892,14 @@ class PSHEAR(ShellProperty):
 
 class PSHELL(ShellProperty):
     """
-    ::
-
-      PSHELL PID MID1 T MID2 12I/T**3 MID3 TS/T NSM
-      Z1 Z2 MID4
-      PSHELL   41111   1      1.0000   1               1               0.02081"""
+    +--------+-------+------+--------+------+----------+------+------+---------+
+    | PSHELL |  PID  | MID1 |   T    | MID2 | 12I/T**3 | MID3 | TS/T |   NSM   |
+    +--------+-------+------+--------+------+----------+------+------+---------+
+    |        |  Z1   |  Z2  |  MID4  |
+    +--------+-------+------+--------+------+----------+------+------+---------+
+    | PSHELL | 41111 |  1   | 1.0000 |  1   |          |   1  |      | 0.02081 |
+    +--------+-------+------+--------+------+----------+------+------+---------+
+    """
     type = 'PSHELL'
     _field_map = {
         1: 'pid', 2:'mid1', 3:'t', 4:'mid2', 5:'twelveIt3', 6:'mid3',
@@ -1061,10 +1064,11 @@ class PSHELL(ShellProperty):
 
         .. math:: \frac{m}{A} = nsm + \rho t
         """
+        rho = self.Rho()
         try:
-            massPerArea = self.nsm + self.Rho() * self.t
+            massPerArea = self.nsm + rho * self.t
         except:
-            print("nsm=%s rho=%s t=%s" % (self.nsm, self.Rho(), self.t))
+            print("nsm=%s rho=%s t=%s" % (self.nsm, rho, self.t))
             raise
         return massPerArea
 
