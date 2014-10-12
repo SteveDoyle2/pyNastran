@@ -1,4 +1,3 @@
-import cStringIO
 from itertools import izip
 
 from numpy import (array, zeros, arange, concatenate, searchsorted, where,
@@ -287,11 +286,6 @@ class CTRIA3(ShellElement):
         obj.thickness = self.thickness[i, :]
         return obj
 
-    def __repr__(self):
-        f = cStringIO.StringIO()
-        f.write('<CTRIA3 object> n=%s\n' % self.n)
-        self.write_bdf(f)
-        return f.getvalue()
 
 def _ctria3_normal_A(n1, n2, n3, calculate_area=True, normalize=True):
     v12 = n2 - n1

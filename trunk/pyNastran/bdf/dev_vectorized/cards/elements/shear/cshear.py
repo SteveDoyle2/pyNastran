@@ -1,3 +1,4 @@
+import cStringIO
 from numpy import array, zeros, arange, concatenate, searchsorted, where, unique
 
 from pyNastran.bdf.fieldWriter import print_card

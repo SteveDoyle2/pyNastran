@@ -1,4 +1,3 @@
-import cStringIO
 from numpy import (array, zeros, arange, concatenate, searchsorted,
     where, unique, cross, dot, asarray)
 from numpy.linalg import norm
@@ -199,11 +198,6 @@ class CQUAD4(ShellElement):
         obj.thickness = self.thickness[i, :]
         return obj
 
-    def __repr__(self):
-        f = cStringIO.StringIO()
-        f.write('<QUAD4 object> n=%s\n' % self.n)
-        self.write_bdf(f)
-        return f.getvalue()
 
 def _cquad4_normal_A(n1, n2, n3, n4, calculate_area=True, normalize=True):
     v13 = n1 - n3

@@ -1,4 +1,3 @@
-import cStringIO
 from numpy import zeros, arange, unique, dot, cross, abs, searchsorted, array, where, asarray
 from numpy.linalg import norm
 
@@ -203,9 +202,3 @@ class CPENTA6(SolidElement):
         obj.property_id = self.property_id[i]
         obj.node_ids = self.node_ids[i, :]
         return obj
-
-    def __repr__(self):
-        f = cStringIO.StringIO()
-        f.write('<CPENTA6 object> n=%s\n' % self.n)
-        self.write_bdf(f)
-        return f.getvalue()
