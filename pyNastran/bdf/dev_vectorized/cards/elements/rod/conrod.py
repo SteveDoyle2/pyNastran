@@ -61,7 +61,7 @@ class CONROD(RodElement):
         :param self: the CONROD object
         :param cards: the list of CONROD cards
         """
-        cards = self._conrod
+        cards = self._cards
         ncards = len(cards)
         self.n = ncards
         if ncards:
@@ -99,6 +99,9 @@ class CONROD(RodElement):
             unique_eids = unique(self.element_id)
             if len(unique_eids) != len(self.element_id):
                 raise RuntimeError('There are duplicate CROD IDs...')
+        else:
+            self.element_id = array([], dtype='int32')
+            self.property_id = array([], dtype='int32')
 
     #=========================================================================
     def get_Area_from_index(self, i):
@@ -153,11 +156,6 @@ class CONROD(RodElement):
             return mass
 
     #=========================================================================
-    def get_stats(self):
-        msg = []
-        if self.n:
-            msg.append('  %-8s: %i' % ('CONROD', self.n))
-        return msg
 
     def write_bdf(self, f, size=8, element_ids=None):
         if self.n:

@@ -113,12 +113,6 @@ class CROD(RodElement):
             return mass
 
     #=========================================================================
-    def get_stats(self):
-        msg = []
-        if self.n:
-            msg.append('  %-8s: %i' % ('CROD', self.n))
-        return msg
-
     def write_bdf(self, f, size=8, element_ids=None):
         if self.n:
             if element_ids is None:

@@ -22,3 +22,10 @@ class RodElement(object):
         f.write('<%s object> n=%s\n' % (self.type, self.n))
         self.write_bdf(f)
         return f.getvalue()
+
+    def get_stats(self):
+        msg = []
+        if self.n:
+            msg.append('  %-8s: %i' % (self.type, self.n))
+        return msg
+

@@ -35,13 +35,13 @@ class ElementsShell(object):
         self.ctriax6 = CTRIAX6(self.model)
 
     def build(self):
-        #print('elements_shell')
+        #print('*build elements_shell')
         types = self._get_types(nlimit=False)
         self.n = 0
         for elems in types:
             elems.build()
             self.n += elems.n
-
+        #print(' build elements_shell n=%s' % self.n)
         #eid = hstack(ctria3.element_id, cquad4.element_id)
         #unique_eids = unique(eid)
         #if unique_eids != len(eid):

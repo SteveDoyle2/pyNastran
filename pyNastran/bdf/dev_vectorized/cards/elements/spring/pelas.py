@@ -1,6 +1,6 @@
 from itertools import izip
 
-from numpy import array, arange, dot, zeros, unique, searchsorted
+from numpy import array, arange, dot, zeros, unique, searchsorted, asarray
 from numpy.linalg import norm
 
 from pyNastran.bdf.fieldWriter import print_card
@@ -75,3 +75,28 @@ class PELAS(object):
             for (pid, k, ge, s) in izip(self.property_id[i], self.K[i], self.ge[i], self.s[i]):
                 card = ['PELAS', pid, k, ge, s]
                 f.write(print_card(card, size=size))
+
+    def __getitem__(self, property_ids):
+        """
+        Allows for slicing:
+         - elements[1:10]
+         - elements[4]
+         - elements[1:10:2]
+         - elements[[1,2,5]]
+         - elements[array([1,2,5])]
+        """
+        i = searchsorted(self.property_id, property_ids)
+        return self.slice_by_index(i)
+
+    def slice_by_index(self, i):
+        i = asarray(i)
+        obj = PELAS(self.model)
+        obj.n = len(i)
+        #obj._cards = self._cards[i]
+        #obj._comments = obj._comments[i]
+        #obj.comments = obj.comments[i]
+        obj.property_id = self.property_id[i]
+        obj.K = self.K[i]
+        obj.ge = self.ge[i]
+        obj.s = self.s[i]
+        return obj

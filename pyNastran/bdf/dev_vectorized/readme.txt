@@ -23,12 +23,17 @@ Approach
              number of properties that were requested (it'll probably crash on None)
            - no need to return eids when mass is called
          - Why B?
-           - you should have a valid BDF
+           - you should have a valid BDF / code
            - it should be a lot faster
            - should we return eids when mass is called?
          - Why C?
-           - best option for developer time
+           - best option for developer time.  
            - a crash flag might be good
+         - Note
+           - It's been specifically requested that code doesn't crash on
+             missing references and that None may be a valid option
+           - You can look at geometry without looking at properties/materials
+           - However, for something like Mass, maybe this doesn't make sense
            
      - model.get_elements will complain if exact list of elements are not found?
        - could remove this method if we figure A/B/C out properly

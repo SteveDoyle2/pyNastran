@@ -203,6 +203,7 @@ class TestMass(unittest.TestCase):
         mass = model.elements.get_mass(range(-10, -5))
         print('massC = %s' % mass)
 
+        print('-------------------------')
         mass = model.elements.get_mass(range(-100, 1000))
         print('massC = %s' % mass)
         pass

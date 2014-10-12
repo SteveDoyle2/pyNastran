@@ -182,9 +182,7 @@ class CQUAD4(ShellElement):
         return positions
 
     def slice_by_index(self, i):
-        #print('isliceA = %s %s' % (i, type(i)))
         i = asarray(i)
-        #print('isliceB = %s %s %s' % (i, type(i), str(i.shape)))
         obj = CQUAD4(self.model)
         obj.n = len(i)
         #obj._cards = self._cards[i]
