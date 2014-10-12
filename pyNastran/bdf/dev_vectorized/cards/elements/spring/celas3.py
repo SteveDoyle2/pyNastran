@@ -1,16 +1,16 @@
-import cStringIO
 from itertools import izip
 
 from numpy import arange, array, dot, zeros, unique, searchsorted, transpose
 from numpy.linalg import norm
 
 from ..rod.conrod import _Lambda
+from pyNastran.bdf.dev_vectorized.cards.elements.spring.spring_element import SpringElement
 
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, integer_double_or_blank, blank)
 
-class CELAS3(object):
+class CELAS3(SpringElement):
     type = 'CELAS3'
     op2_id = 12
     def __init__(self, model):
@@ -20,10 +20,7 @@ class CELAS3(object):
         :param self: the CELAS3 object
         :param model: the BDF object
         """
-        self.model = model
-        self.n = 0
-        self._cards = []
-        self._comments = []
+        SpringElement.__init__(self, model)
 
         self.element_id = []
         #: Property ID
@@ -125,12 +122,6 @@ class CELAS3(object):
         else:
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
-
-    def get_stats(self):
-        msg = []
-        if self.n:
-            msg.append('  %-8s: %i' % ('CELAS3', self.n))
-        return msg
 
     def write_bdf(self, f, size=8, eids=None):
         if self.n:

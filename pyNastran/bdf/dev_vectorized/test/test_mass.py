@@ -185,8 +185,26 @@ class TestMass(unittest.TestCase):
             model.get_elements('cat')
 
     def test_combo_1(self):
-        #mass = model.elements.get_mass([8, 9])
-        #mass = model.elements.get_mass(range(1, 10))
+        model = BDF(debug=False, log=None)
+        bdfname = os.path.join(testpath, 'test_mass.dat')
+        model.read_bdf(bdfname, include_dir=None, xref=True)
+
+        # these are valid
+        mass = model.elements.get_mass([8, 9])
+        print('massA = %s' % mass)
+        mass = model.elements.get_mass(range(1, 10))
+        print('massB = %s' % mass)
+
+        # no analysis - out of range
+        elements = model.elements[[100000, 100001]]
+        print('elementsC = %s' % elements)
+        mass = model.elements.get_mass(range(100000, 100005))
+
+        mass = model.elements.get_mass(range(-10, -5))
+        print('massC = %s' % mass)
+
+        mass = model.elements.get_mass(range(-100, 1000))
+        print('massC = %s' % mass)
         pass
 
     def test_mass_solid_1(self):  # passes

@@ -1,4 +1,3 @@
-import cStringIO
 from numpy import zeros, arange, unique, dot, cross, abs, searchsorted, array, where, asarray
 from numpy.linalg import norm
 
@@ -222,9 +221,3 @@ class CHEXA8(SolidElement):
         obj.property_id = self.property_id[i]
         obj.node_ids = self.node_ids[i, :]
         return obj
-
-    def __repr__(self):
-        f = cStringIO.StringIO()
-        f.write('<CHEXA8 object> n=%s\n' % self.n)
-        self.write_bdf(f)
-        return f.getvalue()

@@ -1,4 +1,3 @@
-import cStringIO
 from numpy import zeros, arange, dot, cross, searchsorted, array, asarray
 from numpy.linalg import norm
 
@@ -225,9 +224,3 @@ class CTETRA10(object):
         obj.property_id = self.property_id[i]
         obj.node_ids = self.node_ids[i, :]
         return obj
-
-    def __repr__(self):
-        f = cStringIO.StringIO()
-        f.write('<CTETRA10 object> n=%s\n' % self.n)
-        self.write_bdf(f)
-        return f.getvalue()

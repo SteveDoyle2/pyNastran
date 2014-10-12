@@ -1,3 +1,4 @@
+import cStringIO
 from numpy import zeros, searchsorted, where
 
 class ShellElement(object):
@@ -18,6 +19,12 @@ class ShellElement(object):
         """
         i = searchsorted(self.element_id, element_ids)
         return self.slice_by_index(i)
+
+    def __repr__(self):
+        f = cStringIO.StringIO()
+        f.write('<C%s object> n=%s\n' % (self.type, self.n))
+        self.write_bdf(f)
+        return f.getvalue()
 
     def add(self, card, comment):
         self._cards.append(card)

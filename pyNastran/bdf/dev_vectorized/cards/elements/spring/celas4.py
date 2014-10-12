@@ -1,16 +1,16 @@
-import cStringIO
 from itertools import izip
 
 from numpy import arange, array, dot, zeros, unique, searchsorted, transpose
 from numpy.linalg import norm
 
 from ..rod.conrod import _Lambda
+from pyNastran.bdf.dev_vectorized.cards.elements.spring.spring_element import SpringElement
 
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, integer_double_or_blank, blank)
 
-class CELAS4(object):
+class CELAS4(SpringElement):
     type = 'CELAS4'
     op2_id = 13
     def __init__(self, model):
@@ -20,10 +20,7 @@ class CELAS4(object):
         :param self: the CELAS4 object
         :param model: the BDF object
         """
-        self.model = model
-        self.n = 0
-        self._cards = []
-        self._comments = []
+        SpringElement.__init__(self, model)
 
         self.element_id = []
         #: Property ID
@@ -126,12 +123,6 @@ class CELAS4(object):
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
 
-    def get_stats(self):
-        msg = []
-        if self.n:
-            msg.append('  %-8s: %i' % ('CELAS4', self.n))
-        return msg
-
     def write_bdf(self, f, size=8, eids=None):
         if self.n:
             if eids is None:
@@ -230,6 +221,7 @@ class CELAS4(object):
         #return (axial_strain, axial_stress, axial_force)
 
     def __getitem__(self, index):
+
         obj = CELAS4(self.model)
         obj.n = len(index)
         #obj._cards = self._cards[index]
@@ -239,9 +231,3 @@ class CELAS4(object):
         obj.property_id = self.property_id[index]
         obj.node_ids = self.node_ids[index, :]
         return obj
-
-    def __repr__(self):
-        f = cStringIO.StringIO()
-        f.write('<CELAS4 object> n=%s\n' % self.n)
-        self.write_bdf(f)
-        return f.getvalue()
