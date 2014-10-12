@@ -9,8 +9,9 @@ from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 
+from pyNastran.bdf.dev_vectorized.cards.elements.rod.rod_element import RodElement
 
-class CROD(object):
+class CROD(RodElement):
     type = 'CROD'
     op2_id = 1
     def __init__(self, model):
@@ -20,14 +21,7 @@ class CROD(object):
         :param self: the CROD object
         :param model: the BDF object
         """
-        self.model = model
-        self.n = 0
-        self._cards = []
-        self._comments = []
-
-    def add(self, card, comment=None):
-        self._cards.append(card)
-        self._comments.append(comment)
+        RodElement.__init__(self, model)
 
     def build(self):
         """
@@ -146,7 +140,7 @@ class CROD(object):
         E = self.get_E(pid)
         G = self.get_G(pid)
         J = self.get_J(pid)
-        print('A=%s E=%s G=%s J=%s' % (A, E, G, J))
+        #print('A=%s E=%s G=%s J=%s' % (A, E, G, J))
 
         #========================
         #(n1, n2) = self.node_ids()
@@ -156,8 +150,8 @@ class CROD(object):
         i0 = index0s[n0]
         i1 = index0s[n1]
 
-        print("n0", n0)
-        print("n1", n1)
+        #print("n0", n0)
+        #print("n1", n1)
         n0 = positions[n0]
         n1 = positions[n1]
         #p1 = model.Node(n1).xyz
@@ -168,7 +162,7 @@ class CROD(object):
             msg = 'invalid CROD length=0.0\n%s' % (self.__repr__())
             raise ZeroDivisionError(msg)
         #========================
-        print("A=%g E=%g G=%g J=%g L=%g" % (A, E, G, J, L))
+        #print("A=%g E=%g G=%g J=%g L=%g" % (A, E, G, J, L))
         k_axial = A * E / L
         k_torsion = G * J / L
         #k_axial = 1.0

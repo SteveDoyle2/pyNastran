@@ -1,7 +1,13 @@
-from numpy import array, zeros, searchsorted, unique, concatenate, argsort, hstack, where, vstack, ones, cross
+from numpy import (array, zeros, searchsorted, unique, concatenate, argsort,
+                   hstack, where, vstack, ones, cross, intersect1d)
 from numpy.linalg import norm
+from itertools import izip
 
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter, unique2d
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.ctetra4 import volume4
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.chexa8 import quad_area_centroid
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.cpenta6 import tri_area_centroid
+
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad4 import _cquad4_normal_A
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctria3 import _ctria3_normal_A
 
@@ -28,6 +34,7 @@ class Elements(object):
         #: stores PSHEAR
         self.pshear = model.pshear
 
+        
         # spring
         self.elements_spring = model.elements_spring
         self.pelas = model.pelas
@@ -71,8 +78,11 @@ class Elements(object):
             props.build()
             self.np += props.n
 
-        check_duplicate('element_id',  etypes)
+        eids = check_duplicate('element_id',  etypes)
         check_duplicate('property_id', ptypes)
+
+        self.element_ids = array(list(eids), dtype='int32')
+        self.element_ids.sort()
 
         self.element_groups = self.build_groups(etypes, 'element_id')
         self.property_groups = self.build_groups(ptypes, 'property_id')
@@ -108,8 +118,10 @@ class Elements(object):
             'CONROD'  : self.conrod,
             'CSHEAR'  : self.cshear,
 
-            'CQUAD4'  : self.elements_shell.cquad4,
             'CTRIA3'  : self.elements_shell.ctria3,
+            'CQUAD4'  : self.elements_shell.cquad4,
+            'CTRIA6'  : self.elements_shell.ctria6,
+            'CQUAD8'  : self.elements_shell.cquad8,
 
             'CTETRA4' : self.elements_solid.ctetra4,
             'CPENTA6' : self.elements_solid.cpenta6,
@@ -187,9 +199,13 @@ class Elements(object):
 
         if element_ids is None:
             element_ids = self.element_ids
+        else:
+            # remove invalid elements
+            element_ids = intersect1d(element_ids, self.element_ids)
+        if len(element_ids) == 0:
+            return
 
         pid_data = self.get_element_ids_by_property_type(element_ids)
-
         #print(pid_data)
         #print unique(pid_data[:, 1:])
 
@@ -198,23 +214,15 @@ class Elements(object):
 
         data2 = {}
         eTypeMap = {
-            1 : 'CROD',
-            2 : 'CBEAM',
-            3 : 'CBAR',
-            10 : 'CELAS1',
-            11 : 'CELAS2',
-            12 : 'CELAS3',
-            13 : 'CELAS4',
+            1 : 'CROD', 5: 'CONROD',
+            2 : 'CBEAM', 3 : 'CBAR',
+            4 : 'CSHEAR',
+            10 : 'CELAS1', 11 : 'CELAS2', 12 : 'CELAS3', 13 : 'CELAS4',
+            73 : 'CTRIA3', 144 : 'CQUAD4',
 
-            73 : 'CTRIA3',
-            144 : 'CQUAD4',
-
-            60 : 'CTETRA4',
-            61 : 'CTETRA10',
-            62 : 'CPENTA6',
-            63 : 'CPENTA15',
-            64 : 'CHEXA8',
-            65 : 'CHEXA20',
+            60 : 'CTETRA4', 61 : 'CTETRA10',
+            62 : 'CPENTA6', 63 : 'CPENTA15',
+            64 : 'CHEXA8', 65 : 'CHEXA20',
         }
 
         # group elements of the same type by property type
@@ -225,66 +233,136 @@ class Elements(object):
         # we do this in order to think about one property at a time and not
         # have to do a lot of special work to handle different methods for
         # getting the mass
-        print("pid_data = \n%s\n" % str(pid_data))
-        print("pid_eType = \n%s\n" % str(pid_eType))
+        #print("pid_data = \n%s\n" % str(pid_data))
+        #print("pid_eType = \n%s\n" % str(pid_eType))
         for (pid, eType) in pid_eType:
             i = where(pid_data[:, 1] == pid)[0]
             #print("pid=%i eType=%s Step #1=> \n%s\n" % (pid, eType, pid_data[i, :]))
             j = where(pid_data[i, 2] == eType)[0]
             eids = pid_data[i[j], 0]
-            print("pid=%i eType=%s eids=%s Step #2=> \n%s\n" % (pid, eType, eids, pid_data[i[j], :]))
+            #print("pid=%i eType=%s eids=%s Step #2=> \n%s\n" % (pid, eType, eids, pid_data[i[j], :]))
             eType = eTypeMap[eType]
             data2[(pid, eType)] = eids
-            assert eids.max() < 20, eids
 
-        print('data2 = %s' % data2)
+        #print('data2 = %s' % data2)
+        nelements = len(element_ids)
+        #print('nelement_ids =', nelements)
+        mass = zeros(nelements, dtype='float64')
+
+        ni = 0
         for (pid, eType), element_ids in data2.iteritems():
-            print('pid=%s eType=%s element_ids=%s' % (pid, eType, element_ids))
+            #print('pid=%s eType=%s element_ids=%s' % (pid, eType, element_ids))
             prop = self.get_properties([pid])[0]
-            print('prop = ' % prop)
+            #print('  prop = %s' % str(prop).rstrip())
+
             elements = TypeMap[eType]
             i = searchsorted(elements.element_id, element_ids)
-            print('ielemenets = %s' % i)
-            if eType in ['CTRIA3', 'CQUAD4']:
+            n = len(i)
+            #print('ielements = %s' % i)
+
+            if eType in ['CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                         'CROD', 'CONROD', 'CBAR', 'CBEAM']:
+                n1, n2 = elements.node_ids[i, 0], elements.node_ids[i, 1]
+                n1 = xyz_cid0[self.model.grid.index_map(n1), :]
+                n2 = xyz_cid0[self.model.grid.index_map(n2), :]
+                L = norm(n2 - n1, axis=0)
+                #print('prop = %s' % prop)
+                #print('  calling get_mass_per_area for pid=%s' % (pid))
+                mpl = prop.get_mass_per_length()
+                mass[ni:ni+n] = mpl * L
+            elif eType in ['CTRIA3', 'CQUAD4']:
                 if eType == 'CTRIA3':
-                    print('all_pid/nodes =\n%s' % vstack([elements.element_id, elements.node_ids]))
                     n1, n2, n3 = elements.node_ids[i, 0], elements.node_ids[i, 1], elements.node_ids[i, 2]
                     n1 = xyz_cid0[self.model.grid.index_map(n1), :]
                     n2 = xyz_cid0[self.model.grid.index_map(n2), :]
                     n3 = xyz_cid0[self.model.grid.index_map(n3), :]
                     normal, A = _ctria3_normal_A(n1, n2, n3, calculate_area=True, normalize=True)
                 elif eType == 'CQUAD4':
-                    n1, n2, n3, n4 = elements.node_ids[i, :]
+                    n1, n2, n3, n4 = elements.node_ids[i, 0], elements.node_ids[i, 1], elements.node_ids[i, 2], elements.node_ids[i, 3]
                     n1 = xyz_cid0[self.model.grid.index_map(n1), :]
                     n2 = xyz_cid0[self.model.grid.index_map(n2), :]
                     n3 = xyz_cid0[self.model.grid.index_map(n3), :]
                     n4 = xyz_cid0[self.model.grid.index_map(n4), :]
-                    normal, A = _cquad4_normal_A(n1, n2, n3, calculate_area=True, normalize=True)
+                    normal, A = _cquad4_normal_A(n1, n2, n3, n4, calculate_area=True, normalize=True)
                 else:
                     print("Element.get_mass doesn't support %s; try %s.get_mass" % (eType, eType))
+                    ni += n
                     continue
-                print('prop = %s' % prop)
-                print('calling get_mass_per_area for pid=%s' % (pid))
+                #print('prop = %s' % prop)
+                #print('  calling get_mass_per_area for pid=%s' % (pid))
                 mpa = prop.get_mass_per_area()
-                mass = mpa * A
-            else:
-                print("Element.get_mass doesn't support %s; try %s.get_mass" % (eType, eType))
-                #raise NotImplementedError("Element.get_mass doesn't support %s; try %s.get_mass" % (eType, eType))
+                mass[ni:ni+n] = mpa * A
+            elif eType in ['CTETRA4', 'CTETRA10', 'CPENTA6', 'CPENTA15', 'CHEXA8', 'CHEXA20']:
+                rho = prop.get_density()
+                if eType in ['CTETRA4', 'CTETRA10']:
+                    n1, n2, n3, n4 = elements.node_ids[i, 0], elements.node_ids[i, 1], elements.node_ids[i, 2], elements.node_ids[i, 3]
+                    n1 = xyz_cid0[self.model.grid.index_map(n1), :]
+                    n2 = xyz_cid0[self.model.grid.index_map(n2), :]
+                    n3 = xyz_cid0[self.model.grid.index_map(n3), :]
+                    n4 = xyz_cid0[self.model.grid.index_map(n4), :]
 
-        print data2
-        raise NotImplementedError()
+                    Vi = zeros(n, self.model.float)
+                    i = 0
+                    for n1i, n2i, n3i, n4i in izip(n1, n2, n3, n4):
+                        Vi[i] = volume4(n1i, n2i, n3i, n4i)
+                        i += 1
+                elif eType in ['CPENTA6', 'CPENTA15']:
+                    n1, n2, n3, n4, n5, n6 = (elements.node_ids[i, 0], elements.node_ids[i, 1],
+                                              elements.node_ids[i, 2], elements.node_ids[i, 3],
+                                              elements.node_ids[i, 4], elements.node_ids[i, 5], )
+                    n1 = xyz_cid0[self.model.grid.index_map(n1), :]
+                    n2 = xyz_cid0[self.model.grid.index_map(n2), :]
+                    n3 = xyz_cid0[self.model.grid.index_map(n3), :]
+                    n4 = xyz_cid0[self.model.grid.index_map(n4), :]
+                    n5 = xyz_cid0[self.model.grid.index_map(n5), :]
+                    n6 = xyz_cid0[self.model.grid.index_map(n6), :]
+                    (A1, c1) = tri_area_centroid(n1, n2, n3)
+                    (A2, c2) = tri_area_centroid(n4, n5, n6)
+                    Vi = (A1 + A2) / 2. * norm(c1 - c2, axis=1)
+                elif eType in ['CHEXA8', 'CHEXA20']:
+                    n1, n2, n3, n4, n5, n6, n7, n8 = (
+                        elements.node_ids[i, 0], elements.node_ids[i, 1],
+                        elements.node_ids[i, 2], elements.node_ids[i, 3],
+                        elements.node_ids[i, 4], elements.node_ids[i, 5],
+                        elements.node_ids[i, 6], elements.node_ids[i, 7], )
+                    n1 = xyz_cid0[self.model.grid.index_map(n1), :]
+                    n2 = xyz_cid0[self.model.grid.index_map(n2), :]
+                    n3 = xyz_cid0[self.model.grid.index_map(n3), :]
+                    n4 = xyz_cid0[self.model.grid.index_map(n4), :]
+                    n5 = xyz_cid0[self.model.grid.index_map(n5), :]
+                    n6 = xyz_cid0[self.model.grid.index_map(n6), :]
+                    n7 = xyz_cid0[self.model.grid.index_map(n7), :]
+                    n8 = xyz_cid0[self.model.grid.index_map(n8), :]
+
+                    (A1, c1) = quad_area_centroid(n1, n2, n3, n4)
+                    (A2, c2) = quad_area_centroid(n5, n6, n7, n8)
+                    Vi = (A1 + A2) / 2. * norm(c1 - c2, axis=1)
+                else:
+                    print("Element.get_mass doesn't support %s; try %s.get_mass" % (eType, eType))
+                    ni += n
+                    continue
+                mass[ni:ni+n] = Vi * rho
+            else:
+                print("  Element.get_mass doesn't support %s; try %s.get_mass" % (eType, eType))
+                #raise NotImplementedError("Element.get_mass doesn't support %s; try %s.get_mass" % (eType, eType))
+            #print("")
+            ni += n
+        print('data2 = %s' % data2)
+        return mass
 
     def get_properties(self, property_ids=None):
         property_ids, int_flag = slice_to_iter(property_ids)
         TypeMap = self.get_property_typemap()
         out = []
-        print('property_ids = %s' % property_ids)
+        #print('property_ids = %s' % property_ids)
         for pid in property_ids:
             for Type, pids in self.property_groups.iteritems():
-                print('pids = %s' % pids)
+                #print('pids = %s' % pids)
                 if pid in pids:
                     i = where(pid == pids)[0]
-                    obj = TypeMap[Type][i]
+                    pids_extract = pids[i]
+                    #obj = TypeMap[Type].slice_by_index(i)
+                    obj = TypeMap[Type][pids_extract]
                     out.append(obj)
         return out
         return out[0] if int_flag else out
@@ -327,17 +405,30 @@ class Elements(object):
 
     def get_element_typemap(self):
         TypeMap = {
-            'CONROD' : self.conrod,
             'CROD' : self.crod,
+            'CONROD' : self.conrod,
+
             'CBAR' : self.cbar,
             'CBEAM' : self.cbeam,
+            'CSHEAR' : self.cshear,
 
-            'CQUAD4'  : self.elements_shell.cquad4,
+            'CELAS1' : self.elements_spring.celas1,
+            'CELAS2' : self.elements_spring.celas2,
+            'CELAS3' : self.elements_spring.celas3,
+            'CELAS4' : self.elements_spring.celas4,
+
             'CTRIA3'  : self.elements_shell.ctria3,
+            'CQUAD4'  : self.elements_shell.cquad4,
+            #'CTRIA6'  : self.elements_shell.ctria6,
+            #'CQUAD8'  : self.elements_shell.cquad8,
 
             'CTETRA4' : self.elements_solid.ctetra4,
             'CPENTA6' : self.elements_solid.cpenta6,
             'CHEXA8'  : self.elements_solid.chexa8,
+
+            'CTETRA10' : self.elements_solid.ctetra10,
+            'CPENTA15' : self.elements_solid.cpenta15,
+            'CHEXA20'  : self.elements_solid.chexa20,
         }
         return TypeMap
 
@@ -362,23 +453,23 @@ class Elements(object):
         element_ids2, int_flag = slice_to_iter(element_ids)
 
         out = []
-        print('element_ids = %s' % element_ids2)
+        #print('element_ids = %s' % element_ids2)
         for eid in element_ids2:
             #obj = None
             for Type, eids in self.element_groups.iteritems():
                 if eid in eids:
                     #print('  found Type=%s' % Type)
                     i = where(eid == eids)[0]
-                    print("    i = %s" % i)
+                    #print("    i = %s" % i)
                     obj = TypeMap[Type].slice_by_index(i)
-                    print("    found eid=%s " % obj.element_id)
+                    #print("    found eid=%s " % obj.element_id)
                     out.append(obj)
                     break
                 #else:
                     #out.append(None)
             #print('*obj = %s' % obj)
             #out.append(obj)
-            print('element_ids = %s\n--%s' % (element_ids2, out))
+            #print('element_ids = %s\n--%s' % (element_ids2, out))
         return out[0] if int_flag else out
 
 def check_duplicate(name, objs):
@@ -395,4 +486,5 @@ def check_duplicate(name, objs):
     #print "unique %s = %s\n" %(name, unique_vals)
     if len(unique_vals) == 0:
         raise RuntimeError("unique %s = %s" %(name, unique_vals))
+    return unique_vals
 

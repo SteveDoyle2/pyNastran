@@ -1,5 +1,5 @@
 import cStringIO
-from numpy import zeros, unique, where, searchsorted
+from numpy import zeros, unique, where, searchsorted, asarray
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.fieldWriter import print_card_8
@@ -124,8 +124,12 @@ class PSOLID(object):
 
     def __getitem__(self, property_ids):
         i = searchsorted(self.property_id, property_ids)
+        return self.slice_by_index(i)
+
+    def slice_by_index(self, i):
+        i = asarray(i)
         obj = PSOLID(self.model)
-        obj.n = len(property_ids)
+        obj.n = len(i)
         #obj._cards = self._cards[i]
         #obj._comments = obj._comments[i]
         #obj.comments = obj.comments[i]

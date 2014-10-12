@@ -8,6 +8,8 @@ from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, blank, integer_or_string)
 
+from pyNastran.bdf.dev_vectorized.cards.elements.rod.rod_element import RodElement
+
 def _Lambda(v1, debug=True):
     """
     ::
@@ -42,8 +44,9 @@ def _Lambda(v1, debug=True):
     return Lambda
 
 
-class CONROD(object):
+class CONROD(RodElement):
     type = 'CONROD'
+    op2_id = 5
     def __init__(self, model):
         """
         Defines the CONROD object.
@@ -51,14 +54,7 @@ class CONROD(object):
         :param self: the CONROD object
         :param model: the BDF object
         """
-        self.model = model
-        self.n = 0
-        self._conrod = []
-        self._conrod_comment = []
-
-    def add(self, card, comment=None):
-        self._conrod.append(card)
-        self._conrod_comment.append(comment)
+        RodElement.__init__(self, model)
 
     def build(self):
         """
@@ -160,7 +156,7 @@ class CONROD(object):
     def get_stats(self):
         msg = []
         if self.n:
-            msg.append('  %-8s: %i' % ('CROD', self.n))
+            msg.append('  %-8s: %i' % ('CONROD', self.n))
         return msg
 
     def write_bdf(self, f, size=8, element_ids=None):

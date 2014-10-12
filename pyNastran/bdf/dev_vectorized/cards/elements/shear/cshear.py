@@ -7,6 +7,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 
 class CSHEAR(object):
     type = 'CSHEAR'
+    op2_id = 4
     def __init__(self, model):
         self.model = model
         self.n = 0

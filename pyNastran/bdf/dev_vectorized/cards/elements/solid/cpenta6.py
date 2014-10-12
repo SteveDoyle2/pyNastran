@@ -6,8 +6,9 @@ from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank, fields)
 
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.solid_element import SolidElement
 
-def area_centroid(n1, n2, n3):
+def tri_area_centroid(n1, n2, n3):
     """
     Gets the area, :math:`A`, and centroid of a triangle.::
 
@@ -24,7 +25,7 @@ def area_centroid(n1, n2, n3):
     return(area, centroid)
 
 
-class CPENTA6(object):
+class CPENTA6(SolidElement):
     type = 'CPENTA6'
     op2_id = 62
     def __init__(self, model):
@@ -34,14 +35,7 @@ class CPENTA6(object):
         :param self: the CPENTA6 object
         :param model: the BDF object
         """
-        self.model = model
-        self.n = 0
-        self._cards = []
-        self._comments = []
-
-    def add(self, card, comment):
-        self._cards.append(card)
-        self._comments.append(comment)
+        SolidElement.__init__(self, model)
 
     def build(self):
         cards = self._cards
@@ -116,8 +110,8 @@ class CPENTA6(object):
 
     def _get_area_centroid(self, element_ids, xyz_cid0):
         n1, n2, n3, n4, n5, n6 = self._node_locations(xyz_cid0)
-        (A1, c1) = area_centroid(n1, n2, n3)
-        (A2, c2) = area_centroid(n4, n5, n6)
+        (A1, c1) = tri_area_centroid(n1, n2, n3)
+        (A2, c2) = tri_area_centroid(n4, n5, n6)
         return (A1, A2, c1, c2)
 
     def get_volume(self, element_ids=None, xyz_cid0=None, total=False):
@@ -181,61 +175,12 @@ class CPENTA6(object):
             centroid = centroid.mean(axis=0)
         return centroid
 
-    def get_mass(self, element_ids=None, xyz_cid0=None, total=False):
-        """
-        Gets the mass for one or more CPENTA6 elements.
-
-        :param element_ids: the elements to consider (default=None -> all)
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the centroid be summed (default=False)
-        """
-        if element_ids is None:
-            element_ids = self.element_id
-        V = self.get_volume(element_ids, xyz_cid0)
-
-        mid = self.model.properties_solid.get_mid(self.property_id)
-        rho = self.model.materials.get_rho(mid)
-
-        mass = V * rho
-        if total:
-            mass = mass.sum()
-        return mass
-
     def get_face_nodes(self, nid, nid_opposite):
         raise NotImplementedError()
         nids = self.nodeIDs()[:4]
         indx = nids.index(nid_opposite)
         nids.pop(indx)
         return nids
-
-    def get_mass_centroid_inertia(self, p=None, element_ids=None, xyz_cid0=None, total=False):
-        """
-        Calculates the mass, centroid, and (3, 3) moment of interia
-        matrix.  Considers position, but not the (hopefully) small
-        elemental term.
-
-        :param p: the point to take the moment of inertia about (default=None -> origin)
-
-        a  = integral(mu * (y^2 + z^2), dV)
-        b  = integral(mu * (x^2 + z^2), dV)
-        c  = integral(mu * (y^2 + y^2), dV)
-        a' = integral(mu * (yz), dV)
-        b' = integral(mu * (xz), dV)
-        c' = integral(mu * (xy), dV)
-
-        I = [ a  -b', -c']
-            [-b'  b   -a']
-            [-c' -a'   c ]
-
-        Exact MOI for tetrahedron
-        http://www.thescipub.com/abstract/?doi=jmssp.2005.8.11
-        """
-        if p is None:
-            p = zeros(3, self.model.float)
-
-        r = centroid - p  # 2D array - 1D array
-        I = mass * r**2 # column vector * 2D array
-        return mass, centroid, I
 
     def write_bdf(self, f, size=8, element_ids=None):
         if self.n:
@@ -246,21 +191,6 @@ class CPENTA6(object):
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
                 card = ['CPENTA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5]]
                 f.write(print_card_8(card))
-
-    def get_density(self, element_ids=None):
-        if element_ids is None:
-            element_ids = self.element_id
-
-        rho = []
-        i = where(element_ids == self.element_id)[0]
-        for pid in self.property_id[i]:
-            rhoi = self.model.properties_solid.psolid.get_density(pid)
-            rho += rhoi
-        return rho
-
-    def __getitem__(self, element_ids):
-        i = searchsorted(self.element_id, element_ids)
-        return self.slice_by_index(i)
 
     def slice_by_index(self, i):
         i = asarray(i)

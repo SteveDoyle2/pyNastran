@@ -3,122 +3,11 @@ from numpy import (array, zeros, arange, concatenate, searchsorted,
     where, unique, cross, dot, asarray)
 from numpy.linalg import norm
 
+from pyNastran.bdf.dev_vectorized.cards.elements.shell.shell_element import ShellElement
+
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
-
-class ShellElement(object):
-    def __init__(self, model):
-        self.model = model
-        self.n = 0
-        self._cards = []
-        self._comments = []
-
-    def add(self, card, comment):
-        self._cards.append(card)
-        self._comments.append(comment)
-
-    def get_mass(self, element_ids=None, total=False, node_ids=None, xyz_cid0=None):
-        """
-        Gets the mass of the CQUAD4s on a total or per element basis.
-
-        :param self: the CQUAD4 object
-        :param element_ids: the elements to consider (default=None -> all)
-        :param total: should the mass be summed (default=False)
-
-        :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
-
-        ..note:: If node_ids is None, the positions of all the GRID cards
-                 must be calculated
-        """
-        mass, _area, _normal = self._mass_area_normal(element_ids=element_ids,
-            xyz_cid0=xyz_cid0,
-            calculate_mass=True, calculate_area=False,
-            calculate_normal=False)
-
-        if total:
-            return mass.sum()
-        else:
-            #print('mass.shape = %s' % mass.shape)
-            return mass
-
-    def get_normal(self, element_ids=None, xyz_cid0=None):
-        """
-        Gets the normals of the CQUAD4s on per element basis.
-
-        :param self: the CQUAD4 object
-        :param element_ids: the elements to consider (default=None -> all)
-
-        :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
-
-        ..note:: If node_ids is None, the positions of all the GRID cards
-                 must be calculated
-        """
-        _mass, area, normal = self._mass_area_normal(element_ids=element_ids,
-            xyz_cid0=xyz_cid0,
-            calculate_mass=False, calculate_area=False,
-            calculate_normal=True)
-        return normal
-
-    def get_area(self, element_ids=None, total=False, xyz_cid0=None):
-        """
-        Gets the area of the CQUAD4s on a total or per element basis.
-
-        :param self: the CQUAD4 object
-        :param element_ids: the elements to consider (default=None -> all)
-        :param total: should the area be summed (default=False)
-
-        :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
-        :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
-
-        ..note:: If node_ids is None, the positions of all the GRID cards
-                 must be calculated
-        """
-        _mass, area, _normal = self._mass_area_normal(element_ids=element_ids,
-            xyz_cid0=xyz_cid0,
-            calculate_mass=False, calculate_area=True,
-            calculate_normal=False)
-        if total:
-            return area.sum()
-        else:
-            return area
-
-    def get_thickness(self, element_ids=None):
-        if element_ids is None:
-            element_ids = self.element_id
-            property_id = self.property_id
-            i = None
-        else:
-            i = searchsorted(self.element_id, element_ids)
-            property_id = self.property_id[i]
-        #print 'element_ids =', element_ids
-        #print 'property_ids =', property_id
-        t = self.model.properties_shell.get_thickness(property_id)
-        return t
-
-    def get_nonstructural_mass(self, element_ids=None):
-        if element_ids is None:
-            element_ids = self.element_id
-            property_id = self.property_id
-            i = None
-        else:
-            i = searchsorted(self.element_id, element_ids)
-            property_id = self.property_id[i]
-        nsm = self.model.properties_shell.get_nonstructural_mass(property_id)
-        return nsm
-
-    def get_density(self, element_ids=None):
-        if element_ids is None:
-            element_ids = self.element_id
-            property_id = self.property_id
-            i = None
-        else:
-            i = searchsorted(self.element_id, element_ids)
-            property_id = self.property_id[i]
-        #print('density - element_ids = %s' % element_ids)
-        density = self.model.properties_shell.get_density(property_id)
-        #print('density_out = %s' % density)
-        return density
 
 
 class CQUAD4(ShellElement):
@@ -252,7 +141,7 @@ class CQUAD4(ShellElement):
     #=========================================================================
     def write_bdf(self, f, size=8, element_ids=None):
         if self.n:
-            print('    self.n = %s' % self.n)
+            #print('    self.n = %s' % self.n)
             if element_ids is None:
                 i = arange(self.n)
             else:
@@ -260,8 +149,8 @@ class CQUAD4(ShellElement):
                 i = searchsorted(self.element_id, element_ids)
             #if len(i) == 1:
                 #i = i[0]
-            print('    iwrite = %s' % i)
-            print('    all_nodes = %s' % str(self.node_ids))
+            #print('    iwrite = %s' % i)
+            #print('    all_nodes = %s' % str(self.node_ids))
 
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 #print('    n = %s' % n)
@@ -293,15 +182,10 @@ class CQUAD4(ShellElement):
         #return grids2_cid_0
         return positions
 
-    def __getitem__(self, element_ids):
-        print('element_ids = %s' % (element_ids))
-        i = searchsorted(self.element_id, element_ids)
-        return self.slice_by_index(i)
-
     def slice_by_index(self, i):
-        print('isliceA = %s %s' % (i, type(i)))
+        #print('isliceA = %s %s' % (i, type(i)))
         i = asarray(i)
-        print('isliceB = %s %s %s' % (i, type(i), str(i.shape)))
+        #print('isliceB = %s %s %s' % (i, type(i), str(i.shape)))
         obj = CQUAD4(self.model)
         obj.n = len(i)
         #obj._cards = self._cards[i]

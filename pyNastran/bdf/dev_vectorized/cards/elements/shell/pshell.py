@@ -233,9 +233,12 @@ class PSHELL(object):
 
     def __getitem__(self, property_ids):
         property_ids, int_flag = slice_to_iter(property_ids)
-        print('looking for %s property_ids' % str(property_ids))
+        #print('looking for %s property_ids' % str(property_ids))
         i = searchsorted(self.property_id, property_ids)
+        return self.slice_by_index(i)
 
+    def slice_by_index(self, i):
+        i = asarray(i)
         i = asarray(i)
         obj = PSHELL(self.model)
         obj.n = len(i)

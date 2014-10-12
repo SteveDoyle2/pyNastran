@@ -5,9 +5,11 @@ from numpy.linalg import norm
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
-from .chexa8 import area_centroid
+from .chexa8 import quad_area_centroid
 
-class CHEXA20(object):
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.solid_element import SolidElement
+
+class CHEXA20(SolidElement):
     type = 'CHEXA20'
     op2_id = 65
     def __init__(self, model):
@@ -17,15 +19,7 @@ class CHEXA20(object):
         :param self: the CHEXA20 object
         :param model: the BDF object
         """
-        self.model = model
-        self.n = 0
-        self._cards = []
-        self._comments = []
-        self.comments = {}
-
-    def add(self, card, comment):
-        self._cards.append(card)
-        self._comments.append(comment)
+        SolidElement.__init__(self, model)
 
     def build(self):
         cards = self._cards
@@ -62,7 +56,6 @@ class CHEXA20(object):
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
 
-
     def _verify(self, xref=True):
         eid = self.Eid()
         pid = self.Pid()
@@ -79,8 +72,8 @@ class CHEXA20(object):
                 assert isinstance(c[i], float)
 
     def _get_area_centroid(self, element_ids, xyz_cid0):
-        (A1, c1) = area_centroid(n1, n2, n3, n4)
-        (A2, c2) = area_centroid(n5, n6, n7, n8)
+        (A1, c1) = quad_area_centroid(n1, n2, n3, n4)
+        (A2, c2) = quad_area_centroid(n5, n6, n7, n8)
         return (A1, A2, c1, c2)
 
     def get_volume(self, element_ids=None, xyz_cid0=None, total=False):
@@ -141,26 +134,6 @@ class CHEXA20(object):
             centroid = centroid.mean()
         return centroid
 
-    def get_mass(self, element_ids=None, xyz_cid0=None, total=False):
-        """
-        Gets the mass for one or more CHEXA20 elements.
-
-        :param element_ids: the elements to consider (default=None -> all)
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the centroid be summed (default=False)
-        """
-        if element_ids is None:
-            element_ids = self.element_id
-        V = self.get_volume(element_ids, xyz_cid0)
-
-        mid = self.model.properties_solid.get_mid(self.pid)
-        rho = self.model.materials.get_rho(mid)
-
-        mass = V * rho
-        if total:
-            mass = mass.sum()
-        return mass
-
     def get_face_nodes(self, nid, nid_opposite):
         raise NotImplementedError()
         nids = self.nodeIDs()[:4]
@@ -178,10 +151,6 @@ class CHEXA20(object):
                 card = ['CHEXA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7], n[8], n[9],
                         n[10], n[11], n[12], n[13], n[14], n[15], n[16], n[17], n[18], n[19]]
                 f.write(print_card_8(card))
-
-    def __getitem__(self, element_ids):
-        i = searchsorted(self.element_id, element_ids)
-        return self.slice_by_index(i)
 
     def slice_by_index(self, i):
         i = asarray(i)
