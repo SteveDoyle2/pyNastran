@@ -1,4 +1,4 @@
-from numpy import zeros, where, array
+from numpy import zeros, where, array, nan
 
 #from .mat1 import MAT1
 #from .mats1 import MATS1
@@ -97,7 +97,7 @@ class Materials(object):
         print _material_ids
         return _material_ids
 
-    def get_rho(self, material_ids):
+    def get_density(self, material_ids):
         rho = zeros(len(material_ids))
         for i, material_id in enumerate(material_ids):
             mat = self.get_structural_material(material_id)
@@ -185,7 +185,7 @@ class Materials(object):
 
     def get_density(self, material_ids):
         mats = self[material_ids]
-        density = array([mid.get_density() for mid in mats])
+        density = array([mid.get_density() if mid is not None else nan for mid in mats])
         #print('material_ids = %s' % material_ids)
         #print("  density mats = %s" % mats)
         #print('  density = %s' % density)

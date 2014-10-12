@@ -1,5 +1,6 @@
 from numpy import (array, zeros, searchsorted, unique, concatenate, argsort,
-                   hstack, where, vstack, ones, cross, intersect1d, setdiff1d)
+                   hstack, where, vstack, ones, cross, intersect1d, setdiff1d,
+                   arange, nan, full)
 from numpy.linalg import norm
 from itertools import izip
 
@@ -151,6 +152,7 @@ class Elements(object):
         Types = [
             self.elements_spring.celas1, self.elements_spring.celas2,
             self.elements_spring.celas3, self.elements_spring.celas4,
+            self.cshear,
             self.crod, self.conrod,
             self.cbar, self.cbeam,
             self.elements_shell.ctria3, self.elements_shell.cquad4,
@@ -197,13 +199,25 @@ class Elements(object):
         oids = oids[i]
 
         data = vstack([eids, pids, oids]).T
+
         #print(data)
 
-        return data
         # drop extra elements
-        # we now skip this because I think we already handled it...
-        #ie = searchsorted(data[:, 0], element_ids)
-        #return data[ie, :]
+        # for eids greater than the max allowable eid located at data[-1,0],
+        # we drop them
+        i_less = where(data[-1, 0] >= element_ids)[0]
+        element_ids = element_ids[i_less]
+
+        # drop more extra elements
+        # we're handling cases of skipped elements (e.g. CELASx cards)
+        # that have a sorted location in data, but no unique value
+        #print('++++++ %s' % element_ids)
+        #print('++++++ %s' % data[:, 0])
+        ie = unique(searchsorted(data[:, 0], element_ids))
+        #print('ie = %s' % ie)
+        #print('dataA \n%s' % data)
+        return data[ie, :]
+        #return data
 
     def get_mass(self, element_ids=None, xyz_cid0=None):
         if xyz_cid0 is None:
@@ -236,17 +250,22 @@ class Elements(object):
 
         if element_ids is None:
             element_ids = self.element_ids
+            #print('A %s' % element_ids)
         else:
             # remove elements that don't exist in the BDF
             #print("self.element_ids = \n%s" % str(self.element_ids))
             #print("element_ids = \n%s" % str(element_ids))
             element_ids = intersect1d(element_ids, self.element_ids)
+            #print('B %s' % element_ids)
 
         if len(element_ids) == 0:
-            return
+            return None, None
 
         pid_data = self.get_element_ids_by_property_type(element_ids,
                         exclude_types=['CELAS1', 'CELAS2', 'CELAS3', 'CELAS4'], )
+        element_ids = pid_data[:, 0]
+        #print('element_ids =', element_ids)
+        #print('pid_data =', pid_data)
         # remove CELAS1
         #ii = where(pid_data[:, 2]==73)[0]
         #print('CTRIA3/CQUAD4 = %s' % pid_data[ii, :])
@@ -291,21 +310,28 @@ class Elements(object):
             eType = eTypeMap[eType]
             data2[(pid, eType)] = eids
 
-        print('**data2 = %s' % data2)
+        #print('**data2 = %s' % data2)
         nelements = len(element_ids)
         #print('nelement_ids =', nelements)
-        mass = zeros(nelements, dtype='float64')
+        eids2 = zeros(nelements, dtype='int32')
+        mass = full(nelements, nan, dtype='float64')
+        #print('mass.shape =', mass.shape)
 
         ni = 0
         for (pid, eType), element_ids in data2.iteritems():
             #print('pid=%s eType=%s element_ids=%s' % (pid, eType, element_ids))
+            elements = TypeMap[eType]
+            i = searchsorted(elements.element_id, element_ids)
+            n = len(i)
+            eids2[ni:ni+n] = elements.element_id[i]
             if pid == 0:
                 pass
             else:
                 props = self.get_properties([pid])
                 if len(props) == 0:
                     # the property doesn't exist
-                    print('Property %i does not exist and is needed by %s' % (pid, eType))
+                    print('Property %i does not exist and is needed by %s eid=%i' % (pid, eType, element_ids[0]))
+                    ni += n
                     #print('props = %s' % props)
                     continue
                 prop = props[0]
@@ -317,6 +343,7 @@ class Elements(object):
             #print('ielements = %s' % i)
 
             if eType in ['CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',]:
+                eids2[ni:ni+n] = elements.element_id[i]
                 pass
             elif eType in ['CROD', 'CONROD', 'CBAR', 'CBEAM']:
                 n1, n2 = elements.node_ids[i, 0], elements.node_ids[i, 1]
@@ -326,20 +353,43 @@ class Elements(object):
                 #print('prop = %s' % prop)
                 #print('  calling get_mass_per_area for pid=%s' % (pid))
                 if eType in ['CONROD']:
-                    rho = self.model.materials.get_rho(elements.material_id)
-                    mass[ni:ni+n] = L * elements.A[i] * rho[i] + elements.nsm[i]
+                    rho = self.model.materials.get_density(elements.material_id)
+                    j = where(rho is not nan)[0]
+                    slots = ni + arange(len(i))  # is slots done correctly
+                    sloti = slots[j]
+                    i = i[j]
+                    #print('j = %s' % j)
+                    #print('n = %s' % n)
+                    #print('L.shape   = %s' % L.shape)
+                    #print('A.shape   = %s' % elements.A[i].shape)
+                    #print('rho.shape = %s' % rho[i].shape)
+                    #print('nsm.shape = %s' % elements.nsm[i].shape)
+                    #print('L   = %s' % L)
+                    #print('AA  = %s' % elements.A)
+                    #print('A   = %s' % elements.A[i])
+                    #print('rho = %s' % rho[i])
+                    #print('nsm = %s' % elements.nsm[i])
+                    calcs = L[j] * elements.A[i] * rho[i]  + elements.nsm[i]
+                    #print("sloti = %s" % sloti)
+                    #print(ni, ni+n)
+                    #print("calcs = %s" % calcs)
+                    #print("len mass = %s" % len(mass))
+                    #print("mass.shape = %s" % mass.shape)
+                    mass[sloti] = calcs
+                    #eids2[sloti] = elements.element_id[i]
                 else:
                     mpl = prop.get_mass_per_length()
                     mass[ni:ni+n] = mpl * L
+                    eids2[ni:ni+n] = elements.element_id[i]
                     del prop
-            elif eType in ['CTRIA3', 'CQUAD4']:
+            elif eType in ['CTRIA3', 'CQUAD4', 'CSHEAR']:
                 if eType == 'CTRIA3':
                     n1, n2, n3 = elements.node_ids[i, 0], elements.node_ids[i, 1], elements.node_ids[i, 2]
                     n1 = xyz_cid0[self.model.grid.index_map(n1), :]
                     n2 = xyz_cid0[self.model.grid.index_map(n2), :]
                     n3 = xyz_cid0[self.model.grid.index_map(n3), :]
                     normal, A = _ctria3_normal_A(n1, n2, n3, calculate_area=True, normalize=True)
-                elif eType == 'CQUAD4':
+                elif eType in ['CQUAD4', 'CSHEAR']:
                     n1, n2, n3, n4 = elements.node_ids[i, 0], elements.node_ids[i, 1], elements.node_ids[i, 2], elements.node_ids[i, 3]
                     n1 = xyz_cid0[self.model.grid.index_map(n1), :]
                     n2 = xyz_cid0[self.model.grid.index_map(n2), :]
@@ -348,12 +398,14 @@ class Elements(object):
                     normal, A = _cquad4_normal_A(n1, n2, n3, n4, calculate_area=True, normalize=True)
                 else:
                     print("Element.get_mass doesn't support %s; try %s.get_mass" % (eType, eType))
+                    eids2[ni:ni+n] = elements.element_id[i]
                     ni += n
                     continue
                 #print('prop = %s' % prop)
                 #print('  calling get_mass_per_area for pid=%s' % (pid))
                 mpa = prop.get_mass_per_area()
                 mass[ni:ni+n] = mpa * A
+                eids2[ni:ni+n] = elements.element_id[i]
                 del prop
             elif eType in ['CTETRA4', 'CTETRA10', 'CPENTA6', 'CPENTA15', 'CHEXA8', 'CHEXA20']:
                 rho = prop.get_density()
@@ -403,16 +455,19 @@ class Elements(object):
                     Vi = (A1 + A2) / 2. * norm(c1 - c2, axis=1)
                 else:
                     print("Element.get_mass doesn't support %s; try %s.get_mass" % (eType, eType))
+                    eids2[ni:ni+n] = elements.element_id[i]
                     ni += n
                     continue
                 mass[ni:ni+n] = Vi * rho
+                eids2[ni:ni+n] = elements.element_id
             else:
+                eids2[ni:ni+n] = elements.element_id[i]
                 print("  Element.get_mass doesn't support %s; try %s.get_mass" % (eType, eType))
                 #raise NotImplementedError("Element.get_mass doesn't support %s; try %s.get_mass" % (eType, eType))
             #print("")
             ni += n
         #print('data2 = %s' % data2)
-        return mass
+        return mass, eids2
 
     def get_properties(self, property_ids=None):
         property_ids, int_flag = slice_to_iter(property_ids)

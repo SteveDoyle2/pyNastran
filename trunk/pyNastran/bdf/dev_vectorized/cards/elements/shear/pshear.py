@@ -1,4 +1,5 @@
-from numpy import array, zeros, unique
+import cStringIO
+from numpy import array, zeros, unique, asarray, searchsorted, arange
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
     double, double_or_blank)
@@ -57,6 +58,53 @@ class PSHEAR(object):
         else:
             self.property_id = array([], dtype='int32')
 
+    def get_mass_per_area(self, property_ids=None):
+        # A * (rho * t + nsm)
+        if property_ids is None:
+            property_ids = self.property_id
+            n = len(property_ids)
+            i = arange(n)
+        else:
+            print('property_ids =', property_ids)
+            n = len(property_ids)
+            i = searchsorted(self.property_id, property_id)
+        mpa = zeros(n, dtype='float64')
+        rho = self.model.materials.get_density(self.material_id)
+        mpa = rho * self.thickness[i] + self.nsm[i]
+        return mpa
+
     def write_bdf(self, f, size=8, pids=None):
         pass
 
+    def __getitem__(self, property_ids):
+        """
+        Allows for slicing:
+         - elements[1:10]
+         - elements[4]
+         - elements[1:10:2]
+         - elements[[1,2,5]]
+         - elements[array([1,2,5])]
+        """
+        i = searchsorted(self.property_id, property_ids)
+        return self.slice_by_index(i)
+
+    def slice_by_index(self, i):
+        i = asarray(i)
+        obj = PSHEAR(self.model)
+        obj.n = len(i)
+        #obj._cards = self._cards[i]
+        #obj._comments = obj._comments[i]
+        #obj.comments = obj.comments[i]
+        obj.property_id = self.property_id[i]
+        obj.material_id = self.material_id[i]
+        obj.thickness = self.thickness[i]
+        obj.nsm = self.nsm[i]
+        obj.f1 = self.f1[i]
+        obj.f2 = self.f2[i]
+        return obj
+
+    def __repr__(self):
+        f = cStringIO.StringIO()
+        f.write('<%s object> n=%s\n' % (self.type, self.n))
+        self.write_bdf(f)
+        return f.getvalue()

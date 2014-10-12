@@ -43,7 +43,7 @@ class SolidElement(object):
             element_ids = self.element_id
         V = self.get_volume(element_ids, xyz_cid0)
         mid = self.model.properties_solid.get_mid(self.property_id)
-        rho = self.model.materials.get_rho(mid)
+        rho = self.model.materials.get_density(mid)
 
         mass = V * rho
         if total:
