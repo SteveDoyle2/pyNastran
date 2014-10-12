@@ -33,7 +33,7 @@ class CSHEAR(object):
 
             self.zoffset = zeros(ncards, 'int32')
             self.t_flag = zeros(ncards, 'int32')
-            self.thickness = zeros((ncards, 4), float_fmt)
+            self.thickness = zeros((ncards, 4), self.model.float)
 
             for i, card in enumerate(cards):
                 self.element_id[i] = integer(card, 1, 'eid')
