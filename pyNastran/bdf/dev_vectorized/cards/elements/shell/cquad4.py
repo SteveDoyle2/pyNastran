@@ -117,8 +117,7 @@ class CQUAD4(ShellElement):
             #assert t is not None
             #assert nsm is not None
             #assert rho is not None
-            #print type(nsm)
-            #print "nsm =", nsm
+            #print(type(nsm)
             #print("A  =%s" % A)
             #print("rho=%s" % rho)
             #print("t  =%s" % t)

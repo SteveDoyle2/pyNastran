@@ -1,4 +1,4 @@
-from numpy import array, zeros, arange, concatenate, searchsorted, where, unique
+from numpy import array, zeros, arange, concatenate, searchsorted, where, unique, asarray
 
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -127,3 +127,42 @@ class PBAR(object):
                     self.area[i], self.I1[i], self.I2[i], self.J[i]):
                 card = ['PBAR', pid, mid, area, I1, I2, J]
                 f.write(print_card_8(card))
+
+    def get_mass_per_length(self, property_ids=None):
+        if property_ids is None:
+            i = arange(self.n)
+        else:
+            i = searchsorted(self.property_id, property_ids)
+        A = self.area[i]
+        mid = self.material_id[i]
+        rho = self.model.materials.get_density(mid)
+        nsm = self.nsm[i]
+        return rho * A + nsm
+
+    def __getitem__(self, property_ids):
+        """
+        Allows for slicing:
+         - elements[1:10]
+         - elements[4]
+         - elements[1:10:2]
+         - elements[[1,2,5]]
+         - elements[array([1,2,5])]
+        """
+        i = searchsorted(self.property_id, property_ids)
+        return self.slice_by_index(i)
+
+    def slice_by_index(self, i):
+        i = asarray(i)
+        obj = PBAR(self.model)
+        obj.n = len(i)
+        #obj._cards = self._cards[i]
+        #obj._comments = obj._comments[i]
+        #obj.comments = obj.comments[i]
+        obj.property_id = self.property_id[i]
+        obj.material_id = self.material_id[i]
+        obj.area = self.area[i]
+        obj.I1 = self.I1[i]
+        obj.I2 = self.I2[i]
+        obj.J = self.J[i]
+        obj.nsm = self.nsm[i]
+        return obj

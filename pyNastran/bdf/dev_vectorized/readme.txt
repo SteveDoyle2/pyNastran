@@ -15,7 +15,7 @@ Approach
          - Option A:  NaN / None if values don't exist
          - Option B:  No entry
          - Option C:  Crash
-         - no decision has been made on this, but leaning towards Option B
+         - no decision has been made on this, but leaning towards Option A
          - Why A?
            - you don't have a valid BDF
              - nobody ever has a valid model...
@@ -27,13 +27,22 @@ Approach
            - it should be a lot faster
            - should we return eids when mass is called?
          - Why C?
-           - best option for developer time.  
+           - best option for avoiding bugs, but could be tedious
            - a crash flag might be good
          - What about?
            - request for elements that don't exist (maybe Option B)
              - use case:  user requests mass from elements 1:10, but 5 doesn't exist
-           - request for elements that have no properties/materials (maybe option A)
-             - use case:  user didn't define material ID for element 5
+             - solution:  don't even mention it
+             - result:    1) element 5 should have existed and we caused a bug
+                          2) the behavior was intended or they didn't know the input
+                             (e.g. element 1:#)
+                          3) off by 1 errors when asking for density to use in mass
+                             formulas
+           - request for mass/elements that have no properties/materials (maybe option A)
+             - use case: user didn't define material ID for element 5
+             - solution: case A shows you couldn't calculate mass for element 5
+             - result:   1) user identifies a bug/new feature for the software
+                         2) ignores the values
          - Note
            - It's been specifically requested that code doesn't crash on
              missing references and that None may be a valid option

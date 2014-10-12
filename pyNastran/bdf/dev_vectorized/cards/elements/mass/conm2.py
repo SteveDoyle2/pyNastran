@@ -70,7 +70,7 @@ class CONM2(object):
                 assert len(card) <= 15, 'len(CONM2 card) = %i' % len(card)
 
             i = self.element_id.argsort()
-            #print "iconm2", i, type(i)
+            #print("iconm2 %s %s" % (i, type(i)))
             self.element_id = self.element_id[i]
             self.node_id = self.node_id[i]
             self.coord_id = self.coord_id[i]
