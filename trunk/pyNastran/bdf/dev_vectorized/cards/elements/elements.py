@@ -1,6 +1,6 @@
 from numpy import (array, zeros, searchsorted, unique, concatenate, argsort,
                    hstack, where, vstack, ones, cross, intersect1d, setdiff1d,
-                   arange, nan, full, ravel)
+                   arange, nan, full, ravel, asarray)
 from numpy.linalg import norm
 from itertools import izip
 
@@ -149,6 +149,10 @@ class Elements(object):
             'CELAS3'  : self.elements_spring.celas3,
             'CELAS4'  : self.elements_spring.celas4,
 
+            'CBUSH'  : self.elements_bush.cbush,
+            'CBUSH1D'  : self.elements_bush.cbush1d,
+            'CBUSH2D'  : self.elements_bush.cbush2d,
+
             'CROD'  : self.crod,
             'CONROD'  : self.conrod,
             'CSHEAR'  : self.cshear,
@@ -201,8 +205,9 @@ class Elements(object):
         # this isn't working...
         #Types = [Type if Type.type not in exclude_types for Type in Types]
 
+        elements_without_properties = ['CELAS2', 'CELAS4', 'CONROD']
         eids = hstack([Type.element_id for Type in Types])
-        pids = hstack([zeros(Type.n, dtype='int32') if Type.type in ['CELAS2', 'CELAS4', 'CONROD']
+        pids = hstack([zeros(Type.n, dtype='int32') if Type.type in elements_without_properties
                        else Type.property_id for Type in Types])
 
         # remove undefined properties
@@ -253,9 +258,48 @@ class Elements(object):
         i = self.model.grid.index_map(node_id, msg=msg)
         return xyz_cid0[i, :]
 
-    def get_mass(self, element_ids=None, xyz_cid0=None):
+    def _get_element_ids(self, element_ids_orig):
+        if element_ids_orig is None:
+            element_ids = self.element_ids
+            element_ids_orig = element_ids
+            #print('A %s' % element_ids)
+        else:
+            # remove elements that don't exist in the BDF
+            #print("self.element_ids = \n%s" % str(self.element_ids))
+            #print("element_ids = \n%s" % str(element_ids))
+            element_ids_orig = asarray(element_ids_orig)
+            element_ids = intersect1d(element_ids_orig, self.element_ids)
+
+            # check for invalid IDs
+            #n = len(element_ids)
+            #i = where(element_ids < 1)[0]  #  < 100000000
+            #j = where(element_ids[i] > 99999999)[0]
+            #if len(i) + len(j):
+                #eids = setdiff1d(element_ids[i[j]], element_ids)
+                #eids = '???'
+                #raise RuntimeError('0 < element_ids < 100000000 is invalid; eids=%s' % eids)
+            #element_ids = element_ids[i[j]]
+            #print('B %s' % element_ids)
+
+        return element_ids, element_ids_orig
+
+    def get_mass(self, element_ids_orig=None, xyz_cid0=None, sort_output=True):
         if xyz_cid0 is None:
             xyz_cid0 = self.model.grid.get_positions()
+
+        element_ids, element_ids_orig = self._get_element_ids(element_ids_orig)
+        if len(element_ids) == 0:
+            nelements = len(element_ids_orig)
+            mass = full(nelements, nan, 'float64')
+            if sort_output:
+                i = argsort(element_ids_orig)
+                #print "i =", i, i.shape
+                #print "element_ids_orig =", element_ids_orig, element_ids_orig.shape
+                return element_ids_orig[i], mass
+            else:
+                return element_ids_orig, mass
+        nelements_orig = len(element_ids_orig)
+        #print('eids orig = %s' % element_ids_orig)
 
         TypeMap = {
             #'CELAS1'  : self.elements_spring.celas1,
@@ -282,76 +326,21 @@ class Elements(object):
             'CHEXA20'  : self.elements_solid.chexa20,
         }
 
-        if element_ids is None:
-            element_ids = self.element_ids
-            #print('A %s' % element_ids)
-        else:
-            # remove elements that don't exist in the BDF
-            #print("self.element_ids = \n%s" % str(self.element_ids))
-            #print("element_ids = \n%s" % str(element_ids))
-            element_ids = intersect1d(element_ids, self.element_ids)
-            #print('B %s' % element_ids)
-
-        if len(element_ids) == 0:
-            return None, None
-
         pid_data = self.get_element_ids_by_property_type(element_ids,
                         exclude_types=['CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
                                        'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
                                        'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
+                                       'CBUSH', 'CBUSH1D', 'CBUSH2D',
                                        ], )
-        element_ids = pid_data[:, 0]
-        #print('element_ids =', element_ids)
-        #print('pid_data =', pid_data)
-        # remove CELAS1
-        #ii = where(pid_data[:, 2]==73)[0]
-        #print('CTRIA3/CQUAD4 = %s' % pid_data[ii, :])
-        #print(pid_data)
-        #print unique(pid_data[:, 1:])
-
-        # find unique groups
-        #print("pid_data = \n%s\n" % str(pid_data))
-        pid_eType = unique2d(pid_data[:, 1:])
-
-        data2 = {}
-        eTypeMap = {
-            1 : 'CROD', 5: 'CONROD',
-            2 : 'CBEAM', 3 : 'CBAR',
-            4 : 'CSHEAR',
-            10 : 'CELAS1', 11 : 'CELAS2', 12 : 'CELAS3', 13 : 'CELAS4',
-            73 : 'CTRIA3', 144 : 'CQUAD4',
-
-            60 : 'CTETRA4', 61 : 'CTETRA10',
-            62 : 'CPENTA6', 63 : 'CPENTA15',
-            64 : 'CHEXA8', 65 : 'CHEXA20',
-        }
-
-        # group elements of the same type by property type
-        #   same element type & different property id (e.g. CTRIA3 PSHELL/PCOMP)  -> different group
-        #   different element type & same property id (e.g. CTRIA3/CQUAD4 PSHELL) -> different group
-        #   same element & same type -> same group
-        #
-        # we do this in order to think about one property at a time and not
-        # have to do a lot of special work to handle different methods for
-        # getting the mass
-        #print("pid_eType = \n%s\n" % str(pid_eType))
-        for (pid, eType) in pid_eType:
-            #if pid not in self.property_ids:
-                #print('Property pid=%s does not exist' % pid)
-                #continue
-            i = where(pid_data[:, 1] == pid)[0]
-            #print("pid=%i eType=%s Step #1=> \n%s\n" % (pid, eType, pid_data[i, :]))
-            j = where(pid_data[i, 2] == eType)[0]
-            eids = pid_data[i[j], 0]
-            #print("pid=%i eType=%s eids=%s Step #2=> \n%s\n" % (pid, eType, eids, pid_data[i[j], :]))
-            eType = eTypeMap[eType]
-            data2[(pid, eType)] = eids
+        element_ids_to_analyze = pid_data[:, 0]
+        data2 = group_elements_by_property_type_and_element_type(self, pid_data)
 
         #print('**data2 = %s' % data2)
         nelements = len(element_ids)
         #print('nelement_ids =', nelements)
-        eids2 = zeros(nelements, dtype='int32')
-        mass = full(nelements, nan, dtype='float64')
+        eids2 = zeros(nelements_orig, dtype='int32')
+        #mass = full(nelements, nan, dtype='float64')
+        mass = full(nelements_orig, nan, dtype='float64')
         #print('mass.shape =', mass.shape)
 
         ni = 0
@@ -383,7 +372,6 @@ class Elements(object):
             #print('ielements = %s' % i)
 
             if eType in ['CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',]:
-                #eids2[ni:ni+n] = elements.element_id[i]
                 pass
             elif eType in ['CROD', 'CONROD', 'CBAR', 'CBEAM']:
                 msg = 'which is required for %ss' % eType
@@ -394,36 +382,10 @@ class Elements(object):
                 #print('  calling get_mass_per_area for pid=%s' % (pid))
                 if eType in ['CONROD']:
                     rho = self.model.materials.get_density(elements.material_id)
-                    if 0:
-                        j = where(rho is not nan)[0]
-                        slots = ni + arange(len(i))  # is slots done correctly
-                        sloti = slots[j]
-                        i = i[j]
-                        #print('j = %s' % j)
-                        #print('n = %s' % n)
-                        #print('L.shape   = %s' % L.shape)
-                        #print('A.shape   = %s' % elements.A[i].shape)
-                        #print('rho.shape = %s' % rho[i].shape)
-                        #print('nsm.shape = %s' % elements.nsm[i].shape)
-                        #print('L   = %s' % L)
-                        #print('AA  = %s' % elements.A)
-                        #print('A   = %s' % elements.A[i])
-                        #print('rho = %s' % rho[i])
-                        #print('nsm = %s' % elements.nsm[i])
-                        calcs = L[j] * elements.A[i] * rho[i]  + elements.nsm[i]
-                        #print("sloti = %s" % sloti)
-                        #print(ni, ni+n)
-                        #print("calcs = %s" % calcs)
-                        #print("len mass = %s" % len(mass))
-                        #print("mass.shape = %s" % mass.shape)
-                        #mass[sloti] = calcs
-                    else:
-                        mass[ni:ni+n] = L * elements.A[i] * rho[i]  + elements.nsm[i]
-                    #eids2[sloti] = elements.element_id[i]
+                    mass[ni:ni+n] = L * elements.A[i] * rho[i]  + elements.nsm[i]
                 else:
                     mpl = prop.get_mass_per_length()
                     mass[ni:ni+n] = mpl * L
-                    #eids2[ni:ni+n] = elements.element_id[i]
                     del prop
             elif eType in ['CTRIA3', 'CQUAD4', 'CSHEAR']:
                 if eType == 'CTRIA3':
@@ -441,14 +403,12 @@ class Elements(object):
                     normal, A = _cquad4_normal_A(n1, n2, n3, n4, calculate_area=True, normalize=True)
                 else:
                     print("Element.get_mass doesn't support %s; try %s.get_mass" % (eType, eType))
-                    eids2[ni:ni+n] = elements.element_id[i]
                     ni += n
                     continue
                 #print('prop = %s' % prop)
                 #print('  calling get_mass_per_area for pid=%s' % (pid))
                 mpa = prop.get_mass_per_area()
                 mass[ni:ni+n] = mpa * A
-                #eids2[ni:ni+n] = elements.element_id[i]
                 del prop
             elif eType in ['CTETRA4', 'CTETRA10', 'CPENTA6', 'CPENTA15', 'CHEXA8', 'CHEXA20']:
                 rho = prop.get_density()
@@ -498,19 +458,31 @@ class Elements(object):
                     Vi = (A1 + A2) / 2. * norm(c1 - c2, axis=1)
                 else:
                     print("Element.get_mass doesn't support %s; try %s.get_mass" % (eType, eType))
-                    eids2[ni:ni+n] = elements.element_id[i]
                     ni += n
                     continue
                 mass[ni:ni+n] = Vi * rho
-                #eids2[ni:ni+n] = elements.element_id
             else:
-                #eids2[ni:ni+n] = elements.element_id[i]
                 print("  Element.get_mass doesn't support %s; try %s.get_mass" % (eType, eType))
-                #raise NotImplementedError("Element.get_mass doesn't support %s; try %s.get_mass" % (eType, eType))
+                raise NotImplementedError("Element.get_mass doesn't support %s; try %s.get_mass" % (eType, eType))
             #print("")
             ni += n
         #print('data2 = %s' % data2)
-        return mass, eids2
+        diff = setdiff1d(element_ids_orig, element_ids_to_analyze)
+        #print('A = %s' % element_ids_orig)
+        #print('B = %s' % element_ids_to_analyze)
+        #print('A-B = %s' % (diff))
+        #print('eids2 = %s' % eids2)
+        #if len(diff):
+            #print('****diff = %s' % list(diff))
+            #print('eids out = %s' % eids2)
+            #print 'len(eids2) =', len(eids2)
+            #print 'len(diff) =', len(diff)
+        eids2[ni:] = diff
+        if sort_output:
+            i = argsort(eids2)
+            eids2 = eids2[i]
+            mass = mass[i]
+        return eids2, mass
 
     def get_properties(self, property_ids=None):
         property_ids, int_flag = slice_to_iter(property_ids)
@@ -680,11 +652,12 @@ def check_duplicate(name, objs):
     for obj in objs:
         if hasattr(obj, name):
             vals = getattr(obj, name)
-            print("%s vals = %s for class %s" % (name, vals, obj.__class__.__name__))
-            unique_vals.update(list(vals))
+            if len(vals):
+                print("%s vals = %s for class %s" % (name, vals, obj.__class__.__name__))
+                unique_vals.update(list(vals))
             #print unique_vals
         else:
-            print "  %s has no %s"  % (obj.__class__.__name__, name)
+            #print "  %s has no %s"  % (obj.__class__.__name__, name)
             pass
     #print "unique %s = %s\n" %(name, unique_vals)
     if len(unique_vals) == 0:
@@ -692,3 +665,44 @@ def check_duplicate(name, objs):
     #print('unique %s = %s' % (name, unique_vals))
     return unique_vals
 
+def group_elements_by_property_type_and_element_type(elements, pid_data):
+    """
+    group elements of the same type by property type
+       same element type & different property id (e.g. CTRIA3 PSHELL/PCOMP)  -> different group
+       different element type & same property id (e.g. CTRIA3/CQUAD4 PSHELL) -> different group
+       same element & same type -> same group
+
+    we do this in order to think about one property at a time and not
+    have to do a lot of special work to handle different methods for
+    getting the mass
+    """
+    # find unique groups
+    #print("pid_data = \n%s\n" % str(pid_data))
+    pid_eType = unique2d(pid_data[:, 1:])
+
+    data2 = {}
+    eTypeMap = {
+        1 : 'CROD', 5: 'CONROD',
+        2 : 'CBEAM', 3 : 'CBAR',
+        4 : 'CSHEAR',
+        10 : 'CELAS1', 11 : 'CELAS2', 12 : 'CELAS3', 13 : 'CELAS4',
+        73 : 'CTRIA3', 144 : 'CQUAD4',
+
+        60 : 'CTETRA4', 61 : 'CTETRA10',
+        62 : 'CPENTA6', 63 : 'CPENTA15',
+        64 : 'CHEXA8', 65 : 'CHEXA20',
+    }
+
+    #print("pid_eType = \n%s\n" % str(pid_eType))
+    for (pid, eType) in pid_eType:
+        if pid not in elements.property_ids:
+            print('Property pid=%s does not exist' % pid)
+            #continue
+        i = where(pid_data[:, 1] == pid)[0]
+        #print("pid=%i eType=%s Step #1=> \n%s\n" % (pid, eType, pid_data[i, :]))
+        j = where(pid_data[i, 2] == eType)[0]
+        eids = pid_data[i[j], 0]
+        #print("pid=%i eType=%s eids=%s Step #2=> \n%s\n" % (pid, eType, eids, pid_data[i[j], :]))
+        eType = eTypeMap[eType]
+        data2[(pid, eType)] = eids
+    return data2

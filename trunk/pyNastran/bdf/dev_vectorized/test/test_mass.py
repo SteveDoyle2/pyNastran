@@ -190,23 +190,25 @@ class TestMass(unittest.TestCase):
         model.read_bdf(bdfname, include_dir=None, xref=True)
 
         # these are valid
-        mass, eids = model.elements.get_mass([8, 9])
+        eids, mass = model.elements.get_mass([8, 9])
         print('massA = %s' % mass)
-        mass, eids = model.elements.get_mass(range(1, 10))
+        eids, mass = model.elements.get_mass(range(1, 10))
         print('massB = %s' % mass)
 
         # no analysis - out of range
         elements = model.elements[[100000, 100001]]
-        print('elementsC = %s' % elements)
-        mass, eids = model.elements.get_mass(range(100000, 100005))
-
-        mass, eids = model.elements.get_mass(range(-10, -5))
+        eids, mass = model.elements.get_mass(range(100000, 100005))
+        print('elementsC = %s' % eids)
         print('massC = %s' % mass)
+
+        eids, mass = model.elements.get_mass(range(-10, -5))
+        print('elementsD = %s' % eids)
+        print('massD = %s' % mass)
 
         print('-------------------------')
-        mass, eids = model.elements.get_mass(range(-100, 1000))
-        print('massC = %s' % mass)
-        print('eidsC = %s' % eids)
+        eids, mass = model.elements.get_mass(range(-100, 1000))
+        print('massE = %s' % mass)
+        print('eidsE = %s' % eids)
         print('\neid   mass')
         print('----------')
         for eidi, massi in zip(eids, mass):
