@@ -191,14 +191,14 @@ class CPENTA6(SolidElement):
                 card = ['CPENTA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5]]
                 f.write(print_card_8(card))
 
-    def slice_by_index(self, i):
-        i = asarray(i)
-        obj = CPENTA6(self.model)
-        obj.n = len(i)
-        #obj._cards = self._cards[i]
-        #obj._comments = obj._comments[i]
-        #obj.comments = obj.comments[i]
-        obj.element_id = self.element_id[i]
-        obj.property_id = self.property_id[i]
-        obj.node_ids = self.node_ids[i, :]
-        return obj
+    #def slice_by_index(self, i):
+        #i = asarray(i)
+        #obj = CPENTA6(self.model)
+        #obj.n = len(i)
+        ##obj._cards = self._cards[i]
+        ##obj._comments = obj._comments[i]
+        ##obj.comments = obj.comments[i]
+        #obj.element_id = self.element_id[i]
+        #obj.property_id = self.property_id[i]
+        #obj.node_ids = self.node_ids[i, :]
+        #return obj

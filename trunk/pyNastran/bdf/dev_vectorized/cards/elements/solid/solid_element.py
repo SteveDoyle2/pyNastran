@@ -1,5 +1,5 @@
 import cStringIO
-from numpy import zeros, searchsorted, where
+from numpy import zeros, searchsorted, where, asarray
 
 class SolidElement(object):
     def __init__(self, model):
@@ -89,3 +89,18 @@ class SolidElement(object):
             rhoi = self.model.properties_solid.psolid.get_density(pid)
             rho += rhoi
         return rho
+
+    def slice_by_index(self, i):
+        i = asarray(i)
+        #name = self.__class__.__name__
+        #obj_class = type(name, (SolidElement, ), {})
+        obj_class = self.__class__#.__class__
+        obj = obj_class(self.model)
+        obj.n = len(i)
+        #obj._cards = self._cards[i]
+        #obj._comments = obj._comments[i]
+        #obj.comments = obj.comments[i]
+        obj.element_id = self.element_id[i]
+        obj.property_id = self.property_id[i]
+        obj.node_ids = self.node_ids[i, :]
+        return obj

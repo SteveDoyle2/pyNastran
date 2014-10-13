@@ -47,17 +47,25 @@ class CQUAD4(ShellElement):
                 #blank(card, 8, 'blank')
                 #blank(card, 9, 'blank')
 
-                #self.TFlag = integer_or_blank(card, 10, 'TFlag', 0)
-                #self.T1 = double_or_blank(card, 11, 'T1', 1.0)
-                #self.T2 = double_or_blank(card, 12, 'T2', 1.0)
-                #self.T3 = double_or_blank(card, 13, 'T3', 1.0)
+                self.t_flag[i] = integer_or_blank(card, 10, 'TFlag', 0)
+                self.thickness[i, :] = [
+                    double_or_blank(card, 11, 'T1', 1.0),
+                    double_or_blank(card, 12, 'T2', 1.0),
+                    double_or_blank(card, 13, 'T3', 1.0),
+                    double_or_blank(card, 14, 'T4', 1.0),
+                ]
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
             self.property_id = self.property_id[i]
             self.node_ids = self.node_ids[i, :]
+            self.thickness = self.thickness[i, :]
+            self.t_flag = self.t_flag[i]
             assert self.node_ids.min() > 0
             self._cards = []
             self._comments = []
+        else:
+            self.element_id = array([], 'int32')
+            self.property_id = array([], dtype='int32')
 
     #=========================================================================
     def _node_locations(self, xyz_cid0, i=None):
@@ -180,20 +188,20 @@ class CQUAD4(ShellElement):
         #return grids2_cid_0
         return positions
 
-    def slice_by_index(self, i):
-        i = asarray(i)
-        obj = CQUAD4(self.model)
-        obj.n = len(i)
+    #def slice_by_index(self, i):
+        #i = asarray(i)
+        #obj = CQUAD4(self.model)
+        #obj.n = len(i)
         #obj._cards = self._cards[i]
         #obj._comments = obj._comments[i]
         #obj.comments = obj.comments[i]
-        obj.element_id = self.element_id[i]
-        obj.property_id = self.property_id[i]
-        obj.node_ids = self.node_ids[i, :]
-        obj.zoffset = self.zoffset[i]
-        obj.t_flag = self.t_flag[i]
-        obj.thickness = self.thickness[i, :]
-        return obj
+        #obj.element_id = self.element_id[i]
+        #obj.property_id = self.property_id[i]
+        #obj.node_ids = self.node_ids[i, :]
+        #obj.zoffset = self.zoffset[i]
+        #obj.t_flag = self.t_flag[i]
+        #obj.thickness = self.thickness[i, :]
+        #return obj
 
 
 def _cquad4_normal_A(n1, n2, n3, n4, calculate_area=True, normalize=True):

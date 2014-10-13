@@ -4,9 +4,9 @@ from numpy.linalg import norm
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
-from .chexa8 import quad_area_centroid
 
-from pyNastran.bdf.dev_vectorized.cards.elements.solid.solid_element import SolidElement
+from .chexa8 import quad_area_centroid, get_hex_volume
+from .solid_element import SolidElement
 
 class CHEXA20(SolidElement):
     type = 'CHEXA20'
@@ -71,6 +71,7 @@ class CHEXA20(SolidElement):
                 assert isinstance(c[i], float)
 
     def _get_area_centroid(self, element_ids, xyz_cid0):
+        n1, n2, n3, n4, n5, n6, n7, n8 = self._node_locations(xyz_cid0)
         (A1, c1) = quad_area_centroid(n1, n2, n3, n4)
         (A2, c2) = quad_area_centroid(n5, n6, n7, n8)
         return (A1, A2, c1, c2)
@@ -86,7 +87,7 @@ class CHEXA20(SolidElement):
         ..note:: Volume for a CHEXA is the average area of two opposing faces
         times the length between the centroids of those points
         """
-        (A1, A2, c1, c2) = self._area_centroid(self, element_ids, xyz_cid0=xyz_cid0)
+        volume = get_hex_volume(self, element_ids, xyz_cid0)
         if total:
             volume = abs(volume).sum()
         else:
@@ -140,6 +141,24 @@ class CHEXA20(SolidElement):
         nids.pop(indx)
         return nids
 
+    def get_volume(self, element_ids=None, xyz_cid0=None, total=False):
+        """
+        Gets the volume for one or more CHEXA8 elements.
+
+        :param element_ids: the elements to consider (default=None -> all)
+        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
+        :param total: should the volume be summed (default=False)
+
+        ..note:: Volume for a CHEXA is the average area of two opposing faces
+        times the length between the centroids of those points
+        """
+        volume = get_hex_volume(self, element_ids, xyz_cid0)
+        if total:
+            volume = abs(volume).sum()
+        else:
+            volume = abs(volume)
+        return volume
+
     def write_bdf(self, f, size=8, element_ids=None):
         if self.n:
             if element_ids is None:
@@ -151,14 +170,14 @@ class CHEXA20(SolidElement):
                         n[10], n[11], n[12], n[13], n[14], n[15], n[16], n[17], n[18], n[19]]
                 f.write(print_card_8(card))
 
-    def slice_by_index(self, i):
-        i = asarray(i)
-        obj = CHEXA20(self.model)
-        obj.n = len(i)
-        #obj._cards = self._cards[i]
-        #obj._comments = obj._comments[i]
-        #obj.comments = obj.comments[i]
-        obj.element_id = self.element_id[i]
-        obj.property_id = self.property_id[i]
-        obj.node_ids = self.node_ids[i, :]
-        return obj
+    #def slice_by_index(self, i):
+        #i = asarray(i)
+        #obj = CHEXA20(self.model)
+        #obj.n = len(i)
+        ##obj._cards = self._cards[i]
+        ##obj._comments = obj._comments[i]
+        ##obj.comments = obj.comments[i]
+        #obj.element_id = self.element_id[i]
+        #obj.property_id = self.property_id[i]
+        #obj.node_ids = self.node_ids[i, :]
+        #return obj

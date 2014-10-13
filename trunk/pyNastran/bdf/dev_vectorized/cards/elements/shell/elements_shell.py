@@ -1,11 +1,11 @@
 from numpy import array, zeros, searchsorted, unique, concatenate, argsort, hstack
 
 from .ctria3 import CTRIA3
-#from .ctria6 import CTRIA6
+from .ctria6 import CTRIA6
 #from .cquad import CQUAD
 #from .cquadx import CQUADX
 from .cquad4 import CQUAD4
-#from .cquad8 import CQUAD8
+from .cquad8 import CQUAD8
 #from .cquad9 import CQUAD9
 
 #from .ctriax import CTRIAX
@@ -24,11 +24,11 @@ class ElementsShell(object):
         self.n = 0
 
         self.ctria3 = CTRIA3(self.model)
-        #self.ctria6 = CTRIA6(self.model)
+        self.ctria6 = CTRIA6(self.model)
         #self.cquad = CQUAD(self.model)
         #self.cquadx = CQUADX(self.model)
         self.cquad4 = CQUAD4(self.model)
-        #self.cquad8 = CQUAD8(self.model)
+        self.cquad8 = CQUAD8(self.model)
         #self.cquad9 = CQUAD9(self.model)
 
         #self.ctriax = CTRIAX(self.model)
@@ -54,8 +54,7 @@ class ElementsShell(object):
         self.ctria3.add(card, comment)
 
     def add_ctria6(self, card, comment):
-        #self.ctria6.add(card, comment)
-        pass
+        self.ctria6.add(card, comment)
 
     def add_cquad(self, card, comment):
         #self.cquad.add(card, comment)
@@ -69,8 +68,7 @@ class ElementsShell(object):
         self.cquad4.add(card, comment)
 
     def add_cquad8(self, card, comment):
-        #self.cquad8.add(card, comment)
-        pass
+        self.cquad8.add(card, comment)
 
     def add_cquad9(self, card, comment):
         #self.cquad9.add(card, comment)
