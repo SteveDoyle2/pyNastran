@@ -142,65 +142,10 @@ from .cards.constraints.mpc import MPC, get_mpc_constraint
 #from .cards.constraints.mpcax import MPCAX
 from .cards.constraints.mpcadd import MPCADD
 
-#from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
-#from .cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
-#                                          PRAC2D, PRAC3D, PCONEAX)
 
-#from .cards.elements.springs import (CELAS3, CELAS4)
-#from .cards.properties.springs import PELAS, PELAST
-
-#from .cards.elements.solid import (CTETRA4, CTETRA10, CPENTA6, CPENTA15,
-#                                   CHEXA8, CHEXA20, SolidElement)
-#from .cards.elements.rigid import (RBAR, RBAR1, RBE1, RBE2, RBE3, RigidElement)
-#
-#from .cards.elements.shell import (CQUAD, CQUADR, CQUADX,
-#                                   CTRIAX, CTRIAR)
-#from .cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE
-#from .cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
-#from .cards.properties.bush import PBUSH, PBUSH1D
-#from .cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
-#                                    CDAMP5, DamperElement)
-#from .cards.properties.damper import (PVISC, PDAMP, PDAMP5, PDAMPT)
-#from .cards.elements.bars import (CTUBE, CBEAM, CBEAM3,
-#                                  CBEND, LineElement, RodElement)
-#from .cards.properties.bars import (PTUBE, PBAR, PBARL,
-#                                    PBEAM, PBEAML, PBCOMP)  # PBEND
-#from .cards.properties.mass import (PMASS, NSM)
-#from .cards.aero import (AEFACT, AELINK, AELIST, AEPARM, AESTAT, AESURF,
-#                         AESURFS, AERO, AEROS, CSSCHD, CAERO1, CAERO2, CAERO3,
-#                         CAERO4, CAERO5, FLFACT, FLUTTER, GUST, MKAERO1,
-#                         MKAERO2, PAERO1, PAERO2, SPLINE1, SPLINE2, SPLINE4,
-#                         SPLINE5)
-#from .cards.constraints import (SPC, SPCADD, SPCD, SPCAX, SPC1,
-#                                MPC, MPCADD, SUPORT1, SUPORT,
-#                                ConstraintObject)
 from .cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
                                       CORD2R, CORD2C, CORD2S, CORD3G)
-#from .cards.dmig import (DEQATN, DMIG, DMI, DMIJ, DMIK, DMIJI, NastranMatrix)
-#from .cards.dynamic import (FREQ, FREQ1, FREQ2, FREQ4, TSTEP, TSTEPNL, NLPARM, NLPCI)
-#from .cards.loads.loads import (LSEQ, SLOAD, DLOAD, DAREA, TLOAD1, TLOAD2,
-#                                RLOAD1, RLOAD2, RANDPS)
-#from .cards.loads.staticLoads import (LOAD, ACCEL1,
-#                                      FORCE1, FORCE2, MOMENT1, MOMENT2,
-#                                      PLOAD4)
-#
-#from .cards.materials import (MAT2, MAT3, MAT4, MAT5,
-#                              MAT8, MAT9, MAT10,
-#                              MATHP, CREEP, EQUIV)
-#from .cards.methods import (EIGB, EIGC, EIGR, EIGP, EIGRL)
-#from .cards.optimization import (DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
-#                                 DRESP1, DRESP2, DVMREL1, DVPREL1, DVPREL2)
 from .cards.params import PARAM
-#from .cards.sets import (ASET, BSET, CSET, QSET,
-#                         ASET1, BSET1, CSET1, QSET1,
-#                         SET1, SET3, SESET, SEQSEP, RADSET)
-#from .cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD)
-#from .cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
-#                                    PHBDY, CONV, RADM, RADBC,)
-#from .cards.tables import (TABLED1, TABLED2, TABLED3,
-#                           TABLEM1, TABLEM2, TABLEM3, TABLEM4,
-#                           TABLES1, TABLEST, TABRND1, TABRNDG, TIC)
-#from .cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS
 from pyNastran.bdf.caseControlDeck import CaseControlDeck
 from .bdf_methods import BDFMethods
 from .bdf_interface.get_methods import GetMethods
@@ -340,8 +285,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             'GRID', 'GRDSET', 'SPOINT', 'EPOINT', 'POINT', 'POINTAX', # 'RINGAX',
 
             # elements
-            'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
-            'CONM1',
+            'CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
+
+            # elements
             'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
             # 'CELAS5',
             'CBUSH', 'CBUSH1D', 'CBUSH2D',
@@ -394,14 +340,14 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             'DLOAD', 'SLOAD', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
             'FORCE', 'FORCE1', 'FORCE2',
             'MOMENT', 'MOMENT1', 'MOMENT2',
-            'GRAV', 'ACCEL1',
+            'GRAV', 'ACCEL', 'ACCEL1',
             'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
             'PLOADX1', 'RFORCE',
 
             # aero cards
             'AERO', 'AEROS', 'GUST', 'FLUTTER', 'FLFACT', 'MKAERO1', 'MKAERO2',
             'AEFACT', 'AELINK', 'AELIST', 'AEPARAM', 'AESTAT', 'AESURF',
-            'CAERO1', 'CAERO2', 'CAERO4', 'CAERO3', # 'CAERO5',
+            'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', # 'CAERO5',
             'PAERO1', 'PAERO2',  'PAERO3', # 'PAERO4', 'PAERO5',
             'SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',
             #'SPLINE3', 'SPLINE6', 'SPLINE7',
@@ -619,6 +565,17 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.properties_shell = PropertiesShell(model)
         #: stores CTRIA3, CTRIA6, CQUAD4, CQUAD8
         self.elements_shell = ElementsShell(model)
+
+        class DummyCard(object):
+            def __init__(self, model):
+                pass
+            def add(self, card, comment=''):
+                pass
+        # bush
+        self.cbush = DummyCard(model)
+        self.cbush1d = DummyCard(model)
+        self.cbush2d = DummyCard(model)
+        self.pbush = DummyCard(model)
 
         # shear
         #: stores CSHEAR
@@ -954,11 +911,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #: the directory of the 1st BDF (include BDFs are relative to this one)
         self.include_dir = include_dir
 
-        #: will this model be cross referenced
-        self._xref = xref
-
         if not os.path.exists(bdf_filename):
-            raise IOError('cannot find bdf_filename=%r' % bdf_filename)
+            msg = 'cannot find bdf_filename=%r\n%s' % (bdf_filename, print_bad_path(bdf_filename))
+            raise IOError(msg)
         if bdf_filename.lower().endswith('.pch'):
             punch = True
 
@@ -976,6 +931,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
             self._read_bulk_data_deck()
             self.cross_reference(xref=xref)
+            self._xref = xref
             self._cleanup_file_streams()
         except:
             self._cleanup_file_streams()
@@ -1009,7 +965,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self._break_comment = False
         lineUpper = ''
         while 'CEND' not in lineUpper[:4] and 'BEGIN' not in lineUpper and 'BULK' not in lineUpper:
-            #lines = []
             try:
                 (i, line, comment) = self._get_line()
             except TypeError:
@@ -1018,10 +973,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
                     include_dir = ''
                 else:
                     include_dir = 'include_dir=%s, ' % self.include_dir
-                if self._xref:
-                    xref = ''
-                else:
-                    xref = 'xref=False, '
                 msg += 'call read_bdf(bdf_filename=%r, %s%spunch=%s)' % (self.bdf_filename, include_dir, xref, True)
                 msg += ' instead.\n'
                 raise RuntimeError(msg)
@@ -1179,14 +1130,13 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
                 filename = get_include_filename(include_lines,
                                                 include_dir=self.include_dir)
                 self._open_file(filename)
-                #line = next_line
             else:
                 self.case_control_lines.append(lineUpper)
 
             if 'BEGIN' in lineUpper and ('BULK' in lineUpper or 'SUPER' in lineUpper):
                 self.log.debug('found the end of the Case Control Deck!')
                 break
-        self.log.info("finished with Case Control Deck...")
+        self.log.debug("finished with Case Control Deck...")
 
         #for line in self.case_control_lines:
             #print "** line=|%r|" %(line)
@@ -1229,9 +1179,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             msg += 'cwd: %r' % os.getcwd()
             raise IOError(msg)
 
-        #print "opening self.active_filename=%s" % bdf_filename
         if bdf_filename in self.active_filenames:
-            msg = 'bdf_filename=%s is already active.\nactive_filenames=%s' % (bdf_filename, self.active_filenames)
+            msg = 'bdf_filename=%s is already active.\nactive_filenames=%s' \
+                % (bdf_filename, self.active_filenames)
             raise RuntimeError(msg)
         self.log.info('opening %r' % bdf_filename)
 
@@ -1414,7 +1364,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         :param self: the BDF object
         """
-        self.log.info("reading Bulk Data Deck...")
+        self.log.debug("reading Bulk Data Deck...")
         self._break_comment = True
         n = 1
         isEndData = False
@@ -1445,11 +1395,11 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
                 isEndData = True  # exits while loop
                 break
 
-            self._increase_card_count(card_name)
             if not self.is_reject(card_name):
                 self.add_card(lines, card_name, comment, is_list=False)
                 icard += 1
             else:
+                self._increase_card_count(card_name)
                 if comment:
                     self.rejects.append([comment])
                 self.rejects.append(lines)
@@ -1559,6 +1509,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
                   created.
         .. warning:: cardObject is not returned
         """
+        card_name = card_name.upper()
+        self._increase_card_count(card_name)
         if card_name in ['DEQATN']:
             card_obj = card_lines
             card = card_lines
@@ -1582,7 +1534,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         # function that gets by name the initialized object (from global scope)
 
-        name = card[0]
+        name = card_name # card[0]
         ##print("name = %r" % name)
         #self.write_sorted_card(card_obj, icard)
 
