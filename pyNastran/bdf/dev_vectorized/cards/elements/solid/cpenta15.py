@@ -155,14 +155,14 @@ class CPENTA15(SolidElement):
                         n[10], n[11], n[12], n[13], n[14]]
                 f.write(print_card_8(card))
 
-    def slice_by_index(self, i):
-        i = asarray(i)
-        obj = CPENTA15(self.model)
-        obj.n = len(i)
-        #obj._cards = self._cards[i]
-        #obj._comments = obj._comments[i]
-        #obj.comments = obj.comments[i]
-        obj.element_id = self.element_id[i]
-        obj.property_id = self.property_id[i]
-        obj.node_ids = self.node_ids[i, :]
-        return obj
+    #def slice_by_index(self, i):
+        #i = asarray(i)
+        #obj = CPENTA15(self.model)
+        #obj.n = len(i)
+        ##obj._cards = self._cards[i]
+        ##obj._comments = obj._comments[i]
+        ##obj.comments = obj.comments[i]
+        #obj.element_id = self.element_id[i]
+        #obj.property_id = self.property_id[i]
+        #obj.node_ids = self.node_ids[i, :]
+        #return obj

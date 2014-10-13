@@ -142,8 +142,7 @@ class CHEXA8(SolidElement):
         ..note:: Volume for a CHEXA is the average area of two opposing faces
         times the length between the centroids of those points
         """
-        (A1, A2, c1, c2) = self._get_area_centroid(element_ids, xyz_cid0)
-        volume = (A1 + A2) / 2. * norm(c1 - c2, axis=1)
+        volume = get_hex_volume(self, element_ids, xyz_cid0)
         if total:
             volume = abs(volume).sum()
         else:
@@ -210,14 +209,7 @@ class CHEXA8(SolidElement):
                 card = ['CHEXA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7]]
                 f.write(print_card_8(card))
 
-    def slice_by_index(self, i):
-        i = asarray(i)
-        obj = CHEXA8(self.model)
-        obj.n = len(i)
-        #obj._cards = self._cards[i]
-        #obj._comments = obj._comments[i]
-        #obj.comments = obj.comments[i]
-        obj.element_id = self.element_id[i]
-        obj.property_id = self.property_id[i]
-        obj.node_ids = self.node_ids[i, :]
-        return obj
+def get_hex_volume(self, element_ids, xyz_cid0):
+    (A1, A2, c1, c2) = self._get_area_centroid(element_ids, xyz_cid0)
+    volume = (A1 + A2) / 2. * norm(c1 - c2, axis=1)
+    return volume

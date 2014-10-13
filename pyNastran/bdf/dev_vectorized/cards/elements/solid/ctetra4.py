@@ -177,14 +177,14 @@ class CTETRA4(SolidElement):
                 card = ['CTETRA', eid, pid, n[0], n[1], n[2], n[3]]
                 f.write(print_card(card))
 
-    def slice_by_index(self, i):
-        i = asarray(i)
-        obj = CTETRA4(self.model)
-        obj.n = len(i)
-        #obj._cards = self._cards[i]
-        #obj._comments = obj._comments[i]
-        #obj.comments = obj.comments[i]
-        obj.element_id = self.element_id[i]
-        obj.property_id = self.property_id[i]
-        obj.node_ids = self.node_ids[i, :]
-        return obj
+    #def slice_by_index(self, i):
+        #i = asarray(i)
+        #obj = CTETRA4(self.model)
+        #obj.n = len(i)
+        ##obj._cards = self._cards[i]
+        ##obj._comments = obj._comments[i]
+        ##obj.comments = obj.comments[i]
+        #obj.element_id = self.element_id[i]
+        #obj.property_id = self.property_id[i]
+        #obj.node_ids = self.node_ids[i, :]
+        #return obj

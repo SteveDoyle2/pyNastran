@@ -34,7 +34,7 @@ class CTRIA3(ShellElement):
             self.thickness = zeros((ncards, 3), float_fmt)
 
             for i, card in enumerate(cards):
-                self.element_id[i] = integer(card, 1, 'elemeent_id')
+                self.element_id[i] = integer(card, 1, 'element_id')
 
                 self.property_id[i] = integer(card, 2, 'property_id')
 
@@ -47,10 +47,11 @@ class CTRIA3(ShellElement):
                 blank(card, 8, 'blank')
                 blank(card, 9, 'blank')
 
-                #self.TFlag = integer_or_blank(card, 10, 'TFlag', 0)
-                #self.T1 = double_or_blank(card, 11, 'T1', 1.0)
-                #self.T2 = double_or_blank(card, 12, 'T2', 1.0)
-                #self.T3 = double_or_blank(card, 13, 'T3', 1.0)
+                self.t_flag[i] = integer_or_blank(card, 10, 'TFlag', 0)
+                self.thickness[i] = [
+                    double_or_blank(card, 11, 'T1', 1.0),
+                    double_or_blank(card, 12, 'T2', 1.0),
+                    double_or_blank(card, 13, 'T3', 1.0), ]
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
             self.property_id = self.property_id[i]
@@ -58,7 +59,7 @@ class CTRIA3(ShellElement):
             self._cards = []
             self._comments = []
         else:
-            self.element_id = zeros([], 'int32')
+            self.element_id = array([], 'int32')
             self.property_id = array([], dtype='int32')
 
     def write_bdf(self, f, size=8, element_ids=None):
@@ -271,20 +272,20 @@ class CTRIA3(ShellElement):
         n1, n2, n3 = self._node_locations(xyz_cid0, i)
         return (n1 + n2 + n3) / 3.
 
-    def slice_by_index(self, i):
-        i = asarray(i)
-        obj = CTRIA3(self.model)
-        obj.n = len(i)
-        #obj._cards = self._cards[i]
-        #obj._comments = obj._comments[i]
-        #obj.comments = obj.comments[i]
-        obj.element_id = self.element_id[i]
-        obj.property_id = self.property_id[i]
-        obj.node_ids = self.node_ids[i, :]
-        obj.zoffset = self.zoffset[i]
-        obj.t_flag = self.t_flag[i]
-        obj.thickness = self.thickness[i, :]
-        return obj
+    #def slice_by_index(self, i):
+        #i = asarray(i)
+        #obj = CTRIA3(self.model)
+        #obj.n = len(i)
+        ##obj._cards = self._cards[i]
+        ##obj._comments = obj._comments[i]
+        ##obj.comments = obj.comments[i]
+        #obj.element_id = self.element_id[i]
+        #obj.property_id = self.property_id[i]
+        #obj.node_ids = self.node_ids[i, :]
+        #obj.zoffset = self.zoffset[i]
+        #obj.t_flag = self.t_flag[i]
+        #obj.thickness = self.thickness[i, :]
+        #return obj
 
 
 def _ctria3_normal_A(n1, n2, n3, calculate_area=True, normalize=True):

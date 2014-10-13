@@ -68,7 +68,7 @@ class Elements(object):
         self.properties_solid = model.properties_solid
 
     def validate_nodes(self, elements):
-        validate_nodes = True
+        validate_nodes = False
         if not hasattr(elements, 'node_ids'):
             # this element isn't finished
             return
@@ -108,7 +108,7 @@ class Elements(object):
             props.build()
             self.np += props.n
 
-        eids = check_duplicate('element_id',  etypes)
+        eids = check_duplicate('element_id', etypes)
         pids = check_duplicate('property_id', ptypes)
 
         self.element_ids = array(list(eids), dtype='int32')
@@ -185,6 +185,7 @@ class Elements(object):
             self.crod, self.conrod,
             self.cbar, self.cbeam,
             self.elements_shell.ctria3, self.elements_shell.cquad4,
+            self.elements_shell.ctria6, self.elements_shell.cquad8,
             self.elements_solid.ctetra4, self.elements_solid.cpenta6, self.elements_solid.chexa8,
             self.elements_solid.ctetra10, self.elements_solid.cpenta15, self.elements_solid.chexa20,
         ]
@@ -543,8 +544,8 @@ class Elements(object):
 
                  self.elements_shell.ctria3,
                  self.elements_shell.cquad4,
-                 #self.elements_shell.ctria6,
-                 #self.elements_shell.cquad8,
+                 self.elements_shell.ctria6,
+                 self.elements_shell.cquad8,
                  #self.elements_shell,
 
                  #self.elements_solid,
@@ -616,8 +617,8 @@ class Elements(object):
 
             'CTRIA3'  : self.elements_shell.ctria3,
             'CQUAD4'  : self.elements_shell.cquad4,
-            #'CTRIA6'  : self.elements_shell.ctria6,
-            #'CQUAD8'  : self.elements_shell.cquad8,
+            'CTRIA6'  : self.elements_shell.ctria6,
+            'CQUAD8'  : self.elements_shell.cquad8,
 
             'CTETRA4' : self.elements_solid.ctetra4,
             'CPENTA6' : self.elements_solid.cpenta6,
@@ -679,7 +680,7 @@ def check_duplicate(name, objs):
     for obj in objs:
         if hasattr(obj, name):
             vals = getattr(obj, name)
-            #print vals
+            print("%s vals = %s for class %s" % (name, vals, obj.__class__.__name__))
             unique_vals.update(list(vals))
             #print unique_vals
         else:

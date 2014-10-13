@@ -2,120 +2,240 @@ This is an attempt at vectorization of the BDF class and is far from being compl
 
 Approach
 ==========
- - clean break from old BDF class
-   - Why?
-     - the data structure is fundamentally different
-   - Note: the CaseControlDeck and ExecutiveControlDeck will be unchanged
+ o clean break from old BDF class
+   o Why?
+     o the data structure is fundamentally different
+   o Note: the CaseControlDeck and ExecutiveControlDeck will be unchanged
  
- - model.element (Element object) stores elements/properties/reference to model
-   - Element
-     - Element slice methods to get eids 1,2,3 (model.elements[3],
+ o model.element (Element object) stores elements/properties/reference to model
+   o Element
+     o Element slice methods to get eids 1,2,3 (model.elements[3],
        model.elements[[1,2,3]] and model.elements[1:10:2])
        For missing elements/properties, it returns:
-         - Option A:  NaN / None if values don't exist
-         - Option B:  No entry
-         - Option C:  Crash
-         - no decision has been made on this, but leaning towards Option A
-         - Why A?
-           - you don't have a valid BDF
+         o Possible Options:
+           o Option A:  NaN if values don't exist
+           o Option C:  Crash on Failure
+           o Option D:  Crash Flag (A or C)
+           o Option E:  Validate Inputs when model is loaded (as a flag)
+         o Invalid Options:
+           o Option B:  No entry
+             o removed as a potential Option in D
+
+         o a final decision has been made on this, but
+           o old pyNastran BDF() uses Options C/E
+           o Jeff has requested not C, forced E
+             o possibly A/B/D/E
+           o leaning towards Option E (with a GEOMCHECK/input flag)
+             and D
+           o B is NOT going to happen.  It has too many downsides.
+
+         o Why A? (NaN value)
+           o NaN could possibly be None
+           o you don't have a valid BDF
              - nobody ever has a valid model...
-           - don't waste developer time adding checks for getting the right
-             number of properties that were requested (it'll probably crash on None)
-           - no need to return eids when mass is called
-         - Why B?
-           - you should have a valid BDF / code
-           - it should be a lot faster
+           - wastes developer time adding checks for getting the right
+             number of properties that were requested (it'll probably crash on NaN)
+           + no need to return eids when mass is called
+         o Why B? (No entry)
+           o you should have a valid BDF / code
+           + it's faster because:
+             + elements/properties are eliminated and don't need to be handled later
            - should we return eids when mass is called?
-         - Why C?
-           - best option for avoiding bugs, but could be tedious
-           - a crash flag might be good
-         - What about?
-           - request for elements that don't exist (maybe Option B)
-             - use case:  user requests mass from elements 1:10, but 5 doesn't exist
-             - solution:  don't even mention it
-             - result:    1) element 5 should have existed and we caused a bug
-                          2) the behavior was intended or they didn't know the input
-                             (e.g. element 1:#)
-                          3) off by 1 errors when asking for density to use in mass
-                             formulas
-           - request for mass/elements that have no properties/materials (maybe option A)
-             - use case: user didn't define material ID for element 5
-             - solution: case A shows you couldn't calculate mass for element 5
-             - result:   1) user identifies a bug/new feature for the software
-                         2) ignores the values
-         - Note
-           - It's been specifically requested that code doesn't crash on
-             missing references and that None may be a valid option
-           - You can look at geometry without looking at properties/materials
-           - However, for something like Mass, maybe this doesn't make sense
+           - errors pass silently
+         o Why C? (Crash on Failure)
+           o doesn't fail unless a bug is specifically encountered
+           + allows for incomplete models
+           - requires checks in more place,
+           + which probably should exist anyways
+           - checks are inevitably incomplete and poor error messages will result
+         o Why D? (Validate Inputs + Crash Flag)
+           + compromise between A and C
+           o still need to decide on A vs. C
+         o Why E? (Validate Inputs)
+           + best option for avoiding bugs
+           - could be tedious
+           - Jeff has specifically requested against this option
+           o a crash flag (e.g. GEOMCHECK) could be used (option D)
+
+         o Results
+           o Approved: Option E as a flag
+           o Eliminated: Option B
+
+           o Jeff has requested not C
+             o possibly A
+           o Conclusion
+             o Option A/C as a flag is probably the way to go
+
+           o request for elements that don't exist
+             o use case #1:  user requests mass from elements 1:10, but 5 doesn't exist
+                 o Favorite:   Option C
+                 o Compromise: Option A
+ 
+           o request for elements that don't exist
+             o use case #2:  user requests mass from elements 1:10, but
+             		     Node 1 / Material 1 on element 1 doesn't exist
+                 o Favorite:   Option C
+                 o Compromise: Option A
+
+           o non-request for nodes/materials that don't exist
+             o use case #3:  user loads model, but missing some data
+                 o Favorite:   Option A/C
+
+         o What about?
+           o request for elements that don't exist
+             o use case #1:  user requests mass from elements 1:10, but 5 doesn't exist
+                 o Favorite:   Option C/E
+                 o Compromise: Option A
+                 o Eliminated: Option B
+
+                 o Why #1: intentionally (e.g. element 1:#)
+                    solution A: NaN value
+                      + they need to deal with the value explicitly, but got what
+                        they wanted (good enough)
+                    solution B: drop the element -> No entry
+                      + they got what they wanted (ideal)
+                    solution C: crash on failure
+                      - they have to fix it (annoying)
+                    Favorite:   Option B
+                    Compromise: Option A
+                    Dislike:    Option C
+
+                 o Why #2: they have a bug
+                    solution A: NaN value
+                      + they can see the NaN, but could get confused with Why #1
+                        (good enough)
+                    solution B: drop the element -> No entry
+                      - errors pass silently (bad!)
+                      - off by 1 errors WILL happen, which forces all sorts of checks
+                         which makes code complicated, hard to maintain, and buggy
+                         (bad!!!)
+                    solution C/E: crash on failure / validate input
+                      + the error is caught with an error message (ideal)
+                    Favorite:   Option C/E
+                    Compromise: Option A
+                    Eliminated: Option B
+
+           o request for elements that don't exist
+             o use case #2:  user requests mass from elements 1:10, but
+             		     Node 1 / Material 1 on element 1 doesn't exist
+                 o Favorite:   Option C/E
+                 o Compromise: Option A
+                 o Eliminated: Option B
+                 o Why #1: bug
+                    solution A: NaN value
+                      + they get a NaN (good enough)
+                    solution B: drop the element -> No entry
+                      - errors pass silently (bad!!!)
+                    solution C: crash on failure
+                      + the error upon requesting mass and is caught
+                        with an error message (ideal)
+                    solution E: validate inputs
+                      + the user never gets past the loading step
+                        and gets an error message (ideal)
+                    Favorite:   Option C/E
+                    Compromise: Option A
+                    Eliminated: Option B
+
+     
+           o non-request for nodes/materials that don't exist
+             o use case #3:  user loads model, but missing some data
+                 o Favorite:   Option A/C
+                 o Compromise: Option E
+
+                 o Why #1: Volume of solids is desired, so I don't need density
+                           on the undefined MAT1 card
+                    solution A/C: NaN value / crash on failure
+                      + they got what they wanted (ideal)
+                    solution E: validate inputs
+                      - the user never gets past the loading step
+                        and gets an error message (bad)
+                    Favorite:   Option A/C
+                    Compromise: Option E
+
+                 o Why #2: Volume of solids is desired, so I don't need the location
+                           of Node 1 used on the undefined CELAS1 card
+                    solution A/C: NaN value / crash on failure
+                      + they got what they wanted (ideal)
+                    solution E: validate inputs
+                      - the user never gets past the loading step
+                        and gets an error message (bad)
+                    Favorite:   Option A/C
+                    Compromise: Option E
+
            
-     - model.get_elements will complain if exact list of elements are not found?
-       - could remove this method if we figure A/B/C out properly
-   - Mass
-     - model.elements.get_mass([1,2,3]) does not fail???
-     - model.get_mass([1,2,3]) can fail???
-   - Fail Criteria
-     - regardless of A/B/C; stills fails given very bad input
-       - strings when values should be integers
-       - None (when not explicitly allowed)
-     - if total mass is desired:
-       - should it fail for None values?
-       - should it set those values to 0.0?
-       - or just not sum the mass?
-   - Why the differing fail criteria?
-     - it requires extra checks; speed
-     - if you as Patran/Femap to show elements 1-10 and only element 1 exists,
+     o model.get_elements will complain if exact list of elements are not found?
+       o could remove this method if we figure A/B/C/D/E out properly
+   o Mass
+     o model.elements.get_mass([1,2,3]) does not fail???
+     o model.get_mass([1,2,3]) can fail???
+   o Fail Criteria
+     o regardless of A/B/C/D/E; stills fails given very bad input
+       o strings when values should be integers
+       o None (when not explicitly allowed)
+     o if total mass is desired:
+       o should it fail for None values?
+       o should it set those values to 0.0?
+         - sounds like Option B (errors pass silenty)
+       o or just not sum the mass?
+   o Why the differing fail criteria?
+     o it requires extra checks; speed
+     o if you as Patran/Femap to show elements 1-10 and only element 1 exists,
        it shows you element 1 and (hopefully :) doesn't crash
-   - Interface
-     - 2D arrays will iterate over the rows to indicate different elements/properties
-     - column 2/3/etc. will refer to column 1
-       - yes [eid1, mass1]
+   o Interface
+     o 2D arrays will iterate over the rows to indicate different elements/properties
+     o column 2/3/etc. will refer to column 1
+       o yes [eid1, mass1]
              [eid2, mass2]
              [eid3, mass3]
              [eid4, mass4]
-       - no  [eid1,   eid2,  eid3,  eid4]
+       o no  [eid1,   eid2,  eid3,  eid4]
              [mass1, mass2, mass3, mass4]
-     - Why?
-       - I'll forget which is which
+     o Why?
+       o I'll forget which is which and a standard is a good thing
 
-  - Easily vectorizable and/or high payoff cards
-    - These include:
-       - GRID, SPOINT (nodes)
-       - CTRIA3, CQUAD4, CTRIA6, CQUAD8 (shells)
-       - CTETRA4, CPENTA6, CHEXA8, CTETRA10, CPENTA15, CHEXA20 (solids)
-       - CELAS1, CELAS2, CELAS3, CELAS4 (springs)
-       - CONROD, CROD (rods)
-       - PELAS
-       - PSHELL, PCOMP, PCOMPG (shell properties)
-       - PSOLID, PLSOLID (solid properties)
-    - When cards are grouped (e.g. CTRIA3, CQUAD4 are shells),
+  o Easily vectorizable and/or high payoff cards
+    o These include:
+       o GRID, SPOINT (nodes)
+       o CTRIA3, CQUAD4, CTRIA6, CQUAD8 (shells)
+       o CTETRA4, CPENTA6, CHEXA8, CTETRA10, CPENTA15, CHEXA20 (solids)
+       o CELAS1, CELAS2, CELAS3, CELAS4 (springs)
+       o CONROD, CROD (rods)
+       o PELAS
+       o PSHELL, PCOMP, PCOMPG (shell properties)
+       o PSOLID, PLSOLID (solid properties)
+    o When cards are grouped (e.g. CTRIA3, CQUAD4 are shells),
       a controlling class is used to interface with the group of cards.
-      - Why?
-        - interfacing is a pain for vectors
-        - different people want to interface differently
-          - solver
-          - pyNastran object style
+      o Why?
+        + interfacing is a pain for vectors
+        + different people want to interface differently
+          o solver
+          o pyNastran object style
+        + it doesn't even matter as users can choose to not use these classes
   
-  - Complicated cards or low payoff cards will not be vectorized.  The already
+  o Complicated cards or low payoff cards will not be vectorized.  The already
     implemented unvectorized BDF card will be used (ideally).
-    - These include:
-      - CORD2R, MAT1, MATS1
-      - CBEAM
-      - PCOMP, PCOMPG, PBEAML, PBARL
-      - AEROS, CAERO1, EIGRL
-    - Why?
-       - Some of these cards are dynamic in length (PCOMP, CBEAM)
-       - Some are interlinked and require special code (MAT1, MATS1)
-       - Others are just a waste of time because you don't use that many
+    o These include:
+      o CORD2R, MAT1, MATS1
+      o CBEAM
+      o PCOMP, PCOMPG, PBEAML, PBARL
+      o AEROS, CAERO1, EIGRL
+    o Why?
+       o Some of these cards are dynamic in length (PCOMP, CBEAM)
+       o Some are interlinked and require special code (MAT1, MATS1)
+       o Others are just a waste of time because you don't use that many
          (e.g. CORD2R, AEROS, CAERO1, EIGRL)
-    - Note:
-       - methods on the original cards (if used) will be updated to work
+    o Note:
+       o methods on the original cards (if used) will be updated to work
          without cross referencing
-       - APIs will be updated to be as similiar as possible when a separate card is used
+       o APIs will be updated to be as similiar as possible when a separate
+         card is used
 
-  - No cross referencing is allowed.  This may be OK for obscure cards.
-    - Why?
-      - cross referencing prevents some options unless you re-cross-reference
+  o No cross referencing is allowed.  This may be OK for obscure cards.
+    o Why?
+      o cross referencing prevents some options unless you re-cross-reference
         - renumbering
-      - slow
+        - cards added after cross referencing
+      - cross referencing cards is slow
+      - accessing data for cross referenced cards is slow
+      - writing out cross referenced cards is slow
       - it prevents vectorization

@@ -1,5 +1,5 @@
 import cStringIO
-from numpy import zeros, searchsorted, where
+from numpy import zeros, searchsorted, where, asarray
 
 class ShellElement(object):
     def __init__(self, model):
@@ -131,4 +131,26 @@ class ShellElement(object):
         density = self.model.properties_shell.get_density(property_id)
         #print('density_out = %s' % density)
         return density
+
+    def slice_by_index(self, i):
+        i = asarray(i)
+        #name = self.__class__.__name__
+        #print('name = %r' % name)
+        #obj = CQUAD4(self.model)
+        #obj_class = type(name, (ShellElement, ), {})
+        obj_class = self.__class__#.__class__
+        obj = obj_class(self.model)
+        #print(type(obj))
+
+        obj.n = len(i)
+        #obj._cards = self._cards[i]
+        #obj._comments = obj._comments[i]
+        #obj.comments = obj.comments[i]
+        obj.element_id = self.element_id[i]
+        obj.property_id = self.property_id[i]
+        obj.node_ids = self.node_ids[i, :]
+        obj.zoffset = self.zoffset[i]
+        obj.t_flag = self.t_flag[i]
+        obj.thickness = self.thickness[i, :]
+        return obj
 
