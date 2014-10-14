@@ -7,9 +7,11 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, string_or_blank, blank)
 
 
-class CBAR(object):
+from pyNastran.bdf.dev_vectorized.cards.elements.element import Element
+class CBAR(Element):
     type = 'CBAR'
     op2_id = 3
+
     def __init__(self, model):
         """
         Defines the CBAR object.
@@ -17,10 +19,7 @@ class CBAR(object):
         :param self: the CBAR object
         :param model: the BDF object
         """
-        self.model = model
-        self.n = 0
-        self._cards = []
-        self._comments = []
+        Element.__init__(self, model)
 
     def add(self, card, comment=None):
         self._cards.append(card)
@@ -117,12 +116,6 @@ class CBAR(object):
             return mass
 
     #=========================================================================
-    def get_stats(self):
-        msg = []
-        if self.n:
-            msg.append('  %-8s: %i' % ('CBAR', self.n))
-        return msg
-
     def write_bdf(self, f, size=8, element_ids=None):
         if self.n:
             if element_ids is None:

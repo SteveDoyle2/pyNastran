@@ -60,17 +60,16 @@ class CHEXA8(SolidElement):
             self.property_id = zeros(ncards, 'int32')
             self.node_ids = zeros((ncards, 8), 'int32')
 
-            comments = {}
+            #comments = {}
             for i, card in enumerate(cards):
-                comment = self._comments[i]
-                eid = integer(card, 1, 'element_id')
-                if comment:
-                    self.comments[eid] = comment
+                #comment = self._comments[i]
+                #if comment:
+                    #self._comments[eid] = comment
 
                 #: Element ID
-                self.element_id[i] = eid
+                self.element_id[i] = eid = integer(card, 1, 'element_id')
                 #: Property ID
-                self.property_id[i] = integer(card, 2, 'pid')
+                self.property_id[i] = integer(card, 2, 'property_id')
                 #: Node IDs
                 nids = [
                     integer(card, 3, 'nid1'),

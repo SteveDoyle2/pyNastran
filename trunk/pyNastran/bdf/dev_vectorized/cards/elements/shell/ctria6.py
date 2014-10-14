@@ -37,19 +37,18 @@ class CTRIA6(ShellElement):
 
             for i, card in enumerate(cards):
                 self.element_id[i] = integer(card, 1, 'element_id')
-
                 self.property_id[i] = integer(card, 2, 'property_id')
 
                 self.node_ids[i] = [
-                    integer(card, 3, 'n1'),
-                    integer(card, 4, 'n2'),
-                    integer(card, 5, 'n3'),
-                    integer_or_blank(card, 6, 'n4', 0),
-                    integer_or_blank(card, 7, 'n5', 0),
-                    integer_or_blank(card, 8, 'n6', 0)]
+                    integer(card, 3, 'node_id1'),
+                    integer(card, 4, 'node_id2'),
+                    integer(card, 5, 'node_id3'),
+                    integer_or_blank(card, 6, 'node_id4', 0),
+                    integer_or_blank(card, 7, 'node_id5', 0),
+                    integer_or_blank(card, 8, 'node_id6', 0)]
 
                 #self.thetaMcid[i] = integer_double_or_blank(card, 9, 'thetaMcid', 0.0)
-                self.zOffset[i] = double_or_blank(card, 10, 'zOffset', 0.0)
+                self.offset[i] = double_or_blank(card, 10, 'zOffset', 0.0)
 
                 self.thickness[i] = [
                     double_or_blank(card, 11, 'T1', 1.0),
@@ -63,6 +62,7 @@ class CTRIA6(ShellElement):
             self.property_id = self.property_id[i]
             self.node_ids = self.node_ids[i, :]
             self.thicknes = self.thickness[i, :]
+            self.zoffset = self.zoffset[i]
             self.t_flag = self.t_flag[i]
             self._cards = []
             self._comments = []

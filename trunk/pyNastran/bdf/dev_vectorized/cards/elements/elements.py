@@ -1,6 +1,6 @@
 from numpy import (array, zeros, searchsorted, unique, concatenate, argsort,
                    hstack, where, vstack, ones, cross, intersect1d, setdiff1d,
-                   arange, nan, full, ravel, asarray)
+                   arange, nan, full, ravel, asarray, any)
 from numpy.linalg import norm
 from itertools import izip
 
@@ -121,6 +121,7 @@ class Elements(object):
 
         self.element_groups = self.build_groups(etypes, 'element_id')
         self.property_groups = self.build_groups(ptypes, 'property_id')
+        print('*****self.property_groups =', self.property_groups)
 
     def build_groups(self, objs, name):
         groups = {}
@@ -344,6 +345,7 @@ class Elements(object):
         #print('mass.shape =', mass.shape)
 
         ni = 0
+        print('data2 = %s' % data2)
         for (pid, eType), element_ids in data2.iteritems():
             #print('pid=%s eType=%s element_ids=%s' % (pid, eType, element_ids))
             elements = TypeMap[eType]
@@ -354,6 +356,7 @@ class Elements(object):
                 # CONROD
                 pass
             else:
+                print('*cat pid = %s' % pid)
                 props = self.get_properties([pid])
                 if len(props) == 0:
                     # the property doesn't exist
@@ -491,7 +494,11 @@ class Elements(object):
         #print('property_ids = %s' % property_ids)
         for pid in property_ids:
             for Type, pids in self.property_groups.iteritems():
-                #print('pids = %s' % pids)
+                if not isinstance(pid, int):
+                    print('pids = %s' % pids)
+                    print('pid  = %s' % pid)
+                    aaa
+
                 if pid in pids:
                     i = where(pid == pids)[0]
                     pids_extract = pids[i]
@@ -622,6 +629,9 @@ class Elements(object):
             'PSOLID' : self.properties_solid.psolid,
         }
         return TypeMap
+
+    def __len__(self):
+        return self.ne
 
     def __getitem__(self, element_ids):
         TypeMap = self.get_element_typemap()

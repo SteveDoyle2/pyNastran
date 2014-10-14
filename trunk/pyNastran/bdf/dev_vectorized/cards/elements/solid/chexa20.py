@@ -31,11 +31,11 @@ class CHEXA20(SolidElement):
             self.property_id = zeros(ncards, 'int32')
             self.node_ids = zeros((ncards, 20), 'int32')
 
-            comments = {}
+            #comments = {}
             for i, card in enumerate(cards):
-                comment = self._comments[i]
-                if comment:
-                    self.comments[eid] = comment
+                #comment = self._comments[i]
+                #if comment:
+                    #self._comments[eid] = comment
 
                 #: Element ID
                 self.element_id[i] = integer(card, 1, 'element_id')

@@ -1,13 +1,11 @@
 import cStringIO
 from numpy import zeros, searchsorted, where, asarray
 
-class SolidElement(object):
+from pyNastran.bdf.dev_vectorized.cards.elements.element import Element
+
+class SolidElement(Element):
     def __init__(self, model):
-        self.model = model
-        self.n = 0
-        self._cards = []
-        self._comments = []
-        #self.comments = {}
+        Element.__init__(self, model)
 
     def __getitem__(self, element_ids):
         """

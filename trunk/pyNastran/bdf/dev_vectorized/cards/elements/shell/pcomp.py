@@ -11,6 +11,9 @@ from pyNastran.bdf.cards.properties.shell import PCOMP as vPCOMP
 
 class PCOMP(object):
     type = 'PCOMP'
+    def __len__(self):
+        return self.n
+
     def __init__(self, model):
         """
         Defines the PCOMP object.

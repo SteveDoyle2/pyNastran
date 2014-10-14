@@ -1,4 +1,6 @@
-from numpy import array, zeros, arange, concatenate, searchsorted, where, unique
+from numpy import array, zeros, arange, concatenate, searchsorted, where, unique, asarray
+
+from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
 
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.bdfInterface.assign_type import (integer, #integer_or_blank,
@@ -7,8 +9,53 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, #integer_or_blank,
     double_or_blank)#, integer_double_or_blank, blank)
 
 
-class PBEAM(object):
+class PBEAM(Property):
     type = 'PBEAM'
+
+    def __getitem__(self, property_ids):
+        """
+        Allows for slicing:
+         - elements[1:10]
+         - elements[4]
+         - elements[1:10:2]
+         - elements[[1,2,5]]
+         - elements[array([1,2,5])]
+        """
+        i = searchsorted(self.property_id, property_ids)
+        return self.slice_by_index(i)
+
+    def slice_by_index(self, i):
+        i = asarray(i)
+        obj = PBEAM(self.model)
+        obj.n = len(i)
+        #obj._cards = self._cards[i]
+        #obj._comments = obj._comments[i]
+        #obj.comments = obj.comments[i]
+        obj.property_id = self.property_id[i]
+        obj.material_id = self.material_id[i]
+        obj.area = self.area[i]
+        obj.I1 = self.I1[i]
+        obj.I2 = self.I2[i]
+        obj.J = self.J[i]
+        obj.nsm = self.nsm[i]
+        obj.k1 = self.k1[i]
+        obj.k2 = self.k2[i]
+        obj.s1 = self.s1[i]
+        obj.s2 = self.s2[i]
+        obj.nsia = self.nsia[i]
+        obj.nsib = self.nsib[i]
+        obj.cwa = self.cwa[i]
+        obj.cwb = self.cwb[i]
+        obj.m1a = self.m1a[i]
+        obj.m2a = self.m2a[i]
+        obj.m1b = self.m1b[i]
+        obj.m2b = self.m2b[i]
+        obj.n1a = self.n1a[i]
+        obj.n2a = self.n2a[i]
+        obj.n1b = self.n1b[i]
+        obj.n2b = self.n2b[i]
+        return obj
+
     def __init__(self, model):
         """
         Defines the PCOMP object.
@@ -111,8 +158,9 @@ class PBEAM(object):
 
     #=========================================================================
     def add_card(self, card, i):
+        pid = integer(card, 1, 'property_id')
         #: property ID
-        self.property_id[i] = integer(card, 1, 'property_id')
+        self.property_id[i] = pid
 
         #: material ID
         self.material_id[i] = integer(card, 2, 'material_id')
@@ -138,8 +186,8 @@ class PBEAM(object):
         J.append(double_or_blank(card, 7, 'J', 0.0))
         NSM.append(double_or_blank(card, 8, 'nsm', 0.0))
         print(card)
-        assert I1[0] > 0, I1[0]
-        assert I2[0] > 0, I2[0]
+        assert I1[0] >= 0., 'I1=%s for property_id=%s' % (I1[0], pid)
+        assert I2[0] >= 0., 'I2=%s for property_id=%s' % (I2[0], pid)
 
         isCDEF = False
         field9 = double_string_or_blank(card, 9, 'field9')

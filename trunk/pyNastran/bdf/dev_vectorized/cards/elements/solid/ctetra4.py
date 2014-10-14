@@ -40,12 +40,12 @@ class CTETRA4(SolidElement):
             self.property_id = zeros(ncards, 'int32')
             self.node_ids = zeros((ncards, 4), 'int32')
 
-            comments = {}
+            #comments = {}
             for i, card in enumerate(cards):
-                comment = self._comments[i]
+                #comment = self._comments[i]
                 eid = integer(card, 1, 'eid')
                 #if comment:
-                    #self.comments[eid] = comment
+                    #self._comments[eid] = comment
 
                 #: Element ID
                 self.element_id[i] = eid
