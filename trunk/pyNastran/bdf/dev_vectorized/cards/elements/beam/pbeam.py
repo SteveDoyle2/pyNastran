@@ -6,8 +6,8 @@ from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.bdfInterface.assign_type import (integer, #integer_or_blank,
     double, double_string_or_blank, integer_double_string_or_blank,
     string,
-    double_or_blank)#, integer_double_or_blank, blank)
-from pyNastran.bdf.cards.properties.bars import PBEAM as vPBEAM
+    double_or_blank)
+from pyNastran.bdf.cards.properties.beam import PBEAM as vPBEAM
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 
 
