@@ -502,6 +502,8 @@ class Elements(object):
                 if pid in pids:
                     i = where(pid == pids)[0]
                     pids_extract = pids[i]
+                    #print('i = %s, shape=%s' % (i, i.shape))
+                    #print('pids_extract = %s' % pids_extract)
                     #obj = TypeMap[Type].slice_by_index(i)
                     obj = TypeMap[Type][pids_extract]
                     out.append(obj)
