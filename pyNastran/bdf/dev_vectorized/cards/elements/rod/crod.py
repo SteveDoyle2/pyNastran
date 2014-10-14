@@ -13,6 +13,7 @@ from pyNastran.bdf.dev_vectorized.cards.elements.rod.rod_element import RodEleme
 class CROD(RodElement):
     type = 'CROD'
     op2_id = 1
+
     def __init__(self, model):
         """
         Defines the CROD object.
@@ -101,8 +102,8 @@ class CROD(RodElement):
         mid = self.model.prod.material_id[i]
         J   = self.model.prod.get_J(mid)
 
-        rho, E = self.model.materials.get_rho_E(mid)
-        rho = self.model.materials.get_rho(mid)
+        rho, E = self.model.materials.get_density_E(mid)
+        rho = self.model.materials.get_density(mid)
         E   = self.model.materials.get_E(mid)
         return 0. if total else [0.]
 

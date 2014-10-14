@@ -4,9 +4,11 @@ from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 
+from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
 
-class PBEAML(object):
+class PBEAML(Property):
     type = 'PBEAML'
+
     def __init__(self, model):
         """
         Defines the PCOMP object.
@@ -15,10 +17,7 @@ class PBEAML(object):
         :param model: the BDF object
         :param cards: the list of PBEAML cards
         """
-        self.model = model
-        self.n = 0
-        self._cards = []
-        self._comments = []
+        Property.__init__(self, model)
 
     def add(self, card, comment):
         self._cards.append(card)

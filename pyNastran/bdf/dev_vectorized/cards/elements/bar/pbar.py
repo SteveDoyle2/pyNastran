@@ -1,12 +1,14 @@
 from numpy import array, zeros, arange, concatenate, searchsorted, where, unique, asarray
 
+from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
+
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 
-
-class PBAR(object):
+class PBAR(Property):
     type = 'PBAR'
+
     def __init__(self, model):
         """
         Defines the PCOMP object.
@@ -15,10 +17,7 @@ class PBAR(object):
         :param model: the BDF object
         :param cards: the list of PCOMP cards
         """
-        self.model = model
-        self.n = 0
-        self._cards = []
-        self._comments = []
+        Property.__init__(self, model)
 
     def add(self, card, comment):
         self._cards.append(card)

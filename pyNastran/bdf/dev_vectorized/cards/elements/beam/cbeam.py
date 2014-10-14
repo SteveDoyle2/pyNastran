@@ -6,10 +6,12 @@ from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, string_or_blank, blank)
 
+from pyNastran.bdf.dev_vectorized.cards.elements.element import Element
 
-class CBEAM(object):
+class CBEAM(Element):
     type = 'CBEAM'
     op2_id = 2
+
     def __init__(self, model):
         """
         Defines the CBAR object.
@@ -17,10 +19,7 @@ class CBEAM(object):
         :param self: the CBAR object
         :param model: the BDF object
         """
-        self.model = model
-        self.n = 0
-        self._cards = []
-        self._comments = []
+        Element.__init__(self, model)
 
     def add(self, card, comment=None):
         self._cards.append(card)
@@ -118,12 +117,6 @@ class CBEAM(object):
             return mass
 
     #=========================================================================
-    def get_stats(self):
-        msg = []
-        if self.n:
-            msg.append('  %-8s: %i' % ('CBAR', self.n))
-        return msg
-
     def write_bdf(self, f, size=8, element_ids=None):
         if self.n:
             if element_ids is None:
@@ -156,7 +149,6 @@ class CBEAM(object):
                 card = ['CBEAM', eid, pid, n[0], n[1], x1, x2, x3, offt,
                         pa, pb, w1a, w2a, w3a, w1b, w2b, w3b]
                 f.write(print_card_8(card))
-
 
     def get_stiffness(self, model, node_ids, index0s, fnorm=1.0):
         return(K, dofs, nIJV)

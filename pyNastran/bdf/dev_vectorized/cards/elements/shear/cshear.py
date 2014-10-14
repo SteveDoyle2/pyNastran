@@ -5,15 +5,17 @@ from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 
+from pyNastran.bdf.dev_vectorized.cards.elements.element import Element
 
-class CSHEAR(object):
+class CSHEAR(Element):
     type = 'CSHEAR'
     op2_id = 4
+
+    def __len__(self):
+        return self.n
+
     def __init__(self, model):
-        self.model = model
-        self.n = 0
-        self._cards = []
-        self._comments = []
+        Element.__init__(self, model)
 
     def add(self, card, comment):
         self._cards.append(card)

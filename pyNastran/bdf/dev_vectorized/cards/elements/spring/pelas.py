@@ -14,6 +14,9 @@ class PELAS(object):
     """
     type = 'PELAS'
 
+    def __len__(self):
+        return self.n
+
     def __init__(self, model):
         self.model = model
         #: Card count

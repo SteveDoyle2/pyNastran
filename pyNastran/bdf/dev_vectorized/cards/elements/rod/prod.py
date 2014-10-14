@@ -1,6 +1,9 @@
+
 from itertools import izip
 
 from numpy import array, zeros, unique, searchsorted, arange, asarray
+
+from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.fieldWriter import print_card_8
@@ -9,8 +12,9 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     string_or_blank, blank)
 
 
-class PROD(object):
+class PROD(Property):
     type = 'PROD'
+
     def __init__(self, model):
         """
         Defines the PROD object.
@@ -18,10 +22,7 @@ class PROD(object):
         :param self: the PROD object
         :param model: the BDF object
         """
-        self.model = model
-        self.n = 0
-        self._cards = []
-        self._comments = []
+        Property.__init__(self, model)
 
     def add(self, card, comment):
         self._cards.append(card)
@@ -69,12 +70,6 @@ class PROD(object):
             self._comments = []
         else:
             self.property_id = array([], dtype='int32')
-
-    def get_stats(self):
-        msg = []
-        if self.n:
-            msg.append('  %-8s: %i' % ('PROD', self.n))
-        return msg
 
 
     def get_mass_per_length(self, property_ids=None):

@@ -4,13 +4,13 @@ from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
     double, double_or_blank)
 
-class PSHEAR(object):
+from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
+
+class PSHEAR(Property):
     type = 'PSHEAR'
+
     def __init__(self, model):
-        self.model = model
-        self.n = 0
-        self._cards = []
-        self._comments = []
+        Property.__init__(self, model)
 
     def add(self, card, comment):
         self._cards.append(card)

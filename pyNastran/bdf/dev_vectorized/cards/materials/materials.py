@@ -97,23 +97,31 @@ class Materials(object):
         print _material_ids
         return _material_ids
 
-    def get_density(self, material_ids):
-        rho = zeros(len(material_ids))
-        for i, material_id in enumerate(material_ids):
-            mat = self.get_structural_material(material_id)
-            rho[i] = mat.rho
-        return rho
+    #def get_density(self, material_ids):
+        #rho = zeros(len(material_ids), dtype='float64')
+        #for i, material_id in enumerate(material_ids):
+            #mat = self.get_structural_material(material_id)
+            #rho[i] = mat.rho
+        #return rho
 
-    def get_rho_E(self, material_ids):
-        rho = zeros(len(material_ids))
-        E = zeros(len(material_ids))
+    def get_density(self, material_ids):
+        mats = self[material_ids]
+        density = array([mid.get_density() if mid is not None else nan for mid in mats])
+        #print('material_ids = %s' % material_ids)
+        #print("  density mats = %s" % mats)
+        #print('  density = %s' % density)
+        return density
+
+    def get_density_E(self, material_ids):
+        rho = zeros(len(material_ids), dtype='float64')
+        E = zeros(len(material_ids), dtype='float64')
         for i, material_id in enumerate(material_ids):
             mat = self.get_structural_material(material_id)
             rho[i] = mat.rho
             E[i] = mat.E()
         return rho, E
 
-    def get_nsm(self, material_ids):
+    def get_nonstructural_mass(self, material_ids):
         nsm = zeros(len(material_ids))
         for i, material_id in enumerate(material_ids):
             mat = self.get_structural_material(material_id)
@@ -154,7 +162,7 @@ class Materials(object):
         elif material_id in self.mat2:
             return self.mat2[material_id]
         elif material_id in self.mat8:
-            return self.mat2[material_id]
+            return self.mat8[material_id]
 
     def get_solid_material(self, material_id):
         if material_id in self.mats1:
@@ -182,14 +190,6 @@ class Materials(object):
         elif material_id in self.mat5:
             return self.mat5[material_id]
         raise RuntimeError('Could not find material_id=%r' % material_id)
-
-    def get_density(self, material_ids):
-        mats = self[material_ids]
-        density = array([mid.get_density() if mid is not None else nan for mid in mats])
-        #print('material_ids = %s' % material_ids)
-        #print("  density mats = %s" % mats)
-        #print('  density = %s' % density)
-        return density
 
     def __getitem__(self, material_ids):
         TypeMap = {

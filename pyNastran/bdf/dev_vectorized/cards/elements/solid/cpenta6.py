@@ -47,12 +47,12 @@ class CPENTA6(SolidElement):
             self.property_id = zeros(ncards, 'int32')
             self.node_ids = zeros((ncards, 6), 'int32')
 
-            comments = {}
+            #comments = {}
             for i, card in enumerate(cards):
                 comment = self._comments[i]
                 eid = integer(card, 1, 'element_id')
-                if comment:
-                    self.comments[eid] = comment
+                #if comment:
+                    #self._comments[eid] = comment
 
                 #: Element ID
                 self.element_id[i] = eid

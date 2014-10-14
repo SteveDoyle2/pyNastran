@@ -7,6 +7,10 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 
 class PBARL(object):
     type = 'PBAR'
+
+    def __len__(self):
+        return self.n
+
     def __init__(self, model):
         """
         Defines the PCOMP object.

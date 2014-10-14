@@ -6,8 +6,9 @@ from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, double,
     double_or_blank, string_or_blank)
 
+from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
 
-class PSHELL(object):
+class PSHELL(Property):
     """
     +--------+-------+------+--------+------+----------+------+------+---------+
     | PSHELL |  PID  | MID1 |   T    | MID2 | 12I/T**3 | MID3 | TS/T |   NSM   |
@@ -18,6 +19,7 @@ class PSHELL(object):
     +--------+-------+------+--------+------+----------+------+------+---------+
     """
     type = 'PSHELL'
+
     def __init__(self, model):
         """
         Defines the PSHELL object.
@@ -26,10 +28,7 @@ class PSHELL(object):
         :param model: the BDF object
         :param cards: the list of PSHELL cards
         """
-        self.model = model
-        self.n = 0
-        self._cards = []
-        self._comments = []
+        Property.__init__(self, model)
 
     def add(self, card, comment):
         self._cards.append(card)

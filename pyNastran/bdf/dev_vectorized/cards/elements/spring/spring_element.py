@@ -2,6 +2,10 @@ import cStringIO
 
 
 class SpringElement(object):
+
+    def __len__(self):
+        return self.n
+
     def __init__(self, model):
         """
         Defines the CELAS1 object.

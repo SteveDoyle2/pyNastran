@@ -1,6 +1,7 @@
 import cStringIO
+from pyNastran.bdf.dev_vectorized.cards.elements.element import Element
 
-class RodElement(object):
+class RodElement(Element):
     def __init__(self, model):
         """
         Defines the CONROD object.
@@ -8,10 +9,7 @@ class RodElement(object):
         :param self: the CONROD object
         :param model: the BDF object
         """
-        self.model = model
-        self.n = 0
-        self._cards = []
-        self._comments = []
+        Element.__init__(self, model)
 
     def add(self, card, comment=None):
         self._cards.append(card)
@@ -22,10 +20,4 @@ class RodElement(object):
         f.write('<%s object> n=%s\n' % (self.type, self.n))
         self.write_bdf(f)
         return f.getvalue()
-
-    def get_stats(self):
-        msg = []
-        if self.n:
-            msg.append('  %-8s: %i' % (self.type, self.n))
-        return msg
 

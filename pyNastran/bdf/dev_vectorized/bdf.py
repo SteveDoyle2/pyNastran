@@ -616,7 +616,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         # control structure
         from pyNastran.bdf.dev_vectorized.cards.elements.elements import Elements
+        from pyNastran.bdf.dev_vectorized.cards.elements.properties import Properties
         self.elements = Elements(self)
+        self.properties = Properties(self)
 
         #===================================
         # methods

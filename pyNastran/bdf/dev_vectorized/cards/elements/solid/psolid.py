@@ -7,7 +7,9 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, integer_string_or_blank,
     string_or_blank, blank)
 
-class PSOLID(object):
+from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
+
+class PSOLID(Property):
     type = 'PSOLID'
     def __init__(self, model):
         """
@@ -16,10 +18,7 @@ class PSOLID(object):
         :param self: the PSOLID object
         :param model: the BDF object
         """
-        self.model = model
-        self.n = 0
-        self._cards = []
-        self._comments = []
+        Property.__init__(self, model)
 
     def add(self, card, comment):
         self._cards.append(card)
