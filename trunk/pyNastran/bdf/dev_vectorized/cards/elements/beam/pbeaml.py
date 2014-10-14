@@ -1,75 +1,80 @@
-from numpy import array, zeros, arange, concatenate, searchsorted, where, unique
+from numpy import array, zeros, arange, concatenate, searchsorted, where, unique, asarray
 
-from pyNastran.bdf.fieldWriter import print_card
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double_or_blank, integer_double_or_blank, blank)
-
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
 
-class PBEAML(Property):
+from pyNastran.bdf.cards.properties.beam import PBEAML as vPBEAML
+from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
+
+
+class PBEAML(object):
+#class PBEAML(Property):
     type = 'PBEAML'
+
+    def __len__(self):
+        return self.n
+
+    def __iter__(self):
+        pids = self.property_id
+        for pid in pids:
+            yield pid
+
+    def values(self):
+        pids = self.property_id
+        for pid in pids:
+            yield self.__getitem__(pid)
+
+    def items(self):
+        pids = self.property_id
+        for pid in pids:
+            yield pid, self.__getitem__(pid)
+
+    def __getitem__(self, property_ids):
+        property_ids, int_flag = slice_to_iter(property_ids)
+        obj = PBEAM(self.model)
+
+        properties = {}
+        for pid in sorted(property_ids):
+            properties[pid] = self.properties[pid]
+        obj.n = len(property_ids)
+        obj.properties = properties
+        obj.property_id = sorted(self.properties.keys())
+        #obj._comments = obj._comments[index]
+        #obj.comments = obj.comments[index]
+        return obj
+
+    def slice_by_index(self, i):
+        i = asarray(i)
+        obj = PBEAML(self.model)
+        asdf
+        return obj
 
     def __init__(self, model):
         """
-        Defines the PCOMP object.
+        Defines the PBEAML object.
 
         :param self: the PBEAML object
         :param model: the BDF object
         :param cards: the list of PBEAML cards
         """
-        Property.__init__(self, model)
+        self.properties = {}
+        self.model = model
+        self.n = 0
 
     def add(self, card, comment):
-        self._cards.append(card)
-        self._comments.append(comment)
+        prop = vPBEAML(card, comment=comment)
+        self.properties[prop.pid] = prop
 
     def build(self):
-        cards = self._cards
-        ncards = len(cards)
-        self.n = ncards
-
-        if ncards:
-            #: Property ID
-            self.property_id = zeros(ncards, 'int32')
-            self.material_id = zeros(ncards, 'int32')
-
-            ncards = len(cards)
-            for i, card in enumerate(cards):
-                self.property_id[i] = integer(card, 1, 'property_id')
-                self.material_id[i] = integer(card, 2, 'material_id')
-            i = self.property_id.argsort()
-            self.property_id = self.property_id[i]
-            self.material_id = self.material_id[i]
-            unique_pids = unique(self.property_id)
-
-            if len(unique_pids) != len(self.property_id):
-                raise RuntimeError('There are duplicate PCOMP IDs...')
-            self._cards = []
-            self._comments = []
-        else:
-            self.property_id = array([], dtype='int32')
-
-    #=========================================================================
-    def get_index(self, property_ids):
-        if isinstance(property_ids, int):
-            property_ids = array([property_ids])
-        if property_ids is None:
-            return arange(self.n)
-
-        indexs = searchsorted(self.property_id, property_ids)
-        assert len(indexs) == len(property_ids), 'indexs=%s pids=%s' % (indexs, property_ids)
-        return indexs
+        self.n = len(self.properties)
+        self.property_id = sorted(self.properties.keys())
 
     #=========================================================================
     def write_bdf(self, f, size=8, property_ids=None):
-        if self.n:
-            if property_ids is None:
-                i = arange(self.n)
-            else:
-                i = searchsorted(self.property_id, property_ids)
-
-            #cid = [cid if cid != 0 else '' for cid in self.coord_id]
-
-            for (pid, mid) in zip(self.property_id[i], self.material_id[i]):
-                card = ['PBEAML', pid, mid,]
-                f.write(print_card(card))
+        if size == 8:
+            for pid, prop in sorted(self.properties.iteritems()):
+                f.write(prop.write_bdf(size, print_card_8))
+        else:
+            for pid, prop in sorted(self.properties.iteritems()):
+                f.write(prop.write_bdf(size, print_card_16))
