@@ -110,11 +110,9 @@ class PCOMP(object):
             for pid, pcomp in sorted(self.properties.iteritems()):
                 f.write(pcomp.write_bdf(size, print_card_16))
 
-
     #def slice_by_index(self, i):
         #i = asarray(i)
         #return self.__getitem__()
-
 
     def __getitem__(self, property_ids):
         property_ids, int_flag = slice_to_iter(property_ids)

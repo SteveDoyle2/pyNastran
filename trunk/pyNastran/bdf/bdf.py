@@ -42,11 +42,11 @@ from .cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
                                     CDAMP5, DamperElement)
 from .cards.properties.damper import (PVISC, PDAMP, PDAMP5, PDAMPT)
 from .cards.elements.rods import CROD, CONROD, CTUBE, RodElement
-from .cards.elements.bars import (CBAR, CBEAM, CBEAM3,
-                                  CBEND, LineElement)
+from .cards.elements.bars import CBAR, CBEND, LineElement, CBEAM3
+from .cards.elements.beam import CBEAM
 from .cards.properties.rods import PROD, PTUBE
-from .cards.properties.bars import (PBAR, PBARL,
-                                    PBEAM, PBEAML, PBCOMP)  # PBEND
+from .cards.properties.bars import (PBAR, PBARL, )  # PBEND
+from .cards.properties.beam import  PBEAM, PBEAML, PBCOMP
 from .cards.elements.mass import (CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4,
                                   PointElement, PointMassElement)  # CMASS5
 from .cards.properties.mass import (PMASS, NSM)
@@ -948,8 +948,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         #for line in self.case_control_lines:
             #print("** line=%r" % line)
 
-        self.caseControlDeck = CaseControlDeck(self.case_control_lines,
-                                               self.log)
+        self.caseControlDeck = CaseControlDeck(self.case_control_lines, self.log)
         self.caseControlDeck.solmap_toValue = self._solmap_to_value
         self.caseControlDeck.rsolmap_toStr = self.rsolmap_toStr
 
