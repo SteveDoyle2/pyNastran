@@ -1,8 +1,11 @@
 # -*- PyInstaller input file -*-
 # -*- mode: python           -*-
 
+#pyInstaller_path = 'C:\\Users\\steve\\Desktop\\pyInstaller'
 import pyinstaller
 pyInstaller_path = os.path.dirname(pyinstaller.__file__)
+print "pyInstaller_path = %r" % pyInstaller_path
+
 
 import os
 import sys
@@ -49,11 +52,18 @@ icon_main = 'guiDemo.png' # pyInstaller doesnt like paths in the ico
 #-------------------------------------------------------------------------
 # main code
 
+binaries = []
+if sys.platform == 'win32':
+    binaries = [('msvcp100.dll', 'C:\\Windows\\System32\\msvcp100.dll', 'BINARY'),
+                ('msvcr100.dll', 'C:\\Windows\\System32\\msvcr100.dll', 'BINARY')]
+
+python_path = 'C:\\Python27_x86'
 a = Analysis(analyze_files,
              pathex=[pyInstaller_path,
-                     'C:\\Python27\\Lib\\site-packages',
-                     'C:\\Python27\\Lib',
-                     'C:\\Python27',
+                     python_path,
+                     os.path.join(python_path, 'Lib'),
+                     os.path.join(python_path, 'Lib', 'site-packages'),
+
                      pkg_path,
                      os.path.join(pkg_path, 'bdf'),
                      os.path.join(pkg_path, 'op2'),
@@ -67,23 +77,24 @@ pyz = PYZ(a.pure)
 #print "help(EXE) = \n",help(EXE)
 exe = EXE(pyz,
           a.scripts,
+          a.binaries + binaries,
           exclude_binaries=1,
           name=os.path.join('build\\pyi.win32\\pyNastranGUI', 'pyNastranGUI.exe'),
-          debug=False,
+          debug=True,
           strip=None,
-          upx=True,
+          #upx=True,
           #icon=icon_main,
           console=True )
 
 #print '*'*80
 #print "help(COLLECT) = \n",help(COLLECT)
-coll = COLLECT(exe,
-               a.binaries+icons,
-               a.zipfiles,
-               a.datas,
-               exclude_binaries=1,
-               #icon=icon_main,
-               strip=None,
-               upx=True,
-               name=os.path.join('dist', 'pyNastranGUI'))
+#coll = COLLECT(exe,
+#               a.binaries + binaries + icons,
+#               a.zipfiles,
+#               a.datas,
+#               exclude_binaries=1,
+#               #icon=icon_main,
+#               strip=None,
+#               upx=True,
+#               name=os.path.join('dist', 'pyNastranGUI'))
 
