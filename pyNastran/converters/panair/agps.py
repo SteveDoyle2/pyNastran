@@ -89,7 +89,7 @@ class AGPS(object):
             if self.debug:
                 print(len(X))
                 for x in X:
-                    print('%s %s' % (x, len(x))
+                    print('%s %s' % (x, len(x)))
 
             X = array(X, dtype='float32')
             Y = array(Y, dtype='float32')
