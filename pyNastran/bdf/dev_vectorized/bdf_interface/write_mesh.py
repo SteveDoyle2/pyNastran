@@ -305,6 +305,9 @@ class WriteMesh(object):
             self.properties_solid.write_bdf(f, size)
             self.elements_solid.write_bdf(f)
 
+            f.write('$ Bush-----------------------------------------------------\n')
+            self.cbush.write_bdf(f, size)
+            self.pbush.write_bdf(f, size)
             f.write('$ Mass-----------------------------------------------------\n')
             self.mass.write_bdf(f, size)
 

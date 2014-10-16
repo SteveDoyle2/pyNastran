@@ -572,10 +572,12 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             def add(self, card, comment=''):
                 pass
         # bush
-        self.cbush = DummyCard(model)
+        from pyNastran.bdf.dev_vectorized.cards.elements.bush.cbush import CBUSH
+        from pyNastran.bdf.dev_vectorized.cards.elements.bush.pbush import PBUSH
+        self.cbush = CBUSH(model)
         self.cbush1d = DummyCard(model)
         self.cbush2d = DummyCard(model)
-        self.pbush = DummyCard(model)
+        self.pbush = PBUSH(model)
 
         # shear
         #: stores CSHEAR
@@ -613,6 +615,12 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.properties_beam = PropertiesBeam(model)
         # stores CBEAMOR
         self.cbeamor = None
+
+        # disabled 1D
+        self.cbeam3 = None
+        self.pbeam3 = None
+        self.cbend = None
+        self.pbend = None
 
         # solids
         #: stores CTETRA4, CPENTA6, CHEXA8, CTETRA10, CPENTA15, CHEXA20
@@ -2302,7 +2310,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
             # 1-D
             self.cbar, self.conrod, self.crod, #self.ctube,
-            self.cbeam, self.cbeam3, self.cbend
+            self.cbeam, self.cbeam3, self.cbend,
 
             # 2-D
             self.elements_shell,
@@ -2365,7 +2373,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 def reduce_types(types):
     types2 = []
     for etype in types:
-        if etype.n:
+        if etype is not None and etype.n:
             types2.append(etype)
     return types2
 

@@ -8,7 +8,12 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, string_or_blank, blank)
 from pyNastran.bdf.cards.elements.bars import CBAROR
 
+from pyNastran.bdf.fieldWriter import set_string8_blank_if_default
+from pyNastran.bdf.fieldWriter16 import set_string16_blank_if_default
+
 from pyNastran.bdf.dev_vectorized.cards.elements.element import Element
+
+
 class CBAR(Element):
     """
     +-------+-----+-----+-----+-----+-----+-----+-----+------+
@@ -230,6 +235,7 @@ class CBAR(Element):
                 x2 = 0 if is_g0 else x[1]
                 x3 = 0 if is_g0 else x[2]
 
+                offt = set_string8_blank_if_default(offt, 'GGG')
                 card = ['CBAR', eid, pid, n[0], n[1], x1, x2, x3, offt,
                         pa, pb, w1a, w2a, w3a, w1b, w2b, w3b]
                 f.write(print_card(card))

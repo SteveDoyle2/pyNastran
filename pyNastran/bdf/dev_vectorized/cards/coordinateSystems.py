@@ -552,9 +552,11 @@ class Cord2x(Coord):
         assert isinstance(cid, int), 'cid=%r' % cid
         assert isinstance(rid, int), 'rid=%r' % rid
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.reprFields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
     def cross_reference(self, model):
         """
@@ -727,7 +729,7 @@ class Cord1x(Coord):
         grids = [self.G1(), self.G2(), self.G3()]
         return grids
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size, is_double=False):
         card = self.reprFields()
         return self.comment() + print_card_8(card)
 
