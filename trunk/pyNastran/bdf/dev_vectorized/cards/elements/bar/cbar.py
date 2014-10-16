@@ -1,5 +1,6 @@
 import cStringIO
-from numpy import array, dot, arange, zeros, unique, searchsorted
+from numpy import array, dot, arange, zeros, unique, searchsorted, full, nan, asarray
+from numpy.linalg import norm
 
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -9,6 +10,27 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 
 from pyNastran.bdf.dev_vectorized.cards.elements.element import Element
 class CBAR(Element):
+    """
+    +-------+-----+-----+-----+-----+-----+-----+-----+------+
+    | CBAR  | EID | PID | GA  | GB  | X1  | X2  | X3  | OFFT |
+    +-------+-----+-----+-----+-----+-----+-----+-----+------+
+    |       | PA  | PB  | W1A | W2A | W3A | W1B | W2B | W3B  |
+    +-------+-----+-----+-----+-----+-----+-----+-----+------+
+
+    or
+
+    +-------+-----+-----+-----+-----+-----+-----+-----+------+
+    | CBAR  | EID | PID | GA  | GB  | G0  |     |     | OFFT |
+    +-------+-----+-----+-----+-----+-----+-----+-----+------+
+    |       | PA  | PB  | W1A | W2A | W3A | W1B | W2B | W3B  |
+    +-------+-----+-----+-----+-----+-----+-----+-----+------+
+
+    +-------+-------+-----+-------+-------+--------+-------+-------+-------+
+    |  CBAR | 2     |  39 | 7     | 6     |  105   |       |       |  GGG  |
+    +-------+-------+-----+-------+-------+--------+-------+-------+-------+
+    |       |       | 513 | 0.0+0 | 0.0+0 |    -9. | 0.0+0 | 0.0+0 |   -9. |
+    +-------+-------+-----+-------+-------+--------+-------+-------+-------+
+    """
     type = 'CBAR'
     op2_id = 3
 
@@ -40,21 +62,59 @@ class CBAR(Element):
             #: Property ID
             self.property_id = zeros(ncards, 'int32')
             self.node_ids = zeros((ncards, 2), 'int32')
-            #self.offt = array(ncards, '|S3')
+
+            self.is_g0 = zeros(ncards, 'bool')
+            self.g0 = full(ncards, nan, 'int32')
+            self.x = full((ncards, 3), nan, float_fmt)
+
+            self.offt = full(ncards, nan, '|S3')
+
             self.pin_flags = zeros((ncards, 2), 'int32')
             self.wa = zeros((ncards, 3), float_fmt)
             self.wb = zeros((ncards, 3), float_fmt)
 
             for i, card in enumerate(cards):
-                self.element_id[i] = integer(card, 1, 'element_id')
-                self.property_id[i] = integer_or_blank(card, 2, 'property_id', self.element_id[i])
+                eid = integer(card, 1, 'element_id')
+                self.element_id[i] = eid
+                self.property_id[i] = integer_or_blank(card, 2, 'property_id', eid)
                 self.node_ids[i] = [integer(card, 3, 'GA'),
                                     integer(card, 4, 'GB')]
 
-                #self.initX_G0(card)
+                #---------------------------------------------------------
+                # x / g0
+                field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
+                if isinstance(field5, int):
+                    self.is_g0[i] = True
+                    self.g0[i] = field5
+                    #x = None
+                elif isinstance(field5, float):
+                    self.is_g0[i] = False
+                    #self.g0[i] = None
+                    x = array([field5,
+                               double_or_blank(card, 6, 'x2', 0.0),
+                               double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
+                    self.x[i, :] = x
+                    if norm(x) == 0.0:
+                        msg = 'G0 vector defining plane 1 is not defined on %s %s.\n' % (self.type, eid)
+                        msg += 'G0 = %s\n' % field5
+                        msg += 'X  = %s\n' % x
+                        msg += '%s' % card
+                        raise RuntimeError(msg)
+                else:
+                    msg = ('field5 on %s (G0/X1) is the wrong type...id=%s field5=%s '
+                           'type=%s' % (self.type, self.eid, field5, type(field5)))
+                    raise RuntimeError(msg)
 
-                #self.offt[i, :] = string_or_blank(card, 8, 'offt', 'GGG')
-                #print 'self.offt = |%s|' % self.offt
+                #---------------------------------------------------------
+                # offt
+                # bit doesn't exist on the CBAR
+                offt = string_or_blank(card, 8, 'offt', 'GGG')
+
+                msg = 'invalid offt parameter of CBEAM...offt=%s' % offt
+                assert offt[0] in ['G', 'B', 'O', 'E'], msg
+                assert offt[1] in ['G', 'B', 'O', 'E'], msg
+                assert offt[2] in ['G', 'B', 'O', 'E'], msg
+                self.offt[i] = offt
 
                 self.pin_flags[i, :] = [integer_or_blank(card, 9, 'pa', 0),
                                         integer_or_blank(card, 10, 'pb', 0)]
@@ -69,11 +129,16 @@ class CBAR(Element):
                 assert len(card) <= 17, 'len(CBAR card) = %i' % len(card)
 
             i = self.element_id.argsort()
-            #print("i %s %s" % (i, type(i)))
             self.element_id = self.element_id[i]
             self.property_id = self.property_id[i]
             self.node_ids = self.node_ids[i, :]
-            #self.offt = self.offt[i, :]
+
+            self.is_g0 = self.is_g0[i]
+            self.g0 = self.g0[i]
+            self.x = self.x[i, :]
+
+            self.offt = self.offt[i]
+
             self.pin_flags = self.pin_flags[i, :]
             self.wa = self.wa[i, :]
             self.wb = self.wb[i, :]
@@ -123,14 +188,11 @@ class CBAR(Element):
             else:
                 i = searchsorted(self.element_id, self.element_id)
 
-            offt = 0
-            ga = None
-            gb = None
-            x1 = None
-            x2 = None
-            x3 = None
-            for (eid, pid, n, pin, wa, wb) in zip(self.element_id[i], self.property_id[i], self.node_ids[i],
-                    self.pin_flags[i], self.wa[i], self.wb[i]):
+            for (eid, pid, n, is_g0, g0, x, offt, pin, wa, wb) in zip(
+                self.element_id[i], self.property_id[i], self.node_ids[i],
+                self.is_g0[i], self.g0[i], self.x[i],
+                self.offt[i],
+                self.pin_flags[i], self.wa[i], self.wb[i]):
 
                 pa = set_blank_if_default(pin[0], 0)
                 pb = set_blank_if_default(pin[1], 0)
@@ -141,14 +203,32 @@ class CBAR(Element):
                 w1b = set_blank_if_default(wb[0], 0.0)
                 w2b = set_blank_if_default(wb[1], 0.0)
                 w3b = set_blank_if_default(wb[2], 0.0)
-                #(x1, x2, x3) = self.getX_G0_defaults()
-                #offt = set_blank_if_default(offt, 'GGG')
-                #list_fields = ['CBAR', self.eid, self.Pid(), self.Ga(), self.Gb(), x1, x2,
-                #          x3, offt, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b]
+                x1 = g0 if is_g0 else x[0]
+                x2 = 0 if is_g0 else x[1]
+                x3 = 0 if is_g0 else x[2]
+
                 card = ['CBAR', eid, pid, n[0], n[1], x1, x2, x3, offt,
                         pa, pb, w1a, w2a, w3a, w1b, w2b, w3b]
                 f.write(print_card(card))
 
+    def slice_by_index(self, i):
+        i = asarray(i)
+        obj = CBAR(self.model)
+        obj.n = len(i)
+        #obj._cards = self._cards[i]
+        #obj._comments = obj._comments[i]
+        #obj.comments = obj.comments[i]
+        obj.element_id = self.element_id[i]
+        obj.property_id = self.property_id[i]
+        obj.node_ids = self.node_ids[i, :]
+        obj.is_g0 = self.is_g0[i]
+        obj.g0 = self.g0[i]
+        obj.x = self.x[i, :]
+        obj.offt = self.offt[i]
+        obj.pin_flags = self.pin_flags[i]
+        obj.wa = self.wa[i]
+        obj.wb = self.wb[i]
+        return obj
 
     def get_stiffness(self, model, node_ids, index0s, fnorm=1.0):
         return(K, dofs, nIJV)
