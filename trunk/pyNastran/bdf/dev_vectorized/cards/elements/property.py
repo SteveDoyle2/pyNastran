@@ -1,3 +1,5 @@
+import cStringIO
+
 class Property(object):
     def __init__(self, model):
         self.model = model
@@ -29,3 +31,8 @@ class Property(object):
         for pid in pids:
             yield pid, self.__getitem__(pid)
 
+    def __repr__(self):
+        f = cStringIO.StringIO()
+        f.write('<%s object> n=%s\n' % (self.type, self.n))
+        self.write_bdf(f)
+        return f.getvalue()

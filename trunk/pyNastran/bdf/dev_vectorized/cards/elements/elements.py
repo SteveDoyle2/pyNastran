@@ -40,6 +40,22 @@ class Elements(object):
         self.elements_spring = model.elements_spring
         self.pelas = model.pelas
 
+        # bushings
+        self.cbush = model.cbush
+        self.cbush1d = model.cbush1d
+        self.cbush2d = model.cbush2d
+        self.pbush = model.pbush
+
+        #mass
+        #self.conm1 = model.conm1
+        #self.conm2 = model.conm2
+        #self.cmass1 = self.cmass1
+        #self.cmass1 = self.cmass1
+        #self.cmass2 = self.cmass2
+        #self.cmass3 = self.cmass3
+        #self.cmass4 = self.cmass4
+        #self.cmass5 = self.cmass5
+
         # rods
         self.conrod = model.conrod
         self.prod = model.prod
@@ -523,6 +539,8 @@ class Elements(object):
                  self.elements_spring.celas3,
                  self.elements_spring.celas4,
 
+                 self.cbush,
+
                  self.elements_shell.ctria3,
                  self.elements_shell.cquad4,
                  self.elements_shell.ctria6,
@@ -550,20 +568,26 @@ class Elements(object):
         """
         :param nlimit: limit the outputs to objects with data
         """
-        types = [self.prod, self.pelas,
-                 self.properties_bar.pbar, self.properties_bar.pbarl,
-                 self.properties_beam.pbeam, self.properties_beam.pbeaml,
-                 self.pshear,
+        types = [
+            # 0D
+            self.pelas,
+            self.pbush,
 
-                 #self.properties_shell,
-                 self.properties_shell.pshell,
-                 self.properties_shell.pcomp,
-                 self.properties_shell.pcompg,
+            # 1D
+            self.prod,
+            self.properties_bar.pbar, self.properties_bar.pbarl,
+            self.properties_beam.pbeam, self.properties_beam.pbeaml,
+            self.pshear,
 
-                 #self.properties_solid,
-                 self.properties_solid.psolid,
-                 #self.properties_solid.plsolid,
-                 ]
+            #self.properties_shell,
+            self.properties_shell.pshell,
+            self.properties_shell.pcomp,
+            self.properties_shell.pcompg,
+
+            #self.properties_solid,
+            self.properties_solid.psolid,
+            #self.properties_solid.plsolid,
+        ]
         if nlimit:
             types2 = []
             for etype in types:
@@ -584,23 +608,36 @@ class Elements(object):
 
     def get_element_typemap(self):
         TypeMap = {
-            'CROD' : self.crod,
-            'CONROD' : self.conrod,
-
-            'CBAR' : self.cbar,
-            'CBEAM' : self.cbeam,
-            'CSHEAR' : self.cshear,
-
+            # 0D
             'CELAS1' : self.elements_spring.celas1,
             'CELAS2' : self.elements_spring.celas2,
             'CELAS3' : self.elements_spring.celas3,
             'CELAS4' : self.elements_spring.celas4,
 
+            'CBUSH' : self.cbush,
+            #'CONM1': self.conm1,
+            #'CONM2': self.conm2,
+            #'CMASS1': self.cmass1,
+            #'CMASS2': self.cmass2,
+            #'CMASS3': self.cmass3,
+            #'CMASS4': self.cmass4,
+            #'CMASS5': self.cmass5,
+
+            # 1D
+            'CROD' : self.crod,
+            'CONROD' : self.conrod,
+
+            'CBAR' : self.cbar,
+            'CBEAM' : self.cbeam,
+
+            # 2D
+            'CSHEAR' : self.cshear,
             'CTRIA3'  : self.elements_shell.ctria3,
             'CQUAD4'  : self.elements_shell.cquad4,
             'CTRIA6'  : self.elements_shell.ctria6,
             'CQUAD8'  : self.elements_shell.cquad8,
 
+            # 3D
             'CTETRA4' : self.elements_solid.ctetra4,
             'CPENTA6' : self.elements_solid.cpenta6,
             'CHEXA8'  : self.elements_solid.chexa8,
@@ -613,17 +650,22 @@ class Elements(object):
 
     def get_property_typemap(self):
         TypeMap = {
+            # 0D
             'PELAS'  : self.pelas,
+            'PBUSH'  : self.pbush,
+            #'PMASS' : self.pmass,
+
+            # 1D
             'PROD'  : self.prod,
-            'PSHEAR'  : self.pshear,
 
             'PBAR'  : self.properties_bar.pbar,
             'PBARL'  : self.properties_bar.pbarl,
 
             'PBEAM'  : self.properties_beam.pbeam,
             'PBEAML'  : self.properties_beam.pbeaml,
-            #'PBUSH'  : self.pbush,
 
+            # 2D
+            'PSHEAR'  : self.pshear,
             'PSHELL'  : self.properties_shell.pshell,
             'PCOMP'  : self.properties_shell.pcomp,
             'PCOMPG'  : self.properties_shell.pcompg,

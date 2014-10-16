@@ -115,7 +115,7 @@ class PSOLID(Property):
                  self.integ, self.stress, self.isop, self.fctn):
 
                 cordm = set_blank_if_default(cordm, 0)
-                fctn = set_blank_if_default(self.fctn, 'SMECH')
+                fctn = set_blank_if_default(fctn, 'SMECH')
                 card = ['PSOLID', pid, mid, cordm, integ,
                         stress, isop, fctn]
                 #print card
