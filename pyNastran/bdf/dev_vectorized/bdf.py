@@ -55,13 +55,13 @@ from .cards.elements.shear.cshear import CSHEAR
 from .cards.elements.shear.pshear import PSHEAR
 
 # bar
-from .cards.elements.bar.cbar import CBAR #, CBAROR
+from .cards.elements.bar.cbar import CBAR, CBAROR
 #from .cards.elements.bar.pbar import PBAR
 #from .cards.elements.bar.pbarl import PBARL
 from .cards.elements.bar.properties_bar import PropertiesBar
 
 # beams
-from .cards.elements.beam.cbeam import CBEAM #, CBAROR
+from .cards.elements.beam.cbeam import CBEAM #, CBEAMOR
 from .cards.elements.beam.properties_beam import PropertiesBeam
 
 # mass
@@ -602,11 +602,17 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #: stores PBAR, PBARL
         self.properties_bar = PropertiesBar(model)
 
+        # stores CBAROR
+        #self.cbaror = None
+        self.cbaror = CBAROR()
+
         # beams
         #: stores CBEAM
         self.cbeam = CBEAM(model)
         #: stores PBEAM, PBEAML
         self.properties_beam = PropertiesBeam(model)
+        # stores CBEAMOR
+        self.cbeamor = None
 
         # solids
         #: stores CTETRA4, CPENTA6, CHEXA8, CTETRA10, CPENTA15, CHEXA20
@@ -1836,6 +1842,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         # bars
         elif name == 'CBAR':
             self.cbar.add(card_obj, comment=comment)
+        elif name == 'CBAROR':
+            self.cbaror.add(card_obj, comment=comment)
         elif name == 'PBAR':
             self.properties_bar.add_pbar(card_obj, comment=comment)
         elif name == 'PBARL':
@@ -1844,6 +1852,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         # beams
         elif name == 'CBEAM':
             self.cbeam.add(card_obj, comment=comment)
+        elif name == 'CBEAMOR':
+            self.cbeamor.add(card_obj, comment=comment)
         elif name == 'PBEAM':
             self.properties_beam.add_pbeam(card_obj, comment=comment)
         elif name == 'PBEAML':
@@ -1857,7 +1867,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         # mass
         elif name == 'PMASS':
             self.mass.add_pmass(card_obj, comment=comment)
-
         elif name == 'CONM1':
             self.mass.add_conm1(card_obj, comment=comment)
         elif name == 'CONM2':
@@ -2293,7 +2302,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
             # 1-D
             self.cbar, self.conrod, self.crod, #self.ctube,
-            self.cbeam,  # self.cbeam3, self.cbend
+            self.cbeam, self.cbeam3, self.cbend
 
             # 2-D
             self.elements_shell,
@@ -2309,7 +2318,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             #celas1, self.celas2, self.celas3, self.celas4,
 
             # 1-D
-            self.cbar, self.conrod, self.crod,
+            self.cbar, self.conrod, self.crod, self.ctube,
+            self.cbeam, self.cbend, self.cbeam3,
 
             # 2-D
             self.elements_shell,

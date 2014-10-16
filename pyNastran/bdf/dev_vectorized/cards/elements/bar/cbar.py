@@ -6,7 +6,7 @@ from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, string_or_blank, blank)
-
+from pyNastran.bdf.cards.elements.bars import CBAROR
 
 from pyNastran.bdf.dev_vectorized.cards.elements.element import Element
 class CBAR(Element):
@@ -54,6 +54,24 @@ class CBAR(Element):
         cards = self._cards
         ncards = len(cards)
         self.n = ncards
+        if self.model.cbaror.n > 0:
+            cbaror = self.model.cbaror
+            pid_default = cbaror.property_id
+            is_g0_default = cbaror.is_g0
+            x1_default = cbaror.x[0]
+            x2_default = cbaror.x[1]
+            x3_default = cbaror.x[2]
+            g0_default = cbaror.g0
+            offt_default = cbaror.offt
+        else:
+            pid_default = None
+            is_g0_default = None
+            x1_default = 0.0
+            x2_default = 0.0
+            x3_default = 0.0
+            g0_default = None
+            offt_default = 'GGG'
+
         if ncards:
             float_fmt = self.model.float
 
@@ -67,7 +85,7 @@ class CBAR(Element):
             self.g0 = full(ncards, nan, 'int32')
             self.x = full((ncards, 3), nan, float_fmt)
 
-            self.offt = full(ncards, nan, '|S3')
+            self.offt = full(ncards, offt_default, '|S3')
 
             self.pin_flags = zeros((ncards, 2), 'int32')
             self.wa = zeros((ncards, 3), float_fmt)
@@ -76,23 +94,28 @@ class CBAR(Element):
             for i, card in enumerate(cards):
                 eid = integer(card, 1, 'element_id')
                 self.element_id[i] = eid
-                self.property_id[i] = integer_or_blank(card, 2, 'property_id', eid)
+                if pid_default is not None:
+                    self.property_id[i] = integer_or_blank(card, 2, 'property_id', pid_default)
+                else:
+                    self.property_id[i] = integer_or_blank(card, 2, 'property_id', eid)
                 self.node_ids[i] = [integer(card, 3, 'GA'),
                                     integer(card, 4, 'GB')]
 
                 #---------------------------------------------------------
                 # x / g0
-                field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
+                if g0_default is not None:
+                    field5 = integer_double_or_blank(card, 5, 'g0_x1', g0_default)
+                else:
+                    field5 = integer_double_or_blank(card, 5, 'g0_x1', x1_default)
+
                 if isinstance(field5, int):
                     self.is_g0[i] = True
                     self.g0[i] = field5
-                    #x = None
                 elif isinstance(field5, float):
                     self.is_g0[i] = False
-                    #self.g0[i] = None
                     x = array([field5,
-                               double_or_blank(card, 6, 'x2', 0.0),
-                               double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
+                               double_or_blank(card, 6, 'x2', x2_default),
+                               double_or_blank(card, 7, 'x3', x3_default)], dtype='float64')
                     self.x[i, :] = x
                     if norm(x) == 0.0:
                         msg = 'G0 vector defining plane 1 is not defined on %s %s.\n' % (self.type, eid)
@@ -108,7 +131,7 @@ class CBAR(Element):
                 #---------------------------------------------------------
                 # offt
                 # bit doesn't exist on the CBAR
-                offt = string_or_blank(card, 8, 'offt', 'GGG')
+                offt = string_or_blank(card, 8, 'offt', offt_default)
 
                 msg = 'invalid offt parameter of CBEAM...offt=%s' % offt
                 assert offt[0] in ['G', 'B', 'O', 'E'], msg
