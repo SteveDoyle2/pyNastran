@@ -9,6 +9,11 @@ import warnings
 from numpy import allclose, isinf, float32
 from pyNastran.bdf.fieldWriter16 import print_card_16
 
+def set_string8_blank_if_default(value, default):
+    val = set_blank_if_default(value, default)
+    if val is None:
+        return '        '
+    return '%8s' % val
 
 def is_same(value1, value2):
     """
