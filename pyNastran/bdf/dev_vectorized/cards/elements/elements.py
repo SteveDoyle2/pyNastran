@@ -135,11 +135,11 @@ class Elements(object):
         self.property_ids.sort()
         #print('*****self.property_ids =', self.property_ids)
 
-        self.element_groups = self.build_groups(etypes, 'element_id')
+        self.element_groups = self.build_groups(etypes, 'element_id', is_element=True)
         self.property_groups = self.build_groups(ptypes, 'property_id')
         print('*****self.property_groups =', self.property_groups)
 
-    def build_groups(self, objs, name):
+    def build_groups(self, objs, name, is_element=False):
         groups = {}
         Types = []
         for obj in objs:
@@ -154,6 +154,11 @@ class Elements(object):
                 Types += [obj]
         for Type in Types:
             group_data = getattr(Type, name)
+
+            assert Type.__class__.__name__ == Type.type, 'class %s has a type of %r' % (Type.__class__.__name__, Type.type)
+            if is_element:
+                assert hasattr(Type, 'op2_id'), 'class %s has no attribute op2_id' % Type.type
+
             if len(group_data):
                 groups[Type.type] = group_data
         #print("groups = %s" % groups)
