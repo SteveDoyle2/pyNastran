@@ -14,17 +14,24 @@ from pyNastran.bdf.fieldWriter16 import print_card_16
 
 class CBEAM(CBAR):
     """
-    ::
+    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
+    | CBEAM | EID | PID | GA  | GB  | X1  | X2  | X3  | OFFT/BIT |
+    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
+    |       | PA  | PB  | W1A | W2A | W3A | W1B | W2B | W3B      |
+    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
+    |       | SA  | SB  |
+    +-------+-----+-----+
 
-      CBEAM EID PID GA GB X1 X2 X3 OFFT/BIT
-      PA PB W1A W2A W3A W1B W2B W3B
-      SA SB
+    or
 
-    or::
+    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
+    | CBEAM | EID | PID | GA  | GB  | G0  |     |     | OFFT/BIT |
+    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
+    |       | PA  | PB  | W1A | W2A | W3A | W1B | W2B | W3B      |
+    +-------+-----+-----+-----+-----+-----+-----+-----+----------+
+    |       | SA  | SB  |
+    +-------+-----+-----+
 
-      CBEAM EID PID GA GB G0 - - OFFT/BIT
-      PA PB W1A W2A W3A W1B W2B W3B
-      SA SB
     """
     type = 'CBEAM'
     _field_map = {
@@ -87,8 +94,8 @@ class CBEAM(CBAR):
                              double_or_blank(card, 15, 'w2b', 0.0),
                              double_or_blank(card, 16, 'w3b', 0.0)], 'float64')
 
-            self.sa = integer_or_blank(card, 17, 'sa')
-            self.sb = integer_or_blank(card, 18, 'sb')
+            self.sa = integer_or_blank(card, 17, 'sa', 0)
+            self.sb = integer_or_blank(card, 18, 'sb', 0)
             assert len(card) <= 19, 'len(CBEAM card) = %i' % len(card)
         else:  #: .. todo:: verify
             #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
@@ -571,12 +578,15 @@ class CBEAM(CBAR):
         w1b = set_blank_if_default(self.wb[0], 0.0)
         w2b = set_blank_if_default(self.wb[1], 0.0)
         w3b = set_blank_if_default(self.wb[2], 0.0)
+
+        sa = set_blank_if_default(self.sa, 0)
+        sb = set_blank_if_default(self.sb, 0)
         (x1, x2, x3) = self.getX_G0_defaults()
         offt = self.getOfft_Bit_defaults()
         ga, gb = self.nodeIDs()
         list_fields = ['CBEAM', self.eid, self.Pid(), ga, gb, x1, x2, x3, offt,
                   self.pa, self.pb, w1a, w2a, w3a,
-                  w1b, w2b, w3b, self.sa, self.sb]
+                  w1b, w2b, w3b, sa, sb]
         return list_fields
 
     def write_bdf(self, size, card_writer):

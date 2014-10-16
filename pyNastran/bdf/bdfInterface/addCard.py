@@ -90,29 +90,23 @@ class AddMethods(object):
 
     def add_element(self, elem, allowOverwrites=False):
         key = elem.eid
-        assert key > 0, 'eid=%s elem=%s' % (key, elem)
-        if key not in self.elements:
-            pass
-        elif key in self.elements and not allowOverwrites:
-            if not elem.isSameCard(self.elements[key], debug=False):
-                #elem.isSameCard(self.elements[key], debug=True)
-                #print('eid=%s\noldElement=\n%snewElement=\n%s' % (key,self.elements[key],elem))
-                msg = 'eid=%s\noldElement=\n%snewElement=\n%s' % (elem.eid,
-                                                                  self.elements[elem.eid].repr_card(),
-                                                                  elem.repr_card())
+        if key in self.elements and not allowOverwrites:
+            if not elem.isSameCard(self.elements[key]):
+                msg = 'eid=%s is not unique\noldElement=\n%snewElement=\n%s' % (
+                    elem.eid, self.elements[elem.eid].repr_card(), elem.repr_card())
                 assert elem.eid not in self.elements, msg
+        assert key > 0, 'eid=%s must be positive; elem=\n%s' % (key, elem)
         self.elements[key] = elem
 
     def add_mass(self, mass, allowOverwrites=False):
         key = mass.eid
         if key in self.masses and not allowOverwrites:
             if not mass.isSameCard(self.masses[key]):
-                mass.isSameCard(self.masses[key], debug=True)
-                #print 'eid=%s\noldMass=\n%snewMass=\n%s' %(key, self.masses[key], mass)
-                assert mass.eid not in self.masses, 'eid=%s\noldMass=\n%snewMass=\n%s' % (mass.eid, self.masses[mass.eid], mass)
-        else:
-            assert key > 0, 'eid=%s mass=%s' % (key, mass)
-            self.masses[key] = mass
+                msg = 'eid=%s is not unique\noldMass=\n%snewMass=\n%s' % (
+                    mass.eid, self.masses[mass.eid], mass)
+                assert mass.eid not in self.masses, msg
+        assert key > 0, 'eid=%s must be positive; mass=\n%s' % (key, mass)
+        self.masses[key] = mass
 
     def add_damper(self, elem, allowOverwrites=False):
         """..warning:: can dampers have the same ID as a standard element?"""

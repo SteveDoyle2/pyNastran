@@ -55,7 +55,6 @@ class CBEAM(Element):
         cards = self._cards
         ncards = len(cards)
         self.n = ncards
-        #print("CBEAM.n = %s" % self.n)
         if ncards:
             float_fmt = self.model.float
 
@@ -97,7 +96,7 @@ class CBEAM(Element):
                     self.is_g0[i] = False
                     x = array([field5,
                                double_or_blank(card, 6, 'x2', 0.0),
-                               double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
+                               double_or_blank(card, 7, 'x3', 0.0)], dtype=float_fmt)
                     self.x[i, :] = x
                     if norm(x) == 0.0:
                         msg = 'G0 vector defining plane 1 is not defined on %s %s.\n' % (self.type, eid)
@@ -124,6 +123,10 @@ class CBEAM(Element):
                     assert offt[1] in ['G', 'B', 'O', 'E'], msg
                     assert offt[2] in ['G', 'B', 'O', 'E'], msg
                     self.offt[i] = offt
+                else:
+                    msg = ('field8 on %s (offt/bit) is the wrong type...id=%s field5=%s '
+                           'type=%s' % (self.type, self.eid, field8, type(field8)))
+                    raise RuntimeError(msg)
 
                 self.pin_flags[i, :] = [integer_or_blank(card, 9, 'pa', 0),
                                         integer_or_blank(card, 10, 'pb', 0)]
