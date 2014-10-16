@@ -216,6 +216,37 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
     #     return kMag * K
 
 
+class CBAROR(object):
+    type = 'CBAROR'
+    def __init__(self):
+        self.n = 0
+
+    def add(self, card=None, data=None, comment=''):
+        if self.n == 1:
+            raise RuntimeError('only one CBAROR is allowed')
+        self.n = 1
+        if comment:
+            self._comment = comment
+
+        self.property_id = integer_or_blank(card, 2, 'pid')
+
+        #---------------------------------------------------------
+        # x / g0
+        field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
+        if isinstance(field5, int):
+            self.is_g0 = True
+            self.g0 = field5
+            self.x = [0., 0., 0.]
+        elif isinstance(field5, float):
+            self.is_g0 = False
+            self.g0 = None
+            self.x = array([field5,
+                       double_or_blank(card, 6, 'x2', 0.0),
+                       double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
+        self.offt = string_or_blank(card, 8, 'offt', 'GGG')
+        assert len(card) <= 9, 'len(CBAROR card) = %i' % len(card)
+
+
 class CBAR(LineElement):
     """
     +-------+-----+-----+-----+-----+-----+-----+-----+------+

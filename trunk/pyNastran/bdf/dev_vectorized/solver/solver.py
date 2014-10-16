@@ -435,7 +435,10 @@ class Solver(F06, OP2):
             self.op2_pack_file.close()
 
     def run_case(self, model, case):
-        sols = {101: self.run_sol_101}
+        sols = {
+            101: self.run_sol_101,
+            103: self.run_sol_103,
+        }
 
         isubcase = case.id
         if model.sol in sols:
@@ -574,6 +577,47 @@ class Solver(F06, OP2):
         self.mp_index = model.grid.n + spoint.n
 
         return(nidComponentToID, i)
+
+    def run_sol_103(self, model, case):
+        assert model.sol == 103, 'model.sol=%s is not 101' % (model.sol)
+        if 'WTMASS' in model.params:
+            wtmass = model.params['WTMASS'].value1
+        else:
+            wtmass = 1.0
+
+        if 'COUPMASS' in model.params:
+            coupmass = model.params['COUPMASS'].value1
+        else:
+            coupmass = -1
+
+        if case.has_parameter('METHOD'):
+            imethod = model.subcase.get_parameter('METHOD')
+            self.eigb[imethod]
+            self.eigc[imethod]
+            self.eigr[imethod]
+            self.eigrl[imethod]
+
+    # analysis
+    (Kgg, Fg, n) = self.setup_sol_101(model, case)
+    Mgg = self.get_Mgg()
+    self.build_dof_sets()
+    lambda, Ua = self.solve_sol_103(Kgg, Mgg)
+
+    dofsAll = set([i for i in xrange(n)])
+    dofsA = remove_dofs(dofsAll, self.iUs)
+    dofsA.sort()
+    U = zeros(n, 'float64')
+
+    # TODO handle MPCs
+    for (i, iu) in enumerate(self.iUs):
+        U[iu] = self.Us[i]
+    for (i, iu) in enumerate(dofsA):
+        U[iu] = Ua[i]
+
+    if self.is_displacement:
+        self._store_displacements(model, U, case)
+    q = U
+
 
     def run_sol_101(self, model, case):
         #print("case = ", case)
@@ -1300,6 +1344,7 @@ class Solver(F06, OP2):
 
         #Mgg = zeros((i, i), 'float64')
         Kgg, Kgg_sparse = self.assemble_global_stiffness(model, i, self.nidComponentToID)
+        #Mgg, Mgg_sparse = self.assemble_global_mass(model, i, self.nidComponentToID)
         Fg = self.assemble_forces(model, i, case, self.nidComponentToID)
         return Kgg, Fg, i
 
@@ -1396,6 +1441,13 @@ class Solver(F06, OP2):
                     #print('Kgg[%i,%i]=%d' % (dof1i, dof2i, Kgg[dof1i, dof2i]) )
         print('Kggi =\n', Kgg)
 
+    def add_mass(self, M, dofs, nijv):
+        Mgg = self.Mgg
+        for i, dof1 in enumerate(dofs):
+            for j, dof2 in enumerate(dofs):
+                if abs(M[i, j]) > 0.0:
+                    Mgg[dof1, dof2] += M[i, j]
+
     def assemble_global_stiffness(self, model, i, Dofs):
         self.Kgg = zeros((i, i), 'float64')
         print("Kgg.shape", self.Kgg.shape)
@@ -1470,6 +1522,83 @@ class Solver(F06, OP2):
         Kgg_sparse = None
         Kgg = self.Kgg
         return Kgg, Kgg_sparse
+
+    def assemble_global_mass_matrix(self, model, i, Dofs):
+        self.Mgg = zeros((i, i), 'float64')
+
+        dof_mapper = []
+
+        nnodes = model.grid.n
+        nspoints = model.spoint.n
+        assert nnodes > 0
+
+        i = 0
+        nids = model.grid.node_id
+
+        self.positions = {}
+        index0s = {}
+        for i in xrange(model.grid.n):
+            nid = model.grid.node_id[i]
+            self.positions[nid] = model.grid.xyz[i]
+            index0s[nid] = 6 * i
+
+        # mass
+        for i in xrange(model.conm1.n):
+            M, dofs, nijv = model.conm1.get_mass_matrix(i, model, self.positions, index0s)
+            self.add_mass(M, dofs, nijv)
+        for i in xrange(model.conm2.n):
+            M, dofs, nijv = model.conm1.get_mass_matrix(i, model, self.positions, index0s)
+            self.add_mass(M, dofs, nijv)
+
+        # cmass
+        for i in xrange(model.cmass1.n):
+            M, dofs, nijv = model.cmass1.get_mass_matrix(i, model, self.positions, index0s)
+            self.add_mass(M, dofs, nijv)
+        for i in xrange(model.cmass2.n):
+            M, dofs, nijv = model.cmass2.get_mass_matrix(i, model, self.positions, index0s)
+            self.add_mass(M, dofs, nijv)
+        for i in xrange(model.cmass3.n):
+            M, dofs, nijv = model.cmass3.get_mass_matrix(i, model, self.positions, index0s)
+            self.add_mass(M, dofs, nijv)
+        for i in xrange(model.cmass4.n):
+            M, dofs, nijv = model.cmass4.get_mass_matrix(i, model, self.positions, index0s)
+            self.add_mass(M, dofs, nijv)
+
+        # conrod
+        for i in xrange(model.conrod.n):
+            M, dofs, nijv = model.conrod.get_mass_matrix(i, model, self.positions, index0s)
+            self.add_mass(M, dofs, nijv)
+        # crod
+        for i in xrange(model.crod.n):
+            M, dofs, nijv = model.crod.get_mass_matrix(i, model, self.positions, index0s)
+            self.add_mass(M, dofs, nijv)
+        # ctube
+        for i in xrange(model.ctube.n):
+            M, dofs, nijv = model.ctube.get_mass_matrix(i, model, self.positions, index0s)
+            self.add_mass(M, dofs, nijv)
+
+        # shells
+        for i in xrange(model.elements_shell.ctria3.n):
+            M, dofs, nijv = model.elements_shell.ctria3.get_mass_matrix(i, model, self.positions, index0s)
+            self.add_mass(M, dofs, nijv)
+        for i in xrange(model.elements_shell.cquad4.n):
+            M, dofs, nijv = model.elements_shell.cquad4.get_mass_matrix(i, model, self.positions, index0s)
+            self.add_mass(M, dofs, nijv)
+
+        for i in xrange(model.elements_shell.ctetra4.n):
+            M, dofs, nijv = model.ctetra4.get_mass_matrix(i, model, self.positions, index0s)
+            self.add_mass(M, dofs, nijv)
+        for i in xrange(model.elements_shell.cpenta6.n):
+            M, dofs, nijv = model.ctetra4.get_mass_matrix(i, model, self.positions, index0s)
+            self.add_mass(M, dofs, nijv)
+        for i in xrange(model.elements_shell.chexa8.n):
+            M, dofs, nijv = model.ctetra4.get_mass_matrix(i, model, self.positions, index0s)
+            self.add_mass(M, dofs, nijv)
+
+        #Mgg_sparse = coo_matrix((entries, (rows, cols)), shape=(i, i))
+        Mgg_sparse = None
+        Mgg = self.Mgg
+        return Mgg, Mgg_sparse
 
     def apply_SPCs(self, model, case, nidComponentToID):
         has_spcs = False
@@ -1608,7 +1737,7 @@ class Solver(F06, OP2):
         Fg = zeros(i, 'float64')
         #print(model.loads)
         (loadID, junk) = model.caseControlDeck.get_subcase_parameter(case.id, 'LOAD')
-        print("loadID = ", loadID)
+        print("loadID = %s" % loadID)
         loads = model.loadcase.resolve(int(loadID))
 
         for load in loads:
@@ -1697,7 +1826,7 @@ class Solver(F06, OP2):
                     #print("dof = ",dof)
                     if dof in Dofs:
                         Fg[Dofs[dof]] += fg
-        print("Fg  = ", Fg)
+        print("Fg  = %s" % Fg)
         return Fg
 
     def write_results(self, case):
@@ -1807,7 +1936,7 @@ def get_cards():
                       'CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
                       'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
 
-                      'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CONROD', 'CBEND',
+                      'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CONROD',  #'CBEND',
                       'CTRIA3', 'CTRIA6',
                       'CQUAD4', 'CQUAD8',
                       'CTETRA', 'CPENTA', 'CHEXA',
@@ -1819,7 +1948,7 @@ def get_cards():
                       # properties
                       'PELAS',
                       'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PTUBE',
-                      'PBEND',
+                      #'PBEND',
                       'PSHELL', 'PCOMP', 'PSHEAR',  # 'PCOMPG',
                       'PSOLID',
 
