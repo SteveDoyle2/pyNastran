@@ -65,6 +65,8 @@ Approach
              o possibly A
            o Conclusion
              o Option A/C as a flag is probably the way to go
+             o since you gotta pick one to start with and Option A
+               promotes bugs, Option C will be implemented first
 
            o request for elements that don't exist
              o use case #1:  user requests mass from elements 1:10, but 5 doesn't exist
@@ -80,6 +82,10 @@ Approach
            o non-request for nodes/materials that don't exist
              o use case #3:  user loads model, but missing some data
                  o Favorite:   Option A/C
+
+             o use case #4:  user wants to write elements 1:10, but 5 doesn't exist
+                 o Favorite:   Option A
+                 o Compromise: Option C
 
          o What about?
            o request for elements that don't exist
@@ -162,6 +168,33 @@ Approach
                     Favorite:   Option A/C
                     Compromise: Option E
 
+             o use case #4:  user wants to write elements 1:10, but 5 doesn't exist
+                 o Favorite:   Option A
+                 o Compromise: Option C
+                 o Eliminated: Option B
+
+                 o Why #1: intentionally (e.g. element 1:#)
+                    solution A: NaN value
+                      + print a flag such as "CQUAD4 5 doesnt exist" (good enough)
+                    solution B: drop the element -> No entry
+                      + they got what they wanted (ideal)
+                    solution C: crash on failure
+                      - they have to fix it (annoying)
+                    Favorite:   Option B
+                    Compromise: Option A
+                    Dislike:    Option C
+
+                 o Why #2: they have a bug
+                    solution A: NaN value
+                      + they can see the warning (good enough)
+                    solution B: drop the element -> No entry
+                      - errors pass silently (bad!)
+                    solution C/E: crash on failure / validate input
+                      + the error is caught with an error message (ideal)
+                    Favorite:   Option C
+                    Compromise: Option A
+                    Eliminated: Option B
+
            
      o model.get_elements will complain if exact list of elements are not found?
        o could remove this method if we figure A/B/C/D/E out properly
@@ -239,3 +272,76 @@ Approach
       - accessing data for cross referenced cards is slow
       - writing out cross referenced cards is slow
       - it prevents vectorization
+
+
+
+Vectorized Cards (done)
+=======================
+GRID
+
+# mass
+CONM1, CONM2
+
+# Elements - 0D
+PELAS, CELAS1, CELAS2, CELAS3, CELAS4
+
+# Elements - 1D
+PROD, CROD, CONROD
+PBAR, CBAR
+CBEAM
+PBUSH, CBUSH
+
+# Elements - 2D
+PSHEAR, CSHEAR
+PSHELL, CQUAD4, CTRIA3
+
+# Elements - 3D
+PSOLID, CTETRA4,  CPENTA6,  CHEXA8,
+        CTETRA10, CPENTA15, CHEXA20
+
+# Loads - 0D
+FORCE, MOMENT, FORCE1, MOMENT1, GRAV
+
+# Loads - 1D
+PLOAD1, PLOAD2, PLOADX1, RFORCE
+# Loads - 2D/3D
+
+Vectorized Cards (not done)
+===========================
+# mass
+
+# Elements - 1D
+PDAMP, CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5
+
+# Elements - 2D
+CTRIA6, CTRIAX6, CTRIA, CQUAD, CQUAD8, CQUADX
+
+# Loads - 1D
+# Loads - 2D/3D
+
+Unvectorizable Cards (done)
+===========================
+# Elements - 1D
+PBEAM, PBEAML, PBCOMP
+
+# Elements - 2D
+PCOMP, PCOMPG
+
+Unvectorizable Cards (not done)
+===============================
+
+
+Not Grouped
+===========
+# mass
+CMASS1, CMASS2, CMASS3, CMASS4, CMASS5
+
+
+# Elements - 1D
+PDAMPT
+
+# Elements - 2D
+# Elements - 3D
+# Loads - 1D
+# Loads - 2D/3D
+
