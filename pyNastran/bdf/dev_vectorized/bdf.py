@@ -1643,11 +1643,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #========================
         # tube
         elif name == 'CTUBE':
-            #self.ctube.add(card_obj, comment=comment)
-            pass
-        elif name == 'PROD':
-            #self.ptube.add(card_obj, comment=comment)
-            pass
+            self.ctube.add(card_obj, comment=comment)
+        elif name == 'PTUBE':
+            self.ptube.add(card_obj, comment=comment)
 
         #========================
         # thermal boundary conditions
@@ -1789,27 +1787,23 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.trim[trim.trim_id] = trim
         #========================
         # bushing
-        elif name == 'CBUSH1D':
-            self.cbush1d.add(card_obj, comment=comment)
-            pass
-        elif name == 'CBUSH2D':
-            self.cbush2d.add(card_obj, comment=comment)
-            pass
         elif name == 'CBUSH':
             self.cbush.add(card_obj, comment=comment)
-            pass
+        elif name == 'CBUSH1D':
+            self.cbush1d.add(card_obj, comment=comment)
+        elif name == 'CBUSH2D':
+            self.cbush2d.add(card_obj, comment=comment)
+        elif name == 'CBUSH':
+            self.cbush.add(card_obj, comment=comment)
         elif name == 'PBUSH':
             self.pbush.add(card_obj, comment=comment)
-            pass
         elif name == 'PBUSHT':
             self.pbusht.add(card_obj, comment=comment)
-            pass
 
         #========================
         # fast
         elif name == 'PFAST':
             self.pfast.add(card_obj, comment=comment)
-            pass
         #========================
         # springs
         elif name == 'PELAS':
@@ -1829,8 +1823,14 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.pdamp.add(card_obj, comment=comment)
         elif name == 'PDAMPT':
             self.pdampt.add(card_obj, comment=comment)
-        elif name == 'CDAMP':
-            self.cdampt.add(card_obj, comment=comment)
+        elif name == 'CDAMP1':
+            self.elements_damper.cdamp1.add(card_obj, comment=comment)
+        elif name == 'CDAMP2':
+            self.elements_damper.cdamp2.add(card_obj, comment=comment)
+        elif name == 'CDAMP3':
+            self.elements_damper.cdamp3.add(card_obj, comment=comment)
+        elif name == 'CDAMP4':
+            self.elements_damper.cdamp4.add(card_obj, comment=comment)
 
         #========================
         # bars
@@ -1848,7 +1848,10 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.properties_beam.add_pbeam(card_obj, comment=comment)
         elif name == 'PBEAML':
             self.properties_beam.add_pbeaml(card_obj, comment=comment)
+        elif name == 'PBCOMP':
+            self.properties_beam.add_pbcomp(card_obj, comment=comment)
 
+        # beam3
         # bend
         #========================
         # mass
@@ -2121,20 +2124,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             raise NotImplementedError(name)
         return
 
-    def print_filename(self, filename):
-        """
-        Takes a path such as C:/work/fem.bdf and locates the file using
-        relative paths.  If it's on another drive, the path is not modified.
-
-        :param self:     the BDF object
-        :param filename: a filename string
-        :returns filename_string: a shortened representation of the filename
-        """
-        driveLetter = os.path.splitdrive(os.path.abspath(filename))[0]
-        if driveLetter == os.path.splitdrive(os.curdir)[0] and self._relpath:
-            return os.path.relpath(filename)
-        return filename
-
     def card_stats(self, return_type='string'):
         """
         Print statistics for the BDF
@@ -2151,6 +2140,22 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         msg += self.crod.get_stats()
         msg += self.prod.get_stats()
         msg += self.conrod.get_stats()
+        #msg += self.ctube.get_stats()
+
+        msg += self.cbar.get_stats()
+        msg += self.properties_bar.get_stats()
+        #msg += self.pbar.get_stats()
+        #msg += self.pbarl.get_stats()
+
+        msg += self.cbeam.get_stats()
+        msg += self.properties_beam.get_stats()
+        #msg += self.pbeam.get_stats()
+        #msg += self.pbeaml.get_stats()
+
+        #msg += self.cbeam3.get_stats()
+        #msg += self.pbeam3.get_stats()
+        #msg += self.cbend.get_stats()
+        #msg += self.pbend.get_stats()
 
         msg += self.elements_shell.get_stats()
         msg += self.properties_shell.get_stats()
@@ -2287,7 +2292,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.mass,
 
             # 1-D
-            self.cbar, self.conrod, self.crod, #self.ctube, self.cbeam,
+            self.cbar, self.conrod, self.crod, #self.ctube,
+            self.cbeam,  # self.cbeam3, self.cbend
 
             # 2-D
             self.elements_shell,
@@ -2374,6 +2380,20 @@ def _clean_comment(comment, end=-1):
             '$SETS', '$CONTACT', '$REJECTS', '$REJECT_LINES']:
         comment = ''
     return comment
+
+#def print_filename(filename, relpath):
+    #"""
+    #Takes a path such as C:/work/fem.bdf and locates the file using
+    #relative paths.  If it's on another drive, the path is not modified.
+
+    #:param filename: a filename string
+    #:returns filename_string: a shortened representation of the filename
+    #"""
+    #driveLetter = os.path.splitdrive(os.path.abspath(filename))[0]
+    #if driveLetter == os.path.splitdrive(os.curdir)[0] and self._relpath:
+        #return os.path.relpath(filename)
+    #return filename
+
 
 
 if __name__ == '__main__':

@@ -48,9 +48,6 @@ class CONROD(RodElement):
     type = 'CONROD'
     op2_id = 5
 
-    def __len__(self):
-        return self.n
-
     def __init__(self, model):
         """
         Defines the CONROD object.

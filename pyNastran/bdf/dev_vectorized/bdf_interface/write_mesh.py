@@ -270,33 +270,43 @@ class WriteMesh(object):
         if interspersed:
             #raise NotImplementedError('interspersed=False')
             self._write_elements_properties(f, size)
+            self.conrod.write_bdf(f, size)
         else:
             #self.properties_springs.write_bdf(f)
             self.elements_spring.write_bdf(f)
             self.pelas.write_bdf(f, size)
 
+            #self.elements_damper.write_bdf(f)
+            #self.pdamp.write_bdf(f, size)
+
             #self.properties_rods.write_bdf(f)
             #self.elements_rods.write_bdf(f)
+            f.write('$ Rods-----------------------------------------------------\n')
+            self.conrod.write_bdf(f)
             self.crod.write_bdf(f)
             self.prod.write_bdf(f)
 
-
-            self.mass.write_bdf(f, size)
             #print(self.mass)
 
+            f.write('$ Bars-----------------------------------------------------\n')
             #self.elements_bars.write_bdf(f)
-            self.cbar.write_bdf(f, size)
             self.properties_bar.write_bdf(f, size)
+            self.cbar.write_bdf(f, size)
 
-            self.cbeam.write_bdf(f, size)
+            f.write('$ Beams----------------------------------------------------\n')
             self.properties_beam.write_bdf(f, size)
+            self.cbeam.write_bdf(f, size)
 
+            f.write('$ Shell----------------------------------------------------\n')
             self.properties_shell.write_bdf(f, size)
             self.elements_shell.write_bdf(f)
 
+            f.write('$ Solid----------------------------------------------------\n')
             self.properties_solid.write_bdf(f, size)
             self.elements_solid.write_bdf(f)
-        self.conrod.write_bdf(f, size)
+
+            f.write('$ Mass-----------------------------------------------------\n')
+            self.mass.write_bdf(f, size)
 
     def _write_aero(self, size, card_writer):
         """Writes the aero cards"""
