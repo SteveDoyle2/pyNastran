@@ -3,6 +3,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from numpy import array
 
+from pyNastran.bdf.fieldWriter import set_string8_blank_if_default
+from pyNastran.bdf.fieldWriter16 import set_string16_blank_if_default
+
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -988,7 +991,7 @@ class GRID(Node):
                         '*',
                         print_float_16(xyz[2]),
                         cd, self.ps, seid))
-        return self.comment() + msg
+        return self.comment() + msg.rstrip() + '\n'
 
     def write_bdf(self, size, card_writer):
         """
@@ -1008,17 +1011,6 @@ class GRID(Node):
         card = self.reprFields()
         return self.comment() + card_writer(card)
 
-def set_string8_blank_if_default(value, default):
-    val = set_blank_if_default(value, default)
-    if val is None:
-        return '        '
-    return val
-
-def set_string16_blank_if_default(value, default):
-    val = set_blank_if_default(value, default)
-    if val is None:
-        return '                '
-    return val
 
 class POINT(Node):
     """
