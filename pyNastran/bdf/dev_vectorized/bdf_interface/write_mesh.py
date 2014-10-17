@@ -234,9 +234,9 @@ class WriteMesh(object):
         self._write_nodes(f, size)
 
         self.write_elements_properties(f, size)
+        self.materials.write_bdf(f, size)
         self._write_aero(f, size)
         self._write_loads(f, size)
-        self.materials.write_bdf(f, size)
         self._write_common(f, size, card_writer)
 
         #self._write_constraints(f, size)
