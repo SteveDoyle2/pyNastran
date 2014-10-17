@@ -192,7 +192,7 @@ class ElementsShell(object):
                 element.write_bdf(f, size=size, element_ids=element_ids)
 
     def _get_types(self, nlimit=True):
-        types = [self.ctria3, self.cquad4, self.ctriax6] #, cquad8
+        types = [self.ctria3, self.cquad4, self.ctria6, self.cquad8, self.ctriax6] #, cquad8
         if nlimit:
             types2 = []
             for etype in types:

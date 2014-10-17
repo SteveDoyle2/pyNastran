@@ -18,6 +18,7 @@ class PropertiesBeam(object):
         self.n = 0
 
     def build(self):
+        #print('building beam')
         self.pbeam.build()
         self.pbeaml.build()
 

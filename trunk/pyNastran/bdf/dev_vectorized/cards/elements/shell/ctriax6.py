@@ -9,6 +9,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 
 class CTRIAX6(object):
     type = 'CTRIAX6'
+    op2_id = 75
     def __init__(self, model):
         self.model = model
         self.n = 0

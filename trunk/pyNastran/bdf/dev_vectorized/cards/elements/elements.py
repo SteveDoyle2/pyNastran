@@ -46,16 +46,6 @@ class Elements(object):
         self.cbush2d = model.cbush2d
         self.pbush = model.pbush
 
-        #mass
-        #self.conm1 = model.conm1
-        #self.conm2 = model.conm2
-        #self.cmass1 = self.cmass1
-        #self.cmass1 = self.cmass1
-        #self.cmass2 = self.cmass2
-        #self.cmass3 = self.cmass3
-        #self.cmass4 = self.cmass4
-        #self.cmass5 = self.cmass5
-
         # rods
         self.conrod = model.conrod
         self.prod = model.prod
@@ -64,6 +54,14 @@ class Elements(object):
         # mass
         #: stores CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4, CMASS5, PMASS
         self.mass = model.mass
+        #self.conm1 = model.conm1
+        #self.conm2 = model.conm2
+        #self.cmass1 = self.cmass1
+        #self.cmass1 = self.cmass1
+        #self.cmass2 = self.cmass2
+        #self.cmass3 = self.cmass3
+        #self.cmass4 = self.cmass4
+        #self.cmass5 = self.cmass5
 
         # bars
         #: stores CBAR
@@ -539,27 +537,28 @@ class Elements(object):
                  self.cbar, self.cbeam,
                  self.cshear,
 
-                 self.elements_spring.celas1,
-                 self.elements_spring.celas2,
-                 self.elements_spring.celas3,
-                 self.elements_spring.celas4,
+                 self.elements_spring,
+                 #self.elements_spring.celas1,
+                 #self.elements_spring.celas2,
+                 #self.elements_spring.celas3,
+                 #self.elements_spring.celas4,
 
                  self.cbush,
 
-                 self.elements_shell.ctria3,
-                 self.elements_shell.cquad4,
-                 self.elements_shell.ctria6,
-                 self.elements_shell.cquad8,
-                 #self.elements_shell,
+                 #self.elements_shell.ctria3,
+                 #self.elements_shell.cquad4,
+                 #self.elements_shell.ctria6,
+                 #self.elements_shell.cquad8,
+                 self.elements_shell,
 
-                 #self.elements_solid,
-                 self.elements_solid.ctetra4,
-                 self.elements_solid.cpenta6,
-                 self.elements_solid.chexa8,
+                 self.elements_solid,
+                 #self.elements_solid.ctetra4,
+                 #self.elements_solid.cpenta6,
+                 #self.elements_solid.chexa8,
 
-                 self.elements_solid.ctetra10,
-                 self.elements_solid.cpenta15,
-                 self.elements_solid.chexa20,
+                 #self.elements_solid.ctetra10,
+                 #self.elements_solid.cpenta15,
+                 #self.elements_solid.chexa20,
         ]
         if nlimit:
             types2 = []
@@ -580,17 +579,18 @@ class Elements(object):
 
             # 1D
             self.prod,
-            self.properties_bar.pbar, self.properties_bar.pbarl,
-            self.properties_beam.pbeam, self.properties_beam.pbeaml,
+            #self.properties_bar.pbar, self.properties_bar.pbarl,
+            #self.properties_beam.pbeam, self.properties_beam.pbeaml,
+            self.properties_bar, self.properties_beam,
             self.pshear,
 
-            #self.properties_shell,
-            self.properties_shell.pshell,
-            self.properties_shell.pcomp,
-            self.properties_shell.pcompg,
+            self.properties_shell,
+            #self.properties_shell.pshell,
+            #self.properties_shell.pcomp,
+            #self.properties_shell.pcompg,
 
-            #self.properties_solid,
-            self.properties_solid.psolid,
+            self.properties_solid,
+            #self.properties_solid.psolid,
             #self.properties_solid.plsolid,
         ]
         if nlimit:
@@ -709,15 +709,30 @@ class Elements(object):
 def check_duplicate(name, objs):
     unique_vals = set([])
     for obj in objs:
+        #print('working on %s' % obj.__class__.__name__)
         if hasattr(obj, name):
             vals = getattr(obj, name)
             if len(vals):
-                print("%s vals = %s for class %s" % (name, vals, obj.__class__.__name__))
+                print("  %s vals = %s for class %s" % (name, vals, obj.__class__.__name__))
                 unique_vals.update(list(vals))
+            #else:
+                #print "  %s has no %s"  % (obj.__class__.__name__, name)
+
             #print unique_vals
         else:
             #print "  %s has no %s"  % (obj.__class__.__name__, name)
-            pass
+            if hasattr(obj, '_get_types'):
+                Types = obj._get_types()
+                for Type in Types:
+                    vals = getattr(Type, name)
+                    if len(vals):
+                        #print("    %s vals = %s for class %s" % (name, vals, Type.__class__.__name__))
+                        unique_vals.update(list(vals))
+                    #else:
+                        #print "    %s has no %s"  % (Type.__class__.__name__, name)
+            #else:
+                #print "    %s has no _get_types"  % (obj.__class__.__name__)
+
     #print "unique %s = %s\n" %(name, unique_vals)
     if len(unique_vals) == 0:
         raise RuntimeError("unique %s = %s" %(name, unique_vals))

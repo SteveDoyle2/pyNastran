@@ -67,7 +67,7 @@ class CTRIA6(ShellElement):
             self._cards = []
             self._comments = []
         else:
-            self.element_id = array([], 'int32')
+            self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
 
     def write_bdf(self, f, size=8, element_ids=None):
