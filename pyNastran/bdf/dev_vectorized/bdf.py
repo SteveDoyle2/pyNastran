@@ -110,7 +110,7 @@ from .cards.loads.pload  import PLOAD
 from .cards.loads.pload1 import PLOAD1
 from .cards.loads.pload2 import PLOAD2
 #from .cards.loads.pload3 import PLOAD3
-#from .cards.loads.pload4 import PLOAD4
+from .cards.loads.pload4 import PLOAD4
 
 from .cards.loads.ploadx1 import PLOADX1
 #from .cards.loads.grav import GRAV
@@ -680,12 +680,11 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.pload1 = PLOAD1(model)
         self.pload2 = PLOAD2(model)
         #self.pload3 = PLOAD3(model)
-        #self.pload4 = PLOAD4(model)
+        self.pload4 = PLOAD4(model)
 
         self.ploadx1 = PLOADX1(model)
 
         #: stores MAT1, MAT2, MAT3,...MAT10 (no MAT4, MAT5)
-        #self.materials = {}
         self.materials = Materials(model)
 
         #: stores MATS1

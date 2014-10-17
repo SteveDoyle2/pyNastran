@@ -1,5 +1,5 @@
 import cStringIO
-from numpy import zeros, unique, where, searchsorted, asarray
+from numpy import zeros, unique, where, searchsorted, asarray, array
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.fieldWriter import print_card_8
@@ -94,7 +94,7 @@ class PSOLID(Property):
             self._comments = []
         else:
             self.property_id = array([], dtype='int32')
-            aaa
+            self.material_id = array([], dtype='int32')
 
     def get_density(self, property_ids=None):
         if property_ids is None:
