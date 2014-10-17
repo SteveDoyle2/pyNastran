@@ -176,7 +176,7 @@ class GRID(object):
 
         cpn = self.cp[n]
         i = where(cpn != 0)[0]
-        if i:
+        if len(i):
             n2 = n[i]
             cps = set(list(unique(cpn)))
             for cp in cps:

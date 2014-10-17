@@ -206,7 +206,7 @@ class TestMass(unittest.TestCase):
         print('massD = %s' % mass)
 
         print('-------------------------')
-        eids, mass = model.elements.get_mass(range(-100, 1000))
+        eids, mass = model.elements.get_mass(range(-3, 20))
         print('massE = %s' % mass)
         print('eidsE = %s' % eids)
         print('\neid   mass')
