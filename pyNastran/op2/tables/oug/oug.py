@@ -147,8 +147,11 @@ class OUG(OP2Common):
             raise NotImplementedError('SORT2!!!!!')
 
         if self.table_code == 1:   # Displacements
-            assert self.table_name in ['OUG1', 'BOUGV1', 'OUGV1', 'OUPV1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
-            n = self._read_displacement(data)
+            assert self.table_name in ['OUG1', 'BOUGV1', 'OUGV1', 'OUPV1', 'OUGV1PAT'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            is_cid = False
+            if self.table_name == 'OUGV1PAT':
+                is_cid = True
+            n = self._read_displacement(data, is_cid)
         elif self.table_code == 7:
             n = self._read_eigenvector(data)
         elif self.table_code == 10:
@@ -185,7 +188,7 @@ class OUG(OP2Common):
         """
         raise NotImplementedError()
 
-    def _read_displacement(self, data):
+    def _read_displacement(self, data, is_cid):
         if self.thermal == 0:
             result_name = 'displacements'
             storage_obj = self.displacements
@@ -194,7 +197,8 @@ class OUG(OP2Common):
             self._found_results.add(result_name)
             n = self._read_table(data, result_name, storage_obj,
                                  RealDisplacement, ComplexDisplacement,
-                                 RealDisplacementArray, ComplexDisplacementArray, 'node', random_code=self.random_code)
+                                 RealDisplacementArray, ComplexDisplacementArray, 'node', random_code=self.random_code,
+                                 is_cid=is_cid)
         elif self.thermal == 1:
             result_name = 'temperatures'
             storage_obj = self.temperatures

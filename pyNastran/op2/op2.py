@@ -174,7 +174,7 @@ class OP2( #BDF,
         table_mapper = {
             #=======================
             # OEF
-            # internal forces
+            # element forces
             'OEFIT' : [self._read_oef1_3, self._read_oef1_4],
             'OEF1X' : [self._read_oef1_3, self._read_oef1_4],
             'OEF1'  : [self._read_oef1_3, self._read_oef1_4],
@@ -182,8 +182,8 @@ class OP2( #BDF,
             #=======================
             # OQG
             # spc forces
-            'OQG1'  : [self._read_oqg1_3, self._read_oqg1_4],
-            'OQGV1' : [self._read_oqg1_3, self._read_oqg1_4],
+            'OQG1'  : [self._read_oqg1_3, self._read_oqg1_4],  # spc forces in the nodal frame
+            'OQGV1' : [self._read_oqg1_3, self._read_oqg1_4],  # spc forces in the nodal frame
             # mpc forces
             'OQMG1' : [self._read_oqg1_3, self._read_oqg1_4],
 
@@ -192,24 +192,24 @@ class OP2( #BDF,
             #=======================
             # OPG
             # applied loads
-            'OPG1'  : [self._read_opg1_3, self._read_opg1_4],
+            'OPG1'  : [self._read_opg1_3, self._read_opg1_4],  # applied loads in the nodal frame
             'OPGV1' : [self._read_opg1_3, self._read_opg1_4],
             'OPNL1' : [self._read_opg1_3, self._read_opg1_4],
 
             # OGPFB1
             # grid point forces
-            'OGPFB1' : [self._read_ogpf1_3, self._read_ogpf1_4],
+            'OGPFB1' : [self._read_ogpf1_3, self._read_ogpf1_4],  # grid point forces
 
             # ONR/OEE
             # strain energy density
-            'ONRGY1' : [self._read_onr1_3, self._read_onr1_4],
+            'ONRGY1' : [self._read_onr1_3, self._read_onr1_4],  # strain energy density
             #=======================
             # OES
             # stress
-            'OES1X1'  : [self._read_oes1_3, self._read_oes1_4],
-            'OES1'    : [self._read_oes1_3, self._read_oes1_4],
-            'OES1X'   : [self._read_oes1_3, self._read_oes1_4],
-            'OES1C'   : [self._read_oes1_3, self._read_oes1_4],
+            'OES1X1'  : [self._read_oes1_3, self._read_oes1_4],  # stress
+            'OES1'    : [self._read_oes1_3, self._read_oes1_4],  # stress
+            'OES1X'   : [self._read_oes1_3, self._read_oes1_4],  # stress
+            'OES1C'   : [self._read_oes1_3, self._read_oes1_4],  # stress - composite
             'OESCP'   : [self._read_oes1_3, self._read_oes1_4],
             'OESNLXR' : [self._read_oes1_3, self._read_oes1_4],
             'OESNLXD' : [self._read_oes1_3, self._read_oes1_4],
@@ -219,33 +219,33 @@ class OP2( #BDF,
             'OESRT'   : [self._read_oes1_3, self._read_oes1_4],
 
             # strain
-            'OSTR1X'  : [self._read_oes1_3, self._read_oes1_4],
-            'OSTR1C'  : [self._read_oes1_3, self._read_oes1_4],
+            'OSTR1X'  : [self._read_oes1_3, self._read_oes1_4],  # strain - isotropic
+            'OSTR1C'  : [self._read_oes1_3, self._read_oes1_4],  # strain - composite
 
             #=======================
             # OUG
-            # displacement/velocity/acceleration/eigenvector
-            'OUG1'   : [self._read_oug1_3, self._read_oug1_4],
-            'OUGV1'  : [self._read_oug1_3, self._read_oug1_4],
-            'BOUGV1' : [self._read_oug1_3, self._read_oug1_4],
-
-            'OUPV1'  : [self._read_oug1_3, self._read_oug1_4],
+            # displacement/velocity/acceleration/eigenvector/temperature
+            'OUG1'    : [self._read_oug1_3, self._read_oug1_4],  # displacements in nodal frame
+            'OUGV1'   : [self._read_oug1_3, self._read_oug1_4],  # displacements in nodal frame
+            'BOUGV1'  : [self._read_oug1_3, self._read_oug1_4],  # OUG1 on the boundary???
+            'OUGV1PAT': [self._read_oug1_3, self._read_oug1_4],  # OUG1 + coord ID
+            'OUPV1'   : [self._read_oug1_3, self._read_oug1_4],
 
             #=======================
             # OGPWG
             # grid point weight
-            'OGPWG' : [self._read_ogpwg_3, self._read_ogpwg_4],
-            'OGPWGM' : [self._read_ogpwg_3, self._read_ogpwg_4],
+            'OGPWG'  : [self._read_ogpwg_3, self._read_ogpwg_4],  # grid point weight
+            'OGPWGM' : [self._read_ogpwg_3, self._read_ogpwg_4],  # modal? grid point weight
 
             #=======================
             # OGS
             # grid point stresses
-            'OGS1' : [self._read_ogs1_3, self._read_ogs1_4],
+            'OGS1' : [self._read_ogs1_3, self._read_ogs1_4],  # grid point stresses
             #=======================
             # eigenvalues
-            'BLAMA': [self._read_buckling_eigenvalue_3, self._read_buckling_eigenvalue_4],
-            'CLAMA': [self._read_complex_eigenvalue_3, self._read_complex_eigenvalue_4],
-            'LAMA': [self._read_real_eigenvalue_3, self._read_real_eigenvalue_4],
+            'BLAMA': [self._read_buckling_eigenvalue_3, self._read_buckling_eigenvalue_4],  # buckling eigenvalues
+            'CLAMA': [self._read_complex_eigenvalue_3,  self._read_complex_eigenvalue_4],   # complex eigenvalues
+            'LAMA' : [self._read_real_eigenvalue_3,     self._read_real_eigenvalue_4],      # eigenvalues
 
             # ===geom passers===
             # geometry
@@ -255,7 +255,7 @@ class OP2( #BDF,
             'GEOM4': [self._table_passer, self._table_passer],
 
             # superelements
-            'GEOM1S': [self._table_passer, self._table_passer],
+            'GEOM1S': [self._table_passer, self._table_passer],  # GEOMx + superelement
             'GEOM2S': [self._table_passer, self._table_passer],
             'GEOM3S': [self._table_passer, self._table_passer],
             'GEOM4S': [self._table_passer, self._table_passer],
@@ -270,12 +270,12 @@ class OP2( #BDF,
             'GEOM3OLD': [self._table_passer, self._table_passer],
             'GEOM4OLD': [self._table_passer, self._table_passer],
 
-            'EPT' : [self._table_passer, self._table_passer],
-            'EPTS': [self._table_passer, self._table_passer],
+            'EPT' : [self._table_passer, self._table_passer],  # elements
+            'EPTS': [self._table_passer, self._table_passer],  # elements - superelements
             'EPTOLD' : [self._table_passer, self._table_passer],
 
-            'MPT' : [self._table_passer, self._table_passer],
-            'MPTS': [self._table_passer, self._table_passer],
+            'MPT' : [self._table_passer, self._table_passer],  # materials
+            'MPTS': [self._table_passer, self._table_passer],  # materials - superelements
 
             'DYNAMIC': [self._table_passer, self._table_passer],
             'DYNAMICS': [self._table_passer, self._table_passer],
@@ -312,13 +312,13 @@ class OP2( #BDF,
 
             #'DYNAMIC': [self._read_dynamics_4, self._read_dynamics_4],
             #'DYNAMICS': [self._read_dynamics_4, self._read_dynamics_4],
-            #'DIT': [self._read_dit_4, self._read_dit_4],
+            #'DIT': [self._read_dit_4, self._read_dit_4],   # table objects (e.g. TABLED1)
 
             # ===passers===
             'EQEXIN': [self._table_passer, self._table_passer],
             'EQEXINS': [self._table_passer, self._table_passer],
 
-            'GPDT': [self._table_passer, self._table_passer],
+            'GPDT': [self._table_passer, self._table_passer],     # grid points?
             'BGPDT': [self._table_passer, self._table_passer],
             'BGPDTS': [self._table_passer, self._table_passer],
             'BGPDTOLD': [self._table_passer, self._table_passer],
@@ -327,21 +327,21 @@ class OP2( #BDF,
             'DESTAB': [self._table_passer, self._table_passer],
             'STDISP': [self._table_passer, self._table_passer],
             'R1TABRG': [self._table_passer, self._table_passer],
-            'CASECC': [self._table_passer, self._table_passer],
+            'CASECC': [self._table_passer, self._table_passer],  # case control deck
 
-            'HISADD': [self._table_passer, self._table_passer],
+            'HISADD': [self._table_passer, self._table_passer],  # optimization history (SOL200)
             'EDTS': [self._table_passer, self._table_passer],
             'FOL': [self._table_passer, self._table_passer],
-            'MONITOR': [self._table_passer, self._table_passer],
+            'MONITOR': [self._table_passer, self._table_passer],  # monitor points
             'PERF': [self._table_passer, self._table_passer],
-            'VIEWTB': [self._table_passer, self._table_passer],
+            'VIEWTB': [self._table_passer, self._table_passer],   # view elements
 
             #==================================
             'OUGATO2': [self._table_passer, self._table_passer],
             'OUGCRM2': [self._table_passer, self._table_passer],
             'OUGNO2': [self._table_passer, self._table_passer],
-            'OUGPSD2': [self._table_passer, self._table_passer],
-            'OUGRMS2': [self._table_passer, self._table_passer],
+            'OUGPSD2': [self._table_passer, self._table_passer],  # psd
+            'OUGRMS2': [self._table_passer, self._table_passer],  # rms
 
             'OQGATO2': [self._table_passer, self._table_passer],
             'OQGCRM2': [self._table_passer, self._table_passer],
@@ -627,8 +627,8 @@ class OP2( #BDF,
                                     'OQMG1',
                                     # ??? forces
                                     'OQP1',
-                                    # displacement/velocity/acceleration/eigenvector
-                                    'OUG1', 'OUGV1', 'BOUGV1', 'OUPV1',
+                                    # displacement/velocity/acceleration/eigenvector/temperature
+                                    'OUG1', 'OUGV1', 'BOUGV1', 'OUPV1', 'OUGV1PAT',
                                     # applied loads
                                     'OPG1', 'OPGV1', 'OPNL1', #'OPG2',
 
@@ -942,7 +942,6 @@ class OP2( #BDF,
             self.binary_debug.write('skipping table...%r\n' % self.table_name)
         self.read_markers([-1])
         data = self._skip_record()
-
         self.read_markers([-2, 1, 0])
         data = self._skip_record()
         self._skip_subtables()
