@@ -281,36 +281,43 @@ class WriteMesh(object):
 
             #self.properties_rods.write_bdf(f)
             #self.elements_rods.write_bdf(f)
-            f.write('$ Rods-----------------------------------------------------\n')
-            self.conrod.write_bdf(f)
-            self.crod.write_bdf(f)
-            self.prod.write_bdf(f)
+            if self.conrod.n or self.crod.n or self.prod.n:
+                f.write('$ Rods-----------------------------------------------------\n')
+                self.conrod.write_bdf(f)
+                self.crod.write_bdf(f)
+                self.prod.write_bdf(f)
 
             #print(self.mass)
+            if self.cbar.n or self.properties_bar.n:
+                f.write('$ Bars-----------------------------------------------------\n')
+                #self.elements_bars.write_bdf(f)
+                self.properties_bar.write_bdf(f, size)
+                self.cbar.write_bdf(f, size)
 
-            f.write('$ Bars-----------------------------------------------------\n')
-            #self.elements_bars.write_bdf(f)
-            self.properties_bar.write_bdf(f, size)
-            self.cbar.write_bdf(f, size)
+            if self.cbeam.n or self.properties_beam.n:
+                f.write('$ Beams----------------------------------------------------\n')
+                self.properties_beam.write_bdf(f, size)
+                self.cbeam.write_bdf(f, size)
 
-            f.write('$ Beams----------------------------------------------------\n')
-            self.properties_beam.write_bdf(f, size)
-            self.cbeam.write_bdf(f, size)
+            if self.elements_shell.n or self.properties_shell.n:
+                f.write('$ Shell----------------------------------------------------\n')
+                self.properties_shell.write_bdf(f, size)
+                self.elements_shell.write_bdf(f)
 
-            f.write('$ Shell----------------------------------------------------\n')
-            self.properties_shell.write_bdf(f, size)
-            self.elements_shell.write_bdf(f)
+            if self.elements_solid.n or self.properties_solid.n:
+                f.write('$ Solid----------------------------------------------------\n')
+                self.properties_solid.write_bdf(f, size)
+                self.elements_solid.write_bdf(f)
 
-            f.write('$ Solid----------------------------------------------------\n')
-            self.properties_solid.write_bdf(f, size)
-            self.elements_solid.write_bdf(f)
+            if self.cbush.n or self.pbush.n:
+                f.write('$ Bush-----------------------------------------------------\n')
+                self.cbush.write_bdf(f, size)
+                self.pbush.write_bdf(f, size)
 
-            f.write('$ Bush-----------------------------------------------------\n')
-            self.cbush.write_bdf(f, size)
-            self.pbush.write_bdf(f, size)
-            f.write('$ Mass-----------------------------------------------------\n')
-            self.mass.write_bdf(f, size)
-
+            if self.mass.n:
+                f.write('$ Mass-----------------------------------------------------\n')
+                self.mass.write_bdf(f, size)
+            f.write('$----------------------------------------------------------\n')
     def _write_aero(self, size, card_writer):
         """Writes the aero cards"""
         msg = []
@@ -630,7 +637,7 @@ class WriteMesh(object):
         self.pload1.write_bdf(f, size)
         self.pload2.write_bdf(f, size)
         #self.pload3.write_bdf(f, size)
-        #self.pload4.write_bdf(f, size)
+        self.pload4.write_bdf(f, size)
 
         self.ploadx1.write_bdf(f, size)
         self.grav.write_bdf(f, size)

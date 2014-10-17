@@ -13,6 +13,7 @@ from pyNastran.bdf.bdfInterface.assign_type import integer
 class Materials(object):
     def __init__(self, model):
         self.model = model
+        self.n = 0
 
         #self.mat1 = MAT1(model)
         #self.mats1 = MATS1(model)
@@ -68,10 +69,12 @@ class Materials(object):
         self.mat10[mid] = mat
 
     def build(self):
-        pass
-        #types = self._get_types()
-        #for mat in types:
-        #    mat.build()
+        n = 0
+        types = self._get_types()
+        for mat in types:
+            n += len(mat)
+            #mat.build()
+        self.n = n
         #self.mat1.build()
         #self.mat1s.build()
         #==================
@@ -261,10 +264,11 @@ class Materials(object):
             material._verify(xref)
 
     def write_bdf(self, f, size=8, material_ids=None):
-        f.write('$MATERIALS\n')
-        types = self._get_types()
-        for materials in types:
-            for mid, mat in sorted(materials.iteritems()):
-                if material_ids is None or mid in material_ids:
-                    #mat.write_bdf(f, size=size, material_ids=material_ids)
-                    f.write(str(mat))
+        if self.n:
+            f.write('$MATERIALS\n')
+            types = self._get_types()
+            for materials in types:
+                for mid, mat in sorted(materials.iteritems()):
+                    if material_ids is None or mid in material_ids:
+                        #mat.write_bdf(f, size=size, material_ids=material_ids)
+                        f.write(str(mat))

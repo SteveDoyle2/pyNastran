@@ -113,6 +113,9 @@ class PSHELL(Property):
                 raise RuntimeError('There are duplicate PSHELL IDs...')
             self._cards = []
             self._comments = []
+        else:
+            self.property_id = array([], dtype='int32')
+            self.material_id = array([], dtype='int32')
 
     def write_bdf(self, f, size=8, property_ids=None):
         """

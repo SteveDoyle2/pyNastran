@@ -160,9 +160,9 @@ class CBUSH(Element):
             else:
                 i = searchsorted(self.element_id, self.element_id)
 
-            for (eid, pid, n, is_g0, g0, x) in zip(
+            for (eid, pid, n, is_g0, g0, x, cid, s, ocid, si) in zip(
                 self.element_id[i], self.property_id[i], self.node_ids[i],
-                self.is_g0[i], self.g0[i], self.x[i], ):
+                self.is_g0[i], self.g0[i], self.x[i], self.cid[i], self.s[i], self.ocid[i], self.si[i]):
 
                 x1 = g0 if is_g0 else x[0]
                 x2 = 0 if is_g0 else x[1]
@@ -174,7 +174,18 @@ class CBUSH(Element):
                 if isnan(x3):
                     x3 = ''
 
-                card = ['CBUSH', eid, pid, n[0], n[1], x1, x2, x3]
+                si1, si2, si3 = si
+                if isnan(si1):
+                    si1 = ''
+                if isnan(si2):
+                    si2 = ''
+                if isnan(si3):
+                    si3 = ''
+
+                ocid = set_blank_if_default(ocid, -1)
+                s = set_blank_if_default(s, 0.5)
+                card = ['CBUSH', eid, pid, n[0], n[1], x1, x2, x3,
+                        cid, s, ocid, si1, si2, si3 ]
                 f.write(print_card(card))
 
     def slice_by_index(self, i):
