@@ -34,6 +34,14 @@ class ElementsShell(object):
         #self.ctriax = CTRIAX(self.model)
         self.ctriax6 = CTRIAX6(self.model)
 
+    def allocate(self, card_count):
+        etypes = self._get_types(nlimit=False)
+        for etype in etypes:
+            if etype.type in card_count:
+                etype.allocate(card_count)
+            #else:
+                #assert hasattr(etype, 'allocate'), '%s doesnt support allocate' % etype.type
+
     def build(self):
         #print('*build elements_shell')
         types = self._get_types(nlimit=False)

@@ -17,6 +17,14 @@ class PropertiesBar(object):
         self.pbarl = PBARL(self.model)
         self.n = 0
 
+    def allocate(self, card_count):
+        ptypes = self._get_types(nlimit=False)
+        for ptype in ptypes:
+            if ptype.type in card_count:
+                ptype.allocate(card_count)
+                del card_count[ptype.type]
+            #else:
+                #assert hasattr(etype, 'allocate'), '%s doesnt support allocate' % etype.type
 
     def build(self):
         self.pbar.build()

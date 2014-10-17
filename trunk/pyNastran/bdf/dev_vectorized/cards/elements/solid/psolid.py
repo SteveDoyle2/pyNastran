@@ -24,12 +24,22 @@ class PSOLID(Property):
         self._cards.append(card)
         self._comments.append(comment)
 
+    def allocate(self, card_count):
+        ncards = card_count['PSOLID']
+        float_fmt = self.model.float
+        self.property_id = zeros(ncards, 'int32')
+        self.material_id = zeros(ncards, 'int32')
+        self.cordm = zeros(ncards, 'int32')
+        self.integ = zeros(ncards, dtype='|S8')
+        self.stress = zeros(ncards, dtype='|S8')
+        self.isop = zeros(ncards, dtype='|S8')
+        self.fctn = zeros(ncards, dtype='|S8')
+
     def build(self):
         """
         :param self: the PSOLID object
         :param cards: the list of PSOLID cards
         """
-
         cards = self._cards
         ncards = len(cards)
         self.n = ncards

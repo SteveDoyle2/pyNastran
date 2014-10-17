@@ -8,22 +8,23 @@ class XRefMesh(object):
         pass
 
     def cross_reference(self, xref=True):
-        self.grid.build()
-        self.point.build()
-        self.spoint.build()
-        self.epoint.build()
-        self.pointax.build()
-        #======================
-        self.coord.build()
-        #======================
-        self._build_elements_properties()
-        #======================
-        self.materials.build()
-        #======================
+        if xref:
+            self.grid.build()
+            self.point.build()
+            self.spoint.build()
+            self.epoint.build()
+            self.pointax.build()
+            #======================
+            self.coord.build()
+            #======================
+            self._build_elements_properties()
+            #======================
+            self.materials.build()
+            #======================
 
-        self._build_loads()
-        self._build_constraints()
-        self._build_aero()
+            self._build_loads()
+            self._build_constraints()
+            self._build_aero()
 
     def _build_aero(self):
         self.caero.build()

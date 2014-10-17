@@ -208,6 +208,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         :param log:   a python logging module object
         """
         assert debug in [True, False], 'debug=%r' % debug
+        self.inspect = False
 
         if precision == 'double':
             self.float = 'float64'
@@ -934,6 +935,19 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         #: is this a punch file (no executive control deck)
         self._punch = punch
+        if not self.inspect:
+            import time
+            t0 = time.time()
+            bdf_temp = BDF(debug=False)
+            bdf_temp.inspect = True
+            bdf_temp.add_card = bdf_temp._add_card
+            bdf_temp.add_reject = bdf_temp._add_reject
+            bdf_temp.read_bdf(bdf_filename=bdf_filename, include_dir=include_dir, xref=False, punch=punch)
+            print('card_count = %s' % bdf_temp.card_count)
+            self.allocate(bdf_temp.card_count)
+            del bdf_temp
+            print('dt = %s' %(time.time() - t0))
+
         try:
             self._open_file(self.bdf_filename)
             self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
@@ -952,6 +966,10 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self._cleanup_file_streams()
             raise
         self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
+
+    def allocate(self, card_count):
+        self.grid.allocate(card_count)
+        self.elements.allocate(card_count)
 
     def _cleanup_file_streams(self):
         """
@@ -1415,9 +1433,15 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
                 icard += 1
             else:
                 self._increase_card_count(card_name)
-                if comment:
-                    self.rejects.append([comment])
-                self.rejects.append(lines)
+                self.add_reject(comment, lines)
+
+    def _add_reject(self, comment, lines):
+        pass
+
+    def add_reject(self, comment, lines):
+        if comment:
+            self.rejects.append([comment])
+        self.rejects.append(lines)
 
     def _increase_card_count(self, card_name):
         """
@@ -1500,6 +1524,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
                 msg += '%-8s' % field
             self.f06.write('%-110s\n' % msg)
         #return msg
+
+    def _add_card(self, card_lines, card_name, comment='', is_list=True):
+        self._increase_card_count(card_name)
 
     def add_card(self, card_lines, card_name, comment='', is_list=True):
         """

@@ -16,6 +16,16 @@ class CTRIA3(ShellElement):
     def __init__(self, model):
         ShellElement.__init__(self, model)
 
+    def allocate(self, card_count):
+        ncards = card_count['CQUAD4']
+        float_fmt = self.model.float
+        self.element_id = zeros(ncards, 'int32')
+        self.property_id = zeros(ncards, 'int32')
+        self.node_ids = zeros((ncards, 3), 'int32')
+        self.zoffset = zeros(ncards, 'int32')
+        self.t_flag = zeros(ncards, 'int32')
+        self.thickness = zeros((ncards, 3), float_fmt)
+
     def build(self):
         cards = self._cards
         ncards = len(cards)

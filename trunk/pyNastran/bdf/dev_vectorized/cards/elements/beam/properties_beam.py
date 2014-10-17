@@ -17,6 +17,15 @@ class PropertiesBeam(object):
         self.pbeaml = PBEAML(self.model)
         self.n = 0
 
+    def allocate(self, card_count):
+        ptypes = self._get_types(nlimit=False)
+        for ptype in ptypes:
+            if ptype.type in card_count:
+                ptype.allocate(card_count)
+                del card_count[ptype.type]
+            #else:
+                #assert hasattr(etype, 'allocate'), '%s doesnt support allocate' % ptype.type
+
     def build(self):
         #print('building beam')
         self.pbeam.build()

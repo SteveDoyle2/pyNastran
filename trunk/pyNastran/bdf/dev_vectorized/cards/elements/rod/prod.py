@@ -24,6 +24,16 @@ class PROD(Property):
         """
         Property.__init__(self, model)
 
+    def allocate(self, card_count):
+        ncards = card_count['PROD']
+        float_fmt = self.model.float
+        self.property_id = zeros(ncards, 'int32')
+        self.material_id = zeros(ncards, 'int32')
+        self.A = zeros(ncards, float_fmt)
+        self.J = zeros(ncards, float_fmt)
+        self.c = zeros(ncards, float_fmt)
+        self.nsm = zeros(ncards, float_fmt)
+
     def add(self, card, comment):
         self._cards.append(card)
         self._comments.append(comment)
