@@ -23,6 +23,17 @@ class PBAR(Property):
         self._cards.append(card)
         self._comments.append(comment)
 
+    def allocate(self, card_count):
+        ncards = card_count['GRID']
+        float_fmt = self.model.float
+        self.property_id = zeros(ncards, 'int32')
+        self.material_id = zeros(ncards, 'int32')
+        self.area = zeros(ncards, 'float64')
+        self.I1 = zeros(ncards, 'float64')
+        self.I2 = zeros(ncards, 'float64')
+        self.J = zeros(ncards, 'float64')
+        self.nsm = zeros(ncards, 'float64')
+
     def build(self):
         cards = self._cards
         ncards = len(cards)

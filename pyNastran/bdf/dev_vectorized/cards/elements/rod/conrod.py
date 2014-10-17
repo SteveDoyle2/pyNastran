@@ -57,6 +57,17 @@ class CONROD(RodElement):
         """
         RodElement.__init__(self, model)
 
+    def allocate(self, card_count):
+        ncards = card_count['CONROD']
+        float_fmt = self.model.float
+        self.element_id = zeros(ncards, 'int32')
+        self.material_id = zeros(ncards, 'int32')
+        self.node_ids = zeros((ncards, 2), 'int32')
+        self.A = zeros(ncards, float_fmt)
+        self.J = zeros(ncards, float_fmt)
+        self.c = zeros(ncards, float_fmt)
+        self.nsm = zeros(ncards, float_fmt)
+
     def build(self):
         """
         :param self: the CONROD object

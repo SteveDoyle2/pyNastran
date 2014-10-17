@@ -1,4 +1,4 @@
-from numpy import zeros, arange, where, searchsorted, argsort
+from numpy import zeros, arange, where, searchsorted, argsort, unique, asarray, array
 
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -107,6 +107,16 @@ class GRID(object):
     def add(self, card, comment):
         self._cards.append(card)
         self._comments.append(comment)
+
+    def allocate(self, card_count):
+        ncards = card_count['GRID']
+        float_fmt = self.model.float
+        self.node_id = zeros(ncards, 'int32')
+        self.xyz = zeros((ncards, 3), float_fmt)
+        self.cp = zeros(ncards, 'int32')
+        self.cd = zeros(ncards, 'int32')
+        self.seid = zeros(ncards, 'int32')
+        self.ps = zeros(ncards, 'int32')
 
     def build(self):
         cards = self._cards

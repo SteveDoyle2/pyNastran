@@ -81,6 +81,7 @@ class Elements(object):
         #: stores PSOLID, PLSOLID
         self.properties_solid = model.properties_solid
 
+
     def validate_nodes(self, elements):
         validate_nodes = False
         if not hasattr(elements, 'node_ids'):
@@ -528,6 +529,29 @@ class Elements(object):
                     out.append(obj)
         return out
         return out[0] if int_flag else out
+
+    def allocate(self, card_count):
+        etypes = self._get_element_types(nlimit=False)
+        for etype in etypes:
+            if hasattr(etype, 'type'):
+                if etype.type in card_count:
+                    etype.allocate(card_count)
+                    del card_count[etype.type]
+                #else:
+                    #asdf
+            else:
+                etype.allocate(card_count)
+
+        ptypes = self._get_property_types(nlimit=False)
+        for ptype in ptypes:
+            if hasattr(ptype, 'type'):
+                if ptype.type in card_count:
+                    ptype.allocate(card_count)
+                    del card_count[ptype.type]
+                #else:
+                    #asdf
+            else:
+                ptype.allocate(card_count)
 
     def _get_element_types(self, nlimit=True):
         """

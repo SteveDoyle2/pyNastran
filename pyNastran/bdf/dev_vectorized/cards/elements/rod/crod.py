@@ -23,6 +23,12 @@ class CROD(RodElement):
         """
         RodElement.__init__(self, model)
 
+    def allocate(self, card_count):
+        ncards = card_count['CROD']
+        self.element_id = zeros(ncards, 'int32')
+        self.property_id = zeros(ncards, 'int32')
+        self.node_ids = zeros((ncards, 2), 'int32')
+
     def build(self):
         """
         :param self: the CROD object

@@ -26,6 +26,14 @@ class ElementsSolid(object):
         self.cpenta15 = CPENTA15(self.model)
         self.chexa20  = CHEXA20(self.model)
 
+    def allocate(self, card_count):
+        etypes = self._get_types(nlimit=False)
+        for etype in etypes:
+            if etype.type in card_count:
+                etype.allocate(card_count)
+            #else:
+                #assert hasattr(ptype, 'allocate'), '%s doesnt support allocate' % ptype.type
+
     def build(self):
         self.n = 0
         types = self._get_types(nlimit=False)
