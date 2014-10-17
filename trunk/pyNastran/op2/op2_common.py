@@ -463,7 +463,7 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
     def _read_table(self, data, result_name, storage_obj,
                     real_obj, complex_obj,
                     real_vector, complex_vector,
-                    node_elem, random_code=None):
+                    node_elem, random_code=None, is_cid=False):
 
         assert isinstance(result_name, basestring), 'result_name=%r' % result_name
         assert isinstance(storage_obj, dict), 'storage_obj=%r' % storage_obj
@@ -478,10 +478,10 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
             # real_obj
             assert real_obj is not None
             nnodes = len(data) // 32  # 8*4
-            auto_return = self._create_table_object(result_name, nnodes, storage_obj, real_obj, real_vector)
+            auto_return = self._create_table_object(result_name, nnodes, storage_obj, real_obj, real_vector, is_cid=is_cid)
             if auto_return:
                 return len(data)
-            n = self._read_real_table(data, result_name, node_elem)
+            n = self._read_real_table(data, result_name, node_elem, is_cid=is_cid)
         elif self.format_code in [1, 2, 3] and self.num_wide == 14:  # real or real/imaginary or mag/phase
             # complex_obj
             assert complex_obj is not None
@@ -506,7 +506,7 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
         #n = self._not_implemented_or_skip(data, msg)
         return n
 
-    def _read_real_table(self, data, result_name, flag):
+    def _read_real_table(self, data, result_name, flag, is_cid=False):
         if self.debug4():
             self.binary_debug.write('  _read_real_table\n')
         assert flag in ['node', 'elem'], flag
@@ -636,7 +636,7 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
             n += ntotal
         return n
 
-    def create_transient_object(self, storageObj, classObj, debug=False):
+    def create_transient_object(self, storageObj, classObj, is_cid=False, debug=False):
         """
         Creates a transient object (or None if the subcase should be skippied).
 
@@ -666,6 +666,7 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
                 self.obj = storageObj[code]
                 self.obj.update_data_code(copy.deepcopy(self.data_code))
             else:
+                classObj.is_cid = is_cid
                 self.obj = classObj(self.data_code, self.is_sort1(), self.isubcase, self.nonlinear_factor)
             storageObj[code] = self.obj
         else:
@@ -884,7 +885,7 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
         return False
 
     def _create_table_object(self, result_name,  nnodes,
-                             slot, slot_object, slot_vector):
+                             slot, slot_object, slot_vector, is_cid=False):
         assert isinstance(result_name, basestring), result_name
         assert isinstance(slot, dict), slot
         auto_return = False
@@ -894,7 +895,7 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
 
         if is_vectorized:
             if self.read_mode == 1:
-                self.create_transient_object(slot, slot_vector)
+                self.create_transient_object(slot, slot_vector, is_cid=is_cid)
                 self.result_names.add(result_name)
                 self.obj._nnodes += nnodes
                 auto_return = True
