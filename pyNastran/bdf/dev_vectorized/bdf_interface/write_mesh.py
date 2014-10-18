@@ -108,7 +108,6 @@ class WriteMesh(object):
             outfile.write('ENDDATA\n')
         outfile.close()
 
-
     def _write_header(self, outfile):
         """
         Writes the executive and case control decks.
@@ -158,6 +157,8 @@ class WriteMesh(object):
         #return self._write_elements_properties2(f, size)
         msg = []
         missing_properties = []
+        if self.properties:
+            outfile.write('$ELEMENTS_WITH_PROPERTIES\n')
 
         eids_written = []
         #pids = sorted(self.properties.keys())
@@ -378,6 +379,7 @@ class WriteMesh(object):
         self._write_coords(outfile, size, card_writer)
 
     def _write_constraints(self, f, size, card_writer):
+        """Writes the constraint cards sorted by ID"""
         spcs = [self.spcadd, self.spc, self.spcd, self.spc1]
         mpcs = [self.mpcadd, self.mpc]
         self._write_constraints_spc_mpc(f, size, spcs)
@@ -492,6 +494,11 @@ class WriteMesh(object):
         pass
 
     def _write_nodes(self, f, size, is_double):
+        """
+        Writes the NODE-type cards
+
+        :param self: the BDF object
+        """
         self.grdset.write_bdf(f, size)
         self.grid.write_bdf(f, size)
         self.point.write_bdf(f, size)
@@ -544,19 +551,6 @@ class WriteMesh(object):
                 msg.append(param.write_bdf(size))
             outfile.write(''.join(msg))
 
-    def _write_rigid_elements(self, outfile, size, card_writer):
-        """Writes the rigid elements in a sorted order"""
-        if self.rigidElements:
-            msg = ['$RIGID ELEMENTS\n']
-            for (eid, element) in sorted(self.rigidElements.iteritems()):
-                try:
-                    msg.append(element.write_bdf(size, card_writer))
-                except:
-                    print('failed printing element...'
-                          'type=%s eid=%s' % (element.type, eid))
-                    raise
-            outfile.write(''.join(msg))
-
     def _write_rejects(self, outfile, size):
         """
         Writes the rejected (processed) cards and the rejected unprocessed
@@ -586,6 +580,19 @@ class WriteMesh(object):
                     if reject2:
                         msg.append(str(reject2) + '\n')
         outfile.write(''.join(msg))
+
+    def _write_rigid_elements(self, outfile, size, card_writer):
+        """Writes the rigid elements in a sorted order"""
+        if self.rigidElements:
+            msg = ['$RIGID ELEMENTS\n']
+            for (eid, element) in sorted(self.rigidElements.iteritems()):
+                try:
+                    msg.append(element.write_bdf(size, card_writer))
+                except:
+                    print('failed printing element...'
+                          'type=%s eid=%s' % (element.type, eid))
+                    raise
+            outfile.write(''.join(msg))
 
     def _write_sets(self, outfile, size, card_writer):
         """Writes the SETx cards sorted by ID"""
