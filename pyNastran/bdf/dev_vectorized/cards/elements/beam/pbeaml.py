@@ -68,7 +68,7 @@ class PBEAML(object):
 
     def build(self):
         self.n = len(self.properties)
-        self.property_id = sorted(self.properties.keys())
+        self.property_id = array(sorted(self.properties.keys()), dtype='int32')
 
     #=========================================================================
     def write_bdf(self, f, size=8, property_ids=None):

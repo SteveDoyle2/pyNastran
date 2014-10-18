@@ -263,7 +263,7 @@ class Materials(object):
         for mid, material in sorted(self.mat1.iteritems()):
             material._verify(xref)
 
-    def write_bdf(self, f, size=8, material_ids=None):
+    def write_bdf(self, f, size=8, is_double=False, material_ids=None):
         if self.n:
             f.write('$MATERIALS\n')
             types = self._get_types()

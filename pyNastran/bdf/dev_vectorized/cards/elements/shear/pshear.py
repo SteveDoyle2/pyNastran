@@ -12,6 +12,15 @@ class PSHEAR(Property):
     def __init__(self, model):
         Property.__init__(self, model)
 
+    def allocate(self, ncards):
+        float_fmt = self.model.float
+        self.property_id = zeros(ncards, 'int32')
+        self.material_id = zeros(ncards, 'int32')
+        self.thickness = zeros(ncards, float_fmt)
+        self.nsm = zeros(ncards, float_fmt)
+        self.f1 = zeros(ncards, float_fmt)
+        self.f2 = zeros(ncards, float_fmt)
+
     def build(self):
         cards = self._cards
         ncards = len(cards)
@@ -70,7 +79,23 @@ class PSHEAR(Property):
         return mpa
 
     def write_bdf(self, f, size=8, pids=None):
-        pass
+        if self.n:
+            if pids is None:
+                i = arange(self.n)
+            else:
+                assert len(unique(pids))==len(pids), unique(pids)
+                i = searchsorted(self.property_id, pids)
+
+                #self.property_id = zeros(ncards, 'int32')
+                #self.material_id = zeros(ncards, 'int32')
+                #self.thickness = zeros(ncards, float_fmt)
+                #self.nsm = zeros(ncards, float_fmt)
+                #self.f1 = zeros(ncards, float_fmt)
+                #self.f2 = zeros(ncards, float_fmt)
+
+            for (pid, mid, t, nsm, f1, f2) in zip(self.property_id[i], self.material_id[i], self.thickness[i], self.nsm[i], self.f1[i], self.f2[i]):
+                card = ['PSHEAR', pid, mid, t, nsm, f1, f2]
+                f.write(print_card(card, size=size))
 
     def __getitem__(self, property_ids):
         """

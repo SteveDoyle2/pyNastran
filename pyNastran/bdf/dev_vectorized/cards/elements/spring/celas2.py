@@ -55,6 +55,15 @@ class CELAS2(SpringElement):
         self.s.append(double_or_blank(card, 8, 's', 0.))
         assert len(card) <= 9, 'len(CELAS2 card) = %i' % len(card) + str(card)
 
+    def allocate(self, ncards):
+        float_fmt = self.model.float
+        self.element_id = zeros(ncards, dtype='int32')
+        self.node_ids = zeros((ncards, 2), dtype='int32')
+        self.components = zeros((ncards, 2), dtype='int32')
+        self.K = zeros(ncards, dtype=float_fmt)
+        self.ge = zeros(ncards, dtype=float_fmt)
+        self.s = zeros(ncards, dtype=float_fmt)
+
     def build(self):
         """
         :param self: the CELAS2 object

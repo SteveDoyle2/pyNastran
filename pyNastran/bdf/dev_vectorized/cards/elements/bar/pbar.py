@@ -11,11 +11,11 @@ class PBAR(Property):
 
     def __init__(self, model):
         """
-        Defines the PCOMP object.
+        Defines the PBAR object.
 
-        :param self: the PCOMP object
+        :param self: the PBAR object
         :param model: the BDF object
-        :param cards: the list of PCOMP cards
+        :param cards: the list of PBAR cards
         """
         Property.__init__(self, model)
 
@@ -162,13 +162,13 @@ class PBAR(Property):
 
     def slice_by_index(self, i):
         i = asarray(i)
-        print('pbar i = %s' % i)
+        #print('pbar i = %s' % i)
         obj = PBAR(self.model)
         obj.n = len(i)
         #obj._cards = self._cards[i]
         #obj._comments = obj._comments[i]
         #obj.comments = obj.comments[i]
-        print(self)
+        #print(self)
         obj.property_id = self.property_id[i]
         obj.material_id = self.material_id[i]
         obj.area = self.area[i]
