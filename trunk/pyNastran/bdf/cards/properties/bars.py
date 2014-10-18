@@ -591,22 +591,26 @@ class PBAR(LineProperty):
                 raise RuntimeError('I2=%r must be greater than or equal to 0.0' % self.i2)
             if self.j < 0.:
                 raise RuntimeError('J=%r must be greater than or equal to 0.0' % self.j)
+
+            #: I12 -> use I12()
+            self.i12 = double_or_blank(card, 19, 'I12', 0.0)
+
             if self.A == 0.0:
+                # K1/K2 must be blank
                 #: default=infinite; assume 1e8
                 self.K1 = blank(card, 17, 'K1')
                 #: default=infinite; assume 1e8
                 self.K2 = blank(card, 18, 'K2')
+            elif self.i12 != 0.0:
+                # K1 / K2 are ignored
+                self.K1 = None
+                self.K2 = None
             else:
                 #: default=infinite; assume 1e8
                 self.K1 = double_or_blank(card, 17, 'K1', 1e8)
                 #: default=infinite; assume 1e8
                 self.K2 = double_or_blank(card, 18, 'K2', 1e8)
 
-            #: I12 -> use I12()
-            self.i12 = double_or_blank(card, 19, 'I12', 0.0)
-            #if self.A == 0.0 and self.i12 == 0.0:
-                #assert self.K1 is None, 'K1 must be blank if A=0.0 and I12=0.0; A=%r I12=%r K1=%r' % (self.A, self.i12, self.K1)
-                #assert self.K2 is None, 'K2 must be blank if A=0.0 and I12=0.0; A=%r I12=%r K2=%r' % (self.A, self.i12, self.K2)
             assert len(card) <= 20, 'len(PBAR card) = %i' % len(card)
         else:
             self.pid = data[0]
