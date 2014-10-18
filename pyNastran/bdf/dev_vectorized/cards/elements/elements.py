@@ -535,23 +535,26 @@ class Elements(object):
         for etype in etypes:
             if hasattr(etype, 'type'):
                 if etype.type in card_count:
-                    etype.allocate(card_count)
+                    etype.allocate(card_count[etype.type])
                     del card_count[etype.type]
                 #else:
                     #asdf
             else:
+                # ElementsSpring
                 etype.allocate(card_count)
+                #del card_count[etype.type]
 
         ptypes = self._get_property_types(nlimit=False)
         for ptype in ptypes:
             if hasattr(ptype, 'type'):
                 if ptype.type in card_count:
-                    ptype.allocate(card_count)
+                    ptype.allocate(card_count[ptype.type])
                     del card_count[ptype.type]
                 #else:
                     #asdf
             else:
                 ptype.allocate(card_count)
+                #del card_count[ptype.type]
 
     def _get_element_types(self, nlimit=True):
         """

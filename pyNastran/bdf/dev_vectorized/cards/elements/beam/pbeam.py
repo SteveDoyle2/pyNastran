@@ -61,7 +61,7 @@ class PBEAM(object):
         self.model = model
         self.n = 0
 
-    def allocate(self, card_count):
+    def allocate(self, ncards):
         pass
 
     def add(self, card, comment):

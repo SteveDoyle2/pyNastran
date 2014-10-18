@@ -11,9 +11,6 @@ from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 class PBARL(Property):
     type = 'PBARL'
 
-    def __len__(self):
-        return self.n
-
     def __init__(self, model):
         """
         Defines the PCOMP object.
@@ -22,14 +19,7 @@ class PBARL(Property):
         :param model: the BDF object
         :param cards: the list of PBARL cards
         """
-        self.model = model
-        self.n = 0
-        self._cards = []
-        self._comments = []
-
-    def add(self, card, comment):
-        self._cards.append(card)
-        self._comments.append(comment)
+        Property.__init__(self, model)
 
     def build(self):
         cards = self._cards

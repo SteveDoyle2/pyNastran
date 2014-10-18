@@ -1,4 +1,3 @@
-import cStringIO
 from numpy import zeros, searchsorted, where, asarray
 
 from pyNastran.bdf.dev_vectorized.cards.elements.element import Element

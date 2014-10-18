@@ -48,12 +48,7 @@ class CBAR(Element):
         """
         Element.__init__(self, model)
 
-    def add(self, card, comment=None):
-        self._cards.append(card)
-        self._comments.append(comment)
-
-    def allocate(self, card_count):
-        ncards = card_count['CBAR']
+    def allocate(self, ncards):
         float_fmt = self.model.float
         self.element_id = zeros(ncards, 'int32')
         self.property_id = zeros(ncards, 'int32')

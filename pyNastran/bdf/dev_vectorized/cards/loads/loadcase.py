@@ -1,3 +1,4 @@
+import cStringIO
 from numpy import unique, where
 
 from collections import defaultdict
@@ -39,7 +40,7 @@ class LoadCase(object):
         all_loads = self.loads[i]  # list of load objs
 
         #print "**********"
-        f = StringIO.StringIO()
+        f = cStringIO.StringIO()
         for load in all_loads:
             load.write_bdf(f)
         #print f.getvalue()
@@ -87,7 +88,7 @@ class LoadCase(object):
                 raise RuntimeError('i > 100')
         #print '------------------'
         #print "resolved LoadCase i=", i
-        f = StringIO.StringIO()
+        f = cStringIO.StringIO()
         for load in all_loads_out:
             load.write_bdf(f)
         #print f.getvalue()

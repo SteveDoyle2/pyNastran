@@ -224,6 +224,7 @@ class WriteMesh(object):
 
     def write_bdf(self, bdf_filename, interspersed=True, size=8):
         f = open(bdf_filename, 'wb')
+        is_double = False
         card_writer = None
 
         #==========================
@@ -236,7 +237,7 @@ class WriteMesh(object):
         self.write_elements_properties(f, size)
         self.materials.write_bdf(f, size)
         self._write_aero(f, size)
-        self._write_loads(f, size)
+        self.loads.write_bdf(f, size, is_double, sort_data=False)
         self._write_common(f, size, card_writer)
 
         #self._write_constraints(f, size)
@@ -605,53 +606,6 @@ class WriteMesh(object):
                         for constraint_id, constraint in sorted(t.iteritems()):
                             if ID == constraint_id:
                                 constraint.write_bdf(f, size=size)
-
-
-    def _write_loads(self, f, size, interspersed=False):
-        #self.loadcase.write_bdf(f, size)
-        for load_id, loads in sorted(self.load.iteritems()):
-            for load in loads:
-                load.write_bdf(f, size)
-
-        for load_id, loads in sorted(self.dload.iteritems()):
-            for load in loads:
-                load.write_bdf(f, size)
-
-        #for load_id, loads in sorted(self.sload.iteritems()):
-            #for load in loads:
-                #load.write_bdf(f, size)
-
-        #for load_id, loads in sorted(self.lseq.iteritems()):
-            #for load in loads:
-                #load.write_bdf(f, size)
-
-        #self.loadset.write_bdf(f, size)
-        self.force.write_bdf(f, size)
-        #self.force1.write_bdf(f, size)
-        #self.force2.write_bdf(f, size)
-        self.moment.write_bdf(f, size)
-        #self.moment1.write_bdf(f, size)
-        #self.moment2.write_bdf(f, size)
-
-        self.pload.write_bdf(f, size)
-        self.pload1.write_bdf(f, size)
-        self.pload2.write_bdf(f, size)
-        #self.pload3.write_bdf(f, size)
-        self.pload4.write_bdf(f, size)
-
-        self.ploadx1.write_bdf(f, size)
-        self.grav.write_bdf(f, size)
-        self.rforce.write_bdf(f, size)
-
-        #self.accel1.write_bdf(f, size)
-
-        #self.tload1.write_bdf(f, size)
-        #self.tload2.write_bdf(f, size)
-        #self.rload1.write_bdf(f, size)
-        #self.rload2.write_bdf(f, size)
-        #self.randps.write_bdf(f, size)
-
-        # DAREA
 
     def _write_rejects(self, size):
         """

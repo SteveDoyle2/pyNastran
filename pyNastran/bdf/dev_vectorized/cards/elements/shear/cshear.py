@@ -11,15 +11,8 @@ class CSHEAR(Element):
     type = 'CSHEAR'
     op2_id = 4
 
-    def __len__(self):
-        return self.n
-
     def __init__(self, model):
         Element.__init__(self, model)
-
-    def add(self, card, comment):
-        self._cards.append(card)
-        self._comments.append(comment)
 
     def build(self):
         cards = self._cards

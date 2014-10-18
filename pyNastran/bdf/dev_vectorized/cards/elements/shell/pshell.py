@@ -30,8 +30,7 @@ class PSHELL(Property):
         """
         Property.__init__(self, model)
 
-    def allocate(self, card_count):
-        ncards = card_count['PSHELL']
+    def allocate(self, ncards):
         float_fmt = self.model.float
         float_fmt = self.model.float
         self.property_id = zeros(ncards, 'int32')

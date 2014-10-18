@@ -22,11 +22,8 @@ class CONM2(object):
         self._cards = []
         self._comments = []
 
-    def add(self, card, comment=None):
-        #print('adding CONM2 %s' % card)
-        self._cards.append(card)
-        self._comments.append(comment)
-        assert len(self._cards) > 0
+    def allocate(self, ncards):
+        pass
 
     def build(self):
         """

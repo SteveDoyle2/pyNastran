@@ -83,44 +83,7 @@ from .cards.materials.materials import Materials
 
 
 # loads
-from .cards.loads.load import LOAD
-from .cards.loads.dload import DLOAD
-from .cards.loads.dload import DLOAD as LSEQ
-from .cards.loads.dload import DLOAD as SLOAD
-from .cards.loads.grav import GRAV
-from .cards.loads.force import FORCE
-from .cards.loads.moment import MOMENT
-
-#from .cards.loads.force1 import FORCE1
-#from .cards.loads.force2 import FORCE2
-#from .cards.loads.moment1 import MOMENT1
-#from .cards.loads.moment2 import MOMENT2
-
-# ACCEL1
-# PLOAD3
-# DAREA
-# TLOAD1
-# TLOAD2
-# RLOAD1
-# RLOAD2
-# RANDPS
-
-# loads
-from .cards.loads.pload  import PLOAD
-from .cards.loads.pload1 import PLOAD1
-from .cards.loads.pload2 import PLOAD2
-#from .cards.loads.pload3 import PLOAD3
-from .cards.loads.pload4 import PLOAD4
-
-from .cards.loads.ploadx1 import PLOADX1
-#from .cards.loads.grav import GRAV
-
-from .cards.loads.rforce import RFORCE
-#from .cards.loads.sload import SLOAD
-
-#from .cards.loads.loadcase import LoadCase
-#from .cards.loads.loadset import LOADSET
-
+from .cards.loads.loads import Loads
 
 #=============================
 # dynamic
@@ -167,7 +130,7 @@ def class_obj_defaultdict(class_obj, *args, **kwargs):
 
         def __getitem__(self, key):
             #print('getting key=%r' % key)
-            #print('dir(d) =', dir(self))
+            #print('dir(d) = %s' % dir(self))
             try:
                 val = self[key]
                 return val
@@ -664,26 +627,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         # loads
         #self.loadcase = LoadCase(model)
 
-        self.load = defaultdict(list)
-        self.dload = defaultdict(list)
-        #self.loadset = LOADSET(model)
 
-        self.force = FORCE(model)
-        #self.force1 = FORCE1(model)
-        #self.force2 = FORCE2(model)
-        self.moment = MOMENT(model)
-        #self.moment1 = MOMENT1(model)
-        #self.moment2 = MOMENT2(model)
-        self.grav = GRAV(model)
-        self.rforce = RFORCE(model)
-
-        self.pload = PLOAD(model)
-        self.pload1 = PLOAD1(model)
-        self.pload2 = PLOAD2(model)
-        #self.pload3 = PLOAD3(model)
-        self.pload4 = PLOAD4(model)
-
-        self.ploadx1 = PLOADX1(model)
+        #: stores LOAD, FORCE, MOMENT, etc.
+        self.loads = Loads(model)
 
         #: stores MAT1, MAT2, MAT3,...MAT10 (no MAT4, MAT5)
         self.materials = Materials(model)
@@ -694,8 +640,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.creepMaterials = {}
 
         # loads
-        #: stores LOAD, FORCE, MOMENT, etc.
-        #self.loads = {}
         #self.gusts  = {} # Case Control GUST = 100
         #self.random = {} # Case Control RANDOM = 100
 
@@ -946,7 +890,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             print('card_count = %s' % bdf_temp.card_count)
             self.allocate(bdf_temp.card_count)
             del bdf_temp
-            print('dt = %s' %(time.time() - t0))
+            print('dt = %s' % (time.time() - t0))
 
         try:
             self._open_file(self.bdf_filename)
@@ -970,6 +914,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
     def allocate(self, card_count):
         self.grid.allocate(card_count)
         self.elements.allocate(card_count)
+        self.loads.allocate(card_count)
 
     def _cleanup_file_streams(self):
         """
@@ -1921,79 +1866,69 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'DLOAD':
             load = DLOAD(self)
             load.add_from_bdf(card_obj, comment=comment)
-            self.dload[load.load_id].append(load)
+            self.loads.dload[load.load_id].append(load)
         elif name == 'LSEQ':
             #load = LSEQ(self)
             #load.add_from_bdf(card_obj, comment=comment)
-            #self.lseq[load.load_id].append(load)
+            #self.loads.lseq[load.load_id].append(load)
             pass
         elif name == 'SLOAD':
             load = SLOAD(self)
             load.add_from_bdf(card_obj, comment=comment)
-            self.sload[load.load_id].append(load)
+            self.loads.sload[load.load_id].append(load)
             #pass
         elif name == 'LOAD':
-            load = LOAD(self)
-            load.add_from_bdf(card_obj, comment=comment)
-            self.load[load.load_id].append(load)
-            #self.load.add(card_obj, comment=comment)
-            pass
+            print(card_obj)
+            self.loads.load.add(card_obj, comment=comment)
 
         #========================
         # applied loads
         elif name == 'FORCE':
-            self.force.add(card_obj, comment=comment)
+            self.loads.force.add(card_obj, comment=comment)
         elif name == 'FORCE1':
-            self.force1.add(card_obj, comment=comment)
+            self.loads.force1.add(card_obj, comment=comment)
         elif name == 'FORCE2':
-            self.force2.add(card_obj, comment=comment)
+            self.loads.force2.add(card_obj, comment=comment)
         elif name == 'MOMENT':
-            self.moment.add(card_obj, comment=comment)
+            self.loads.moment.add(card_obj, comment=comment)
         elif name == 'MOMENT1':
-            self.moment1.add(card_obj, comment=comment)
+            self.loads.moment1.add(card_obj, comment=comment)
         elif name == 'MOMENT2':
-            self.moment2.add(card_obj, comment=comment)
+            self.loads.moment2.add(card_obj, comment=comment)
 
         elif name == 'GRAV':
-            self.grav.add(card_obj, comment=comment)
+            self.loads.grav.add(card_obj, comment=comment)
         #========================
         # pressure loads
         elif name == 'PLOAD':
-            self.pload.add(card_obj, comment=comment)
+            self.loads.pload.add(card_obj, comment=comment)
         elif name == 'PLOAD1':
-            self.pload1.add(card_obj, comment=comment)
+            self.loads.pload1.add(card_obj, comment=comment)
         elif name == 'PLOAD2':
-            self.pload2.add(card_obj, comment=comment)
+            self.loads.pload2.add(card_obj, comment=comment)
         elif name == 'PLOAD4':
-            self.pload4.add(card_obj, comment=comment)
-            pass
-        #elif name == 'PLOADX1':
-            #self.ploadx1.add(card_obj, comment=comment)
-            pass
+            self.loads.pload4.add(card_obj, comment=comment)
+        elif name == 'PLOADX1':
+            self.loads.ploadx1.add(card_obj, comment=comment)
 
         #========================
         # time loads
         elif name == 'TLOAD1':
-            #self.tload1.add(card_obj, comment=comment)
-            pass
+            self.loads.tload1.add(card_obj, comment=comment)
         elif name == 'TLOAD2':
-            #self.tload2.add(card_obj, comment=comment)
-            pass
+            self.loads.tload2.add(card_obj, comment=comment)
 
         # frequency loads
         elif name == 'RLOAD1':
-            #self.rload1.add(card_obj, comment=comment)
-            pass
+            self.loads.rload1.add(card_obj, comment=comment)
         elif name == 'RLOAD2':
-            #self.rload2.add(card_obj, comment=comment)
-            pass
+            self.loads.rload2.add(card_obj, comment=comment)
 
         # other
         elif name == 'RFORCE':
-            self.rforce.add(card_obj, comment=comment)
+            self.loads.rforce.add(card_obj, comment=comment)
         elif name == 'DAREA':
-            #self.darea.add(card_obj, comment=comment)
-            pass
+            self.loads.darea.add(card_obj, comment=comment)
 
 
         #========================

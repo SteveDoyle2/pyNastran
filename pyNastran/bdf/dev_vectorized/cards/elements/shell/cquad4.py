@@ -15,8 +15,7 @@ class CQUAD4(ShellElement):
     def __init__(self, model):
         ShellElement.__init__(self, model)
 
-    def allocate(self, card_count):
-        ncards = card_count['CQUAD4']
+    def allocate(self, ncards):
         float_fmt = self.model.float
         self.element_id = zeros(ncards, 'int32')
         self.property_id = zeros(ncards, 'int32')

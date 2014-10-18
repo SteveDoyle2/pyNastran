@@ -24,8 +24,8 @@ class PROD(Property):
         """
         Property.__init__(self, model)
 
-    def allocate(self, card_count):
-        ncards = card_count['PROD']
+    def allocate(self, ncards):
+        #print('%s ncards=%s' % (self.type, ncards))
         float_fmt = self.model.float
         self.property_id = zeros(ncards, 'int32')
         self.material_id = zeros(ncards, 'int32')
@@ -33,10 +33,6 @@ class PROD(Property):
         self.J = zeros(ncards, float_fmt)
         self.c = zeros(ncards, float_fmt)
         self.nsm = zeros(ncards, float_fmt)
-
-    def add(self, card, comment):
-        self._cards.append(card)
-        self._comments.append(comment)
 
     def build(self):
         """
@@ -100,6 +96,11 @@ class PROD(Property):
         A = self.A[i]
         return A
 
+    def get_non_structural_mass(self, property_ids):
+        i = self.get_index(property_ids)
+        nsm = self.nsm[i]
+        return nsm
+
     def get_E(self, property_ids):
         i = self.get_index(property_ids)
         material_id = self.material_id[i]
@@ -151,18 +152,6 @@ class PROD(Property):
 
                 card = ['PROD', pid, mid, A, J, c, nsm]
                 f.write(print_card_8(card))
-
-    def __getitem__(self, property_ids):
-        """
-        Allows for slicing:
-         - elements[1:10]
-         - elements[4]
-         - elements[1:10:2]
-         - elements[[1,2,5]]
-         - elements[array([1,2,5])]
-        """
-        i = searchsorted(self.property_id, property_ids)
-        return self.slice_by_index(i)
 
     def slice_by_index(self, i):
         i = asarray(i)
