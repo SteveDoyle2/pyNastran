@@ -1,7 +1,7 @@
 import StringIO
 from itertools import izip
 
-from numpy import zeros, searchsorted, unique
+from numpy import zeros, searchsorted, unique, where
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.fieldWriter import print_card
@@ -17,13 +17,24 @@ class FORCE(object):
 
         :param self: the FORCE object
         :param model: the BDF object
-        
+
         ..todo:: collapse loads
         """
         self.model = model
         self.n = 0
         self._cards = []
         self._comments = []
+
+    def __contains__(self, key):
+        """TODO: should check against unique values"""
+        if key in self.load_id:
+            return True
+        return False
+        #return dict.__contains__(self, self.__keytransform__(key))
+
+    def get_load_ids(self):
+        #print('load_id = %s' % self.load_id)
+        return unique(self.load_id)
 
     def __getitem__(self, i):
         unique_lid = unique(self.load_id)
@@ -55,6 +66,14 @@ class FORCE(object):
         self._cards.append(card)
         self._comments.append(comment)
 
+    def allocate(self, ncards):
+        float_fmt = self.model.float
+        self.load_id = zeros(ncards, 'int32')
+        self.node_id = zeros(ncards, 'int32')
+        self.coord_id = zeros(ncards, 'int32')
+        self.mag = zeros(ncards, float_fmt)
+        self.xyz = zeros((ncards, 3), float_fmt)
+
     def build(self):
         """
         :param self: the FORCE object
@@ -82,7 +101,7 @@ class FORCE(object):
                        double_or_blank(card, 7, 'X3', 0.0)]
                 self.xyz[i] = xyz
                 assert len(card) <= 8, 'len(FORCE card) = %i' % len(card)
-            
+
             i = self.load_id.argsort()
             self.load_id = self.load_id[i]
             self.node_id = self.node_id[i]
@@ -91,20 +110,29 @@ class FORCE(object):
             self.xyz = self.xyz[i]
             self._cards = []
             self._comments = []
-        
+
     def get_stats(self):
         msg = []
         if self.n:
             msg.append('  %-8s: %i' % ('FORCE', self.n))
         return msg
 
-    def write_bdf(self, f, size=8, lids=None):
+    def write_bdf(self, f, size=8, is_double=False, load_id=None):
         if self.n:
-            for (lid, nid, cid, mag, xyz) in izip(
-                 self.load_id, self.node_id, self.coord_id, self.mag, self.xyz):
+            if load_id is None:
+                for (lid, nid, cid, mag, xyz) in izip(
+                     self.load_id, self.node_id, self.coord_id, self.mag, self.xyz):
 
-                card = ['FORCE', lid, nid, cid, mag, xyz[0], xyz[1], xyz[2] ]
-                f.write(print_card(card))
+                    card = ['FORCE', lid, nid, cid, mag, xyz[0], xyz[1], xyz[2] ]
+                    f.write(print_card(card))
+            else:
+                for lid in unique(load_id):
+                    i = where(self.load_id == lid)[0]
+                    for (lid, nid, cid, mag, xyz) in izip(
+                         self.load_id[i], self.node_id[i], self.coord_id[i], self.mag[i], self.xyz[i]):
+
+                        card = ['FORCE', lid, nid, cid, mag, xyz[0], xyz[1], xyz[2] ]
+                        f.write(print_card(card))
 
     def __repr__(self):
         f = StringIO.StringIO()

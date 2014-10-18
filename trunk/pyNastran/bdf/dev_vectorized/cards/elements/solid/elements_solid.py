@@ -30,7 +30,7 @@ class ElementsSolid(object):
         etypes = self._get_types(nlimit=False)
         for etype in etypes:
             if etype.type in card_count:
-                etype.allocate(card_count)
+                etype.allocate(card_count[etype.type])
             #else:
                 #assert hasattr(ptype, 'allocate'), '%s doesnt support allocate' % ptype.type
 

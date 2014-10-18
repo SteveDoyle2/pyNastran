@@ -38,7 +38,7 @@ class ElementsShell(object):
         etypes = self._get_types(nlimit=False)
         for etype in etypes:
             if etype.type in card_count:
-                etype.allocate(card_count)
+                etype.allocate(card_count[etype.type])
             #else:
                 #assert hasattr(etype, 'allocate'), '%s doesnt support allocate' % etype.type
 

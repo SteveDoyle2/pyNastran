@@ -220,14 +220,13 @@ class CELAS4(SpringElement):
 
         #return (axial_strain, axial_stress, axial_force)
 
-    def __getitem__(self, index):
-
+    def slice_by_index(self, i):
         obj = CELAS4(self.model)
-        obj.n = len(index)
-        #obj._cards = self._cards[index]
-        #obj._comments = obj._comments[index]
-        #obj.comments = obj.comments[index]
-        obj.element_id = self.element_id[index]
-        obj.property_id = self.property_id[index]
-        obj.node_ids = self.node_ids[index, :]
+        obj.n = len(i)
+        #obj._cards = self._cards[i]
+        #obj._comments = obj._comments[i]
+        #obj.comments = obj.comments[i]
+        obj.element_id = self.element_id[i]
+        obj.property_id = self.property_id[i]
+        obj.node_ids = self.node_ids[i, :]
         return obj

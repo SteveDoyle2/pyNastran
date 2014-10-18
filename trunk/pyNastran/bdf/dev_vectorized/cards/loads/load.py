@@ -1,6 +1,6 @@
 from itertools import izip
 
-from numpy import zeros, searchsorted
+from numpy import zeros, searchsorted, asarray, array
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.fieldWriter import print_card
@@ -10,6 +10,10 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 
 class LOAD(object):
     type = 'LOAD'
+
+    def allocate(self, ncards):
+        pass
+
     def __init__(self, model):
         """
         Defines the LOAD object.
@@ -53,7 +57,7 @@ class LOAD(object):
 
     def build(self):
         pass
-    
+
     def resolve_loads(self):
         asdf
         types = [self.model.load, self.model.dload]
@@ -75,7 +79,10 @@ class LOAD(object):
         msg.append('  %-8s: %i' % ('LOAD[%s]' % self.load_id))
         return msg
 
-    def write_bdf(self, f, size=8, lids=None):
+    def write_bdf(self, f, size=8, is_double=False, load_id=None):
+        if load_id is None:
+            load_id = self.load_id
+        load_id = asarray(load_id)
         list_fields = ['LOAD', self.load_id, self.scale]
         for (scaleFactor, lid) in izip(self.scale_factors, self.load_ids):
             list_fields += [scaleFactor, lid]

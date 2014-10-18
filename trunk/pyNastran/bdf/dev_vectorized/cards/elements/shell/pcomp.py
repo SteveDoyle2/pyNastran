@@ -14,6 +14,9 @@ class PCOMP(object):
     def __len__(self):
         return self.n
 
+    def allocate(self, ncards):
+        pass
+
     def __init__(self, model):
         """
         Defines the PCOMP object.

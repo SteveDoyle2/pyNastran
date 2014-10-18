@@ -76,28 +76,28 @@ class XRefMesh(object):
 
     def _build_loads(self):
         #self.loadcase.build()
-        for load_id, loads in self.load.iteritems():
+        for load_id, loads in self.loads.load.iteritems():
             for load in loads:
                 load.build()
-        for load_id, loads in self.dload.iteritems():
+        for load_id, loads in self.loads.dload.iteritems():
             for load in loads:
                 load.build()
 
         #self.loadset.build()
-        self.force.build()
-        #self.force1.build()
-        #self.force2.build()
-        self.moment.build()
-        #self.moment1.build()
-        #self.moment2.build()
+        self.loads.force.build()
+        #self.loads.force1.build()
+        #self.loads.force2.build()
+        self.loads.moment.build()
+        #self.loads.moment1.build()
+        #self.loads.moment2.build()
 
 
-        self.pload.build()
-        self.pload1.build()
-        self.pload2.build()
-        #self.pload4.build()
+        self.loads.pload.build()
+        self.loads.pload1.build()
+        self.loads.pload2.build()
+        #self.loads.pload4.build()
 
-        self.ploadx1.build()
+        self.loads.ploadx1.build()
 
         if 0:
             self.spc_object = SPCObject()
@@ -112,36 +112,36 @@ class XRefMesh(object):
             self.mpc_object.add(self.mpc)
 
         self.loadcase = LoadCase()
-        self.loadcase.add_reference(self.load)
-        self.loadcase.add_reference(self.dload)
-        #self.loadcase.add_reference(self.sload)
-        #self.loadcase.add_reference(self.lseq)
+        self.loadcase.add_reference(self.loads.load)
+        self.loadcase.add_reference(self.loads.dload)
+        #self.loadcase.add_reference(self.loads.sload)
+        #self.loadcase.add_reference(self.loads.lseq)
 
-        self.loadcase.add(self.force)
-        #self.loadcase.add(self.force1)
-        #self.loadcase.add(self.force2)
+        self.loadcase.add(self.loads.force)
+        #self.loadcase.add(self.loads.force1)
+        #self.loadcase.add(self.loads.force2)
 
-        self.loadcase.add(self.moment)
-        #self.loadcase.add(self.moment1)
-        #self.loadcase.add(self.moment2)
+        self.loadcase.add(self.loads.moment)
+        #self.loadcase.add(self.loads.moment1)
+        #self.loadcase.add(self.loads.moment2)
 
-        self.loadcase.add(self.pload)
-        self.loadcase.add(self.pload1)
-        self.loadcase.add(self.pload2)
-        #self.loadcase.add(self.pload3)
-        #self.loadcase.add(self.pload4)
+        self.loadcase.add(self.loads.pload)
+        self.loadcase.add(self.loads.pload1)
+        self.loadcase.add(self.loads.pload2)
+        #self.loadcase.add(self.loads.pload3)
+        #self.loadcase.add(self.loads.pload4)
 
-        self.loadcase.add(self.ploadx1)
-        self.loadcase.add(self.grav)
-        self.loadcase.add(self.rforce)
+        self.loadcase.add(self.loads.ploadx1)
+        self.loadcase.add(self.loads.grav)
+        self.loadcase.add(self.loads.rforce)
 
-        #self.loadcase.add(self.tload1)
-        #self.loadcase.add(self.tload2)
-        #self.loadcase.add(self.rload1)
-        #self.loadcase.add(self.rload2)
+        #self.loadcase.add(self.loads.tload1)
+        #self.loadcase.add(self.loads.tload2)
+        #self.loadcase.add(self.loads.rload1)
+        #self.loadcase.add(self.loads.rload2)
 
-        #self.loadcase.add(self.accel1)
-        #self.loadcase.add(self.randps)
+        #self.loadcase.add(self.loads.accel1)
+        #self.loadcase.add(self.loads.randps)
 
 
         #self.loadcase.resolve(2)

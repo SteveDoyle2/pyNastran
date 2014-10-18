@@ -12,10 +12,6 @@ class PSHEAR(Property):
     def __init__(self, model):
         Property.__init__(self, model)
 
-    def add(self, card, comment):
-        self._cards.append(card)
-        self._comments.append(comment)
-
     def build(self):
         cards = self._cards
         ncards = len(cards)
@@ -102,9 +98,3 @@ class PSHEAR(Property):
         obj.f1 = self.f1[i]
         obj.f2 = self.f2[i]
         return obj
-
-    def __repr__(self):
-        f = cStringIO.StringIO()
-        f.write('<%s object> n=%s\n' % (self.type, self.n))
-        self.write_bdf(f)
-        return f.getvalue()

@@ -23,8 +23,7 @@ class CROD(RodElement):
         """
         RodElement.__init__(self, model)
 
-    def allocate(self, card_count):
-        ncards = card_count['CROD']
+    def allocate(self, ncards):
         self.element_id = zeros(ncards, 'int32')
         self.property_id = zeros(ncards, 'int32')
         self.node_ids = zeros((ncards, 2), 'int32')
@@ -85,6 +84,10 @@ class CROD(RodElement):
         c = self.model.prod.get_c(property_ids)
         return c
 
+    def get_non_structural_mass(self, property_ids=None):
+        c = self.model.prod.get_non_structural_mass(property_ids)
+        return c
+
     def _node_locations(self, xyz_cid0):
         if xyz_cid0 is None:
             xyz_cid0 = self.model.grid.get_positions()
@@ -108,12 +111,12 @@ class CROD(RodElement):
         mid = self.model.prod.material_id[i]
         J   = self.model.prod.get_J(mid)
 
-        rho, E = self.model.materials.get_density_E(mid)
+        #rho, E = self.model.materials.get_density_E(mid)
         rho = self.model.materials.get_density(mid)
-        E   = self.model.materials.get_E(mid)
-        return 0. if total else [0.]
+        #E   = self.model.materials.get_E(mid)
+        #return 0. if total else [0.]
 
-        mass = norm(L, axis=1) * A * rho + self.nsm
+        mass = norm(L, axis=1) * A * rho + self.get_non_structural_mass()
         if total:
             return mass.sum()
         else:

@@ -1,18 +1,8 @@
-class Element(object):
+from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
+
+class Element(VectorizedCard):
     def __init__(self, model):
-        self.model = model
-        self.n = 0
-        self._cards = []
-        self._comments = []
-
-    def get_stats(self):
-        msg = []
-        if self.n:
-            msg.append('  %-8s: %i' % (self.type, self.n))
-        return msg
-
-    def __len__(self):
-        return self.n
+        VectorizedCard.__init__(self, model)
 
     def __iter__(self):
         eids = self.element_id
