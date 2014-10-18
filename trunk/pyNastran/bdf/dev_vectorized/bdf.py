@@ -108,7 +108,7 @@ from .cards.constraints.mpcadd import MPCADD
 
 from .cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
                                       CORD2R, CORD2C, CORD2S, CORD3G)
-from .cards.params import PARAM
+from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.caseControlDeck import CaseControlDeck
 from .bdf_methods import BDFMethods
 from .bdf_interface.get_methods import GetMethods
@@ -615,18 +615,11 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.paero = PAero(model)
         self.paeros = {}
 
-        #: stores TRIM
-        self.trim = {}
-        #self.aero = AERO(model)
-        #self.aeros = AEROS(model)
-        #===================================
-        # optimization
-        #self.dconstr = DCONSTR(model)
+        #: stores coordinate systems
+        self.coord = Coord(model)
 
-        #===================================
         # loads
         #self.loadcase = LoadCase(model)
-
 
         #: stores LOAD, FORCE, MOMENT, etc.
         self.loads = Loads(model)
@@ -634,6 +627,20 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #: stores MAT1, MAT2, MAT3,...MAT10 (no MAT4, MAT5)
         self.materials = Materials(model)
 
+
+        self.__define_unvectorized()
+
+    def __define_unvectorized(self):
+        #: stores TRIM
+        self.trim = {}
+        self.trims = {}
+        #self.aero = AERO(model)
+        #self.aeros = AEROS(model)
+        #===================================
+        # optimization
+        #self.dconstr = DCONSTR(model)
+
+        #===================================
         #: stores MATS1
         self.materialDeps = {}
         #: stores the CREEP card
@@ -642,9 +649,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         # loads
         #self.gusts  = {} # Case Control GUST = 100
         #self.random = {} # Case Control RANDOM = 100
-
-        #: stores coordinate systems
-        self.coord = Coord(model)
 
         # --------------------------- constraints ----------------------------
         #: stores SUPORT1s
