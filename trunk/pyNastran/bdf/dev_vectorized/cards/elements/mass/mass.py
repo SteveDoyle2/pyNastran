@@ -104,7 +104,7 @@ class Mass(object):
     #=========================================================================
     def write_bdf(self, f, size=8, element_ids=None):
         types = self._get_types(nlimit=True)
-
+        assd
         if types:
             f.write('$ELEMENTS_MASS\n')
         for elems in types:

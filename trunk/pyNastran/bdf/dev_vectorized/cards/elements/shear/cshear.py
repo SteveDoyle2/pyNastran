@@ -14,6 +14,14 @@ class CSHEAR(Element):
     def __init__(self, model):
         Element.__init__(self, model)
 
+    def allocate(self, ncards):
+        self.element_id = zeros(ncards, 'int32')
+        self.property_id = zeros(ncards, 'int32')
+        self.node_ids = zeros((ncards, 4), 'int32')
+        self.zoffset = zeros(ncards, 'int32')
+        self.t_flag = zeros(ncards, 'int32')
+        self.thickness = zeros((ncards, 4), self.model.float)
+
     def build(self):
         cards = self._cards
         ncards = len(cards)

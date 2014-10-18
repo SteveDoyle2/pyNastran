@@ -1,6 +1,6 @@
 from numpy import (array, zeros, searchsorted, unique, concatenate, argsort,
                    hstack, where, vstack, ones, cross, intersect1d, setdiff1d,
-                   arange, nan, full, ravel, asarray, any)
+                   arange, nan, full, ravel, asarray, any, ndarray)
 from numpy.linalg import norm
 from itertools import izip
 
@@ -153,6 +153,8 @@ class Elements(object):
                 Types += [obj]
         for Type in Types:
             group_data = getattr(Type, name)
+            if not isinstance(group_data, ndarray):
+                raise RuntimeError('Type %s does not return an ndarray when %s is requested' % (Type.type, name))
 
             assert Type.__class__.__name__ == Type.type, 'class %s has a type of %r' % (Type.__class__.__name__, Type.type)
             if is_element:
@@ -706,6 +708,77 @@ class Elements(object):
         }
         return TypeMap
 
+    def write_bdf(self, f, size=8, is_double=True, include_properties=False, interspersed=True):
+        interspersed = False
+        include_properties = True
+        if interspersed:
+            #raise NotImplementedError('interspersed=False')
+            self._write_interspersed_elements_properties(f, size)
+            self.conrod.write_bdf(f, size)
+        else:
+            self._write_alternating_elements_properties(f, size, is_double)
+
+    def _write_alternating_elements_properties(self, f, size, is_double):
+        self._write_alternating_elements_properties_0d(f, size, is_double)
+        self._write_alternating_elements_properties_1d(f, size, is_double)
+        self._write_alternating_elements_properties_2d(f, size, is_double)
+        self._write_alternating_elements_properties_3d(f, size, is_double)
+        f.write('$----------------------------------------------------------\n')
+
+    def _write_alternating_elements_properties_0d(self, f, size, is_double):
+        #self.properties_springs.write_bdf(f)
+        self.elements_spring.write_bdf(f)
+        self.pelas.write_bdf(f, size)
+
+        #self.elements_damper.write_bdf(f)
+        #self.pdamp.write_bdf(f, size)
+
+        if self.mass.n:
+            f.write('$ Mass-----------------------------------------------------\n')
+            self.mass.write_bdf(f, size)
+
+    def _write_alternating_elements_properties_1d(self, f, size, is_double):
+        #self.properties_rods.write_bdf(f)
+        #self.elements_rods.write_bdf(f)
+        if self.conrod.n or self.crod.n or self.prod.n:
+            f.write('$ Rods-----------------------------------------------------\n')
+            self.conrod.write_bdf(f)
+            self.crod.write_bdf(f)
+            self.prod.write_bdf(f)
+
+        if self.cbush.n or self.pbush.n:
+            f.write('$ Bush-----------------------------------------------------\n')
+            self.cbush.write_bdf(f, size)
+            self.pbush.write_bdf(f, size)
+
+        if self.cbar.n or self.properties_bar.n:
+            f.write('$ Bars-----------------------------------------------------\n')
+            #self.elements_bars.write_bdf(f)
+            self.properties_bar.write_bdf(f, size)
+            self.cbar.write_bdf(f, size)
+
+        if self.cbeam.n or self.properties_beam.n:
+            f.write('$ Beams----------------------------------------------------\n')
+            self.properties_beam.write_bdf(f, size)
+            self.cbeam.write_bdf(f, size)
+
+    def _write_alternating_elements_properties_2d(self, f, size, is_double):
+        if self.elements_shell.n or self.properties_shell.n:
+            f.write('$ Shear----------------------------------------------------\n')
+            self.pshear.write_bdf(f, size)
+            self.cshear.write_bdf(f, size)
+
+        if self.elements_shell.n or self.properties_shell.n:
+            f.write('$ Shell----------------------------------------------------\n')
+            self.properties_shell.write_bdf(f, size)
+            self.elements_shell.write_bdf(f)
+
+    def _write_alternating_elements_properties_3d(self, f, size, is_double):
+        if self.elements_solid.n or self.properties_solid.n:
+            f.write('$ Solid----------------------------------------------------\n')
+            self.properties_solid.write_bdf(f, size)
+            self.elements_solid.write_bdf(f)
+
     def __len__(self):
         return self.ne
 
@@ -732,6 +805,7 @@ class Elements(object):
             #out.append(obj)
             #print('element_ids = %s\n--%s' % (element_ids2, out))
         return out[0] if int_flag else out
+
 
 def check_duplicate(name, objs):
     unique_vals = set([])

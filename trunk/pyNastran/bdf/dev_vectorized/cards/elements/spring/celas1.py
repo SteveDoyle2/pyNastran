@@ -1,4 +1,4 @@
-from numpy import dot, array, zeros, unique, searchsorted, transpose, where
+from numpy import dot, array, zeros, unique, searchsorted, transpose, where, arange
 from numpy.linalg import norm
 
 from ..rod.conrod import _Lambda
@@ -20,6 +20,12 @@ class CELAS1(SpringElement):
         :param model: the BDF object
         """
         SpringElement.__init__(self, model)
+
+    def allocate(self, ncards):
+        self.element_id = zeros(ncards, 'int32')
+        self.property_id = zeros(ncards, 'int32')
+        self.node_ids = zeros((ncards, 2), 'int32')
+        self.components = zeros((ncards, 2), 'int32')
 
     def build(self):
         """

@@ -44,7 +44,7 @@ class PBUSH(object):
 
     def build(self):
         self.n = len(self.properties)
-        self.property_id = sorted(self.properties.keys())
+        self.property_id = array(sorted(self.properties.keys()), dtype='int32')
         return
         self.n = 0
         cards = self._cards
