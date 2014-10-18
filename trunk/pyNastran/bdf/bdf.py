@@ -1563,20 +1563,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             raise
         return card_obj
 
-    def print_filename(self, filename):
-        """
-        Takes a path such as C:/work/fem.bdf and locates the file using
-        relative paths.  If it's on another drive, the path is not modified.
-
-        :param self:     the BDF object
-        :param filename: a filename string
-        :returns filename_string: a shortened representation of the filename
-        """
-        driveLetter = os.path.splitdrive(os.path.abspath(filename))[0]
-        if driveLetter == os.path.splitdrive(os.curdir)[0] and self._relpath:
-            return os.path.relpath(filename)
-        return filename
-
     def get_bdf_stats(self, return_type='string'):
         """
         Print statistics for the BDF

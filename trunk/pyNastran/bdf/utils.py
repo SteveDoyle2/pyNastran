@@ -1,4 +1,18 @@
+import os
 from numpy import unique, cross, dot
+
+def print_filename(filename, relpath):
+    """
+    Takes a path such as C:/work/fem.bdf and locates the file using
+    relative paths.  If it's on another drive, the path is not modified.
+
+    :param filename: a filename string
+    :returns filename_string: a shortened representation of the filename
+    """
+    driveLetter = os.path.splitdrive(os.path.abspath(filename))[0]
+    if driveLetter == os.path.splitdrive(os.curdir)[0] and relpath:
+        return os.path.relpath(filename)
+    return filename
 
 def parse_patran_syntax(node_sets):
     """
