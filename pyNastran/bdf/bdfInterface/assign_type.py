@@ -164,7 +164,7 @@ def integer(card, n, fieldname):
     :param n:         field number
     :param fieldname: name of field
     """
-    assert isinstance(card, BDFCard), type(card)
+    assert isinstance(card, BDFCard), 'type=%s card=%s' % (type(card), card)
     assert isinstance(n, int), type(n)
     assert isinstance(fieldname, basestring), type(fieldname)
     try:

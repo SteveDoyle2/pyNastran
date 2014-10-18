@@ -8,10 +8,10 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 #import warnings
+from pyNastran.bdf.utils import print_filename
 from pyNastran.utils.gui_io import save_file_dialog
 from pyNastran.bdf.fieldWriter import print_card, print_card_8, print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
-#from pyNastran.bdf.bdfInterface.bdf_Reader import print_filename
 
 
 #class WriteMeshDeprecated(object):
@@ -134,7 +134,7 @@ class WriteMesh(object):
             assert size in [8, 16], size
 
         assert isinstance(interspersed, bool)
-        fname = self.print_filename(out_filename)
+        fname = print_filename(out_filename, self._relpath)
         self.log.debug("***writing %s" % fname)
         return out_filename, card_writer
 
