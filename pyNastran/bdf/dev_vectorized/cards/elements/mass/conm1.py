@@ -6,18 +6,12 @@ from numpy import zeros, array, arange, unique, searchsorted, where
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, double_or_blank)
 
+from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 
-class CONM1(object):
+class CONM1(VectorizedCard):
     type = 'CONM1'
     def __init__(self, model):
-        self.model = model
-        self._cards = []
-        self._comments = []
-        self.n = 0
-
-    def add(self, card, comment):
-        self._cards.append(card)
-        self._comments.append(comment)
+        VectorizedCard.__init__(self, model)
 
     def build(self):
         cards = self._cards
@@ -28,10 +22,10 @@ class CONM1(object):
             self.element_id = zeros(ncards, 'int32')
             self.node_id = zeros(ncards, 'int32')
             self.coord_id = zeros(ncards, 'int32')
-            
+
             float_fmt = self.model.float
             m = zeros((ncards, 6, 6), float_fmt)
-            self.mass_matrix = mass
+            self.mass_matrix = m
 
             for i, card in enumerate(cards):
                 self.element_id[i] = integer(card, 1, 'eid')
@@ -62,6 +56,21 @@ class CONM1(object):
                 assert len(card) <= 25, 'len(CONM1 card) = %i' % len(card)
             self._cards = []
             self._comments = []
+        else:
+            self.element_id = array([], dtype='int32')
+            self.property_id = array([], dtype='int32')
+
+    def get_mass(self, element_id=None, total=False):
+        m = self.mass_matrix
+        if element_id is None:
+            mm = m[:, 0, 0] + m[:, 1, 1] + m[:, 2, 2]
+        else:
+            i = searchsorted(self.element_id, element_id)
+            mm = m[i, 0, 0] + m[i, 1, 1] + m[i, 2, 2]
+        if total:
+            return mm.sum()
+        else:
+            return mm
 
     def write_bdf(self, f, size=8, element_ids=None):
         if self.n:
@@ -77,8 +86,3 @@ class CONM1(object):
                               m[3, 3], m[4, 0], m[4, 1], m[4, 2], m[4, 3], m[4, 4],
                               m[5, 0], m[5, 1], m[5, 2], m[5, 3], m[5, 4], m[5, 5]]
                     f.write(print_card(card, size=size))
-
-    def __repr__(self):
-        f = StringIO.StringIO()
-        self.write_bdf(f)
-        return f.getvalue()

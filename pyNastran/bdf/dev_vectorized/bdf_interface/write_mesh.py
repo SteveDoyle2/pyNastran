@@ -426,6 +426,8 @@ class WriteMesh(object):
     def _write_coords(self, outfile, size, card_writer):
         """Writes the coordinate cards in a sorted order"""
         msg = []
+        from pyNastran.bdf.fieldWriter import print_card_8
+        card_writer = print_card_8
         if len(self.coords) > 1:
             msg.append('$COORDS\n')
         for (unused_id, coord) in sorted(self.coords.iteritems()):

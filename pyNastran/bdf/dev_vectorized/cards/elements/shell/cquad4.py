@@ -11,7 +11,6 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 
 class CQUAD4(ShellElement):
     type = 'CQUAD4'
-    op2_id = 144
     def __init__(self, model):
         ShellElement.__init__(self, model)
 

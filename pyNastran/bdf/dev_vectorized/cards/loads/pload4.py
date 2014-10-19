@@ -1,4 +1,4 @@
-from numpy import arange, array, zeros, searchsorted, unique
+from numpy import arange, array, zeros, searchsorted, unique, full, nan
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default, print_card_8
 from pyNastran.bdf.fieldWriter16 import print_card_16
@@ -52,6 +52,23 @@ class PLOAD4(object):
     def add(self, card, comment=None):
         self._cards.append(card)
         self._comments.append(comment)
+
+    def allocate(self, ncards):
+        float_fmt = self.model.float
+        self.load_id = zeros(ncards, 'int32')
+        #self.element_id = zeros(ncards, 'int32')
+        self.pressures = zeros((ncards, 4), 'int32')
+
+        self.element_ids = {}
+        for i in xrange(ncards):
+            self.element_ids[i] = []
+
+        self.g1 = full(ncards, nan, 'int32')
+        self.g34 = full(ncards, nan, 'int32')
+        self.ldir = full(ncards, nan, '|S4')
+        self.sorl = full(ncards, nan, '|S4')
+        self.cid = zeros(ncards, dtype='int32')
+        self.NVector = zeros((ncards, 3), dtype=float_fmt)
 
     def build(self):
         """

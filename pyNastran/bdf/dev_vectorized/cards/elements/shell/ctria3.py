@@ -12,7 +12,6 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 
 class CTRIA3(ShellElement):
     type = 'CTRIA3'
-    op2_id = 73
     def __init__(self, model):
         ShellElement.__init__(self, model)
 

@@ -36,8 +36,6 @@ class CBUSH(Element):
     +-------+-------+-----+-------+-------+--------+-------+-------+-------+
     """
     type = 'CBUSH'
-    op2_id = 4
-
     def __init__(self, model):
         """
         Defines the CBUSH object.
@@ -47,9 +45,18 @@ class CBUSH(Element):
         """
         Element.__init__(self, model)
 
-    def add(self, card, comment=None):
-        self._cards.append(card)
-        self._comments.append(comment)
+    def allocate(self, ncards):
+        float_fmt = self.model.float
+        self.element_id = zeros(ncards, 'int32')
+        self.property_id = zeros(ncards, 'int32')
+        self.node_ids = zeros((ncards, 2), 'int32')
+        self.is_g0 = zeros(ncards, 'bool')
+        self.g0 = full(ncards, nan, 'int32')
+        self.x = full((ncards, 3), nan, float_fmt)
+        self.cid = full(ncards, nan, 'int32')
+        self.s = full(ncards, nan, float_fmt)
+        self.ocid = full(ncards, nan, 'int32')
+        self.si = full((ncards, 3), nan, float_fmt)
 
     def build(self):
         """

@@ -37,8 +37,6 @@ class CBAR(Element):
     +-------+-------+-----+-------+-------+--------+-------+-------+-------+
     """
     type = 'CBAR'
-    op2_id = 3
-
     def __init__(self, model):
         """
         Defines the CBAR object.

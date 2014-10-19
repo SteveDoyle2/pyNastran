@@ -10,7 +10,6 @@ from pyNastran.bdf.dev_vectorized.cards.elements.solid.solid_element import Soli
 
 class CPENTA15(SolidElement):
     type = 'CPENTA15'
-    op2_id = 63
     def __init__(self, model):
         """
         Defines the CPENTA15 object.

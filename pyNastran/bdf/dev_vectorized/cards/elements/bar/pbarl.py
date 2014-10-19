@@ -21,6 +21,10 @@ class PBARL(Property):
         """
         Property.__init__(self, model)
 
+    def allocate(self, ncards):
+        float_fmt = self.model.float
+        pass
+
     def build(self):
         cards = self._cards
         ncards = len(cards)

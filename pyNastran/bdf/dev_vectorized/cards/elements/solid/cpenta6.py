@@ -26,7 +26,6 @@ def tri_area_centroid(n1, n2, n3):
 
 class CPENTA6(SolidElement):
     type = 'CPENTA6'
-    op2_id = 62
     def __init__(self, model):
         """
         Defines the CPENTA6 object.

@@ -12,7 +12,6 @@ from .cquad4 import _cquad4_normal_A
 
 class CQUAD8(ShellElement):
     type = 'CQUAD8'
-    op2_id = 145
     def __init__(self, model):
         ShellElement.__init__(self, model)
 

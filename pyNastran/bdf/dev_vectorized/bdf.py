@@ -227,6 +227,28 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #: flag that allows for OpenMDAO-style optimization syntax to be used
         self._is_dynamic_syntax = False
 
+        self._element_type_to_element_name_mapper = {
+            1 : 'CROD',
+            2 : 'CBEAM', 3 : 'CBAR',
+            4 : 'CSHEAR',
+            10: 'CONROD',
+
+            11 : 'CELAS1', 12 : 'CELAS2', 13 : 'CELAS3', 14 : 'CELAS4',
+            15 : 'CDAMP1', 16 : 'CDAMP2', 17 : 'CDAMP3', 18 : 'CDAMP4',
+            19: 'CVISC', 20: 'CBUSH', 21: 'CBUSH1D', 23: 'CBUSH2D',
+            30 : 'CMASS1', 31 : 'CMASS2', 32 : 'CMASS3', 33 : 'CMASS4',
+            34 : 'CONM1',  35 : 'CONM2',
+
+
+            73 : 'CTRIA3', 74: 'CTRIA6', 75 : 'CTRIAX', 76: 'CTRIAX6',
+            144 : 'CQUAD4', 145: 'CQUAD8', 146: 'CQUAD', 147: 'CQUADX',
+
+            60 : 'CTETRA4', 61 : 'CTETRA10',
+            62 : 'CPENTA6', 63 : 'CPENTA15',
+            64 : 'CHEXA8', 65 : 'CHEXA20',
+        }
+        self._element_name_to_element_type_mapper = {v:k for k, v in self._element_type_to_element_name_mapper.iteritems()}
+
         #: lines that were rejected b/c they were for a card that isnt supported
         self.rejects = []
 
@@ -510,7 +532,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.epoint = EPOINT(model)
         self.pointax = POINTAX(model)
 
-        self.coords = {0 : CORD2R() }
+        #self.coords = {0 : CORD2R() }
+        self.coords = Coord(model)
 
         #: stores rigid elements (RBE2, RBE3, RJOINT, etc.)
         self.rigidElements = {}
@@ -616,7 +639,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.paeros = {}
 
         #: stores coordinate systems
-        self.coord = Coord(model)
+        #self.coord = Coord(model)
 
         # loads
         #self.loadcase = LoadCase(model)
@@ -917,6 +940,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
     def allocate(self, card_count):
         self.grid.allocate(card_count)
+        self.coords.allocate(card_count)
         self.elements.allocate(card_count)
         self.loads.allocate(card_count)
 
@@ -2050,24 +2074,30 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             pass
         #========================
         elif name == 'CORD1R':
-            card = CORD1R(card_obj, nCoord=0, comment=comment)
-            self.coords[card.cid] = card
+            #card = CORD1R(card_obj, nCoord=0, comment=comment)
+            #self.coords[card.cid] = card
+            self.coords.add_cord1r(card_obj, comment=comment)
         elif name == 'CORD1C':
-            card = CORD1C(card_obj, nCoord=0, comment=comment)
-            self.coords[card.cid] = card
+            #card = CORD1C(card_obj, nCoord=0, comment=comment)
+            #self.coords[card.cid] = card
+            self.coords.add_cord1c(card_obj, comment=comment)
         elif name == 'CORD1S':
-            card = CORD1S(card_obj, nCoord=0, comment=comment)
-            self.coords[card.cid] = card
+            #card = CORD1S(card_obj, nCoord=0, comment=comment)
+            #self.coords[card.cid] = card
+            self.coords.add_cord1s(card_obj, comment=comment)
 
         elif name == 'CORD2R':
-            card = CORD2R(card_obj, comment=comment)
-            self.coords[card.cid] = card
+            #card = CORD2R(card_obj, comment=comment)
+            #self.coords[card.cid] = card
+            self.coords.add_cord2r(card_obj, comment=comment)
         elif name == 'CORD2C':
-            card = CORD2C(card_obj, comment=comment)
-            self.coords[card.cid] = card
+            self.coords.add_cord2c(card_obj, comment=comment)
+            #card = CORD2C(card_obj, comment=comment)
+            #self.coords[card.cid] = card
         elif name == 'CORD2S':
-            card = CORD2S(card_obj, comment=comment)
-            self.coords[card.cid] = card
+            self.coords.add_cord2s(card_obj, comment=comment)
+            #card = CORD2S(card_obj, comment=comment)
+            #self.coords[card.cid] = card
 
         #========================
         elif name == 'ACMODL':

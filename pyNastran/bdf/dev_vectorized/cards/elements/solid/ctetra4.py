@@ -19,7 +19,6 @@ def volume4(n1, n2, n3, n4):
 
 class CTETRA4(SolidElement):
     type = 'CTETRA4'
-    op2_id = 60
     def __init__(self, model):
         """
         Defines the CTETRA4 object.

@@ -10,7 +10,6 @@ from .solid_element import SolidElement
 
 class CHEXA20(SolidElement):
     type = 'CHEXA20'
-    op2_id = 65
     def __init__(self, model):
         """
         Defines the CHEXA20 object.

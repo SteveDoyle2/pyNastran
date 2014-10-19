@@ -15,7 +15,7 @@ class XRefMesh(object):
             self.epoint.build()
             self.pointax.build()
             #======================
-            self.coord.build()
+            self.coords.build()
             #======================
             self._build_elements_properties()
             #======================

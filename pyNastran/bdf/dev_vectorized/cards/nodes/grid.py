@@ -1,4 +1,4 @@
-from numpy import zeros, arange, where, searchsorted, argsort, unique, asarray, array
+from numpy import zeros, arange, where, searchsorted, argsort, unique, asarray, array, dot, transpose
 
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -172,6 +172,9 @@ class GRID(object):
         return searchsorted(self.node_id, node_ids)
 
     def get_positions(self, node_ids=None):
+        """
+        in the global frame
+        """
         if node_ids is None:
             node_ids = self.node_id
             xyz = self.xyz.copy()
@@ -190,10 +193,21 @@ class GRID(object):
             n2 = n[i]
             cps = set(list(unique(cpn)))
             for cp in cps:
-                i = where(cpn != 0)[0]
-                T = self.model.coord.transform(cp)
-                xyzi = xyz[n2[i], :]
-                xyzi = dot(transpose(T), dot(xyzi, T))
+                #print self.model.coords
+                T = self.model.coords.transform(cp)
+                j = where(self.cp == cp)[0]
+                #if i.max() > len(n2):
+                    #ii = where(i > len(n2))[0]
+                    #i2 = i[ii]
+                    ## save the bad data
+                    #i = i2
+                    #print('n2 = %s' % n2)
+                    #print('i2 = %s' % i2)
+                #j = n2[i]
+                #print(j)
+                xyzi = xyz[j, :]
+                #xyzi = dot(transpose(T), dot(xyzi, T))
+                xyzi = dot(xyzi, T)
 
         assert len(node_ids) == len(cpn), 'n1=%s n2=%s'  %(len(node_ids), len(cpn))
         return xyz

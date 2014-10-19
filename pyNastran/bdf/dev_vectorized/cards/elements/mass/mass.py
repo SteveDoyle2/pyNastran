@@ -28,6 +28,14 @@ class Mass(object):
         #self.cmass4 = CMASS4(model)
         #self.cmass5 = CMASS5(model)
 
+    def allocate(self, card_count):
+        etypes = self._get_types(nlimit=True)
+        for etype in etypes:
+            if etype.type in card_count:
+                etype.allocate(card_count[etype.type])
+            #else:
+                #assert hasattr(etype, 'allocate'), '%s doesnt support allocate' % etype.type
+
     def build(self):
         #self.n = 0
         types = self._get_types(nlimit=False)
@@ -35,6 +43,7 @@ class Mass(object):
         for elems in types:
             elems.build()
             self.n += elems.n
+
         #eid = concatenate(pshell.pid, pcomp.pid)
         #unique_eids = unique(eid)
         #if unique_eids != len(eid):
@@ -98,23 +107,22 @@ class Mass(object):
             mass = massi.sum()
         else:
             mass = massi
-
         return mass
 
     #=========================================================================
-    def write_bdf(self, f, size=8, element_ids=None):
+    def write_bdf(self, f, size=8, is_double=False, element_ids=None):
         types = self._get_types(nlimit=True)
-        assd
         if types:
             f.write('$ELEMENTS_MASS\n')
         for elems in types:
-            print "MASS", elems.type
+            #print "MASS", elems.type
             elems.write_bdf(f, size=size, element_ids=element_ids)
 
     def _get_types(self, nlimit=True):
-        mtypes = [self.conm1, self.conm2,
-                # self.cmass1, self.cmass2, self.cmass3, self.cmass4, self.cmass5,
-                # self.pmass,
+        mtypes = [
+            self.conm1, self.conm2,
+            #self.cmass1, self.cmass2, self.cmass3, self.cmass4, self.cmass5,
+            #self.pmass,
         ]
         if nlimit:
             d = []

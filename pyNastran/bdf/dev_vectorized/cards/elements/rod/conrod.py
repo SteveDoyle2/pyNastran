@@ -46,8 +46,6 @@ def _Lambda(v1, debug=True):
 
 class CONROD(RodElement):
     type = 'CONROD'
-    op2_id = 5
-
     def __init__(self, model):
         """
         Defines the CONROD object.

@@ -45,6 +45,13 @@ def normalize(v):
 class Coord(BaseCard):
     type = 'COORD'
 
+    def __repr__(self):
+        aaa
+        return write_bdf(size=8, is_double=False)
+
+    def __str__(self):
+        return self.__repr__()
+
     def __init__(self, card, data):
         """
         Defines a general CORDxx object
@@ -729,7 +736,7 @@ class Cord1x(Coord):
         grids = [self.G1(), self.G2(), self.G3()]
         return grids
 
-    def write_bdf(self, size, is_double=False):
+    def write_bdf(self, size=8, is_double=False):
         card = self.reprFields()
         return self.comment() + print_card_8(card)
 

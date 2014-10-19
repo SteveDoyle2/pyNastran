@@ -9,8 +9,6 @@ from pyNastran.bdf.dev_vectorized.cards.elements.element import Element
 
 class CSHEAR(Element):
     type = 'CSHEAR'
-    op2_id = 4
-
     def __init__(self, model):
         Element.__init__(self, model)
 
