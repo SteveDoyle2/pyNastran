@@ -1,5 +1,6 @@
 from numpy import zeros, arange, where, searchsorted, argsort, unique, asarray, array, dot, transpose
 
+from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, blank, integer_or_string)
@@ -119,6 +120,7 @@ class GRID(object):
         self.ps = zeros(ncards, 'int32')
 
     def build(self):
+        print('--------building grid--------')
         cards = self._cards
         ncards = len(cards)
 
@@ -195,8 +197,11 @@ class GRID(object):
             for cp in cps:
                 #print self.model.coords
                 T = self.model.coords.transform(cp)
-                j = where(self.cp == cp)[0]
-                #if i.max() > len(n2):
+                #print('T[%s] = \n%s\n' % (cp, T))
+                j = where(self.cp[n] == cp)[0]
+                #print('j = %s' % j)
+
+                #if j.max() > len(n2):
                     #ii = where(i > len(n2))[0]
                     #i2 = i[ii]
                     ## save the bad data
@@ -207,7 +212,8 @@ class GRID(object):
                 #print(j)
                 xyzi = xyz[j, :]
                 #xyzi = dot(transpose(T), dot(xyzi, T))
-                xyzi = dot(xyzi, T)
+                xyz[j, :] = self.model.coords.get_global_position(xyzi, cp)
+
 
         assert len(node_ids) == len(cpn), 'n1=%s n2=%s'  %(len(node_ids), len(cpn))
         return xyz
@@ -240,3 +246,27 @@ class GRID(object):
     def __repr__(self):
         msg = "<GRID>\n"
         msg += '  nGRID = %i' % self.n
+
+    def __getitem__(self, node_id):
+        print('self.node_id = %s' % self.node_id)
+        print('node_id = %s' % node_id)
+        #node_id = slice_to_iter(node_id)
+        i = where(self.node_id == node_id)[0]
+        return self.slice_by_index(i)
+
+    def slice_by_index(self, i):
+        #i = slice_to_iter(i)
+        i = asarray(i)
+        print('i = %s' % i, type(i))
+        obj = GRID(self.model)
+        obj.n = len(i)
+        #obj._cards = self._cards[i]
+        #obj._comments = obj._comments[i]
+        #obj.comments = obj.comments[i]
+        obj.node_id = self.node_id[i]
+        obj.xyz = self.xyz[i, :]
+        obj.cp = self.cp[i]
+        obj.cd = self.cd[i]
+        obj.ps = self.ps[i]
+        obj.seid = self.seid[i]
+        return obj

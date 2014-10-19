@@ -1,13 +1,34 @@
 from numpy import (array, concatenate, searchsorted, unique, zeros, array, full,
                    nan, where, vstack, dot, cross, degrees, radians, arctan2,
-                   cos, sin, hstack, array_equal, allclose)
+                   cos, sin, hstack, array_equal, allclose, eye)
+from numpy.linalg import norm
+
 from pyNastran.bdf.cards.coordinateSystems import (
     CORD1R, CORD1C, CORD1S,
-    CORD2R, CORD2C, CORD2S, normalize)
+    CORD2R, CORD2C, CORD2S)
+
+def normalize(v):
+    print(v)
+    return v / norm(v, axis=0)
 
 # ..todo:: incomplete
 
 class Coord(object):
+    def get_global_position(self, xyz, cp):
+        assert isinstance(cp, int), cp
+        coord = self.coords[cp]
+
+        T = coord.beta()
+        origin = coord.origin.reshape(3, 1)
+        print('origin = %s' % origin)
+        print('T.shape=%s' % str(T.shape))
+        print('xyz.shape=%s' % str(xyz.shape))
+        xyz2 = (dot(T, xyz.T)  + origin).T
+        #print('xyz = %s' % xyz.T)
+        #print('xyz2 = %s' % xyz2)
+        assert xyz.shape == xyz2.shape, "xyz.shape=%s xyz2.shape=%s" % (xyz.shape, xyz2.shape)
+        return xyz2
+
     def __repr__(self):
         print('dummy')
 
@@ -17,12 +38,15 @@ class Coord(object):
     def __getitem__(self, value):
         return self.coords[value]
 
-    def allocate(self, card_count):
+    def allocate(self, ncards=None, card_count=None):
         float_fmt = self.model.float
-        ncards = array([card_count[name]
-                  for name in ['CORD1R', 'CORD1C', 'CORD1S', 'CORD2R', 'CORD2C', 'CORD2S']
-                  if name in card_count]).sum() + 1
-
+        assert ncards is not None or card_count is not None
+        if ncards is None:
+            ncards = array([card_count[name]
+                      for name in ['CORD1R', 'CORD1C', 'CORD1S',
+                                   'CORD2R', 'CORD2C', 'CORD2S']
+                      if name in card_count]).sum() + 1
+        print('nCOORDcards = %s' % ncards)
         #print('ncards coord = %s' % ncards)
         self.coord_id = zeros(ncards, dtype='int32')
         #self.rid = zeros(ncards, dtype='int32')
@@ -42,10 +66,18 @@ class Coord(object):
         :param pshears: the list of PSHEAR cards
         """
         self.model = model
+        float_fmt = self.model.float
 
         self.n = 1
-        self.cids = [0]
+        ncards = 1
         self.coords = {0: CORD2R(),}
+        self.coord_id = zeros(ncards, dtype='int32')
+        self.Type = full(ncards, 'R', dtype='|S1')  # R-CORD2R, S-CORD2S, C-CORD2C
+
+        self.T = full((ncards, 3, 3), nan, dtype=float_fmt)
+        self.T[0, :, :] = eye(3)
+        self.origin = zeros((ncards, 3), dtype=float_fmt)
+        self.is_resolved = full(ncards, True, dtype='bool')
 
         #self.cord2r = CORD2R()
         #self.cord2c = CORD2C()
@@ -55,21 +87,17 @@ class Coord(object):
         #unique_cids = unique(cid)
         #if unique_cids != len(cid):
         #    raise RuntimeError('There are duplicate PSHELL/PCOMP IDs...')
-        self.To = {}
 
     def build(self, coord_id=None):
-        #cmap = {'R': 1, 'C': 2, 'S': 3,}
+        print('----------building COORDx-------------')
         cids_to_resolve = []
-        nids_to_resolve = []
+        ncoords = len(self.coords.keys())
+        self.allocate(ncards=ncoords)
+        #print('coord_ids = %s' % self.coords.keys())
+        #print('T = \n%s' % self.T)
         for i, (cid, coord) in enumerate(sorted(self.coords.iteritems())):
             self.coord_id[i] = cid
-            #self.rid[i] = coord.rid
-            Type = coord.type[-1]
-            #key = coord.type[-1]
-            #Type = cmap[key]
-            #self.Type[i] = Type
-            self.Type[i] = Type
-
+            self.Type[i] = coord.Type
             if coord.isResolved:
                 self.is_resolved[i] = True
                 self.origin[i, :] = coord.origin
@@ -77,13 +105,13 @@ class Coord(object):
                                           coord.j[:],
                                           coord.k[:]] )
             else:
-                print('need to resolve cid=%i rid=%i Type=%s' % (cid, coord.rid, Type))
+                print('need to resolve cid=%i rid=%i Type=%s' % (cid, coord.rid, coord.Type))
                 cids_to_resolve.append(cid)
         print('coord_id = %s' % self.coord_id)
-        #print('rid = %s' % self.rid)
-        print('T =\n%s' % self.T)
+        #print('T =\n%s' % self.T)
+        self.resolve_coords(cids_to_resolve)
 
-        #i0 = where(self.rid== 0)[0]
+    def resolve_coords(self, cids_to_resolve):
         while cids_to_resolve:
             cids_to_resolve2 = []
             print('need to resolve cids=%s' % cids_to_resolve)
@@ -102,7 +130,7 @@ class Coord(object):
                     print('  is rid=%i resolved -> %s' % (rid, is_resolved))
                     if is_resolved:
                         ref_coord = self.coords[rid]
-                        ref_coord_type = self.Type[j]
+                        ref_coord_type = self.Type[j][0]
                         self.resolve_coord2(i, coord,
                                             j, ref_coord_type, ref_coord)
                 elif n == '1':
@@ -135,7 +163,7 @@ class Coord(object):
         #print('is_resolved = %s' % self.is_resolved)
         #print('origin = \n%s' % self.origin)
         #print('T = \n%s' % self.T)
-        aaa
+        #aaa
 
     def resolve_coord1(self, i, coord, xyz,
                        r, ref_coord_type, ref_coord):
@@ -165,6 +193,7 @@ class Coord(object):
         print("  e2 = %s" % e2)
         e13 = e2[2] - e2[0]
         e12 = e2[1] - e2[0]
+
         coord.k = normalize(e12)
         coord.j = normalize(cross(coord.k, e13))
         coord.i = cross(coord.j, coord.k)
@@ -212,10 +241,9 @@ class Coord(object):
             e2 = e123[0, :]
             e3 = e123[1, :]
         elif ref_coord_type == 'C':  # Cylindrical
-            e1 = dot(T, cylindrical_to_rectangular(coord.e1))
-            e2 = dot(T, cylindrical_to_rectangular(coord.e2))
-            e3 = dot(T, cylindrical_to_rectangular(coord.e3))
-            raise NotImplementedError(ref_coord_type)
+            e1 = dot(T, self.cylindrical_to_rectangular(coord.e1))
+            e2 = dot(T, self.cylindrical_to_rectangular(coord.e2))
+            e3 = dot(T, self.cylindrical_to_rectangular(coord.e3))
         elif ref_coord_type == 'S':  # Spherical
             #print [coord.e1, coord.e2, coord.e3]
             # column
@@ -377,10 +405,10 @@ class Coord(object):
 
     def transform(self, cp):
         #print('cp = %s' % cp)
-        return self.To[cp][0]
+        return self.coords[cp].beta()
 
     def origin(self, cp):
-        return self.To[cp][1]
+        return self.coords[cp].origin
 
     def __len__(self):
         return len(self.coords)
