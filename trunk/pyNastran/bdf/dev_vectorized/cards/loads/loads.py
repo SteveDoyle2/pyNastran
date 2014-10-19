@@ -198,17 +198,15 @@ class Loads(object):
             types = self._get_load_types(nlimit=True)
             all_load_ids = array([], dtype='int32')
             for load_type in types:
-                print('*load-type = %s' % load_type.type)
+                #print('*load-type = %s' % load_type.type)
                 all_load_ids = union1d(all_load_ids, load_type.get_load_ids())
-            print('load_ids= %s' % all_load_ids)
-            #all_load_ids.sort()
+            #print('load_ids= %s' % all_load_ids)
+
             for load_id in sorted(all_load_ids):
                 for load_type in types:
                     if load_id in load_type:
-                        print('******** load-type = %s' % load_type.type)
+                        #print('******** load-type = %s' % load_type.type)
                         load_type.write_bdf(f, size=size, is_double=is_double, load_id=load_id)
-                    #else:
-                        #bbb
 
         else:
             #self.loadcase.write_bdf(f, size)

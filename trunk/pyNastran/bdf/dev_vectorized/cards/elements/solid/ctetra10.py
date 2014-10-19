@@ -17,7 +17,6 @@ def volume4(n1, n2, n3, n4):
 
 class CTETRA10(object):
     type = 'CTETRA10'
-    op2_id = 61
     def __init__(self, model):
         """
         Defines the CTETRA10 object.

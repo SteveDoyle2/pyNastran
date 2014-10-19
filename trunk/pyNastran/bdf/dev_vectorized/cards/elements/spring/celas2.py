@@ -12,7 +12,6 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 
 class CELAS2(SpringElement):
     type = 'CELAS2'
-    op2_id = 11
     def __init__(self, model):
         """
         Defines the CELAS2 object.

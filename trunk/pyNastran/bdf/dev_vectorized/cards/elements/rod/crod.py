@@ -12,8 +12,6 @@ from pyNastran.bdf.dev_vectorized.cards.elements.rod.rod_element import RodEleme
 
 class CROD(RodElement):
     type = 'CROD'
-    op2_id = 1
-
     def __init__(self, model):
         """
         Defines the CROD object.

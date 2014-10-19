@@ -33,6 +33,9 @@ class PBUSH(object):
         #self._cards.append(card)
         #self._comments.append(comment)
 
+    def allocate(self, ncards):
+        pass
+
     def get_properties(self, property_id=None):
         props = []
         if property_id is None:

@@ -39,7 +39,6 @@ def quad_area_centroid(n1, n2, n3, n4):
 
 class CHEXA8(SolidElement):
     type = 'CHEXA8'
-    op2_id = 64
     def __init__(self, model):
         """
         Defines the CHEXA8 object.

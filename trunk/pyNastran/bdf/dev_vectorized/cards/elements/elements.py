@@ -157,8 +157,8 @@ class Elements(object):
                 raise RuntimeError('Type %s does not return an ndarray when %s is requested' % (Type.type, name))
 
             assert Type.__class__.__name__ == Type.type, 'class %s has a type of %r' % (Type.__class__.__name__, Type.type)
-            if is_element:
-                assert hasattr(Type, 'op2_id'), 'class %s has no attribute op2_id' % Type.type
+            #if is_element:
+                #assert hasattr(Type, 'op2_id'), 'class %s has no attribute op2_id' % Type.type
 
             if len(group_data):
                 groups[Type.type] = group_data
@@ -566,6 +566,8 @@ class Elements(object):
                  self.cbar, self.cbeam,
                  self.cshear,
 
+                 self.mass,
+
                  self.elements_spring,
                  #self.elements_spring.celas1,
                  #self.elements_spring.celas2,
@@ -856,17 +858,7 @@ def group_elements_by_property_type_and_element_type(elements, pid_data):
     pid_eType = unique2d(pid_data[:, 1:])
 
     data2 = {}
-    eTypeMap = {
-        1 : 'CROD', 5: 'CONROD',
-        2 : 'CBEAM', 3 : 'CBAR',
-        4 : 'CSHEAR',
-        10 : 'CELAS1', 11 : 'CELAS2', 12 : 'CELAS3', 13 : 'CELAS4',
-        73 : 'CTRIA3', 144 : 'CQUAD4',
-
-        60 : 'CTETRA4', 61 : 'CTETRA10',
-        62 : 'CPENTA6', 63 : 'CPENTA15',
-        64 : 'CHEXA8', 65 : 'CHEXA20',
-    }
+    eTypeMap = self.model._element_type_mapper
 
     #print("pid_eType = \n%s\n" % str(pid_eType))
     for (pid, eType) in pid_eType:

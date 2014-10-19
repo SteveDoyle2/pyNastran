@@ -33,8 +33,6 @@ class CBEAM(Element):
 
     """
     type = 'CBEAM'
-    op2_id = 2
-
     def __init__(self, model):
         """
         Defines the CBEAM object.
