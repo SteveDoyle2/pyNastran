@@ -2,6 +2,9 @@ class GetMethods(object):
     def __init__(self):
         pass
 
+    def Node(self, node_id):
+        return self.grid[[node_id]]
+
     def Coord(self, cid, msg=''):
         try:
             return self.coords[cid]

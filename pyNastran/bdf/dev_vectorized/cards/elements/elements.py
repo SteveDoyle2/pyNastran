@@ -123,20 +123,19 @@ class Elements(object):
             props.build()
             self.np += props.n
 
-        eids = check_duplicate('element_id', etypes)
-        pids = check_duplicate('property_id', ptypes)
-
-        self.element_ids = array(list(eids), dtype='int32')
-        self.element_ids.sort()
+        if self.ne:
+            eids = check_duplicate('element_id', etypes)
+            self.element_ids = array(list(eids), dtype='int32')
+            self.element_ids.sort()
+            self.element_groups = self.build_groups(etypes, 'element_id', is_element=True)
+        if self.np:
+            pids = check_duplicate('property_id', ptypes)
+            self.property_ids = array(list(pids), dtype='int32')
+            self.property_ids.sort()
+            self.property_groups = self.build_groups(ptypes, 'property_id')
+            print('*****self.property_groups =', self.property_groups)
         #print('*****self.element_ids =', self.element_ids)
-
-        self.property_ids = array(list(pids), dtype='int32')
-        self.property_ids.sort()
         #print('*****self.property_ids =', self.property_ids)
-
-        self.element_groups = self.build_groups(etypes, 'element_id', is_element=True)
-        self.property_groups = self.build_groups(ptypes, 'property_id')
-        print('*****self.property_groups =', self.property_groups)
 
     def build_groups(self, objs, name, is_element=False):
         groups = {}
@@ -811,6 +810,7 @@ class Elements(object):
 
 def check_duplicate(name, objs):
     unique_vals = set([])
+    print("nobjs = %s" % len(objs))
     for obj in objs:
         #print('working on %s' % obj.__class__.__name__)
         if hasattr(obj, name):

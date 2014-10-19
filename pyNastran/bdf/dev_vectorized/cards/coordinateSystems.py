@@ -862,6 +862,7 @@ class CORD1R(Cord1x, RectangularCoord):
     +-------+------+-----+-----+------+------+-----+------+-----+
     """
     type = 'CORD1R'
+    Type = 'R'
 
     def __init__(self, card=None, nCoord=0, data=None, comment=''):
         """
@@ -892,6 +893,7 @@ class CORD1C(Cord1x, CylindricalCoord):
     +-------+------+-----+-----+------+------+-----+------+-----+
     """
     type = 'CORD1C'
+    Type = 'C'
 
     def __init__(self, card=None, nCoord=0, data=None, comment=''):
         """
@@ -923,6 +925,7 @@ class CORD1S(Cord1x, SphericalCoord):
     +-------+------+-----+-----+------+------+-----+------+-----+
     """
     type = 'CORD1S'
+    Type = 'S'
 
     def __init__(self, card=None, nCoord=0, data=None, comment=''):
         """
@@ -945,6 +948,7 @@ class CORD1S(Cord1x, SphericalCoord):
 
 class CORD2R(Cord2x, RectangularCoord):
     type = 'CORD2R'
+    Type = 'R'
 
     def __init__(self, card=None,
                  data=[0, 0, 0., 0., 0., 0., 0., 1., 1., 0., 0.], comment=''):
@@ -989,6 +993,7 @@ class CORD2R(Cord2x, RectangularCoord):
 
 class CORD2C(Cord2x, CylindricalCoord):
     type = 'CORD2C'
+    Type = 'C'
 
     def __init__(self, card=None, data=None, comment=''):
         """
@@ -1019,6 +1024,7 @@ class CORD2C(Cord2x, CylindricalCoord):
 
 class CORD2S(Cord2x, SphericalCoord):
     type = 'CORD2S'
+    Type = 'S'
 
     def __init__(self, card=None, data=None, comment=''):
         """
