@@ -339,7 +339,11 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         #quit_key = 'Alt+F4' if sys.platform in ['win32', 'cygwin'] else 'Ctrl+Q'
 
         checkables = ['show_info', 'show_debug', 'show_gui', 'show_command']
-        scripts = [script for script in os.listdir(script_path) if '.py' in script ]
+        if os.path.exists(script_path):
+            scripts = [script for script in os.listdir(script_path) if '.py' in script ]
+        else:
+            scripts = []
+
         scripts = tuple(scripts)
 
         tools = [
