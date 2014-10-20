@@ -1,6 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, unicode_literals, print_function
 
+# standard library
+import sys
+import os.path
+import cgi #  html lib
+import datetime
+import traceback
+#import webbrowser
+#webbrowser.open("http://xkcd.com/353/")
+
 # Qt
 try:
     from PyQt4 import QtCore, QtGui
@@ -14,17 +23,7 @@ except ImportError:
     except ImportError:
         msg = 'Failed to import PySide or PyQt4'
         raise ImportError(msg)
-
 assert fmode in [1, 2]
-
-# standard library
-import sys
-import os.path
-import cgi #  html lib
-import datetime
-import traceback
-#import webbrowser
-#webbrowser.open("http://xkcd.com/353/")
 
 # 3rd party
 from numpy import ndarray
@@ -43,9 +42,17 @@ from pyNastran.gui.arg_handling import get_inputs
 from pyNastran.gui.qt_files.qt_legend import LegendPropertiesWindow
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 
-pkg_path = pyNastran.__path__[0]
-script_path = os.path.join(pkg_path, 'gui', 'scripts')
-icon_path = os.path.join(pkg_path, 'gui', 'icons')
+try:
+    pkg_path = sys._MEIPASS #@UndefinedVariable
+    script_path = os.path.join(pkg_path, 'scripts')
+    icon_path = os.path.join(pkg_path, 'icons')
+except:
+    pkg_path = pyNastran.__path__[0]
+    script_path = os.path.join(pkg_path, 'gui', 'scripts')
+    icon_path = os.path.join(pkg_path, 'gui', 'icons')
+
+print('script_path = %s' % script_path)
+print('icon_path = %s' % icon_path)
 
 # tcolorpick.png and tabout.png trefresh.png icons on LGPL license, see
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/color-picker-grey.png
@@ -602,6 +609,9 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         | Format | pyString |
         +--------+----------+
         """
+        if not hasattr(self, 'caseKeys'):
+            self.log_error('No model has been loaded.')
+            return
         key = self.caseKeys[self.iCase]
         case = self.resultCases[key]
         #print("len(case) = %i" % len(case))
