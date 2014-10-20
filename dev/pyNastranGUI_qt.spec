@@ -45,8 +45,9 @@ for icon_name in icon_names:
 #i11 = ('icons/tundo.png',     os.path.join(iconPath,'tundo.png'),     'DATA')
 
 #icon_main = os.path.join(iconPath,'guiDemo_128.ico')
-icon_main = 'guiDemo.png' # pyInstaller doesnt like paths in the ico
-
+icon_main = 'logo.ico' # pyInstaller doesnt like paths in the ico
+                       # it also won't handle png files
+assert os.path.exists(icon_main), '%s doesnt exist' % icon_main
 #icons = [i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11]
 
 #-------------------------------------------------------------------------
@@ -77,13 +78,15 @@ pyz = PYZ(a.pure)
 #print "help(EXE) = \n",help(EXE)
 exe = EXE(pyz,
           a.scripts,
-          a.binaries + binaries,
-          exclude_binaries=1,
+          a.binaries + binaries + icons,
+          a.zipfiles,
+          a.datas,
+          #exclude_binaries=True,
           name=os.path.join('build\\pyi.win32\\pyNastranGUI', 'pyNastranGUI.exe'),
           debug=True,
           strip=None,
           #upx=True,
-          #icon=icon_main,
+          icon=icon_main,
           console=True )
 
 #print '*'*80
