@@ -51,8 +51,8 @@ except:
     script_path = os.path.join(pkg_path, 'gui', 'scripts')
     icon_path = os.path.join(pkg_path, 'gui', 'icons')
 
-print('script_path = %s' % script_path)
-print('icon_path = %s' % icon_path)
+#print('script_path = %s' % script_path)
+#print('icon_path = %s' % icon_path)
 
 # tcolorpick.png and tabout.png trefresh.png icons on LGPL license, see
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/color-picker-grey.png
