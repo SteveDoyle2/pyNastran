@@ -60,6 +60,9 @@ class CONM1(VectorizedCard):
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
 
+    def get_mass_matrix(self, i):
+        return self.mass_matrix[i, :, :]
+
     def get_mass(self, element_id=None, total=False):
         m = self.mass_matrix
         if element_id is None:
