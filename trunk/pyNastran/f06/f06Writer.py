@@ -23,7 +23,7 @@ def make_stamp(Title, today=None):
         str_today = '%-9s %2s, %4s' % (str_month, today.day, today.year)
     else:
         (month, day, year) = today
-        #print "day=%s month=%s year=%s" % (day, month, year)
+        #print("day=%s month=%s year=%s" % (day, month, year))
         str_month = months[month - 1].upper()
         str_today = '%-9s %2s, %4s' % (str_month, day, year)
     str_today = str_today  #.strip()
