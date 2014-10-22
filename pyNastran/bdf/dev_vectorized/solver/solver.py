@@ -9,7 +9,7 @@ from struct import pack
 
 # 3rd party
 from numpy import (array, zeros, ones, radians, cos, sin, dot, vstack, hstack,
-                   eye, searchsorted)
+                   eye, searchsorted, array_equal)
 
 from numpy.linalg import solve, norm, eigh
 
@@ -291,6 +291,9 @@ class Solver(F06, OP2):
 
         #==============================
 
+        # g-set before elimination of any degrees of freedom
+        # n-set after elimination of multipoint constraints
+        # f-set after elimination of automatic constraints and SPC�s
         self.Ub = []
         self.iUb = []
         self.Uc = []
@@ -386,8 +389,8 @@ class Solver(F06, OP2):
         self.f06_file.write(self.make_f06_header())
         #self.f06_file.write(sorted_bulk_data_header())
 
-        date = date.today()
-        self.date = (date.month, date.day, date.year)
+        d = date.today()
+        self.date = (d.month, d.day, d.year)
 
         pageStamp = self.make_stamp(self.Title, self.date)
 
@@ -427,9 +430,9 @@ class Solver(F06, OP2):
         #print analysisCases
         for case in analysisCases:
             print(case)
-            (value, options) = case.get_parameter('STRESS')
-            print("STRESS value   = %s" % value)
-            print("STRESS options = %s" % options)
+            #(value, options) = case.get_parameter('STRESS')
+            #print("STRESS value   = %s" % value)
+            #print("STRESS options = %s" % options)
 
             if case.has_parameter('TEMPERATURE(INITIAL)'):
                 (value, options) = case.get_parameter('TEMPERATURE(INITIAL)')
@@ -589,16 +592,39 @@ class Solver(F06, OP2):
         return(nidComponentToID, i)
 
     def run_sol_103(self, model, case):
+        """
+        ug = un+um All structural DOF including scalar DOF
+        um DOF eliminated by multipoint constraints and rigid elements
+        un = uf+us All structural DOF not constrained by multipoint constraints
+        us DOF eliminated by single-point constraints
+        uf = ua+uo Unconstrained (free) structural DOF
+        uo DOF omitted by static condensation (Guyan Reduction)
+        ua = ur+ul DOF used in real eigenvalue analysis
+        ur DOF to which determinate reactions are applied for the solution of free body models
+        ul The remaining structural DOF used in static analysis (points left over)
+        ue Extra DOF introduced in dynamic analysis
+        ud = ua+ue DOF used in dynamic analysis by the direct method
+        up = ug+ue The g-set plus EXTRA points for dynamic analysis
+        uz DOF representing modal coordinates
+        uh = ue+uz DOF used in dynamic analysis by the modal method
+
+        SPC Forces
+        qs = Kfs * Uf + Kss * Ys
+        qs = Kfs * Uf + Kss * (Ys + Ys_dot*dt + Ys_dotdot*dt*dt)  # where *dt means integration
+        """
         assert model.sol == 103, 'model.sol=%s is not 101' % (model.sol)
         if 'WTMASS' in model.params:
+            # converts weight units to mass
             wtmass = model.params['WTMASS'].value1
         else:
             wtmass = 1.0
 
         if 'COUPMASS' in model.params:
-            coupmass = model.params['COUPMASS'].value1
+            coupled_mass = model.params['COUPMASS'].value1
+            lumped_mass = False
         else:
-            coupmass = -1
+            coupled_mass = -1
+            lumped_mass = True
 
         if case.has_parameter('METHOD'):
             imethod = model.subcase.get_parameter('METHOD')
@@ -1366,6 +1392,7 @@ class Solver(F06, OP2):
             else:
                 Mgg, Mgg_sparse = self.assemble_global_mass_matrix(model, i, self.nidComponentToID)
                 self.make_gpwg(grid_point, Mgg)
+                sys.exit('check the mass...')
         Fg = self.assemble_forces(model, i, case, self.nidComponentToID)
         return Kgg, Fg, i
 
@@ -1374,8 +1401,8 @@ class Solver(F06, OP2):
         :param grid_point: 0->origin, x>0, that grid point
         :param Mgg: the mass matrix
         """
-        return
-        example = True
+        #return
+        example = False
         if example:
                    # nid, xb, yb, zb
             node1 = [0., 0., 0.]
@@ -1386,30 +1413,32 @@ class Solver(F06, OP2):
                           dtype='float32')
             cg = xyz_cid0.mean(axis=0)
             print('cg = %s' % cg)
-
-            mcd = [[2., 3., 5.],
-                   [2., 3., 5.],
-                   [2., 3., 5.],
-                   [2., 3., 5.],
-                   ]
         else:
-            xyz_cid0 = self.model.grid.get_xyz(cid=0)
+            xyz_cid0 = zeros((self.model.grid.n, 3), dtype='float32')
+            for i, (key, xyz) in enumerate(sorted(self.positions.iteritems())):
+                xyz_cid0[i, :] = xyz
 
-        nnodes = 4
+            #xyz_cid0 = self.model.grid.get_xyz(cid=0)
+
+        nnodes = xyz_cid0.shape[0]
         D = zeros((nnodes*6, 6), dtype='float32')
-        Mjj = zeros((nnodes*6, nnodes*6), dtype='float32')
+        if example:
+            Mgg = zeros((nnodes*6, nnodes*6), dtype='float32')
+            for i, node in enumerate(xyz_cid0):
+                j = i * 6
+                Mgg[j, j] = 2.
+                Mgg[j+1, j+1] = 3.
+                Mgg[j+2, j+2] = 5.
+
         for i, node in enumerate(xyz_cid0):
             r1, r2, r3 = node
             j = i * 6
-            Mjj[j, j] = 2.
-            Mjj[j+1, j+1] = 3.
-            Mjj[j+2, j+2] = 5.
-            print('i=%s node=%s' % (i+1, node))
+            #print('i=%s node=%s' % (i+1, node))
             #r1, r2, r3 = node.get_position()
             Tr = array([[0., r3, -r2],
                         [-r3, 0., r1],
                         [r2, -r1, 0.]], dtype='float32')
-            print('Tr[%i]=\n%s\n' % (i+1, Tr))
+            #print('Tr[%i]=\n%s\n' % (i+1, Tr))
             if example:
                 if i in [0, 2]:
                     if i == 0:
@@ -1424,30 +1453,25 @@ class Solver(F06, OP2):
                 else:
                     Ti = eye(3, dtype='float32')
             else:
+                #Ti = eye(3, dtype='float32')
                 cp = self.model.grid.cp[i]
-                Ti = self.model.coords[cp].T
-            print('Ti[%i]=\n%s\n' % (i+1, Ti))
+                Ti = self.model.coords[cp].beta()
+            if not array_equal(Ti, eye(3)):
+                print('Ti[%i]=\n%s\n' % (i+1, Ti))
             TiT = Ti.T
             d = zeros((6, 6), dtype='float32')
             d[:3, :3] = TiT
             d[3:, 3:] = TiT
             d[:3, 3:] = dot(TiT, Tr)
-            print('d[%i]=\n%s\n' % (i+1, d))
-            #if D is None:
-                #D = d
-            #else:
-                #D = vstack([D, d])
-            #print('d.shape ', d.shape)
-            #print('D.shape ', D[:, :].shape)
-            #print('Di.shape ', D[j:j+6, :].shape)
+            #print('d[%i]=\n%s\n' % (i+1, d))
             #print('j=', j)
             D[j:j+6, :] = d
         #print('D.shape =', D.shape)
+
         Mo = zeros((6, 6), dtype='float32')
         #print('D=\n%s\n' % D)
         # translati
 
-        #DT = d.T
         def triple(A, B):
             """
             A.T @ B @ A
@@ -1461,8 +1485,8 @@ class Solver(F06, OP2):
             assert isinstance(A, ndarray), type(B)
             return dot(A.T, dot(B, A))
 
-        Mo = triple(D, Mjj)
-        print('Mjj=\n%s\n' % Mjj)
+        Mo = triple(D, Mgg)
+        print('Mgg=\n%s\n' % Mgg)
         print('Mo=\n%s\n' % Mo)
 
         # t-translation; r-rotation
@@ -1503,11 +1527,13 @@ class Solver(F06, OP2):
         Mx = Mt[0, 0]
         My = Mt[1, 1]
         Mz = Mt[2, 2]
+        mass = diag(Mt)
+        print('mass = %s' % mass)
         cg = array([
             [ Mtr[0, 0]/Mx, -Mtr[0, 2]/Mx,  Mtr[0, 1]/Mx ],
             [ Mtr[1, 2]/My,  Mtr[1, 1]/My, -Mtr[1, 0]/My ],
             [-Mtr[2, 1]/Mz,  Mtr[2, 0]/Mz,  Mtr[2, 2]/Mz ],
-        ])
+        ], dtype='float32')
 
         print('cg=\n%s\n' % cg)
         xx = cg[0, 0]
@@ -1533,16 +1559,19 @@ class Solver(F06, OP2):
             [I31, I32, I33],
             ], dtype='float32')
         print('I(S)=\n%s\n' % II)
-        from numpy import fill_diagonal
-        fill_diagonal(-II, diag(II))
-        print('I~=\n%s\n' % II)
-        omegaQ, Q = eigh(II)
-        print('Q -> wrong =\n%s\n' % Q)
-        IQ = triple(Q, II)
-        print('I(Q) -> wrong =\n%s\n' % IQ)
 
 
         # 6. Reverse the sign of the off diagonal terms
+        from numpy import fill_diagonal, argsort
+        from numpy.linalg import eig
+        fill_diagonal(-II, diag(II))
+        #print('I~=\n%s\n' % II)
+        omegaQ, Q = eig(II)
+        #i = argsort(omegaQ)
+        print('omegaQ = %s' % omegaQ)
+        print('Q -> wrong =\n%s\n' % Q)
+        #IQ = triple(Q, II)
+        #print('I(Q) -> wrong =\n%s\n' % IQ)
 
 
 
@@ -1795,15 +1824,18 @@ class Solver(F06, OP2):
             self.add_mass(M, dofs, nijv)
 
         # solids
-        for i in xrange(model.elements_solid.ctetra4.n):
-            M, dofs, nijv = model.ctetra4.get_mass_matrix(i, model, self.positions, index0s)
-            self.add_mass(M, dofs, nijv)
-        for i in xrange(model.elements_solid.cpenta6.n):
-            M, dofs, nijv = model.ctetra4.get_mass_matrix(i, model, self.positions, index0s)
-            self.add_mass(M, dofs, nijv)
-        for i in xrange(model.elements_solid.chexa8.n):
-            M, dofs, nijv = model.ctetra4.get_mass_matrix(i, model, self.positions, index0s)
-            self.add_mass(M, dofs, nijv)
+        nsolids = model.elements_solid.n
+        if nsolids:
+            solid = model.elements_solid
+            for i in xrange(solid.ctetra4.n):
+                M, dofs, nijv = solid.ctetra4.get_mass_matrix(i, model, self.positions, index0s)
+                self.add_mass(M, dofs, nijv)
+            for i in xrange(solid.cpenta6.n):
+                M, dofs, nijv = solid.ctetra4.get_mass_matrix(i, model, self.positions, index0s)
+                self.add_mass(M, dofs, nijv)
+            for i in xrange(solid.chexa8.n):
+                M, dofs, nijv = solid.ctetra4.get_mass_matrix(i, model, self.positions, index0s)
+                self.add_mass(M, dofs, nijv)
         # ctetra10
         # cpenta15
         # chexa20
@@ -1811,6 +1843,7 @@ class Solver(F06, OP2):
         #Mgg_sparse = coo_matrix((entries, (rows, cols)), shape=(i, i))
         Mgg_sparse = None
         Mgg = self.Mgg
+        print('returning Mgg')
         return Mgg, Mgg_sparse
 
     def apply_SPCs(self, model, case, nidComponentToID):
