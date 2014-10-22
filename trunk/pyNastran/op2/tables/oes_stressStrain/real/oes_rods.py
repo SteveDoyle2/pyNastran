@@ -679,7 +679,7 @@ class RealRodStrain(StrainObject):
 class ConrodStress(RealRodStress):
     eType = 'CONROD'
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealRodStress.__init__(self, data_code, isubcase, dt)
+        RealRodStress.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
@@ -694,7 +694,7 @@ class ConrodStress(RealRodStress):
 class CtubeStress(RealRodStress):
     eType = 'CTUBE'
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealRodStress.__init__(self, data_code, isubcase, dt)
+        RealRodStress.__init__(self, is_sort1, data_code, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
@@ -709,7 +709,7 @@ class CtubeStress(RealRodStress):
 class ConrodStrain(RealRodStrain):
     eType = 'CONROD'
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealRodStrain.__init__(self, data_code, isubcase, dt)
+        RealRodStrain.__init__(self, is_sort1, data_code, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
@@ -723,7 +723,7 @@ class ConrodStrain(RealRodStrain):
 class CtubeStrain(RealRodStrain):
     eType = 'CTUBE'
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealRodStrain.__init__(self, data_code, isubcase, dt)
+        RealRodStrain.__init__(self, is_sort1, data_code, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
