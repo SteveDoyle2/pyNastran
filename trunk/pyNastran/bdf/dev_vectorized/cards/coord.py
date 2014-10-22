@@ -45,11 +45,10 @@ class Coord(object):
             ncards = array([card_count[name]
                       for name in ['CORD1R', 'CORD1C', 'CORD1S',
                                    'CORD2R', 'CORD2C', 'CORD2S']
-                      if name in card_count]).sum() + 1
+                      if name in card_count], dtype='int32').sum() + 1
         print('nCOORDcards = %s' % ncards)
         #print('ncards coord = %s' % ncards)
         self.coord_id = zeros(ncards, dtype='int32')
-        #self.rid = zeros(ncards, dtype='int32')
         self.Type = full(ncards, nan, dtype='|S1')  # R-CORD2R, S-CORD2S, C-CORD2C
         self.T = full((ncards, 3, 3), nan, dtype=float_fmt)
         self.origin = full((ncards, 3), nan, dtype=float_fmt)

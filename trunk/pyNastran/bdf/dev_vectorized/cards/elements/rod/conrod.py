@@ -85,15 +85,15 @@ class CONROD(RodElement):
             self.nsm = zeros(ncards, float_fmt)
 
             for i, card in enumerate(cards):
-                self.element_id[i] = integer(card, 1, 'eid')
-                self.node_ids[i] = [integer(card, 2, 'n1'),
-                                    integer(card, 3, 'n2')]
+                self.element_id[i] = integer(card, 1, 'element_id')
+                self.node_ids[i] = [integer(card, 2, 'node_1'),
+                                    integer(card, 3, 'node_2')]
 
-                self.material_id[i] = integer(card, 4, 'mid')
-                self.A[i] = double(card, 5, 'A')
-                self.J[i] = double_or_blank(card, 6, 'j', 0.0)
+                self.material_id[i] = integer(card, 4, 'material_id')
+                self.A[i] = double(card, 5, 'Area')
+                self.J[i] = double_or_blank(card, 6, 'J', 0.0)
                 self.c[i] = double_or_blank(card, 7, 'c', 0.0)
-                self.nsm[i] = double_or_blank(card, 8, 'nsm', 0.0)
+                self.nsm[i] = double_or_blank(card, 8, 'non_structural_mass', 0.0)
                 assert len(card) <= 9, 'len(CONROD card) = %i' % len(card)
 
             i = self.element_id.argsort()
@@ -107,13 +107,13 @@ class CONROD(RodElement):
 
             unique_eids = unique(self.element_id)
             if len(unique_eids) != len(self.element_id):
-                raise RuntimeError('There are duplicate CROD IDs...')
+                raise RuntimeError('There are duplicate CONROD IDs...')
         else:
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
 
     #=========================================================================
-    def get_Area_from_index(self, i):
+    def get_area_from_index(self, i):
         return self.A[i]
 
     #def get_E_from_index(self, i):
@@ -122,7 +122,7 @@ class CONROD(RodElement):
     def get_material_from_index(self, i):
         return self.model.materials.mat1
 
-    def get_Area(self, property_ids=None):
+    def get_area(self, property_ids=None):
         A = self.A
         return A
 
@@ -174,18 +174,66 @@ class CONROD(RodElement):
                  self.element_id, self.node_ids, self.material_id, self.A, self.J,
                  self.c, self.nsm):
 
-                #self.mid = integer(card, 4, 'mid')
-                #self.A = double(card, 5, 'A')
-                #self.j = double_or_blank(card, 6, 'j', 0.0)
-                #self.c = double_or_blank(card, 7, 'c', 0.0)
-                #self.nsm = double_or_blank(card, 8, 'nsm', 0.0)
-
                 card = ['CONROD', eid, n12[0], n12[1], mid, A, J, c, nsm ]
                 f.write(print_card(card))
 
-    def get_stiffness(self, i, model, positions, index0s, knorm=1.0):  # CROD/CONROD
+    def get_mass_matrix(self, i, model, positions, index0s, knorm=1.0):  # CROD/CONROD
+        """
+        Lumped:
+        =======
+          mi = 1/2 * rho * A * L
+                 [ 1  0 ]
+          M = mi [ 0  1 ]
+
+        Consistent:
+        ===========
+          mi = 1/6 * rho * A * L
+                 [ 2 1 ]
+          M = mi [ 1 2 ]
+        """
+        A = self.get_area_from_index(i)
+        mat = self.model.materials.mat1[self.material_id[i]]
+        mid = self.material_id[i]
+        rho = mat.get_density()
+        #========================
+        n0, n1 = self.node_ids[i, :]
+
+        i0 = index0s[n0]
+        i1 = index0s[n1]
+
+        p0 = positions[n0]
+        p1 = positions[n1]
+        v1 = p0 - p1
+        L = norm(v1)
+        if L == 0.0:
+            msg = 'invalid CROD length=0.0\n%s' % self.__repr__()
+            raise ZeroDivisionError(msg)
+        #========================
+        mi = (rho * A * L + self.nsm[i]) / 6.
+        m = array([[2., 1.],
+                   [1., 2.]])  # 1D rod
+
+        Lambda = _Lambda(v1, debug=False)
+        M = dot(dot(transpose(Lambda), m), Lambda)
+        Mi, Mj = M.shape
+        dofs = array([
+            i0, i0+1, i0+2,
+            i1, i1+1, i1+2,
+        ], 'int32')
+        nIJV = [
+            # axial
+            (n0, 1), (n0, 2), (n0, 3),
+            (n1, 1), (n1, 2), (n1, 3),
+
+            # torsion -> NA
+        ]
+
+        print('dofs =', dofs)
+        return(M, dofs, nIJV)
+
+    def get_stiffness_matrix(self, i, model, positions, index0s, knorm=1.0):  # CROD/CONROD
         #print("----------------")
-        A = self.get_Area_from_index(i)
+        A = self.get_area_from_index(i)
         #mat = self.get_material_from_index(i)
         #print mat
         #print mat.material_id[se]
@@ -223,7 +271,8 @@ class CONROD(RodElement):
         #k_axial = 1.0
         #k_torsion = 2.0
 
-        k = array([[1., -1.], [-1., 1.]])  # 1D rod
+        k = array([[1., -1.],
+                   [-1., 1.]])  # 1D rod
 
         Lambda = _Lambda(v1, debug=False)
         K = dot(dot(transpose(Lambda), k), Lambda)
@@ -338,10 +387,9 @@ class CONROD(RodElement):
             print("A=%g E=%g G=%g J=%g L=%g" % (A, E, G, J, L))
             k_axial = A * E / L
             k_torsion = G * J / L
-            #k_axial = 1.0
-            #k_torsion = 2.0
 
-            #k = array([[1., -1.], [-1., 1.]])  # 1D rod
+            #k = array([[1., -1.],
+                       #[-1., 1.]])  # 1D rod
 
             Lambda = _Lambda(v1, debug=True)
 
