@@ -27,6 +27,7 @@ from pyNastran.utils.log import get_logger
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacement
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import SPCForcesObject
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import MPCForcesObject
+from pyNastran.f06.tables.oload_resultant import OLOAD_Resultant
 
 # springs
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealCelasStress, RealCelasStrain
@@ -565,18 +566,20 @@ class Solver(F06, OP2):
             nid = model.grid.node_id[ni]
             ps = model.grid.ps[ni]
 
-            self.log.info('node_id=%s ps=%s' % (nid, ps))
-            iUsg = []
-            Usg = []
-            while ps > 0:
-                psi = ps % 10
-                j = i + psi - 1
-                iUsg.append(j)
-                Usg.append(0.0)
-                ps = ps // 10
-            self.log.info("  i=%s Usg=%s" % (j, Usg))
-            self.iUsg += iUsg
-            self.Usg += Usg
+            if ps > -1:
+                self.log.info('node_id=%s ps=%s' % (nid, ps))
+                iUsg = []
+                Usg = []
+                j = None
+                while ps > 0:
+                    psi = ps % 10
+                    j = i + psi - 1
+                    iUsg.append(j)
+                    Usg.append(0.0)
+                    ps = ps // 10
+                self.log.info("  Usg=%s" % Usg)
+                self.iUsg += iUsg
+                self.Usg += Usg
 
             nidComponentToID[(nid, 1)] = i
             nidComponentToID[(nid, 2)] = i + 1
@@ -598,6 +601,22 @@ class Solver(F06, OP2):
         self.mp_index = model.grid.n + spoint.n
 
         return(nidComponentToID, i)
+
+    def get_Mgg(self, model, ndofs, force_calcs=False):
+        Mgg = None
+        if force_calcs:
+            Mgg, Mgg_sparse = self.assemble_global_mass_matrix(model, ndofs, self.nidComponentToID)
+            model.params['GRDPNT'] = 0
+
+        if 'GRDPNT' in model.params:
+            grid_point = model.params['GRDPNT']
+            if grid_point == -1:
+                self.log.debug('No mass requested')
+            else:
+                self.log.debug('PARAM,GRIDPNT = %s' % grid_point)
+                self.make_gpwg(grid_point, Mgg)
+                #sys.exit('check the mass...')
+        return Mgg
 
     def run_sol_103(self, model, case):
         """
@@ -641,18 +660,9 @@ class Solver(F06, OP2):
             self.eigr[imethod]
             self.eigrl[imethod]
 
+        Mgg = self.get_Mgg(model, ndofs, force_calcs=True)
         # analysis
         (Kgg, Fg, n) = self.setup_sol_101(model, case)
-
-        if 'GRDPNT' in model.params:
-            grid_point = model.params['GRDPNT']
-            if grid_point == -1:
-                self.log.debug('No mass requested')
-            else:
-                self.log.debug('PARAM,GRIDPNT = %s' % grid_point)
-                Mgg, Mgg_sparse = self.assemble_global_mass_matrix(model, i, self.nidComponentToID)
-                self.make_gpwg(grid_point, Mgg)
-                sys.exit('check the mass...')
 
         self.build_dof_sets()
         Lambda, Ua = self.solve_sol_103(Kgg, Mgg)
@@ -718,16 +728,16 @@ class Solver(F06, OP2):
             self.log.info("------------------------\n")
             self.log.info("solving...")
             Ua = self.solve_sol_101(Kgg, Fg)
-            self.log.info("Ua = %s" % Ua)
-            self.log.info("Us = %s" % self.Us)
+            self.log.info("Ua =\n%s" % Ua)
+            self.log.info("Us =\n%s" % self.Us)
 
             dofsAll = set([i for i in xrange(n)])
             #dofsA = remove_dofs(remove_dofs(dofsAll, self.iUs), self.iUm))
             dofsA = remove_dofs(dofsAll, self.iUs)
             dofsA.sort()
             U = zeros(n, 'float64')
-            self.log.info("U   = %s" % U)
-            self.log.info("iUs = %s" % self.iUs)
+            self.log.info("U   =\n%s" % U)
+            self.log.info("iUs =\n%s" % self.iUs)
             #print("iUm = ", self.iUm)
 
             # TODO handle MPCs
@@ -1392,18 +1402,18 @@ class Solver(F06, OP2):
 
     def setup_sol_101(self, model, case):
         # the (GridID,componentID) -> internalID
-        (self.nidComponentToID, i) = self.build_nid_component_to_id(model)
+        (self.nidComponentToID, ndofs) = self.build_nid_component_to_id(model)
         self.apply_SPCs(model, case, self.nidComponentToID)
         self.apply_MPCs(model, case, self.nidComponentToID)
 
         #spcDOFs = self.iUs
         #mpcDOFs = self.iUm
 
-        #Mgg = zeros((i, i), 'float64')
-        Kgg, Kgg_sparse = self.assemble_global_stiffness_matrix(model, i, self.nidComponentToID)
+        Mgg = self.get_Mgg(model, ndofs, force_calcs=True)
+        Kgg, Kgg_sparse = self.assemble_global_stiffness_matrix(model, ndofs, self.nidComponentToID)
 
-        Fg = self.assemble_forces(model, i, case, self.nidComponentToID)
-        return Kgg, Fg, i
+        Fg = self.assemble_forces(model, ndofs, case, self.nidComponentToID)
+        return Kgg, Fg, ndofs
 
     def make_gpwg(self, grid_point, Mgg):
         """
@@ -1576,10 +1586,17 @@ class Solver(F06, OP2):
         #i = argsort(omegaQ)
         self.log.info('omegaQ = %s' % omegaQ)
         self.log.info('Q -> wrong =\n%s\n' % Q)
-        #IQ = triple(Q, II)
+        IQ = triple(Q, II)
         #print('I(Q) -> wrong =\n%s\n' % IQ)
 
-
+        self.grid_point_weight.reference_point = grid_point
+        self.grid_point_weight.MO = Mo
+        self.grid_point_weight.S = S
+        self.grid_point_weight.mass = mass
+        self.grid_point_weight.cg = cg
+        self.grid_point_weight.IS = II
+        self.grid_point_weight.IQ = diag(IQ)
+        self.grid_point_weight.Q = Q
 
 
     def solve_sol_101(self, Kgg, Fg):
@@ -1605,8 +1622,8 @@ class Solver(F06, OP2):
         Fa, _dofs2 = partition_dense_vector(Fg, self.iUs)
         #print("Kaa = \n%s" % (print_matrix(Kaa)))
 
-        self.log.info("Fg/%g = %s" % (self.fnorm, Fg/self.fnorm))
-        self.log.info("Fa/%g = %s" % (self.fnorm, Fa/self.fnorm))
+        self.log.info("Fg/%g = \n%s" % (self.fnorm, Fg/self.fnorm))
+        self.log.info("Fa/%g = \n%s" % (self.fnorm, Fa/self.fnorm))
         #print("Us = ", self.Us)
 
         #self.Us = array(self.Us, 'float64')  # SPC
@@ -1777,8 +1794,8 @@ class Solver(F06, OP2):
 
     #def assemble_global_damping_matrix(self, model, i, Dofs):
 
-    def assemble_global_mass_matrix(self, model, i, Dofs):
-        self.Mgg = zeros((i, i), 'float64')
+    def assemble_global_mass_matrix(self, model, ndofs, Dofs):
+        self.Mgg = zeros((ndofs, ndofs), 'float64')
 
         dof_mapper = []
 
@@ -2001,9 +2018,12 @@ class Solver(F06, OP2):
         self.iUv = self.iUo + self.iUc + self.iUr
         return
 
-    def assemble_forces(self, model, i, case, Dofs):
+    def write_OLOAD_resultant(self, Fg):
+        self.oload_resultant = OLOAD_Resultant()
+
+    def assemble_forces(self, model, ndofs, case, Dofs):
         """very similar to writeCodeAster loads"""
-        Fg = zeros(i, 'float64')
+        Fg = zeros(ndofs, 'float64')
         #print(model.loads)
         (loadID, junk) = model.caseControlDeck.get_subcase_parameter(case.id, 'LOAD')
         self.log.info("loadID = %s" % loadID)
@@ -2031,6 +2051,7 @@ class Solver(F06, OP2):
                         Fg[Dofs[(nid, ni + 3)]] += z
             else:
                 raise NotImplementedError(load.type)
+        self.write_OLOAD_resultant(Fg)
         return Fg
 
         self.gravLoad = array([0., 0., 0.])
