@@ -78,6 +78,25 @@ class MAT1(object):
             self._cards = []
             self._comments = []
 
+    def get_D_matrix(self):
+        """
+        // The isotropic Elasticity matrix D is given by
+        //               -                                             -     -                        -
+        //               | 1-nu  nu   nu      0         0        0     |     | D0  D1  D1  0   0   0  |
+        //    young      |  nu  1-nu  nu      0         0        0     |     | D1  D0  D1  0   0   0  |
+        // ------------- |  nu   nu  1-nu     0         0        0     |     | D1  D1  D0  0   0   0  |
+        // (1+nu)(1-2nu) |  0    0   0    (1-2nu)/2     0        0     |  =  | 0   0   0   D2  0   0  |
+        //               |  0    0   0        0     (1-2nu)/2    0     |     | 0   0   0   0   D2  0  |
+        //               |  0    0   0        0         0    (1-2nu)/2 |     | 0   0   0   0   0   D2 |
+        //               -                                             -     -                        -
+        http://image.diku.dk/svn/OpenTissue/archieve/silcowitz/OpenTissue/dynamics/fem/fem_compute_isotropic_elasticity.h
+        """
+        poisson2 = 2.0*poisson
+        scale = young / ((1.0 + poisson) * (1.0 - poisson2))
+        D[0] = (1.0 - poisson) * scale
+        D[1] = poisson * scale
+        D[2] = young / (2.0  + poisson2)
+
     def _G_default(self, E, G, nu):
         if G == 0.0 or nu == 0.0:
             pass

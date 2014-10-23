@@ -9,9 +9,8 @@ from struct import pack
 
 # 3rd party
 from numpy import (array, zeros, ones, radians, cos, sin, dot, vstack, hstack,
-                   eye, searchsorted, array_equal)
-
-from numpy.linalg import solve, norm, eigh
+                   eye, searchsorted, array_equal, ndarray, diag, fill_diagonal, argsort)
+from numpy.linalg import solve, norm, eigh, eig
 
 from scipy.sparse import coo_matrix
 
@@ -19,10 +18,10 @@ from scipy.sparse import coo_matrix
 from pyNastran.f06.f06Writer import sorted_bulk_data_header
 from pyNastran.utils.dev import list_print
 from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
-#from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.dev_vectorized.bdf import BDF, SPC, SPC1
 from pyNastran.f06.f06 import F06
 from pyNastran.op2.op2 import OP2
+from pyNastran.utils.log import get_logger
 
 # Tables
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacement
@@ -84,10 +83,10 @@ def partition_dense_symmetric(A, dofs_in):
 
 def partition_dense_vector(F, dofs_in):
     nAll = F.shape[0]
-    #print("dofs = ", dofs)
+    #print("dofs = %s" % dofs)
     dofs = getDOF_Set(nAll, dofs_in)
     dofs.sort()
-    print("dofs = ", dofs)
+    #print("dofs = %s" % dofs)
     n = len(dofs)
     F2 = zeros(n, 'float64')
     for (i, dofI) in enumerate(dofs):
@@ -226,9 +225,11 @@ class Solver(F06, OP2):
           - not calculated
           - no tables created
     """
-    def __init__(self, fargs):
+    def __init__(self, fargs, log=None):
         F06.__init_data__(self)
         OP2.__init__(self, make_geom=False, debug=False, log=None, debug_file=None)
+        debug = True
+        self.log = get_logger(log, 'debug' if debug else 'info')
 
         self.page_num = 1
         self.fargs = fargs
@@ -320,13 +321,13 @@ class Solver(F06, OP2):
 
     def _solve(self, K, F, dofs):  # can be overwritten
         r"""solves \f$ [K]{x} = {F}\f$ for \f${x}\f$"""
-        print("--------------")
-        print("Kaa_norm / %s = \n" % self.knorm + list_print(K / self.knorm))
-        print("--------------")
-        print("Fa/%g = %s" % (self.fnorm, F / self.fnorm))
+        self.log.info("--------------")
+        self.log.info("Kaa_norm / %s = \n" % self.knorm + list_print(K / self.knorm))
+        self.log.info("--------------")
+        self.log.info("Fa/%g = %s" % (self.fnorm, F / self.fnorm))
         if F[0] == 0.0:
             assert max(F) != min(F), 'no load is applied...'
-        print("--------------")
+        self.log.info("--------------")
 
         try:
             U = solve(K, F)
@@ -418,7 +419,7 @@ class Solver(F06, OP2):
         #print(cc.subcases)
         analysisCases = []
         for (isub, subcase) in sorted(cc.subcases.iteritems()):
-            print(subcase)
+            self.log.info(subcase)
             if subcase.has_parameter('LOAD'):
                 analysisCases.append(subcase)
                 #print('analyzing subcase = \n%s' % subcase)
@@ -429,15 +430,15 @@ class Solver(F06, OP2):
 
         #print analysisCases
         for case in analysisCases:
-            print(case)
+            self.log.info(case)
             #(value, options) = case.get_parameter('STRESS')
             #print("STRESS value   = %s" % value)
             #print("STRESS options = %s" % options)
 
             if case.has_parameter('TEMPERATURE(INITIAL)'):
                 (value, options) = case.get_parameter('TEMPERATURE(INITIAL)')
-                print('value   = %s' % value)
-                print('options = %s' % options)
+                self.log.info('value   = %s' % value)
+                self.log.info('options = %s' % options)
                 raise NotImplementedError('TEMPERATURE(INITIAL) not supported')
                 #integrate(B.T*E*alpha*dt*Ads)
             #sys.exit('starting case')
@@ -564,11 +565,18 @@ class Solver(F06, OP2):
             nid = model.grid.node_id[ni]
             ps = model.grid.ps[ni]
 
+            self.log.info('node_id=%s ps=%s' % (nid, ps))
+            iUsg = []
+            Usg = []
             while ps > 0:
                 psi = ps % 10
-                self.iUsg.append(i + psi - 1)
-                self.Usg.append(0.0)
+                j = i + psi - 1
+                iUsg.append(j)
+                Usg.append(0.0)
                 ps = ps // 10
+            self.log.info("  i=%s Usg=%s" % (j, Usg))
+            self.iUsg += iUsg
+            self.Usg += Usg
 
             nidComponentToID[(nid, 1)] = i
             nidComponentToID[(nid, 2)] = i + 1
@@ -577,7 +585,7 @@ class Solver(F06, OP2):
             nidComponentToID[(nid, 5)] = i + 4
             nidComponentToID[(nid, 6)] = i + 5
             i += 6
-            #print('iUsg[%i] = %s' % (nid, self.iUsg))
+        self.log.info('iUsg = %s' % (self.iUsg))
 
         spoint = model.spoint
         if spoint.n:
@@ -635,7 +643,17 @@ class Solver(F06, OP2):
 
         # analysis
         (Kgg, Fg, n) = self.setup_sol_101(model, case)
-        Mgg = self.get_Mgg()
+
+        if 'GRDPNT' in model.params:
+            grid_point = model.params['GRDPNT']
+            if grid_point == -1:
+                self.log.debug('No mass requested')
+            else:
+                self.log.debug('PARAM,GRIDPNT = %s' % grid_point)
+                Mgg, Mgg_sparse = self.assemble_global_mass_matrix(model, i, self.nidComponentToID)
+                self.make_gpwg(grid_point, Mgg)
+                sys.exit('check the mass...')
+
         self.build_dof_sets()
         Lambda, Ua = self.solve_sol_103(Kgg, Mgg)
 
@@ -697,19 +715,19 @@ class Solver(F06, OP2):
             # analysis
             (Kgg, Fg, n) = self.setup_sol_101(model, case)
             self.build_dof_sets()
-            print("------------------------\n")
-            print("solving...")
+            self.log.info("------------------------\n")
+            self.log.info("solving...")
             Ua = self.solve_sol_101(Kgg, Fg)
-            print("Ua = ", Ua)
-            print("Us = ", self.Us)
+            self.log.info("Ua = %s" % Ua)
+            self.log.info("Us = %s" % self.Us)
 
             dofsAll = set([i for i in xrange(n)])
             #dofsA = remove_dofs(remove_dofs(dofsAll, self.iUs), self.iUm))
             dofsA = remove_dofs(dofsAll, self.iUs)
             dofsA.sort()
             U = zeros(n, 'float64')
-            print("U   = ", U)
-            print("iUs = ", self.iUs)
+            self.log.info("U   = %s" % U)
+            self.log.info("iUs = %s" % self.iUs)
             #print("iUm = ", self.iUm)
 
             # TODO handle MPCs
@@ -718,8 +736,8 @@ class Solver(F06, OP2):
             for (i, iu) in enumerate(dofsA):
                 U[iu] = Ua[i]
 
-            print("*U = ", U)
-            print("dofsA = ", dofsA)
+            self.log.info("*U = \n%s" % U)
+            self.log.info("dofsA = %s" % dofsA)
 
             if self.is_displacement:
                 self._store_displacements(model, U, case)
@@ -775,7 +793,7 @@ class Solver(F06, OP2):
                         elementType.displacement_stress(model, self.positions, q, self.nidComponentToID,
                             ispring, o1, e1, f1)
                         eids = elementType.element_id
-                        print("eids =", eids)
+                        self.log.info("eids = %s" % eids)
                     ispring += n
                 #if self.is_strain:
                 self._store_spring_oes(model, eids, e1, case, elementType.type, Type='strain')
@@ -793,6 +811,7 @@ class Solver(F06, OP2):
 
             for elementType in elementTypes:
                 n = elementType.n
+                self.log.info('Type=%s n=%s displacement_stress' % (elementType.type, n))
                 if n:
                     #margin_1 =
                     #margin_2 =
@@ -836,7 +855,7 @@ class Solver(F06, OP2):
             # BARS
             ncbars = 0
             if ncbars:
-                print("ncbars", ncbars)
+                self.log.info("ncbars = %s" % ncbars)
                 o1 = zeros(ncbars, 'float64')
                 e1 = zeros(ncbars, 'float64')
                 f1 = zeros(ncbars, 'float64')
@@ -860,7 +879,7 @@ class Solver(F06, OP2):
             # BEAMS
             ncbeams = 0
             if ncbeams:
-                print("ncbeams", ncbeams)
+                self.log.info("ncbeams = %s" % ncbeams)
                 o1 = zeros(ncbeams, 'float64')
                 e1 = zeros(ncbeams, 'float64')
                 f1 = zeros(ncbeams, 'float64')
@@ -887,7 +906,7 @@ class Solver(F06, OP2):
             nctria3s = 0
             ncquad4s = 0
             if nctria3s or ncquad4s:
-                print("nctria3", nctria3s)
+                self.log.info("nctria3 = %s" % nctria3s)
                 stress = zeros((nctria3s+ncquad4s, 3), 'float64')
                 strain = zeros((nctria3s+ncquad4s, 3), 'float64')
                 force  = zeros((nctria3s+ncquad4s, 3), 'float64')
@@ -924,7 +943,7 @@ class Solver(F06, OP2):
         self.write_f06(self.f06_file, end_flag=True)
         self.write_op2(self.op2_file, packing=True)
         self.write_op2(self.op2_pack_file, packing=False)
-        print('finished SOL 101')
+        self.log.info('finished SOL 101')
 
     def _op2_header(self, f, packing=True):
         data = [4,3,4,
@@ -1001,7 +1020,7 @@ class Solver(F06, OP2):
         for (eid, axiali) in zip(eids, axial):
             element = model.Element(eid)
             n1, n2 = element.nodeIDs()
-            print(n1, n2)
+            self.log.info(n1, n2)
             #      (eid, grid, sd,  sxc,   sxd, sxe, sxf,  smax, smin, mst, msc) = out
             line = [eid, n1,   0.0, axiali, 0., 0.0,  0.0, 0.0, 0.0,  0.0,  0.0]
             data.append(line)
@@ -1048,7 +1067,7 @@ class Solver(F06, OP2):
         for (eid, fxi) in zip(eids, fx):
             element = model.Element(eid)
             n1, n2 = element.nodeIDs()
-            print('***(*', n1, n2)
+            self.log.info('***(*', n1, n2)
             #      [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
             line = [eid, n1, 0.0, 0.,   0.,   0., 0., 0.,   0.,  0.0]
             data.append(line)
@@ -1058,7 +1077,7 @@ class Solver(F06, OP2):
             data.append(line)
             line = [eid, n2, 1.0, 0.,   0.,   0., 0., 0.,   0.,  0.0]
             #data.append(line)
-        print(data)
+        self.log.info(data)
         forces.add_f06_data(data, dt)
 
         if elementType == 'CBEAM':
@@ -1282,8 +1301,8 @@ class Solver(F06, OP2):
         #stress.dt = None
 
     def _store_rod_oes(self, model, eids, axial, torsion, case, elementType, Type='stress'):
-        if len(eids) == 0:
-            return
+        #if len(eids) == 0:
+            #return
         analysis_code = 1
         transient = False
         isubcase = case.id
@@ -1300,7 +1319,6 @@ class Solver(F06, OP2):
                     'nonlinear_factor': None, 'dataNames':['lsdvmn']}
         if Type == 'stress':
             if elementType == 'CROD':
-                #data_code, is_sort1, isubcase, dt
                 stress = RealRodStress(data_code, is_sort1, isubcase, dt=False)
             elif elementType == 'CONROD':
                 stress = ConrodStress(data_code, is_sort1, isubcase, dt=False)
@@ -1325,17 +1343,17 @@ class Solver(F06, OP2):
         stress.add_f06_data(data, dt)
 
         if elementType == 'CROD' and Type == 'stress':
-            self.rodStress[isubcase] = stress
+            self.crod_stress[isubcase] = stress
         elif elementType == 'CROD' and Type == 'strain':
-            self.rodStrain[isubcase] = stress
+            self.crod_strain[isubcase] = stress
         elif elementType == 'CONROD' and Type == 'stress':
-            self.conrodStress[isubcase] = stress
+            self.conrod_stress[isubcase] = stress
         elif elementType == 'CONROD' and Type == 'strain':
-            self.conrodStrain[isubcase] = stress
+            self.conrod_strain[isubcase] = stress
         elif elementType == 'CTUBE' and Type == 'stress':
-            self.ctubeStress[isubcase] = stress
+            self.ctube_stress[isubcase] = stress
         elif elementType == 'CTUBE' and Type == 'strain':
-            self.ctubeStrain[isubcase] = stress
+            self.ctube_strain[isubcase] = stress
         else:
             raise NotImplementedError('elementType=%r Type=%r' % (elementType, Type))
         stress.dt = None
@@ -1364,7 +1382,7 @@ class Solver(F06, OP2):
             nid = model.grid.node_id[ni]
             line = [nid, 'G']
             xyz = U[i:i + 6]  # 1,2,3,4,5,6
-            print("nid=%s txyz,rxyz=%s" % ( nid, xyz))
+            self.log.info("nid=%s txyz,rxyz=%s" % ( nid, xyz))
             line += xyz
             i += 6
             data.append(line)
@@ -1384,15 +1402,6 @@ class Solver(F06, OP2):
         #Mgg = zeros((i, i), 'float64')
         Kgg, Kgg_sparse = self.assemble_global_stiffness_matrix(model, i, self.nidComponentToID)
 
-        #model.params = {'GRDPNT': 0,}
-        if 'GRDPNT' in model.params:
-            grid_point = model.params['GRDPNT']
-            if grid_point == -1:
-                pass
-            else:
-                Mgg, Mgg_sparse = self.assemble_global_mass_matrix(model, i, self.nidComponentToID)
-                self.make_gpwg(grid_point, Mgg)
-                sys.exit('check the mass...')
         Fg = self.assemble_forces(model, i, case, self.nidComponentToID)
         return Kgg, Fg, i
 
@@ -1412,7 +1421,7 @@ class Solver(F06, OP2):
             xyz_cid0 = array([node1, node2, node3, node4],
                           dtype='float32')
             cg = xyz_cid0.mean(axis=0)
-            print('cg = %s' % cg)
+            self.log.info('cg = %s' % cg)
         else:
             xyz_cid0 = zeros((self.model.grid.n, 3), dtype='float32')
             for i, (key, xyz) in enumerate(sorted(self.positions.iteritems())):
@@ -1457,7 +1466,7 @@ class Solver(F06, OP2):
                 cp = self.model.grid.cp[i]
                 Ti = self.model.coords[cp].beta()
             if not array_equal(Ti, eye(3)):
-                print('Ti[%i]=\n%s\n' % (i+1, Ti))
+                self.log.info('Ti[%i]=\n%s\n' % (i+1, Ti))
             TiT = Ti.T
             d = zeros((6, 6), dtype='float32')
             d[:3, :3] = TiT
@@ -1480,14 +1489,13 @@ class Solver(F06, OP2):
             A.T [m x n]
             T [m x m] = A.T [m x n] @ B [n x n] @ A [n x m]
             """
-            from numpy import ndarray
             assert isinstance(A, ndarray), type(A)
             assert isinstance(A, ndarray), type(B)
             return dot(A.T, dot(B, A))
 
         Mo = triple(D, Mgg)
-        print('Mgg=\n%s\n' % Mgg)
-        print('Mo=\n%s\n' % Mo)
+        self.log.info('Mgg=\n%s\n' % Mgg)
+        self.log.info('Mo=\n%s\n' % Mo)
 
         # t-translation; r-rotation
         Mt_bar = Mo[:3, :3]
@@ -1495,7 +1503,6 @@ class Solver(F06, OP2):
         Mrt_bar = Mo[3:, :3]
         Mr_bar = Mo[3:, 3:]
 
-        from numpy import diag
         #print('dinner =', diag(Mt_bar))
         delta = norm(diag(Mt_bar))
         #print('einner =', Mt_bar - diag(Mt_bar))
@@ -1507,16 +1514,15 @@ class Solver(F06, OP2):
             # user warning 3042
             pass
 
-        print('Mt_bar (correct) =\n%s\n' % Mt_bar)
-        print('delta=%s' % delta)
-        print('epsilon=%s' % epsilon)
-        print('e/d=%s' % (epsilon/delta))
-        print()
+        self.log.info('Mt_bar (correct) =\n%s\n' % Mt_bar)
+        self.log.info('delta=%s' % delta)
+        self.log.info('epsilon=%s' % epsilon)
+        self.log.info('e/d=%s\n' % (epsilon/delta))
 
         # hermitian eigenvectors
         omega, S = eigh(Mt_bar)
-        print('omega=%s' % omega)
-        print('S (right, but not correct order) =\n%s\n' % S)
+        self.log.info('omega=%s' % omega)
+        self.log.info('S (right, but not correct order) =\n%s\n' % S)
 
         Mt = triple(S, Mt_bar)
         Mtr = triple(S, Mtr_bar)
@@ -1528,14 +1534,16 @@ class Solver(F06, OP2):
         My = Mt[1, 1]
         Mz = Mt[2, 2]
         mass = diag(Mt)
-        print('mass = %s' % mass)
+        self.log.info('mass = %s' % mass)
+        if min(mass) == 0.:
+            raise RuntimeError('mass = %s' % mass)
         cg = array([
             [ Mtr[0, 0]/Mx, -Mtr[0, 2]/Mx,  Mtr[0, 1]/Mx ],
             [ Mtr[1, 2]/My,  Mtr[1, 1]/My, -Mtr[1, 0]/My ],
             [-Mtr[2, 1]/Mz,  Mtr[2, 0]/Mz,  Mtr[2, 2]/Mz ],
         ], dtype='float32')
 
-        print('cg=\n%s\n' % cg)
+        self.log.info('cg=\n%s\n' % cg)
         xx = cg[0, 0]
         yx = cg[0, 1]
         zx = cg[0, 2]
@@ -1558,18 +1566,16 @@ class Solver(F06, OP2):
             [I21, I22, I13],
             [I31, I32, I33],
             ], dtype='float32')
-        print('I(S)=\n%s\n' % II)
+        self.log.info('I(S)=\n%s\n' % II)
 
 
         # 6. Reverse the sign of the off diagonal terms
-        from numpy import fill_diagonal, argsort
-        from numpy.linalg import eig
         fill_diagonal(-II, diag(II))
         #print('I~=\n%s\n' % II)
         omegaQ, Q = eig(II)
         #i = argsort(omegaQ)
-        print('omegaQ = %s' % omegaQ)
-        print('Q -> wrong =\n%s\n' % Q)
+        self.log.info('omegaQ = %s' % omegaQ)
+        self.log.info('Q -> wrong =\n%s\n' % Q)
         #IQ = triple(Q, II)
         #print('I(Q) -> wrong =\n%s\n' % IQ)
 
@@ -1578,29 +1584,29 @@ class Solver(F06, OP2):
 
     def solve_sol_101(self, Kgg, Fg):
         for (i, j, a) in zip(self.iUm, self.jUm, self.Um):
-            print("Kgg[%s, %s] = %s" % (i, j, a))
+            self.log.info("Kgg[%s, %s] = %s" % (i, j, a))
             Kgg[i, j] = a
 
         (self.IDtoNidComponents) = reverse_dict(self.nidComponentToID)
-        print("IDtoNidComponents = ", self.IDtoNidComponents)
-        print("Kgg =\n" + print_annotated_matrix(Kgg, self.IDtoNidComponents, self.IDtoNidComponents))
+        self.log.info("IDtoNidComponents = %s" % self.IDtoNidComponents)
+        self.log.info("Kgg =\n" + print_annotated_matrix(Kgg, self.IDtoNidComponents, self.IDtoNidComponents))
         #print("Kgg = \n", Kgg)
         #print("iSize = ", i)
 
         #(Kaa, Fa) = self.Partition(Kgg)
         #sys.exit('verify Kgg')
 
-        print("Kgg/%g = \n%s" % (self.knorm, print_matrix(Kgg / self.knorm)))
+        self.log.info("Kgg/%g = \n%s" % (self.knorm, print_matrix(Kgg / self.knorm)))
         Kaa, dofs2 = partition_dense_symmetric(Kgg, self.iUs)
-        print("Kaa/%g = \n%s" % (self.knorm, print_matrix(Kaa / self.knorm)))
+        self.log.info("Kaa/%g = \n%s" % (self.knorm, print_matrix(Kaa / self.knorm)))
         #print("Kaa.shape = ",Kaa.shape)
 
         #sys.exit('verify Kaa')
         Fa, _dofs2 = partition_dense_vector(Fg, self.iUs)
         #print("Kaa = \n%s" % (print_matrix(Kaa)))
 
-        print("Fg/%g = %s" % (self.fnorm, Fg/self.fnorm))
-        print("Fa/%g = %s" % (self.fnorm, Fa/self.fnorm))
+        self.log.info("Fg/%g = %s" % (self.fnorm, Fg/self.fnorm))
+        self.log.info("Fa/%g = %s" % (self.fnorm, Fa/self.fnorm))
         #print("Us = ", self.Us)
 
         #self.Us = array(self.Us, 'float64')  # SPC
@@ -1660,14 +1666,14 @@ class Solver(F06, OP2):
             #dof1i = self.nidComponentToID[dof1]
             for j, dof2 in enumerate(dofs):
                 if abs(K[i, j]) > 0.0:
-                    print('i=%s j=%s dof1=%s dof2=%s Ke[i,j]=%s' % (i, j, dof1, dof2, K[i,j]/self.knorm))
+                    self.log.info('i=%s j=%s dof1=%s dof2=%s Ke[i,j]=%s' % (i, j, dof1, dof2, K[i,j]/self.knorm))
                     #dof2i = self.nidComponentToID[dof2]
                     #assert isinstance(dof1i, int), dof1i
                     #assert isinstance(dof2i, int), dof2i
                     Kgg[dof1, dof2] += K[i, j]
                     #Kgg[dof1i, dof2i] += K[i, j]
                     #print('Kgg[%i,%i]=%d' % (dof1i, dof2i, Kgg[dof1i, dof2i]) )
-        print('Kggi =\n', Kgg)
+        self.log.info('Kggi =\n%s' % Kgg)
 
     def add_mass(self, M, dofs, nijv):
         Mgg = self.Mgg
@@ -1678,20 +1684,20 @@ class Solver(F06, OP2):
 
     def assemble_global_stiffness_matrix(self, model, i, Dofs):
         self.Kgg = zeros((i, i), 'float64')
-        print("Kgg.shape", self.Kgg.shape)
+        self.log.info("Kgg.shape = %s" % str(self.Kgg.shape))
 
         dof_mapper = []
 
         nnodes = model.grid.n
         nspoints = model.spoint.n
         assert nnodes > 0
-        print("nnodes =", nnodes)
+        self.log.info("nnodes = %s" % nnodes)
         #ndofs = 6 * nnodes + nspoints
 
         i = 0
         nids = model.grid.node_id
         #nids.sort()
-        print('nids =', nids, i)
+        self.log.info('nids = %s %s' %(nids, i))
         #dof_ids = arange(0, 6*nnodes, 6)
 
         #dofs_0 = [nid=2, 1] -> searchsorted(nids, nid)[0]
@@ -1699,53 +1705,70 @@ class Solver(F06, OP2):
         #for nid in sorted(self.nodes.iterkeys()):
             #nid_dof_mapper[]
 
+        self.log.info('start calculating xyz_cid0')
         self.positions = {}
         index0s = {}
         for i in xrange(model.grid.n):
             nid = model.grid.node_id[i]
             self.positions[nid] = model.grid.xyz[i]
             index0s[nid] = 6 * i
+        self.log.info('end calculating xyz_cid0')
 
         # spring
-        for i in xrange(model.elements_spring.celas1.n):
-            K, dofs, nijv = model.elements_spring.celas1.get_stiffness_matrix(i, model, self.positions, index0s)
-            print("Kcelas1 =\n", K)
-            self.add_stiffness(K, dofs, nijv)
+        if model.elements_spring.celas1.n:
+            self.log.info('start calculating Kcelas1')
+            for i in xrange(model.elements_spring.celas1.n):
+                K, dofs, nijv = model.elements_spring.celas1.get_stiffness_matrix(i, model, self.positions, index0s)
+                self.log.info("Kcelas1 =\n%s" % K)
+                self.add_stiffness(K, dofs, nijv)
 
-        for i in xrange(model.elements_spring.celas2.n):
-            K, dofs, nijv = model.elements_spring.celas2.get_stiffness_matrix(i, model, self.positions, index0s)
-            self.add_stiffness(K, dofs, nijv)
+        if model.elements_spring.celas2.n:
+            self.log.info('start calculating Kcelas2')
+            for i in xrange(model.elements_spring.celas2.n):
+                K, dofs, nijv = model.elements_spring.celas2.get_stiffness_matrix(i, model, self.positions, index0s)
+                self.add_stiffness(K, dofs, nijv)
 
-        if 0:
+        if model.elements_spring.celas3.n:
+            self.log.info('start calculating Kcelas3')
             for i in xrange(model.elements_spring.celas3.n):
                 K, dofs, nijv = model.elements_spring.celas3.get_stiffness_matrix(i, model, self.positions, index0s)
                 self.add_stiffness(K, dofs, nijv)
 
+        if model.elements_spring.celas4.n:
+            self.log.info('start calculating Kcelas4')
             for i in xrange(model.elements_spring.celas4.n):
                 K, dofs, nijv = model.elements_spring.celas4.get_stiffness_matrix(i, model, self.positions, index0s)
                 self.add_stiffness(K, dofs, nijv)
 
         # conrod
-        for i in xrange(model.conrod.n):
-            self.conrodStress = {}
-            K, dofs, nijv = model.conrod.get_stiffness_matrix(i, model, self.positions, index0s)
-            self.add_stiffness(K, dofs, nijv)
+        if model.conrod.n:
+            self.log.info('start calculating Kconrod')
+            for i in xrange(model.conrod.n):
+                self.conrodStress = {}
+                K, dofs, nijv = model.conrod.get_stiffness_matrix(i, model, self.positions, index0s)
+                self.add_stiffness(K, dofs, nijv)
 
         # crod
-        for i in xrange(model.crod.n):
-            K, dofs, nijv = model.crod.get_stiffness_matrix(i, model, self.positions, index0s)
-            self.add_stiffness(K, dofs, nijv)
+        if model.crod.n:
+            self.log.info('start calculating Kcrod')
+            for i in xrange(model.crod.n):
+                K, dofs, nijv = model.crod.get_stiffness_matrix(i, model, self.positions, index0s)
+                self.add_stiffness(K, dofs, nijv)
 
         # ctube
+        #if model.ctube.n:
+            #self.log.info('start calculating Kctube')
 
         # shells
-        for i in xrange(model.elements_shell.ctria3.n):
-            K, dofs, nijv = model.elements_shell.ctria3.get_stiffness_matrix(i, model, self.positions, index0s)
-            self.add_stiffness(K, dofs, nijv)
+        if model.elements_shell.ctria3.n:
+            for i in xrange(model.elements_shell.ctria3.n):
+                K, dofs, nijv = model.elements_shell.ctria3.get_stiffness_matrix(i, model, self.positions, index0s)
+                self.add_stiffness(K, dofs, nijv)
 
-        for i in xrange(model.elements_shell.cquad4.n):
-            K, dofs, nijv = model.elements_shell.cquad4.get_stiffness_matrix(i, model, self.positions, index0s)
-            self.add_stiffness(K, dofs, nijv)
+        if model.elements_shell.cquad4.n:
+            for i in xrange(model.elements_shell.cquad4.n):
+                K, dofs, nijv = model.elements_shell.cquad4.get_stiffness_matrix(i, model, self.positions, index0s)
+                self.add_stiffness(K, dofs, nijv)
 
         #Kgg_sparse = coo_matrix((entries, (rows, cols)), shape=(i, i))
         Kgg_sparse = None
@@ -1843,7 +1866,7 @@ class Solver(F06, OP2):
         #Mgg_sparse = coo_matrix((entries, (rows, cols)), shape=(i, i))
         Mgg_sparse = None
         Mgg = self.Mgg
-        print('returning Mgg')
+        self.log.info('returning Mgg')
         return Mgg, Mgg_sparse
 
     def apply_SPCs(self, model, case, nidComponentToID):
@@ -1871,7 +1894,7 @@ class Solver(F06, OP2):
                                 for nid in node_ids:
                                     key = (nid, dofi)
                                     i = nidComponentToID[key]
-                                    print("i=%s Us=%s" % (i, 0.0))
+                                    self.log.info("  i=%s Us=%s" % (i, 0.0))
                                     if i not in self.iUsb:
                                         self.iUsb.append(i)
                                         self.Usb.append(0.0)
@@ -1983,11 +2006,11 @@ class Solver(F06, OP2):
         Fg = zeros(i, 'float64')
         #print(model.loads)
         (loadID, junk) = model.caseControlDeck.get_subcase_parameter(case.id, 'LOAD')
-        print("loadID = %s" % loadID)
+        self.log.info("loadID = %s" % loadID)
         loads = model.loadcase.resolve(int(loadID))
 
         for load in loads:
-            print(load)
+            self.log.info(load)
             if load.type in ['FORCE', 'MOMENT']:
                 if load.type in ['FORCE']:
                     ni = 0
@@ -2012,13 +2035,13 @@ class Solver(F06, OP2):
 
         self.gravLoad = array([0., 0., 0.])
         for load_set in LoadSet:
-            print("load_set = %r" % str(load_set))
+            self.log.info("load_set = %r" % str(load_set))
             #print("type", type(load_set))
             (typesFound, forceLoads, momentLoads,
              forceConstraints, momentConstraints,
              gravityLoad) = load_set.organizeLoads(model)
 
-            print('typesFound', typesFound)
+            self.log.info('typesFound = %s' % typesFound)
             if not (isinstance(typesFound, list) or  isinstance(typesFound, set)):
                 raise RuntimeError(type(typesFound))
             assert isinstance(forceLoads, dict), type(forceLoads)
@@ -2034,11 +2057,11 @@ class Solver(F06, OP2):
                 nids.add(nid)
 
             if gravityLoad != []:
-                print("gravityLoad = ", gravityLoad)
+                self.log.info("gravityLoad = %s" % gravityLoad)
                 self.gravLoad += gravityLoad
 
             for nid in nids:
-                print("nid = ", nid)
+                self.log.info("nid = %s" % nid)
 
                 if nid in forceLoads:
                     force = forceLoads[nid]
@@ -2062,9 +2085,9 @@ class Solver(F06, OP2):
 
         if sum(abs(self.gravLoad)) > 0.0:
             for (eid, elem) in sorted(model.elements.iteritems()):  # CROD, CONROD
-                print("----------------------------")
+                self.log.info("----------------------------")
                 node_ids, index0s = self.element_dof_start(elem, nids)
-                print("node_ids=%s index0s=%s" % (node_ids, index0s))
+                self.log.info("node_ids=%s index0s=%s" % (node_ids, index0s))
 
                 # nIJV is the position of the values of K in the dof
                 (Fgi, nGrav) = elem.Fg(model, self.gravLoad, fnorm)
@@ -2072,7 +2095,7 @@ class Solver(F06, OP2):
                     #print("dof = ",dof)
                     if dof in Dofs:
                         Fg[Dofs[dof]] += fg
-        print("Fg  = %s" % Fg)
+        self.log.info("Fg  = %s" % Fg)
         return Fg
 
     def write_results(self, case):

@@ -206,7 +206,7 @@ class CONROD(RodElement):
         v1 = p0 - p1
         L = norm(v1)
         if L == 0.0:
-            msg = 'invalid CROD length=0.0\n%s' % self.__repr__()
+            msg = 'invalid CONROD length=0.0\n%s' % self.__repr__()
             raise ZeroDivisionError(msg)
         #========================
         mi = (rho * A * L + self.nsm[i]) / 6.
@@ -228,7 +228,7 @@ class CONROD(RodElement):
             # torsion -> NA
         ]
 
-        print('dofs =', dofs)
+        self.model.log.info('dofs = %s' % dofs)
         return(M, dofs, nIJV)
 
     def get_stiffness_matrix(self, i, model, positions, index0s, knorm=1.0):  # CROD/CONROD
@@ -262,7 +262,7 @@ class CONROD(RodElement):
         v1 = p0 - p1
         L = norm(v1)
         if L == 0.0:
-            msg = 'invalid CROD length=0.0\n%s' % (self.__repr__())
+            msg = 'invalid CONROD length=0.0\n%s' % (self.__repr__())
             raise ZeroDivisionError(msg)
         #========================
         #print("A=%r E=%r G=%r J=%r L=%r" % (A, E, G, J, L))
@@ -342,7 +342,7 @@ class CONROD(RodElement):
         #print(K / knorm)
         #print("K[%s] = \n%s\n" % (self.eid, list_print(K/knorm)))
 
-        print('dofs =', dofs)
+        self.model.log.info('dofs = %s' % dofs)
         #print('K =\n', list_print(K / knorm))
 
         return(K2, dofs, nIJV)
@@ -367,7 +367,7 @@ class CONROD(RodElement):
             v1 = p1 - p2
             L = norm(p1 - p2)
             if L == 0.0:
-                msg = 'invalid CROD length=0.0\n%s' % (self.__repr__())
+                msg = 'invalid CONROD length=0.0\n%s' % (self.__repr__())
                 raise ZeroDivisionError(msg)
             #========================
             A = self.get_area_from_index(i)

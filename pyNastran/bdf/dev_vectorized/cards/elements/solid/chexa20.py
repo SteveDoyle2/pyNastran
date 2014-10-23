@@ -5,7 +5,7 @@ from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 
-from .chexa8 import quad_area_centroid, get_hex_volume
+from .chexa8 import quad_area_centroid, volume8
 from .solid_element import SolidElement
 
 class CHEXA20(SolidElement):
@@ -86,7 +86,8 @@ class CHEXA20(SolidElement):
         ..note:: Volume for a CHEXA is the average area of two opposing faces
         times the length between the centroids of those points
         """
-        volume = get_hex_volume(self, element_ids, xyz_cid0)
+        n1, n2, n3, n4, n5, n6, n7, n8 = self._node_locations(xyz_cid0)
+        volume = volume8(n1, n2, n3, n4, n5, n6, n7, n8)
         if total:
             volume = abs(volume).sum()
         else:
