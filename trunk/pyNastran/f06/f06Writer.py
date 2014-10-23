@@ -296,8 +296,7 @@ class F06Writer(object):
         self.chexa_strain = {}
         #======================================================================
 
-    def __objects_init__(self):
-        """More variable declarations"""
+    def __objects_common_init__(self):
         #: the date the job was run on
         self.date = None
 
@@ -306,9 +305,15 @@ class F06Writer(object):
         #:   PARAM   GRDPNT    0  (required for F06/OP2)
         #:   PARAM   POSTEXT YES  (required for OP2)
         self.grid_point_weight = GridPointWeight()
+        self.oload_resultant = None
 
         #: ESE
         self.eigenvalues = {}
+
+
+    def __objects_init__(self):
+        """More variable declarations"""
+        self.__objects_common_init__()
 
         #: OUG - displacement
         self.displacements = {}           # tCode=1 thermal=0
@@ -722,33 +727,9 @@ class F06Writer(object):
             msg += '0                             POINT    TYPE   FAILED      STIFFNESS       OLD USET           NEW USET\n'
             msg += '                               ID            DIRECTION      RATIO     EXCLUSIVE  UNION   EXCLUSIVE  UNION\n'
             for (nid, dof) in failed:
-                msg += '                                %s        G      %s         0.00E+00          B        F         SB       SB   *\n' % (nid, dof)
+                msg += '                         %8s        G      %s         0.00E+00          B        F         SB       SB   *\n' % (nid, dof)
         else:
             msg += 'No constraints have been applied...\n'
-
-        page_stamp = self.make_stamp(self.Title, self.date)
-        msg += page_stamp % self.page_num
-        self.page_num += 1
-        return msg
-
-    def write_oload(self, model, Fg):
-        msg = ''
-        msg += '        *** USER INFORMATION MESSAGE 7310 (VECPRN)\n'
-        msg += '            ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM WILL BE USED AS REFERENCE LOCATION.\n'
-        msg += '            RESULTANTS ABOUT ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM IN SUPERELEMENT BASIC SYSTEM COORDINATES.\n'
-        msg += '       0                                                  OLOAD    RESULTANT       \n'
-
-        #nnodes = len(model.nodes)
-
-        msg += '        SUBCASE/    LOAD\n'
-        msg += '        DAREA ID    TYPE       T1            T2            T3            R1            R2            R3\n'
-        msg += '      0        1     FX    3.000000E+03     ----          ----          ----       0.000000E+00 -6.000000E+04                             \n'
-        msg += '                     FY       ----       5.000000E+03     ----       0.000000E+00     ----       2.000000E+05                             \n'
-        msg += '                     FZ       ----          ----       0.000000E+00  0.000000E+00  0.000000E+00     ----                                  \n'
-        msg += '                     MX       ----          ----          ----       1.300000E+04     ----          ----                                  \n'
-        msg += '                     MY       ----          ----          ----          ----       0.000000E+00     ----                                  \n'
-        msg += '                     MZ       ----          ----          ----          ----          ----       0.000000E+00                             \n'
-        msg += '                   TOTALS  3.000000E+03  5.000000E+03  0.000000E+00  1.300000E+04  0.000000E+00  1.400000E+05\n'
 
         page_stamp = self.make_stamp(self.Title, self.date)
         msg += page_stamp % self.page_num
@@ -872,6 +853,10 @@ class F06Writer(object):
             print("grid_point_weight")
             self.page_num = self.grid_point_weight.write_f06(f06, page_stamp, self.page_num)
             assert isinstance(self.page_num, int), self.grid_point_weight.__class__.__name__
+
+        if self.oload_resultant is not None:
+            self.page_num = self.oload_resultant.write_f06(f06, page_stamp, self.page_num)
+            assert isinstance(self.page_num, int), self.oload_resultant.__class__.__name__
 
         #print "page_stamp = %r" % page_stamp
         #print "stamp      = %r" % stamp
