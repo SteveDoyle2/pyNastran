@@ -109,25 +109,96 @@ class CHEXA8(SolidElement):
             for i in range(3):
                 assert isinstance(c[i], float)
 
-    def _node_locations(self, xyz_cid0):
+    def get_mass_matrix(self, i, model, positions, index0s):
+        nnodes = 8
+        ndof = 3 * nnodes
+        pid = self.property_id[i]
+        rho = self.model.elements.properties_solid.psolid.get_density(pid)[0]
+
+        n0, n1, n2, n3, n4, n5, n6, n7 = self.node_ids[i, :]
+        V = volume8(positions[self.node_ids[i, 0]],
+                    positions[self.node_ids[i, 1]],
+                    positions[self.node_ids[i, 2]],
+                    positions[self.node_ids[i, 3]],
+
+                    positions[self.node_ids[i, 4]],
+                    positions[self.node_ids[i, 5]],
+                    positions[self.node_ids[i, 6]],
+                    positions[self.node_ids[i, 7]],
+                    )
+
+        mass = rho * V
+        if is_lumped:
+            mi = mass / 4.
+            nnodes = 4
+            M = eye(ndof, dtype='float32')
+        else:
+            mi = mass / 20.
+            M = ones((ndof, ndof), dtype='float32')
+            for i in xrange(nnodes):
+                j = i * 3
+                M[j:j+3, j:j+3] = 2.
+        M *= mi
+        dofs, nijv = self.get_dofs_nijv(index0s, n0, n1, n2, n3, n4, n5, n6, n7)
+        return M, dofs, nijv
+
+    def get_dofs_nijv(self, index0s, n0, n1, n2, n3, n4, n5, n6, n7):
+        i0 = index0s[n0]
+        i1 = index0s[n1]
+        i2 = index0s[n2]
+        i3 = index0s[n3]
+        i4 = index0s[n4]
+        i5 = index0s[n5]
+        i6 = index0s[n6]
+        i7 = index0s[n7]
+        dofs = array([
+            i0, i0+1, i0+2,
+            i1, i1+1, i1+2,
+            i2, i2+1, i2+2,
+            i3, i3+1, i3+2,
+            i4, i4+1, i4+2,
+            i5, i5+1, i5+2,
+            i6, i6+1, i6+2,
+            i7, i7+1, i7+2,
+        ], 'int32')
+        nijv = [
+            # translation
+            (n0, 1), (n0, 2), (n0, 3),
+            (n1, 1), (n1, 2), (n1, 3),
+            (n2, 1), (n2, 2), (n2, 3),
+            (n3, 1), (n3, 2), (n3, 3),
+            (n4, 1), (n4, 2), (n4, 3),
+            (n5, 1), (n5, 2), (n5, 3),
+            (n6, 1), (n6, 2), (n6, 3),
+            (n7, 1), (n7, 2), (n7, 3),
+        ]
+        return dofs, nijv
+
+    def _node_locations_element_id(self, element_id=None, xyz_cid0=None):
+        if element_id is None:
+            i = None
+        else:
+            i = searchsorted(self.element_id, element_id)
         if xyz_cid0 is None:
             xyz_cid0 = self.model.grid.get_positions()
+        return self._node_locations_i(i, xyz_cid0)
 
-        n1 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 0]), :]
-        n2 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 1]), :]
-        n3 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 2]), :]
-        n4 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 3]), :]
-        n5 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 4]), :]
-        n6 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 5]), :]
-        n7 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 6]), :]
-        n8 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 7]), :]
+    def _node_locations_i(self, i, xyz_cid0):
+        """
+        :param i:        None or an array of node IDs
+        :param xyz_cid0: the node positions as a dictionary
+        """
+        index_map = self.model.grid.index_map
+        node_ids = self.node_ids
+        n1 = xyz_cid0[index_map(node_ids[i, 0]), :]
+        n2 = xyz_cid0[index_map(node_ids[i, 1]), :]
+        n3 = xyz_cid0[index_map(node_ids[i, 2]), :]
+        n4 = xyz_cid0[index_map(node_ids[i, 3]), :]
+        n5 = xyz_cid0[index_map(node_ids[i, 4]), :]
+        n6 = xyz_cid0[index_map(node_ids[i, 5]), :]
+        n7 = xyz_cid0[index_map(node_ids[i, 6]), :]
+        n8 = xyz_cid0[index_map(node_ids[i, 7]), :]
         return n1, n2, n3, n4, n5, n6, n7, n8
-
-    def _get_area_centroid(self, element_ids, xyz_cid0):
-        n1, n2, n3, n4, n5, n6, n7, n8 = self._node_locations(xyz_cid0)
-        (A1, c1) = quad_area_centroid(n1, n2, n3, n4)
-        (A2, c2) = quad_area_centroid(n5, n6, n7, n8)
-        return (A1, A2, c1, c2)
 
     def get_volume(self, element_ids=None, xyz_cid0=None, total=False):
         """
@@ -140,29 +211,28 @@ class CHEXA8(SolidElement):
         ..note:: Volume for a CHEXA is the average area of two opposing faces
         times the length between the centroids of those points
         """
-        volume = get_hex_volume(self, element_ids, xyz_cid0)
+        n1, n2, n3, n4, n5, n6, n7, n8 = self._node_locations_element_id(ielement, xyz_cid0)
+        (A1, c1) = quad_area_centroid(n1, n2, n3, n4)
+        (A2, c2) = quad_area_centroid(n5, n6, n7, n8)
         if total:
             volume = abs(volume).sum()
         else:
             volume = abs(volume)
         return volume
 
-    def get_centroid_volume(self, element_ids=None, xyz_cid0=None, total=False):
+    def get_centroid_volume(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the centroid and volume for one or more CHEXA8 elements.
 
-        :param element_ids: the elements to consider (default=None -> all)
+        :param element_id: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the volume be summed; centroid be averaged (default=False)
 
         ..see:: CHEXA8.get_volume() and CHEXA8.get_centroid() for more information.
         """
-        if element_ids is None:
-            element_ids = self.element_id
-        if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_positions()
-
-        (A1, A2, c1, c2) = self._area_centroid(element_ids, xyz_cid0)
+        n1, n2, n3, n4, n5, n6, n7, n8 = self._node_locations_element_id(element_id, xyz_cid0)
+        (A1, c1) = quad_area_centroid(n1, n2, n3, n4)
+        (A2, c2) = quad_area_centroid(n5, n6, n7, n8)
         centroid = (c1 * A1 + c2 * A2) / (A1 + A2)
         volume = (A1 + A2) / 2. * norm(c1 - c2, axis=1)
         if total:
@@ -173,7 +243,7 @@ class CHEXA8(SolidElement):
         assert volume.min() > 0.0, 'volume.min() = %f' % volume.min()
         return centroid, volume
 
-    def get_centroid(self, element_ids=None, xyz_cid0=None, total=False):
+    def get_centroid(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the centroid for one or more CHEXA8 elements.
 
@@ -181,9 +251,9 @@ class CHEXA8(SolidElement):
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the centroid be averaged (default=False)
         """
-        if element_ids is None:
-            element_ids = self.element_id
-        (A1, A2, c1, c2) = self._get_area_centroid(element_ids, xyz_cid0)
+        n1, n2, n3, n4, n5, n6, n7, n8 = self._node_locations_element_id(element_id, xyz_cid0)
+        (A1, c1) = quad_area_centroid(n1, n2, n3, n4)
+        (A2, c2) = quad_area_centroid(n5, n6, n7, n8)
         centroid = (c1 * A1 + c2 * A2) / (A1 + A2)
         if total:
             centroid = centroid.mean(axis=0)
@@ -196,18 +266,20 @@ class CHEXA8(SolidElement):
         nids.pop(indx)
         return nids
 
-    def write_bdf(self, f, size=8, element_ids=None):
+    def write_bdf(self, f, size=8, element_id=None):
         if self.n:
-            if element_ids is None:
+            if element_id is None:
                 i = arange(self.n)
             else:
-                i = searchsorted(self.element_id, element_ids)
+                i = searchsorted(self.element_id, element_id)
 
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 card = ['CHEXA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7]]
                 f.write(print_card_8(card))
 
-def get_hex_volume(self, element_ids, xyz_cid0):
-    (A1, A2, c1, c2) = self._get_area_centroid(element_ids, xyz_cid0)
+
+def volume8(n1, n2, n3, n4, n5, n6, n7, n8):
+    (A1, c1) = quad_area_centroid(n1, n2, n3, n4)
+    (A2, c2) = quad_area_centroid(n5, n6, n7, n8)
     volume = (A1 + A2) / 2. * norm(c1 - c2, axis=1)
     return volume

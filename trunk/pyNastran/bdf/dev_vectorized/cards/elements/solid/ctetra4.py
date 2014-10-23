@@ -1,3 +1,5 @@
+from itertools import count, izip
+
 from numpy import zeros, arange, dot, cross, searchsorted, array, where, asarray, eye
 from numpy.linalg import norm
 
@@ -71,120 +73,119 @@ class CTETRA4(SolidElement):
 
     def get_mass_matrix(self, i, model, positions, index0s):
         """
-        //---
-        //--- A mass matrix is a discrete representation of a continuous mass distribution.
-        //--- To compute our mass matrix for a tetrahedral element with linear shape
-        //--- functions we need the formula (pp. 266 in Cook)
-        //---
-        //---                                                  a!b!c!d!
-        //---  \int_V N_1^a  N_2^b N_3^c N_4^d dV = 6V --------------------------     (**)
-        //---                                             (3 + a + b +c + d)!
-        //---
-        //--- A consistent element mass matrix (pp. 376 Cook) is defined as
-        //---
-        //---   m = \int_V \rho N^T N dV           (***)
-        //---
-        //--- This equation can be derived from work balance, the details of which is unimportant
-        //--- here (look Cook pp. 375-376 for details).
-        //--- Assumping \rho is constant over each tetrahedral element and using the linear shape
-        //--- functions the above definition (***) results in
-        //---
-        //---                    |N_1|
-        //--- m =  \rho \int_V   |N_2|  |N_1 N_2 N_3 N_4| dV
-        //---                    |N_3|
-        //---                    |N_4|
-        //---
-        //---                       |(N_1 N_1)   (N_1 N_2)   (N_1 N_3)   (N_1 N_4)|
-        //--- m =   \rho    \int_V  |(N_2 N_1)   (N_2 N_2)   (N_2 N_3)   (N_2 N_4)| dV
-        //---                       |(N_3 N_1)   (N_3 N_2)   (N_3 N_3)   (N_3 N_4)|
-        //---                       |(N_4 N_1)   (N_4 N_2)   (N_4 N_3)   (N_4 N_4)|
-        //---
-        //--- by (**)
-        //---
-        //---                 | 2 1 1 1|
-        //--- m = \rho  V/20  | 1 2 1 1|          (****)
-        //---                 | 1 1 2 1|
-        //---                 | 1 1 1 2|
-        //---
-        //---               V
-        //--- m_ij =  \rho --- (1+delta_ij)
-        //---               20
-        //---
-        //--- in 3D this means that for the tetrahedral element
-        //---
-        //---                | 2 2 2  1 1 1  1 1 1  1 1 1 |
-        //---                | 2 2 2  1 1 1  1 1 1  1 1 1 |
-        //---                | 2 2 2  1 1 1  1 1 1  1 1 1 |
-        //---                |                            |
-        //---                | 1 1 1  2 2 2  1 1 1  1 1 1 |
-        //---                | 1 1 1  2 2 2  1 1 1  1 1 1 |
-        //---            V   | 1 1 1  2 2 2  1 1 1  1 1 1 |
-        //--- Me = \rho ---  |                            |
-        //---            20  | 1 1 1  1 1 1  2 2 2  1 1 1 |
-        //---                | 1 1 1  1 1 1  2 2 2  1 1 1 |
-        //---                | 1 1 1  1 1 1  2 2 2  1 1 1 |
-        //---                |                            |
-        //---                | 1 1 1  1 1 1  1 1 1  2 2 2 |
-        //---                | 1 1 1  1 1 1  1 1 1  2 2 2 |
-        //---                | 1 1 1  1 1 1  1 1 1  2 2 2 |
-        //---
-        //--- Notice that in order to obtain the global/system mass matrix an assembly similar to the
-        //--- stiffness matrix assembly must be carried out. Further, the global M matrix will
-        //--- have the same sub-block pattern as the global K matrix.
-        //---
-        //--- A consistent mass matrix is often not used in computer graphics. Instead and
-        //--- ad-hoc approach named ``lumped'' mass matrix is applied.
-        //--- The lumped mass matrix is obtained by placing particle masses at the nodes.
-        //--- This corresponds to shifting all the masses in the rows of (****) onto the
-        //--- diagonal. In 3D this yields the element mass matrix
-        //---
-        //---                | 1 0 0  0 0 0  0 0 0  0 0 0 |
-        //---                | 0 1 0  0 0 0  0 0 0  0 0 0 |
-        //---                | 0 0 1  0 0 0  0 0 0  0 0 0 |
-        //---                |                            |
-        //---                | 0 0 0  1 0 0  0 0 0  0 0 0 |
-        //---                | 0 0 0  0 1 0  0 0 0  0 0 0 |
-        //---            V   | 0 0 0  0 0 1  0 0 0  0 0 0 |
-        //--- Me = \rho ---  |                            |
-        //---            4   | 0 0 0  0 0 0  1 0 0  0 0 0 |
-        //---                | 0 0 0  0 0 0  0 1 0  0 0 0 |
-        //---                | 0 0 0  0 0 0  0 0 1  0 0 0 |
-        //---                |                            |
-        //---                | 0 0 0  0 0 0  0 0 0  1 0 0 |
-        //---                | 0 0 0  0 0 0  0 0 0  0 1 0 |
-        //---                | 0 0 0  0 0 0  0 0 0  0 0 1 |
-        //---
-        //--- Thus a lumped mass matrix is diagonal whereas a consistent mass matrix
-        //--- is not. Observe that the global mass matrix would also diagonal and the
-        //--- assembly is simplified to an iteration over all tetrahedra, while
-        //--- incementing the nodal mass by one fourth of the tetrahedral mass.
-        //---
-        //---  for each node n
-        //---    mass(n) = 0
-        //---  next n
-        //---  for each tetrahedron e
-        //---    mass(n_i) += \rho_e Ve / 4
-        //---    mass(n_j) += \rho_e Ve / 4
-        //---    mass(n_k) += \rho_e Ve / 4
-        //---    mass(n_m) += \rho_e Ve / 4
-        //---  next e
-        //---
-        //--- where n_i,n_j,n_k and n_m are the four nodes of the e'th tetrahedron.
-        //---
-        //--- The advantage of lumping is less storage and higher performace. On the downside
-        //--- lumping introduces a discontinouty in the displacement field.
-        //---
-        //--- Obrien.shen state that the errors in lumping is negligeble for small-size course
-        //--- meshes used in computer graphics. However, for finer meshes the errors becomes
-        //--- noticeable.
-        //---
-        //--- There do exist other approaches for computing mass matrices, even mehtods which
-        //--- combine other methods. We refer the interested reader to Cook for more details. Here
-        //--- we have limited our selfes to the two most common methods.
-        //---
-        //--- It is worthwhile to notice that under the reasonable assumptions that V and \rho are
-        //--- positive for all elements both the element mass matrices and the global mass matrices
-        //--- are symmetric positive definite matrices.
+        A mass matrix is a discrete representation of a continuous mass distribution.
+        To compute our mass matrix for a tetrahedral element with linear shape
+        functions we need the formula (pp. 266 in Cook)
+
+                                                         a!b!c!d!
+         \int_V N_1^a  N_2^b N_3^c N_4^d dV = 6V --------------------------     (**)
+                                                    (3 + a + b +c + d)!
+
+        A consistent element mass matrix (pp. 376 Cook) is defined as
+
+          m = \int_V \rho N^T N dV           (***)
+
+        This equation can be derived from work balance, the details of which is unimportant
+        here (look Cook pp. 375-376 for details).
+        Assumping \rho is constant over each tetrahedral element and using the linear shape
+        functions the above definition (***) results in
+
+                           |N_1|
+        m =  \rho \int_V   |N_2|  |N_1 N_2 N_3 N_4| dV
+                           |N_3|
+                           |N_4|
+
+                              |(N_1 N_1)   (N_1 N_2)   (N_1 N_3)   (N_1 N_4)|
+        m =   \rho    \int_V  |(N_2 N_1)   (N_2 N_2)   (N_2 N_3)   (N_2 N_4)| dV
+                              |(N_3 N_1)   (N_3 N_2)   (N_3 N_3)   (N_3 N_4)|
+                              |(N_4 N_1)   (N_4 N_2)   (N_4 N_3)   (N_4 N_4)|
+
+        by (**)
+
+                        | 2 1 1 1|
+        m = \rho  V/20  | 1 2 1 1|          (****)
+                        | 1 1 2 1|
+                        | 1 1 1 2|
+
+                      V
+        m_ij =  \rho --- (1+delta_ij)
+                      20
+
+        in 3D this means that for the tetrahedral element
+
+                       | 2 2 2  1 1 1  1 1 1  1 1 1 |
+                       | 2 2 2  1 1 1  1 1 1  1 1 1 |
+                       | 2 2 2  1 1 1  1 1 1  1 1 1 |
+                       |                            |
+                       | 1 1 1  2 2 2  1 1 1  1 1 1 |
+                       | 1 1 1  2 2 2  1 1 1  1 1 1 |
+                   V   | 1 1 1  2 2 2  1 1 1  1 1 1 |
+        Me = \rho ---  |                            |
+                   20  | 1 1 1  1 1 1  2 2 2  1 1 1 |
+                       | 1 1 1  1 1 1  2 2 2  1 1 1 |
+                       | 1 1 1  1 1 1  2 2 2  1 1 1 |
+                       |                            |
+                       | 1 1 1  1 1 1  1 1 1  2 2 2 |
+                       | 1 1 1  1 1 1  1 1 1  2 2 2 |
+                       | 1 1 1  1 1 1  1 1 1  2 2 2 |
+
+        Notice that in order to obtain the global/system mass matrix an assembly similar to the
+        stiffness matrix assembly must be carried out. Further, the global M matrix will
+        have the same sub-block pattern as the global K matrix.
+
+        A consistent mass matrix is often not used in computer graphics. Instead and
+        ad-hoc approach named ``lumped'' mass matrix is applied.
+        The lumped mass matrix is obtained by placing particle masses at the nodes.
+        This corresponds to shifting all the masses in the rows of (****) onto the
+        diagonal. In 3D this yields the element mass matrix
+
+                       | 1 0 0  0 0 0  0 0 0  0 0 0 |
+                       | 0 1 0  0 0 0  0 0 0  0 0 0 |
+                       | 0 0 1  0 0 0  0 0 0  0 0 0 |
+                       |                            |
+                       | 0 0 0  1 0 0  0 0 0  0 0 0 |
+                       | 0 0 0  0 1 0  0 0 0  0 0 0 |
+                   V   | 0 0 0  0 0 1  0 0 0  0 0 0 |
+        Me = \rho ---  |                            |
+                   4   | 0 0 0  0 0 0  1 0 0  0 0 0 |
+                       | 0 0 0  0 0 0  0 1 0  0 0 0 |
+                       | 0 0 0  0 0 0  0 0 1  0 0 0 |
+                       |                            |
+                       | 0 0 0  0 0 0  0 0 0  1 0 0 |
+                       | 0 0 0  0 0 0  0 0 0  0 1 0 |
+                       | 0 0 0  0 0 0  0 0 0  0 0 1 |
+
+        Thus a lumped mass matrix is diagonal whereas a consistent mass matrix
+        is not. Observe that the global mass matrix would also diagonal and the
+        assembly is simplified to an iteration over all tetrahedra, while
+        incementing the nodal mass by one fourth of the tetrahedral mass.
+
+         for each node n
+           mass(n) = 0
+         next n
+         for each tetrahedron e
+           mass(n_i) += \rho_e Ve / 4
+           mass(n_j) += \rho_e Ve / 4
+           mass(n_k) += \rho_e Ve / 4
+           mass(n_m) += \rho_e Ve / 4
+         next e
+
+        where n_i,n_j,n_k and n_m are the four nodes of the e'th tetrahedron.
+
+        The advantage of lumping is less storage and higher performace. On the downside
+        lumping introduces a discontinouty in the displacement field.
+
+        Obrien.shen state that the errors in lumping is negligeble for small-size course
+        meshes used in computer graphics. However, for finer meshes the errors becomes
+        noticeable.
+
+        There do exist other approaches for computing mass matrices, even mehtods which
+        combine other methods. We refer the interested reader to Cook for more details. Here
+        we have limited our selfes to the two most common methods.
+
+        It is worthwhile to notice that under the reasonable assumptions that V and \rho are
+        positive for all elements both the element mass matrices and the global mass matrices
+        are symmetric positive definite matrices.
 
         http://image.diku.dk/svn/OpenTissue/archieve/silcowitz/OpenTissue/dynamics/fem/fem_compute_mass.h
         """
@@ -272,13 +273,26 @@ class CTETRA4(SolidElement):
             for i in range(3):
                 assert isinstance(c[i], float)
 
-    def _node_locations(self, xyz_cid0):
+    def _node_locations_element_id(self, element_id=None, xyz_cid0=None):
+        if element_id is None:
+            i = None
+        else:
+            i = searchsorted(self.element_id, element_id)
         if xyz_cid0 is None:
             xyz_cid0 = self.model.grid.get_positions()
-        n1 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 0]), :]
-        n2 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 1]), :]
-        n3 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 2]), :]
-        n4 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 3]), :]
+        return self._node_locations_i(i, xyz_cid0)
+
+    def _node_locations_i(self, i, xyz_cid0):
+        """
+        :param i:        None or an array of node IDs
+        :param xyz_cid0: the node positions as a dictionary
+        """
+        index_map = self.model.grid.index_map
+        node_ids = self.node_ids
+        n1 = xyz_cid0[index_map(node_ids[i, 0]), :]
+        n2 = xyz_cid0[index_map(node_ids[i, 1]), :]
+        n3 = xyz_cid0[index_map(node_ids[i, 2]), :]
+        n4 = xyz_cid0[index_map(node_ids[i, 3]), :]
         return n1, n2, n3, n4
 
     def get_volume(self, element_ids=None, xyz_cid0=None, total=False):
@@ -296,8 +310,7 @@ class CTETRA4(SolidElement):
         n = len(element_ids)
         V = zeros(n, self.model.float)
 
-        i = 0
-        for n1i, n2i, n3i, n4i in zip(n1, n2, n3, n4):
+        for i, n1i, n2i, n3i, n4i in izip(count(), n1, n2, n3, n4):
             V[i] = volume4(n1i, n2i, n3i, n4i)
             i += 1
         return V
@@ -312,10 +325,7 @@ class CTETRA4(SolidElement):
 
         ..see:: CTETRA4.volume() and CTETRA4.centroid for more information.
         """
-        if element_ids is None:
-            element_ids = self.element_id
-
-        n1, n2, n3, n4 = self._node_locations(xyz_cid0)
+        n1, n2, n3, n4 = self._node_locations_element_id(xyz_cid0)
         n = len(element_ids)
         volume = zeros(n, self.model.float)
 
@@ -330,18 +340,15 @@ class CTETRA4(SolidElement):
         assert volume.min() > 0.0, 'volume.min() = %f' % volume.min()
         return centroid, volume
 
-    def get_centroid(self, element_ids=None, xyz_cid0=None, total=False):
+    def get_centroid(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the centroid for one or more CTETRA elements.
 
-        :param element_ids: the elements to consider (default=None -> all)
+        :param element_id: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the centroid be averaged (default=False)
         """
-        if element_ids is None:
-            element_ids = self.element_id
-
-        n1, n2, n3, n4 = self._node_locations(xyz_cid0)
+        n1, n2, n3, n4 = self._node_locations_element_id(element_id, xyz_cid0)
         centroid = (n1 + n2 + n3 + n4) / 4.0
         if total:
             centroid = centroid.mean(axis=0)
@@ -354,12 +361,12 @@ class CTETRA4(SolidElement):
         nids.pop(indx)
         return nids
 
-    def write_bdf(self, f, size=8, element_ids=None):
+    def write_bdf(self, f, size=8, element_id=None):
         if self.n:
-            if element_ids is None:
+            if element_id is None:
                 i = arange(self.n)
             else:
-                i = searchsorted(self.element_id, element_ids)
+                i = searchsorted(self.element_id, element_id)
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
                 card = ['CTETRA', eid, pid, n[0], n[1], n[2], n[3]]
                 f.write(print_card(card))

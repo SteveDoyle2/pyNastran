@@ -133,7 +133,7 @@ class CROD(RodElement):
                 f.write(print_card(card))
 
     #=========================================================================
-    def get_stiffness(self, i, model, positions, index0s, knorm=1.0):
+    def get_stiffness_matrix(self, i, model, positions, index0s, knorm=1.0):
         #print("----------------")
         pid = self.property_id[i]
         assert isinstance(pid, int), pid
@@ -239,8 +239,8 @@ class CROD(RodElement):
         #print(K / knorm)
         #print("K[%s] = \n%s\n" % (self.eid, list_print(K/knorm)))
 
-        print('dofs =', dofs)
-        print('K =\n', list_print(K / knorm))
+        self.model.log.info('dofs = %s' % dofs)
+        self.model.log.info('K =\n%s' % list_print(K / knorm))
 
         return(K2, dofs, nIJV)
 
