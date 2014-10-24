@@ -9,12 +9,14 @@ from struct import pack
 
 # 3rd party
 from numpy import (array, zeros, ones, radians, cos, sin, dot, vstack, hstack,
-                   eye, searchsorted, array_equal, ndarray, diag, fill_diagonal, argsort)
+                   eye, searchsorted, array_equal, ndarray, diag, fill_diagonal, argsort,
+                   nan, nan_to_num)
 from numpy.linalg import solve, norm, eigh, eig
 
-from scipy.sparse import coo_matrix
+from scipy.sparse import dok_matrix, coo_matrix
 
 # pyNastran
+from pyNastran.bdf.dev_vectorized.solver.utils import triple, reverse_dict, partition_dense_symmetric, partition_dense_vector, remove_dofs
 from pyNastran.f06.f06Writer import sorted_bulk_data_header
 from pyNastran.utils.dev import list_print
 from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
@@ -44,86 +46,6 @@ from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealCShearForce
 # beams
 from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import RealBeamStress, RealBeamStrain
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealCBeamForce
-
-
-def partition_sparse(Is, Js, Vs):
-    I2 = []
-    J2 = []
-    V2 = []
-    for (i, j, v) in (Is, Js, Vs):
-        if abs(v) >= 1e-8:
-            I2.append(i)
-            J2.append(j)
-            V2.append(v)
-    return(I2, J2, V2)
-
-
-def getDOF_Set(nAll, dofs):
-    dofsAll = set([i for i in xrange(nAll)])
-    dofs = list(dofsAll.difference(set(dofs)))
-    return dofs
-
-def remove_dofs(dofsAll, dofs_remove):
-    dofs = list(dofsAll.difference(set(dofs_remove)))
-    return dofs
-
-
-def partition_dense_symmetric(A, dofs_in):
-    nAll = A.shape[0]
-    dofs = getDOF_Set(nAll, dofs_in)
-    dofs.sort()
-    n = len(dofs)
-    A2 = zeros((n, n), 'float64')
-    for (i, dofI) in enumerate(dofs):
-        for (j, dofJ) in enumerate(dofs):
-            v = A[dofI, dofJ]
-            if abs(v) >= 1e-8:
-                A2[i, j] = v
-    return (A2, dofs)
-
-
-def partition_dense_vector(F, dofs_in):
-    nAll = F.shape[0]
-    #print("dofs = %s" % dofs)
-    dofs = getDOF_Set(nAll, dofs_in)
-    dofs.sort()
-    #print("dofs = %s" % dofs)
-    n = len(dofs)
-    F2 = zeros(n, 'float64')
-    for (i, dofI) in enumerate(dofs):
-        v = F[dofI]
-        if abs(v) >= 1e-8:
-            F2[i] = v
-    return (F2, dofs)
-
-
-def partition_sparse_vector(F, dofs):
-    dofs.sort()
-    #n = len(dofs)
-    F2i = []
-    F2v = []
-    for (i, dofI) in enumerate(dofs):
-        v = F2v[dofI]
-        if abs(v) >= 1e-8:
-            F2i.append(i)
-            F2v.append(v)
-    return(F2i, F2v)
-
-
-def departition_dense_vector(n, IsVs):
-    V = zeros(n)
-    for IV in IsVs:
-        (Is, Vs) = IV
-        for (i, v) in izip(Is, Vs):
-            V[i] = v
-    return(V)
-
-
-def reverse_dict(A):
-    B = {}
-    for (key, value) in A.iteritems():
-        B[value] = key
-    return B
 
 
 class Solver(F06, OP2):
@@ -1441,40 +1363,28 @@ class Solver(F06, OP2):
 
         nnodes = xyz_cid0.shape[0]
         D = zeros((nnodes*6, 6), dtype='float32')
-        if example:
-            Mgg = zeros((nnodes*6, nnodes*6), dtype='float32')
-            for i, node in enumerate(xyz_cid0):
-                j = i * 6
-                Mgg[j, j] = 2.
-                Mgg[j+1, j+1] = 3.
-                Mgg[j+2, j+2] = 5.
 
-        for i, node in enumerate(xyz_cid0):
+
+        grid_point = 2
+        if grid_point in [-1, 0]:
+            # -1 is don't compute a mass matrix, but since we're in this function,
+            # we use the origin.
+            ref_point = zeros(3, dtype='float32')
+        else:
+            # find mass/inertia about point G
+            ref_point = self.positions[grid_point]
+
+        # we subtract ref point so as to not change xyz_cid0
+        for i, node in enumerate(xyz_cid0 - ref_point):
             r1, r2, r3 = node
             j = i * 6
-            #print('i=%s node=%s' % (i+1, node))
-            #r1, r2, r3 = node.get_position()
             Tr = array([[0., r3, -r2],
                         [-r3, 0., r1],
                         [r2, -r1, 0.]], dtype='float32')
             #print('Tr[%i]=\n%s\n' % (i+1, Tr))
-            if example:
-                if i in [0, 2]:
-                    if i == 0:
-                        angle = radians(45.)
-                    elif i == 2:
-                        angle = radians(60.)
-                    Ti = array([
-                        [cos(angle), -sin(angle), 0.],
-                        [sin(angle), cos(angle), 0.],
-                        [0., 0., 1.],
-                    ], dtype='float32')
-                else:
-                    Ti = eye(3, dtype='float32')
-            else:
-                #Ti = eye(3, dtype='float32')
-                cp = self.model.grid.cp[i]
-                Ti = self.model.coords[cp].beta()
+
+            cp = self.model.grid.cp[i]
+            Ti = self.model.coords[cp].beta()
             if not array_equal(Ti, eye(3)):
                 self.log.info('Ti[%i]=\n%s\n' % (i+1, Ti))
             TiT = Ti.T
@@ -1482,26 +1392,11 @@ class Solver(F06, OP2):
             d[:3, :3] = TiT
             d[3:, 3:] = TiT
             d[:3, 3:] = dot(TiT, Tr)
-            #print('d[%i]=\n%s\n' % (i+1, d))
-            #print('j=', j)
             D[j:j+6, :] = d
-        #print('D.shape =', D.shape)
 
         Mo = zeros((6, 6), dtype='float32')
         #print('D=\n%s\n' % D)
         # translati
-
-        def triple(A, B):
-            """
-            A.T @ B @ A
-
-            A   [n x m]
-            A.T [m x n]
-            T [m x m] = A.T [m x n] @ B [n x n] @ A [n x m]
-            """
-            assert isinstance(A, ndarray), type(A)
-            assert isinstance(A, ndarray), type(B)
-            return dot(A.T, dot(B, A))
 
         Mo = triple(D, Mgg)
         self.log.info('Mgg=\n%s\n' % Mgg)
@@ -1545,13 +1440,20 @@ class Solver(F06, OP2):
         Mz = Mt[2, 2]
         mass = diag(Mt)
         self.log.info('mass = %s' % mass)
-        if min(mass) == 0.:
-            raise RuntimeError('mass = %s' % mass)
+        #if min(mass) == 0.:
+            #raise RuntimeError('mass = %s' % mass)
         cg = array([
-            [ Mtr[0, 0]/Mx, -Mtr[0, 2]/Mx,  Mtr[0, 1]/Mx ],
-            [ Mtr[1, 2]/My,  Mtr[1, 1]/My, -Mtr[1, 0]/My ],
-            [-Mtr[2, 1]/Mz,  Mtr[2, 0]/Mz,  Mtr[2, 2]/Mz ],
+            [ Mtr[0, 0], -Mtr[0, 2],  Mtr[0, 1] ],
+            [ Mtr[1, 2],  Mtr[1, 1], -Mtr[1, 0] ],
+            [-Mtr[2, 1],  Mtr[2, 0],  Mtr[2, 2] ],
         ], dtype='float32')
+        if mass[0] != 0.:
+            cg[0, :] /= Mx
+        if mass[1] != 0.:
+            cg[1, :] /= My
+        if mass[2] != 0.:
+            cg[2, :] /= Mz
+        #cg = nan_to_num(cg)
 
         self.log.info('cg=\n%s\n' % cg)
         xx = cg[0, 0]
@@ -1576,13 +1478,17 @@ class Solver(F06, OP2):
             [I21, I22, I13],
             [I31, I32, I33],
             ], dtype='float32')
+        II = nan_to_num(II)
         self.log.info('I(S)=\n%s\n' % II)
 
 
         # 6. Reverse the sign of the off diagonal terms
         fill_diagonal(-II, diag(II))
         #print('I~=\n%s\n' % II)
-        omegaQ, Q = eig(II)
+        if nan in II:
+            Q = zeros((3, 3), dtype='float32')
+        else:
+            omegaQ, Q = eig(II)
         #i = argsort(omegaQ)
         self.log.info('omegaQ = %s' % omegaQ)
         self.log.info('Q -> wrong =\n%s\n' % Q)
@@ -1694,10 +1600,12 @@ class Solver(F06, OP2):
 
     def add_mass(self, M, dofs, nijv):
         Mgg = self.Mgg
+        Mgg_sparse = self.Mgg_sparse
         for i, dof1 in enumerate(dofs):
             for j, dof2 in enumerate(dofs):
                 if abs(M[i, j]) > 0.0:
                     Mgg[dof1, dof2] += M[i, j]
+                    Mgg_sparse[dof1, dof2] += M[i, j]
 
     def assemble_global_stiffness_matrix(self, model, i, Dofs):
         self.Kgg = zeros((i, i), 'float64')
@@ -1796,6 +1704,7 @@ class Solver(F06, OP2):
 
     def assemble_global_mass_matrix(self, model, ndofs, Dofs):
         self.Mgg = zeros((ndofs, ndofs), 'float64')
+        self.Mgg_sparse = dok_matrix((ndofs, ndofs), dtype='float64')
 
         dof_mapper = []
 
@@ -1822,6 +1731,9 @@ class Solver(F06, OP2):
             assert coord_id == 0, 'CONM1 doesnt support coord_id != 0 for element %i' % (model.conm1.element_id[i], coord_id)
             # CONM1 doesn't consider coord ID
             self.Mgg[i0:i0+6, i0:i0+6] += M[:, :]
+            for ii1, i01 in arange(i0, i0+6):
+                for ii2, i02 in arange(i0, i0+6):
+                    self.Mgg_sparse[i01, i02] = M[ii1, ii2]
         for i in xrange(model.mass.conm2.n):
             M, dofs, nijv = model.conm1.get_mass_matrix(i, model, self.positions, index0s)
             self.add_mass(M, dofs, nijv)

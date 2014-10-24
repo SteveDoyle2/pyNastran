@@ -120,6 +120,66 @@ class CROD(RodElement):
         else:
             return mass
 
+    def get_mass_matrix(self, i, model, positions, index0s, knorm=1.0):  # CROD/CONROD
+        """
+        Lumped:
+        =======
+          mi = 1/2 * rho * A * L
+                 [ 1  0 ]
+          M = mi [ 0  1 ]
+
+        Consistent:
+        ===========
+          mi = 1/6 * rho * A * L
+                 [ 2 1 ]
+          M = mi [ 1 2 ]
+        """
+        i = self.model.prod.get_index(self.property_id)
+        A = self.model.prod.A[i]
+        mid = self.model.prod.material_id[i]
+        rho = self.model.materials.get_density(mid)
+        #========================
+        xyz_cid0 = None
+        #xyz1, xyz2 = self._node_locations(xyz_cid0)
+        if self.n == 1:
+            n1, n2 = self.node_ids[0, :]
+        else:
+            n1, n2 = self.node_ids[i, :]
+
+        i1 = index0s[n1]
+        i2 = index0s[n2]
+
+        p1 = positions[n1]
+        p2 = positions[n2]
+        v1 = p1 - p2
+        L = norm(v1)
+        if L == 0.0:
+            msg = 'invalid CONROD length=0.0\n%s' % self.__repr__()
+            raise ZeroDivisionError(msg)
+        #========================
+        nsm = self.get_non_structural_mass(self.property_id[i])
+        mi = (rho * A * L + nsm) / 6.
+        m = array([[2., 1.],
+                   [1., 2.]])  # 1D rod
+
+        Lambda = _Lambda(v1, debug=False)
+        M = dot(dot(transpose(Lambda), m), Lambda)
+
+        Mi, Mj = M.shape
+        dofs = array([
+            i1, i1+1, i1+2,
+            i2, i2+1, i2+2,
+        ], 'int32')
+        nIJV = [
+            # axial
+            (n1, 1), (n1, 2), (n1, 3),
+            (n2, 1), (n2, 2), (n2, 3),
+
+            # torsion -> NA
+        ]
+        self.model.log.info('dofs = %s' % dofs)
+        return(M, dofs, nIJV)
+
     #=========================================================================
     def write_bdf(self, f, size=8, element_ids=None):
         if self.n:
@@ -145,19 +205,19 @@ class CROD(RodElement):
 
         #========================
         #(n1, n2) = self.node_ids()
-        n0 = self.node_ids[i, 0]
-        n1 = self.node_ids[i, 1]
+        n1 = self.node_ids[i, 0]
+        n2 = self.node_ids[i, 1]
 
-        i0 = index0s[n0]
         i1 = index0s[n1]
+        i2 = index0s[n2]
 
         #print("n0", n0)
         #print("n1", n1)
-        n0 = positions[n0]
         n1 = positions[n1]
+        n2 = positions[n2]
         #p1 = model.Node(n1).xyz
 
-        v1 = n0 - n1
+        v1 = n1 - n2
         L = norm(v1)
         if L == 0.0:
             msg = 'invalid CROD length=0.0\n%s' % (self.__repr__())
@@ -169,7 +229,8 @@ class CROD(RodElement):
         #k_axial = 1.0
         #k_torsion = 2.0
 
-        k = array([[1., -1.], [-1., 1.]])  # 1D rod
+        k = array([[1., -1.],
+                   [-1., 1.]])  # 1D rod
 
         Lambda = _Lambda(v1, debug=True)
         K = dot(dot(transpose(Lambda), k), Lambda)
@@ -186,24 +247,24 @@ class CROD(RodElement):
         elif k_torsion == 0.0: # axial; 2D or 3D
             K2 = K * k_axial
             dofs = array([
-                i0, i0+1, i0+2,
                 i1, i1+1, i1+2,
+                i2, i2+1, i2+2,
             ], 'int32')
             nIJV = [
                 # axial
-                (n0, 1), (n0, 2), (n0, 3),
                 (n1, 1), (n1, 2), (n1, 3),
+                (n2, 1), (n2, 2), (n2, 3),
             ]
         elif k_axial == 0.0: # torsion; assume 3D
             K2 = K * k_torsion
             dofs = array([
-                i0+3, i0+4, i0+5,
                 i1+3, i1+4, i1+5,
+                i2+3, i2+4, i2+5,
             ], 'int32')
             nIJV = [
                 # torsion
-                (n0, 4), (n0, 5), (n0, 6),
-                (n1, 4), (n1, 5), (n1, 6),
+                (n1, 4), (n1, 5), (n2, 6),
+                (n2, 4), (n2, 5), (n1, 6),
             ]
 
         else:  # axial + torsion; assume 3D
@@ -214,20 +275,20 @@ class CROD(RodElement):
             K2[Ki:, Ki:] = K * k_torsion
 
             dofs = array([
-                i0, i0+1, i0+2,
                 i1, i1+1, i1+2,
+                i2, i2+1, i2+2,
 
-                i0+3, i0+4, i0+5,
                 i1+3, i1+4, i1+5,
+                i2+3, i2+4, i2+5,
             ], 'int32')
             nIJV = [
                 # axial
-                (n0, 1), (n0, 2), (n0, 3),
                 (n1, 1), (n1, 2), (n1, 3),
+                (n2, 1), (n2, 2), (n2, 3),
 
                 # torsion
-                (n0, 4), (n0, 5), (n0, 6),
                 (n1, 4), (n1, 5), (n1, 6),
+                (n2, 4), (n2, 5), (n2, 6),
             ]
 
         #Fg = dot(dot(transpose(Lambda), grav), Lambda)
