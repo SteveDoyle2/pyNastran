@@ -215,6 +215,7 @@ class CONROD(RodElement):
 
         Lambda = _Lambda(v1, debug=False)
         M = dot(dot(transpose(Lambda), m), Lambda)
+
         Mi, Mj = M.shape
         dofs = array([
             i0, i0+1, i0+2,
