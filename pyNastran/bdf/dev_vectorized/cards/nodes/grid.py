@@ -1,4 +1,4 @@
-from numpy import zeros, arange, where, searchsorted, argsort, unique, asarray, array, dot, transpose
+from numpy import zeros, arange, where, searchsorted, argsort, unique, asarray, array, dot, transpose, append
 
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 from pyNastran.bdf.fieldWriter import print_card
@@ -120,12 +120,12 @@ class GRID(object):
         self.ps = zeros(ncards, 'int32')
 
     def build(self):
-        print('--------building grid--------')
         cards = self._cards
         ncards = len(cards)
 
         self.n = ncards
         if ncards:
+            self.model.log.debug('--------building grid--------')
             float_fmt = self.model.float
             self.node_id = zeros(ncards, 'int32')
             self.xyz = zeros((ncards, 3), float_fmt)
@@ -173,21 +173,77 @@ class GRID(object):
             #raise RuntimeError('Cannot find GRID %s, %s' % (node_ids[i_too_large], msg))
         return searchsorted(self.node_id, node_ids)
 
-    def get_positions(self, node_ids=None):
+    def get_index_by_node_id(self, node_id=None):
+        if node_ids is None:
+            out_index = None
+        else:
+            out_index = searchsorted(self.node_id, node_ids)
+            assert len(node_ids) == len(n), 'n1=%s n2=%s'  %(len(node_ids), len(n))
+        return out_index
+
+    def get_index_by_cp(self, cp=None, i=None):
+        """Find all the j-indicies where cp=cpi for some given subset of i-indicies"""
+        return self._get_index_by_param('cp', self.cp, cp, i)
+
+    def get_index_by_cd(self, cd=None, i=None):
+        """Find all the j-indicies where cd=cdi for some given subset of i-indicies"""
+        return self._get_index_by_param('cd', self.cd, cd, i)
+
+    def get_index_by_seid(self, seid=None, i=None):
+        """Find all the j-indicies where seid=seidi for some given subset of i-indicies"""
+        return self._get_index_by_param('seid', self.seid, seid, i)
+
+    def _get_index_by_param(self, name, param_data, param, i):
+        """
+        You probably shouldn't be calling this method.
+        It does the work associcated with get_index_by_cp / get_index_by_cd
+        """
+        if param is None:
+            return i
+        #param_all = unique(param_data)
+        i, n = _index_to_nslice(i, self.n)
+        out_index = array(n, dtype='int32')
+        param_data_i = param_data[i]
+
+        i0 = 0
+        for parami in param:
+            j = where(param_data_i == parami)[0]
+            nj = len(j)
+            out_index[i0:i0+nj] = j
+            i0 += nj
+        return out_index
+
+    def get_index_by_cp2(self, cp=None, i=None):
+        """Find all the j-indicies where cp=cpi for some given subset of i-indicies"""
+        if cp is None:
+            return i
+        #cp_all = unique(self.cp)
+        i, n = index_to_nslice(i, self.n)
+        out_index = array(n, dtype='int32')
+        Cp = self.cp[i]
+
+        i0 = 0
+        for cpi in cp:
+            j = where(Cp == cpi)[0]
+            nj = len(j)
+            out_index[i0:i0+nj] = j
+            i0 += nj
+        return out_index
+
+    def get_positions(self, node_id=None):
+        i = self.get_index_by_node_id(node_id)
+        return self.get_positions_by_index(i)
+
+    def get_positions_by_index(self, i=None):
         """
         in the global frame
         """
-        if node_ids is None:
-            node_ids = self.node_id
+        if i is None:
             xyz = self.xyz.copy()
-            # indexs
-            n = arange(self.n)
+            n = slice(None, None)
         else:
-            # indexs
-            n = searchsorted(self.node_id, node_ids)
-            assert len(node_ids) == len(n), 'n1=%s n2=%s'  %(len(node_ids), len(n))
+            i = n
             xyz = self.xyz[n, :].copy()
-            #print "n =", n
 
         cpn = self.cp[n]
         i = where(cpn != 0)[0]
@@ -227,19 +283,40 @@ class GRID(object):
             msg.append('  %-8s: %i' % ('GRID', self.n))
         return msg
 
-    def write_bdf(self, f, size=8):
+    def write_bdf(self, f, node_id=None, size=8, is_double=False):
+        i = self.get_index_by_node_id(node_id)
+        return self.write_bdf_by_index(f, i, size, is_double)
+
+    def write_bdf_by_index(self, f, i=None, size=8, is_double=False):
+        """
+        Write the BDF cards
+
+        :param f: a file object
+        :param i: the indicies (default=None -> all)
+        :param size: the field width (8/16)
+        :param is_double: is this double precision (default=False)
+        """
+        if i is None:
+            i = slice(None, None)
         if self.n:
             f.write('$GRID\n')
-            cp0 = self.model.grdset.cp
-            cd0 = self.model.grdset.cd
-            ps0 = self.model.grdset.ps
-            seid0 = self.model.grdset.seid
+            # default to the GRDSET defaults
+            #cp0 = self.model.grdset.cp
+            #cd0 = self.model.grdset.cd
+            #ps0 = self.model.grdset.ps
+            #seid0 = self.model.grdset.seid
 
-            Cp   = [cpi   if cpi   != cp0   else '' for cpi   in self.cp]
-            Cd   = [cdi   if cdi   != cd0   else '' for cdi   in self.cd]
-            Ps   = [psi   if psi   != ps0   else '' for psi   in self.ps]
-            Seid = [seidi if seidi != seid0 else '' for seidi in self.seid]
-            for (nid, cp, xyz, cd, ps, seid) in zip(self.node_id, Cp, self.xyz, Cd, Ps, Seid):
+            # default to the GRID defaults
+            cp0 = 0
+            cd0 = 0
+            ps0 = -1
+            seid0 = 0
+            blank = ' '*8 if size==8 else ' ' * 16
+            Cp   = [cpi   if cpi   != cp0   else blank for cpi   in self.cp[i]]
+            Cd   = [cdi   if cdi   != cd0   else blank for cdi   in self.cd[i]]
+            Ps   = [psi   if psi   != ps0   else blank for psi   in self.ps[i]]
+            Seid = [seidi if seidi != seid0 else blank for seidi in self.seid[i]]
+            for (nid, cp, xyz, cd, ps, seid) in zip(self.node_id, Cp, self.xyz[i, :], Cd, Ps, Seid):
                 card = ['GRID', nid, cp, xyz[0], xyz[1], xyz[2], cd, ps, seid]
                 f.write(print_card(card, size))
 
@@ -270,3 +347,12 @@ class GRID(object):
         obj.ps = self.ps[i]
         obj.seid = self.seid[i]
         return obj
+
+def _index_to_nslice(i, n):
+    if i is None:
+        i = slice(None, None)
+        n = self.n
+    else:
+        n = len(i)
+    return i, n
+
