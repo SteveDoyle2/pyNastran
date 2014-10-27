@@ -86,16 +86,22 @@ class BDFMethods(BDFMethodsDeprecated):
     def __init__(self):
         pass
 
-    def mass_properties(self, reference_point=None, sym_axis=None, num_cpus=1):
+    def mass_properties(self, element_ids=None, reference_point=None, sym_axis=None,
+        calculate_cg=True, calculate_inertia=True, num_cpus=1):
         """
         Caclulates mass properties in the global system about the reference point.
 
         :param self: the BDF object
+        :param element_ids: an array of element ids
         :param reference_point: an array that defines the origin of the frame.
             default = <0,0,0>.
+        :param calculate_cg: should the cg be calculated? (default=True)
+        :param calculate_inertia: should the inertia be calculated? (default=True)
+        :param sym_axis: the axis to which the model is symmetric.
+                         If AERO cards are used, this can be left blank
         :returns mass: the mass of the model
         :returns cg: the cg of the model as an array.
-        :returns I: moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz])
+        :returns I: moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz]) or None
 
         I = mass * centroid * centroid
 
@@ -111,17 +117,42 @@ class BDFMethods(BDFMethodsDeprecated):
         if reference_point is None:
             reference_point = array([0., 0., 0.])
 
-        if num_cpus > 1:
-            mass, cg, I = self._mass_properties_mp(num_cpus, reference_point=reference_point, sym_axis=sym_axis)
+        if element_ids is None:
+            elements = self.elements.itervalues()
+            masses = self.masses.itervalues()
+            nelements = len(self.elements) + len(self.masses)
         else:
-                     #Ixx Iyy Izz, Ixy, Ixz Iyz
-            I = array([0., 0., 0., 0., 0., 0., ])
-            cg = array([0., 0., 0.])
+            elements = [element for eid, element in self.elements.iteritems() if eid in element_ids]
+            masses = [mass for eid, mass in self.masses.iteritems() if eid in element_ids]
+            nelements = len(element_ids)
+
+        I = array([0., 0., 0., 0., 0., 0., ])
+        cg = array([0., 0., 0.])
+        if calculate_cg is False and calculate_inertia is False:
             mass = 0.
+            for pack in [elements, masses]:
+                for element in pack:
+                    try:
+                        m = element.Mass()
+                        mass += m
+                    except:
+                        pass
+            mass, cg, I = self._apply_mass_symmetry(sym_axis, mass, cg, I)
+            return mass, None, None
+
+        #num_cpus = 4
+        if num_cpus > 1:
+            # doesn't support calculate_cg = False
+            # must use num_cpus = 1
+            mass, cg, I = self._mass_properties_mp(num_cpus, elements, masses, nelements,
+                            reference_point=reference_point, calculate_inertia=calculate_inertia)
+        else:
+            #Ixx Iyy Izz, Ixy, Ixz Iyz
             # precompute the CG location and make it the reference point
-            if reference_point == 'cg':
-                for pack in [self.elements, self.masses]:
-                    for element in pack.itervalues():
+            if reference_point == 'cg' or calculate_inertia is False:
+                mass = 0.
+                for pack in [elements, masses]:
+                    for element in pack:
                         try:
                             p = element.Centroid()
                             m = element.Mass()
@@ -129,15 +160,20 @@ class BDFMethods(BDFMethodsDeprecated):
                             cg += m * p
                         except:
                             pass
-
                 if mass == 0.0:
-                    return (mass, cg, I)
+                    return mass, cg, I
+                elif not calculate_inertia:
+                    mass, cg, I = self._apply_mass_symmetry(sym_axis, mass, cg, I)
+                    return (mass, cg, None)
                 reference_point = cg / mass
+            else:
+                # reference_point = [0.,0.,0.] or user-defined array
+                pass
 
-            cg = array([0., 0., 0.])
             mass = 0.
-            for pack in [self.elements, self.masses]:
-                for element in pack.itervalues():
+            cg = array([0., 0., 0.])
+            for pack in [elements, masses]:
+                for element in pack:
                     try:
                         p = element.Centroid()
                     except:
@@ -163,6 +199,14 @@ class BDFMethods(BDFMethodsDeprecated):
             if mass:
                 cg = cg / mass
 
+        mass, cg, I = self._apply_mass_symmetry(sym_axis, mass, cg, I)
+        return (mass, cg, I)
+
+    def _apply_mass_symmetry(self, sym_axis, mass, cg, I):
+        """
+        Scales the mass & moement of inertia based on the symmetry axes and
+        WTMASS PARAM card
+        """
         if sym_axis is None:
             for key, aero in self.aero.iteritems():
                 sym_axis = ''
@@ -175,54 +219,55 @@ class BDFMethods(BDFMethodsDeprecated):
                 if aero.IsAntiSymmetricalXZ():
                     raise NotImplementedError('%s is antisymmetric about the XZ plane' % str(aero))
         if sym_axis is not None:
+            # either we figured sym_axis out from the AERO cards or the user told us
             self.log.debug('Mass/MOI sym_axis = %r' % sym_axis)
 
-        scale = 1.0
+        if None is not sym_axis:
+            if 'x' in sym_axis:
+                mass *= 2.0
+                I[0] *= 2.0
+                I[1] *= 2.0
+                I[2] *= 2.0
+                I[3] *= 0.0  # Ixy
+                I[4] *= 0.0  # Ixz
+                I[5] *= 2.0  # Iyz
+                cg[0] = 0.0
+            if 'y' in sym_axis:
+                mass *= 2.0
+                I[0] *= 2.0
+                I[1] *= 2.0
+                I[2] *= 2.0
+                I[3] *= 0.0  # Ixy
+                I[4] *= 2.0  # Ixz
+                I[5] *= 0.0  # Iyz
+                cg[1] = 0.0
+            if 'z' in sym_axis:
+                mass *= 2.0
+                I[0] *= 2.0
+                I[1] *= 2.0
+                I[2] *= 2.0
+                I[3] *= 2.0  # Ixy
+                I[4] *= 0.0  # Ixz
+                I[5] *= 0.0  # Iyz
+                cg[2] = 0.0
+
         if 'WTMASS' in self.params:
             scale = self.params['WTMASS'].values[0]
-            #print("mass scale =", scale)
-
-        if None is not sym_axis and 'x' in sym_axis:
-            mass *= 2.0
-            I[0] *= 2.0
-            I[1] *= 2.0
-            I[2] *= 2.0
-            I[3] *= 0.0  # Ixy
-            I[4] *= 0.0  # Ixz
-            I[5] *= 2.0  # Iyz
-            cg[0] = 0.0
-        if None is not sym_axis and 'y' in sym_axis:
-            mass *= 2.0
-            I[0] *= 2.0
-            I[1] *= 2.0
-            I[2] *= 2.0
-            I[3] *= 0.0  # Ixy
-            I[4] *= 2.0  # Ixz
-            I[5] *= 0.0  # Iyz
-            cg[1] = 0.0
-        if None is not sym_axis and 'z' in sym_axis:
-            mass *= 2.0
-            I[0] *= 2.0
-            I[1] *= 2.0
-            I[2] *= 2.0
-            I[3] *= 2.0  # Ixy
-            I[4] *= 0.0  # Ixz
-            I[5] *= 0.0  # Iyz
-            cg[2] = 0.0
-
-        # these are strangely not included in the F06...
-        #mass *= scale
-        #I *= scale ** 2.0
+            mass *= scale
+            I *= scale
         return (mass, cg, I)
 
 
-    def _mass_properties_mp(self, num_cpus, reference_point=None, sym_axis=None):
+    def _mass_properties_mp(self, num_cpus, elements, masses, nelements,
+        reference_point=None, calculate_inertia=True):
         """
         Caclulates mass properties in the global system about the reference point.
 
         :param self: the BDF object
+        :param num_cpus: the number of CPUs to use; 2 < num_cpus < 20
         :param reference_point: an array that defines the origin of the frame.
             default = <0,0,0>.
+        :param calculate_inertia: should I be calculated? (default=True)
         :returns mass: the mass of the model
         :returns cg: the cg of the model as an array.
         :returns I: moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz])
@@ -239,23 +284,24 @@ class BDFMethods(BDFMethodsDeprecated):
         """
         if num_cpus <= 1:
             raise RuntimeError('num_proc must be > 1; num_cpus=%s' % num_cpus)
-
-        nelements = len(self.elements) + len(self.masses)
+        if num_cpus > 20:
+            # the user probably doesn't want 68,000 CPUs; change it if you want...
+            raise RuntimeError('num_proc must be < 20; num_cpus=%s' % num_cpus)
         #-----------------------------------------------------------
         self.log.debug("Creating %i-process pool!" % num_cpus)
 
         pool = mp.Pool(num_cpus)
-        result  = pool.imap(_mass_properties_mass_mp_func, [(element) for element in self.elements.itervalues()
+        result  = pool.imap(_mass_properties_mass_mp_func, [(element) for element in elements
                            if element.type not in ['CBUSH', 'CBUSH1D',
                                'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
                                'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
                            ]])
-        result2 = pool.imap(_mass_properties_mass_mp_func, [(element) for element in self.masses.itervalues() ])
+        result2 = pool.imap(_mass_properties_mass_mp_func, [(element) for element in masses ])
 
         mass = zeros((nelements), 'float64')
         xyz = zeros((nelements, 3), 'float64')
         for j, return_values in enumerate(result):
-            #self.log.info("%.3f %% Processed"% (j*100./nelements))
+            #self.log.info("%.3f %% Processed" % (j*100./nelements))
             mass[j] = return_values[0]
             xyz[j, :] = return_values[1]
         pool.close()
@@ -263,7 +309,7 @@ class BDFMethods(BDFMethodsDeprecated):
 
         pool = mp.Pool(num_cpus)
         for j2, return_values in enumerate(result2):
-            #self.log.info("%.3f %% Processed"% (j*100./nelements))
+            #self.log.info("%.3f %% Processed" % (j*100./nelements))
             mass[j+j2] = return_values[0]
             xyz[j+j2, :] = return_values[1]
         pool.close()
@@ -276,6 +322,9 @@ class BDFMethods(BDFMethodsDeprecated):
             cg = array([0., 0., 0.])
             I = array([0., 0., 0., 0., 0., 0., ])
             return massi, cg, I
+        elif not calculate_inertia:
+            I = None
+            return massi, cg, None
 
         cg = dot(mass, xyz) / massi
         #cg = numpy.multiply(mass, xyz) / massi
@@ -333,17 +382,14 @@ class BDFMethods(BDFMethodsDeprecated):
         #I = numpy.sum(I, axis=0)
         #return (massi, cg, I)
 
-    def mass(self):
+    def mass(self, element_ids=None, sym_axis=None):
         """Calculates mass in the global coordinate system"""
-        mass = 0.
-        for pack in [self.elements, self.masses]:
-            for element in pack.itervalues():
-                try:
-                    m = element.Mass()
-                    mass += m
-                except:
-                    self.log.warning("could not get the mass for element"
-                                     "...\n%s" % element)
+        mass, cg, I = self.mass_properties(element_ids=element_ids,
+                                           reference_point=None,
+                                           sym_axis=sym_axis,
+                                           calculate_cg=False,
+                                           calculate_inertia=False,
+                                           num_cpus=1)
         return mass
 
     def resolve_grids(self, cid=0):
@@ -381,6 +427,9 @@ class BDFMethods(BDFMethodsDeprecated):
         gravity_i = model.loads[2][0]
         gi = gravity_i.N * gravity_i.scale
         mass, cg, I = model.mass_properties(reference_point=p0, sym_axis=None, num_cpus=6)
+
+    def sum_forces_moments_elements(self, p0, loadcase_id, eids, include_grav=False):
+        raise NotImplementedError()
 
     def sum_forces_moments(self, p0, loadcase_id, include_grav=False):
         """
