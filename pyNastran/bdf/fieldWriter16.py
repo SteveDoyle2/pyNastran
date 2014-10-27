@@ -6,7 +6,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
 from pyNastran.bdf.bdfInterface.BDF_Card import wipe_empty_fields
-
+from pyNastran.bdf.fieldWriter import set_blank_if_default
 
 def set_string16_blank_if_default(value, default):
     val = set_blank_if_default(value, default)

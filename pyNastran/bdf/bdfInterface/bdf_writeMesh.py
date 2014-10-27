@@ -10,7 +10,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 #import warnings
 from pyNastran.bdf.utils import print_filename
 from pyNastran.utils.gui_io import save_file_dialog
-from pyNastran.bdf.fieldWriter import print_card, print_card_8, print_card_16
+from pyNastran.bdf.fieldWriter import print_card, print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
 
