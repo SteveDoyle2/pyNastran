@@ -1111,7 +1111,7 @@ class PLOAD(Load):
             n4 = integer_or_blank(card, 6, 'n4', 0)
             if n4:
                 nodes.append(n4)
-            #self.nodes = self._wipeEmptyFields(nodes)
+            #self.nodes = wipe_empty_fields(nodes)
             self.nodes = nodes
             assert len(card) <= 7, 'len(PLOAD card) = %i' % len(card)
         else:

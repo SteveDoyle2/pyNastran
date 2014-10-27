@@ -472,6 +472,13 @@ class GetMethods(GetMethodsDeprecated):
     def nCAeros(self):
         return len(self.caeros)
 
+    def AEList(self, aelist, msg=''):
+        try:
+            return self.aelists[aelist]
+        except KeyError:
+            raise KeyError('aelist=%s not found%s.  Allowed AELIST=%s'
+                           % (aelist, msg, self.aelists.keys()))
+
     def Aero(self, acsid, msg=''):
         try:
             return self.aero[acsid]

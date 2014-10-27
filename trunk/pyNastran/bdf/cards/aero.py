@@ -36,7 +36,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (fields,
     integer_or_string, double_string_or_blank,
     blank, interpret_value)
 from pyNastran.bdf.fieldWriter import print_card_8
-
+from pyNastran.bdf.bdfInterface.BDF_Card import wipe_empty_fields
 
 class AEFACT(BaseCard):
     """
@@ -911,8 +911,8 @@ class CAERO1(BaseCard):
     def Points(self):
         p1, matrix = self.cp.transformToGlobal(self.p1)
         p4, matrix = self.cp.transformToGlobal(self.p4)
-        p2 = self.p1 + array([self.x12, 0., 0.])
-        p3 = self.p4 + array([self.x43, 0., 0.])
+        p2 = p1 + array([self.x12, 0., 0.])
+        p3 = p4 + array([self.x43, 0., 0.])
         return [p1, p2, p3, p4]
 
     def SetPoints(self, points):
@@ -2340,7 +2340,7 @@ class SPLINE4(Spline):
     def AEList(self):
         if isinstance(self.aelist, int):
             return self.aelist
-        return self.aelist.aelist
+        return self.aelist.sid
 
     def Set(self):
         if isinstance(self.setg, int):
@@ -2356,9 +2356,9 @@ class SPLINE4(Spline):
         :type model:   BDF()
         """
         msg = ' which is required by SPLINE4 eid=%s' % self.eid
-        self.caero = model.CAero(self.caero, msg=msg)
-        self.setg = model.Set(self.setg, msg=msg)
-        self.aelist = model.AEList(self.aelist, msg=msg)
+        #self.caero = model.CAero(self.caero, msg=msg)
+        #self.setg = model.Set(self.setg, msg=msg)
+        #self.aelist = model.AEList(self.aelist, msg=msg)
 
     def rawFields(self):
         """
@@ -2385,7 +2385,7 @@ class SPLINE4(Spline):
 
         list_fields = ['SPLINE4', self.eid, self.CAero(), self.AEList(), None,
                   self.Set(), dz, method, usage, nelements, melements]
-        list_fields = self._wipeEmptyFields(list_fields)
+        list_fields = wipe_empty_fields(list_fields)
         return list_fields
 
     def write_bdf(self, size, card_writer):
