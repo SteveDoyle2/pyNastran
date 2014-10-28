@@ -186,7 +186,10 @@ class SPOINT(Node):
         :param double: unused
         """
         card = self.reprFields()
-        return self.comment() + print_int_card(card)
+        if 'THRU' not in card:
+            return self.comment() + print_int_card(card)
+        else:
+            return self.comment() + print_card_8(card)
 
 
 class SPOINTs(Node):
@@ -309,7 +312,10 @@ class SPOINTs(Node):
         :param double: unused
         """
         card = self.rawFields()
-        return self.comment() + print_int_card(card)
+        if 'THRU' not in card:
+            return self.comment() + print_int_card(card)
+        else:
+            return self.comment() + print_card_8(card)
 
 
 class GRDSET(Node):
