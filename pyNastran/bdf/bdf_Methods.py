@@ -125,9 +125,9 @@ class BDFMethods(BDFMethodsDeprecated):
             elements = [element for eid, element in self.elements.items() if eid in element_ids]
             masses = [mass for eid, mass in self.masses.items() if eid in element_ids]
             nelements = len(element_ids)
-        I = array([0., 0., 0., 0., 0., 0., ])
-        cg = array([0., 0., 0.])
         if calculate_cg is False and calculate_inertia is False:
+            I = array([0., 0., 0., 0., 0., 0., ])
+            cg = array([0., 0., 0.])
             mass = 0.
             for pack in [elements, masses]:
                 for element in pack:
@@ -139,66 +139,74 @@ class BDFMethods(BDFMethodsDeprecated):
             mass, cg, I = self._apply_mass_symmetry(sym_axis, mass, cg, I)
             return mass, None, None
 
-        #num_cpus = 4
+        num_cpus = 4
         if num_cpus > 1:
             # doesn't support calculate_cg = False
             # must use num_cpus = 1
             mass, cg, I = self._mass_properties_mp(num_cpus, elements, masses, nelements,
                             reference_point=reference_point, calculate_inertia=calculate_inertia)
         else:
-            #Ixx Iyy Izz, Ixy, Ixz Iyz
-            # precompute the CG location and make it the reference point
-            if reference_point == 'cg' or calculate_inertia is False:
-                mass = 0.
-                for pack in [elements, masses]:
-                    for element in pack:
-                        try:
-                            p = element.Centroid()
-                            m = element.Mass()
-                            mass += m
-                            cg += m * p
-                        except:
-                            pass
-                if mass == 0.0:
-                    return mass, cg, I
-                elif not calculate_inertia:
-                    mass, cg, I = self._apply_mass_symmetry(sym_axis, mass, cg, I)
-                    return (mass, cg, None)
-                reference_point = cg / mass
-            else:
-                # reference_point = [0.,0.,0.] or user-defined array
-                pass
+            mass, cg, I = self._mass_properties_sp(elements, masses,
+                            reference_point=reference_point, calculate_inertia=calculate_inertia)
 
+        mass, cg, I = self._apply_mass_symmetry(sym_axis, mass, cg, I)
+        return (mass, cg, I)
+
+    def _mass_properties_sp(self, elements, masses,
+                        reference_point, calculate_inertia):
+        #Ixx Iyy Izz, Ixy, Ixz Iyz
+        # precompute the CG location and make it the reference point
+        I = array([0., 0., 0., 0., 0., 0., ])
+        cg = array([0., 0., 0.])
+        if reference_point == 'cg' or calculate_inertia is False:
             mass = 0.
-            cg = array([0., 0., 0.])
             for pack in [elements, masses]:
                 for element in pack:
                     try:
                         p = element.Centroid()
-                    except:
-                        continue
-
-                    try:
                         m = element.Mass()
-                        (x, y, z) = p - reference_point
-                        x2 = x * x
-                        y2 = y * y
-                        z2 = z * z
-                        I[0] += m * (y2 + z2)  # Ixx
-                        I[1] += m * (x2 + z2)  # Iyy
-                        I[2] += m * (x2 + y2)  # Izz
-                        I[3] += m * x * y      # Ixy
-                        I[4] += m * x * z      # Ixz
-                        I[5] += m * y * z      # Iyz
                         mass += m
                         cg += m * p
                     except:
-                        self.log.warning("could not get the inertia for element\n%s" % element)
-                        continue
-            if mass:
-                cg = cg / mass
+                        pass
+            if mass == 0.0:
+                return mass, cg, I
+            elif not calculate_inertia:
+                mass, cg, I = self._apply_mass_symmetry(sym_axis, mass, cg, I)
+                return (mass, cg, None)
+            reference_point = cg / mass
+        else:
+            # reference_point = [0.,0.,0.] or user-defined array
+            pass
 
-        mass, cg, I = self._apply_mass_symmetry(sym_axis, mass, cg, I)
+        mass = 0.
+        cg = array([0., 0., 0.])
+        for pack in [elements, masses]:
+            for element in pack:
+                try:
+                    p = element.Centroid()
+                except:
+                    continue
+
+                try:
+                    m = element.Mass()
+                    (x, y, z) = p - reference_point
+                    x2 = x * x
+                    y2 = y * y
+                    z2 = z * z
+                    I[0] += m * (y2 + z2)  # Ixx
+                    I[1] += m * (x2 + z2)  # Iyy
+                    I[2] += m * (x2 + y2)  # Izz
+                    I[3] += m * x * y      # Ixy
+                    I[4] += m * x * z      # Ixz
+                    I[5] += m * y * z      # Iyz
+                    mass += m
+                    cg += m * p
+                except:
+                    self.log.warning("could not get the inertia for element\n%s" % element)
+                    continue
+        if mass:
+            cg = cg / mass
         return (mass, cg, I)
 
     def _apply_mass_symmetry(self, sym_axis, mass, cg, I):
@@ -427,8 +435,351 @@ class BDFMethods(BDFMethodsDeprecated):
         gi = gravity_i.N * gravity_i.scale
         mass, cg, I = model.mass_properties(reference_point=p0, sym_axis=None, num_cpus=6)
 
-    def sum_forces_moments_elements(self, p0, loadcase_id, eids, include_grav=False):
-        raise NotImplementedError()
+    def sum_forces_moments_elements(self, p0, loadcase_id, eids, nids, include_grav=False):
+        """
+        Sum the forces/moments based on a list of nodes and elements.
+
+        :param eids:  the list of elements to include (e.g. the loads due to a PLOAD4)
+        :param nids:  the list of nodes to include (e.g. the loads due to a FORCE card)
+
+        Nodal Types  : FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2, PLOAD
+        Element Types: PLOAD1, PLOAD2, PLOAD4, GRAV
+
+        If you have a CQUAD4 eid=3 with a PLOAD4 (eid=3) and a FORCE card (nid=5)
+        acting on it, you can incldue the PLOAD4, but not the FORCE card using:
+
+        Just pressure:
+        ==============
+        eids = [3]
+        nids = []
+
+        Just force:
+        ==============
+        eids = []
+        nids = [5]
+
+        or both:
+        ==============
+        eids = [3]
+        nids = [5]
+
+        ..todo:: not done...
+        """
+        if not isinstance(loadcase_id, int):
+            raise RuntimeError('loadcase_id must be an integer; loadcase_id=%r' % loadcase_id)
+        if isinstance(p0, int):
+            p = self.model.nodes[p0].Position()
+        else:
+            p = array(p0)
+
+        loadCase = self.loads[loadcase_id]
+        #for (key, loadCase) in self.loads.iteritems():
+            #if key != loadcase_id:
+                #continue
+
+        scale_factors2 = []
+        loads2 = []
+        for load in loadCase:
+            if isinstance(load, LOAD):
+                scale_factors, loads = load.getReducedLoads()
+                scale_factors2 += scale_factors
+                loads2 += loads
+            else:
+                scale_factors2.append(1.)
+                loads2.append(load)
+
+        F = array([0., 0., 0.])
+        M = array([0., 0., 0.])
+
+        xyz = {}
+        for nid, node in self.nodes.iteritems():
+            xyz[nid] = node.Position()
+
+        unsupported_types = set([])
+        for load, scale in zip(loads2, scale_factors2):
+            if isinstance(load, Force):  # FORCE, FORCE1, FORCE2
+                if load.nodeIDs not in nids:
+                    continue
+                f = load.mag * load.xyz
+                node = self.Node(load.node)
+                r = xyz[node.nid] - p
+                m = cross(r, f)
+                F += f * scale
+                M += m * scale
+            elif isinstance(load, Moment):  # MOMENT, MOMENT1, MOMENT2
+                if load.nodeIDs not in nids:
+                    continue
+                m = load.mag * load.xyz
+                M += m * scale
+
+            elif load.type == 'PLOAD':
+                nodes = load.nodeIDs()
+                nnodes = len(nodes)
+                nodesi = 0
+                if nnodes == 3:
+                    n1, n2, n3 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]]
+                    axb = cross(n1 - n2, n1 - n3)
+                    centroid = (n1 + n2 + n3) / 3.
+
+                elif nnodes == 4:
+                    n1, n2, n3, n4 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]], xyz[nodes[3]]
+                    axb = cross(n1 - n3, n2 - n4)
+                    centroid = (n1 + n2 + n3 + n4) / 4.
+                    if nodes[3] in nids:
+                        nodesi += 1
+                else:
+                    raise RuntimeError('invalid number of nodes on PLOAD card; nodes=%s' % str(nodes))
+                if nodes[0] in nids:
+                    nodesi += 1
+                if nodes[1] in nids:
+                    nodesi += 1
+                if nodes[2] in nids:
+                    nodesi += 1
+
+                nunit = norm(axb)
+                A = 0.5 * nunit
+                try:
+                    n = axb / nunit
+                except FloatingPointError:
+                    msg = ''
+                    for i, nid in enumerate(nodes):
+                        msg += 'nid%i=%i node=%s\n' % (i+1, nid, xyz[nodes[i]])
+                    msg += 'a x b = %s\n' % axb
+                    msg += 'nunit = %s\n' % nunit
+                    raise FloatingPointError(msg)
+                r = centroid - p
+                f = load.p * A * n * scale
+                m = cross(r, f)
+
+                node_scale = nodesi / float(nnodes)
+                F += f * node_scale
+                M += m * node_scale
+
+            elif load.type == 'PLOAD1':
+                #elem = self.elements[load.eid]
+                elem = load.eid
+                if elem.eid not in eids:
+                    continue
+
+                p1 = load.p1 * scale
+                p2 = load.p2 * scale
+                if elem.type not in ['CBAR', 'CBEAM', 'CBEND']:
+                    raise RuntimeError('element.type=%r is not a CBAR, CBEAM, or CBEND' % elem.type)
+
+                nodes = elem.nodeIDs()
+                n1, n2 = xyz[nodes[0]], xyz[nodes[1]]
+                n1 += elem.wa
+                n2 += elem.wb
+
+                deltaL = n2 - n1
+                L = norm(deltaL)
+                Ldir = deltaL / L
+                if load.scale == 'FR':  # x1, x2 are fractional lengths
+                    x1 = load.x1
+                    x2 = load.x2
+                    compute_fx = False
+                elif load.scale == 'LE': # x1, x2 are actual lengths
+                    x1 = load.x1 / L
+                    x2 = load.x2 / L
+                elif load.scale == 'LEPR':
+                    print('LEPR continue')
+                    continue
+                    raise NotImplementedError('scale=%r is not supported.  Use "FR", "LE".' % load.scale)
+                elif load.scale == 'FRPR':
+                    print('FRPR continue')
+                    continue
+                    raise NotImplementedError('scale=%r is not supported.  Use "FR", "LE".' % load.scale)
+                else:
+                    raise NotImplementedError('scale=%r is not supported.  Use "FR", "LE".' % load.scale)
+
+                if x1 != x2:
+                    print('x1 != x2 continue')
+                    continue
+
+                #print(load)
+                v = elem.get_orientation_vector(xyz)
+                i = Ldir
+                ki = cross(i, v)
+                k = ki / norm(ki)
+                j = cross(k, i)
+
+                if load.Type in ['FX', 'FY', 'FZ']:
+                    #deltaL = n2 - n1
+                    r = (1 - x1) * n1 + x1 * n2
+                    #print('    r =', r)
+                    #print('    n1 =', n1)
+                    #print('    n2 =', n2)
+                    #print('    x1 =', x1)
+                    #print('    1-x1 =', 1-x1)
+                    #print('    deltaL =', deltaL)
+                    if load.Type == 'FX':
+                        if x1 == x2:
+                            Fdir = array([1., 0., 0.])
+                    elif load.Type == 'FY':
+                        if x1 == x2:
+                            Fdir = array([0., 1., 0.])
+                    elif load.Type == 'FZ':
+                        if x1 == x2:
+                            Fdir = array([0., 0., 1.])
+                    F += p1 * Fdir
+                    M += cross(r - p, F)
+                elif load.Type in ['MX', 'MY', 'MZ']:
+                    if load.Type == 'MX':
+                        if x1 == x2:
+                            Mdir = array([1., 0., 0.])
+                    elif load.Type == 'MY':
+                        if x1 == x2:
+                            Mdir = array([0., 1., 0.])
+                    elif load.Type == 'MZ':
+                        if x1 == x2:
+                            Mdir = array([0., 0., 1.])
+                    M += p1 * Mdir
+                elif load.Type in ['FXE', 'FYE', 'FZE']:
+                    r = (1 - x1) * n1 + x1 * n2
+                    #print('\n    r =', r)
+                    #print('    n1 =', n1)
+                    #print('    n2 =', n2)
+                    #print('    x1 =', x1)
+                    #print('    1-x1 =', 1-x1)
+                    #print('    i    =', i)
+                    #print('    j    =', j)
+                    #print('    k    =', k)
+                    if load.Type == 'FXE':
+                        if x1 == x2:
+                            Fdir = i
+                    elif load.Type == 'FYE':
+                        if x1 == x2:
+                            Fdir = j
+                    elif load.Type == 'FZE':
+                        if x1 == x2:
+                            Fdir = k
+                    #print('    Fdir =', Fdir, load.Type)
+                    try:
+                        F += p1 * Fdir
+                    except FloatingPointError:
+                        msg = 'eid = %s\n' % elem.eid
+                        msg += 'i = %s\n' % Ldir
+                        msg += 'Fdir = %s\n' % Fdir
+                        msg += 'load = \n%s' % str(load)
+                        raise FloatingPointError(msg)
+                    M += cross(r - p, F)
+                    del Fdir
+
+                elif load.Type in ['MXE', 'MYE', 'MZE']:
+                    if load.Type == 'MXE':
+                        if x1 == x2:
+                            Mdir = i
+                    elif load.Type == 'MYE':
+                        if x1 == x2:
+                            Mdir = j
+                    elif load.Type == 'MZE':
+                        if x1 == x2:
+                            Mdir = k
+                    try:
+                        M += p1 * Mdir
+                    except FloatingPointError:
+                        msg = 'eid = %s\n' % elem.eid
+                        msg += 'Mdir = %s\n' % Mdir
+                        msg += 'load = \n%s' % str(load)
+                        raise FloatingPointError(msg)
+                    del Mdir
+                else:
+                    raise NotImplementedError('Type=%r is not supported.  Use "FX", "FXE".' % load.Type)
+
+            elif load.type == 'PLOAD2':
+                pressure = load.pressures[0] * scale  # there are 4 pressures, but we assume p0
+                for eid in load.eids:
+                    if eid not in eids:
+                        continue
+                    elem = self.elements[eid]
+                    if elem.type in ['CTRIA3',
+                                     'CQUAD4', 'CSHEAR']:
+                        n = elem.Normal()
+                        A = elem.Area()
+                        f = pressure * n * A
+                        r = elm.Centroid() - p
+                        m = cross(r, f)
+                        F += f
+                        M += m
+                    else:
+                        self.log.debug('case=%s etype=%r loadtype=%r not supported' % (loadcase_id, elem.type, load.type))
+            elif load.type == 'PLOAD4':
+                #elem = load.eid
+                pressure = load.pressures[0] * scale  # there are 4 possible pressures, but we assume p0
+                assert load.Cid() == 0, 'Cid() = %s' % (load.Cid())
+                assert load.sorl == 'SURF', 'sorl = %s' % (load.sorl)
+                assert load.ldir == 'NORM', 'ldir = %s' % (load.ldir)
+                for elem in load.eids:
+                    eid = elem.eid
+                    if eid not in eids:
+                        continue
+                    if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',]:
+                        # triangles
+                        nodes = elem.nodeIDs()
+                        n1, n2, n3 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]]
+                        axb = cross(n1 - n2, n1 - n3)
+                        nunit = norm(axb)
+                        A = 0.5 * nunit
+                        try:
+                            n = axb / nunit
+                        except FloatingPointError:
+                            msg = ''
+                            for i, nid in enumerate(nodes):
+                                msg += 'nid%i=%i node=%s\n' % (i+1, nid, xyz[nodes[i]])
+                            msg += 'a x b = %s\n' % axb
+                            msg += 'nunit = %s\n' % nunit
+                            raise FloatingPointError(msg)
+                        centroid = (n1 + n2 + n3) / 3.
+                    elif elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
+                        # quads
+                        nodes = elem.nodeIDs()
+                        n1, n2, n3, n4 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]], xyz[nodes[3]]
+                        axb = cross(n1 - n3, n2 - n4)
+                        nunit = norm(axb)
+                        A = 0.5 * nunit
+                        try:
+                            n = axb / nunit
+                        except FloatingPointError:
+                            msg = ''
+                            for i, nid in enumerate(nodes):
+                                msg += 'nid%i=%i node=%s\n' % (i+1, nid, xyz[nodes[i]])
+                            msg += 'a x b = %s\n' % axb
+                            msg += 'nunit = %s\n' % nunit
+                            raise FloatingPointError(msg)
+
+                        centroid = (n1 + n2 + n3 + n4) / 4.
+                    elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
+                        A, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
+                    else:
+                        self.log.debug('case=%s eid=%s etype=%r loadtype=%r not supported' % (loadcase_id, eid, elem.type, load.type))
+                        continue
+                    r = centroid - p
+                    f = pressure * A * n
+                    #load.cid.transformToGlobal()
+                    m = cross(r, f)
+                    F += f
+                    M += m
+            elif load.type == 'GRAV':
+                if include_grav:  # this will be super slow
+                    g = load.GravityVector() * scale
+                    for eid, elem in self.elements.iteritems():
+                        if eid not in eids:
+                            continue
+                        centroid = elem.Centroid()
+                        mass = elem.Mass()
+                        r = centroid - p
+                        f = mass * g
+                        m = cross(r, f)
+                        F += f
+                        M += m
+            else:
+                # we collect them so we only get one print
+                unsupported_types.add(load.type)
+
+        for Type in unsupported_types:
+            self.log.debug('case=%s loadtype=%r not supported' % (loadcase_id, Type))
+        #self.log.info("case=%s F=%s M=%s\n" % (loadcase_id, F, M))
+        return (F, M)
 
     def sum_forces_moments(self, p0, loadcase_id, include_grav=False):
         """
@@ -745,7 +1096,7 @@ class BDFMethods(BDFMethodsDeprecated):
                 if include_grav:  # this will be super slow
                     g = load.GravityVector() * scale
                     for eid, elem in self.elements.iteritems():
-                        cenntroid = elem.Centroid()
+                        centroid = elem.Centroid()
                         mass = elem.Mass()
                         r = centroid - p
                         f = mass * g
