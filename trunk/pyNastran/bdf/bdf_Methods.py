@@ -118,14 +118,13 @@ class BDFMethods(BDFMethodsDeprecated):
             reference_point = array([0., 0., 0.])
 
         if element_ids is None:
-            elements = self.elements.itervalues()
-            masses = self.masses.itervalues()
+            elements = self.elements.values()
+            masses = self.masses.values()
             nelements = len(self.elements) + len(self.masses)
         else:
-            elements = [element for eid, element in self.elements.iteritems() if eid in element_ids]
-            masses = [mass for eid, mass in self.masses.iteritems() if eid in element_ids]
+            elements = [element for eid, element in self.elements.items() if eid in element_ids]
+            masses = [mass for eid, mass in self.masses.items() if eid in element_ids]
             nelements = len(element_ids)
-
         I = array([0., 0., 0., 0., 0., 0., ])
         cg = array([0., 0., 0.])
         if calculate_cg is False and calculate_inertia is False:
