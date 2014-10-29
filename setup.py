@@ -62,7 +62,7 @@ setup(name='pyNastran',
 #          'cython',
       ],#{'': ['license.txt']}
       #package_data={'': ['*.png']},
-      data_files=[tuple([icon_path] + icon_files2)],
+      data_files=tuple(icon_files2),
 
       entry_points = {
         'console_scripts': [
