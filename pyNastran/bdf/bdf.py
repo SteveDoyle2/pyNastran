@@ -1,4 +1,5 @@
 # pylint: disable=W0212,C0103,W0633,W0611,W0201,C0301,R0915,R0912
+# coding: utf-8
 """
 Main BDF class.  Defines:
   - BDF
@@ -7,6 +8,7 @@ Main BDF class.  Defines:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
+from codecs import open as codec_open
 import io
 import os
 import sys
@@ -711,6 +713,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         bdf.elements = 10
         etc.
         """
+        #self._encoding = encoding
+
         if bdf_filename is None:
             from pyNastran.utils.gui_io import load_file_dialog
             wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas; *.pch)|" \

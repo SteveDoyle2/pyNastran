@@ -1,4 +1,5 @@
 # pylint: disable=E1101,W0612
+# coding: utf-8
 """
 This file defines:
   - WriteMeshDeprecated (NA for major releases)
@@ -6,6 +7,7 @@ This file defines:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from codecs import open
 
 #import warnings
 from pyNastran.bdf.utils import print_filename
@@ -324,6 +326,7 @@ class WriteMesh(object):
         self._write_contact(outfile, size, card_writer)
         self._write_rejects(outfile, size)
         self._write_coords(outfile, size, card_writer)
+
     def _write_constraints(self, outfile, size, card_writer):
         """Writes the constraint cards sorted by ID"""
         if self.suports:
@@ -648,7 +651,7 @@ class WriteMesh(object):
                 for reject in reject_lines:
                     reject2 = reject.rstrip()
                     if reject2:
-                        msg.append(str(reject2) + '\n')
+                        msg.append(repr(reject2) + '\n')
         outfile.write(''.join(msg))
 
     def _write_rigid_elements(self, outfile, size, card_writer):
