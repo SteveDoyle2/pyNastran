@@ -290,214 +290,247 @@ class LineProperty(Property):
             raise NotImplementedError(msg)
         return(I1, I2, I12)
 
-    def areaL(self, dim):
+def _bar_areaL(class_name, Type, dim):
+    """
+    Area(x) method for the PBARL and PBEAML classes (pronounced **Area-L**)
+
+    :param self:   the object pointer
+    :param dim:    a list of the dimensions associated with **Type**
+    :returns Area: Area of the given cross section defined
+                   by **self.Type**
+
+    .. note:: internal method
+    """
+    if Type == 'ROD':
         """
-        Area(x) method for the PBARL and PBEAML classes (pronounced **Area-L**)
+        This is a circle if you couldn't tell...
+          __C__
+         /     \
+        |       |
+        F       D
+        |       |
+         \     /
+          \_E_/
 
-        :param self:   the object pointer
-        :param dim:    a list of the dimensions associated with **self.Type**
-        :returns Area: Area of the given cross section defined
-                       by **self.Type**
-
-        .. note:: internal method
+        Radius = dim1
         """
-        try:
-            if self.Type == 'ROD':
-                A = pi * dim[0] ** 2
-            elif self.Type == 'TUBE':
-                A = pi * (dim[0] ** 2 - dim[1] ** 2)
-            elif self.Type == 'I':
-                h1 = dim[5]
-                w1 = dim[2]
+        A = pi * dim[0] ** 2
+    elif Type == 'TUBE':
+        A = pi * (dim[0] ** 2 - dim[1] ** 2)
+    elif Type == 'I':
+        h1 = dim[5]
+        w1 = dim[2]
 
-                h3 = dim[4]
-                w3 = dim[1]
+        h3 = dim[4]
+        w3 = dim[1]
 
-                h2 = dim[0] - h1 - h3
-                w2 = dim[3]
-                A = h1 * w1 + h2 * w2 + h3 * w3
-            elif self.Type == 'CHAN':
-                h1 = dim[3]
-                w1 = dim[0]
+        h2 = dim[0] - h1 - h3
+        w2 = dim[3]
+        A = h1 * w1 + h2 * w2 + h3 * w3
+    elif Type == 'L':
+        """
 
-                h3 = h1
-                w3 = w1
-                h2 = dim[1] - h1 - h3
-                w2 = dim[2]
-                A = h1 * w1 + h2 * w2 + h3 * w3
-            elif self.Type == 'T':
-                h1 = dim[2]
-                w1 = dim[0]
+         D4
+        F--C      ^
+        |  |      |
+        |  |      |
+        |  |      | D2
+        |  +---+  |
+        |   D3 |  |
+        E------D  |
 
-                h2 = dim[1] - h1
-                w2 = dim[3]
-                A = h1 * w1 + h2 * w2
-            elif self.Type == 'BOX':
-                h1 = dim[2]
-                w1 = dim[0]
+        <------> D1
+        """
+        (d1, d2, d3, d4) = dim
+        A1 = d1 * d3
 
-                h2 = dim[1] - 2 * h1
-                w2 = dim[3]
-                A = 2 * (h1 * w1 + h2 * w2)
-            elif self.Type == 'BAR':
-                h1 = dim[1]
-                w1 = dim[0]
-                A = h1 * w1
-            elif self.Type == 'CROSS':
-                h1 = dim[2]
-                w1 = dim[1]
+        h2 = (d2 - d3)
+        A2 = h2 * d4
+        A = A1 + A2
+    elif Type == 'CHAN':
+        h1 = dim[3]
+        w1 = dim[0]
 
-                h2 = dim[3]
-                w2 = dim[0]
-                A = h1 * w1 + h2 * w2
-            elif self.Type == 'H':
-                h1 = dim[2]
-                w1 = dim[1]
+        h3 = h1
+        w3 = w1
+        h2 = dim[1] - h1 - h3
+        w2 = dim[2]
+        A = h1 * w1 + h2 * w2 + h3 * w3
+    elif Type == 'T':
+        h1 = dim[2]
+        w1 = dim[0]
 
-                h2 = dim[3]
-                w2 = dim[0]
-                A = h1 * w1 + h2 * w2
-            elif self.Type == 'T1':
-                h1 = dim[0]
-                w1 = dim[2]
+        h2 = dim[1] - h1
+        w2 = dim[3]
+        A = h1 * w1 + h2 * w2
+    elif Type == 'BOX':
+        h1 = dim[2]
+        w1 = dim[0]
 
-                h2 = dim[3]
-                w2 = dim[1]
-                A = h1 * w1 + h2 * w2
-            elif self.Type == 'I1':
-                h2 = dim[2]
-                w2 = dim[1]
+        h2 = dim[1] - 2 * h1
+        w2 = dim[3]
+        A = 2 * (h1 * w1 + h2 * w2)
+    elif Type == 'BAR':
+        """
+        <------> D1
 
-                h1 = dim[3] - h2
-                w1 = dim[0] + w2
-                A = h1 * w1 + h2 * w2
-            elif self.Type == 'CHAN1':
-                h2 = dim[2]
-                w2 = dim[1]
+        F------C  ^
+        |      |  |
+        |      |  | D2
+        |      |  |
+        E------D  |
+        """
+        h1 = dim[1]
+        w1 = dim[0]
+        A = h1 * w1
+    elif Type == 'CROSS':
+        h1 = dim[2]
+        w1 = dim[1]
 
-                h1 = dim[3] - h2
-                w1 = dim[0] + w2
-                A = h1 * w1 + h2 * w2
-            elif self.Type == 'Z':
-                h2 = dim[2]
-                w2 = dim[1]
+        h2 = dim[3]
+        w2 = dim[0]
+        A = h1 * w1 + h2 * w2
+    elif Type == 'H':
+        h1 = dim[2]
+        w1 = dim[1]
 
-                h1 = dim[3] - h2
-                w1 = dim[0]
-                A = h1 * w1 + h2 * w2
-            elif self.Type == 'CHAN2':
-                h2 = dim[1]
-                w2 = dim[3]
+        h2 = dim[3]
+        w2 = dim[0]
+        A = h1 * w1 + h2 * w2
+    elif Type == 'T1':
+        h1 = dim[0]
+        w1 = dim[2]
 
-                h1 = dim[2] - h2
-                w1 = dim[0] * 2
-                A = h1 * w1 + h2 * w2
+        h2 = dim[3]
+        w2 = dim[1]
+        A = h1 * w1 + h2 * w2
+    elif Type == 'I1':
+        h2 = dim[2]
+        w2 = dim[1]
 
-            elif self.Type == 'T2':
-                h1 = dim[3]
-                w1 = dim[1]
+        h1 = dim[3] - h2
+        w1 = dim[0] + w2
+        A = h1 * w1 + h2 * w2
+    elif Type == 'CHAN1':
+        h2 = dim[2]
+        w2 = dim[1]
 
-                h2 = h1 - dim[2]
-                w2 = dim[0]
-                A = h1 * w1 + h2 * w2
-            elif self.Type == 'BOX1':
-                h1 = dim[2]  # top
-                w1 = dim[0]
+        h1 = dim[3] - h2
+        w1 = dim[0] + w2
+        A = h1 * w1 + h2 * w2
+    elif Type == 'Z':
+        h2 = dim[2]
+        w2 = dim[1]
 
-                h2 = dim[3]  # btm
-                A1 = (h1 + h2) * w1
+        h1 = dim[3] - h2
+        w1 = dim[0]
+        A = h1 * w1 + h2 * w2
+    elif Type == 'CHAN2':
+        h2 = dim[1]
+        w2 = dim[3]
 
-                h3 = dim[1] - h1 - h2  # left
-                w3 = dim[5]
+        h1 = dim[2] - h2
+        w1 = dim[0] * 2
+        A = h1 * w1 + h2 * w2
 
-                w4 = dim[4]  # right
-                A2 = h3 * (w3 + w4)
-                A = A1 + A2
-            elif self.Type == 'HEXA':
-                hBox = dim[2]
-                wBox = dim[1]
+    elif Type == 'T2':
+        h1 = dim[3]
+        w1 = dim[1]
 
-                wTri = dim[0]
-                A = hBox * wBox - wTri * hBox
-            elif self.Type == 'HAT':
-                w = dim[1]      # constant width (note h is sometimes w)
-                h1 = w           # horizontal lower bar
-                w1 = dim[3]
+        h2 = h1 - dim[2]
+        w2 = dim[0]
+        A = h1 * w1 + h2 * w2
+    elif Type == 'BOX1':
+        h1 = dim[2]  # top
+        w1 = dim[0]
 
-                h2 = dim[0] - 2 * w  # vertical bar
-                w2 = w
+        h2 = dim[3]  # btm
+        A1 = (h1 + h2) * w1
 
-                h3 = w           # half of top bar
-                w3 = dim[2] / 2.
+        h3 = dim[1] - h1 - h2  # left
+        w3 = dim[5]
 
-                A = 2 * (h1 * w1 + h2 * w2 + h3 * w3)  # symmetrical box
-            elif self.Type == 'HAT1':
-                w = dim[3]
+        w4 = dim[4]  # right
+        A2 = h3 * (w3 + w4)
+        A = A1 + A2
+    elif Type == 'HEXA':
+        hBox = dim[2]
+        wBox = dim[1]
 
-                h0 = dim[4]         # btm bar
-                w0 = dim[0] / 2.
+        wTri = dim[0]
+        A = hBox * wBox - wTri * hBox
+    elif Type == 'HAT':
+        w = dim[1]      # constant width (note h is sometimes w)
+        h1 = w           # horizontal lower bar
+        w1 = dim[3]
 
-                h2 = dim[1] - h0 - 2 * w  # vertical bar
-                w2 = w
+        h2 = dim[0] - 2 * w  # vertical bar
+        w2 = w
 
-                h3 = w              # top bar
-                w3 = dim[2] / 2.
+        h3 = w           # half of top bar
+        w3 = dim[2] / 2.
 
-                h1 = w              # upper, horizontal lower bar (see HAT)
-                w1 = w0 - w3
+        A = 2 * (h1 * w1 + h2 * w2 + h3 * w3)  # symmetrical box
+    elif Type == 'HAT1':
+        w = dim[3]
 
-                A = 2 * (h0 * w0 + h1 * w1 + h2 * w2 + h3 * w3)
+        h0 = dim[4]         # btm bar
+        w0 = dim[0] / 2.
 
-            elif self.Type == 'DBOX':
-                #
-                #  |--2------5----
-                #  |     |       |
-                #  1     3       6
-                #  |     |       |
-                #  |--4--|---7---|
-                #
+        h2 = dim[1] - h0 - 2 * w  # vertical bar
+        w2 = w
 
-                #0,1,2,6,11
-                #1,2,3,7,12
+        h3 = w              # top bar
+        w3 = dim[2] / 2.
 
-                hTotal = dim[11]
-                wTotal = dim[0]
+        h1 = w              # upper, horizontal lower bar (see HAT)
+        w1 = w0 - w3
 
-                h2 = dim[6]
-                w2 = dim[3]
+        A = 2 * (h0 * w0 + h1 * w1 + h2 * w2 + h3 * w3)
 
-                h4 = dim[7]
-                w4 = w2
+    elif Type == 'DBOX':
+        #
+        #  |--2------5----
+        #  |     |       |
+        #  1     3       6
+        #  |     |       |
+        #  |--4--|---7---|
+        #
 
-                h1 = hTotal - h2 - h4
-                w1 = dim[3]
+        #0,1,2,6,11
+        #1,2,3,7,12
 
-                h5 = dim[8]
-                w5 = wTotal - w2
+        hTotal = dim[11]
+        wTotal = dim[0]
 
-                h7 = dim[9]
-                w7 = w5
+        h2 = dim[6]
+        w2 = dim[3]
 
-                h6 = hTotal - h5 - h7
-                w6 = dim[5]
+        h4 = dim[7]
+        w4 = w2
 
-                h3 = (h1 + h6) / 2.
-                w3 = dim[4]
+        h1 = hTotal - h2 - h4
+        w1 = dim[3]
 
-                A = (h1 * w1 + h2 * w2 + h3 * w3 + h4 * w4 +
-                     h5 * w5 + h6 * w6 + h7 * w7)
-            else:
-                msg = 'areaL; Type=%s is not supported for %s class...' % (self.Type,
-                                                                    self.type)
-                raise NotImplementedError(msg)
-        except IndexError as e:
-            msg = 'There was an error extracting fields'
-            msg += ' from a %s dim=%s for a %s' % (self.Type, dim, self.type)
-            msg += '-' * 80 + '\n'
-            msg += 'Traceback:\n%s' % str(e)
-            raise IndexError(msg)
-        return A
+        h5 = dim[8]
+        w5 = wTotal - w2
 
+        h7 = dim[9]
+        w7 = w5
+
+        h6 = hTotal - h5 - h7
+        w6 = dim[5]
+
+        h3 = (h1 + h6) / 2.
+        w3 = dim[4]
+
+        A = (h1 * w1 + h2 * w2 + h3 * w3 + h4 * w4 +
+             h5 * w5 + h6 * w6 + h7 * w7)
+    else:
+        msg = 'areaL; Type=%s is not supported for %s class...' % (Type,
+                                                            class_name)
+        raise NotImplementedError(msg)
+    return A
 
 class IntegratedLineProperty(LineProperty):
     def __init__(self, card, data):
@@ -853,7 +886,7 @@ class PBARL(LineProperty):
         """
         Gets the area :math:`A` of the CBAR.
         """
-        return self.areaL(self.dim)
+        return _bar_areaL('PBARL', self.Type, self.dim)
 
     def Nsm(self):
         """
@@ -899,7 +932,7 @@ class PBARL(LineProperty):
         #return self.I12()
 
     def _points(self, Type, dim):
-        if Type in ['BAR']:  # origin ar center
+        if Type == 'BAR':  # origin ar center
             (d1, d2) = dim
             Area = d1 * d2
             y1 = d2 / 2.
@@ -910,7 +943,7 @@ class PBARL(LineProperty):
                 [-x1, -y1],  # p3
                 [-x1, -y1],  # p4
             ]
-        elif Type in ['CROSS']:
+        elif Type == 'CROSS':
             (d1, d2, d3, d4) = dim  # origin at center
             x1 = d2 / 2.
             x2 = d2 / 2. + d1

@@ -14,7 +14,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from itertools import izip, count
 from numpy import pi, array
 
-from .bars import IntegratedLineProperty, LineProperty
+from .bars import IntegratedLineProperty, LineProperty, _bar_areaL
 from pyNastran.bdf.fieldWriter import (set_blank_if_default,
                                        set_default_if_blank)
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -578,7 +578,7 @@ class PBEAML(IntegratedLineProperty):
         rho = self.Rho()
         massPerLs = []
         for (dim, nsm) in izip(self.dim, self.nsm):
-            a = self.areaL(dim)
+            a = _bar_areaL('PBEAML', self.Type, dim)
             try:
                 massPerLs.append(a * rho + nsm)
             except:
@@ -597,7 +597,7 @@ class PBEAML(IntegratedLineProperty):
         """
         Areas = []
         for dim in self.dim:
-            Areas.append(self.areaL(dim))
+            Areas.append(_bar_areaL('PBEAML', self.Type, dim))
         A = integrate_line(self.xxb, Areas)
         return A
 
@@ -691,7 +691,6 @@ class PBEAML(IntegratedLineProperty):
     def write_bdf(self, size, card_writer):
         """..todo:: having bug with PBEAML"""
         card = self.reprFields()
-        #return self.comment() + card_writer(card)  #is this allowed???
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)  #is this allowed???
