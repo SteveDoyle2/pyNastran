@@ -58,6 +58,7 @@ setup(name='pyNastran',
 #          'matplotlib >= 1.3.0',
           'vtk >= 5.10.0',
           'pillow >= 2.0.0',
+          'six >= 1.7.2',
 #          'wx >= 2.8.12.0',
 #          'cython',
       ],#{'': ['license.txt']}
