@@ -8,7 +8,7 @@ Main BDF class.  Defines:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from codecs import open as codec_open
+#from codecs import open as codec_open
 import io
 import os
 import sys
