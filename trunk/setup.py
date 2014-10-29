@@ -14,7 +14,7 @@ packages = find_packages()+['gui/icons/*.*']
     #extra['convert_2to3_doctests'] = ['src/your/module/README.txt']  # what does this do?
     #extra['use_2to3_fixers'] = ['your.fixers']
 
-py2_scripts = []
+py2_gui_scripts = []
 if sys.version_info <= (3,):
     py2_gui_scripts = ['pyNastranGUI = pyNastran.gui.gui:main',
                        'pyNastranGUI_wx = pyNastran.gui.gui_wx:main',
