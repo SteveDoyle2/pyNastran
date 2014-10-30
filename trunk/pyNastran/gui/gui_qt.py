@@ -13,18 +13,18 @@ import traceback
 #webbrowser.open("http://xkcd.com/353/")
 
 # Qt
-try:
-    from PyQt4 import QtCore, QtGui
-    print("Using PyQt4")
-    fmode = 1
-except ImportError:
-    try:
-        from PySide import QtCore, QtGui
-        print("Using PySide")
-        fmode = 2
-    except ImportError:
-        msg = 'Failed to import PySide or PyQt4'
-        raise ImportError(msg)
+#try:
+from PyQt4 import QtCore, QtGui
+print("Using PyQt4")
+fmode = 1
+#except ImportError:
+    #try:
+        #from PySide import QtCore, QtGui
+        #print("Using PySide")
+        #fmode = 2
+    #except ImportError:
+        #msg = 'Failed to import PySide or PyQt4'
+        #raise ImportError(msg)
 assert fmode in [1, 2]
 
 # 3rd party
@@ -1252,6 +1252,8 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         #geometryActor.AddPosition(2, 0, 2)
         #geometryActor.GetProperty().SetDiffuseColor(0, 0, 1) # blue
         geometryActor.GetProperty().SetDiffuseColor(1, 1, 0)  # green
+        geometryActor.GetProperty().SetLineWidth(5)
+
         self.rend.AddActor(geometryActor)
         vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
 
