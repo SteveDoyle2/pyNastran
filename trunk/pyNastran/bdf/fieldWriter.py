@@ -123,7 +123,7 @@ def print_float_8(value):
             if field.index('.') < 8:
                 field = '%8.1f' % round(value)
                 field = field[0:8]
-                assert '.' != field[0], field
+                #assert '.' != field[0], field
             else:
                 field = print_scientific_8(value)
             return field
@@ -165,15 +165,15 @@ def print_float_8(value):
             field = "%8.1f" % value
             if field.index('.') < 8:
                 field = '%7s.' % int(round(value, 0))
-                assert '.' != field[0], field
+                #assert '.' != field[0], field
             else:
                 field = print_scientific_8(value)
             return field
     field = field.strip(' 0')
     field = '%8s' % field
 
-    assert len(field) == 8, ('value=|%s| field=|%s| is not 8 characters '
-                             'long, its %s' % (value, field, len(field)))
+    #assert len(field) == 8, ('value=|%s| field=|%s| is not 8 characters '
+    #                         'long, its %s' % (value, field, len(field)))
     return field
 
 
