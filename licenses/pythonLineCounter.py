@@ -96,28 +96,28 @@ def countLines(fnames=[]):
                     input_file_list.append(line)
             inputs_file.close()
             if len(input_file_list) == 0:
-                print usage
+                print(usage)
                 sys.exit(1)
         except IOError:
-            print usage
+            print(usage)
             sys.exit(1)
     else:
         input_file_list = fnames
 
-    print "Input files:"
+    print("Input files:")
 
     for input_file_name in input_file_list:
         if not input_file_name.endswith('.py'):
             continue
-        print input_file_name
+        print(input_file_name)
 
         try:
             current_file = open(input_file_name, "r")
         except IOError:
-            print "Error opening \"" + input_file_name + "\", skipping...\n"
+            print("Error opening \"" + input_file_name + "\", skipping...\n")
             break
         except TypeError:
-            print "Error opening \"" + str(input_file_name) + "\", skipping...\n"
+            print("Error opening \"" + str(input_file_name) + "\", skipping...\n")
             break
         i = 0
         toggleComment = False
@@ -179,16 +179,16 @@ def countLines(fnames=[]):
     total_lines2 = (blank_lines + comment_lines + code_lines +
                     header_lines + doxygen_lines + format_lines)  # doesn't include ???
 
-    print "Total lines:   " + str(total_lines)
-    print "Total lines2:  " + str(total_lines2)
-    print "Code lines:    " + str(code_lines)
-    print "Header lines:  " + str(header_lines)
-    print "Comment lines: " + str(comment_lines)
-    print "Doxygen start: " + str(doxygen_starter_lines)
-    print "Doxygen lines: " + str(doxygen_lines)
-    print "Bad Doxy lines " + str(bad_doxygen_lines)
-    print "Blank lines:   " + str(blank_lines)
-    print "Format lines:  " + str(format_lines)
+    print("Total lines:   " + str(total_lines))
+    print("Total lines2:  " + str(total_lines2))
+    print("Code lines:    " + str(code_lines))
+    print("Header lines:  " + str(header_lines))
+    print("Comment lines: " + str(comment_lines))
+    print("Doxygen start: " + str(doxygen_starter_lines))
+    print("Doxygen lines: " + str(doxygen_lines))
+    print("Bad Doxy lines " + str(bad_doxygen_lines))
+    print("Blank lines:   " + str(blank_lines))
+    print("Format lines:  " + str(format_lines))
 
 if __name__ == "__main__":
     countLines()

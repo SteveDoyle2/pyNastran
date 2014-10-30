@@ -182,8 +182,8 @@ class WriteMesh(object):
                 pids_all = t.property_id
                 n = 1
             elif t.n:
-                print pids_all
-                print t.property_id
+                print(pids_all)
+                print(t.property_id)
                 try:
                     pids_all = concatenate(pids_all, t.property_id)
                 except ValueError:
@@ -241,7 +241,7 @@ class WriteMesh(object):
         elements_by_pid = {}
         if pids is not None:
             pids_unique = unique(pids)
-            print "pids_unique =", pids_unique
+            print("pids_unique =", pids_unique)
             pids_unique.sort()
             if len(pids_unique) > 0:
                 f.write('$ELEMENTS_WITH_PROPERTIES\n')

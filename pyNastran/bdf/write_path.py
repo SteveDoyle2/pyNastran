@@ -71,13 +71,13 @@ def write_include(filename, is_windows=True):
 
 if __name__ == '__main__':  ## pragma: no cover
     fname = r'C:\NASA\formats\pynastran_v0.6\pyNastran\bdf\writePath.py'
-    print '%s' % write_include(fname, is_windows=True)
+    print('%s' % write_include(fname, is_windows=True))
 
     fname = r'/opt/NASA/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
-    print '%s' % write_include(fname, is_windows=False)
+    print('%s' % write_include(fname, is_windows=False))
 
     fname = r'/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
-    print '%s' % write_include(fname, is_windows=False)
+    print('%s' % write_include(fname, is_windows=False))
 
     fname = r'/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
-    print '%s' % write_include(fname, is_windows=True)
+    print('%s' % write_include(fname, is_windows=True))

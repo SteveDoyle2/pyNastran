@@ -8,7 +8,7 @@ for version in versions:
     v0 = version[0]
     egginfo_path = r'C:\Python%s\Scripts\egginfo.exe' % version
     python_path = r'C:\Python%s\python.exe' % version
-    
+
     if v0 == '2':
         pkg_path = r'D:\work\pyNastran_py2x\pyNastran'
     elif v0 == '3':
@@ -22,10 +22,10 @@ for version in versions:
     test_path = r'%s\all_tests.py' % test_dir
 
     #print print_bad_path(egginfo_path)
-    print print_bad_path(test_path)
+    print(print_bad_path(test_path))
 
     tests = r'%s %s' % (python_path, test_path)
-    print "tests = %r" % tests
+    print("tests = %r" % tests)
 
     code1 = os.system(egginfo)
     assert code1 == 0

@@ -7,7 +7,7 @@ from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
 def nastran_to_cart3d(bdf, log=None, debug=False):
     """
     Converts a Nastran BDF object to Cart3D format.
-    
+
     :param bdf:    a BDF object
     :param log:    a logger object (or None)
     :param debug:  True/False (used if log is not defined)
@@ -15,10 +15,10 @@ def nastran_to_cart3d(bdf, log=None, debug=False):
     :returns cart3d: a Cart3D object
     """
     cart3d = Cart3DReader(log=log, debug=debug)
-    
+
     nnodes = len(model.nodes)
     nelements = len(model.elements)
-    
+
     nodes = zeros((nnodes, 3), 'float64')
     elements = zeros((nelements, 3), 'int32')
     regions = zeros(nelements, 'int32')
@@ -42,7 +42,7 @@ def nastran_to_cart3d(bdf, log=None, debug=False):
 def nastran_to_cart3d_filename(bdf_filename, cart3d_filename, log=None, debug=False):
     """
     Converts a Nastran file to Cart3D format.
-    
+
     :param bdf_filename: the path to the BDF
     :param cart3d_filename: the path to the Cart3D output file
     :param log:    a logger object (or None)
@@ -74,7 +74,7 @@ def nastran_to_cart3d_filename(bdf_filename, cart3d_filename, log=None, debug=Fa
         try:
             n1, n2, n3 = out
         except:
-            print "type =", element.type
+            print("type =", element.type)
             raise
         #print out
         n1 = node_id_shift[n1]

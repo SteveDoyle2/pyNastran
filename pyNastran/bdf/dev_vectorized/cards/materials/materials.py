@@ -94,10 +94,10 @@ class Materials(object):
                 #msg.append('  %-8s: %i' % (mat.type, nmat))
         return msg
 
-    def get_mid(self, property_ids):
+    def get_material_id(self, property_ids):
         types = self._get_types(nlimit=True)
         _material_ids = concatenate([ptype.material_id for ptype in types])
-        print _material_ids
+        print(_material_ids)
         return _material_ids
 
     #def get_density(self, material_ids):

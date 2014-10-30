@@ -174,11 +174,11 @@ class TestMass(unittest.TestCase):
         model.read_bdf(bdfname, include_dir=None, xref=True)
 
         # this passes silently
-        print model.elements[['cat']]
+        print(model.elements[['cat']])
 
         # this does not
         with self.assertRaises(TypeError):
-            print model.elements[None]
+            print(model.elements[None])
 
         #print model.get_elements('cat')
         with self.assertRaises(KeyError):

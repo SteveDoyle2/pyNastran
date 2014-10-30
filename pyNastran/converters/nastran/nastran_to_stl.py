@@ -83,7 +83,7 @@ def nastran_to_stl_filename(bdf_filename, stl_filename, log=None):
             f.write('  endfacet\n')
             element_id += 1
         else:
-            print element.type
+            print(element.type)
     f.write('endsolid\n')
     f.close()
 

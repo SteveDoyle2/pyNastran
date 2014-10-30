@@ -49,7 +49,7 @@ def ListPrint(listA):
             try:
                 msg += ' %g,' %(a)
             except TypeError:
-                print "a = |%s|" %(a)
+                print("a = |%s|" %(a))
                 raise
 
     msg = msg[:-1]
@@ -191,10 +191,10 @@ def AreaNormal(nodes):
     normal = vector / length
     area = 0.5 * length
     if allclose(norm(normal), 1.) == False:
-        print "a = ",a
-        print "b = ",b
-        print "normal = ",normal
-        print "length = ",length
+        print("a = ", a)
+        print("b = ", b)
+        print("normal = ", normal)
+        print("length = ", length)
         sys.exit('check...')
     return (area,normal)
 
@@ -229,8 +229,8 @@ if __name__=='__main__':
     n2 = array([0.,1.,0.])
     c1 = Centroid(n1,n2,n3)
     n = Normal(n5,n2)
-    print "norm = ",n,norm(n)
+    print("norm = ",n,norm(n))
 
     (area,centroid,normal) = Triangle_AreaCentroidNormal([n1,n2,n3])
-    print "area=%s centroid=%s normal=%s" %(area,centroid,normal)
+    print("area=%s centroid=%s normal=%s" %(area,centroid,normal))
 

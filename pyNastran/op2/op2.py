@@ -1216,14 +1216,14 @@ if __name__ == '__main__':  # pragma: no conver
     op2_filename = 'solid_shell_bar.op2'
     op2 = OP2()
     op2.read_op2(op2_filename)
-    print op2.displacements[1]
+    print(op2.displacements[1])
     dump(op2, f)
     f.close()
 
     f = open(txt_filename, 'r')
     op2 = load(f)
     f.close()
-    print op2.displacements[1]
+    print(op2.displacements[1])
 
 
     #import sys

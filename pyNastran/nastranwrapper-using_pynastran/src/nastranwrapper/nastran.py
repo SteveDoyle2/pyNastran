@@ -1,5 +1,5 @@
 """``nastran.py`` defines NastranComponent.
-  
+
 """
 import time
 import os.path
@@ -63,7 +63,7 @@ class NastranComponent(ExternalCode):
         self.bdf = None
         self.f06 = None
         self.op2 = None
-        
+
         # These variables are just to keep track of what we've
         # deleted if you select keep_first_iteration or keep_last_iteration
         self._seen_first_iteration = False
@@ -94,7 +94,7 @@ class NastranComponent(ExternalCode):
             The component relies on ExternalCode which can throw all
             sorts of RuntimeError-like exceptions (RunStopped,
             RunInterrupted also included).
-            
+
         Filesystem-type Errors
             NastranComponent makes a temporary directory with mkdtemp
             in the temp module. If that fails, the error just
@@ -180,7 +180,7 @@ class NastranComponent(ExternalCode):
 
         ########## update hook ##########
         self.update_hook()
- 
+
         ########## write modified BDF ##########
         self.timing_section( "Write modified BDF" )
          #self.bdf.write_bdf(tmppath)
@@ -189,7 +189,7 @@ class NastranComponent(ExternalCode):
         ########## Run Nastran via subprocess ##########
         self.timing_section( "Run Nastran" )
         self.output_filename = os.path.join(tmpdir, "input.out")
-        print self.output_filename # perhaps this should be logged, or something
+        print(self.output_filename)  # perhaps this should be logged, or something
 
         # Then we run the nastran file
         if self.nastran_command == 'python':  # True when using fake_nastran.py
@@ -262,7 +262,7 @@ class NastranComponent(ExternalCode):
         #     if table == "displacement vector" :
         #         ixyz = displacement_columns.index( column )
         #         setattr(self, name, self.op2.displacements[subcase].translations[nastran_id][ixyz])
-        
+
         for output_name, output_trait in output_variables.iteritems():
             # We run trait.nastran_func on op2 to get output values
             if output_trait.nastran_args:
@@ -314,6 +314,6 @@ class NastranComponent(ExternalCode):
             self.current_section = section_name
         else:
             t1 = time.time()
-            print self.current_section, "time", t1 - self.t0
+            print(self.current_section, "time", t1 - self.t0)
             self.t0 = time.time()
             self.current_section = section_name

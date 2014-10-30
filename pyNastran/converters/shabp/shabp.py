@@ -378,7 +378,7 @@ class SHABP(ShabpOut):
                 #print "  lines[%i] = %s" % (i+1, self.trailer[i].rstrip())
                 i += 1
         else:
-            print "*lines[%i] = %s\n" % (i+1, self.trailer[i].rstrip())
+            print("*lines[%i] = %s\n" % (i+1, self.trailer[i].rstrip()))
             aaaa
 
         # component names   7

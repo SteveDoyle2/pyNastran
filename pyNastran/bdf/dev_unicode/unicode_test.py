@@ -23,14 +23,14 @@ def run(bdf_filename, encoding='utf-8'):
     try:
         with io.open(bdf_filename, 'r', encoding=encoding, errors='strict') as f:
             for line in f:
-                print line.rstrip()
+                print(line.rstrip())
     except:
         print('----------------------------------------------------------')
         for encodingi in encoding_list:
             try:
                 with io.open(bdf_filename, 'r', encoding=encodingi, errors='strict') as f:
                     for line in f:
-                        print line.rstrip()
+                        print(line.rstrip())
                         pass
                 print('*passed %s' % codeci)
             except:
