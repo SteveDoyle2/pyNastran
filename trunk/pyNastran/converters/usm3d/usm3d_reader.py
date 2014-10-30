@@ -1,3 +1,4 @@
+from six.moves import range
 import os
 from struct import pack, unpack
 from numpy import array, transpose, zeros, where
@@ -195,7 +196,7 @@ class Usm3dReader(object):
 
         if get_lbouf:
             lbouf = zeros((ntris, 4), dtype='int32')
-            for i in xrange(ntris):
+            for i in range(ntris):
                 line = lines[i+2].strip()
                 #print('%r' % line)
                 (n, isurf, n1, n2, n3) = line.split()
@@ -205,7 +206,7 @@ class Usm3dReader(object):
             tris = zeros((ntris, 3), dtype='int32')
             bcs  = zeros(ntris, dtype='int32')
 
-            for i in xrange(ntris):
+            for i in range(ntris):
                 (n, isurf, n1, n2, n3) = lines[i+2].split()
                 tris[i] = [n1, n2, n3]
                 bcs[i] = isurf
@@ -493,7 +494,7 @@ class Usm3dReader(object):
             ni = n
             # extract nodes 1, 2, ... 10, but not 11+
             if nvars == 6:  # sequential nvars=6
-                for i in xrange(1, n):
+                for i in range(1, n):
                     sline1 = flo_file.readline().strip().split()
                     rhoi, rhoui, rhovi, rhowi, ei = Float(sline1[1:], 5)
                     node_id[i] = sline1[0]
@@ -504,7 +505,7 @@ class Usm3dReader(object):
                     e[i] = ei
                     assert len(sline1) == 6, 'len(sline1)=%s' % len(sline1)
             else:  # sequential nvars=5
-                for i in xrange(1, n):
+                for i in range(1, n):
                     sline1 = flo_file.readline().strip().split()
                     rhoi, rhoui, rhovi, rhowi = Float(sline1[1:], 4)
                     assert len(sline1) == 5, 'len(sline1)=%s' % len(sline1)
@@ -522,7 +523,7 @@ class Usm3dReader(object):
         else:
             # extract node 1, 2, and 10
             if nvars == 6:  # dynamic nvars=6
-                for i in xrange(1, nmax):
+                for i in range(1, nmax):
                     if i in node_ids_minus_1:
                         sline1 = flo_file.readline().strip().split()
                         rhoi, rhoui, rhovi, rhowi, ei = Float(sline1[1:], 5)
@@ -538,7 +539,7 @@ class Usm3dReader(object):
                     else:
                         line1 = flo_file.readline()
             else:  # dynamic nvars=5
-                for i in xrange(1, nmax):
+                for i in range(1, nmax):
                     if i in node_ids_minus_1:
                         sline1 = flo_file.readline().strip().split()
                         rhoi, rhoui, rhovi, rhowi = Float(sline1[1:], 4)

@@ -1,3 +1,4 @@
+from six.moves import range
 import os
 from collections import defaultdict
 
@@ -155,7 +156,7 @@ class Usm3dIO(object):
 
         nid = 0
         #print("nnodes=%s" % nnodes)
-        for i in xrange(nnodes):
+        for i in range(nnodes):
             points.InsertPoint(nid, nodes[i, :])
             nid += 1
 

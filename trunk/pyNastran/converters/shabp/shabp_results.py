@@ -1,3 +1,4 @@
+from six.moves import range
 from numpy import zeros
 
 class ShabpOut(object):
@@ -10,7 +11,7 @@ class ShabpOut(object):
 
     def readline_n(self, f, i, n):
         i += n
-        for j in xrange(n-1):
+        for j in range(n-1):
             f.readline()
         return f.readline(), i
 
@@ -18,7 +19,7 @@ class ShabpOut(object):
         npatches = len(self.X)
         istart = zeros(npatches, dtype='int32')
         nelements = 0
-        for ipatch in xrange(npatches):
+        for ipatch in range(npatches):
             X = self.X[ipatch]
             nrows, ncols = X.shape
             nelementsi = (nrows-1) * (ncols-1)
@@ -38,7 +39,7 @@ class ShabpOut(object):
         #print "  istart=%s" % istart
 
         components = self.component_name_to_patch.keys()
-        for icase in xrange(ncases):
+        for icase in range(ncases):
             Cp = zeros(nelements, dtype='float32')
             delta = zeros(nelements, dtype='float32')
             for name in sorted(components):
@@ -91,7 +92,7 @@ class ShabpOut(object):
         Cp_dict_components = {}
         delta_dict_components = {}
         _line, i = self.readline_n(f, i, 5)
-        for icomponent in xrange(npatches):
+        for icomponent in range(npatches):
             #print "icomponent =", icomponent
             mach_line, i = self.readline(f, i)
             if 'Summation Number' in mach_line:
