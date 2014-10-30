@@ -1111,7 +1111,7 @@ class CAERO2(BaseCard):
 
     def Points(self):
         (p1, matrix) = self.cp.transformToGlobal(self.p1)
-        p2 = self.p1 + array([self.x12, 0., 0.])
+        p2 = p1 + array([self.x12, 0., 0.])
         #print("x12 = ",self.x12)
         #print("pcaero[%s] = %s" %(self.eid,[p1,p2]))
         return [p1, p2]
