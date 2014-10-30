@@ -4,6 +4,7 @@ Defines functions for single precision 8 character field writing.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import string_types
 import sys
 import warnings
 from numpy import allclose, isinf, float32
@@ -20,7 +21,7 @@ def is_same(value1, value2):
 
     .. note:: this method is used by almost every card when printing
     """
-    if isinstance(value1, basestring) or value1 is None:
+    if isinstance(value1, string_types) or value1 is None:
         return True if value1 == value2 else False
     if value1 == value2:
         return True

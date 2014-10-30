@@ -7,6 +7,7 @@ Main BDF class.  Defines:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import string_types
 
 #from codecs import open as codec_open
 import io
@@ -864,7 +865,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                                    'len(%s)=%s' % (key, len(key)))
             assert len(key) >= 1, ('min length for key is 1; '
                                    'len(%s)=%s' % (key, len(key)))
-            if not isinstance(key, basestring):
+            if not isinstance(key, string_types):
                 msg = 'key=%r must be a string.  type=%s' % (key, type(key))
                 raise TypeError(msg)
             self.dict_of_vars[key] = value
@@ -1190,7 +1191,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             assert len(lines) > 0
 
             card_name = self._get_card_name(lines)
-            if not isinstance(comment, basestring):
+            if not isinstance(comment, string_types):
                 raise TypeError('comment=%s type=%s' % (comment, type(comment)))
 
             if card_name == 'INCLUDE':

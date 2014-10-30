@@ -1,5 +1,4 @@
-from six.moves import zip
-import cStringIO
+from six.moves import zip, StringIO
 from numpy import zeros, unique, where, searchsorted, asarray, array
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -148,7 +147,7 @@ class PSOLID(Property):
         return obj
 
     def __repr__(self):
-        f = cStringIO.StringIO()
+        f = StringIO.StringIO()
         f.write('<PSOLID object> n=%s\n' % self.n)
         self.write_bdf(f)
         #print f

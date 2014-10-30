@@ -21,6 +21,7 @@ All tables have a self.table parameter that is a TableObj
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import string_types
 #import sys
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default

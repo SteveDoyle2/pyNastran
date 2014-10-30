@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 __all__ = ['OP4']
-
+from six import string_types
 import os
 import io
 from struct import pack, unpack
@@ -1095,14 +1095,14 @@ class OP4(object):
         #if nR == nC: op4_form = 1   # square
         #else:        op4_form = 2   # rectangular
 
-        if isinstance(op4_filename, basestring):
+        if isinstance(op4_filename, string_types):
             f = open(op4_filename, 'wb')
         else:
             f = op4_filename
 
         if name_order is None:
             name_order = sorted(matrices.keys())
-        elif isinstance(name_order, basestring):
+        elif isinstance(name_order, string_types):
             name_order = [name_order]
 
         isBigMat = False  ## ..todo:: hardcoded

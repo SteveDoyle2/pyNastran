@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-
+from six import string_types
 from six.moves import zip
 from numpy import zeros, searchsorted, unique
 
@@ -107,7 +107,7 @@ class RealCompositePlateArray(OES_Object):
         #msg = "i=%s dt=%s eid=%s layer=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (
             #self.itotal, dt, eid, layer, fd, oxx, oyy, txy, angle, major, minor, ovm)
         #print(msg)
-        #if isinstance(nodeID, basestring):
+        #if isinstance(nodeID, string_types):
             #nodeID = 0
         #assert isinstance(nodeID, int), nodeID
         self.element_layer[self.itotal, :] = [eid, layer]

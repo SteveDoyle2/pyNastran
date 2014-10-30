@@ -1,3 +1,4 @@
+from six import string_types
 import os
 from os.path import splitext, getsize
 from os.path import join as pjoin
@@ -29,7 +30,7 @@ def list_print(lst, float_fmt='%-4.2f'):
     :returns: the clean string representation of the object
     """
     def _print(val):
-        if val is None or isinstance(val, basestring):
+        if val is None or isinstance(val, string_types):
             return str(val)
         if isinstance(val, float):
             return float_fmt % val

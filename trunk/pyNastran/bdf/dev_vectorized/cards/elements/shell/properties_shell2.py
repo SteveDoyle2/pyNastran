@@ -1,4 +1,4 @@
-import StringIO
+from six.moves import StringIO
 
 #from .pshell import PSHELL
 #from .pcomp import PCOMP

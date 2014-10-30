@@ -1,3 +1,4 @@
+from six.moves import StringIO
 from collections import defaultdict
 from numpy import array, intersect1d, union1d, asarray
 
@@ -101,7 +102,7 @@ class VectorizedCardDict(object):
             yield key, value
 
     def __repr__(self):
-        f = cStringIO.StringIO()
+        f = StringIO.StringIO()
         f.write('<%s object> n=%s\n' % (self.type, self.n))
         self.write_bdf(f)
         return f.getvalue()

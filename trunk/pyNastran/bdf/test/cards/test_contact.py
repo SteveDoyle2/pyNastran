@@ -1,5 +1,4 @@
-import StringIO
-from six.moves import zip
+from six.moves import zip, StringIO
 from math import pi, sqrt
 from itertools import count
 import copy

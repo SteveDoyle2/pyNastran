@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, unicode_literals, print_function
+from six import string_types
 
 # standard library
 import sys
@@ -460,7 +461,7 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
                 if not i:
                     menu.addSeparator()
                 else:
-                    menu.addAction(actions[i] if isinstance(i, basestring) else i())
+                    menu.addAction(actions[i] if isinstance(i, string_types) else i())
 
     def init_ui(self):
         """ Initialize user iterface"""

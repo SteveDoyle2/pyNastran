@@ -1,5 +1,4 @@
-from six.moves import zip
-import cStringIO
+from six.moves import zip, StringIO
 from numpy import unique, where
 
 from collections import defaultdict
@@ -36,12 +35,11 @@ class LoadCase(object):
                 self.loads[load_id].append(load)
 
     def resolve(self, i):
-        import StringIO
         #print("key %s" % i)
         all_loads = self.loads[i]  # list of load objs
 
         #print("**********")
-        f = cStringIO.StringIO()
+        f = StringIO.StringIO()
         for load in all_loads:
             load.write_bdf(f)
         #print(f.getvalue())
@@ -89,7 +87,7 @@ class LoadCase(object):
                 raise RuntimeError('i > 100')
         #print('------------------')
         #print("resolved LoadCase i=", i)
-        f = cStringIO.StringIO()
+        f = StringIO.StringIO()
         for load in all_loads_out:
             load.write_bdf(f)
         #print(f.getvalue())

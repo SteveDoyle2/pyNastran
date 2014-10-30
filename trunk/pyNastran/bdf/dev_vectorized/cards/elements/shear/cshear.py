@@ -1,5 +1,4 @@
-from six.moves import zip
-import cStringIO
+from six.moves import zip, StringIO
 from numpy import array, zeros, arange, concatenate, searchsorted, where, unique
 
 from pyNastran.bdf.fieldWriter import print_card

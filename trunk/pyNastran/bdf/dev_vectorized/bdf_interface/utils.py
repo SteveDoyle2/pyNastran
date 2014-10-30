@@ -1,3 +1,6 @@
+from six import string_types
+
+
 def wipe_empty_fields(card):
     """
     Removes an trailing Nones from the card.

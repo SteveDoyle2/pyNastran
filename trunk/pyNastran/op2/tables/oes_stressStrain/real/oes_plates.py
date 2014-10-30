@@ -1,6 +1,7 @@
 #pylint disable=C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import string_types
 from six.moves import zip
 from itertools import count
 from numpy import zeros, searchsorted, ravel
@@ -96,8 +97,8 @@ class RealPlateArray(OES_Object):
 
         assert isinstance(eid, int)
         self.times[self.itime] = dt
-        assert isinstance(nodeID, basestring), nodeID
-        if isinstance(nodeID, basestring):
+        assert isinstance(nodeID, string_types), nodeID
+        if isinstance(nodeID, string_types):
             nodeID = 0
         self.element_node[self.itotal, :] = [eid, nodeID]
         self.data[self.itime, self.itotal, :] = [fd, oxx, oyy, txy, angle, majorP, minorP, ovm]
@@ -105,20 +106,20 @@ class RealPlateArray(OES_Object):
         self.ielement += 1
 
     def addNewNode(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        if isinstance(nodeID, basestring):
+        if isinstance(nodeID, string_types):
             nodeID = 0
         self.add_sort1(dt, eid, nodeID, fd, oxx, oyy, txy, angle,
                             majorP, minorP, ovm)
 
 
     def add(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        if isinstance(nodeID, basestring):
+        if isinstance(nodeID, string_types):
             nodeID = 0
         self.add_sort1(dt, eid, nodeID, fd, oxx, oyy, txy, angle,
                             majorP, minorP, ovm)
 
     def addNewNodeSort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        if isinstance(nodeID, basestring):
+        if isinstance(nodeID, string_types):
             nodeID = 0
         self.add_sort1(dt, eid, nodeID, fd, oxx, oyy, txy, angle,
                             majorP, minorP, ovm)
@@ -129,7 +130,7 @@ class RealPlateArray(OES_Object):
         msg = "i=%s dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (
             self.itotal, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
         #print(msg)
-        if isinstance(nodeID, basestring):
+        if isinstance(nodeID, string_types):
             nodeID = 0
         #assert isinstance(nodeID, int), nodeID
         self.element_node[self.itotal, :] = [eid, nodeID]

@@ -1059,7 +1059,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
                                    'len(%s)=%s' % (key, len(key)))
             assert len(key) >= 1, ('min length for key is 1; '
                                    'len(%s)=%s' % (key, len(key)))
-            if not isinstance(key, basestring):
+            if not isinstance(key, string_types):
                 msg = 'key=%r must be a string.  type=%s' % (key, type(key))
                 raise TypeError(msg)
             self.dict_of_vars[key] = value
@@ -1385,7 +1385,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             n += 1
 
             card_name = self._get_card_name(lines)
-            if not isinstance(comment, basestring):
+            if not isinstance(comment, string_types):
                 raise TypeError('comment=%s type=%s' % (comment, type(comment)))
 
             if card_name == 'INCLUDE':

@@ -1,4 +1,4 @@
-import cStringIO
+from six.moves import StringIO
 
 class VectorizedCard(object):
     def __init__(self, model):
@@ -23,7 +23,7 @@ class VectorizedCard(object):
         return msg
 
     def __repr__(self):
-        f = cStringIO.StringIO()
+        f = StringIO.StringIO()
         self.write_bdf(f)
         return f.getvalue().rstrip()
 

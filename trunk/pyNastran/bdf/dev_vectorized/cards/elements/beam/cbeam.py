@@ -1,5 +1,5 @@
-from six.moves import zip
-import cStringIO
+from six import string_types
+from six.moves import zip, StringIO
 from numpy import array, dot, arange, zeros, unique, searchsorted, nan, full, asarray
 from numpy.linalg import norm
 
@@ -127,7 +127,7 @@ class CBEAM(Element):
                 if isinstance(field8, float):
                     self.is_offt[i] = False
                     self.bit[i] = field8
-                elif isinstance(field8, basestring):
+                elif isinstance(field8, string_types):
                     self.is_offt[i] = True
                     offt = field8
                     msg = 'invalid offt parameter of CBEAM...offt=%s' % offt

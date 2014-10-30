@@ -1,5 +1,4 @@
-from six.moves import zip
-import StringIO
+from six.moves import zip, StringIO
 
 from numpy import array, dot, arange, zeros, unique, searchsorted
 from numpy.linalg import norm
