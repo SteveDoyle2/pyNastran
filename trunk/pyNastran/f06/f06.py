@@ -1,6 +1,6 @@
 #pylint: disable=C0301,C0111
 import os
-from itertools import izip
+from six.moves import zip
 
 from pyNastran.utils import print_bad_path
 from pyNastran.utils.log import get_logger
@@ -600,7 +600,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
         :Format: list of types [int,str,float,float,float] that maps to sline
         """
         out = []
-        for entry, iFormat in izip(sline, Format):
+        for entry, iFormat in zip(sline, Format):
             try:
                 entry2 = iFormat(entry)
             except:
@@ -614,7 +614,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
         """allows blanks"""
         out = []
 
-        for entry, iFormat in izip(sline, Format):
+        for entry, iFormat in zip(sline, Format):
             if entry.strip():
                 try:
                     entry2 = iFormat(entry)

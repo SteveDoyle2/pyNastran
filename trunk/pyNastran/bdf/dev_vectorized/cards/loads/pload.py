@@ -1,3 +1,4 @@
+from six.moves import zip
 from numpy import arange, array, zeros, searchsorted, unique
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -63,7 +64,7 @@ class PLOAD(object):
             #self._comment = comment
         #cards = self._cards
         #ncards = len(cards)
-        
+
         float_fmt = self.model.float
         self.n = len(self.load_id)
         if self.n:
@@ -83,7 +84,7 @@ class PLOAD(object):
                 i = arange(self.n)
             else:
                 i = searchsorted(load_ids, self.load_id)
-            
+
             n3 = ['' if n3i == 0 else n3i for n3i in self.node_ids[i, 3]]
             for (load_id, p, n, n3i) in zip(self.load_id[i], self.pressure[i],self.node_ids[i, :2], n3):
                 card = ['PLOAD', load_id, p, n[0], n[1], n[2], n3i ]

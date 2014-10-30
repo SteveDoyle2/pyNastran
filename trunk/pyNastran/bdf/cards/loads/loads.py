@@ -16,7 +16,7 @@ All static loads are defined in this file.  This includes:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
-from itertools import izip
+from six.moves import zip
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
@@ -227,7 +227,7 @@ class DLOAD(LoadCombination):
 
     def rawFields(self):
         list_fields = ['DLOAD', self.sid, self.scale]
-        for (scaleFactor, loadID) in izip(self.scaleFactors, self.loadIDs):
+        for (scaleFactor, loadID) in zip(self.scaleFactors, self.loadIDs):
             list_fields += [scaleFactor, self.LoadID(loadID)]
         return list_fields
 
@@ -332,7 +332,7 @@ class SLOAD(Load):
 
     def rawFields(self):
         list_fields = ['SLOAD', self.sid]
-        for (nid, mag) in izip(self.nids, self.mags):
+        for (nid, mag) in zip(self.nids, self.mags):
             list_fields += [self.Nid(nid), mag]
         return list_fields
 

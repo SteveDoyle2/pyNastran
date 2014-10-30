@@ -1,8 +1,8 @@
 #pylint disable=C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-
-from itertools import izip, count
+from six.moves import zip
+from itertools import count
 from numpy import zeros, searchsorted, ravel
 
 from .oes_objects import StressObject, StrainObject, OES_Object
@@ -232,7 +232,7 @@ class RealPlateArray(OES_Object):
             ovm = self.data[itime, :, 7]
 
             # loop over all the elements
-            for i, eid, nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi in izip(
+            for i, eid, nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi in zip(
                 count(), eids, nids, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
                 ([fdi, oxxi, oyyi, txyi, major, minor, ovmi],
                  is_all_zeros) = writeFloats13E([fdi, oxxi, oyyi, txyi, major, minor, ovmi])

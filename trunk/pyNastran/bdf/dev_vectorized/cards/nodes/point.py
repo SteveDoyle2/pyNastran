@@ -1,3 +1,6 @@
+from six.moves import zip
+
+
 class POINT(object):
     type = 'POINT'
     def __init__(self, model):

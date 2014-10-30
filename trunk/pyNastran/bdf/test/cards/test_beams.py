@@ -1,7 +1,8 @@
 import StringIO
 import unittest
 
-from itertools import izip, count
+from six.moves import zip
+from itertools import count
 
 from pyNastran.bdf.bdf import BDF, BDFCard, PBEAM, PBAR, CBEAM, GRID, MAT1
 from pyNastran.bdf.bdf import CROD, CONROD
@@ -38,7 +39,7 @@ class TestBeams(unittest.TestCase):
         msgA = '\n%s\n\n%s\n' % ('\n'.join(lines_expected), msg)
         msgA += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
         self.assertEqual(len(lines_actual), len(lines_expected), msgA)
-        for i, actual, expected in izip(count(), lines_actual, lines_expected):
+        for i, actual, expected in zip(count(), lines_actual, lines_expected):
             actual = str(actual)
             expected = str(expected)
             msg = msgA + '\ni=%s' % i + '\nactual   = %r\n' % actual

@@ -1,4 +1,5 @@
-from itertools import izip, count
+from six.moves import zip
+from itertools import count
 from numpy import array, pi, linspace
 
 from pyNastran.bdf.fieldWriter import print_card
@@ -6,7 +7,7 @@ from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru,
                                           wipe_empty_fields)
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, 
+    double, double_or_blank,
     string, string_or_blank,
     integer_or_string, double_string_or_blank,
     blank)
@@ -15,7 +16,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 class TRIM(object):
     def __init__(self, model):
         self.model = model
-    
+
     def add(self, card, comment):
         #: Trim set identification number. (Integer > 0)
         self.trim_id = integer(card, 1, 'trim_id')
@@ -67,7 +68,7 @@ class TRIM(object):
 
     def _repr_fields(self):
         card = ['TRIM', self.trim_id, self.mach, self.q]
-        for (i, label, ux) in izip(count(), self.labels, self.uxs):
+        for (i, label, ux) in zip(count(), self.labels, self.uxs):
             card += [label, ux]
             if i == 1:
                 card += [self.aeqr]

@@ -1,7 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from itertools import izip
+from six.moves import zip
 #from math import ceil
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -254,7 +254,7 @@ class DLINK(OptConstraint):
 
     def rawFields(self):
         list_fields = ['DLINK', self.oid, self.ddvid, self.c0, self.cmult]
-        for (idv, ci) in izip(self.IDv, self.Ci):
+        for (idv, ci) in zip(self.IDv, self.Ci):
             list_fields += [idv, ci]
         return list_fields
 
@@ -262,7 +262,7 @@ class DLINK(OptConstraint):
         c0 = set_blank_if_default(self.c0, 0.)
         cmult = set_blank_if_default(self.cmult, 1.)
         list_fields = ['DLINK', self.oid, self.ddvid, c0, cmult]
-        for (idv, ci) in izip(self.IDv, self.Ci):
+        for (idv, ci) in zip(self.IDv, self.Ci):
             list_fields += [idv, ci]
         return list_fields
 
@@ -496,7 +496,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
     def rawFields(self):
         list_fields = ['DVMREL1', self.oid, self.Type, self.Mid(),
                   self.mpName, self.mpMin, self.mpMax, self.c0, None]
-        for (dvid, coeff) in izip(self.dvids, self.coeffs):
+        for (dvid, coeff) in zip(self.dvids, self.coeffs):
             list_fields.append(dvid)
             list_fields.append(coeff)
         return list_fields
@@ -506,7 +506,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         c0 = set_blank_if_default(self.c0, 0.)
         list_fields = ['DVMREL1', self.oid, self.Type, self.Mid(),
                   self.mpName, self.mpMin, mpMax, c0, None]
-        for (dvid, coeff) in izip(self.dvids, self.coeffs):
+        for (dvid, coeff) in zip(self.dvids, self.coeffs):
             list_fields.append(dvid)
             list_fields.append(coeff)
         return list_fields
@@ -569,7 +569,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
     def rawFields(self):
         list_fields = ['DVPREL1', self.oid, self.Type, self.Pid(),
                   self.pNameFid, self.pMin, self.pMax, self.c0, None]
-        for (dvid, coeff) in izip(self.dvids, self.coeffs):
+        for (dvid, coeff) in zip(self.dvids, self.coeffs):
             list_fields.append(dvid)
             list_fields.append(coeff)
         return list_fields
@@ -579,7 +579,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         c0 = set_blank_if_default(self.c0, 0.)
         list_fields = ['DVPREL1', self.oid, self.Type, self.Pid(),
                   self.pNameFid, self.pMin, pMax, c0, None]
-        for (dvid, coeff) in izip(self.dvids, self.coeffs):
+        for (dvid, coeff) in zip(self.dvids, self.coeffs):
             list_fields.append(dvid)
             list_fields.append(coeff)
         return list_fields

@@ -1,7 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from itertools import izip
+from six.moves import zip
 from numpy import zeros
 
 from .oes_objects import StressObject, StrainObject, OES_Object
@@ -148,7 +148,7 @@ class RealShearArray(OES_Object):
 
             # loop over all the elements
             out = []
-            for eid, max_sheari, avg_sheari, margini in izip(eids, max_shear, avg_shear, margin):
+            for eid, max_sheari, avg_sheari, margini in zip(eids, max_shear, avg_shear, margin):
                 #([max_sheari, avg_sheari, margini],
                 #is_all_zeros) = writeFloats13E([max_sheari, avg_sheari, margini])
                 out.append([eid, max_sheari, avg_sheari, margini])

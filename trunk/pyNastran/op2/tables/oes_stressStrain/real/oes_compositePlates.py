@@ -1,7 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from itertools import izip
+from six.moves import zip
 from numpy import zeros, searchsorted, unique
 
 from .oes_objects import StressObject, StrainObject, OES_Object
@@ -239,7 +239,7 @@ class RealCompositePlateArray(OES_Object):
             ovm = self.data[itime, :, 8]
 
             # loop over all the elements
-            for eid, layer, o11i, o22i, t12i, t1zi, t2zi, anglei, majori, minori, ovmi in izip(
+            for eid, layer, o11i, o22i, t12i, t1zi, t2zi, anglei, majori, minori, ovmi in zip(
                 eids, layers, o11, o22, t12, t1z, t2z, angle, major, minor, ovm):
 
                 ([o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi], is_all_zeros) = writeFloats12E([

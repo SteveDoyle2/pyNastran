@@ -1,5 +1,5 @@
 from collections import defaultdict
-from itertools import izip, count
+from itertools import count
 
 from numpy import array, zeros, unique, searchsorted, arange
 
@@ -25,7 +25,7 @@ def get_spc_constraint(card, i):
         raise RuntimeError('i =', i)
 
     return constraint_id, node_id, dofs, enforced_motion
-    
+
 class SPC(object):
     """
     Defines enforced displacement/temperature (static analysis)

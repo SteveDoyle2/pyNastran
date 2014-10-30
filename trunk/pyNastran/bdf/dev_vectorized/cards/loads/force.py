@@ -1,5 +1,5 @@
 import StringIO
-from itertools import izip
+from six.moves import zip
 
 from numpy import zeros, searchsorted, unique, where
 
@@ -120,7 +120,7 @@ class FORCE(object):
     def write_bdf(self, f, size=8, is_double=False, load_id=None):
         if self.n:
             if load_id is None:
-                for (lid, nid, cid, mag, xyz) in izip(
+                for (lid, nid, cid, mag, xyz) in zip(
                      self.load_id, self.node_id, self.coord_id, self.mag, self.xyz):
 
                     card = ['FORCE', lid, nid, cid, mag, xyz[0], xyz[1], xyz[2] ]
@@ -128,7 +128,7 @@ class FORCE(object):
             else:
                 for lid in unique(load_id):
                     i = where(self.load_id == lid)[0]
-                    for (lid, nid, cid, mag, xyz) in izip(
+                    for (lid, nid, cid, mag, xyz) in zip(
                          self.load_id[i], self.node_id[i], self.coord_id[i], self.mag[i], self.xyz[i]):
 
                         card = ['FORCE', lid, nid, cid, mag, xyz[0], xyz[1], xyz[2] ]

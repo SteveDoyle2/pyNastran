@@ -1,8 +1,9 @@
 # pylint: disable=C0301,W0613,C0103,R0913,R0914,R0904,C0111,R0201,R0902
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six.moves import zip
 from collections import defaultdict
-from itertools import izip, count
+from itertools import count
 from numpy import array, sqrt, zeros, where, searchsorted, ravel, argwhere, unique, arange
 from numpy.linalg import eigh
 
@@ -202,7 +203,7 @@ class RealSolidArray(OES_Object):
 
             # loop over all the elements and nodes
             cnnodes = nnodes + 1
-            for i, deid, node_id, doxx, doyy, dozz, dtxy, dtyz, dtxz, do1, do2, do3, dp, dovm in izip(
+            for i, deid, node_id, doxx, doyy, dozz, dtxy, dtyz, dtxz, do1, do2, do3, dp, dovm in zip(
                 count(), eids2, nodes, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm):
 
                 # TODO: cid not supported

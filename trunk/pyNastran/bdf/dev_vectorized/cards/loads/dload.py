@@ -1,4 +1,4 @@
-from itertools import izip
+from six.moves import zip
 
 from numpy import zeros, searchsorted
 
@@ -66,6 +66,6 @@ class DLOAD(object):
 
     def write_bdf(self, f, size=8, lids=None):
         list_fields = ['DLOAD', self.load_id, self.scale]
-        for (scaleFactor, lid) in izip(self.scale_factors, self.load_ids):
+        for (scaleFactor, lid) in zip(self.scale_factors, self.load_ids):
             list_fields += [scaleFactor, lid]
         f.write(print_card(list_fields, size))

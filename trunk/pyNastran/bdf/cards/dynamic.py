@@ -17,7 +17,7 @@ All cards are BaseCard objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from math import log, exp, ceil
-from itertools import izip
+from six.moves import zip
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
@@ -64,8 +64,8 @@ class FREQ(BaseCard):
         :param self:  the object pointer
         :param freqs: the frequencies for a FREQx object
         """
-        #print "self.freqs = ",self.freqs
-        #print "freqs = ",freqs
+        #print("self.freqs = ",self.freqs)
+        #print("freqs = ",freqs)
         self.freqs += freqs
         self.cleanFreqs()
 
@@ -300,7 +300,7 @@ class TSTEP(BaseCard):
 
     def rawFields(self):
         list_fields = ['TSTEP', self.sid]
-        for (N, dt, no) in izip(self.N, self.DT, self.NO):
+        for (N, dt, no) in zip(self.N, self.DT, self.NO):
             list_fields += [N, dt, no, None, None, None, None, None]
         return list_fields
 

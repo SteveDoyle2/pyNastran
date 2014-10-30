@@ -12,7 +12,7 @@ All coordinate cards are defined in this file.  This includes:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from math import sqrt, degrees, radians, atan2, acos, sin, cos
-from itertools import izip
+from six.moves import zip
 
 from numpy import array, cross, dot, transpose, zeros, vstack
 from numpy.linalg import norm
@@ -809,7 +809,7 @@ class CORD3G(Coord):  # not done
         """
         if self.methodES == 'E':
             rotations = [int(i) for i in str(self.methodInt)]
-            for (rotation, theta) in izip(rotations, self.thetas):
+            for (rotation, theta) in zip(rotations, self.thetas):
                 ct = cos(radians(theta))
                 st = sin(radians(theta))
                 if   rotation == 1:

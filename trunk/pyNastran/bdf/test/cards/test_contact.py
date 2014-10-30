@@ -1,6 +1,7 @@
 import StringIO
+from six.moves import zip
 from math import pi, sqrt
-from itertools import izip, count
+from itertools import count
 import copy
 import unittest
 

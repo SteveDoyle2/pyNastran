@@ -13,7 +13,7 @@ All cards are Method objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
-from itertools import izip
+from six.moves import zip
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
@@ -235,7 +235,7 @@ class EIGC(Method):
     def rawMethod(self):
         list_fields = []
         if self.method in ['HESS', 'INV']:
-            for (alphaA, omegaA, alphaB, omegaB, Lj, NEj, NDj) in izip(
+            for (alphaA, omegaA, alphaB, omegaB, Lj, NEj, NDj) in zip(
                     self.alphaAjs, self.omegaAjs, self.alphaBjs, self.omegaBjs,
                     self.LJs, self.NEJs, self.NDJs):
                 alphaA = set_blank_if_default(alphaA, 0.0)
@@ -245,7 +245,7 @@ class EIGC(Method):
                 list_fields += [alphaA, omegaA, alphaB, omegaB, Lj, NEj, NDj, None]
 
         elif self.method == 'CLAN':
-            for (alphaA, omegaA, mblksz, iblksz, kstep, Nj) in izip(
+            for (alphaA, omegaA, mblksz, iblksz, kstep, Nj) in zip(
                     self.alphaAjs, self.omegaAjs, self.mblkszs, self.iblkszs,
                     self.ksteps, self.NJIs):
                 alphaA = set_blank_if_default(alphaA, 0.0)
@@ -483,7 +483,7 @@ class EIGRL(Method):
     def rawFields(self):
         list_fields = ['EIGRL', self.sid, self.v1, self.v2, self.nd,
                        self.msglvl, self.maxset, self.shfscl, self.norm]
-        for (option, value) in izip(self.options, self.values):
+        for (option, value) in zip(self.options, self.values):
             list_fields += [option + '=' + str(value)]
         return list_fields
 
@@ -491,7 +491,7 @@ class EIGRL(Method):
         msglvl = set_blank_if_default(self.msglvl, 0)
         list_fields = ['EIGRL', self.sid, self.v1, self.v2, self.nd, msglvl,
                   self.maxset, self.shfscl, self.norm]
-        for (option, value) in izip(self.options, self.values):
+        for (option, value) in zip(self.options, self.values):
             list_fields += [option + '=' + str(value)]
         return list_fields
 

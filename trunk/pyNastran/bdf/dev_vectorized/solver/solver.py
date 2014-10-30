@@ -4,7 +4,7 @@ from __future__ import print_function
 import os
 import sys
 from datetime import date
-from itertools import izip
+from six.moves import zip
 from struct import pack
 
 # 3rd party
@@ -2024,7 +2024,7 @@ class Solver(F06, OP2):
 
                 # nIJV is the position of the values of K in the dof
                 (Fgi, nGrav) = elem.Fg(model, self.gravLoad, fnorm)
-                for (fg, dof) in izip(Fgi, nGrav):
+                for (fg, dof) in zip(Fgi, nGrav):
                     #print("dof = ",dof)
                     if dof in Dofs:
                         Fg[Dofs[dof]] += fg

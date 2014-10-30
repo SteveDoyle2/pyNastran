@@ -1,7 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from itertools import izip
+from six.moves import zip
 from math import log, sin, cos, radians, atan2
 #from math import (sin,sinh,cos,cosh,tan,tanh,sqrt,atan,atan2,acosh,acos,asin,
 #                  asinh,atanh) #,atanh2   # going to be used by DEQATN
@@ -313,7 +313,7 @@ class NastranMatrix(BaseCard):
 
         if self.isComplex():
             if self.isPolar():
-                for (GCi, GCj, reali, imagi) in izip(self.GCi, self.GCj, self.Real, self.Complex):
+                for (GCi, GCj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
                     magi = sqrt(reali**2 + complexi**2)
                     if reali == 0.0:
                         phasei = 0.0
@@ -323,12 +323,12 @@ class NastranMatrix(BaseCard):
                               None, GCi[0], GCi[1], magi, phasei]
                     msg += print_card(list_fields)
             else:
-                for (GCi, GCj, reali, imagi) in izip(self.GCi, self.GCj, self.Real, self.Complex):
+                for (GCi, GCj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
                     list_fields = [self.type, self.name, GCj[0], GCj[1],
                               None, GCi[0], GCi[1], reali, imagi]
                     msg += print_card(list_fields)
         else:
-            for (GCi, GCj, reali) in izip(self.GCi, self.GCj, self.Real):
+            for (GCi, GCj, reali) in zip(self.GCi, self.GCj, self.Real):
                 list_fields = [self.type, self.name, GCj[0], GCj[1],
                           None, GCi[0], GCi[1], reali, None]
                 msg += print_card(list_fields)
@@ -346,7 +346,7 @@ class NastranMatrix(BaseCard):
 
         if self.isComplex():
             if self.isPolar():
-                for (GCi, GCj, reali, imagi) in izip(self.GCi, self.GCj, self.Real, self.Complex):
+                for (GCi, GCj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
                     magi = sqrt(reali**2 + complexi**2)
                     if reali == 0.0:
                         phasei = 0.0
@@ -356,12 +356,12 @@ class NastranMatrix(BaseCard):
                               None, GCi[0], GCi[1], magi, phasei]
                     msg += print_card(list_fields)
             else:
-                for (GCi, GCj, reali, imagi) in izip(self.GCi, self.GCj, self.Real, self.Complex):
+                for (GCi, GCj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
                     list_fields = [self.type, self.name, GCj[0], GCj[1],
                               None, GCi[0], GCi[1], reali, imagi]
                     msg += print_card(list_fields)
         else:
-            for (GCi, GCj, reali) in izip(self.GCi, self.GCj, self.Real):
+            for (GCi, GCj, reali) in zip(self.GCi, self.GCj, self.Real):
                 list_fields = [self.type, self.name, GCj[0], GCj[1],
                           None, GCi[0], GCi[1], reali, None]
                 msg += print_card(list_fields)
@@ -424,7 +424,7 @@ def getMatrix(self, isSparse=False, applySymmetry=True):
         ncols = 0
         if self.isComplex():
             #: no check for symmetry
-            for (GCj, GCi, reali, complexi) in izip(self.GCj, self.GCi, self.Real, self.Complex):
+            for (GCj, GCi, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
                 i = rows[GCi]
                 j = cols[GCj]
                 nrows = max(i, nrows)
@@ -434,7 +434,7 @@ def getMatrix(self, isSparse=False, applySymmetry=True):
                 data.append(complex(reali, complexi))
         else:
             # no check for symmetry
-            for (GCj, GCi) in izip(self.GCj, self.GCi):
+            for (GCj, GCi) in zip(self.GCj, self.GCi):
                 i = rows[GCi]
                 j = cols[GCj]
                 nrows = max(i, nrows)
@@ -465,26 +465,26 @@ def getMatrix(self, isSparse=False, applySymmetry=True):
         if self.isComplex():
             M = zeros((i, j), dtype='complex128')
             if self.ifo == 6 and applySymmetry:  # symmetric
-                for (GCj, GCi, reali, complexi) in izip(self.GCj, self.GCi, self.Real, self.Complex):
+                for (GCj, GCi, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
                     i = rows[GCi]
                     j = cols[GCj]
                     M[i, j] = complex(reali, complexi)
                     M[j, i] = complex(reali, complexi)
             else:
-                for (GCj, GCi, reali, complexi) in izip(self.GCj, self.GCi, self.Real, self.Complex):
+                for (GCj, GCi, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
                     i = rows[GCi]
                     j = cols[GCj]
                     M[i, j] = complex(reali, complexi)
         else:
             M = zeros((i, j), dtype='float64')
             if self.ifo == 6 and applySymmetry:  # symmetric
-                for (GCj, GCi, reali) in izip(self.GCj, self.GCi, self.Real):
+                for (GCj, GCi, reali) in zip(self.GCj, self.GCi, self.Real):
                     i = rows[GCi]
                     j = cols[GCj]
                     M[i, j] = reali
                     M[j, i] = reali
             else:
-                for (GCj, GCi, reali) in izip(self.GCj, self.GCi, self.Real):
+                for (GCj, GCi, reali) in zip(self.GCj, self.GCi, self.Real):
                     i = rows[GCi]
                     j = cols[GCj]
                     M[i, j] = reali
@@ -708,10 +708,10 @@ class DMI(NastranMatrix):
                   self.tout, None, self.nRows, self.nCols]
 
         if self.isComplex():
-            for (GCi, GCj, reali, imagi) in izip(self.GCi, self.GCj, self.Real, self.Complex):
+            for (GCi, GCj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
                 list_fields += ['DMI', self.name, GCj, GCi, reali, imagi]
         else:
-            for (GCi, GCj, reali) in izip(self.GCi, self.GCj, self.Real):
+            for (GCi, GCj, reali) in zip(self.GCi, self.GCj, self.Real):
                 list_fields += ['DMI', self.name, GCj, GCi, reali]
         return list_fields
 
@@ -724,11 +724,11 @@ class DMI(NastranMatrix):
         #msg += self.print_card(list_fields,size=16,isD=False)
 
         if self.isComplex():
-            for (GCi, GCj, reali, imagi) in izip(self.GCi, self.GCj, self.Real, self.Complex):
+            for (GCi, GCj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
                 list_fields = ['DMI', self.name, GCj, GCi, reali, imagi]
                 msg += print_card(list_fields)
         else:
-            for (GCi, GCj, reali) in izip(self.GCi, self.GCj, self.Real):
+            for (GCi, GCj, reali) in zip(self.GCi, self.GCj, self.Real):
                 list_fields = ['DMI', self.name, GCj, GCi, reali]
                 msg += print_card(list_fields)
         return msg
@@ -747,11 +747,11 @@ class DMI(NastranMatrix):
         #msg += self.print_card(list_fields,size=16,isD=False)
 
         if self.isComplex():
-            for (GCi, GCj, reali, imagi) in izip(self.GCi, self.GCj, self.Real, self.Complex):
+            for (GCi, GCj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
                 list_fields = [self.type, self.name, GCj, GCi, reali, imagi]
                 msg += self.print_card(list_fields)
         else:
-            for (GCi, GCj, reali) in izip(self.GCi, self.GCj, self.Real):
+            for (GCi, GCj, reali) in zip(self.GCi, self.GCj, self.Real):
                 list_fields = [self.type, self.name, GCj, GCi, reali]
                 msg += self.print_card(list_fields)
         return msg

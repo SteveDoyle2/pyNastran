@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from itertools import izip
+from six.moves import zip
 from numpy import zeros
 
 from .oes_objects import StressObject, StrainObject, OES_Object
@@ -154,7 +154,7 @@ class RealRodArray(OES_Object):
 
             # loop over all the elements
             out = []
-            for eid, axiali, SMai, torsioni, SMti in izip(eids, axial, SMa, torsion, SMt):
+            for eid, axiali, SMai, torsioni, SMti in zip(eids, axial, SMa, torsion, SMt):
                 #([axiali, torsioni, SMai, SMti],
                 #is_all_zeros) = writeFloats13E([axiali, torsioni, SMai, SMti])
                 out.append([eid, axiali, SMai, torsioni, SMti])

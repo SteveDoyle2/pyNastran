@@ -1,3 +1,4 @@
+from six.moves import zip
 from numpy import array
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
@@ -92,7 +93,7 @@ class RealAppliedLoadsVectorArray(AppliedLoadsVectorArray):
             m1 = self.data[itime, :, 3]
             m2 = self.data[itime, :, 4]
             m3 = self.data[itime, :, 5]
-            for f1i, f2i, f3i, m1i, m2i, m3i in izip(f1, f2, f3, m1, m2, m3):
+            for f1i, f2i, f3i, m1i, m2i, m3i in zip(f1, f2, f3, m1, m2, m3):
                 vals = [f1i, f2i, f3i, m1i, m2i, m3i]
                 (vals2, is_all_zeros) = writeFloats13E(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
@@ -129,7 +130,7 @@ class ComplexAppliedLoadsVectorArray(AppliedLoadsVectorArray):
             m1 = self.data[itime, :, 3]
             m2 = self.data[itime, :, 4]
             m3 = self.data[itime, :, 5]
-            for f1i, f2i, f3i, m1i, m2i, m3i in izip(f1, f2, f3, m1, m2, m3):
+            for f1i, f2i, f3i, m1i, m2i, m3i in zip(f1, f2, f3, m1, m2, m3):
                 vals = [f1i, f2i, f3i, m1i, m2i, m3i]
                 (vals2, is_all_zeros) = writeFloats13E(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2

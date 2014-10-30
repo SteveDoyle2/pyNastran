@@ -1,4 +1,5 @@
-from itertools import count, izip
+from six.moves import zip
+from itertools import count
 
 from numpy import zeros, arange, dot, cross, searchsorted, array, where, asarray, eye
 from numpy.linalg import norm
@@ -310,7 +311,7 @@ class CTETRA4(SolidElement):
         n = len(element_ids)
         V = zeros(n, self.model.float)
 
-        for i, n1i, n2i, n3i, n4i in izip(count(), n1, n2, n3, n4):
+        for i, n1i, n2i, n3i, n4i in zip(count(), n1, n2, n3, n4):
             V[i] = volume4(n1i, n2i, n3i, n4i)
             i += 1
         return V

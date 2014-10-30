@@ -1,7 +1,7 @@
 #pylint: disable=C0301,C0111,R0921
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from itertools import izip
+from six.moves import zip
 from collections import defaultdict
 
 from numpy import zeros, array, concatenate, string_, searchsorted, where, argwhere, ravel, abs
@@ -250,7 +250,7 @@ class ComplexSolid(OES_Object):
             #print('nodes =', nodes, nodes.shape)
             #print('oxx =', oxx)
             # loop over all the elements and nodes
-            for deid, node, doxx, doyy, dozz, dtxy, dtyz, dtxz in izip(eids2, nodes, oxx, oyy, ozz, txy, tyz, txz):
+            for deid, node, doxx, doyy, dozz, dtxy, dtyz, dtxz in zip(eids2, nodes, oxx, oyy, ozz, txy, tyz, txz):
                 #print("oxx =", oxx)
                 #print("oxx.shape =", oxx.shape)
 

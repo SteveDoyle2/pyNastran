@@ -1,3 +1,4 @@
+from six.moves import zip
 from numpy import arange, array, zeros, searchsorted, unique
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -24,7 +25,7 @@ class PLOAD2(object):
         self._load_id = []
         self._element_ids = []
         self._p = []
-        
+
     def __getitem__(self, i):
         unique_lid = unique(self.load_id)
         #print "force", unique_lid, i
@@ -68,7 +69,7 @@ class PLOAD2(object):
             #self._comment = comment
         #cards = self._cards
         ncards = self.n
-        
+
         float_fmt = self.model.float
         self.load_id = zeros(ncards, 'int32')
         self.element_id = zeros(ncards, 'int32')

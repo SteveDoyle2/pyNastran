@@ -1,3 +1,4 @@
+from six.moves import zip
 import cStringIO
 from numpy import array, zeros, arange, concatenate, searchsorted, where, unique
 

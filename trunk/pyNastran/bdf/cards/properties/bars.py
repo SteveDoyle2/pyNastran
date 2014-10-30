@@ -10,7 +10,7 @@ Multi-segment beams are IntegratedLineProperty objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
-from itertools import izip, count
+from itertools import count
 from numpy import pi, array
 
 from pyNastran.bdf.fieldWriter import (set_blank_if_default,

@@ -1,4 +1,4 @@
-from itertools import izip
+from six.moves import zip
 
 from numpy import zeros, array, where, unique, searchsorted
 
@@ -77,7 +77,7 @@ class POINTAX(object):
     def write_bdf(self, f, size=8):
         if self.n:
             f.write('$POINTAX\n')
-            for (nid, rid, phi) in izip(self.point_id, self.ring_id, self.phi):
+            for (nid, rid, phi) in zip(self.point_id, self.ring_id, self.phi):
                 card = ['POINTAX', rid, phi]
                 f.write(print_card(card, size))
 

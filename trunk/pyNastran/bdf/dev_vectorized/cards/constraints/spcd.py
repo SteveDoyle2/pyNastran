@@ -1,4 +1,5 @@
-from itertools import izip, count
+from six.moves import zip
+from itertools import count
 
 from numpy import array, zeros, unique, searchsorted, arange
 
@@ -60,6 +61,6 @@ class SPCD(object):
     def write_bdf(self, f, size=8):
         if self.n:
             fields = ['SPCD', self.constraint_id]
-            for (nid, constraint, enforced) in izip(self.gids, self.components, self.enforced_motion):
+            for (nid, constraint, enforced) in zip(self.gids, self.components, self.enforced_motion):
                 fields += [nid, constraint, enforced]
             f.write(card)

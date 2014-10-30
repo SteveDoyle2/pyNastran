@@ -1,3 +1,4 @@
+from six.moves import zip
 from numpy import arange, array, zeros, searchsorted, unique
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -66,7 +67,7 @@ class PLOAD1(object):
             #self._comment = comment
         cards = self._cards
         ncards = len(cards)
-        
+
         float_fmt = self.model.float
         self.load_id = zeros(ncards, 'int32')
         self.element_id = zeros(ncards, 'int32')

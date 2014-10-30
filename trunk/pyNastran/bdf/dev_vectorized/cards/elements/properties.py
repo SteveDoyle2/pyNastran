@@ -2,7 +2,6 @@ from numpy import (array, zeros, searchsorted, unique, concatenate, argsort,
                    hstack, where, vstack, ones, cross, intersect1d, setdiff1d,
                    arange, nan, full, ravel, asarray)
 from numpy.linalg import norm
-from itertools import izip
 
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter, unique2d
 #from pyNastran.bdf.dev_vectorized.cards.elements.solid.ctetra4 import volume4

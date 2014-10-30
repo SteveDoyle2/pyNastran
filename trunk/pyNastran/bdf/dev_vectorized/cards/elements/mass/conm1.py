@@ -1,5 +1,5 @@
 import StringIO
-from itertools import izip
+from six.moves import zip
 
 from numpy import zeros, array, arange, unique, searchsorted, where
 
@@ -83,7 +83,7 @@ class CONM1(VectorizedCard):
                 i = searchsorted(self.element_id, element_ids)
 
             Cid = [cid if cid != 0 else '' for cid in self.coord_id[i]]
-            for (eid, nid, cid, m) in izip(self.element_id[i], self.node_id[i], Cid, self.mass_matrix):
+            for (eid, nid, cid, m) in zip(self.element_id[i], self.node_id[i], Cid, self.mass_matrix):
                     card = ['CONM1', eid, nid, cid, m[0, 0], m[1, 0], m[1, 1],
                               m[2, 0], m[2, 1], m[2, 2], m[3, 0], m[3, 1], m[3, 2],
                               m[3, 3], m[4, 0], m[4, 1], m[4, 2], m[4, 3], m[4, 4],

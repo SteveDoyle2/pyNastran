@@ -1,5 +1,6 @@
 # pylint: disable=C0103,C0111,E1101
 from __future__ import print_function
+from six.moves import zip
 
 #VTK_TRIANGLE = 5
 #VTK_QUADRATIC_TRIANGLE = 22

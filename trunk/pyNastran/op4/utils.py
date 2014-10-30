@@ -1,9 +1,10 @@
-from pyNastran.bdf.fieldWriter import print_card_8 #, print_card_16
-from pyNastran.bdf.field_writer_double import print_card_double
-from itertools import izip
+from six.moves import zip
 from numpy import real, imag, ndarray, where, arange
 from numpy import matrix as Matrix
 from scipy.sparse import coo_matrix
+
+from pyNastran.bdf.fieldWriter import print_card_8 #, print_card_16
+from pyNastran.bdf.field_writer_double import print_card_double
 
 
 def write_DMIG(f, name, matrix, form,
@@ -86,13 +87,13 @@ def write_DMIG(f, name, matrix, form,
         if is_complex:
             reals = real(matrix.data)
             imags = imag(matrix.data)
-            for i, j, reali, imagi in izip(matrix.row, matrix.col, reals, imags):
+            for i, j, reali, imagi in zip(matrix.row, matrix.col, reals, imags):
                 GJ, CJ = col_index_to_node_component_id[i]
                 G1, C1 = row_index_to_node_component_id[i]
                 card = ['DMIG', name, GJ, CJ, G1, C1, reali, imagi]
                 f.write(print_card(card))
         else:
-            for i, j, reali in izip(matrix.row, matrix.col, matrix.data):
+            for i, j, reali in zip(matrix.row, matrix.col, matrix.data):
                 GJ, CJ = col_index_to_node_component_id[i]
                 G1, C1 = row_index_to_node_component_id[i]
                 card = ['DMIG', name, GJ, CJ, G1, C1, reali]
@@ -128,7 +129,7 @@ def write_DMIG(f, name, matrix, form,
                     #index_range = [ii.min(), ii.max()]
                     GJ, CJ = col_index_to_node_component_id[icol]
                     card = ['DMIG', name, GJ, CJ, '']
-                    #for i, j, reali in izip(matrix.row, matrix.col, matrix.data):
+                    #for i, j, reali in zip(matrix.row, matrix.col, matrix.data):
                     ii_max = ii.max()
                     ii_min = ii.min()
                     if ii_max == ii_min:

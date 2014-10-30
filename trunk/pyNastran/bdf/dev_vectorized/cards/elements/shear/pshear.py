@@ -1,3 +1,4 @@
+from six.moves import zip
 import cStringIO
 from numpy import array, zeros, unique, asarray, searchsorted, arange
 from pyNastran.bdf.fieldWriter import print_card

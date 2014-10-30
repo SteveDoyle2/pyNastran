@@ -13,7 +13,7 @@ All shell properties are ShellProperty and Property objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
-from itertools import izip
+from six.moves import zip
 from numpy import array
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -434,7 +434,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         if debug:
             print("fields1=%s fields2=%s" % (fields1, fields2))
 
-        for (field1, field2) in izip(fields1, fields2):
+        for (field1, field2) in zip(fields1, fields2):
             if not self.isSame(field1, field2):
                 return False
         return True
@@ -574,7 +574,7 @@ class PCOMP(CompositeShellProperty):
 
             self.plies = []
             #ply = [mid,t,theta,sout]
-            for (mid, t, theta, sout) in izip(Mid, T, Theta, Sout):
+            for (mid, t, theta, sout) in zip(Mid, T, Theta, Sout):
                 if sout == 0:
                     sout = 'NO'
                 elif sout == 1:  #: .. todo:: not sure  0=NO,1=YES (most likely)

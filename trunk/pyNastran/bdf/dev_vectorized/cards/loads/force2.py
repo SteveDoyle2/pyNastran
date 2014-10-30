@@ -1,5 +1,5 @@
 import StringIO
-from itertools import izip
+from six.moves import zip
 
 from numpy import zeros, searchsorted, unique
 
@@ -96,7 +96,7 @@ class FORCE2(VectorizedCard):
 
     def write_bdf(self, f, size=8, lids=None):
         if self.n:
-            for (lid, nid, cid, mag, xyz) in izip(
+            for (lid, nid, cid, mag, xyz) in zip(
                  self.load_id, self.node_id, self.coord_id, self.mag, self.xyz):
 
                 card = ['FORCE2', lid, nid, cid, mag, xyz[0], xyz[1], xyz[2] ]

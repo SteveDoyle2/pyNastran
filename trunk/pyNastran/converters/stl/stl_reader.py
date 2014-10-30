@@ -1,8 +1,8 @@
 #pylint:  disable=C0103,C0111
+from six.moves import zip
 import os
 import sys
 #from struct import pack
-from itertools import izip
 
 from docopt import docopt
 

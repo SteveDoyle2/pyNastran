@@ -1,7 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-
+from six.moves import zip
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 from pyNastran.bdf.bdfInterface.assign_type import (integer_or_blank,
@@ -191,7 +191,7 @@ class PARAM(BaseCard):
     #def isSameCard(self, param, debug=False):
         #fields1 = [self.key] + self.values
         #fields2 = [param.key] + param.values
-        #for (field1, field2) in izip(fields1, fields2):
+        #for (field1, field2) in zip(fields1, fields2):
         #    if not self.isSame(field1, field2):
         #        return False
         #return True

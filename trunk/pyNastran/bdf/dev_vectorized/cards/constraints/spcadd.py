@@ -1,5 +1,5 @@
 from collections import defaultdict
-from itertools import izip, count
+from itertools import count
 import StringIO
 
 from numpy import array

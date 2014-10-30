@@ -1,3 +1,4 @@
+from six.moves import zip
 import os
 import unittest
 from math import sqrt

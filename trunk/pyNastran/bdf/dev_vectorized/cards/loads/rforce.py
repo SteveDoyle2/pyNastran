@@ -1,4 +1,4 @@
-from itertools import izip
+from six.moves import zip
 
 from numpy import zeros, searchsorted, unique
 
@@ -16,7 +16,7 @@ class RFORCE(object):
 
         :param self: the RFORCE object
         :param model: the BDF object
-        
+
         ..todo:: collapse loads
         """
         self.model = model
@@ -96,7 +96,7 @@ class RFORCE(object):
                 self.mb[i] = integer_or_blank(card, 10, 'mb', 0)
                 self.idrf[i] = integer_or_blank(card, 11, 'idrf', 0)
                 assert len(card) <= 12, 'len(RFORCE card) = %i' % len(card)
-            
+
             i = self.load_id.argsort()
             self.load_id = self.load_id[i]
             self.node_id = self.node_id[i]
@@ -109,7 +109,7 @@ class RFORCE(object):
             self.idrf = self.idrf[i]
             self._cards = []
             self._comments = []
-        
+
     def get_stats(self):
         msg = []
         if self.n:
@@ -118,7 +118,7 @@ class RFORCE(object):
 
     def write_bdf(self, f, size=8, lids=None):
         if self.n:
-            for (lid, nid, cid, scale_vel, r, method, scale_acc, mb, idrf) in izip(
+            for (lid, nid, cid, scale_vel, r, method, scale_acc, mb, idrf) in zip(
                  self.load_id, self.node_id, self.coord_id, self.scale_vel,
                  self.r, self.scale_acc, self.mb, self.idrf):
 

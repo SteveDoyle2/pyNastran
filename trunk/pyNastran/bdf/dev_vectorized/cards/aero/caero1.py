@@ -1,4 +1,4 @@
-from itertools import izip
+from six.moves import zip
 
 from numpy import array, zeros, arange, concatenate, searchsorted, where, unique
 
@@ -25,7 +25,7 @@ class CAERO1(object):
     def __init__(self, model):
         """
         ::
-        
+
           1
           | \
           |   \
@@ -67,12 +67,12 @@ class CAERO1(object):
             #: assumed; if zero or blank, a list of division points is given at LSPAN, field 7.
             #: (Integer > 0)
             self.nspan = zeros(ncards, 'int32')
-            
+
             #: Number of chordwise boxes; if a positive value is given NCHORD, equal divisions
             #: are assumed; if zero or blank, a list of division points is given at LCHORD, field 8.
             #: (Integer >= 0)
             self.nchord = zeros(ncards, 'int32')
-            
+
             #: ID of an AEFACT entry containing a list of division points for spanwise boxes.
             #; Used only if NSPAN, field 5 is zero or blank. (Integer > 0)
             self.lspan = zeros(ncards, 'int32')
@@ -80,10 +80,10 @@ class CAERO1(object):
             #: ID of an AEFACT data entry containing a list of division points for chordwise boxes.
             #: Used only if NCHORD, field 6 is zero or blank. (Integer > 0)
             self.lchord = zeros(ncards, 'int32')
-            
+
             #: Interference group identification; aerodynamic elements with different IGIDs are uncoupled.
             self.igid = zeros(ncards, 'int32')
-            
+
             #: Location of points 1, in coordinate system CP. (Real)
             self.p1 = zeros((ncards, 3), float_fmt)
 
@@ -91,7 +91,7 @@ class CAERO1(object):
             self.p4 = zeros((ncards, 3), float_fmt)
             self.x12 = zeros(ncards, float_fmt)
             self.x43 = zeros(ncards, float_fmt)
-            
+
             for i, card in enumerate(cards):
                 self.element_id[i] = integer(card, 1, 'element_id')
                 self.property_id[i] = integer(card, 2, 'property_id')
@@ -151,7 +151,7 @@ class CAERO1(object):
             Lchord = [lchord if lchord !=0. else '' for lchord in self.lchord[i]]
 
             for (eid, pid, cid, nspan, nchord, lspan, lchord, igid,
-                    p1, x12, p4, x43) in izip(self.element_id[i], self.property_id[i],
+                    p1, x12, p4, x43) in zip(self.element_id[i], self.property_id[i],
                     Cid, Nspan, Nchord, Lspan, Lchord, Igid,
                     self.p1[i, :], self.x12[i], self.p4[i, :], self.x43[i]):
                 card = ['CAERO1', eid, pid, cid, nspan, nchord, lspan, lchord, igid,
@@ -169,14 +169,14 @@ class CAERO1(object):
     def area(self, element_ids=None, total=False, node_ids=None, grids_cid0=None):
         """
         Gets the area of the CAERO1s on a total or per element basis.
-        
+
         :param self: the CAERO1 object
         :param element_ids: the elements to consider (default=None -> all)
         :param total: should the area be summed (default=False)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
         :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
-        
+
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
@@ -193,13 +193,13 @@ class CAERO1(object):
     def normal(self, element_ids=None, node_ids=None, grids_cid0=None):
         """
         Gets the normals of the CAERO1s on per element basis.
-        
+
         :param self: the CAERO1 object
         :param element_ids: the elements to consider (default=None -> all)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
         :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
-        
+
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
@@ -219,7 +219,7 @@ class CAERO1(object):
         """
         Gets the area, and normals of the CAERO1s on a per
         element basis.
-        
+
         :param self: the CAERO1 object
         :param element_ids: the elements to consider (default=None -> all)
 
@@ -228,7 +228,7 @@ class CAERO1(object):
 
         :param calculate_area: should the area be calculated (default=True)
         :param calculate_normal: should the normals be calculated (default=True)
-        
+
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
@@ -240,26 +240,26 @@ class CAERO1(object):
         p2 = self._positions(grids_cid0, self.node_ids[:, 1])
         p3 = self._positions(grids_cid0, self.node_ids[:, 2])
         p4 = self._positions(grids_cid0, self.node_ids[:, 3])
-        
+
         v12 = p2 - p1
         v13 = p3 - p1
         v123 = cross(v12, v13)
-        
+
         A = None
         normal = v123 / n
         if calculate_area:
             A = 0.5 * n
         return A, normal
-    
+
     def _positions(self, nids_to_get, node_ids, grids_cid0):
         """
         Gets the positions of a list of nodes
-        
+
         :param nids_to_get:  the node IDs to get as an NDARRAY
         :param node_ids:     the node IDs that contains all the nids_to_get
                              as an NDARRAY
         :param grids_cid_0:  the GRIDs as an (N, )  NDARRAY
-        
+
         :returns grids2_cid_0 : the corresponding positins of the requested
                                 GRIDs
         """

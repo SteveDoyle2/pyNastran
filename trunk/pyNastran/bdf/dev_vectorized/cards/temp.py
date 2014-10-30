@@ -1,3 +1,4 @@
+from six.moves import zip
 from numpy import zeros
 
 from pyNastran.bdf.fieldWriter import print_card
@@ -44,11 +45,11 @@ class TEMPD(object):
     def build(self):
         self.load_id = array(self.load_id)
         self.temperature_default = array(self.temperature_default)
-        
+
     def write_bdf(self, f, size=8):
         if self.n:
             n = 0
-            for lid, t in izip(self.load_id, self.temperature_default):
+            for lid, t in zip(self.load_id, self.temperature_default):
                 card = ['TEMPD', lid, t]
                 f.write(print_card(card, size))
 
@@ -73,7 +74,7 @@ class TEMP(object):
 
     def add(self, card, comment):
         self.load_id = integer(card, 1, 'load_id')
-        
+
         self._comments.append(comment)
 
     def build(self):

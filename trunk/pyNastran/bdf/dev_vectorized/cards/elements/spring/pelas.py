@@ -1,4 +1,4 @@
-from itertools import izip
+from six.moves import zip
 
 from numpy import array, arange, dot, zeros, unique, searchsorted, asarray
 from numpy.linalg import norm
@@ -82,7 +82,7 @@ class PELAS(object):
             else:
                 i = pids
 
-            for (pid, k, ge, s) in izip(self.property_id[i], self.K[i], self.ge[i], self.s[i]):
+            for (pid, k, ge, s) in zip(self.property_id[i], self.K[i], self.ge[i], self.s[i]):
                 card = ['PELAS', pid, k, ge, s]
                 f.write(print_card(card, size=size))
 
