@@ -161,7 +161,7 @@ class Bar3Static(NastranComponent):
             axial = self.op2.rodStress[isubcase].axial[ i ]
             torsion = self.op2.rodStress[isubcase].torsion[ i  ]
             #import pdb; pdb.set_trace()
-            
+
             stresses.append((axial, torsion))
 
         [self.bar1_stress, self.bar2_stress, self.bar3_stress] = \
@@ -204,21 +204,21 @@ if __name__ == "__main__": # pragma: no cover
 
     truss.run()
 
-    print " "
-    print "Weight = %8.4f" % (truss.weight)
-    print " "
-    print "Bar Forces = %8.4f" % (truss.bar1_force), \
+    print(" ")
+    print("Weight = %8.4f" % (truss.weight))
+    print(" ")
+    print("Bar Forces = %8.4f" % (truss.bar1_force), \
                        "%8.4f" % (truss.bar2_force), \
-                       "%8.4f" % (truss.bar3_force)
-    print " "
-    print "Bar Stresses = %8.4f" % (truss.bar1_stress), \
+                       "%8.4f" % (truss.bar3_force))
+    print(" ")
+    print("Bar Stresses = %8.4f" % (truss.bar1_stress), \
                          "%8.4f" % (truss.bar2_stress), \
-                         "%8.4f" % (truss.bar3_stress)
-    print " "
-    print "Displacement in x & y directions = %8.4f" \
+                         "%8.4f" % (truss.bar3_stress))
+    print(" ")
+    print("Displacement in x & y directions = %8.4f" \
                    % (truss.displacement_x_dir),"%8.4f" \
-                   % (truss.displacement_y_dir)
-    print " "
-    print "Frequency = %8.4f" % (truss.frequency)
-    print " "
-    print "Elapsed time: ", time.time()-time1
+                   % (truss.displacement_y_dir))
+    print(" ")
+    print("Frequency = %8.4f" % (truss.frequency))
+    print(" ")
+    print("Elapsed time: ", time.time()-time1)

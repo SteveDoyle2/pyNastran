@@ -80,7 +80,7 @@ def nastran_split(log, line, is_large_field, debug=False):
         field = rawField.strip()
         #if debug:
         #if (i==9) and field=='' or field=='*' or field=='+':
-            #print "skipping * or + or empty field"
+            #print("skipping * or + or empty field")
         #    pass
         #else:
         if debug:

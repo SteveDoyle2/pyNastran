@@ -318,7 +318,7 @@ def print_int_card_blocks(fields_blocks):
         [[1, 2, 3], True],      # these are all integers
     ]
     msg = print_int_card_blocks(fields_blocks)
-    print msg
+    print(msg)
     >>> 'SET1           a      1.       3       1       2       3\n'
 
     """

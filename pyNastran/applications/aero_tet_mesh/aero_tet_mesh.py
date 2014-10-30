@@ -25,7 +25,7 @@ def run_arg_parse():
 
     ver = str(pyNastran.__version__)
     data = docopt(msg, version=ver)
-    #print data
+    #print(data)
 
     #format  = data['--format']
     input = data['INPUT']
@@ -66,10 +66,10 @@ def main():
     pid_map = module.__dict__['pid_map']
     boundary_conditions = module.__dict__['boundary_conditions']
 
-    #print dir(module)
+    #print(dir(module))
     #e = execfile(bc_file, globals(), locals())
-    #print globals()
-    #print dir(e)
+    #print(globals())
+    #print(dir(e))
 
     pid_map
     boundary_conditions
@@ -78,11 +78,11 @@ def main():
 
     get_bcs(bdf_filename, pid_map, boundary_conditions, log=None)
     #if flip_normals:
-    #    bdf = BDF()
-    #    bdf.read_bdf(bdf_filename, xref=False)
-    #    bdf.flip_normals()
-    #    bdf.write_bdf(bdf_filename2)
-    #    del bdf
+       #bdf = BDF()
+       #bdf.read_bdf(bdf_filename, xref=False)
+       #bdf.flip_normals()
+       #bdf.write_bdf(bdf_filename2)
+       #del bdf
     #else:
     #bdf_filename2 = bdf_filename
 

@@ -46,7 +46,7 @@ class ConstraintObject(object):
     def append(self, constraint):
         key = constraint.conid
         if key in self.constraints:
-            #print "already has key...key=%s\n%s" %(key,str(constraint))
+            #print("already has key...key=%s\n%s" %(key,str(constraint)))
             self.constraints[key].append(constraint)
         else:
             self.constraints[key] = [constraint]
@@ -546,12 +546,12 @@ class SPC1(Constraint):
 
     def rawFields(self):  # SPC1
         #test = [i for i in xrange(self.nodes[0], self.nodes[-1]+1)]
-        #print "self.nodes = ",self.nodes
-        #print "test       = ",test
+        #print("self.nodes = ",self.nodes)
+        #print("test       = ",test)
         #if self.nodes == test:
         #    nodes = [self.nodes[0], 'THRU', self.nodes[-1]]
         #else:
-        #print "SPC1 self.nodes = ",self.nodes
+        #print("SPC1 self.nodes = ",self.nodes)
         nodes = [int(i) for i in self.nodes]  # SPC1
         fields = ['SPC1', self.conid, self.constraints] + nodes
         return fields
@@ -573,12 +573,12 @@ class ConstraintADD(Constraint):
         outSPCs = ''
         fieldSets = []
 
-        #print "repr---mpcadd"
-        #print self.sets
+        #print("repr---mpcadd")
+        #print(self.sets)
         for spcsets in sorted(self.sets):
-            #print "*spcsets",spcsets
+            #print("*spcsets",spcsets)
             if isinstance(spcsets, int):  # spcset wasnt found
-                #print "int unfound...%s" %(spcsets)
+                #print("int unfound...%s" %(spcsets))
                 #outSPCs += str(spcsets)
                 fields.append(spcsets)
             elif isinstance(spcsets, list):

@@ -282,7 +282,7 @@ def solid_bending():
     }
     vm_avg_derive = get_nodal_averaged_stress(model, eid_to_nid_map, isubcase, options2)['vonMises']
     for nid, stressi in sorted(vm_derive_avg.iteritems()):
-        print "nid=%-3s derive/avg=%-8g avg/derive=%-8g diff=%g" % (nid, stressi, vm_avg_derive[nid], stressi - vm_avg_derive[nid])
+        print("nid=%-3s derive/avg=%-8g avg/derive=%-8g diff=%g" % (nid, stressi, vm_avg_derive[nid], stressi - vm_avg_derive[nid]))
 
 def sol_101_elements():
     model_path = os.path.join(pyNastran.__path__[0], '..', 'models')
@@ -305,7 +305,7 @@ def sol_101_elements():
     }
     vm_avg_derive = get_nodal_averaged_stress(model, eid_to_nid_map, isubcase, options2)['vonMises']
     for nid, stressi in sorted(vm_derive_avg.iteritems()):
-        print "nid=%-3s derive/avg=%-8g avg/derive=%-8g diff=%g" % (nid, stressi, vm_avg_derive[nid], stressi - vm_avg_derive[nid])
+        print("nid=%-3s derive/avg=%-8g avg/derive=%-8g diff=%g" % (nid, stressi, vm_avg_derive[nid], stressi - vm_avg_derive[nid]))
 
 def setup(bdf_filename, op2_filename):
     fem = BDF()

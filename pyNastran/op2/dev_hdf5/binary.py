@@ -15,16 +15,16 @@ dt = [('one', 'int32'),
 f = open('f.bin', 'rb')
 #A = fromfile(f, dtype=dt)
 A = fromfile(f, dtype=dt, count=10)
-print A, len(A)*4
+print(A, len(A)*4)
 f.close()
-print "------"
+print("------")
 
 
 # this fails
 if 0:
     f = open('f.bin', 'rb')
     d = f.read(n*4)
-    print len(d)
+    print(len(d))
     A = fromfile(d, dtype=dt)
-    print A
+    print(A)
     f.close()

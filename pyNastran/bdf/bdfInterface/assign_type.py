@@ -708,7 +708,7 @@ def interpret_value(valueRaw, card='', debug=False):
     # if there are non-floats/scientific notation -> string
     noED = list(set(valueIn) - set('ED 1234567890+-'))
     word = ''.join(noED)
-    #print "word=%r" %word
+    #print("word=%r" %word)
     if word.isalpha():
         if debug:
             print("WORD!")
@@ -721,8 +721,8 @@ def interpret_value(valueRaw, card='', debug=False):
         v0 = '+'  # inplied positive value
         valueLeft = valueIn
 
-    #print "valueIn = %r" % valueIn
-    #print "v0 = %r" %v0
+    #print("valueIn = %r" % valueIn)
+    #print("v0 = %r" % v0)
     if v0 == '-':
         vFactor = -1.
     elif v0 == '+' or v0.isdigit():
@@ -761,7 +761,7 @@ def interpret_value(valueRaw, card='', debug=False):
                           'tabs/spaces/commas!  Fix it!' % msg)
 
     value = s0 * 10 ** (s1)
-    #print "valueOut = %r" %value
+    #print("valueOut = %r" % value)
 
     if debug:
         print("SCIENTIFIC!")
@@ -789,8 +789,8 @@ def string_parser(stringIn):
             msg = "s=|%r|" % s
             raise SyntaxError(msg)
 
-        #print "s=%s stringIn[i-1]=%s" % (state, typeCheck[i-1])
-        #print "i=%s s=%s typeCheck=%s" % (i, s, typeCheck)
+        #print("s=%s stringIn[i-1]=%s" % (state, typeCheck[i-1]))
+        #print("i=%s s=%s typeCheck=%s" % (i, s, typeCheck))
         if i == 0:
             typeCheck += state
             n += 1
@@ -821,13 +821,13 @@ def string_parser(stringIn):
         i = stringReversed.index('+')
         lString = list(stringIn)
         lString.insert(-i - 1, 'e')
-        #print "lString = ", lString
+        #print("lString = ", lString)
         out = ''.join(lString)
         print("out = %s" % out)
         return float(out)
     else:
-        #print "string = ", stringIn
-        #print "typeCheck = ", typeCheck
+        #print("string = ", stringIn)
+        #print("typeCheck = ", typeCheck)
         #return 'string'
         return stringIn
 

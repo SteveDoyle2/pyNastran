@@ -30,7 +30,7 @@ def bar():
     b = w1
     h = h1
     """
-    print "---Bar---"
+    print("---Bar---")
     #A = b*h
     h = Symbol('h')
     b = Symbol('b')
@@ -45,12 +45,12 @@ def bar():
     p2 = addx(p1, b)
     p3 = suby(p2, h)
     p4 = subx(p3, b)
-    print "p1 = ", p1
-    print "p2 = ", p2
-    print "p3 = ", p3
-    print "p4 = ", p4
+    print("p1 = ", p1)
+    print("p2 = ", p2)
+    print("p3 = ", p3)
+    print("p4 = ", p4)
     Atri = half * p1[0] * p1[0]
-    print "Atri = ", Atri
+    print("Atri = ", Atri)
 
     sections = [[1, p1, p2], [1, p2, p3], [1, p3, p4], [1, p4, p1]]
     Ixx(sections)
@@ -78,7 +78,7 @@ def cross():
     #k-j = D4
     #h-g = D2
     #b-g = D3
-    print "---Cross---"
+    print("---Cross---")
 
     D1 = Symbol('D1')
     D2 = Symbol('D2')
@@ -109,19 +109,19 @@ def cross():
     k = addy(j, h2)
     l = addx(k, b1)
     A = addy(l, h1)
-    #print "a = ",a
-    #print "b = ",b
+    #print("a = ",a)
+    #print("b = ",b)
 
-    #print "d = ",d
-    #print "e = ",e
+    #print("d = ",d)
+    #print("e = ",e)
 
-    #print "g = ",g
-    #print "h = ",h
+    #print("g = ",g)
+    #print("h = ",h)
 
-    #print "k = ",k
-    #print "j = ",j
+    #print("k = ",k)
+    #print("j = ",j)
 
-    #print "A = ",A
+    #print("A = ",A)
     sections = [[1, a, b], [1, b, c], [1, c, d], [1, d, e],
                 [1, e, f], [1, f, g], [1, g, h], [1, h, i],
                 [1, i, j], [1, j, k], [1, k, l], [1, l, a]]
@@ -152,7 +152,7 @@ def box():
     #d-c     = D1
     #(g-c)_x = D4
     """
-    print "---Box---"
+    print("---Box---")
 
     D1 = Symbol('D1')
     D2 = Symbol('D2')
@@ -217,7 +217,7 @@ def Box1():
     .. warning:: inertia is wrong b/c 0 is assumed to be <0,0> when it should
     be the output of the first inertia calculation
     """
-    print "---Box1---"
+    print("---Box1---")
 
     D1 = Symbol('D1')
     D2 = Symbol('D2')
@@ -281,7 +281,7 @@ def T():
     .. todo:: Inertias should be relative to the CG
     .. warning:: wrong...
     """
-    print "---T---"
+    print("---T---")
 
     D1 = Symbol('D1')
     D2 = Symbol('D2')
@@ -336,14 +336,14 @@ def Ixx(sections):
     o3 = Rational(1, 3)
     for i, section in enumerate(sections):
         (sign, p1, p2) = section
-        #print "p%s = %s" %(i,p1)
-        #print "p%s = %s" %(i+1,p2)
+        #print("p%s = %s" %(i,p1))
+        #print("p%s = %s" %(i+1,p2))
         #Atri = half * abs(p1[0]*p2[1])
         AA = Matrix([p1, p2])
-        #print "AA = \n",AA
+        #print("AA = \n",AA)
         detAA = AA.det()
         msgAA = '%s' % (detAA)
-        #print "msgAA = ",msgAA
+        #print("msgAA = ",msgAA)
         if '-' in msgAA:
             detAA *= Rational(-1, 1)
         Atri = detAA
@@ -355,28 +355,28 @@ def Ixx(sections):
         Ixxi = ixxi * Atri
         Iyyi = iyyi * Atri
         Ixyi = ixyi * Atri
-        #print "Atri = ",Atri
-        #print "Ixxi = ",Ixxi
+        #print("Atri = ",Atri)
+        #print("Ixxi = ",Ixxi)
         Ixx += Ixxi
         Iyy += Iyyi
         Ixy += Ixyi
-        #print "Ixx = ",simplify(Ixx),'\n'
+        #print("Ixx = ",simplify(Ixx),'\n')
         CG = [CG[0] + p1[0] * o3 + p2[0] * o3, CG[1] + p1[1] * o3 + p2[1] * o3]
         Area += Atri
     CG = [CG[0] / Area, CG[1] / Area]
-    #print "Ixx = ",simplify(Ixx)
+    #print("Ixx = ",simplify(Ixx))
     o12 = Rational(1, 12)
     o24 = Rational(1, 24)
     Ixx = Ixx * o12
     Iyy = Iyy * o12
     Ixy = Ixy * o24
     J = Ixx + Iyy
-    print "Area = ", simplify(Area * half)
-    print "CG   = ", simplify(CG)
-    print "Ixx  = ", simplify(Ixx)
-    print "Iyy  = ", simplify(Iyy)
-    print "Ixy  = ", simplify(Ixy)
-    print "J    = ", simplify(J), '\n'
+    print("Area = ", simplify(Area * half))
+    print("CG   = ", simplify(CG))
+    print("Ixx  = ", simplify(Ixx))
+    print("Iyy  = ", simplify(Iyy))
+    print("Ixy  = ", simplify(Ixy))
+    print("J    = ", simplify(J), '\n')
 
 
 def add(p1, p2, s1=1, s2=1):

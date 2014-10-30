@@ -114,7 +114,7 @@ class AddMethods(object):
         # key = elem.eid
         # if key in self.damperElements and not allowOverwrites:
         #     if not elem.isSameCard(self.damperElements[key]):
-        #         #print 'eid=%s\noldElement=\n%snewElement=\n%s' %(key,self.elements[key],elem)
+        #         #print('eid=%s\noldElement=\n%snewElement=\n%s' %(key,self.elements[key],elem))
         #         assert elem.eid not in self.damperElements, 'eid=%s\noldDamperElement=\n%snewDamperElement=\n%s' % (elem.eid, self.damperElements[elem.eid], elem)
         # else:
         #     assert key > 0, 'eid=%s elem=%s' % (key, elem)
@@ -149,7 +149,7 @@ class AddMethods(object):
 
         if key in self.properties and not allowOverwrites:
             if not prop.isSameCard(self.properties[key]):
-                #print 'pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.properties[key],prop)
+                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.properties[key],prop))
                 assert key not in self.properties, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, self.properties[key], prop)
         else:
             assert key > 0, 'pid=%s prop=%s' % (key, prop)
@@ -159,7 +159,7 @@ class AddMethods(object):
         key = prop.pid
         if key in self.properties_mass and not allowOverwrites:
             if not prop.isSameCard(self.properties_mass[key]):
-                #print 'pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.properties_mass[key],prop)
+                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.properties_mass[key],prop))
                 assert key not in self.properties_mass, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, self.properties_mass[key], prop)
         else:
             assert key > 0, 'pid=%s prop=%s' % (key, prop)
@@ -170,7 +170,7 @@ class AddMethods(object):
 
         if key in self.pbusht and not allowOverwrites:
             if not prop.isSameCard(self.pbusht[key]):
-                #print 'pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.pdampt[key],prop)
+                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.pdampt[key],prop))
                 assert key not in self.pbusht, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, self.pbusht[key], prop)
         else:
             assert key > 0, 'pid=%s prop=%s' % (key, prop)
@@ -199,7 +199,7 @@ class AddMethods(object):
 
         if key in self.pdampt and not allowOverwrites:
             if not prop.isSameCard(self.pdampt[key]):
-                #print 'pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.pdampt[key],prop)
+                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.pdampt[key],prop))
                 assert key not in self.pdampt, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, self.pdampt[key], prop)
         else:
             assert key > 0, 'pid=%s prop=%s' % (key, prop)
@@ -210,7 +210,7 @@ class AddMethods(object):
 
         if key in self.pelast and not allowOverwrites:
             if not prop.isSameCard(self.pelast[key]):
-                #print 'pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.pdampt[key],prop)
+                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.pdampt[key],prop))
                 assert key not in self.pelast, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, self.pelast[key], prop)
         else:
             assert key > 0, 'pid=%s prop=%s' % (key, prop)
@@ -492,7 +492,7 @@ class AddMethods(object):
         #assert key not in self.flfacts
         assert key > 0
         self.flfacts[key] = flfact  # set id...
-        #print "added flfact...flflact =\n"+flfact
+        #print("added flfact...flflact =\n"+flfact)
 
     def add_DCONSTR(self, dconstr):
         key = (dconstr.oid, dconstr.rid)

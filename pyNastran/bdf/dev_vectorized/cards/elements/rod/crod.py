@@ -393,8 +393,8 @@ class CROD(RodElement):
             #print("q2[%s] = %s" % (self.eid, q2))
             #print("Lambda = \n"+str(Lambda))
 
-            #print "Lsize = ",Lambda.shape
-            #print "qsize = ",q.shape
+            #print("Lsize = ", Lambda.shape)
+            #print("qsize = ", q.shape)
             u_axial = dot(array(Lambda), q_axial)
             du_axial = -u_axial[0] + u_axial[1]
             u_torsion = dot(array(Lambda), q_torsion)

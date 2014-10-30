@@ -280,8 +280,8 @@ class CBEAM(CBAR):
         #print("q2[%s] = %s" % (self.eid, q2))
         #print("Lambda = \n"+str(Lambda))
 
-        #print "Lsize = ",Lambda.shape
-        #print "qsize = ",q.shape
+        #print("Lsize = ",Lambda.shape)
+        #print("qsize = ",q.shape)
         L = self.Length()
         A = self.Area()
         E = self.E()
@@ -472,7 +472,7 @@ class CBEAM(CBAR):
         #k_rod = matrix([[1., -1.], [-1., 1.]])  # 1D rod
 
         #k, ki = self.Stiffness1D(model)  # CBEAM
-        #print R
+        #print(R)
         #print(k)
         #print("Lambda.shape = ", Lambda.shape)
         #K = dot(dot(transpose(Lambda), k), Lambda)

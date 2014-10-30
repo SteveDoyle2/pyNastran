@@ -33,7 +33,7 @@ def run_arg_parse(mode):
 
     ver = str(pyNastran.__version__)
     data = docopt(msg, version=ver)
-    #print data
+    #print(data)
 
     format  = data['--format']
     input   = data['--input']
@@ -67,7 +67,7 @@ def run_arg_parse(mode):
     #writeBDF = args.writeBDF
     if shots:
         #shots = shots[1]
-        #print "shots2 = %r" % shots, type(shots)
+        #print("shots2 = %r" % shots, type(shots))
         shots = shots.split(';')[0]
     return (edges, is_nodal, is_centroidal, format, input, output, shots,
             magnify, rotation, script, debug)

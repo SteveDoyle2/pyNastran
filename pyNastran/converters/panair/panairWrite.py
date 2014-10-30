@@ -23,7 +23,7 @@ class PanairWrite(object):
 
     def print_options(self):
         msg = ''
-        msg += '0               print options\n'
+        msg += '0            options\n'
         msg += '            %i = singularity grid print flag\n' % (
             self.isings)
         msg += '            %i = panel geometry print flag\n' % (self.igeomp)

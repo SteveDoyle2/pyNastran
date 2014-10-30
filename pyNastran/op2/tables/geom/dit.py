@@ -31,7 +31,7 @@ class DIT(object):
         """
         GUST(1005,10,174)    - the marker for Record 1
         """
-        #print "reading GUST"
+        #print("reading GUST")
         nEntries = (len(data) - n) // 20  # 5*4
         for i in xrange(nEntries):
             eData = data[n:n + 20]
@@ -51,7 +51,7 @@ class DIT(object):
         """
         self.skippedCardsFile.write('skipping TABLED1 in DIT\n')
         return
-        #print "reading TABLED1"
+        #print("reading TABLED1")
         func = TABLED1
         self.readTable1(func, data, n)
 
@@ -82,7 +82,7 @@ class DIT(object):
         """
         TABLED2(1205,12,134) - the marker for Record 5
         """
-        #print "reading TABLED2"
+        #print("reading TABLED2")
         func = TABLED2
         self.readTable2(func, data)
 
@@ -112,7 +112,7 @@ class DIT(object):
         """
         TABLED3(1305,13,140) - the marker for Record 6
         """
-        #print "reading TABLED3"
+        #print("reading TABLED3")
         func = TABLED3
         self.readTable3(func, data)
 
@@ -145,7 +145,7 @@ class DIT(object):
         """
         self.skippedCardsFile.write('skipping TABLEM1 in DIT\n')
         return
-        #print "reading TABLED1"
+        #print("reading TABLED1")
         func = TABLEM1
         self.readTable1(func, data)
 
@@ -153,7 +153,7 @@ class DIT(object):
         """
         TABLEM2(205,2,94) - the marker for Record 10
         """
-        #print "reading TABLEM2"
+        #print("reading TABLEM2")
         func = TABLEM2
         self.readTable2(func, data)
 
@@ -161,7 +161,7 @@ class DIT(object):
         """
         TABLEM3(305,3,95) - the marker for Record 11
         """
-        #print "reading TABLED3"
+        #print("reading TABLED3")
         func = TABLEM3
         self.readTable3(func, data)
 
@@ -169,7 +169,7 @@ class DIT(object):
         """
         TABLEM4(405,4,96) - the marker for Record 12
         """
-        #print "reading TABLED3"
+        #print("reading TABLED3")
         func = TABLEM4
         self.readTable4(func, data)
 

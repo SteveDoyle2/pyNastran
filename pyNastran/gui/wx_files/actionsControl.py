@@ -18,7 +18,7 @@ class pyWidget(wxVTKRenderWindow):
         return self._CurrentCamera
 
     def onChar2(self, event):
-        #print "onChar2 = ",event.GetKeyCode()
+        #print("onChar2 = ",event.GetKeyCode())
         camera = self.GetCamera()
         code = event.GetKeyCode()
         if   code == ord('m'):  # zooming in

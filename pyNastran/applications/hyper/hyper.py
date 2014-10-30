@@ -62,7 +62,7 @@ class Hypersonic(BDF):
         """
         doesn't support solid elements
         """
-        #print self.flow
+        #print(self.flow)
         flow = self.flow[1]
         self.omega = flow.get_omega()
         #flow.get_xyzref()
@@ -92,7 +92,7 @@ class Hypersonic(BDF):
                 hyper.set = hyper.sets[iset]
                 hyper.gamma = hyper.gammas[iset]
 
-            print element.type
+            print(element.type)
             if element.type in ['CTRIA3', 'CTRIA6']:
                 n1, n2, n3 = element.nodeIDs()
                 p1, p2, p3 = positions[n1], positions[n2], positions[n3]

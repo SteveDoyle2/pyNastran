@@ -78,7 +78,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
 
     def Rho(self):
         """Get the material density, :math:`\rho`"""
-        #print str(self.pid),type(self.pid)
+        #print(str(self.pid), type(self.pid))
         #raise NotImplementedError('implement self.Rho() for %s' % self.type)
         if isinstance(self.pid, int):
             raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
@@ -504,7 +504,7 @@ class CBAR(LineElement):
         #k_beam = self.Stiffness1D(model)
         #k_unit = array([[1.0, -1.0],
         #                [-1.0, 1.0]], dtype='float64')
-        #print R
+        #print(R)
         #print(k)
         #print("Lambda.shape = ", Lambda.shape)
         #K_unit = dot(dot(transpose(Lambda), k_unit), Lambda)
@@ -572,8 +572,8 @@ class CBAR(LineElement):
 
         p1 = model.Node(n1).xyz
         p2 = model.Node(n2).xyz
-        #print "node1 = ",node1
-        #print "node2 = ",node2
+        #print("node1 = ", node1)
+        #print("node2 = ", node2)
         L = norm(p1 - p2)
 
         if L == 0.0:

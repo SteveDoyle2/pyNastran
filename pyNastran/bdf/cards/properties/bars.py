@@ -563,8 +563,8 @@ class IntegratedLineProperty(LineProperty):
         return i12
 
     def Nsm(self):
-        #print "xxb = ",self.xxb
-        #print "nsm = ",self.nsm
+        #print("xxb = ",self.xxb)
+        #print("nsm = ",self.nsm)
         nsm = integrate_positive_line(self.xxb, self.nsm)
         return nsm
 

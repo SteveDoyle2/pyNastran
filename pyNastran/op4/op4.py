@@ -790,9 +790,9 @@ class OP4(object):
         strings = unpack(self.endian + b'%is' % n, data)
         ints    = unpack(self.endian + b'%ii' % nints, data)
         floats  = unpack(self.endian + b'%if' % nints, data)
-        #print "strings =", strings
-        print "ints    =", ints
-        print "floats  =", floats
+        #print("strings =", strings)
+        print("ints    =", ints)
+        print("floats  =", floats)
         return strings, ints, floats
 
     def _read_complex_dense_binary(self, f, nrows, ncols, Type, isBigMat):
@@ -859,7 +859,7 @@ class OP4(object):
 
                 #irow-=1
                 #icol-=1
-                #print "is_sparse = ",is_sparse
+                #print("is_sparse = ", is_sparse)
                 irow -= 1
                 icol -= 1
 
@@ -956,7 +956,7 @@ class OP4(object):
                 valueList = unpack(strValues, data[0:nValues * NBW])
                 assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
                 #self.show(f, 4)
-                #print self.print_block(data)
+                #print(self.print_block(data))
                 if 0:
                     print("valueList = %s" % (valueList))
 

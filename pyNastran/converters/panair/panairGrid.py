@@ -86,7 +86,7 @@ class PanairGrid(object):
         msg = '%i\n' % npatches
         for patchID, patch in sorted(self.patches.iteritems()):
             #if patchID == 1:
-            print "patchID =", patchID
+            print("patchID = %s" % patchID)
             ni, nj = patch.x.shape
             #nr = patch.nRows
             #nc = patch.nCols
@@ -890,7 +890,7 @@ class PanairGrid(object):
     def read_panair(self, infileName):
         assert os.path.exists(infileName), print_bad_path(infileName)
         self.infileName = infileName
-    
+
         infile = open(self.infileName, 'r')
         self.lines = infile.readlines()
         infile.close()
@@ -1093,9 +1093,9 @@ if __name__ == '__main__':
     import sys
     infileName = sys.argv[1]
     outfileName = infileName[:-4] + '_new.inp'
-    print "outfile_name = ", outfileName
+    print("outfile_name = %r" % outfileName)
     grid = PanairGrid(infileName)
     grid.read_panair()
     grid.write_panair(outfileName)
     (points, elements, regions) = grid.getPointsElementsRegions()
-    print("\ninfileName=%s" % infileName)
+    print("\ninfileName=%r" % infileName)

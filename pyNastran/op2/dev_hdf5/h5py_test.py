@@ -20,7 +20,7 @@ def load():
     d = Displacement()
 
     f1 = f.create_group('disp1')
-    print f1.name
+    print(f1.name)
     d.build(f1)
 
     f2 = f.create_group('disp2')
@@ -45,11 +45,11 @@ class OP2_Interface(object):
         f = self.f
         for key in f.iterkeys():
             if 'disp' in key:
-                print "key =", key
+                print("key =", key)
                 i = key[4:]
                 group = f[key]
                 self.displacements[i] = Displacement(group)
-        print self.displacements.keys()
+        print(self.displacements.keys())
 
 def op2_interface(f):
     model = OP2_Interface(f)
@@ -61,12 +61,12 @@ print f.keys()
 #print f['disp1']['time']
 #print f['disp1']['value']
 #val = f['disp1']['value']
-print "value2.name =", f['disp1']['value'].name
-print "value2.value =", f['disp1']['value'].value
-#print "value2.name =", f['disp1']['value'].name
-#print "value2.value =", f['disp1']['value2'].value
-print "keys =", f['disp1'].keys()
-#print val.keys()
+print("value2.name =", f['disp1']['value'].name)
+print("value2.value =", f['disp1']['value'].value)
+#print("value2.name =", f['disp1']['value'].name)
+#print("value2.value =", f['disp1']['value2'].value)
+print("keys =", f['disp1'].keys())
+#print(val.keys())
 
 op2_interface(f)
 #plt.plot(f['disp1']['time'], f['disp1']['response'])

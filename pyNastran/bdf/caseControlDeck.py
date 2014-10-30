@@ -186,12 +186,12 @@ class CaseControlDeck(object):
         :param isubcase: the subcase ID to update
         :param sol: the solution type to change the solution to
 
-        >>> print bdf.case_control
+        >>> print(bdf.case_control)
         SUBCASE 1
             DISP = ALL
 
         >>> bdf.case_control.update_solution(1, 'FLUTTER')
-        >>> print bdf.case_control
+        >>> print(bdf.case_control)
         SUBCASE 1
             ANALYSIS FLUTTER
             DISP = ALL
@@ -210,7 +210,7 @@ class CaseControlDeck(object):
         >>> bdf = BDF()
         >>> bdf.read_bdf(bdf_filename)
         >>> bdf.case_control.add_parameter_to_global_subcase('DISP=ALL')
-        >>> print bdf.case_control
+        >>> print(bdf.case_control)
         TITLE = DUMMY LINE
         DISP = ALL
         """
@@ -232,7 +232,7 @@ class CaseControlDeck(object):
         >>> bdf = BDF()
         >>> bdf.read_bdf(bdf_filename)
         >>> bdf.case_control.add_parameter_to_local_subcase(1, 'DISP=ALL')
-        >>> print bdf.case_control
+        >>> print(bdf.case_control)
         TITLE = DUMMY LINE
         SUBCASE 1
             DISP = ALL
@@ -308,7 +308,7 @@ class CaseControlDeck(object):
             isubcase = self._add_parameter_to_subcase(key, value, options,
                                                       paramType, isubcase)
 
-        #print str(self)
+        #print(str(self))
         self.finish_subcases()
 
     def _parse_entry(self, lines):
@@ -357,8 +357,8 @@ class CaseControlDeck(object):
         param_type = None
 
         line = lines[i]
-        #print line
-        #print "*****lines = ", lines
+        #print(line)
+        #print("*****lines = ", lines)
 
         equals_count = 0
         for letter in line:
@@ -368,7 +368,7 @@ class CaseControlDeck(object):
 
         #print("line_upper = %r" % line)
         if line_upper.startswith('SUBCASE'):
-            #print "line = |%r|" %(line)
+            #print("line = %r" % line)
             line2 = line.replace('=', '')
             sline = line2.split()
             if len(sline) != 2:
@@ -416,7 +416,7 @@ class CaseControlDeck(object):
                 if key == 'TEMPERATURE' or key == 'TEMP':
                     key = 'TEMPERATURE(%s)' % (options[0])
                     options = []
-                #print "key=|%s| options=%s" %(key,options)
+                #print("key=%r options=%s" %(key,options))
 
             elif ' ' in key and ',' in value:  # SET-type
                 (key, ID) = key.split()
@@ -430,27 +430,27 @@ class CaseControlDeck(object):
                 # read more lines....
                 if line[-1].strip() == ',':
                     i += 1
-                    #print "rawSETLine = |%r|" %(lines[i])
+                    #print("rawSETLine = |%r|" %(lines[i]))
                     while 1:
                         if ',' == lines[i].strip()[-1]:
                             fivalues += lines[i][:-1].split(',')
                         else:  # last case
                             fivalues += lines[i].split(',')
-                            #print "fivalues last = i=%s %r" % (i, lines[i])
+                            #print("fivalues last = i=%s %r" % (i, lines[i]))
                             i += 1
                             break
                         i += 1
-                #print "len(fivalues) = ",len(fivalues)
+                #print("len(fivalues) = ",len(fivalues))
                 value = fivalues
 
                 options = ID  # needed a place to put it...
                 param_type = 'SET-type'
             elif ',' in value:  # STRESS-type; special TITLE = stuffA,stuffB
-                #print 'A ??? line = ',line
+                #print('A ??? line = ',line)
                 #raise RuntimeError(line)
                 pass
             else:  # STRESS-type; TITLE = stuff
-                #print 'B ??? line = ',line
+                #print('B ??? line = ',line)
                 pass
 
             key = update_param_name(key.strip())
@@ -526,7 +526,7 @@ class CaseControlDeck(object):
             assert value not in self.subcases
             assert isinstance(value, int)
             isubcase = value
-            #print "value=", value
+            #print("value=", value)
             self.copy_subcase(i_from_subcase=0, i_to_subcase=isubcase,
                               overwrite_subcase=True)
             if self.debug:
@@ -540,7 +540,7 @@ class CaseControlDeck(object):
         subcase = self.subcases[isubcase]
         subcase._add_data(key, value, options, param_type)
 
-        #print "\n%s\n" %(self.subcases[isubcase])
+        #print("\n%s\n" %(self.subcases[isubcase]))
         return isubcase
 
     def cross_reference(self, model):
@@ -578,14 +578,14 @@ class CaseControlDeck(object):
             msg += ' '.join(self.begin_bulk) + '\n'
         return msg
 
-    #def parseParam(self,param):
-    #    """
-    #    .. warning:: doesnt support comment characters
-    #    """
-    #    param = param.substr('\n','').substr('\r','') # remove line endings
-    #    parse(param)
-    #    #param2 = [''.join(param)]
-    #    #print 'param2 = ',param2
+    ##def parseParam(self,param):
+       #"""
+       #.. warning:: doesnt support comment characters
+       #"""
+       #param = param.substr('\n','').substr('\r','') # remove line endings
+       #parse(param)
+       ##param2 = [''.join(param)]
+       ##print('param2 = ',param2)
 
 
 def verify_card(key, value, options, line):

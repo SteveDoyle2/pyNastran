@@ -24,7 +24,7 @@ def makeTruss2():
     *56
           40"
     @endcode
-    
+
     where:
       * \* indicates a constraint
       * 1234 are nodes
@@ -81,7 +81,7 @@ def makeTruss2():
     force = ['FORCE', loadID, 2, None, 1000., 0., 1., 0.]
     model.add_card(force, 'FORCE')
     model.writeBDF('conrod.bdf')
-    print "done"
+    print("done")
     return model
 
 
@@ -160,7 +160,7 @@ def makeTruss():
     force = ['FORCE', loadID, 3, None, 100., 1., 0., 0.]
     model.add_card(force, 'FORCE')
     model.writeBDF('frame.bdf')
-    print "done"
+    print("done")
     return model
 
 
@@ -174,7 +174,7 @@ def addRods(model, rods, mat1, i, A, J):
         #print "rod = ",rod           #mid
         conrod = ['CONROD', i + 1, n1, n2, mat1[1], area, J]
         model.add_card(conrod, 'CONROD')
-        #print conrod
+        #print(conrod)
         #Ke = model.Element(i+1).Stiffness(model)
         i += 1
 
@@ -196,24 +196,24 @@ def buildGlobalStiffness(model):
 
     for id, element in sorted(model.elements.iteritems()):
         #nodes = element.nodes
-        print element
+        print(element)
         Ke = element.Stiffness(model)
-        #print "K_element[%s] = \n%s\n" %(id,Ke)
+        #print("K_element[%s] = \n%s\n" % (id, Ke))
 
         nodes = element.nodeIDs()
-        print "nodes = ", nodes
+        print("nodes = ", nodes)
 
         dofs = []
         for i, iNode in enumerate(nodes):
             dofs += Dofs[iNode]
-        print "allDOFs = ", dofs
+        print("allDOFs = ", dofs)
 
         # put in global stiffness matrix
         for j, dof in enumerate(dofs):
-            print "nid=%s dofs=%s" % (iNode, dof)
+            print("nid=%s dofs=%s" % (iNode, dof))
             for k, dof2 in enumerate(dofs):
-                print "Kg[%s][%s] = Ke[%s][%s] = %s" % (
-                    dof, dof2, j, k, Ke[j, k])
+                print("Kg[%s][%s] = Ke[%s][%s] = %s" % (
+                    dof, dof2, j, k, Ke[j, k]))
                 #print "Kg[%s][%s] = Ke[%s][%s] = %s" %(dof2,dof, k,j,Ke[k,j])
                 #print "Kg[%s][%s] = Ke[%s][%s] = %s" %(dof2,dof2,k,k,Ke[k,k])
                 #print "Kg[%s][%s] = Ke[%s][%s] = %s" %(dof, dof, j,j,Ke[j,j])
@@ -222,8 +222,8 @@ def buildGlobalStiffness(model):
                 #Kg[dof2,dof2] += Ke[k,k]
                 #Kg[dof ,dof ] += Ke[j,j]
 
-        print "K_global =\n", list_print(Kg)
-    print "K_global =\n", list_print(Kg)
+        print("K_global =\n", list_print(Kg))
+    print("K_global =\n", list_print(Kg))
     #print "K_global = \n",Kg
     return Kg, Dofs
 
@@ -249,11 +249,11 @@ def applyBoundaryConditions(model, Kg):
 
     notNids = [nid - 1 for nid in allNodes if nid not in nids]
     #print "notNids =\n",notNids
-    print "nids = ", nids
-    print "Kg2 =\n", list_print(Kg)
+    print("nids = ", nids)
+    print("Kg2 =\n", list_print(Kg))
     Kr = reduce_matrix(Kg, nids)
     #Kr = reduce_matrix(Kg,notNids)
-    print "Kreduced =\n", list_print(Kr)
+    print("Kreduced =\n", list_print(Kr))
     return Kr
 
 
@@ -275,7 +275,7 @@ def setCol(Kg, nid, value):
 
 def getForces(model, Dofs):
     Fvector = zeros(model.nNodes() * 3, 'd')
-    print model.loads
+    print(model.loads)
     for load_set, loads in model.loads.iteritems():
         # TODO if loadset in required loadsets...
         #print loads
@@ -285,13 +285,13 @@ def getForces(model, Dofs):
                 #nid = load.nodeID()
                 for nodeID, F in loadDir.iteritems():
                     dof = Dofs[nodeID]
-                    print "dof[%s] = %s" % (nodeID, dof)
+                    print("dof[%s] = %s" % (nodeID, dof))
                     Fvector[dof[0]] = F[0]
                     Fvector[dof[1]] = F[1]
                     Fvector[dof[2]] = F[2]
-                    print "FVector = ", Fvector
+                    print("FVector = ", Fvector)
 
-    print "Fvector = ", Fvector
+    print("Fvector = ", Fvector)
     return Fvector
 
 
@@ -299,7 +299,7 @@ def runTruss():
     model = makeTruss2()
     model.cross_reference()
     #for id,e in model.elements.iteritems():
-    #    print "K = \n",e.Stiffness(model),'\n'
+        #print("K = \n",e.Stiffness(model),'\n')
 
     Kglobal, Dofs = buildGlobalStiffness(model)
     #Kreduced = applyBoundaryConditions(model,Kglobal)
@@ -308,12 +308,12 @@ def runTruss():
 
     q = solveKF(model, Kglobal, F, Dofs)
 
-    print q
+    print(q)
     for eid, elem in model.elements.iteritems():
         elem.displacementStress(model, q)
 
     #x = solve(Kreduced,F) # deflections
-    #print "x = ",x
+    #prin( "x = ", x)
 
 
 def solveKF(model, Kg, F, Dofs):
@@ -329,7 +329,7 @@ def solveKF(model, Kg, F, Dofs):
 
         constrainedDOFs[nid] = []
         freeDOFs[nid] = []
-        print "BCs = ", BCs
+        print("BCs = ", BCs)
 
         #dofmap[(nid,1)] = dofs[0]
         #dofmap[(nid,2)] = dofs[1]
@@ -368,30 +368,30 @@ def solveKF(model, Kg, F, Dofs):
 
         for dofPack in aDOF:
             (dofs, i) = dofPack
-            print "dofs=%s i=%s" % (dofs, i)
+            print("dofs=%s i=%s" % (dofs, i))
             allPacks.append(i)
             #allDOFs.append(dofs)
 
-    print allPacks
+    print(allPacks)
 
     for j, dof in enumerate(allPacks):
         for k, dof2 in enumerate(allPacks):
-            print "Kff[%s][%s] = Kg[%s][%s] = %s" % (
-                j + 1, k + 1, dof, dof2, Kg[dof, dof2])
+            print("Kff[%s][%s] = Kg[%s][%s] = %s" % (
+                j + 1, k + 1, dof, dof2, Kg[dof, dof2]))
             Kff[j, k] = Kg[dof, dof2]
         Qf[j] = F[dof]
 
     qf = solve(Kff, Qf)
     q = zeros(model.nNodes() * 3, 'd')
 
-    print "Kff = \n%s" % (Kff)
-    print "Qf  = %s" % (Qf)
-    print "qf  = %s" % (qf)
+    print("Kff = \n%s" % (Kff))
+    print("Qf  = %s" % (Qf))
+    print("qf  = %s" % (qf))
 
     for dof, qi in izip(allPacks, qf):
         q[dof] = qi
 
-    print "q   = %s" % (q)
+    print("q   = %s" % (q))
     return q
 
 
