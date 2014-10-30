@@ -1,5 +1,5 @@
 #pylint: disable=C0103,C0111,C0301,W0612,W0613,R0914,C0326,R0201
-from six.moves import StringIO
+from six.moves import StringIO, range
 from struct import unpack, Struct
 
 from pyNastran.bdf.cards.loads.staticLoads import (FORCE, FORCE1, FORCE2, GRAV,
@@ -81,7 +81,7 @@ class GEOM3(object):
         ntotal = 28  # 7*4
         nEntries = (len(data) - n) // ntotal
         s = Struct(b'iiiffff')
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 28]
             (sid, g, cid, f, n1, n2, n3) = s.unpack(eData)
             load = FORCE(None, [sid, g, cid, f, n1, n2, n3])
@@ -97,7 +97,7 @@ class GEOM3(object):
         ntotal = 20  # 5*4
         s = Struct('iifii')
         nEntries = (len(data) - n) // ntotal
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 20]
             (sid, g, f, n1, n2) = s.unpack(eData)
             load = FORCE1(None, [sid, g, f, n1, n2])
@@ -114,7 +114,7 @@ class GEOM3(object):
         ntotal = 28  # 7*4
         s = Struct(b'iif4i')
         nEntries = (len(data) - n) // ntotal
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 28]
             (sid, g, f, n1, n2, n3, n4) = s.unpack(eData)
             load = FORCE2(None, [sid, g, f, n1, n2, n3, n4])
@@ -133,7 +133,7 @@ class GEOM3(object):
         ntotal = 28  # 7*4
         s = Struct(b'ii4fi')
         nEntries = (len(data) - n) // ntotal
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 28]
             out = s.unpack(eData)
             (sid, cid, a, n1, n2, n3, mb) = out
@@ -201,7 +201,7 @@ class GEOM3(object):
         ntotal = 28
         s = Struct(b'iiiffff')
         nEntries = (len(data) - n) // 28  # 7*4
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 28]
             out = s.unpack(eData)
             (sid, g, cid, m, n1, n2, n3) = out
@@ -218,7 +218,7 @@ class GEOM3(object):
         #print("reading MOMENT1")
         ntotal = 20  # 5*4
         nEntries = (len(data) - n) // ntotal
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 20]
             out = unpack('iifii', eData)
             (sid, g, m, n1, n2) = out
@@ -235,7 +235,7 @@ class GEOM3(object):
         #print("reading MOMENT2")
         ntotal = 28  # 7*4
         nEntries = (len(data) - n) // ntotal
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 28]
             out = unpack('iif4i', eData)
             (sid, g, m, n1, n2, n3, n4) = out
@@ -257,7 +257,7 @@ class GEOM3(object):
         ntotal = 32  # 8*4
         s = Struct(b'4i4f')
         nEntries = (len(data) - n) // ntotal
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 32]
             out = s.unpack(eData)
             (sid, eid, Type, scale, x1, p1, x2, p2) = out
@@ -275,7 +275,7 @@ class GEOM3(object):
         #print("reading PLOAD2")
         ntotal = 12  # 3*4
         nEntries = (len(data) - n) // ntotal
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 12]
             out = unpack('ifi', eData)
             (sid, p, eid) = out
@@ -292,7 +292,7 @@ class GEOM3(object):
         #print("reading PLOAD3")
         ntotal = 20  # 5*4
         nEntries = (len(data) - n) // ntotal
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 20]
             out = unpack('if3i', eData)
             (sid, p, eid, n1, n2) = out
@@ -309,7 +309,7 @@ class GEOM3(object):
         #print("reading PLOAD4")
         ntotal = 48  # 13*4
         nEntries = (len(data) - n) // ntotal
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 48]
                          #iiffffiiifffi   ssssssssssssssss
             out = unpack('2i4f3i3f', eData)
@@ -344,7 +344,7 @@ class GEOM3(object):
         #print("reading QBDY1")
         ntotal = 12  # 3*4
         nEntries = (len(data) - n) // ntotal
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 12]
             out = unpack('ifi', eData)
             (sid, q0, eid) = out
@@ -361,7 +361,7 @@ class GEOM3(object):
         #print("reading QBDY2")
         ntotal = 40  # 10*4
         nEntries = (len(data) - n) // ntotal
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 40]
             out = unpack('iiffffffff', eData)
             (sid, eid, q1, q2, q3, q4, q5, q6, q7, q8) = out
@@ -378,7 +378,7 @@ class GEOM3(object):
         #print("reading QBDY3")
         ntotal = 16  # 4*4
         nEntries = (len(data) - n) // ntotal
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 16]
             out = unpack('ifii', eData)
             (sid, q0, cntrlnd, eid) = out
@@ -396,7 +396,7 @@ class GEOM3(object):
         #print("reading TEMP")
         ntotal = 12  # 3*4
         nEntries = (len(data) - n) // ntotal
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 12]
             out = unpack('iif', eData)
             (sid, g, T) = out
@@ -417,7 +417,7 @@ class GEOM3(object):
         #print("reading TEMPD")
         ntotal = 8  # 2*4
         nEntries = (len(data) - n) // ntotal
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 8]
             out = unpack('if', eData)
             (sid, T) = out

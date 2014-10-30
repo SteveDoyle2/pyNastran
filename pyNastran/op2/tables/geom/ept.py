@@ -1,7 +1,7 @@
 #pylint: disable=C0301,W0612,C0111,R0201,C0103,W0613,R0914,C0326
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import StringIO
+from six.moves import StringIO, range
 from struct import unpack, Struct
 
 from pyNastran.bdf.bdf import (NSM, PBAR, PBARL, PBEAM,
@@ -116,7 +116,7 @@ class EPT(object):
         ntotal = 76  # 19*4
         s = Struct(b'2i17f')
         nentries = (len(data) - n) // ntotal
-        for i in xrange(nentries):
+        for i in range(nentries):
             eData = data[n:n+76]
             out = s.unpack(eData)
             #print(out)
@@ -158,7 +158,7 @@ class EPT(object):
         ntotal = 28  # 7*4 - ROD - shortest entry...could be buggy... # TODO fix this
         s = Struct(b'2i8s8sf')
         nentries = (len(data) - n) // ntotal
-        for i in xrange(nentries):
+        for i in range(nentries):
             eData = data[n:n+28]
             out = s.unpack(eData)
             (pid, mid, group, Type, value) = out
@@ -192,7 +192,7 @@ class EPT(object):
         s3 = Struct(b'11f')
         ntotal = 1072  # 44+12*84+20
         nproperties = (len(data) - n) // ntotal
-        for i in xrange(nproperties):
+        for i in range(nproperties):
             eData = data[n:n+20]
             n += 20
             dataIn = list(s1.unpack(eData))
@@ -200,7 +200,7 @@ class EPT(object):
             #print(out)
             (pid, mid, nsegs, ccf, x) = dataIn
 
-            for i in xrange(12):
+            for i in range(12):
                 eData = data[n:n+64]
                 n += 64
                 pack = s2.unpack(eData)
@@ -270,7 +270,7 @@ class EPT(object):
             assert 0 < nLayers < 100, 'pid=%s nLayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s' % (pid, nLayers, z0, nsm, sb, ft, Tref, ge)
 
             idata = 0
-            for ilayer in xrange(nLayers):
+            for ilayer in range(nLayers):
                 (mid, t, theta, sout) = s2.unpack(eData[idata:idata+16])
                 Mid.append(mid)
                 T.append(t)
@@ -315,7 +315,7 @@ class EPT(object):
         s = Struct(b'i3f')
         ntotal = 16  # 4*4
         nproperties = (len(data) - n) // ntotal
-        for i in xrange(nproperties):
+        for i in range(nproperties):
             eData = data[n:n+16]
             out = s.unpack(eData)
             #(pid,k,ge,s) = out
@@ -334,7 +334,7 @@ class EPT(object):
         """
         s = Struct(b'i10f')
         nproperties = (len(data) - n) // 44
-        for i in xrange(nproperties):
+        for i in range(nproperties):
             eData = data[n:n+44]
             out = s.unpack(eData)
             #(pid,u0,f0,ka,kb,kt,mu1,mu2,tmax,mar,trmin) = out
@@ -360,7 +360,7 @@ class EPT(object):
         n = 0
         s = Struct(b'ii')
         nEntries = (len(data) - n) // 8  # 2*4
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 8]
             out = s.unpack(eData)
             #out = (pid,mass)
@@ -376,7 +376,7 @@ class EPT(object):
         ntotal = 24  # 6*4
         s = Struct(b'2i4f')
         nproperties = (len(data) - n) // ntotal
-        for i in xrange(nproperties):
+        for i in range(nproperties):
             eData = data[n:n+24]
             out = s.unpack(eData)
             (pid, mid, a, j, c, nsm) = out
@@ -391,7 +391,7 @@ class EPT(object):
         """
         s = Struct(b'2i4f')
         nproperties = (len(data) - n) // 24
-        for i in xrange(nproperties):
+        for i in range(nproperties):
             eData = data[n:n+24]
             out = s.unpack(eData)
             (pid, mid, t, nsm, f1, f2) = out
@@ -408,7 +408,7 @@ class EPT(object):
         ntotal = 44  # 11*4
         s = Struct(b'iififi4fi')
         nproperties = (len(data) - n) // ntotal
-        for i in xrange(nproperties):
+        for i in range(nproperties):
             eData = data[n:n+44]
             out = s.unpack(eData)
             (pid, mid1, t, mid2, bk, mid3, ts, nsm, z1, z2, mid4) = out
@@ -431,7 +431,7 @@ class EPT(object):
         ntotal = 28  # 7*4
         s = Struct(b'6i4s')
         nproperties = (len(data) - n) // ntotal
-        for i in xrange(nproperties):
+        for i in range(nproperties):
             eData = data[n:n+28]
             (pid, mid, cid, inp, stress, isop, fctn) = s.unpack(eData)
             dataIn = [pid, mid, cid, inp, stress, isop, fctn]
@@ -453,7 +453,7 @@ class EPT(object):
         """
         s = Struct(b'2i3f')
         nproperties = (len(data) - n) // 20
-        for i in xrange(nproperties):
+        for i in range(nproperties):
             eData = data[n:n+20]  # or 24???
             (pid, mid, OD, t, nsm) = s.unpack(eData)
             dataIn = [pid, mid, OD, t, nsm]
@@ -471,7 +471,7 @@ class EPT(object):
         """PVISC(1802,18,31) - the marker for Record 39"""
         s = Struct(b'i2f')
         nproperties = (len(data) - n) // 12
-        for i in xrange(nproperties):
+        for i in range(nproperties):
             eData = data[n:n+12]
             out = s.unpack(eData)
             #(pid,ce,cr) = out

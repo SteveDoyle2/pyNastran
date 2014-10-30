@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import zip
+from six.moves import zip, range
 import random
 import unittest
 
@@ -38,7 +38,7 @@ class TestFieldWriter(unittest.TestCase):
 
 
     def test_2(self):
-        for i in xrange(100):
+        for i in range(100):
             a = random.uniform(-20, 20)
             a2 = 10 ** a
             compare(a2)
@@ -337,8 +337,8 @@ class TestFieldWriter(unittest.TestCase):
 
         nums = (
             [0., 0.000034, -0.000034] +
-            [ 9./11 * 10**x for x in xrange(small_exponent,large_exponent+1)] +
-            [-9./11 * 10**x for x in xrange(small_exponent,large_exponent+1)])
+            [ 9./11 * 10**x for x in range(small_exponent,large_exponent+1)] +
+            [-9./11 * 10**x for x in range(small_exponent,large_exponent+1)])
 
         expected = [
             '      0.', ' .000034', '  -3.4-5',
@@ -369,8 +369,8 @@ class TestFieldWriter(unittest.TestCase):
         nums = (
             [0.,
              0.000034, -0.000034] +
-            [ 9./11 * 10**x for x in xrange(small_exponent,large_exponent+1)] +
-            [-9./11 * 10**x for x in xrange(small_exponent,large_exponent+1)])
+            [ 9./11 * 10**x for x in range(small_exponent,large_exponent+1)] +
+            [-9./11 * 10**x for x in range(small_exponent,large_exponent+1)])
 
         expected = [
             '              0.',
@@ -409,8 +409,8 @@ class TestFieldWriter(unittest.TestCase):
 
         nums = (
             [0., 0.000034, -0.000034] +
-            [ 9./11 * 10**x for x in xrange(small_exponent,large_exponent+1)] +
-            [-9./11 * 10**x for x in xrange(small_exponent,large_exponent+1)])
+            [ 9./11 * 10**x for x in range(small_exponent,large_exponent+1)] +
+            [-9./11 * 10**x for x in range(small_exponent,large_exponent+1)])
 
         expected = [
             '              0.', '         .000034', '        -.000034',
@@ -441,7 +441,7 @@ class TestFieldWriter(unittest.TestCase):
             self.assertEqual(output, expectedi, msg='num=%s output=%r expected=%r' % (x, output, expectedi ))
 
         if 0:
-            nums = [.99999999999999 * 10**x for x in xrange(small_exponent,large_exponent+1)]
+            nums = [.99999999999999 * 10**x for x in range(small_exponent,large_exponent+1)]
             positive_output = [print_float_16(x) for x in nums]
             negative_output = [print_float_16(-x) for x in nums]
 

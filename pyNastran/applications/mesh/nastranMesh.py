@@ -1,4 +1,4 @@
-from six.moves import zip
+from six.moves import zip, range
 from numpy import array, dot, norm
 
 from pyNastran.bdf.bdf import BDF
@@ -228,17 +228,17 @@ class NastranMesh(BDF):
         #x=[]; y=[]
         ij_NMap = {}
         points = {}
-        for j in xrange(ny + 1):
+        for j in range(ny + 1):
             yi = dy * j
-            for i in xrange(nx + 1):
+            for i in range(nx + 1):
                 xi = dx * i
                 points[n] = array([xi, yi, 0.])
                 ij_NMap[(i, j)] = n
                 n += 1
 
         elements = []
-        for j in xrange(ny):
-            for i in xrange(nx):
+        for j in range(ny):
+            for i in range(nx):
                 element = [ij_NMap[(i, j)],
                            ij_NMap[(i + 1, j)],
                            ij_NMap[(i + 1, j + 1)], ]

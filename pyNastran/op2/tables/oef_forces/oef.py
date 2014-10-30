@@ -1,4 +1,5 @@
 #pylint: disable=C0111,C0301,C0326,C0103
+from six.moves import range
 from struct import Struct
 
 from pyNastran.op2.op2_helper import polar_to_real_imag
@@ -283,7 +284,7 @@ class OEF(OP2Common):
                 ntotal = 36  # 10*4
                 s = Struct(b'i8s6f')
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+ntotal]
 
                     out = s.unpack(edata)
@@ -318,7 +319,7 @@ class OEF(OP2Common):
                 nelements = len(data) // ntotal
 
                 s = Struct(b'i8s6f')
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+ntotal]
                     n += ntotal
                     out = s.unpack(edata)
@@ -334,7 +335,7 @@ class OEF(OP2Common):
                 nelements = len(data) // ntotal
 
                 s = Struct(b'i8s6fi')
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+ntotal]
                     n += ntotal
                     out = s.unpack(edata)
@@ -355,7 +356,7 @@ class OEF(OP2Common):
                 s1 = Struct(b'i8s5f')
                 ntotal = 32
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+32]
                     n += ntotal
                     out = s1.unpack(edata)
@@ -376,7 +377,7 @@ class OEF(OP2Common):
                 s1 = Struct(b'ifif')
                 ntotal = 16
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+16]
                     n += 16
                     out = s1.unpack(edata)
@@ -410,7 +411,7 @@ class OEF(OP2Common):
                 s1 = Struct(b'ii')
                 s2 = Struct(b'i6f')
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+8]  # 2*4
                     n += 8
                     out = s1.unpack(edata)
@@ -418,7 +419,7 @@ class OEF(OP2Common):
                     eid = (eid_device - self.device_code) // 10
                     dataIn = [eid, parent]
                     gradFluxes = []
-                    for i in xrange(nnodes):
+                    for i in range(nnodes):
                         edata = data[0:28]
                         n += 28
                         #print "i=%s len(edata)=%s" %(i,len(edata))
@@ -449,7 +450,7 @@ class OEF(OP2Common):
                 s1 = Struct(b'iii4sii')
                 s2 = Struct(b'i6f')
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+24]  # 6*4
                     n += 24
 
@@ -459,7 +460,7 @@ class OEF(OP2Common):
                     dataIn = [eid, parent, coord, icord, theta]
 
                     gradFluxes = []
-                    for i in xrange(nnodes):
+                    for i in range(nnodes):
                         edata = data[n:n+28]  # 7*4
                         n += 28
                         out = s2.unpack(edata)
@@ -483,7 +484,7 @@ class OEF(OP2Common):
                 s1 = Struct(b'iii4s')
                 s2 = Struct(b'i6f')
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+16]  # 4*4
                     n += 16
 
@@ -494,7 +495,7 @@ class OEF(OP2Common):
                     dataIn = [eid, parent, coord, icord]
 
                     gradFluxes = []
-                    for i in xrange(nnodes):
+                    for i in range(nnodes):
                         edata = data[n:n+28]  # 7*4
                         n += 28
                         out = s2.unpack(edata)
@@ -595,7 +596,7 @@ class OEF(OP2Common):
                     return nelements * self.num_wide * 4
 
                 s = Struct(b'iff')  # 3
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
                     (eid_device, axial, torque) = out
@@ -611,7 +612,7 @@ class OEF(OP2Common):
                 s = Struct(b'i4f')
                 ntotal = 20 # 5*4
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+20]
                     out = s.unpack(edata)
                     (eid_device, axial_real, torque_real, axial_imag, torque_imag) = out
@@ -649,7 +650,7 @@ class OEF(OP2Common):
                 s = Struct(b'i8f')  # 36
                 ntotal = 36
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+36]
                     out = s.unpack(edata)
                     if self.debug4():
@@ -665,13 +666,13 @@ class OEF(OP2Common):
 
                 ntotal = 400  # 1+(10-1)*11=100 ->100*4 = 400
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+4]
                     eid_device, = s1.unpack(edata)
                     eid = (eid_device - self.device_code) // 10
                     n += 4
 
-                    for i in xrange(11):
+                    for i in range(11):
                         edata = data[n:n+36]
                         out = s2.unpack(edata)
                         if self.debug4():
@@ -690,13 +691,13 @@ class OEF(OP2Common):
                 s2 = Struct(b'i15f')
                 ntotal = 708  # (16*11+1)*4 = 177*4
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+4]
                     eid_device, = s1.unpack(edata)
                     eid = (eid_device - self.device_code) // 10
 
                     n += 4
-                    for i in xrange(11):
+                    for i in range(11):
                         edata = data[n:n+64]
                         n += 64
 
@@ -761,7 +762,7 @@ class OEF(OP2Common):
                 s = Struct(b'if')  # 2
                 ntotal = 8  # 2*4
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+8]
 
                     out = s.unpack(edata)
@@ -787,7 +788,7 @@ class OEF(OP2Common):
                 ntotal = 12  # 3*4
 
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+12]
                     out = s.unpack(edata)
                     (eid_device, force_real, force_imag) = out
@@ -816,7 +817,7 @@ class OEF(OP2Common):
                 s = Struct(b'iff')
                 ntotal = 12  # 3*4
                 nelements = len(data) // 12
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+12]
 
                     out = s.unpack(edata)
@@ -835,7 +836,7 @@ class OEF(OP2Common):
                 s = Struct(b'i4f')  # 5
                 ntotal = 20  # 5*4
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+20]
 
                     out = s.unpack(edata)
@@ -868,7 +869,7 @@ class OEF(OP2Common):
                 s = Struct(b'i8f')  # 9
                 ntotal = 36  # 9*4
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+36]
 
                     out = s.unpack(edata)
@@ -887,7 +888,7 @@ class OEF(OP2Common):
                 s = Struct(b'i16f')
                 ntotal = 68  # 17*4
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+68]
 
                     out = s.unpack(edata)
@@ -934,7 +935,7 @@ class OEF(OP2Common):
                 s = Struct(b'i7f')
                 ntotal = 32  # 8*4
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+32]
 
                     out = s.unpack(edata)
@@ -988,7 +989,7 @@ class OEF(OP2Common):
                     return nelements * self.num_wide * 4
 
                 s = Struct(b'i8f')
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+36]
 
                     out = s.unpack(edata)
@@ -1010,7 +1011,7 @@ class OEF(OP2Common):
 
                 ntotal = 68
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+68]
                     out = s.unpack(edata)
                     (eid_device, mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
@@ -1107,7 +1108,7 @@ class OEF(OP2Common):
                 s2 = Struct(b'i8f') # 36
                 nelements = len(data) // ntotal
 
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+44]
 
                     out = s1.unpack(edata)
@@ -1122,7 +1123,7 @@ class OEF(OP2Common):
                     #print "%s" % (self.get_element_type(self.element_type)), dt, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty
                     self.obj.add_new_element(eid, dt, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
                     n += 44
-                    for i in xrange(nnodes):
+                    for i in range(nnodes):
                         edata = data[n : n + 36]
                         out = s2.unpack(edata)
                         if self.debug4():
@@ -1142,7 +1143,7 @@ class OEF(OP2Common):
                 s2 = Struct(b'i16f')  # 17 * 4 = 68
                 ntotal = 8 + (nnodes+1) * 68
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+76]
                     n += 76
 
@@ -1175,7 +1176,7 @@ class OEF(OP2Common):
                     #print "%s" % (self.get_element_type(self.element_type)), data_in
                     self.obj.add_new_element(eid, dt, data_in)
 
-                    for i in xrange(nnodes):  # .. todo:: fix crash...
+                    for i in range(nnodes):  # .. todo:: fix crash...
                         edata = data[n:n+68]
                         n += 68
                         out = s2.unpack(edata)
@@ -1233,7 +1234,7 @@ class OEF(OP2Common):
                 #eid_old = 0
                 #format1 = 'i8si4f4s' # 9
                 #s = Struct(format1)
-                #for i in xrange(nelements):
+                #for i in range(nelements):
                     #if i % 10000 == 0:
                         #print 'i = ', i
                     #edata = data[n:n+ntotal]  # 4*9
@@ -1293,7 +1294,7 @@ class OEF(OP2Common):
                 s = Struct(b'i16f')
                 ntotal = 68  # 17*4
                 nelements = len(data) // 68
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+68]
 
                     out = s.unpack(edata)
@@ -1314,7 +1315,7 @@ class OEF(OP2Common):
                 s = Struct(b'i32f')
                 ntotal = 132  # 33*4
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+132]
                     n += ntotal
 
@@ -1381,7 +1382,7 @@ class OEF(OP2Common):
                 ntotal = 28  # 7*4
                 s = Struct(b'i6f')
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
                     if self.debug4():
@@ -1409,7 +1410,7 @@ class OEF(OP2Common):
                 s = Struct(b'i8f')
                 ntotal = 36 # 9*4
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+36]
 
                     out = s.unpack(edata)
@@ -1438,7 +1439,7 @@ class OEF(OP2Common):
 
                 ntotal = 60  # 15*4
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+ntotal]
 
                     out = s.unpack(edata)
@@ -1461,7 +1462,7 @@ class OEF(OP2Common):
 
                 ntotal = 108  # 27*4
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+108]
                     n += ntotal
 
@@ -1525,7 +1526,7 @@ class OEF(OP2Common):
                 nelements = len(data) // ntotal
                 self.create_transient_object(self.solidPressureForces, RealPentaPressureForce)
                 s = Struct(b'i8s7f')
-                for i in xrange(nelements):
+                for i in range(nelements):
                     eData = data[n:n+40]
                     n += 40
                     out = s.unpack(eData)
@@ -1545,7 +1546,7 @@ class OEF(OP2Common):
                 s = Struct(b'i8s13f')
                 ntotal = 64
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     eData = data[n:n+64]
                     n += 64
 
@@ -1590,7 +1591,7 @@ class OEF(OP2Common):
                 s = Struct(format1)
                 ntotal = 32  # 8*4
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+32]
                     n += 32
                     out = s.unpack(edata)
@@ -1614,7 +1615,7 @@ class OEF(OP2Common):
                 s = Struct(b'i6f')
                 ntotal = 28 # 7*4
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+28]
                     out = s.unpack(edata)
                     if self.debug4():
@@ -1632,7 +1633,7 @@ class OEF(OP2Common):
 
                 ntotal = 52  # 13*4
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+52]
 
                     out = s.unpack(edata)
@@ -1698,7 +1699,7 @@ class OEF(OP2Common):
 
                 s1 = Struct(b'iii4sii')
                 s2 = Struct(b'i3f3i5fi')
-                for i in xrange(nelements):
+                for i in range(nelements):
                     eData = data[n:n+24]  # 6*4
                     n += 24
 
@@ -1711,7 +1712,7 @@ class OEF(OP2Common):
                     dataIn = [eid, parent, coord, icord, theta]
 
                     forces = []
-                    for i in xrange(nNodes):
+                    for i in range(nNodes):
                         eData = data[n:n+52]  # 13*4
                         n += 52
                         out = s2.unpack(eData)
@@ -1734,7 +1735,7 @@ class OEF(OP2Common):
                 s1 = Struct(b'iii4sii')
                 s2 = Struct(b'i3f3i5fi3f3i5fi')
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     eData = data[n:n+24]  # 6*4
                     n += 24
 
@@ -1745,7 +1746,7 @@ class OEF(OP2Common):
                     dataIn = [eid, parent, coord, icord, theta]
 
                     forces = []
-                    for i in xrange(nNodes):
+                    for i in range(nNodes):
                         eData = data[n:n+100]  # 13*4
                         n += 100
                         out = s2.unpack(eData)
@@ -1801,7 +1802,7 @@ class OEF(OP2Common):
 
                 s1 = Struct(b'iii4s')
                 s2 = Struct(b'i7f')
-                for i in xrange(nelements):
+                for i in range(nelements):
                     eData = data[n:n+16]  # 8*4
                     n += 16
 
@@ -1814,7 +1815,7 @@ class OEF(OP2Common):
                     dataIn = [eid, parent, coord, icord]
 
                     forces = []
-                    for i in xrange(nNodes):
+                    for i in range(nNodes):
                         eData = data[n:n+32]  # 8*4
                         n += 32
                         #print "i=%s len(data)=%s" %(i,len(eData))
@@ -1840,7 +1841,7 @@ class OEF(OP2Common):
                 s2 = Struct(b'i13f')
                 n = 0
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     eData = data[n:n+16]  # 8*4
                     n += 16
 
@@ -1851,7 +1852,7 @@ class OEF(OP2Common):
                     dataIn = [eid, parent, coord, icord]
 
                     forces = []
-                    for i in xrange(nNodes):
+                    for i in range(nNodes):
                         eData = data[n:n+56]  # 14*4
                         n += 56
                         out = s2.unpack(eData)

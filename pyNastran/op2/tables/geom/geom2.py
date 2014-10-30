@@ -1,5 +1,5 @@
 # pylint: disable=W0612,C0103,C0301,C0302,C0303,W0613,C0111,R0914,C0326,R0201
-from six.moves import StringIO
+from six.moves import StringIO, range
 from struct import unpack, Struct
 
 from pyNastran.bdf.cards.elements.elements import CGAP
@@ -204,7 +204,7 @@ class GEOM2(object):
         CBAR(2408,24,180) - the marker for Record 8
         """
         nelements = (len(data) - n) // 64
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n + 64]  # 16*4
             f, = unpack(b'i', eData[28:32])
             if   f == 0:
@@ -245,7 +245,7 @@ class GEOM2(object):
         CBEAM(5408,54,261) - the marker for Record 10
         """
         nelements = (len(data) - n) // 72
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n + 72]  # 18*4
             f, = unpack(b'i', eData[40:44])
             if   f == 0:  # basic cid
@@ -329,7 +329,7 @@ class GEOM2(object):
         CDAMP2(301,3,70) - the marker for Record 17
         """
         nelements = (len(data) - n) // 24
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n + 24]  # 6*4
             out = unpack(b'if4i', eData)
             (eid, b, g1, g2, c1, c2) = out
@@ -345,7 +345,7 @@ class GEOM2(object):
         """
         s = Struct(b'4i')
         nelements = (len(data) - n) // 16
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n + 16]  # 4*4
             out = s.unpack(eData)
             (eid, pid, s1, s2) = out
@@ -361,7 +361,7 @@ class GEOM2(object):
         """
         s = Struct(b'ifii')
         nelements = (len(data) - n) // 16
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n + 16]  # 4*4
             out = s.unpack(eData)
             (eid, b, s1, s2) = out
@@ -377,7 +377,7 @@ class GEOM2(object):
         """
         s = Struct(b'4i')
         nelements = (len(data) - n) // 16
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n + 16]  # 4*4
             out = s.unpack(eData)
             (eid, pid, s1, s2) = out
@@ -403,7 +403,7 @@ class GEOM2(object):
         ntotal = 24  # 6*4
         s = Struct(b'6i')
         nelements = (len(data) - n) // ntotal
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n+24]
             out = s.unpack(eData)
             (eid, pid, g1, g2, c1, c2) = out
@@ -437,7 +437,7 @@ class GEOM2(object):
         ntotal = 16  # 4*4
         s = Struct(b'4i')
         nelements = (len(data) - n) // ntotal
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n+16]
             out = s.unpack(eData)
             (eid, pid, s1, s2) = out
@@ -490,7 +490,7 @@ class GEOM2(object):
         """
         s1 = Struct(b'4i3fii')
         nelements = (len(data) - n) // 36
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n + 36]  # 9*4
             out = s1.unpack(eData)
             (eid, pid, ga, gb, x1, x2, x3, f, cid) = out  # f=0,1
@@ -522,7 +522,7 @@ class GEOM2(object):
         ntotal = 64  # 16*4
         s = Struct(b'16i')
         nelements = (len(data) - n) // ntotal
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n+64]
             (eid, blank, Type, iviewf, iviewb, radmidf, radmidb, blank2,
              g1, g2, g3, g4, g5, g6, g7, g8) = s.unpack(eData)
@@ -543,7 +543,7 @@ class GEOM2(object):
         s = Struct(b'22i')
         ntotal = 88  # 22*4
         nelements = (len(data) - n) // ntotal
-        for i in xrange(nelements):
+        for i in range(nelements):
             edata = data[n:n+88]
             out = s.unpack(edata)
             (eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
@@ -573,7 +573,7 @@ class GEOM2(object):
         """
         s = Struct(b'6i')
         nelements = (len(data) - n) // 24
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n + 24]  # 6*4
             out = s.unpack(eData)
             #(eid,pid,g1,g2,c1,c2) = out
@@ -589,7 +589,7 @@ class GEOM2(object):
         """
         s = Struct(b'if4i')
         nelements = (len(data) - n) // 24
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n + 24]  # 6*4
             out = s.unpack(eData)
             #(eid, m, g1, g2, c1, c2) = out
@@ -605,7 +605,7 @@ class GEOM2(object):
         """
         s = Struct(b'4i')
         nelements = (len(data) - n) // 16
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n + 16]  # 4*4
             out = s.unpack(eData)
             #(eid, pid, s1, s2) = out
@@ -621,7 +621,7 @@ class GEOM2(object):
         """
         nelements = (len(data) - n) // 16
         s = Struct(b'ifii')
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n + 16]  # 4*4
             out = s.unpack(eData)
             #(eid, m,s 1, s2) = out
@@ -644,7 +644,7 @@ class GEOM2(object):
         """
         s = Struct(b'3i21f')
         nelements = (len(data) - n) // 96
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n + 96]  # 24*4
             out = s.unpack(eData)
             (eid, g, cid, m1, m2a, m2b, m3a, m3b, m3c, m4a, m4b, m4c, m4d,
@@ -662,7 +662,7 @@ class GEOM2(object):
         ntotal = 52  # 13*4
         s = Struct(b'3i10f')
         nelements = (len(data) - n) // ntotal
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n+52]
             out = s.unpack(eData)
             (eid, g, cid, m, x1, x2, x3, i1, i2a, i2b, i3a, i3b, i3c) = out
@@ -679,7 +679,7 @@ class GEOM2(object):
         ntotal = 32  # 8*4
         s = Struct(b'4i4f')
         nelements = (len(data) - n) // ntotal
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n+32]
             out = s.unpack(eData)
             (eid, n1, n2, mid, a, j, c, nsm) = out
@@ -720,7 +720,7 @@ class GEOM2(object):
         ntotal = 28  # 7*4
         s = Struct(b'7i')
         nelements = (len(data) - n) // ntotal
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n+28]
             out = unpack(eData)
             (eid, pconID, flmnd, cntrlnd,
@@ -741,7 +741,7 @@ class GEOM2(object):
         """
         s = Struct(b'17i')
         nelements = (len(data) - n) // 68
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n + 68]  # 17*4
             out = s.unpack(eData)
             (eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
@@ -774,7 +774,7 @@ class GEOM2(object):
         """common method for CQUAD, CQUADX"""
         s = Struct(b'11i')
         nelements = (len(data) - n) // 44  # 11*4
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n + 44]
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8,
                 n9) = s.unpack(eData)
@@ -800,7 +800,7 @@ class GEOM2(object):
         """
         nelements = (len(data) - n) // 56
         s = Struct(b'6iffii4f')
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n + 56]  # 14*4
             (eid, pid, n1, n2, n3, n4, theta, zoffs, blank, tflag,
                 t1, t2, t3, t4) = s.unpack(eData)
@@ -823,7 +823,7 @@ class GEOM2(object):
         return
         nelements = (len(data) - n) // 64  # 17*4
         s = Struct(b'10i5fi')
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n + 64]
             out = s.unpack(eData)
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
@@ -862,7 +862,7 @@ class GEOM2(object):
         """
         s = Struct(b'4i')
         nelements = (len(data) - n) // 16  # 4*4
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n + 16]
             out = s.unpack(eData)
             (eid, pid, n1, n2) = out
@@ -902,7 +902,7 @@ class GEOM2(object):
         #raise NotImplementedError('needs work...')
         nelements = (len(data) - n) // 108  # 27*4
         s = Struct(b'27i')
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n+108]
             out = s.unpack(eData)
             (eid, pid, n1, n2, n3, n4, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12,
@@ -926,7 +926,7 @@ class GEOM2(object):
         """
         s = Struct(b'12i')
         nelements = (len(data) - n)// 48  # 12*4
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n + 48]
             out = s.unpack(eData)
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = out
@@ -956,7 +956,7 @@ class GEOM2(object):
         ntotal = 52  # 13*4
         s = Struct(b'5iff3i3f')
         nelements = (len(data) - n)// 52  # 13*4
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n+52]
             out = s.unpack(eData)
             #print("eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %(eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3))
@@ -979,7 +979,7 @@ class GEOM2(object):
         """
         s = Struct(b'8i4fi')
         nelements = (len(data) - n) // 52  # 13*4
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n + 52]
             out = s.unpack(eData)
             #print("eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %(eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3))
@@ -1012,7 +1012,7 @@ class GEOM2(object):
         """
         s = Struct(b'4i')
         nelements = (len(data) - n) // 16
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n + 16]  # 4*4
             out = s.unpack(eData)
             (eid, pid, n1, n2) = out
@@ -1026,7 +1026,7 @@ class GEOM2(object):
         """CVISC(3901,39, 50) - the marker for Record 104"""
         s = Struct(b'4i')
         nelements = (len(data) - n) // 16
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n + 16]  # 4*4
             out = s.unpack(eData)
             #(eid,pid,n1,n2) = out

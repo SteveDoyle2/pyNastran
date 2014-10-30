@@ -1,7 +1,7 @@
 #pylint: disable=C0111,C0103,C0301,W0612,W0613,R0914,R0201
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import StringIO
+from six.moves import StringIO, range
 from struct import unpack, Struct
 
 from pyNastran.bdf.cards.materials import (CREEP, MAT1, MAT2, MAT3, MAT4, MAT5,
@@ -74,7 +74,7 @@ class MPT(object):
         #print "reading CREEP"
         nmaterials = (len(data) - n) // 64
         s = Struct(b'i2f4ifi7f')
-        for i in xrange(nmaterials):
+        for i in range(nmaterials):
             edata = data[n:n+64]
             out = s.unpack(edata)
             (mid, T0, exp, form, tidkp, tidcp, tidcs, thresh,
@@ -92,7 +92,7 @@ class MPT(object):
         ntotal = 48  # 12*4
         s = Struct(b'i10fi')
         nmaterials = (len(data) - n) // ntotal
-        for i in xrange(nmaterials):
+        for i in range(nmaterials):
             eData = data[n:n+48]
             out = s.unpack(eData)
             (mid, E, G, nu, rho, A, TRef, ge, St, Sc, Ss, mcsid) = out
@@ -109,7 +109,7 @@ class MPT(object):
         ntotal = 68  # 17*4
         s = Struct(b'i15fi')
         nmaterials = (len(data) - n) // ntotal
-        for i in xrange(nmaterials):
+        for i in range(nmaterials):
             edata = data[n:n+68]
             out = s.unpack(edata)
             (mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
@@ -132,7 +132,7 @@ class MPT(object):
         #print "reading MAT3"
         s = Struct(b'i8fi5fi')
         nmaterials = (len(data) - n) // 64
-        for i in xrange(nmaterials):
+        for i in range(nmaterials):
             out = s.unpack(data[n:n+64])
             (mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx,
                 blank, ax, ath, az, TRef, ge, blank) = out
@@ -149,7 +149,7 @@ class MPT(object):
         #print "reading MAT4"
         s = Struct(b'i10f')
         nmaterials = (len(data) - n) // 40
-        for i in xrange(nmaterials):
+        for i in range(nmaterials):
             out = s.unpack(data[n:n+44])
             (mid, k, cp, rho, h, mu, hgen, refenth, tch, tdelta, qlat) = out
             self.add_thermal_material(MAT4(None, out), allowOverwrites=True)
@@ -163,7 +163,7 @@ class MPT(object):
         #print "reading MAT5"
         s = Struct(b'i9f')
         nmaterials = (len(data) - n) // 40
-        for i in xrange(nmaterials):
+        for i in range(nmaterials):
             out = s.unpack(data[n:n+40])
             (mid, k1, k2, k3, k4, k5, k6, cp, rho, hgen) = out
             self.add_thermal_material(MAT5(None, out), allowOverwrites=True)
@@ -177,7 +177,7 @@ class MPT(object):
         #print "reading MAT8"
         s = Struct(b'i18f')
         nmaterials = (len(data) - n) // 76
-        for i in xrange(nmaterials):
+        for i in range(nmaterials):
             out = s.unpack(data[n:n+76])
             (mid, E1, E2, nu12, G12, G1z, G2z, rho, a1, a2,
              TRef, Xt, Xc, Yt, Yc, S, ge, f12, strn) = out
@@ -193,7 +193,7 @@ class MPT(object):
         #print "reading MAT9"
         s = Struct(b'22i9f4i')
         nmaterials = (len(data) - n) // 140
-        for i in xrange(nmaterials):
+        for i in range(nmaterials):
             out = s.unpack(data[n:n+140])
             (mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21,
              rho, a1, a2, a3, a4, a5, a6, TRef, ge, blank1, blank2, blank3, blank4) = out
@@ -213,7 +213,7 @@ class MPT(object):
         ntotal = 44  # 5*4
         s = Struct(b'i4f')
         nmaterials = (len(data) - n) // ntotal
-        for i in xrange(nmaterials):
+        for i in range(nmaterials):
             edata = data[n:n+20]
             out = s.unpack(edata)
             (mid, bulk, rho, c, ge) = out
@@ -259,7 +259,7 @@ class MPT(object):
         ntotal = 44  # 11*4
         s = Struct(b'3ifiiff3i')
         nmaterials = (len(data) - n) // ntotal
-        for i in xrange(nmaterials):
+        for i in range(nmaterials):
             edata = data[n:n+44]
             out = s.unpack(edata)
             (mid, tid, Type, h, yf, hr, limit1, limit2, a, b, c) = out
@@ -340,7 +340,7 @@ class MPT(object):
         ntotal = 76  # 19*4
         s = Struct(b'iif5i3f3iffiff')
         nentries = (len(data) - n) // ntotal
-        for i in xrange(nentries):
+        for i in range(nentries):
             edata = data[n:n+76]
             out = s.unpack(edata)
             #(sid,ninc,dt,kMethod,kStep,maxIter,conv,intOut,epsU,epsP,epsW,
@@ -362,7 +362,7 @@ class MPT(object):
         ntotal = 88  # 19*4
         s = Struct(b'iif5i3f3if3i4f')
         nentries = (len(data) - n) // ntotal
-        for i in xrange(nentries):
+        for i in range(nentries):
             edata = data[n:n+88]
             out = s.unpack(edata)
             #(sid,ndt,dt,no,kMethod,kStep,maxIter,conv,epsU,epsP,epsW,

@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-
+from six.moves import range
 from ..real.oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
@@ -488,7 +488,7 @@ class ComplexPlateStress(StressObject):
         k.remove(cen)
         k.sort()
         for nid in [cen] + k:
-            for iLayer in xrange(len(self.oxx[eid][nid])):
+            for iLayer in range(len(self.oxx[eid][nid])):
                 fd = self.fiberCurvature[eid][nid][iLayer]
                 oxx = self.oxx[eid][nid][iLayer]
                 oyy = self.oyy[eid][nid][iLayer]
@@ -513,7 +513,7 @@ class ComplexPlateStress(StressObject):
         k.remove(cen)
         k.sort()
         for nid in [cen] + k:
-            for iLayer in xrange(len(self.oxx[dt][eid][nid])):
+            for iLayer in range(len(self.oxx[dt][eid][nid])):
                 fd = self.fiberCurvature[eid][nid][iLayer]
                 oxx = self.oxx[dt][eid][nid][iLayer]
                 oyy = self.oyy[dt][eid][nid][iLayer]
@@ -539,7 +539,7 @@ class ComplexPlateStress(StressObject):
         k.remove(cen)
         k.sort()
         for nid in [cen] + k:
-            for iLayer in xrange(len(self.oxx[eid][nid])):
+            for iLayer in range(len(self.oxx[eid][nid])):
                 fd = self.fiberCurvature[eid][nid][iLayer]
                 oxx = self.oxx[eid][nid][iLayer]
                 oyy = self.oyy[eid][nid][iLayer]
@@ -560,7 +560,7 @@ class ComplexPlateStress(StressObject):
         k.remove(cen)
         k.sort()
         for nid in [cen] + k:
-            for iLayer in xrange(len(self.oxx[dt][eid][nid])):
+            for iLayer in range(len(self.oxx[dt][eid][nid])):
                 fd = self.fiberCurvature[eid][nid][iLayer]
                 oxx = self.oxx[dt][eid][nid][iLayer]
                 oyy = self.oyy[dt][eid][nid][iLayer]
@@ -918,7 +918,7 @@ class ComplexPlateStrain(StrainObject):
         k.remove(cen)
         k.sort()
         for nid in [cen] + k:
-            for iLayer in xrange(len(self.exx[dt][eid][nid])):
+            for iLayer in range(len(self.exx[dt][eid][nid])):
                 fd = self.fiberCurvature[eid][nid][iLayer]
                 exx = self.exx[dt][eid][nid][iLayer]
                 eyy = self.eyy[dt][eid][nid][iLayer]
@@ -943,7 +943,7 @@ class ComplexPlateStrain(StrainObject):
         k.remove(cen)
         k.sort()
         for nid in [cen] + k:
-            for iLayer in xrange(len(self.exx[dt][eid][nid])):
+            for iLayer in range(len(self.exx[dt][eid][nid])):
                 fd = self.fiberCurvature[eid][nid][iLayer]
                 exx = self.exx[dt][eid][nid][iLayer]
                 eyy = self.eyy[dt][eid][nid][iLayer]

@@ -1,3 +1,4 @@
+from six.moves import range
 from numpy import unique
 
 def slice_to_iter(ids):
@@ -7,7 +8,7 @@ def slice_to_iter(ids):
     :param ids:
         a list of values that will be iterated over and may be a slice
     :returns ids2:
-        an iterable as list, ndarray, xrange
+        an iterable as list, ndarray, range
     :returns int_flag:
         when integers are passed in, we can return a single object at the end,
         but need a flag to remember
@@ -32,9 +33,9 @@ def slice_to_iter(ids):
         int_flag = True
     elif isinstance(ids, slice):
         if ids.step is None:
-            ids2 = xrange(ids.start, ids.stop)
+            ids2 = range(ids.start, ids.stop)
         else:
-            ids2 = xrange(ids.start, ids.stop, ids.step)
+            ids2 = range(ids.start, ids.stop, ids.step)
     elif ids is None:
         raise TypeError('cannot turn None into an iterable')
     else: # list, ndarray

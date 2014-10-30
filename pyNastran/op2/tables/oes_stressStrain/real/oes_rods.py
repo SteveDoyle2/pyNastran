@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import zip
+from six.moves import zip, range
 from numpy import zeros
 
 from .oes_objects import StressObject, StrainObject, OES_Object
@@ -136,7 +136,7 @@ class RealRodArray(OES_Object):
             nwrite -= 1
             is_odd = True
 
-        for itime in xrange(ntimes):
+        for itime in range(ntimes):
             dt = self.times[itime]  # TODO: rename this...
             if self.nonlinear_factor is not None:
                 dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
@@ -159,7 +159,7 @@ class RealRodArray(OES_Object):
                 #is_all_zeros) = writeFloats13E([axiali, torsioni, SMai, SMti])
                 out.append([eid, axiali, SMai, torsioni, SMti])
 
-            for i in xrange(0, nwrite, 2):
+            for i in range(0, nwrite, 2):
                 outLine = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[i] + out[i + 1]))
                 f.write(outLine)
             if is_odd:
@@ -419,7 +419,7 @@ class RealRodStress(StressObject):
         nWrite = nOut
         if nOut % 2 == 1:
             nWrite = nOut - 1
-        for i in xrange(0, nWrite, 2):
+        for i in range(0, nWrite, 2):
             #print i,out[i:]
             outLine = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[i] + out[i + 1]))
             msg.append(outLine)
@@ -456,7 +456,7 @@ class RealRodStress(StressObject):
             nWrite = nOut
             if nOut % 2 == 1:
                 nWrite = nOut - 1
-            for i in xrange(0, nWrite, 2):
+            for i in range(0, nWrite, 2):
                 outLine = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[i] + out[i + 1]))
                 msg.append(outLine)
 
@@ -629,7 +629,7 @@ class RealRodStrain(StrainObject):
         nWrite = nOut
         if nOut % 2 == 1:
             nWrite = nOut - 1
-        for i in xrange(0, nWrite, 2):
+        for i in range(0, nWrite, 2):
             outLine = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[i] + out[i + 1]))
             msg.append(outLine)
 
@@ -662,7 +662,7 @@ class RealRodStrain(StrainObject):
             nWrite = nOut
             if nOut % 2 == 1:
                 nWrite = nOut - 1
-            for i in xrange(0, nWrite, 2):
+            for i in range(0, nWrite, 2):
                 outLine = '      %8i   %13.6E  %10.4E %13.6E  %10.4E   %8i   %13.6E  %10.4E %13.6E  %10.4E\n' % (tuple(out[i] + out[i + 1]))
                 msg.append(outLine)
 

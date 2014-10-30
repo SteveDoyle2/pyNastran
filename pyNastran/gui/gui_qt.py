@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, unicode_literals, print_function
 from six import string_types
+from six.moves import range
 
 # standard library
 import sys

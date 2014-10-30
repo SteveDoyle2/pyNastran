@@ -1,7 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import zip
+from six.moves import zip, range
 from math import log, sin, cos, radians, atan2
 #from math import (sin,sinh,cos,cosh,tan,tanh,sqrt,atan,atan2,acosh,acos,asin,
 #                  asinh,atanh) #,atanh2   # going to be used by DEQATN
@@ -186,12 +186,12 @@ class NastranMatrix(BaseCard):
         #assert nFields <= 8,'nFields=%s' % nFields
 
         #print("nloops   = ",nloops)
-        for i in xrange(nloops):
+        for i in range(nloops):
             self.GCj.append((Gj, Cj))
 
         if self.isComplex():
             if self.isPolar():
-                for i in xrange(nloops):
+                for i in range(nloops):
                     n = 5 + 4 * i
                     Gi = integer(card, n, 'Gi')
                     Ci = integer(card, n + 1, 'Ci')
@@ -205,7 +205,7 @@ class NastranMatrix(BaseCard):
                     self.Real.append(reali)
                     self.Complex.append(complexi)
             else:
-                for i in xrange(nloops):
+                for i in range(nloops):
                     n = 5 + 4 * i
                     Gi = integer(card, n, 'Gi')
                     Ci = integer(card, n + 1, 'Ci')
@@ -217,7 +217,7 @@ class NastranMatrix(BaseCard):
                     self.Real.append(reali)
                     self.Complex.append(complexi)
         else:
-            for i in xrange(nloops):
+            for i in range(nloops):
                 n = 5 + 4 * i
                 Gi = integer(card, n, 'Gi')
                 Ci = integer(card, n + 1, 'Ci')
@@ -406,8 +406,8 @@ def getMatrix(self, isSparse=False, applySymmetry=True):
     #A = ss.lil_matrix((3,3), dtype='d') # double precision
 
     #rows=[]; cols=[]; data=[]
-    #for i in xrange(3):
-    #    for j in xrange(3):
+    #for i in range(3):
+    #    for j in range(3):
     #        k = float((i+1)*(j+1))
     #        rows.append(i)
     #        cols.append(j)
@@ -651,7 +651,7 @@ class DMI(NastranMatrix):
                         #print("*i=%s j=%s value=%s" %(i1,j,realValue))
                         endI = fields[i + 1]
                         #print("*i=%s endI=%s j=%s value=%s" %(i1,endI,j,realValue))
-                        for ii in xrange(i1, endI + 1):
+                        for ii in range(i1, endI + 1):
                             self.GCj.append(j)
                             self.GCi.append(ii)
                             self.Real.append(realValue)

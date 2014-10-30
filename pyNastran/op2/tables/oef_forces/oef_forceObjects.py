@@ -1,7 +1,7 @@
 #pylint disable=C0301
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import zip
+from six.moves import zip, range
 from numpy import zeros, searchsorted
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
@@ -152,7 +152,7 @@ class RealRodForceArray(ScalarObject):
             is_odd = True
 
         #print('len(eids)=%s nwrite=%s is_odd=%s' % (len(eids), nwrite, is_odd))
-        for itime in xrange(ntimes):
+        for itime in range(ntimes):
             dt = self.times[itime]  # TODO: rename this...
             if self.nonlinear_factor is not None:
                 dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
@@ -172,7 +172,7 @@ class RealRodForceArray(ScalarObject):
                 ([axiali, torsioni], is_all_zeros) = writeFloats13E([axiali, torsioni])
                 out.append([eid, axiali, torsioni])
 
-            for i in xrange(0, nwrite, 2):
+            for i in range(0, nwrite, 2):
                 outLine = '      %8i   %-13s  %-13s  %8i   %-13s  %s\n' % tuple(out[i] + out[i + 1])
                 f.write(outLine)
             if is_odd:
@@ -276,7 +276,7 @@ class RealRodForce(ScalarObject):  # 1-ROD
         nWrite = nOut
         if nOut % 2 == 1:
             nWrite = nOut - 1
-        for i in xrange(0, nWrite, 2):
+        for i in range(0, nWrite, 2):
             outLine = '      %8i   %-13s  %-13s  %8i   %-13s  %-13s\n' % tuple(out[i] + out[i + 1])
             msg.append(outLine)
 
@@ -1269,7 +1269,7 @@ class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
 
         eids = self.element
         cen_word = 'CEN/%i' % nnodes
-        for itime in xrange(ntimes):
+        for itime in range(ntimes):
             dt = self.times[itime]  # TODO: rename this...
             if self.nonlinear_factor is not None:
                 dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
@@ -1513,7 +1513,7 @@ class RealPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
             mxii = self.mx[eid]
             term = self.term[eid]
             #self.term[eid] = term
-            for i in xrange(len(mxii)):
+            for i in range(len(mxii)):
                 node_id = self.ngrids[eid][i]
                 mxi = self.mx[eid][i]
                 myi = self.my[eid][i]
