@@ -23,8 +23,8 @@ def print_scientific_double(value):
 
     if field == '-0.0000000000D+00':
         field = '0.0000000000D+00'
-    assert len(field) == 16, ('value=%r field=%r is not 16 characters '
-                              'long, its %s' % (value, field, len(field)))
+    #assert len(field) == 16, ('value=%r field=%r is not 16 characters '
+    #                          'long, its %s' % (value, field, len(field)))
     return field
 
 

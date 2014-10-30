@@ -116,7 +116,7 @@ def print_float_16(value):
             if field.index('.') < 16:
                 field = '%16.1f' % (round(value))
                 field = field[0:16]  # drop off the .1f
-                assert '.' != field[0], field
+                #assert '.' != field[0], field
             else:
                 field = print_scientific_16(value)
             return field
@@ -171,15 +171,15 @@ def print_float_16(value):
             field = "%16.1f" % value
             if field.index('.') < 16:
                 field = '%15s.' % (int(round(value, 0)))
-                assert '.' != field[0], field
+                #assert '.' != field[0], field
             else:
                 field = print_scientific_16(value)
             return field
     field = field.strip(' 0')
     field = '%16s' % field
 
-    assert len(field) == 16, ('value=%r field=%r is not 16 characters '
-                              'long, its %s' % (value, field, len(field)))
+    #assert len(field) == 16, ('value=%r field=%r is not 16 characters '
+    #                          'long, its %s' % (value, field, len(field)))
     return field
 
 
