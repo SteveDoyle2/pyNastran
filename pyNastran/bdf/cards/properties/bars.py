@@ -840,11 +840,11 @@ class PBARL(LineProperty):
             self.Type = data[3].strip()
             self.dim = list(data[4:-1])
             self.nsm = data[-1]
-            #print "group = |%s|" % self.group
-            #print "Type  = |%s|" % self.Type
-            #print "dim = ",self.dim
-            #print str(self)
-            #print "*PBARL = ",data
+            #print("group = %r" % self.group)
+            #print("Type  = %r" % self.Type)
+            #print("dim = ",self.dim)
+            #print(str(self))
+            #print("*PBARL = ",data)
             #raise NotImplementedError('not finished...')
         if self.Type not in self.validTypes:
             msg = ('Invalid PBARL Type, Type=%s '

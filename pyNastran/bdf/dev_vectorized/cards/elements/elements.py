@@ -142,7 +142,7 @@ class Elements(object):
         Types = []
         for obj in objs:
             if hasattr(obj, '_get_types'):
-                #print obj.__class__.__name__
+                #print(obj.__class__.__name__)
                 Types2 = obj._get_types(nlimit=False)
                 Types += Types2
                 #Types += [Type.type for Type in Types2]
@@ -315,8 +315,8 @@ class Elements(object):
             mass = full(nelements, nan, 'float64')
             if sort_output:
                 i = argsort(element_ids_orig)
-                #print "i =", i, i.shape
-                #print "element_ids_orig =", element_ids_orig, element_ids_orig.shape
+                #print("i =", i, i.shape)
+                #print("element_ids_orig =", element_ids_orig, element_ids_orig.shape)
                 return element_ids_orig[i], mass
             else:
                 return element_ids_orig, mass
@@ -499,8 +499,8 @@ class Elements(object):
         #if len(diff):
             #print('****diff = %s' % list(diff))
             #print('eids out = %s' % eids2)
-            #print 'len(eids2) =', len(eids2)
-            #print 'len(diff) =', len(diff)
+            #print('len(eids2) =', len(eids2))
+            #print('len(diff) =', len(diff))
         eids2[ni:] = diff
         if sort_output:
             i = argsort(eids2)
@@ -819,11 +819,11 @@ def check_duplicate(name, objs):
                 print("  %s vals = %s for class %s" % (name, vals, obj.__class__.__name__))
                 unique_vals.update(list(vals))
             #else:
-                #print "  %s has no %s"  % (obj.__class__.__name__, name)
+                #print("  %s has no %s"  % (obj.__class__.__name__, name))
 
-            #print unique_vals
+            #print(unique_vals)
         else:
-            #print "  %s has no %s"  % (obj.__class__.__name__, name)
+            #print("  %s has no %s"  % (obj.__class__.__name__, name))
             if hasattr(obj, '_get_types'):
                 Types = obj._get_types()
                 for Type in Types:
@@ -832,11 +832,11 @@ def check_duplicate(name, objs):
                         #print("    %s vals = %s for class %s" % (name, vals, Type.__class__.__name__))
                         unique_vals.update(list(vals))
                     #else:
-                        #print "    %s has no %s"  % (Type.__class__.__name__, name)
+                        #print("    %s has no %s"  % (Type.__class__.__name__, name))
             #else:
-                #print "    %s has no _get_types"  % (obj.__class__.__name__)
+                #print("    %s has no _get_types"  % (obj.__class__.__name__))
 
-    #print "unique %s = %s\n" %(name, unique_vals)
+    #print("unique %s = %s\n" %(name, unique_vals))
     if len(unique_vals) == 0:
         raise RuntimeError("unique %s = %s" %(name, unique_vals))
     #print('unique %s = %s' % (name, unique_vals))

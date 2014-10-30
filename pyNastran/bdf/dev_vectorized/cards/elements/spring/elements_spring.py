@@ -24,7 +24,7 @@ class ElementsSpring(object):
         etypes = self._get_types(nlimit=True)
         for etype in etypes:
             if etype.type in card_count:
-                #print 'etype.type =', etype.type, etype.n
+                #print('etype.type =', etype.type, etype.n)
                 etype.allocate(card_count)
             #else:
                 #assert hasattr(ptype, 'allocate'), '%s doesnt support allocate' % ptype.type
@@ -38,7 +38,7 @@ class ElementsSpring(object):
         #eid = concatenate(pshell.pid, pcomp.pid)
         #unique_eids = unique(eid)
         #if unique_eids != len(eid):
-        #    raise RuntimeError('There are duplicate CTRIA3/CQUAD4 IDs...')
+            #raise RuntimeError('There are duplicate CTRIA3/CQUAD4 IDs...')
 
     def rebuild(self):
         raise NotImplementedError()
@@ -73,7 +73,7 @@ class ElementsSpring(object):
             types2 = []
             for etype in types:
                 if etype.n > 0:
-                    #print "etype.Type =", etype.Type
+                    #print("etype.Type =", etype.Type)
                     types2.append(etype)
             types = types2
         return types

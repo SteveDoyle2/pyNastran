@@ -80,7 +80,7 @@ class DEQATN(BaseCard):  # needs work...
                 newCard += field
 
         #if len(card.card)>1:
-            #print "card.card = ",card.card
+            #print("card.card = ", card.card)
             #line0 = ','.join(card.card)
         #else:
             #line0 = ''.join(card.card)

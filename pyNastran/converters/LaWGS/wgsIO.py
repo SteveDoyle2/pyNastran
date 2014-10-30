@@ -44,7 +44,7 @@ class LaWGS_IO(object):
             for nid, node in sorted(nodes.iteritems()):
                 points.InsertPoint(nid - 1, *node)
                 self.gridResult.InsertNextValue(nid * fraction)
-                #print str(element)
+                #print(str(element))
 
                 #elem = vtk.vtkVertex()
                 #elem.GetPointIds().SetId(0, i)
@@ -69,7 +69,7 @@ class LaWGS_IO(object):
         self.grid.SetPoints(points)
         #self.grid2.SetPoints(points2)
         #self.grid.GetPointData().SetScalars(self.gridResult)
-        #print dir(self.grid) #.SetNumberOfComponents(0)
+        #print(dir(self.grid) #.SetNumberOfComponents(0))
         #self.grid.GetCellData().SetNumberOfTuples(1);
         #self.grid.GetCellData().SetScalars(self.gridResult)
         self.grid.Modified()
@@ -89,7 +89,7 @@ class LaWGS_IO(object):
         cases = {}
         ID = 1
 
-        #print "nElements = ",nElements
+        #print("nElements = %s" % nElements)
         #cases = self._fill_lawgs_case(cases, ID, regions, loads)
         self.finish_nastran_io(cases)
 

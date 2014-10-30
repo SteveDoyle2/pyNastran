@@ -151,7 +151,7 @@ class ElementsShell(object):
         n = len(element_ids)
         thickness = zeros(n, 'float64')
         for i, property_id in enumerate(property_ids):
-            #print "unique=%s pid=%s" % (unique_pids, property_id)
+            #print("unique=%s pid=%s" % (unique_pids, property_id))
             j = searchsorted(unique_pids, property_id)
             thickness[i] = unique_thickness[j]
         return thickness
@@ -164,12 +164,12 @@ class ElementsShell(object):
                 element_ids.extend(etype.element_id)
 
         n = len(element_ids)
-        #print 'element_ids =', element_ids
-        #print 'property_ids =', property_ids
+        #print('element_ids =', element_ids)
+        #print('property_ids =', property_ids)
         massi = zeros(n, dtype='float64')
 
         etypes = [etype.type for type in types]
-        #print "etypes =", etypes
+        #print("etypes =", etypes)
         massi = zeros(n, dtype='float64')
 
         n0 = 0
@@ -184,7 +184,7 @@ class ElementsShell(object):
                  massi[n0] = 1.
             n0 += elems.n
         assert massi.sum() > 0, elems.type
-        #print "massii =", massi
+        #print("massii =", massi)
         if total:
             mass = massi.sum()
         else:
@@ -196,7 +196,7 @@ class ElementsShell(object):
         types = self._get_types(nlimit=True)
         for element in types:
             if element.n:
-                #print element.type
+                #print(element.type)
                 element.write_bdf(f, size=size, element_ids=element_ids)
 
     def _get_types(self, nlimit=True):

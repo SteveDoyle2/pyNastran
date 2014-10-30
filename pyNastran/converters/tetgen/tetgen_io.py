@@ -61,7 +61,7 @@ class TetgenIO(object):
             for nid, node in sorted(nodes.iteritems()):
                 points.InsertPoint(nid - 1, *node)
                 self.gridResult.InsertNextValue(nid * fraction)
-                #print str(element)
+                #print(str(element))
 
                 #elem = vtk.vtkVertex()
                 #elem.GetPointIds().SetId(0, i)

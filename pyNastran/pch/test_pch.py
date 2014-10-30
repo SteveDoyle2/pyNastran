@@ -23,7 +23,7 @@ def get_failed_files(filename):
     infile = open(filename, 'r')
     lines = infile.readlines()
     infile.close()
-    
+
     files = []
     for line in lines:
         files.append(line.strip())
@@ -67,14 +67,14 @@ def run_lots_of_files(files ,makeGeom=True, writeBDF=False, write_f06=True,
         for pchfile in failedCases:
             f.write('%s\n' % pchfile)
         f.close()
-    
+
     seconds = time.time()-t0
     minutes = seconds/60.
     print("dt = %s seconds = %s minutes" %(seconds,minutes))
-    
+
     #pch = PCH('test_tet10_subcase_1.pch')
     #pch.read_pch()
-    
+
     msg = '-----done with all models %s/%s=%.2f%%  nFailed=%s-----' %(nPassed,nTotal,100.*nPassed/float(nTotal),nTotal-nPassed)
     print(msg)
     sys.exit(msg)
@@ -110,16 +110,16 @@ def run_pch(pchFileName, makeGeom=False, writeBDF=False, write_f06=True,
             (model, ext) = os.path.splitext(pchFileName)
             pch.write_matlab(model+'.m', isMagPhase=isMagPhase)
 
-        #print pch.print_results()
+        #print(pch.print_results())
         if print_results:
             pch.print_results()
-        #print "subcases = ",pch.subcases
+        #print("subcases = %s" % pch.subcases)
 
         #assert tableNamesF06==tableNamesPCH,'tableNamesF06=%s tableNamesPCH=%s' %(tableNamesF06,tableNamesPCH)
         #pch.caseControlDeck.sol = pch.sol
-        #print pch.caseControlDeck.get_pch_data()
-        #print pch.print_results()
-        #print pch.caseControlDeck.get_pch_data()
+        #print(pch.caseControlDeck.get_pch_data())
+        #print(pch.print_results())
+        #print(pch.caseControlDeck.get_pch_data())
         isPassed = True
     except KeyboardInterrupt:
         sys.stdout.flush()
@@ -175,7 +175,7 @@ def run_pch(pchFileName, makeGeom=False, writeBDF=False, write_f06=True,
     except SyntaxError: #Param Parse
         isPassed = True
     except:
-        #print e
+        #print(e)
         print_exc(file=sys.stdout)
         if stopOnFailure:
             raise
@@ -203,7 +203,7 @@ def run_arg_parse():
     parser.add_argument('-m','--matlab',   dest='write_matlab', action='store_true', help='Matlab Writer is enabled (fails for transient; limited support)')
     parser.add_argument('-p','--print_results',dest='print_results',  action='store_true', help='Prints objects to screen which can require lots of memory')
     parser.add_argument('-v','--version',action='version',version=ver)
-    
+
     if len(sys.argv)==1:
         parser.print_help()
         sys.exit()

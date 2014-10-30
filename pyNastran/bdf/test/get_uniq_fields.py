@@ -44,13 +44,13 @@ class BDFuniqCard(BDF):
             item_type = type(item)
             if item_type == int:
                 item = 1
-                #print "int"
+                #print("int")
             elif item_type == float:
                 item = 1.0
-                #print "float"
+                #print("float")
             rec.append(item)
-            #print type(c), c
-        #print "*", rec
+            #print(type(c), c
+        #print("*", rec)
         rec_str = str(rec)
         if not rec_str in self.card_set:
             #self.newBDF.add_card(card, cardName, iCard, old_card_obj)

@@ -95,7 +95,7 @@ class EPT(object):
             data = data[16:]
             out = s.unpack(eData)
             (sid, propSet, ID, value) = out
-            #print "sid=%s propSet=%s ID=%s value=%s" %(sid,propSet,ID,value)
+            #print("sid=%s propSet=%s ID=%s value=%s" %(sid,propSet,ID,value))
             prop = NSM(None, None, [sid, propSet, ID, value])
             #self.addOp2Property(prop)
         return n
@@ -119,7 +119,7 @@ class EPT(object):
         for i in xrange(nentries):
             eData = data[n:n+76]
             out = s.unpack(eData)
-            #print out
+            #print(out)
             (pid, mid, a, I1, I2, J, nsm, fe, c1, c2, d1, d2,
                 e1, e2, f1, f2, k1, k2, I12) = out
             prop = PBAR(None, out)
@@ -164,7 +164,7 @@ class EPT(object):
             (pid, mid, group, Type, value) = out
             Type = Type.strip()
             dataIn = [pid, mid, group, Type, value]
-            #print "pid=%s mid=%s group=|%s| Type=|%s| value=%s" %(pid,mid,group,Type,value)
+            #print("pid=%s mid=%s group=|%s| Type=|%s| value=%s" %(pid,mid,group,Type,value))
             expectedLength = validTypes[Type]
             iFormat = b'%if' % expectedLength
             dataIn += list(unpack(iFormat, data[:expectedLength * 4]))
@@ -172,11 +172,11 @@ class EPT(object):
             # TODO why do i need the +4???
             data = data[expectedLength * 4 + 4:]
 
-            #print "len(out) = ",len(out)
-            #print "PBARL = ",dataIn
+            #prin( "len(out) = ",len(out)))
+            #print("PBARL = ",dataIn)
             prop = PBARL(None, dataIn)
             self.addOp2Property(prop)
-            #print self.print_section(20)
+            #print(self.print_section(20))
         self.card_count['PBARL'] = nentries
         return n
 
@@ -196,8 +196,8 @@ class EPT(object):
             eData = data[n:n+20]
             n += 20
             dataIn = list(s1.unpack(eData))
-            #print "len(out) = ",len(out)
-            #print out
+            #print("len(out) = ",len(out))
+            #print(out)
             (pid, mid, nsegs, ccf, x) = dataIn
 
             for i in xrange(12):
@@ -251,8 +251,8 @@ class EPT(object):
         s1 = Struct(b'2i3fi2f')
         s2 = Struct(b'i2fi')
         while n2 < n:  #len(data) >= 32:  # 8*4 - dynamic
-            #print "len(data) = ",len(data)
-            #print self.print_block(data[0:200])
+            #print("len(data) = %s" % len(data))
+            #print(self.print_block(data[0:200]))
             isSymmetrical = 'NO'
             eData = data[n:n+32]
             out = s1.unpack(eData)
@@ -266,7 +266,7 @@ class EPT(object):
             if nLayers < 0:
                 isSymmetrical = 'YES'
                 nLayers = abs(nLayers)
-            #print "nLayers = ",nLayers
+            #print("nLayers = ",nLayers)
             assert 0 < nLayers < 100, 'pid=%s nLayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s' % (pid, nLayers, z0, nsm, sb, ft, Tref, ge)
 
             idata = 0
@@ -280,7 +280,7 @@ class EPT(object):
 
             dataIn = [pid, z0, nsm, sb, ft, Tref, ge,
                       isSymmetrical, Mid, T, Theta, Sout]
-            #print "PCOMP = %s" % (dataIn)
+            #print("PCOMP = %s" % (dataIn))
             prop = PCOMP(None, dataIn)
             self.addOp2Property(prop)
             nproperties += 1
@@ -415,7 +415,7 @@ class EPT(object):
             prop = PSHELL(None, out)
 
             if max(pid, mid1, mid2, mid3, mid4) > 1e8:
-                #print "PSHELL = ",out
+                #print("PSHELL = ",out)
                 self.bigProperties[pid] = prop
             else:
                 self.addOp2Property(prop)
@@ -427,7 +427,7 @@ class EPT(object):
         """
         PSOLID(2402,24,281) - the marker for Record 52
         """
-        #print "reading PSOLID"
+        #print("reading PSOLID")
         ntotal = 28  # 7*4
         s = Struct(b'6i4s')
         nproperties = (len(data) - n) // ntotal

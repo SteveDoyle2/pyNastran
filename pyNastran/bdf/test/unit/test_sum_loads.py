@@ -13,7 +13,7 @@ class TestLoadSum(unittest.TestCase):
         bdf_filename = os.path.join(model_path, 'solid_bending', 'solid_bending.bdf')
         model.read_bdf(bdf_filename)
         loadcase_id = 1
-        #print "keys1", model.loads.keys()
+        #print("keys1", model.loads.keys())
 
         p0 = array([0., 0., 0.])
         F_expected = array([23000., 0., 0.])
@@ -28,7 +28,7 @@ class TestLoadSum(unittest.TestCase):
         bdf_filename = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.bdf')
         model.read_bdf(bdf_filename)
         loadcase_id = 10000
-        #print "keys2", model.loads.keys()
+        #print("keys2", model.loads.keys())
 
         p0 = array([0., 0., 0.])
         F_expected = array([0., 0., 10000.])
@@ -53,7 +53,7 @@ class TestLoadSum(unittest.TestCase):
             bdf_filename = os.path.join(model_path, 'iSat', 'ISat_Launch_Sm_4pt.dat')
             model.read_bdf(bdf_filename)
             loadcase_id = 1
-            #print "keys3", model.loads.keys()
+            #print("keys3", model.loads.keys())
 
             p0 = array([0., 0., 0.])
             F_expected = array([0., 0., 1.])
@@ -68,7 +68,7 @@ class TestLoadSum(unittest.TestCase):
         model = BDF(log=log)
         bdf_filename = os.path.join(model_path, 'plate', 'plate.bdf')
         model.read_bdf(bdf_filename)
-        #print "keys4", model.loads.keys()
+        #print("keys4", model.loads.keys())
 
         loadcase_id = 1
         F_expected = array([600., 0., 0.])
@@ -115,7 +115,7 @@ class TestLoadSum(unittest.TestCase):
         F_expected *= 5.
         M_expected *= 5.
         F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-        #print 'F =', F
+        #print('F =', F)
         self.assertTrue(allclose(F_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F_expected, F))
         self.assertTrue(allclose(M_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M_expected, M))
 

@@ -21,7 +21,7 @@ class LoadCase(object):
                                 'MOMENT', 'MOMENT1', 'MOMENT2',
                                 'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOADX1']:  # PLOAD4, RFORCE, GRAV
                     i = where(load_id == load.load_id)[0]
-                    #print "i** =", i
+                    #print("i** =", i)
                     if len(i):
                         self.loads[load_id].append(load[i])
                 else:
@@ -30,33 +30,33 @@ class LoadCase(object):
 
     def add_reference(self, load):
         for load_id, loads in load.iteritems():
-            #print "ref", loads
+            #print("ref", loads)
             for load in loads:
                 self.loads[load_id].append(load)
 
     def resolve(self, i):
         import StringIO
-        #print "key", i
+        #print("key %s" % i)
         all_loads = self.loads[i]  # list of load objs
 
-        #print "**********"
+        #print("**********")
         f = cStringIO.StringIO()
         for load in all_loads:
             load.write_bdf(f)
-        #print f.getvalue()
-        #print "**********"
+        #print(f.getvalue())
+        #print("**********")
 
         all_loads_out = []
         all_loads_loop = all_loads
 
         i = 0
         while all_loads_loop:
-            #print "--------------------------"
-            #print "i = ", i
+            #print("--------------------------")
+            #print("i = %s" % i)
             all_loads_loop = []
             #print "all_loads", all_loads
             for loads in all_loads:
-                #print "a-loads =", loads
+                #print("a-loads =", loads)
                 if isinstance(loads, tuple):
                     (sf, loads2) = loads
                     for load in loads2:
@@ -68,29 +68,29 @@ class LoadCase(object):
                     all_loads_out.append(loads)
 
                 else:
-                    #print "*loads", loads  # LOAD, DLOAD
+                    #print("*loads", loads)  # LOAD, DLOAD
                     load = loads
                     #for load in loads:
                     scale = load.scale
                     scale_factors = load.scale_factors
                     new_load_ids = load.load_ids
-                    #print "new_load_ids =", new_load_ids
+                    #print("new_load_ids =", new_load_ids)
 
                     for scale_factor, new_load_id in zip(scale_factors, new_load_ids):
                         sf = scale * scale_factor
                         new_all_loads = self.resolve(new_load_id)
                         all_loads_loop.append((sf, new_all_loads))
-                        #print "added sf=%s new_load_id=%s" % (sf, new_load_id)
-            #print "len(all_loads_loop) =", len(all_loads_loop)
+                        #print("added sf=%s new_load_id=%s" % (sf, new_load_id))
+            #print("len(all_loads_loop) =", len(all_loads_loop))
             all_loads = all_loads_loop
             i += 1
             if i > 100:
                 raise RuntimeError('i > 100')
-        #print '------------------'
-        #print "resolved LoadCase i=", i
+        #print('------------------')
+        #print("resolved LoadCase i=", i)
         f = cStringIO.StringIO()
         for load in all_loads_out:
             load.write_bdf(f)
-        #print f.getvalue()
-        #print '------------------'
+        #print(f.getvalue())
+        #print('------------------')
         return all_loads_out

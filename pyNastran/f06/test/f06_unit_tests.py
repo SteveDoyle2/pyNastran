@@ -26,7 +26,7 @@ from pyNastran.op4.op4 import OP4
 
 test_path = os.path.join(pyNastran.__path__[0], 'f06', 'test', 'tests')
 model_path = os.path.join(pyNastran.__path__[0], '..', 'models')
-#print "testpath =", testpath
+#print("testpath =", testpath)
 
 class TestF06(unittest.TestCase):
     def run_model(self, bdf_name=None, f06_name=None, op2_name=None,
@@ -91,12 +91,12 @@ class TestF06(unittest.TestCase):
         f06.write_f06(f06_filename + '.out')
 
         ref_point = f06.grid_point_weight.reference_point
-        #print "ref_point", ref_point
+        #print("ref_point = %s" % ref_point)
         ref_point_exact = 0
         self.assertEqual(ref_point, ref_point_exact)
 
         MO = f06.grid_point_weight.MO
-        #print "MO", MO
+        #print("MO %s" % MO)
         MO_exact = array(
             [[  1.22085800e-01,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00,  5.33146300e-01,  -1.22767700e-05],
              [  0.00000000e+00,   1.22085800e-01,   0.00000000e+00,  -5.33146300e-01,  0.00000000e+00,   1.57186600e-01],
@@ -110,12 +110,12 @@ class TestF06(unittest.TestCase):
         S_exact = array([[ 1.,  0.,  0.],
                          [ 0.,  1.,  0.],
                          [ 0.,  0.,  1.]])
-        #print "S", S
+        #print("S %s" % S)
 
         mass = f06.grid_point_weight.mass
         mass_exact = array([ 0.1220858,  0.1220858,  0.1220858])
         self.assertTrue(array_equiv(mass, mass_exact))
-        #print "mass =", mass
+        #print("mass = %s" % mass)
 
         cg = f06.grid_point_weight.cg
         cg_exact = array(
@@ -125,17 +125,17 @@ class TestF06(unittest.TestCase):
              [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
              [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
              [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00]])
-        #print "cg =", cg
+        #print("cg = %s", cg)
         self.assertTrue(array_equiv(cg, cg_exact))
 
         IS = f06.grid_point_weight.IS
-        #print "IS", IS
+        #print("IS = %s" % IS)
         IS_exact = array([[  8.74036600e-01,  -8.67305300e-06,  -2.54028500e-03],
                           [ -8.67305300e-06,   9.19714300e-01,   1.99762300e-05],
                           [ -2.54028500e-03,   1.99762300e-05,   4.79082500e-02]])
 
         IQ = f06.grid_point_weight.IQ
-        #print "IQ", IQ
+        #print("IQ %s" % IQ)
         IQ_exact = array([[ 0.04790044, 0.9197143, 0.8740444 ]])
         msg = 'IQ=%s\nexact=%s' % (str(IQ), str(IQ_exact))
         self.assertTrue(array_equiv(IQ, IQ_exact), msg=msg)
@@ -154,12 +154,12 @@ class TestF06(unittest.TestCase):
         f06.write_f06(f06_filename + '.out')
 
         ref_point = f06.grid_point_weight.reference_point
-        #print "ref_point", ref_point
+        #print("ref_point = %s" % ref_point)
         ref_point_exact = 0
         self.assertEqual(ref_point, ref_point_exact)
 
         MO = f06.grid_point_weight.MO
-        #print "MO", MO
+        #print("MO = %s" % MO)
         MO_exact = array(
             [[  1.22085800e-01,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00,  5.33146300e-01,  -1.22767700e-05],
              [  0.00000000e+00,   1.22085800e-01,   0.00000000e+00,  -5.33146300e-01,  0.00000000e+00,   1.57186600e-01],
@@ -173,12 +173,12 @@ class TestF06(unittest.TestCase):
         S_exact = array([[ 1.,  0.,  0.],
                          [ 0.,  1.,  0.],
                          [ 0.,  0.,  1.]])
-        #print "S", S
+        #print("S %s" % S)
 
         mass = f06.grid_point_weight.mass
         mass_exact = array([ 0.1220858,  0.1220858,  0.1220858])
         self.assertTrue(array_equiv(mass, mass_exact))
-        #print "mass =", mass
+        #print("mass = %s" % mass)
 
         cg = f06.grid_point_weight.cg
         cg_exact = array(
@@ -188,17 +188,17 @@ class TestF06(unittest.TestCase):
              [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
              [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00],
              [  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, 0.00000000e+00,   0.00000000e+00]])
-        #print "cg =", cg
+        #print("cg = %s" % cg)
         self.assertTrue(array_equiv(cg, cg_exact))
 
         IS = f06.grid_point_weight.IS
-        #print "IS", IS
+        #print("IS  %s" % IS)
         IS_exact = array([[  8.74036600e-01,  -8.67305300e-06,  -2.54028500e-03],
                           [ -8.67305300e-06,   9.19714300e-01,   1.99762300e-05],
                           [ -2.54028500e-03,   1.99762300e-05,   4.79082500e-02]])
 
         IQ = f06.grid_point_weight.IQ
-        #print "IQ", IQ
+        #print("IQ %s" % IQ)
         IQ_exact = array([[ 0.04790044, 0.9197143, 0.8740444 ]])
         self.assertTrue(array_equiv(IQ, IQ_exact))
 

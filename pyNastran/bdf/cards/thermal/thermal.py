@@ -269,8 +269,8 @@ class CHBDYP(ThermalElement):
             assert self.pid > 0
 
             self.Type = string(card, 3, 'Type')
-            #print "self.Type = ",self.Type
-            # msg = 'CHBDYP Type=|%s|' (self.Type)
+            #print("self.Type = %s" % self.Type)
+            # msg = 'CHBDYP Type=%r' % self.Type
             #assert self.Type in ['POINT','LINE','ELCYL','FTUBE','TUBE'], msg
 
             #: A VIEW entry identification number for the front face.

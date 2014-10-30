@@ -94,12 +94,12 @@ class GuiCommon(object):
             #self.scalarBar.SetMaximumNumberOfColors(nValueSet)
             #prop = self.scalarBar.GetLabelTextProperty()
             #fontSize = prop.GetFontSize()
-            #print "fontSize = ",fontSize
+            #print("fontSize = %s" % fontSize)
             #prop.SetFontSize(40)
 
             # TODO results can only go from centroid->node and not back to
             ## centroid
-            #print dir(self.grid)
+            #print(dir(self.grid))
             #self.grid.Reset()
             self.final_grid_update(gridResult, key, subtitle, label)
 
@@ -107,8 +107,8 @@ class GuiCommon(object):
         # flips sign to make colors go from blue -> red
         norm_value = float(max_value - min_value)
         print('max_value=%s min_value=%r norm_value=%r' % (max_value, min_value, norm_value))
-        #print "case = ",case
-        #if normValue==0.: # avoids division by 0.
+        #print("case = ", case)
+        #if normValue == 0.: # avoids division by 0.
         #    normValue = 1.
 
         valueSet = set()
@@ -187,7 +187,7 @@ class GuiCommon(object):
             self.log_error("No Results found.  Many results are not supported in the GUI.\n")
             self.scalarBar.SetVisibility(False)
             foundCases = False
-        #print "next key = ",key
+        #print("next key = %s" % key)
         return foundCases
 
     def build_grid_result(self, vectorSize, location):
@@ -234,8 +234,8 @@ class GuiCommon(object):
             #ncolors = nvalues
             #if nvalues < 5:
                 #ncolors = 5
-            #print "need to adjust axes...max_value=%s" %(max_value)
-        #if data_format=='%.0f' and maxValue>
+            #print("need to adjust axes...max_value=%s" % max_value)
+        #if data_format == '%.0f' and maxValue>
 
         self.scalarBar.SetNumberOfLabels(nvalues)
         self.scalarBar.SetMaximumNumberOfColors(nvalues)

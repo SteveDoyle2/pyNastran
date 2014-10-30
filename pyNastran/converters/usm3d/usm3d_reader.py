@@ -197,7 +197,7 @@ class Usm3dReader(object):
             lbouf = zeros((ntris, 4), dtype='int32')
             for i in xrange(ntris):
                 line = lines[i+2].strip()
-                #print '%r' % line
+                #print('%r' % line)
                 (n, isurf, n1, n2, n3) = line.split()
                 lbouf[i, :] = [isurf, n1, n2, n3]
             return header, lbouf
@@ -361,10 +361,10 @@ class Usm3dReader(object):
         for i in range(4): #  tets
             data = f.read(4 * nelements)
             elements[:, i] = unpack(Format, data)
-            #print "elements[:, %s] =" %i, elements[:, i]
+            #print("elements[:, %s] =" %i, elements[:, i])
         elements -= 1
 
-        #print 'tell volume2 =', f.tell()
+        #print('tell volume2 = %s' % f.tell())
         dummy2 = f.read(4)
         self.log.debug("dummy2 = %s %s" % (unpack('>i', dummy2), unpack('>f', dummy2)))
         dummy_int2, = unpack('>i', dummy2)
@@ -390,7 +390,7 @@ class Usm3dReader(object):
 
         dummy4 = f.read(4) # nnodes * 3 * 8
         dummy4_int, = unpack('>i', dummy4)
-        #print "dummy4 = ", unpack('>i', dummy4), unpack('>f', dummy4)
+        #print("dummy4 = ", unpack('>i', dummy4), unpack('>f', dummy4))
 
         assert dummy3_int == dummy4_int
         self.nodes = nodes
@@ -671,7 +671,7 @@ def write_cogsg_volume(model, cogsg_file):
     model.log.debug("Format = %r" % Format)
     data = pack(Format, *values_header)
     outfile.write(data)
-    #print "outfile.tell = ", outfile.tell()
+    #print("outfile.tell = %s" % outfile.tell())
     #outfile.write(block_size)
     #--------------------------------------------------------------------------
     tets = self.tets
@@ -687,7 +687,7 @@ def write_cogsg_volume(model, cogsg_file):
     n1 = tets[:, 1] + 1
     n2 = tets[:, 2] + 1
     n3 = tets[:, 3] + 1
-    #print "n0 =", n0
+    #print("n0 = %s" % n0)
     outfile.write( pack(Format, *n0) )
     outfile.write( pack(Format, *n1) )
     outfile.write( pack(Format, *n2) )

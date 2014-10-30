@@ -141,7 +141,7 @@ class GridPointWeight(object):
             sline = line.split()
             for j in range(6):
                 self.MO[i, j] = sline[j]
-        #print "MO =", self.MO
+        #print("MO =", self.MO)
         n += i + 1
 
         #========================================
@@ -153,7 +153,7 @@ class GridPointWeight(object):
             sline = line.split()
             for j in range(3):
                 self.S[i, j] = sline[j]
-        #print "S =", self.S
+        #print("S =", self.S)
         n += i + 1
 
         #========================================
@@ -167,8 +167,8 @@ class GridPointWeight(object):
             for j in range(3):
                 self.cg[i, j] = sline[j + 1]
 
-        #print "mass =", self.mass
-        #print "mass =", self.cg
+        #print("mass =", self.mass)
+        #print("mass =", self.cg)
         n += 3
 
         #========================================
@@ -179,7 +179,7 @@ class GridPointWeight(object):
             sline = line.split()
             for j in range(3):
                 self.IS[i, j] = sline[j]
-        #print "IS =", self.IS
+        #print("IS =", self.IS)
         n += i + 1
 
         #========================================
@@ -188,7 +188,7 @@ class GridPointWeight(object):
         for i in range(3):
             sline = lines[n + i][1:-1].strip().split()  # get rid of the * characters
             self.IQ[i] = sline[0]
-        #print "IQ =", self.IQ
+        #print("IQ =", self.IQ)
         n += i + 1
 
         #========================================
@@ -200,7 +200,7 @@ class GridPointWeight(object):
             sline = line.split()
             for j in range(3):
                 self.Q[i, j] = sline[j]
-        #print "Q =", self.Q
+        #print("Q =", self.Q)
         n += i
 
     def write_f06(self, f, page_stamp, page_num):
@@ -239,5 +239,5 @@ class GridPointWeight(object):
             msg.append('                                           * %13.6E %13.6E %13.6E *' % tuple(self.Q[i, :]))
         msg.append('\n' + page_stamp % page_num + '\n')
         f.write('\n'.join(msg))
-        #print '\n'.join(msg)
+        #print('\n'.join(msg))
         return page_num + 1

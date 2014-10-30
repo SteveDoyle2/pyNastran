@@ -66,7 +66,7 @@ def run_time_acc(dirname, model_name, node_ids, nstart=0, nlimit=None, num_cpus=
     n_list, flo_filenames = get_flo_files(dirname, model_name, nstart, nlimit)
     nlimit = len(flo_filenames)
     assert nlimit > 0, 'nfiles=%s' % (nlimit)
-    #print "nmax =", nlimit
+    #print("nmax =", nlimit)
 
     Cp = {}
     Mach = {}
@@ -113,7 +113,7 @@ def run_time_acc(dirname, model_name, node_ids, nstart=0, nlimit=None, num_cpus=
                 if j % 500 == 0:
                     print("n =", j, flo_filenames[j])
                 for i, node_id in enumerate(node_ids):
-                    #print "Cp[node=%s] =%s" % (node_id, loads['Cp'][i])
+                    #print("Cp[node=%s] =%s" % (node_id, loads['Cp'][i]))
                     Cp[node_id][j] = loads['Cp'][i]
                     Mach[node_id][j] = loads['Mach'][i]
                     T[node_id][j] = loads['T'][i]
@@ -137,7 +137,7 @@ def _loads_func(data):
 
 def write_loads(csv_filename, loads):
     (Cp, Mach, T, U, V, W, p, rhoU) = loads
-    #print "loads.keys() = ", sorted(loads.keys())
+    #print("loads.keys() = ", sorted(loads.keys()))
     f = open(csv_filename, 'wb')
     dt = 1.0
     t = arange(len(Cp[node_id])) * dt  # broken...
