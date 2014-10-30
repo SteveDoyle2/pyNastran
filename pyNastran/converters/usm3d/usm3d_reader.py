@@ -381,7 +381,7 @@ class Usm3dReader(object):
         dummy3 = f.read(4)  # nnodes * 3 * 8
         dummy3_int, = unpack('>i', dummy3)
         #assert dummy3_int == 298560
-        print("dummy3 = ", unpack('>i', dummy3) #, unpack('>f', dummy3))
+        print("dummy3 = ", unpack('>i', dummy3)) #, unpack('>f', dummy3)
 
         nodes = zeros((nnodes, 3), 'float64')
         for i in range(3): #  x, y, z
