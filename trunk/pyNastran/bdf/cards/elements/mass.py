@@ -346,7 +346,6 @@ class CMASS4(PointMassElement):
     }
 
     def __init__(self, card=None, data=None, comment=''):
-        print("***")
         PointMassElement.__init__(self, card, data)
         if comment:
             self._comment = comment

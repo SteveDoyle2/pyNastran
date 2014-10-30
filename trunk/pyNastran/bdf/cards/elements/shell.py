@@ -1222,22 +1222,22 @@ class QuadShell(ShellElement):
         T3 = set_blank_if_default(self.T3, 1.0)
         T4 = set_blank_if_default(self.T4, 1.0)
 
-        if 0:
-            print("eid       = %s" % self.eid)
-            print("nodes     = %s" % self.nodes)
+        #if 0:
+            #print("eid       = %s" % self.eid)
+            #print("nodes     = %s" % self.nodes)
 
-            print("self.zOffset   = %s" % self.zOffset)
-            print("self.TFlag     = %s" % self.TFlag)
-            print("self.thetaMcid = %s" % self.thetaMcid)
+            #print("self.zOffset   = %s" % self.zOffset)
+            #print("self.TFlag     = %s" % self.TFlag)
+            #print("self.thetaMcid = %s" % self.thetaMcid)
 
-            print("zOffset   = %s" % zOffset)
-            print("TFlag     = %s" % TFlag)
-            print("thetaMcid = %s" % thetaMcid)
+            #print("zOffset   = %s" % zOffset)
+            #print("TFlag     = %s" % TFlag)
+            #print("thetaMcid = %s" % thetaMcid)
 
-            print("T1 = %s" % T1)
-            print("T2 = %s" % T2)
-            print("T3 = %s" % T3)
-            print("T4 = %s\n" % T4)
+            #print("T1 = %s" % T1)
+            #print("T2 = %s" % T2)
+            #print("T3 = %s" % T3)
+            #print("T4 = %s\n" % T4)
         return (thetaMcid, zOffset, TFlag, T1, T2, T3, T4)
 
 
