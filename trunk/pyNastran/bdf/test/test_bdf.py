@@ -268,7 +268,8 @@ def compute_ints(cards1, cards2, fem1):
                                                        value2) + factorMsg
         msg = msg.rstrip()
         print(msg)
-    return listKeys1 + listKeys2
+    #return listKeys1 + listKeys2
+    return diffKeys1 + diffKeys2
 
 
 def compute(cards1, cards2):
