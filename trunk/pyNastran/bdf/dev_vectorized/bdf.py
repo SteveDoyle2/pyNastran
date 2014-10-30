@@ -870,10 +870,10 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         >>> bdf = BDF()
         >>> bdf.read_bdf(bdf_filename, xref=True)
         >>> g1 = bdf.Node(1)
-        >>> print g1.Position()
+        >>> print(g1.Position())
         [10.0, 12.0, 42.0]
         >>> bdf.write_bdf(bdf_filename2)
-        >>> print bdf.card_stats()
+        >>> print(bdf.card_stats())
         ---BDF Statistics---
         SOL 101
         bdf.nodes = 20
@@ -1145,7 +1145,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.log.debug("finished with Case Control Deck...")
 
         #for line in self.case_control_lines:
-            #print "** line=|%r|" %(line)
+            #print("** line=%r" % line)
 
         self.caseControlDeck = CaseControlDeck(self.case_control_lines, self.log)
         self.caseControlDeck.solmap_toValue = self._solmap_to_value
@@ -2414,6 +2414,6 @@ if __name__ == '__main__':
     import pyNastran
     pkg_path = pyNastran.__path__[0]
     bdfname = sys.argv[1]
-    #print "bdfname =", bdfname
+    #print("bdfname =", bdfname)
     bdf.read_bdf(bdfname)
     bdf.write_bdf('fem.out.bdf')

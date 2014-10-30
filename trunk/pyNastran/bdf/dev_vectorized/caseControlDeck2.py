@@ -36,7 +36,7 @@ class Subcase(object):
 
     def has_parameter(self, param_name):
         names = [param.__class__.__name__ for param in self.params]
-        #print names
+        #print(names)
         return True if param_name.upper() in names else False
 
     def get_parameter(self, param_name):

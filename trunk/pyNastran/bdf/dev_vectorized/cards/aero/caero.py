@@ -51,7 +51,7 @@ class CAero(object):
         f.write('$AERO\n')
         types = self._get_types()
         for elems in types:
-            #print "AERO", elems.type
+            #print("AERO", elems.type)
             elems.write_bdf(f, size=size, element_ids=element_ids)
 
     def _get_types(self):

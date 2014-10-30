@@ -129,9 +129,9 @@ class Cart3DReader(object):
             aElems = segments[a]
             print(aElems)
             i = aElems.index(eid)
-            #print i
+            #print(i)
             aElems.pop(i)
-            #print aElems
+            #print(aElems)
             eidA = aElems[0]
             #eidA = elements[a]
             print("eidA = ", eidA)
@@ -285,8 +285,8 @@ class Cart3DReader(object):
         nodes2 = nodes[inodes_save, :]
         nnodes2, three = nodes2.shape
         assert 0 < nnodes2 < nnodes, 'nnodes=%s nnodes2=%s'  % (nnodes, nnodes2)
-        #print 'nnodes=%s nnodes2=%s'  % (nnodes, nnodes2)
-        #print 'inodes_save=%s'  % (inodes_save), len(inodes_save)
+        #print('nnodes=%s nnodes2=%s'  % (nnodes, nnodes2))
+        #print('inodes_save=%s'  % (inodes_save), len(inodes_save))
 
         inodes_save += 1  # +1 is so we don't have to shift inode
         # ..todo:: still need to handle element's node id renumbering
@@ -297,11 +297,11 @@ class Cart3DReader(object):
             for inode in element:
                 # something like this should be faster since we know inodes_save is sorted
                 #if inode != inodes_save[searchsorted(inodes_save, inode)]:
-                    #print "bad...", ielement, element, inode
+                    #print("bad...", ielement, element, inode)
                     #save_element = False
                     #break
                 if inode not in inodes_save:
-                    #print "bad...", ielement, element, inode
+                    #print("bad...", ielement, element, inode)
                     save_element = False
                     break
 
@@ -373,7 +373,7 @@ class Cart3DReader(object):
         if loads is None or loads == {}:
             loads = {}
             is_loads = False
-            print "no loads"
+            print("no loads")
         else:
             is_loads = True
 
@@ -441,8 +441,8 @@ class Cart3DReader(object):
             savetxt(f, elements, int_fmt)
 
     def write_regions(self, f, regions, is_binary):
-        #print "is_binary=%s" % is_binary
-        #print "regions.shape =", regions.shape
+        #print("is_binary=%s" % is_binary)
+        #print("regions.shape =", regions.shape)
         if is_binary:
             four = pack('>i', 4)
             f.write(four)
@@ -671,7 +671,7 @@ class Cart3DReader(object):
                 #mach = sqrt(mach2)
                 #if mach > 10:
                     #print("nid=%s Cp=%s mach=%s rho=%s rhoU=%s rhoV=%s rhoW=%s" % (pointNum, cp, mach, rho, rhoU, rhoV, rhoW))
-            #print "pt=%s i=%s Cp=%s p=%s" %(pointNum,i,sline[0],p)
+            #print("pt=%s i=%s Cp=%s p=%s" %(pointNum,i,sline[0],p))
         del sline
 
         return self._calculate_results(result_names, results)
@@ -807,7 +807,7 @@ class Cart3DReader(object):
             else:
                 segments[a] = [eid]
                 #print(a)
-                #print nodes[1]
+                #print(nodes[1])
                 lengths[a] = nodes[a[1]] - nodes[a[0]]
 
             if b in segments:
@@ -879,7 +879,7 @@ class Cart3DReader(object):
         #for nid in xrange(nPoints):
             #assert nid in points, 'nid=%s not in points' % nid
         self.infile.read(8)  # end of second block, start of third block
-        #print "finished read_points"
+        #print("finished read_points")
         return points
 
     def read_elements_binary(self, nelements):
@@ -913,12 +913,12 @@ class Cart3DReader(object):
             #raise RuntimeError('unBuffered')
         elements2 = elements.reshape((nelements, 3))
         self.infile.read(8)  # end of third (element) block, start of regions (fourth) block
-        #print "finished read_elements"
+        #print("finished read_elements")
         return elements2
 
     def read_regions_binary(self, nelements):
-        #print "starting read_regions"
-        #print self.infile.tell(), 'regions'
+        #print("starting read_regions")
+        #print(self.infile.tell(), 'regions')
         #isBuffered = True
         size = nelements * 4  # 12=3*4 all the elements
         s = Struct(b'>3000i')
@@ -931,7 +931,7 @@ class Cart3DReader(object):
             try:
                 region_data = s.unpack(data)
             except:
-                print "len =", len(data)
+                print("len =", len(data))
                 raise
 
             #r = nr + 3000
@@ -947,7 +947,7 @@ class Cart3DReader(object):
             try:
                 region_data = unpack(Format, data)
             except:
-                print "len =", len(data)
+                print("len =", len(data))
                 raise
 
             r = nelements
@@ -958,7 +958,7 @@ class Cart3DReader(object):
             size = 0
 
         self.infile.read(4)  # end of regions (fourth) block
-        #print "finished read_regions"
+        #print("finished read_regions")
         return regions
 
     def read_results_binary(self, i, infile, result_names=None):
@@ -991,7 +991,7 @@ if __name__ == '__main__':
     (points2, elements2, regions2, loads2) = cart.make_mirror_model(points, elements, regions, loads)
     cart.write_cart3d(full_model, points2, elements2, regions2)
 
-    print "dt = ", time.time() - t0
+    print("dt = ", time.time() - t0)
     sys.exit('made half model')
 
     # ascii
@@ -1000,7 +1000,7 @@ if __name__ == '__main__':
     cart2 = Cart3DReader(log, debug)
     (points, elements, regions, loads) = cart2.read_cart3d(cart3dGeom)
     cart2.write_cart3d(outfilename, points, elements, regions)
-    #print points
+    #print(points)
 
 
 if 0:
@@ -1028,7 +1028,7 @@ if 0:
     #points2 = {}
     #for (iPoint,point) in sorted(points.iteritems()):
         #(x,y,z) = point
-        #print "p=%s x=%s y=%s z=%s  z2=%s" %(iPoint,x,y,z,z+x/10.)
+        #print("p=%s x=%s y=%s z=%s  z2=%s" %(iPoint,x,y,z,z+x/10.))
         #points2[iPoint] = [x,y,z+x/10.]
     #(points, elements, regions, loads) = cart.make_mirror_model(points2, elements, regions, loads)
 
@@ -1044,6 +1044,6 @@ if 0:
     #(points, elements, regions, loads) = cart3.make_mirror_model(points, elements, regions, loads)
 
 
-    #print "loads = ",list_print(loads), len(loads)
+    #print("loads = ",list_print(loads), len(loads))
     #cartOutfile = os.path.join(workpath, 'bJet.a.tri_test')
     #cart.writeInfile(cartOutfile, cartPoints, elements, regions)

@@ -162,10 +162,10 @@ def countLines(fnames=[]):
 
                 if n3==1:
                     format_lines += 1
-                    print input_file_name, "###"
+                    print(input_file_name, "###")
                 elif n==1 and '@' in line and '<' not in line:
                     bad_doxygen_lines += 1
-                    print input_file_name, "****bad****",i
+                    print(input_file_name, "****bad****",i)
                 elif n2==1 and '@' in line:
                     doxygen_starter_lines += 1
                 elif n2==1:

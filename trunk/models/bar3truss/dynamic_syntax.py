@@ -52,27 +52,27 @@ def main():
         model2.stop_after_reading_grid_point_weight(stop=True)
     model2.read_f06()
 
-    #print '\n'.join(dir(subcase1))
-    print ""
-    print "mass = %s" % model2.grid_point_weight.mass
+    #print('\n'.join(dir(subcase1)))
+    print("")
+    print("mass = %s" % model2.grid_point_weight.mass)
 
     #========================================
     model3 = OP2(out_op2)
     model3.read_op2()
     #========================================
     for form, modeli in [('f06', model2), ('op2', model3)]:
-        print "---%s---" % form
+        print("---%s---" % form)
         subcase1 = modeli.rodStress[1]
 
         eid = 2
-        print 'axial   stress[%s] = %s' % (eid, subcase1.axial[eid])
-        print 'torsion stress[%s] = %s' % (eid, subcase1.torsion[eid])
-        print '        stress[%s] = %s\n' % (eid, calculate_stress(subcase1.axial[eid], subcase1.torsion[eid]))
+        print('axial   stress[%s] = %s' % (eid, subcase1.axial[eid]))
+        print('torsion stress[%s] = %s' % (eid, subcase1.torsion[eid]))
+        print('        stress[%s] = %s\n' % (eid, calculate_stress(subcase1.axial[eid], subcase1.torsion[eid])))
 
         eid = 3
-        print 'axial   stress[%s] = %s' % (eid, subcase1.axial[eid])
-        print 'torsion stress[%s] = %s' % (eid, subcase1.torsion[eid])
-        print '        stress[%s] = %s\n' % (eid, calculate_stress(subcase1.axial[eid], subcase1.torsion[eid]))
+        print('axial   stress[%s] = %s' % (eid, subcase1.axial[eid]))
+        print('torsion stress[%s] = %s' % (eid, subcase1.torsion[eid]))
+        print('        stress[%s] = %s\n' % (eid, calculate_stress(subcase1.axial[eid], subcase1.torsion[eid])))
 
 if __name__ == '__main__':
     main()

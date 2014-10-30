@@ -42,7 +42,7 @@ class MeshTools(BDF):
 
         for eid, element in self.rigidElements.iteritems():
             nids = element.nodeIDs()
-            #print nids
+            #print(nids)
             eid_to_nids[eid] = nids
             for nid in nids:
                 nid_to_eids[nid].append(eid)
@@ -50,7 +50,7 @@ class MeshTools(BDF):
         #print('mpc', self.mpcObject)
         for (eid, mpcs) in sorted(self.mpcs.iteritems()):
             for mpc in mpcs:
-                #print str(mpc)
+                #print(str(mpc))
                 nids = mpc.nodeIDs()
                 eid_to_nids[eid] = nids
                 for nid in nids:

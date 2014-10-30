@@ -130,7 +130,7 @@ class AeroModel(Model):
         return self.areas[eid]
 
         nodes = self.get_element_nodes(eid)
-        #print "nodes[%s]=%s" %(eid, nodes)
+        #print("nodes[%s]=%s" % (eid, nodes))
         (area, normal) = AreaNormal(nodes)
         return area
 
@@ -175,8 +175,8 @@ class AeroModel(Model):
         n1 = self.Node(nid1)
         n2 = self.Node(nid2)
         n3 = self.Node(nid3)
-        #print "nids[%s] = %s %s %s" %(eid, nid1, nid2, nid3)
-        #print "n[%s]=%s n[%s]=%s n[%s]=%s\n" %(nid1, n1, nid2, n2, nid3, n3)
+        #print("nids[%s] = %s %s %s" %(eid, nid1, nid2, nid3))
+        #print("n[%s]=%s n[%s]=%s n[%s]=%s\n" %(nid1, n1, nid2, n2, nid3, n3))
         return (n1, n2, n3)
 
     def get_element_properties(self, eid):

@@ -244,16 +244,16 @@ class Coord(object):
             e2 = dot(T, self.cylindrical_to_rectangular(coord.e2))
             e3 = dot(T, self.cylindrical_to_rectangular(coord.e3))
         elif ref_coord_type == 'S':  # Spherical
-            #print [coord.e1, coord.e2, coord.e3]
+            #print([coord.e1, coord.e2, coord.e3])
             # column
             #_e1 = dot(T, self.spherical_to_rectangular(coord.e1))
             #_e2 = dot(T, self.spherical_to_rectangular(coord.e2))
             #_e3 = dot(T, self.spherical_to_rectangular(coord.e3))
-            #print "_e1", _e1
+            #print("_e1", _e1
             #_e123 = vstack([_e1, _e2, _e3])
 
             pts = vstack([coord.e1, coord.e2, coord.e3])
-            #print "pts", pts, pts.shape
+            #print("pts", pts, pts.shape)
             #_t1 = self.spherical_to_rectangular(coord.e1)  # good are _
             #_t2 = self.spherical_to_rectangular(coord.e2)
             #_t3 = self.spherical_to_rectangular(coord.e3)
@@ -269,7 +269,7 @@ class Coord(object):
             e3 = e123[2, :]
 
             #pts = vstack([coord.e2, coord.e3])
-            #print "pts2", pts, pts.shape
+            #print("pts2", pts, pts.shape)
             #e123 = dot(T, self.spherical_to_rectangular(coord, pts).T).T
             #e2 = e123[0, :]
             #e3 = e123[1, :]
@@ -331,7 +331,7 @@ class Coord(object):
 
     def spherical_to_rectangular(self, r_theta_phi):
         if len(r_theta_phi.shape) == 2:
-            #print '2d', r_theta_phi
+            #print('2d', r_theta_phi)
             R = r_theta_phi[:, 0]
             #print('  R = %s' % R)
             theta = radians(r_theta_phi[:, 1])

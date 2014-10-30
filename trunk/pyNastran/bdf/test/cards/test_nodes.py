@@ -15,14 +15,14 @@ class TestNodes(unittest.TestCase):
         #print n1
 
         msg = n1.write_bdf2(size=8)
-        print msg
+        print(msg)
         msg = n1.write_bdf2(size=16)
-        print msg
+        print(msg)
         msg = n1.write_bdf2(size=16, double=True)
-        print msg
+        print(msg)
         if 0:
             msg = n1.write_bdf2(size=8)
-            #print '%r' % msg
+            #print('%r' % msg)
             # small field
             self.assertEqual(msg, 'GRID           1       2      0.      0.      0.                        \n')
             msg = n1.write_bdf2(size=16)
@@ -30,19 +30,19 @@ class TestNodes(unittest.TestCase):
             # large field
             card = ('GRID*                  1               2             .-0             .-0\n'
                     '*                    .-0                                                \n')
-            print '%r' % msg
+            print('%r' % msg)
             ref = 'ERROR\n'
             if card != msg:
                 scard = card.split('\n')
                 smsg  = msg.split('\n')
                 i = 0
-                print scard
-                print smsg
+                print(scard)
+                print(smsg)
                 for sc, sm in zip(scard, smsg):
                     if sc != sm:
                         ref += 'i=%s\ncard=%r\nmsg =%r\n' % (i, sc, sm)
                     i += 1
-            print ref
+            print(ref)
             self.assertEqual(msg, card), ref
 
 

@@ -79,25 +79,25 @@ class IGES(object):
                 raise NotImplementedError(SGDPT)
             #print '%r' % line[72:73]
         del lines
-        #print S1
+        #print(S1)
         #for
         G_global = ''.join(Global1)
-        print "G =", G_global.split(',')
-        print "----P----"
+        print("G =", G_global.split(','))
+        print("----P----")
         P_parameter_data = self.combine(Parameter1, True)
         #for key, line in sorted(P_parameter_data.iteritems()):
-            #print key, line
+            #print(key, line)
 
-        print "----D----"
+        print("----D----")
         for line in Directory1:
             dline = line[0:72].split()
-            print '%r' % dline
+            print('%r' % dline)
             dType = int(dline[0])
             assert dType in self.supported+self.maybe_supported, '%i is not supported' % dType
 
         #D_directory_entry = self.combine(Directory1)
         #for key, line in sorted(D_directory_entry.iteritems()):
-            #print '***', key, line
+            #print('***', key, line)
 
     def combine(self, P1, debug=False):
         P = defaultdict(str)
@@ -105,7 +105,7 @@ class IGES(object):
             i = pline[63:72].lstrip()
             #if debug:
                 #print "i =", i
-            #print '%r' % pline[63:72].lstrip()
+            #print('%r' % pline[63:72].lstrip())
             P[i] += pline[:70]
         return P
     def write_iges(self, fname):

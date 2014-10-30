@@ -106,23 +106,23 @@ if __name__ == "__main__": # pragma: no cover
     set_as_top(opt_bar3)
 
     def prz(title):
-        """ Print before and after"""
+        """Print before and after"""
 
-        print '---------------------------------'
-        print title
-        print '---------------------------------'
-        print 'Bar3: Weight = ', opt_bar3.bar3_truss.weight
-        print 'DV1: Bar1_area = ', opt_bar3.bar3_truss.bar1_area
-        print 'DV2: Bar2_area = ', opt_bar3.bar3_truss.bar2_area
-        print 'Dv3: Bar3_area = ', opt_bar3.bar3_truss.bar3_area
-        print '---------------------------------'
-        print 'Con1: Bar1_stress = ', opt_bar3.bar3_truss.bar1_stress
-        print 'Con2: Bar2_stress = ', opt_bar3.bar3_truss.bar2_stress
-        print 'Con3: Bar3_stress = ', opt_bar3.bar3_truss.bar3_stress
-        print 'Con4: Displ_u = ', opt_bar3.bar3_truss.displacement_x_dir
-        print 'Con5: Displ_v = ', opt_bar3.bar3_truss.displacement_y_dir
-        print 'Con6: Frequency = ', opt_bar3.bar3_truss.frequency
-        print '\n'
+        print('---------------------------------')
+        print(title)
+        print('---------------------------------')
+        print('Bar3: Weight = ', opt_bar3.bar3_truss.weight)
+        print('DV1: Bar1_area = ', opt_bar3.bar3_truss.bar1_area)
+        print('DV2: Bar2_area = ', opt_bar3.bar3_truss.bar2_area)
+        print('Dv3: Bar3_area = ', opt_bar3.bar3_truss.bar3_area)
+        print('---------------------------------')
+        print('Con1: Bar1_stress = ', opt_bar3.bar3_truss.bar1_stress)
+        print('Con2: Bar2_stress = ', opt_bar3.bar3_truss.bar2_stress)
+        print('Con3: Bar3_stress = ', opt_bar3.bar3_truss.bar3_stress)
+        print('Con4: Displ_u = ', opt_bar3.bar3_truss.displacement_x_dir)
+        print('Con5: Displ_v = ', opt_bar3.bar3_truss.displacement_y_dir)
+        print('Con6: Frequency = ', opt_bar3.bar3_truss.frequency)
+        print('\n')
 
 
     opt_bar3.bar3_truss.run()
@@ -132,8 +132,8 @@ if __name__ == "__main__": # pragma: no cover
     opt_bar3.run()
     prz('New Design')
 
-    print "CONMIN Iterations: ", opt_bar3.driver.iter_count
-    print ""
-    print "Elapsed time:", time.time()-time1
+    print("CONMIN Iterations: ", opt_bar3.driver.iter_count)
+    print("")
+    print("Elapsed time:", time.time()-time1)
 
 # end bar3_optimization.py

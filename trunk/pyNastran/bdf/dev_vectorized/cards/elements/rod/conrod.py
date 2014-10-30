@@ -236,8 +236,8 @@ class CONROD(RodElement):
         #print("----------------")
         A = self.get_area_from_index(i)
         #mat = self.get_material_from_index(i)
-        #print mat
-        #print mat.material_id[se]
+        #print(mat)
+        #print(mat.material_id[se])
         mat = self.model.materials.mat1[self.material_id[i]]
         E = mat.E()
         G = mat.G()
@@ -428,8 +428,8 @@ class CONROD(RodElement):
             #print("q2[%s] = %s" % (self.eid, q2))
             #print("Lambda = \n"+str(Lambda))
 
-            #print "Lsize = ",Lambda.shape
-            #print "qsize = ",q.shape
+            #print("Lsize = ",Lambda.shape)
+            #print("qsize = ",q.shape)
             u_axial = dot(array(Lambda), q_axial)
             du_axial = -u_axial[0] + u_axial[1]
             u_torsion = dot(array(Lambda), q_torsion)

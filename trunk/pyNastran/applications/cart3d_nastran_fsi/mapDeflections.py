@@ -342,7 +342,7 @@ def test_deflections():
     displacements = op2.convertDisplacements()
 
     #for gridID,disp in sorted(displacements.items()):
-    #    print "gridID=%s disp=%s" %(gridID,disp)
+    #    print("gridID=%s disp=%s" %(gridID,disp))
 
 #------------------------------------------------------------------
 
@@ -368,65 +368,65 @@ def mapDeflectionsStructures_Aero(bdfModel='test_tet10.bdf', op2Filename='test_t
 
     #print "type(tets) = ",type(tets)
     #for i,tet in sorted(tets.items()):
-    #    print "tet[%4s]=%s" %(i,tet)
+        #print("tet[%4s]=%s" % (i, tet))
 
     # loading op2 displacements
     defreader = deflectionReader(op2Filename) # test_tet10.op2
     sys.stdout.flush()
     #deflections = defreader.convertDisplacements()
     #deflections = {1:[1.,2.,3.]}
-    #for key,d in deflections.items():
+    #for key, d in deflections.items():
         #print("d = ", d)
 
     # loading aero nodes
     cart = Cart3DReader(cart3dGeom)  # bJet.a.tri
-    (cartPoints,elements,regions,loads) = cart.read()
-    #(cartPoints,elements,regions,Cp) = cart.makeHalfModel(cartPoints,elements,regions,Cp)
+    (cartPoints, elements regions, loads) = cart.read()
+    #(cartPoints, elements, regions, Cp) = cart.makeHalfModel(cartPoints, elements, regions, Cp)
     sys.stdout.flush()
 
 
-    #cartOutfile = os.path.join(workpath,'bJet.a.tri_test')   # test code
+    #cartOutfile = os.path.join(workpath, 'bJet.a.tri_test')   # test code
     #cart.writeInfile(cartOutfile,cartPoints,elements,regions)
     #for point in cartPoints:
-    #    print("point = ",point)
+    #    print("point = ", point)
 
 
     # deflect the aero nodes
-    dmap = DeflectionMapper(cartPoints,tets,defreader)
+    dmap = DeflectionMapper(cartPoints, tets, defreader)
     t1 = time()
     log.info("setup time = %g sec" %(t1-t0))
 
-    (aeroNodes2,properTets) = dmap.mapDeflections(properTets)
-    writeProperTets(workpath,properTets)
+    (aeroNodes2, properTets) = dmap.mapDeflections(properTets)
+    writeProperTets(workpath, properTets)
 
 
     # write out the deflected aero nodes
-    cart.writeInfile(cart3dOut,aeroNodes2,elements,regions) #bJet.a.tri_new
+    cart.writeInfile(cart3dOut, aeroNodes2, elements, regions) #bJet.a.tri_new
     log.info("done with deflection mapping!")
 
     #for aeroNode in aeroNodes2:
-    #    print("aeroNode = ",aeroNode)
+    #    print("aeroNode = ", aeroNode)
     t2 = time()
-    log.info("total mapDeflections.py time = %g sec" %(t2-t0))
+    log.info("total mapDeflections.py time = %g sec" % (t2-t0))
 
 #------------------------------------------------------------------
 
 if __name__=='__main__':
     basepath = os.getcwd()
-    configpath = os.path.join(basepath,'inputs')
-    workpath   = os.path.join(basepath,'outputs')
-    bdfModel   = os.path.join(configpath,'fem3.bdf')
-    assert os.path.exists(bdfModel),'%r doesnt exist' %(bdfModel)
+    configpath = os.path.join(basepath, 'inputs')
+    workpath   = os.path.join(basepath, 'outputs')
+    bdfModel   = os.path.join(configpath, 'fem3.bdf')
+    assert os.path.exists(bdfModel),'%r doesnt exist' % bdfModel
 
     os.chdir(workpath)
     log.info("basepath = %r" % basepath)
-    tetFilename = os.path.join(configpath,'geometry.morph.in')
-    op2Filename = os.path.join(configpath,'fem3.op2')
-    cart3dGeom  = os.path.join(configpath,'Cart3d_bwb.i.tri')
+    tetFilename = os.path.join(configpath, 'geometry.morph.in')
+    op2Filename = os.path.join(configpath, 'fem3.op2')
+    cart3dGeom  = os.path.join(configpath, 'Cart3d_bwb.i.tri')
     cart3dOut   = os.path.join(workpath,  'Cart3d_bwb.i.tri2')
     properTetFilename = os.path.join(configpath,'properTets.in')  # not required to exist...
 
-    mapDeflectionsStructures_Aero(bdfModel,op2Filename,tetFilename,cart3dGeom,cart3dOut,properTetFilename)
+    mapDeflectionsStructures_Aero(bdfModel, op2Filename, tetFilename, cart3dGeom, cart3dOut, properTetFilename)
 
     #mapDeflectionsStructures_Aero()
     #test_Tet()
@@ -436,7 +436,7 @@ if __name__=='__main__':
 
     sys.exit('finished mapDeflections.py')
     #iteration = [1,2,3]
-    defMapper = DeflectionMapper(aeroModel,structuralModel)
+    defMapper = DeflectionMapper(aeroModel, structuralModel)
     for i in iteration:
         defMapper.setStructuralOutfile('fem.f06')
         aeroFile = 'cart3d_%s.tri' % i

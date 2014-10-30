@@ -18,8 +18,8 @@ import difflib
 
 def main():
     if len(sys.argv) < 5:
-        print "This program takes at least 4 arguments:\n" + \
-              "./fake_nastran nastran's_input ideal_input ideal_output ideal_op2"
+        print("This program takes at least 4 arguments:\n" + \
+              "./fake_nastran nastran's_input ideal_input ideal_output ideal_op2")
         sys.exit(1)
 
     nastran_input_filename = sys.argv[1]
@@ -38,10 +38,10 @@ def main():
     # First we make sure the ideal input is the same as the nastran input
     diff = list(difflib.context_diff(ideal_input, nastran_input))
     if len(diff) > 0: # we have a problem
-        print "There was a difference between the ideal input and nastran's input."
-        print
+        print("There was a difference between the ideal input and nastran's input.")
+        print()
         for line in diff:
-            print line
+            print(line)
         sys.exit(1)
 
     # Now we have to output the output files given to us in

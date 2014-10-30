@@ -12,16 +12,16 @@ def get_folders_files(dirname, skip_file_sufix = ('.pyc', '.pyx', '.bdf'),
                             skip_directories = ('.svn', '.idea', '.settings')):
     """
     Return list of directories and files in a given tree path. By default discards:
-    
+
     * directories ".svn", ".idea", ".settings"
-      
+
     * files that ends with ".pyc", .pyx", ".bdf"
     """
     files = []
     folders = []
     for root, dirs, fil in os.walk(dirname):
         folders.append(root)
-        files += [os.path.join(root, i) for i in fil 
+        files += [os.path.join(root, i) for i in fil
                   if not i.endswith(skip_file_sufix)]
         dirs[:] = [d for d in dirs if not d in skip_directories]
 
@@ -34,22 +34,22 @@ def get_classes(filenames):
         f = open(filename, 'r')
         lines = f.readlines()
         f.close()
-        
+
         for line in lines:
             if 'class' in line:
-                print line.rstrip()
+                print(line.rstrip())
                 sline = line.split('(')
                 if len(sline) == 2:
                     if 'raise' in sline[0]:
                         continue
                     pre, post = sline
                 else:
-                    print "*******"
+                    print("*******")
                     continue
-                
+
                 pre, post = pre.split('class')
                 name = post.strip()
-                print "name =", name
+                print("name =", name)
                 dirname = os.path.dirname(filename)
                 d[dirname] = name
 
@@ -58,39 +58,39 @@ def get_doc(filenames):
     for filename in filenames:
         if '.py' not in filename[-3:]:
             continue
-        
+
         dirname = os.path.dirname(filename)
         dirname = os.path.join(dirname)
         if dirname == r'../pyNastran':
             continue
 
-        if dirname not in dirs:            
+        if dirname not in dirs:
             dirs[dirname] = []
         dirs[dirname].append(filename)
 
     for dirname, files in sorted(dirs.iteritems()):
-        print "***************************************"
+        print("***************************************")
         basepath = os.path.basename(dirname)
         if basepath in ignore_dirs:
             continue
 
-        print "dirname = ", dirname
+        print("dirname = ", dirname)
         #absname = os.path.join(dirname, filename)
         dirnamebase = dirname
         dirname2 = dirnamebase.strip('./')
         dirname2 = dirname2.replace('\\', '.')
 
-        print 'dirname2 = ', dirname2
+        print('dirname2 = ', dirname2)
         fpath = os.path.join('index', '%s.rst' % dirname2) # basepath, dirname2
-        
+
         msg = '%s Package\n' % basepath  # loads Package
         msg += '=' * (len(msg)-1) + '\n'
         msg += '\n'
 
-        print "----------------------"
-        #print 'absname2 = ', absname2
-        print 'fpath = ', fpath
-        print "basepath = ", basepath
+        print("----------------------")
+        #print 'absname2 = ', absname2)
+        print('fpath = ', fpath)
+        print("basepath = ", basepath)
 
         if len(files) == 0:
             continue
@@ -104,15 +104,15 @@ def get_doc(filenames):
 
             fnamebase = os.path.basename(fname)
             fnamebase2 = fnamebase[:-3]
-            
+
             fname2 = fname[:-3]
             fname2 = fname2.strip('/.')
-            
+
             modname = fnamebase2
             automodname = fname2.replace('\\', '.')
-            
+
             #print "fname = ", fname
-            print "fname2 = ", fname2
+            print("fname2 = ", fname2)
 
             if modname in mods_skip:
                 continue
@@ -146,7 +146,7 @@ def get_doc(filenames):
             for dir in dirs:
                 dir2 = dir.strip('/.')
                 dir2 = dir2.replace('\\', '.')
-                print "dir2 =", dir2
+                print("dir2 =", dir2)
                 msg += '    %s\n' % dir2
             msg += '\n'
             f.write(msg)
@@ -155,17 +155,17 @@ def get_doc(filenames):
 def get_sub_dirs(dirname):
     maybe_dirs = os.listdir(dirname)
     dirs = []
-    print "dirname_check =", dirname
+    print("dirname_check =", dirname)
 
     for dir in maybe_dirs:
         #print "dir = ", dir
         dir2 = os.path.join(dirname, dir)
         if os.path.isdir(dir2):
             if dir not in ignore_dirs:
-                print "adding %s" % dir2
+                print("adding %s" % dir2)
                 dirs.append(dir2)
-    
-    #dirs2 = 
+
+    #dirs2 =
     #print dirs
     #asdf
     return dirs
@@ -174,7 +174,7 @@ def run():
     folders, files = get_folders_files('../pyNastran')
     #c = get_classes(files)
     c2 = get_doc(files)
-    
+
 
 if __name__ == '__main__':
     run()

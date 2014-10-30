@@ -8,7 +8,7 @@ def load_panair_file(fname='panair.in'):
     if not os.path.exists(fname):
         raise IOError('%s does not exist' % fname)
     execfile(fname)
-    varnames = {   
+    varnames = {
                    'title': 'default title',
                    'alpha': 0.,
                    'alphaCompressibility': 0.,
@@ -43,11 +43,11 @@ def load_panair_file(fname='panair.in'):
                 varmap[varname] = default
             else:
                 raise RuntimeError('variable %s is not defined' % varname)
-    
+
     if 'bcMap' not in varmap:
         raise RuntimeError('variable bcMap is not defined')
     return varmap
-    
+
 if 0:
     title = 'simple wing-body with composite panel. (run with a502i)'
     alphas = 4.
@@ -122,8 +122,8 @@ class Cart3dToPanair(PanairGridHelper):
     def write_points(self, point1, point2):
         point1 = self.fix_point(point1)
         point2 = self.fix_point(point2)
-        #print point1
-        #print point2
+        #print(point1)
+        #print(point2)
         out = "%-10s" * 6 % (point1[0], point1[1], point1[2],
                              point2[0], point2[1], point2[2])
         return out + '\n'
@@ -140,8 +140,8 @@ class Cart3dToPanair(PanairGridHelper):
             if len(sValue) > 10:
                 sValue = sValue[0:9]
             pointOut.append(sValue.rstrip('0'))
-            #print "sValue=%s len=%s" %(sValue,len(sValue))
-        #print "pointOut = ",pointOut
+            #print("sValue=%s len=%s" %(sValue,len(sValue)))
+        #print("pointOut = ",pointOut)
         return pointOut
 
     def run(self, cart3dGeom, oname, varmap):
@@ -172,7 +172,7 @@ class Cart3dToPanair(PanairGridHelper):
             msg += self.write_reference_quantities()
             msg += self.printout
             f.write(msg)
-            
+
             BCMap = varmap['bcMap']
 
             cart = generic_cart3d_reader(cart3dGeom)
@@ -198,16 +198,16 @@ class Cart3dToPanair(PanairGridHelper):
                     header += '=region %s\n' % region
                 region_old = region
 
-                #print "****"
-                #print "element =",element
-                #print "region  =",region
+                #print("****")
+                #print("element =",element)
+                #print("region  =",region)
                 #if eid==2:
-                #    print("points = ",points)
+                   #print("points = ",points)
                 nid1, nid2, nid3 = element
                 n1, n2, n3 = points[nid1], points[nid2], points[nid3]
-                #print "n1=%s" %(n1)
-                #print "n2=%s" %(n2)
-                #print "n3=%s" %(n3)
+                #print("n1=%s" % n1)
+                #print("n2=%s" % n2)
+                #print("n3=%s" % n3)
                 #p1 =
                 #sys.exit()
 
@@ -223,8 +223,8 @@ class Cart3dToPanair(PanairGridHelper):
                 pointsOut += self.write_points(n3, n3)
                 f.write(header + pointsOut)
                 #break
-            #print points
-            #print outfilename
+            #print(points)
+            #print(outfilename)
 
             f.write('$end of panair inputs\n')
             #sys.exit()

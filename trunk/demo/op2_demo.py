@@ -96,7 +96,7 @@ else:
 #ovm.keys()  # modes 1-6
 #ovm[6].keys()  # elements 1-3277
 print ""
-print "[layer1, layer2, ...] =", ovm[6][1000]['C'] 
+print "[layer1, layer2, ...] =", ovm[6][1000]['C']
 ovm_mode6_eid1000 = abs_max_min(ovm[6][1000]['C'])
 print "ovm_mode6_eid1000 =", ovm_mode6_eid1000
 
@@ -111,19 +111,19 @@ inode = 'C'
 ilayer = 1
 
 # result[imode][ielement][ilayer]
-print "ps.mode_cycle =", plate_stress.mode_cycles[imode]
-print "oxx =", plate_stress.oxx[imode][iele][inode][ilayer]
-print "oyy =", plate_stress.oyy[imode][iele][inode][ilayer]
-print "txy =", plate_stress.txy[imode][iele][inode][ilayer]
-print "omax =", plate_stress.majorP[imode][iele][inode][ilayer]
-print "omin = ", plate_stress.minorP[imode][iele][inode][ilayer]
-print "ovm/maxShear =", plate_stress.ovmShear[imode][iele][inode][ilayer]
+print("ps.mode_cycle =", plate_stress.mode_cycles[imode])
+print("oxx =", plate_stress.oxx[imode][iele][inode][ilayer])
+print("oyy =", plate_stress.oyy[imode][iele][inode][ilayer])
+print("txy =", plate_stress.txy[imode][iele][inode][ilayer])
+print("omax =", plate_stress.majorP[imode][iele][inode][ilayer])
+print("omin = ", plate_stress.minorP[imode][iele][inode][ilayer])
+print("ovm/maxShear =", plate_stress.ovmShear[imode][iele][inode][ilayer])
 
 # result[imode][ielement][inode][ilayer]
 if plate_stress.isFiberDistance():
-    print "fiberDistance =", plate_stress.fiberCurvature[iele][inode][ilayer]
+    print("fiberDistance =", plate_stress.fiberCurvature[iele][inode][ilayer])
 else:
-    print "curvature =", plate_stress.fiberCurvature[iele][inode][ilayer]
+    print("curvature =", plate_stress.fiberCurvature[iele][inode][ilayer])
 
 # <codecell>
 

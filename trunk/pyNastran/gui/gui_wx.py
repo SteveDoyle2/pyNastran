@@ -341,11 +341,11 @@ class AppFrame(wx.Frame):
 
     def log_info(self, msg):
         #if self.log_info:
-        print msg
+        print(msg)
 
     def log_debug(self, msg):
         #if self.log_debug:
-        print msg
+        print(msg)
 
     def buildTree(self, panel1):
         tree = wx.TreeCtrl(self, 1, wx.DefaultPosition, (-1, -1),
@@ -490,9 +490,9 @@ class AppFrame(wx.Frame):
                     button = self.toolbar1.AddLabelTool(ID, '', wx.BitmapFromImage(timage), longHelp=tip)
                     self.Bind(wx.EVT_TOOL, event, id=ID)
                 else:
-                    print "canot add %s" % desc
+                    print("canot add %s" % desc)
             else:
-                print "canot add %s" % desc
+                print("canot add %s" % desc)
         self.toolbar1.Realize()
 
         print('---building button menu---')
@@ -895,7 +895,7 @@ class EventsHandler(object):
         """
         rend = self.parent.frmPanel.widget.GetCurrentRenderer()
         if not rend:  # rend doesnt exist at first
-            print 'Try again to change the color (you didnt "click" on the color; one time bug)'
+            print('Try again to change the color (you didnt "click" on the color; one time bug)')
             return
             rend = self.parent.frmPanel.widget.GetCurrentRenderer()
 

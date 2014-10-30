@@ -185,7 +185,7 @@ class NastranMatrix(BaseCard):
             nloops += 1
         #assert nFields <= 8,'nFields=%s' % nFields
 
-        #print "nloops   = ",nloops
+        #print("nloops   = ",nloops)
         for i in xrange(nloops):
             self.GCj.append((Gj, Cj))
 
@@ -459,8 +459,8 @@ def getMatrix(self, isSparse=False, applySymmetry=True):
                        shape=(nrows, ncols), dtype=dType)
         #M = coo_matrix( (data,(self.GCi,self.GCj)),shape=(i,j)) # old
         #M = coo_matrix( (data,(self.GCi,self.GCj)),shape=(nrows,ncols))
-        #print M.todense()
-        #print M
+        #print(M.todense())
+        #print(M)
     else:
         if self.isComplex():
             M = zeros((i, j), dtype='complex128')
@@ -630,12 +630,12 @@ class DMI(NastranMatrix):
         # Real, starts at A(i1,j), goes to A(i2,j) in a column
         while i < len(fields):
             i1 = fields[i]
-            #print "i1 = ",i1
+            #print("i1 = ",i1)
             if isinstance(i1, int):
                 i += 1
                 isDoneReadingFloats = False
                 while not isDoneReadingFloats and i < len(fields):
-                    #print "i=%s len(fields)=%s" %(i,len(fields))
+                    #print("i=%s len(fields)=%s" %(i,len(fields)))
                     realValue = fields[i]
                     if isinstance(realValue, int):
                         isDoneReadingFloats = True
@@ -643,21 +643,21 @@ class DMI(NastranMatrix):
                         self.GCj.append(j)
                         self.GCi.append(i1)
                         self.Real.append(realValue)
-                        #print "i=%s j=%s value=%s" %(i1,j,realValue)
+                        #print("i=%s j=%s value=%s" %(i1,j,realValue)
                         i += 1
                     else:
-                        #print "*i=%s j=%s value=%s type=%s" %(i1,j,realValue,type(realValue))
+                        #print("*i=%s j=%s value=%s type=%s" %(i1,j,realValue,type(realValue)))
                         realValue = self.Real[-1]
-                        #print "*i=%s j=%s value=%s" %(i1,j,realValue)
+                        #print("*i=%s j=%s value=%s" %(i1,j,realValue))
                         endI = fields[i + 1]
-                        #print "*i=%s endI=%s j=%s value=%s" %(i1,endI,j,realValue)
+                        #print("*i=%s endI=%s j=%s value=%s" %(i1,endI,j,realValue))
                         for ii in xrange(i1, endI + 1):
                             self.GCj.append(j)
                             self.GCi.append(ii)
                             self.Real.append(realValue)
 
-                        #print "i = ",3+i
-                        #print 'field i=',fields[i]
+                        #print("i = ",3+i)
+                        #print('field i=',fields[i])
                         i += 1
                         isDoneReadingFloats = True
 

@@ -125,7 +125,7 @@ class IFace(FortranFile):
         data = f.read(4 * 3)  # A, B, C
         A, B, C = unpack('>3i', data)
 
-        print "A=%s B=%s C=%s" % (A, B, C)
+        print("A=%s B=%s C=%s" % (A, B, C))
         nints = C
         Format = '>%ii' % nints
         data = f.read(4 * nints)  # read nints ints
@@ -156,7 +156,7 @@ class IFace(FortranFile):
         #print factors(B)
         #print factors(C)
 
-        print self.print_section2(n, '>')
+        print(self.print_section2(n, '>'))
         pass
 
 

@@ -41,7 +41,7 @@ class PanairPatch(object):
         ..todo: is the normal defined correctly?
         ..todo: will this load into tecplot
         """
-        print "x.shape=%s" % str(self.x.shape)
+        print("x.shape=%s" % str(self.x.shape))
         if dim == 1:
             data = self.x
         elif dim == 2:

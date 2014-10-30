@@ -28,21 +28,21 @@ def split_model(model, nids, func=None):
         nidi += 1
 
     for eid, element in model.elements.iteritems():
-        #print dir(element)
+        #print(dir(element))
         e_nids = element.nodeIDs()
         e_nids2 = [nid for nid in e_nids if nid in nids]
         #e_nids2 = [nid if nid in nids else False for nid in e_nids]
 
         if element.type in ['CTRIA3', 'CQUAD4']:
-            #print "e_nids2 =", e_nids2
+            #print("e_nids2 =", e_nids2)
             if func(element):
                 for nid in e_nids2:
                     i = e_nids.index(nid)
 
                     nidi = nodes_map[nid]
-                    #print "    nid=%s -> nidi=%s" % (nid, nidi)
+                    #print("    nid=%s -> nidi=%s" % (nid, nidi))
                     node2 = model.nodes[nidi]
-                    #print node2
+                    #print(node2)
                     element.nodes[i] = node2
             else:
                 continue
@@ -61,10 +61,10 @@ def split_model(model, nids, func=None):
     for nid in lost_nids:
         del model.nodes[nid]
 
-    #print "all_nids", all_nids
-    #print "old_nids", old_nids
+    #print("all_nids", all_nids)
+    #print("old_nids", old_nids)
     #new_nids = all_nids.remove(old_nids.intersection(lost_nids) )
-    #print "new_nids", new_nids
+    #print("new_nids", new_nids)
     #nid0 = min(new_nids)
     #model.nodes[nid]._comment = 'updated...\n'
 
@@ -97,9 +97,9 @@ def update_nodes_cid(model, nids_group, cid):
     nodes = zeros((nnodes, 3), 'float64')
 
     for i, nid in enumerate(nids_group):
-        #print i, nid
+        #print(i, nid)
         node = model.nodes[nid]
-        #print dir(node)
+        #print(dir(node))
         if node.Cp() != 0:
             print("cp =" % node.Cp())
             xyz = node.PositionWRT(model, cid=cid)
@@ -307,7 +307,7 @@ if __name__ == '__main__':
     def centroid_at_7(element):
         c = element.Centroid()
         if c[1] == 7.0:  # update if the element centroid > 6
-            #print c
+            #print(c)
             return True  # upper group
         return False     # lower group
     func = centroid_at_7

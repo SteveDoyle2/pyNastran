@@ -25,7 +25,7 @@ class LoadCase(object):
                     if len(i):
                         self.loads[load_id].append(load[i])
                 else:
-                    print "load.type", load.type
+                    print("load.type %s" % load.type)
                     raise NotImplementedError(load.type)
 
     def add_reference(self, load):
