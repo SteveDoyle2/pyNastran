@@ -1,7 +1,7 @@
 import os
 #import sys
 #import copy
-from six.moves import zip
+from six.moves import zip, range
 from itertools import count
 
 from math import ceil, sin, cos, radians
@@ -136,7 +136,7 @@ class PanairGrid(object):
 
     def nPanels(self):
         totalNPanels = 0
-        for patchID in xrange(self.nPatches()):
+        for patchID in range(self.nPatches()):
             patch = self.get_patch(patchID)
             if patch.kt == 1:
                 totalNPanels += patch.nPanels()
@@ -245,7 +245,7 @@ class PanairGrid(object):
         reads the points
         """
         points = []
-        for n in xrange(nActual):
+        for n in range(nActual):
             #(x1,y1,z1) = lines[n][0 :10].strip(),lines[n][10:20].strip(),lines[n][20:30].strip()
             #print "x1=%s y1=%s z1=%s" %(x1,y1,z1)
             line = lines[n]
@@ -326,7 +326,7 @@ class PanairGrid(object):
         n = 4
         self.msg += '      kn,kt            %i          %i\n' % (nNetworks, kt)
 
-        for iNetwork in xrange(nNetworks):
+        for iNetwork in range(nNetworks):
             #self.log.debug("lines[* %s] = %s" % (n - 1, section[n - 1]))
             nm = int(float(section[n - 1][0:10]))
             nn = int(float(section[n - 1][10:20]))
@@ -341,7 +341,7 @@ class PanairGrid(object):
             nPartialLines = nm % 2
             nLines = nFullLines + nPartialLines
             #print "nFullLines=%s nPartialLines=%s nLines=%s" %(nFullLines,nPartialLines,nLines)
-            for j in xrange(nn):
+            for j in range(nn):
                 lines = section[n:n + nLines]
                 n += nLines
                 #print '\n'.join(lines)
@@ -396,7 +396,7 @@ class PanairGrid(object):
         n = 3
         self.msg += '      kn,kt            %i          %i\n' % (nNetworks, kt)
 
-        for iNetwork in xrange(nNetworks):
+        for iNetwork in range(nNetworks):
             #self.log.debug("lines[%s] = %s" % (n, section[n]))
             # 0-noDisplacement; 1-Specify
             nDisplacement = int(float(section[n][0:10]))
@@ -655,7 +655,7 @@ class PanairGrid(object):
         n = 3  # line number
         self.msg += '      kn,kt            %i          %i\n' % (nNetworks, kt)
         #self.log.debug('kt=%s cpNorm=%s matchw=%s' % (kt, cpNorm, matchw))
-        for iNetwork in xrange(nNetworks):
+        for iNetwork in range(nNetworks):
             #self.log.debug("lines[* %s] = %s" % (n, section[n]))
 
             trailedPanel = section[n][0:10].strip()

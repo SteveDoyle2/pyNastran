@@ -1,3 +1,4 @@
+from six.moves import range
 from numpy import array, zeros, arange, ravel, ones, cross
 from numpy.linalg import norm
 
@@ -53,8 +54,8 @@ class SHABP(ShabpOut):
                     xmax = max(xmax, XYZ[:, 0].max())
 
                 # TODO: can we vectorize this efficiently?
-                for irow in xrange(nrows-1):
-                    for jcol in xrange(ncols-1):
+                for irow in range(nrows-1):
+                    for jcol in range(ncols-1):
                         i1 = irow*ncols +jcol,
                         i2 = (irow+1)*ncols +(jcol  ),
                         i3 = (irow+1)*ncols +(jcol+1),
@@ -101,8 +102,8 @@ class SHABP(ShabpOut):
 
             A = 0.
             # TODO: can we vectorize this efficiently?
-            for irow in xrange(nrows-1):
-                for jcol in xrange(ncols-1):
+            for irow in range(nrows-1):
+                for jcol in range(ncols-1):
                     i1 = irow*ncols +jcol,
                     i2 = (irow+1)*ncols +(jcol  ),
                     i3 = (irow+1)*ncols +(jcol+1),
@@ -227,7 +228,7 @@ class SHABP(ShabpOut):
         npatches = len(self.X)
         npoints = 0
         nelements = 0
-        for ipatch in xrange(npatches):
+        for ipatch in range(npatches):
             X = self.X[ipatch]
             nrows, ncols = X.shape
             npoints += nrows * ncols
@@ -243,7 +244,7 @@ class SHABP(ShabpOut):
         impact = ones(nelements, dtype='int32')
         shadow = ones(nelements, dtype='int32')
 
-        for ipatch in xrange(npatches):
+        for ipatch in range(npatches):
             #print "---ipatch=%s---" % ipatch
             if ipatch not in self.patch_to_component_num:
                 comp_num = 0
@@ -267,8 +268,8 @@ class SHABP(ShabpOut):
                 #continue
             elements = []
 
-            for irow in xrange(nrows-1):
-                for jcol in xrange(ncols-1):
+            for irow in range(nrows-1):
+                for jcol in range(ncols-1):
                     element = [
                          irow*ncols + jcol,
                          (irow+1)*ncols + (jcol  ),
@@ -313,7 +314,7 @@ class SHABP(ShabpOut):
 
         i = 4
         self.shabp_cases = {}
-        for n in xrange(nalpha_beta):
+        for n in range(nalpha_beta):
             alpha_line = self.trailer[i].rstrip()
             #print "alpha_line =", alpha_line
             alpha = float(alpha_line[0:10])
@@ -329,7 +330,7 @@ class SHABP(ShabpOut):
         assert zero == '0', 'zero=%r; %s' %(zero, ncomponents_line)
 
         i += 1
-        for icomponent in xrange(ncomponents):
+        for icomponent in range(ncomponents):
             #print "lines[%i] = %s" % (i, self.trailer[i].rstrip())
             #print "lines[%i] = %s\n" % (i+1, self.trailer[i+1].rstrip())
 
@@ -374,7 +375,7 @@ class SHABP(ShabpOut):
             val2 = int(self.trailer[i][2:4])
             assert val2 == ncomponents, 'val2=%r ncomponents=%r' % (val2, ncomponents)
             i += 1
-            for v in xrange(val2):
+            for v in range(val2):
                 #print "  lines[%i] = %s" % (i+1, self.trailer[i].rstrip())
                 i += 1
         else:
@@ -387,7 +388,7 @@ class SHABP(ShabpOut):
         ncomps = int(comp_names_line.strip().split()[2])
         i += 1
 
-        for icomp in xrange(ncomps):
+        for icomp in range(ncomps):
             line = self.trailer[i]
             #print "line =", line.strip()
             npatches = int(line[:2])
@@ -395,7 +396,7 @@ class SHABP(ShabpOut):
 
             line = self.trailer[i+1] + ' '
             patches = []
-            for n in xrange(0, len(line), 2):
+            for n in range(0, len(line), 2):
                 #print "n =", n
                 ipatch = line[n:n+2].strip()
                 if len(ipatch) == 0:

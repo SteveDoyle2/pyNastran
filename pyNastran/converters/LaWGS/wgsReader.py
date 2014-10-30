@@ -1,3 +1,4 @@
+from six.moves import range
 import copy
 from math import sin, cos
 from numpy import array, radians, dot, zeros
@@ -40,8 +41,8 @@ class LaWGS_Panel(object):
 
         irow = 0
         #print "*****",group[-1]
-        for iline in xrange(self.nRows):
-            for row in xrange(nGroupLines):
+        for iline in range(self.nRows):
+            for row in range(nGroupLines):
                 line = group[irow]
                 #print " line = ",line
                 (x1, y1, z1, x2, y2, z2) = line.strip().split()
@@ -65,9 +66,9 @@ class LaWGS_Panel(object):
         n = 0
         #for n,point in enumerate(points):
         Points = []
-        for i in xrange(self.nRows):
+        for i in range(self.nRows):
             points2 = []
-            for j in xrange(self.nCols):
+            for j in range(self.nCols):
                 points2.append(points[n])
                 #jj = n%self.nCols
                 #ii = n/self.nCols
@@ -120,17 +121,17 @@ class LaWGS_Panel(object):
         points = self.points
         Points2 = copy.deepcopy(points)
         print("size(points) = (%s,%s)\n" % (len(points), len(points[0])))
-        for i in xrange(self.nRows):
+        for i in range(self.nRows):
             #points2 = []
-            for j in xrange(self.nCols):
+            for j in range(self.nCols):
                 Points2[i][j] = scale * (dot(rot, points[i][j]) + translate)
         self.Points = Points2
 
     def get_points(self):
         Points = []
-        for i in xrange(self.nRows):
+        for i in range(self.nRows):
             #points2 = []
-            for j in xrange(self.nCols):
+            for j in range(self.nCols):
                 Points.append(self.Points[i][j])
         return Points, len(Points)
 
@@ -139,8 +140,8 @@ class LaWGS_Panel(object):
         #print "name=%s n=%s nout=%s" %(self.name,n)
         elements = []
 
-        for i in xrange(self.nRows - 1):
-            for j in xrange(self.nCols - 1):
+        for i in range(self.nRows - 1):
+            for j in range(self.nCols - 1):
                 elements.append(self.getElement(pointI, i, j))
         assert n == len(elements)
         return elements, n
@@ -156,9 +157,9 @@ class LaWGS_Panel(object):
         X = []
         Y = []
         Z = []
-        for i in xrange(self.nRows):
+        for i in range(self.nRows):
             #points2 = []
-            for j in xrange(self.nCols):
+            for j in range(self.nCols):
                 (x, y, z) = self.Points[i][j]
                 X.append(x)
                 Y.append(y)

@@ -1,3 +1,4 @@
+from six.moves import range
 import vtk
 from vtk import vtkQuad
 from pyNastran.converters.plot3d.plot3d import Plot3d
@@ -50,7 +51,7 @@ class Plot3d_io(object):
         elem = vtkQuad()
         quad_type = elem.GetCellType()
         #nblocks = len(model.x)
-        for iblock in xrange(nblocks):
+        for iblock in range(nblocks):
             print("iblock =", iblock)
             nid_base = nid
             x = model.x[iblock]
@@ -60,17 +61,17 @@ class Plot3d_io(object):
             print(x)
             (ni, nj, nk) = x.shape
             assert nk == 1
-            for k in xrange(nk):
-                for j in xrange(nj):
-                    for i in xrange(ni):
+            for k in range(nk):
+                for j in range(nj):
+                    for i in range(ni):
                         points.InsertPoint(nid, x[i, j, 0],
                                                 y[i, j, 0],
                                                 z[i, j, 0])
                         nid += 1
 
-            for j in xrange(nj - 1):
+            for j in range(nj - 1):
                 jstart = nid_base + j * ni
-                for i in xrange(ni - 1):
+                for i in range(ni - 1):
                     elem = vtkQuad()
 
                     p1 = jstart + (i)
