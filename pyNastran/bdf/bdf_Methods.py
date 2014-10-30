@@ -140,7 +140,7 @@ class BDFMethods(BDFMethodsDeprecated):
             mass, cg, I = self._apply_mass_symmetry(sym_axis, mass, cg, I)
             return mass, None, None
 
-        num_cpus = 4
+        #num_cpus = 1
         if num_cpus > 1:
             # doesn't support calculate_cg = False
             # must use num_cpus = 1
@@ -308,6 +308,7 @@ class BDFMethods(BDFMethodsDeprecated):
 
         mass = zeros((nelements), 'float64')
         xyz = zeros((nelements, 3), 'float64')
+        j = 0
         for j, return_values in enumerate(result):
             #self.log.info("%.3f %% Processed" % (j*100./nelements))
             mass[j] = return_values[0]
