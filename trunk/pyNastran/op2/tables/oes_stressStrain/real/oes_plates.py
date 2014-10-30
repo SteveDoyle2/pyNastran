@@ -2,7 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types
-from six.moves import zip
+from six.moves import zip, range
 from itertools import count
 from numpy import zeros, searchsorted, ravel
 
@@ -210,7 +210,7 @@ class RealPlateArray(OES_Object):
         nids = self.element_node[:, 1]
 
         cen_word = 'CEN/%i' % nnodes
-        for itime in xrange(ntimes):
+        for itime in range(ntimes):
             dt = self.times[itime]  # TODO: rename this...
             if self.nonlinear_factor is not None:
                 dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
@@ -1043,7 +1043,7 @@ class RealPlateStress(StressObject):
         k.remove(cen)
         k.sort()
         for nid in [cen] + k:
-            for iLayer in xrange(len(self.oxx[eid][nid])):
+            for iLayer in range(len(self.oxx[eid][nid])):
                 fd = self.fiberCurvature[eid][nid][iLayer]
                 oxx = self.oxx[eid][nid][iLayer]
                 oyy = self.oyy[eid][nid][iLayer]
@@ -1072,7 +1072,7 @@ class RealPlateStress(StressObject):
         k.remove(cen)
         k.sort()
         for nid in [cen] + k:
-            for iLayer in xrange(len(self.oxx[dt][eid][nid])):
+            for iLayer in range(len(self.oxx[dt][eid][nid])):
                 fd = self.fiberCurvature[eid][nid][iLayer]
                 oxx = self.oxx[dt][eid][nid][iLayer]
                 oyy = self.oyy[dt][eid][nid][iLayer]
@@ -1098,7 +1098,7 @@ class RealPlateStress(StressObject):
         msg = ['']
         oxxNodes = self.oxx[eid].keys()
         for nid in sorted(oxxNodes):
-            for iLayer in xrange(len(self.oxx[eid][nid])):
+            for iLayer in range(len(self.oxx[eid][nid])):
                 fd = self.fiberCurvature[eid][nid][iLayer]
                 oxx = self.oxx[eid][nid][iLayer]
                 oyy = self.oyy[eid][nid][iLayer]
@@ -1120,7 +1120,7 @@ class RealPlateStress(StressObject):
         msg = ['']
         oxxNodes = self.oxx[dt][eid].keys()
         for nid in sorted(oxxNodes):
-            for iLayer in xrange(len(self.oxx[dt][eid][nid])):
+            for iLayer in range(len(self.oxx[dt][eid][nid])):
                 fd = self.fiberCurvature[eid][nid][iLayer]
                 oxx = self.oxx[dt][eid][nid][iLayer]
                 oyy = self.oyy[dt][eid][nid][iLayer]
@@ -1805,7 +1805,7 @@ class RealPlateStrain(StrainObject):
         k.remove(cen)
         k.sort()
         for nid in [cen] + k:
-            for iLayer in xrange(len(self.exx[eid][nid])):
+            for iLayer in range(len(self.exx[eid][nid])):
                 fd = self.fiberCurvature[eid][nid][iLayer]
                 exx = self.exx[eid][nid][iLayer]
                 eyy = self.eyy[eid][nid][iLayer]
@@ -1834,7 +1834,7 @@ class RealPlateStrain(StrainObject):
         k.remove(cen)
         k.sort()
         for nid in [cen] + k:
-            for iLayer in xrange(len(self.exx[dt][eid][nid])):
+            for iLayer in range(len(self.exx[dt][eid][nid])):
                 fd = self.fiberCurvature[eid][nid][iLayer]
                 exx = self.exx[dt][eid][nid][iLayer]
                 eyy = self.eyy[dt][eid][nid][iLayer]
@@ -1861,7 +1861,7 @@ class RealPlateStrain(StrainObject):
         msg = ['']
         k = self.exx[eid].keys()
         for nid in sorted(k):
-            for iLayer in xrange(len(self.exx[eid][nid])):
+            for iLayer in range(len(self.exx[eid][nid])):
                 fd = self.fiberCurvature[eid][nid][iLayer]
                 exx = self.exx[eid][nid][iLayer]
                 eyy = self.eyy[eid][nid][iLayer]
@@ -1884,7 +1884,7 @@ class RealPlateStrain(StrainObject):
         exxNodes = self.exx[dt][eid]
         #k = exxNodes.keys()
         for nid in sorted(exxNodes):
-            for iLayer in xrange(len(self.exx[dt][eid][nid])):
+            for iLayer in range(len(self.exx[dt][eid][nid])):
                 fd = self.fiberCurvature[eid][nid][iLayer]
                 exx = self.exx[dt][eid][nid][iLayer]
                 eyy = self.eyy[dt][eid][nid][iLayer]

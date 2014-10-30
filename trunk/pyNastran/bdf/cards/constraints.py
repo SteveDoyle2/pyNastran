@@ -19,7 +19,7 @@ The ConstraintObject contain multiple constraints.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #from math import ceil
-from six.moves import zip
+from six.moves import zip, range
 from itertools import count
 
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
@@ -107,19 +107,19 @@ class ConstraintObject(object):
         constraints3 = self.remapSPCs(constraints2)
 
     # def remapSPCs(self, constraints):
-    #     """not really done yet"""
-    #     # takes the MPCADDs that reference MPCADDs and makes them
-    #     # reference MPCs
-    #     constraints2 = {}
-    #     key = constraints.keys()
-    #     nkeys = len(key) - 1
-    #     for i in xrange(nkeys):
-    #         key = keys[i]
-    #         constraints2[key]
-    #         for j in xrange(nkeys):
-    #             if i > j:
-    #                 constraints2[key].append(constraints[key])
-    #     return constraints2
+         #"""not really done yet"""
+         ## takes the MPCADDs that reference MPCADDs and makes them
+         ## reference MPCs
+         #constraints2 = {}
+         #key = constraints.keys()
+         #nkeys = len(key) - 1
+         #for i in range(nkeys):
+             #key = keys[i]
+             #constraints2[key]
+             #for j in range(nkeys):
+                 #if i > j:
+                     #constraints2[key].append(constraints[key])
+         #return constraints2
 
     def ConstraintID(self):
         if isinstance(self.conid, int):
@@ -186,7 +186,7 @@ class SUPORT1(Constraint):
             assert len(card) > 2
             nterms = int((nfields - 1.) / 2.)
             n = 1
-            for i in xrange(nterms):
+            for i in range(nterms):
                 nstart = 2 + 2 * i
                 ID = integer(card, nstart, 'ID%s' % n)
                 C = components_or_blank(card, nstart + 1, 'component%s' % n, '0')
@@ -233,7 +233,7 @@ class SUPORT(Constraint):
             assert len(card) > 1, card
             nterms = int(nfields / 2.)
             n = 1
-            for i in xrange(nterms):
+            for i in range(nterms):
                 nstart = 1 + 2 * i
                 ID = integer(card, nstart, 'ID%s' % n)
                 C = components_or_blank(card, nstart + 1, 'component%s' % n, '0')
@@ -242,7 +242,7 @@ class SUPORT(Constraint):
                 n += 1
         else:
             fields = data
-            for i in xrange(0, len(fields), 2):
+            for i in range(0, len(fields), 2):
                 self.IDs.append(fields[i])
                 self.Cs.append(fields[i + 1])
         assert len(self.IDs) > 0
@@ -282,7 +282,7 @@ class MPC(Constraint):
             nfields = len(fields)
 
             i = 1
-            for ifield in xrange(2, nfields, 8):
+            for ifield in range(2, nfields, 8):
                 grid = integer(card, ifield, 'G%i' % i)
                 component = components_or_blank(card, ifield + 1, 'constraint%i' % i, 0)  # scalar point
                 if i == 1:
@@ -546,7 +546,7 @@ class SPC1(Constraint):
         self.nodes[i] = node
 
     def rawFields(self):  # SPC1
-        #test = [i for i in xrange(self.nodes[0], self.nodes[-1]+1)]
+        #test = [i for i in range(self.nodes[0], self.nodes[-1]+1)]
         #print("self.nodes = ",self.nodes)
         #print("test       = ",test)
         #if self.nodes == test:

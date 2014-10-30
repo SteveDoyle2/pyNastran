@@ -1,4 +1,4 @@
-from six.moves import zip
+from six.moves import zip, range
 from numpy import dot, ndarray, zeros
 
 def partition_sparse(Is, Js, Vs):
@@ -14,7 +14,7 @@ def partition_sparse(Is, Js, Vs):
 
 
 def getDOF_Set(nAll, dofs):
-    dofsAll = set([i for i in xrange(nAll)])
+    dofsAll = set([i for i in range(nAll)])
     dofs = list(dofsAll.difference(set(dofs)))
     return dofs
 

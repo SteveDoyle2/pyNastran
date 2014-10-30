@@ -1,4 +1,5 @@
 #pylint: disable=C0301,C0111,C0103
+from six.moves import range
 from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RealRodStress, RealRodStrain
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStress, RealBarStrain
 #from pyNastran.op2.tables.oes_stressStrain.real.oes_beams   import RealBeamStress
@@ -659,7 +660,7 @@ class OES(object):
                 line = self.infile.readline()  # blank line
                 self.i += 3
 
-            for i in xrange(4):
+            for i in range(4):
                 line = self.infile.readline()[1:].strip().split()
                 data_types = [int, float, float, float, float,
                                    float, float, float, float]

@@ -12,8 +12,7 @@ All shell properties are ShellProperty and Property objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-#import sys
-from six.moves import zip
+from six.moves import zip, range
 from numpy import array
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -63,7 +62,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         :param self:  the PCOMP/PCOMPG object
         :param model: a BDF object
         """
-        for iply in xrange(len(self.plies)):
+        for iply in range(len(self.plies)):
             mid = self.plies[iply][0]
             msg = ' which is required by PLPCOMP/G pid=%s iply=%s' % (self.pid, iply)
             self.plies[iply][0] = model.Material(mid, msg)  # mid
@@ -139,7 +138,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         nplies = len(self.plies)
         if iply == 'all':  # get all layers
             t = 0.
-            for iply in xrange(nplies):
+            for iply in range(nplies):
                 t += self.get_thickness(iply)
 
             if self.isSymmetrical():
@@ -198,7 +197,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         :returns mids: the material IDs
         """
         mids = []
-        for iply in xrange(self.nPlies()):
+        for iply in range(self.nPlies()):
             mids.append(self.Mid(iply))
             #theta = self.get_theta(iply)
             #sout = self.get_sout(iply)
@@ -380,7 +379,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
             # where nsmi has two methods
             massPerArea = 0.
             nplies = len(self.plies)
-            for iply in xrange(nplies):
+            for iply in range(nplies):
                 #rho = self.get_density(iply)
                 rho = rhos[iply]
                 t = self.plies[iply][1]
@@ -520,7 +519,7 @@ class PCOMP(CompositeShellProperty):
             iply = 1
 
             # supports single ply per line
-            for i in xrange(9, 9 + nplies * 4, 4):
+            for i in range(9, 9 + nplies * 4, 4):
                 actual = card.fields(i, i + 4)
                 mid = integer_or_blank(card, i, 'mid', midLast)
                 t = double_or_blank(card, i + 1, 't', tLast)

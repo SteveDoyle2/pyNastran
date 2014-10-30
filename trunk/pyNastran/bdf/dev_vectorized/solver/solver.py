@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=E0602,C0103
 from __future__ import print_function
+from six.mvoes import range
 import os
 import sys
 from datetime import date
@@ -276,7 +277,7 @@ class Solver(F06, OP2):
 
                 if value in [1, 'YES']:
                     # figure out what are the DOFs that are removed
-                    ilist = list(set(xrange(len(dofs))).difference(set(faileds)))
+                    ilist = list(set(range(len(dofs))).difference(set(faileds)))
                     ilist.sort()
 
                     # remove the DOFs and solve
@@ -484,7 +485,7 @@ class Solver(F06, OP2):
             if cd == 0:
                 raise NotImplementedError('Set cd=0; cd=%s is not supported.')
 
-        for ni in xrange(model.grid.n):  # GRIDs
+        for ni in range(model.grid.n):  # GRIDs
             nid = model.grid.node_id[ni]
             ps = model.grid.ps[ni]
 
@@ -589,7 +590,7 @@ class Solver(F06, OP2):
         self.build_dof_sets()
         Lambda, Ua = self.solve_sol_103(Kgg, Mgg)
 
-        dofsAll = set([i for i in xrange(n)])
+        dofsAll = set([i for i in range(n)])
         dofsA = remove_dofs(dofsAll, self.iUs)
         dofsA.sort()
         U = zeros(n, 'float64')
@@ -653,7 +654,7 @@ class Solver(F06, OP2):
             self.log.info("Ua =\n%s" % Ua)
             self.log.info("Us =\n%s" % self.Us)
 
-            dofsAll = set([i for i in xrange(n)])
+            dofsAll = set([i for i in range(n)])
             #dofsA = remove_dofs(remove_dofs(dofsAll, self.iUs), self.iUm))
             dofsA = remove_dofs(dofsAll, self.iUs)
             dofsA.sort()
@@ -1310,7 +1311,7 @@ class Solver(F06, OP2):
 
         i = 0
         #(nodeID, gridType, t1, t2, t3, r1, r2, r3) = line
-        for ni in xrange(model.grid.n):
+        for ni in range(model.grid.n):
             nid = model.grid.node_id[ni]
             line = [nid, 'G']
             xyz = U[i:i + 6]  # 1,2,3,4,5,6
@@ -1633,7 +1634,7 @@ class Solver(F06, OP2):
         self.log.info('start calculating xyz_cid0')
         self.positions = {}
         index0s = {}
-        for i in xrange(model.grid.n):
+        for i in range(model.grid.n):
             nid = model.grid.node_id[i]
             self.positions[nid] = model.grid.xyz[i]
             index0s[nid] = 6 * i
@@ -1642,33 +1643,33 @@ class Solver(F06, OP2):
         # spring
         if model.elements_spring.celas1.n:
             self.log.info('start calculating Kcelas1')
-            for i in xrange(model.elements_spring.celas1.n):
+            for i in range(model.elements_spring.celas1.n):
                 K, dofs, nijv = model.elements_spring.celas1.get_stiffness_matrix(i, model, self.positions, index0s)
                 self.log.info("Kcelas1 =\n%s" % K)
                 self.add_stiffness(K, dofs, nijv)
 
         if model.elements_spring.celas2.n:
             self.log.info('start calculating Kcelas2')
-            for i in xrange(model.elements_spring.celas2.n):
+            for i in range(model.elements_spring.celas2.n):
                 K, dofs, nijv = model.elements_spring.celas2.get_stiffness_matrix(i, model, self.positions, index0s)
                 self.add_stiffness(K, dofs, nijv)
 
         if model.elements_spring.celas3.n:
             self.log.info('start calculating Kcelas3')
-            for i in xrange(model.elements_spring.celas3.n):
+            for i in range(model.elements_spring.celas3.n):
                 K, dofs, nijv = model.elements_spring.celas3.get_stiffness_matrix(i, model, self.positions, index0s)
                 self.add_stiffness(K, dofs, nijv)
 
         if model.elements_spring.celas4.n:
             self.log.info('start calculating Kcelas4')
-            for i in xrange(model.elements_spring.celas4.n):
+            for i in range(model.elements_spring.celas4.n):
                 K, dofs, nijv = model.elements_spring.celas4.get_stiffness_matrix(i, model, self.positions, index0s)
                 self.add_stiffness(K, dofs, nijv)
 
         # conrod
         if model.conrod.n:
             self.log.info('start calculating Kconrod')
-            for i in xrange(model.conrod.n):
+            for i in range(model.conrod.n):
                 self.conrodStress = {}
                 K, dofs, nijv = model.conrod.get_stiffness_matrix(i, model, self.positions, index0s)
                 self.add_stiffness(K, dofs, nijv)
@@ -1676,7 +1677,7 @@ class Solver(F06, OP2):
         # crod
         if model.crod.n:
             self.log.info('start calculating Kcrod')
-            for i in xrange(model.crod.n):
+            for i in range(model.crod.n):
                 K, dofs, nijv = model.crod.get_stiffness_matrix(i, model, self.positions, index0s)
                 self.add_stiffness(K, dofs, nijv)
 
@@ -1686,12 +1687,12 @@ class Solver(F06, OP2):
 
         # shells
         if model.elements_shell.ctria3.n:
-            for i in xrange(model.elements_shell.ctria3.n):
+            for i in range(model.elements_shell.ctria3.n):
                 K, dofs, nijv = model.elements_shell.ctria3.get_stiffness_matrix(i, model, self.positions, index0s)
                 self.add_stiffness(K, dofs, nijv)
 
         if model.elements_shell.cquad4.n:
-            for i in xrange(model.elements_shell.cquad4.n):
+            for i in range(model.elements_shell.cquad4.n):
                 K, dofs, nijv = model.elements_shell.cquad4.get_stiffness_matrix(i, model, self.positions, index0s)
                 self.add_stiffness(K, dofs, nijv)
 
@@ -1717,14 +1718,14 @@ class Solver(F06, OP2):
 
         self.positions = {}
         index0s = {}
-        for i in xrange(model.grid.n):
+        for i in range(model.grid.n):
             nid = model.grid.node_id[i]
             self.positions[nid] = model.grid.xyz[i]
             index0s[nid] = 6 * i
 
         # mass
         conm1 = model.mass.conm1
-        for i in xrange(conm1.n):
+        for i in range(conm1.n):
             M = conm1.get_mass_matrix(i)
             i0 = index[conm1.node_id[i]]
             coord_id = conm1.coord_id[i]
@@ -1734,44 +1735,44 @@ class Solver(F06, OP2):
             for ii1, i01 in arange(i0, i0+6):
                 for ii2, i02 in arange(i0, i0+6):
                     self.Mgg_sparse[i01, i02] = M[ii1, ii2]
-        for i in xrange(model.mass.conm2.n):
+        for i in range(model.mass.conm2.n):
             M, dofs, nijv = model.conm1.get_mass_matrix(i, model, self.positions, index0s)
             self.add_mass(M, dofs, nijv)
 
         if 0:
             # cmass
-            for i in xrange(model.cmass1.n):
+            for i in range(model.cmass1.n):
                 M, dofs, nijv = model.cmass1.get_mass_matrix(i, model, self.positions, index0s)
                 self.add_mass(M, dofs, nijv)
-            for i in xrange(model.cmass2.n):
+            for i in range(model.cmass2.n):
                 M, dofs, nijv = model.cmass2.get_mass_matrix(i, model, self.positions, index0s)
                 self.add_mass(M, dofs, nijv)
-            for i in xrange(model.cmass3.n):
+            for i in range(model.cmass3.n):
                 M, dofs, nijv = model.cmass3.get_mass_matrix(i, model, self.positions, index0s)
                 self.add_mass(M, dofs, nijv)
-            for i in xrange(model.cmass4.n):
+            for i in range(model.cmass4.n):
                 M, dofs, nijv = model.cmass4.get_mass_matrix(i, model, self.positions, index0s)
                 self.add_mass(M, dofs, nijv)
 
         # conrod
-        for i in xrange(model.conrod.n):
+        for i in range(model.conrod.n):
             M, dofs, nijv = model.conrod.get_mass_matrix(i, model, self.positions, index0s)
             self.add_mass(M, dofs, nijv)
         # crod
-        for i in xrange(model.crod.n):
+        for i in range(model.crod.n):
             M, dofs, nijv = model.crod.get_mass_matrix(i, model, self.positions, index0s)
             self.add_mass(M, dofs, nijv)
         if 0:
             # ctube
-            for i in xrange(model.ctube.n):
+            for i in range(model.ctube.n):
                 M, dofs, nijv = model.ctube.get_mass_matrix(i, model, self.positions, index0s)
                 self.add_mass(M, dofs, nijv)
 
         # shells
-        for i in xrange(model.elements_shell.ctria3.n):
+        for i in range(model.elements_shell.ctria3.n):
             M, dofs, nijv = model.elements_shell.ctria3.get_mass_matrix(i, model, self.positions, index0s)
             self.add_mass(M, dofs, nijv)
-        for i in xrange(model.elements_shell.cquad4.n):
+        for i in range(model.elements_shell.cquad4.n):
             M, dofs, nijv = model.elements_shell.cquad4.get_mass_matrix(i, model, self.positions, index0s)
             self.add_mass(M, dofs, nijv)
 
@@ -1779,13 +1780,13 @@ class Solver(F06, OP2):
         nsolids = model.elements_solid.n
         if nsolids:
             solid = model.elements_solid
-            for i in xrange(solid.ctetra4.n):
+            for i in range(solid.ctetra4.n):
                 M, dofs, nijv = solid.ctetra4.get_mass_matrix(i, model, self.positions, index0s)
                 self.add_mass(M, dofs, nijv)
-            for i in xrange(solid.cpenta6.n):
+            for i in range(solid.cpenta6.n):
                 M, dofs, nijv = solid.ctetra4.get_mass_matrix(i, model, self.positions, index0s)
                 self.add_mass(M, dofs, nijv)
-            for i in xrange(solid.chexa8.n):
+            for i in range(solid.chexa8.n):
                 M, dofs, nijv = solid.ctetra4.get_mass_matrix(i, model, self.positions, index0s)
                 self.add_mass(M, dofs, nijv)
         # ctetra10
@@ -1951,7 +1952,7 @@ class Solver(F06, OP2):
                 else:
                     raise NotImplementedError(load.type)
 
-                for i in xrange(load.n):
+                for i in range(load.n):
                     nid = load.node_id[i]
                     x, y, z = load.mag[i] * load.xyz[i]
 

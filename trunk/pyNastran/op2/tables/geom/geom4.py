@@ -1,5 +1,5 @@
 #pylint: disable=C0301,C0111,C0103,W0613
-from six.moves import StringIO
+from six.moves import StringIO, range
 from struct import unpack, Struct
 
 #from pyNastran.bdf.cards.constraints import SPC,SPCADD
@@ -210,7 +210,7 @@ class GEOM4(object):
         #self.skippedCardsFile.write('skipping SPC in GEOM4\n')
         n = 0
         nEntries = len(data) // 20  # 5*4
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 20]
             (sid, ID, c, xxx, dx) = unpack(b'iiiif', eData)
 
@@ -259,7 +259,7 @@ class GEOM4(object):
         n = 0
         s = Struct(b'4if')
         nEntries = len(data) // 20  # 5*4
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 20]
             (sid, ID, c, xxx, dx) = s.unpack(eData)
 
@@ -311,7 +311,7 @@ class GEOM4(object):
         n = 0
         nEntries = len(data) // 8  # 2*4
         s = Struct(b'2i')
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             self.add_suport(SUPORT(None, list(s.unpack(data[n:n + 8])))) # extracts [sid, c]
             n += 8
         return n

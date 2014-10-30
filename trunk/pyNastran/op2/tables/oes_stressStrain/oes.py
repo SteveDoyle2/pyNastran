@@ -4,6 +4,7 @@ Contains the OES class that is used to read stress/strain data
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six.moves import range
 from struct import Struct
 
 from pyNastran.op2.op2_common import OP2Common
@@ -342,7 +343,7 @@ class OES(OP2Common):
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
                 s = Struct(b'i4f')
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
                     (eid_device, axial, axial_margin, torsion, torsion_margin) = out
@@ -363,7 +364,7 @@ class OES(OP2Common):
                     return nelements * self.num_wide * 4
 
                 s = Struct(b'i4f')
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n + ntotal]
                     (eid_device, axialReal, axial_imag, torsion_real, torsionImag) = s.unpack(edata)
                     eid = (eid_device - self.device_code) // 10
@@ -383,7 +384,7 @@ class OES(OP2Common):
                 #ntotal = 32
                 #s = Struct(b'i')
                 #nelements = len(data) // ntotal
-                #for i in xrange(nelements):
+                #for i in range(nelements):
                     #edata = data[n:n + 4]
                     #eid_device, = s.unpack(edata)
                     #eid = (eid_device - self.device_code) // 10
@@ -428,7 +429,7 @@ class OES(OP2Common):
                 s2 = Struct(b'i9f')
 
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+n1]
                     n += n1
 
@@ -441,7 +442,7 @@ class OES(OP2Common):
                     #(grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
                     self.obj.add_new_eid(dt, eid, out[1:])
 
-                    for inode in xrange(nnodes):
+                    for inode in range(nnodes):
                         edata = data[n:n+n2]
                         n += n2
                         out = s2.unpack(edata)
@@ -467,7 +468,7 @@ class OES(OP2Common):
                 s2 = Struct(b'i9f')
 
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+n1]
                     n += n1
 
@@ -481,7 +482,7 @@ class OES(OP2Common):
                     #           exci, exdi, exei, exfi) = out
                     #self.obj.add_new_eid(dt, eid, out[1:])
 
-                    for inode in xrange(nnodes):
+                    for inode in range(nnodes):
                         edata = data[n:n+n2]
                         n += n2
                         out = s2.unpack(edata)
@@ -534,7 +535,7 @@ class OES(OP2Common):
                     return nelements * self.num_wide * 4
 
                 s = Struct(b'i3f')
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = s.unpack(edata)  # num_wide=5
                     if self.debug4():
@@ -556,7 +557,7 @@ class OES(OP2Common):
                     return nelements * self.num_wide * 4
 
                 s = Struct(b'i4f')
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = s.unpack(edata)  # num_wide=5
                     if self.debug4():
@@ -597,7 +598,7 @@ class OES(OP2Common):
                 ntotal = 8 # 2 * 4
                 nelements = len(data) // ntotal
                 s = Struct(b'if')
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
                     (eid_device, ox) = out
@@ -617,7 +618,7 @@ class OES(OP2Common):
                 ntotal = 12
                 s = Struct(b'i2f')
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n + ntotal]
                     (eid_device, axial_real, axial_imag) = s.unpack(edata)
                     eid = (eid_device - self.device_code) // 10
@@ -661,7 +662,7 @@ class OES(OP2Common):
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
                 s = Struct(b'i15f')
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
                     (eid_device, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
@@ -683,7 +684,7 @@ class OES(OP2Common):
                 s = Struct(b'i18f')
                 ntotal = 76
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+ntotal]
                     n += ntotal
                     out = s.unpack(edata)
@@ -805,7 +806,7 @@ class OES(OP2Common):
 
                 struct1 = Struct(b'ii4si')
                 struct2 = Struct(b'i20f')
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+16]
                     out = struct1.unpack(edata)
                     (eid_device, cid, abcd, nnodes) = out
@@ -820,7 +821,7 @@ class OES(OP2Common):
                     assert nnodes < 21, 'print_block(data[n:n+16])'  #self.print_block(data[n:n+16])
 
                     n += 16
-                    for inode in xrange(nnodes_expected):  # nodes pts, +1 for centroid (???)
+                    for inode in range(nnodes_expected):  # nodes pts, +1 for centroid (???)
                         out = struct2.unpack(data[n:n + 84]) # 4*21 = 84
                         if self.debug4():
                             self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
@@ -872,7 +873,7 @@ class OES(OP2Common):
                 #print "self.obj.data.shape =", self.obj.data.shape
                 s1 = Struct(b'2i4si')
                 s2 = Struct(b'i12f')
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+16]
                     n += 16
                     out = s1.unpack(edata)
@@ -884,7 +885,7 @@ class OES(OP2Common):
 
                     #element_name = self.element_name + str(nodef)  # this is correct, but has problems...
                     self.obj.add_eid_sort1(self.element_type, element_name, dt, eid, cid, ctype, nodef)
-                    for inode in xrange(nnodes_expected):
+                    for inode in range(nnodes_expected):
                         edata = data[n:n+52]
                         n += 52
                         out = s2.unpack(edata)
@@ -938,7 +939,7 @@ class OES(OP2Common):
                 ntotal = 68  # 4*17
                 s = Struct(b'i16f')
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
 
@@ -966,7 +967,7 @@ class OES(OP2Common):
 
                 ntotal = 4 * (15 * (nnodes + 1))
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+60]  # 4*15=60
                     n += 60
                     out = s1.unpack(edata)  # 15
@@ -995,7 +996,7 @@ class OES(OP2Common):
                     self.obj.add_new_eid('CQUAD4', dt, eid, 'CEN/4', fd1, sx1, sy1, txy1)
                     self.obj.add(dt, eid, 'CEN/4', fd2, sx2, sy2, txy2)
 
-                    for node_id in xrange(nnodes):  # nodes pts
+                    for node_id in range(nnodes):  # nodes pts
                         edata = data[n:n+60]  # 4*15=60
                         n += 60
                         out = s2.unpack(edata)
@@ -1082,7 +1083,7 @@ class OES(OP2Common):
                     self.binary_debug.write('  #                        fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,]\n')
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = s.unpack(edata)
 
@@ -1111,7 +1112,7 @@ class OES(OP2Common):
                     return nelements * self.num_wide * 4
 
                 s = Struct(b'i14f')
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = s.unpack(edata)
                     (eid_device, fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
@@ -1272,7 +1273,7 @@ class OES(OP2Common):
                     self.binary_debug.write('  #                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
                     self.binary_debug.write('  nelements=%i; nnodes=%i # +1 centroid\n' % (nelements, nnodes))
 
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+76]
 
                     out = cs.unpack(edata)  # len=17*4
@@ -1325,7 +1326,7 @@ class OES(OP2Common):
 
                 s1 = Struct(b'ii')  # 2
                 s2 = Struct(b'i14f') # 15
-                for i in xrange(nelements):
+                for i in range(nelements):
                     (eid_device, _) = s1.unpack(data[n:n+8])
                     n += 8
 
@@ -1358,7 +1359,7 @@ class OES(OP2Common):
                     self.obj.add_new_eid(etype, dt, eid, gridC, fd1, sx1, sy1, txy1)
                     self.obj.add(dt, eid, gridC, fd2, sx2, sy2, txy2)
 
-                    for node_id in xrange(nnodes):  # nodes pts
+                    for node_id in range(nnodes):  # nodes pts
                         edata = data[n:n+60]  # 4*15=60
                         n += 60
                         out = s2.unpack(edata)
@@ -1407,7 +1408,7 @@ class OES(OP2Common):
                 ntotal = 52  # 4*13
                 s = Struct(b'i12f')  # 1+12=13
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = s.unpack(edata)
                     if self.debug4():
@@ -1431,7 +1432,7 @@ class OES(OP2Common):
                 ntotal = 100  # 4*25
                 s = Struct(b'i24f') # 1+24=25
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = s.unpack(edata)
                     if self.debug4():
@@ -1539,7 +1540,7 @@ class OES(OP2Common):
                 if hasattr(self, 'eid_old'):
                     eid_old = self.eid_old
 
-                for i in xrange(nelements):
+                for i in range(nelements):
                     #if i % 10000 == 0:
                         #print 'i = ', i
                     edata = data[n:n+44]  # 4*11
@@ -1584,7 +1585,7 @@ class OES(OP2Common):
                 s = Struct(b'i')
                 s2 = Struct(b'8si3fi4s')
                 s3 = Struct(b'8si4f4s')
-                for i in xrange(nelements):
+                for i in range(nelements):
                     #out = s.unpack(data[n:n + ntotal])
                     eid_device, = s.unpack(data[n:n+4])
                     #t, = s.unpack(data[n:n+4])
@@ -1633,7 +1634,7 @@ class OES(OP2Common):
 
                 s1 = Struct(b'2i7f')  # 36
                 s2 = Struct(b'i7f')
-                for i in xrange(nelements):
+                for i in range(nelements):
                     out = s1.unpack(data[n:n + 36])
                     (eid_device, loc, rs, azs, As, ss, maxp, tmax, octs) = out
                     if self.debug4():
@@ -1642,7 +1643,7 @@ class OES(OP2Common):
                     #print "eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" % (eid,loc,rs,azs,As,ss,maxp,tmax,octs)
                     self.obj.add_new_eid(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
                     n += 36
-                    for i in xrange(3):
+                    for i in range(3):
                         out = s2.unpack(data[n:n + 32])
                         (loc, rs, azs, As, ss, maxp, tmax, octs) = out
                         if self.debug4():
@@ -1668,7 +1669,7 @@ class OES(OP2Common):
                 assert num_wide == self.num_wide, num_wide
                 nelements = len(data) // ntotal  # (1+8*4)*4 = 33*4 = 132
 
-                for i in xrange(nelements):
+                for i in range(nelements):
                     out = s1.unpack(data[n:n + 40])
                     (eid_device, loc, rsr, rsi, azsr, azsi, Asr, Asi, ssr, ssi) = out
                     eid = (eid_device - self.device_code) // 10
@@ -1688,7 +1689,7 @@ class OES(OP2Common):
                     #self.obj.add_new_eid(dt, eid, loc, rs, azs, As, ss)
 
                     n += 40
-                    for i in xrange(3):
+                    for i in range(3):
                         out = s2.unpack(data[n:n + 36])
                         (loc, rsr, rsi, azsr, azsi, Asr, Asi, ssr, ssi) = out
                         if self.debug4():
@@ -1729,7 +1730,7 @@ class OES(OP2Common):
 
                 nelements = len(data) // ntotal
                 s = Struct(b'i6f')
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = s.unpack(edata)  # num_wide=7
                     if self.debug4():
@@ -1749,7 +1750,7 @@ class OES(OP2Common):
 
                 nelements = len(data) // ntotal
                 s = Struct(b'i12f')
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = s.unpack(edata)  # num_wide=7
                     if self.debug4():
@@ -1798,7 +1799,7 @@ class OES(OP2Common):
                 ntotal = 32  # 4*8
                 s = Struct(b'i6fi')
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = s.unpack(edata)  # num_wide=25
                     if self.debug4():
@@ -1819,7 +1820,7 @@ class OES(OP2Common):
                 ntotal = 36  # 4*9
                 s = Struct(b'i8f')
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+ntotal]
 
                     out = s.unpack(edata)  # num_wide=25
@@ -1873,7 +1874,7 @@ class OES(OP2Common):
                 s = Struct(b'i6f')  # 1+6=7
                 ntotal = 28  #  7*4 = 28
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
 
@@ -1913,7 +1914,7 @@ class OES(OP2Common):
                 ntotal = 12  # 4*3
                 nelements = len(data) // ntotal
                 s = Struct(b'i2f')
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)  # num_wide=3
                     (eid_device, force, stress) = out
@@ -1954,7 +1955,7 @@ class OES(OP2Common):
                 ntotal = 44  # 4*11
                 s = Struct(b'i8f4s4s')
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n + ntotal]
 
                     out = s.unpack(edata)  # num_wide=25
@@ -1995,7 +1996,7 @@ class OES(OP2Common):
                 s = Struct(b'2i 4s5f 4s5f 4s5f 4s5f i 4s5f 4s5f 4s5f 4s5f')  # 2 + 6*8 + 1 = 51
                 # 204 = 51 * 4
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):  # num_wide=51
+                for i in range(nelements):  # num_wide=51
                     #edata = data[n:n + 8]
                     #out1 = s1.unpack(edata)
                     #n += 8
@@ -2081,7 +2082,7 @@ class OES(OP2Common):
                 s1 = Struct(b'i4s')
                 s2 = Struct(b'i15f')
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):  # 2+16*9 = 146 -> 146*4 = 584
+                for i in range(nelements):  # 2+16*9 = 146 -> 146*4 = 584
                     edata = data[n:n+8]
                     n += 8
 
@@ -2091,7 +2092,7 @@ class OES(OP2Common):
                     (eid_device, cType) = out
                     eid = (eid_device - self.device_code) // 10
 
-                    for i in xrange(nnodes):
+                    for i in range(nnodes):
                         edata = data[n:n+64]
                         n += 64
                         out = s2.unpack(edata)
@@ -2149,12 +2150,12 @@ class OES(OP2Common):
                 s1 = Struct(b'ii')
                 s2 = Struct(b'i11f')
                 nelements = len(data) // ntotal  # 2+16*9 = 146 -> 146*4 = 584
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+8]
                     (eid_device, parent_id) = s1.unpack(edata)
                     eid = (eid_device - self.device_code) // 10
 
-                    for i in xrange(nnodes):
+                    for i in range(nnodes):
                         edata = data[n:n+48]
                         out = s2.unpack(edata)
                         if self.debug4():
@@ -2197,7 +2198,7 @@ class OES(OP2Common):
                 s1 = Struct(b'i4si6f')  # 1 + 4+1+6 = 12
                 s2 = Struct(b'i6f')
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     edata = data[n:n+36]  # 4*9
                     out = s1.unpack(edata)
                     if self.debug4():
@@ -2210,7 +2211,7 @@ class OES(OP2Common):
                     #                                                                                  angle, smj, smi)
                     n += 36
 
-                    for i in xrange(3):
+                    for i in range(3):
                         edata = data[n:n + 28]  # 4*7
                         out = s2.unpack(edata)
                         if self.debug4():
@@ -2260,7 +2261,7 @@ class OES(OP2Common):
                 s2 = Struct(b'3i4s2i')
                 s3 = Struct(b'i16f')
                 nelements = len(data) // ntotal
-                for i in xrange(nelements):
+                for i in range(nelements):
                     (eid_device, parent, coord, icord, theta, itype) = s2.unpack(data[n:n+24])
                     n += 24
                     eid = (eid_device - self.device_code) // 10
@@ -2274,7 +2275,7 @@ class OES(OP2Common):
 
                     #self.obj.addNewNode(dt, eid, parent, coord, icord, theta, itype)
                     #self.obj.add_new_eid(eType, dt, eid, parent, coord, icord, theta, itype)
-                    for node_id in xrange(nnodes-1):  # nodes pts
+                    for node_id in range(nnodes-1):  # nodes pts
                         edata = data[n:n+68]
                         n += 68
                         out = s3.unpack(edata)
@@ -2363,7 +2364,7 @@ class OES(OP2Common):
         n = 0
         s = Struct(b'i8si3fi4s')
         nelements = len(data) // ntotal
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n + ntotal]
             out = s.unpack(eData)  # num_wide=9
             if self.debug4():

@@ -1,7 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types
-from six.moves import zip
+from six.moves import zip, range
 from numpy import zeros, searchsorted, unique
 
 from .oes_objects import StressObject, StrainObject, OES_Object
@@ -215,7 +215,7 @@ class RealCompositePlateArray(OES_Object):
         eids = self.element_layer[:, 0]
         layers = self.element_layer[:, 1]
 
-        for itime in xrange(ntimes):
+        for itime in range(ntimes):
             dt = self.times[itime]  # TODO: rename this...
             if self.nonlinear_factor is not None:
                 dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
@@ -548,7 +548,7 @@ class RealCompositePlateStress(StressObject):
         for eid, o11s in sorted(self.o11.iteritems()):
             out = ''
             eType = self.eType[eid]
-            for iLayer in xrange(len(o11s)):
+            for iLayer in range(len(o11s)):
                 o11 = self.o11[eid][iLayer]
                 o22 = self.o22[eid][iLayer]
                 t12 = self.t12[eid][iLayer]
@@ -619,7 +619,7 @@ class RealCompositePlateStress(StressObject):
             for eid, o11s in sorted(O11s.iteritems()):
                 out = ''
                 eType = self.eType[eid]
-                for iLayer in xrange(len(o11s)):
+                for iLayer in range(len(o11s)):
                     o11 = self.o11[dt][eid][iLayer]
                     o22 = self.o22[dt][eid][iLayer]
                     t12 = self.t12[dt][eid][iLayer]
@@ -900,7 +900,7 @@ class RealCompositePlateStrain(StrainObject):
         for eid, e11s in sorted(self.e11.iteritems()):
             out = ''
             eType = self.eType[eid]
-            for iLayer in xrange(len(e11s)):
+            for iLayer in range(len(e11s)):
                 e11 = self.e11[eid][iLayer]
                 e22 = self.e22[eid][iLayer]
                 e12 = self.e12[eid][iLayer]
@@ -972,7 +972,7 @@ class RealCompositePlateStrain(StrainObject):
             for eid, e11s in sorted(e11s.iteritems()):
                 out = ''
                 eType = self.eType[eid]
-                for iLayer in xrange(len(e11s)):
+                for iLayer in range(len(e11s)):
                     e11 = self.e11[dt][eid][iLayer]
                     e22 = self.e22[dt][eid][iLayer]
                     e12 = self.e12[dt][eid][iLayer]
