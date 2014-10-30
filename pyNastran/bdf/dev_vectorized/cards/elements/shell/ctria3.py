@@ -1,4 +1,4 @@
-from itertools import izip
+from six.moves import zip
 
 from numpy import (array, zeros, arange, concatenate, searchsorted, where,
                    unique, cross, asarray)
@@ -82,7 +82,7 @@ class CTRIA3(ShellElement):
             else:
                 assert len(unique(element_ids))==len(element_ids), unique(element_ids)
                 i = searchsorted(self.element_id, element_ids)
-            for (eid, pid, n) in izip(self.element_id[i], self.property_id[i], self.node_ids[i]):
+            for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 card = ['CTRIA3', eid, pid, n[0], n[1], n[2]]
                 f.write(print_card_8(card))
 

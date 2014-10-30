@@ -1,3 +1,4 @@
+from six.moves import zip
 from numpy import arange, array, zeros, searchsorted, unique, full, nan
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default, print_card_8

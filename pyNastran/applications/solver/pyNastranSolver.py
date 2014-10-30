@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=E0602,C0103
 from __future__ import print_function
+from six.moves import zip
 import os
 import sys
-from itertools import izip
 from struct import pack
 
 # 3rd party
@@ -106,7 +106,7 @@ def departition_dense_vector(n, IsVs):
     V = zeros(n)
     for IV in IsVs:
         (Is, Vs) = IV
-        for (i, v) in izip(Is, Vs):
+        for (i, v) in zip(Is, Vs):
             V[i] = v
     return(V)
 
@@ -1375,7 +1375,7 @@ class Solver(F06, OP2):
                 print(msg)
                 raise
             #(Fg, nGrav) = elem.Fg(model, self.gravLoad, fnorm)
-            #for (fg, dof) in izip(Fg, nGrav):
+            #for (fg, dof) in zip(Fg, nGrav):
                 ##print("dof = ",dof)
                 #if dof in Dofs:
                     #F[Dofs[dof]] += fg
@@ -1422,7 +1422,7 @@ class Solver(F06, OP2):
         if 0:
             # n is (nid,componentID), IJV is the (ith,jth,value) in K
             #(n,IJV) = elem.nIJV()
-            for (ni, ijv) in izip(n, IJV):
+            for (ni, ijv) in zip(n, IJV):
                 i = nidComponentToID(ni)
                 j = nidComponentToID(ji)
                 #(i,j,v) = ijv
@@ -1585,7 +1585,7 @@ class Solver(F06, OP2):
 
                 # nIJV is the position of the values of K in the dof
                 (Fgi, nGrav) = elem.Fg(model, self.gravLoad, fnorm)
-                for (fg, dof) in izip(Fgi, nGrav):
+                for (fg, dof) in zip(Fgi, nGrav):
                     #print("dof = ",dof)
                     if dof in Dofs:
                         Fg[Dofs[dof]] += fg

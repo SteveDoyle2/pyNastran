@@ -1,4 +1,4 @@
-# standard python modules
+from six.moves import zip
 import os
 import sys
 import multiprocessing as mp
@@ -102,7 +102,7 @@ class LoadMapping(object):
         sys.stdout.flush()
         for aEID, distribution in self.mappingMatrix.iteritems():
             #print "aEID = ",aEID
-            #print "***distribution = ",distribution
+            #print "***distribution = ", distribution
             sumLoad = 0.
             area   = self.aeroModel.Area(aEID)
             normal = self.aeroModel.Normal(aEID)
@@ -123,8 +123,8 @@ class LoadMapping(object):
                 Fxyz = Fn * percentLoad  # negative sign is to be consistent with nastran
                 self.addForce(sNID, Fxyz)
 
-                #print "Fxyz = ",Fxyz
-                #print "type(structuralModel) = ", type(self.structuralModel)
+                #print("Fxyz = ",Fxyz)
+                #print("type(structuralModel) = ", type(self.structuralModel))
 
                 #comment = 'percentLoad=%.2f' % percentLoad
                 #self.structuralModel.writeLoad(self.bdf, self.loadCase, sNID,
@@ -479,7 +479,7 @@ class LoadMapping(object):
         if len(piercedElements) == 0:
             piercedElements = sElements
             #for sEID in sElements:
-                #piercedElements.append([sEID,None])  # TODO: why a None?
+                #piercedElements.append([sEID, None])  # TODO: why a None?
             nPiercings = 0
         else:
             dists = []
@@ -542,11 +542,11 @@ class LoadMapping(object):
         """
         aModel = self.aeroModel
         sModel = self.structuralModel
-        #print "piercedElements = ",piercedElements
+        #print("piercedElements = ", piercedElements)
         nIDs = []
         if nPiercings == 0:
             #assert len(nPiercings)==1,'fix me...'
-            #print "nPiercings=0 distributing load to closest nodes...u=%g v=%g" %(-1,-1)
+            #print("nPiercings=0 distributing load to closest nodes...u=%g v=%g" %(-1,-1))
             log.debug("nPiercings=0 distributing load to closest nodes...")
             for sEID in piercedElements:
                 nIDs += sModel.get_element_node_ids(sEID)
@@ -561,11 +561,11 @@ class LoadMapping(object):
             distribution = self.create_distribution(nIDs, weights)
 
             log.debug("element aEID=%s sEID=%s weights=%s" % (aEID, sEID, ListPrint(weights)))
-            #print "distribution = ", distribution
-            #print "nIDs         = ", nIDs
-            #print "weights      = ", weights
-            #print "nodes = ", nodes
-            #print "nPiercings = ", nPiercings
+            #print("distribution = ", distribution)
+            #print("nIDs         = ", nIDs)
+            #print("weights      = ", weights)
+            #print("nodes = ", nodes)
+            #print("nPiercings = ", nPiercings)
         else:
             log.info("mapping load to actual element...")
             nClose = 3  # number of elements to map to

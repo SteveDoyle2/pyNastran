@@ -1,7 +1,8 @@
 import os
 #import sys
 #import copy
-from itertools import izip, count
+from six.moves import zip
+from itertools import count
 
 from math import ceil, sin, cos, radians
 from numpy import array, zeros, ones
@@ -508,8 +509,8 @@ class PanairGrid(object):
             Z = zeros([nXR, nTheta])
             #print("Xin=%s \nR=%s" % (Xin, R))
             #print("X.shape = ", X.shape)
-            for (i, x, r) in izip(count(), Xin, R):
-                for (j, sinTheta, cosTheta) in izip(count(), sinThetaR, cosThetaR):
+            for (i, x, r) in zip(count(), Xin, R):
+                for (j, sinTheta, cosTheta) in zip(count(), sinThetaR, cosThetaR):
                     y = r * sinTheta
                     z = r * cosTheta + zi
                     #print("x=%s y=%s z=%s" % (x, y, z))
@@ -840,7 +841,7 @@ class PanairGrid(object):
         #validMaps = ['yaw','poi','tra']
         validMaps = sectionMap.keys()
 
-        for section, sectionName in izip(sections, sectionNames):  # 1st line
+        for section, sectionName in zip(sections, sectionNames):  # 1st line
             self.msg += '  $%s\n' % (sectionName)
             #print "section = ",len(section)
             #self.log.debug("sectionName=%s" %(sectionName))

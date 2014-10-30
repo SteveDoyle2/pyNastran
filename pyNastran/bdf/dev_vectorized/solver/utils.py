@@ -1,3 +1,4 @@
+from six.moves import zip
 from numpy import dot, ndarray, zeros
 
 def partition_sparse(Is, Js, Vs):
@@ -68,7 +69,7 @@ def departition_dense_vector(n, IsVs):
     V = zeros(n)
     for IV in IsVs:
         (Is, Vs) = IV
-        for (i, v) in izip(Is, Vs):
+        for (i, v) in zip(Is, Vs):
             V[i] = v
     return(V)
 

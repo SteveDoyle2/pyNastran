@@ -19,7 +19,8 @@ The ConstraintObject contain multiple constraints.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #from math import ceil
-from itertools import izip, count
+from six.moves import zip
+from itertools import count
 
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -200,7 +201,7 @@ class SUPORT1(Constraint):
 
     def rawFields(self):
         fields = ['SUPORT1', self.conid]
-        for ID, c in izip(self.IDs, self.Cs):
+        for ID, c in zip(self.IDs, self.Cs):
             fields += [ID, c]
         return fields
 
@@ -249,7 +250,7 @@ class SUPORT(Constraint):
 
     def rawFields(self):
         fields = ['SUPORT']
-        for ID, c in izip(self.IDs, self.Cs):
+        for ID, c in zip(self.IDs, self.Cs):
             fields += [ID, c]
         return fields
 
@@ -322,7 +323,7 @@ class MPC(Constraint):
 
     def rawFields(self):  # MPC
         fields = ['MPC', self.conid]
-        for (i, gid, constraint, enforced) in izip(count(), self.gids,
+        for (i, gid, constraint, enforced) in zip(count(), self.gids,
              self.constraints, self.enforced):
             fields += [gid, constraint, enforced]
             if i % 2 == 1 and i > 0:
@@ -333,7 +334,7 @@ class MPC(Constraint):
     def write_bdf2(self, size=8, double=False):
         if size == 8:
             msg = 'MPC     %8s' % self.conid
-            for (i, grid, component, enforced) in izip(count(), self.gids,
+            for (i, grid, component, enforced) in zip(count(), self.gids,
                  self.constraints, self.enforced):
                 msg += '%8i%8s%8s' % (grid, component, print_float_8(enforced))
                 if i % 2 == 1 and i > 0:
@@ -342,13 +343,13 @@ class MPC(Constraint):
             # TODO: we're sure MPCs support double precision?
             msg = 'MPC*    %16s' % self.conid
             if double:
-                for (i, grid, component, enforced) in izip(count(), self.gids,
+                for (i, grid, component, enforced) in zip(count(), self.gids,
                      self.constraints, self.enforced):
                     msg += '%16i%16s%16s' % (grid, component, print_scientific_double(enforced))
                     if i % 2 == 1 and i > 0:
                         msg += '\n%8s%16s' % ('*', '')
             else:
-                for (i, grid, component, enforced) in izip(count(), self.gids,
+                for (i, grid, component, enforced) in zip(count(), self.gids,
                      self.constraints, self.enforced):
                     msg += '%16i%16s%16s' % (grid, component, print_float_16(enforced))
                     if i % 2 == 1 and i > 0:
@@ -421,7 +422,7 @@ class SPC(Constraint):
 
     def rawFields(self):
         fields = ['SPC', self.conid]
-        for (gid, constraint, enforced) in izip(self.gids, self.constraints,
+        for (gid, constraint, enforced) in zip(self.gids, self.constraints,
                 self.enforced):
             fields += [gid, constraint, enforced]
         return fields
@@ -453,7 +454,7 @@ class SPCD(SPC):
 
     def rawFields(self):
         fields = ['SPCD', self.conid]
-        for (gid, constraint, enforced) in izip(self.gids, self.constraints,
+        for (gid, constraint, enforced) in zip(self.gids, self.constraints,
                 self.enforced):
             fields += [gid, constraint, enforced]
         return fields

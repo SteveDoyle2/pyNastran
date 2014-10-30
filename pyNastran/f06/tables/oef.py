@@ -1,3 +1,4 @@
+from six.moves import zip
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealPlateForce, RealPlate2Force, RealRodForce
 
 class OEF(object):
@@ -33,7 +34,7 @@ class OEF(object):
 
     def _parse_line_gradients_fluxes(self, sline, Format):
         out = []
-        for entry, iFormat in izip(sline, Format):
+        for entry, iFormat in zip(sline, Format):
             if entry.strip() is '':
                 out.append(0.0)
             else:

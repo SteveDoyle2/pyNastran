@@ -1,4 +1,4 @@
-from itertools import izip
+from six.moves import zip
 
 from numpy import arange, zeros, searchsorted, unique
 
@@ -88,7 +88,7 @@ class PLOADX1(object):
                                        integer(card, 6, 'gb')]
                 self.theta[i] = double_or_blank(card, 7, 'theta', 0.)
                 assert len(card) <= 8, 'len(PLOADX1 card) = %i' % len(card)
-            
+
             i = self.load_id.argsort()
             self.load_id = self.load_id[i]
             self.element_id = self.element_id[i]
@@ -97,7 +97,7 @@ class PLOADX1(object):
             self.theta = self.theta[i]
             self._cards = []
             self._comments = []
-        
+
     def get_stats(self):
         msg = []
         if self.n:
@@ -114,7 +114,7 @@ class PLOADX1(object):
     def write_bdf(self, f, size=8, load_ids=None):
         if self.n:
             i = self.get_index(load_ids)
-            for (lid, eid, p, n, theta) in izip(self.load_id[i],
+            for (lid, eid, p, n, theta) in zip(self.load_id[i],
                     self.element_id[i], self.p[i], self.node_ids[i], self.theta[i]):
                 card = ['PLOADX1', lid, eid, p[0], p[1], n[0], n[1], theta]
                 f.write(print_card(card))

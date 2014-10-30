@@ -1,4 +1,4 @@
-from itertools import izip
+from six.moves import zip
 
 from numpy import zeros, searchsorted, asarray, array
 
@@ -84,6 +84,6 @@ class LOAD(object):
             load_id = self.load_id
         load_id = asarray(load_id)
         list_fields = ['LOAD', self.load_id, self.scale]
-        for (scaleFactor, lid) in izip(self.scale_factors, self.load_ids):
+        for (scaleFactor, lid) in zip(self.scale_factors, self.load_ids):
             list_fields += [scaleFactor, lid]
         f.write(print_card(list_fields, size))

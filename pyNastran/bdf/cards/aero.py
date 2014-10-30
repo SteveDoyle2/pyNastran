@@ -23,7 +23,8 @@ All cards are BaseCard objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
-from itertools import izip, count
+from six.moves import zip
+from itertools import count
 from numpy import array, pi, linspace
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -140,7 +141,7 @@ class AELINK(BaseCard):
           LIST
         """
         fields = ['AELINK', self.id, self.label]
-        for (ivar, ival) in izip(self.independentLabels, self.Cis):
+        for (ivar, ival) in zip(self.independentLabels, self.Cis):
             fields += [ivar, ival]
         return fields
 
@@ -1714,7 +1715,7 @@ class MKAERO1(BaseCard):
           LIST
         """
         #list_fields = ['MKAERO1']
-        #for (i, mach, rfreq) in izip(count(), self.machs, self.rFreqs):
+        #for (i, mach, rfreq) in zip(count(), self.machs, self.rFreqs):
         #    list_fields += [mach, rfreq]
         machs = [None] * 8
         freqs = [None] * 8
@@ -1780,7 +1781,7 @@ class MKAERO2(BaseCard):
           LIST
         """
         list_fields = ['MKAERO2']
-        for (i, mach, rfreq) in izip(count(), self.machs, self.rFreqs):
+        for (i, mach, rfreq) in zip(count(), self.machs, self.rFreqs):
             list_fields += [mach, rfreq]
         return list_fields
 
@@ -1969,7 +1970,7 @@ class PAERO2(BaseCard):
         """
         list_fields = ['PAERO2', self.pid, self.orient, self.width,
                   self.AR, self.lrsb, self.lrib, self.lth1, self.lth2]
-        for (thi, thn) in izip(self.thi, self.thn):
+        for (thi, thn) in zip(self.thi, self.thn):
             list_fields += [thi, thn]
         return list_fields
 
@@ -2065,7 +2066,7 @@ class PAERO3(BaseCard):
           LIST
         """
         list_fields = ['PAERO3', self.pid, self.nbox, self.ncontrol_surfaces, None]
-        for (x, y) in izip(self.x, self.y):
+        for (x, y) in zip(self.x, self.y):
             list_fields += [x, y]
         return list_fields
 
@@ -2511,7 +2512,7 @@ class TRIM(BaseCard):
         :type field:  varies
         """
         ni = 4
-        for (i, label, ux) in izip(count(), self.labels, self.uxs):
+        for (i, label, ux) in zip(count(), self.labels, self.uxs):
             if n == ni:
                 value = self.labels[i]
                 return value
@@ -2536,7 +2537,7 @@ class TRIM(BaseCard):
         :type field:  varies
         """
         ni = 4
-        for (i, label, ux) in izip(count(), self.labels, self.uxs):
+        for (i, label, ux) in zip(count(), self.labels, self.uxs):
             if n == ni:
                 self.labels[i] = value
                 return
@@ -2609,7 +2610,7 @@ class TRIM(BaseCard):
           LIST
         """
         list_fields = ['TRIM', self.sid, self.mach, self.q]
-        for (i, label, ux) in izip(count(), self.labels, self.uxs):
+        for (i, label, ux) in zip(count(), self.labels, self.uxs):
             list_fields += [label, ux]
             if i == 1:
                 list_fields += [self.aeqr]

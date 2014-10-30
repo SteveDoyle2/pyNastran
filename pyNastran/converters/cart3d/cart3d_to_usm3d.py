@@ -1,5 +1,6 @@
 from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
-from itertools import izip, count
+from six.moves import zip
+from itertools import count
 from numpy import unique
 
 def cart3d_to_usm3d_bc(cart3d, log=None, debug=False):
@@ -43,7 +44,7 @@ def cart3d_to_usm3d_bc_filename(cart3d_filename, usm3d_bc_filename, log=None, de
 
     usm3d_bc.write('%-8s %-8s %-8s %s\n'  % (nelements, 'intA', npatches, 'intB'))
     usm3d_bc.write('Triangle   Patch            Nodes\n')
-    for i, element, iregion in izip(count(), elements, regions):
+    for i, element, iregion in zip(count(), elements, regions):
         (n1, n2, n3) = element
         usm3d_bc.write('%-8s %-8s %-8s %-8s %s\n' % (i+1, iregion, n1, n2, n3))
     usm3d_bc.close()

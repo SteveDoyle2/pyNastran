@@ -4,7 +4,6 @@ __all__ = ['OP4']
 import os
 import io
 from struct import pack, unpack
-from itertools import izip
 
 from numpy import (array, zeros, float32, float64, complex64, complex128,
                   allclose, ndarray)

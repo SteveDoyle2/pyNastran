@@ -1,4 +1,4 @@
-from itertools import izip
+from six.moves import zip
 
 from numpy import arange, zeros, unique
 from numpy.linalg import norm
@@ -170,7 +170,7 @@ class CONROD(RodElement):
         if self.n:
             if element_ids is None:
                 i = arange(self.n)
-            for (eid, n12, mid, A, J, c, nsm) in izip(
+            for (eid, n12, mid, A, J, c, nsm) in zip(
                  self.element_id, self.node_ids, self.material_id, self.A, self.J,
                  self.c, self.nsm):
 

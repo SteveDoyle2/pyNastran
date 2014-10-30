@@ -1,3 +1,4 @@
+from six.moves import zip
 from numpy import zeros, arange, where, searchsorted, argsort, unique, asarray, array, dot, transpose, append
 
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter

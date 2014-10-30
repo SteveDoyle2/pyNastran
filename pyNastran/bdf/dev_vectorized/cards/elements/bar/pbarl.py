@@ -1,3 +1,4 @@
+from six.moves import zip
 from numpy import array, zeros, arange, concatenate, searchsorted, where, unique, asarray
 
 from pyNastran.bdf.dev_vectorized.cards.elements.property import Property

@@ -1,7 +1,7 @@
 #pylint disable=C0301
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from itertools import izip
+from six.moves import zip
 from numpy import zeros, searchsorted
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
@@ -168,7 +168,7 @@ class RealRodForceArray(ScalarObject):
 
             # loop over all the elements
             out = []
-            for eid, axiali, torsioni in izip(eids, axial, torsion):
+            for eid, axiali, torsioni in zip(eids, axial, torsion):
                 ([axiali, torsioni], is_all_zeros) = writeFloats13E([axiali, torsioni])
                 out.append([eid, axiali, torsioni])
 
@@ -1293,7 +1293,7 @@ class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
             # loop over all the elements
             out = []
             if self.element_type == 74:
-                for eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in izip(eids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+                for eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(eids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
                     ([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi],
                     is_all_zeros) = writeFloats13E([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
                     # ctria3
@@ -1301,7 +1301,7 @@ class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
                     f.write('   %8i %18s %13s %13s   %13s %13s %13s   %13s %s\n' % (eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
 
             elif self.element_type == 33:
-                for eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in izip(eids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
+                for eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(eids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
                     ([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi],
                     is_all_zeros) = writeFloats13E([mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
                     # cquad4

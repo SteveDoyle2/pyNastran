@@ -1,4 +1,4 @@
-from itertools import izip
+from six.moves import zip
 
 from numpy import arange, array, dot, zeros, unique, searchsorted, transpose
 from numpy.linalg import norm
@@ -133,7 +133,7 @@ class CELAS3(SpringElement):
             N1 = self.node_ids[i, 1]
             C0 = self.components[i, 0]
             C1 = self.components[i, 1]
-            for (eid, k, n0, n1, c0, c1, ge, s) in izip(self.element_id[i],
+            for (eid, k, n0, n1, c0, c1, ge, s) in zip(self.element_id[i],
                     self.K[i], N0, N1, C0, C1, self.ge[i], self.s[i]):
                 card = ['CELAS3', eid, k, n0, c0, n1, c1, ge, s ]
                 f.write(print_card(card))

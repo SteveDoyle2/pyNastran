@@ -1,7 +1,4 @@
 import StringIO
-#from collections import defaultdict
-#from itertools import izip, count
-
 #from numpy import array
 
 from pyNastran.bdf.fieldWriter import print_card

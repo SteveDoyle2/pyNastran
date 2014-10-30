@@ -1,3 +1,4 @@
+from six.moves import zip
 import cStringIO
 from numpy import unique, where
 

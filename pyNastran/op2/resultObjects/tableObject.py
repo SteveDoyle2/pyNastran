@@ -1,5 +1,5 @@
 from struct import Struct, pack
-from itertools import izip
+from six.moves import zip
 
 from numpy import array, zeros, sqrt, abs, angle  # dot,
 
@@ -228,7 +228,7 @@ class RealTableArray(TableArray):  # displacement style table
 
             i = 0
 
-            for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in izip(nnodes_device, gridtype, t1, t2, t3, r1, r2, r3):
+            for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(nnodes_device, gridtype, t1, t2, t3, r1, r2, r3):
                 vals = (node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i)
                 #grid = nodeID*10+device_code
                 f.write(s.pack(*vals))
@@ -252,7 +252,7 @@ class RealTableArray(TableArray):  # displacement style table
         r1 = self.data[0, :, 3]
         r2 = self.data[0, :, 4]
         r3 = self.data[0, :, 5]
-        for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in izip(node, gridtype, t1, t2, t3, r1, r2, r3):
+        for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
             sgridtype = self.recast_gridtype_as_string(gridtypei)
             vals = [t1i, t2i, t3i, r1i, r2i, r3i]
             (vals2, is_all_zeros) = writeFloats13E(vals)
@@ -285,7 +285,7 @@ class RealTableArray(TableArray):  # displacement style table
             else:
                 header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
             f.write(''.join(header + words))
-            for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in izip(node, gridtype, t1, t2, t3, r1, r2, r3):
+            for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
                 sgridtype = self.recast_gridtype_as_string(gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                 (vals2, is_all_zeros) = writeFloats13E(vals)
@@ -331,7 +331,7 @@ class ComplexTableArray(TableArray):  # displacement style table
             dt = self._times[itime]
             header[2] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             f.write(''.join(header + words))
-            for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in izip(node, gridtype, t1, t2, t3, r1, r2, r3):
+            for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
                 sgridtype = self.recast_gridtype_as_string(gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                 (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)

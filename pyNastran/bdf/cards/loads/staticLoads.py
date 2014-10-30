@@ -18,7 +18,7 @@ All static loads are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from itertools import izip
+from six.moves import zip
 
 from numpy import array, cross, allclose, unique
 from numpy.linalg import norm
@@ -179,7 +179,7 @@ class LOAD(LoadCombination):
         scale_factors = []
         loads = []
         load_scale = self.scale # global
-        for (loadsPack, i_scale) in izip(self.loadIDs, self.scaleFactors):
+        for (loadsPack, i_scale) in zip(self.loadIDs, self.scaleFactors):
             scale = i_scale * load_scale # actual scale = global * local
             for load in loadsPack:
                 if (isinstance(load, Force) or isinstance(load, Moment) or
@@ -218,7 +218,7 @@ class LOAD(LoadCombination):
         typesFound = set()
         (scaleFactors, loads) = self.getReducedLoads()
 
-        for (scaleFactor, load) in izip(scaleFactors, loads):
+        for (scaleFactor, load) in zip(scaleFactors, loads):
             #print("*load = ",load)
             out = load.transformLoad()
             typesFound.add(load.__class__.__name__)
@@ -250,7 +250,7 @@ class LOAD(LoadCombination):
 
             elif isinstance(load, PLOAD4):
                 (isLoad, nodes, vectors) = out
-                for (nid, vector) in izip(nodes, vectors):
+                for (nid, vector) in zip(nodes, vectors):
                     # not the same vector for all nodes
                     forceLoads[nid] = vector * scaleFactor
 
@@ -266,7 +266,7 @@ class LOAD(LoadCombination):
 
     def rawFields(self):
         list_fields = ['LOAD', self.sid, self.scale]
-        for (scaleFactor, loadID) in izip(self.scaleFactors, self.loadIDs):
+        for (scaleFactor, loadID) in zip(self.scaleFactors, self.loadIDs):
             list_fields += [scaleFactor, self.LoadID(loadID)]
         return list_fields
 
@@ -1239,7 +1239,7 @@ class PLOAD1(Load):
         typesFound = set()
         (scaleFactors, loads) = self.getReducedLoads()
 
-        for (scaleFactor, load) in izip(scaleFactors, loads):
+        for (scaleFactor, load) in zip(scaleFactors, loads):
             #print("*load = ",load)
             out = load.transformLoad()
             typesFound.add(load.__class__.__name__)
@@ -1503,7 +1503,7 @@ class PLOAD4(Load):
 
         vector = array(self.eid.Normal())
         vectors = []
-        for (nid, p) in izip(faceNodeIDs, self.pressures):
+        for (nid, p) in zip(faceNodeIDs, self.pressures):
             #: .. warning:: only supports normal pressures
             vectors.append(vector * p * Area / n)  # Force_i
 

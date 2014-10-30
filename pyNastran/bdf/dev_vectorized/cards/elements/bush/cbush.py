@@ -1,3 +1,4 @@
+from six.moves import zip
 from numpy import array, dot, arange, zeros, unique, searchsorted, full, nan, asarray, isnan
 from numpy.linalg import norm
 

@@ -1,5 +1,5 @@
 #pylint: disable=C0301,C0103,W0612
-from itertools import izip
+from six.moves import zip
 
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacement, ComplexDisplacement
 from pyNastran.op2.tables.oug.oug_eigenvectors import Eigenvector  # ,ComplexEigenVector
@@ -320,7 +320,7 @@ class OUG(object):
 
     def _parse_line_temperature(self, sline, Format):
         out = []
-        for (entry, iFormat) in izip(sline, Format):
+        for (entry, iFormat) in zip(sline, Format):
             if entry is '':
                 return out
             #print "sline=|%r|\n entry=|%r| format=%r" %(sline, entry, iFormat)

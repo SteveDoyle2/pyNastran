@@ -1,4 +1,4 @@
-from itertools import izip
+from six.moves import zip
 
 from numpy import zeros, searchsorted, unique, where, array
 
@@ -15,7 +15,7 @@ class GRAV(object):
 
         :param self: the GRAV object
         :param model: the BDF object
-        
+
         ..todo:: collapse loads
         """
         self.model = model
@@ -90,7 +90,7 @@ class GRAV(object):
                 #: (Integer; Default = 0)
                 self.mb[i] = integer_or_blank(card, 7, 'mb', 0)
                 assert len(card) <= 8, 'len(GRAV card) = %i' % len(card)
-            
+
             i = self.load_id.argsort()
             self.load_id = self.load_id[i]
             self.node_id = self.node_id[i]
@@ -99,7 +99,7 @@ class GRAV(object):
             self.N = self.N[i]
             self._cards = []
             self._comments = []
-        
+
     def get_stats(self):
         msg = []
         if self.n:
@@ -108,7 +108,7 @@ class GRAV(object):
 
     def write_bdf(self, f, size=8, lids=None):
         if self.n:
-            for (lid, cid, scale, N, mb) in izip(
+            for (lid, cid, scale, N, mb) in zip(
                  self.load_id, self.coord_id, self.scale, self.N, self.mb):
 
                 card = ['GRAV', lid, cid, scale, N[0], N[1], n[2], mb]

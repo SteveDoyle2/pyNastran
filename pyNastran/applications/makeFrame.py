@@ -1,4 +1,4 @@
-from itertools import izip
+from six.moves import zip
 from numpy import array, zeros, matrix
 from numpy.linalg import solve
 
@@ -169,7 +169,7 @@ def addRods(model, rods, mat1, i, A, J):
         A = [A] * len(rods)
 
     model.add_card(mat1, 'MAT1')
-    for (area, rod) in izip(A, rods):
+    for (area, rod) in zip(A, rods):
         (n1, n2) = rod
         #print "rod = ",rod           #mid
         conrod = ['CONROD', i + 1, n1, n2, mat1[1], area, J]
@@ -388,7 +388,7 @@ def solveKF(model, Kg, F, Dofs):
     print("Qf  = %s" % (Qf))
     print("qf  = %s" % (qf))
 
-    for dof, qi in izip(allPacks, qf):
+    for dof, qi in zip(allPacks, qf):
         q[dof] = qi
 
     print("q   = %s" % (q))

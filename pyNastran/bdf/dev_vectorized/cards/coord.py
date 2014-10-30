@@ -1,3 +1,4 @@
+from six.moves import zip
 from numpy import (array, concatenate, searchsorted, unique, zeros, array, full,
                    nan, where, vstack, dot, cross, degrees, radians, arctan2,
                    cos, sin, hstack, array_equal, allclose, eye)

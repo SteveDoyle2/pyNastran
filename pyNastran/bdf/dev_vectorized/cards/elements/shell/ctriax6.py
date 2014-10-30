@@ -1,4 +1,4 @@
-from itertools import izip
+from six.moves import zip
 
 from numpy import array, zeros, arange, concatenate, searchsorted, where, unique
 
@@ -76,7 +76,7 @@ class CTRIAX6(object):
             N3 = [n if n != 0 else '' for n in self.node_ids[i, 3]]
             N4 = [n if n != 0 else '' for n in self.node_ids[i, 4]]
             N5 = [n if n != 0 else '' for n in self.node_ids[i, 5]]
-            for (eid, mid, n0, n1, n2, n3, n4, n5, theta) in izip(self.element_id[i], self.material_id[i],
+            for (eid, mid, n0, n1, n2, n3, n4, n5, theta) in zip(self.element_id[i], self.material_id[i],
                     N0, N1, N2, N3, N4, N5, Theta):
                 card = ['CTRIAX6', eid, mid, n0, n1, n2, n3, n4, n5, theta]
                 f.write(print_card(card, size=size))

@@ -12,8 +12,9 @@ All rigid elements are RigidElement and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six.moves import zip
 import sys
-from itertools import izip, count
+from itertools import count
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Element
@@ -220,7 +221,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
     def rawFields(self):
         list_fields = [self.type, self.eid]
 
-        for (i, gn, cn) in izip(count(), self.Gni, self.Cni):
+        for (i, gn, cn) in zip(count(), self.Gni, self.Cni):
             #print('i=%r gn=%r cn=%r' % (i, gn, cn))
             list_fields += [gn, cn]
             if i > 0 and i % 3 == 0:
@@ -234,7 +235,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         # overly complicated loop to print the UM section
         list_fields += ['UM']
         j = 1
-        for (i, gm, cm) in izip(count(), self.Gmi, self.Cmi):
+        for (i, gm, cm) in zip(count(), self.Gmi, self.Cmi):
             #print "j=%s gmi=%s cmi=%s" %(j,gm,cm)
             list_fields += [gm, cm]
             if i > 0 and j % 3 == 0:
@@ -525,7 +526,7 @@ class RBE3(RigidElement):
 
         if self.Gmi and 0:
             fields2 = ['UM']
-            for (gmi, cmi) in izip(self.Gmi, self.Cmi):
+            for (gmi, cmi) in zip(self.Gmi, self.Cmi):
                 fields2 += [gmi, cmi]
             list_fields += self.buildTableLines(fields2, i=1, j=1)  ## ..todo:: what's going on here with the arguments???
 
@@ -534,7 +535,7 @@ class RBE3(RigidElement):
         if self.Gmi:
             #print "Gmi = ",self.Gmi
             #print "Cmi = ",self.Cmi
-            for (gmi, cmi) in izip(self.Gmi, self.Cmi):
+            for (gmi, cmi) in zip(self.Gmi, self.Cmi):
                 list_fields += [gmi, cmi]
 
         nSpaces = 8 - (len(list_fields) - 1) % 8  # puts ALPHA onto next line

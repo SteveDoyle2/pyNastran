@@ -2,7 +2,7 @@ from numpy import (array, zeros, searchsorted, unique, concatenate, argsort,
                    hstack, where, vstack, ones, cross, intersect1d, setdiff1d,
                    arange, nan, full, ravel, asarray, any, ndarray)
 from numpy.linalg import norm
-from itertools import izip
+from six.moves import zip
 
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter, unique2d
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.ctetra4 import volume4
@@ -446,7 +446,7 @@ class Elements(object):
 
                     Vi = zeros(n, self.model.float)
                     i = 0
-                    for n1i, n2i, n3i, n4i in izip(n1, n2, n3, n4):
+                    for n1i, n2i, n3i, n4i in zip(n1, n2, n3, n4):
                         Vi[i] = volume4(n1i, n2i, n3i, n4i)
                         i += 1
                 elif eType in ['CPENTA6', 'CPENTA15']:

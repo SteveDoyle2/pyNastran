@@ -1,7 +1,7 @@
 # pylint: disable=R0904,R0902,C0111,C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from itertools import izip
+from six.moves import zip
 
 from pyNastran.bdf.fieldWriter import print_card, is_same
                                #print_card_8, set_default_if_blank, print_card
@@ -64,7 +64,7 @@ class BaseCard(object):
               'not implemented\n' % self.type)
 
     def isSameFields(self, fields1, fields2):
-        for (field1, field2) in izip(fields1, fields2):
+        for (field1, field2) in zip(fields1, fields2):
             if not is_same(field1, field2):
                 return False
         return True

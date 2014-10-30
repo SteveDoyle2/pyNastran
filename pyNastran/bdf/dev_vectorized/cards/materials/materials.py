@@ -1,3 +1,4 @@
+from six.moves import zip
 from numpy import zeros, where, array, nan
 
 #from .mat1 import MAT1

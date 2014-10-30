@@ -8,7 +8,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
-#from itertools import izip, count
 #from numpy import array, pi, linspace
 
 #from pyNastran.bdf.fieldWriter import set_blank_if_default

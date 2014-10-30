@@ -3,7 +3,7 @@ import os
 import sys
 from struct import pack
 from math import ceil#, sqrt
-from itertools import izip
+from six.moves import zip
 
 from numpy import array, zeros, where, savetxt, sqrt, abs, amax, amin
 from numpy import arange, searchsorted, vstack, unique, hstack, ravel
@@ -468,7 +468,7 @@ class Cart3DReader(object):
 
             nrows = len(Cp)
             fmt = '%s\n%s %s %s %s %s\n' % (float_fmt, float_fmt, float_fmt, float_fmt, float_fmt, float_fmt)
-            for (cpi, rhoi, rhou, rhov, rhoe, e) in izip(Cp, rho, rhoU, rhoV, rhoW, E):
+            for (cpi, rhoi, rhou, rhov, rhoe, e) in zip(Cp, rho, rhoU, rhoV, rhoW, E):
                 f.write(fmt % (cpi, rhoi, rhou, rhov, rhoe, e))
             #fmt2 = '%s\n%s %s %s %s %s' % (float_fmt, float_fmt, float_fmt, float_fmt, float_fmt, float_fmt)
             #savetxt(f, hstack([Cp, rho, rhoU, rhoV, rhoW, E], fmt2)
@@ -785,7 +785,7 @@ class Cart3DReader(object):
             f.write(print_card(['MAT1', pidMid, e, g, nu]))
             f.write(print_card(['PSHELL', pidMid, pidMid, thickness]))
 
-        for eid, (nodes, region) in enumerate(1, izip(elements, regions)):
+        for eid, (nodes, region) in enumerate(1, zip(elements, regions)):
             (n1, n2, n3) = nodes
             f.write(print_card(['CTRIA3', eid, region, n1, n2, n3]))
         f.close()

@@ -1,6 +1,6 @@
 import StringIO
 from math import pi, sqrt
-from itertools import izip, count
+from itertools import count
 
 import unittest
 

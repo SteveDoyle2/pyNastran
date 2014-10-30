@@ -1,3 +1,4 @@
+from six.moves import zip
 from numpy import unique
 
 from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader

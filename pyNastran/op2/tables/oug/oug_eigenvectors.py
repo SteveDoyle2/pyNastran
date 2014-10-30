@@ -1,5 +1,5 @@
 from math import sqrt
-from itertools import izip
+from six.moves import zip
 from numpy import array, pi
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
@@ -41,7 +41,7 @@ class RealEigenvectorArray(RealTableArray):
             #else:
                 #header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
             msg += header + [words % dt]
-            for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in izip(node, gridtype, t1, t2, t3, r1, r2, r3):
+            for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
                 sgridtype = self.recast_gridtype_as_string(gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                 (vals2, is_all_zeros) = writeFloats13E(vals)

@@ -1,5 +1,5 @@
 
-from itertools import izip
+from six.moves import zip
 
 from numpy import array, zeros, unique, searchsorted, arange, asarray
 
@@ -141,7 +141,7 @@ class PROD(Property):
                 else:
                     assert len(unique(property_ids))==len(property_ids), unique(property_ids)
                     i = searchsorted(self.property_id, property_ids)
-            for (pid, mid, A, J, c, nsm) in izip(
+            for (pid, mid, A, J, c, nsm) in zip(
                  self.property_id, self.material_id[i], self.A[i], self.J[i], self.c[i], self.nsm[i]):
 
                 #self.mid = integer(card, 4, 'mid')

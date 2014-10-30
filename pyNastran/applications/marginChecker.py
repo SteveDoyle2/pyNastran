@@ -1,4 +1,4 @@
-from itertools import izip
+from six.moves import zip
 from math import sqrt, log10
 from numpy import array
 from numpy.linalg import norm
@@ -75,7 +75,7 @@ class MarginChecker(object):
             #self.plateStressResults[fname] =
 
         #print "self.subcases2 = ",self.subcases
-        for (fname, subcaseID, ID) in izip(self.filenames, self.subcases, self.IDs):
+        for (fname, subcaseID, ID) in zip(self.filenames, self.subcases, self.IDs):
             self.cases[fname].append(subcaseID)
 
         for key in self.cases:
@@ -93,8 +93,8 @@ class MarginChecker(object):
             op2.readOP2()
 
             for subcaseID in subcaseList:
-                print("subcaseID = ", subcaseID)
-                print("i = ", i)
+                print("subcaseID = %s" % subcaseID)
+                print("i = %s" % i)
                 self.displacementResults[i] = op2.displacements[subcaseID]
 
                 #self.solidStrainResults[i] = op2.solidStrain
