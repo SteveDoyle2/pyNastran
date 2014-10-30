@@ -262,6 +262,8 @@ class NastranIO(object):
 
         # pid = pids_dict[eid]
         pids_dict = {}
+        nelements = len(model.elements)
+        pids = zeros(nelements, 'int32')
         for (eid, element) in sorted(model.elements.iteritems()):
             self.eidMap[eid] = i
             #print(element.type)
@@ -482,16 +484,21 @@ class NastranIO(object):
                     # CELAS2, CELAS4?
                     pid = 0
                 nodeIDs = element.nodeIDs()
+                if nodeIDs[0] is None and  nodeIDs[0] is None: # CELAS2
+                    del self.eidMap[eid]
+                    continue
                 if None in nodeIDs:  # used to be 0...
-                    if nodeIDs[0] != None:
-                        slot = 0
-                    elif nodeIDs[1] != None:
+                    if nodeIDs[0] is None:
                         slot = 1
-                    else:
-                        continue
-
+                    elif nodeIDs[1] is None:
+                        slot = 0
+                    #print('nodeIDs=%s slot=%s' % (str(nodeIDs), slot))
                     self.eid_to_nid_map[eid] = nodeIDs[slot]
-                    c = nidMap[nodeIDs[slot]]
+                    nid = nodeIDs[slot]
+                    if nid not in nidMap:
+                        # SPOINT
+                        continue
+                    c = nidMap[nid]
                     elem = vtk.vtkVertex()
                     elem.GetPointIds().SetId(0, j)
 
@@ -521,8 +528,15 @@ class NastranIO(object):
             #   are they plotted as elements?
             #   and thus do they need a property?
 
-            pids.append(pid)
-            pids_dict[eid] = pid
+            if pid is None:
+                # CONROD
+                #print(element)
+                #pids[i] = 0
+                #pids_dict[eid] = 0
+                pass
+            else:
+                pids[i] = pid
+                pids_dict[eid] = pid
             i += 1
 
         self.grid.SetPoints(points)
