@@ -123,7 +123,7 @@ class GetChoices(wx.Dialog):
         for name, checkbox in zip(names, self.checkboxes):
             val = checkbox.GetValue()
             if val:
-                #print "name=%r val=%s" % (name, val)
+                #print("name=%r val=%s" % (name, val))
                 names2.append(name)
         self.args['selected'] = names2
         self.Destroy()
@@ -148,7 +148,7 @@ def main(names):
     }
     GetChoices(None, args)
     ex.MainLoop()
-    #print "****args = ", args
+    #print("****args = ", args)
     selected = args['selected']
     print("****selected = %s" % selected)
     if selected is None:

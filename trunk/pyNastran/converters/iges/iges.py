@@ -67,7 +67,7 @@ class IGES(object):
             if SGDPT in 'S':
                 Start1.append(line)
             elif SGDPT in 'G':
-                #print '%r' % line[:72]
+                #print('%r' % line[:72])
                 Global1.append(line[:72])
             elif SGDPT in 'D':
                 Directory1.append(line)
@@ -77,7 +77,7 @@ class IGES(object):
                 Terminate1.append(line)
             else:
                 raise NotImplementedError(SGDPT)
-            #print '%r' % line[72:73]
+            #print('%r' % line[72:73])
         del lines
         #print(S1)
         #for
@@ -104,7 +104,7 @@ class IGES(object):
         for pline in P1:
             i = pline[63:72].lstrip()
             #if debug:
-                #print "i =", i
+                #print("i = %s" % i)
             #print('%r' % pline[63:72].lstrip())
             P[i] += pline[:70]
         return P

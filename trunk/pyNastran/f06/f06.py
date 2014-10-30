@@ -257,7 +257,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
             lines.append(line)
             self.i += 1
             self.fatal_check(line)
-        #print '\n'.join(lines)
+        #print('\n'.join(lines))
         self.grid_point_weight.read_grid_point_weight(lines)
 
     def _case_control_echo(self):
@@ -335,7 +335,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
             line2 = line.rstrip()
             if line2:
                 #msg += '%i -> %s\n' % (-4 + i, line.rstrip())
-                #print "%r" % line2.replace("  ", " ")
+                #print("%r" % line2.replace("  ", " "))
                 lines2.append(line2)
 
         if self.Title is None or self.Title == '' and len(self.stored_lines) > 4:
@@ -448,7 +448,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
 
         eigenvalue = self.stored_lines[-2][1:].strip()
         eigenvalue = float(eigenvalue.split('=')[1])
-        #print "eigenvalue=%s cycle=%s" % (eigenvalue, cycles)
+        #print("eigenvalue=%s cycle=%s" % (eigenvalue, cycles))
 
         eTypeLine = self.skip(2)[1:]
         eType = eTypeLine[30:40]
@@ -457,8 +457,8 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
         mode_line = self.skip(1)[1:]
         iMode = mode_line[24:40]
         totalEnergy2 = mode_line[99:114]
-        #print "eType=%r totalEnergy1=%r" % (eType, totalEnergy1)
-        #print "iMode=%r totalEnergy2=%r" % (iMode, totalEnergy2)
+        #print("eType=%r totalEnergy1=%r" % (eType, totalEnergy1))
+        #print("iMode=%r totalEnergy2=%r" % (iMode, totalEnergy2))
         headers = self.skip(2)
 
         data = []
@@ -604,7 +604,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
             try:
                 entry2 = iFormat(entry)
             except:
-                #print "sline=%r\n entry=%r format=%s" % (sline, entry, iFormat)
+                #print("sline=%r\n entry=%r format=%s" % (sline, entry, iFormat))
                 #raise
                 return None
             out.append(entry2)
@@ -623,7 +623,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
                     raise
             else:
                 entry2 = None
-                #print "sline=%r\n entry=%r format=%s" % (sline, entry, iFormat)
+                #print("sline=%r\n entry=%r format=%s" % (sline, entry, iFormat))
             out.append(entry2)
         return out
 
@@ -661,8 +661,8 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
         blank = 0
         self.infile = open(self.f06_filename, 'r')
         while 1:
-            #if self.i%1000==0:
-                #print "i=%i" % (self.i)
+            #if self.i % 1000 == 0:
+                #print("i=%i" % (self.i))
             line = self.infile.readline()
             marker = line[1:].strip()
 
@@ -671,7 +671,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
                 fatal_count = 0
                 while 1:
                     line = self.infile.readline().rstrip()
-                    #print "blank = %s" % blank
+                    #print("blank = %s" % blank)
                     fatal_count += 1
                     if fatal_count == 20 or '* * * END OF JOB * * *' in line:
                         break
@@ -723,7 +723,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
 
             self.stored_lines.append(line)
             self.i += 1
-        #print "i=%i" % (self.i)
+        #print("i=%i" % self.i)
         self.infile.close()
         self._process_f06()
         if hasattr(self, '_ieigenvalue'):
@@ -743,7 +743,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
         if len(marker) < 2 or marker == '* * * * * * * * * * * * * * * * * * * *':
             return False
         for i, char in enumerate(marker):
-            #print "i=%s i%%2=%s char=%s" % (i, i%2, char)
+            #print("i=%s i%%2=%s char=%s" % (i, i%2, char))
             if i % 2 == 1 and ' ' is not char:
                 return False
             elif i % 2 == 0 and ' ' == char:
@@ -774,7 +774,7 @@ def _parse_label_isubcase(label_isubcase):
         isubcase = 1
     return label, isubcase
     #assert isinstance(isubcase,int),'isubcase=%r' % isubcase
-    #print "subcaseName=%s isubcase=%s" % (subcaseName, isubcase)
+    #print("subcaseName=%s isubcase=%s" % (subcaseName, isubcase))
 
 if __name__ == '__main__':
     from pyNastran.f06.test.test_f06 import main

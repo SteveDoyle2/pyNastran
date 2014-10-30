@@ -83,7 +83,7 @@ class TetgenReader(object):
         nelements = int(nelements)
 
 
-        #print "line =", line
+        #print("line =", line)
         tri_list = []
         for ielement in xrange(nelements):
             sline = f.readline().strip().split()
@@ -93,7 +93,7 @@ class TetgenReader(object):
                 tri_list.append(element_nodes)
             else:
                 raise NotImplementedError('nnodes = %s' % nnodes)
-            #print element_nodes
+            #print(element_nodes)
         tri = array(tri_list, 'int32') - 1 # subtract 1 so the node ids start at 0
         print(tri)
         f.close()
@@ -114,14 +114,14 @@ class TetgenReader(object):
         return nodes
 
     def read_ele(self, ele_filename, form_flag='1'):
-        #print "ele_filename =", ele_filename
+        #print("ele_filename =", ele_filename)
         f = open(ele_filename, 'r')
         nelements, four, form_flag_enabled = f.readline().strip().split()
         form_flag_enabled = int(form_flag_enabled)
 
         assert four == '4', four
         nelements = int(nelements)
-        #print "nelements =", nelements
+        #print("nelements =", nelements)
 
         if not form_flag_enabled:
             tets = zeros((nelements, 4), 'int32')
@@ -140,7 +140,7 @@ class TetgenReader(object):
             tets = array(tets, 'int32')
 
         f.close()
-        #print "nodes =", nodes
+        #print("nodes =", nodes)
         return tets - 1
     #self.tet = self.read_ele(ele_filename)
 

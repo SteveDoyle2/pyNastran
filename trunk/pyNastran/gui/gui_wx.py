@@ -60,7 +60,7 @@ valid_formats = [
 assert is_nastran == True, is_nastran
 
 pkgPath = pyNastran.gui.__path__[0]
-#print "pkgPath = %r" % pkgPath
+#print("pkgPath = %r" % pkgPath)
 
 if '?' in pkgPath:
     iconPath = 'icons'
@@ -669,7 +669,7 @@ class EventsHandler(object):
 
     def onLoadBDF(self, event):
         """ Open a file"""
-        #print "OnOpen..."
+        #print("OnOpen...")
 
         wildcard = "Nastran BDF (*.bdf; *.dat; *.nas)|*.bdf;*.dat;*.nas|" \
             "All files (*.*)|*.*"
@@ -682,7 +682,7 @@ class EventsHandler(object):
 
     def onLoadOP2(self, event):
         """ Open a file"""
-        #print "OnOpen..."
+        #print("OnOpen...")
 
         if 0:
             bdf = self.parent.infile_name
@@ -882,7 +882,7 @@ class EventsHandler(object):
         dlg.GetColourData().SetChooseFull(True)
         if dlg.ShowModal() == wx.ID_OK:
             data = dlg.GetColourData()
-            #print 'You selected: %s\n' % str(data.GetColour().Get())
+            #print('You selected: %s\n' % str(data.GetColour().Get()))
             dlg.Destroy()
             self.SetColor(data.GetColour().Get())
             return

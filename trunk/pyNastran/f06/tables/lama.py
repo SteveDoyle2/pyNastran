@@ -26,10 +26,10 @@ class LAMA(object):
         #MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED
         # NO.       ORDER                                                                       MASS              STIFFNESS
         #     1         1        1.018377E-03        3.191203E-02        5.078956E-03        1.000000E+00        1.018377E-03
-        #print line1
-        #print line2
+        #print(line1)
+        #print(line2)
         #headers = self.skip(2)
-        #print headers
+        #print(headers)
         data = self._read_f06_table([int, int, float, float, float, float, float])
 
         self.eigenvalues[self.Title] = RealEigenvalues(Title)

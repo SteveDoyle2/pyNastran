@@ -57,9 +57,9 @@ def op2_interface(f):
 
 fname2 = load()
 f = h5py.File(fname2, 'r')
-print f.keys()
-#print f['disp1']['time']
-#print f['disp1']['value']
+print(f.keys())
+#print(f['disp1']['time'])
+#print(f['disp1']['value'])
 #val = f['disp1']['value']
 print("value2.name =", f['disp1']['value'].name)
 print("value2.value =", f['disp1']['value'].value)

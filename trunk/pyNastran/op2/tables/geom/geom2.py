@@ -189,7 +189,7 @@ class GEOM2(object):
 
     def addOp2Element(self, elem):
         self.add_element(elem, allowOverwrites=True)
-        #print str(elem)[:-1]
+        #print(str(elem)[:-1])
 
 # 1-AEROQ4 (???)
 # AEROT3   (???)
@@ -778,7 +778,7 @@ class GEOM2(object):
             eData = data[n:n + 44]
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8,
                 n9) = s.unpack(eData)
-            #print "eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4)
+            #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4))
             #dataInit = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
             data = [eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9]
             elem = Element(None, data)
@@ -804,7 +804,7 @@ class GEOM2(object):
             eData = data[n:n + 56]  # 14*4
             (eid, pid, n1, n2, n3, n4, theta, zoffs, blank, tflag,
                 t1, t2, t3, t4) = s.unpack(eData)
-            #print "eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s blank=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,blank,tflag,t1,t2,t3,t4)
+            #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s blank=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,blank,tflag,t1,t2,t3,t4))
             dataInit = [eid, pid, n1, n2, n3, n4, theta, zoffs,
                         tflag, t1, t2, t3, t4]
             elem = Element(None, dataInit)
@@ -828,7 +828,7 @@ class GEOM2(object):
             out = s.unpack(eData)
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
                 t3, t4, theta, tflag) = out
-            #print "eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4)
+            #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4))
             #dataInit = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
             elem = CQUAD8(None, out)
             self.addOp2Element(elem)
@@ -848,7 +848,7 @@ class GEOM2(object):
         """
         CQUADX(9008,90,508)  - the marker for Record 75
         """
-        #print "reading CQUADX"
+        #print("reading CQUADX")
         return self.runCQUAD4(data, n, CQUADX)
 
 # CRBAR
@@ -907,15 +907,15 @@ class GEOM2(object):
             out = s.unpack(eData)
             (eid, pid, n1, n2, n3, n4, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12,
              f1, f2, f3, f4, b1, ee1, ee2, ee3, ee4) = out
-            #print "out = ",out
+            #print("out = ",out)
             e = [e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12]
             f = [f1, f2, f3, f4]
             ee = [ee1, ee2, ee3, ee4]
 
-            #print "e  = ",e
-            #print "f  = ",f
-            #print "b1  = ",b1
-            #print "ee = ",ee
+            #print("e  = ",e)
+            #print("f  = ",f)
+            #print("b1  = ",b1)
+            #print("ee = ",ee)
             dataIn = [eid, pid, n1, n2, n2, n3, n4]
             elem = CTETRA4(None, dataIn)
             self.addOp2Element(elem)
@@ -930,7 +930,7 @@ class GEOM2(object):
             eData = data[n:n + 48]
             out = s.unpack(eData)
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = out
-            #print "out = ",out
+            #print("out = ",out)
 
             dataIn = [eid, pid, n1, n2, n3, n4]
             bigNodes = [n5, n6, n7, n8, n9, n10]
@@ -959,7 +959,7 @@ class GEOM2(object):
         for i in xrange(nelements):
             eData = data[n:n+52]
             out = s.unpack(eData)
-            #print "eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %(eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3)
+            #print("eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %(eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3))
             (eid, pid, n1, n2, n3, theta, zoffs, blank1,
                 blank2, tflag, t1, t2, t3) = out
             dataIn = [eid, pid, n1, n2, n3, theta, zoffs, tflag, t1, t2, t3]
@@ -982,7 +982,7 @@ class GEOM2(object):
         for i in xrange(nelements):
             eData = data[n:n + 52]
             out = s.unpack(eData)
-            #print "eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %(eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3)
+            #print("eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %(eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3))
             (eid, pid, n1, n2, n3, n4, n5, n6, theta, t1, t2, t3, tflag) = out
             elem = CTRIA6(None, out)
             self.addOp2Element(elem)

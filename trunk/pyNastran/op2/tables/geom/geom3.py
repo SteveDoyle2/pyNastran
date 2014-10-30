@@ -77,7 +77,7 @@ class GEOM3(object):
         """
         FORCE(4201,42,18) - the marker for Record 3
         """
-        #print "reading FORCE"
+        #print("reading FORCE")
         ntotal = 28  # 7*4
         nEntries = (len(data) - n) // ntotal
         s = Struct(b'iiiffff')
@@ -93,7 +93,7 @@ class GEOM3(object):
         """
         FORCE1(4001,40,20) - the marker for Record 4
         """
-        #print "reading FORCE1"
+        #print("reading FORCE1")
         ntotal = 20  # 5*4
         s = Struct('iifii')
         nEntries = (len(data) - n) // ntotal
@@ -110,7 +110,7 @@ class GEOM3(object):
         """
         FORCE2(4101,41,22) - the marker for Record 5
         """
-        #print "reading FORCE2"
+        #print("reading FORCE2")
         ntotal = 28  # 7*4
         s = Struct(b'iif4i')
         nEntries = (len(data) - n) // ntotal
@@ -129,7 +129,7 @@ class GEOM3(object):
         """
         GRAV(4401,44,26) - the marker for Record 7
         """
-        #print "reading GRAV"
+        #print("reading GRAV")
         ntotal = 28  # 7*4
         s = Struct(b'ii4fi')
         nEntries = (len(data) - n) // ntotal
@@ -148,7 +148,7 @@ class GEOM3(object):
         (4551, 61, 84) - the marker for Record 8
         .. todo:: add object
         """
-        #print "reading LOAD"
+        #print("reading LOAD")
         ntotal = 16  # 4*4
         nEntries = (len(data) - n) // ntotal
         count = 0
@@ -158,20 +158,20 @@ class GEOM3(object):
             (sid, s, si, l1) = unpack('iffi', eData)
             Si = [si]
             L1 = [l1]
-            #print Si,L1
+            #print(Si, L1)
             while 1:
                 eData = data[n:n+8]
                 n += 8
                 (si, l1) = unpack('fi', eData)
                 siTest, = unpack('i', eData[0:4])
-                #print si,siTest,l1
-                #print type(si)
+                #print(si,siTest, l1)
+                #print(type(si))
 
                 if [siTest, l1] == [-1, -1]:
                     break
                 Si.append(si)
                 L1.append(l1)
-                #print Si,L1
+                #print(Si, L1)
 
             dataIn = [sid, s, Si, L1]
             load = LOAD(None, dataIn)
@@ -197,7 +197,7 @@ class GEOM3(object):
         """
         MOMENT(4801,48,19) - the marker for Record 13
         """
-        #print "reading MOMENT"
+        #print("reading MOMENT")
         ntotal = 28
         s = Struct(b'iiiffff')
         nEntries = (len(data) - n) // 28  # 7*4
@@ -215,7 +215,7 @@ class GEOM3(object):
         """
         MOMENT1(4601,46,21) - the marker for Record 14
         """
-        #print "reading MOMENT1"
+        #print("reading MOMENT1")
         ntotal = 20  # 5*4
         nEntries = (len(data) - n) // ntotal
         for i in xrange(nEntries):
@@ -232,7 +232,7 @@ class GEOM3(object):
         """
         MOMENT2(4701,47,23) - the marker for Record 15
         """
-        #print "reading MOMENT2"
+        #print("reading MOMENT2")
         ntotal = 28  # 7*4
         nEntries = (len(data) - n) // ntotal
         for i in xrange(nEntries):
@@ -253,7 +253,7 @@ class GEOM3(object):
         """
         PLOAD2(6802,68,199) - the marker for Record 17
         """
-        #print "reading PLOAD1"
+        #print("reading PLOAD1")
         ntotal = 32  # 8*4
         s = Struct(b'4i4f')
         nEntries = (len(data) - n) // ntotal
@@ -261,7 +261,7 @@ class GEOM3(object):
             eData = data[n:n + 32]
             out = s.unpack(eData)
             (sid, eid, Type, scale, x1, p1, x2, p2) = out
-            #print "PLOAD1 = ",out
+            #print("PLOAD1 = ", out)
             load = PLOAD1(None, out)
             self.add_load(load)
             n += 32
@@ -272,7 +272,7 @@ class GEOM3(object):
         """
         PLOAD2(6802,68,199) - the marker for Record 18
         """
-        #print "reading PLOAD2"
+        #print("reading PLOAD2")
         ntotal = 12  # 3*4
         nEntries = (len(data) - n) // ntotal
         for i in xrange(nEntries):
@@ -289,7 +289,7 @@ class GEOM3(object):
         """
         PLOAD3(7109,71,255) - the marker for Record 19
         """
-        #print "reading PLOAD3"
+        #print("reading PLOAD3")
         ntotal = 20  # 5*4
         nEntries = (len(data) - n) // ntotal
         for i in xrange(nEntries):
@@ -306,7 +306,7 @@ class GEOM3(object):
         """
         PLOAD4(7209,72,299) - the marker for Record 20
         """
-        #print "reading PLOAD4"
+        #print("reading PLOAD4")
         ntotal = 48  # 13*4
         nEntries = (len(data) - n) // ntotal
         for i in xrange(nEntries):
@@ -341,7 +341,7 @@ class GEOM3(object):
         """
         QBDY1(4509,45,239) - the marker for Record 24
         """
-        #print "reading QBDY1"
+        #print("reading QBDY1")
         ntotal = 12  # 3*4
         nEntries = (len(data) - n) // ntotal
         for i in xrange(nEntries):
@@ -358,7 +358,7 @@ class GEOM3(object):
         """
         QBDY2(4909,49,240) - the marker for Record 25
         """
-        #print "reading QBDY2"
+        #print("reading QBDY2")
         ntotal = 40  # 10*4
         nEntries = (len(data) - n) // ntotal
         for i in xrange(nEntries):
@@ -375,7 +375,7 @@ class GEOM3(object):
         """
         QBDY3(2109,21,414) - the marker for Record 26
         """
-        #print "reading QBDY3"
+        #print("reading QBDY3")
         ntotal = 16  # 4*4
         nEntries = (len(data) - n) // ntotal
         for i in xrange(nEntries):
@@ -393,7 +393,7 @@ class GEOM3(object):
         TEMP(5701,57,27) - the marker for Record 32
         .. warning:: buggy
         """
-        #print "reading TEMP"
+        #print("reading TEMP")
         ntotal = 12  # 3*4
         nEntries = (len(data) - n) // ntotal
         for i in xrange(nEntries):
@@ -414,7 +414,7 @@ class GEOM3(object):
         TEMPD(5641,65,98) - the marker for Record 33
         .. todo:: add object
         """
-        #print "reading TEMPD"
+        #print("reading TEMPD")
         ntotal = 8  # 2*4
         nEntries = (len(data) - n) // ntotal
         for i in xrange(nEntries):

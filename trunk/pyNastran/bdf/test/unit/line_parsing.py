@@ -18,16 +18,16 @@ def parseSetSline(listA):
                     by = sline[4]
                 else:
                     by = 1
-                #print "BY = %s" %(by)
+                #print("BY = %s" % by)
                 vals = set([])
                 startValue = interpret_value(sline[0])
                 endValue = interpret_value(sline[2]) + 1
                 for i in xrange(startValue, endValue, by):
                     vals.add(i)
-                #print "vals = ",vals
+                #print("vals = ", vals)
                 if 'EXCEPT' in sline:
                     iExcept = sline.index('EXCEPT')
-                    #print "e = ",sline[iExcept]
+                    #print("e = ", sline[iExcept])
                     excepted = int(sline[iExcept + 1])
                     vals.remove(excepted)
                 vals = list(vals)
@@ -36,7 +36,7 @@ def parseSetSline(listA):
             else:
                 print("sline = ", sline)
         else:
-            #print "spot = %s" %(spot)
+            #print("spot = %s" % (spot))
             if '/' in spot:
                 listB.append(spot)
             else:
@@ -56,7 +56,7 @@ def parseSetType(i, line, lines, key, value):
     # read more lines....
     if line[-1].strip() == ',':
         i += 1
-        #print "rawSETLine = |%r|" %(lines[i])
+        #print("rawSETLine = %r" % lines[i])
         while 1:
             if ',' == lines[i].strip()[-1]:
                 sline = lines[i][:-1].strip().split(',')
@@ -64,12 +64,12 @@ def parseSetType(i, line, lines, key, value):
             else:  # last case
                 sline = lines[i].strip().split(',')
                 fivalues += parseSetSline(sline)
-                #print "fivalues last = i=%s |%r|" %(i,lines[i])
+                #print("fivalues last = i=%s |%r|" % (i, lines[i]))
                 i += 1
                 break
             i += 1
 
-    #print "len(fivalues) = ",len(fivalues)
+    #print("len(fivalues) = %s" % len(fivalues))
     value = fivalues
 
     options = int(ID)  # needed a place to put it...
@@ -85,8 +85,8 @@ def _parseEntry(lines):
     paramType = None
 
     line = lines[i]
-    #print line
-    #print "*****lines = ",lines
+    #print(line)
+    #print("*****lines = ", lines)
 
     equalsCount = 0
     for letter in line:
@@ -102,7 +102,7 @@ def _parseEntry(lines):
             msg = "trying to parse |%s|..." % line
             raise SyntaxError("Invalid Subcase: %s" % msg)
         (key, isubcase) = sline
-        #print "key=|%s| isubcase=|%s|" %(key,isubcase)
+        #print("key=%r isubcase=%r" % (key, isubcase))
         value = int(isubcase)
         #self. subcase = int(isubcase)
         paramType = 'SUBCASE-type'
@@ -122,9 +122,9 @@ def _parseEntry(lines):
             raise RuntimeError(msg)
 
         key = key.strip()
-        #print value
+        #print(value)
         value = value.strip()
-        #print("key=|%s| value=|%s|" %(key, value))
+        #print("key=%r value=%r" % (key, value))
         paramType = 'STRESS-type'
 
         #if 'SET' in key:
@@ -139,17 +139,17 @@ def _parseEntry(lines):
             if key == 'TEMPERATURE' or key == 'TEMP':
                 key = 'TEMPERATURE(%s)' % (options[0])
                 options = []
-            #print "key=|%s| options=%s" %(key,options)
+            #print("key=%r options=%s" % (key, options))
 
         elif ' ' in key and ',' in value:  # SET-type (with spaces, so SET 1 = 1, not SET = ALL)
             (i, key, value, options, paramType) = parseSetType(
                 i, line, lines, key, value)
         elif ',' in value:  # STRESS-type; special TITLE = stuffA,stuffB
-            #print 'A ??? line = ',line
+            #print('A ??? line = ',line)
             #raise RuntimeError(line)
             pass
         else:  # STRESS-type; TITLE = stuff
-            #print 'B ??? line = ',line
+            #print('B ??? line = ',line)
             if ' ' in value:
                 sline = value.split(' ')
                 print("sline = ", sline)
@@ -167,7 +167,7 @@ def _parseEntry(lines):
     elif 'PARAM' in lineUpper:  # param
         sline = line.split(',')
         if len(sline) != 3:
-            raise SyntaxError("Param Parse: trying to parse |%s|..." % (line))
+            raise SyntaxError("Param Parse: trying to parse %r..." % line)
         (key, value, options) = sline
         paramType = 'CSV-type'
     elif ' ' not in line:
@@ -176,26 +176,26 @@ def _parseEntry(lines):
         options = None
         paramType = 'KEY-type'
     else:
-        msg = 'generic catch all...line=|%r|' % (line)
-        #print 'C ??? line = ',line
+        msg = 'generic catch all...line=%r' % line
+        #print('C ??? line = ', line)
         #raise RuntimeError(msg)
         key = ''
         value = line
         options = None
         paramType = 'KEY-type'
     i += 1
-    #print "done with ",key
+    #print("done with %s" % key)
     return (i, key, value, options, paramType)
 
 if __name__ == '__main__':
     pass
-    #print _parseEntry(['SET =ALL'])
-    #print _parseEntry(['SET 77=5'])
-    #print _parseEntry(['SET 88=5, 6, 7, 8, 9, 10 THRU 55 EXCEPT 15, 16, 77, 78, 79, 100 THRU 300'])
-    #print _parseEntry(['SET 99=1 THRU 110'])
-    #print _parseEntry(['SET 2001=M1,M2'])
-    #print _parseEntry(['SET 101=1.0, 2.0, 3.0'])
+    #print(_parseEntry(['SET =ALL']))
+    #print(_parseEntry(['SET 77=5']))
+    #print(_parseEntry(['SET 88=5, 6, 7, 8, 9, 10 THRU 55 EXCEPT 15, 16, 77, 78, 79, 100 THRU 300']))
+    #print(_parseEntry(['SET 99=1 THRU 110']))
+    #print(_parseEntry(['SET 2001=M1,M2']))
+    #print(_parseEntry(['SET 101=1.0, 2.0, 3.0']))
     #deck = CaseControlDeck(lines)
 
-    #print _parseEntry(['SET 105=1.009, 10.2, 13.4, 14.0, 15.0'])
-    #print _parseEntry(['SET 1001=101/T1, 501/T3, 991/R3'])
+    #print(_parseEntry(['SET 105=1.009, 10.2, 13.4, 14.0, 15.0']))
+    #print(_parseEntry(['SET 1001=101/T1, 501/T3, 991/R3']))

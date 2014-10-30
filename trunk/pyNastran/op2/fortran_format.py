@@ -185,7 +185,7 @@ class FortranFormat(object):
                 if not passer:
                     table3_parser(data)
                     #if hasattr(self, 'isubcase'):
-                        #print "code = ", self._get_code()
+                        #print("code = ", self._get_code())
 
             else:
                 if passer or not self.is_valid_subcase():
@@ -234,7 +234,7 @@ class FortranFormat(object):
                                         assert isinstance(n, int), self.table_name
                                         datai = data[n:]
                                         #if self.obj is not None:
-                                            #print "len(datai) =", len(datai), ndata / (self.num_wide * 4.)
+                                            #print("len(datai) =", len(datai), ndata / (self.num_wide * 4.))
                                 assert len(datai) == 0, len(datai)
                                 #n = record_len
                                 #break

@@ -309,8 +309,8 @@ def T():
     j = subx(i, D1)
     k = subx(p1, D4 * o2)
     l = addx(p1, D4 * o2)
-    #print "a = ",a
-    #print "A = ",A
+    #print("a = ", a)
+    #print("A = ", A)
 
     sections = [[1, a, b], [1, b, c], [1, d, c], [1, d, e], [1, f, e],
                 [1, f, g], [1, g, h], [1, h, a],

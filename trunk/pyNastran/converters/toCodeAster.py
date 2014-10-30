@@ -15,13 +15,13 @@ class CodeAsterConverter(BDF):
        This is consistent with standard Nastran.
 
     Limitations:
-    
+
      * All Case Control inputs must come from SUBCASE 1.
      * LOAD cards must bound FORCEx/MOMENTx/PLOAD4 cards in order for loads to be written
      * Only SOL 101 (Static)
 
     Supported Cards:
-    
+
      * GRID, COORDx
      * LOAD, FORCEx, MOMENTx, PLOAD4
      * CBAR, CBEAM, CROD, CTUBE, CTETRA, CPENTA, CHEXA,CTRIA3/6, CQUAD4/8
@@ -291,7 +291,7 @@ class CodeAsterConverter(BDF):
             key = self.caseControlDeck.getSubcaseParameter(
                 isubcase, paramName)[0]
             loadcase = self.loads[key]
-            #print loadcase
+            #print(loadcase)
             for i, load in enumerate(loadcase):
                 comm += '# main LOAD lid=%s type=%s\n' % (loadcase[
                     i].lid, loadcase[i].__class__.__name__)
@@ -306,7 +306,7 @@ class CodeAsterConverter(BDF):
                         #skippedLids[(load.lid,load.type)] = out
                         comm += out
                 #except:
-                    #print 'failed printing load...type=%s key=%s' %(load.type,key)
+                    #print('failed printing load...type=%s key=%s' % (load.type, key))
                     #raise
             #loadcase.
             #for ID,grav in sorted(self.gravs.iteritems()):

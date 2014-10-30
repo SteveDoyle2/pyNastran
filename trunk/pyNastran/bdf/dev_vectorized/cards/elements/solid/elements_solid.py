@@ -95,7 +95,7 @@ class ElementsSolid(object):
         f.write('$ELEMENTS_SOLID\n')
         types = self._get_types(nlimit=True)
         for elems in types:
-            #print elems.type
+            #print(elems.type)
             elems.write_bdf(f, size=size, element_ids=element_ids)
 
     def _get_types(self, nlimit=True):
@@ -106,10 +106,10 @@ class ElementsSolid(object):
             types2 = []
             for etype in types:
                 if etype.n > 0:
-                    #print "etype.Type =", etype.Type
+                    #print("etype.Type =", etype.Type)
                     types2.append(etype)
             types = types2
-        #print "solid nlimit=%s" % nlimit
+        #print("solid nlimit=%s" % nlimit)
         return types
 
     def get_stats(self):

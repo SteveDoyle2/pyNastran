@@ -23,10 +23,10 @@ class Usm3dIO(object):
             dirname = os.getcwd()
         basename = os.path.basename(flo_filename)
         base, ext = os.path.splitext(basename)
-        #print "base=%r ext=%r" % (base, ext)
+        #print("base=%r ext=%r" % (base, ext))
         if '_' in base:
             model_name, n = base.rsplit('_', 1)
-            #print "model_name=%r n=%r" % (model_name, n)
+            #print("model_name=%r n=%r" % (model_name, n))
             n = int(n)
             n_list = get_n_list(dirname, model_name)
             inn = n_list.index(n)
@@ -36,11 +36,11 @@ class Usm3dIO(object):
                 nnew = max(n_list)
                 if nnew == n:
                     raise RuntimeError('%r is the last file' % self.out_filename)
-            #print "inn=%r nnew=%r" % (inn, nnew)
+            #print("inn=%r nnew=%r" % (inn, nnew))
             flo_filename = model_name + '_%s.flo' % nnew
         else:
             raise RuntimeError('The current file is must have the format of xxx_%%i.flo, not %r' % self.out_filename)
-        #print "loading %r" % flo_filename
+        #print("loading %r" % flo_filename)
         self.load_usm3d_results(flo_filename, dirname)
         self.out_filename = os.path.join(dirname, flo_filename)
 
@@ -75,7 +75,7 @@ class Usm3dIO(object):
         self._fill_usm3d_results(cases, bcs, mapbc, bcmap_to_bc_name, loads)
 
     def load_usm3d_geometry(self, cogsg_filename, dirname):
-        #print "load_usm3d_geometry..."
+        #print("load_usm3d_geometry...")
         skipReading = self.removeOldGeometry(cogsg_filename)
         if skipReading:
             return
@@ -143,7 +143,7 @@ class Usm3dIO(object):
             for nid, node in sorted(nodes.iteritems()):
                 points.InsertPoint(nid - 1, *node)
                 self.gridResult.InsertNextValue(nid * fraction)
-                #print str(element)
+                #print(str(element))
 
                 #elem = vtk.vtkVertex()
                 #elem.GetPointIds().SetId(0, i)
@@ -154,7 +154,7 @@ class Usm3dIO(object):
         nnodes, three = nodes.shape
 
         nid = 0
-        #print "nnodes=%s" % nnodes
+        #print("nnodes=%s" % nnodes)
         for i in xrange(nnodes):
             points.InsertPoint(nid, nodes[i, :])
             nid += 1

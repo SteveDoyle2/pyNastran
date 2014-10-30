@@ -16,7 +16,7 @@ class TestMass(unittest.TestCase):
         #prop = str(prop)
         #print('----------------------------')
         assert not isinstance(element, list), element
-        #print object_methods(element, 'all')
+        #print(object_methods(element, 'all'))
         self.assertAlmostEqual(element.get_area()[0], area, msg='PCOMP: area=%s expected=%s\n%s%s' % (element.get_area(), area, element, prop))
         self.assertAlmostEqual(element.get_thickness()[0], thickness, msg='PCOMP: thickness=%s expected=%s\n%s%s' % (element.get_thickness(), thickness, element, prop))
         self.assertAlmostEqual(element.get_nonstructural_mass()[0], nsm, msg='PCOMP: nsm=%s expected=%s\n%s%s' % (element.get_nonstructural_mass(), nsm, element, prop))
@@ -31,7 +31,7 @@ class TestMass(unittest.TestCase):
     def verify_pshell_element(self, element, prop, mat, rho, mass, area, centroid, normal, nsm):
         #print('----------------------------')
         assert not isinstance(element, list), element
-        #print object_methods(element, 'all')
+        #print(object_methods(element, 'all'))
         #print(element)
         #print(prop)
         #print(mat)
@@ -51,11 +51,11 @@ class TestMass(unittest.TestCase):
 
     def verify_psolid_element(self, element, mass, volume, centroid, rho, E=None, G=None, nu=None):
         assert not isinstance(element, list), element
-        #print object_methods(element, 'all')
+        #print(object_methods(element, 'all'))
         self.assertAlmostEqual(element.get_volume(), volume, msg='volume=%s expected=%s' % (element.get_volume(), volume))
         self.assertTrue(all(element.get_centroid()[0] == centroid), msg='centroid=%s expected=%s' % (element.get_centroid(), centroid))
         if rho:
-            #print "rho =", element.get_density(), rho
+            #print("rho =", element.get_density(), rho)
             self.assertAlmostEqual(element.get_density()[0], rho, msg='rho=%s expected=%s' % (element.get_density(), rho))
             #self.assertAlmostEqual(element.pid.Rho(), rho, msg='rho=%s expected=%s' % (element.pid.Rho(), rho))
             #self.assertEqual(element.pid.mid.type, 'MAT1', msg='mass=%s expected=%s' % (element.pid.mid.type, 'MAT1'))
@@ -180,7 +180,7 @@ class TestMass(unittest.TestCase):
         with self.assertRaises(TypeError):
             print(model.elements[None])
 
-        #print model.get_elements('cat')
+        #print(model.get_elements('cat'))
         with self.assertRaises(KeyError):
             model.get_elements('cat')
 
@@ -213,7 +213,7 @@ class TestMass(unittest.TestCase):
         print('----------')
         for eidi, massi in zip(eids, mass):
             print('%-5s %-5s' % (eidi, massi))
-        #print vstack([mass, eids])
+        #print(vstack([mass, eids]))
 
     def test_mass_solid_1(self):  # passes
         model = BDF(debug=False, log=None)
@@ -221,14 +221,14 @@ class TestMass(unittest.TestCase):
         model.read_bdf(bdfname, include_dir=None, xref=True)
 
         # hexa - psolid - nsm = 0
-        #print model.elements[7:8]
-        #print model.elements[[7,8]]
+        #print(model.elements[7:8])
+        #print(model.elements[[7,8]])
         model.elements[7:9]
         model.elements[7:9:2]
         model.elements[1:100]
         #hexa = model.get_elements(7)
         #hexa = model.get_elements(7)
-        #print hexa
+        #print(hexa)
         hexa = model.elements[7]
         mass = 0.2
         volume = 2. # l * w * h = 1 * 1 * 2

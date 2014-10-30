@@ -103,24 +103,24 @@ class DeflectionMapper(object):
         if isInternal:
             log.info("***already Internal")
         while isInternal==False:
-            log.info("excluding ID=%s" %(tetID))
+            log.info("excluding ID=%s" % tetID)
             excluded.append(tetID)
             (newTet,minValue) = self.findCloserTet(m,closestTet,tets,excluded)
             closestTet = copy.deepcopy(newTet)
             tetID = closestTet.ID
-            #print "excluded = ",len(excluded)
+            #print("excluded = ", len(excluded))
 
-            counter +=1
-            if(counter==counterMax):
+            counter += 1
+            if(counter == counterMax):
                 break
 
             if tetID in excluded:
-                log.info("ERROR***ID=%s was already excluded...excluded=%s" %(tetID,excluded))
+                log.info("ERROR***ID=%s was already excluded...excluded=%s" % (tetID, excluded))
                 broken = True
                 break
             else:
                pass
-               #print "ID=%s dist=%s" %(tetID,minValue)
+               #print("ID=%s dist=%s" % (tetID, minValue))
 
             (isInternal,localVol) = closestTet.isInternalNode(m)
 
@@ -129,8 +129,8 @@ class DeflectionMapper(object):
         else:
             log.info("*findClosestTet worked!!!")
 
-        #print "*tet[%s]=%s" %(tetID,closestTet)
-        #print "nodes = ",closestTet.nodes
+        #print("*tet[%s]=%s" % (tetID, closestTet))
+        #print("nodes = ",closestTet.nodes)
 
         return closestTet,closestTet.ID
 

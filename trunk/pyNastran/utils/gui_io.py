@@ -28,7 +28,7 @@ elif _gui_mode in [1, 2]:
             self.setGeometry(1, 1, 0, 0)
 
 #----------------------------------------------------------------------
-#print "f_mode =", f_mode
+#print("f_mode =", f_mode)
 
 def radio_pullown_dialog(Title, button_dict, nwide=3):  # pragma: no conver
     """
@@ -77,7 +77,7 @@ def save_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
         fname = QtGui.QFileDialog.getSaveFileName(form, Title,
                                                   dirname, qt_wildcard)
         app.exit()
-        #print "fname =", fname
+        #print("fname =", fname)
     else:
         msg = 'Could not import wx, PySide, or PyQt4.  ' \
             'Please specify the file explicitly.'
@@ -116,7 +116,7 @@ def load_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
         fname, wildcard_level = QtGui.QFileDialog.getOpenFileName(form, Title,
             dirname, qt_wildcard)
         app.exit()
-        #print "fname =", fname
+        #print("fname =%s" % fname)
     else:
         msg = 'Could not import wx, PySide, or PyQt4.  '\
             'Please specify the file explicitly.'

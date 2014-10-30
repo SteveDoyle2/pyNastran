@@ -858,8 +858,8 @@ class F06Writer(object):
             self.page_num = self.oload_resultant.write_f06(f06, page_stamp, self.page_num)
             assert isinstance(self.page_num, int), self.oload_resultant.__class__.__name__
 
-        #print "page_stamp = %r" % page_stamp
-        #print "stamp      = %r" % stamp
+        #print("page_stamp = %r" % page_stamp)
+        #print("stamp      = %r" % stamp)
 
         #is_mag_phase = False
         header = ['     DEFAULT                                                                                                                        \n',
@@ -1065,7 +1065,7 @@ class F06Writer(object):
                 (subtitle, label) = self.iSubcaseNameMap[isubcase]
                 subtitle = subtitle.strip()
                 label = label.strip()
-                #print "label = ",label
+                #print("label = %s" % label)
 
                 (subtitle, label) = self.iSubcaseNameMap[isubcase]
                 label = label.strip()
@@ -1092,7 +1092,7 @@ class F06Writer(object):
                     #header[0] = '     %s\n' % subtitle
                     header[0] = '      %-126s\n' % subtitle
                     header[1] = '0     %-32s                                                                       SUBCASE %-15i\n \n' % (label, isubcase)
-                    #print "res_type = ", res_type
+                    #print("res_type = %s" % res_type)
                     if isubcase in res_type:
                         #header = copy.deepcopy(headerOld)  # fixes bug in case
                         #print("isubcase ", isubcase)
@@ -1107,7 +1107,7 @@ class F06Writer(object):
                             self.page_num = result.write_f06(header, page_stamp, page_num=self.page_num, f=f06, is_mag_phase=False)
                             assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
                         except:
-                            #print "result name = %r" % result.name()
+                            #print("result name = %r" % result.name())
                             raise
                         if delete_objects:
                             del result

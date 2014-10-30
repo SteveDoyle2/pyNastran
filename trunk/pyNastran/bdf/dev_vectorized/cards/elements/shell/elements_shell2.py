@@ -172,7 +172,7 @@ class ElementsShell(object):
         types = self._get_types()
         for element in types:
             #if element.n:
-                #print element.type
+                #print(element.type)
             element.write_bdf(f, size=size, element_ids=element_ids)
 
     def _get_types(self):

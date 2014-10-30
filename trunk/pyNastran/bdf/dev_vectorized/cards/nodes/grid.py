@@ -251,7 +251,7 @@ class GRID(object):
             n2 = n[i]
             cps = set(list(unique(cpn)))
             for cp in cps:
-                #print self.model.coords
+                #print(self.model.coords)
                 T = self.model.coords.transform(cp)
                 #print('T[%s] = \n%s\n' % (cp, T))
                 j = where(self.cp[n] == cp)[0]

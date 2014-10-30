@@ -19,10 +19,10 @@ def parse_skipped_cards(fname):
             (oes, form, elementTypeNum) = fore.strip().split(' ')
             (element_type, eType) = elementTypeNum.strip().split('=')
             (msg, fpath) = aft.strip().split('-')
-            #print "fpath=|%s|" %(fpath)
+            #print("fpath=%r" % fpath)
             fpath = fpath.lstrip()[6:]
             eName = msg.split(' ')[0]
-            #print "eName=%s eType=%s form=%s fpath=|%s|" %(eName,eType,form,fpath)
+            #print("eName=%s eType=%s form=%s fpath=|%s|" % (eName, eType, form, fpath))
             key = (eName, eType, form)
             if key not in results:
                 results[key] = fpath
@@ -59,14 +59,14 @@ def main():
         for fname in files2:
             if 'test_f06' in fname:
                 os.remove(fname)
-        
+
         files3 = []
         for fname in files2:
             if 'test_f06' not in fname:
                 files3.append(fname)
         #files2 = [fname if 'test_f06' not in fname for fname in files2]
         files2 = files3
-        #print files2
+        #print(files2)
         #files2 = []
         files2 += files
         files2.sort()
@@ -77,13 +77,13 @@ def main():
     #files = files+files2
     files = files2
     #files = [r'D:\work\move\move_tpl\see101hs.f06']
-    #print len(files)
+    #print(len(files))
     #files = []
 
     #            HIS, R1B        EQEXIN
     #skipFiles = ['accopt3.f06','acms111m.f06','adjoint.f06','aerobeam.f06',] # tpl
     skipFiles = ['nltrot99.f06', 'rot12901.f06']  # giant
-    #print files
+    #print(files)
 
     nStart = 0
     nStop = 10000
@@ -93,12 +93,12 @@ def main():
         pass
 
     print("nFiles = %s" % len(files))
-    #print files
+    #print(files)
     import time
     t0 = time.time()
     run_lots_of_files(files, debug, saveCases, skipFiles,
                       stopOnFailure, nStart, nStop)
-    print("dt = %f" %(time.time() - t0))
+    print("dt = %f" % (time.time() - t0))
     sys.exit('final stop...')
 
 if __name__ == '__main__':

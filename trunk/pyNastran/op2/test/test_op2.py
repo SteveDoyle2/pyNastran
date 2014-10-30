@@ -246,12 +246,12 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
             print("Memory usage cleanup: %s (KB); %.2f (MB)" % (kb, mb))
 
 
-        #print "subcases = ",op2.subcases
+        #print("subcases = ",op2.subcases)
 
         #assert tableNamesF06==tableNamesOP2,'tableNamesF06=%s tableNamesOP2=%s' %(tableNamesF06,tableNamesOP2)
         #op2.caseControlDeck.sol = op2.sol
-        #print op2.caseControlDeck.get_op2_data()
-        #print op2.caseControlDeck.get_op2_data()
+        #print(op2.caseControlDeck.get_op2_data())
+        #print(op2.caseControlDeck.get_op2_data())
         isPassed = True
     except KeyboardInterrupt:
         sys.stdout.flush()

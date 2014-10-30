@@ -183,7 +183,7 @@ class CalculixConverter(BDF):
                         dat += '%s,' % nid
                     dat = dat[:-1] + '\n'
         dat += self.breaker()
-        #print dat
+        #print(dat)
         fdat.write(dat)
 
     def Calculix_Properties(self):

@@ -287,7 +287,7 @@ class GetMethods(GetMethodsDeprecated):
 
         for eid in self.elementIDs():
             element = self.Element(eid)
-            #print dir(element)
+            #print(dir(element))
             if hasattr(element, 'pid'):
                 pid = element.Pid()
                 if pid == 0:  # CONM2
@@ -435,7 +435,7 @@ class GetMethods(GetMethodsDeprecated):
     # LOADS
 
     def Load(self, sid, msg=''):
-        #print 'sid=%s self.loads=%s' %(sid,(self.loads.keys()))
+        #print('sid=%s self.loads=%s' %(sid,(self.loads.keys())))
         assert isinstance(sid, int), 'sid=%s is not an integer\n' % sid
         if sid in self.loads:
             load = self.loads[sid]
@@ -447,7 +447,7 @@ class GetMethods(GetMethodsDeprecated):
     # SPCs
 
     def SPC(self, conid, msg=''):
-        #print 'conid=%s self.spcs=%s' %(conid,(self.spcs.keys()))
+        #print('conid=%s self.spcs=%s' %(conid,(self.spcs.keys())))
         assert isinstance(conid, int), 'conid=%s is not an integer\n' % conid
         if conid in self.spcs:
             constraint = self.spcs[conid]

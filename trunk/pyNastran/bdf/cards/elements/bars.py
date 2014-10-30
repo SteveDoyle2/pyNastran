@@ -317,7 +317,7 @@ class CBAR(LineElement):
             self.initX_G0(card)
 
             self.offt = string_or_blank(card, 8, 'offt', 'GGG')
-            #print 'self.offt = |%s|' %(self.offt)
+            #print('self.offt = |%s|' % (self.offt))
 
             self.pa = integer_or_blank(card, 9, 'pa', 0)
             self.pb = integer_or_blank(card, 10, 'pb', 0)
@@ -599,7 +599,7 @@ class CBAR(LineElement):
         k2 = P * L ** 3 / (E * I1)
         #print("A=%g E=%g L=%g I1=%g I2=%G AE/L=%g L^3/E*Iz=%g" % (
         #    A, E, L, I1, I2, k1, k2))
-        #print "K = \n",K
+        #print("K = \n",K)
         #return K
 
         L = self.Length()

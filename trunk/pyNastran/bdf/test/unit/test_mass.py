@@ -13,7 +13,7 @@ testpath = os.path.join(rootpath, 'bdf', 'test', 'unit')
 class TestMass(unittest.TestCase):
 
     def verify_pcomp_element(self, element, mass, area, centroid, normal):
-        #print object_methods(element, 'all')
+        #print(object_methods(element, 'all'))
         self.assertAlmostEqual(element.Mass(), mass, msg='mass=%s expected=%s' % (element.Mass(), mass))
         self.assertAlmostEqual(element.Area(), area, msg='area=%s expected=%s' % (element.Area(), area))
         self.assertTrue(all(element.Centroid() == centroid), msg='centroid=%s expected=%s' % (element.Centroid(), centroid))
@@ -24,7 +24,7 @@ class TestMass(unittest.TestCase):
             element.Length()
 
     def verify_pshell_element(self, element, mass, area, centroid, normal, nsm):
-        #print object_methods(element, 'all')
+        #print(object_methods(element, 'all'))
         self.assertAlmostEqual(element.Mass(), mass, msg='mass=%s expected=%s' % (element.Mass(), mass))
         self.assertAlmostEqual(element.Area(), area, msg='area=%s expected=%s' % (element.Area(), area))
         self.assertAlmostEqual(element.Nsm(), nsm, msg='nsm=%s expected=%s' % (element.Nsm(), nsm))
@@ -36,7 +36,7 @@ class TestMass(unittest.TestCase):
             element.Length()
 
     def verify_psolid_element(self, element, mass, volume, centroid, rho, E=None, G=None, nu=None):
-        #print object_methods(element, 'all')
+        #print(object_methods(element, 'all'))
         self.assertAlmostEqual(element.Volume(), volume, msg='volume=%s expected=%s' % (element.Volume(), volume))
         self.assertTrue(all(element.Centroid() == centroid), msg='centroid=%s expected=%s' % (element.Centroid(), centroid))
         if rho:

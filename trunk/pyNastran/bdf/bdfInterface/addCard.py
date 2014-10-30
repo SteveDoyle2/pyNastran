@@ -76,7 +76,7 @@ class AddMethods(object):
                      (key, self.nodes[key], node))
                 assert node.nid not in self.nodes, 'nid=%s\noldNode=\n%snewNode=\n%s' % (node.nid, self.nodes[key], node)
             else:
-                #print 'Node was duplicated...nid=%s\nnode=\n%s' %(key,node)
+                #print('Node was duplicated...nid=%s\nnode=\n%s' % (key, node))
                 pass
         else:
             assert key > 0, 'nid=%s node=%s' % (key, node)

@@ -33,21 +33,21 @@ class LAMA(OP2Common):
         ## fluid modes Flag
         self.fldFlag = self.add_data_parameter(data, 'fldFlag', 'i', 12, False)
 
-        #print self.data_code
+        #print(self.data_code)
         #self.add_data_parameter(data,'format_code',  'i',9,False)   ## format code
         #self.add_data_parameter(data,'num_wide',     'i',10,False)  ## number of words per entry in record; .. note:: is this needed for this table ???
 
         #if self.analysis_code==2: # sort2
         #    self.lsdvmn = self.get_values(data,'i',5)
 
-        #print "*isubcase=%s"%(self.isubcase)
-        #print "analysis_code=%s table_code=%s thermal=%s" %(self.analysis_code,self.table_code,self.thermal)
+        #print("*isubcase=%s"%(self.isubcase)()
+        #print("analysis_code=%s table_code=%s thermal=%s" %(self.analysis_code self.table_code, self.thermal))
 
         #self.print_block(data)
         self._read_title(data)
 
         #assert self.isubcase != 0, self.isubcase
-        #print self.Title
+        #print(self.Title)
         #raise NotImplementedError(self.table_name)
 
     def _read_complex_eigenvalue_4(self, data):
@@ -104,15 +104,15 @@ class LAMA(OP2Common):
         self.fldFlag = self.add_data_parameter(data, 'fldFlag', 'i', 12, False)
         self.Title = None
 
-        #print self.data_code
+        #print(self.data_code)
         #self.add_data_parameter(data,'format_code',  'i',9,False)   ## format code
         #self.add_data_parameter(data,'num_wide',     'i',10,False)  ## number of words per entry in record; .. note:: is this needed for this table ???
 
-        #if self.analysis_code==2: # sort2
-        #    self.lsdvmn = self.get_values(data,'i',5)
+        #if self.analysis_code == 2: # sort2
+            #self.lsdvmn = self.get_values(data,'i',5)
 
-        #print "*isubcase=%s"%(self.isubcase)
-        #print "analysis_code=%s table_code=%s thermal=%s" %(self.analysis_code,self.table_code,self.thermal)
+        #print("*isubcase=%s" % self.isubcase)
+        #print("analysis_code=%s table_code=%s thermal=%s" % (self.analysis_code, self.table_code, self.thermal))
 
         #self.print_block(data)
         self._read_title(data)

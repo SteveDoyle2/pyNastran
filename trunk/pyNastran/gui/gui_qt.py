@@ -251,7 +251,7 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         end = text_cursor.End
         #print("end", end)
         text_cursor.movePosition(end)
-        #print dir(text_cursor)
+        #print(dir(text_cursor))
         text_cursor.insertHtml(msg + r"<br />")
         self.log_widget.ensureCursorVisible() # new message will be visible
         self.log_mutex.unlock()
@@ -334,7 +334,7 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         # prepare actions that will  be used in application
         actions = {}
         pth = os.path.join(icon_path, 'tbdf.png')
-        #print print_bad_path(pth)
+        #print(print_bad_path(pth))
 
         # http://docs.python.org/2/library/sys.html#sys.platform
         #System  platform value
@@ -342,7 +342,7 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         #Windows 'win32'
         #Windows/Cygwin  'cygwin'
         #Mac OS X    'darwin'
-        #print sys.platform
+        #print(sys.platform)
         #quit_key = 'Alt+F4' if sys.platform in ['win32', 'cygwin'] else 'Ctrl+Q'
 
         checkables = ['show_info', 'show_debug', 'show_gui', 'show_command']
@@ -407,14 +407,14 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
             self.menu_scripts = None
 
         for (nam, txt, icon, shortcut, tip, func) in tools:
-            #print "name=%s txt=%s icon=%s short=%s tip=%s func=%s" % (nam, txt, icon, short, tip, func)
+            #print("name=%s txt=%s icon=%s short=%s tip=%s func=%s" % (nam, txt, icon, short, tip, func))
             #if icon is None:
-                #print "missing_icon = %r!!!" % nam
+                #print("missing_icon = %r!!!" % nam)
                 #icon = os.path.join(icon_path, 'no.png')
 
             if icon is None:
                 print("missing_icon = %r!!!" % nam)
-                #print print_bad_path(icon)
+                #print(print_bad_path(icon))
             #elif not "/" in icon:
                 #ico = QtGui.QIcon.fromTheme(icon)
             else:
@@ -754,7 +754,7 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         txtprop.SetColor(1, 1, 1)
         txt.SetDisplayPosition(*position)
 
-        #print "dir(text) = ",dir(txt)
+        #print("dir(text) = ",dir(txt))
         txt.VisibilityOff()
 
         #txt.SetDisplayPosition(5,5) # bottom left
@@ -1032,7 +1032,7 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
     def _create_load_file_dialog(self, qt_wildcard, Title):
         # getOpenFileName return QString and we want Python string
         fname, wildcard_level = QtGui.QFileDialog.getOpenFileNameAndFilter(self, Title, self.last_dir, qt_wildcard)
-        #print "d =", d # fname, wildcard_level
+        #print("d =", d) # fname, wildcard_level
         #fname = str(QtGui.QFileDialog.getOpenFileName(self, Title, self.last_dir, wildcard))
         return str(wildcard_level), str(fname)
 
@@ -1304,9 +1304,9 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
             self.log_error('invalid camera code...%r' % code)
             return
         self._update_camera(camera)
-        #print dir(camera)
-        #print dir(self.vtk_interactor)
-        #print dir(self.rend)
+        #print(dir(camera))
+        #print(dir(self.vtk_interactor))
+        #print(dir(self.rend))
         self.rend.ResetCamera()
         #self.vtk_interactor.ResetCamera()
         self.log_command('update_camera(%r)' % code)

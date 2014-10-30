@@ -136,7 +136,7 @@ class GEOM1(object):
             assert one == 1, one
             assert two == 2, two
             dataIn = [cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3]
-            #print "cid=%s one=%s two=%s rid=%s a1=%s a2=%s a3=%s b1=%s b2=%s b3=%s c1=%s c2=%s c3=%s" %(cid,one,two,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3)
+            #print("cid=%s one=%s two=%s rid=%s a1=%s a2=%s a3=%s b1=%s b2=%s b3=%s c1=%s c2=%s c3=%s" %(cid,one,two,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3))
             coord = CORD2R(None, dataIn)
             self.add_coord(coord, allowOverwrites=True)
             n += 52

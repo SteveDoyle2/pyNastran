@@ -150,11 +150,11 @@ class IFace(FortranFile):
         ints = unpack(Format, data)
         assert max(ints) < nints, 'max(ints)=%i nints=%i'  % (max(ints), nints)
         self.n += 4 * nints
-        #print ints
+        #print(ints
 
-        #print factors(A)
-        #print factors(B)
-        #print factors(C)
+        #print(factors(A))
+        #print(factors(B))
+        #print(factors(C))
 
         print(self.print_section2(n, '>'))
         pass
