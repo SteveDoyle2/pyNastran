@@ -44,7 +44,7 @@ class Usm3dIO(object):
         self.load_usm3d_results(flo_filename, dirname)
         self.out_filename = os.path.join(dirname, flo_filename)
 
-        print "done stepping..."
+        print("done stepping...")
 
     def _get_next_n(self, base):
         n = int(n)

@@ -246,7 +246,7 @@ class DeflectionMapper(object):
         aeroNodes2 = []
         tet = tets[1]
         log.info("-"*80)
-        #print "type(aeroNodes)=%s" %(type(aeroNodes))
+        #print("type(aeroNodes)=%s" % type(aeroNodes))
 
         for i,aeroNode in aeroNodes.iteritems():
             if aeroNode[1] < 0:
@@ -254,7 +254,7 @@ class DeflectionMapper(object):
                 continue
             log.info("aeroNode[%s]  = %s" % (i, ListPrint(aeroNode)))
 
-            #print "aeroNode  = ",aeroNode
+            #print("aeroNode  = ",aeroNode)
             #continue
 
             if properTets.has_key(i):
@@ -264,14 +264,14 @@ class DeflectionMapper(object):
 
             #(isInternal,localVol) = closeTet.isInternalNode(aeroNode)
             #assert isInternal==True
-            #print "isInternal?  = ",isInternal
+            #print("isInternal?  = ",isInternal)
 
-            #print "***tet = %s" %(tet)
-            (n0,n1,n2,n3) = tet.nodes
+            #print("***tet = %s" %(tet))
+            (n0, n1, n2, n3) = tet.nodes
             ID = tet.ID
             deflectionsTet = d.getDeflections(ID,n0,n1,n2,n3)
             aeroNode2 = tet.mapDeflections(deflectionsTet,aeroNode)
-            log.info("aeroNode2 = %s" %(ListPrint(aeroNode2)))
+            log.info("aeroNode2 = %s" % (ListPrint(aeroNode2)))
             properTets[i] = ID
             aeroNodes2.append(aeroNode2)
 
@@ -286,7 +286,7 @@ class DeflectionMapper(object):
             sys.stdout.flush()
         #return aeroNode2
         #for key,value in properTets.items():
-        #    print "pointID=%s  -> tetID=%s" %(key,value)
+        #    print("pointID=%s  -> tetID=%s" % (key, value))
         sys.stdout.flush()
         return (aeroNodes2,properTets)
 
@@ -300,7 +300,7 @@ def loadProperTets(properTetFilename='properTets.in'):
     properTets = {}
 
     if os.path.exists(properTetFilename):
-        log.info("loading tets from |%s|..." %(properTetFilename))
+        log.info("loading tets from %r..." % properTetFilename)
         infile = open(properTetFilename,'r')
         lines = infile.readlines()
         for line in lines[1:]:
@@ -308,7 +308,7 @@ def loadProperTets(properTetFilename='properTets.in'):
             (pointID,properTet) = line.strip().split()
             properTets[int(pointID)] = int(properTet)
     else:
-        log.info("couldnt find tetFile |%s|..." %(properTetFilename))
+        log.info("couldnt find tetFile %r..." % properTetFilename)
     return properTets
 
 def writeProperTets(workpath,properTets):
@@ -317,7 +317,7 @@ def writeProperTets(workpath,properTets):
         log.info("writing tets...")
         msg = '#PointID    tetID\n'
         for key,value in properTets.items():
-            msg += "%5s  %5s\n" %(key,value)
+            msg += "%5s  %5s\n" % (key, value)
         outfile = open(outfilename,'wb')
         outfile.write(msg)
         outfile.close()
@@ -330,7 +330,7 @@ def test_Tet():
     m1 = [ 1., 1., 1.]
     m2 = [ 2., 2., 2.]
     tet = Tet4(a,b,c,d)
-    #print "volume = ",tet.volume()
+    #print("volume = ",tet.volume())
     log.info("isInternal = \n%s\n" %(tet.isInternalNode(m1)))
     log.info("isInternal = \n%s"   %(tet.isInternalNode(m2)))
 
@@ -352,9 +352,9 @@ def test_deflections():
     runPremorph(args,bdfModel,premorphPath)
 
 
-def mapDeflectionsStructures_Aero(bdfModel='test_tet10.bdf',op2Filename='test_tet10.op2',
+def mapDeflectionsStructures_Aero(bdfModel='test_tet10.bdf', op2Filename='test_tet10.op2',
                                   tetFilename='geometry.morph.in',
-                                  cart3dGeom='bJet.a.tri',cart3dOut='bJet.a.tri2',
+                                  cart3dGeom='bJet.a.tri', cart3dOut='bJet.a.tri2',
                                   properTetFilename='properTets.in'):
     t0 = time()
     properTets = loadProperTets(properTetFilename)
@@ -363,7 +363,7 @@ def mapDeflectionsStructures_Aero(bdfModel='test_tet10.bdf',op2Filename='test_te
 
     # loading tetrahedra
     dr = DelauneyReader(tetFilename) # geometry.morph.in
-    (tets,nodes,elements,volume) = dr.buildTets()
+    (tets, nodes, elements, volume) = dr.buildTets()
     sys.stdout.flush()
 
     #print "type(tets) = ",type(tets)
@@ -376,7 +376,7 @@ def mapDeflectionsStructures_Aero(bdfModel='test_tet10.bdf',op2Filename='test_te
     #deflections = defreader.convertDisplacements()
     #deflections = {1:[1.,2.,3.]}
     #for key,d in deflections.items():
-    #    print "d = ",d
+        #print("d = ", d)
 
     # loading aero nodes
     cart = Cart3DReader(cart3dGeom)  # bJet.a.tri
@@ -388,7 +388,7 @@ def mapDeflectionsStructures_Aero(bdfModel='test_tet10.bdf',op2Filename='test_te
     #cartOutfile = os.path.join(workpath,'bJet.a.tri_test')   # test code
     #cart.writeInfile(cartOutfile,cartPoints,elements,regions)
     #for point in cartPoints:
-    #    print "point = ",point
+    #    print("point = ",point)
 
 
     # deflect the aero nodes
@@ -405,7 +405,7 @@ def mapDeflectionsStructures_Aero(bdfModel='test_tet10.bdf',op2Filename='test_te
     log.info("done with deflection mapping!")
 
     #for aeroNode in aeroNodes2:
-    #    print "aeroNode = ",aeroNode
+    #    print("aeroNode = ",aeroNode)
     t2 = time()
     log.info("total mapDeflections.py time = %g sec" %(t2-t0))
 

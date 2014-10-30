@@ -95,7 +95,7 @@ class TetgenReader(object):
                 raise NotImplementedError('nnodes = %s' % nnodes)
             #print element_nodes
         tri = array(tri_list, 'int32') - 1 # subtract 1 so the node ids start at 0
-        print tri
+        print(tri)
         f.close()
         return tri
 
@@ -110,7 +110,7 @@ class TetgenReader(object):
         for inode in xrange(nnodes):
             nodes[inode] = f.readline().strip().split()[1:]
         f.close()
-        print "nodes =", nodes
+        print("nodes =", nodes)
         return nodes
 
     def read_ele(self, ele_filename, form_flag='1'):

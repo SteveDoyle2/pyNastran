@@ -10,11 +10,11 @@ class FEM(object):
     def solveABC(self, N, k, av, bv=0., cv=0.):
         N2 = self.subABC(N, av, bv, cv)
         #N2 = N.subs(a,av).subs(b,bv).subs(c,cv)
-        print "N  = ", N
-        print "Nb = ", N2
+        print("N  = ", N)
+        print("Nb = ", N2)
         k = solve(N2, k)
-        print "k  = ", k[0]
-        print ""
+        print("k  = ", k[0])
+        print("")
         return k[0]
 
     def subABC(self, N, av, bv=0, cv=0):
@@ -47,10 +47,10 @@ class CTRIA3(FEM):
         #N3 = 1-a-b
         N3 = k3 * (1 - N1 - N2)
 
-        print "CTRIA3"
-        print "N1 = %s" % (N1)
-        print "N2 = %s" % (N2)
-        print "N3 = %s" % (N3)
+        print("CTRIA3")
+        print("N1 = %s" % (N1))
+        print("N2 = %s" % (N2))
+        print("N3 = %s" % (N3))
 
 
 class CTRIA4(FEM):
@@ -129,11 +129,11 @@ class CTRIA4(FEM):
         #p4 = (0.5,0.5,0)
         assert N4.subs(a, 0.5).subs(b, 0.5) == 1, self.subABC(N4, 0.5, 0.5, 0)
 
-        print "CTRIA4"
-        print "N1 = %s" % (N1)
-        print "N2 = %s" % (N2)
-        print "N3 = %s" % (N3)
-        print "N4 = %s" % (N4)
+        print("CTRIA4")
+        print("N1 = %s" % (N1))
+        print("N2 = %s" % (N2))
+        print("N3 = %s" % (N3))
+        print("N4 = %s" % (N4))
 
 
 class CTRIA5(FEM):
@@ -214,12 +214,12 @@ class CTRIA5(FEM):
         #self.verifyN(N4,[0,0,0,1,0])
         #self.verifyN(N5,[0,0,0,0,1])
 
-        print "CTRIA4"
-        print "N1 = %s" % (N1)
-        print "N2 = %s" % (N2)
-        print "N3 = %s" % (N3)
-        print "N4 = %s" % (N4)
-        print "N5 = %s" % (N5)
+        print("CTRIA4")
+        print("N1 = %s" % (N1))
+        print("N2 = %s" % (N2))
+        print("N3 = %s" % (N3))
+        print("N4 = %s" % (N4))
+        print("N5 = %s" % (N5))
 
     def verifyN(self, N, V):
         v = [1, 0, 0]
@@ -276,7 +276,7 @@ class CTRIA6(FEM):
         k5 = Symbol('k5')
         k6 = Symbol('k6')
 
-        print k1
+        print(k1)
         L12 = c
         L13 = b
         L23 = a
@@ -294,7 +294,7 @@ class CTRIA6(FEM):
         N5 = k5 * L12 * L13 - 1
         N6 = k6 * L12 * L23 - 1
 
-        print "N1 = %s" % (N1)
+        print("N1 = %s" % (N1))
         k1 = self.solveABC(N1, k1, 1, 0, 0)
         k2 = self.solveABC(N2, k2, 0, 1, 0)
         k3 = self.solveABC(N3, k3, 0, 0, 1)
@@ -313,21 +313,21 @@ class CTRIA6(FEM):
         N5 = k5 * L12 * L13
         N6 = k6 * L12 * L23
 
-        print "CTRIA6"
-        print "N1 = %s" % (N1)
-        print "N2 = %s" % (N2)
-        print "N3 = %s" % (N3)
-        print "N4 = %s" % (N4)
-        print "N5 = %s" % (N5)
-        print "N6 = %s" % (N6)
+        print("CTRIA6")
+        print("N1 = %s" % (N1))
+        print("N2 = %s" % (N2))
+        print("N3 = %s" % (N3))
+        print("N4 = %s" % (N4))
+        print("N5 = %s" % (N5))
+        print("N6 = %s" % (N6))
 
     def solveABC(self, N, k, av, bv=0., cv=0.):
         N2 = N.subs(a, av).subs(b, bv).subs(c, cv)
-        print "N  = ", N
-        print "Nb = ", N2
+        print("N  = ", N)
+        print("Nb = ", N2)
         k = solve(N2, k)
-        print "k  = ", k  # [0]
-        print ""
+        print("k  = ", k)  # [0]
+        print("")
         return k[0]
 
 
@@ -372,11 +372,11 @@ class CQUAD4(FEM):
         N3 = k3 * L14 * L12
         N4 = k4 * L12 * L23
 
-        print "CQUAD4"
-        print "N1 = %s" % (N1)
-        print "N2 = %s" % (N2)
-        print "N3 = %s" % (N3)
-        print "N4 = %s" % (N4)
+        print("CQUAD4")
+        print("N1 = %s" % (N1))
+        print("N2 = %s" % (N2))
+        print("N3 = %s" % (N3))
+        print("N4 = %s" % (N4))
 
 
 class CQUAD9(FEM):  # really a CQUAD8
@@ -462,17 +462,17 @@ class CQUAD9(FEM):  # really a CQUAD8
         #center
         N9 = k9 * L34 * L12 * L14 * L23
 
-        print "CQUAD8"
-        print "N1 = %s" % (N1)
-        print "N2 = %s" % (N2)
-        print "N3 = %s" % (N3)
-        print "N4 = %s" % (N4)
+        print("CQUAD8")
+        print("N1 = %s" % (N1))
+        print("N2 = %s" % (N2))
+        print("N3 = %s" % (N3))
+        print("N4 = %s" % (N4))
 
-        print "N5 = %s" % (N5)
-        print "N6 = %s" % (N6)
-        print "N7 = %s" % (N7)
-        print "N8 = %s" % (N8)
-        print "N9 = %s" % (N9)
+        print("N5 = %s" % (N5))
+        print("N6 = %s" % (N6))
+        print("N7 = %s" % (N7))
+        print("N8 = %s" % (N8))
+        print("N9 = %s" % (N9))
 
 
 obj = CTRIA3()

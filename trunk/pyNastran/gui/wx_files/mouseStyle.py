@@ -16,8 +16,8 @@ class MouseStyle(vtk.vtkInteractorStyleTrackballCamera):
 
     def getActiveCamera(self):
         ren = self.pipeline.rend
-        #print "type(ren) = ",ren
-        #print "dir = ",'\n'.join(dir(ren))
+        #print("type(ren) = ",ren)
+        #print("dir = ",'\n'.join(dir(ren)))
         camera = self.cam
         #camera = ren.getActiveCamera
         #print "type(camera) = ",camera
@@ -25,34 +25,34 @@ class MouseStyle(vtk.vtkInteractorStyleTrackballCamera):
         #return self.pipeline.rend.getActiveCamera()
 
     #def leftButtonPressEvent(self,obj,event):
-    #    print "Left Button pressed"
+    #    print("Left Button pressed")
     #    self.LeftButtonDown()
     #    return
     #
     #def rightButtonPressEvent(self,obj,event):
-    #    print "Right Button pressed"
+    #    print("Right Button pressed")
     #    self.OnRightButtonDown()
     #    return
 
     #def rightButtonReleaseEvent(self,obj,event):
-    #    print "Right Button released"
+    #    print("Right Button released")
     #    self.OnRightButtonUp()
     #    return
 
     def middleButtonPressEvent(self, obj, event):
-        print "Middle Button pressed"
+        print("Middle Button pressed")
         self.OnMiddleButtonDown()
         return
 
     def middleButtonReleaseEvent(self, obj, event):
-        print "Middle Button released"
+        print("Middle Button released")
         self.OnMiddleButtonUp()
         return
 
     def onChar(self, obj, event):
         rwi = obj
         key = rwi.GetKeySym()
-        print "*Pressed %s" % (key)
+        print("*Pressed %s" % key)
 
         #renderer = self.ren
         camera = self.getActiveCamera()

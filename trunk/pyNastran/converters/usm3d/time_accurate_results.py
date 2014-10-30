@@ -14,7 +14,7 @@ def get_n_list(dirname, model_name):
         base, ext = os.path.splitext(flo_filename)
         if ext == '.flo' and '.aux.' not in flo_filename:
             if '_' not in flo_filename:
-                print flo_filename
+                print(flo_filename)
                 continue
             n = int(base.split('_')[-1])
             n_list.append(n)
@@ -111,7 +111,7 @@ def run_time_acc(dirname, model_name, node_ids, nstart=0, nlimit=None, num_cpus=
         if 1:
             for j, loads in enumerate(result):
                 if j % 500 == 0:
-                    print "n =", j, flo_filenames[j]
+                    print("n =", j, flo_filenames[j])
                 for i, node_id in enumerate(node_ids):
                     #print "Cp[node=%s] =%s" % (node_id, loads['Cp'][i])
                     Cp[node_id][j] = loads['Cp'][i]

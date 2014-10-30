@@ -22,13 +22,13 @@ def to_cart3d(bdf_filename, cart3d_filename):
         if element.type in ['CQUADR', 'CONM2']:
             continue
         assert element.type in ['CTRIA3', 'CTRIAR'], element.type
-        
-        
+
+
         out = element.nodeIDs()
         try:
             n1, n2, n3 = out
         except:
-            print "type =", element.type
+            print("type =", element.type)
             raise
         #print out
         n1 = node_id_shift[n1]

@@ -11,7 +11,7 @@ class TetgenIO(object):
         pass
 
     def load_tetgen_geometry(self, smesh_filename, dirname):
-        print "load_tetgen_geometry..."
+        print("load_tetgen_geometry...")
         skipReading = self.removeOldGeometry(smesh_filename)
         if skipReading:
             return
@@ -72,7 +72,7 @@ class TetgenIO(object):
         nnodes, three = nodes.shape
 
         nid = 0
-        print "nnodes=%s" % nnodes
+        print("nnodes=%s" % nnodes)
         for i in xrange(nnodes):
             points.InsertPoint(nid, nodes[i, :])
             nid += 1

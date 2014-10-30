@@ -17,7 +17,7 @@ def bar():
     NT = Matrix([N1, N2])
     pdV = p * A * L / 2
     M = makeM(pdV, NT)
-    print "Mbar = \n", M
+    print("Mbar = \n", M)
 
 
 def truss():
@@ -27,7 +27,7 @@ def truss():
                  [0, N1, 0, N2]])
     pdV = p * A * L / 2
     M = makeM(pdV, NT)
-    print "Mtruss = \n", M
+    print("Mtruss = \n", M)
 
 
 def quad():
@@ -46,7 +46,7 @@ def quad():
                        [0, 0, 0, 0]])
     factorI = Jacobian
     M = makeM(pdV, NT, factorI, levels=2)
-    print "Mquad = \n", M
+    print("Mquad = \n", M)
 
 
 def tet4():
@@ -74,7 +74,7 @@ def tet4():
     pdV = 3
     factorI = 1
     M = makeM(pdV, NT, factorI, levels=3)
-    print "Mtet = \n", M
+    print("Mtet = \n", M)
 
 
 def makeM(pdV, NT, factorI=1, levels=1):
@@ -82,13 +82,13 @@ def makeM(pdV, NT, factorI=1, levels=1):
 
     #print "N = \n",N
 
-    print "size(NT) = ", NT.shape
-    print "size(N) = ", N.shape
+    print("size(NT) = ", NT.shape)
+    print("size(N) = ", N.shape)
 
     NtN = NT * N
     B = []
-    print "NtN = \n", NtN
-    print "size(NtN) = ", NtN.shape
+    print("NtN = \n", NtN)
+    print("size(NtN) = ", NtN.shape)
 
     M = integrate(NtN * factorI, z)
     Mp1 = M.subs(z, 1)
@@ -101,15 +101,15 @@ def makeM(pdV, NT, factorI=1, levels=1):
         M4 = M3p1 - M3m1
         M2 = M4
         if levels >= 3:
-            print "M4 = ", M4
+            print("M4 = ", M4)
             M5 = integrate(M4, b)
             M5p1 = M5.subs(b, 1)
             M5m1 = M5.subs(b, -1)
             M6 = M5p1 - M5m1
             M2 = M6
-            print "M6 = ", M6
+            print("M6 = ", M6)
 
-    print "pdV = ", pdV
+    print("pdV = ", pdV)
     MM = pdV * M2
     MM.simplify()
     return MM

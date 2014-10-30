@@ -58,13 +58,13 @@ class badTree(object):
 
         toKeys = toNodes.keys()
         nToNodes = len(toKeys)
-        
+
         nMax = len(fromKeys)
         n = 0
-        
+
         for fromKey in fromKeys:
             if n%1000==0:
-                print "n/%s = %s; %.2f%%" %(n,nMax,n*100./nMax)
+                print("n/%s = %s; %.2f%%" % (n,nMax,n*100./nMax))
             #print "fromKey = ",fromKey
             fromNode = fromNodes[fromKey] #.xyz
             #print "fromNode = ",fromNode
@@ -82,14 +82,14 @@ class badTree(object):
 
             dFTshort = self.reduceToClose(dFT,sortList)
             nIDshort = self.reduceToClose(toKeys,sortList)
-            
+
             #print "dFTshort = ",dFTshort
             #print "nIDshort = ",nIDshort
             #print "node[%s]=%s" %(nIDshort[0],toNodes[nIDshort[0]])
             #print "node[%s]=%s" %(nIDshort[1],toNodes[nIDshort[1]])
             self.tree[fromKey] = [nIDshort,dFTshort]
             n+=1
-        print "finished constructing distance tree"
+        print("finished constructing distance tree")
         return self.tree
 
 
@@ -99,7 +99,7 @@ if __name__=='__main__':
     n3 = array([1.,0.,0.])
     n4 = array([5.,3.,0.])
     n5 = array([2.,0.,4.])
-    
+
     nodes = {
         1:n1,
         2:n2,
@@ -108,8 +108,8 @@ if __name__=='__main__':
         5:n5,}
     treeObj = Tree(treeType='node',nClose=3)
     tree = treeObj.buildTree(nodes,nodes)
-    
+
     for nkey,dist in tree.items():
-        print nkey,dist[0],dist[1]
-    
+        print(nkey, dist[0], dist[1])
+
 

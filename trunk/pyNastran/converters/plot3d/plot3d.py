@@ -46,9 +46,9 @@ class Plot3d(object):
             #print "sline = ", sline, nxyzi, nxyzi2, nxyz
             nxyzi = nxyzi2
             if nxyzi2 == nxyz:
-                print "finished with block %i ixyz=%s" % (iblock, ixyz)
+                print("finished with block %i ixyz=%s" % (iblock, ixyz))
                 #block = self.blocks[iblock]
-                print "reshaping...", self.block_shapes[iblock]
+                print("reshaping...", self.block_shapes[iblock])
                 nleft -= nxyz
                 b = block.reshape(self.block_shapes[iblock])
                 if ixyz == 0:
@@ -79,12 +79,12 @@ class Plot3d(object):
                     ixyz = 0
                 else:
                     asdf
-                print "iblock=%s icoeff=%s nleft=%s" %(iblock, ixyz, nleft)
+                print("iblock=%s icoeff=%s nleft=%s" %(iblock, ixyz, nleft))
 
             elif nxyzi2 > nxyz:
                 asdf2
 
-        print "finished with all blocks"
+        print("finished with all blocks")
 
 if __name__ == '__main__':
     fname = 'HSCT-1.p3d'

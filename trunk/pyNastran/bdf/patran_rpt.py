@@ -14,7 +14,7 @@ def rpt_read():
             headers2.append(header)
     headers = headers2
     #headers2 = [header if header.strip() for header in headers]
-    print headers
+    print(headers)
 
     i = 2
     j = 0
@@ -57,7 +57,7 @@ def main():
         for row in rows:
             z = float(row[iz])
             ozz = float(row[iozz])
-            print "z=%s ozz=%s" % (z, ozz)
+            print("z=%s ozz=%s" % (z, ozz))
             f.write('%g,%g\n' % (z, ozz))
         f.close()
 
@@ -90,7 +90,7 @@ def csv_simplify(csv_filename, x0, ix, iname, tol=0.05):
             update_flag = False
 
         # if the points are the same in the direction of interest, find the max
-        print "x=%s x_orig=%s" % (x, x_orig)
+        print("x=%s x_orig=%s" % (x, x_orig))
         if allclose(x, x_orig, atol=tol):
             if response is None:
                 response = aResponse[i]
@@ -98,7 +98,7 @@ def csv_simplify(csv_filename, x0, ix, iname, tol=0.05):
                 response = vstack((response, aResponse[i]))
             update_flag = False
         else:
-            print "response =", response
+            print("response = %s" % response)
             if len(response.shape) == 2:
                 # max
                 response = response[0:].max(axis=0)

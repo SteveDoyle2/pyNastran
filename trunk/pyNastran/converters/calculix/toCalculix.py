@@ -209,8 +209,8 @@ class CalculixConverter(BDF):
             elif prop.type == 'PBARL':
                 mid = prop.mid
                 #section_name = 'SQUARE'
-                print "what is the section_name?"
-                print " ", sorted(prop.__dict__.keys())
+                print("what is the section_name?")
+                print(" ", sorted(prop.__dict__.keys()))
                 msg += '*BEAM SECTION,ELSET=eids_pid%i,MATERIAL=MAT%i,SECTION=%s\n' % (prop.Pid(), mid.Mid(), section_name)
                 if section_name == 'SQUARE':
                     msg += '%s\n' % prop.dims[0]

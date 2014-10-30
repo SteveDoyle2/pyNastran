@@ -43,17 +43,17 @@ for in_file in ['test/mat_b_dn.op4',
             error = abs(a - A).max()
 
             if error > 0:
-                print "Name = |%s|" % (Name)
-                print('%s:' % op4fh.name[i])
-                print "error[%s] = %s" % (Name, error)
+                print("Name = |%s|" % (Name))
+                print('%s:' % op4fh.name[i]))
+                print("error[%s] = %s" % (Name, error))
 
-                print "cOP4:"
-                print print_matrix(a)
+                print("cOP4:")
+                print(print_matrix(a))
 
-                print "pyOP4:"
-                print print_matrix(A)
+                print("pyOP4:")
+                print(print_matrix(A))
 
-                print "diff:"
-                print print_matrix(a - A)
-                print '----------------------------'
+                print("diff:")
+                print(print_matrix(a - A))
+                print('----------------------------')
                 sys.exit('stopping')

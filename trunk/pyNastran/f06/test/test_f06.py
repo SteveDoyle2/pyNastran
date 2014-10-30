@@ -131,7 +131,7 @@ def run_f06(f06_filename, iSubcases=[], write_f06=True, debug=False,
             raise
         else:
             isPassed = False
-    print "isPassed =", isPassed
+    print("isPassed =", isPassed)
     return isPassed
 
 

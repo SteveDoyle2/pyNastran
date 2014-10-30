@@ -15,21 +15,21 @@ class PCH(object):
 
     def read_pch(self):
         with open(self.pch_filename, 'r') as pch:
-    
+
             for line in pch.readline()[:72]:
                 headerLines = []
                 while '$' in line:
                     headerLines.append(line)
                     line = pch.readline()[:72]
-                print "***line = ", line
+                print("***line = ", line)
                 for line in headerLines:
-                    print line
-    
+                    print(line)
+
                 # read the headers
                 headers = {}
                 for line in headerLines:
-                    print "-----"
-                    print line
+                    print("-----")
+                    print(line)
                     if '=' in line:
                         i = line.index('=')
                         key = line[1:i].strip()
@@ -39,35 +39,35 @@ class PCH(object):
                         value = None
                     if key:
                         headers[key] = value
-                        print "key=|%s| value=|%s|" % (key, value)
-    
+                        print("key=|%s| value=|%s|" % (key, value))
+
                 if 'REAL OUTPUT' in headers:  # MAGNITUDE-PHASE OUTPUT
-                    print "***real",
+                    print("***real",)
                     if 'DISPLACEMENTS' in headers:
-                        print "displacements"
-                        print pch.readline().strip(), '***'
+                        print("displacements")
+                        print(pch.readline().strip(), '***'
                         line = read_real_table(pch, line)
                     elif 'VELOCITY' in headers:
-                        print "velocity"
+                        print("velocity")
                         line = read_real_table(pch, line)
                     elif 'ACCELERATION' in headers:
-                        print "acceleration"
+                        print("acceleration")
                         line = read_real_table(pch, line)
                     elif 'EIGENVALUE' in headers:
-                        print "eigenvalue"
+                        print("eigenvalue")
                         line = read_real_table(pch, line)
                     #elif 'OLOADS' in headers:
-                        #print "oloads"
+                        #print("oloads")
                     else:
                         msg = 'headerkeys RealOutput = %r' % headers.keys()
                         raise NotImplementedError(msg)
                 elif 'REAL-IMAGINARY OUTPUT':
-                    print "real-imaginary"
+                    print("real-imaginary")
                 else:
                     msg = 'headerkeys = %r' % headers.keys()
                     raise NotImplementedError(msg)
                 sys.exit('done')
-    
+
                 if line == '':  # end of file
                     break
 
@@ -77,16 +77,16 @@ def read_real_table(pch, line):
     reads displacemnt, velocity, acceleration, spc/mpc forces,
     temperature, load vector
     """
-    #print "?",line
+    #print("?",line)
     #a = pch.readline()
-    #print "xxxxx",a
+    #print("xxxxx",a)
     line = ''
     lines = []
     while '$' not in line:
         line = pch.readline()
-        print "?|%s|" % line
+        print("?|%s|" % line)
         lines.append(line)
-    print '\n'.join(lines)
+    print('\n'.join(lines))
     return line
 
 if __name__ == '__main__':

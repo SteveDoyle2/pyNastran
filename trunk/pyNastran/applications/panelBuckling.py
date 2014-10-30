@@ -12,7 +12,7 @@ class PanelBuckling(object):
         """
         Preliminary work on a panel buckling code
         Assumptions:
-        
+
         1. node connectivitity (no gaps)
         2. large change in normal vector signifies change in panel
         3. only CTRIA3, CQUAD4 elements
@@ -73,8 +73,8 @@ class PanelBuckling(object):
         for edge, elements in sorted(Edges2.iteritems()):
             #elements = self.removeExtraElements2(elements)
             self.edgeCount[edge] = len(elements)
-            print "edge=%s elements=%s edgeCount=%s" % (
-                edge, elements, self.edgeCount[edge])
+            print("edge=%s elements=%s edgeCount=%s" % (
+                edge, elements, self.edgeCount[edge]))
 
 
     def buildPanelMove(self, Edges, Edges2, Normals, eStart=None):
@@ -83,7 +83,7 @@ class PanelBuckling(object):
         if eStart is None:
             eStart = self.unclaimed[0]
         self.unclaimed = set(self.unclaimed)
-        print "eStart = ", eStart
+        print("eStart = ", eStart)
 
         #Edges2 = {}  ## maps edges to elements
         #print("Edges[edge=%s] = %s" % (edge,Edges2[edge])) # edges to elements
@@ -93,7 +93,7 @@ class PanelBuckling(object):
         self.claimed = []
         iLevel = 0
         patch = self.buildPatch(patch, iLevel, Edges, Edges2, eStart)
-        print "self.claimed = ", self.claimed
+        print("self.claimed = ", self.claimed)
 
         # if a node is shared by *3* elements at the edge of a patch, it's a corner element
         # from 2, 1 is found, then 3 is found
@@ -111,19 +111,19 @@ class PanelBuckling(object):
         # doesnt hand 2 element wide patches, but if we rego over all missed elements
         # a few times, we should be ok...
 
-        print "patch = ", patch
+        print("patch = ", patch)
 
     def buildPatch(self, patch, iLevel, Edges, Edges2, eStart):
         edges = Edges[eStart]
-        print "------------"
-        print "*eStart = ", eStart
+        print("------------")
+        print("*eStart = ", eStart)
 
         allEids = []
         for edge in edges:
-            print "patch1 = ", patch
+            print("patch1 = ", patch)
             eids = Edges2[edge]
 
-            print "edge=%s elements=%s" % (edge, eids)
+            print("edge=%s elements=%s" % (edge, eids))
             #indexCurrentElement = eids.index(eStart)
             #eids.pop(indexCurrentElement)
             #Edges2[edge] = eids
@@ -136,20 +136,20 @@ class PanelBuckling(object):
             elif self.edgeCount[edge] == 3:  # questionable panel
                 pass
 
-            print "patch2 = ", patch
+            print("patch2 = ", patch)
 
         allEids = list(set(allEids))
 
         iLevel += 1
-        print "allEids = ", allEids
+        print("allEids = ", allEids)
         for eid in allEids:
             if eid in self.unclaimed:
-                print "*eid=%s" % (eid)
+                print("*eid=%s" % (eid))
                 patch = self.buildPatch(patch, iLevel, Edges, Edges2, eid)
-                print "patch = ", patch
+                print("patch = ", patch)
 
         iLevel -= 1
-        print "------------"
+        print("------------")
         return patch
 
             #sys.exit()
@@ -163,7 +163,7 @@ class PanelBuckling(object):
 
         self.eidsDone = set([])
         for eid, edges in sorted(Edges.iteritems()):
-            print "eid = ", eid
+            print("eid = ", eid)
             self.eidsDone = self.eidsDone.union([eid])
             # what panel are we working on
             if eid not in panelEids:
@@ -172,13 +172,13 @@ class PanelBuckling(object):
                 panelID = copy.deepcopy(maxPanelID)
             else:
                 panelID = panelEids[eid]
-            print "panelID = ", panelID
+            print("panelID = ", panelID)
 
             # what elements are nearby
             nEid = Normals[eid]
             touchingElements = []
             for edge in edges:
-                print("edge=%s" % str(edge))
+                print("edge=%s" % str(edge)))
                 #print("eid=%s edge=%s" % (eid, edge))
                 # get only the unique entries
                 touchingElements = list(set(Edges2[edge]))
@@ -187,11 +187,11 @@ class PanelBuckling(object):
 
                 if len(touchingElements) == 0:
                     continue
-                print "touchingElements = ", touchingElements
+                print("touchingElements = ", touchingElements)
 
                 edgeCount = self.edgeCount[edge]
                 if edgeCount == 1:
-                    print "  symmetry..."
+                    print("  symmetry...")
                 elif edgeCount == 2:
                     for touchingElement in touchingElements:
                         if eid == touchingElement:
@@ -200,16 +200,16 @@ class PanelBuckling(object):
 
                         angle = self.Angle(nEid, nTouch)  # degrees
                         if angle < self.maxAngle:
-                            print "   *angle[%s,%s] = %g" % (eid, touchingElement, angle)
+                            print("   *angle[%s,%s] = %g" % (eid, touchingElement, angle))
                             panelEids[touchingElement] = panelID
                         else:
-                            print "    angle[%s,%s] = %g" % (eid, touchingElement, angle)
+                            print("    angle[%s,%s] = %g" % (eid, touchingElement, angle))
 
                 else:
-                    print "  edgeCount = ", edgeCount
+                    print("  edgeCount = ", edgeCount)
                     self.skippedEdges.append(edge)
 
-            print ""
+            print("")
 
         for edge in self.skippedEdges:
             elements = Edges2[edge]
@@ -218,7 +218,7 @@ class PanelBuckling(object):
                     del panelEids[eid]
         del Edges
 
-        print "skippedEdges = ", self.skippedEdges
+        print("skippedEdges = ", self.skippedEdges)
 
         reversedPanelEids = {}
         # i dont like initializing lists within dictionaries, messy
@@ -231,18 +231,18 @@ class PanelBuckling(object):
 
         eidsToRemove = []
         for panelID, eids in sorted(reversedPanelEids.iteritems()):
-            print "panelID=%s nEids=%s eids=%s" % (panelID, len(eids), eids)
+            print("panelID=%s nEids=%s eids=%s" % (panelID, len(eids), eids))
             if panelID not in IDsToKeep:
-                print "****removing ", panelID
+                print("****removing ", panelID)
                 eidsToRemove += eids
 
-        print "eidsToRemove = ", eidsToRemove
+        print("eidsToRemove = ", eidsToRemove)
         for eid in eidsToRemove:
             del self.bdf.elements[eid]
 
         #self.bdf.elements = shells2
         self.bdf.writeBDFAsPatran('fem.out.bdf')
-        print "done building panels!!!"
+        print("done building panels!!!")
 
     def Angle(self, nEid, nTouch):
         r"""

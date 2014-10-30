@@ -128,58 +128,58 @@ def abs_max_min(values, global_abs_max=True):
 
 
 def test_abs_max_min_global():
-    #print iformat('4si3f', 2)
-    print abs_max_min_global([0.0, 2.0, 1.0])
-    print abs_max_min_global([0.0, 2.0, -1.0])
-    print abs_max_min_global([0.0, 2.0, -3.0])
-    print abs_max_min_global(array([0.0, 2.0, -3.0]))
-    print abs_max_min_global([1.0])
+    #print(iformat('4si3f', 2))
+    print(abs_max_min_global([0.0, 2.0, 1.0]))
+    print(abs_max_min_global([0.0, 2.0, -1.0]))
+    print(abs_max_min_global([0.0, 2.0, -3.0]))
+    print(abs_max_min_global(array([0.0, 2.0, -3.0])))
+    print(abs_max_min_global([1.0]))
 
     # gets the global max/min value
-    print abs_max_min_global([
-        [0.0, 2.0, -3.0],
-        [0.0, 2.0, -4.0],
-    ])
-    print abs_max_min_global(array([
+    print(abs_max_min_global([
         [0.0, 2.0, -3.0],
         [0.0, 2.0, -4.0],
     ]))
+    print(abs_max_min_global(array([
+        [0.0, 2.0, -3.0],
+        [0.0, 2.0, -4.0],
+    ])))
 
 
 def test_abs_max_min_vector():
-    print abs_max_min_vector(array([
+    print(abs_max_min_vector(array([
         [0.0, 2.0, 1.0],
         [0.0, 2.0, -1.0],
         [0.0, 2.0, -3.0],
-    ]))
+    ])))
 
-    print abs_max_min_vector([
-        [0.0, 2.0, 1.0],
-        [0.0, 2.0, -1.0],
-        [0.0, 2.0, -3.0],
-        [0.0, 2.0, 4.0],
-    ])
-    print abs_max_min_vector(array([
+    print(abs_max_min_vector([
         [0.0, 2.0, 1.0],
         [0.0, 2.0, -1.0],
         [0.0, 2.0, -3.0],
         [0.0, 2.0, 4.0],
     ]))
+    print(abs_max_min_vector(array([
+        [0.0, 2.0, 1.0],
+        [0.0, 2.0, -1.0],
+        [0.0, 2.0, -3.0],
+        [0.0, 2.0, 4.0],
+    ])))
 
-    print abs_max_min_vector(array([
+    print(abs_max_min_vector(array([
         [3.0, 2.0, -3.0],
         [-3.0, 2.0, 3.0],
-    ]))
+    ])))
 
     # not an array
-    #print abs_max_min([
+    #print(abs_max_min([
         #[0.0, 2.0, 1.0],
         #[0.0, 2.0, -1.0],
         #[0.0, 2.0, -3.0],
         #[0.0, 2.0, 4.0],
-    #])
+    #]))
 
 if __name__ == '__main__':
-    #print iformat('4si3f')
+    #print(iformat('4si3f'))
     test_abs_max_min_global()
     test_abs_max_min_vector()

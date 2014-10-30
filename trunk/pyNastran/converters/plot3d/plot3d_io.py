@@ -8,7 +8,7 @@ class Plot3d_io(object):
         pass
 
     def load_plot3d_geometry(self, p3d_filename, dirname):
-        print "load_plot3d_geometry"
+        print("load_plot3d_geometry")
         self.nidMap = {}
 
         #key = self.caseKeys[self.iCase]
@@ -51,13 +51,13 @@ class Plot3d_io(object):
         quad_type = elem.GetCellType()
         #nblocks = len(model.x)
         for iblock in xrange(nblocks):
-            print "iblock =", iblock
+            print("iblock =", iblock)
             nid_base = nid
             x = model.x[iblock]
             y = model.y[iblock]
             z = model.z[iblock]
-            print "x.shape[%s] =" % iblock, x.shape
-            print x
+            print("x.shape[%s] =" % iblock, x.shape)
+            print(x)
             (ni, nj, nk) = x.shape
             assert nk == 1
             for k in xrange(nk):
@@ -84,7 +84,7 @@ class Plot3d_io(object):
                     elem.GetPointIds().SetId(3, p4)
                     element = [p1, p2, p3, p4]
                     self.grid.InsertNextCell(quad_type, elem.GetPointIds())
-                    print element
+                    print(element)
                 #jstart += ni
 
             #nid_base += ni * nj * nk
@@ -130,7 +130,7 @@ class Plot3d_io(object):
         #nNodes = self.nNodes
         #nElements = self.nElements
 
-        print "is_centroidal=%s isNodal=%s" % (self.is_centroidal, self.is_nodal)
+        print("is_centroidal=%s isNodal=%s" % (self.is_centroidal, self.is_nodal))
         assert self.is_centroidal!= self.is_nodal
 
         #result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
