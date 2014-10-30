@@ -1,7 +1,6 @@
-import StringIO
+from six.moves import zip, StringIO
 import unittest
 
-from six.moves import zip
 from itertools import count
 
 from pyNastran.bdf.bdf import BDF, BDFCard, PBAR #, GRID, MAT1

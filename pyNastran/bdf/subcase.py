@@ -2,6 +2,7 @@
 """
 Subcase creation/extraction class
 """
+from six import string_types
 
 class Subcase(object):
     """
@@ -368,7 +369,7 @@ class Subcase(object):
         key = update_param_name(key)
         #print("adding isubcase=%s key=%r value=%r options=%r "
         #      "param_type=%r" %(self.id, key, value, options, param_type))
-        if isinstance(value, basestring) and value.isdigit():
+        if isinstance(value, string_types) and value.isdigit():
             value = int(value)
 
         (key, value, options) = self._simplify_data(key, value, options, param_type)

@@ -1,6 +1,7 @@
 # pylint: disable=E1101,C0103,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import string_types
 #import sys
 from numpy import ndarray
 import warnings
@@ -127,7 +128,7 @@ class GetMethods(GetMethodsDeprecated):
         else:
             raise RuntimeError('invalid type; type(xkeys)=%r' % type(xkeys))
 
-        assert isinstance(ykeys[0], basestring), ykeys
+        assert isinstance(ykeys[0], string_types), ykeys
 
         out_set = set([])
         for xkey in xkeys:

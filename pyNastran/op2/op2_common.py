@@ -1,4 +1,5 @@
 from __future__ import print_function
+from six import string_types
 import copy
 from struct import Struct, unpack
 
@@ -465,7 +466,7 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
                     real_vector, complex_vector,
                     node_elem, random_code=None, is_cid=False):
 
-        assert isinstance(result_name, basestring), 'result_name=%r' % result_name
+        assert isinstance(result_name, string_types), 'result_name=%r' % result_name
         assert isinstance(storage_obj, dict), 'storage_obj=%r' % storage_obj
         #assert real_obj is None
         #assert complex_obj is None
@@ -646,7 +647,7 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
 
         .. note:: dt can also be load_step depending on the class
         """
-        assert not isinstance(classObj, basestring), 'classObj=%r' % classObj
+        assert not isinstance(classObj, string_types), 'classObj=%r' % classObj
         if debug:
             print("create Transient Object")
             print("***NF = %s" % self.nonlinear_factor)
@@ -886,7 +887,7 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
 
     def _create_table_object(self, result_name,  nnodes,
                              slot, slot_object, slot_vector, is_cid=False):
-        assert isinstance(result_name, basestring), result_name
+        assert isinstance(result_name, string_types), result_name
         assert isinstance(slot, dict), slot
         auto_return = False
         is_vectorized = self.is_vectorized

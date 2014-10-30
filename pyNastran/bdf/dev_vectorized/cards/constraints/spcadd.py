@@ -1,6 +1,6 @@
+from six.moves import StringIO
 from collections import defaultdict
 from itertools import count
-import StringIO
 
 from numpy import array
 

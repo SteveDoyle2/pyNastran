@@ -1,3 +1,4 @@
+from six.moves import StringIO
 from collections import defaultdict
 from itertools import count
 
@@ -59,7 +60,6 @@ class SPC1(object):
             f.write(print_card(card))
 
     def __repr__(self):
-        import StringIO
         f = StringIO.StringIO()
         self.write_bdf(f)
         return f.getvalue().rstrip()

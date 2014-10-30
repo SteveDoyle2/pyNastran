@@ -1,6 +1,7 @@
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import string_types
 
 from numpy import matrix, zeros, array, transpose, dot, ones
 from numpy import eye, allclose, cross
@@ -357,7 +358,7 @@ class CBAR(LineElement):
             self.wa = array([main[6], main[7], main[8]], dtype='float64')
             self.wb = array([main[9], main[10], main[11]], dtype='float64')
 
-        if not isinstance(self.offt, basestring):
+        if not isinstance(self.offt, string_types):
             raise SyntaxError('invalid offt expected a string of length 3 '
                               'offt=|%r|; Type=%s' % (self.offt, type(self.offt)))
 

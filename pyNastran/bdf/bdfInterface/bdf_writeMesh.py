@@ -7,6 +7,7 @@ This file defines:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import string_types
 from codecs import open
 
 #import warnings
@@ -75,7 +76,7 @@ class WriteMesh(object):
             title = 'Save BDF/DAT/PCH'
             out_filename = save_file_dialog(title, wildcard_wx, wildcard_qt)
             assert out_filename is not None, out_filename
-        if not isinstance(out_filename, basestring):
+        if not isinstance(out_filename, string_types):
             raise TypeError('out_filename=%r must be a string' % out_filename)
 
         if size == 8:

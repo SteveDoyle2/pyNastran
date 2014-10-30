@@ -1,6 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import string_types
 from six.moves import zip
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
@@ -82,13 +83,13 @@ class PARAM(BaseCard):
                 value = value1
 
         if value is None:
-            if isinstance(value1, basestring):
+            if isinstance(value1, string_types):
                 assert ' ' not in value1, 'PARAM value1=%r' % value1
-            if isinstance(value2, basestring):
+            if isinstance(value2, string_types):
                 assert ' ' not in value2, 'PARAM value2=%r' % value2
             self.values = [value1, value2]
         else:
-            if isinstance(value, basestring):
+            if isinstance(value, string_types):
                 assert ' ' not in value, 'PARAM value=%r' % value
             self.values = [value]
 

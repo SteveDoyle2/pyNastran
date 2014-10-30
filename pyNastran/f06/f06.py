@@ -443,7 +443,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
         cycles = self.stored_lines[-1][1:].strip()
         try:
             cycles = float(cycles.split('=')[1])
-        except IndexError, ValueError:
+        except (IndexError, ValueError):
             return
 
         eigenvalue = self.stored_lines[-2][1:].strip()

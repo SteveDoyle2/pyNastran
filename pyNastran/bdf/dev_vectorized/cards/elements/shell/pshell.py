@@ -1,5 +1,4 @@
-from six.moves import zip
-import cStringIO
+from six.moves import zip, StringIO
 from numpy import array, zeros, argsort, concatenate, searchsorted, unique, where, nan, arange, asarray
 
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
@@ -277,7 +276,7 @@ class PSHELL(Property):
         return obj
 
     def __repr__(self):
-        f = cStringIO.StringIO()
+        f = StringIO.StringIO()
         f.write('<PSHELL object> n=%s\n' % self.n)
         self.write_bdf(f)
         return f.getvalue()

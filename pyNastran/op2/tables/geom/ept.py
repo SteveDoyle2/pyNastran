@@ -1,8 +1,8 @@
 #pylint: disable=C0301,W0612,C0111,R0201,C0103,W0613,R0914,C0326
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six.moves import StringIO
 from struct import unpack, Struct
-import StringIO
 
 from pyNastran.bdf.bdf import (NSM, PBAR, PBARL, PBEAM,
                                PROD, PSHELL, PSHEAR,

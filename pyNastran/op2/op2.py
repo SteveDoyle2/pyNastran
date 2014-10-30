@@ -2,6 +2,7 @@
 """
 Defines the OP2 class.
 """
+from six import string_types
 import os
 from struct import unpack, Struct
 #from struct import error as StructError
@@ -166,7 +167,7 @@ class OP2( #BDF,
         if debug_file is None:
             self.debug_file = None
         else:
-            assert isinstance(debug_file, basestring), debug_file
+            assert isinstance(debug_file, string_types), debug_file
             self.debug_file = debug_file
         self.make_geom = False
 

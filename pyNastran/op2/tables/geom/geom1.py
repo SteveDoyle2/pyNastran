@@ -1,5 +1,5 @@
 #pylint: disable=C0301,C0103,W0612,R0914,C0326
-import StringIO
+from six.moves import StringIO
 from struct import unpack, Struct
 
 from pyNastran.bdf.cards.nodes import GRID

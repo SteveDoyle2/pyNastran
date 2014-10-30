@@ -1,6 +1,7 @@
 # pylint: disable=R0904,R0902,C0111,C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import string_types
 from six.moves import zip
 
 from pyNastran.bdf.fieldWriter import print_card, is_same
@@ -375,7 +376,7 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
     :param sort_fields: should the fields be sorted at the end? (default=False)
     """
     # ..todo:  should this be removed...is the field capitalized when read in?
-    fields = [field.upper() if isinstance(field, basestring) else field for field in fields]
+    fields = [field.upper() if isinstance(field, string_types) else field for field in fields]
 
     if isinstance(fields, int):
         return [fields]
@@ -416,7 +417,7 @@ def expand_thru_by(fields, set_fields=True, sort_fields=False):
     .. note:: used for QBDY3, ???
     """
     # ..todo:  should this be removed...is the field capitalized when read in?
-    fields = [field.upper() if isinstance(field, basestring) else field for field in fields]
+    fields = [field.upper() if isinstance(field, string_types) else field for field in fields]
 
     if len(fields) == 1:
         return [interpret_value(fields[0])]
@@ -464,7 +465,7 @@ def expand_thru_exclude(self, fields):
     .. warning:: hasnt been tested
     """
     # ..todo:  should this be removed...is the field capitalized when read in?
-    fields = [interpret_value(field.upper()) if isinstance(field, basestring) else field for field in fields]
+    fields = [interpret_value(field.upper()) if isinstance(field, string_types) else field for field in fields]
 
     fieldsOut = []
     nFields = len(fields)

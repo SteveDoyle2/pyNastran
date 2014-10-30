@@ -1,4 +1,4 @@
-import cStringIO
+from six.moves import StringIO
 from numpy import array, zeros, arange, searchsorted, where, unique, hstack, concatenate
 
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
@@ -98,7 +98,7 @@ class PBUSH(object):
 
 
     def __repr__(self):
-        f = cStringIO.StringIO()
+        f = StringIO.StringIO()
         f.write('<PBUSH object> n=%s\n' % self.n)
         self.write_bdf(f)
         return f.getvalue()

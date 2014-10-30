@@ -1,5 +1,6 @@
-from struct import Struct, pack
+from six import string_types
 from six.moves import zip
+from struct import Struct, pack
 
 from numpy import array, zeros, sqrt, abs, angle  # dot,
 
@@ -142,7 +143,7 @@ class RealTableArray(TableArray):  # displacement style table
                 header_format += b'i'
             elif isinstance(val, float):
                 header_format += b'f'
-            elif isinstance(val, basestring) and word in ['Title', 'subtitle', 'label']:
+            elif isinstance(val, string_types) and word in ['Title', 'subtitle', 'label']:
                 val = 4
                 header_format += 'i'
                 #val = '%128s' % val

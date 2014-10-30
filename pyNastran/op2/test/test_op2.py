@@ -1,3 +1,4 @@
+from six import string_types
 import os
 import sys
 import time

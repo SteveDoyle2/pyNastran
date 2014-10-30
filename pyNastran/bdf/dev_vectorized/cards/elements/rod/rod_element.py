@@ -1,4 +1,4 @@
-import cStringIO
+from six.moves import StringIO
 from pyNastran.bdf.dev_vectorized.cards.elements.element import Element
 
 class RodElement(Element):

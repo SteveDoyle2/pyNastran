@@ -1,6 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import string_types
 import sys
 import copy
 
@@ -230,7 +231,7 @@ def wipe_empty_fields(card):
     """
     cardB = []
     for field in card:
-        if isinstance(field, basestring):
+        if isinstance(field, string_types):
             field = field.strip()
             if field == '':
                 field = None

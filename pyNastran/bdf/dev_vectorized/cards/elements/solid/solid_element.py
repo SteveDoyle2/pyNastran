@@ -1,3 +1,4 @@
+from six.moves import StringIO
 from numpy import zeros, searchsorted, where, asarray
 
 from pyNastran.bdf.dev_vectorized.cards.elements.element import Element
@@ -19,7 +20,7 @@ class SolidElement(Element):
         return self.slice_by_index(i)
 
     def __repr__(self):
-        f = cStringIO.StringIO()
+        f = StringIO.StringIO()
         f.write('<%s object> n=%s\n' % (self.type, self.n))
         self.write_bdf(f)
         return f.getvalue()

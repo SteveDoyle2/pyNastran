@@ -12,6 +12,7 @@ All rigid elements are RigidElement and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import string_types
 from six.moves import zip
 import sys
 from itertools import count
@@ -414,7 +415,7 @@ class RBE3(RigidElement):
         self.refc = components_or_blank(card, 4, 'refc')
         #iUM = fields.index('UM')
 
-        fields = [field.upper() if isinstance(field, basestring) else field for field in card[5:]]
+        fields = [field.upper() if isinstance(field, string_types) else field for field in card[5:]]
         iOffset = 5
         iWtMax = len(fields) + iOffset
         try:

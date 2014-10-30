@@ -1,4 +1,5 @@
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
+from six import string_types
 from numpy import matrix, zeros, array, transpose, dot, ones
 from numpy import eye, allclose, cross
 from numpy.linalg import norm
@@ -154,7 +155,7 @@ class CBEAM(CBAR):
             self.isOfft = True
             self.offt = 'GGG'  # default
             self.bit = None
-        elif isinstance(field8, basestring):
+        elif isinstance(field8, string_types):
             self.isOfft = True
             self.bit = None
             self.offt = field8
