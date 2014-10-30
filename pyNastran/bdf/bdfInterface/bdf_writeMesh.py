@@ -652,7 +652,7 @@ class WriteMesh(object):
                 for reject in reject_lines:
                     reject2 = reject.rstrip()
                     if reject2:
-                        msg.append(repr(reject2) + '\n')
+                        msg.append(str(reject2) + '\n')
         outfile.write(''.join(msg))
 
     def _write_rigid_elements(self, outfile, size, card_writer):

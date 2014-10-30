@@ -297,10 +297,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI',
             'DEQATN',
 
+
             # optimization cards
             'DCONSTR', 'DESVAR', 'DDVAL', 'DRESP1', 'DRESP2',
             'DVPREL1', 'DVPREL2',
             'DOPTPRM', 'DVMREL1', 'DLINK', 'DRESP3',
+            #'DSCREEN',
 
             # sets
             'ASET', 'BSET', 'CSET', 'QSET',  # 'USET',
@@ -585,6 +587,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.dvprels = {}
         self.dvmrels = {}
         self.doptprm = None
+        self.dscreen = {}
 
         # ------------------------- nonlinear defaults -----------------------
         #: stores NLPCI
@@ -1211,6 +1214,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 # card_count is increased in add_card function
                 self.add_card(lines, card_name, comment, is_list=False)
             else:
+                print('card_name = %r\n' % card_name)
+                print('lines = %s\n' % lines)
+                print('comment = %s\n\n' % comment)
                 self._increase_card_count(card_name)
                 if comment:
                     self.rejects.append([comment])
