@@ -215,15 +215,15 @@ class CBEAM(CBAR):
         p1 = model.Node(n1).Position()
         p2 = model.Node(n2).Position()
         v1 = p2 - p1
-        if debug:
-            print("v1=%s" % (v1))
+        #if debug:
+            #print("v1=%s" % (v1))
         v1 = v1 / norm(v1)
         #v2 = v2/norm(v2)
         #v3 = v3/norm(v3)
         (l, m, n) = v1
         #(o,p,q) = v2
         #(r,s,t) = v3
-        print("l=%s m=%s n=%s" % (l, m, n))
+        #print("l=%s m=%s n=%s" % (l, m, n))
         if is3D:
             Lambda = matrix([[l, m, n, 0, 0, 0, ],
                              [m, l, n, 0, 0, 0, ],
@@ -240,8 +240,8 @@ class CBEAM(CBAR):
                              [0, 0, 0, m, l, n, ],
                              [0, 0, 0, 0, 0, 1, ],
                              ])
-        if debug:
-            print("Lambda* = \n" + str(Lambda))
+        #if debug:
+            #print("Lambda* = \n" + str(Lambda))
         return Lambda
 
     def displacement_stress(self, model, q, dofs, is3D=False):  # CBEAM
@@ -338,11 +338,11 @@ class CBEAM(CBAR):
         v2 = cross(v1, v3)
 
         R = array([ v1, v2, v3 ])
-        if debug:
-            print("v1 =", v1)
-            print("v2 =", v2)
-            print("v3 =", v3)
-            print('R =\n', R)
+        #if debug:
+            #print("v1 =", v1)
+            #print("v2 =", v2)
+            #print("v3 =", v3)
+            #print('R =\n', R)
             #print('R.shape =', R.shape)
         return R, v1, v2, v3
         (l1, m1, n1) = v1
@@ -366,8 +366,8 @@ class CBEAM(CBAR):
         p1 = model.Node(n1).Position()
         p2 = model.Node(n2).Position()
         v1 = p2 - p1
-        if debug:
-            print("v1=%s" % (v1))
+        #if debug:
+            #print("v1=%s" % (v1))
         v1 = v1 / norm(v1)
         (l, m, n) = v1
         #l = 1
@@ -385,8 +385,8 @@ class CBEAM(CBAR):
         #print("R = \n",R)
         #print("is3D = \n",is3D)
         #debug = True
-        if debug:
-            print("Lambda = \n" + str(Lambda))
+        #if debug:
+            #print("Lambda = \n" + str(Lambda))
             #sys.exit('asdf')
         return Lambda
 
@@ -421,8 +421,8 @@ class CBEAM(CBAR):
         Lambda[10,9:] = v2
         Lambda[11,9:] = v3
 
-        if debug:
-            print("Lambda = \n" + str(Lambda))
+        #if debug:
+            #print("Lambda = \n" + str(Lambda))
             #sys.exit('asdf')
         return Lambda
 
@@ -448,7 +448,7 @@ class CBEAM(CBAR):
         I22 = self.I22()
         G = self.G()
         J = self.J()
-        print("A=%s E=%s L=%s G=%s J=%s" % (A, E, L, G, J))
+        #print("A=%s E=%s L=%s G=%s J=%s" % (A, E, L, G, J))
         #G = J = A = E = 1.0
         #A = J = G = 0.0
 

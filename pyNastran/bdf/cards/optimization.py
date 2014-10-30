@@ -586,10 +586,10 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
-        #if size == 8:
-        return self.comment() + print_card_8(card)
-        #return self.comment() + print_card_16(card)
-        #return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        else:
+            return self.comment() + print_card_16(card)
 
 
 class DVPREL2(OptConstraint):

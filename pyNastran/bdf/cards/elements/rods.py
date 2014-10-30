@@ -27,8 +27,8 @@ def _Lambda(model, n1, n2, debug=True):
     p1 = model.Node(n1).Position()
     p2 = model.Node(n2).Position()
     v1 = p2 - p1
-    if debug:
-        print("v1=%s" % (v1))
+    #if debug:
+        #print("v1=%s" % (v1))
     v1 = v1 / norm(v1)
     (l, m, n) = v1
     #l = 1
@@ -41,8 +41,8 @@ def _Lambda(model, n1, n2, debug=True):
 
     #print("R = \n",R)
     #debug = True
-    if debug:
-        print("Lambda = \n" + str(Lambda))
+    #if debug:
+        #print("Lambda = \n" + str(Lambda))
         #sys.exit('asdf')
     return Lambda
 
@@ -225,8 +225,8 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         #print(K / fnorm)
         #print("K[%s] = \n%s\n" % (self.eid, list_print(K/fnorm)))
 
-        print('dofs =', dofs)
-        print('K =\n', list_print(K / fnorm))
+        #print('dofs =', dofs)
+        #print('K =\n', list_print(K / fnorm))
 
         return(K2, dofs, nIJV)
 
