@@ -1214,9 +1214,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 # card_count is increased in add_card function
                 self.add_card(lines, card_name, comment, is_list=False)
             else:
-                print('card_name = %r\n' % card_name)
-                print('lines = %s\n' % lines)
-                print('comment = %s\n\n' % comment)
                 self._increase_card_count(card_name)
                 if comment:
                     self.rejects.append([comment])

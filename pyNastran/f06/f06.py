@@ -1,6 +1,6 @@
 #pylint: disable=C0301,C0111
 import os
-from six.moves import zip
+from six.moves import zip, range
 
 from pyNastran.utils import print_bad_path
 from pyNastran.utils.log import get_logger
@@ -751,7 +751,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
         return True
 
     def skip(self, iskip):
-        for i in xrange(iskip - 1):
+        for i in range(iskip - 1):
             self.infile.readline()
         self.i += iskip
         return self.infile.readline()
