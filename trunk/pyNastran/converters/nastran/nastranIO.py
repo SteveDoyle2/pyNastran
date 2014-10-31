@@ -267,7 +267,7 @@ class NastranIO(object):
         pids_dict = {}
         nelements = len(model.elements)
         pids = zeros(nelements, 'int32')
-        for (eid, element) in sorted(iteritems(model.elementss)):
+        for (eid, element) in sorted(iteritems(model.elements)):
             self.eidMap[eid] = i
             #print(element.type)
             pid = 0
