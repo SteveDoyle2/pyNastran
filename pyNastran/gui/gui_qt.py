@@ -298,7 +298,7 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
             'Left Click - Rotate',
             'Middle Click - Pan/Recenter Rotation Point',
             'Shift + Left Click - Pan/Recenter Rotation Point',
-            'Right Mouse - Zoom',
+            'Right Mouse / Wheel - Zoom',
             '',
             'Keyboard Controls',
             #'r   - reset camera view',
@@ -313,6 +313,8 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
             #'o/O    - rotate counter-clockwise/clockwise 5 degrees',
             's      - view model as a surface',
             'w      - view model as a wireframe',
+            '',
+            'Reload Model:  using the same filename reload the model',
         ]
         QtGui.QMessageBox.about(self, "About pyNastran GUI", "\n".join(about))
 

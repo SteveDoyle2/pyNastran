@@ -157,7 +157,7 @@ def _parseEntry(lines):
                 value = parseSetSline(sline)
             else:
                 value = interpret_value(value)
-    ### = in line
+
     elif lineUpper.startswith('BEGIN'):  # begin bulk
         try:
             (key, value) = lineUpper.split(' ')
