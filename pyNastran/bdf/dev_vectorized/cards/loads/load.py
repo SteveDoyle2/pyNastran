@@ -1,3 +1,4 @@
+from six import iteritems
 from six.moves import zip, range
 
 from numpy import zeros, searchsorted, asarray, array
@@ -64,7 +65,7 @@ class LOAD(object):
         types2 = [self.model.force,  #self.model.force1,  self.model.force2,
                   self.model.moment, ]#self.model.moment1, self.model.moment2]
         #for loadtype in types:
-            #for load_id, loads in loadtype.iteritems():
+            #for load_id, loads in iteritems(loadtype):
                 #self.resolve_loads()
         #for loadtype in types2:
             #loadtype.resolve_loads()

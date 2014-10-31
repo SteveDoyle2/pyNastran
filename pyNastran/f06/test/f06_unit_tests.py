@@ -1,3 +1,4 @@
+from six import  iteritems
 from six.moves import zip
 import os
 import unittest
@@ -505,12 +506,12 @@ class TestF06(unittest.TestCase):
         self.assertEquals(bdf.sol, 101, bdf.sol)
 
         cen = 'CEN/4'
-        for (loadcase, stress) in f06.plateStress.iteritems():
+        for (loadcase, stress) in iteritems(f06.plateStress):
             #print("%3s %3s %6s %8s" % ('EID', 'NID', 'iLayer', 'VM_Stress'))
             # stress is a PlateStressObject
             if stress.isVonMises():
                 #vonMises = 'VON MISES'
-                for eid,ovm in sorted(stress.ovmShear.iteritems()):
+                for eid,ovm in sorted(iteritems(stress.ovmShear)):
                     ovmkeys = ovm.keys()
                     ovmkeys.remove(cen)
                     ovmkeys.sort()
@@ -522,7 +523,7 @@ class TestF06(unittest.TestCase):
                             pass
             else:
                 #vonMises = 'MAX SHEAR'
-                for eid,ovm in sorted(stress.ovmShear.iteritems()):
+                for eid,ovm in sorted(iteritems(stress.ovmShear)):
                     ovmkeys = ovm.keys()
                     ovmkeys.remove(cen)
                     ovmkeys.sort()

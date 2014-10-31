@@ -114,7 +114,7 @@ class NastranComponent(ExternalCode):
         output_variables = {}
         grid_outputs = {}
 
-        for name, trait in self.traits().iteritems():
+        for name, trait in iteritems(self.traits()):
             if trait.iotype == "in":
                 if trait.nastran_card and trait.nastran_id and trait.nastran_field:
                     smart_replacements[name] = trait
@@ -163,7 +163,7 @@ class NastranComponent(ExternalCode):
 
         ########## Modify BDF ##########
         self.timing_section( "Modify BDF" )
-        for name, trait in smart_replacements.iteritems():
+        for name, trait in iteritems(smart_replacements):
             value = getattr(self, name)
             nastran_id = int( trait.nastran_id )
             get_method = getattr( self.bdf, pyNastran_get_card_methods[ trait.nastran_card ] )
@@ -234,11 +234,11 @@ class NastranComponent(ExternalCode):
         self.timing_section( "Set outputs using data from OP2" )
 
         from pyNastran.utils import object_attributes
-        for name, trait in grid_outputs.iteritems():
+        for name, trait in iteritems(grid_outputs):
             if trait.nastran_header == 'displacements' :
                 var = getattr(self.op2, trait.nastran_header)
                 case = var[trait.nastran_subcase]
-                for key, eid in trait.nastran_constraints.iteritems():  # e.g., "translations", 18
+                for key, eid in iteritems(trait.nastran_constraints):  # e.g., "translations", 18
                     if not hasattr(case, key):
                         #op2.displacements[isubcase=1] doesn't have an attribute "translation".
                         #valid attributes are:  ["translations", "rotations"]

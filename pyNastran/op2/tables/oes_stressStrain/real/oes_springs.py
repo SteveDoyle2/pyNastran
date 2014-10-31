@@ -154,7 +154,7 @@ def _write_f06_springs_transient(f, stress, header, words, name):
 def _write_f06_springs(f, data):
     eids = []
     stresses = []
-    for eid, stress in sorted(data.iteritems()):
+    for eid, stress in sorted(iteritems(data)):
         eids.append(eid)
         stresses.append(stress)
         if len(stresses) == 4:

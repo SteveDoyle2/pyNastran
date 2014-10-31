@@ -1,8 +1,8 @@
 """
     blade_2dv_static_nastran.py - Blade implementation for a quad
-    example structures problem. 
+    example structures problem.
 """
-
+from six import iteritems
 from openmdao.lib.datatypes.api import Float
 
 from nastranwrapper.nastran import NastranComponent
@@ -25,11 +25,11 @@ class BladeStatic(NastranComponent):
 
     # these are actually groups of stresses that will be constrained
 
-    group1_stress = Float(0., 
+    group1_stress = Float(0.,
                         iotype='out',
                         units='lb/(inch*inch)',
                         desc='Stress in group 1')
-    group2_stress = Float(0., 
+    group2_stress = Float(0.,
                         iotype='out',
                         units='lb/(inch*inch)',
                         desc='Stress in group 2')
@@ -71,13 +71,13 @@ class BladeStatic(NastranComponent):
         #   inside of that are grid-id values
         isubcase = 1
         von_mises =[]
-        for eid, ovmShear in self.op2.plateStress[isubcase].ovmShear.iteritems() :
+        for eid, ovmShear in iteritems(self.op2.plateStress[isubcase].ovmShear) :
             biggest = max( max( s[0], s[1] ) for s in ovmShear.values() )
             von_mises.append(biggest)
 
         groups = [range(25601,25945+1), range(1, 25600+1)]
 
-        [self.group1_stress, self.group2_stress] = group_von_mises(groups, von_mises) 
+        [self.group1_stress, self.group2_stress] = group_von_mises(groups, von_mises)
 
 def group_von_mises(groups, von_mises):
     final = []

@@ -1,3 +1,4 @@
+from six import  iteritems
 from numpy import concatenate, hstack, argsort, searchsorted, ndarray, unique, array
 
 from .pshell import PSHELL
@@ -95,7 +96,7 @@ class PropertiesShell(object):
             'PCOMPG': (self.pcompg, self.pcompg.property_id),
         }
         out = array([])
-        for Type, (ptype, pids) in sorted(TypeMap.iteritems()):
+        for Type, (ptype, pids) in sorted(iteritems(TypeMap)):
             for pid in pids:
                 if pid in property_ids:
                     value = getattr(ptype, method)
@@ -118,7 +119,7 @@ class PropertiesShell(object):
         }
         #print('property_ids = %s' % property_ids)
         out = array([])
-        for Type, (ptype, pids) in sorted(TypeMap.iteritems()):
+        for Type, (ptype, pids) in sorted(iteritems(TypeMap)):
             for pid in pids:
                 if pid in property_ids:
                     value = getattr(ptype, method)([pid])

@@ -1,3 +1,4 @@
+from six import  iteritems
 from math import pi, degrees
 from pyNastran.bdf.bdf import BDF, to_fields, wipe_empty_fields, BDFCard
 #from pyNastran.applications.hyper
@@ -51,9 +52,9 @@ class Hypersonic(BDF):
 
     def _write_common(self, size, card_writer):
         msg = ''
-        for fid,flow in sorted(self.flow.iteritems()):
+        for fid,flow in sorted(iteritems(self.flow)):
             msg += str(flow)
-        for fid,hyper in sorted(self.hyper.iteritems()):
+        for fid,hyper in sorted(iteritems(self.hyper)):
             msg += str(hyper)
         msg += BDF._write_common(self, size, card_writer)
         return msg
@@ -76,10 +77,10 @@ class Hypersonic(BDF):
         pinf = 0.
 
         positions = {}
-        for nid, node in self.nodes.iteritems():
+        for nid, node in iteritems(self.nodes):
             positions[nid] = node.Position()
 
-        for eid, element in self.elements.iteritems():
+        for eid, element in iteritems(self.elements):
             pid = element.Pid()
             hyper = self.hyper[pid]
 

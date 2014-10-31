@@ -1,3 +1,4 @@
+from six import iteritems
 import pyNastran
 from collections import defaultdict
 from docopt import docopt
@@ -85,7 +86,7 @@ class IGES(object):
         print("G =", G_global.split(','))
         print("----P----")
         P_parameter_data = self.combine(Parameter1, True)
-        #for key, line in sorted(P_parameter_data.iteritems()):
+        #for key, line in sorted(iteritems(P_parameter_data)):
             #print(key, line)
 
         print("----D----")
@@ -96,7 +97,7 @@ class IGES(object):
             assert dType in self.supported+self.maybe_supported, '%i is not supported' % dType
 
         #D_directory_entry = self.combine(Directory1)
-        #for key, line in sorted(D_directory_entry.iteritems()):
+        #for key, line in sorted(iteritems(D_directory_entry)):
             #print('***', key, line)
 
     def combine(self, P1, debug=False):

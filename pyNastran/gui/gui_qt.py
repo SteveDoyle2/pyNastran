@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, unicode_literals, print_function
-from six import string_types
+from six import string_types, iteritems
 from six.moves import range
 
 # standard library
@@ -197,7 +197,7 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
             'tecplot' : is_tecplot,
             'usm3d' : is_usm3d,
         }
-        for (name, is_on) in sorted(self.formats.iteritems()):
+        for (name, is_on) in sorted(iteritems(self.formats)):
             if is_on:
                 self.supported_formats.append(name)
         print("formats =", self.supported_formats)
@@ -769,11 +769,11 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         self.iText += 1
 
     def TurnTextOff(self):
-        for (i, text) in self.textActors.iteritems():
+        for (i, text) in iteritems(self.textActors):
             text.VisibilityOff()
 
     def TurnTextOn(self):
-        for (i, text) in self.textActors.iteritems():
+        for (i, text) in iteritems(self.textActors):
             text.VisibilityOn()
 
     def build_lookup_table(self):

@@ -1,3 +1,4 @@
+from six import iteritems
 from six.moves import StringIO
 from numpy import array, zeros, arange, searchsorted, where, unique, hstack, concatenate
 
@@ -72,10 +73,10 @@ class PBUSH(object):
 
     def write_bdf(self, f, size=8, property_ids=None):
         if size == 8:
-            for pid, pcomp in sorted(self.properties.iteritems()):
+            for pid, pcomp in sorted(iteritems(self.properties)):
                 f.write(pcomp.write_bdf(size, print_card_8))
         else:
-            for pid, pcomp in sorted(self.properties.iteritems()):
+            for pid, pcomp in sorted(iteritems(self.properties)):
                 f.write(pcomp.write_bdf(size, print_card_16))
 
     #def slice_by_index(self, i):

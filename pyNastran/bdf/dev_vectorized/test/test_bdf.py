@@ -360,7 +360,7 @@ def compare_params(fem1, fem2):
 
 
 def print_points(fem1, fem2):
-    for (nid, n1) in sorted(fem1.nodes.iteritems()):
+    for (nid, n1) in sorted(iteritems(fem1.nodes)):
         print("%s   xyz=%s  n1=%s  n2=%s" % (nid, n1.xyz, n1.Position(True),
                                             fem2.Node(nid).Position()))
         break

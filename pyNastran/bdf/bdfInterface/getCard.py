@@ -1,7 +1,7 @@
 # pylint: disable=E1101,C0103,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types
+from six import string_types, iteritems
 #import sys
 from numpy import ndarray
 import warnings
@@ -55,7 +55,7 @@ class GetMethods(GetMethodsDeprecated):
 
     def getNodes(self):
         nodes = []
-        for (nid, node) in sorted(self.nodes.iteritems()):
+        for (nid, node) in sorted(iteritems(self.nodes)):
             nodes.append(node)
         return nodes
 
@@ -233,7 +233,7 @@ class GetMethods(GetMethodsDeprecated):
         assert isinstance(pids, list), pids
         if mode == 'list':
             eids2 = []
-            for eid, element in sorted(self.elements.iteritems()):
+            for eid, element in sorted(iteritems(self.elements)):
                 pid = element.Pid()
                 if pid in pids:
                     eids2.append(eid)
@@ -241,7 +241,7 @@ class GetMethods(GetMethodsDeprecated):
             eids2 = {}
             for pid in pids:
                 eids2[pid] = []
-            for eid, element in self.elements.iteritems():
+            for eid, element in iteritems(self.elements):
                 try:
                     pid = element.Pid()
                     if pid in pids:
@@ -267,7 +267,7 @@ class GetMethods(GetMethodsDeprecated):
             for nid in sorted(self.spoints.spoints):  # SPOINTs
                 nidToElementsMap[nid] = []
 
-        for (eid, element) in self.elements.iteritems():  # load the mapper
+        for (eid, element) in iteritems(self.elements):  # load the mapper
             try:
                 # not supported for 0-D and 1-D elements
                 nids = element.nodeIDs()

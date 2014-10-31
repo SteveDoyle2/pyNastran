@@ -1,3 +1,4 @@
+from six import iteritems
 from numpy import zeros
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
@@ -180,7 +181,7 @@ class GridPointStresses(ScalarObject):
               #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
               #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
               #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
-        for eKey, nxs in sorted(self.nx.iteritems()):
+        for eKey, nxs in sorted(iteritems(self.nx)):
             eKey2 = eKey
             zero = '0'
             for iLoad, nx in enumerate(nxs):
@@ -219,8 +220,8 @@ class GridPointStresses(ScalarObject):
               #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
               #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
               #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
-        for dt, Forces in sorted(self.forces.iteritems()):
-            for eKey, force in sorted(Forces.iteritems()):
+        for dt, Forces in sorted(iteritems(self.forces)):
+            for eKey, force in sorted(iteritems(Forces)):
                 zero = '0'
                 for iLoad, f in enumerate(force):
                     (f1, f2, f3) = f
@@ -382,7 +383,7 @@ class GridPointStressesVolume(ScalarObject):
               #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
               #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
               #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
-        for eKey, nxs in sorted(self.nx.iteritems()):
+        for eKey, nxs in sorted(iteritems(self.nx)):
             eKey2 = eKey
             zero = '0'
             for iLoad, nx in enumerate(nxs):
@@ -418,8 +419,8 @@ class GridPointStressesVolume(ScalarObject):
               #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
               #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
               #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
-        for dt, Forces in sorted(self.forces.iteritems()):
-            for eKey, force in sorted(Forces.iteritems()):
+        for dt, Forces in sorted(iteritems(self.forces)):
+            for eKey, force in sorted(iteritems(Forces)):
                 zero = '0'
                 for iLoad, f in enumerate(force):
                     (f1, f2, f3) = f

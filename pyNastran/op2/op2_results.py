@@ -1,3 +1,4 @@
+from six import iteritems
 from collections import defaultdict
 from numpy import amax, amin, mean, array, sqrt  #, sum
 from numpy.linalg import eigvalsh
@@ -208,12 +209,12 @@ def get_nodal_averaged_stress(model, eid_to_nid_map, isubcase, options=None):
             raise RuntimeError('location=%r' % location)
 
     if mode == 'derive/avg':
-        for result_name, result in results.iteritems():
-            for nid, datai in result.iteritems():
+        for result_name, result in iteritems(results):
+            for nid, datai in iteritems(result):
                 results[result_name][nid] = mean(datai)
     elif mode == 'avg/derive':
         for result_name in ['x', 'y', 'z', 'xy', 'yz', 'xz']:
-            for nid, datai in results[result_name].iteritems():
+            for nid, datai in iteritems(results[result_name]):
                 results[result_name][nid] = mean(datai)
 
         for nid in results['maxP']:
@@ -281,7 +282,7 @@ def solid_bending():
         'layers': 'max',
     }
     vm_avg_derive = get_nodal_averaged_stress(model, eid_to_nid_map, isubcase, options2)['vonMises']
-    for nid, stressi in sorted(vm_derive_avg.iteritems()):
+    for nid, stressi in sorted(iteritems(vm_derive_avg)):
         print("nid=%-3s derive/avg=%-8g avg/derive=%-8g diff=%g" % (nid, stressi, vm_avg_derive[nid], stressi - vm_avg_derive[nid]))
 
 def sol_101_elements():
@@ -304,7 +305,7 @@ def sol_101_elements():
         'layers': 'min',
     }
     vm_avg_derive = get_nodal_averaged_stress(model, eid_to_nid_map, isubcase, options2)['vonMises']
-    for nid, stressi in sorted(vm_derive_avg.iteritems()):
+    for nid, stressi in sorted(iteritems(vm_derive_avg)):
         print("nid=%-3s derive/avg=%-8g avg/derive=%-8g diff=%g" % (nid, stressi, vm_avg_derive[nid], stressi - vm_avg_derive[nid]))
 
 def setup(bdf_filename, op2_filename):
@@ -312,7 +313,7 @@ def setup(bdf_filename, op2_filename):
     fem.read_bdf(bdf_filename)
 
     eid_to_nid_map = {}
-    for eid, element in fem.elements.iteritems():
+    for eid, element in iteritems(fem.elements):
         node_ids = element.nodeIDs()
         eid_to_nid_map[eid] = node_ids
     del fem

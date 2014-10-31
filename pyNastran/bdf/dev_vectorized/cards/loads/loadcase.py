@@ -1,3 +1,4 @@
+from six import iteritems
 from six.moves import zip, StringIO
 from numpy import unique, where
 
@@ -29,7 +30,7 @@ class LoadCase(object):
                     raise NotImplementedError(load.type)
 
     def add_reference(self, load):
-        for load_id, loads in load.iteritems():
+        for load_id, loads in iteritems(load):
             #print("ref", loads)
             for load in loads:
                 self.loads[load_id].append(load)

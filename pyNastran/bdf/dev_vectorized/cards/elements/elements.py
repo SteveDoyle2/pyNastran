@@ -1,8 +1,9 @@
 from numpy import (array, zeros, searchsorted, unique, concatenate, argsort,
                    hstack, where, vstack, ones, cross, intersect1d, setdiff1d,
                    arange, nan, full, ravel, asarray, any, ndarray)
-from numpy.linalg import norm
+from six import iteritems
 from six.moves import zip
+from numpy.linalg import norm
 
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter, unique2d
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.ctetra4 import volume4
@@ -195,7 +196,7 @@ class Elements(object):
         out = []
         for eid in element_ids:
             obj = None
-            for Type, eids in self.element_groups.iteritems():
+            for Type, eids in iteritems(self.element_groups):
                 if eid in eids:
                     i = where(eid == eids)[0]
                     obj = TypeMap[Type][i]
@@ -367,7 +368,7 @@ class Elements(object):
 
         ni = 0
         print('data2 = %s' % data2)
-        for (pid, eType), element_ids in data2.iteritems():
+        for (pid, eType), element_ids in iteritems(data2):
             #print('pid=%s eType=%s element_ids=%s' % (pid, eType, element_ids))
             elements = TypeMap[eType]
             i = searchsorted(elements.element_id, element_ids)
@@ -514,7 +515,7 @@ class Elements(object):
         out = []
         #print('property_ids = %s' % property_ids)
         for pid in property_ids:
-            for Type, pids in self.property_groups.iteritems():
+            for Type, pids in iteritems(self.property_groups):
                 if not isinstance(pid, int):
                     print('pids = %s' % pids)
                     print('pid  = %s' % pid)
@@ -634,7 +635,7 @@ class Elements(object):
     def get_elements(self, element_ids=None):
         if element_ids is None:
             out = []
-            for Type, eids in self.element_groups.iteritems():
+            for Type, eids in iteritems(self.element_groups):
                 for i in range(len(eids)):
                     obj = TypeMap[Type].slice_by_index(i)
                     out.append(obj)
@@ -791,7 +792,7 @@ class Elements(object):
         #print('element_ids = %s' % element_ids2)
         for eid in element_ids2:
             #obj = None
-            for Type, eids in self.element_groups.iteritems():
+            for Type, eids in iteritems(self.element_groups):
                 if eid in eids:
                     #print('  found Type=%s' % Type)
                     i = where(eid == eids)[0]

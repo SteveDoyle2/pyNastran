@@ -1,4 +1,4 @@
-from six import string_types
+from six import string_types, iteritems
 import os
 from os.path import splitext, getsize
 from os.path import join as pjoin
@@ -104,7 +104,7 @@ def write_dict(obj, nspaces, nbase, isClass):
         return '{}'
 
     msg = '{\n'
-    for key, value in sorted(obj.iteritems()):
+    for key, value in sorted(iteritems(obj)):
         #msg += '#'
         msg += write_object_attributes(key, value, nspaces2, nbase, isClass=False)
     msg += '%s}' % spaces

@@ -1,3 +1,4 @@
+from six import  iteritems
 from struct import pack
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 
@@ -35,7 +36,7 @@ class Flux(ScalarObject):  # approach_code=1, table_code=3, thermal=1
         .. warning:: hasnt been tested...
         """
         msg = block3
-        for nodeID, flux in sorted(self.fluxes.iteritems()):
+        for nodeID, flux in sorted(iteritems(self.fluxes)):
             grid = nodeID * 10 + device_code
             msg += pack('i6f', grid, flux[0], flux[1], flux[2], 0, 0, 0)
         return msg

@@ -213,7 +213,7 @@ class WriteMesh(object):
 
         msg = []
         #failed_element_types = set([])
-        for (pid, eids) in sorted(pid_eids.iteritems()):
+        for (pid, eids) in sorted(iteritems(pid_eids)):
             prop = self.properties[pid]
             if eids:
                 msg.append(prop.write_bdf(size, card_writer))

@@ -2,7 +2,7 @@
 """
 Defines the OP2 class.
 """
-from six import string_types
+from six import string_types, iteritems
 from six.moves import range
 import os
 from struct import unpack, Struct
@@ -104,7 +104,7 @@ class OP2( #BDF,
                    subcaseID_2: [time3, time4]}
         """
         expected_times = {}
-        for (isubcase, eTimes) in times.iteritems():
+        for (isubcase, eTimes) in iteritems(times):
             eTimes = list(times)
             eTimes.sort()
             expected_times[isubcase] = array(eTimes)
@@ -1201,7 +1201,7 @@ class OP2( #BDF,
         msg = []
         for table_type in table_types:
             table = getattr(self, table_type)
-            for isubcase, subcase in sorted(table.iteritems()):
+            for isubcase, subcase in sorted(iteritems(table)):
                 if hasattr(subcase, 'get_stats'):
                     msg.append('op2.%s[%s]\n' % (table_type, isubcase))
                     msg.extend(subcase.get_stats())

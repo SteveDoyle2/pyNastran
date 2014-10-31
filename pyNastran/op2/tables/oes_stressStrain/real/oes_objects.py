@@ -1,5 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import iteritems
 from numpy import argsort
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
@@ -54,7 +55,7 @@ class OES_Object(ScalarObject):
         #valid_types = ['CTRIA3', 'CTRIA6', 'CQUAD4', 'CQUAD8']
         for eType in valid_types:
             orderedETypes[eType] = []
-        for eid, eType in sorted(self.eType.iteritems()):
+        for eid, eType in sorted(iteritems(self.eType)):
             #print "eType = ",eType
             assert eType in valid_types, 'unsupported eType=%r; valid_type=%s' % (eType, str(['%r' % str(t) for t in valid_types]))
             orderedETypes[eType].append(eid)

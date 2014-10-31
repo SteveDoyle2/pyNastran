@@ -507,9 +507,9 @@ class Subcase(object):
         op2Params['thermal'] = thermal
 
         print("\nThe estimated results...")
-        for (key, value) in sorted(op2Params.iteritems()):
+        for (key, value) in sorted(iteritems(op2Params)):
             if value is not None:
-                print("   key=|%s| value=|%s|" % (key, value))
+                print("   key=%r value=%r" % (key, value))
 
     def print_param(self, key, param):
         """

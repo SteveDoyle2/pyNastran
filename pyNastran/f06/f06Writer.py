@@ -1,7 +1,7 @@
 #pylint: disable=W0201,C0301,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types
+from six import string_types, iteritems
 import sys
 import copy
 from datetime import date
@@ -867,7 +867,7 @@ class F06Writer(object):
                   '\n', '']
 
         # eigenvalues are written first
-        for ikey, result in sorted(self.eigenvalues.iteritems()):
+        for ikey, result in sorted(iteritems(self.eigenvalues)):
             header
             print('%-18s case=%r' % (result.__class__.__name__, ikey))
             self.page_num = result.write_f06(f06, header, page_stamp,
@@ -879,7 +879,7 @@ class F06Writer(object):
 
         # then eigenvectors
         # has a special header
-        for isubcase, result in sorted(self.eigenvectors.iteritems()):
+        for isubcase, result in sorted(iteritems(self.eigenvectors)):
             (subtitle, label) = self.iSubcaseNameMap[isubcase]
             subtitle = subtitle.strip()
             header[0] = '     %s\n' % subtitle

@@ -204,7 +204,7 @@ class MeshTools(BDF):
 
         # find nodes with z < tol
         nids_tol = []
-        for nid, xyz in xyz2.iteritems():
+        for nid, xyz in iteritems(xyz2):
             if xyz[2] < ztol:
                 nids_tol.append(nid)
 
