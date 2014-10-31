@@ -321,7 +321,6 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
         -2 -> xxx             subcase 1
         """
         #print('-----------------')
-        ### changed...
         #for iline in [-4, -3, -2, -1, 0]:
             #if iline == -1:
                 #print('***line[%s]=%r' % (iline, self.stored_lines[iline].replace("    ", " ")))
