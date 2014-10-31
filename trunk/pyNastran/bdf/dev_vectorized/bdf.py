@@ -247,7 +247,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             62 : 'CPENTA6', 63 : 'CPENTA15',
             64 : 'CHEXA8', 65 : 'CHEXA20',
         }
-        self._element_name_to_element_type_mapper = {v:k for k, v in self._element_type_to_element_name_mapper.iteritems()}
+        self._element_name_to_element_type_mapper = {v:k for k, v in iteritems(self._element_type_to_element_name_mapper)}
 
         #: lines that were rejected b/c they were for a card that isnt supported
         self.rejects = []

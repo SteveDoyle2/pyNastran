@@ -1,3 +1,4 @@
+from six import  iteritems
 from pyNastran.f06.f06_formatting import writeFloats13E
 from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray, RealTableObject, ComplexTableObject
 
@@ -37,7 +38,7 @@ class RealSPCForces(RealTableObject):
             return self._write_f06_transient_block(words, header, pageStamp, page_num, f)
 
         msg = header + words
-        for nodeID, translation in sorted(self.translations.iteritems()):
+        for nodeID, translation in sorted(iteritems(self.translations)):
             rotation = self.rotations[nodeID]
             grid_type = self.gridTypes[nodeID]
 

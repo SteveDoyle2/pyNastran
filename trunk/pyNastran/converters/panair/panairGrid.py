@@ -911,7 +911,7 @@ class PanairGrid(object):
         elements = []
         regions = []
         pointI = 0
-        for name, panel in sorted(self.patches.iteritems()):
+        for name, panel in sorted(iteritems(self.patches)):
             if not get_wakes:
                 if panel.is_wake():
                     continue

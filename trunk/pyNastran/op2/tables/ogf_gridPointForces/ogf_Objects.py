@@ -1,3 +1,4 @@
+from six import iteritems
 from numpy import array
 from struct import pack
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
@@ -135,7 +136,7 @@ class RealGridPointForces(ScalarObject):
               #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
               #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
         zero = ' '
-        for eKey, Force in sorted(self.forces.iteritems()):
+        for eKey, Force in sorted(iteritems(self.forces)):
             for iLoad, force in enumerate(Force):
                 (f1, f2, f3) = force
                 (m1, m2, m3) = self.moments[eKey][iLoad]
@@ -161,9 +162,9 @@ class RealGridPointForces(ScalarObject):
               #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
               #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
               #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
-        for dt, Forces in sorted(self.forces.iteritems()):
+        for dt, Forces in sorted(iteritems(self.forces)):
             zero = ' '
-            for eKey, Force in sorted(Forces.iteritems()):
+            for eKey, Force in sorted(iteritems(Forces)):
                 for iLoad, force in enumerate(Force):
                     (f1, f2, f3) = force
                     (m1, m2, m3) = self.moments[dt][eKey][iLoad]

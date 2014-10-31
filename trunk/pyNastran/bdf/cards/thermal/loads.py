@@ -1,6 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import  iteritems
 from six.moves import range
 
 from ...bdfInterface.BDF_Card import wipe_empty_fields
@@ -311,7 +312,7 @@ class TEMP(ThermalLoad):
 
     def add(self, tempObj):
         assert self.sid == tempObj.sid
-        for (gid, temp) in self.tempObj.temperatures.iteritems():
+        for (gid, temp) in iteritems(self.tempObj.temperatures):
             self.temperatures[gid] = temp
 
     def cross_reference(self, model):
@@ -321,7 +322,7 @@ class TEMP(ThermalLoad):
         """Writes the TEMP card"""
         list_fields = ['TEMP', self.sid]
         nTemps = len(self.temperatures) - 1
-        for i, (gid, temp) in enumerate(sorted(self.temperatures.iteritems())):
+        for i, (gid, temp) in enumerate(sorted(iteritems(self.temperatures))):
             list_fields += [gid, temp]
             if i % 3 == 2 and nTemps > i:  # start a new TEMP card
                 list_fields += [None, 'TEMP', self.lid]
@@ -373,7 +374,7 @@ class TEMPD(ThermalLoadDefault):
             self.temperatures = {data[0]: data[1]}
 
     def add(self, tempd_obj):
-        for (lid, tempd) in tempd_obj.temperatures.iteritems():
+        for (lid, tempd) in iteritems(tempd_obj.temperatures):
             self.temperatures[lid] = tempd
 
     def cross_reference(self, model):
@@ -384,7 +385,7 @@ class TEMPD(ThermalLoadDefault):
         list_fields = ['TEMPD']
 
         nTemps = len(self.temperatures) - 1
-        for i, (gid, temp) in enumerate(sorted(self.temperatures.iteritems())):
+        for i, (gid, temp) in enumerate(sorted(iteritems(self.temperatures))):
             list_fields += [gid, temp]
             if i % 4 == 3 and nTemps > i:  # start a new TEMP card
                 list_fields += ['TEMPD']

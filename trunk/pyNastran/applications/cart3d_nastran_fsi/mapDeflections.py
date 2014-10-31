@@ -1,15 +1,14 @@
+from six import iteritems
 import os
 import sys
 import copy
 from time import time
 #from cPickle import loads,dumps
 
-# 3rd party
 import numpy
 from numpy import array,dot,cross,argsort
 from numpy.linalg import det,solve,norm
 
-# Steve's code
 from delauney.premorph   import runPremorph
 from delauneyReader      import Tet4, DelauneyReader
 from mathFunctions       import ListPrint
@@ -248,7 +247,7 @@ class DeflectionMapper(object):
         log.info("-"*80)
         #print("type(aeroNodes)=%s" % type(aeroNodes))
 
-        for i,aeroNode in aeroNodes.iteritems():
+        for i,aeroNode in iteritems(aeroNodes):
             if aeroNode[1] < 0:
                 log.info('skipping aeroNode=%s bc y<0.' % i)
                 continue

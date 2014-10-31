@@ -1,6 +1,7 @@
 #pylint: disable=C0301,C0111
-import os
+from six import iteritems
 from six.moves import zip, range
+import os
 
 from pyNastran.utils import print_bad_path
 from pyNastran.utils.log import get_logger
@@ -733,7 +734,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
         #data = [self.disp,self.SpcForces,self.stress,self.isoStress,self.barStress,self.solidStress,self.temperature]
         data_pack = [self.solidStress]
         for data_set in data_pack:
-            for key, data in data_set.iteritems():
+            for key, data in iteritems(data_set):
                 data.processF06Data()
 
     def _is_marker(self, marker):

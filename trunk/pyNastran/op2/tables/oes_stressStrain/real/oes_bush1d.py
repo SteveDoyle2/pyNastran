@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-
+from six import iteritems
 from ..real.oes_objects import StressObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
@@ -146,7 +146,7 @@ class RealBush1DStress(StressObject):
             '    ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C\n',
         ]
 
-        for eid, S1s in sorted(self.s1.iteritems()):
+        for eid, S1s in sorted(iteritems(self.s1)):
             element_force = self.element_force[eid]
             axial_displacement = self.axial_displacement[eid]
             axial_velocity = self.axial_velocity[eid]
@@ -184,10 +184,10 @@ class RealBush1DStress(StressObject):
                     '        TIME            FORCE       DISPLACEMENT    VELOCITY      STRESS        STRAIN        STRAIN        STATUS\n',
         ]
         msg = []
-        for dt, ElementForce in sorted(self.element_force.iteritems()):
+        for dt, ElementForce in sorted(iteritems(self.element_force)):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
-            for eid, element_force in sorted(ElementForce.iteritems()):
+            for eid, element_force in sorted(iteritems(ElementForce)):
                 #eType = self.eType[eid]
                 #element_force = self.element_force[dt][eid]
                 axial_displacement = self.axial_displacement[dt][eid]

@@ -208,7 +208,9 @@ class NastranIO(object):
                 points2.InsertPoint(j + 1, *cpoints[1])
                 points2.InsertPoint(j + 2, *cpoints[2])
                 points2.InsertPoint(j + 3, *cpoints[3])
+                #elem.GetProperty().SetLineWidth(5)
                 self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                #self.grid2.GetProperty().SetLineWidth(5)
                 j += 4
             #elif isinstance(element, CAERO2): # cylinder
                 #pass

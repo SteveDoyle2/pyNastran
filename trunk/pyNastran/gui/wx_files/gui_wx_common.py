@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from six import iteritems
 import vtk
 from numpy import ndarray
 
@@ -157,7 +158,7 @@ class GuiCommon(object):
     def incrementCycle(self, result_name=False):
         found_case = False
         if result_name is not False and result_name is not None:
-            for icase, cases in sorted(self.resultCases.iteritems()):
+            for icase, cases in sorted(iteritems(self.resultCases)):
                 if result_name == cases[1]:
                     found_case = True
                     self.iCase = icase

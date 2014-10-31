@@ -1,3 +1,4 @@
+from six import  iteritems
 from six.moves import StringIO
 from collections import defaultdict
 from numpy import array, intersect1d, union1d, asarray
@@ -98,7 +99,7 @@ class VectorizedCardDict(object):
         return self._objs[load_id]
 
     def iteritems(self):
-        for key, value in self._objs.iteritems():
+        for key, value in iteritems(self._objs):
             yield key, value
 
     def __repr__(self):
@@ -211,19 +212,19 @@ class Loads(object):
 
         else:
             #self.loadcase.write_bdf(f, size)
-            for load_id, loads in sorted(self.load.iteritems()):
+            for load_id, loads in sorted(iteritems(self.load)):
                 for load in loads:
                     load.write_bdf(f, size)
 
-            for load_id, loads in sorted(self.dload.iteritems()):
+            for load_id, loads in sorted(iteritems(self.dload)):
                 for load in loads:
                     load.write_bdf(f, size)
 
-            #for load_id, loads in sorted(self.sload.iteritems()):
+            #for load_id, loads in sorted(iteritems(self.sload)):
                 #for load in loads:
                     #load.write_bdf(f, size)
 
-            #for load_id, loads in sorted(self.lseq.iteritems()):
+            #for load_id, loads in sorted(iteritems(self.lseq)):
                 #for load in loads:
                     #load.write_bdf(f, size)
 

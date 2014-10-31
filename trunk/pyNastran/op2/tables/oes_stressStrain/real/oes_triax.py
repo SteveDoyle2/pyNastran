@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-
+from six import iteritems
 from .oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
@@ -168,7 +168,7 @@ class RealTriaxStress(StressObject):
               #'               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
 
         #out = []
-        for eid, radial in sorted(self.radial.iteritems()):
+        for eid, radial in sorted(iteritems(self.radial)):
             for nid in sorted(radial):
                 rad = self.radial[eid][nid]
                 azimuth = self.azimuthal[eid][nid]
@@ -198,10 +198,10 @@ class RealTriaxStress(StressObject):
               #'               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
 
         msg = []
-        for dt, Radial in sorted(self.radial.iteritems()):
+        for dt, Radial in sorted(iteritems(self.radial)):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
-            for eid, radial in sorted(Radial.iteritems()):
+            for eid, radial in sorted(iteritems(Radial)):
                 for nid in sorted(radial):
                     rad = self.radial[dt][eid][nid]
                     azimuth = self.azimuthal[dt][eid][nid]
@@ -357,7 +357,7 @@ class RealTriaxStrain(StrainObject):
               #'               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
 
         #out = []
-        for eid, radial in sorted(self.radial.iteritems()):
+        for eid, radial in sorted(iteritems(self.radial)):
             for nid in sorted(radial):
                 rad = self.radial[eid][nid]
                 azimuth = self.azimuthal[eid][nid]
@@ -387,10 +387,10 @@ class RealTriaxStrain(StrainObject):
               #'               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
 
         msg = []
-        for dt, Radial in sorted(self.radial.iteritems()):
+        for dt, Radial in sorted(iteritems(self.radial)):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
-            for eid, radial in sorted(Radial.iteritems()):
+            for eid, radial in sorted(iteritems(Radial)):
                 for nid in sorted(radial):
                     rad = self.radial[dt][eid][nid]
                     azimuth = self.azimuthal[dt][eid][nid]

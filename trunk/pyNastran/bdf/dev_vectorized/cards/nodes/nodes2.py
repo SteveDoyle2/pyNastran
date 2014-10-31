@@ -1,6 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import iteritems
 from six.moves import zip
 import sys
 from numpy import array, ndarray, unique
@@ -175,7 +176,7 @@ class GRIDs(object):
         hasnt been tested well...
         """
         debug = False
-        for (nid, node_old) in model_old.nodes.iteritems():
+        for (nid, node_old) in iteritems(model_old.nodes):
             coord = node_old.cp
             xyz = self.xyz[id]
             (p, matrix) = coord.transformToGlobal(xyz, debug=debug)

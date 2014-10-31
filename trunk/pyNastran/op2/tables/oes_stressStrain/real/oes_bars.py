@@ -215,7 +215,7 @@ class RealBarStress(StressObject):
               ]
 
         f.write(''.join(msg))
-        for eid, S1s in sorted(self.s1.iteritems()):
+        for eid, S1s in sorted(iteritems(self.s1)):
             #eType = self.eType[eid]
             axial = self.axial[eid]
             #MSt = self.MSt[eid]
@@ -460,7 +460,7 @@ class RealBarStrain(StrainObject):
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
                 '    ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C\n',
               ]
-        for eid, E1s in sorted(self.e1.iteritems()):
+        for eid, E1s in sorted(iteritems(self.e1)):
             #eType = self.eType[eid]
             axial = self.axial[eid]
             #MSt = self.MSt[eid]

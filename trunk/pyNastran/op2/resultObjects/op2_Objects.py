@@ -1,5 +1,6 @@
 #pylint: disable=C0301,C0111
 from __future__ import print_function
+from six import  iteritems
 from six.moves import range
 import copy
 
@@ -242,7 +243,7 @@ class ScalarObject(BaseScalarObject):
 
     def apply_data_code(self):
         #self.log = self.data_code['log']
-        for key, value in sorted(self.data_code.iteritems()):
+        for key, value in sorted(iteritems(self.data_code)):
             #if key is not 'log':
                 self.__setattr__(key, value)
                 #self.log.debug("  key=%s value=%s" %(key, value))

@@ -4,6 +4,7 @@ Links up the various cards in the BDF.
 # pylint: disable=E1101,C0103,R0902,R0904,R0914,W0611
 
 from __future__ import print_function
+from six import  iteritems
 import warnings
 #from pyNastran.bdf.cards.constraints import constraintObject2
 
@@ -24,7 +25,7 @@ class XrefMesh(object):
         """
         if xref:
             self.log.debug("Cross Referencing...")
-            #for key,e in self.elements.iteritems():
+            #for key,e in iteritems(self.elements):
                 #print(e)
 
             self._cross_reference_nodes()
@@ -179,7 +180,7 @@ class XrefMesh(object):
         """
         Links the loads to nodes, coordinate systems, and other loads.
         """
-        for (lid, sid) in self.loads.iteritems():
+        for (lid, sid) in iteritems(self.loads):
             #self.log.debug("lid=%s sid=%s" %(lid,sid))
             for load in sid:
                 try:

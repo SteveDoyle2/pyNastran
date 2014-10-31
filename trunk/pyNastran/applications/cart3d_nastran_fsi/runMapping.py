@@ -1,5 +1,6 @@
 import os
 import sys
+from six import  iteritems
 import copy
 import shutil
 from numpy import allclose
@@ -48,7 +49,7 @@ def load_inputs():
         'structural_call' :  None,
         'qInf' : None,
     }
-    for key, value in command_module.__dict__.iteritems():
+    for key, value in iteritems(command_module.__dict__):
         required_inputs[key] = value
 
     for key in required_inputs:

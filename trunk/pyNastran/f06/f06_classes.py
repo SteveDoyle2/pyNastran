@@ -1,3 +1,6 @@
+from six import iteritems
+
+
 class MaxDisplacement(object):
     def __init__(self, data):
         self.translations = {}
@@ -11,7 +14,7 @@ class MaxDisplacement(object):
         msg = ['0                                                  MAXIMUM  DISPLACEMENTS',
                '  SUBCASE/',
                '  DAREA ID        T1             T2             T3             R1             R2             R3']
-        for sid, trans in sorted(self.translations.iteritems()):
+        for sid, trans in sorted(iteritems(self.translations)):
             rot = self.rotations[sid]
             msg.append('0 %8i  %13.8E %13.8E %13.8E %13.8E %13.8E %13.8E' %
                        (tuple([sid] + trans + rot)))

@@ -1,5 +1,4 @@
-#imort sys
-#from math import sqrt
+from six import iteritems
 from scipy.spatial import KDTree as scipyKDTree
 
 class Node(object):
@@ -19,7 +18,7 @@ class KdTree2(object):
         self.node_ids = array(npoints, dtype='int32')
 
         i = 0
-        for node_id, xyz in sorted(pointList.iteritems()):
+        for node_id, xyz in sorted(iteritems(pointList)):
             nodes[i, :] = xyz
             self.node_ids[i] = nid
         self.tree = scipyKDTree(pointList)
@@ -40,13 +39,13 @@ class KdTree(object):
             raise RuntimeError(msg)
 
         nodes = []
-        for node_id,xyz in sorted(pointsList.iteritems()):
+        for node_id,xyz in sorted(iteritems(pointsList)):
             n = list(xyz) + [node_id]
             nodes.append(n)
         self.tree = self.buildTree(nodes,nClose)
 
     def getCloseElementIDs(self,point):
-        closeNodesDists = self.nNearestPoints(point,self.nClose)
+        closeNodesDists = self.nNearestPoints(point, self.nClose)
         close_ids = []
         dists = []
         for nodeDist in closeNodesDists:
