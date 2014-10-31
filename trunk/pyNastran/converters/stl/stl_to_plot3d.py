@@ -1,3 +1,4 @@
+from six.moves import range
 from numpy import savetxt
 
 from pyNastran.converters.stl.stl_reader import STLReader
@@ -13,14 +14,14 @@ def stl_to_plot3d_filename(stl_filename, p3d_filename, log=None, ascii=True):
     nblocks = len(model.elements)
     #nblocks = 10
     p3d.write('%i\n' % nblocks)
-    for iblock in xrange(nblocks):
+    for iblock in range(nblocks):
         p3d.write('2 2 1\n')
 
     nodes = model.nodes
     elements = model.elements
     if 0:
         for i in [0, 1, 2]:
-            for iblock in xrange(nblocks):
+            for iblock in range(nblocks):
                 (n1, n2, n3) = elements[iblock]
                 p1 = nodes[n1, :]
                 p2 = nodes[n2, :]
@@ -29,7 +30,7 @@ def stl_to_plot3d_filename(stl_filename, p3d_filename, log=None, ascii=True):
                 xi = [[p1[i], p2[i], p3[i], p4[i]]]
                 savetxt(p3d, xi, fmt='%f')
     else:
-        for iblock in xrange(nblocks):
+        for iblock in range(nblocks):
             for i in [0, 1, 2]:
                 (n1, n2, n3) = elements[iblock]
                 p1 = nodes[n1, :]

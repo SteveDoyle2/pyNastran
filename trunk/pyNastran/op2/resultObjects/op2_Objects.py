@@ -1,5 +1,6 @@
 #pylint: disable=C0301,C0111
 from __future__ import print_function
+from six.moves import range
 import copy
 
 from pyNastran.op2.op2Codes import Op2Codes
@@ -347,7 +348,7 @@ class ScalarObject(BaseScalarObject):
         msg += '\n'
 
         nModes = len(keyVals[0])
-        for i in xrange(nModes):
+        for i in range(nModes):
             for vals in keyVals:
                 msg += '%-10g ' % vals[i]
             msg += '\n'

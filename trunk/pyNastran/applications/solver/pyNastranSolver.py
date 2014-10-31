@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=E0602,C0103
 from __future__ import print_function
-from six.moves import zip
+from six.moves import zip, range
 import os
 import sys
 from struct import pack
@@ -55,7 +55,7 @@ def partition_sparse(Is, Js, Vs):
 
 
 def getDOF_Set(nAll, dofs):
-    dofsAll = set([i for i in xrange(nAll)])
+    dofsAll = set([i for i in range(nAll)])
     dofs = list(dofsAll.difference(set(dofs)))
     return dofs
 
@@ -279,7 +279,7 @@ class Solver(F06, OP2):
 
                 if value in [1, 'YES']:
                     # figure out what are the DOFs that are removed
-                    ilist = list(set(xrange(len(dofs))).difference(set(faileds)))
+                    ilist = list(set(range(len(dofs))).difference(set(faileds)))
                     ilist.sort()
 
                     # remove the DOFs and solve
@@ -1405,8 +1405,8 @@ class Solver(F06, OP2):
                 nij2.append(Dofs[ij])
             print('nij2', nij2)
 
-            for i in xrange(Ki):
-                for j in xrange(Kj):
+            for i in range(Ki):
+                for j in range(Kj):
                     #kij = K[i, j]
                     #if abs(kij)>1e-8:
                     #print('niJV = ',nIJV[ij])

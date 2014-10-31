@@ -4,6 +4,7 @@ Defines functions for single precision 16 character field writing.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six.moves import range
 import sys
 from pyNastran.bdf.bdfInterface.BDF_Card import wipe_empty_fields
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -234,7 +235,7 @@ def print_card_16(fields, wipe_fields=True):
         sys.stdout.flush()
         raise
 
-    for i in xrange(1, len(fields)):
+    for i in range(1, len(fields)):
         field = fields[i]
         try:
             out += print_field_16(field)

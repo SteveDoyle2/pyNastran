@@ -11,7 +11,7 @@ All ungrouped properties are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-#import sys
+from six.moves import range
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Property, Material
@@ -499,10 +499,10 @@ class PCONEAX(Property):
             self.nsm = double(card, 8, 'nsm')
             self.z1 = double(card, 9, 'z1')
             self.z2 = double(card, 10, 'z2')
-            
+
             j = 1
             self.phi = []
-            for i in xrange(11, len(card)):
+            for i in range(11, len(card)):
                 phii = double(card, i, 'phi' % j)
                 self.phi.append(phii)
                 j += 1

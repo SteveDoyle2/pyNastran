@@ -1,5 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six.moves import range
 import platform
 
 import wx
@@ -103,7 +104,7 @@ class Pan(wx.Panel, GuiCommon, NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO, 
             actors = self.widget._CurrentRenderer.GetActors()
             numActors = actors.GetNumberOfItems()
             actors.InitTraversal()
-            for i in xrange(0, numActors):
+            for i in range(0, numActors):
                 actor = actors.GetNextItem()
                 actor.GetProperty().SetInterpolationToFlat()
             self.widget.Render()
@@ -113,7 +114,7 @@ class Pan(wx.Panel, GuiCommon, NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO, 
             actors = self.widget._CurrentRenderer.GetActors()
             numActors = actors.GetNumberOfItems()
             actors.InitTraversal()
-            for i in xrange(0, numActors):
+            for i in range(0, numActors):
                 actor = actors.GetNextItem()
                 actor.GetProperty().SetInterpolationToGouraud()
             self.widget.Render()
@@ -123,7 +124,7 @@ class Pan(wx.Panel, GuiCommon, NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO, 
             actors = self.widget._CurrentRenderer.GetActors()
             numActors = actors.GetNumberOfItems()
             actors.InitTraversal()
-            for i in xrange(0, numActors):
+            for i in range(0, numActors):
                 actor = actors.GetNextItem()
                 actor.GetProperty().SetInterpolationToPhong()
             self.widget.Render()

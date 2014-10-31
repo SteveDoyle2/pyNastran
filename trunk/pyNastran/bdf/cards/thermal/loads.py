@@ -1,6 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six.moves import range
 
 from ...bdfInterface.BDF_Card import wipe_empty_fields
 from .thermal import ThermalCard
@@ -298,7 +299,7 @@ class TEMP(ThermalLoad):
             #: dictionary of temperatures where the key is the grid ID (Gi)
             #: and the value is the temperature (Ti)
             self.temperatures = {}
-            for i in xrange(nfields // 2):
+            for i in range(nfields // 2):
                 n = i * 2 + 2
                 gi = integer(card, n, 'g' + str(i))
                 Ti = double(card, n + 1, 'T' + str(i))
@@ -363,7 +364,7 @@ class TEMPD(ThermalLoadDefault):
             #: dictionary of temperatures where the key is the set ID (SIDi)
             #: and the value is the temperature (Ti)
             self.temperatures = {}
-            for i in xrange(0, nfields, 2):
+            for i in range(0, nfields, 2):
                 n = i // 2
                 sid = integer(card, i + 1, 'sid' + str(n))
                 temp = double(card, i + 2, 'temp' + str(n))

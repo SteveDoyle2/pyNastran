@@ -1,4 +1,4 @@
-from six.moves import zip
+from six.moves import zip, range
 from numpy import arange, array, zeros, searchsorted, unique, full, nan
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default, print_card_8
@@ -61,7 +61,7 @@ class PLOAD4(object):
         self.pressures = zeros((ncards, 4), 'int32')
 
         self.element_ids = {}
-        for i in xrange(ncards):
+        for i in range(ncards):
             self.element_ids[i] = []
 
         self.g1 = full(ncards, nan, 'int32')
@@ -88,7 +88,7 @@ class PLOAD4(object):
             self.pressures = zeros((ncards, 4), 'int32')
 
             element_ids = {}
-            for i in xrange(ncards):
+            for i in range(ncards):
                 element_ids[i] = []
 
             self.g1 = full(ncards, nan, 'int32')
@@ -144,7 +144,7 @@ class PLOAD4(object):
             #self.node_ids = self.node_ids[i, :]
 
             #element_ids = {}
-            #for j in xrange(ncards):
+            #for j in range(ncards):
                 #element_ids[j] = element_ids[i[j]]
 
             self.g1 = self.g1[i]
@@ -177,7 +177,7 @@ class PLOAD4(object):
         #self.n = ncards
         #istart = 0
         #iend = None
-        #for i in xrange(self.n):
+        #for i in range(self.n):
             #element_ids = self._element_ids[i]
             #n = len(element_ids)
             #iend = istart + n

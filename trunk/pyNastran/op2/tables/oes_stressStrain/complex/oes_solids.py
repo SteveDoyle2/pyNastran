@@ -1,7 +1,7 @@
 #pylint: disable=C0301,C0111,R0921
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import zip
+from six.moves import zip, range
 from collections import defaultdict
 
 from numpy import zeros, array, concatenate, string_, searchsorted, where, argwhere, ravel, abs
@@ -210,7 +210,7 @@ class ComplexSolid(OES_Object):
 
         # write the f06
         (ntimes, ntotal, six) = self.data.shape
-        for itime in xrange(ntimes):
+        for itime in range(ntimes):
             dt = self.times[itime]  ## TODO: rename this...
 
             #print('eids=', eids)

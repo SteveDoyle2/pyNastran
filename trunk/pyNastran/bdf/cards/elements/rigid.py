@@ -13,7 +13,7 @@ All rigid elements are RigidElement and Element objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types
-from six.moves import zip
+from six.moves import zip, range
 import sys
 from itertools import count
 
@@ -476,7 +476,7 @@ class RBE3(RigidElement):
             i = iUm + 1
             n = 1
             #print("i=%s iUmStop=%s" % (i,iUmStop))
-            for j in xrange(i, iUmStop, 2):
+            for j in range(i, iUmStop, 2):
 
                 gm_name = 'gm' + str(n)
                 cm_name = 'cm' + str(n)

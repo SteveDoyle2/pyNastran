@@ -3,6 +3,7 @@
 Defines the OP2 class.
 """
 from six import string_types
+from six.moves import range
 import os
 from struct import unpack, Struct
 #from struct import error as StructError
@@ -741,7 +742,7 @@ class OP2( #BDF,
         self.read_markers([-3, 1, 1])
 
         # data = read_record()
-        for i in xrange(170//10):
+        for i in range(170//10):
             self.read_markers([2])
             data = self.read_block()
             #print "i=%s n=%s" % (i, self.n)
@@ -749,14 +750,14 @@ class OP2( #BDF,
         self.read_markers([4])
         data = self.read_block()
 
-        for i in xrange(7):
+        for i in range(7):
             self.read_markers([2])
             data = self.read_block()
             #print "i=%s n=%s" % (i, self.n)
 
 
         self.read_markers([-4, 1, 1])
-        for i in xrange(170//10):
+        for i in range(170//10):
             self.read_markers([2])
             data = self.read_block()
             #print "i=%s n=%s" % (i, self.n)
@@ -764,7 +765,7 @@ class OP2( #BDF,
         self.read_markers([4])
         data = self.read_block()
 
-        for i in xrange(7):
+        for i in range(7):
             self.read_markers([2])
             data = self.read_block()
             #print "i=%s n=%s" % (i, self.n)
@@ -1057,7 +1058,7 @@ class OP2( #BDF,
     def get_marker_n(self, n):
         markers = []
         s = Struct('3i')
-        for i in xrange(n):
+        for i in range(n):
             block = self.f.read(12)
             marker = s.unpack(block)
             print('markers =', marker)

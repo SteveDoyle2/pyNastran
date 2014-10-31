@@ -314,7 +314,7 @@ class GEOM2(object):
         CDAMP1(201,2,69) - the marker for Record 16
         """
         nelements = (len(data) - n) // 24
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n + 24]  # 6*4
             out = unpack(b'6i', eData)
             (eid, pid, g1, g2, c1, c2) = out
@@ -420,7 +420,7 @@ class GEOM2(object):
         s1 = Struct(b'if4iff')
         ntotal = 32
         nelements = (len(data) - n) // ntotal
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n+32]
             out = s1.unpack(eData)
             (eid, k, g1, g2, c1, c2, ge, s) = out
@@ -453,7 +453,7 @@ class GEOM2(object):
         """
         s = Struct(b'ifii')
         nelements = (len(data) - n) // 16
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n + 16]  # 4*4
             out = s.unpack(eData)
             (eid, k, s1, s2) = out
@@ -697,7 +697,7 @@ class GEOM2(object):
         ntotal = 80  # 20*4
         s = Struct(b'12i8f')
         nelements = (len(data) - n) // ntotal
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n+80]
             out = s.unpack(eData)
             (eid, pconID, flmnd, cntrlnd,
@@ -881,7 +881,7 @@ class GEOM2(object):
         """
         s = Struct(b'6i')
         nelements = (len(data) - n) // 24  # 6*4
-        for i in xrange(nelements):
+        for i in range(nelements):
             eData = data[n:n + 24]
             out = s.unpack(eData)
             (eid, pid, n1, n2, n3, n4) = out

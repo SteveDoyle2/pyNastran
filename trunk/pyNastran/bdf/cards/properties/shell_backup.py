@@ -4,7 +4,7 @@ Created on Wed Nov 28 21:32:56 2012
 
 @author: steve
 """
-
+from six.moves import range
 from numpy import transpose, array, zeros, matrix
 from numpy.linalg import inv
 import copy
@@ -353,7 +353,7 @@ class PCOMP_backup(Property):
     def D(self):
         D = zeros([3, 3])
         #isSym = self.isSymmetrical()
-        for iply in xrange(len(self.plies)):
+        for iply in range(len(self.plies)):
             theta = self.Theta(iply)
             #t    = self.Thickness(iply)
             mat = self.Material(iply)

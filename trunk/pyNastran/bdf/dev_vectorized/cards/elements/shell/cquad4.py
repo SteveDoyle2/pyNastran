@@ -1,4 +1,4 @@
-from six.moves import zip
+from six.moves import zip, range
 from numpy import (array, zeros, arange, concatenate, searchsorted,
     where, unique, cross, dot, asarray)
 from numpy.linalg import norm
@@ -227,7 +227,7 @@ def _cquad4_normal_A(n1, n2, n3, n4, calculate_area=True, normalize=True):
 
     if normalize:
         #n = len(_norm)
-        #for i in xrange(n):
+        #for i in range(n):
             #normal[i] /= _norm[i]
         normal /= n
     return normal, A

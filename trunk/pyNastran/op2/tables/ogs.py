@@ -1,3 +1,4 @@
+from six.moves import range
 from struct import Struct, unpack
 from pyNastran.op2.op2_common import OP2Common
 
@@ -132,7 +133,7 @@ class OGS(OP2Common):
 
         n = 0
         nelements = len(data) // 44  # 11*4
-        for i in xrange(nelements):
+        for i in range(nelements):
             edata = data[n:n+44]
             out = s.unpack(edata)
             (ekey, eid, fiber, nx, ny, txy, angle, major,
@@ -161,7 +162,7 @@ class OGS(OP2Common):
 
         n = 0
         nelements = len(data) // 36  # 9*4
-        for i in xrange(nelements):
+        for i in range(nelements):
             edata = data[n:n+36]
             out = unpack(format1, edata)
             (ekey, nx, ny, nz, txy, tyz, txz, pressure, ovm) = out

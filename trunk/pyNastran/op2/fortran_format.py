@@ -1,4 +1,5 @@
 from __future__ import print_function
+from six.moves import range
 from struct import unpack
 import copy
 
@@ -103,7 +104,7 @@ class FortranFormat(object):
         """
         ni = self.n
         markers = []
-        for i in xrange(n):
+        for i in range(n):
             data = self.read_block()
             marker, = unpack(b'i', data)
             markers.append(marker)
@@ -111,7 +112,7 @@ class FortranFormat(object):
             self.n = ni
             self.f.seek(self.n)
         else:
-            for i in xrange(n):
+            for i in range(n):
                 self.binary_debug.write('get_nmarkers- [4, %i, 4]\n' % i)
         return markers
 

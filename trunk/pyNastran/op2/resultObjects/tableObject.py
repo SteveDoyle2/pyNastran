@@ -1,5 +1,5 @@
 from six import string_types
-from six.moves import zip
+from six.moves import zip, range
 from struct import Struct, pack
 
 from numpy import array, zeros, sqrt, abs, angle  # dot,
@@ -211,7 +211,7 @@ class RealTableArray(TableArray):  # displacement style table
         ntotal = self.ntimes * nnodes * (2 + 6)
 
         table_num = 3
-        for itime in xrange(self.ntimes):
+        for itime in range(self.ntimes):
             self._write_op2_header(f, table_num, itime)
 
             # record 4
@@ -272,7 +272,7 @@ class RealTableArray(TableArray):  # displacement style table
         node = self.node_gridtype[:, 0]
         gridtype = self.node_gridtype[:, 1]
         #print("nodes =", node)
-        for itime in xrange(self.ntimes):
+        for itime in range(self.ntimes):
             dt = self._times[itime]
             t1 = self.data[itime, :, 0]
             t2 = self.data[itime, :, 1]
@@ -319,7 +319,7 @@ class ComplexTableArray(TableArray):  # displacement style table
 
         if not len(header) >= 3:
             header.append('')
-        for itime in xrange(self.ntimes):
+        for itime in range(self.ntimes):
             node = self.node_gridtype[:, 0]
             gridtype = self.node_gridtype[:, 1]
             t1 = self.data[itime, :, 0]

@@ -1,3 +1,4 @@
+from six.moves import range
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 #from pyNastran.bdf.caseControlDeck import CaseControlDeck
 
@@ -22,7 +23,7 @@ def parseSetSline(listA):
                 vals = set([])
                 startValue = interpret_value(sline[0])
                 endValue = interpret_value(sline[2]) + 1
-                for i in xrange(startValue, endValue, by):
+                for i in range(startValue, endValue, by):
                     vals.add(i)
                 #print("vals = ", vals)
                 if 'EXCEPT' in sline:

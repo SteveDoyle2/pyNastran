@@ -1,3 +1,4 @@
+from six.moves import range
 from numpy import arange, array, where, acos, norm
 
 from pyNastran.bdf.bdf import BDF
@@ -109,8 +110,8 @@ def Grid(object):
             xyzi = positions[edge_nid]
             xyz[0, icol, :] = xyzi
 
-        for ix in xrange(nx):
-            for iy in xrange(ny):
+        for ix in range(nx):
+            for iy in range(ny):
                 xyz[0, icol, :] = xyzi
 
 

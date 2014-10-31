@@ -1,3 +1,4 @@
+from six.moves import range
 import copy
 
 from math import acos, pi, asin
@@ -39,7 +40,7 @@ class PanelBuckling(object):
             edges = []
             Normals[eid] = element.Normal()
             nodeIDs = element.nodeIDs()
-            for i in xrange(len(nodeIDs) - 1):
+            for i in range(len(nodeIDs) - 1):
                 key = tuple(sorted([nodeIDs[i], nodeIDs[i + 1]]))
                 Edges[eid].append(key)
                 Edges2[key] = []

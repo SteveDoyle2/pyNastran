@@ -1,5 +1,5 @@
 #VTK_TRIANGLE = 5
-
+from six.moves import range
 from numpy import zeros, arange, mean
 
 import vtk
@@ -84,13 +84,13 @@ class STL_IO(object):
 
         nid = 0
         print("nnodes=%s" % nnodes)
-        for i in xrange(nnodes):
+        for i in range(nnodes):
             points.InsertPoint(nid, nodes[i, :])
             nid += 1
 
         nelements, three = elements.shape
         #elements -= 1
-        for eid in xrange(nelements):
+        for eid in range(nelements):
             elem = vtkTriangle()
             node_ids = elements[eid, :]
             elem.GetPointIds().SetId(0, node_ids[0])

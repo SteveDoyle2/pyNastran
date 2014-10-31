@@ -2,7 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types
-from six.moves import zip
+from six.moves import zip, range
 
 from pyNastran.bdf.fieldWriter import print_card, is_same
                                #print_card_8, set_default_if_blank, print_card
@@ -389,7 +389,7 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
         if fields[i] == 'THRU':
             istart = int(fields[i - 1])
             iend = int(fields[i + 1])
-            for j in xrange(istart, iend + 1): # adding 1 to iend for the xrange offset
+            for j in range(istart, iend + 1): # adding 1 to iend for the range offset
                 out.append(j)
             i += 2
         else:
@@ -438,7 +438,7 @@ def expand_thru_by(fields, set_fields=True, sort_fields=False):
             maxValue = interpret_value(fields[i + 1])
             maxR = int((maxValue - minValue) // by + 1)  # max range value
 
-            for j in xrange(0, maxR):  # +1 is to include final point
+            for j in range(0, maxR):  # +1 is to include final point
                 value = minValue + by * j
                 out.append(value)
 
@@ -469,10 +469,10 @@ def expand_thru_exclude(self, fields):
 
     fieldsOut = []
     nFields = len(fields)
-    for i in xrange(nFields):
+    for i in range(nFields):
         if fields[i] == 'THRU':
             storedList = []
-            for j in xrange(fields[i - 1], fields[i + 1]):
+            for j in range(fields[i - 1], fields[i + 1]):
                 storedList.append(fields[j])
 
         elif fields[i] == 'EXCLUDE':
@@ -605,7 +605,7 @@ def build_thru_packs(packs, maxDV=1):
                 double = [firstVal, 'THRU', lastVal]
                 doubles.append(double)
             else:
-                for val in xrange(lastVal, firstVal+1, by):
+                for val in range(lastVal, firstVal+1, by):
                     singles.append(val)
     return singles, doubles
 
@@ -646,10 +646,10 @@ def build_thru(packs, maxDV=None):
                     fields.append('BY')
                     fields.append(dv)
                 else:
-                    for v in xrange(firstVal, lastVal + dv, dv):
+                    for v in range(firstVal, lastVal + dv, dv):
                         fields.append(v)
             else:
-                for v in xrange(firstVal, lastVal + dv, dv):
+                for v in range(firstVal, lastVal + dv, dv):
                     fields.append(v)
     return fields
 
@@ -675,7 +675,7 @@ def build_thru_float(packs, maxDV=None):
             fields.append(dv)
         else:
             nv = int(round((lastVal - firstVal) / dv)) + 1
-            for i in xrange(nv):
+            for i in range(nv):
                 v = firstVal + i * dv
                 fields.append(v)
     return fields

@@ -1,6 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six.moves import range
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by,
@@ -130,7 +131,7 @@ class CHBDYE(ThermalElement):
     #     # [1,2,3]
     #
     #     # id-1 is for the 0 based python index
-    #     nodes = [enodes[id - 1] for id in xrange(len(eid.nodes))
+    #     nodes = [enodes[id - 1] for id in range(len(eid.nodes))
     #              if id in sideIDs]
     #     return side
 

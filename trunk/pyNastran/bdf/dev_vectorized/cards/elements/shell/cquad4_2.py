@@ -6,6 +6,7 @@ All shell elements are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six.moves import range
 #import sys
 
 from numpy import array, eye, cross, allclose, float32  # zeros,dot
@@ -168,7 +169,7 @@ class CQUAD4s(object):
     def write(self, f=None, eids=None):
         msg = []
         size = 8
-        for i in xrange(self._ncquad4):
+        for i in range(self._ncquad4):
             eid = self.eid[i]
             pid = self.pid[i]
             zOffset = self.zOffset[i]

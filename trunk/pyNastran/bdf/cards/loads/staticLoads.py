@@ -18,7 +18,7 @@ All static loads are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import zip
+from six.moves import zip, range
 
 from numpy import array, cross, allclose, unique
 from numpy.linalg import norm
@@ -1370,7 +1370,7 @@ class PLOAD2(Load):
             if integer_string_or_blank(card, 4, 'THRU') == 'THRU':
                 e1 = integer(card, 3, 'Element1')
                 e2 = integer(card, 5, 'Element1')
-                eids = [i for i in xrange(e1, e2 + 1)]
+                eids = [i for i in range(e1, e2 + 1)]
                 assert len(card) == 6, 'len(PLOAD2 card) = %i' % len(card)
             else:
                 eids = fields(integer, card, 'eid', i=3, j=len(card))

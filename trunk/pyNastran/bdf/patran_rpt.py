@@ -1,9 +1,12 @@
+from six.moves import range
+
+
 def rpt_read():
     lines = open('patran.rpt', 'r').readlines()[14:]
 
     nheader = 2
     headers = ''
-    for n in xrange(nheader):
+    for n in range(nheader):
         header = lines[n].strip('\n\r\t')
         headers += header
     headers = headers.split('-')
@@ -23,7 +26,7 @@ def rpt_read():
     while i < len(lines):
         data = []
 
-        for n in xrange(nheader):
+        for n in range(nheader):
             data += lines[i+n].strip().split()
         if "MSC.Patran" in data:
             res += 1

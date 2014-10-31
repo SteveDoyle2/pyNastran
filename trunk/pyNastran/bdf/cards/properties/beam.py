@@ -11,7 +11,7 @@ Multi-segment beams are IntegratedLineProperty objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
-from six.moves import zip
+from six.moves import zip, range
 from itertools import count
 from numpy import pi, array
 
@@ -169,7 +169,7 @@ class PBEAM(IntegratedLineProperty):
                     pass
 
             # ----------------------------------------------------------------
-            for nrepeated in xrange(1, nmajor): # start at 1 to drop the header
+            for nrepeated in range(1, nmajor): # start at 1 to drop the header
                 #print("  adding a major")
                 # field 17 is the first possible so
                 if is_cdef:
@@ -736,7 +736,7 @@ class PBCOMP(LineProperty):
             if nfields % 8 > 0:
                 nrows += 1
 
-            for row in xrange(nrows):
+            for row in range(nrows):
                 i = 8 * row + 17
                 yi = double(card, i, 'y' + str(row))
                 zi = double(card, i + 1, 'z' + str(row))

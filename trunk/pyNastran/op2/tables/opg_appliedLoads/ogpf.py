@@ -1,3 +1,4 @@
+from six.moves import range
 from struct import Struct
 
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import (
@@ -37,7 +38,7 @@ class OGPF(object):
                 s = Struct(b'ii8s6f')
                 ntotal = 40
                 nnodes = len(data) // ntotal
-                for i in xrange(nnodes):
+                for i in range(nnodes):
                     eData = data[n:n+ntotal]
                     out = s.unpack(eData)
                     (ekey, eid, elemName, f1, f2, f3, m1, m2, m3) = out

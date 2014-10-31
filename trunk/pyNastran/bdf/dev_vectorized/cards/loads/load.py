@@ -1,4 +1,4 @@
-from six.moves import zip
+from six.moves import zip, range
 
 from numpy import zeros, searchsorted, asarray, array
 
@@ -50,7 +50,7 @@ class LOAD(object):
         # alternating of scale factor & load set ID
         nLoads = len(card) - 3
         assert nLoads % 2 == 0
-        for i in xrange(nLoads // 2):
+        for i in range(nLoads // 2):
             n = 2 * i + 3
             self.scale_factors.append(double(card, n, 'scaleFactor'))
             self.load_ids.append(integer(card, n + 1, 'loadID'))

@@ -6,6 +6,7 @@ All shell elements are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six.moves import range
 from numpy import array, eye, cross, allclose, float32  # zeros,dot
 from numpy.linalg import det  # inv
 
@@ -198,7 +199,7 @@ class CTRIA3s(object): # TriShell
     def write(self, f=None, eids=None):
         msg = []
         size = 8
-        for i in xrange(self._nctria3):
+        for i in range(self._nctria3):
             eid = self.eid[i]
             pid = self.pid[i]
             zOffset = self.zOffset[i]

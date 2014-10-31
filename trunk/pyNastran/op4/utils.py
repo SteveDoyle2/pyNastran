@@ -1,4 +1,4 @@
-from six.moves import zip
+from six.moves import zip, range
 from numpy import real, imag, ndarray, where, arange
 from numpy import matrix as Matrix
 from scipy.sparse import coo_matrix
@@ -103,7 +103,7 @@ def write_DMIG(f, name, matrix, form,
         #if name == 'EYE5CD':
             #pass
         if is_complex:
-            for icol in xrange(ncols):
+            for icol in range(ncols):
                 ii = where(matrix[:, icol] != 0.0)[0]
                 reals = real(matrix[:, icol])
                 imags = imag(matrix[:, icol])
@@ -123,7 +123,7 @@ def write_DMIG(f, name, matrix, form,
                         card.append(imags[iirow, 0])
                     f.write(print_card(card))
         else:
-            for icol in xrange(ncols):
+            for icol in range(ncols):
                 ii = where(matrix[:, icol] != 0.0)[0]
                 if ii.shape[1]: #len(ii) > 0:  # Matrix is 2D
                     #index_range = [ii.min(), ii.max()]

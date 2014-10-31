@@ -1,5 +1,5 @@
+from six.moves import zip, range
 from math import sqrt
-from six.moves import zip
 from numpy import array, pi
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
@@ -25,7 +25,7 @@ class RealEigenvectorArray(RealTableArray):
         msg = []
         #if not len(header) >= 3:
             #header.append('')
-        for itime in xrange(self.ntimes):
+        for itime in range(self.ntimes):
             node = self.node_gridtype[:, 0]
             gridtype = self.node_gridtype[:, 1]
             t1 = self.data[itime, :, 0]
