@@ -13,6 +13,7 @@ All solid elements are SolidElement and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six.moves import range
 from numpy import dot, cross, array, matrix, zeros
 from numpy.linalg import solve, norm
 
@@ -744,9 +745,9 @@ class CTETRA4(SolidElement):
         (P, W) = gauss(1)
 
         K = zeros((6, 6))
-        for i in xrange(ng):
-            for j in xrange(ng):
-                for k in xrange(ng):
+        for i in range(ng):
+            for j in range(ng):
+                for k in range(ng):
                     p = [P[i], P[j], P[k]]
                     w = W[i] * W[j] * W[k]
                     pz = self.zeta(p)

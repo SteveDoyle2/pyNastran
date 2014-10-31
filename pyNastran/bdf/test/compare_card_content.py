@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import zip
+from six.moves import zip, range
 from itertools import count
 
 from pyNastran.bdf.bdfInterface.BDF_Card import wipe_empty_fields
@@ -365,7 +365,7 @@ def compare_aero_content(fem1, fem2):
         card2 = fem2.flutters[key]
         assert_fields(card1, card2)
 
-    for i in xrange(len(fem1.mkaeros)):
+    for i in range(len(fem1.mkaeros)):
         card1 = fem1.mkaeros[i]
         card2 = fem2.mkaeros[i]
         assert_fields(card1, card2)

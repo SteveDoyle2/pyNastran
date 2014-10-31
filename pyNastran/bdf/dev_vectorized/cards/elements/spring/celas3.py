@@ -1,4 +1,4 @@
-from six.moves import zip
+from six.moves import zip, range
 
 from numpy import arange, array, dot, zeros, unique, searchsorted, transpose
 from numpy.linalg import norm
@@ -180,7 +180,7 @@ class CELAS3(SpringElement):
 
         n = self.n
         du_axial = zeros(n, 'float64')
-        for i in xrange(self.n):
+        for i in range(self.n):
             n0, n1 = self.node_ids[i, :]
             if n0 == n1:
                 raise RuntimeError('CELAS3 eid=%s n1=%s n2=%s' % (self.element_id[i], n0, n1))

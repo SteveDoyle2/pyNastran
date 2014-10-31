@@ -5,6 +5,7 @@ Defines functions for single precision 8 character field writing.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types
+from six.moves import range
 import sys
 import warnings
 from numpy import allclose, isinf, float32
@@ -238,7 +239,7 @@ def print_card_8(fields):
         sys.stdout.flush()
         raise
 
-    for i in xrange(1, len(fields)):
+    for i in range(1, len(fields)):
         field = fields[i]
         try:
             out += print_field(field)
@@ -278,7 +279,7 @@ def print_int_card(fields):
         sys.stdout.flush()
         raise
 
-    for i in xrange(1, len(fields)):
+    for i in range(1, len(fields)):
         field = fields[i]
         try:
             out += "%8i" % field  # balks if you have None or string fields

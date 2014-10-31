@@ -1,9 +1,9 @@
 #pylint:  disable=C0103,C0111
+from six.moves import zip, range
 import os
 import sys
 from struct import pack
 from math import ceil#, sqrt
-from six.moves import zip
 
 from numpy import array, zeros, where, savetxt, sqrt, abs, amax, amin
 from numpy import arange, searchsorted, vstack, unique, hstack, ravel
@@ -146,7 +146,7 @@ class Cart3DReader(object):
         isInnerNode = {}
 
         nnodes, three = nodes.shape
-        for inode in xrange(nnodes):
+        for inode in range(nnodes):
             node = nodes[inode, :]
             if node[1] == 0:
                 yZeroNodes[inode+1] = node
@@ -199,7 +199,7 @@ class Cart3DReader(object):
         nelements, three = elements.shape
 
         # remap the mirrored nodes with the new node ids
-        for eid in xrange(nelements):
+        for eid in range(nelements):
             element = elements_upper[eid, :]
             for i, eidi in enumerate(element):
                 if eidi in iy0:
@@ -291,7 +291,7 @@ class Cart3DReader(object):
         inodes_save += 1  # +1 is so we don't have to shift inode
         # ..todo:: still need to handle element's node id renumbering
         ielements_save = set([])
-        for ielement in xrange(nelements):
+        for ielement in range(nelements):
             save_element = True
             element = elements[ielement, :]
             for inode in element:
@@ -323,12 +323,12 @@ class Cart3DReader(object):
             aa
             # build a dictionary of old node ids to new node ids
             nodes_map = {}
-            for i in xrange(1, len(inodes_save) + 1):
+            for i in range(1, len(inodes_save) + 1):
                 nid = inodes_save[i - 1]
                 nodes_map[nid] = i
 
             # update the node ids
-            for ielement in xrange(nelements2):
+            for ielement in range(nelements2):
                 element = elements2[ielement, :]
                 elements[ielement, :] = [nodes_map[nid] for nid in element]
 
@@ -351,7 +351,7 @@ class Cart3DReader(object):
         regions2 = {}
 
         nnodes, three = nodes.shape
-        for inode in xrange(nnodes):
+        for inode in range(nnodes):
             node = nodes[inode]
             NodeOldToNew[inode] = iNodeCounter
             nodes2[iNodeCounter] = node
@@ -593,7 +593,7 @@ class Cart3DReader(object):
     def read_regions_ascii(self, bypass=True):
         regions = zeros(self.nElementsRead, dtype='int32')
         if bypass:
-            for i in xrange(self.nElements):
+            for i in range(self.nElements):
                 self.infile.readline()
         else:
             r = 0
@@ -641,11 +641,11 @@ class Cart3DReader(object):
         results = zeros((self.nPoints, 6), dtype='float32')
 
         nResultLines = int(ceil(self.nResults / 5.)) - 1
-        for ipoint in xrange(self.nPoints):
+        for ipoint in range(self.nPoints):
             # rho rhoU,rhoV,rhoW,pressure/rhoE/E
             sline = infile.readline().strip().split()
             i += 1
-            for n in xrange(nResultLines):
+            for n in range(nResultLines):
                 sline += infile.readline().strip().split()  # Cp
                 i += 1
                 #gamma = 1.4
@@ -772,7 +772,7 @@ class Cart3DReader(object):
     def write_nastran(self, fname, points, elements, regions):
         f = open(fname, 'wb')
         nnodes, three = points.shape
-        for nid in xrange(nnodes):
+        for nid in range(nnodes):
             (x, y, z) = nodes[nid, :]
             f.write(print_card(['GRID', nid + 1, '', x, y, z]))
 
@@ -876,7 +876,7 @@ class Cart3DReader(object):
         #else:
             #raise RuntimeError('unBuffered')
 
-        #for nid in xrange(nPoints):
+        #for nid in range(nPoints):
             #assert nid in points, 'nid=%s not in points' % nid
         self.infile.read(8)  # end of second block, start of third block
         #print("finished read_points")

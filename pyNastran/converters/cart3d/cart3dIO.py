@@ -1,5 +1,5 @@
 #VTK_TRIANGLE = 5
-
+from six.moves import range
 from numpy import zeros, arange, mean, amax, amin
 
 import vtk
@@ -95,13 +95,13 @@ class Cart3dIO(object):
         dim_max = (mmax - mmin).max()
         self.update_axes_length(dim_max)
 
-        for i in xrange(nnodes):
+        for i in range(nnodes):
             points.InsertPoint(nid, nodes[i, :])
             nid += 1
 
         nelements, three = elements.shape
         elements -= 1
-        for eid in xrange(nelements):
+        for eid in range(nelements):
             elem = vtkTriangle()
             node_ids = elements[eid, :]
             elem.GetPointIds().SetId(0, node_ids[0])

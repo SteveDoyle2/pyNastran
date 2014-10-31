@@ -1,3 +1,4 @@
+from six.moves import range
 from numpy import array, zeros
 from pyNastran.utils.log import get_logger
 from pyNastran.bdf.fieldWriter import print_card
@@ -76,7 +77,7 @@ class TetgenReader(object):
 
     def read_smesh(self, smesh_filename):
         f = open(smesh_filename, 'r')
-        for i in xrange(6):
+        for i in range(6):
             f.readline()
 
         nelements, zero = f.readline().strip().split() # nelements, 0
@@ -85,7 +86,7 @@ class TetgenReader(object):
 
         #print("line =", line)
         tri_list = []
-        for ielement in xrange(nelements):
+        for ielement in range(nelements):
             sline = f.readline().strip().split()
             nnodes = sline[0]
             element_nodes = sline[1:]
@@ -107,7 +108,7 @@ class TetgenReader(object):
         assert zero2 == '0', zero2
         nnodes = int(nnodes)
         nodes = zeros((nnodes, 3), 'float64')
-        for inode in xrange(nnodes):
+        for inode in range(nnodes):
             nodes[inode] = f.readline().strip().split()[1:]
         f.close()
         print("nodes =", nodes)
@@ -125,13 +126,13 @@ class TetgenReader(object):
 
         if not form_flag_enabled:
             tets = zeros((nelements, 4), 'int32')
-            for ielement in xrange(nelements):
+            for ielement in range(nelements):
                 # eid n1    n2    n3    n4       flip_flag???
                 # 1   13260 15506 16059 16065    -1
                 tets[ielement] = f.readline().strip().split()[1:]
         else:
             tets = []
-            for ielement in xrange(nelements):
+            for ielement in range(nelements):
                 # eid n1    n2    n3    n4       flip_flag???
                 # 1   13260 15506 16059 16065    -1
                 (n0, n1, n2, n3, flag) = f.readline().strip().split()[1:]

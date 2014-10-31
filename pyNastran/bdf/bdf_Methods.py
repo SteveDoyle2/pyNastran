@@ -17,7 +17,7 @@ reading/writing/accessing of BDF data.  Such methods include:
 # pylint: disable=R0904,R0902
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import zip
+from six.moves import zip, range
 import multiprocessing as mp
 
 from numpy import array, cross, zeros, dot, allclose
@@ -385,7 +385,7 @@ class BDFMethods(BDFMethodsDeprecated):
         #mass = 0.
         #cg = array([0., 0., 0.])
         #I = zeros((nelements, 5), 'float64')
-        #result = [_inertia_mp_func(mass[i], element) for element in xrange(self.elements.iterkeys()]
+        #result = [_inertia_mp_func(mass[i], element) for element in range(self.elements.iterkeys()]
         #for j, return_values in enumerate(result):
             #I[j, :] += return_values[2]
         #I = numpy.sum(I, axis=0)

@@ -1,5 +1,5 @@
 #pylint: disable=C0301,C0103,W0612,R0914,C0326
-from six.moves import StringIO
+from six.moves import range, StringIO
 from struct import unpack, Struct
 
 from pyNastran.bdf.cards.nodes import GRID
@@ -58,7 +58,7 @@ class GEOM1(object):
         """
         s = Struct(b'6i')
         nEntries = (len(data) - n) // 24
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 24]  # 6*4
             (cid, one, two, g1, g2, g3) = s.unpack(eData)
             assert one in [1, 2], one
@@ -76,7 +76,7 @@ class GEOM1(object):
         """
         s = Struct(b'6i')
         nEntries = (len(data) - n) // 24
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 24]  # 6*4
             (cid, one1, one2, g1, g2, g3) = s.unpack(eData)
             assert one1 == 1, one1
@@ -94,7 +94,7 @@ class GEOM1(object):
         """
         s = Struct(b'6i')
         nEntries = (len(data) - n) // 24
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             edata = data[n:n + 24]  # 6*4
             (cid, three, one, g1, g2, g3) = s.unpack(edata)
             assert three == 3, three
@@ -112,7 +112,7 @@ class GEOM1(object):
         """
         s = Struct(b'4i9f')
         nEntries = (len(data) - n) // 52
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 52]  # 13*4
             (cid, two1, two2, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3) = s.unpack(eData)
             assert two1 == 2, two1
@@ -129,7 +129,7 @@ class GEOM1(object):
         (2101,21,8) - the marker for Record 5
         """
         nEntries = (len(data) - n) // 52
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 52]  # 13*4
             (cid, one, two, rid, a1, a2, a3, b1, b2, b3, c1,
                 c2, c3) = unpack(b'4i9f', eData)
@@ -149,7 +149,7 @@ class GEOM1(object):
         """
         s = Struct(b'4i9f')
         nEntries = (len(data) - n) // 52
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 52]  # 13*4
             (cid, sixty5, eight, rid, a1, a2, a3, b1, b2, b3,
                 c1, c2, c3) = s.unpack(eData)
@@ -167,7 +167,7 @@ class GEOM1(object):
         """
         s = Struct(b'4i')
         nEntries = (len(data) - n) // 16
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 16]  # 4*4
             (cid, n1, n2, n3) = s.unpack(eData)
             dataIn = [cid, n1, n2, n3]
@@ -182,7 +182,7 @@ class GEOM1(object):
         s = Struct(b'ii3f3i')
         ntotal = 32
         nentries = (len(data) - n) // ntotal
-        for i in xrange(nentries):
+        for i in range(nentries):
             edata = data[n:n + 32]
             out = s.unpack(edata)
             (nID, cp, x1, x2, x3, cd, ps, seid) = out

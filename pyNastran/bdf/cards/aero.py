@@ -23,7 +23,7 @@ All cards are BaseCard objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
-from six.moves import zip
+from six.moves import zip, range
 from itertools import count
 from numpy import array, pi, linspace
 
@@ -120,7 +120,7 @@ class AELINK(BaseCard):
 
             fields = [interpret_value(field) for field in card[3:] ]
             assert len(fields) % 2 == 0, 'fields=%s' % fields
-            for i in xrange(0, len(fields), 2):
+            for i in range(0, len(fields), 2):
                 independentLabel = fields[i]
                 Ci = fields[i + 1]
                 self.independentLabels.append(independentLabel)
@@ -1402,7 +1402,7 @@ class FLFACT(BaseCard):
                 msg = 'embedded THRUs not supported yet on FLFACT card\n'
                 raise NotImplementedError(msg)
                 #(a,thru,b,n,dn) = factors
-                #for i in xrange(
+                #for i in range(
         else:
             self.sid = data[0]
             self.factors = data[1:]
@@ -1684,7 +1684,7 @@ class MKAERO1(BaseCard):
             nfields = len(fields) - 8
             self.machs = []
             self.rFreqs = []
-            for i in xrange(1, 1 + nfields):
+            for i in range(1, 1 + nfields):
                 self.machs.append(double_or_blank(card, i, 'mach'))
                 self.rFreqs.append(double_or_blank(card, i + 8, 'rFreq'))
             self.machs = wipe_empty_fields(self.machs)
@@ -1755,7 +1755,7 @@ class MKAERO2(BaseCard):
             nFields = len(fields)
             self.machs = []
             self.rFreqs = []
-            for i in xrange(1, 1 + nFields, 2):
+            for i in range(1, 1 + nFields, 2):
                 self.machs.append(double(card, i, 'mach'))
                 self.rFreqs.append(double(card, i + 1, 'rFreq'))
         else:
@@ -1950,7 +1950,7 @@ class PAERO2(BaseCard):
             self.thn = []
             fields = [interpret_value(field) for field in card[9:] ]
             nFields = len(fields)
-            for i in xrange(9, 9 + nFields, 2):
+            for i in range(9, 9 + nFields, 2):
                 self.thi.append(integer(card, i, 'lth'))
                 self.thn.append(integer(card, i + 1, 'thn'))
         else:
@@ -2043,7 +2043,7 @@ class PAERO3(BaseCard):
             nfields = card.nFields()
 
             j = 0
-            for i in xrange(6, nfields, 2):
+            for i in range(6, nfields, 2):
                 x = double(card, i, 'x%i' % j)
                 y = double(card, i + 1, 'y%i' % j)
                 self.x.append(x)

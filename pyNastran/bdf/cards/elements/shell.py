@@ -18,6 +18,7 @@ All quads are QuadShell, ShellElement, and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six.moves import range
 #import sys
 import warnings
 
@@ -1542,7 +1543,7 @@ class CSHEAR(QuadShell):
 def LambdaN(L, n):
     nx, ny = L.shape
     N = zeros((nx*n, ny*n), 'float64')
-    for i in xrange(n):
+    for i in range(n):
         ix0 = i * nx
         iy0 = i * ny
         ix = (i + 1) * nx

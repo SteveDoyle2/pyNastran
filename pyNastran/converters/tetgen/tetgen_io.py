@@ -1,3 +1,4 @@
+from six.moves import range
 import os
 
 import vtk
@@ -73,7 +74,7 @@ class TetgenIO(object):
 
         nid = 0
         print("nnodes=%s" % nnodes)
-        for i in xrange(nnodes):
+        for i in range(nnodes):
             points.InsertPoint(nid, nodes[i, :])
             nid += 1
 

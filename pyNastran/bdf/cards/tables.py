@@ -22,7 +22,7 @@ All tables have a self.table parameter that is a TableObj
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types
-#import sys
+from six.moves import range
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
@@ -76,7 +76,7 @@ class TableObj(object):
         i = 0
         while i < nxy:
             pack = []
-            for j in xrange(nrepeated):
+            for j in range(nrepeated):
                 pack.append(xy[i + j])
             i += nrepeated
             self.table.append(pack)
@@ -91,19 +91,19 @@ class TableObj(object):
         """
         try:
             msg = ''
-            for i in xrange(nxy):
-                for j in xrange(nrepeated):
+            for i in range(nxy):
+                for j in range(nrepeated):
                     try:
-                        msg += '%-8g ' % (xy[i * nrepeated + j])
+                        msg += '%-8g ' % xy[i * nrepeated + j]
                     except TypeError:
-                        msg += '*%-8s ' % (xy[i * nrepeated + j])
+                        msg += '*%-8s ' % xy[i * nrepeated + j]
                     except IndexError:
                         msg += 'IndexError'
                 msg += '\n'
         except:
             print(xy)
             print(msg)
-            #assert nxy%nrepeated==0,msg
+            #assert nxy%nrepeated == 0, msg
             raise
 
     def _cleanup_xy(self, xy, isData=False):
@@ -120,7 +120,7 @@ class TableObj(object):
 
         foundENDT = False
         for value in xy:
-            if isinstance(value, basestring) and 'ENDT' in value.upper():
+            if isinstance(value, string_types) and 'ENDT' in value.upper():
                 foundENDT = True
             else:
                 xy2.append(value)

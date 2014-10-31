@@ -1,4 +1,5 @@
 #pylint: disable=C0326,C0301,C0103
+from six.moves import range
 from struct import Struct, unpack
 
 from pyNastran.op2.tables.oee_energy.oee_objects import StrainEnergyObject
@@ -150,7 +151,7 @@ class ONR(OP2Common):
 
             ntotal = 16
             nnodes = len(data) // ntotal
-            for i in xrange(nnodes):
+            for i in range(nnodes):
                 edata = data[n:n+ntotal]
 
                 out = s.unpack(edata)
@@ -167,7 +168,7 @@ class ONR(OP2Common):
             ntotal = 20
             s = Struct(b'8s3f')
             nnodes = len(data) // ntotal
-            for i in xrange(nnodes):
+            for i in range(nnodes):
                 edata = data[n:n+20]
                 out = s.unpack(edata)
                 (word, energy, percent, density) = out
@@ -185,7 +186,7 @@ class ONR(OP2Common):
             ntotal = 24
             s = Struct(b'i8s3f')
             nnodes = len(data) // ntotal
-            for i in xrange(nnodes):
+            for i in range(nnodes):
                 edata = data[n:n+24]
                 out = s.unpack(edata)
                 (word, energy, percent, density) = out  # TODO: this has to be wrong...

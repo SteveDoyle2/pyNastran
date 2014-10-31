@@ -1,4 +1,4 @@
-from six.moves import zip
+from six.moves import zip, range
 from itertools import count
 
 from numpy import zeros, arange, dot, cross, searchsorted, array, where, asarray, eye
@@ -211,7 +211,7 @@ class CTETRA4(SolidElement):
         else:
             mi = mass / 20.
             M = ones((ndof, ndof), dtype='float32')
-            for i in xrange(nnodes):
+            for i in range(nnodes):
                 j = i * 3
                 M[j:j+3, j:j+3] = 2.
         M *= mi

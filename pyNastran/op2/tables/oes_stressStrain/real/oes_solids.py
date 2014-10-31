@@ -1,7 +1,7 @@
 # pylint: disable=C0301,W0613,C0103,R0913,R0914,R0904,C0111,R0201,R0902
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import zip
+from six.moves import zip, range
 from collections import defaultdict
 from itertools import count
 from numpy import array, sqrt, zeros, where, searchsorted, ravel, argwhere, unique, arange
@@ -178,7 +178,7 @@ class RealSolidArray(OES_Object):
 
         eids2 = self.element_node[:, 0]
         nodes = self.element_node[:, 1]
-        for itime in xrange(ntimes):
+        for itime in range(ntimes):
             dt = self.times[itime]  # TODO: rename this...
             if self.nonlinear_factor is not None:
                 dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
@@ -419,7 +419,7 @@ class RealSolidStress(StressObject):
                 self.o3[eid] = {}
                 self.ovmShear[eid] = {}
                 n += 1
-                for j in xrange(nNodes):
+                for j in range(nNodes):
                     (blank, nodeID, x, oxx, xy, txy, a, o1, lx, d1, d2, d3, pressure, ovmShear) = self._f06_data[n]
                     (blank, blank, y, oyy, yz, tyz, b, o2, ly, d1, d2, d3, blank, blank) = self._f06_data[n+1]
                     (blank, blank, z, ozz, zx, txz, c, o3, lz, d1, d2, d3, blank, blank) = self._f06_data[n+2]
@@ -473,7 +473,7 @@ class RealSolidStress(StressObject):
                 self.o3[dt][eid] = {}
                 self.ovmShear[dt][eid] = {}
                 n += 1
-                for j in xrange(nNodes):
+                for j in range(nNodes):
                     (blank, nodeID, x, oxx, xy, txy, a, o1, lx, d1, d2, d3, pressure, ovmShear) = f06_data[n]
                     (blank, blank, y, oyy, yz, tyz, b, o2, ly, d1, d2, d3, blank, blank) = f06_data[n+1]
                     (blank, blank, z, ozz, zx, txz, c, o3, lz, d1, d2, d3, blank, blank) = f06_data[n+2]
@@ -953,7 +953,7 @@ class RealSolidStrain(StrainObject):
                 self.e3[eid] = {}
                 self.evmShear[eid] = {}
                 n += 1
-                for j in xrange(nNodes):
+                for j in range(nNodes):
                     (blank, nodeID, x, exx, xy, exy, a, e1, lx, d1, d2, d3,
                         pressure, evmShear) = self.data[n]
                     (blank, blank, y, eyy, yz, eyz, b, e2, ly, d1, d2, d3,
@@ -1011,7 +1011,7 @@ class RealSolidStrain(StrainObject):
                 self.e3[dt][eid] = {}
                 self.evmShear[dt][eid] = {}
                 n += 1
-                for j in xrange(nNodes):
+                for j in range(nNodes):
                     (blank, nodeID, x, oxx, xy, txy, a, o1, lx, d1, d2, d3, pressure, ovmShear) = f06_data[n]
                     (blank, blank, y, oyy, yz, tyz, b, o2, ly, d1, d2, d3, blank, blank) = f06_data[n+1]
                     (blank, blank, z, ozz, zx, txz, c, o3, lz, d1, d2, d3, blank, blank) = f06_data[n+2]

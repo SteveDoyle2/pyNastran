@@ -1,4 +1,4 @@
-from six.moves import zip
+from six.moves import zip, range
 from numpy import array, dot, arange, zeros, unique, searchsorted, transpose
 from numpy.linalg import norm
 
@@ -323,7 +323,7 @@ class CROD(RodElement):
         Js = self.get_J(self.property_id)
         Cs = self.get_c(self.property_id)
 
-        for i in xrange(n):
+        for i in range(n):
             A = As[i]
             E = Es[i]
             G = Gs[i]

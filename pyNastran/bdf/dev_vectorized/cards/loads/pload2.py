@@ -1,4 +1,4 @@
-from six.moves import zip
+from six.moves import zip, range
 from numpy import arange, array, zeros, searchsorted, unique
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -57,7 +57,7 @@ class PLOAD2(object):
         if integer_string_or_blank(card, 4, 'THRU') == 'THRU':
             e1 = integer(card, 3, 'Element1')
             e2 = integer(card, 5, 'Element1')
-            eids = [i for i in xrange(e1, e2 + 1)]
+            eids = [i for i in range(e1, e2 + 1)]
         else:
             eids = fields(integer, card, 'eid', i=3, j=len(card))
         assert len(card) == 6, 'len(PLOAD2 card) = %i' % len(card)
@@ -78,7 +78,7 @@ class PLOAD2(object):
         self.n = ncards
         istart = 0
         iend = None
-        for i in xrange(self.n):
+        for i in range(self.n):
             element_ids = self._element_ids[i]
             n = len(element_ids)
             iend = istart + n

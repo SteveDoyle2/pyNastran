@@ -1,7 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import zip
+from six.moves import zip, range
 
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru, collapse_thru_packs
 from pyNastran.bdf.fieldWriter import print_card_8, print_int_card_blocks
@@ -73,7 +73,7 @@ class ABCQSet(Set):
         self.components = []
 
         nterms = len(card) // 2
-        for n in xrange(nterms):
+        for n in range(nterms):
             i = n * 2 + 1
             ID = integer(card, i, 'ID' + str(n))
             component = components(card, i + 1, 'component' + str(n))

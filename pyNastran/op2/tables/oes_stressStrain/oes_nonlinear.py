@@ -1,5 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six.moves import range
 from math import isnan
 
 from .real.oes_objects import StressObject, StrainObject
@@ -285,7 +286,7 @@ class HyperelasticQuad(StressObject):
                 majorP = self.majorP[dt][eid]
                 minorP = self.minorP[dt][eid]
 
-                for i in xrange(4):  # 1,2,3,4
+                for i in range(4):  # 1,2,3,4
                     if i == 0:
                         msg.append('0%8i %8s  %8i  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6\n' % (eid, gauss, i + 1, oxx[i], oyy[i], txy[i], angle[i], majorP[i], minorP[i]))
                     else:

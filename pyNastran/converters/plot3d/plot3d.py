@@ -1,3 +1,4 @@
+from six.moves import range
 from numpy import zeros
 
 class Plot3d(object):
@@ -19,7 +20,7 @@ class Plot3d(object):
         nblocks = int(sline[0])
 
         npoints = 0
-        for i in xrange(nblocks):
+        for i in range(nblocks):
             nx, ny, nz = f.readline().strip().split()
             nx = int(nx)
             ny = int(ny)

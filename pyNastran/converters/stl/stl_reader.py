@@ -1,5 +1,5 @@
 #pylint:  disable=C0103,C0111
-from six.moves import zip
+from six.moves import zip, range
 import os
 import sys
 #from struct import pack
@@ -239,7 +239,7 @@ class STLReader(object):
 
             bdf.flush()
             bdf.write('$SOLID ELEMENTS in Layer=%i\n' % (ni + 1))
-            for eid in xrange(nelements):
+            for eid in range(nelements):
                 (n1, n2, n3) = elements2[nebase  + eid] + 1
                 (n4, n5, n6) = elements2[neshift + eid] + 1
                 card = ['CPENTA', eid2, pid, n1, n2, n3, n4, n5, n6]

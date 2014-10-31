@@ -1,7 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import zip
+from six.moves import zip, range
 #from math import ceil
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -201,7 +201,7 @@ class DOPTPRM(OptConstraint):
 
         nFields = len(card) - 1
         self.params = {}
-        for i in xrange(0, nFields, 2):
+        for i in range(0, nFields, 2):
             param = string_or_blank(card, i + 1, 'param')
             default_value = None
             if param is None:
@@ -245,7 +245,7 @@ class DLINK(OptConstraint):
         self.IDv = []
         self.Ci = []
 
-        for i in xrange(n):
+        for i in range(n):
             j = 2 * i + 5
             IDv = integer(card, j, 'IDv' + str(i))
             Ci = double(card, j + 1, 'Ci' + str(i))
@@ -475,7 +475,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
             nFields += 1
 
         i = 0
-        for i in xrange(0, nFields, 2):
+        for i in range(0, nFields, 2):
             self.dvids.append(endFields[i])
             self.coeffs.append(endFields[i + 1])
         if nFields % 2 == 1:
@@ -548,7 +548,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
             endFields.append(None)
             nFields += 1
         i = 0
-        for i in xrange(0, nFields, 2):
+        for i in range(0, nFields, 2):
             self.dvids.append(endFields[i])
             self.coeffs.append(endFields[i + 1])
         if nFields % 2 == 1:
@@ -652,7 +652,7 @@ class DVPREL2(OptConstraint):
         self.dvids = []
         if iDesvar:
             n = 1
-            for i in xrange(10, iDesStop):
+            for i in range(10, iDesStop):
                 dvid_name = 'DVID' + str(n)
                 dvid = integer_or_blank(card, i, dvid_name)
                 #print("%s = %s" % (dvid_name, dvid))
@@ -665,7 +665,7 @@ class DVPREL2(OptConstraint):
         self.labels = []
         if iDTable:
             n = 1
-            for i in xrange(iDTable + 1, iEnd):
+            for i in range(iDTable + 1, iEnd):
                 label_name = 'Label' + str(n)
                 label = string(card, i, label_name)
                 #print("%s = %s" % (label_name, label))

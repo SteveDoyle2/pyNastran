@@ -1,3 +1,4 @@
+from six.moves import range
 from struct import Struct
 
 from pyNastran.op2.op2_common import OP2Common
@@ -73,7 +74,7 @@ class LAMA(OP2Common):
         self.eigenvalues[self.Title] = blama
         #self.eigenvalues[self.isubcase] = lama
         s = Struct(b'ii5f')
-        for i in xrange(nModes):
+        for i in range(nModes):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
             if self.debug4():
@@ -128,7 +129,7 @@ class LAMA(OP2Common):
         lama = RealEigenvalues(self.Title)
         self.eigenvalues[self.Title] = lama
         s = Struct('ii5f')
-        for i in xrange(nModes):
+        for i in range(nModes):
             edata = data[n:n+28]
             out = s.unpack(edata)
             if self.debug4():

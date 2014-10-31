@@ -1,5 +1,6 @@
 from __future__ import print_function
 from six import string_types
+from six.moves import range
 import copy
 from struct import Struct, unpack
 
@@ -524,7 +525,7 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
         assert nnodes > 0
         #assert len(data) % ntotal == 0
         s = Struct(format1)
-        for inode in xrange(nnodes):
+        for inode in range(nnodes):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
             (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
@@ -556,7 +557,7 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
         assert nnodes > 0
         #assert len(data) % ntotal == 0
 
-        for inode in xrange(nnodes):
+        for inode in range(nnodes):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
 
@@ -606,7 +607,7 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
         assert nnodes > 0
         #assert len(data) % ntotal == 0
 
-        for inode in xrange(nnodes):
+        for inode in range(nnodes):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
 

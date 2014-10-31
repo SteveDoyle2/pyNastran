@@ -11,7 +11,7 @@ def wipe_empty_fields(card):
     """
     cardB = []
     for field in card:
-        if isinstance(field, basestring):
+        if isinstance(field, string_types):
             field = field.strip()
             if field == '':
                 field = None

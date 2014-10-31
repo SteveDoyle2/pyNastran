@@ -1,4 +1,4 @@
-from six.moves import zip
+from six.moves import zip, range
 
 from numpy import arange, zeros, unique
 from numpy.linalg import norm
@@ -358,7 +358,7 @@ class CONROD(RodElement):
         e4 = zeros(n, 'float64')
         f4 = zeros(n, 'float64')
 
-        for i in xrange(n):
+        for i in range(n):
             n1, n2 = self.node_ids[i, :]
 
 

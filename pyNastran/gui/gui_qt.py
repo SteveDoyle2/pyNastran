@@ -841,7 +841,7 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         self.set_window_title(msg)
         self.log_command('on_reload()')
         #self.cycleResults(Title)
-        for i in xrange(10):  #  limit on number of cycles
+        for i in range(10):  #  limit on number of cycles
             if self.Title != Title:
                 self.cycleResults(Title)
             else:

@@ -17,7 +17,7 @@ All cards are BaseCard objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from math import log, exp, ceil
-from six.moves import zip
+from six.moves import zip, range
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
@@ -115,7 +115,7 @@ class FREQ1(FREQ):
         assert len(card) <= 5, 'len(FREQ card) = %i' % len(card)
 
         self.freqs = []
-        for i in xrange(ndf):
+        for i in range(ndf):
             self.freqs.append(f1 + i * df)
         self.cleanFreqs()
 
@@ -153,7 +153,7 @@ class FREQ2(FREQ):
 
         d = 1. / nf * log(f2 / f1)
         self.freqs = []
-        for i in xrange(nf):
+        for i in range(nf):
             self.freqs.append(f1 * exp(i * d))  # 0 based index
         self.cleanFreqs()
 

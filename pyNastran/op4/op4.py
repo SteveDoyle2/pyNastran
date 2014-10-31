@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 __all__ = ['OP4']
 from six import string_types
+from six.moves import range
 import os
 import io
 from struct import pack, unpack
@@ -965,7 +966,7 @@ class OP4(object):
                 icol -= 1
 
                 cols += [icol] * nValues
-                rows += [i + irow for i in xrange(nValues)]
+                rows += [i + irow for i in range(nValues)]
                 for i, value in enumerate(valueList):
                     if i % 2 == 0:
                         realValue = value
@@ -1299,7 +1300,7 @@ class OP4(object):
         msg = pack(self.endian + '5i8s', 24, ncols, nrows, form, Type, name2)
         f.write(msg)
 
-        for icol in xrange(ncols):
+        for icol in range(ncols):
             (iStart, iEnd) = self._get_start_end_row(A[:, icol], nrows)
 
             # write the column
@@ -1320,7 +1321,7 @@ class OP4(object):
                         fmt = '2f'
                     else:         # complex, double
                         fmt = '2d'
-                    for irow in xrange(iStart, iEnd):
+                    for irow in range(iStart, iEnd):
                         msg += pack(fmt, A[irow, icol].real,
                                          A[irow, icol].imag)
             f.write(msg)
@@ -1333,7 +1334,7 @@ class OP4(object):
     def _get_start_end_row(self, A, nrows):
         """find the starting and ending points of the matrix"""
         iStart = None
-        for irow in xrange(nrows):
+        for irow in range(nrows):
             if abs(A[irow]) > 0.0:
                 iStart = irow
                 break
@@ -1352,7 +1353,7 @@ class OP4(object):
         f.write(msg)
 
         if Type in [1, 2]: # real
-            for icol in xrange(ncols):
+            for icol in range(ncols):
                 value_str = ''
                 (iStart, iEnd) = self._get_start_end_row(A[:, icol], nrows)
 
@@ -1362,7 +1363,7 @@ class OP4(object):
                     msg = '%8i%8i%8i\n' % (icol + 1, iStart + 1,
                                            (iEnd - iStart) * NWV)
                     f.write(msg)
-                    for i, irow in enumerate(xrange(iStart, iEnd)):
+                    for i, irow in enumerate(range(iStart, iEnd)):
                         value_str += '%23.16E' % A[irow, icol]
                         if (i + 1) % 3 == 0:
                             f.write(value_str + '\n')
@@ -1370,7 +1371,7 @@ class OP4(object):
                 if value_str:
                     f.write(value_str + '\n')
         else: # complex
-            for icol in xrange(ncols):
+            for icol in range(ncols):
                 value_str = ''
                 (iStart, iEnd) = self._get_start_end_row(A[:, icol], nrows)
 
@@ -1381,7 +1382,7 @@ class OP4(object):
                                            (iEnd - iStart) * NWV)
                     f.write(msg)
                     i = 0
-                    for irow in xrange(iStart, iEnd):
+                    for irow in range(iStart, iEnd):
                         value_str += '%23.16E' % A[irow, icol].real
                         if (i + 1) % 3 == 0:
                             f.write(value_str + '\n')

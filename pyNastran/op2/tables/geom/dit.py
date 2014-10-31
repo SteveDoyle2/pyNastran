@@ -1,3 +1,4 @@
+from six.moves import range
 from struct import unpack
 
 from pyNastran.bdf.cards.aero import GUST
@@ -33,7 +34,7 @@ class DIT(object):
         """
         #print("reading GUST")
         nEntries = (len(data) - n) // 20  # 5*4
-        for i in xrange(nEntries):
+        for i in range(nEntries):
             eData = data[n:n + 20]
             out = unpack('ii3f', eData)
             (sid, dload, wg, x0, V) = out

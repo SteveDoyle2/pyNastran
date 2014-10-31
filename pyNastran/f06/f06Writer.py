@@ -198,7 +198,7 @@ class F06Writer(object):
         self._saved_results.clear()
 
     def add_results(self, results):
-        if isinstance(results, basestring):
+        if isinstance(results, string_types):
             results = [results]
         all_results = self.get_all_results()
         for result in results:
@@ -231,7 +231,7 @@ class F06Writer(object):
             self._saved_results.add(result)
 
     def set_results(self, results):
-        if isinstance(results, basestring):
+        if isinstance(results, string_types):
             results = [results]
         self._clear_results()
         self.add_results(results)

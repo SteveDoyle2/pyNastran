@@ -1,3 +1,6 @@
+from six.moves import range
+
+
 class PanairWrite(object):
     def __init__(self):
         pass
@@ -145,7 +148,7 @@ class PanairWrite(object):
 
         totalPoints = 0
         totalPanels = 0
-        for patchID in xrange(self.nPatches()):
+        for patchID in range(self.nPatches()):
             patch = self.patch(patchID)
             msg3 += patch.quick_summary(totalPoints, totalPanels)
             totalPanels += patch.nPanels()
@@ -153,7 +156,7 @@ class PanairWrite(object):
 
         msg2 += '0  case       alpha          beta      mag(f-s-v)\n'
         msg2 += ' ------    ----------    ----------   -----------\n'
-        for (iCase) in xrange(self.ncases):
+        for (iCase) in range(self.ncases):
             alpha = self.alphas[iCase]
             beta = self.betas[iCase]
             msg2 += '     %2s      %f      %f      1.000000\n' % (

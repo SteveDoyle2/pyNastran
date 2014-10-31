@@ -7,6 +7,7 @@ pure Python and the Cython OP4 modules.  Plot the timing results.
 al.danial@gmail.com March 2013
 """
 from __future__ import print_function
+from six.moves import range
 import time
 import numpy as np
 import os
@@ -69,7 +70,7 @@ def dense_square_test(dimension, is_binary=True):
 
     print("filenames =", filenames)
     # Method 1: cop4
-    for i in xrange(len(dimension)):
+    for i in range(len(dimension)):
         start_elapsed = time.time()
         B = cop4.Load(filenames[i], '*')  # dictionary-based
         end_elapsed = time.time()
@@ -81,7 +82,7 @@ def dense_square_test(dimension, is_binary=True):
         print('cop4 read %-20s in %8.3f s' % (filenames[i], cop4_load[i]))
 
     # Method 2: pure Python op4
-    for i in xrange(len(dimension)):
+    for i in range(len(dimension)):
         start_elapsed = time.time()
         B = pyop4.read_op4(filenames[i])
         end_elapsed = time.time()

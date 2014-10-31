@@ -2,6 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types
+from six.moves import range
 import sys
 import copy
 
@@ -88,7 +89,7 @@ class BDFCard(object):
         out = []
 
         d = 0
-        for n in xrange(i, j):
+        for n in range(i, j):
             value = self.field(n, defaults[d])
             out.append(value)
             d += 1
@@ -157,7 +158,7 @@ class BDFCard(object):
 
         cardBuilt = [fieldsOld[0]]
 
-        for i in xrange(1, minLength):
+        for i in range(1, minLength):
             fieldOld = fieldsOld[i]
             fieldNew = fieldsNew[i]
 
@@ -199,11 +200,11 @@ class BDFCard(object):
 
         if maxLength < len(cardBuilt):
             # the new card is longer than builtCard
-            for i in xrange(self.nfields, maxLength):
+            for i in range(self.nfields, maxLength):
                 cardBuilt.append(self.card[i])
         elif len(cardBuilt) < self.oldCard.nfields:
             # builtCard is shorter than the old card
-            for i in xrange(self.nfields, maxLength):
+            for i in range(self.nfields, maxLength):
                 cardBuilt.append(self.oldCard.field(i))
         #else: # same length
             #pass

@@ -1,5 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six.moves import range
 import unittest
 from numpy import array
 
@@ -278,7 +279,7 @@ class TestShells(unittest.TestCase):
         Mcsid = None
         mat1 = [mid,E,G,nu,rho,a,TRef, ge, St, Sc, Ss, Mcsid]
         m = MAT1(data=mat1)
-        for iply in xrange(len(p.plies)):
+        for iply in range(len(p.plies)):
             mid = p.plies[iply][0]
             p.plies[iply][0] = m # MAT1
             #p.mids = [m, m, m]
@@ -404,7 +405,7 @@ class TestShells(unittest.TestCase):
         Mcsid = None
         mat1 = [mid,E,G,nu,rho,a,TRef, ge, St, Sc, Ss, Mcsid]
         m = MAT1(data=mat1)
-        for iply in xrange(len(p.plies)):
+        for iply in range(len(p.plies)):
             mid = p.plies[iply][0]
             p.plies[iply][0] = m # MAT1
 

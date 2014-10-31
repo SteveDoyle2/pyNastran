@@ -1,3 +1,4 @@
+from six.moves import range
 from model import Model
 from numpy import array, cross, ndarray
 
@@ -152,14 +153,14 @@ class AeroModel(Model):
 
     def NodeIDs(self):
         nNodes = self.nNodes()
-        return xrange(1, nNodes + 1)
+        return range(1, nNodes + 1)
 
     #def getElementIDsWithPIDs(self):
         #return self.ElementIDs()
 
     def ElementIDs(self):
         nElements = self.nElements()
-        return xrange(1, nElements + 1)
+        return range(1, nElements + 1)
 
     def Cp(self, eid):
         cp = self.Cps[eid]

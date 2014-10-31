@@ -1,7 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from six.moves import zip
+from six.moves import zip, range
 from numpy import zeros
 
 from .oes_objects import StressObject, StrainObject, OES_Object
@@ -131,7 +131,7 @@ class RealShearArray(OES_Object):
             nwrite -= 1
             is_odd = True
 
-        for itime in xrange(ntimes):
+        for itime in range(ntimes):
             dt = self.times[itime]  # TODO: rename this...
             if self.nonlinear_factor is not None:
                 dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
@@ -153,7 +153,7 @@ class RealShearArray(OES_Object):
                 #is_all_zeros) = writeFloats13E([max_sheari, avg_sheari, margini])
                 out.append([eid, max_sheari, avg_sheari, margini])
 
-            for i in xrange(0, nwrite, 2):
+            for i in range(0, nwrite, 2):
                 outLine = '      %8i   %13s  %10.4E %13s  %8i   %13s  %10.4E %s\n' % (tuple(out[i] + out[i + 1]))
                 f.write(outLine)
             if is_odd:

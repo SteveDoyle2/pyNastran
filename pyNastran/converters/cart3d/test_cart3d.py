@@ -1,4 +1,5 @@
 #from pyNastran.converters.cart3d.cart3d_reader import generic_cart3d_reader
+from six.moves import range
 from cart3d_reader import Cart3DReader
 from numpy import array_equal, allclose
 
@@ -102,7 +103,7 @@ def test_3():
 def check(points, points2):
     nnodes, three = points.shape
     if not array_equal(points, points2):
-        for nid in xrange(nnodes):
+        for nid in range(nnodes):
             p1 = points[nid]
             p2 = points2[nid]
             abs_sum_delta = sum(abs(p1-p2))

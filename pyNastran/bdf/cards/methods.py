@@ -13,7 +13,7 @@ All cards are Method objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
-from six.moves import zip
+from six.moves import zip, range
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
@@ -183,7 +183,7 @@ class EIGC(Method):
             raise NotImplementedError('EIGC')
 
     def loadCLAN(self, nRows, card):
-        for irow in xrange(nRows):
+        for irow in range(nRows):
             #NDJ_default = None
             i = 9 + 8 * irow
             self.alphaAjs.append(
@@ -207,7 +207,7 @@ class EIGC(Method):
             alphaOmega_default = 0.0
             LJ_default = 1.0
 
-        for iRow in xrange(nRows):
+        for iRow in range(nRows):
             NEj = integer(card, 9 + 7 * iRow + 5, 'NE%s' + str(iRow))
             NDJ_default = None
             if self.method == 'INV':

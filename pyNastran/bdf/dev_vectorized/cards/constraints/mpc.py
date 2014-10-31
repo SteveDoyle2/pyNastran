@@ -1,4 +1,4 @@
-from six.moves import StringIO
+from six.moves import range, StringIO
 from pyNastran.bdf.dev_vectorized.bdf_interface.assign_type import (integer, double_or_blank, components_or_blank)
 from pyNastran.bdf.fieldWriter import print_card
 
@@ -16,7 +16,7 @@ def get_mpc_constraint(card):
 
     fields = card.fields(0)
     nFields = len(fields) - 1
-    for iField in xrange(2, nFields, 8):
+    for iField in range(2, nFields, 8):
         grid = integer(card, iField, 'gid')
         component = components_or_blank(card, iField + 1, 'constraint', 0)  # scalar point
         value = double_or_blank(card, iField + 2, 'enforced', 0.0)

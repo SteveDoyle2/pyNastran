@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=C0103
 from __future__ import print_function
+from six.moves import range
 
 import sys
 from math import sqrt
@@ -142,7 +143,7 @@ def print_annotated_matrix(A, row_names=None, col_names=None, tol=1e-8):
     """
     B = array(A)
     if row_names is None:
-        row_names = [i for i in xrange(B.shape[0])]
+        row_names = [i for i in range(B.shape[0])]
 
     rwidth = max([len(str(row_names[i])) for i in range(len(row_names))])
     row_fmt = '%%-%ss' % rwidth
@@ -159,13 +160,13 @@ def print_annotated_matrix(A, row_names=None, col_names=None, tol=1e-8):
         float_fmt = '%%-%i.2f' % cwidth
 
     c= header + ''.join([row_fmt % (str(row_names[i])) + ' ' + list_print(B[i, :], tol, float_fmt=float_fmt)
-                              + '\n' for i in xrange(B.shape[0])])
+                              + '\n' for i in range(B.shape[0])])
     return c
 
 
 def print_matrix(A, tol=1e-8):
     B = array(A)
-    return ''.join([list_print(B[i, :], tol) + '\n' for i in xrange(B.shape[0])])
+    return ''.join([list_print(B[i, :], tol) + '\n' for i in range(B.shape[0])])
 
 
 def list_print(listA, tol=1e-8, float_fmt='%-3.2g', zero_fmt='    0'):
