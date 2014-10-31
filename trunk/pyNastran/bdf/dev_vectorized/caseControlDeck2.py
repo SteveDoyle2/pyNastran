@@ -1,3 +1,5 @@
+from six import iteritems
+
 def _clean_lines(case_control, lines):
     """
     Removes comment characters defined by a *$*.
@@ -282,7 +284,7 @@ class CaseControlDeck(object):
 
     def __repr__(self):
         msg = ''
-        for subcase_id, subcase in sorted(self.subcases.iteritems()):
+        for subcase_id, subcase in sorted(iteritems(self.subcases)):
             msg += str(subcase)
         #msg += 'BEGIN BULK\n'
         return msg

@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-
+from six import iteritems
 from .oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
@@ -231,10 +231,10 @@ class RealBeamStress(StressObject):
                  '                    STAT DIST/\n',
                  '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
         msg = []
-        for dt, SMaxs in sorted(self.smax.iteritems()):
+        for dt, SMaxs in sorted(iteritems(self.smax)):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
-            for eid, Smax in sorted(SMaxs.iteritems()):
+            for eid, Smax in sorted(iteritems(SMaxs)):
                 msg.append('0  %8i\n' % (eid))
                 for i, nid in enumerate(self.grids[eid]):
                     xxb = self.xxb[eid][i]
@@ -488,10 +488,10 @@ class RealBeamStrain(StrainObject):
                  '                    STAT DIST/\n',
                  '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
         msg = []
-        for dt, SMaxs in sorted(self.smax.iteritems()):
+        for dt, SMaxs in sorted(iteritems(self.smax)):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
-            for eid, Smax in sorted(SMaxs.iteritems()):
+            for eid, Smax in sorted(iteritems(SMaxs)):
                 msg.append('0  %8i\n' % (eid))
                 for i, nid in enumerate(self.grids[eid]):
                     xxb = self.xxb[eid][i]

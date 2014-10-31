@@ -1,3 +1,4 @@
+from six import iteritems
 from six.moves import range
 import vtk
 from vtk import vtkQuad
@@ -25,7 +26,7 @@ class Plot3d_io(object):
 
         npoints = 0
         nelements = 0
-        for iblock, shape in sorted(model.block_shapes.iteritems()):
+        for iblock, shape in sorted(iteritems(model.block_shapes)):
             npoints += shape[0] * shape[1] * shape[2]
             nelements += (shape[0] - 1)  * (shape[1] - 1) * (shape[2] - 1)
         nblocks = iblock

@@ -7,7 +7,7 @@ Main BDF class.  Defines:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types
+from six import string_types, iteritems
 
 #from codecs import open as codec_open
 import io
@@ -658,34 +658,34 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         Cross reference verification method.
         """
         xref = self._xref
-        #for key, card in sorted(self.params.iteritems()):
+        #for key, card in sorted(iteritems(self.params)):
             #try:
             #card._verify(xref)
-        for key, card in sorted(self.nodes.iteritems()):
+        for key, card in sorted(iteritems(self.nodes)):
             try:
                 card._verify(xref)
             except:
                 print(str(card))
                 raise
-        for key, card in sorted(self.coords.iteritems()):
+        for key, card in sorted(iteritems(self.coords)):
             try:
                 card._verify(xref)
             except:
                 print(str(card))
                 raise
-        for key, card in sorted(self.elements.iteritems()):
+        for key, card in sorted(iteritems(self.elements)):
             try:
                 card._verify(xref)
             except:
                 print(str(card))
                 raise
-        for key, card in sorted(self.properties.iteritems()):
+        for key, card in sorted(iteritems(self.properties)):
             try:
                 card._verify(xref)
             except:
                 print(str(card))
                 raise
-        for key, card in sorted(self.materials.iteritems()):
+        for key, card in sorted(iteritems(self.materials)):
             try:
                 card._verify(xref)
             except:
@@ -863,7 +863,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         self.dict_of_vars = {}
         assert len(dict_of_vars) > 0, 'nvars = %s' % len(dict_of_vars)
-        for (key, value) in sorted(dict_of_vars.iteritems()):
+        for (key, value) in sorted(iteritems(dict_of_vars)):
             assert len(key) <= 7, ('max length for key is 7; '
                                    'len(%s)=%s' % (key, len(key)))
             assert len(key) >= 1, ('min length for key is 1; '
@@ -1431,7 +1431,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
              'add_DVMREL': ['DVMREL1'],
             }
 
-            for func, names in _cards.iteritems():
+            for func, names in iteritems(_cards):
                 if card_name in names:
                     try:
                         getattr(self, func)(_get_cls(card_name))
@@ -1664,12 +1664,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         msg.append('SOL %s\n' % self.sol)
 
         # loads
-        for (lid, loads) in sorted(self.loads.iteritems()):
+        for (lid, loads) in sorted(iteritems(self.loads)):
             msg.append('bdf.loads[%s]' % lid)
             groups = {}
             for load in loads:
                 groups[load.type] = groups.get(load.type, 0) + 1
-            for name, n in sorted(groups.iteritems()):
+            for name, n in sorted(iteritems(groups)):
                 msg.append('  %-8s %s' % (name + ':', n))
             msg.append('')
 
@@ -1705,7 +1705,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         # rejects
         if self.rejects:
             msg.append('Rejected Cards')
-            for name, counter in sorted(self.card_count.iteritems()):
+            for name, counter in sorted(iteritems(self.card_count)):
                 if name not in self.cardsToRead:
                     msg.append('  %-8s %s' % (name + ':', counter))
         msg.append('')

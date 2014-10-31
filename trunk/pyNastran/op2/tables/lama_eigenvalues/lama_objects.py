@@ -1,4 +1,5 @@
 from __future__ import print_function
+from six import iteritems
 from math import sqrt
 
 from numpy import array, pi, allclose
@@ -60,7 +61,7 @@ class RealEigenvalues(BaseScalarObject):
         msg = header + ['                                              R E A L   E I G E N V A L U E S\n', title,
                         '   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED\n',
                         '    NO.       ORDER                                                                       MASS              STIFFNESS\n']
-        for (iMode, order) in sorted(self.extractionOrder.iteritems()):
+        for (iMode, order) in sorted(iteritems(self.extractionOrder)):
             eigenvalue = self.eigenvalues[iMode]
             #cycle = sqrt(abs(eigenvalue)) / (2. * pi)
 
@@ -76,7 +77,7 @@ class RealEigenvalues(BaseScalarObject):
 
     def __repr__(self):
         msg = '%-7s %15s %15s %10s %10s %10s %15s\n' % ('ModeNum', 'ExtractionOrder', 'Eigenvalue', 'Radians', 'Cycles', 'GenMass', 'GenStiffness')
-        for modeNum, extractOrder in sorted(self.extractionOrder.iteritems()):
+        for modeNum, extractOrder in sorted(iteritems(self.extractionOrder)):
             eigenvalue = self.eigenvalues[modeNum]
             radian = self.radians[modeNum]
 
@@ -131,7 +132,7 @@ class ComplexEigenvalues(BaseScalarObject):
                         '0                ROOT     EXTRACTION                  EIGENVALUE                     FREQUENCY              DAMPING\n',
                         '                  NO.        ORDER             (REAL)           (IMAG)                (CYCLES)            COEFFICIENT\n']
 
-        for (iMode, order) in sorted(self.extractionOrder.iteritems()):
+        for (iMode, order) in sorted(iteritems(self.extractionOrder)):
             eigr = self.eigenvalues[iMode][0]
             eigi = self.eigenvalues[iMode][1]
 
@@ -148,7 +149,7 @@ class ComplexEigenvalues(BaseScalarObject):
     def __repr__(self):
         msg = '%-7s %15s %15s %10s %10s %10s\n' % ('RootNum', 'ExtractionOrder', 'Eigenvalue', '', 'Cycles', 'Damping')
         msg += '%-7s %15s %15s %10s\n' % ('', '', 'Real', 'Imaginary')
-        for rootNum, extractOrder in sorted(self.extractionOrder.iteritems()):
+        for rootNum, extractOrder in sorted(iteritems(self.extractionOrder)):
             eigenvalue = self.eigenvalues[rootNum]
             cycle = self.cycles[rootNum]
             damping = self.damping[rootNum]
@@ -211,7 +212,7 @@ class BucklingEigenvalues(BaseScalarObject):
                         '   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED\n',
                         '    NO.       ORDER                                                                       MASS              STIFFNESS\n']
 
-        for (iMode, order) in sorted(self.extractionOrder.iteritems()):
+        for (iMode, order) in sorted(iteritems(self.extractionOrder)):
             eigr = self.eigenvalues[iMode]
 
             omega = self.omegas[iMode]
@@ -228,7 +229,7 @@ class BucklingEigenvalues(BaseScalarObject):
     #def __repr__(self):
         #msg = '%-7s %15s %15s %10s %10s %10s\n' % ('RootNum', 'ExtractionOrder', 'Eigenvalue', '', 'Cycles', 'Damping')
         #msg += '%-7s %15s %15s %10s\n' % ('', '', 'Real', 'Imaginary')
-        #for rootNum, extractOrder in sorted(self.extractionOrder.iteritems()):
+        #for rootNum, extractOrder in sorted(iteritems(self.extractionOrder)):
             #eigenvalue = self.eigenvalues[rootNum]
             #cycle = self.cycles[rootNum]
             #damping = self.damping[rootNum]

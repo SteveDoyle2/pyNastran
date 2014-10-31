@@ -1,3 +1,4 @@
+from six import iteritems
 import os
 import sys
 import time
@@ -163,7 +164,7 @@ def main():
     ver = str(pyNastran.__version__)
     data = docopt(msg, version=ver)
 
-    for key, value in sorted(data.iteritems()):
+    for key, value in sorted(iteritems(data)):
         print("%-12s = %r" % (key.strip('--'), value))
 
     if os.path.exists('skippedCards.out'):

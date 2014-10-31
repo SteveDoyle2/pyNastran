@@ -1,5 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import iteritems
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
@@ -859,7 +860,7 @@ class ComplexCBarForce(ScalarObject):  # 34-CBAR
                  '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
 
         msg = []
-        for dt, bendA in sorted(self.bendingMomentA.iteritems()):
+        for dt, bendA in sorted(iteritems(self.bendingMomentA)):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
             for eid in sorted(bendA):

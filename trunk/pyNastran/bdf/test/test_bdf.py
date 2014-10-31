@@ -1,6 +1,7 @@
 # pylint: disable=W0612,C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import iteritems
 import os
 import sys
 import numpy
@@ -309,7 +310,7 @@ def compute(cards1, cards2):
 
 def get_element_stats(fem1, fem2):
     """verifies that the various element methods work"""
-    for (key, loads) in sorted(fem1.loads.iteritems()):
+    for (key, loads) in sorted(iteritems(fem1.loads)):
         for load in loads:
             try:
                 allLoads = load.getLoads()
@@ -328,7 +329,7 @@ def get_element_stats(fem1, fem2):
     print("cg   =", cg)
     print("I    =", I)
 
-   # for (key, e) in sorted(fem1.elements.iteritems()):
+   # for (key, e) in sorted(iteritems(fem1.elements)):
    #     try:
    #         e._verify()
    #         #if isinstance(e, RigidElement):
@@ -355,7 +356,7 @@ def get_element_stats(fem1, fem2):
 
 
 def get_matrix_stats(fem1, fem2):
-    for (key, dmig) in sorted(fem1.dmigs.iteritems()):
+    for (key, dmig) in sorted(iteritems(fem1.dmigs)):
         try:
             if isinstance(dmig, NastranMatrix):
                 dmig.getMatrix()
@@ -384,7 +385,7 @@ def compare_params(fem1, fem2):
 
 
 def print_points(fem1, fem2):
-    for (nid, n1) in sorted(fem1.nodes.iteritems()):
+    for (nid, n1) in sorted(iteritems(fem1.nodes)):
         print("%s   xyz=%s  n1=%s  n2=%s" % (nid, n1.xyz, n1.Position(True),
                                             fem2.Node(nid).Position()))
         break
@@ -435,7 +436,7 @@ def main():
     ver = str(pyNastran.__version__)
     data = docopt(msg, version=ver)
 
-    for key, value in sorted(data.iteritems()):
+    for key, value in sorted(iteritems(data)):
         print("%-12s = %r" % (key.strip('--'), value))
 
     import time

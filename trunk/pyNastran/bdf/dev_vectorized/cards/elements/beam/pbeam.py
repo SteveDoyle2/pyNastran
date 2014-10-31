@@ -1,3 +1,4 @@
+from six impot iteritems
 from numpy import array, zeros, arange, concatenate, searchsorted, where, unique, asarray
 
 from pyNastran.bdf.fieldWriter import print_card_8
@@ -75,8 +76,8 @@ class PBEAM(object):
     #=========================================================================
     def write_bdf(self, f, size=8, property_ids=None):
         if size == 8:
-            for pid, prop in sorted(self.properties.iteritems()):
+            for pid, prop in sorted(iteritems(self.properties)):
                 f.write(prop.write_bdf(size, print_card_8))
         else:
-            for pid, prop in sorted(self.properties.iteritems()):
+            for pid, prop in sorted(iteritems(self.properties)):
                 f.write(prop.write_bdf(size, print_card_16))

@@ -1,3 +1,4 @@
+from six import iteritems
 from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray, RealTableObject, ComplexTableObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
@@ -36,7 +37,7 @@ class RealForceVector(RealTableObject):  # table_code=12, sort_code=0, thermal=0
         msg = header + ['                                         N O N - L I N E A R - F O R C E   V E C T O R\n'
                         ' \n',
                         '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        for nodeID, translation in sorted(self.translations.iteritems()):
+        for nodeID, translation in sorted(iteritems(self.translations)):
             rotation = self.rotations[nodeID]
             grid_type = self.gridTypes[nodeID]
 
@@ -58,10 +59,10 @@ class RealForceVector(RealTableObject):  # table_code=12, sort_code=0, thermal=0
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
 
-        for dt, translations in sorted(self.translations.iteritems()):
+        for dt, translations in sorted(iteritems(self.translations)):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
-            for nodeID, translation in sorted(translations.iteritems()):
+            for nodeID, translation in sorted(iteritems(translations)):
                 rotation = self.rotations[dt][nodeID]
                 grid_type = self.gridTypes[nodeID]
 
@@ -92,7 +93,7 @@ class ComplexForceVector(ComplexTableObject):  # table_code=12, approach_code=??
                         '                                                          (REAL/IMAGINARY)\n',
                         ' \n',
                         '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        for nodeID, translation in sorted(self.translations.iteritems()):
+        for nodeID, translation in sorted(iteritems(self.translations)):
             rotation = self.rotations[nodeID]
             grid_type = self.gridTypes[nodeID]
 
@@ -129,10 +130,10 @@ class ComplexForceVector(ComplexTableObject):  # table_code=12, approach_code=??
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         msg = []
-        for dt, translations in sorted(self.translations.iteritems()):
+        for dt, translations in sorted(iteritems(self.translations)):
             header[2] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
-            for nodeID, translation in sorted(translations.iteritems()):
+            for nodeID, translation in sorted(iteritems(translations)):
                 rotation = self.rotations[dt][nodeID]
                 grid_type = self.gridTypes[nodeID]
 

@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-
+from six import iteritems
 from .oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
@@ -96,7 +96,7 @@ class RealBushStress(StressObject):
             '                  ELEMENT-ID        STRESS-TX     STRESS-TY     STRESS-TZ    STRESS-RX     STRESS-RY     STRESS-RZ \n',
         ]
 
-        for eid, (tx, ty, tz) in sorted(self.translations.iteritems()):
+        for eid, (tx, ty, tz) in sorted(iteritems(self.translations)):
             eType = self.eType[eid]
             (rx, ry, rz) = self.rotations[eid]
 
@@ -115,10 +115,10 @@ class RealBushStress(StressObject):
             '                  ELEMENT-ID        STRESS-TX     STRESS-TY     STRESS-TZ    STRESS-RX     STRESS-RY     STRESS-RZ \n',
         ]
         msg = []
-        for dt, translations in sorted(self.translations.iteritems()):
+        for dt, translations in sorted(iteritems(self.translations)):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
-            for eid, (tx, ty, tz) in sorted(translations.iteritems()):
+            for eid, (tx, ty, tz) in sorted(iteritems(translations)):
                 eType = self.eType[eid]
                 (rx, ry, rz) = self.rotations[dt][eid]
 

@@ -1,4 +1,4 @@
-from six import string_types
+from six import string_types, iteritems
 import os
 import sys
 import time
@@ -345,7 +345,7 @@ def main():
     data = docopt(msg, version=ver)
     #print("data", data)
 
-    for key, value in sorted(data.iteritems()):
+    for key, value in sorted(iteritems(data)):
         print("%-12s = %r" % (key.strip('--'), value))
 
     if os.path.exists('skippedCards.out'):

@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-
+from six import iteritems
 from ..real.oes_objects import StressObject
 from pyNastran.f06.f06_formatting import writeImagFloats13E
 
@@ -130,7 +130,7 @@ class ComplexBush1DStress(StressObject):
             '    ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C\n',
         ]
 
-        for eid, S1s in sorted(self.s1.iteritems()):
+        for eid, S1s in sorted(iteritems(self.s1)):
             eType = self.eType[eid]
             axial = self.axial[eid]
             s1 = self.s1[eid]
@@ -163,10 +163,10 @@ class ComplexBush1DStress(StressObject):
             '    ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C\n',
         ]
         msg = []
-        for dt, S1s in sorted(self.s1.iteritems()):
+        for dt, S1s in sorted(iteritems(self.s1)):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
-            for eid, S1 in sorted(S1s.iteritems()):
+            for eid, S1 in sorted(iteritems(S1s)):
                 eType = self.eType[eid]
                 axial = self.axial[dt][eid]
                 s1 = self.s1[dt][eid]

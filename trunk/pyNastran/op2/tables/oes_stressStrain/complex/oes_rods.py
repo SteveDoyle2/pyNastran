@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-#import sys
+from six import iteritems
 from six.moves import range
 from ..real.oes_objects import StressObject, StrainObject
 
@@ -140,7 +140,7 @@ class ComplexRodStress(StressObject):
                  '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
                  '         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN\n']
         msg = []
-        for dt, axials in sorted(self.axial.iteritems()):
+        for dt, axials in sorted(iteritems(self.axial)):
             dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
             header[2] = dtLine
             msg += header + words
@@ -293,7 +293,7 @@ class ComplexRodStrain(StrainObject):
                  '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
                  '         ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN\n']
         msg = []
-        for dt, axials in sorted(self.axial.iteritems()):
+        for dt, axials in sorted(iteritems(self.axial)):
             dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
             header[2] = dtLine
             msg += header + words

@@ -1,3 +1,4 @@
+from six import iteritems
 import os
 from numpy import zeros, array, cross, dot, ravel, amax, amin
 from numpy.linalg import det, norm
@@ -49,7 +50,7 @@ class ShabpIO(object):
         #elem.SetNumberOfPoints(nNodes)
         if 0:
             fraction = 1. / nNodes  # so you can color the nodes by ID
-            for nid, node in sorted(nodes.iteritems()):
+            for nid, node in sorted(iteritems(nodes)):
                 points.InsertPoint(nid - 1, *point)
                 self.gridResult.InsertNextValue(nid * fraction)
                 #print str(element)
@@ -166,7 +167,7 @@ class ShabpIO(object):
 
         if self.is_centroidal:
             self.resultCases = {}
-            for case_id, Cp in sorted(Cpd.iteritems()):
+            for case_id, Cp in sorted(iteritems(Cpd)):
                 Cp = Cpd[case_id]
                 #delta = deltad[case_id]
 

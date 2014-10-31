@@ -1,3 +1,4 @@
+from six import iteritems
 import os
 import sys
 
@@ -28,7 +29,7 @@ def load_panair_file(fname='panair.in'):
                 }
     varmap = {}
     localvars = locals()
-    for varname, default in sorted(varnames.iteritems()):
+    for varname, default in sorted(iteritems(varnames)):
         if varname in localvars:
             print("type(%s)=%s type(localvars[varname])=%s" % (varname, type(default), type(localvars[varname])))
             if type(default) != type(localvars[varname]):
@@ -178,12 +179,12 @@ class Cart3dToPanair(PanairGridHelper):
             cart = generic_cart3d_reader(cart3dGeom)
             (points, elements, regions, loads) = cart.read_cart3d(cart3dGeom)
 
-            #for pid, point in sorted(points.iteritems()):
+            #for pid, point in sorted(iteritems(points)):
                 #if pid<85:
                 #    print(pid,point)
                 #pass
             region_old = 9
-            for eid, element in sorted(elements.iteritems()):
+            for eid, element in sorted(iteritems(elements)):
                 header = ''
                 region = regions[eid]
                 if region not in BCMap:

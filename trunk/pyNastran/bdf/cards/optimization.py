@@ -1,6 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import iteritems
 from six.moves import zip, range
 #from math import ceil
 
@@ -213,7 +214,7 @@ class DOPTPRM(OptConstraint):
 
     def rawFields(self):
         list_fields = ['DOPTPRM']
-        for param, val in sorted(self.params.iteritems()):
+        for param, val in sorted(iteritems(self.params)):
             list_fields += [param, val]
         return list_fields
 
@@ -353,7 +354,7 @@ class DRESP2(OptConstraint):
         del self.params['$NULL$']
 
         #print "--Params--"
-        #for (key, valueList) in sorted(self.params.iteritems()):
+        #for key, valueList in sorted(iteritems(self.params)):
             #print("  key=%s params=%s" %(key, valueList))
 
         #print self
@@ -378,7 +379,7 @@ class DRESP2(OptConstraint):
              'DESVAR':  [1, 0],
         }
         list_fields = []
-        for (key, valueList) in sorted(self.params.iteritems()):
+        for key, valueList in sorted(iteritems(self.params)):
             fields2 = [key] + valueList
             try:
                 (i, j) = packLength[key]

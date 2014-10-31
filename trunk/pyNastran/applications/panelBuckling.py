@@ -1,3 +1,4 @@
+from six import iteritems
 from six.moves import range
 import copy
 
@@ -27,7 +28,7 @@ class PanelBuckling(object):
 
         ## maps elements to edges
         Edges = {}
-        for eid, element in sorted(self.bdf.elements.iteritems()):
+        for eid, element in sorted(iteritems(self.bdf.elements)):
             if isinstance(element, ShellElement):
                 Edges[eid] = []
                 self.shells[eid] = element
@@ -36,7 +37,7 @@ class PanelBuckling(object):
         ## maps edges to elements
         Edges2 = {}
         Normals = {}
-        for eid, element in sorted(self.shells.iteritems()):
+        for eid, element in sorted(iteritems(self.shells)):
             edges = []
             Normals[eid] = element.Normal()
             nodeIDs = element.nodeIDs()
@@ -55,10 +56,10 @@ class PanelBuckling(object):
             #Edges[eid] = edges
         del key, edges, element
 
-        for eid, edges in sorted(Edges.iteritems()):
+        for eid, edges in sorted(iteritems(Edges)):
             for edge in edges:
                 Edges2[edge].append(eid)
-                #print("Edges2[edge=%s] = %s" % (edge,Edges2[edge]))
+                #print("Edges2[edge=%s] = %s" % (edge, Edges2[edge]))
 
         #print("Edges[edge=%s] = %s" % (edge, Edges2[edge])) # edges to elements
 
@@ -71,7 +72,7 @@ class PanelBuckling(object):
         #Edges2 = {}  ## maps edges to elements
         #print("Edges[edge=%s] = %s" % (edge, Edges2[edge])) # edges to elements
         self.edgeCount = {}
-        for edge, elements in sorted(Edges2.iteritems()):
+        for edge, elements in sorted(iteritems(Edges2)):
             #elements = self.removeExtraElements2(elements)
             self.edgeCount[edge] = len(elements)
             print("edge=%s elements=%s edgeCount=%s" % (
@@ -163,7 +164,7 @@ class PanelBuckling(object):
         maxPanelID = -1
 
         self.eidsDone = set([])
-        for eid, edges in sorted(Edges.iteritems()):
+        for eid, edges in sorted(iteritems(Edges)):
             print("eid = ", eid)
             self.eidsDone = self.eidsDone.union([eid])
             # what panel are we working on
@@ -223,15 +224,15 @@ class PanelBuckling(object):
 
         reversedPanelEids = {}
         # i dont like initializing lists within dictionaries, messy
-        for eid, panelID in panelEids.iteritems():
+        for eid, panelID in iteritems(panelEids):
             reversedPanelEids[panelID] = []
 
         IDsToKeep = [74]
-        for eid, panelID in panelEids.iteritems():
+        for eid, panelID in iteritems(panelEids):
             reversedPanelEids[panelID].append(eid)
 
         eidsToRemove = []
-        for panelID, eids in sorted(reversedPanelEids.iteritems()):
+        for panelID, eids in sorted(iteritems(reversedPanelEids)):
             print("panelID=%s nEids=%s eids=%s" % (panelID, len(eids), eids))
             if panelID not in IDsToKeep:
                 print("****removing ", panelID)

@@ -1,3 +1,4 @@
+from six import iteritems
 from six.moves import StringIO
 from collections import defaultdict
 from itertools import count
@@ -47,7 +48,7 @@ class SPC1(object):
         self.components[dofs].append(node_ids)
 
     def build(self):
-        for comp, nodes_lists in self.components.iteritems():
+        for comp, nodes_lists in iteritems(self.components):
             nodes2 = []
             for nodes in nodes_lists:
                 nodes2 += nodes
@@ -55,7 +56,7 @@ class SPC1(object):
             self.components[comp] = nodes2
 
     def write_bdf(self, f, size=8):
-        for comp, nodes in self.components.iteritems():
+        for comp, nodes in iteritems(self.components):
             card = ['SPC1', self.constraint_id, comp] + list(nodes)
             f.write(print_card(card))
 

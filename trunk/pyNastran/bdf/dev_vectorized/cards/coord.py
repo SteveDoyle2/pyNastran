@@ -1,3 +1,4 @@
+from six import iteritems
 from six.moves import zip
 from numpy import (array, concatenate, searchsorted, unique, zeros, array, full,
                    nan, where, vstack, dot, cross, degrees, radians, arctan2,
@@ -95,7 +96,7 @@ class Coord(object):
         self.allocate(ncards=ncoords)
         #print('coord_ids = %s' % self.coords.keys())
         #print('T = \n%s' % self.T)
-        for i, (cid, coord) in enumerate(sorted(self.coords.iteritems())):
+        for i, (cid, coord) in enumerate(sorted(iteritems(self.coords))):
             self.coord_id[i] = cid
             self.Type[i] = coord.Type
             if coord.isResolved:
@@ -422,7 +423,7 @@ class Coord(object):
             yield coord
 
     def items(self):
-        for cid, coord in self.coords.iteritems():
+        for cid, coord in iteritems(self.coords):
             yield cid, coord
 
     def iterkeys(self):

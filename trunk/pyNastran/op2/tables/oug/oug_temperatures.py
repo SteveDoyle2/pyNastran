@@ -1,4 +1,5 @@
 # pylint: disable=E1101
+from six import iteritems
 from pyNastran.op2.resultObjects.tableObject import RealTableArray  #, ComplexTableArray, TableObject, ComplexTableObject
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 
@@ -123,7 +124,7 @@ class RealTemperature(ScalarObject):  # approach_code=1, sort_code=0, thermal=1
    #     .. warning:: hasnt been tested...
    #     """
    #     msg = block3
-   #     for nodeID,T in sorted(self.temperatures.iteritems()):
+   #     for nodeID,T in sorted(iteritems(self.temperatures)):
    #         grid = nodeID*10+device_code
    #         msg += pack('iffffff',grid,T,0,0,0,0,0)
    #     return msg
@@ -135,12 +136,12 @@ class RealTemperature(ScalarObject):  # approach_code=1, sort_code=0, thermal=1
    #     .. warning:: dt slot needs to be fixed...
    #     """
    #     msg = ''
-   #     for dt,temperatures in sorted(self.temperatures.iteritems()):
+   #     for dt,temperatures in sorted(iteritems(self.temperatures)):
    #         XXX = 50 ## this isnt correct... .. todo:: update dt
    #         msg += block3[0:XXX] + pack('i',dt) + block3[XXX+4:]
    #         #msg += '%s = %g\n' %(self.data_code['name'],dt)
    #
-   #         for nodeID,T in sorted(temperatures.iteritems()):
+   #         for nodeID,T in sorted(iteritems(temperatures)):
    #             grid = nodeID*10+device_code
    #             msg += pack('iffffff',grid,T,0,0,0,0,0)
    #     return msg
@@ -151,7 +152,7 @@ class RealTemperature(ScalarObject):  # approach_code=1, sort_code=0, thermal=1
                  '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']
         msg = []
         if self.nonlinear_factor is not None:
-            for dt, temperatures in sorted(self.temperatures.iteritems()):
+            for dt, temperatures in sorted(iteritems(self.temperatures)):
                 dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
                 header[2] = dtLine
                 msg += header + words
@@ -172,7 +173,7 @@ class RealTemperature(ScalarObject):  # approach_code=1, sort_code=0, thermal=1
         ipack = []
         oldNodeID = -1
         oldGridType = None
-        for nodeID, T in sorted(temperatures.iteritems()):
+        for nodeID, T in sorted(iteritems(temperatures)):
             grid_type = self.gridTypes[nodeID]
 
             if oldNodeID + 1 == nodeID and grid_type == oldGridType:

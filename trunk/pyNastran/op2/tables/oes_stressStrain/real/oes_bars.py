@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-
+from six import iteritems
 from .oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
@@ -248,12 +248,12 @@ class RealBarStress(StressObject):
                 '    ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C\n',
               ]
         i = 0
-        for dt, S1s in sorted(self.s1.iteritems()):
+        for dt, S1s in sorted(iteritems(self.s1)):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             if hasattr(self, 'eigr'):
                 header[2] = ' %14s = %12.6E\n' % ('EIGENVALUE', self.eigrs[i])
             f.write(''.join(header + words))
-            for eid, S1 in sorted(S1s.iteritems()):
+            for eid, S1 in sorted(iteritems(S1s)):
                 #eType = self.eType[eid]
                 axial = self.axial[dt][eid]
                 #MSt = self.MSt[eid]
@@ -495,12 +495,12 @@ class RealBarStrain(StrainObject):
               ]
         msg = []
         i = 0
-        for dt, E1s in sorted(self.e1.iteritems()):
+        for dt, E1s in sorted(iteritems(self.e1)):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             if hasattr(self, 'eigr'):
                 header[2] = ' %14s = %12.6E\n' % ('EIGENVALUE', self.eigrs[i])
             msg += header + words
-            for eid, e1s in sorted(E1s.iteritems()):
+            for eid, e1s in sorted(iteritems(E1s)):
                 #eType = self.eType[eid]
                 axial = self.axial[dt][eid]
                 #MSt = self.MSt[eid]
@@ -529,4 +529,3 @@ class RealBarStrain(StrainObject):
             page_num += 1
             i += 1
         return page_num - 1
-    

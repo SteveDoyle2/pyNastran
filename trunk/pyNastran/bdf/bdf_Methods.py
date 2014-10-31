@@ -17,6 +17,7 @@ reading/writing/accessing of BDF data.  Such methods include:
 # pylint: disable=R0904,R0902
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import iteritems
 from six.moves import zip, range
 import multiprocessing as mp
 
@@ -216,7 +217,7 @@ class BDFMethods(BDFMethodsDeprecated):
         WTMASS PARAM card
         """
         if sym_axis is None:
-            for key, aero in self.aero.iteritems():
+            for key, aero in iteritems(self.aero):
                 sym_axis = ''
                 if aero.IsSymmetricalXY():
                     sym_axis += 'y'
@@ -412,7 +413,7 @@ class BDFMethods(BDFMethodsDeprecated):
         """
         assert cid in self.coords, ('cannot resolve nodes to '
                                     'cid=%r b/c it doesnt exist' % cid)
-        for nid, node in sorted(self.nodes.iteritems()):
+        for nid, node in sorted(iteritems(self.nodes)):
             p = node.PositionWRT(self, cid)
             node.UpdatePosition(self, p, cid)
 
@@ -426,7 +427,7 @@ class BDFMethods(BDFMethodsDeprecated):
         .. warning:: hasnt been tested well...
         """
         debug = False
-        for (nid, node_old) in model_old.nodes.iteritems():
+        for (nid, node_old) in iteritems(model_old.nodes):
             coord = node_old.cp
             (p, matrix) = coord.transformToGlobal(self.xyz, debug=debug)
             p2 = coord.transformToLocal(p, matrix, debug=debug)
@@ -475,7 +476,7 @@ class BDFMethods(BDFMethodsDeprecated):
             p = array(p0)
 
         loadCase = self.loads[loadcase_id]
-        #for (key, loadCase) in self.loads.iteritems():
+        #for (key, loadCase) in iteritems(self.loads):
             #if key != loadcase_id:
                 #continue
 
@@ -494,7 +495,7 @@ class BDFMethods(BDFMethodsDeprecated):
         M = array([0., 0., 0.])
 
         xyz = {}
-        for nid, node in self.nodes.iteritems():
+        for nid, node in iteritems(self.nodes):
             xyz[nid] = node.Position()
 
         unsupported_types = set([])
@@ -764,7 +765,7 @@ class BDFMethods(BDFMethodsDeprecated):
             elif load.type == 'GRAV':
                 if include_grav:  # this will be super slow
                     g = load.GravityVector() * scale
-                    for eid, elem in self.elements.iteritems():
+                    for eid, elem in iteritems(self.elements):
                         if eid not in eids:
                             continue
                         centroid = elem.Centroid()
@@ -830,7 +831,7 @@ class BDFMethods(BDFMethodsDeprecated):
             p = array(p0)
 
         loadCase = self.loads[loadcase_id]
-        #for (key, loadCase) in self.loads.iteritems():
+        #for (key, loadCase) in iteritems(self.loads):
             #if key != loadcase_id:
                 #continue
 
@@ -849,7 +850,7 @@ class BDFMethods(BDFMethodsDeprecated):
         M = array([0., 0., 0.])
 
         xyz = {}
-        for nid, node in self.nodes.iteritems():
+        for nid, node in iteritems(self.nodes):
             xyz[nid] = node.Position()
 
         unsupported_types = set([])
@@ -1097,7 +1098,7 @@ class BDFMethods(BDFMethodsDeprecated):
             elif load.type == 'GRAV':
                 if include_grav:  # this will be super slow
                     g = load.GravityVector() * scale
-                    for eid, elem in self.elements.iteritems():
+                    for eid, elem in iteritems(self.elements):
                         centroid = elem.Centroid()
                         mass = elem.Mass()
                         r = centroid - p

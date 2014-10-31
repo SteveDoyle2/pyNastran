@@ -1,3 +1,4 @@
+from six import iteritems
 import os
 from collections import defaultdict
 from numpy import savetxt, arange, zeros
@@ -143,7 +144,7 @@ def write_loads(csv_filename, loads):
     t = arange(len(Cp[node_id])) * dt  # broken...
     f.write('time\t');  savetxt(f, t, delimiter='', newline=',')
     f.write('\n')
-    for node_id, Cpi in sorted(Cp.iteritems()):
+    for node_id, Cpi in sorted(iteritems(Cp)):
         f.write("\nnode_id=%i\n" % node_id)
         f.write('Cp[%s],' % node_id);  savetxt(f, Cpi,        delimiter='', newline=',')
         f.write('\np[%s],' % node_id); savetxt(f, p[node_id], delimiter='', newline=',')

@@ -1,3 +1,4 @@
+from six import iteritems
 from six.moves import range
 
 
@@ -50,7 +51,7 @@ def rpt_read():
 def main():
     headers, results, key_map = rpt_read()
 
-    for key, rows in results.iteritems():
+    for key, rows in iteritems(results):
         data2 = {}
         iz = key_map['X Location']
         iozz = key_map['Z Component']

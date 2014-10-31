@@ -1,3 +1,4 @@
+from six import iteritems
 import os
 #import sys
 #import copy
@@ -85,7 +86,7 @@ class PanairGrid(object):
         npatches = len(self.patches)
         npatches = 1
         msg = '%i\n' % npatches
-        for patchID, patch in sorted(self.patches.iteritems()):
+        for patchID, patch in sorted(iteritems(self.patches)):
             #if patchID == 1:
             print("patchID = %s" % patchID)
             ni, nj = patch.x.shape
@@ -96,7 +97,7 @@ class PanairGrid(object):
             break
 
         f.write(msg)
-        for patchID, patch in sorted(self.patches.iteritems()):
+        for patchID, patch in sorted(iteritems(self.patches)):
             #if patchID == 1:
             patch.write_plot3d(f, 1) # x
             patch.write_plot3d(f, 2) # y
@@ -173,7 +174,7 @@ class PanairGrid(object):
 
         #outfile.write(self.alphaSection)
         #outfile.write(self.caseSection)
-        for patchName, patch in sorted(self.patches.iteritems()):
+        for patchName, patch in sorted(iteritems(self.patches)):
             outfile.write(str(patch))
 
         outfile.write(self.xyzSection)
@@ -196,7 +197,7 @@ class PanairGrid(object):
             if '=' in line:
                 #print "line -> |%s|" %(line)
                 if '=' is not line[0]:
-                    self.log.debug("line[0] -> %s" % (line[0]))
+                    self.log.debug("line[0] -> %s" % line[0])
                     line = line.split('=')[0]
                     #self.log.debug("******")
                     lines2.append(line)
@@ -289,7 +290,7 @@ class PanairGrid(object):
 
     def find_patch_by_name(self, netName):
         names = []
-        for patchID, patch in self.patches.iteritems():
+        for patchID, patch in iteritems(self.patches):
             #self.log.debug("patchID=%s" % (patchID))
             #self.log.debug("*get_patch = %s" %(get_patch))
             #self.log.debug("get_patch.netName=%s" % (get_patch.netName))

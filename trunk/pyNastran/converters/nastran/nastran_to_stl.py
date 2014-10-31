@@ -1,3 +1,4 @@
+from six import iteritems
 from numpy import cross
 from numpy.linalg import norm
 from pyNastran.bdf.bdf import BDF
@@ -11,13 +12,13 @@ def nastran_to_stl_filename(bdf_filename, stl_filename, log=None):
     f = open(stl_filename, 'wb')
     positions = {}
 
-    for node_id, node in sorted(model.nodes.iteritems()):
+    for node_id, node in sorted(iteritems(model.nodes)):
         positions[node_id] = node.Position()
 
     f.write('solid nastran_model\n')
 
     element_id = 1
-    for eid, element in sorted(model.elements.iteritems()):
+    for eid, element in sorted(iteritems(model.elements)):
         if element.type in ['CQUADR']:
             continue
         elif element.type in ['CBAR', 'CBEAM', 'CONM2', 'RBE2', 'RBE3',

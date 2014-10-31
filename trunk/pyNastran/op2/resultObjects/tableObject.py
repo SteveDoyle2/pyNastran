@@ -1,4 +1,4 @@
-from six import string_types
+from six import string_types, iteritems
 from six.moves import zip, range
 from struct import Struct, pack
 
@@ -495,20 +495,20 @@ class RealTableObject(ScalarObject):  # displacement style table
         translations2 = {}
         rotations2 = {}
         if self.dt is not None:
-            for dt, translations in sorted(self.translations.iteritems()):
+            for dt, translations in sorted(iteritems(self.translations)):
                 nodeIDs = translations.keys()
                 for nodeID in nodeIDs:
                     translations2[nodeID] = {}
                     rotations2[nodeID] = {}
 
-            for dt, translations in sorted(self.translations.iteritems()):
-                for nodeID, translation in sorted(translations.iteritems()):
+            for dt, translations in sorted(iteritems(self.translations)):
+                for nodeID, translation in sorted(iteritems(translations)):
                     rotation = self.rotations[dt][nodeID]
                     translations2[nodeID][dt] = translation
                     rotations2[nodeID][dt] = rotation
         else:
             return (self.translations, self.rotations)
-            #for nodeID,translation in sorted(self.translations.iteritems()):
+            #for nodeID,translation in sorted(iteritems(self.translations)):
             #    rotation = self.rotations[nodeID]
             #    translations2[nodeID] = translation
             #    rotations2[nodeID]    = rotation
@@ -517,7 +517,7 @@ class RealTableObject(ScalarObject):  # displacement style table
     def _write_f06_block(self, words, header, pageStamp, page_num=1, f=None):
         msg = words
         #assert f is not None # remove
-        for nodeID, translation in sorted(self.translations.iteritems()):
+        for nodeID, translation in sorted(iteritems(self.translations)):
             rotation = self.rotations[nodeID]
             grid_type = self.gridTypes[nodeID]
 
@@ -536,7 +536,7 @@ class RealTableObject(ScalarObject):  # displacement style table
     def _write_f06_transient_block(self, words, header, pageStamp, page_num=1, f=None):
         msg = []
         #assert f is not None # remove
-        for dt, translations in sorted(self.translations.iteritems()):
+        for dt, translations in sorted(iteritems(self.translations)):
             if isinstance(dt, float):  # fix
                 #header[1] = ' %s = %10.4E float %s\n' % (self.data_code['name'], dt, self.analysis_code)
                 header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
@@ -544,7 +544,7 @@ class RealTableObject(ScalarObject):  # displacement style table
                 #header[1] = ' %s = %10i integer %s\n' % (self.data_code['name'], dt, self.analysis_code)
                 header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
             msg += header + words
-            for nodeID, translation in sorted(translations.iteritems()):
+            for nodeID, translation in sorted(iteritems(translations)):
                 rotation = self.rotations[dt][nodeID]
                 grid_type = self.gridTypes[nodeID]
 
@@ -784,7 +784,7 @@ class ComplexTableObject(ScalarObject):
         words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
 
         msg = words
-        for node_id, translation in sorted(self.translations.iteritems()):
+        for node_id, translation in sorted(iteritems(self.translations)):
             rotation = self.rotations[node_id]
             grid_type = self.gridTypes[node_id]
 
@@ -817,10 +817,10 @@ class ComplexTableObject(ScalarObject):
         if not len(header) >= 3:
             header.append('')
         #assert f is not None
-        for dt, translations in sorted(self.translations.iteritems()):
+        for dt, translations in sorted(iteritems(self.translations)):
             header[2] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
-            for node_id, translation in sorted(translations.iteritems()):
+            for node_id, translation in sorted(iteritems(translations)):
                 rotation = self.rotations[dt][node_id]
                 grid_type = self.gridTypes[node_id]
 

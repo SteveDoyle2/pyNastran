@@ -1,3 +1,4 @@
+from six import iteritems
 from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray, RealTableObject, ComplexTableObject
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
@@ -36,7 +37,7 @@ class RealMPCForces(RealTableObject):
         msg = header + ['                               F O R C E S   O F   M U L T I - P O I N T   C O N S T R A I N T\n',
                         ' \n',
                         '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        for nodeID, translation in sorted(self.translations.iteritems()):
+        for nodeID, translation in sorted(iteritems(self.translations)):
             rotation = self.rotations[nodeID]
             grid_type = self.gridTypes[nodeID]
 
@@ -56,10 +57,10 @@ class RealMPCForces(RealTableObject):
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         msg = []
-        for dt, translations in sorted(self.translations.iteritems()):
+        for dt, translations in sorted(iteritems(self.translations)):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
-            for nodeID, translation in sorted(translations.iteritems()):
+            for nodeID, translation in sorted(iteritems(translations)):
                 rotation = self.rotations[dt][nodeID]
                 grid_type = self.gridTypes[nodeID]
 
@@ -89,7 +90,7 @@ class ComplexMPCForces(ComplexTableObject):
                         ' \n',
                         '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         raise RuntimeError('is this valid...')
-        for nodeID, translation in sorted(self.translations.iteritems()):
+        for nodeID, translation in sorted(iteritems(self.translations)):
             rotation = self.rotations[nodeID]
             grid_type = self.gridTypes[nodeID]
 
@@ -118,10 +119,10 @@ class ComplexMPCForces(ComplexTableObject):
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         msg = []
-        for dt, translations in sorted(self.translations.iteritems()):
+        for dt, translations in sorted(iteritems(self.translations)):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
-            for nodeID, translation in sorted(translations.iteritems()):
+            for nodeID, translation in sorted(iteritems(translations)):
                 rotation = self.rotations[dt][nodeID]
                 grid_type = self.gridTypes[nodeID]
 

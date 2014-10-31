@@ -1,3 +1,4 @@
+from six import iteritems
 import os
 from numpy import unique, cross, dot
 
@@ -105,7 +106,7 @@ def parse_patran_syntax_dict(node_sets):
             else:
                 key = snode
                 data[key] = []
-    for key, ints in data.iteritems():
+    for key, ints in iteritems(data):
         data[key] = unique(ints)
     return data
 

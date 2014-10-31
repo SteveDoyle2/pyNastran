@@ -18,7 +18,7 @@ The ConstraintObject contain multiple constraints.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-#from math import ceil
+from six import iteritems
 from six.moves import zip, range
 from itertools import count
 
@@ -61,14 +61,14 @@ class ConstraintObject(object):
     def cross_reference(self, model):
         #return
         #add_constraints2 = {}
-        for key, add_constraint in sorted(self.add_constraints.iteritems()):
+        for key, add_constraint in sorted(iteritems(self.add_constraints)):
             for i, spcID in enumerate(add_constraint.sets):
                 add_constraint.sets[i] = self._spc(spcID)
             self.add_constraints[key] = add_constraint
         #self.add_constraints = add_constraints2
 
         constraints2 = {}
-        for key, constraints in sorted(self.constraints.iteritems()):
+        for key, constraints in sorted(iteritems(self.constraints)):
             constraints2[key] = []
             for constraint in constraints:
                 constraints2[key].append(constraint.cross_reference(model))
@@ -88,7 +88,7 @@ class ConstraintObject(object):
         constraints2 = {}
         referencedConstraints = {}
         # some of the ADDConstraint keys are MPCADDs/SPCADDs, some are not
-        for key, add_constraint in sorted(self.add_constraints.iteritems()):
+        for key, add_constraint in sorted(iteritems(self.add_constraints)):
             constraints = []
             for i, spcID in enumerate(add_constraint.sets):
                 constraintIDs = add_constraint.getConstraintIDs()
@@ -100,7 +100,7 @@ class ConstraintObject(object):
             constraints2[key] = constraints
 
         # not needed b/c there are no MPCADD/SPCADD
-        #for key,constraints in sorted(self.constraints.iteritems()):
+        #for key,constraints in sorted(iteritems(self.constraints)):
             #for constraint in constraints:
                 #conID = constraint.ConID()
                 #constraints2[conID]
@@ -128,11 +128,11 @@ class ConstraintObject(object):
 
     def getConstraintIDs(self):
         IDs = []
-        for key, constraints in sorted(self.add_constraints.iteritems()):
+        for key, constraints in sorted(iteritems(self.add_constraints)):
             conID = constraints.ConID()
             IDs.append(conID)
 
-        for key, constraints in sorted(self.constraints.iteritems()):
+        for key, constraints in sorted(iteritems(self.constraints)):
             for constraint in constraints:
                 conID = constraint.ConID()
                 IDs.append(conID)
@@ -144,10 +144,10 @@ class ConstraintObject(object):
     def __repr__(self):
         msg = ''
         # write the SPCADD/MPCADD cards
-        for key, add_constraint in sorted(self.add_constraints.iteritems()):
+        for key, add_constraint in sorted(iteritems(self.add_constraints)):
             msg += str(add_constraint)
 
-        for key, constraints in sorted(self.constraints.iteritems()):
+        for key, constraints in sorted(iteritems(self.constraints)):
             for constraint in constraints:
                 msg += str(constraint)
         return msg
@@ -589,7 +589,7 @@ class ConstraintADD(Constraint):
             else:
                 # dict
                 #outSPCs += str(spcsets.conid)
-                for (key, spcset) in sorted(spcsets.iteritems()):
+                for (key, spcset) in sorted(iteritems(spcsets)):
                     fieldSets.append(spcsets.conid)
 
         # SPCADD

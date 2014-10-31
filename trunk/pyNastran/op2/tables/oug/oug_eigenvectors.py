@@ -1,3 +1,4 @@
+from six import iteritems
 from six.moves import zip, range
 from math import sqrt
 from numpy import array, pi
@@ -146,7 +147,7 @@ class Eigenvector(RealTableObject):  # approach_code=2, sort_code=0, thermal=0
 
         #print "self.eigrs =", self.eigrs
         #print "dir",dir(self)
-        for i, (iMode, eigVals) in enumerate(sorted(self.translations.iteritems())):
+        for i, (iMode, eigVals) in enumerate(sorted(iteritems(self.translations))):
             msg += header
             freq = self.eigrs[i]
             msg.append('%16s = %13E\n' % ('EIGENVALUE', freq))
@@ -163,7 +164,7 @@ class Eigenvector(RealTableObject):  # approach_code=2, sort_code=0, thermal=0
                 msg.append('                                         R E A L   E I G E N V E C T O R   N O . %10i\n \n' % iMode)
 
             msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
-            for nodeID, displacement in sorted(eigVals.iteritems()):
+            for nodeID, displacement in sorted(iteritems(eigVals)):
                 rotation = self.rotations[iMode][nodeID]
                 grid_type = self.gridTypes[nodeID]
                 (dx, dy, dz) = displacement
@@ -266,13 +267,13 @@ class RealEigenvector(ScalarObject):  # approach_code=2, sort_code=0, thermal=0
         """
         msg = []
         #print self.data_code
-        for i, (iMode, eigVals) in enumerate(sorted(self.translations.iteritems())):
+        for i, (iMode, eigVals) in enumerate(sorted(iteritems(self.translations))):
             msg += header
             freq = self.eigrs[i]
             msg.append('%16s = %12E\n' % ('EIGENVALUE', freq))
             msg.append('                                         R E A L   E I G E N V E C T O R   N O . %10i\n \n' % (iMode))
             msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
-            for nodeID, translation in sorted(eigVals.iteritems()):
+            for nodeID, translation in sorted(iteritems(eigVals)):
                 rotation = self.rotations[iMode][nodeID]
                 grid_type = self.gridTypes[nodeID]
                 (dx, dy, dz) = translation
@@ -326,7 +327,7 @@ class ComplexEigenvector(ComplexTableObject):  # approach_code=2, sort_code=0, t
         msg = []
         #print self.data_code
         hasCycle = hasattr(self, 'mode_cycle')
-        for i, (iMode, eigVals) in enumerate(sorted(self.translations.iteritems())):
+        for i, (iMode, eigVals) in enumerate(sorted(iteritems(self.translations))):
             msg += header
             freq = self.eigrs[i]
             #freq = 0.0
@@ -336,7 +337,7 @@ class ComplexEigenvector(ComplexTableObject):  # approach_code=2, sort_code=0, t
             else:
                 msg.append('                                         C O M P L E X   E I G E N V E C T O R   N O . %10i\n \n' % (iMode))
             msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
-            for nodeID, displacement in sorted(eigVals.iteritems()):
+            for nodeID, displacement in sorted(iteritems(eigVals)):
                 rotation = self.rotations[iMode][nodeID]
                 grid_type = self.gridTypes[nodeID]
                 (dx, dy, dz) = displacement

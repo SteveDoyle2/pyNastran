@@ -1,4 +1,6 @@
 
+from six import iteritems
+from six.moves import zip
 from collections import defaultdict
 from pyNastran.bdf.bdf import BDF, PBAR, PBARL, PBEAM, PBEAML
 
@@ -64,7 +66,7 @@ class CalculixConverter(BDF):
 
         for mid in self.materials:
             mats[mid] = []
-        for eid, element in self.elements.iteritems():
+        for eid, element in iteritems(self.elements):
             try:
                 mid = element.Mid()
                 mats[mid].append(eid)
@@ -96,7 +98,7 @@ class CalculixConverter(BDF):
 
         for mid in self.materials:
             mats[mid] = []
-        for pid, property in self.properties.iteritems():
+        for pid, property in iteritems(self.properties):
             try:
                 mid = property.Mid()
                 mats[mid].append(pid)
@@ -132,7 +134,7 @@ class CalculixConverter(BDF):
 
         form = '%-' + str(self.maxNIDlen) + 's %8s,%8s,%8s\n'
 
-        for nid, node in sorted(self.nodes.iteritems()):
+        for nid, node in sorted(iteritems(self.nodes)):
             p = node.Position()
             dat = form % (nid, p[0], p[1], p[2])
             f.write(dat)
@@ -167,9 +169,9 @@ class CalculixConverter(BDF):
         formE = '%-' + str(self.maxEIDlen) + 's, '
 
         elsets = []
-        for pid, eids in sorted(pid_eids.iteritems()):
+        for pid, eids in sorted(iteritems(pid_eids)):
             elems = self.getElementsByType(eids)
-            for Type, eids in sorted(elems.iteritems()):
+            for Type, eids in sorted(iteritems(elems)):
                 calculix_type = TypeMap[Type]
                 elset = 'pid%i_Elements%i' % (pid, Type)
                 elsets.append(elset)
@@ -237,7 +239,7 @@ class CalculixConverter(BDF):
         *SOLID SECTION,MATERIAL=EL,ELSET=EALL
         """
         inp = '** Calculix_Materials\n'
-        for mid, material in sorted(self.materials.iteritems()):
+        for mid, material in sorted(iteritems(self.materials)):
             msg = '*MATERIAL,NAME=MAT%i\n'
             if mid.type == 'MAT1':
                 msg += '*ELASTIC\n%s, %s\n' % (mid.E(), mid.Nu())
@@ -288,7 +290,7 @@ class CalculixConverter(BDF):
             p = array(p0)
 
         loadCase = self.loads[loadcase_id]
-        #for (key, loadCase) in self.loads.iteritems():
+        #for (key, loadCase) in iteritems(self.loads):
             #if key != loadcase_id:
                 #continue
 
@@ -310,7 +312,7 @@ class CalculixConverter(BDF):
         i = 0
         xyz = {}
         nid_to_i_map = {}
-        for nid, node in self.nodes.iteritems():
+        for nid, node in iteritems(self.nodes):
             nid_to_i_map[nid] = i
             xyz[nid] = node.Position()
 
@@ -442,7 +444,7 @@ class CalculixConverter(BDF):
         return FM
 
     def Calculix_SPCs(self):
-        #for spcID,spcs in self.spcObject2.iteritems():
+        #for spcID,spcs in iteritems(self.spcObject2):
         inp = ''
         inp += '** Calculix_SPCs\n'
         inp += self.breaker()

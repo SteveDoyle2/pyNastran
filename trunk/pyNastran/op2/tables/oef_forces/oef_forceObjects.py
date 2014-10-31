@@ -1,6 +1,7 @@
 #pylint disable=C0301
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import iteritems
 from six.moves import zip, range
 from numpy import zeros, searchsorted
 
@@ -455,10 +456,10 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
                  '   ELEMENT-ID  GRID   LENGTH    PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE         TORQUE\n']
 
         msg = []
-        for dt, bms in sorted(self.bendingMoment.iteritems()):
+        for dt, bms in sorted(iteritems(self.bendingMoment)):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
-            for eid, bm in sorted(bms.iteritems()):
+            for eid, bm in sorted(iteritems(bms)):
                 for sd in sorted(bm):
                     nid = self.nodes[eid][sd]
                     bm1, bm2 = self.bendingMoment[dt][eid][sd]
@@ -487,7 +488,7 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
         msg = header + ['                                 F O R C E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
                         '                    STAT DIST/   - BENDING MOMENTS -            - WEB  SHEARS -           AXIAL          TOTAL          WARPING\n',
                         '   ELEMENT-ID  GRID   LENGTH    PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE         TORQUE\n']
-        for eid, bm in sorted(self.bendingMoment.iteritems()):
+        for eid, bm in sorted(iteritems(self.bendingMoment)):
             msg.append('0  %8i\n' % eid)
             for sd in sorted(bm):
                 nid = self.nodes[eid][sd]
@@ -675,7 +676,7 @@ class RealCShearForce(ScalarObject):  # 4-CSHEAR
             '         ID               KICK-1       SHEAR-12       KICK-2       SHEAR-23       KICK-3       SHEAR-34       KICK-4       SHEAR-41\n'
         ]
         msg = header + words
-        for eid, forcei in sorted(self.force14.iteritems()):
+        for eid, forcei in sorted(iteritems(self.force14)):
             f41 = self.force41[eid]
             f14 = self.force14[eid]
             f21 = self.force21[eid]
@@ -786,14 +787,14 @@ class RealSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
                  '        ID.                              ID.                              ID.                              ID.\n',
                  ]
         msg = []
-        for dt, Force in sorted(self.force.iteritems()):
+        for dt, Force in sorted(iteritems(self.force)):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
 
             forces = []
             #elements = []
             line = '   '
-            for eid, force in sorted(Force.iteritems()):
+            for eid, force in sorted(iteritems(Force)):
                 #elements.append(eid)
                 forces.append(force)
                 line += '%13s  %13s     ' % (eid, f)
@@ -1641,7 +1642,7 @@ class RealCBarForce(ScalarObject):  # 34-CBAR
                  '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
                  '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
 
-        for dt, bm in sorted(self.bendingMomentA.iteritems()):
+        for dt, bm in sorted(iteritems(self.bendingMomentA)):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             f.write(''.join(header + words))
             for eid in sorted(bm):

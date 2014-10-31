@@ -1,3 +1,4 @@
+from six import iteritems
 from numpy import zeros, ones
 
 from pyNastran.bdf.bdf import BDF
@@ -24,9 +25,9 @@ def nastran_to_cart3d(bdf, log=None, debug=False):
     regions = zeros(nelements, 'int32')
 
     i = 0
-    for node_id, node in sorted(model.nodes.iteritems()):
+    for node_id, node in sorted(iteritems(model.nodes)):
         elements[i, :] = node.Position()
-    for element_id, element in sorted(model.elements.iteritems()):
+    for element_id, element in sorted(iteritems(model.elements)):
         if element.type == 'CTRIA3':
             elements[i, :] = element.NodeIDs()
             regions[i] = element.Mid()
@@ -57,14 +58,14 @@ def nastran_to_cart3d_filename(bdf_filename, cart3d_filename, log=None, debug=Fa
     f.write('%s %s\n' % (nnodes, nelements))
     node_id_shift = {}
     i = 1
-    for node_id, node in sorted(model.nodes.iteritems()):
+    for node_id, node in sorted(iteritems(model.nodes)):
         node_id_shift[node_id] = i
         x, y, z = node.Position()
         f.write('%s %s %s\n' % (x, y, z))
         i += 1
     mids = ''
     j = 0
-    for element_id, element in sorted(model.elements.iteritems()):
+    for element_id, element in sorted(iteritems(model.elements)):
         if element.type in ['CQUADR', 'CONM2']:
             continue
         assert element.type in ['CTRIA3', 'CTRIAR'], element.type

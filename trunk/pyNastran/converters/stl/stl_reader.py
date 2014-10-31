@@ -1,4 +1,5 @@
 #pylint:  disable=C0103,C0111
+from six import iteritems
 from six.moves import zip, range
 import os
 import sys
@@ -148,7 +149,7 @@ class STLReader(object):
 
         normals_at_nodes = zeros(nodes.shape, 'float64')
         eid = 0
-        for nid, elementsi in nid_to_eid.iteritems():
+        for nid, elementsi in iteritems(nid_to_eid):
             pe = normals[elementsi]
             m = pe.mean(axis=0)
             normals_at_nodes[nid] = m/norm(m)
@@ -411,7 +412,7 @@ class STLReader(object):
         #print "nnodes = ", nnodes
         #print "nodes =", nodes.shape
         #print "elements =", elements.shape
-        for node, inode in nodes_dict.iteritems():
+        for node, inode in iteritems(nodes_dict):
             nodes[inode] = node
         self.nodes = nodes
         #print "***"

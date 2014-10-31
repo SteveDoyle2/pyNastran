@@ -1,3 +1,4 @@
+from six import iteritems
 import os
 import unittest
 from numpy import array, allclose, cross
@@ -87,7 +88,7 @@ class TestLoadSum(unittest.TestCase):
         #---------
         loadcase_id = 3
         A = 0.
-        for e, element in model.elements.iteritems():
+        for e, element in iteritems(model.elements):
             A += element.Area()
         A_expected = 100.
         self.assertTrue(allclose(A, A_expected), 'loadcase_id=%s A_expected=%s A=%s' % (loadcase_id, A_expected, A))

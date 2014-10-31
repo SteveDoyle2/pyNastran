@@ -2,7 +2,7 @@
 """
 Subcase creation/extraction class
 """
-from six import string_types
+from six import string_types, iteritems
 
 class Subcase(object):
     """
@@ -447,14 +447,14 @@ class Subcase(object):
         if sol in self.solCodeMap:  # reduces SOL 144 to SOL 101
             sol = self.solCodeMap[sol]
 
-        for (key, param) in self.params.iteritems():
+        for (key, param) in iteritems(self.params):
             key = key.upper()
             (value, options, paramType) = param
             #msg = ("  -key=|%s| value=|%s| options=%s paramType=|%s|"
             #    % (key, value, options, paramType))
 
         thermal = 0
-        for (key, param) in self.params.iteritems():
+        for (key, param) in iteritems(self.params):
             key = key.upper()
             (value, options, paramType) = param
             #msg = ("  *key=|%s| value=|%s| options=%s paramType=|%s|"

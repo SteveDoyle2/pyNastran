@@ -1,3 +1,4 @@
+from six import iteritems
 import os
 import sys
 
@@ -26,7 +27,7 @@ def parse_skipped_cards(fname):
                 results[key] = fpath
 
     filesToAnalyze = []
-    for (key,value) in sorted(results.iteritems()):
+    for (key,value) in sorted(iteritems(results)):
         filesToAnalyze.append(value)
 
     f = open('newElements.in','wb')

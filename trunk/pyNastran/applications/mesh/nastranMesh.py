@@ -1,3 +1,4 @@
+from six import iteritems
 from six.moves import zip, range
 from numpy import array, dot, norm
 
@@ -106,7 +107,7 @@ class NastranMesh(BDF):
 
         zMax = node_locations[nid][2]
         zMin = zMax
-        for nid, node in sorted(node_locations.iteritems()):
+        for nid, node in sorted(iteritems(node_locations)):
             zMax = max(zMax, node[2])
             zMin = min(zMin, node[2])
 
@@ -121,7 +122,7 @@ class NastranMesh(BDF):
 
             aboveNodes = set()
             belowNodes = set()
-            for nid, node in sorted(node_locations.iteritems()):
+            for nid, node in sorted(iteritems(node_locations)):
                 if node[2] >= z0:
                     aboveNodes.add(nid)
                 else:
@@ -130,7 +131,7 @@ class NastranMesh(BDF):
             if 0:
                 belowElements = set()
                 partialElements = set()
-                for eid, nodeIDs in sorted(elementNodeIDs.iteritems()):
+                for eid, nodeIDs in sorted(iteritems(elementNodeIDs)):
                     elem = self.elements[eid]
 
                     isAboveBelow = set()  # True=Above False=Below
@@ -192,7 +193,7 @@ class NastranMesh(BDF):
 
         if add_elements:
             maxEid = max(self.elements) + 1  # get the next available eid
-            for (nid, mass) in sorted(nodalMasses.iteritems()):
+            for (nid, mass) in sorted(iteritems(nodalMasses)):
                 card = ['CONM2', maxEid, nid, 0, mass]
                 self.add_card(self, card, 'CONM2')
                 maxEid += 1
@@ -264,7 +265,7 @@ class NastranMesh(BDF):
                  zAxis[0], zAxis[1], zAxis[2],
                  xAxis[0], xAxis[1], xAxis[2]]
         f.write(print_card(coord))
-        for nid, point in sorted(points.iteritems()):
+        for nid, point in sorted(iteritems(points)):
             (x, y, z) = point
             node = ['GRID', nid, cid, x, y, z]
             f.write(print_card(node))
@@ -290,7 +291,7 @@ class NastranMesh(BDF):
         nodeLocations = {}
         i = 0
         nodes = []
-        for nid, node in sorted(self.nodes.iteritems()):
+        for nid, node in sorted(iteritems(self.nodes)):
             position = node.Position()
             nodeLocations[nid] = position
             nodes.append(position)
@@ -301,7 +302,7 @@ class NastranMesh(BDF):
         newElements = {}
         newNodes = set()
         oldNodes = set()
-        for eid, element in sorted(self.elements.iteritems()):
+        for eid, element in sorted(iteritems(self.elements)):
             if eid in eids:
                 newElements[eid] = element
                 newNodes = newNodes.union(set(element.nodeIDs()))
@@ -374,7 +375,7 @@ class NastranMesh(BDF):
     #     # clean up the elements that will be considered
     #     elemsToCheck = set([])
     #     nidToEidMap = self.getNodeIDToElementIDsMap()
-    #     for (nid, eidsMap) in sorted(nidToEidMap.iteritems()):
+    #     for (nid, eidsMap) in sorted(iteritems(nidToEidMap)):
     #         if nid not in validNids:  # clean up extra nodes
     #             del nidToEidMap[nid]
     #         else:

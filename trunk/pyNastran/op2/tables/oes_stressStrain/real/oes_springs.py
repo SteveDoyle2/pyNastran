@@ -1,5 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import iteritems
 from six.moves import zip
 
 from .oes_objects import StressObject, StrainObject
@@ -115,14 +116,14 @@ class RealCelasStress(StressObject):
         return page_num
 
 def _write_f06_springs_transient(f, stress, header, words, name):
-    for dt, datai in sorted(data.iteritems()):
+    for dt, datai in sorted(iteritems(data)):
         header[1] = ' %s = %10.4E\n' % (name, dt)
         msg += header + words
         f.write(''.join(msg))
 
         eids = []
         stresses = []
-        for eid, stress in sorted(datai.iteritems()):
+        for eid, stress in sorted(iteritems(datai)):
             eids.append(eid)
             stresses.append(stress)
             if len(stresses) == 4:

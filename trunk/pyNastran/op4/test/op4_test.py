@@ -1,3 +1,4 @@
+from six import iteritems
 import os
 
 from numpy import ndarray, eye, array_equal, complex64, complex128, zeros
@@ -64,7 +65,7 @@ class TestOP4(unittest.TestCase):
             op4 = OP4()
 
             matrices = op4.read_op4(os.path.join(op4Path, fname))
-            for name, (form, matrix) in sorted(matrices.iteritems()):
+            for name, (form, matrix) in sorted(iteritems(matrices)):
                 #print("name = %s" % (name))
                 if isinstance(matrix, ndarray):
                     pass
@@ -81,7 +82,7 @@ class TestOP4(unittest.TestCase):
                       ]:
             op4 = OP4()
             matrices = op4.read_op4(os.path.join(op4Path, fname))
-            for name, (form, matrix) in sorted(matrices.iteritems()):
+            for name, (form, matrix) in sorted(iteritems(matrices)):
                 #print("name = %s" % name)
                 if isinstance(matrix, ndarray):
                     #print(matrix)
