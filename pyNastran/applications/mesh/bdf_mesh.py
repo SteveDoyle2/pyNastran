@@ -1,3 +1,4 @@
+from six import iteritems
 from pyNastran.bdf.bdf import BDF
 from collections import defaultdict
 
@@ -34,13 +35,13 @@ class MeshTools(BDF):
     def get_elemental_nodeids(self):
         nid_to_eids = defaultdict(list)
         eid_to_nids = {}
-        for eid, element in self.elements.iteritems():
+        for eid, element in iteritems(self.elements):
             nids = element.nodeIDs()
             eid_to_nids[eid] = nids
             for nid in nids:
                 nid_to_eids[nid].append(eid)
 
-        for eid, element in self.rigidElements.iteritems():
+        for eid, element in iteritems(self.rigidElements):
             nids = element.nodeIDs()
             #print(nids)
             eid_to_nids[eid] = nids
@@ -48,7 +49,7 @@ class MeshTools(BDF):
                 nid_to_eids[nid].append(eid)
 
         #print('mpc', self.mpcObject)
-        for (eid, mpcs) in sorted(self.mpcs.iteritems()):
+        for (eid, mpcs) in sorted(iteritems(self.mpcs)):
             for mpc in mpcs:
                 #print(str(mpc))
                 nids = mpc.nodeIDs()
@@ -291,7 +292,7 @@ class MeshTools(BDF):
             xyz_data = zeros((len(self.nodes), 3), dtype='float64')
 
             i = 0
-            for nid, node in sorted(self.nodes.iteritems()):
+            for nid, node in sorted(iteritems(self.nodes)):
                 point, M = grid.Position(xyz)
                 #xyz[nid] = point
                 xyz_data[i, :] = point
@@ -302,7 +303,7 @@ class MeshTools(BDF):
         # find the non-unique nodes
         i = 0
         all_ids = set([])
-        for nid, node in sorted(self.nodes.iteritems()):
+        for nid, node in sorted(iteritems(self.nodes)):
             point = xyz_data[i]
 
             # find the nodes at the current location

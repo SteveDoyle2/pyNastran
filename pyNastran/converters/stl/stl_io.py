@@ -1,4 +1,5 @@
 #VTK_TRIANGLE = 5
+from six import iteritems
 from six.moves import range
 from numpy import zeros, arange, mean
 
@@ -69,7 +70,7 @@ class STL_IO(object):
         #elem.SetNumberOfPoints(nNodes)
         if 0:
             fraction = 1. / self.nNodes  # so you can color the nodes by ID
-            for nid, node in sorted(nodes.iteritems()):
+            for nid, node in sorted(iteritems(nodes)):
                 points.InsertPoint(nid - 1, *node)
                 self.gridResult.InsertNextValue(nid * fraction)
                 #print str(element)

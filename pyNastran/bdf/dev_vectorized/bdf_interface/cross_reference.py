@@ -1,5 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import iteritems
 from ..cards.loads.loadcase import LoadCase
 
 
@@ -67,19 +68,19 @@ class XRefMesh(object):
 
     def _build_constraints(self):
         for t in [self.spcadd, self.spc, self.spc1, self.spcd]:
-            for constraint_id, constraint in t.iteritems():
+            for constraint_id, constraint in iteritems(t):
                 constraint.build()
 
         for t in [self.mpcadd, self.mpc]:
-            for constraint_id, constraint in t.iteritems():
+            for constraint_id, constraint in iteritems(t):
                 constraint.build()
 
     def _build_loads(self):
         #self.loadcase.build()
-        for load_id, loads in self.loads.load.iteritems():
+        for load_id, loads in iteritems(self.loads.load):
             for load in loads:
                 load.build()
-        for load_id, loads in self.loads.dload.iteritems():
+        for load_id, loads in iteritems(self.loads.dload):
             for load in loads:
                 load.build()
 

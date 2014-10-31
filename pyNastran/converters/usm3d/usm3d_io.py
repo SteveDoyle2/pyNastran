@@ -1,3 +1,4 @@
+from six import iteritems
 from six.moves import range
 import os
 from collections import defaultdict
@@ -141,7 +142,7 @@ class Usm3dIO(object):
         #elem.SetNumberOfPoints(nNodes)
         if 0:
             fraction = 1. / self.nNodes  # so you can color the nodes by ID
-            for nid, node in sorted(nodes.iteritems()):
+            for nid, node in sorted(iteritems(nodes)):
                 points.InsertPoint(nid - 1, *node)
                 self.gridResult.InsertNextValue(nid * fraction)
                 #print(str(element))
@@ -225,7 +226,7 @@ class Usm3dIO(object):
             cases[(ID, 'Region', 1, 'centroid', '%.0f')] = bcs
 
             mapbc_print = defaultdict(list)
-            for region, bcnum in sorted(mapbc.iteritems()):
+            for region, bcnum in sorted(iteritems(mapbc)):
                 mapbc_print[bcnum].append(region)
                 try:
                     name = bcmap_to_bc_name[bcnum]
@@ -233,7 +234,7 @@ class Usm3dIO(object):
                     name = '???'
                 #self.log.info('Region=%i BC=%s name=%r' % (region, bcnum, name))
 
-            for bcnum, regions in sorted(mapbc_print.iteritems()):
+            for bcnum, regions in sorted(iteritems(mapbc_print)):
                 try:
                     name = bcmap_to_bc_name[bcnum]
                 except KeyError:
@@ -244,7 +245,7 @@ class Usm3dIO(object):
         #==============================
         ID = 2
         if self.is_nodal and len(loads):
-            for key, load in loads.iteritems():
+            for key, load in iteritems(loads):
                 cases[(ID, key, 1, 'node', '%.3f')] = load
             self.scalarBar.VisibilityOn()
         return cases

@@ -18,6 +18,7 @@ All static loads are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import iteritems
 from six.moves import zip, range
 
 from numpy import array, cross, allclose, unique
@@ -129,7 +130,7 @@ class LOAD(LoadCombination):
 
         #print("nids = ",nids)
         spaces = "                                 "
-        for nid in sorted(nids):  # ,load in sorted(forceLoads.iteritems())
+        for nid in sorted(nids):  # ,load in sorted(iteritems(forceLoads))
             #print("nid = ",nid)
             msg += spaces + "_F(NOEUD='%s%s',\n" % (gridWord, nid)
             #print "load = ",load

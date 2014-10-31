@@ -1,3 +1,4 @@
+from six import iteritems
 from numpy import array
 
 class AGPS(object):
@@ -99,7 +100,7 @@ class AGPS(object):
             #print(Cp.shape)
             if self.debug:
                 print("")
-        #for ipatch, Cp in sorted(self.pressures.iteritems()):
+        #for ipatch, Cp in sorted(iteritems(self.pressures)):
             #print(Cp)
 
 if __name__ == '__main__':

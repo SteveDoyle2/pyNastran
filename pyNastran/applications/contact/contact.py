@@ -1,4 +1,5 @@
 from __future__ import division
+from six import iteritems
 from six.moves import zip
 import os
 import copy
@@ -28,7 +29,7 @@ def split_model(model, nids, func=None):
         nodes_map[nid] = nidi
         nidi += 1
 
-    for eid, element in model.elements.iteritems():
+    for eid, element in iteritems(model.elements):
         #print(dir(element))
         e_nids = element.nodeIDs()
         e_nids2 = [nid for nid in e_nids if nid in nids]
@@ -52,7 +53,7 @@ def split_model(model, nids, func=None):
             raise NotImplementedError(element.type)
 
     all_nids = set([])
-    for eid, element in model.elements.iteritems():
+    for eid, element in iteritems(model.elements):
         e_nids = element.nodeIDs()
         for nid in e_nids:
             all_nids.add(nid)
@@ -184,7 +185,7 @@ def setup_contact(main_bdf, contact_bdf, contact_surfaces):
         if i > 0:
             f.write('$-------------------------------------------------------\n')
         f.write('$ contact set %i\n' % i)
-        for g1, spring_nodes in sorted(spring_sets.iteritems()):
+        for g1, spring_nodes in sorted(iteritems(spring_sets)):
             f.write('$ g1=%i, dof=%i\n' % (g1, dof))
             for g2 in spring_nodes:
                 celas = ['CELAS2', eid, stiffness, g1, c1, g2, c2]
@@ -259,7 +260,7 @@ def parse_op2(contact_bdf, main_op2, subcase_id, contact_surfaces, eid_groups, n
         c1 = c2 = cid
 
         i = 0
-        for eid, force in spring_forces.forces.iteritems():
+        for eid, force in iteritems(spring_forces.forces):
             #forces[i] = force
             g1 = spring_forces.g1[eid]
             g2 = spring_forces.g2[eid]
@@ -325,7 +326,7 @@ if __name__ == '__main__':
 
     group1_nodes = set([])
     group2_nodes = set([])
-    for eid, element in model.elements.iteritems():
+    for eid, element in iteritems(model.elements):
         nids = element.nodeIDs()
         if func(element):
             for nid in nids:

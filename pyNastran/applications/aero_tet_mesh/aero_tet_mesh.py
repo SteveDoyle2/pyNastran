@@ -1,3 +1,4 @@
+from six ipmort iteritems
 from pyNastran.utils.log import get_logger
 
 log = None
@@ -113,7 +114,7 @@ def get_bcs(bdf_filename, pid_map, boundary_conditions, log=None):
     boundary_condition_ids = zeros(ntris, 'int32')
     i = 0
 
-    for eid, element in sorted(bdf.elements.iteritems()):
+    for eid, element in sorted(iteritems(bdf.elements)):
         assert element.type == 'CTRIA3', element.type
         boundary_condition_ids[i] = pid_map[element.Pid()]
         i += 1

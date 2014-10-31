@@ -1,3 +1,4 @@
+from six import iteritems
 import os
 import sys
 from numpy import pi, zeros, array, matrix #, float64, memmap
@@ -56,7 +57,7 @@ def write_new_cart3d_mesh(cfdGridFile, cfdGridFile2, wA):
 
     # adjusting points
     points2 = {}
-    for (iPoint, point) in sorted(points.iteritems()):
+    for (iPoint, point) in sorted(iteritems(points)):
         wai = wA[iPoint]
         (x, y, z) = point
         points2[iPoint] = [x, y, z + wai]
@@ -135,7 +136,7 @@ def getXK_Matrix(Cws, nodeList, mesh, aPoints):
     nPoints = len(aPoints.keys())
     wa = {}
     i = 0
-    for (iAero, aNode) in sorted(aPoints.iteritems()):
+    for (iAero, aNode) in sorted(iteritems(aPoints)):
         xK = zeros(nNodes+3, 'd')
         #nodeI = mesh.Node(iNode)
 

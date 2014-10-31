@@ -1,6 +1,7 @@
 # pylint: disable=W0612,C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import iteritems
 import os
 import sys
 import numpy
@@ -286,7 +287,7 @@ def compute(cards1, cards2):
 def get_element_stats(fem1, fem2):
     """verifies that the various element methods work"""
     if 0:
-        for (key, loads) in sorted(fem1.loads.iteritems()):
+        for (key, loads) in sorted(iteritems(fem1.loads)):
             for load in loads:
                 try:
                     allLoads = load.getLoads()
@@ -300,7 +301,7 @@ def get_element_stats(fem1, fem2):
 
     fem1._verify_bdf()
 
-   # for (key, e) in sorted(fem1.elements.iteritems()):
+   # for (key, e) in sorted(iteritems(fem1.elements)):
    #     try:
    #         e._verify()
    #         #if isinstance(e, RigidElement):
@@ -327,7 +328,7 @@ def get_element_stats(fem1, fem2):
 
 
 def get_matrix_stats(fem1, fem2):
-    for (key, dmig) in sorted(fem1.dmigs.iteritems()):
+    for (key, dmig) in sorted(iteritems(fem1.dmigs)):
         try:
             if isinstance(dmig, NastranMatrix):
                 dmig.getMatrix()

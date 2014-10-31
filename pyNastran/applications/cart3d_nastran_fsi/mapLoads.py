@@ -1,3 +1,4 @@
+from six import iteritems
 from six.moves import zip
 import os
 import sys
@@ -100,7 +101,7 @@ class LoadMapping(object):
         sumMoments = array([0., 0., 0.])
         sumForces  = array([0., 0., 0.])
         sys.stdout.flush()
-        for aEID, distribution in self.mappingMatrix.iteritems():
+        for aEID, distribution in iteritems(self.mappingMatrix):
             #print "aEID = ",aEID
             #print "***distribution = ", distribution
             sumLoad = 0.
@@ -117,7 +118,7 @@ class LoadMapping(object):
             Fn = F * normal
             sumMoments += cross(r, Fn)
             sumForces  += Fn
-            for sNID, percentLoad in sorted(distribution.iteritems()):
+            for sNID, percentLoad in sorted(iteritems(distribution)):
                 sumLoad += percentLoad
 
                 Fxyz = Fn * percentLoad  # negative sign is to be consistent with nastran
@@ -156,9 +157,9 @@ class LoadMapping(object):
         log.info("---starting writeLoads---")
         self.bdf.write('$ ***writeLoads***\n')
         self.bdf.write('$ nCloseElements=%s\n' % self.nCloseElements)
-        for loadCase, loads in sorted(self.loadCases.iteritems()):
+        for loadCase, loads in sorted(iteritems(self.loadCases)):
             log.info("  loadCase = %s" % loadCase)
-            for (sNID, Fxyz) in sorted(loads.iteritems()):
+            for (sNID, Fxyz) in sorted(iteritems(loads)):
                 self.structuralModel.write_load(self.bdf, loadCase, sNID, *Fxyz)
 
         log.info("finished writeLoads---")
@@ -201,7 +202,7 @@ class LoadMapping(object):
         #print "type(aCentroids)=%s type(sCentroids)=%s" %(type(aCentroids), type(sCentroids))
 
         msg = 'Element '
-        for (id,sCentroid) in sorted(sCentroids.iteritems()):
+        for (id,sCentroid) in sorted(iteritems(sCentroids)):
             msg += "%s " % id
         log.info(msg + '\n')
 
@@ -252,7 +253,7 @@ class LoadMapping(object):
         Instead, each element should have a value of area[i].
         """
         mapTest = {}
-        for (aEID, distribution) in sorted(mappingMatrix.iteritems()):
+        for (aEID, distribution) in sorted(iteritems(mappingMatrix)):
             for (sEID,weight) in distribution.items():
                 if sEID in mapTest:
                     mapTest[sEID] += weight
@@ -261,7 +262,7 @@ class LoadMapping(object):
 
         mapOut = open(mapTestFilename, 'wb')
         mapOut.write('# sEID  weight\n')
-        for sEID, weight in sorted(mapTest.iteritems()):
+        for sEID, weight in sorted(iteritems(mapTest)):
             mapOut.write("%s %s\n" % (sEID, weight))
         mapOut.close()
 

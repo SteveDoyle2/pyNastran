@@ -1,6 +1,7 @@
 #pylint: disable=W0201,C0301,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import iteritems
 import sys
 import copy
 from struct import Struct
@@ -342,7 +343,7 @@ class OP2Writer(object):
         #is_mag_phase = False
 
         # eigenvalues are written first
-        for ikey, result in sorted(self.eigenvalues.iteritems()):
+        for ikey, result in sorted(iteritems(self.eigenvalues)):
             header
             #print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
             if has_attr(result, 'write_op2'):
@@ -352,7 +353,7 @@ class OP2Writer(object):
 
         # then eigenvectors
         # has a special header
-        for isubcase, result in sorted(self.eigenvectors.iteritems()):
+        for isubcase, result in sorted(iteritems(self.eigenvectors)):
             (subtitle, label) = self.iSubcaseNameMap[isubcase]
 
             if hasattr(result, 'write_op2'):

@@ -1,6 +1,7 @@
 """``nastran.py`` defines NastranComponent.
 
 """
+from six import iteritems
 import time
 import os.path
 import inspect
@@ -254,7 +255,7 @@ class NastranComponent(ExternalCode):
                 raise RuntimeError("The Nastran header, %s, is not supported yet" % trait.nastran_header )
 
         # displacement_columns = ['T1','T2','T3']
-        # for name, trait in grid_outputs.iteritems():
+        # for name, trait in iteritems(grid_outputs):
         #     table = trait.nastran_table
         #     subcase = trait.nastran_subcase
         #     nastran_id = trait.nastran_id
@@ -263,7 +264,7 @@ class NastranComponent(ExternalCode):
         #         ixyz = displacement_columns.index( column )
         #         setattr(self, name, self.op2.displacements[subcase].translations[nastran_id][ixyz])
 
-        for output_name, output_trait in output_variables.iteritems():
+        for output_name, output_trait in iteritems(output_variables):
             # We run trait.nastran_func on op2 to get output values
             if output_trait.nastran_args:
                 setattr(self, output_name,

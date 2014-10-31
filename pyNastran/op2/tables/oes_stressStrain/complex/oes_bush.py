@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-
+from six import iteritems
 from ..real.oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
@@ -111,7 +111,7 @@ class ComplexBushStress(StressObject):
             '    ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C\n',
         ]
 
-        for eid, S1s in sorted(self.s1.iteritems()):
+        for eid, S1s in sorted(iteritems(self.s1)):
             eType = self.eType[eid]
             axial = self.axial[eid]
             s1 = self.s1[eid]
@@ -144,10 +144,10 @@ class ComplexBushStress(StressObject):
             '    ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C\n',
         ]
         msg = []
-        for dt, S1s in sorted(self.s1.iteritems()):
+        for dt, S1s in sorted(iteritems(self.s1)):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
-            for eid, S1 in sorted(S1s.iteritems()):
+            for eid, S1 in sorted(iteritems(S1s)):
                 eType = self.eType[eid]
                 axial = self.axial[dt][eid]
                 s1 = self.s1[dt][eid]
@@ -274,7 +274,7 @@ class ComplexBushStrain(StrainObject):
             '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
             '    ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C\n',
         ]
-        for eid, E1s in sorted(self.e1.iteritems()):
+        for eid, E1s in sorted(iteritems(self.e1)):
             eType = self.eType[eid]
             axial = self.axial[eid]
 
@@ -302,10 +302,10 @@ class ComplexBushStrain(StrainObject):
             '    ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C\n',
         ]
         msg = []
-        for dt, E1s in sorted(self.e1.iteritems()):
+        for dt, E1s in sorted(iteritems(self.e1)):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
-            for eid, e1s in sorted(E1s.iteritems()):
+            for eid, e1s in sorted(iteritems(E1s)):
                 eType = self.eType[eid]
                 axial = self.axial[eid]
 

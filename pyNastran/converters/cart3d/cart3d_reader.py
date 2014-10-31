@@ -1,4 +1,5 @@
 #pylint:  disable=C0103,C0111
+from six import iteritems
 from six.moves import zip, range
 import os
 import sys
@@ -40,7 +41,7 @@ class Cart3DReader(object):
     def make_quads(self, nodes, elements):
         raise NotImplementedError()
         segments, lengths = self._get_segments(nodes, elements)
-        for eid, e in elements.iteritems():
+        for eid, e in iteritems(elements):
             a = tuple(sorted([e[0], e[1]]))  # segments of e
             b = tuple(sorted([e[1], e[2]]))
             c = tuple(sorted([e[2], e[0]]))
@@ -218,7 +219,7 @@ class Cart3DReader(object):
         regions2 = hstack([regions, regions_upper])
 
         loads2 = {}
-        for key, data in loads.iteritems():
+        for key, data in iteritems(loads):
 
             # flip the sign on the flipping axis terms
             if ((key in ['U', 'rhoU'] and ax2==0) or
@@ -333,7 +334,7 @@ class Cart3DReader(object):
                 elements[ielement, :] = [nodes_map[nid] for nid in element]
 
         loads2 = {} # 'Cp', 'Mach', 'U', etc.
-        for key, load in loads.iteritems():
+        for key, load in iteritems(loads):
             loads2[key] = load[inodes_save]
 
         self.log.info('---finished make_half_model---')
@@ -357,7 +358,7 @@ class Cart3DReader(object):
             nodes2[iNodeCounter] = node
             iNodeCounter += 1
 
-        for (ielement, element) in sorted(elements.iteritems()):
+        for (ielement, element) in sorted(iteritems(elements)):
             element2 = []
             for nID in element:
                 nID2 = NodeOldToNew[nID]
@@ -793,7 +794,7 @@ class Cart3DReader(object):
     def _get_segments(self, nodes, elements):
         segments = {}  # key=eid,
         lengths = {}
-        for eid, e in elements.iteritems():
+        for eid, e in iteritems(elements):
             a = tuple(sorted([e[0], e[1]]))  # segments of e
             b = tuple(sorted([e[1], e[2]]))
             c = tuple(sorted([e[2], e[0]]))
@@ -1026,7 +1027,7 @@ if 0:
     #cart = Cart3DAsciiReader(cart3dGeom)  # bJet.a.tri
     #(cartPoints,elements,regions,loads) = cart.read()
     #points2 = {}
-    #for (iPoint,point) in sorted(points.iteritems()):
+    #for (iPoint,point) in sorted(iteritems(points)):
         #(x,y,z) = point
         #print("p=%s x=%s y=%s z=%s  z2=%s" %(iPoint,x,y,z,z+x/10.))
         #points2[iPoint] = [x,y,z+x/10.]

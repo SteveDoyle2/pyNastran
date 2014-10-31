@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-
+from six import iteritems
 from ..real.oes_objects import StressObject, StrainObject  # ,array
 #from oes_complexObjects import complexStressObject,complexStrainObject
 
@@ -106,7 +106,7 @@ class ComplexCelasStress(complexStressObject):
 #                   1009       7.689395E+00 /  0.0                            1010       7.689395E+00 /  0.0
         msg = []
         is_mag_phase = False
-        for dt, Stress in sorted(self.stress.iteritems()):
+        for dt, Stress in sorted(iteritems(self.stress)):
             if isinstance(dt, float):  # fix
                 header[1] = ' %s = %10.4E float %s\n' % (self.data_code[
                     'name'], dt, self.analysis_code)
@@ -116,7 +116,7 @@ class ComplexCelasStress(complexStressObject):
             msg += header + words
 
             i = 0
-            for elementID, stress in sorted(Stress.iteritems()):
+            for elementID, stress in sorted(iteritems(Stress)):
 
                 if is_mag_phase:
                     stressr = abs(stressr)

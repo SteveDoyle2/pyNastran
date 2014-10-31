@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 __all__ = ['OP4']
-from six import string_types
+from six import string_types, iteritems
 from six.moves import range
 import os
 import io
@@ -1200,7 +1200,7 @@ class OP4(object):
 
         f.write(msg)
         msg = ''
-        for j, col in cols.iteritems():
+        for j, col in iteritems(cols):
             #print("***********")
             #print("j=%s col=%s" % (j, col))
             #col.sort()
@@ -1525,7 +1525,7 @@ if __name__ == '__main__':  ## pragma: no cover
             precision='default')
         print("keys = %s" % matrices.keys())
         print("fname=%s" % fname)
-        for name, (form, matrix) in sorted(matrices.iteritems()):
+        for name, (form, matrix) in sorted(iteritems(matrices)):
             op4.write_op4(f, matrices, name_order=name)
     f.close()
     print("-----------------------------")

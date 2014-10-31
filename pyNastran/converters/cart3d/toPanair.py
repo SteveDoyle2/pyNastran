@@ -1,3 +1,4 @@
+from six import iteritems
 import os
 import sys
 
@@ -8,7 +9,7 @@ def load_panair_file(fname='panair.in'):
     if not os.path.exists(fname):
         raise IOError('%s does not exist' % fname)
     execfile(fname)
-    varnames = {   
+    varnames = {
                    'title': 'default title',
                    'alpha': 0.,
                    'alphaCompressibility': 0.,
@@ -28,7 +29,7 @@ def load_panair_file(fname='panair.in'):
                 }
     varmap = {}
     localvars = locals()
-    for varname, default in sorted(varnames.iteritems()):
+    for varname, default in sorted(iteritems(varnames)):
         if varname in localvars:
             print("type(%s)=%s type(localvars[varname])=%s" % (varname, type(default), type(localvars[varname])))
             if type(default) != type(localvars[varname]):
@@ -43,11 +44,11 @@ def load_panair_file(fname='panair.in'):
                 varmap[varname] = default
             else:
                 raise RuntimeError('variable %s is not defined' % varname)
-    
+
     if 'bcMap' not in varmap:
         raise RuntimeError('variable bcMap is not defined')
     return varmap
-    
+
 if 0:
     title = 'simple wing-body with composite panel. (run with a502i)'
     alphas = 4.
@@ -172,18 +173,18 @@ class Cart3dToPanair(PanairGridHelper):
             msg += self.write_reference_quantities()
             msg += self.printout
             f.write(msg)
-            
+
             BCMap = varmap['bcMap']
 
             cart = generic_cart3d_reader(cart3dGeom)
             (points, elements, regions, loads) = cart.read_cart3d(cart3dGeom)
 
-            #for pid, point in sorted(points.iteritems()):
+            #for pid, point in sorted(iteritems(points)):
                 #if pid<85:
                 #    print(pid,point)
                 #pass
             region_old = 9
-            for eid, element in sorted(elements.iteritems()):
+            for eid, element in sorted(iteritems(elements)):
                 header = ''
                 region = regions[eid]
                 if region not in BCMap:

@@ -1,3 +1,4 @@
+from six import iteritems
 from six.moves import zip
 from numpy import zeros, where, array, nan
 
@@ -210,7 +211,7 @@ class Materials(object):
         #print('material_ids = %s' % material_ids)
         for mid in material_ids:
             obj = None
-            for Type, (mdict, mids) in TypeMap.iteritems():
+            for Type, (mdict, mids) in iteritems(TypeMap):
                 if mids:
                     #print('mids = %s' % mids)
                     if mid in mids:
@@ -243,7 +244,7 @@ class Materials(object):
     def __iter__(self):
         types = self._get_types()
         for materials in types:
-            for mid, mat in materials.iteritems():
+            for mid, mat in iteritems(materials):
                 yield mat
             #if mat.type == 'MATS1':
                 #yield mat.material_id
@@ -261,7 +262,7 @@ class Materials(object):
                 'MATS1']
 
     def _verify(self, xref=True):
-        for mid, material in sorted(self.mat1.iteritems()):
+        for mid, material in sorted(iteritems(self.mat1)):
             material._verify(xref)
 
     def write_bdf(self, f, size=8, is_double=False, material_ids=None):
@@ -269,7 +270,7 @@ class Materials(object):
             f.write('$MATERIALS\n')
             types = self._get_types()
             for materials in types:
-                for mid, mat in sorted(materials.iteritems()):
+                for mid, mat in sorted(iteritems(materials)):
                     if material_ids is None or mid in material_ids:
                         #mat.write_bdf(f, size=size, material_ids=material_ids)
                         f.write(str(mat))

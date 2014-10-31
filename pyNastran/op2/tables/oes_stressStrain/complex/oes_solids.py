@@ -1,6 +1,7 @@
 #pylint: disable=C0301,C0111,R0921
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import iteritems
 from six.moves import zip, range
 from collections import defaultdict
 
@@ -565,7 +566,7 @@ class ComplexSolidStress(StressObject):
         tetra10_eids = []
         hexa20_eids = []
         penta15_eids = []
-        for eid, eType in sorted(self.eType.iteritems()):
+        for eid, eType in sorted(iteritems(self.eType)):
             if eType in ['CTETRA4']:
                 tetra_eids.append(eid)
             elif eType in ['CTETRA10']:
@@ -808,7 +809,7 @@ class ComplexSolidStrain(StrainObject):
         tetra10_eids = []
         hexa20_eids = []
         penta15_eids = []
-        for eid, eType in sorted(self.eType.iteritems()):
+        for eid, eType in sorted(iteritems(self.eType)):
             if eType in ['CTETRA4']:
                 tetra_eids.append(eid)
             elif eType in ['CTETRA10']:

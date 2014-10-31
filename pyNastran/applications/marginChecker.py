@@ -1,3 +1,4 @@
+from six import iteritems
 from six.moves import zip
 from math import sqrt, log10
 from numpy import array
@@ -83,7 +84,7 @@ class MarginChecker(object):
 
     def readFiles(self):
         i = 0
-        for fname, subcaseList in sorted(self.cases.iteritems()):
+        for fname, subcaseList in sorted(iteritems(self.cases)):
             #print("case[%s] = %s" % (key, self.cases[key]))
             subcaseList = list(set(subcaseList))
             print("subcaseList[%s] = %s" % (fname, subcaseList))

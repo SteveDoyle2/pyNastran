@@ -1,3 +1,4 @@
+from six import iteritems
 from collections import defaultdict
 from itertools import count
 
@@ -65,12 +66,12 @@ class SPC(object):
         self.n = len(self.components)
         if self.n:
             self.grid_id = array(self.grid_id)
-            for dof, nodes in self.components.iteritems():
+            for dof, nodes in iteritems(self.components):
                 self.components[dof] = array(nodes)
 
     def write_bdf(self, f, size=8):
         if self.n:
-            for dof, node_ids in sorted(self.components.iteritems()):
+            for dof, node_ids in sorted(iteritems(self.components)):
                 card = ['SPC', self.constraint_id]
                 for node_id in node_ids:
                     card += [node_id, dof, 0.0]

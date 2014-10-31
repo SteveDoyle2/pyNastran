@@ -1,3 +1,4 @@
+from six import iteritems
 import os
 import sys
 
@@ -17,8 +18,8 @@ from pyNastran.op2.op2 import OP2
 
 def update_bdf(model):
     cc = model.caseControlDeck
-    #for isubcase, subcase in sorted(cc.subcases.iteritems()):
-        #for param, values in subcase.params.iteritems():
+    #for isubcase, subcase in sorted(iteritems(cc.subcases)):
+        #for param, values in iteritems(subcase.params):
             #if param in ['SPCFORCES', 'STRESS', 'DISPLACEMENT', 'STRAIN', 'MPCFORCES', 'GPFORCE', 'GPSTRESS', 'VELOCITY', 'ACCELERATION']:
                 #print('values =', values)
     if 'POST' in sorted(model.params):

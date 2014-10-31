@@ -4,7 +4,7 @@ Main BDF class
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-
+from six import iteritems
 import io
 import os
 import sys
@@ -825,29 +825,29 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         Cross reference verification method.
         """
         xref = self._xref
-        #for key, card in sorted(self.params.iteritems()):
+        #for key, card in sorted(iteritems(self.params)):
             #try:
             #card._verify(xref)
-        for key, card in sorted(self.nodes.iteritems()):
+        for key, card in sorted(iteritems(self.nodes)):
             try:
                 card._verify(xref)
             except:
                 print(str(card))
                 raise
-        for key, card in sorted(self.coords.iteritems()):
+        for key, card in sorted(iteritems(self.coords)):
             try:
                 card._verify(xref)
             except:
                 print(str(card))
                 raise
         if 0:
-            for key, card in sorted(self.elements.iteritems()):
+            for key, card in sorted(iteritems(self.elements)):
                 try:
                     card._verify(xref)
                 except:
                     print(str(card))
                     raise
-            for key, card in sorted(self.properties.iteritems()):
+            for key, card in sorted(iteritems(self.properties)):
                 try:
                     card._verify(xref)
                 except:
@@ -1054,7 +1054,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         self.dict_of_vars = {}
         assert len(dict_of_vars) > 0, 'nvars = %s' % len(dict_of_vars)
-        for (key, value) in sorted(dict_of_vars.iteritems()):
+        for (key, value) in sorted(iteritems(dict_of_vars)):
             assert len(key) <= 7, ('max length for key is 7; '
                                    'len(%s)=%s' % (key, len(key)))
             assert len(key) >= 1, ('min length for key is 1; '
@@ -2180,7 +2180,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         # rejects
         if self.rejects:
             msg.append('Rejected Cards')
-            for name, counter in sorted(self.card_count.iteritems()):
+            for name, counter in sorted(iteritems(self.card_count)):
                 if name not in self.cards_to_read:
                     msg.append('  %-8s %s' % (name + ':', counter))
         msg.append('')
@@ -2206,7 +2206,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             spcs['SPCADD'] = self.spcadd,
 
         spc_ids = []
-        for spc_type, spc in spcs.iteritems():
+        for spc_type, spc in iteritems(spcs):
             spc_ids.extend(spc.keys())
         return unique(spc_ids)
 
@@ -2236,12 +2236,12 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         }
 
         if not resolve:
-            for spc_type, spc in spcs.iteritems():
+            for spc_type, spc in iteritems(spcs):
                 if spc_id in spc:
                     spc_out.append(out)
             return spc_out
 
-        for spc_type, spc in spcs.iteritems():
+        for spc_type, spc in iteritems(spcs):
             if spc_id in spc:
                 out = spc[spc_id]
                 if spc_type == 'SPCADD':
@@ -2277,12 +2277,12 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         used_ids.append(mpc_id)
 
         if not resolve:
-            for mpc_type, mpc in mpcs.iteritems():
+            for mpc_type, mpc in iteritems(mpcs):
                 if mpc_id in mpc:
                     mpc_out.append(out)
             return mpc_out
 
-        for mpc_type, mpc in mpcs.iteritems():
+        for mpc_type, mpc in iteritems(mpcs):
             if mpc_id in mpc:
                 out = mpc[mpc_id]
                 if mpc_type == 'MPCADD':

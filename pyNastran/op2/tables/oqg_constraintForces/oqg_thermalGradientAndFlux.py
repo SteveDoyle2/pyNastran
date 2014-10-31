@@ -1,3 +1,4 @@
+from six import iteritems
 from pyNastran.op2.resultObjects.tableObject import RealTableObject, ComplexTableObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
@@ -30,7 +31,7 @@ class RealTemperatureGradientAndFlux(RealTableObject):
                         ' \n',
                         '   ELEMENT-ID   EL-TYPE        X-GRADIENT       Y-GRADIENT       Z-GRADIENT        X-FLUX           Y-FLUX           Z-FLUX\n']
         f.write(''.join(msg))
-        for nodeID, translation in sorted(self.translations.iteritems()):
+        for nodeID, translation in sorted(iteritems(self.translations)):
             rotation = self.rotations[nodeID]
             grid_type = self.gridTypes[nodeID]
 
@@ -63,7 +64,7 @@ class ComplexTemperatureGradientAndFlux(ComplexTableObject):
                         ' \n',
                         '   ELEMENT-ID   EL-TYPE        X-GRADIENT       Y-GRADIENT       Z-GRADIENT        X-FLUX           Y-FLUX           Z-FLUX\n']
         raise RuntimeError('is this valid...')
-        for nodeID, translation in sorted(self.translations.iteritems()):
+        for nodeID, translation in sorted(iteritems(self.translations)):
             rotation = self.rotations[nodeID]
             grid_type = self.gridTypes[nodeID]
 

@@ -1,3 +1,4 @@
+from six import iteritems
 from six.moves import range
 import copy
 from math import sin, cos
@@ -219,7 +220,7 @@ class LaWGS(object):
 
         del groups['']
         self.panels = {}
-        for key, headerGroup in sorted(groups.iteritems()):
+        for key, headerGroup in sorted(iteritems(groups)):
             header, group = headerGroup
             #if key=='BODY':
             if 1:
@@ -231,7 +232,7 @@ class LaWGS(object):
         points = []
         elements = []
         pointI = 0
-        for (name, panel) in sorted(self.panels.iteritems()):
+        for (name, panel) in sorted(iteritems(self.panels)):
             (pointsI, pointi) = panel.get_points()
             (elementsI, n) = panel.get_elements(pointI)
             #print "elementsI = ",elementsI
@@ -248,10 +249,10 @@ class LaWGS(object):
         f = open(p3dname, 'wb')
 
         f.write('%s\n' % (len(self.panels)))
-        for (name, panel) in sorted(self.panels.iteritems()):
+        for (name, panel) in sorted(iteritems(self.panels)):
             f.write('%s %s 1\n' % (panel.nRows, panel.nCols))
 
-        for (name, panel) in sorted(self.panels.iteritems()):
+        for (name, panel) in sorted(iteritems(self.panels)):
             panel.write_as_plot3d(f)
 
 if __name__ == '__main__':

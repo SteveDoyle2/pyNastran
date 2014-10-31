@@ -1,6 +1,7 @@
 # pylint: disable=C0301,W0613,C0103,R0913,R0914,R0904,C0111,R0201,R0902
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import iteritems
 from six.moves import zip, range
 from collections import defaultdict
 from itertools import count
@@ -441,7 +442,7 @@ class RealSolidStress(StressObject):
                     n += 3
             return
 
-        for dt, f06_data in sorted(self._f06_data.iteritems()):
+        for dt, f06_data in sorted(iteritems(self._f06_data)):
             n = 0
             if dt not in self.oxx:
                 self.oxx[dt] = {}
@@ -681,7 +682,7 @@ class RealSolidStress(StressObject):
         HEXA = defaultdict(list)
         PENTA = defaultdict(list)
 
-        for eid, eType in sorted(self.eType.iteritems()):
+        for eid, eType in sorted(iteritems(self.eType)):
             if 'CTETRA' in eType:
                 TETRA[eType[6:]].append(eid)
             elif 'CHEXA' in eType:
@@ -979,7 +980,7 @@ class RealSolidStrain(StrainObject):
 
         (dtName, dt) = transient
         self.data_code['name'] = dtName
-        for dt, f06_data in sorted(self._f06_data.iteritems()):
+        for dt, f06_data in sorted(iteritems(self._f06_data)):
             n = 0
             if dt not in self.exx:
                 self.exx[dt] = {}
@@ -1232,7 +1233,7 @@ class RealSolidStrain(StrainObject):
         HEXA = defaultdict(list)
         PENTA = defaultdict(list)
 
-        for eid, eType in sorted(self.eType.iteritems()):
+        for eid, eType in sorted(iteritems(self.eType)):
             if 'CTETRA' in eType:
                 TETRA[eType[6:]].append(eid)
             elif 'CHEXA' in eType:

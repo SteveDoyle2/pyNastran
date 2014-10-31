@@ -1,4 +1,5 @@
 
+from six import iteritems
 from pyNastran.bdf.bdf import BDF, PBARL, PBEAML  # PBAR,PBEAM,
 
 
@@ -46,7 +47,7 @@ class CodeAsterConverter(BDF):
         props = {}
         for pid in self.properties:
             props[pid] = []
-        for eid, element in self.elements.iteritems():
+        for eid, element in iteritems(self.elements):
             pid = element.Pid()
             props[pid].append(eid)
         return mats
@@ -60,7 +61,7 @@ class CodeAsterConverter(BDF):
 
         for mid in self.materials:
             mats[mid] = []
-        for eid, element in self.elements.iteritems():
+        for eid, element in iteritems(self.elements):
             try:
                 mid = element.Mid()
                 mats[mid].append(eid)
@@ -76,7 +77,7 @@ class CodeAsterConverter(BDF):
         elems = {}
         #for eid,elements in self.elements:
             #elems[eid] = []
-        for eid, element in self.elements.iteritems():
+        for eid, element in iteritems(self.elements):
             Type = element.asterType
             if Type not in elems:
                 elems[Type] = []
@@ -92,7 +93,7 @@ class CodeAsterConverter(BDF):
 
         for mid in self.materials:
             mats[mid] = []
-        for pid, property in self.properties.iteritems():
+        for pid, property in iteritems(self.properties):
             try:
                 mid = property.Mid()
                 mats[mid].append(pid)
@@ -141,7 +142,7 @@ class CodeAsterConverter(BDF):
         mail += 'COOR_3D\n'
         form = '    %s%-' + str(self.maxNIDlen) + 's %8s %8s %8s\n'
 
-        for nid, node in sorted(self.nodes.iteritems()):
+        for nid, node in sorted(iteritems(self.nodes)):
             p = node.Position()
             mail += form % (gridWord, nid, p[0], p[1], p[2])
         mail += 'FINSF\n\n'
@@ -160,7 +161,7 @@ class CodeAsterConverter(BDF):
 
         formE = '    %s%-' + str(self.maxEIDlen) + 's '
         formG = '%s%-' + str(self.maxNIDlen) + 's '
-        for Type, eids in sorted(elems.iteritems()):
+        for Type, eids in sorted(iteritems(elems)):
             mail += '%s\n' % (Type)
             for eid in eids:
                 mail += formE % (elemWord, eid)
@@ -181,7 +182,7 @@ class CodeAsterConverter(BDF):
             comm += ''
 
         #p = []
-        #for pid,prop in sorted(self.properties.iteritems()):
+        #for pid,prop in sorted(iteritems(self.properties)):
         #    p.append('%s_%s' %(prop.type,pid))
         #p = str(p)[1:-1] # chops the [] signs
         #comm += "MODEL=AFFE_MODELE(MAILLAGE=MESH,\n"
@@ -194,7 +195,7 @@ class CodeAsterConverter(BDF):
         iCut = 0
         iFace = 0
         iStart = 0
-        for pid, prop in sorted(self.properties.iteritems()):
+        for pid, prop in sorted(iteritems(self.properties)):
             if isinstance(prop, PBARL) or isinstance(prop, PBEAML):
                 (pyCAi, iCut, iFace, iStart) = prop.writeCodeAster(
                     iCut, iFace, iStart)
@@ -225,7 +226,7 @@ class CodeAsterConverter(BDF):
         else:
             comm += ''
         mats = self.getElementsByMid()
-        for mid, material in sorted(self.materials.iteritems()):
+        for mid, material in sorted(iteritems(self.materials)):
             #comm += 'GROUP_MA name = %s_%s\n' %(material.type,mid)
             comm += material.writeCodeAster()
 
@@ -259,7 +260,7 @@ class CodeAsterConverter(BDF):
         comm += '                      AFFE=(\n'
 
         mat2Props = self.getPropertiesByMid()
-        for mid, material in sorted(self.materials.iteritems()):
+        for mid, material in sorted(iteritems(self.materials)):
             comm += '                      _F(GROUP_MA=('
             pids = mat2Props[mid]
             #comm += "                      "
@@ -309,17 +310,17 @@ class CodeAsterConverter(BDF):
                     #print('failed printing load...type=%s key=%s' % (load.type, key))
                     #raise
             #loadcase.
-            #for ID,grav in sorted(self.gravs.iteritems()):
+            #for ID,grav in sorted(iteritems(self.gravs)):
             #    comm += grav.writeCodeAster(mag)
 
-        #for lid_loadType,commi in sorted(skippedLids.iteritems()):
+        #for lid_loadType,commi in sorted(iteritems(skippedLids)):
             #comm += commi
 
         comm += self.breaker()
         return comm
 
     def CA_SPCs(self):
-        #for spcID,spcs in self.spcObject2.iteritems():
+        #for spcID,spcs in iteritems(self.spcObject2):
         comm = ''
         comm += '# CA_SPCs\n'
         comm += self.breaker()

@@ -1,4 +1,5 @@
 from __future__ import print_function
+from six import iteritems
 import os
 import sys
 import time
@@ -154,7 +155,7 @@ def main():
     data = docopt(msg, version=ver)
     #print("data", data)
 
-    for key, value in sorted(data.iteritems()):
+    for key, value in sorted(iteritems(data)):
         print("%-12s = %r" % (key.strip('--'), value))
 
     import time

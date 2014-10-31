@@ -4,6 +4,7 @@ CaseControlDeck parsing and extraction class
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import iteritems
 import sys
 import copy
 
@@ -146,7 +147,7 @@ class CaseControlDeck(object):
             subcase_from = self.subcases[i_from_subcase]
             subcase_to = copy.deepcopy(subcase_from)
             subcase_to.id = i_to_subcase
-            #for key, param in sorted(subcase_from.params.iteritems()):
+            #for key, param in sorted(iteritems(subcase_from.params)):
                 #print("going to copy key=%s param=%s" % (key, param))
             self.subcases[i_to_subcase] = subcase_to
         else:
@@ -155,7 +156,7 @@ class CaseControlDeck(object):
                 raise RuntimeError(msg)
             subcase_to = self.subcases[i_to_subcase]
 
-            for key, param in sorted(subcase_to.iteritems()):
+            for key, param in sorted(iteritems(subcase_to)):
                 #print('copying key=%s param=%s' % (key, param))
                 if key == 'BEGIN':
                     pass
@@ -544,7 +545,7 @@ class CaseControlDeck(object):
         return isubcase
 
     def cross_reference(self, model):
-        for (isubcase, subcase) in sorted(self.subcases.iteritems()):
+        for (isubcase, subcase) in sorted(iteritems(self.subcases)):
             subcase.cross_reference(model)
 
     def get_op2_data(self):
@@ -555,7 +556,7 @@ class CaseControlDeck(object):
         .. todo:: not done...
         """
         cases = {}
-        for (isubcase, subcase) in sorted(self.subcases.iteritems()):
+        for (isubcase, subcase) in sorted(iteritems(self.subcases)):
             if isubcase:
                 cases[isubcase] = subcase.getOp2Data(self.sol, subcase.solmap_toValue)
         return cases

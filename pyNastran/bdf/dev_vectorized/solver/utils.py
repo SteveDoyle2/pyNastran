@@ -1,3 +1,4 @@
+from six import iteritems
 from six.moves import zip, range
 from numpy import dot, ndarray, zeros
 
@@ -76,7 +77,7 @@ def departition_dense_vector(n, IsVs):
 
 def reverse_dict(A):
     B = {}
-    for (key, value) in A.iteritems():
+    for (key, value) in iteritems(A):
         B[value] = key
     return B
 

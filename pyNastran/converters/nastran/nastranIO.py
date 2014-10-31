@@ -1,5 +1,6 @@
 # pylint: disable=C0103,C0111,E1101
 from __future__ import print_function
+from six import iteritems
 from six.moves import zip
 
 #VTK_TRIANGLE = 5
@@ -131,7 +132,7 @@ class NastranIO(object):
         if 0:
             i = 0
             fraction = 1. / nNodes  # so you can color the nodes by ID
-            for (nid, node) in sorted(model.nodes.iteritems()):
+            for (nid, node) in sorted(iteritems(model.nodes)):
                 point = node.Position()
                 points.InsertPoint(i, *point)
                 #self.gridResult.InsertNextValue(i * fraction)
@@ -156,7 +157,7 @@ class NastranIO(object):
 
         zmin = position0[2]
         zmax = position0[2]
-        for i, (nid, node) in enumerate(sorted(model.nodes.iteritems())):
+        for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
             point = node.Position()
             xmin = min(xmin, point[0])
             xmax = max(xmax, point[0])
@@ -182,7 +183,7 @@ class NastranIO(object):
 
         nsprings = 0
         if 0:
-            for (eid, element) in sorted(model.elements.iteritems()):
+            for (eid, element) in sorted(iteritems(model.elements)):
                 if (isinstance(element, LineElement) or
                       isinstance(element, SpringElement) or
                       element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
@@ -194,7 +195,7 @@ class NastranIO(object):
                             nsprings += 1
 
         points2.SetNumberOfPoints(nCAeros * 4 + nCONM2 + nsprings)
-        for (eid, element) in sorted(model.caeros.iteritems()):
+        for (eid, element) in sorted(iteritems(model.caeros)):
             if (isinstance(element, CAERO1) or isinstance(element, CAERO3) or
                 isinstance(element, CAERO4) or isinstance(element, CAERO5)):
                 cpoints = element.Points()
@@ -215,7 +216,7 @@ class NastranIO(object):
                 self.log_info("skipping %s" % element.type)
 
         sphere_size = self._get_sphere_size(dim_max)
-        for (eid, element) in sorted(model.masses.iteritems()):
+        for (eid, element) in sorted(iteritems(model.masses)):
             if isinstance(element, CONM2):
                 #del self.eidMap[eid]
 
@@ -264,7 +265,7 @@ class NastranIO(object):
         pids_dict = {}
         nelements = len(model.elements)
         pids = zeros(nelements, 'int32')
-        for (eid, element) in sorted(model.elements.iteritems()):
+        for (eid, element) in sorted(iteritems(model.elementss)):
             self.eidMap[eid] = i
             #print(element.type)
             pid = 0
@@ -556,7 +557,7 @@ class NastranIO(object):
         pids = array(pids, 'int32')
         if not len(pids) == len(self.eidMap):
             msg = 'ERROR:  len(pids)=%s len(eidMap)=%s\n' % (len(pids), len(self.eidMap))
-            for eid, pid in sorted(pids_dict.iteritems()):
+            for eid, pid in sorted(iteritems(pids_dict)):
                 if eid not in self.eidMap:
                     msg += 'eid=%s %s' % (eid, str(model.elements[eid]))
             raise RuntimeError(msg)
@@ -567,7 +568,7 @@ class NastranIO(object):
         #nzs = []
         #i = 0
 
-        #for eid, element in sorted(model.elements.iteritems()):
+        #for eid, element in sorted(iteritems(model.elements)):
             #if isinstance(element, ShellElement):
                 #(nx, ny, nz) = element.Normal()
             #else:
@@ -585,7 +586,7 @@ class NastranIO(object):
         nidsSet = True
         if nidsSet and self.is_nodal:
             nids = zeros(self.nNodes, 'd')
-            for (nid, nid2) in self.nidMap.iteritems():
+            for (nid, nid2) in iteritems(self.nidMap):
                 nids[nid2] = nid
             cases[(0, 'Node_ID', 1, 'node', '%.0f')] = nids
             nidsSet = True
@@ -594,7 +595,7 @@ class NastranIO(object):
         eidsSet = True
         if eidsSet and self.is_centroidal:
             eids = zeros(nElements, dtype='int32')
-            for (eid, eid2) in self.eidMap.iteritems():
+            for (eid, eid2) in iteritems(self.eidMap):
                 eids[eid2] = eid
             cases[(0, 'Element_ID', 1, 'centroid', '%.0f')] = eids
             eidsSet = True
@@ -794,7 +795,7 @@ class NastranIO(object):
 
         #case = model.displacements[1]
         #print("case = ",case)
-        #for nodeID,translation in sorted(case.translations.iteritems()):
+        #for nodeID,translation in sorted(iteritems(case.translations)):
             #print("nodeID=%s t=%s" %(nodeID,translation))
         #self.iSubcaseNameMap[self.isubcase] = [Subtitle,Label]
 
@@ -852,7 +853,7 @@ class NastranIO(object):
                     res = getattr(case, word)
 
                     print('case.type =', case.__class__.__name__)
-                    for (nid, txyz) in res.iteritems():
+                    for (nid, txyz) in iteritems(res):
                         nid2 = self.nidMap[nid]
                         displacements[nid2] = txyz
                         xyz_displacements[nid2] = norm(txyz)
@@ -874,7 +875,7 @@ class NastranIO(object):
                     if case.nonlinear_factor is not None: # transient
                         return
                     temperatures = zeros(nnodes, dtype='float32')
-                    for (nid, txyz) in case.translations.iteritems():
+                    for (nid, txyz) in iteritems(case.translations):
                         nid2 = self.nidMap[nid]
                         displacements[nid2] = txyz
                         temperatures[nid2] = norm(txyz)

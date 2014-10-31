@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types
+from six import string_types, iteritems
 from six.moves import zip, range
 from numpy import zeros, searchsorted, unique
 
@@ -545,7 +545,7 @@ class RealCompositePlateStress(StressObject):
             isTri = False
             triMsg = []
 
-        for eid, o11s in sorted(self.o11.iteritems()):
+        for eid, o11s in sorted(iteritems(self.o11)):
             out = ''
             eType = self.eType[eid]
             for iLayer in range(len(o11s)):
@@ -607,7 +607,7 @@ class RealCompositePlateStress(StressObject):
             isTri = False
             triWords = []
 
-        for dt, O11s in sorted(self.o11.iteritems()):
+        for dt, O11s in sorted(iteritems(self.o11)):
             quadMsg = []
             triMsg = []
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
@@ -616,7 +616,7 @@ class RealCompositePlateStress(StressObject):
             if isTri:
                 triMsg = header + triWords
 
-            for eid, o11s in sorted(O11s.iteritems()):
+            for eid, o11s in sorted(iteritems(O11s)):
                 out = ''
                 eType = self.eType[eid]
                 for iLayer in range(len(o11s)):
@@ -897,7 +897,7 @@ class RealCompositePlateStrain(StrainObject):
             isTri = False
             triMsg = []
 
-        for eid, e11s in sorted(self.e11.iteritems()):
+        for eid, e11s in sorted(iteritems(self.e11)):
             out = ''
             eType = self.eType[eid]
             for iLayer in range(len(e11s)):
@@ -960,7 +960,7 @@ class RealCompositePlateStrain(StrainObject):
             isTri = False
             triWords = []
 
-        for dt, e11s in sorted(self.e11.iteritems()):
+        for dt, e11s in sorted(iteritems(self.e11)):
             quadMsg = []
             triMsg = []
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
@@ -969,7 +969,7 @@ class RealCompositePlateStrain(StrainObject):
             if isTri:
                 triMsg = header + triWords
 
-            for eid, e11s in sorted(e11s.iteritems()):
+            for eid, e11s in sorted(iteritems(e11s)):
                 out = ''
                 eType = self.eType[eid]
                 for iLayer in range(len(e11s)):

@@ -1,5 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import iteritems
 from six.moves import range
 import platform
 
@@ -354,11 +355,11 @@ class Pan(wx.Panel, GuiCommon, NastranIO, Cart3dIO, LaWGS_IO, PanairIO, STL_IO, 
         self.iText += 1
 
     def TurnTextOff(self):
-        for (i, text) in self.textActors.iteritems():
+        for (i, text) in iteritems(self.textActors):
             text.VisibilityOff()
 
     def TurnTextOn(self):
-        for (i, text) in self.textActors.iteritems():
+        for (i, text) in iteritems(self.textActors):
             text.VisibilityOn()
 
     def getWindow(self):

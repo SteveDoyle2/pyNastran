@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=E0602,C0103
 from __future__ import print_function
+from six import iteritems
 from six.moves import zip, range
 import os
 import sys
@@ -113,7 +114,7 @@ def departition_dense_vector(n, IsVs):
 
 def reverse_dict(A):
     B = {}
-    for (key, value) in A.iteritems():
+    for (key, value) in iteritems(A):
         B[value] = key
     return B
 
@@ -309,7 +310,7 @@ class Solver(F06, OP2):
         cc = self.model.caseControlDeck
         #print cc.subcases
         analysisCases = []
-        for (isub, subcase) in sorted(cc.subcases.iteritems()):
+        for (isub, subcase) in sorted(iteritems(cc.subcases)):
             if subcase.has_parameter('LOAD'):
                 analysisCases.append(subcase)
 
@@ -442,7 +443,7 @@ class Solver(F06, OP2):
     def build_nid_component_to_id(self, model):
         i = 0
         nidComponentToID = {}
-        for (nid, node) in sorted(model.nodes.iteritems()):  # GRIDs
+        for (nid, node) in sorted(iteritems(model.nodes)):  # GRIDs
             for ps in node.ps:
                 self.iUs.append(i + int(ps) - 1)
                 self.Us.append(0.0)
@@ -570,7 +571,7 @@ class Solver(F06, OP2):
             'CHEXA'  : chexa8s,
         }
         elements = model.elements
-        for eid, element in elements.iteritems():
+        for eid, element in iteritems(elements):
             try:
                 a = type_map[element.type]
             except KeyError:
@@ -823,7 +824,7 @@ class Solver(F06, OP2):
         self._op2_header(f, packing=packing)
 
         for result in results:
-            for subcase, case in sorted(result.iteritems()):
+            for subcase, case in sorted(iteritems(result)):
                 case.write_op2(header, pageStamp, f, is_mag_phase=False, packing=packing)
                 if not packing:
                     f.write('\n')
@@ -1230,7 +1231,7 @@ class Solver(F06, OP2):
 
         i = 0
         #(nodeID, gridType, t1, t2, t3, r1, r2, r3) = line
-        for (nid, node) in sorted(model.nodes.iteritems()):
+        for (nid, node) in sorted(iteritems(model.nodes)):
             if node.type == 'GRID':
                 line = [nid, 'G']
                 xyz = U[i:i + 6]  # 1,2,3,4,5,6
@@ -1362,7 +1363,7 @@ class Solver(F06, OP2):
         #for nid in sorted(self.nodes.iterkeys()):
             #nid_dof_mapper[]
 
-        for (eid, elem) in sorted(model.elements.iteritems()):  # CROD, CONROD
+        for (eid, elem) in sorted(iteritems(model.elements)):  # CROD, CONROD
             print("----------------------------")
             node_ids, index0s = self.element_dof_start(elem, nids)
             print("node_ids=%s index0s=%s" % (node_ids, index0s))
@@ -1578,7 +1579,7 @@ class Solver(F06, OP2):
                         Fg[Dofs[(nid, 6)]] += moment[2]
 
         if sum(abs(self.gravLoad)) > 0.0:
-            for (eid, elem) in sorted(model.elements.iteritems()):  # CROD, CONROD
+            for (eid, elem) in sorted(iteritems(model.elements)):  # CROD, CONROD
                 print("----------------------------")
                 node_ids, index0s = self.element_dof_start(elem, nids)
                 print("node_ids=%s index0s=%s" % (node_ids, index0s))
