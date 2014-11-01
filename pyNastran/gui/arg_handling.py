@@ -51,9 +51,8 @@ def run_arg_parse(mode):
         shots = data['--shots']
 
     script = None
-    if '--script' in data:
-        script = data['--script']
-
+    if '--pyscript' in data:
+        script = data['--pyscript']
     magnify = 1
     if '--magnify' in data and data['--magnify'] is not None:
         magnify = int(data['--magnify'])
