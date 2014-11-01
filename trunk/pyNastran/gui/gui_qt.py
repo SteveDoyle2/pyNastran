@@ -96,6 +96,7 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         self.blue_to_red = False
         self._is_axes_shown = True
         self.nvalues = 9
+        self.is_wireframe = False
 
         #-------------
         # inputs dict
@@ -699,12 +700,16 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         self._simulate_key_press('r')
 
     def on_surface(self):
-        self.log_command('on_surface()')
-        self._simulate_key_press('s')
+        if self.is_wireframe:
+            self.log_command('on_surface()')
+            self._simulate_key_press('s')
+            self.is_wireframe = False
 
     def on_wireframe(self):
-        self.log_command('on_wireframe()')
-        self._simulate_key_press('w')
+        if not self.is_wireframe:
+            self.log_command('on_wireframe()')
+            self._simulate_key_press('w')
+            self.is_wireframe = True
 
     def _update_camera(self, camera=None):
         if camera is None:
@@ -1038,7 +1043,7 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
             #self.load_results.Enable(enable)
         else: # no file specified
             return
-        print("on_load_geometry(infile_name=%r, geometry_format=None)" % infile_name)
+        #print("on_load_geometry(infile_name=%r, geometry_format=None)" % infile_name)
         self.infile_name = infile_name
 
         if self.out_filename is not None:
