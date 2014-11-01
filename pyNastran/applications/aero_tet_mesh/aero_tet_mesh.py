@@ -1,4 +1,4 @@
-from six ipmort iteritems
+from six import iteritems
 from pyNastran.utils.log import get_logger
 
 log = None
