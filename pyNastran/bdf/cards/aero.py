@@ -62,7 +62,7 @@ class AEFACT(BaseCard):
             #: Set identification number. (Unique Integer > 0)
             self.sid = integer(card, 1, 'sid')
             #: Number (float)
-            self.Di = [interpret_value(field) for field in card.fields(2)]
+            self.Di = array([interpret_value(field) for field in card.fields(2)], dtype='float64')  # TODO: change to double
         else:
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
@@ -78,7 +78,7 @@ class AEFACT(BaseCard):
         :type fields:
           LIST
         """
-        fields = ['AEFACT', self.sid] + self.Di
+        fields = ['AEFACT', self.sid] + list(self.Di)
         return fields
 
     def write_bdf(self, size, card_writer):
@@ -908,6 +908,12 @@ class CAERO1(BaseCard):
         msg = ' which is required by CAERO1 eid=%s' % self.eid
         self.pid = model.PAero(self.pid, msg=msg)
         self.cp = model.Coord(self.cp, msg=msg)
+        if self.nchord == 0:
+            assert isinstance(self.lchord, int), self.lchord
+            self.lchord = model.aefacts[self.lchord]
+        if self.nspan == 0:
+            assert isinstance(self.lspan, int), self.lspan
+            self.lspan = model.aefacts[self.lspan]
 
     def Points(self):
         p1, matrix = self.cp.transformToGlobal(self.p1)
@@ -915,6 +921,95 @@ class CAERO1(BaseCard):
         p2 = p1 + array([self.x12, 0., 0.])
         p3 = p4 + array([self.x43, 0., 0.])
         return [p1, p2, p3, p4]
+
+    def panel_points_elements(self):
+        p1, p2, p3, p4 = self.Points()
+        p43 = p4 - p3
+        p34 = p3 - p4
+        p41 = p4 - p1
+        p21 = p2 - p1
+
+        from numpy import array, linspace, zeros
+
+        msg = '%s eid=%s nchord=%s nspan=%s lchord=%s lspan=%s' % (self.type,
+                                                                   self.eid,
+                                                                   self.nchord,
+                                                                   self.nspan,
+                                                                   self.lchord,
+                                                                   self.lspan)
+
+        if self.nchord == 0:
+            x = self.lchord.Di
+            nchord = len(x) - 1
+        else:
+            nchord = self.nchord
+            x = linspace(0., 1., nchord + 1)
+
+        if self.nspan == 0:
+            y = self.lspan.Di
+            nspan = len(y) - 1
+        else:
+            nspan = self.nspan
+            y = linspace(0., 1., nspan + 1)
+
+        print('x =', x)
+        print('y =', y)
+
+        assert nchord >= 1, msg
+        assert nspan >= 1, msg
+
+
+        nelements = nchord * nspan
+        npoints = (nchord + 1) * (nspan + 1)
+        points = zeros((npoints, 3), dtype='float32')
+        elements = zeros((nelements, 4), dtype='int32')
+
+        n = 0
+        points_dict = {}
+        for i, xi in enumerate(x):
+            for j, yi in enumerate(y):
+                points_dict[(i,j)] = n
+                print("n=%s xi=%s yi=%s" % (n, xi, yi))
+                #points[n, 0] = p1[0] + yi * p41[0] + xi * p21[0]
+                #points[n, 1] = p1[1] + yi * p41[1]
+                #points[n, 2] = p1[2] + yi * p21[1]
+                a = xi * p21 + p1
+                b = xi * p34 + p4
+                c = yi * b + (1 - yi) * a
+                #if p34[0] < 0.:
+                    #print(p1)
+                    #print(p2)
+                    ##print('----')
+                    #print(p3)
+                    #print(p4)
+                    #print(a)
+                    #print(b)
+                    #print(c)
+                    #asdf
+                points[n, 0] = c[0]
+                points[n, 1] = c[1]
+                points[n, 2] = c[2]
+                #asdf
+
+                n += 1
+        print("Points...", points.shape)
+        print(points)
+
+        nx = x.shape[0]
+        ny = y.shape[0]
+        print('nx=%s ny=%s' % (nx, ny))
+        n = 0
+        for i in range(nx-1):
+            for j in range(ny-1):
+                elements[n, 0] = points_dict[(i, j)]
+                elements[n, 1] = points_dict[(i+1, j)]
+                elements[n, 2] = points_dict[(i+1, j+1)]
+                elements[n, 3] = points_dict[(i, j+1)]
+                n += 1
+        print("Elements...", elements.shape)
+        print(elements)
+        return points, elements
+
 
     def SetPoints(self, points):
         self.p1 = points[0]

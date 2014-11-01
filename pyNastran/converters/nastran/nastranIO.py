@@ -104,7 +104,24 @@ class NastranIO(object):
         assert nNodes > 0
         nElements = model.nElements()
         assert nElements > 0
-        nCAeros = model.nCAeros()
+
+        is_sub_panels = False
+        if is_sub_panels:
+            nsub_elements_caeros = 0
+            nsub_points_caeros = 0
+            for key, caero in iteritems(model.caeros):
+                if hasattr(caero, 'panel_points_elements'):
+                    points, elements = caero.panel_points_elements()
+                    nsub_elements_caeros += elements.shape[0]
+                    nsub_points_caeros += points.shape[0]
+                else:
+                    print('%r doesnt support panel_points_elements' % caero.type)
+            nCAeros = nsub_elements_caeros
+            nCAerosPoints = nsub_points_caeros
+        else:
+            nCAeros = model.nCAeros()
+            nCAerosPoints = nCAeros * 4
+
         self.nNodes = nNodes
         self.nElements = nElements
 
@@ -194,24 +211,41 @@ class NastranIO(object):
                         if None in nodeIDs:
                             nsprings += 1
 
-        points2.SetNumberOfPoints(nCAeros * 4 + nCONM2 + nsprings)
+        points2.SetNumberOfPoints(nCAerosPoints * 4 + nCONM2 + nsprings)
         for (eid, element) in sorted(iteritems(model.caeros)):
             if (isinstance(element, CAERO1) or isinstance(element, CAERO3) or
                 isinstance(element, CAERO4) or isinstance(element, CAERO5)):
-                cpoints = element.Points()
-                elem = vtkQuad()
-                elem.GetPointIds().SetId(0, j)
-                elem.GetPointIds().SetId(1, j + 1)
-                elem.GetPointIds().SetId(2, j + 2)
-                elem.GetPointIds().SetId(3, j + 3)
-                points2.InsertPoint(j, *cpoints[0])
-                points2.InsertPoint(j + 1, *cpoints[1])
-                points2.InsertPoint(j + 2, *cpoints[2])
-                points2.InsertPoint(j + 3, *cpoints[3])
-                #elem.GetProperty().SetLineWidth(5)
-                self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                #self.grid2.GetProperty().SetLineWidth(5)
-                j += 4
+                if is_sub_panels:
+                    pointsi, elementsi = element.panel_points_elements()
+                    for ipoint, pointii in enumerate(pointsi):
+                        points2.InsertPoint(j + ipoint, *pointii)
+
+                    elem = vtkQuad()
+                    eType = elem.GetCellType()
+                    for ielement, elementsi in enumerate(elementsi):
+                        elem = vtkQuad()
+                        elem.GetPointIds().SetId(0, j + elementsi[0])
+                        elem.GetPointIds().SetId(1, j + elementsi[1])
+                        elem.GetPointIds().SetId(2, j + elementsi[2])
+                        elem.GetPointIds().SetId(3, j + elementsi[3])
+                        self.grid2.InsertNextCell(eType, elem.GetPointIds())
+                    j += ipoint + 1
+                    #isubpanel += ipoint
+                else:
+                    cpoints = element.Points()
+                    elem = vtkQuad()
+                    elem.GetPointIds().SetId(0, j)
+                    elem.GetPointIds().SetId(1, j + 1)
+                    elem.GetPointIds().SetId(2, j + 2)
+                    elem.GetPointIds().SetId(3, j + 3)
+                    points2.InsertPoint(j, *cpoints[0])
+                    points2.InsertPoint(j + 1, *cpoints[1])
+                    points2.InsertPoint(j + 2, *cpoints[2])
+                    points2.InsertPoint(j + 3, *cpoints[3])
+                    #elem.GetProperty().SetLineWidth(5)
+                    self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    #self.grid2.GetProperty().SetLineWidth(5)
+                    j += 4
             #elif isinstance(element, CAERO2): # cylinder
                 #pass
             else:
