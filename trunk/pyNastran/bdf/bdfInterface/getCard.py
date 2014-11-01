@@ -480,6 +480,13 @@ class GetMethods(GetMethodsDeprecated):
             raise KeyError('aelist=%s not found%s.  Allowed AELIST=%s'
                            % (aelist, msg, self.aelists.keys()))
 
+    def AEFact(self, aefact, msg=''):
+        try:
+            return self.aefacts[aefact]
+        except KeyError:
+            raise KeyError('aefact=%s not found%s.  Allowed AEFACT=%s'
+                           % (aefact, msg, self.aefacts.keys()))
+
     def Aero(self, acsid, msg=''):
         try:
             return self.aero[acsid]

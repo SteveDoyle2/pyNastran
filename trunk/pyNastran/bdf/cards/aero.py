@@ -22,7 +22,6 @@ All cards are BaseCard objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-#import sys
 from six.moves import zip, range
 from itertools import count
 from numpy import array, pi, linspace
@@ -38,6 +37,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (fields,
     blank, interpret_value)
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.bdfInterface.BDF_Card import wipe_empty_fields
+
 
 class AEFACT(BaseCard):
     """
@@ -866,10 +866,10 @@ class CAERO1(BaseCard):
             self.nchord = integer_or_blank(card, 5, 'nchord', 0)
 
             #if self.nspan==0:
-            self.lspan = integer_or_blank(card, 6, 'lspan')
+            self.lspan = integer_or_blank(card, 6, 'lspan', 0)
 
             #if self.nchord==0:
-            self.lchord = integer_or_blank(card, 7, 'lchord')
+            self.lchord = integer_or_blank(card, 7, 'lchord', 0)
 
             self.igid = integer(card, 8, 'igid')
 
@@ -882,6 +882,20 @@ class CAERO1(BaseCard):
                              double_or_blank(card, 14, 'y4', 0.0),
                              double_or_blank(card, 15, 'z4', 0.0)])
             self.x43 = double_or_blank(card, 16, 'x43', 0.)
+            if self.nspan == 0 and self.lspan == 0:
+                msg = 'NSPAN or LSPAN must be greater than 0'
+                raise ValueError(msg)
+            if self.nspan != 0 and self.lspan != 0:
+                msg = 'Either NSPAN or LSPAN must 0'
+                raise ValueError(msg)
+
+            if self.nchord == 0 and self.lchord == 0:
+                msg = 'NCHORD or LCHORD must be greater than 0'
+                raise ValueError(msg)
+            if self.nchord != 0 and self.lchord != 0:
+                msg = 'Either NCHORD or LCHORD must 0'
+                raise ValueError(msg)
+
             assert len(card) <= 17, 'len(CAERO1 card) = %i' % len(card)
         else:
             msg = '%s has not implemented data parsing' % self.type
@@ -910,10 +924,10 @@ class CAERO1(BaseCard):
         self.cp = model.Coord(self.cp, msg=msg)
         if self.nchord == 0:
             assert isinstance(self.lchord, int), self.lchord
-            self.lchord = model.aefacts[self.lchord]
+            self.lchord = model.AEFact(self.lchord, msg)
         if self.nspan == 0:
             assert isinstance(self.lspan, int), self.lspan
-            self.lspan = model.aefacts[self.lspan]
+            self.lspan = model.AEFact(self.lspan, msg)
 
     def Points(self):
         p1, matrix = self.cp.transformToGlobal(self.p1)
@@ -961,43 +975,44 @@ class CAERO1(BaseCard):
 
         nelements = nchord * nspan
         npoints = (nchord + 1) * (nspan + 1)
-        points = zeros((npoints, 3), dtype='float32')
+        #points = zeros((npoints, 3), dtype='float32')
         elements = zeros((nelements, 4), dtype='int32')
 
+        # we should be able to vectorize this...
         n = 0
         points_dict = {}
         for i, xi in enumerate(x):
+            #a = xi * (p2 - p1) + p1
+            #b = xi * (p3 - p4) + p4
+            a = xi * p2 + (1 - xi) * p1
+            b = xi * p3 + (1 - xi) * p4
             for j, yi in enumerate(y):
                 points_dict[(i,j)] = n
-                print("n=%s xi=%s yi=%s" % (n, xi, yi))
-                #points[n, 0] = p1[0] + yi * p41[0] + xi * p21[0]
-                #points[n, 1] = p1[1] + yi * p41[1]
-                #points[n, 2] = p1[2] + yi * p21[1]
-                a = xi * p21 + p1
-                b = xi * p34 + p4
-                c = yi * b + (1 - yi) * a
-                #if p34[0] < 0.:
-                    #print(p1)
-                    #print(p2)
-                    ##print('----')
-                    #print(p3)
-                    #print(p4)
-                    #print(a)
-                    #print(b)
-                    #print(c)
-                    #asdf
-                points[n, 0] = c[0]
-                points[n, 1] = c[1]
-                points[n, 2] = c[2]
-                #asdf
-
+                #c = yi * b + (1 - yi) * a  # this works
+                #points[n, 0] = c[0]
+                #points[n, 1] = c[1]
+                #points[n, 2] = c[2]
                 n += 1
+
+        # this hasn't been tested
+        #a = x * p2 + (1 - x) * p1
+        #b = x * p3 + (1 - x) * p4
+        #c = y * b + (1 - y) * a
+        points = y * (x * p2 + (1 - x) * p1) + (1 - y) * (x * p3 + (1 - x) * p4)
+        assert points.shape == (npoints, 3), points.shape
+
         print("Points...", points.shape)
         print(points)
 
         nx = x.shape[0]
         ny = y.shape[0]
         print('nx=%s ny=%s' % (nx, ny))
+        #ii = arange(npoints - ny, dtype='int32') #.reshape((nx-1, ny-1))
+        #jj = ny + arange(npoints, dtype='int32') #.reshape((nx-1, ny-1))
+        #elements[:, 0] = ii
+        #elements[:, 1] = ii + 1
+        #elements[:, 3] = jj + 1
+        #elements[:, 4] = jj
         n = 0
         for i in range(nx-1):
             for j in range(ny-1):
@@ -1032,10 +1047,22 @@ class CAERO1(BaseCard):
         :type fields:
           LIST
         """
+        lchord = self.get_LSpan()
+        lspan = self.get_LChord()
         list_fields = ['CAERO1', self.eid, self.Pid(), self.Cp(), self.nspan,
-                  self.nchord, self.lspan, self.lchord, self.igid,
+                  self.nchord, lspan, lchord, self.igid,
                   ] + list(self.p1) + [self.x12] + list(self.p4) + [self.x43]
         return list_fields
+
+    def get_LChord(self):
+        if isinstance(self.lchord, int):
+            return self.lchord
+        return self.lchord.sid
+
+    def get_LSpan(self):
+        if isinstance(self.lspan, int):
+            return self.lspan
+        return self.lspan.sid
 
     def reprFields(self):
         """
@@ -1051,6 +1078,8 @@ class CAERO1(BaseCard):
         cp = set_blank_if_default(self.Cp(), 0)
         nspan = set_blank_if_default(self.nspan, 0)
         nchord = set_blank_if_default(self.nchord, 0)
+        lchord = set_blank_if_default(self.get_LSpan(), 0)
+        lspan = set_blank_if_default(self.get_LChord(), 0)
         list_fields = (['CAERO1', self.eid, self.Pid(), cp, nspan, nchord,
                    self.lspan, self.lchord, self.igid] + list(self.p1) +
                   [self.x12] + list(self.p4) + [self.x43])
