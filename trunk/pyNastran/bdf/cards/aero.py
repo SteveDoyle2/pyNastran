@@ -24,7 +24,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import zip, range
 from itertools import count
-from numpy import array, pi, linspace
+from numpy import array, pi, linspace, zeros, arange, repeat, dot
+
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru,
@@ -700,10 +701,10 @@ class CSSCHD(BaseCard):
             self._comment = comment
         if card:
             self.sid = integer(card, 1, 'sid')
-            self.aesid = integer(card, 2, 'aesid')  # AESURF
+            self.aesid = integer(card, 2, 'aesid')             # AESURF
             self.lAlpha = integer_or_blank(card, 3, 'lAlpha')  # AEFACT
-            self.lMach = integer_or_blank(card, 4, 'lMach')  # AEFACT
-            self.lSchd = integer(card, 5, 'lSchd')  # AEFACT
+            self.lMach = integer_or_blank(card, 4, 'lMach')    # AEFACT
+            self.lSchd = integer(card, 5, 'lSchd')             # AEFACT
             assert len(card) <= 6, 'len(CSSCHD card) = %i' % len(card)
         else:
             self.sid = data[0]
@@ -936,14 +937,33 @@ class CAERO1(BaseCard):
         p3 = p4 + array([self.x43, 0., 0.])
         return [p1, p2, p3, p4]
 
+    def get_npanel_points_elements(self):
+        msg = '%s eid=%s nchord=%s nspan=%s lchord=%s lspan=%s' % (self.type,
+                                                                   self.eid,
+                                                                   self.nchord,
+                                                                   self.nspan,
+                                                                   self.lchord,
+                                                                   self.lspan)
+        if self.nchord == 0:
+            x = self.lchord.Di
+            nchord = len(x) - 1
+        else:
+            nchord = self.nchord
+
+        if self.nspan == 0:
+            y = self.lspan.Di
+            nspan = len(y) - 1
+        else:
+            nspan = self.nspan
+        assert nchord >= 1, msg
+        assert nspan >= 1, msg
+
+        nelements = nchord * nspan
+        npoints = (nchord + 1) * (nspan + 1)
+        return npoints, nelements
+
     def panel_points_elements(self):
         p1, p2, p3, p4 = self.Points()
-        p43 = p4 - p3
-        p34 = p3 - p4
-        p41 = p4 - p1
-        p21 = p2 - p1
-
-        from numpy import array, linspace, zeros
 
         msg = '%s eid=%s nchord=%s nspan=%s lchord=%s lspan=%s' % (self.type,
                                                                    self.eid,
@@ -966,63 +986,45 @@ class CAERO1(BaseCard):
             nspan = self.nspan
             y = linspace(0., 1., nspan + 1)
 
-        print('x =', x)
-        print('y =', y)
-
         assert nchord >= 1, msg
         assert nspan >= 1, msg
 
-
         nelements = nchord * nspan
         npoints = (nchord + 1) * (nspan + 1)
-        #points = zeros((npoints, 3), dtype='float32')
-        elements = zeros((nelements, 4), dtype='int32')
-
-        # we should be able to vectorize this...
-        n = 0
-        points_dict = {}
-        for i, xi in enumerate(x):
-            #a = xi * (p2 - p1) + p1
-            #b = xi * (p3 - p4) + p4
-            a = xi * p2 + (1 - xi) * p1
-            b = xi * p3 + (1 - xi) * p4
-            for j, yi in enumerate(y):
-                points_dict[(i,j)] = n
-                #c = yi * b + (1 - yi) * a  # this works
-                #points[n, 0] = c[0]
-                #points[n, 1] = c[1]
-                #points[n, 2] = c[2]
-                n += 1
-
-        # this hasn't been tested
-        #a = x * p2 + (1 - x) * p1
-        #b = x * p3 + (1 - x) * p4
-        #c = y * b + (1 - y) * a
-        points = y * (x * p2 + (1 - x) * p1) + (1 - y) * (x * p3 + (1 - x) * p4)
-        assert points.shape == (npoints, 3), points.shape
-
-        print("Points...", points.shape)
-        print(points)
 
         nx = x.shape[0]
         ny = y.shape[0]
-        print('nx=%s ny=%s' % (nx, ny))
-        #ii = arange(npoints - ny, dtype='int32') #.reshape((nx-1, ny-1))
-        #jj = ny + arange(npoints, dtype='int32') #.reshape((nx-1, ny-1))
-        #elements[:, 0] = ii
-        #elements[:, 1] = ii + 1
-        #elements[:, 3] = jj + 1
-        #elements[:, 4] = jj
-        n = 0
-        for i in range(nx-1):
-            for j in range(ny-1):
-                elements[n, 0] = points_dict[(i, j)]
-                elements[n, 1] = points_dict[(i+1, j)]
-                elements[n, 2] = points_dict[(i+1, j+1)]
-                elements[n, 3] = points_dict[(i, j+1)]
-                n += 1
-        print("Elements...", elements.shape)
-        print(elements)
+
+        # shape the vectors so we can multiply them
+        x = x.reshape((1, nx))
+        y = y.reshape((1, ny))
+        p1 = p1.reshape(1, 3)
+        p2 = p2.reshape(1, 3)
+        p3 = p3.reshape(1, 3)
+        p4 = p4.reshape(1, 3)
+
+        # x repeats ny times and varies slowly
+        # y repeats nx times and varies quickly
+        xv = repeat(x, ny, axis=1).reshape(npoints, 1)
+        yv = repeat(y, nx, axis=0).reshape(npoints, 1)
+
+        # calculate the points a and b xv% along the chord
+        a = xv * p2 + (1 - xv) * p1
+        b = xv * p3 + (1 - xv) * p4
+
+        # calculate the point yv% along the span
+        points = yv * b + (1 - yv) * a
+        assert points.shape == (npoints, 3), "npoints=%s shape=%s" % (npoints, str(points.shape))
+
+        # create a matrix with the point counter
+        ipoints = arange(npoints, dtype='int32').reshape((nx, ny))
+
+        # move around the CAERO quad and apply ipoints
+        elements = zeros((nelements, 4), dtype='int32')
+        elements[:, 0] = ipoints[:-1, :-1].ravel()  # (i,  j  )
+        elements[:, 1] = ipoints[1:, :-1].ravel()   # (i+1,j  )
+        elements[:, 2] = ipoints[1:, 1:].ravel()    # (i+1,j+1)
+        elements[:, 3] = ipoints[:-1, 1:].ravel()   # (i,j+1  )
         return points, elements
 
 
@@ -1031,10 +1033,8 @@ class CAERO1(BaseCard):
         self.p2 = points[1]
         self.p3 = points[2]
         self.p4 = points[3]
-        x12 = self.p2 - self.p1
-        x43 = self.p4 - self.p3
-        self.x12 = x12[0]
-        self.x43 = x43[0]
+        self.x12 = self.p2[0] - self.p1[0]
+        self.x43 = self.p4[0] - self.p3[0]
 
     def rawFields(self):
         """
@@ -1081,7 +1081,7 @@ class CAERO1(BaseCard):
         lchord = set_blank_if_default(self.get_LSpan(), 0)
         lspan = set_blank_if_default(self.get_LChord(), 0)
         list_fields = (['CAERO1', self.eid, self.Pid(), cp, nspan, nchord,
-                   self.lspan, self.lchord, self.igid] + list(self.p1) +
+                   lspan, lchord, self.igid] + list(self.p1) +
                   [self.x12] + list(self.p4) + [self.x43])
         return list_fields
 
@@ -1324,9 +1324,9 @@ class CAERO3(BaseCard):
         msg = ' which is required by CAERO3 eid=%s' % self.eid
         self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO3
         self.cp = model.Coord(self.cp, msg=msg)
-        #self.list_w = model.AeFact(self.list_w, msg=msg)   # not added
-        #self.list_c1 = model.AeFact(self.list_c1, msg=msg) # not added
-        #self.list_c2 = model.AeFact(self.list_c2, msg=msg) # not added
+        #self.list_w = model.AEFact(self.list_w, msg=msg)   # not added
+        #self.list_c1 = model.AEFact(self.list_c1, msg=msg) # not added
+        #self.list_c2 = model.AEFact(self.list_c2, msg=msg) # not added
 
     def Cp(self):
         if isinstance(self.cp, int):
@@ -2210,10 +2210,12 @@ class SPLINE1(Spline):
     aeroelastic problems on aerodynamic geometries defined by regular arrays of
     aerodynamic points.::
 
-      SPLINE1 EID CAERO BOX1 BOX2 SETG DZ METH USAGE
-      NELEM MELEM
-
-      SPLINE1 3   111    115  122  14   0.
+      +---------+-------+-------+------+------+------+----+------+-------+
+      | SPLINE1 | EID   | CAERO | BOX1 | BOX2 | SETG | DZ | METH | USAGE |
+      +---------+-------+-------+------+------+------+----+------+-------+
+      | NELEM   | MELEM |
+      +---------+-------+-------+------+------+------+----+      | SPLINE1 |   3   |  111  | 115  | 122  |  14  | 0. |
+      +---------+-------+-------+------+------+------+----+
     """
     type = 'SPLINE1'
     _field_map = {
@@ -2318,10 +2320,17 @@ class SPLINE2(Spline):
     aeroelastic problems on aerodynamic geometries defined by regular arrays of
     aerodynamic points.::
 
-      SPLINE2 EID CAERO ID1 ID2 SETG DZ DTOR CID
-      DTHX DTHY None USAGE
-      SPLINE2 5 8 12 24 60 0. 1.0 3
-      1.
+      +---------+------+-------+-------+-------+------+----+------+-----+
+      | SPLINE2 | EID  | CAERO |  ID1  |  ID2  | SETG | DZ | DTOR | CID |
+      +---------+------+-------+-------+-------+------+----+------+-----+
+      |         | DTHX | DTHY  | None  | USAGE |
+      +---------+------+-------+-------+-------+
+
+      +---------+------+-------+-------+-------+------+----+------+-----+
+      | SPLINE2 |   5  |   8   |  12   | 24    | 60   | 0. | 1.0  |  3  |
+      +---------+------+-------+-------+-------+------+----+------+-----+
+      |         |  1.  |
+      +---------+------+
     """
     type = 'SPLINE2'
     _field_map = {
@@ -2413,11 +2422,15 @@ class SPLINE4(Spline):
     Surface Spline Methods
     Defines a curved surface spline for interpolating motion and/or forces for
     aeroelastic problems on general aerodynamic geometries using either the
-    Infinite Plate, Thin Plate or Finite Plate splining method.::
+    Infinite Plate, Thin Plate or Finite Plate splining method.
 
-      SPLINE4 EID CAERO AELIST --- SETG DZ METH USAGE
-      NELEM MELEM
-      SPLINE4 3 111 115 --- 14 0. IPS
+     +---------+-------+-------+--------+-----+------+----+------+-------+
+     | SPLINE4 | EID   | CAERO | AELIST | --- | SETG | DZ | METH | USAGE |
+     +---------+-------+-------+--------+-----+------+----+------+-------+
+     | NELEM   | MELEM |
+     +---------+-------+-------+--------+-----+------+----+------+
+     | SPLINE4 |   3   | 111   |   115  | --- |  14  | 0. | IPS  }
+     +---------+-------+-------+--------+-----+------+----+------+
     """
     type = 'SPLINE4'
     _field_map = {
@@ -2523,10 +2536,13 @@ class SPLINE5(Spline):
     Defines a 1D beam spline for interpolating motion and/or forces for
     aeroelastic problems on aerodynamic geometries defined by irregular arrays
     of aerodynamic points. The interpolating beam supports axial rotation and
-    bending in the yz-plane.::
+    bending in the yz-plane.
 
-      SPLINE5 EID CAERO AELIST ---   SETG DZ DTOR CID
-              DTHX DTHY ---    USAGE
+    +---------+------+-------+--------+-------+------+----+------+-----+
+    | SPLINE5 | EID  | CAERO | AELIST | ---   | SETG | DZ | DTOR | CID |
+    +---------+------+-------+--------+-------+------+----+------+-----+
+    |         | DTHX | DTHY  | ---    | USAGE |
+    +---------+------+-------+--------+-------+
     """
     type = 'SPLINE5'
     _field_map = {
