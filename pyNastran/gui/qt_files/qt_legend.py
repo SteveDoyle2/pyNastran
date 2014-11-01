@@ -227,6 +227,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
             self.out_data['format'] = format_value
             self.out_data['is_blue_to_red'] = self.checkbox_blue_to_red.isChecked()
             self.out_data['is_discrete'] = self.checkbox_discrete.isChecked()
+            self.out_data['clicked_ok'] = True
 
             #print("name = %r" % self.name_edit.text())
             #print("min = %r" % self.min_edit.text())

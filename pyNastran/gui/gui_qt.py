@@ -628,21 +628,34 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
             'format' : data_format,
             'is_blue_to_red' : True,
             'is_discrete': True,
+            'clicked_ok' : False,
         }
         legend = LegendPropertiesWindow(data, win_parent=self)
         legend.show()
         legend.exec_()
         #print("out_data", data)
 
-        Title = data['name']
-        min_value = data['min']
-        max_value = data['max']
-        data_format = data['format']
-        is_blue_to_red = data['is_blue_to_red']
-        is_discrete = data['is_discrete']
+        if data['clicked_ok']:
+            Title = data['name']
+            min_value = data['min']
+            max_value = data['max']
+            data_format = data['format']
+            is_blue_to_red = data['is_blue_to_red']
+            is_discrete = data['is_discrete']
+            self.on_update_legend(Title=Title, min_value=min_value, max_value=max_value,
+                                  data_format=data_format,
+                                  is_blue_to_red=is_blue_to_red,
+                                  is_discrete=is_discrete)
+
+    def on_update_legend(self, Title='Title', min_value=0., max_value=1.,
+                      data_format='%.0f', is_blue_to_red=True, is_discrete=True):
+        key = self.caseKeys[self.iCase]
+        case = self.resultCases[key]
+        #print("len(case) = %i" % len(case))
+        (subcase_id, _resultType, vectorSize, location, _data_format) = key
 
         try:
-            caseName = self.iSubcaseNameMap[subcaseID]
+            caseName = self.iSubcaseNameMap[subcase_id]
         except KeyError:
             caseName = ('case=NA', 'label=NA')
         (subtitle, label) = caseName
@@ -651,6 +664,9 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         norm_value, nValueSet = self.set_grid_values(gridResult, case, vectorSize, min_value, max_value, is_blue_to_red=is_blue_to_red)
         self.UpdateScalarBar(Title, min_value, max_value, norm_value, data_format, is_blue_to_red=is_blue_to_red)
         self.final_grid_update(gridResult, key, subtitle, label)
+        self.log_command('self.on_update_legend(Title=%r, min_value=%s, max_value=%s,\n'
+                         '                      data_format=%r, is_blue_to_red=%s, is_discrete=%s)'
+                         % (Title, min_value, max_value, data_format, is_blue_to_red, is_discrete))
 
     def on_run_script(self, python_file=False):
         print('python_file =', python_file)
@@ -1022,7 +1038,7 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
             #self.load_results.Enable(enable)
         else: # no file specified
             return
-        print("on_load_geometry(%r)" % infile_name)
+        print("on_load_geometry(infile_name=%r, geometry_format=None)" % infile_name)
         self.infile_name = infile_name
 
         if self.out_filename is not None:
@@ -1030,8 +1046,7 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         else:
             msg = '%s - %s' % (self.format, self.infile_name)
         self.set_window_title(msg)
-
-        self.log_command("on_load_geometry(%r, %r)" % (infile_name, self.format))
+        self.log_command("on_load_geometry(infile_name=%r, geometry_format=%r)" % (infile_name, self.format))
 
     def _create_load_file_dialog(self, qt_wildcard, Title):
         # getOpenFileName return QString and we want Python string
@@ -1199,7 +1214,7 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
             writer.SetFileName(fname)
             writer.Write()
             #self.log_info("Saved screenshot: " + fname)
-            self.log_command('on_take_screenshot(%r' % fname)
+            self.log_command('on_take_screenshot(%r)' % fname)
 
     def closeEvent(self, event):
         """

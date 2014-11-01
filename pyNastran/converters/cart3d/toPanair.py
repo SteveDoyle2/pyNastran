@@ -199,16 +199,16 @@ class Cart3dToPanair(PanairGridHelper):
                     header += '=region %s\n' % region
                 region_old = region
 
-                #print "****"
-                #print "element =",element
-                #print "region  =",region
+                #print("****")
+                #print('element = %s' % element)
+                #print('region  = %s' % region)
                 #if eid==2:
-                #    print("points = ",points)
+                    #print('points = %s' % points)
                 nid1, nid2, nid3 = element
                 n1, n2, n3 = points[nid1], points[nid2], points[nid3]
-                #print "n1=%s" %(n1)
-                #print "n2=%s" %(n2)
-                #print "n3=%s" %(n3)
+                #print("n1=%s" % (n1))
+                #print("n2=%s" % (n2))
+                #print("n3=%s" % (n3))
                 #p1 =
                 #sys.exit()
 

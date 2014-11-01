@@ -111,9 +111,9 @@ class NastranIO(object):
             nsub_points_caeros = 0
             for key, caero in iteritems(model.caeros):
                 if hasattr(caero, 'panel_points_elements'):
-                    points, elements = caero.panel_points_elements()
-                    nsub_elements_caeros += elements.shape[0]
-                    nsub_points_caeros += points.shape[0]
+                    npoints, nelements = caero.get_npanel_points_elements()
+                    nsub_elements_caeros += npoints
+                    nsub_points_caeros += nelements
                 else:
                     print('%r doesnt support panel_points_elements' % caero.type)
             nCAeros = nsub_elements_caeros
@@ -242,9 +242,7 @@ class NastranIO(object):
                     points2.InsertPoint(j + 1, *cpoints[1])
                     points2.InsertPoint(j + 2, *cpoints[2])
                     points2.InsertPoint(j + 3, *cpoints[3])
-                    #elem.GetProperty().SetLineWidth(5)
                     self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                    #self.grid2.GetProperty().SetLineWidth(5)
                     j += 4
             #elif isinstance(element, CAERO2): # cylinder
                 #pass

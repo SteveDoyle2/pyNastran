@@ -53,7 +53,6 @@ class GuiCommon(object):
 
     def cycleResults_explicit(self, result_name=None):
         self.log_command('cycleResults(result_name=%r)' % result_name)
-        #print('cycling...')
         print("is_nodal=%s is_centroidal=%s" % (self.is_nodal, self.is_centroidal))
 
         foundCases = self.incrementCycle(result_name)
@@ -81,6 +80,7 @@ class GuiCommon(object):
                 max_value = case.max()
                 min_value = case.min()
             else:
+                raise RuntimeError('list-based results have been disabled; use numpy.array')
                 print('resultType=%r should really use numpy arrays...' % resultType)
                 max_value = case[0]
                 min_value = case[0]
@@ -103,6 +103,9 @@ class GuiCommon(object):
             #print(dir(self.grid))
             #self.grid.Reset()
             self.final_grid_update(gridResult, key, subtitle, label)
+            self.log_command('cycleResults(result_name=%r)' % resultType)
+        #else:
+            #self.log_command('invalid cycle...')
 
     def set_grid_values(self, gridResult, case, vectorSize, min_value, max_value, is_blue_to_red=True):
         # flips sign to make colors go from blue -> red
