@@ -62,8 +62,7 @@ both
  - cell picker to get element/node info
  - usm3d surface/boundary layer/incomplete volume
  - results selector window rather than cycling
-  
- 
+ - load file from * with a specific file type
 
 --------------
 wx
@@ -112,7 +111,9 @@ Nastran
  - ***data label for CAERO cards
    - as a element numbr
    - as a color (e.g. element ID for the CAERO card)
- - ***change between sub-element and element support without hacking code
+ - change between sub-element and element using self.is_sub_panels and a script
+   - PyQt
+   - ***wx
 
 Cart3d
 ======
@@ -198,6 +199,9 @@ Usm3d
    - single results (e.g. pid) can't have their legends edited
    - the Isat model seems to have something wrong with the Pid
    - what do elements with pid=0 correspond to?
+     - CONROD
+     - CELAS2/4
+     - buggy cards
  
  - panair
    =======
