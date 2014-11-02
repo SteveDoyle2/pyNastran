@@ -42,7 +42,7 @@ from pyNastran.f06.f06 import F06
 
 class NastranIO(object):
     def __init__(self):
-        pass
+        self.is_sub_panels = False
 
     def load_nastran_geometry(self, bdf_filename, dirname):
         self.eidMap = {}
@@ -105,8 +105,7 @@ class NastranIO(object):
         nElements = model.nElements()
         assert nElements > 0
 
-        is_sub_panels = False
-        if is_sub_panels:
+        if self.is_sub_panels:
             nsub_elements_caeros = 0
             nsub_points_caeros = 0
             for key, caero in iteritems(model.caeros):
@@ -215,7 +214,7 @@ class NastranIO(object):
         for (eid, element) in sorted(iteritems(model.caeros)):
             if (isinstance(element, CAERO1) or isinstance(element, CAERO3) or
                 isinstance(element, CAERO4) or isinstance(element, CAERO5)):
-                if is_sub_panels:
+                if self.is_sub_panels:
                     pointsi, elementsi = element.panel_points_elements()
                     for ipoint, pointii in enumerate(pointsi):
                         points2.InsertPoint(j + ipoint, *pointii)
