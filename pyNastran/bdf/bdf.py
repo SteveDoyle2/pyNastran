@@ -140,6 +140,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         :param log:   a python logging module object
         """
         assert debug in [True, False], 'debug=%r' % debug
+        self.echo = False
 
         # file management parameters
         self._ifile = -1
@@ -203,6 +204,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         #: the list of possible cards that will be parsed
         self.cardsToRead = set([
+            'ECHOON', 'ECHOOFF',
             'PARAM',
             'GRID', 'GRDSET', 'SPOINT',  # 'RINGAX',
             #'POINT', 'POINTAX', 'RINGAX',
@@ -973,7 +975,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             return False
         if card_name:
             if card_name not in self.reject_count:
-                self.log.info("reject card_name = %r" % card_name)
                 self.reject_count[card_name] = 0
             self.reject_count[card_name] += 1
         return True
@@ -1214,6 +1215,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 # card_count is increased in add_card function
                 self.add_card(lines, card_name, comment, is_list=False)
             else:
+                if self.echo:
+                    self.log.info('Rejecting %s:\n' % card_name + ''.join(lines))
+                else:
+                    self.log.info("reject card_name = %s" % card_name)
+
                 self._increase_card_count(card_name)
                 if comment:
                     self.rejects.append([comment])
@@ -1338,6 +1344,17 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             self.reject_cards.append(card)
             print('rejecting processed auto=rejected %s' % card)
             return card_obj
+
+        if card_name == 'ECHOON':
+            self.echo = True
+            return
+        elif card_name == 'ECHOOFF':
+            self.echo = False
+            return
+
+        if self.echo:
+            from pyNastran.bdf.fieldWriter import print_card_8
+            print(print_card_8(card_obj).rstrip())
 
         # function that gets by name the initialized object (from global scope)
         try:

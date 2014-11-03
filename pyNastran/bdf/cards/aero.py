@@ -1292,7 +1292,7 @@ class CAERO3(BaseCard):
         if card:
             #: Element identification number
             self.eid = integer(card, 1, 'eid')
-            #: Property identification number of a PAERO2 entry.
+            #: Property identification number of a PAERO3 entry.
             self.pid = integer(card, 2, 'pid')
             #: Coordinate system for locating point 1.
             self.cp = integer_or_blank(card, 3, 'cp', 0)
@@ -1384,7 +1384,7 @@ class CAERO4(BaseCard):
         if card:
             #: Element identification number
             self.eid = integer(card, 1, 'eid')
-            #: Property identification number of a PAERO2 entry.
+            #: Property identification number of a PAERO4 entry.
             self.pid = integer(card, 2, 'pid')
             #: Coordinate system for locating point 1.
             self.cp = integer_or_blank(card, 3, 'cp', 0)
@@ -1406,6 +1406,12 @@ class CAERO4(BaseCard):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
+    def c1_c2(self):
+        Lambda = 0.
+        secL = 1 / cos(Lambda)
+        c1 = mach / (mach ** 2 - secL ** 2) ** 0.5
+        raise NotImplementedError()
+
     def cross_reference(self, model):
         """
         Cross links the card
@@ -1415,7 +1421,7 @@ class CAERO4(BaseCard):
         :type model:   BDF()
         """
         msg = ' which is required by CAERO4 eid=%s' % self.eid
-        #self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO4
+        #self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO4 (not added)
         self.cp = model.Coord(self.cp, msg=msg)
 
     def Cp(self):
@@ -1467,8 +1473,84 @@ class CAERO4(BaseCard):
 
 
 class CAERO5(BaseCard):
-    def __init__(self, card):
-        pass
+    def __init__(self, card=None, data=None, comment=''):
+        if comment:
+            self._comment = comment
+        if card:
+            #: Element identification number
+            self.eid = integer(card, 1, 'eid')
+            #: Property identification number of a PAERO5 entry.
+            self.pid = integer(card, 2, 'pid')
+            #: Coordinate system for locating point 1.
+            self.cp = integer_or_blank(card, 3, 'cp', 0)
+            self.nspan = integer_or_blank(card, 4, 'nspan', 0)
+            self.lspan = integer_or_blank(card, 5, 'lspan', 0)
+            self.ntheory = integer_or_blank(card, 6, 'ntheory')
+            self.nthick = integer_or_blank(card, 7, 'nthick')
+            # 8 - blank
+            self.p1 = array([double_or_blank(card, 9,  'x1', 0.0),
+                             double_or_blank(card, 10, 'y1', 0.0),
+                             double_or_blank(card, 11, 'z1', 0.0)])
+            self.x12 = double(card, 12, 'x12')
+            assert self.x12 > 0., 'x12=%s' % self.x12
+            self.p4 = array([double_or_blank(card, 13, 'x4', 0.0),
+                             double_or_blank(card, 14, 'y4', 0.0),
+                             double_or_blank(card, 15, 'z4', 0.0)])
+            self.x43 = double_or_blank(card, 16, 'x43', 0.0)
+            assert len(card) <= 17, 'len(CAERO3 card) = %i' % len(card)
+        else:
+            msg = '%s has not implemented data parsing' % self.type
+            raise NotImplementedError(msg)
+
+        if not (self.nspan > 0 or self.lspan > 0):
+            msg = 'nspan=%r or lspan=%r must be > 0' % (self.nspan, self.lspan)
+            raise ValueError(msg)
+        if not (self.x12 > 0.0 or self.x43 > 0.0):
+            msg = 'x12=%r or x43=%r must be > 0.0' % (self.x12, self.x43)
+            raise ValueError(msg)
+
+    def cross_reference(self, model):
+        """
+        Cross links the card
+
+        :param self:   the CAERO3 object pointer
+        :param model:  the BDF object
+        :type model:   BDF()
+        """
+        msg = ' which is required by CAERO5 eid=%s' % self.eid
+        #self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO5 (not added)
+        self.cp = model.Coord(self.cp, msg=msg)
+        self.lspan = model.AEFact(self.lspan, msg=msg)
+
+    def Cp(self):
+        if isinstance(self.cp, int):
+            return self.cp
+        return self.cp.cid
+
+    def Pid(self):
+        if isinstance(self.pid, int):
+            return self.pid
+        return self.pid.pid
+
+    def reprFields(self):
+        """
+        Gets the fields in their simplified form
+
+        :param self:
+          the CAERO4 object pointer
+        :returns fields:
+          the fields that define the card
+        :type fields:
+          LIST
+        """
+        nspan = self.nspan
+        lspan = self.LSpan()
+        ntheory = self.ntheory
+        cp = set_blank_if_default(self.Cp(), 0)
+        list_fields = (['CAERO5', self.eid, self.Pid(), cp, nspan, lspan,
+                        ntheory, self.nthick, None,] + list(self.p1) + [self.x12] +
+                        list(self.p4) + [self.x43])
+        return list_fields
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()

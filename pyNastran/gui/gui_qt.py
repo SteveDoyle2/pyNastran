@@ -12,6 +12,8 @@ import traceback
 #import webbrowser
 #webbrowser.open("http://xkcd.com/353/")
 
+# rgb default = (25,51,102)
+# hsl default = (146,146,60)
 # Qt
 #try:
 from PyQt4 import QtCore, QtGui
