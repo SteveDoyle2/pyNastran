@@ -9,7 +9,7 @@ class LoadCase(object):
         self.loads = defaultdict(list)
 
     def __getitem__(self, key):
-        print("loadcase %s" % key)
+        self.model.log.debug("loadcase %s" % key)
         aaa
         return self.resolve(key)
 
@@ -22,24 +22,24 @@ class LoadCase(object):
                                 'MOMENT', 'MOMENT1', 'MOMENT2',
                                 'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOADX1']:  # PLOAD4, RFORCE, GRAV
                     i = where(load_id == load.load_id)[0]
-                    #print("i** =", i)
+                    #self.model.log.debug("i** =", i)
                     if len(i):
                         self.loads[load_id].append(load[i])
                 else:
-                    print("load.type %s" % load.type)
+                    self.model.log.debug("load.type %s" % load.type)
                     raise NotImplementedError(load.type)
 
     def add_reference(self, load):
         for load_id, loads in iteritems(load):
-            #print("ref", loads)
+            #self.model.log.debug("ref", loads)
             for load in loads:
                 self.loads[load_id].append(load)
 
     def resolve(self, i):
-        #print("key %s" % i)
+        #self.model.log.debug("key %s" % i)
         all_loads = self.loads[i]  # list of load objs
 
-        #print("**********")
+        #self.model.log.debug("**********")
         f = StringIO.StringIO()
         for load in all_loads:
             load.write_bdf(f)

@@ -38,6 +38,8 @@ class ElementsSolid(object):
         self.n = 0
         types = self._get_types(nlimit=False)
         for elems in types:
+            if elems.n:
+                self.model.log.debug('    building ES - %s' % elems.__class__.__name__)
             elems.build()
             self.n += elems.n
 

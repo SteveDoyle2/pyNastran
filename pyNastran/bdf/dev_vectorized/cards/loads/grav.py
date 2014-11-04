@@ -49,6 +49,14 @@ class GRAV(object):
     def __rmul__(self, value):
         return self.__mul__(value)
 
+    def allocate(self, ncards):
+        float_fmt = self.model.float
+        self.load_id = zeros(ncards, 'int32')
+        self.coord_id = zeros(ncards, 'int32')
+        self.scale = zeros(ncards, float_fmt)
+        self.N = zeros((ncards, 3), float_fmt)
+        self.mb = zeros(ncards, 'int32')
+
     def add(self, card, comment):
         self._cards.append(card)
         self._comments.append(comment)

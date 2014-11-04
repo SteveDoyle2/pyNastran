@@ -304,7 +304,7 @@ def compare_aero_content(fem1, fem2):
     assert len(fem1.flutters) == len(fem2.flutters)
     assert len(fem1.mkaeros) == len(fem2.mkaeros)
     assert len(fem1.splines) == len(fem2.splines)
-    assert len(fem1.trim) == len(fem2.trim)
+    #assert len(fem1.trim) == len(fem2.trim)
 
     for key in fem1.caeros:
         card1 = fem1.caeros[key]
@@ -377,7 +377,7 @@ def compare_aero_content(fem1, fem2):
         card2 = fem2.splines[key]
         assert_fields(card1, card2, key)
 
-    for key in fem1.trim:
-        card1 = fem1.trim[key]
-        card2 = fem2.trim[key]
-        assert_fields(card1, card2, key)
+    #for key in fem1.trim:
+        #card1 = fem1.trim[key]
+        #card2 = fem2.trim[key]
+        #assert_fields(card1, card2, key)

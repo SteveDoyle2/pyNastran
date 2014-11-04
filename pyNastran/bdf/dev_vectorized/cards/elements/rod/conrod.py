@@ -153,9 +153,21 @@ class CONROD(RodElement):
         if self.n == 0:
             return 0.0
 
-        grid_cid0 = self.model.grid.get_positions()
-        p1 = grid_cid0[self.node_ids[:, 0]]
-        p2 = grid_cid0[self.node_ids[:, 1]]
+        #i = self.model.grid.get_index_by_node_id()
+        #grid_cid0 = self.model.grid.get_positions_by_index(i)
+
+
+        # doesn't support indicies
+        #self.model.log.debug('grid_cid0 = %s' % grid_cid0)
+        #self.model.log.debug('node0 = %s' % self.node_ids[:, 0])
+        #p1 = grid_cid0[self.node_ids[:, 0]]
+        #p2 = grid_cid0[self.node_ids[:, 1]]
+
+
+        #grid_cid0 = self.model.grid.get_positions_by_index(self.model.grid.get_index_by_node_id())
+        p1 = self.model.grid.get_positions_by_index(self.model.grid.get_index_by_node_id(self.node_ids[:, 0]))
+        p2 = self.model.grid.get_positions_by_index(self.model.grid.get_index_by_node_id(self.node_ids[:, 1]))
+
         L = p2 - p1
         rho = self.model.materials.get_density(self.material_id)
         mass = norm(L, axis=1) * self.A * rho + self.nsm

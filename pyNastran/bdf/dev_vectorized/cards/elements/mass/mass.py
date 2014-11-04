@@ -40,7 +40,10 @@ class Mass(object):
         #self.n = 0
         types = self._get_types(nlimit=False)
         #print('bt', types)
+
         for elems in types:
+            if elems.n:
+                self.model.log.debug('    building %s' % elems.__class__.__name__)
             elems.build()
             self.n += elems.n
 

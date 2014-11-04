@@ -305,7 +305,7 @@ class WriteMesh(object):
     def _write_aero(self, outfile, size, card_writer):
         """Writes the aero cards"""
         if (self.aero or self.aeros or self.gusts or self.caeros
-        or self.paeros or self.trims):
+            or self.paeros or self.trims):
             msg = ['$AERO\n']
             for (unused_id, caero) in sorted(iteritems(self.caeros)):
                 msg.append(caero.write_bdf(size, card_writer))
@@ -503,12 +503,12 @@ class WriteMesh(object):
 
         :param self: the BDF object
         """
-        self.grdset.write_bdf(f, size)
-        self.grid.write_bdf(f, size)
-        self.point.write_bdf(f, size)
-        self.epoint.write_bdf(f, size)
-        self.spoint.write_bdf(f, size)
-        self.pointax.write_bdf(f, size)
+        self.grdset.write_bdf(f, size=size, is_double=is_double)
+        self.grid.write_bdf(f, size=size, is_double=is_double)
+        self.point.write_bdf(f, size=size, is_double=is_double)
+        self.epoint.write_bdf(f, size=size, is_double=is_double)
+        self.spoint.write_bdf(f, size=size, is_double=is_double)
+        self.pointax.write_bdf(f, size=size, is_double=is_double)
 
     def _write_nonlinear(self, f, size):
         for key, card in sorted(iteritems(self.nlparm)):

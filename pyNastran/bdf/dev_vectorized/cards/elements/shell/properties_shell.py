@@ -29,9 +29,11 @@ class PropertiesShell(object):
                 #assert hasattr(etype, 'allocate'), '%s doesnt support allocate' % ptype.type
 
     def build(self):
-        self.pshell.build()
-        self.pcomp.build()
-        self.pcompg.build()
+        for prop in [self.pshell, self.pcomp, self.pcompg]:
+            if hasattr(prop, 'n'):
+                self.model.log.debug('    building %s' % prop.__class__.__name__)
+            prop.build()
+            self.n += prop.n
 
         npshell = self.pshell.n
         npcomp  = self.pcomp.n

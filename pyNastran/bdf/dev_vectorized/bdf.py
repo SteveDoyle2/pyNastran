@@ -4,7 +4,7 @@ Main BDF class
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
+from six import string_types, iteritems
 import io
 import os
 import sys
@@ -267,6 +267,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         #: the list of possible cards that will be parsed
         self.cards_to_read = set([
+            'ECHOON', 'ECHOOFF',
             'PARAM',
             'GRID', 'GRDSET', 'SPOINT', 'EPOINT', 'POINT', 'POINTAX', # 'RINGAX',
 
@@ -364,6 +365,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             'DCONSTR', 'DESVAR', 'DDVAL', 'DRESP1', 'DRESP2',
             'DVPREL1', 'DVPREL2',
             'DOPTPRM', 'DVMREL1', 'DLINK', 'DRESP3',
+            #'DSCREEN',
 
             # sets
             'ASET', 'BSET', 'CSET', 'QSET',  # 'USET',
@@ -630,7 +632,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         # dynamic
         self.nlpcis = {}
         #===================================
-        # aero
+        # vectorized: aero
 
         #: stores CAERO1, CAERO2, CAERO3, CAERO4, CAERO5
         self.caero = CAero(model)
@@ -654,6 +656,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.__define_unvectorized()
 
     def __define_unvectorized(self):
+        self.aero = {}
+        self.aeros = {}
+
         #: stores TRIM
         self.trim = {}
         self.trims = {}
@@ -752,6 +757,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.dvprels = {}
         self.dvmrels = {}
         self.doptprm = None
+        self.dscreen = {}
 
         # ------------------------- nonlinear defaults -----------------------
         #: stores NLPCI
@@ -772,9 +778,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #: stores PAEROx
         self.paeros = {}
         #: stores AERO
-        self.aero = {}
+        #self.aero = {}
         #: stores AEROS
-        self.aeros = {}
+        #self.aeros = {}
 
         #: stores AEFACT
         self.aefacts = {}
@@ -1164,7 +1170,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             return False
         if card_name:
             if card_name not in self.reject_count:
-                self.log.info("reject card_name = %r" % card_name)
                 self.reject_count[card_name] = 0
             self.reject_count[card_name] += 1
         return True
@@ -1361,7 +1366,10 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         card_name = lines[0][:8].rstrip('\t, ').split(',')[0].split('\t')[0].strip('*\t ')
         if len(card_name) == 0:
             return None
-        assert ' ' not in card_name and len(card_name) > 0, 'card_name=|%r|\nline=|%s| in filename=%s is invalid' % (card_name, lines[0], self.active_filename)
+        if ' ' in card_name or len(card_name) == 0:
+            msg = 'card_name=%r\nline=%r in filename=%r is invalid' \
+                  % (card_name, lines[0], self.active_filename)
+            raise RuntimeError(msg)
         return card_name.upper()
 
     def _read_bulk_data_deck(self):
@@ -1405,6 +1413,13 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
                 self.add_card(lines, card_name, comment, is_list=False)
                 icard += 1
             else:
+                if self.echo:
+                    self.log.info('Rejecting %s:\n' % card_name + ''.join(lines))
+                else:
+                    if card_name not in self.card_count:
+                        # don't print 1000 copies of reject card X
+                        self.log.info("reject card_name = %s" % card_name)
+
                 self._increase_card_count(card_name)
                 self.add_reject(comment, lines)
 
@@ -1553,6 +1568,16 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         ##print("name = %r" % name)
         #self.write_sorted_card(card_obj, icard)
 
+        if card_name == 'ECHOON':
+            self.echo = True
+            return
+        elif card_name == 'ECHOOFF':
+            self.echo = False
+            return
+
+        if self.echo:
+            from pyNastran.bdf.fieldWriter import print_card_8
+            print(print_card_8(card_obj).rstrip())
 
         #if icard % 10000 == 0:
             #self.log.debug('icard = %i' % icard)
@@ -1630,13 +1655,13 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             if len(card) == 9:
                 self.elements_solid.add_cpenta6(card_obj, comment=comment)
             else:
-                print('len(CPENTA) =', len(card_obj))
+                self.model.log.debug('len(CPENTA) = %s' % len(card_obj))
                 self.elements_solid.add_cpenta15(card_obj, comment=comment)
         elif name == 'CHEXA':
             if len(card) == 11:
                 self.elements_solid.add_chexa8(card_obj, comment=comment)
             else:
-                print('len(CHEXA) =', len(card_obj))
+                self.model.log.debug('len(CHEXA) = %s' % len(card_obj))
                 self.elements_solid.add_chexa20(card_obj, comment=comment)
 
         elif name == 'PSOLID':
@@ -1735,6 +1760,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'AELIST':
             pass
         elif name == 'AERO':
+            self.add_AERO(card_obj)
             #self.aero.add(card_obj, comment=comment)
             pass
         elif name == 'AEROS':
@@ -1906,7 +1932,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.loads.sload[load.load_id].append(load)
             #pass
         elif name == 'LOAD':
-            print(card_obj)
+            #self.model.log.debug(card_obj)
             self.loads.load.add(card_obj, comment=comment)
 
         #========================
@@ -2135,6 +2161,73 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         else:
             raise NotImplementedError(name)
         return
+
+    def add_AERO(self, card_obj, comment=''):
+        aero = AERO(card_obj, comment=comment)
+        key = aero.acsid
+        assert key not in self.aero, '\naero=\n%s oldAERO=\n%s' % (
+            aero, self.aero[key])
+        assert key >= 0
+        self.aero[key] = aero
+
+    def add_AEROS(self, card_obj, comment=''):
+        aero = AEROS(card_obj, comment=comment)
+        key = aero.acsid
+        assert key not in self.aeros, '\naeros=\n%s oldAEROS=\n%s' % (
+            aero, self.aeros[key])
+        assert key >= 0
+        self.aeros[key] = aero
+
+    def add_AEFACT(self, card_obj, comment='', allowOverwrites=False):
+        aefact = AEFACT(card_obj, comment=comment)
+        key = aefact.sid
+        if key in self.aefacts and not allowOverwrites:
+            if not aefact.isSameCard(self.aefacts[key]):
+                assert key not in self.aefacts, 'sid=%s\noldAEFACT=\n%snewAEFACT=\n%s' % (key, self.aefacts[key], aefact)
+        else:
+            assert key > 0, 'sid=%s method=\n%s' % (key, aefact)
+            self.aefacts[key] = aefact
+
+    def add_AELIST(self, card_obj, comment=''):
+        aelist = AELIST(card_obj, comment=comment)
+        key = aelist.sid
+        assert key not in self.aelists, '\naelist=\n%s oldAELIST=\n%s' % (
+            aelist, self.aelists[key])
+        assert key >= 0
+        self.aelists[key] = aelist
+
+    def add_AELINK(self, card_obj, comment=''):
+        aelink = AELINK(card_obj, comment=comment)
+        key = aelink.id
+        assert key >= 0
+        if key not in self.aelinks:
+            self.aelinks[key] = []
+        self.aelinks[key].append(aelink)
+        #assert key not in self.aestats,'\naestat=%s oldAESTAT=\n%s' %(aestat,self.aestats[key])
+
+    def add_AEPARM(self, card_obj, comment=''):
+        aeparam = AEPARM(card_obj, comment=comment)
+        key = aeparam.id
+        assert key not in self.aeparams, '\naeparam=\n%s oldAESTAT=\n%s' % (
+            aeparam, self.aeparams[key])
+        assert key >= 0
+        self.aeparams[key] = aeparam
+
+    def add_AESTAT(self, card_obj, comment=''):
+        aero = AESTAT(card_obj, comment=comment)
+        key = aestat.id
+        assert key not in self.aestats, '\naestat=\n%s oldAESTAT=\n%s' % (
+            aestat, self.aestats[key])
+        assert key >= 0
+        self.aestats[key] = aestat
+
+    def add_AESURF(self, card_obj, comment=''):
+        aesurf = AESURF(card_obj, comment=comment)
+        key = aesurf.aesid
+        assert key not in self.aesurfs, '\naesurf=\n%s oldAESURF=\n%s' % (
+            aesurf, self.aesurfs[key])
+        assert key >= 0
+        self.aesurfs[key] = aesurf
 
     def card_stats(self, return_type='string'):
         """

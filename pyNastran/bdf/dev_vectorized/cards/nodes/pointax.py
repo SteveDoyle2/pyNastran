@@ -74,7 +74,7 @@ class POINTAX(object):
             msg.append('  %-8s: %i' % ('POINTAX', self.n))
         return msg
 
-    def write_bdf(self, f, size=8):
+    def write_bdf(self, f, size=8, is_double=False):
         if self.n:
             f.write('$POINTAX\n')
             for (nid, rid, phi) in zip(self.point_id, self.ring_id, self.phi):

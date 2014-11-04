@@ -16,7 +16,7 @@ class PCOMP(object):
         return self.n
 
     def allocate(self, ncards):
-        pass
+        self.n = 0
 
     def __init__(self, model):
         """

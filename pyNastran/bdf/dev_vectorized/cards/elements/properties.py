@@ -183,16 +183,16 @@ def group_elements_by_property_type_and_element_type(elements, pid_data):
         64 : 'CHEXA8', 65 : 'CHEXA20',
     }
 
-    #print("pid_eType = \n%s\n" % str(pid_eType))
+    #self.model.log.debug("pid_eType = \n%s\n" % str(pid_eType))
     for (pid, eType) in pid_eType:
         if pid not in elements.property_ids:
-            print('Property pid=%s does not exist' % pid)
+            self.model.log.debug('Property pid=%s does not exist' % pid)
             #continue
         i = where(pid_data[:, 1] == pid)[0]
-        #print("pid=%i eType=%s Step #1=> \n%s\n" % (pid, eType, pid_data[i, :]))
+        #self.model.log.debug("pid=%i eType=%s Step #1=> \n%s\n" % (pid, eType, pid_data[i, :]))
         j = where(pid_data[i, 2] == eType)[0]
         eids = pid_data[i[j], 0]
-        #print("pid=%i eType=%s eids=%s Step #2=> \n%s\n" % (pid, eType, eids, pid_data[i[j], :]))
+        #self.model.log.debug("pid=%i eType=%s eids=%s Step #2=> \n%s\n" % (pid, eType, eids, pid_data[i[j], :]))
         eType = eTypeMap[eType]
         data2[(pid, eType)] = eids
     return data2

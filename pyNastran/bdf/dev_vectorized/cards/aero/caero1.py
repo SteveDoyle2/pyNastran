@@ -119,13 +119,14 @@ class CAERO1(object):
                 self.x43[i] = double_or_blank(card, 16, 'x43', 0.)
                 assert len(card) <= 17, 'len(CAERO1 card) = %i' % len(card)
             i = self.element_id.argsort()
+            self.model.log.debug(i)
             self.element_id = self.element_id[i]
             self.property_id = self.property_id[i]
             self.coord_id = self.coord_id[i]
             self.p1 = self.p1[i, :]
             self.p4 = self.p4[i, :]
-            self.x12 = self.x12[i, :]
-            self.x43 = self.x43[i, :]
+            self.x12 = self.x12[i]
+            self.x43 = self.x43[i]
             self.nspan = self.nspan[i]
             self.nchord = self.nchord[i]
             self.lspan = self.lspan[i]

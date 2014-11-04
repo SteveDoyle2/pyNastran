@@ -99,7 +99,7 @@ class PBARL(Property):
 
             #cid = [cid if cid != 0 else '' for cid in self.coord_id]
 
-            print('*pbarl write pids=%s' % self.property_id)
+            self.model.log.debug('*pbarl write pids=%s' % self.property_id)
             for (pid, mid) in zip(self.property_id[i], self.material_id[i]):
                 card = ['PBARL', pid, mid,]
                 f.write(print_card(card))

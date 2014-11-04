@@ -76,7 +76,7 @@ class POINT(object):
             msg.append('  %-8s: %i' % ('POINT', self.n))
         return msg
 
-    def write_bdf(self, f, size=8):
+    def write_bdf(self, f, size=8, is_double=False):
         if self.n:
             f.write('$POINT\n')
             cp0 = self.model.grdset.cp

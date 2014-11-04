@@ -27,7 +27,7 @@ class SPOINT(object):
             self.spoint.sort()
             self._comments = []
 
-    def write_bdf(self, f, size=8):
+    def write_bdf(self, f, size=8, is_double=False):
         #..todo:: collapse the IDs
         if self.n:
             card = ['SPOINT'] + collapse_thru(self.spoint)
