@@ -30,7 +30,8 @@ class PropertiesSolid(object):
         #print "building solid properties"
         types = self._get_types(nlimit=False)
         for prop in types:
-            #print "prop =", prop
+            if prop.n:
+                self.model.log.debug('    building %s' % prop.__class__.__name__)
             prop.build()
             self.n += prop.n
 

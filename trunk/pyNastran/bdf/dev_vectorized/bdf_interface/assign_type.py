@@ -1,3 +1,5 @@
+from six import string_types
+
 #old
 from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 

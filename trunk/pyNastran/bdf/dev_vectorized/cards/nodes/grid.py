@@ -81,7 +81,7 @@ class GRDSET(object):
         self.ps = integer_or_blank(card, 7, 'ps', -1)
         self.seid = integer_or_blank(card, 8, 'seid', 0)
 
-    def write_bdf(self, f, size=8):
+    def write_bdf(self, f, size=8, is_double=False):
         if self.n:
             card = ['GRDSET', None, self.cp, None, None, None, self.cd, self.seid]
             f.write(print_card(card, size))
@@ -167,19 +167,22 @@ class GRID(object):
             self.ps = self.ps[i]
             self.seid = self.seid[i]
 
-    def index_map(self, node_ids, msg=''):
-        #return searchsorted(node_ids, self.node_id)
-        #i_too_large = where(self.node_id[-1] < node_ids)[0]
+    def index_map(self, node_id, msg=''):
+        #return searchsorted(node_id, self.node_id)
+        #i_too_large = where(self.node_id[-1] < node_id)[0]
         #if len(i_too_large):
-            #raise RuntimeError('Cannot find GRID %s, %s' % (node_ids[i_too_large], msg))
-        return searchsorted(self.node_id, node_ids)
+            #raise RuntimeError('Cannot find GRID %s, %s' % (node_id[i_too_large], msg))
+        return searchsorted(self.node_id, node_id)
 
     def get_index_by_node_id(self, node_id=None):
-        if node_ids is None:
+        if node_id is None:
             out_index = None
         else:
-            out_index = searchsorted(self.node_id, node_ids)
-            assert len(node_ids) == len(n), 'n1=%s n2=%s'  %(len(node_ids), len(n))
+            if isinstance(node_id, int):
+                node_id = array([node_id])
+            out_index = searchsorted(self.node_id, node_id)
+            self.model.log.debug('node_id = %s' % node_id)
+            #assert len(node_id) == len(n), 'n1=%s n2=%s'  %(len(node_id), len(n))  # TODO: what is this for?
         return out_index
 
     def get_index_by_cp(self, cp=None, i=None):
@@ -243,7 +246,7 @@ class GRID(object):
             xyz = self.xyz.copy()
             n = slice(None, None)
         else:
-            i = n
+            n = i
             xyz = self.xyz[n, :].copy()
 
         cpn = self.cp[n]
@@ -272,7 +275,7 @@ class GRID(object):
                 xyz[j, :] = self.model.coords.get_global_position(xyzi, cp)
 
 
-        assert len(node_ids) == len(cpn), 'n1=%s n2=%s'  %(len(node_ids), len(cpn))
+        #assert len(node_ids) == len(cpn), 'n1=%s n2=%s'  %(len(node_ids), len(cpn))
         return xyz
 
     def get_positions_wrt(self, node_ids=None, coord_ids=None):
@@ -285,6 +288,8 @@ class GRID(object):
         return msg
 
     def write_bdf(self, f, node_id=None, size=8, is_double=False):
+        self.model.log.debug('GRID nid = %s' % node_id)
+        self.model.log.debug('GRID nids = %s' % self.node_id)
         i = self.get_index_by_node_id(node_id)
         return self.write_bdf_by_index(f, i, size, is_double)
 
@@ -313,9 +318,10 @@ class GRID(object):
             ps0 = -1
             seid0 = 0
             blank = ' '*8 if size==8 else ' ' * 16
-            Cp   = [cpi   if cpi   != cp0   else blank for cpi   in self.cp[i]]
-            Cd   = [cdi   if cdi   != cd0   else blank for cdi   in self.cd[i]]
-            Ps   = [psi   if psi   != ps0   else blank for psi   in self.ps[i]]
+            self.model.log.debug('GRID i = %s' % i)
+            Cp   = [cpi if cpi != cp0 else blank for cpi in self.cp[i]]
+            Cd   = [cdi if cdi != cd0 else blank for cdi in self.cd[i]]
+            Ps   = [psi if psi != ps0 else blank for psi in self.ps[i]]
             Seid = [seidi if seidi != seid0 else blank for seidi in self.seid[i]]
             for (nid, cp, xyz, cd, ps, seid) in zip(self.node_id, Cp, self.xyz[i, :], Cd, Ps, Seid):
                 card = ['GRID', nid, cp, xyz[0], xyz[1], xyz[2], cd, ps, seid]
@@ -326,8 +332,8 @@ class GRID(object):
         msg += '  nGRID = %i' % self.n
 
     def __getitem__(self, node_id):
-        print('self.node_id = %s' % self.node_id)
-        print('node_id = %s' % node_id)
+        self.model.log.debug('self.node_id = %s' % self.node_id)
+        self.model.log.debug('node_id = %s' % node_id)
         #node_id = slice_to_iter(node_id)
         i = where(self.node_id == node_id)[0]
         return self.slice_by_index(i)
@@ -335,7 +341,7 @@ class GRID(object):
     def slice_by_index(self, i):
         #i = slice_to_iter(i)
         i = asarray(i)
-        print('i = %s' % i, type(i))
+        self.model.log.debug('i = %s' % i, type(i))
         obj = GRID(self.model)
         obj.n = len(i)
         #obj._cards = self._cards[i]

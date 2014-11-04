@@ -58,6 +58,18 @@ class RFORCE(object):
     def __rmul__(self, value):
         return self.__mul__(value)
 
+    def allocate(self, ncards):
+        float_fmt = self.model.float
+        self.load_id = zeros(ncards, 'int32')
+        self.node_id = zeros(ncards, 'int32')
+        self.coord_id = zeros(ncards, 'int32')
+        self.r = zeros((ncards, 3), float_fmt)
+        self.scale_vel = zeros(ncards, float_fmt)
+        self.method = zeros(ncards, 'int32')
+        self.scale_acc = zeros(ncards, float_fmt)
+        self.mb = zeros(ncards, 'int32')
+        self.idrf = zeros(ncards, 'int32')
+
     def add(self, card, comment):
         self._cards.append(card)
         self._comments.append(comment)

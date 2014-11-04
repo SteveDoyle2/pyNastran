@@ -53,7 +53,7 @@ class SPC(object):
         assert enforced_motion == 0.0
 
         self._comments.append(comment)
-        print('dofs=%r node_id=%r' % (dofs, node_id))
+        self.model.log.debug('dofs=%r node_id=%r' % (dofs, node_id))
         self.components[dofs].append(node_id)
 
         if self.constraint_id is None:

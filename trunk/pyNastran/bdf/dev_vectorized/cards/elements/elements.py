@@ -115,15 +115,17 @@ class Elements(object):
         ptypes = self._get_property_types(nlimit=False)
         self.n = 0
         for elems in etypes:
+            self.model.log.debug('building %s' % elems.__class__.__name__)
             elems.build()
             self.ne += elems.n
             self.validate_nodes(elems)
                 #print nids - grids[i]
 
         for props in ptypes:
+            self.model.log.debug('building %s' % props.__class__.__name__)
             props.build()
             self.np += props.n
-
+        self.model.log.debug('finished building %s' % self.__class__.__name__)
         if self.ne:
             eids = check_duplicate('element_id', etypes)
             self.element_ids = array(list(eids), dtype='int32')
@@ -358,18 +360,18 @@ class Elements(object):
         element_ids_to_analyze = pid_data[:, 0]
         data2 = group_elements_by_property_type_and_element_type(self, pid_data)
 
-        #print('**data2 = %s' % data2)
+        #self.model.log.debug('**data2 = %s' % data2)
         nelements = len(element_ids)
-        #print('nelement_ids =', nelements)
+        #self.model.log.debug('nelement_ids =', nelements)
         eids2 = zeros(nelements_orig, dtype='int32')
         #mass = full(nelements, nan, dtype='float64')
         mass = full(nelements_orig, nan, dtype='float64')
-        #print('mass.shape =', mass.shape)
+        #self.model.log.debug('mass.shape =', mass.shape)
 
         ni = 0
-        print('data2 = %s' % data2)
+        self.model.log.debug('data2 = %s' % data2)
         for (pid, eType), element_ids in iteritems(data2):
-            #print('pid=%s eType=%s element_ids=%s' % (pid, eType, element_ids))
+            #self.model.log.debug('pid=%s eType=%s element_ids=%s' % (pid, eType, element_ids))
             elements = TypeMap[eType]
             i = searchsorted(elements.element_id, element_ids)
             n = len(i)
@@ -378,11 +380,11 @@ class Elements(object):
                 # CONROD
                 pass
             else:
-                print('*cat pid = %s' % pid)
+                self.model.log.debug('*cat pid = %s' % pid)
                 props = self.get_properties([pid])
                 if len(props) == 0:
                     # the property doesn't exist
-                    print('Property %i does not exist and is needed by %s eid=%i' % (pid, eType, element_ids[0]))
+                    self.model.log.debug('Property %i does not exist and is needed by %s eid=%i' % (pid, eType, element_ids[0]))
                     ni += n
                     #print('props = %s' % props)
                     continue
@@ -427,7 +429,7 @@ class Elements(object):
                     n4 = xyz_cid0[self.model.grid.index_map(n4), :]
                     normal, A = _cquad4_normal_A(n1, n2, n3, n4, calculate_area=True, normalize=True)
                 else:
-                    print("Element.get_mass doesn't support %s; try %s.get_mass" % (eType, eType))
+                    self.model.log.debug("Element.get_mass doesn't support %s; try %s.get_mass" % (eType, eType))
                     ni += n
                     continue
                 #print('prop = %s' % prop)
@@ -482,16 +484,16 @@ class Elements(object):
                     (A2, c2) = quad_area_centroid(n5, n6, n7, n8)
                     Vi = (A1 + A2) / 2. * norm(c1 - c2, axis=1)
                 else:
-                    print("Element.get_mass doesn't support %s; try %s.get_mass" % (eType, eType))
+                    self.model.log.debug("Element.get_mass doesn't support %s; try %s.get_mass" % (eType, eType))
                     ni += n
                     continue
                 mass[ni:ni+n] = Vi * rho
             else:
-                print("  Element.get_mass doesn't support %s; try %s.get_mass" % (eType, eType))
+                self.model.log.debug("  Element.get_mass doesn't support %s; try %s.get_mass" % (eType, eType))
                 raise NotImplementedError("Element.get_mass doesn't support %s; try %s.get_mass" % (eType, eType))
-            #print("")
+            #self.model.log.debug("")
             ni += n
-        #print('data2 = %s' % data2)
+        #self.model.log.debug('data2 = %s' % data2)
         diff = setdiff1d(element_ids_orig, element_ids_to_analyze)
         #print('A = %s' % element_ids_orig)
         #print('B = %s' % element_ids_to_analyze)
@@ -517,8 +519,8 @@ class Elements(object):
         for pid in property_ids:
             for Type, pids in iteritems(self.property_groups):
                 if not isinstance(pid, int):
-                    print('pids = %s' % pids)
-                    print('pid  = %s' % pid)
+                    self.model.log.debug('pids = %s' % pids)
+                    self.model.log.debug('pid  = %s' % pid)
                     aaa
 
                 if pid in pids:
@@ -864,13 +866,13 @@ def group_elements_by_property_type_and_element_type(elements, pid_data):
     #print("pid_eType = \n%s\n" % str(pid_eType))
     for (pid, eType) in pid_eType:
         if pid not in elements.property_ids:
-            print('Property pid=%s does not exist' % pid)
+            self.model.log.debug('Property pid=%s does not exist' % pid)
             #continue
         i = where(pid_data[:, 1] == pid)[0]
-        #print("pid=%i eType=%s Step #1=> \n%s\n" % (pid, eType, pid_data[i, :]))
+        #self.model.log.debug("pid=%i eType=%s Step #1=> \n%s\n" % (pid, eType, pid_data[i, :]))
         j = where(pid_data[i, 2] == eType)[0]
         eids = pid_data[i[j], 0]
-        #print("pid=%i eType=%s eids=%s Step #2=> \n%s\n" % (pid, eType, eids, pid_data[i[j], :]))
+        #self.model.log.debug("pid=%i eType=%s eids=%s Step #2=> \n%s\n" % (pid, eType, eids, pid_data[i[j], :]))
         eType = eTypeMap[eType]
         data2[(pid, eType)] = eids
     return data2

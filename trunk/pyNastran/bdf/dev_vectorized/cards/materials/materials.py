@@ -99,7 +99,7 @@ class Materials(object):
     def get_material_id(self, property_ids):
         types = self._get_types(nlimit=True)
         _material_ids = concatenate([ptype.material_id for ptype in types])
-        print(_material_ids)
+        self.model.log.debug(_material_ids)
         return _material_ids
 
     #def get_density(self, material_ids):
@@ -112,9 +112,9 @@ class Materials(object):
     def get_density(self, material_ids):
         mats = self[material_ids]
         density = array([mid.get_density() if mid is not None else nan for mid in mats])
-        #print('material_ids = %s' % material_ids)
-        #print("  density mats = %s" % mats)
-        #print('  density = %s' % density)
+        #self.model.log.debug('material_ids = %s' % material_ids)
+        #self.model.log.debug("  density mats = %s" % mats)
+        #self.model.log.debug('  density = %s' % density)
         return density
 
     def get_density_E(self, material_ids):
