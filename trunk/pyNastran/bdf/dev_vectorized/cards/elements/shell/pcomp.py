@@ -134,7 +134,7 @@ class PCOMP(object):
 
 
     def __repr__(self):
-        f = StringIO.StringIO()
+        f = StringIO()
         f.write('<PCOMP object> n=%s\n' % self.n)
         self.write_bdf(f)
         return f.getvalue()

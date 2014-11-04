@@ -276,7 +276,7 @@ class PSHELL(Property):
         return obj
 
     def __repr__(self):
-        f = StringIO.StringIO()
+        f = StringIO()
         f.write('<PSHELL object> n=%s\n' % self.n)
         self.write_bdf(f)
         return f.getvalue()

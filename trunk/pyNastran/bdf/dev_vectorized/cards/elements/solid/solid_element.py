@@ -20,7 +20,7 @@ class SolidElement(Element):
         return self.slice_by_index(i)
 
     def __repr__(self):
-        f = StringIO.StringIO()
+        f = StringIO()
         f.write('<%s object> n=%s\n' % (self.type, self.n))
         self.write_bdf(f)
         return f.getvalue()

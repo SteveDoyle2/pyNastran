@@ -5,6 +5,7 @@ from numpy.linalg import norm
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.solid_element import SolidElement
 
 def volume4(n1, n2, n3, n4):
     r"""
@@ -16,7 +17,7 @@ def volume4(n1, n2, n3, n4):
     return V
 
 
-class CTETRA10(object):
+class CTETRA10(SolidElement):
     type = 'CTETRA10'
     def __init__(self, model):
         """
@@ -25,10 +26,7 @@ class CTETRA10(object):
         :param self: the CTETRA10 object
         :param model: the BDF object
         """
-        self.model = model
-        self.n = 0
-        self._cards = []
-        self._comments = []
+        SolidElement.__init__(self, model)
 
     def add(self, card, comment):
         self._cards.append(card)
@@ -89,19 +87,20 @@ class CTETRA10(object):
     def _node_locations(self, xyz_cid0, n=4):
         if xyz_cid0 is None:
             xyz_cid0 = self.model.grid.get_positions()
-        n1 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 0]), :]
-        n2 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 1]), :]
-        n3 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 2]), :]
-        n4 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 3]), :]
+
+        n1 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 0]), :]
+        n2 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 1]), :]
+        n3 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 2]), :]
+        n4 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 3]), :]
         if n4:
             return n1, n2, n3, n4
 
-        n5 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 4]), :]
-        n6 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 5]), :]
-        n7 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 6]), :]
-        n8 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 7]), :]
-        n9 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 8]), :]
-        n10 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 9]), :]
+        n5 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 4]), :]
+        n6 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 5]), :]
+        n7 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 6]), :]
+        n8 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 7]), :]
+        n9 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 8]), :]
+        n10 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 9]), :]
         return n1, n2, n3, n4, n5, n6, n7, n8, n9, n10
 
     def get_volume(self, element_ids=None, xyz_cid0=None, total=False):

@@ -80,6 +80,6 @@ class MPC(object):
                 f.write(print_card(card))
 
     def __repr__(self):
-        f = StringIO.StringIO()
+        f = StringIO()
         self.write_bdf(f)
         return f.getvalue()

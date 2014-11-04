@@ -40,7 +40,7 @@ class LoadCase(object):
         all_loads = self.loads[i]  # list of load objs
 
         #self.model.log.debug("**********")
-        f = StringIO.StringIO()
+        f = StringIO()
         for load in all_loads:
             load.write_bdf(f)
         #print(f.getvalue())
@@ -88,7 +88,7 @@ class LoadCase(object):
                 raise RuntimeError('i > 100')
         #print('------------------')
         #print("resolved LoadCase i=", i)
-        f = StringIO.StringIO()
+        f = StringIO()
         for load in all_loads_out:
             load.write_bdf(f)
         #print(f.getvalue())
