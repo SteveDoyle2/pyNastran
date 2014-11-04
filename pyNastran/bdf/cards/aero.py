@@ -988,44 +988,7 @@ class CAERO1(BaseCard):
 
         assert nchord >= 1, msg
         assert nspan >= 1, msg
-
-        nelements = nchord * nspan
-        npoints = (nchord + 1) * (nspan + 1)
-
-        nx = x.shape[0]
-        ny = y.shape[0]
-
-        # shape the vectors so we can multiply them
-        x = x.reshape((1, nx))
-        y = y.reshape((1, ny))
-        p1 = p1.reshape(1, 3)
-        p2 = p2.reshape(1, 3)
-        p3 = p3.reshape(1, 3)
-        p4 = p4.reshape(1, 3)
-
-        # x repeats ny times and varies slowly
-        # y repeats nx times and varies quickly
-        xv = repeat(x, ny, axis=1).reshape(npoints, 1)
-        yv = repeat(y, nx, axis=0).reshape(npoints, 1)
-
-        # calculate the points a and b xv% along the chord
-        a = xv * p2 + (1 - xv) * p1
-        b = xv * p3 + (1 - xv) * p4
-
-        # calculate the point yv% along the span
-        points = yv * b + (1 - yv) * a
-        assert points.shape == (npoints, 3), "npoints=%s shape=%s" % (npoints, str(points.shape))
-
-        # create a matrix with the point counter
-        ipoints = arange(npoints, dtype='int32').reshape((nx, ny))
-
-        # move around the CAERO quad and apply ipoints
-        elements = zeros((nelements, 4), dtype='int32')
-        elements[:, 0] = ipoints[:-1, :-1].ravel()  # (i,  j  )
-        elements[:, 1] = ipoints[1:, :-1].ravel()   # (i+1,j  )
-        elements[:, 2] = ipoints[1:, 1:].ravel()    # (i+1,j+1)
-        elements[:, 3] = ipoints[:-1, 1:].ravel()   # (i,j+1  )
-        return points, elements
+        return points_elements_from_quad_points(p1, p2, p3, p4, x, y)
 
 
     def SetPoints(self, points):
@@ -1406,11 +1369,12 @@ class CAERO4(BaseCard):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
-    def c1_c2(self):
-        Lambda = 0.
-        secL = 1 / cos(Lambda)
-        c1 = mach / (mach ** 2 - secL ** 2) ** 0.5
-        raise NotImplementedError()
+    def get_points(self):
+        p1, matrix = self.cp.transformToGlobal(self.p1)
+        p4, matrix = self.cp.transformToGlobal(self.p4)
+        p2 = p1 + array([self.x12, 0., 0.])
+        p3 = p4 + array([self.x43, 0., 0.])
+        return [p1, p2, p3, p4]
 
     def cross_reference(self, model):
         """
@@ -1522,6 +1486,84 @@ class CAERO5(BaseCard):
         self.cp = model.Coord(self.cp, msg=msg)
         self.lspan = model.AEFact(self.lspan, msg=msg)
 
+    def get_npanel_points_elements(self):
+        msg = '%s eid=%s nspan=%s lspan=%s' % (self.type,
+                                               self.eid,
+                                               self.nspan,
+                                               self.lspan)
+        if self.nspan == 0:
+            y = self.lspan.Di
+            nspan = len(y) - 1
+        else:
+            nspan = self.nspan
+        assert nspan >= 1, msg
+
+        nchord = 1
+        nelements = nchord * nspan
+        npoints = (nchord + 1) * (nspan + 1)
+        return npoints, nelements
+
+    def panel_points_elements(self):
+        p1, p2, p3, p4 = self.get_points()
+
+        msg = '%s eid=%s nspan=%s lspan=%s' % (self.type,
+                                               self.eid,
+                                               self.nspan,
+                                               self.lspan)
+        if self.nspan == 0:
+            y = self.lspan.Di
+            nspan = len(y) - 1
+        else:
+            nspan = self.nspan
+            y = linspace(0., 1., nspan + 1)
+        assert nspan >= 1, msg
+
+        x = array([0., 1.], dtype='float64')
+        assert nspan >= 1, msg
+
+        return points_elements_from_quad_points(p1, p2, p3, p4, x, y)
+
+    def c1_c2(self, mach):
+        p1, p2, p3, p4 = self.get_points()
+        #i = p2 - p1
+        #ihat = i / norm(i)
+        #k = cross(ihat, p4-p1)
+        #khat = k / norm(k)
+        #jhat = cross(khat, ihat)
+        #b = self.p4 - self.p1
+        L = norm(p4 - p1)
+
+        # b = L * cos(Lambda)
+        # ci = L * sin(Lambda)
+
+        if self.ntheory == 0:
+            # piston theory
+            pass
+        elif self.ntheory == 1:
+            gamma = 1.4
+            #Lambda = 0.
+            c1 = 1.
+
+            secL = 1 / cos(Lambda)
+            secL2 = secL ** 2
+            ma2_secL2 = mach ** 2 - secL2
+            c1 = mach / ma2_secL2 ** 0.5
+            c2 = (mach ** 4 * (gamma + 1) - 4 * secL2 * ma2_secL2) / (4 * ma2_secL2 ** 2)
+        else:
+            gamma = 1.4
+
+            # the advance in x
+            ci = p4[0] - p1[0]
+
+            # sweep angle
+            Lambda = asin(ci / L)
+
+            secL = 1 / cos(Lambda)
+            secL2 = secL ** 2
+            ma2_secL2 = mach ** 2 - secL2
+            c1 = mach / ma2_secL2 ** 0.5
+            c2 = (mach ** 4 * (gamma + 1) - 4 * secL2 * ma2_secL2) / (4 * ma2_secL2 ** 2)
+
     def Cp(self):
         if isinstance(self.cp, int):
             return self.cp
@@ -1555,6 +1597,114 @@ class CAERO5(BaseCard):
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
         return self.comment() + print_card_8(card)
+
+def points_elements_from_quad_points(p1, p2, p3, p4, x, y):
+    nx = x.shape[0]
+    ny = y.shape[0]
+    assert nx > 1
+    assert ny > 1
+
+    nelements = (nx - 1) * (ny - 1)
+    npoints = nx * ny
+
+    # shape the vectors so we can multiply them
+    x = x.reshape((1, nx))
+    y = y.reshape((1, ny))
+    p1 = p1.reshape(1, 3)
+    p2 = p2.reshape(1, 3)
+    p3 = p3.reshape(1, 3)
+    p4 = p4.reshape(1, 3)
+
+    # x repeats ny times and varies slowly
+    # y repeats nx times and varies quickly
+    xv = repeat(x, ny, axis=1).reshape(npoints, 1)
+    yv = repeat(y, nx, axis=0).reshape(npoints, 1)
+
+    # calculate the points a and b xv% along the chord
+    a = xv * p2 + (1 - xv) * p1
+    b = xv * p3 + (1 - xv) * p4
+
+    # calculate the point yv% along the span
+    points = yv * b + (1 - yv) * a
+    assert points.shape == (npoints, 3), "npoints=%s shape=%s" % (npoints, str(points.shape))
+
+    # create a matrix with the point counter
+    ipoints = arange(npoints, dtype='int32').reshape((nx, ny))
+
+    # move around the CAERO quad and apply ipoints
+    elements = zeros((nelements, 4), dtype='int32')
+    elements[:, 0] = ipoints[:-1, :-1].ravel()  # (i,  j  )
+    elements[:, 1] = ipoints[1:, :-1].ravel()   # (i+1,j  )
+    elements[:, 2] = ipoints[1:, 1:].ravel()    # (i+1,j+1)
+    elements[:, 3] = ipoints[:-1, 1:].ravel()   # (i,j+1  )
+    return points, elements
+
+class PAERO5(object):
+    def __init__(self):
+        """
+        +--------+-------+--------+--------+---------+-------+-------+-------+
+        | PAERO5 | PID   | NALPHA | LALPHA | NXIS    | LXIS  | NTAUS | LTAUS |
+        +--------+-------+--------+--------+---------+-------+-------+-------+
+        |        | CAOC1 | CAOC2  | CAOC3  | CAOC4   | CAOC5 |
+        +--------+-------+--------+--------+---------+-------+
+
+        +--------+-------+--------+--------+---------+-------+-------+-------+
+        | PAERO5 | 7001  |   1    |  702   |    1    | 701   |   1   |  700  |
+        +--------+-------+--------+--------+---------+-------+-------+-------+
+                 |  0.0  |  0.0   |  5.25  | 3.99375 |  0.0  |
+        +--------+-------+--------+--------+---------+-------+
+        """
+        self.pid = integer(card, 1, 'property_id')
+        self.nalpha = integer_or_blank(card, 2, 'nalpha', default=0)
+        self.lalpha = integer_or_blank(card, 3, 'lalpha', default=0)
+
+        # number of dimensionless chord coordinates in zeta ()
+        self.nxis = integer_or_blank(card, 4, 'nxis', default=0)
+
+        # ID of AEFACT that lists zeta
+        self.lxis = integer_or_blank(card, 5, 'lxis', default=0)
+
+        # number of dimensionless thickess coordinates in tau
+        self.ntaus = integer_or_blank(card, 6, 'ntaus', default=0)
+
+        # ID of AEFACT that lists thickness ratios (t/c)
+        self.ltaus = integer_or_blank(card, 7, 'ltaus', default=0)
+
+        # ca/c - control surface chord / strip chord
+        caoci = []
+        j = 0
+        for n, i in enumerate(range(9, len(card))):
+            ca = double(card, i, 'ca/ci_%i' % (n+1))
+            caoci.append(ca)
+        self.caoci = array(caoci, dtype='float64')
+
+    def integrals(self):
+        # chord location
+        x = self.lxis.Di
+
+        # thickness
+        y = self.ltaus.Di
+
+        # slope of airfoil semi-thickness
+        yp = derivative1(y/2, x)
+
+        # x hinge
+        for xh in self.caoci:
+            I1 = integrate(yp, x, 0., 1.)
+            I2 = integrate(x * yp, x, 0., 1.)
+            I3 = integrate(x**2*yp, x, 0., 1.)
+            I4 = integrate(yp**2, x, 0., 1.)
+            I5 = integrate(x**2 * yp**2, x, 0., 1.)
+
+            J1 = integrate(yp, x, xh, 1.)
+            J2 = integrate(x * yp, x, xh, 1.)
+            J3 = integrate(x**2*yp, x, xh, 1.)
+            J4 = integrate(yp**2, x, xh, 1.)
+            J5 = integrate(x**2 * yp**2, x, xh, 1.)
+
+        return(I1, I2, I3, I4, I5,
+               J1, J2, J3, J4, J5)
+
 
 
 class FLFACT(BaseCard):
