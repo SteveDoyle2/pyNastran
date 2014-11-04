@@ -90,8 +90,8 @@ class CROD(RodElement):
     def _node_locations(self, xyz_cid0):
         if xyz_cid0 is None:
             xyz_cid0 = self.model.grid.get_positions()
-        n1 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 0]), :]
-        n2 = xyz_cid0[self.model.grid.index_map(self.node_ids[:, 1]), :]
+        n1 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 0]), :]
+        n2 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 1]), :]
         return n1, n2
 
     def get_mass(self, element_ids=None, xyz_cid0=None, total=False):

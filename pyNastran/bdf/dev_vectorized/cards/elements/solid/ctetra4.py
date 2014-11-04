@@ -45,14 +45,14 @@ class CTETRA4(SolidElement):
             #comments = {}
             for i, card in enumerate(cards):
                 #comment = self._comments[i]
-                eid = integer(card, 1, 'eid')
+                eid = integer(card, 1, 'element_id')
                 #if comment:
                     #self._comments[eid] = comment
 
                 #: Element ID
                 self.element_id[i] = eid
                 #: Property ID
-                self.property_id[i] = integer(card, 2, 'pid')
+                self.property_id[i] = integer(card, 2, 'property_id')
                 #: Node IDs
                 self.node_ids[i, :] = [
                     integer(card, 3, 'nid1'),
@@ -236,7 +236,7 @@ class CTETRA4(SolidElement):
         K = eye(ndof, dtype='float32')  # not done...
         K *= ki
         dofs, nijv = self.get_dofs_nijv(index0s, n0, n1, n2, n3)
-        return M, dofs, nijv
+        return K, dofs, nijv
 
     def get_dofs_nijv(self, index0s, n0, n1, n2, n3):
         i0 = index0s[n0]
@@ -245,7 +245,6 @@ class CTETRA4(SolidElement):
         i3 = index0s[n3]
         dofs = array([
             i0, i0+1, i0+2,
-
             i1, i1+1, i1+2,
             i2, i2+1, i2+2,
             i3, i3+1, i3+2,
@@ -274,29 +273,29 @@ class CTETRA4(SolidElement):
             for i in range(3):
                 assert isinstance(c[i], float)
 
-    def _node_locations_element_id(self, element_id=None, xyz_cid0=None):
-        if element_id is None:
-            i = None
-        else:
-            i = searchsorted(self.element_id, element_id)
+    def _get_node_locations_by_element_id(self, element_id=None, xyz_cid0=None):
+        i = self._get_sorted_index(self.element_id, element_id, self.n, 'element_id in %s' % self.type, check=True)
         if xyz_cid0 is None:
             xyz_cid0 = self.model.grid.get_positions()
-        return self._node_locations_i(i, xyz_cid0)
+        return self._get_node_locations_by_index(i, xyz_cid0)
 
-    def _node_locations_i(self, i, xyz_cid0):
+    def _get_node_locations_by_index(self, i, xyz_cid0):
         """
         :param i:        None or an array of node IDs
         :param xyz_cid0: the node positions as a dictionary
         """
-        index_map = self.model.grid.index_map
+        grid = self.model.grid
+        get_index_by_node_id = self.model.grid.get_index_by_node_id
         node_ids = self.node_ids
-        n1 = xyz_cid0[index_map(node_ids[i, 0]), :]
-        n2 = xyz_cid0[index_map(node_ids[i, 1]), :]
-        n3 = xyz_cid0[index_map(node_ids[i, 2]), :]
-        n4 = xyz_cid0[index_map(node_ids[i, 3]), :]
+
+        msg = ', which is required by %s' % self.type
+        n1 = xyz_cid0[get_index_by_node_id(node_ids[i, 0], msg), :]
+        n2 = xyz_cid0[get_index_by_node_id(node_ids[i, 1], msg), :]
+        n3 = xyz_cid0[get_index_by_node_id(node_ids[i, 2], msg), :]
+        n4 = xyz_cid0[get_index_by_node_id(node_ids[i, 3], msg), :]
         return n1, n2, n3, n4
 
-    def get_volume(self, element_ids=None, xyz_cid0=None, total=False):
+    def get_volume(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the volume for one or more CTETRA4 elements.
 
@@ -304,30 +303,27 @@ class CTETRA4(SolidElement):
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the volume be summed (default=False)
         """
-        if element_ids is None:
-            element_ids = self.element_id
-        n1, n2, n3, n4 = self._node_locations(xyz_cid0)
+        n1, n2, n3, n4 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
 
-        n = len(element_ids)
-        V = zeros(n, self.model.float)
+        V = zeros(n1.shape[0], self.model.float)
 
         for i, n1i, n2i, n3i, n4i in zip(count(), n1, n2, n3, n4):
             V[i] = volume4(n1i, n2i, n3i, n4i)
             i += 1
         return V
 
-    def get_centroid_volume(self, element_ids=None, xyz_cid0=None, total=False):
+    def get_centroid_volume(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the centroid and volume for one or more CTETRA4 elements.
 
-        :param element_ids: the elements to consider (default=None -> all)
+        :param element_id: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the volume be summed; centroid be averaged (default=False)
 
         ..see:: CTETRA4.volume() and CTETRA4.centroid for more information.
         """
-        n1, n2, n3, n4 = self._node_locations_element_id(xyz_cid0)
-        n = len(element_ids)
+        n1, n2, n3, n4 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
+        n = len(element_id)
         volume = zeros(n, self.model.float)
 
         i = 0
@@ -338,6 +334,9 @@ class CTETRA4(SolidElement):
         centroid = (n1 + n2 + n3 + n4) / 4.0
         if total:
             centroid = centroid.mean()
+            volume = abs(volume).sum()
+        else:
+            volume = abs(volume)
         assert volume.min() > 0.0, 'volume.min() = %f' % volume.min()
         return centroid, volume
 
@@ -349,7 +348,7 @@ class CTETRA4(SolidElement):
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the centroid be averaged (default=False)
         """
-        n1, n2, n3, n4 = self._node_locations_element_id(element_id, xyz_cid0)
+        n1, n2, n3, n4 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
         centroid = (n1 + n2 + n3 + n4) / 4.0
         if total:
             centroid = centroid.mean(axis=0)
@@ -370,7 +369,7 @@ class CTETRA4(SolidElement):
                 i = searchsorted(self.element_id, element_id)
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
                 card = ['CTETRA', eid, pid, n[0], n[1], n[2], n[3]]
-                f.write(print_card(card))
+                f.write(print_card_8(card))
 
     #def slice_by_index(self, i):
         #i = asarray(i)
@@ -383,3 +382,4 @@ class CTETRA4(SolidElement):
         #obj.property_id = self.property_id[i]
         #obj.node_ids = self.node_ids[i, :]
         #return obj
+

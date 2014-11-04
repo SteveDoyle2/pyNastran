@@ -104,6 +104,6 @@ class PropertiesShell(object):
                         prop.write_bdf(f, size=size)
 
     def __repr__(self):
-        f = StringIO.StringIO()
+        f = StringIO()
         self.write_bdf(f)
         return f.getvalue().rstrip()

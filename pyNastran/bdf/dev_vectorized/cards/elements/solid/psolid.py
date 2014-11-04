@@ -147,7 +147,7 @@ class PSOLID(Property):
         return obj
 
     def __repr__(self):
-        f = StringIO.StringIO()
+        f = StringIO()
         f.write('<PSOLID object> n=%s\n' % self.n)
         self.write_bdf(f)
         #print f

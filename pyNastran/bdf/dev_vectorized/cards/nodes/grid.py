@@ -1,5 +1,5 @@
 from six.moves import zip
-from numpy import zeros, arange, where, searchsorted, argsort, unique, asarray, array, dot, transpose, append
+from numpy import zeros, arange, where, searchsorted, argsort, unique, asarray, array, dot, transpose, append, array_equal
 
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 from pyNastran.bdf.fieldWriter import print_card
@@ -86,8 +86,9 @@ class GRDSET(object):
             card = ['GRDSET', None, self.cp, None, None, None, self.cd, self.seid]
             f.write(print_card(card, size))
 
+from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 
-class GRID(object):
+class GRID(VectorizedCard):
     type = 'GRID'
     def __init__(self, model):
         """
@@ -102,9 +103,7 @@ class GRID(object):
         | GRID | NID | CP | X1 | X2 | X3 | CD | PS | SEID |
         +------+-----+----+----+----+----+----+----+------+
         """
-        self.model = model
-        self._cards = []
-        self._comments = []
+        VectorizedCard.__init__(self, model)
 
     def add(self, card, comment):
         self._cards.append(card)
@@ -167,23 +166,26 @@ class GRID(object):
             self.ps = self.ps[i]
             self.seid = self.seid[i]
 
-    def index_map(self, node_id, msg=''):
+    #def get_index_by_node_id(self, node_id, msg=''):
         #return searchsorted(node_id, self.node_id)
         #i_too_large = where(self.node_id[-1] < node_id)[0]
         #if len(i_too_large):
             #raise RuntimeError('Cannot find GRID %s, %s' % (node_id[i_too_large], msg))
-        return searchsorted(self.node_id, node_id)
+        #return self._get_sorted_index(self.node_id, node_id, self.n, 'node_id in GRID', check=True)
 
-    def get_index_by_node_id(self, node_id=None):
-        if node_id is None:
-            out_index = None
-        else:
-            if isinstance(node_id, int):
-                node_id = array([node_id])
-            out_index = searchsorted(self.node_id, node_id)
-            self.model.log.debug('node_id = %s' % node_id)
-            #assert len(node_id) == len(n), 'n1=%s n2=%s'  %(len(node_id), len(n))  # TODO: what is this for?
-        return out_index
+    def get_index_by_node_id(self, node_id=None, msg=''):
+        i = self._get_sorted_index(self.node_id, node_id, self.n, 'node_id in GRID%s' % msg, check=True)
+        return i
+        #if node_id is None:
+            #out_index = None
+        #else:
+            #if isinstance(node_id, int):
+                #node_id = array([node_id])
+            #out_index = searchsorted(self.node_id, node_id)
+            #assert array_equal(self.node_id[out_index], node_id)
+            #self.model.log.debug('node_id = %s' % node_id)
+            ##assert len(node_id) == len(n), 'n1=%s n2=%s'  %(len(node_id), len(n))  # TODO: what is this for?
+        #return out_index
 
     def get_index_by_cp(self, cp=None, i=None):
         """Find all the j-indicies where cp=cpi for some given subset of i-indicies"""
