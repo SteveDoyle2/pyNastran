@@ -299,7 +299,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI',
             'DEQATN',
 
-
             # optimization cards
             'DCONSTR', 'DESVAR', 'DDVAL', 'DRESP1', 'DRESP2',
             'DVPREL1', 'DVPREL2',
@@ -1218,7 +1217,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 if self.echo:
                     self.log.info('Rejecting %s:\n' % card_name + ''.join(lines))
                 else:
-                    self.log.info("reject card_name = %s" % card_name)
+                    if card_name not in self.card_count:
+                        # don't print 1000 copies of reject card X
+                        self.log.info("reject card_name = %s" % card_name)
 
                 self._increase_card_count(card_name)
                 if comment:
