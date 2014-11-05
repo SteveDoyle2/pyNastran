@@ -40,10 +40,10 @@ def partition_dense_symmetric(A, dofs_in):
 
 def partition_dense_vector(F, dofs_in):
     nAll = F.shape[0]
-    #print("dofs = %s" % dofs)
+    #print("partition_dense_vector:  dofs_in = %s" % sorted(dofs_in))
     dofs = getDOF_Set(nAll, dofs_in)
     dofs.sort()
-    #print("dofs = %s" % dofs)
+    #print("partition_dense_vector:  dofs = %s" % dofs)
     n = len(dofs)
     F2 = zeros(n, 'float64')
     for (i, dofI) in enumerate(dofs):

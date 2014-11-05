@@ -8,6 +8,7 @@ Main BDF class.  Defines:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types, iteritems
+from pyNastran.utils import (object_attributes, print_bad_path)
 
 #from codecs import open as codec_open
 import io

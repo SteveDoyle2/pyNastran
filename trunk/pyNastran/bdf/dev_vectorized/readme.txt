@@ -329,14 +329,27 @@ PCOMP, PCOMPG
 
 Unvectorizable Cards (not done)
 ===============================
+TABLEx
 
+Vectorizable, but may not be worth vectorizing
+==============================================
+# aero
+CAERO1, CAERO2, CAERO3, CAERO4, CAERO5
+PAERO1, PAERO2, PAERO3, PAERO4, PAERO5
 
 Not Grouped
 ===========
 # mass
 CMASS1, CMASS2, CMASS3, CMASS4, CMASS5
 
+# aero
+AERO, AEROS
+SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5
+AEFACT, AESURF, AESURFS, AELIST, AEPARM, AESTAT, AELINK
+FLFACT, GUST, MKAERO1, MKAERO2
+TRIM, CSSCHD
 
+ 
 # Elements - 1D
 PDAMPT
 

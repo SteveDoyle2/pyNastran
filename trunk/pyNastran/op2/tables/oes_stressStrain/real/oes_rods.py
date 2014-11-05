@@ -486,6 +486,7 @@ class RealRodStrain(StrainObject):
          1001    1.000000E+00   1.0E+00    1.250000E+00   3.0E+00         1007    1.000000E+00   1.0E+00    1.250000E+00   3.0E+00
     """
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        assert not isinstance(data_code, bool)
         StrainObject.__init__(self, data_code, isubcase)
         self.eType = 'CROD'  # {} # 'CROD/CONROD/CTUBE'
 
@@ -710,7 +711,7 @@ class CtubeStress(RealRodStress):
 class ConrodStrain(RealRodStrain):
     eType = 'CONROD'
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealRodStrain.__init__(self, is_sort1, data_code, isubcase, dt)
+        RealRodStrain.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:

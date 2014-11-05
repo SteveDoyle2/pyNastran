@@ -1290,6 +1290,7 @@ class Solver(F06, OP2):
             self.ctube_strain[isubcase] = stress
         else:
             raise NotImplementedError('elementType=%r Type=%r' % (elementType, Type))
+        #stress.write_f06(self.header, pageStamp)
         stress.dt = None
 
     def _store_displacements(self, model, U, case):
@@ -1937,6 +1938,7 @@ class Solver(F06, OP2):
 
     def assemble_forces(self, model, ndofs, case, Dofs):
         """very similar to writeCodeAster loads"""
+        self.log.info('assemble forces')
         Fg = zeros(ndofs, 'float64')
         #print(model.loads)
         (loadID, junk) = model.caseControlDeck.get_subcase_parameter(case.id, 'LOAD')
@@ -1965,6 +1967,7 @@ class Solver(F06, OP2):
                         Fg[Dofs[(nid, ni + 3)]] += z
             else:
                 raise NotImplementedError(load.type)
+        #print('Fg = %s' % Fg)
         self.write_OLOAD_resultant(Fg)
         return Fg
 
@@ -2033,102 +2036,102 @@ class Solver(F06, OP2):
         self.log.info("Fg  = %s" % Fg)
         return Fg
 
-    def write_results(self, case):
-        Us = self.Us  # SPC set
-        Um = self.Um  # MPC set
-        Ua = self.Ua  # constrained set
-        #Ug - global set
+    #def write_results(self, case):
+        #Us = self.Us  # SPC set
+        #Um = self.Um  # MPC set
+        #Ua = self.Ua  # constrained set
+        ##Ug - global set
 
-        iUs = self.iUs
-        iUm = self.iUm
-        iUa = self.iUa
-        page_num = 1
+        #iUs = self.iUs
+        #iUm = self.iUm
+        #iUa = self.iUa
+        #page_num = 1
 
-        if case.has_parameter('DISPLACEMENT'):
-            (value, options) = case.get_parameter('DISPLACEMENT')
-            if options is not []:
-                Ug_separate = [[Ua, iUa], [Us, iUs], [Um, iUm]]
-                Ug = departition_dense_vector(Ug_separate)
+        #if case.has_parameter('DISPLACEMENT'):
+            #(value, options) = case.get_parameter('DISPLACEMENT')
+            #if options is not []:
+                #Ug_separate = [[Ua, iUa], [Us, iUs], [Um, iUm]]
+                #Ug = departition_dense_vector(Ug_separate)
 
-                result = RealDisplacement(data_code, transient)
-                result.add_f06_data()
+                #result = RealDisplacement(data_code, transient)
+                #result.add_f06_data()
 
-                if 'PRINT' in options:
-                    f06.write(result.write_f06(header, pageStamp, page_num))
-                if 'PLOT' in options:
-                    op2.write(result.write_op2(self.Title, self.Subtitle))
+                #if 'PRINT' in options:
+                    #f06.write(result.write_f06(header, pageStamp, page_num))
+                #if 'PLOT' in options:
+                    #op2.write(result.write_op2(self.Title, self.Subtitle))
 
-        assert case.has_parameter('SPCFORCES') == True
-        if case.has_parameter('SPCFORCES'):
-            (value, options) = case.get_parameter('SPCFORCES')
-            if options is not []:
-                if value != 'NONE':
-                    SPCForces = Ksa * Ua + Kss * Us
-                    if isMPC:
-                        SPCForces += Ksm * Um
+        #assert case.has_parameter('SPCFORCES') == True
+        #if case.has_parameter('SPCFORCES'):
+            #(value, options) = case.get_parameter('SPCFORCES')
+            #if options is not []:
+                #if value != 'NONE':
+                    #SPCForces = Ksa * Ua + Kss * Us
+                    #if isMPC:
+                        #SPCForces += Ksm * Um
 
-                    result = RealSPCForces(data_code, transient)
-                    result.add_f06_data()
+                    #result = RealSPCForces(data_code, transient)
+                    #result.add_f06_data()
 
-                    flag = 0
-                    if 'PRINT' in options:
-                        f06.write(result.write_f06(header, pageStamp, page_num))
-                        flag += 1
-                    if 'PLOT' in options:
-                        op2.write(result.write_op2(Title, Subtitle))
-                        flag += 1
-                    if not flag:
-                        f06.write(result.write_f06(header, pageStamp, page_num))
+                    #flag = 0
+                    #if 'PRINT' in options:
+                        #f06.write(result.write_f06(header, pageStamp, page_num))
+                        #flag += 1
+                    #if 'PLOT' in options:
+                        #op2.write(result.write_op2(Title, Subtitle))
+                        #flag += 1
+                    #if not flag:
+                        #f06.write(result.write_f06(header, pageStamp, page_num))
 
-        if case.has_parameter('MPCFORCES'):
-            if options is not []:
-                (value, options) = case.get_parameter('MPCFORCES')
-                if value != 'NONE':
-                    MPCForces = Kma * Ua + Kmm * Um
-                    if isSPC:
-                        MPCForces += Kms * Us
+        #if case.has_parameter('MPCFORCES'):
+            #if options is not []:
+                #(value, options) = case.get_parameter('MPCFORCES')
+                #if value != 'NONE':
+                    #MPCForces = Kma * Ua + Kmm * Um
+                    #if isSPC:
+                        #MPCForces += Kms * Us
 
-                    result = RealMPCForces(data_code, transient)
-                    result.add_f06_data()
-                    flag = 0
-                    if 'PRINT' in options:
-                        f06.write(result.write_f06(header, pageStamp, page_num))
-                        flag += 1
-                    if 'PLOT' in options:
-                        f06.write(result.write_op2(Title, Subtitle))
-                        flag += 1
-                    if not flag:
-                        f06.write(result.write_f06(header, pageStamp, page_num))
+                    #result = RealMPCForces(data_code, transient)
+                    #result.add_f06_data()
+                    #flag = 0
+                    #if 'PRINT' in options:
+                        #f06.write(result.write_f06(header, pageStamp, page_num))
+                        #flag += 1
+                    #if 'PLOT' in options:
+                        #f06.write(result.write_op2(Title, Subtitle))
+                        #flag += 1
+                    #if not flag:
+                        #f06.write(result.write_f06(header, pageStamp, page_num))
 
-        if case.has_parameter('GPFORCE'):
-            if options is not []:
-                (value, options) = case.get_parameter('GPFORCE')
-                AppliedLoads = Kaa * Ua
-                if isSPC:
-                    AppliedLoads += Kas * Us
-                if isMPC:
-                    AppliedLoads += Kam * Um
+        #if case.has_parameter('GPFORCE'):
+            #if options is not []:
+                #(value, options) = case.get_parameter('GPFORCE')
+                #AppliedLoads = Kaa * Ua
+                #if isSPC:
+                    #AppliedLoads += Kas * Us
+                #if isMPC:
+                    #AppliedLoads += Kam * Um
 
-                result = AppliedLoadsObject(data_code, transient)
-                result.add_f06_data()
-                if 'PRINT' in options:
-                    f06.write(result.write_f06(header, pageStamp, page_num))
-                if 'PLOT' in options:
-                    op2.write(result.write_op2(Title, Subtitle))
+                #result = AppliedLoadsObject(data_code, transient)
+                #result.add_f06_data()
+                #if 'PRINT' in options:
+                    #f06.write(result.write_f06(header, pageStamp, page_num))
+                #if 'PLOT' in options:
+                    #op2.write(result.write_op2(Title, Subtitle))
 
-        if case.has_parameter('STRAIN'):
-            if options is not []:
-                (value, options) = case.get_parameter('STRAIN')
+        #if case.has_parameter('STRAIN'):
+            #if options is not []:
+                #(value, options) = case.get_parameter('STRAIN')
 
-                for (eid, elem) in sorted(model.elements()):
-                    pass
+                #for (eid, elem) in sorted(model.elements()):
+                    #pass
 
-                result = xxxObject(data_code, transient)
-                result.add_f06_data()
-                if 'PRINT' in options:
-                    f06.write(result.write_f06(header, pageStamp, page_num))
-                if 'PLOT' in options:
-                    op2.write(result.write_op2(Title, Subtitle))
+                #result = xxxObject(data_code, transient)
+                #result.add_f06_data()
+                #if 'PRINT' in options:
+                    #f06.write(result.write_f06(header, pageStamp, page_num))
+                #if 'PLOT' in options:
+                    #op2.write(result.write_op2(Title, Subtitle))
 
 
 def get_cards():
