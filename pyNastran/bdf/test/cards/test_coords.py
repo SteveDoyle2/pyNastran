@@ -403,7 +403,7 @@ class TestCoords(unittest.TestCase):
         card.write_bdf(size, 'dummy')
         card.rawFields()
 
-    def test_cord2r_1(self):
+    def test_cord2r_02(self):
         grid = ['GRID       20143       7 -9.31-4  .11841 .028296']
         coord = ['CORD2R         7           1.135 .089237  -.0676    .135 .089237  -.0676',
                  '           1.135 .089237   .9324']
@@ -415,15 +415,20 @@ class TestCoords(unittest.TestCase):
         card = model.process_card(coord)
         model.add_card(card, card[0])
         model.cross_reference()
+        coord = model.Coord(7)
+        #print(coord.origin)
+        #print(coord.i, coord.j, coord.k)
 
         g = model.Node(20143)
         #print(g.Position(debug=False))
+        xyz = g.Position()
 
         # by running it through Patran...
         #GRID     20143          1.1067  .207647 -.068531
-        diff = g.Position() - array([1.106704, .207647, -0.068531])
+        expected = array([1.106704, .207647, -0.068531])
+        diff = xyz - expected
 
-        msg = 'diff=%s' % diff
+        msg = '\nexpected=%s \nactual  =%s \ndiff    =%s' % (expected, xyz, diff)
         assert allclose(diff, 0.), msg
         coord = model.Coord(7)
         coord.T()
