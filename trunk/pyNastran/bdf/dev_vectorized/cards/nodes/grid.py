@@ -219,28 +219,11 @@ class GRID(VectorizedCard):
             i0 += nj
         return out_index
 
-    def get_index_by_cp2(self, cp=None, i=None):
-        """Find all the j-indicies where cp=cpi for some given subset of i-indicies"""
-        if cp is None:
-            return i
-        #cp_all = unique(self.cp)
-        i, n = index_to_nslice(i, self.n)
-        out_index = array(n, dtype='int32')
-        Cp = self.cp[i]
-
-        i0 = 0
-        for cpi in cp:
-            j = where(Cp == cpi)[0]
-            nj = len(j)
-            out_index[i0:i0+nj] = j
-            i0 += nj
-        return out_index
-
-    def get_positions(self, node_id=None):
+    def get_position_by_node_id(self, node_id=None):
         i = self.get_index_by_node_id(node_id)
-        return self.get_positions_by_index(i)
+        return self.get_position_by_index(i)
 
-    def get_positions_by_index(self, i=None):
+    def get_position_by_index(self, i=None):
         """
         in the global frame
         """
@@ -274,7 +257,7 @@ class GRID(VectorizedCard):
                 #print(j)
                 xyzi = xyz[j, :]
                 #xyzi = dot(transpose(T), dot(xyzi, T))
-                xyz[j, :] = self.model.coords.get_global_position(xyzi, cp)
+                xyz[j, :] = self.model.coords.get_global_position_by_xyz(xyzi, cp)
 
 
         #assert len(node_ids) == len(cpn), 'n1=%s n2=%s'  %(len(node_ids), len(cpn))
@@ -343,7 +326,7 @@ class GRID(VectorizedCard):
     def slice_by_index(self, i):
         #i = slice_to_iter(i)
         i = asarray(i)
-        self.model.log.debug('i = %s' % i, type(i))
+        self.model.log.debug('i = %s; type=%s' % (i, type(i)))
         obj = GRID(self.model)
         obj.n = len(i)
         #obj._cards = self._cards[i]

@@ -25,6 +25,12 @@ class SolidElement(Element):
         self.write_bdf(f)
         return f.getvalue()
 
+    def _get_node_locations_by_element_id(self, element_id=None, xyz_cid0=None):
+        i = self._get_sorted_index(self.element_id, element_id, self.n, 'element_id in %s' % self.type, check=True)
+        if xyz_cid0 is None:
+            xyz_cid0 = self.model.grid.get_position_by_index()
+        return self._get_node_locations_by_index(i, xyz_cid0)
+
     def add(self, card, comment):
         self._cards.append(card)
         self._comments.append(comment)

@@ -165,8 +165,8 @@ class CONROD(RodElement):
 
 
         #grid_cid0 = self.model.grid.get_positions_by_index(self.model.grid.get_index_by_node_id())
-        p1 = self.model.grid.get_positions_by_index(self.model.grid.get_index_by_node_id(self.node_ids[:, 0]))
-        p2 = self.model.grid.get_positions_by_index(self.model.grid.get_index_by_node_id(self.node_ids[:, 1]))
+        p1 = self.model.grid.get_position_by_index(self.model.grid.get_index_by_node_id(self.node_ids[:, 0]))
+        p2 = self.model.grid.get_position_by_index(self.model.grid.get_index_by_node_id(self.node_ids[:, 1]))
 
         L = p2 - p1
         rho = self.model.materials.get_density(self.material_id)

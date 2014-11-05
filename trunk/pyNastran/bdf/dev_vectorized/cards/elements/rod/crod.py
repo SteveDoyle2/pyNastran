@@ -89,7 +89,7 @@ class CROD(RodElement):
 
     def _node_locations(self, xyz_cid0):
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_positions()
+            xyz_cid0 = self.model.grid.get_position_by_index()
         n1 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 0]), :]
         n2 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 1]), :]
         return n1, n2
@@ -102,7 +102,7 @@ class CROD(RodElement):
             return 0.0
 
         assert element_ids is None
-        grid_cid0 = self.model.grid.get_positions()
+        grid_cid0 = self.model.grid.get_position_by_index()
         n1, n2 = self._node_locations(xyz_cid0)
         L = n2 - n1
         i = self.model.prod.get_index(self.property_id)

@@ -24,9 +24,9 @@ class CTETRA4(SolidElement):
     type = 'CTETRA4'
     def __init__(self, model):
         """
-        Defines the CTETRA4 object.
+        Defines the CTETRA object.
 
-        :param self: the CTETRA4 object
+        :param self: the CTETRA object
         :param model: the BDF object
         """
         SolidElement.__init__(self, model)
@@ -54,12 +54,14 @@ class CTETRA4(SolidElement):
                 #: Property ID
                 self.property_id[i] = integer(card, 2, 'property_id')
                 #: Node IDs
-                self.node_ids[i, :] = [
+                nids = [
                     integer(card, 3, 'nid1'),
                     integer(card, 4, 'nid2'),
                     integer(card, 5, 'nid3'),
                     integer(card, 6, 'nid4'),
                 ]
+                assert 0 not in nids, '%s\n%s' % (nids, card)
+                self.node_ids[i, :] = nids
                 assert len(card) == 7, 'len(CTETRA4 card) = %i' % len(card)
 
             i = self.element_id.argsort()
@@ -273,12 +275,6 @@ class CTETRA4(SolidElement):
             for i in range(3):
                 assert isinstance(c[i], float)
 
-    def _get_node_locations_by_element_id(self, element_id=None, xyz_cid0=None):
-        i = self._get_sorted_index(self.element_id, element_id, self.n, 'element_id in %s' % self.type, check=True)
-        if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_positions()
-        return self._get_node_locations_by_index(i, xyz_cid0)
-
     def _get_node_locations_by_index(self, i, xyz_cid0):
         """
         :param i:        None or an array of node IDs
@@ -297,16 +293,15 @@ class CTETRA4(SolidElement):
 
     def get_volume(self, element_id=None, xyz_cid0=None, total=False):
         """
-        Gets the volume for one or more CTETRA4 elements.
+        Gets the volume for one or more elements.
 
-        :param element_ids: the elements to consider (default=None -> all)
+        :param element_id: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the volume be summed (default=False)
         """
         n1, n2, n3, n4 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
 
         V = zeros(n1.shape[0], self.model.float)
-
         for i, n1i, n2i, n3i, n4i in zip(count(), n1, n2, n3, n4):
             V[i] = volume4(n1i, n2i, n3i, n4i)
             i += 1
@@ -314,7 +309,7 @@ class CTETRA4(SolidElement):
 
     def get_centroid_volume(self, element_id=None, xyz_cid0=None, total=False):
         """
-        Gets the centroid and volume for one or more CTETRA4 elements.
+        Gets the centroid and volume for one or more elements.
 
         :param element_id: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
@@ -342,7 +337,7 @@ class CTETRA4(SolidElement):
 
     def get_centroid(self, element_id=None, xyz_cid0=None, total=False):
         """
-        Gets the centroid for one or more CTETRA elements.
+        Gets the centroid for one or more elements.
 
         :param element_id: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
@@ -367,19 +362,8 @@ class CTETRA4(SolidElement):
                 i = arange(self.n)
             else:
                 i = searchsorted(self.element_id, element_id)
+
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
                 card = ['CTETRA', eid, pid, n[0], n[1], n[2], n[3]]
                 f.write(print_card_8(card))
-
-    #def slice_by_index(self, i):
-        #i = asarray(i)
-        #obj = CTETRA4(self.model)
-        #obj.n = len(i)
-        ##obj._cards = self._cards[i]
-        ##obj._comments = obj._comments[i]
-        ##obj.comments = obj.comments[i]
-        #obj.element_id = self.element_id[i]
-        #obj.property_id = self.property_id[i]
-        #obj.node_ids = self.node_ids[i, :]
-        #return obj
 

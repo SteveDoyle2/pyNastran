@@ -2,7 +2,7 @@ from six import iteritems
 from six.moves import zip
 from numpy import (array, concatenate, searchsorted, unique, zeros, array, full,
                    nan, where, vstack, dot, cross, degrees, radians, arctan2,
-                   cos, sin, hstack, array_equal, allclose, eye)
+                   cos, sin, hstack, array_equal, allclose, eye, ndarray)
 from numpy.linalg import norm
 
 from pyNastran.bdf.cards.coordinateSystems import (
@@ -16,26 +16,43 @@ def normalize(v):
 # ..todo:: incomplete
 
 class Coord(object):
-    def get_global_position(self, xyz, cp):
+    def get_global_position_by_node_id(self, node_id, cp):
+        i = self.model.grid.get_index_by_node_id(node_id)
+        self.model.log.info('i = %s; type=%s' % (i, type(i)))
+        xyz = self.model.grid.xyz[i, :]
+        xyz = xyz.reshape(len(i), 3)
+        return self.get_global_position_by_xyz(xyz, cp)
+
+    def get_global_position_by_xyz(self, xyz, cp):
         assert isinstance(cp, int), cp
+        assert isinstance(xyz, ndarray), xyz
         coord = self.coords[cp]
 
         T = coord.beta()
-        origin = coord.origin.reshape(3, 1)
-        print('origin = %s' % origin)
-        print('T.shape=%s' % str(T.shape))
-        print('xyz.shape=%s' % str(xyz.shape))
-        xyz2 = (dot(T, xyz.T)  + origin).T
+        assert coord.isResolved == True
+        origin = coord.origin
+        assert origin is not None, 'origin is None...\n%s' % str(coord)
+        #self.model.log.info('originA = %s' % origin)
+
+        origin = origin.reshape(3, 1)
+        self.model.log.info('origin = %s' % origin)
+        #self.model.log.info('T.shape=%s' % str(T.shape))
+        self.model.log.info('T=\n%s' % T)
+        self.model.log.info('xyz=%s' % xyz)
+        #self.model.log.info('xyz.shape=%s' % str(xyz.shape))
+        xyz2 = (dot(T.T, xyz.T)  + origin).T  # TODO: should this have T.T?
         #print('xyz = %s' % xyz.T)
         #print('xyz2 = %s' % xyz2)
         assert xyz.shape == xyz2.shape, "xyz.shape=%s xyz2.shape=%s" % (xyz.shape, xyz2.shape)
         return xyz2
 
     def __repr__(self):
-        print('dummy')
+        return self.__str__()
 
     def __str__(self):
-        return 'dummy'
+        msg = '<Coord object>; Instead call:'
+        msg += '>>> coords[coord_id]'
+        return msg
 
     def __getitem__(self, value):
         return self.coords[value]
@@ -213,6 +230,8 @@ class Coord(object):
         print('T.shape = %s' % str(T.shape))
         self.T[i, :, :] = T
 
+        coord.origin = e2[0]
+
     def resolve_coord2(self, i, coord,
                        r, ref_coord_type, ref_coord):
         #print('  icoord = %s' % i)
@@ -302,6 +321,9 @@ class Coord(object):
         self.is_resolved[i] = True
         self.origin[i] = e1
         self.T[i, :, :] = vstack([coord.i, coord.j, coord.k])
+
+        coord.origin = e1
+
 
     def cylindrical_to_rectangular(self, r_theta_z):
         if len(r_theta_z.shape) == 2:

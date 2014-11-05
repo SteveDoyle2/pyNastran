@@ -182,7 +182,7 @@ class CTRIAX6(object):
         """
         if nodes_cid0 is None:
             node_ids = self.model.grid.node_ids
-            grids_cid0 = self.model.grid.get_positions()
+            grids_cid0 = self.model.grid.get_position_by_index()
 
         p1 = self._positions(grids_cid0, self.node_ids[:, 0])
         p2 = self._positions(grids_cid0, self.node_ids[:, 1])
