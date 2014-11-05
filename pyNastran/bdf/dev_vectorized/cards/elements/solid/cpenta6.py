@@ -29,9 +29,9 @@ class CPENTA6(SolidElement):
     type = 'CPENTA6'
     def __init__(self, model):
         """
-        Defines the CPENTA6 object.
+        Defines the CPENTA object.
 
-        :param self: the CPENTA6 object
+        :param self: the CPENTA object
         :param model: the BDF object
         """
         SolidElement.__init__(self, model)
@@ -81,6 +81,12 @@ class CPENTA6(SolidElement):
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
 
+    def get_mass_matrix(self, i, model, positions, index0s):
+        return M, dofs, nijv
+
+    def get_stiffness_matrix(self, i, model, positions, index0s):
+        return K, dofs, nijv
+
     def _verify(self, xref=True):
         eid = self.Eid()
         pid = self.Pid()
@@ -95,15 +101,6 @@ class CPENTA6(SolidElement):
             assert isinstance(v, float)
             for i in range(3):
                 assert isinstance(c[i], float)
-
-    def get_mass_matrix(self, i, model, positions, index0s):
-        pass
-
-    def _get_node_locations_by_element_id(self, element_id=None, xyz_cid0=None):
-        i = self._get_sorted_index(self.element_id, element_id, self.n, 'element_id in %s' % self.type, check=True)
-        if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_positions()
-        return self._get_node_locations_by_index(i, xyz_cid0)
 
     def _get_node_locations_by_index(self, i, xyz_cid0):
         """
@@ -123,15 +120,9 @@ class CPENTA6(SolidElement):
         n6 = xyz_cid0[get_index_by_node_id(node_ids[i, 5], msg), :]
         return n1, n2, n3, n4, n5, n6
 
-    def _get_area_centroid(self, element_id, xyz_cid0):
-        n1, n2, n3, n4, n5, n6 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
-        (A1, c1) = tri_area_centroid(n1, n2, n3)
-        (A2, c2) = tri_area_centroid(n4, n5, n6)
-        return (A1, A2, c1, c2)
-
     def get_volume(self, element_id=None, xyz_cid0=None, total=False):
         """
-        Gets the volume for one or more CPENTA6 elements.
+        Gets the volume for one or more elements.
 
         :param element_id: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
@@ -140,7 +131,9 @@ class CPENTA6(SolidElement):
         ..note:: Volume for a CPENTA is the average area of two opposing faces
         times the length between the centroids of those points
         """
-        (A1, A2, c1, c2) = self._get_area_centroid(element_id, xyz_cid0)
+        n1, n2, n3, n4, n5, n6 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
+        (A1, c1) = tri_area_centroid(n1, n2, n3)
+        (A2, c2) = tri_area_centroid(n4, n5, n6)
         volume = (A1 + A2) / 2. * norm(c1 - c2, axis=1)
         if total:
             volume = abs(volume).sum()
@@ -150,7 +143,7 @@ class CPENTA6(SolidElement):
 
     def get_centroid_volume(self, element_id=None, xyz_cid0=None, total=False):
         """
-        Gets the centroid and volume for one or more CPENTA6 elements.
+        Gets the centroid and volume for one or more elements.
 
         :param element_id: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
@@ -158,12 +151,12 @@ class CPENTA6(SolidElement):
 
         ..see:: CPENTA6.get_volume() and CPENTA6.get_centroid() for more information.
         """
-        if element_id is None:
-            element_id = self.element_id
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_positions()
+            xyz_cid0 = self.model.grid.get_position_by_index()
 
-        (A1, A2, c1, c2) = self._area_centroid(element_id, xyz_cid0)
+        n1, n2, n3, n4, n5, n6 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
+        (A1, c1) = tri_area_centroid(n1, n2, n3)
+        (A2, c2) = tri_area_centroid(n4, n5, n6)
         centroid = (c1 * A1 + c2 * A2) / (A1 + A2)
         volume = (A1 + A2) / 2. * norm(c1 - c2, axis=1)
         if total:
@@ -176,7 +169,7 @@ class CPENTA6(SolidElement):
 
     def get_centroid(self, element_id=None, xyz_cid0=None, total=False):
         """
-        Gets the centroid for one or more CPENTA6 elements.
+        Gets the centroid for one or more elements.
 
         :param element_id: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
@@ -184,7 +177,9 @@ class CPENTA6(SolidElement):
         """
         if element_id is None:
             element_id = self.element_id
-        (A1, A2, c1, c2) = self._get_area_centroid(element_id, xyz_cid0)
+        n1, n2, n3, n4, n5, n6 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
+        (A1, c1) = tri_area_centroid(n1, n2, n3)
+        (A2, c2) = tri_area_centroid(n4, n5, n6)
         centroid = (c1 * A1 + c2 * A2) / (A1 + A2)
         if total:
             centroid = centroid.mean(axis=0)
@@ -208,14 +203,3 @@ class CPENTA6(SolidElement):
                 card = ['CPENTA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5]]
                 f.write(print_card_8(card))
 
-    #def slice_by_index(self, i):
-        #i = asarray(i)
-        #obj = CPENTA6(self.model)
-        #obj.n = len(i)
-        ##obj._cards = self._cards[i]
-        ##obj._comments = obj._comments[i]
-        ##obj.comments = obj.comments[i]
-        #obj.element_id = self.element_id[i]
-        #obj.property_id = self.property_id[i]
-        #obj.node_ids = self.node_ids[i, :]
-        #return obj

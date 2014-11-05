@@ -1,5 +1,5 @@
 from six.moves import StringIO
-from numpy import array, searchsorted, array_equal, setdiff1d
+from numpy import array, searchsorted, array_equal, setdiff1d, int64
 
 class VectorizedCard(object):
     def __init__(self, model):
@@ -34,9 +34,10 @@ class VectorizedCard(object):
         if unsorted_array is None:
             i = None
             if n == 1:
-                i = array([0])
+                i = array([0], dtype='int32')
         else:
             i = searchsorted(sorted_array, unsorted_array)
+            i.astype('int32')
             if check:
                 if not array_equal(sorted_array[i], unsorted_array):
                     # undefined nodes/elements
@@ -44,4 +45,6 @@ class VectorizedCard(object):
                     #print('sorted %s' % sorted_array)
                     #pass
                     raise RuntimeError('Undefined %s\n%s' % (msg, setdiff1d(unsorted_array, sorted_array)))
+        if isinstance(i, int64) or isinstance(i, int):
+            i = array([i], dtype='int32')
         return i

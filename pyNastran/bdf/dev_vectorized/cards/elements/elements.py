@@ -310,7 +310,7 @@ class Elements(object):
 
     def get_mass(self, element_ids_orig=None, xyz_cid0=None, sort_output=True):
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_positions()
+            xyz_cid0 = self.model.grid.get_position_by_index()
 
         element_ids, element_ids_orig = self._get_element_ids(element_ids_orig)
         if len(element_ids) == 0:

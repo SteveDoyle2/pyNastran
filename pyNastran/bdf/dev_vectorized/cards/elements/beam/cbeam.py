@@ -192,7 +192,7 @@ class CBEAM(Element):
             return 0.0
         return [0.0]
         if grid_cid0 is None:
-            grid_cid0 = self.model.grid.get_positions()
+            grid_cid0 = self.model.grid.get_position_by_index()
         p1 = grid_cid0[self.node_ids[:, 0]]
         p2 = grid_cid0[self.node_ids[:, 1]]
         L = p2 - p1

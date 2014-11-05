@@ -42,9 +42,9 @@ class CHEXA8(SolidElement):
     type = 'CHEXA8'
     def __init__(self, model):
         """
-        Defines the CHEXA8 object.
+        Defines the CHEXA object.
 
-        :param self: the CHEXA8 object
+        :param self: the CHEXA object
         :param model: the BDF object
         """
         SolidElement.__init__(self, model)
@@ -179,13 +179,6 @@ class CHEXA8(SolidElement):
             for i in range(3):
                 assert isinstance(c[i], float)
 
-
-    def _get_node_locations_by_element_id(self, element_id=None, xyz_cid0=None):
-        i = self._get_sorted_index(self.element_id, element_id, self.n, 'element_id in %s' % self.type, check=True)
-        if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_positions()
-        return self._get_node_locations_by_index(i, xyz_cid0)
-
     def _get_node_locations_by_index(self, i, xyz_cid0):
         """
         :param i:        None or an array of node IDs
@@ -208,7 +201,7 @@ class CHEXA8(SolidElement):
 
     def get_volume(self, element_id=None, xyz_cid0=None, total=False):
         """
-        Gets the volume for one or more CHEXA8 elements.
+        Gets the volume for one or more elements.
 
         :param element_id: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
@@ -227,7 +220,7 @@ class CHEXA8(SolidElement):
 
     def get_centroid_volume(self, element_id=None, xyz_cid0=None, total=False):
         """
-        Gets the centroid and volume for one or more CHEXA8 elements.
+        Gets the centroid and volume for one or more elements.
 
         :param element_id: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
@@ -250,7 +243,7 @@ class CHEXA8(SolidElement):
 
     def get_centroid(self, element_id=None, xyz_cid0=None, total=False):
         """
-        Gets the centroid for one or more CHEXA8 elements.
+        Gets the centroid for one or more elements.
 
         :param element_id: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
