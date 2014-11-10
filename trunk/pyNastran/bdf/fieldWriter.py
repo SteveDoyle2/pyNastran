@@ -207,9 +207,23 @@ def print_card(fields, size=8):
     """
     Prints a nastran-style card with 8 or 16-character width fields
 
-    :param fields: all the fields in the BDF card (no blanks)
+    :param fields: all the fields in the BDF card (no trailing Nones)
     :param size:   the width of a field (size=8 or 16)
     :returns card: string representation of the card in small/large field format
+    .. note:: An internal field value of None or '' will be treated as
+              a blank field
+
+    Example
+    =======
+    >>> fields = ['DUMMY', 1, 2, 3, None, 4, 5, 6, 7, 8.]
+    >>> print_card(fields, size=8)
+    DUMMY          1       2       3               4       5       6       7
+                  8.
+    >>> print_card(fields, size=16)
+    DUMMY*                 1               2               3
+    *                      4               5               6               7
+    *                     8.
+    *
     """
     if size == 8:
         return print_card_8(fields)
@@ -224,13 +238,24 @@ def print_card_8(fields):
     """
     Prints a nastran-style card with 8-character width fields.
 
-    :param fields: all the fields in the BDF card (no blanks)
+    :param fields: all the fields in the BDF card (no trailing Nones)
     :returns card: string representation of the card in small field format
+    .. note:: An internal field value of None or '' will be treated as
+              a blank field
     .. note:: A small field format follows the  8-8-8-8-8-8-8-8 = 80
               format where the first 8 is the card name or
               blank (continuation).  The last 8-character field indicates
               an optional continuation, but because it's a left-justified
               unneccessary field, print_card doesnt use it.
+
+    Example
+    =======
+    >>> fields = ['DUMMY', 1, 2, 3, None, 4, 5, 6, 7, 8.]
+    >>> print_card_16(fields)
+    DUMMY*                 1               2               3
+    *                      4               5               6               7
+    *                     8.
+    *
     """
     try:
         out = '%-8s' % fields[0]

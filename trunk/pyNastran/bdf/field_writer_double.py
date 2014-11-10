@@ -54,15 +54,25 @@ def print_card_double(fields, wipe_fields=True):
     """
     Prints a nastran-style card with 16-character width fields.
 
-    :param fields: all the fields in the BDF card (no blanks)
+    :param fields: all the fields in the BDF card (no trailing Nones)
     :param wipe_fields:  some cards (e.g. PBEAM) have ending fields
                          that need to be there, others cannot have them.
-
+    .. note:: An internal field value of None or '' will be treated as
+              a blank field
     .. note:: A large field format follows the  8-16-16-16-16-8 = 80
               format where the first 8 is the card name or
               blank (continuation).  The last 8-character field indicates
               an optional continuation, but because it's a left-justified
               unneccessary field, print_card doesnt use it.
+
+    Example
+    =======
+    >>> fields = ['DUMMY', 1, 2, 3, None, 4, 5, 6, 7, 8.]
+    >>> print_card_double(fields)
+    DUMMY*                 1               2               3
+    *                      4               5               6               7
+    *       8.0000000000D+00
+    *
     """
     if wipe_fields:
         fields = wipe_empty_fields(fields)
