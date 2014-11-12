@@ -318,6 +318,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             # other
             'INCLUDE',  # '='
+            'ENDDATA',
         ])
 
         caseControlCards = set(['FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
@@ -771,15 +772,21 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         while i < nlines:
             line = lines[i].rstrip('\r\n\t')
             uline = line.upper()
+            #print(uline.rstrip())
             if uline.startswith('INCLUDE'):
                 j = i + 1
                 print('*** %s' % line)
                 #bdf_filename2 = line[7:].strip(" '")
                 bdf_filename2 = get_include_filename([line], include_dir=self.include_dir)
+                #print('****f = %r' % bdf_filename2)
 
 
                 f = self._open_file(bdf_filename2)
+                #print('f.name = %s' % f.name)
                 lines2 = f.readlines()
+                f.close()
+
+                #print('lines2 = %s' % lines2)
                 nlines += len(lines2)
 
                 #line2 = lines[j].split('$')
@@ -787,22 +794,32 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     #print('** %s' % line2)
 
                 include_comment = '$ INCLUDE processed:  %s' % bdf_filename2
+                #for line in lines2:
+                    #print("  ?%s" % line.rstrip())
                 lines = lines[:i] + [include_comment] + lines2 + lines[j:]
+                #for line in lines:
+                    #print("  *%s" % line.rstrip())
             i += 1
 
         executive_control_lines = []
         case_control_lines = []
         bulk_data_lines = []
-        flag = 1
+
+        if punch:
+            flag = 3
+        else:
+            flag = 1
         for i, line in enumerate(lines):
             if flag == 1:
                 #line = line.upper()
                 if line.upper().startswith('CEND'):
+                    assert flag == 1
                     flag = 2
                 executive_control_lines.append(line.rstrip())
             elif flag == 2:
                 uline = line.upper()
                 if 'BEGIN' in uline and ('BULK' in uline or 'SUPER' in uline):
+                    assert flag == 2
                     flag = 3
                 case_control_lines.append(line.rstrip())
             else:
@@ -826,13 +843,15 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #print('    backup=%r' % backup_comment)
             comment = ''
             if '$' in line:
-                line, comment = line.split('$')
-            card_name = line.split(',')[0][:8].rstrip().upper()
-            if card_name and card_name not in ['', '+', '*']:
+                line, comment = line.split('$', 1)
+            card_name = line.split(',', 1)[0].split('\t', 1)[0][:8].rstrip().upper()
+            if card_name and card_name[0] not in ['+', '*']:
                 if old_card_name:
                     #print('-------')
                     #print('applying %s' % card_name)
                     #print(full_comment)
+                    #for linei in card_lines:
+                        #print('  %r' % linei)
                     #print('-------')
                     if self.echo:
                         self.log.info('Reading %s:\n' % old_card_name + full_comment + ''.join(card_lines))
@@ -846,7 +865,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                         self.echo = True
                     elif old_card_name == 'ECHOOFF':
                         self.echo = False
-                old_card_name = card_name
+                old_card_name = card_name.rstrip(' *')
                 if old_card_name == 'ENDDATA':
                     self.card_count['ENDDATA'] = 1
                     if nlines - i > 1:
@@ -920,6 +939,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             if self.is_reject(card_name):
                 self.log.info('    rejecting card_name = %s' % card_name)
                 for cardi in card:
+                    self._increase_card_count(card_name)
                     self.rejects.append([cardi[0]] + cardi[1])
             else:
                 for comment, card_lines in card:
@@ -1311,6 +1331,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             elif card_name == 'DMIG':  # not done...
                 field2 = integer_or_string(card_obj, 2, 'flag')
+                #print('card_obj = %s' % card_obj)
                 if field2 == 'UACCEL':  # special DMIG card
                     self.reject_cards.append(card)
                 elif field2 == 0:
