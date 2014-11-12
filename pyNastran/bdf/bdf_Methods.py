@@ -51,8 +51,6 @@ class BDFMethodsDeprecated(object):
         mass, cg, I = self.mass_properties(element_ids=element_ids,
                                            reference_point=None,
                                            sym_axis=sym_axis,
-                                           calculate_cg=False,
-                                           calculate_inertia=False,
                                            num_cpus=1)
         return mass
 
@@ -100,7 +98,7 @@ class BDFMethods(BDFMethodsDeprecated):
         pass
 
     def mass_properties(self, element_ids=None, reference_point=None, sym_axis=None,
-        calculate_cg=True, calculate_inertia=True, num_cpus=1):
+        num_cpus=1):
         """
         Caclulates mass properties in the global system about the reference point.
 
@@ -108,8 +106,6 @@ class BDFMethods(BDFMethodsDeprecated):
         :param element_ids: an array of element ids
         :param reference_point: an array that defines the origin of the frame.
             default = <0,0,0>.
-        :param calculate_cg: should the cg be calculated? (default=True)
-        :param calculate_inertia: should the inertia be calculated? (default=True)
         :param sym_axis: the axis to which the model is symmetric.
                          If AERO cards are used, this can be left blank
         :returns mass: the mass of the model
@@ -138,40 +134,27 @@ class BDFMethods(BDFMethodsDeprecated):
             elements = [element for eid, element in self.elements.items() if eid in element_ids]
             masses = [mass for eid, mass in self.masses.items() if eid in element_ids]
             nelements = len(element_ids)
-        if calculate_cg is False and calculate_inertia is False:
-            I = array([0., 0., 0., 0., 0., 0., ])
-            cg = array([0., 0., 0.])
-            mass = 0.
-            for pack in [elements, masses]:
-                for element in pack:
-                    try:
-                        m = element.Mass()
-                        mass += m
-                    except:
-                        pass
-            mass, cg, I = self._apply_mass_symmetry(sym_axis, mass, cg, I)
-            return mass, None, None
 
         #num_cpus = 1
         if num_cpus > 1:
             # doesn't support calculate_cg = False
             # must use num_cpus = 1
             mass, cg, I = self._mass_properties_mp(num_cpus, elements, masses, nelements,
-                            reference_point=reference_point, calculate_inertia=calculate_inertia)
+                            reference_point=reference_point)
         else:
             mass, cg, I = self._mass_properties_sp(elements, masses,
-                            reference_point=reference_point, calculate_inertia=calculate_inertia)
+                            reference_point=reference_point)
 
         mass, cg, I = self._apply_mass_symmetry(sym_axis, mass, cg, I)
         return (mass, cg, I)
 
     def _mass_properties_sp(self, elements, masses,
-                        reference_point, calculate_inertia):
+                        reference_point):
         #Ixx Iyy Izz, Ixy, Ixz Iyz
         # precompute the CG location and make it the reference point
         I = array([0., 0., 0., 0., 0., 0., ])
         cg = array([0., 0., 0.])
-        if reference_point == 'cg' or calculate_inertia is False:
+        if reference_point == 'cg':
             mass = 0.
             for pack in [elements, masses]:
                 for element in pack:
@@ -184,9 +167,7 @@ class BDFMethods(BDFMethodsDeprecated):
                         pass
             if mass == 0.0:
                 return mass, cg, I
-            elif not calculate_inertia:
-                mass, cg, I = self._apply_mass_symmetry(sym_axis, mass, cg, I)
-                return (mass, cg, None)
+
             reference_point = cg / mass
         else:
             # reference_point = [0.,0.,0.] or user-defined array
@@ -287,7 +268,6 @@ class BDFMethods(BDFMethodsDeprecated):
         :param num_cpus: the number of CPUs to use; 2 < num_cpus < 20
         :param reference_point: an array that defines the origin of the frame.
             default = <0,0,0>.
-        :param calculate_inertia: should I be calculated? (default=True)
         :returns mass: the mass of the model
         :returns cg: the cg of the model as an array.
         :returns I: moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz])
