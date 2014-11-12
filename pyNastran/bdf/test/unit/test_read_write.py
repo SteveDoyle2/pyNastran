@@ -121,9 +121,11 @@ class TestReadWrite(unittest.TestCase):
         f = open('c.bdf', 'wb')
         f.write('GRID,3\n\n')
         f.write("ENDDATA\n")
+        f.close()
 
         model = BDF(log=log, debug=False)
         model.read_bdf('a.bdf')
+        model.write_bdf('a.out.bdf')
         #print('nodes =', model.nodes)
         self.assertEquals(len(model.nodes), 3)
 
