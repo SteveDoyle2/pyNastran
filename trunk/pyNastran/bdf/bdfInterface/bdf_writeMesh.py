@@ -646,13 +646,13 @@ class WriteMesh(object):
         if self.rejects:
             msg.append('$REJECT_LINES\n')
         for reject_lines in self.rejects:
-            if reject_lines[0][0] == ' ':
-                continue
-            else:
-                for reject in reject_lines:
-                    reject2 = reject.rstrip()
-                    if reject2:
-                        msg.append(str(reject2) + '\n')
+            #if reject_lines[0]=='' or reject_lines[0][0] == ' ':
+                #continue
+            #else:
+            for reject in reject_lines:
+                reject2 = reject.rstrip()
+                if reject2:
+                    msg.append(str(reject2) + '\n')
         outfile.write(''.join(msg))
 
     def _write_rigid_elements(self, outfile, size, card_writer):
