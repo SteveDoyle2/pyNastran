@@ -142,7 +142,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.echo = False
 
         # file management parameters
-        self._ifile = -1
         self.active_filenames = []
         self.include_dir = ''
 
@@ -874,6 +873,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     return cards, card_count
                 #print("card_name = %s" % card_name)
 
+            comment = _clean_comment(comment)
             if line:
                 card_lines.append(line)
                 if backup_comment:
@@ -1568,26 +1568,26 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             return msg
 
 
-def _clean_comment(comment, end=-1):
+def _clean_comment(comment):
     """
     Removes specific pyNastran comment lines so duplicate lines aren't
     created.
 
     :param comment: the comment to possibly remove
     """
-    if comment[:end] in ['$EXECUTIVE CONTROL DECK',
-            '$CASE CONTROL DECK',
-            '$NODES', '$SPOINTS', '$ELEMENTS',
-            '$PARAMS', '$PROPERTIES', '$ELEMENTS_WITH_PROPERTIES',
-            '$ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)',
-            '$UNASSOCIATED_PROPERTIES',
-            '$MATERIALS', '$THERMAL MATERIALS',
-            '$CONSTRAINTS', '$SPCs', '$MPCs', '$RIGID ELEMENTS',
-            '$LOADS', '$AERO', '$AERO CONTROL SURFACES',
-            '$FLUTTER', '$DYNAMIC', '$OPTIMIZATION',
-            '$COORDS', '$THERMAL', '$TABLES', '$RANDOM TABLES',
-            '$SETS', '$CONTACT', '$REJECTS', '$REJECT_LINES',
-            '$PROPERTIES_MASS', '$MASSES']:
+    if comment in ('EXECUTIVE CONTROL DECK',
+            'CASE CONTROL DECK',
+            'NODES', 'SPOINTS', 'ELEMENTS',
+            'PARAMS', 'PROPERTIES', 'ELEMENTS_WITH_PROPERTIES',
+            'ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)',
+            'UNASSOCIATED_PROPERTIES',
+            'MATERIALS', 'THERMAL MATERIALS',
+            'CONSTRAINTS', 'SPCs', 'MPCs', 'RIGID ELEMENTS',
+            'LOADS', 'AERO', 'AERO CONTROL SURFACES',
+            'FLUTTER', 'DYNAMIC', 'OPTIMIZATION',
+            'COORDS', 'THERMAL', 'TABLES', 'RANDOM TABLES',
+            'SETS', 'CONTACT', 'REJECTS', 'REJECT_LINES',
+            'PROPERTIES_MASS', 'MASSES'):
         comment = ''
     return comment
 
