@@ -259,6 +259,33 @@ class CTRIA3(ShellElement):
         t = model.properties_shell.get_thickness(pid)
 
 
+
+        # [k_bend] = [b.T] [D] [b] -> 5.16 - Przemieniecki
+        # [b] - 5.139 Prz.
+        # [D] - 2.28 - Prz.
+        p, q, r = p1, p2, p3
+        pq = q - p
+        dpq = norm(pq)
+        L = pq / dpq
+        t = array([
+            p[0] + L[0] * dpq,
+            p[1] + L[1] * dpq,
+            p[2] + L[2] * dpq,
+        ])
+
+        b = array([
+            [y32,    0, -y32,   0,  y21,    0],
+            [0,   -x32, 0,    x31,    0, -x21],
+            [-x32, y32, x31, -y32, -x21,  y21],
+        ], dtype='float64')
+
+        D = E / (1 - nu ** 2) * array([
+            [1, nu, 0],
+            [nu, 1, 0],
+            [0, 0, (1-nu)/2.],
+        ], dtype='float64')
+        k = cross(b.T, cross(D, b))
+
         #====
         # bending
         Cb = [

@@ -45,6 +45,17 @@ class BDFMethodsDeprecated(object):
         """
         return self.mass()
 
+
+    def mass(self, element_ids=None, sym_axis=None):
+        """Calculates mass in the global coordinate system"""
+        mass, cg, I = self.mass_properties(element_ids=element_ids,
+                                           reference_point=None,
+                                           sym_axis=sym_axis,
+                                           calculate_cg=False,
+                                           calculate_inertia=False,
+                                           num_cpus=1)
+        return mass
+
     def resolveGrids(self, cid=0):
         """
         .. seealso:: resolve_grids
@@ -268,7 +279,7 @@ class BDFMethods(BDFMethodsDeprecated):
 
 
     def _mass_properties_mp(self, num_cpus, elements, masses, nelements,
-        reference_point=None, calculate_inertia=True):
+        reference_point=None):
         """
         Caclulates mass properties in the global system about the reference point.
 
@@ -296,9 +307,8 @@ class BDFMethods(BDFMethodsDeprecated):
         if num_cpus > 20:
             # the user probably doesn't want 68,000 CPUs; change it if you want...
             raise RuntimeError('num_proc must be < 20; num_cpus=%s' % num_cpus)
-        #-----------------------------------------------------------
-        self.log.debug("Creating %i-process pool!" % num_cpus)
 
+        self.log.debug("Creating %i-process pool!" % num_cpus)
         pool = mp.Pool(num_cpus)
         result  = pool.imap(_mass_properties_mass_mp_func, [(element) for element in elements
                            if element.type not in ['CBUSH', 'CBUSH1D',
@@ -332,20 +342,8 @@ class BDFMethods(BDFMethodsDeprecated):
             cg = array([0., 0., 0.])
             I = array([0., 0., 0., 0., 0., 0., ])
             return massi, cg, I
-        elif not calculate_inertia:
-            I = None
-            return massi, cg, None
 
         cg = dot(mass, xyz) / massi
-        #cg = numpy.multiply(mass, xyz) / massi
-        #cg = numpy.multiply(xyz, mass) / massi
-
-        #cg = numpy.multiply(xyz, mass).sum(axis=0) / massi
-        #cg = numpy.dot(xyz.T, mass).T / massi
-
-        #cg = (xyz * mass).sum(axis=0) / massi  # (186, 1)
-        #print('cg =', cg)
-        #print('reference_point ', reference_point)
         if reference_point is None:
             x = xyz[:, 0]
             y = xyz[:, 1]
@@ -363,9 +361,6 @@ class BDFMethods(BDFMethodsDeprecated):
         y2 = y ** 2
         z2 = z ** 2
 
-        #A = y2 + z2
-        #print('mass.shape', mass.shape)
-        #print('A.shape', A.shape)
         I = array([
             mass * (y2 + z2),  # Ixx
             mass * (x2 + z2),  # Iyy
@@ -376,31 +371,6 @@ class BDFMethods(BDFMethodsDeprecated):
         ]).sum(axis=1)
 
         return (massi, cg, I)
-
-        #massi = numpy.sum(mass)
-        #cgi = numpy.sum(cg, axis=0)
-        #del cg #, mass
-        #self.log.info("massi = %s" % massi)
-        #------------------------------------------------------------
-
-        #mass = 0.
-        #cg = array([0., 0., 0.])
-        #I = zeros((nelements, 5), 'float64')
-        #result = [_inertia_mp_func(mass[i], element) for element in range(self.elements.iterkeys()]
-        #for j, return_values in enumerate(result):
-            #I[j, :] += return_values[2]
-        #I = numpy.sum(I, axis=0)
-        #return (massi, cg, I)
-
-    def mass(self, element_ids=None, sym_axis=None):
-        """Calculates mass in the global coordinate system"""
-        mass, cg, I = self.mass_properties(element_ids=element_ids,
-                                           reference_point=None,
-                                           sym_axis=sym_axis,
-                                           calculate_cg=False,
-                                           calculate_inertia=False,
-                                           num_cpus=1)
-        return mass
 
     def resolve_grids(self, cid=0):
         """
@@ -936,7 +906,6 @@ class BDFMethods(BDFMethodsDeprecated):
                     print('x1 != x2 continue')
                     continue
 
-                #print(load)
                 v = elem.get_orientation_vector(xyz)
                 i = Ldir
                 ki = cross(i, v)
@@ -1112,5 +1081,4 @@ class BDFMethods(BDFMethodsDeprecated):
 
         for Type in unsupported_types:
             self.log.debug('case=%s loadtype=%r not supported' % (loadcase_id, Type))
-        #self.log.info("case=%s F=%s M=%s\n" % (loadcase_id, F, M))
         return (F, M)
