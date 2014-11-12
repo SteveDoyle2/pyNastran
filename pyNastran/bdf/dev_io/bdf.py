@@ -736,7 +736,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             self.caseControlDeck.rsolmap_toStr = self.rsolmap_toStr
 
             cards, card_count = self.get_bdf_cards(bulk_data_lines)
-            self.parse_cards(cards, card_count)
+            self._parse_cards(cards, card_count)
             self.cross_reference(xref=xref)
             self._xref = xref
         except:
@@ -774,7 +774,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #print(uline.rstrip())
             if uline.startswith('INCLUDE'):
                 j = i + 1
-                print('*** %s' % line)
+                #print('*** %s' % line)
                 #bdf_filename2 = line[7:].strip(" '")
                 bdf_filename2 = get_include_filename([line], include_dir=self.include_dir)
                 #print('****f = %r' % bdf_filename2)
@@ -924,16 +924,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 f.write('\n')
 
 
-    def parse_cards(self, cards, card_count):
-        #if 0:
-            #for card_name, card in sorted(cards.iteritems()):
-                #print('---%r---' % card_name)
-                #for cardi in card:
-                    #print('card...')
-                    #print(cardi[1])
-
+    def _parse_cards(self, cards, card_count):
         #print('card_count = %s' % card_count)
-
         for card_name, card in sorted(cards.iteritems()):
             #print('---%r---' % card_name)
             if self.is_reject(card_name):
@@ -941,36 +933,41 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 for cardi in card:
                     self._increase_card_count(card_name)
                     self.rejects.append([cardi[0]] + cardi[1])
+            elif card_name == 'DMIG':
+                # the DMIG cards need special handling because there is no
+                # guarantee that the header card comes first
+                dmig_cards = []
+
+                # read the header cards and save the other cards
+                for comment, card_lines in card:
+                    card_obj, card_fields = self.create_card_object(card_lines, card_name, is_list=False)
+                    field2 = integer_or_string(card_obj, 2, 'flag')
+                    if field2 == 0:
+                        self.add_DMIG(DMIG(card_obj, comment=comment))
+                    else:
+                        dmig_cards.append([comment, card_obj])
+
+                # load the matrix entries
+                for comment, card_obj in dmig_cards:
+                    field2 = integer_or_string(card_obj, 2, 'flag')
+                    if field2 == 'UACCEL':  # special DMIG card
+                        self.reject_cards.append(card)
+                    #elif field2 == 0:
+                        #self.add_DMIG(DMIG(card_obj, comment=comment))
+                    else:
+                        name = string(card_obj, 1, 'name')
+                        try:
+                            dmig = self.dmigs[name]
+                        except KeyError:
+                            msg = 'cannot find DMIG name=%r in names=%s' \
+                                % (name, self.dmigs.keys())
+                            raise KeyError(msg)
+                        dmig.addColumn(card_obj, comment=comment)
+
             else:
                 for comment, card_lines in card:
-                    #print(card_lines)
+                    assert card_lines != []
                     self.add_card(card_lines, card_name, comment=comment, is_list=False)
-
-    def _read_executive_control_deck(self):
-        """Reads the executive control deck"""
-        self._break_comment = False
-        lineUpper = ''
-        while('CEND' not in lineUpper[:4] and 'BEGIN' not in lineUpper and
-              'BULK' not in lineUpper):
-            (i, line, comment) = self._get_line()
-            line = line.rstrip('\n\r\t ')
-
-            lineUpper = line.upper()
-            if lineUpper == '$EXECUTIVE CONTROL DECK':
-                continue  # skip this comment
-
-            if len(line) > 0:
-                self.executive_control_lines.append(line)
-            lineUpper = lineUpper.split('$')[0]
-
-        if 'CEND' in lineUpper[:4]:
-            self.has_case_control_deck = True
-        else:
-            self.has_case_control_deck = False
-            (i, line, comment) = self._get_line()   # BEGIN BULK
-
-        sol, method, iSolLine = parse_executive_control_deck(self.executive_control_lines)
-        self.update_solution(sol, method, iSolLine)
 
     def update_solution(self, sol, method, iSolLine):
         """
@@ -1129,6 +1126,29 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         card[0] = card_name
         return card
 
+    def create_card_object(self, card_lines, card_name, is_list=True):
+        if card_name in ['DEQATN']:
+            card_obj = card_lines
+            card = card_lines
+        else:
+            if is_list:
+                fields = card_lines
+            else:
+                fields = to_fields(card_lines, card_name)
+
+            # apply OPENMDAO syntax
+            if self._is_dynamic_syntax:
+                fields = [self._parse_dynamic_syntax(field) if '%' in
+                          field[0:1] else field for field in fields]
+
+                card = wipe_empty_fields([interpret_value(field, fields)
+                                          if field is not None
+                                          else None for field in fields])
+            else:  # leave everything as strings
+                card = wipe_empty_fields(fields)
+            card_obj = BDFCard(card)
+        return card_obj, card
+
     def add_card(self, card_lines, card_name, comment='', is_list=True):
         """
         Adds a card object to the BDF object.
@@ -1145,36 +1165,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         :returns card_object: the card object representation of card
 
         .. note:: this is a very useful method for interfacing with the code
-        .. note:: the cardObject is not a card-type object...so not a GRID
+        .. note:: the card_object is not a card-type object...so not a GRID
                   card or CQUAD4 object.  It's a BDFCard Object.  However,
                   you know the type (assuming a GRID), so just call the
                   *mesh.Node(nid)* to get the Node object that was just
                   created.
-        .. warning:: cardObject is not returned
+        .. warning:: card_object is not returned
         """
         card_name = card_name.upper()
         self._increase_card_count(card_name)
-        if card_name in ['DEQATN']:
-            card_obj = card_lines
-            card = card_lines
-        else:
-            if is_list:
-                fields = card_lines
-            else:
-                fields = to_fields(card_lines, card_name)
-                #print('fields = %s' % fields)
-
-            # apply OPENMDAO syntax
-            if self._is_dynamic_syntax:
-                fields = [self._parse_dynamic_syntax(field) if '%' in
-                          field[0:1] else field for field in fields]
-
-                card = wipe_empty_fields([interpret_value(field, fields)
-                                          if field is not None
-                                          else None for field in fields])
-            else:  # leave everything as strings
-                card = wipe_empty_fields(fields)
-            card_obj = BDFCard(card)
+        card_obj, card = self.create_card_object(card_lines, card_name, is_list=is_list)
 
         if self._auto_reject:
             self.reject_cards.append(card)
