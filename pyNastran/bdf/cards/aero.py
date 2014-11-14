@@ -1010,8 +1010,8 @@ class CAERO1(BaseCard):
         :type fields:
           LIST
         """
-        lchord = self.get_LSpan()
-        lspan = self.get_LChord()
+        lchord = self.get_LChord()
+        lspan = self.get_LSpan()
         list_fields = ['CAERO1', self.eid, self.Pid(), self.Cp(), self.nspan,
                   self.nchord, lspan, lchord, self.igid,
                   ] + list(self.p1) + [self.x12] + list(self.p4) + [self.x43]
