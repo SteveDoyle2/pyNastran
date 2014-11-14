@@ -1041,8 +1041,8 @@ class CAERO1(BaseCard):
         cp = set_blank_if_default(self.Cp(), 0)
         nspan = set_blank_if_default(self.nspan, 0)
         nchord = set_blank_if_default(self.nchord, 0)
-        lchord = set_blank_if_default(self.get_LSpan(), 0)
-        lspan = set_blank_if_default(self.get_LChord(), 0)
+        lchord = set_blank_if_default(self.get_LChord(), 0)
+        lspan = set_blank_if_default(self.get_LSpan(), 0)
         list_fields = (['CAERO1', self.eid, self.Pid(), cp, nspan, nchord,
                    lspan, lchord, self.igid] + list(self.p1) +
                   [self.x12] + list(self.p4) + [self.x43])
