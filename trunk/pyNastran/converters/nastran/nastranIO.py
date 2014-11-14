@@ -943,7 +943,7 @@ class NastranIO(object):
         self.eid_to_nid_map = {}
 
     def fill_stress_case(self, cases, model, subcaseID):
-        return cases
+        #return cases
         if self.is_centroidal:
             self._fill_stress_case_centroidal(cases, model, subcaseID)
         elif self.is_nodal:
