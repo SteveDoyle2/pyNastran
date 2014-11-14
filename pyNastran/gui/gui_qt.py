@@ -215,8 +215,8 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         if is_failed:
             return
         if output:
-            print("format=%r" % format)
-            print("output=%r" % output)
+            #print("218-format=%r" % form)
+            #print("219-output=%r" % output)
             self.on_load_results(output)
         self._simulate_key_press('r')
         self.vtk_interactor.Modified()
