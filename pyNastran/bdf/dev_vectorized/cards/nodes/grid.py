@@ -229,7 +229,8 @@ class GRID(VectorizedCard):
         """
         if i is None:
             xyz = self.xyz.copy()
-            n = slice(None, None)
+            #n = slice(None, None)
+            n = arange(self.n)
         else:
             n = i
             xyz = self.xyz[n, :].copy()

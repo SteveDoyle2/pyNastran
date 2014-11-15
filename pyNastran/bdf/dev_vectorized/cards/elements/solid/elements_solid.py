@@ -93,12 +93,12 @@ class ElementsSolid(object):
         return mass
 
     #=========================================================================
-    def write_bdf(self, f, size=8, element_ids=None):
+    def write_bdf(self, f, size=8, element_id=None):
         f.write('$ELEMENTS_SOLID\n')
         types = self._get_types(nlimit=True)
         for elems in types:
-            #print(elems.type)
-            elems.write_bdf(f, size=size, element_ids=element_ids)
+            print(elems.type)
+            elems.write_bdf(f, size=size, element_id=element_id)
 
     def _get_types(self, nlimit=True):
         types = [self.ctetra4, self.cpenta6, self.chexa8,

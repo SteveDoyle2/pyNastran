@@ -26,15 +26,29 @@ def quad_area_centroid(n1, n2, n3, n4):
     a = n2 - n4
     b = n2 - n3
     area2 = 0.5 * norm(cross(a, b), axis=1)
+    #area2.reshape(
     c2 = (n2 + n3 + n4) / 3.
 
     area = area1 + area2
     try:
-        centroid = (c1 * area1 + c2 * area2) / area
+        #centroid = (c1 * area1 + c2 * area2) / area
+        centroid = ((c1.T * area1 + c2.T * area2) / area).T
     except FloatingPointError:
         msg = '\nc1=%r\narea1=%r\n' % (c1, area1)
         msg += 'c2=%r\narea2=%r' % (c2, area2)
         raise FloatingPointError(msg)
+    except ValueError:
+        msg  = 'c1    = %s\n' % str(c1.shape)
+        msg += 'c2    = %s\n' % str(c2.shape)
+        msg += 'area1 = %s\n' % str(area1.shape)
+        msg += 'area2 = %s\n' % str(area2.shape)
+        msg += 'area  = %s' % str(area.shape)
+        print(msg)
+        #dot(c1.T, area1)
+        raise
+    n = len(n1)
+    assert area.shape == (n, ), area.shape
+    assert centroid.shape == (n, 3), centroid.shape
     return(area, centroid)
 
 

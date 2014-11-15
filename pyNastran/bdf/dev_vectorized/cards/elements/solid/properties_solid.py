@@ -62,17 +62,17 @@ class PropertiesSolid(object):
         self.plsolid.add(card, comment)
 
     #=========================================================================
-    def get_mid(self, property_ids):
+    def get_mid(self, property_id):
         types = self._get_types(nlimit=True)
         _material_ids = concatenate([ptype.material_id for ptype in types])
         #print _material_ids
         return _material_ids
 
-    #def get_mid(self, property_ids):
+    #def get_mid(self, property_id):
         #types = self._get_types(nlimit=True)
         #_material_ids = concatenate([ptype.material_id for ptype in types])
-        #print _property_ids
-        #return _property_ids
+        #print _property_id
+        #return _property_id
 
     def _get_types(self, nlimit=True):
         types = [self.psolid]
@@ -94,8 +94,8 @@ class PropertiesSolid(object):
                 msg.append('  %-8s: %i' % (prop.type, nprop))
         return msg
 
-    def write_bdf(self, f, size=8, property_ids=None):
+    def write_bdf(self, f, size=8, property_id=None):
         f.write('$PROPERTIES_SOLID\n')
         types = self._get_types()
         for prop in types:
-            prop.write_bdf(f, size=size, property_ids=property_ids)
+            prop.write_bdf(f, size=size, property_id=property_id)
