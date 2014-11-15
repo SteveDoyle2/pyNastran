@@ -96,55 +96,68 @@ class Materials(object):
                 #msg.append('  %-8s: %i' % (mat.type, nmat))
         return msg
 
-    def get_material_id(self, property_ids):
+    def get_material_id(self, property_id):
+        n = len(property_id)
         types = self._get_types(nlimit=True)
-        _material_ids = concatenate([ptype.material_id for ptype in types])
-        self.model.log.debug(_material_ids)
-        return _material_ids
+        _material_id = concatenate([ptype.material_id for ptype in types])
+        self.model.log.debug(_material_id)
+        assert _material_id.shape == (n, ), _material_id.shape
+        return _material_id
 
-    #def get_density(self, material_ids):
-        #rho = zeros(len(material_ids), dtype='float64')
-        #for i, material_id in enumerate(material_ids):
-            #mat = self.get_structural_material(material_id)
+    #def get_density(self, material_id):
+        #rho = zeros(len(material_id), dtype='float64')
+        #for i, mid in enumerate(material_id):
+            #mat = self.get_structural_material(mid)
             #rho[i] = mat.rho
         #return rho
 
-    def get_density(self, material_ids):
-        mats = self[material_ids]
+    def get_density(self, material_id):
+        n = len(material_id)
+        mats = self[material_id]
         density = array([mid.get_density() if mid is not None else nan for mid in mats])
         #self.model.log.debug('material_ids = %s' % material_ids)
         #self.model.log.debug("  density mats = %s" % mats)
         #self.model.log.debug('  density = %s' % density)
+        assert density.shape == (n, ), density.shape
         return density
 
-    def get_density_E(self, material_ids):
-        rho = zeros(len(material_ids), dtype='float64')
-        E = zeros(len(material_ids), dtype='float64')
-        for i, material_id in enumerate(material_ids):
-            mat = self.get_structural_material(material_id)
+    def get_density_E(self, material_id):
+        n = len(material_id)
+        rho = zeros(n, dtype='float64')
+        E = zeros(n, dtype='float64')
+        for i, mid in enumerate(material_id):
+            mat = self.get_structural_material(mid)
             rho[i] = mat.rho
             E[i] = mat.E()
+        assert density.shape == (n, ), density.shape
+        assert E.shape == (n, ), E.shape
         return rho, E
 
-    def get_nonstructural_mass(self, material_ids):
-        nsm = zeros(len(material_ids))
-        for i, material_id in enumerate(material_ids):
-            mat = self.get_structural_material(material_id)
+    def get_nonstructural_mass(self, material_id):
+        n = len(material_id)
+        nsm = zeros(n)
+        for i, mid in enumerate(material_id):
+            mat = self.get_structural_material(mid)
             nsm[i] = mat.nsm
+        assert nsm.shape == (n, ), nsm.shape
         return nsm
 
-    def get_E(self, material_ids):
-        E = zeros(len(material_ids))
-        for i, material_id in enumerate(material_ids):
-            mat = self.get_shell_material(material_id)
+    def get_E(self, material_id):
+        n = len(material_id)
+        E = zeros(n)
+        for i, mid in enumerate(material_id):
+            mat = self.get_shell_material(mid)
             E[i] = mat.E()
+        assert E.shape == (n, ), E.shape
         return E
 
-    def get_G(self, material_ids):
-        G = zeros(len(material_ids))
-        for i, material_id in enumerate(material_ids):
-            mat = self.get_shell_material(material_id)
+    def get_G(self, material_id):
+        n = len(material_id)
+        G = zeros(n)
+        for i, mid in enumerate(material_id):
+            mat = self.get_shell_material(mid)
             G[i] = mat.G()
+        assert G.shape == (n, ), G.shape
         return G
 
     #def get_index(self, property_ids):

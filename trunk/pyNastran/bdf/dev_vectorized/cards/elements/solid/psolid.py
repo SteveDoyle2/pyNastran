@@ -101,18 +101,38 @@ class PSOLID(Property):
             self.property_id = array([], dtype='int32')
             self.material_id = array([], dtype='int32')
 
-    def get_density(self, property_ids=None):
-        if property_ids is None:
-            property_ids = self.property_id
+    def get_density_by_property_id(self, property_id=None):
+        if property_id is None:
+            property_id = self.property_id
+        n = len(property_id)
+        rho = zeros(n, dtype='float64')
+        upid = unique(property_id)
+        for i, pid in enumerate(upid):
+            # get the location of pid id in global props
+            j = where(pid == self.property_id)[0]
 
-        rho = []
-        i = where(property_ids == self.property_id)[0]
-        for mid in self.material_id[i]:
-            rhoi = self.model.materials.mat1[mid].get_density()
-            rho.append(rhoi)
+            # get the location of pid in the local props
+            k = where(pid == property_id)[0]
+
+            if len(j) == 0:
+                msg = 'pid=%s was not found in %s' % (upid, self.property_id)
+                raise ValueError(msg)
+            mid = self.material_id[j[0]]
+            rhoi = self.model.materials.get_density([mid])
+            #print('pid=%s rho[%s]=%s' % (pid, k, rhoi))
+            rho[k] = rhoi
+
+        if rho.min() == 0.0:
+            msg = 'property_id = %s\n' % property_id
+            msg += 'i = %s\n' % i
+            msg += 'rho = %s\n' % rho
+            msg += 'rhoj = %s' % rhoi
+            raise ValueError(msg)
+
+        assert rho.shape == (n, ), rho.shape
         return rho
 
-    def write_bdf(self, f, size=8, property_ids=None):
+    def write_bdf(self, f, size=8, property_id=None):
         if self.n:
             #print "PSOLID.property_id =", self.property_id
             for (pid, mid, cordm, integ, stress, isop, fctn) in zip(
@@ -126,8 +146,8 @@ class PSOLID(Property):
                 #print card
                 f.write(print_card_8(card))
 
-    def __getitem__(self, property_ids):
-        i = searchsorted(self.property_id, property_ids)
+    def __getitem__(self, property_id):
+        i = searchsorted(self.property_id, property_id)
         return self.slice_by_index(i)
 
     def slice_by_index(self, i):

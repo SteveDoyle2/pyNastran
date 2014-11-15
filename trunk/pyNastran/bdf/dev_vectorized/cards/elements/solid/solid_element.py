@@ -27,6 +27,7 @@ class SolidElement(Element):
 
     def _get_node_locations_by_element_id(self, element_id=None, xyz_cid0=None):
         i = self._get_sorted_index(self.element_id, element_id, self.n, 'element_id in %s' % self.type, check=True)
+        self.model.log.debug('ielem = %s' % (i))
         if xyz_cid0 is None:
             xyz_cid0 = self.model.grid.get_position_by_index()
         return self._get_node_locations_by_index(i, xyz_cid0)
@@ -35,7 +36,7 @@ class SolidElement(Element):
         self._cards.append(card)
         self._comments.append(comment)
 
-    def get_mass(self, element_ids=None, xyz_cid0=None, total=False):
+    def get_mass(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the mass for one or more SolidElement elements.
 
@@ -43,13 +44,29 @@ class SolidElement(Element):
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the centroid be summed (default=False)
         """
-        if element_ids is None:
-            element_ids = self.element_id
-        V = self.get_volume(element_ids, xyz_cid0)
+        if element_id is None:
+            element_id = self.element_id
+        V = self.get_volume(element_id, xyz_cid0)
+
         mid = self.model.properties_solid.get_mid(self.property_id)
         rho = self.model.materials.get_density(mid)
 
-        mass = V * rho
+        rho = self.model.properties_solid.psolid.get_density_by_property_id(self.property_id)
+        #rho = self.model.materials.get_density(mid)
+
+        try:
+            mass = V * rho
+        except ValueError:
+            msg = 'element_id = %s; n=%s\n' % (element_id, len(element_id))
+            msg += 'mid=%s\n' % mid
+            msg += 'rho=%s\n' % rho
+            msg += 'V.shape = %s\n' % str(V.shape)
+            msg += 'rho.shape = %s' % str(rho.shape)
+            print(msg)
+            raise
+
+        n = len(element_id)
+        assert mass.shape == (n, ), mass.shape
         if total:
             mass = mass.sum()
         return mass
