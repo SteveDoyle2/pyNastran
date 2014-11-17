@@ -115,7 +115,7 @@ class PBAR(Property):
             self.property_id = array([], dtype='int32')
 
     #=========================================================================
-    def get_index_by_property_id(self, property_id):
+    def get_property_index_from_property_id(self, property_id):
         if isinstance(property_id, int):
             property_id = array([property_id])
         if property_id is None:

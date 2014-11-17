@@ -86,7 +86,7 @@ class CONM2(VectorizedCard):
         """
         if element_id is None:
             element_id = arange(self.n)
-        #grid_cid0 = self.model.grid.get_position_by_index()
+        #grid_cid0 = self.model.grid.get_position_from_node_index()
         #p = grid_cid0[self.node_id]
 
         mass = self.mass

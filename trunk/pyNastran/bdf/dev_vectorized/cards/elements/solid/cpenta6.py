@@ -108,16 +108,16 @@ class CPENTA6(SolidElement):
         :param xyz_cid0: the node positions as a dictionary
         """
         grid = self.model.grid
-        get_index_by_node_id = self.model.grid.get_index_by_node_id
+        get_node_index_from_node_id = self.model.grid.get_node_index_from_node_id
         node_ids = self.node_ids
 
         msg = ', which is required by %s' % self.type
-        n1 = xyz_cid0[get_index_by_node_id(node_ids[i, 0], msg), :]
-        n2 = xyz_cid0[get_index_by_node_id(node_ids[i, 1], msg), :]
-        n3 = xyz_cid0[get_index_by_node_id(node_ids[i, 2], msg), :]
-        n4 = xyz_cid0[get_index_by_node_id(node_ids[i, 3], msg), :]
-        n5 = xyz_cid0[get_index_by_node_id(node_ids[i, 4], msg), :]
-        n6 = xyz_cid0[get_index_by_node_id(node_ids[i, 5], msg), :]
+        n1 = xyz_cid0[get_node_index_from_node_id(node_ids[i, 0], msg), :]
+        n2 = xyz_cid0[get_node_index_from_node_id(node_ids[i, 1], msg), :]
+        n3 = xyz_cid0[get_node_index_from_node_id(node_ids[i, 2], msg), :]
+        n4 = xyz_cid0[get_node_index_from_node_id(node_ids[i, 3], msg), :]
+        n5 = xyz_cid0[get_node_index_from_node_id(node_ids[i, 4], msg), :]
+        n6 = xyz_cid0[get_node_index_from_node_id(node_ids[i, 5], msg), :]
         return n1, n2, n3, n4, n5, n6
 
     def get_volume(self, element_id=None, xyz_cid0=None, total=False):
@@ -152,7 +152,7 @@ class CPENTA6(SolidElement):
         ..see:: CPENTA6.get_volume() and CPENTA6.get_centroid() for more information.
         """
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_position_by_index()
+            xyz_cid0 = self.model.grid.get_position_from_node_index()
 
         n1, n2, n3, n4, n5, n6 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
         (A1, c1) = tri_area_centroid(n1, n2, n3)

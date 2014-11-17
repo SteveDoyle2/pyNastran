@@ -107,7 +107,7 @@ class CPENTA15(SolidElement):
         if element_id is None:
             element_id = self.element_id
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_position_by_index()
+            xyz_cid0 = self.model.grid.get_position_from_node_index()
 
         (A1, A2, c1, c2) = self._area_centroid(element_id, xyz_cid0)
         centroid = (c1 * A1 + c2 * A2) / (A1 + A2)

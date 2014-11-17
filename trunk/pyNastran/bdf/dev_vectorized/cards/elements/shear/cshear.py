@@ -170,7 +170,7 @@ class CSHEAR(Element):
         """
         if nodes_cid0 is None:
             node_ids = self.model.grid.node_ids
-            grids_cid0 = self.model.grid.get_position_by_index()
+            grids_cid0 = self.model.grid.get_position_from_node_index()
 
         p1 = self._positions(grids_cid0, self.node_ids[:, 0])
         p2 = self._positions(grids_cid0, self.node_ids[:, 1])
