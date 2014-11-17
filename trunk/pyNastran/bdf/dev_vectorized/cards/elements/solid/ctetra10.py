@@ -103,19 +103,19 @@ class CTETRA10(SolidElement):
         n10 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 9]), :]
         return n1, n2, n3, n4, n5, n6, n7, n8, n9, n10
 
-    def get_volume(self, element_ids=None, xyz_cid0=None, total=False):
+    def get_volume(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the volume for one or more CTETRA10 elements.
 
-        :param element_ids: the elements to consider (default=None -> all)
+        :param element_id: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the volume be summed (default=False)
         """
-        if element_ids is None:
-            element_ids = self.element_id
+        if element_id is None:
+            element_id = self.element_id
         n1, n2, n3, n4 = self._node_locations(xyz_cid0)
 
-        n = len(element_ids)
+        n = len(element_id)
         V = zeros(n, self.model.float)
 
         i = 0
@@ -124,21 +124,21 @@ class CTETRA10(SolidElement):
             i += 1
         return V
 
-    def get_centroid_volume(self, element_ids=None, xyz_cid0=None, total=False):
+    def get_centroid_volume(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the centroid and volume for one or more CTETRA10 elements.
 
-        :param element_ids: the elements to consider (default=None -> all)
+        :param element_id: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the volume be summed (default=False)
 
         ..see:: CTETRA10.volume() and CTETRA10.centroid() for more information.
         """
-        if element_ids is None:
-            element_ids = self.element_id
+        if element_id is None:
+            element_id = self.element_id
 
         n1, n2, n3, n4 = self._node_locations(xyz_cid0)
-        n = len(element_ids)
+        n = len(element_id)
         volume = zeros(n, self.model.float)
 
         i = 0
@@ -152,16 +152,16 @@ class CTETRA10(SolidElement):
         assert volume.min() > 0.0, 'volume.min() = %f' % volume.min()
         return centroid, volume
 
-    def get_centroid(self, element_ids=None, xyz_cid0=None, total=False):
+    def get_centroid(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the centroid for one or more CTETRA elements.
 
-        :param element_ids: the elements to consider (default=None -> all)
+        :param element_id: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the centroid be summed (default=False)
         """
-        if element_ids is None:
-            element_ids = self.element_id
+        if element_id is None:
+            element_id = self.element_id
 
         n1, n2, n3, n4 = self._node_locations(xyz_cid0)
         centroid = (n1 + n2 + n3 + n4) / 4.0
@@ -169,20 +169,20 @@ class CTETRA10(SolidElement):
             centroid = centroid.mean()
         return centroid
 
-    def get_mass(self, element_ids=None, xyz_cid0=None, total=False):
+    def get_mass(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the mass for one or more CTETRA10 elements.
 
-        :param element_ids: the elements to consider (default=None -> all)
+        :param element_id: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the centroid be summed (default=False)
         """
-        if element_ids is None:
-            element_ids = self.element_id
+        if element_id is None:
+            element_id = self.element_id
         if xyz_cid0 is None:
             xyz_cid0 = self.model.grid.get_position_by_index()
 
-        V = self.get_volume(element_ids, xyz_cid0)
+        V = self.get_volume(element_id, xyz_cid0)
         mid = self.model.properties_solid.get_mid(self.property_id)
         rho = self.model.materials.get_rho(mid)
 
@@ -198,12 +198,12 @@ class CTETRA10(SolidElement):
         nids.pop(indx)
         return nids
 
-    def write_bdf(self, f, size=8, element_ids=None):
+    def write_bdf(self, f, size=8, element_id=None):
         if self.n:
-            if element_ids is None:
+            if element_id is None:
                 i = arange(self.n)
             else:
-                i = searchsorted(self.element_id, element_ids)
+                i = searchsorted(self.element_id, element_id)
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
                 card = ['CTETRA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7], n[8], n[9]]
                 f.write(print_card(card))

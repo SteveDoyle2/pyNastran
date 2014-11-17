@@ -87,7 +87,7 @@ class CQUAD8(ShellElement):
             n4 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[i, 3]), :]
         return n1, n2, n3, n4
 
-    def _mass_area_normal(self, element_ids=None, node_ids=None, xyz_cid0=None,
+    def _mass_area_normal(self, element_id=None, node_ids=None, xyz_cid0=None,
                           calculate_mass=True, calculate_area=True,
                           calculate_normal=True):
         """
@@ -95,7 +95,7 @@ class CQUAD8(ShellElement):
         element basis.
 
         :param self: the CQUAD4 object
-        :param element_ids: the elements to consider (default=None -> all)
+        :param element_id: the elements to consider (default=None -> all)
 
         :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
 
@@ -106,12 +106,12 @@ class CQUAD8(ShellElement):
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
-        if element_ids is None:
-            element_ids = self.element_id
+        if element_id is None:
+            element_id = self.element_id
             property_id = self.property_id
             i = None
         else:
-            i = searchsorted(self.element_id, element_ids)
+            i = searchsorted(self.element_id, element_id)
             property_id = self.property_id[i]
 
         n1, n2, n3, n4 = self._node_locations(xyz_cid0, i)
@@ -126,23 +126,23 @@ class CQUAD8(ShellElement):
             massi = mpa * A
         return massi, A, normal
 
-    def get_centroid(self, element_ids=None, node_ids=None, xyz_cid0=None):
-        if element_ids is None:
-            element_ids = self.element_id
+    def get_centroid(self, element_id=None, node_ids=None, xyz_cid0=None):
+        if element_id is None:
+            element_id = self.element_id
             i = None
         else:
-            i = searchsorted(self.element_id, element_ids)
+            i = searchsorted(self.element_id, element_id)
         n1, n2, n3, n4 = self._node_locations(xyz_cid0, i)
         return (n1 + n2 + n3 + n4) / 4.
 
     #=========================================================================
-    def write_bdf(self, f, size=8, element_ids=None):
+    def write_bdf(self, f, size=8, element_id=None):
         if self.n:
-            if element_ids is None:
+            if element_id is None:
                 i = arange(self.n)
             else:
-                assert len(unique(element_ids))==len(element_ids), unique(element_ids)
-                i = searchsorted(self.element_id, element_ids)
+                assert len(unique(element_id))==len(element_id), unique(element_id)
+                i = searchsorted(self.element_id, element_id)
 
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 card = ['CQUAD8', eid, pid, n[0], n[1], n[2], n[3]]

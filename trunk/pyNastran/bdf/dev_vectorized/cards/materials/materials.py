@@ -12,6 +12,7 @@ from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 #from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT4, MAT5, MAT8,
     #MAT10, MAT11) #, MATS1)
 from .mat1 import MAT1
+from .mat8 import MAT8
 from .mats1 import MATS1
 
 from pyNastran.bdf.bdfInterface.assign_type import integer
@@ -33,7 +34,7 @@ class Materials(object):
         #self.mat10 = {}
         #self.mat2 = MAT1(model)
         #self.mat4 = MAT1(model)
-        #self.mat8 = MAT1(model)
+        self.mat8 = MAT8(model)
         #self.mat10 = MAT1(model)
 
     def add_mat1(self, card, comment):
@@ -75,13 +76,15 @@ class Materials(object):
 
 
     def allocate(self, card_count):
-        #self.model.log.debug('allocate')
+        self.model.log.info('allocate Materials')
         n = 0
         types = self._get_types()
         names = self._get_type_names()
         for name, mat in zip(names, types):
             if name in card_count:
                 n = card_count[name]
+                self.model.log.info('    allocate %s; n=%s' % (name, n))
+                self.model.log.info('    mat.type=%s' % mat.type)
                 mat.allocate(n)
                 self.n += n
         self.n = n
@@ -91,9 +94,23 @@ class Materials(object):
         types = self._get_types()
         names = self._get_type_names()
         for name, mat in zip(names, types):
-            n += len(mat)
             mat.build()
+            n += len(mat)
+
         self.n = n
+        self.model.log.info('Material.n = %s' % self.n)
+        i = 0
+        self.material_id_type = zeros((n, 2), dtype='int32')
+        for name, mat in zip(names, types):
+            n = len(mat)
+            if n:
+                self.material_id_type[i:i+n, 0] = mat.material_id
+                self.material_id_type[i:i+n, 1] = int(mat.type[3:])
+                i += n
+        self.model.log.info('material_id_type =\n%s' % self.material_id_type)
+        self.material_id = self.material_id_type
+        assert 0 not in self.material_id
+        #sys.exit()
 
     def get_stats(self):
         msg = []
@@ -122,13 +139,18 @@ class Materials(object):
         #return rho
 
     def get_density(self, material_id):
+        return self.get_density_by_material_id(material_id)
+
+    def get_density_by_material_id(self, material_id):
         n = len(material_id)
-        self.model.log.debug('material_id =%s' % material_id)
+        self.model.log.debug('material_id=%s' % material_id)
+        self.model.log.debug('self.material_id=%s' % self.material_id)
         umids = unique(material_id)
 
         density = zeros(n, dtype='float64')
         for mid in umids:
-            rho = self[mid].get_density_by_material_id([mid])
+            mat = self[mid]
+            rho = mat.get_density_by_material_id([mid])
             i = where(mid==material_id)[0]
             density[i] = rho
 
@@ -234,7 +256,7 @@ class Materials(object):
             #'MAT2'  : (self.mat2, self.mat2.material_id),
             #'MAT4'  : (self.mat4, self.mat4.material_id),
             #'MAT5'  : (self.mat5, self.mat5.material_id),
-            #'MAT8'  : (self.mat8, self.mat8.material_id),
+            'MAT8'  : (self.mat8, self.mat8.material_id),
             #'MAT10' : (self.mat10, self.mat10.material_id),
             'MATS1' : (self.mats1, self.mats1.material_id),
         }
@@ -254,7 +276,10 @@ class Materials(object):
                     else:
                         #self.model.log.debug('  mid=%i Type=%s was not found' % (mid, Type))
                         pass
+            assert obj is not None, 'could not find material_id=%s' % mid
             out.append(obj)
+        #print(out)
+        #return out
         return out[0] if int_flag else out
 
     def __getitem2__(self, material_id):
@@ -282,12 +307,16 @@ class Materials(object):
 
     def _get_types(self):
         return [self.mat1,
-                #self.mat2, self.mat4, self.mat8, self.mat10,
+                #self.mat2, self.mat4,
+                self.mat8,
+                #self.mat10,
                 self.mats1,]
 
     def _get_type_names(self):
         return ['MAT1',
-                #'MAT2', 'MAT4', 'MAT8', 'MAT10',
+                #'MAT2', 'MAT4',
+                'MAT8',
+                # 'MAT10',
                 'MATS1'
                 ]
 

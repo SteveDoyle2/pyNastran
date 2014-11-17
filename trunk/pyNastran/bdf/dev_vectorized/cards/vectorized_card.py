@@ -57,3 +57,27 @@ class VectorizedCard(object):
         if isinstance(i, int64) or isinstance(i, int):
             i = array([i], dtype='int32')
         return i
+
+def by_converter(value, default):
+    """
+    For use in:
+        - get_index_by_?
+        - get_?_by_index
+
+    INPUT:
+      - list
+      - int
+      - 1d-array
+      - None
+    OUTPUT
+      - 1d-array
+
+    Assumes dtype='int32'
+    """
+    if value is None:
+        return default
+    if isinstance(value, int):
+        return array([value], dtype='int32')
+    else:
+        return asarray(value)
+

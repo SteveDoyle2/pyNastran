@@ -30,14 +30,14 @@ class PBEAM(object):
         for pid in pids:
             yield pid, self.__getitem__(pid)
 
-    def __getitem__(self, property_ids):
-        property_ids, int_flag = slice_to_iter(property_ids)
+    def __getitem__(self, property_id):
+        property_id, int_flag = slice_to_iter(property_id)
         obj = PBEAM(self.model)
 
         properties = {}
-        for pid in sorted(property_ids):
+        for pid in sorted(property_id):
             properties[pid] = self.properties[pid]
-        obj.n = len(property_ids)
+        obj.n = len(property_id)
         obj.properties = properties
         obj.property_id = sorted(self.properties.keys())
         #obj._comments = obj._comments[index]

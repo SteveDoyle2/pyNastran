@@ -439,7 +439,8 @@ class Elements(object):
                 mass[ni:ni+n] = mpa * A
                 del prop
             elif eType in ['CTETRA4', 'CTETRA10', 'CPENTA6', 'CPENTA15', 'CHEXA8', 'CHEXA20']:
-                rho = prop.get_density()
+                print(prop)
+                rho = prop.get_density_by_property_id()
                 del prop
                 if eType in ['CTETRA4', 'CTETRA10']:
                     n1, n2, n3, n4 = elements.node_ids[i, 0], elements.node_ids[i, 1], elements.node_ids[i, 2], elements.node_ids[i, 3]
@@ -533,7 +534,7 @@ class Elements(object):
                     obj = TypeMap[Type][pids_extract]
                     out.append(obj)
         return out
-        return out[0] if int_flag else out
+        #return out[0] if int_flag else out
 
     def allocate(self, card_count):
         etypes = self._get_element_types(nlimit=False)

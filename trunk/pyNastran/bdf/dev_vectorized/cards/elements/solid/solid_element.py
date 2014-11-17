@@ -2,6 +2,8 @@ from six.moves import StringIO
 from numpy import zeros, searchsorted, where, asarray
 
 from pyNastran.bdf.dev_vectorized.cards.elements.element import Element
+from pyNastran.bdf.dev_vectorized.cards.vectorized_card import by_converter
+
 
 class SolidElement(Element):
     def __init__(self, model):
@@ -26,7 +28,7 @@ class SolidElement(Element):
         return f.getvalue()
 
     def _get_node_locations_by_element_id(self, element_id=None, xyz_cid0=None):
-        i = self._get_sorted_index(self.element_id, element_id, self.n, 'element_id in %s' % self.type, check=True)
+        i = self._get_sorted_index(self.element_id, element_id, self.n, 'element_id', 'element_id in %s' % self.type, check=True)
         self.model.log.debug('ielem = %s' % (i))
         if xyz_cid0 is None:
             xyz_cid0 = self.model.grid.get_position_by_index()
@@ -37,6 +39,11 @@ class SolidElement(Element):
         self._comments.append(comment)
 
     def get_mass(self, element_id=None, xyz_cid0=None, total=False):
+        return self.get_mass_by_element_id(element_id=element_id,
+                                           xyz_cid0=xyz_cid0,
+                                           total=total)
+
+    def get_mass_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the mass for one or more SolidElement elements.
 
@@ -49,7 +56,7 @@ class SolidElement(Element):
         V = self.get_volume(element_id, xyz_cid0)
 
         mid = self.model.properties_solid.get_mid(self.property_id)
-        rho = self.model.materials.get_density(mid)
+        rho = self.model.materials.get_density_by_material_id(mid)
 
         rho = self.model.properties_solid.psolid.get_density_by_property_id(self.property_id)
         #rho = self.model.materials.get_density(mid)
@@ -100,15 +107,21 @@ class SolidElement(Element):
         I = mass * r**2 # column vector * 2D array
         return mass, centroid, I
 
-    def get_density(self, element_ids=None):
-        if element_ids is None:
-            element_ids = self.element_id
+    def get_density(self, element_id=None):
+        return self.get_density_by_element_id(element_id)
 
-        rho = []
-        i = where(element_ids == self.element_id)[0]
+    def get_density_by_element_id(self, element_id=None):
+        element_id = by_converter(element_id, self.element_id)
+
+        n = len(element_id)
+        rho = zeros(n, dtype='float64')
+        i = where(element_id == self.element_id)[0]
+        j = 0
         for pid in self.property_id[i]:
-            rhoi = self.model.properties_solid.psolid.get_density(pid)
-            rho += rhoi
+            rhoi = self.model.properties_solid.psolid.get_density_by_property_id(pid)
+            rho[j] = rhoi
+            j += 1
+        #self.model.log.info('element_id=%s element_ids=%s i=%s rho=%s' % (element_id, self.element_id, i, rho))
         return rho
 
     def slice_by_index(self, i):
@@ -125,3 +138,4 @@ class SolidElement(Element):
         obj.property_id = self.property_id[i]
         obj.node_ids = self.node_ids[i, :]
         return obj
+

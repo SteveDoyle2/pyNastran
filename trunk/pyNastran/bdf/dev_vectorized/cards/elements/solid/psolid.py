@@ -104,6 +104,10 @@ class PSOLID(Property):
     def get_density_by_property_id(self, property_id=None):
         if property_id is None:
             property_id = self.property_id
+        elif isinstance(property_id, int):
+            property_id = array([property_id], dtype='int32')
+        property_id = asarray(property_id)
+        #self.model.log.info('PSOLID property_id=%s' % property_id)
         n = len(property_id)
         rho = zeros(n, dtype='float64')
         upid = unique(property_id)
@@ -118,7 +122,7 @@ class PSOLID(Property):
                 msg = 'pid=%s was not found in %s' % (upid, self.property_id)
                 raise ValueError(msg)
             mid = self.material_id[j[0]]
-            rhoi = self.model.materials.get_density([mid])
+            rhoi = self.model.materials.get_density_by_material_id([mid])
             #print('pid=%s rho[%s]=%s' % (pid, k, rhoi))
             rho[k] = rhoi
 
@@ -130,6 +134,7 @@ class PSOLID(Property):
             raise ValueError(msg)
 
         assert rho.shape == (n, ), rho.shape
+        #self.model.log.info('PSOLID.rho = %s' % rho)
         return rho
 
     def write_bdf(self, f, size=8, property_id=None):

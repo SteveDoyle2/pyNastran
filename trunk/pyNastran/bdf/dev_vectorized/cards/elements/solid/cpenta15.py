@@ -71,45 +71,45 @@ class CPENTA15(SolidElement):
             for i in range(3):
                 assert isinstance(c[i], float)
 
-    def _area_centroid(self, element_ids, xyz_cid0):
+    def _area_centroid(self, element_id, xyz_cid0):
         (A1, c1) = tri_area_centroid(n1, n2, n3)
         (A2, c2) = tri_area_centroid(n4, n5, n6)
         return (A1, A2, c1, c2)
 
-    def get_volume(self, element_ids=None, xyz_cid0=None, total=False):
+    def get_volume(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the volume for one or more CPENTA15 elements.
 
-        :param element_ids: the elements to consider (default=None -> all)
+        :param element_id: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the volume be summed (default=False)
 
         ..note:: Volume for a CPENTA is the average area of two opposing faces
         times the length between the centroids of those points
         """
-        (A1, A2, c1, c2) = self._area_centroid(self, element_ids, xyz_cid0)
+        (A1, A2, c1, c2) = self._area_centroid(self, element_id, xyz_cid0)
         if total:
             volume = abs(volume).sum()
         else:
             volume = abs(volume)
         return volume
 
-    def get_centroid_volume(self, element_ids=None, xyz_cid0=None, total=False):
+    def get_centroid_volume(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the centroid and volume for one or more CPENTA15 elements.
 
-        :param element_ids: the elements to consider (default=None -> all)
+        :param element_id: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the volume be summed (default=False)
 
         ..see:: CPENTA15.get_volume() and CPENTA15.get_centroid() for more information.
         """
-        if element_ids is None:
-            element_ids = self.element_id
+        if element_id is None:
+            element_id = self.element_id
         if xyz_cid0 is None:
             xyz_cid0 = self.model.grid.get_position_by_index()
 
-        (A1, A2, c1, c2) = self._area_centroid(element_ids, xyz_cid0)
+        (A1, A2, c1, c2) = self._area_centroid(element_id, xyz_cid0)
         centroid = (c1 * A1 + c2 * A2) / (A1 + A2)
         volume = (A1 + A2) / 2. * norm(c1 - c2, axis=1)
         if total:
@@ -120,17 +120,17 @@ class CPENTA15(SolidElement):
         assert volume.min() > 0.0, 'volume.min() = %f' % volume.min()
         return centroid, volume
 
-    def get_centroid(self, element_ids=None, xyz_cid0=None, total=False):
+    def get_centroid(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the centroid for one or more CPENTA15 elements.
 
-        :param element_ids: the elements to consider (default=None -> all)
+        :param element_id: the elements to consider (default=None -> all)
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the centroid be summed (default=False)
         """
-        if element_ids is None:
-            element_ids = self.element_id
-        (A1, A2, c1, c2) = self._area_centroid(self, element_ids, xyz_cid0)
+        if element_id is None:
+            element_id = self.element_id
+        (A1, A2, c1, c2) = self._area_centroid(self, element_id, xyz_cid0)
 
         centroid = (c1 * A1 + c2 * A2) / (A1 + A2)
         if total:
@@ -144,12 +144,12 @@ class CPENTA15(SolidElement):
         nids.pop(indx)
         return nids
 
-    def write_bdf(self, f, size=8, element_ids=None):
+    def write_bdf(self, f, size=8, element_id=None):
         if self.n:
-            if element_ids is None:
+            if element_id is None:
                 i = arange(self.n)
             else:
-                i = searchsorted(self.element_id, element_ids)
+                i = searchsorted(self.element_id, element_id)
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
                 card = ['CHEXA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7], n[8], n[9],
                         n[10], n[11], n[12], n[13], n[14]]

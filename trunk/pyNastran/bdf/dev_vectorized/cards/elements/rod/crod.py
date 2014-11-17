@@ -94,14 +94,14 @@ class CROD(RodElement):
         n2 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 1]), :]
         return n1, n2
 
-    def get_mass(self, element_ids=None, xyz_cid0=None, total=False):
+    def get_mass(self, element_id=None, xyz_cid0=None, total=False):
         """
         mass = rho * A * L + nsm
         """
         if self.n == 0:
             return 0.0
 
-        assert element_ids is None
+        assert element_id is None
         grid_cid0 = self.model.grid.get_position_by_index()
         n1, n2 = self._node_locations(xyz_cid0)
         L = n2 - n1
@@ -182,9 +182,9 @@ class CROD(RodElement):
         return(M, dofs, nIJV)
 
     #=========================================================================
-    def write_bdf(self, f, size=8, element_ids=None):
+    def write_bdf(self, f, size=8, element_id=None):
         if self.n:
-            if element_ids is None:
+            if element_id is None:
                 i = arange(self.n)
             else:
                 i = searchsorted(self.element_id, self.element_id)
