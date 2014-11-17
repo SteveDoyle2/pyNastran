@@ -31,7 +31,7 @@ class SolidElement(Element):
         i = self._get_sorted_index(self.element_id, element_id, self.n, 'element_id', 'element_id in %s' % self.type, check=True)
         self.model.log.debug('ielem = %s' % (i))
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_position_by_index()
+            xyz_cid0 = self.model.grid.get_position_from_node_index()
         return self._get_node_locations_by_index(i, xyz_cid0)
 
     def add(self, card, comment):
@@ -56,7 +56,7 @@ class SolidElement(Element):
         V = self.get_volume(element_id, xyz_cid0)
 
         mid = self.model.properties_solid.get_mid(self.property_id)
-        rho = self.model.materials.get_density_by_material_id(mid)
+        rho = self.model.materials.get_density_from_material_id(mid)
 
         rho = self.model.properties_solid.psolid.get_density_by_property_id(self.property_id)
         #rho = self.model.materials.get_density(mid)

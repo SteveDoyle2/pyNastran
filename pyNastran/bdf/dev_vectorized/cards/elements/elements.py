@@ -282,7 +282,7 @@ class Elements(object):
         #return data
 
     def get_nodes(self, node_id, xyz_cid0, msg=''):
-        i = self.model.grid.get_index_by_node_id(node_id, msg=msg)
+        i = self.model.grid.get_node_index_from_node_id(node_id, msg=msg)
         return xyz_cid0[i, :]
 
     def _get_element_ids(self, element_ids_orig):
@@ -312,7 +312,7 @@ class Elements(object):
 
     def get_mass(self, element_ids_orig=None, xyz_cid0=None, sort_output=True):
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_position_by_index()
+            xyz_cid0 = self.model.grid.get_position_from_node_index()
 
         element_ids, element_ids_orig = self._get_element_ids(element_ids_orig)
         if len(element_ids) == 0:
@@ -420,16 +420,16 @@ class Elements(object):
             elif eType in ['CTRIA3', 'CQUAD4', 'CSHEAR']:
                 if eType == 'CTRIA3':
                     n1, n2, n3 = elements.node_ids[i, 0], elements.node_ids[i, 1], elements.node_ids[i, 2]
-                    n1 = xyz_cid0[self.model.grid.get_index_by_node_id(n1), :]
-                    n2 = xyz_cid0[self.model.grid.get_index_by_node_id(n2), :]
-                    n3 = xyz_cid0[self.model.grid.get_index_by_node_id(n3), :]
+                    n1 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n1), :]
+                    n2 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n2), :]
+                    n3 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n3), :]
                     normal, A = _ctria3_normal_A(n1, n2, n3, calculate_area=True, normalize=True)
                 elif eType in ['CQUAD4', 'CSHEAR']:
                     n1, n2, n3, n4 = elements.node_ids[i, 0], elements.node_ids[i, 1], elements.node_ids[i, 2], elements.node_ids[i, 3]
-                    n1 = xyz_cid0[self.model.grid.get_index_by_node_id(n1), :]
-                    n2 = xyz_cid0[self.model.grid.get_index_by_node_id(n2), :]
-                    n3 = xyz_cid0[self.model.grid.get_index_by_node_id(n3), :]
-                    n4 = xyz_cid0[self.model.grid.get_index_by_node_id(n4), :]
+                    n1 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n1), :]
+                    n2 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n2), :]
+                    n3 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n3), :]
+                    n4 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n4), :]
                     normal, A = _cquad4_normal_A(n1, n2, n3, n4, calculate_area=True, normalize=True)
                 else:
                     self.model.log.debug("Element.get_mass doesn't support %s; try %s.get_mass" % (eType, eType))
@@ -446,10 +446,10 @@ class Elements(object):
                 del prop
                 if eType in ['CTETRA4', 'CTETRA10']:
                     n1, n2, n3, n4 = elements.node_ids[i, 0], elements.node_ids[i, 1], elements.node_ids[i, 2], elements.node_ids[i, 3]
-                    n1 = xyz_cid0[self.model.grid.get_index_by_node_id(n1), :]
-                    n2 = xyz_cid0[self.model.grid.get_index_by_node_id(n2), :]
-                    n3 = xyz_cid0[self.model.grid.get_index_by_node_id(n3), :]
-                    n4 = xyz_cid0[self.model.grid.get_index_by_node_id(n4), :]
+                    n1 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n1), :]
+                    n2 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n2), :]
+                    n3 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n3), :]
+                    n4 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n4), :]
 
                     Vi = zeros(n, self.model.float)
                     i = 0
@@ -460,12 +460,12 @@ class Elements(object):
                     n1, n2, n3, n4, n5, n6 = (elements.node_ids[i, 0], elements.node_ids[i, 1],
                                               elements.node_ids[i, 2], elements.node_ids[i, 3],
                                               elements.node_ids[i, 4], elements.node_ids[i, 5], )
-                    n1 = xyz_cid0[self.model.grid.get_index_by_node_id(n1), :]
-                    n2 = xyz_cid0[self.model.grid.get_index_by_node_id(n2), :]
-                    n3 = xyz_cid0[self.model.grid.get_index_by_node_id(n3), :]
-                    n4 = xyz_cid0[self.model.grid.get_index_by_node_id(n4), :]
-                    n5 = xyz_cid0[self.model.grid.get_index_by_node_id(n5), :]
-                    n6 = xyz_cid0[self.model.grid.get_index_by_node_id(n6), :]
+                    n1 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n1), :]
+                    n2 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n2), :]
+                    n3 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n3), :]
+                    n4 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n4), :]
+                    n5 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n5), :]
+                    n6 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n6), :]
                     (A1, c1) = tri_area_centroid(n1, n2, n3)
                     (A2, c2) = tri_area_centroid(n4, n5, n6)
                     Vi = (A1 + A2) / 2. * norm(c1 - c2, axis=1)
@@ -475,14 +475,14 @@ class Elements(object):
                         elements.node_ids[i, 2], elements.node_ids[i, 3],
                         elements.node_ids[i, 4], elements.node_ids[i, 5],
                         elements.node_ids[i, 6], elements.node_ids[i, 7], )
-                    n1 = xyz_cid0[self.model.grid.get_index_by_node_id(n1), :]
-                    n2 = xyz_cid0[self.model.grid.get_index_by_node_id(n2), :]
-                    n3 = xyz_cid0[self.model.grid.get_index_by_node_id(n3), :]
-                    n4 = xyz_cid0[self.model.grid.get_index_by_node_id(n4), :]
-                    n5 = xyz_cid0[self.model.grid.get_index_by_node_id(n5), :]
-                    n6 = xyz_cid0[self.model.grid.get_index_by_node_id(n6), :]
-                    n7 = xyz_cid0[self.model.grid.get_index_by_node_id(n7), :]
-                    n8 = xyz_cid0[self.model.grid.get_index_by_node_id(n8), :]
+                    n1 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n1), :]
+                    n2 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n2), :]
+                    n3 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n3), :]
+                    n4 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n4), :]
+                    n5 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n5), :]
+                    n6 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n6), :]
+                    n7 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n7), :]
+                    n8 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n8), :]
 
                     (A1, c1) = quad_area_centroid(n1, n2, n3, n4)
                     (A2, c2) = quad_area_centroid(n5, n6, n7, n8)

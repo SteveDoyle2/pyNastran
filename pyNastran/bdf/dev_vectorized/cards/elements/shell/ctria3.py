@@ -164,15 +164,15 @@ class CTRIA3(ShellElement):
 
     def _node_locations(self, xyz_cid0, i=None):
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_position_by_index()
+            xyz_cid0 = self.model.grid.get_position_from_node_index()
         if i is None:
-            n1 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 0]), :]
-            n2 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 1]), :]
-            n3 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 2]), :]
+            n1 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 0]), :]
+            n2 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 1]), :]
+            n3 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 2]), :]
         else:
-            n1 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[i, 0]), :]
-            n2 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[i, 1]), :]
-            n3 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[i, 2]), :]
+            n1 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[i, 0]), :]
+            n2 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[i, 1]), :]
+            n3 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[i, 2]), :]
         return n1, n2, n3
 
     def _mass_area_normal(self, element_id=None, xyz_cid0=None,

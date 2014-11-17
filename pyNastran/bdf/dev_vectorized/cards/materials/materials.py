@@ -132,9 +132,9 @@ class Materials(object):
         return _material_id
 
     #def get_density(self, material_id):
-        #return self.get_density_by_material_id(material_id)
+        #return self.get_density_from_material_id(material_id)
 
-    def get_density_by_material_id(self, material_id):
+    def get_density_from_material_id(self, material_id):
         n = len(material_id)
         self.model.log.debug('material_id=%s' % material_id)
         self.model.log.debug('self.material_id=%s' % self.material_id)
@@ -143,12 +143,12 @@ class Materials(object):
         density = zeros(n, dtype='float64')
         for mid in umids:
             mat = self[mid]
-            rho = mat.get_density_by_material_id([mid])
+            rho = mat.get_density_from_material_id([mid])
             i = where(mid==material_id)[0]
             density[i] = rho
 
         #mats = self[material_id]
-        #density = array([mid.get_density_by_material_id(mid) if mid is not None else nan for mid in mats])
+        #density = array([mid.get_density_from_material_id(mid) if mid is not None else nan for mid in mats])
         #self.model.log.debug('material_ids = %s' % material_ids)
         #self.model.log.debug("  density mats = %s" % mats)
         #self.model.log.debug('  density = %s' % density)

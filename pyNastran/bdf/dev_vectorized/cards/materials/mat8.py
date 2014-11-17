@@ -136,8 +136,8 @@ class MAT8(Material):
             self.F12 = self.F12[i]
             self.strn = self.strn[i]
 
-    def get_density_by_material_id(self, material_id=None):
-        i = self.get_index_by_material_id(material_id)
+    def get_density_from_material_id(self, material_id=None):
+        i = self.get_material_index_from_material_id(material_id)
         density = self.rho[i]
         return density
 

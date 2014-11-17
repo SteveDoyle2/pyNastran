@@ -167,14 +167,14 @@ class GRID(VectorizedCard):
             self.ps = self.ps[i]
             self.seid = self.seid[i]
 
-    #def get_index_by_node_id(self, node_id, msg=''):
+    #def get_node_index_from_node_id(self, node_id, msg=''):
         #return searchsorted(node_id, self.node_id)
         #i_too_large = where(self.node_id[-1] < node_id)[0]
         #if len(i_too_large):
             #raise RuntimeError('Cannot find GRID %s, %s' % (node_id[i_too_large], msg))
         #return self._get_sorted_index(self.node_id, node_id, self.n, 'node_id in GRID', check=True)
 
-    def get_index_by_node_id(self, node_id=None, msg=''):
+    def get_node_index_from_node_id(self, node_id=None, msg=''):
         #assert msg != ''
         i = self._get_sorted_index(self.node_id, node_id, self.n, 'node_id', 'node_id in GRID%s' % msg, check=True)
         return i
@@ -222,10 +222,10 @@ class GRID(VectorizedCard):
         return out_index
 
     def get_position_by_node_id(self, node_id=None, msg=''):
-        i = self.get_index_by_node_id(node_id, msg=msg)
-        return self.get_position_by_index(i)
+        i = self.get_node_index_from_node_id(node_id, msg=msg)
+        return self.get_position_from_node_index(i)
 
-    def get_position_by_index(self, i=None):
+    def get_position_from_node_index(self, i=None):
         """
         in the global frame
         """
@@ -278,7 +278,7 @@ class GRID(VectorizedCard):
     def write_bdf(self, f, node_id=None, size=8, is_double=False):
         self.model.log.debug('GRID node_id = %s' % node_id)
         self.model.log.debug('GRID self.node_id = %s' % self.node_id)
-        i = self.get_index_by_node_id(node_id, 'GRID.write_bdf')
+        i = self.get_node_index_from_node_id(node_id, 'GRID.write_bdf')
         return self.write_bdf_by_index(f, i, size, is_double)
 
     def write_bdf_by_index(self, f, i=None, size=8, is_double=False):

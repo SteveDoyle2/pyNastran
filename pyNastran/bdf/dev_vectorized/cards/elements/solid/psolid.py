@@ -122,7 +122,7 @@ class PSOLID(Property):
                 msg = 'pid=%s was not found in %s' % (upid, self.property_id)
                 raise ValueError(msg)
             mid = self.material_id[j[0]]
-            rhoi = self.model.materials.get_density_by_material_id([mid])
+            rhoi = self.model.materials.get_density_from_material_id([mid])
             #print('pid=%s rho[%s]=%s' % (pid, k, rhoi))
             rho[k] = rhoi
 

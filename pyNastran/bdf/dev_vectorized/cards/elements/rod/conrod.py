@@ -123,27 +123,27 @@ class CONROD(RodElement):
         return self.model.materials.mat1
 
     def get_area_by_property_id(self, property_id=None):
-        i = self.get_index_by_property_id(property_id)
+        i = self.get_property_index_from_property_id(property_id)
         return self.get_area_from_index(i)
 
-    def get_E(self, property_ids=None):
+    def get_E(self, property_id=None):
         mat = self.model.materials.mat1[self.material_id[i]]
         E = mat.E()
         G = mat.G()
         return E
 
-    def get_G(self, property_ids=None):
+    def get_G(self, property_id=None):
         mat = self.model.materials.mat1[self.material_id[i]]
         E = mat.E()
         G = mat.G()
         return G
 
-    def get_J(self, property_ids=None):
-        J = self.model.prod.get_J(property_ids)
+    def get_J(self, property_id=None):
+        J = self.model.prod.get_J(property_id)
         return J
 
-    def get_c(self, property_ids=None):
-        c = self.model.prod.get_c(property_ids)
+    def get_c(self, property_id=None):
+        c = self.model.prod.get_c(property_id)
         return c
 
     def get_mass(self, total=False):
@@ -153,7 +153,7 @@ class CONROD(RodElement):
         if self.n == 0:
             return 0.0
 
-        #i = self.model.grid.get_index_by_node_id()
+        #i = self.model.grid.get_node_index_from_node_id()
         #grid_cid0 = self.model.grid.get_positions_by_index(i)
 
 
@@ -164,25 +164,25 @@ class CONROD(RodElement):
         #p2 = grid_cid0[self.node_ids[:, 1]]
 
 
-        #grid_cid0 = self.model.grid.get_positions_by_index(self.model.grid.get_index_by_node_id())
+        #grid_cid0 = self.model.grid.get_positions_by_index(self.model.grid.get_node_index_from_node_id())
         try:
             msg = ', which is required by CONROD get_mass'
-            i1 = self.model.grid.get_index_by_node_id(self.node_ids[:, 0], msg=msg)
-            i2 = self.model.grid.get_index_by_node_id(self.node_ids[:, 1], msg=msg)
-            p1 = self.model.grid.get_position_by_index(i1)
-            p2 = self.model.grid.get_position_by_index(i2)
+            i1 = self.model.grid.get_node_index_from_node_id(self.node_ids[:, 0], msg=msg)
+            i2 = self.model.grid.get_node_index_from_node_id(self.node_ids[:, 1], msg=msg)
+            p1 = self.model.grid.get_position_from_node_index(i1)
+            p2 = self.model.grid.get_position_from_node_index(i2)
         except RuntimeError:
             for eid, (n1, n2) in zip(self.element_id, self.node_ids):
                 msg = ', which is required by CONROD element_id=%s node1=%s\n' % (eid, n1)
-                i1 = self.model.grid.get_index_by_node_id([n1], msg=msg)
+                i1 = self.model.grid.get_node_index_from_node_id([n1], msg=msg)
                 msg = ', which is required by CONROD element_id=%s node2=%s\n' % (eid, n2)
-                i2 = self.model.grid.get_index_by_node_id([n2], msg=msg)
-                p1 = self.model.grid.get_position_by_index(i1)
-                p2 = self.model.grid.get_position_by_index(i2)
+                i2 = self.model.grid.get_node_index_from_node_id([n2], msg=msg)
+                p1 = self.model.grid.get_position_from_node_index(i1)
+                p2 = self.model.grid.get_position_from_node_index(i2)
 
 
         L = p2 - p1
-        rho = self.model.materials.get_density(self.material_id)
+        rho = self.model.materials.get_density_from_material_id(self.material_id)
         mass = norm(L, axis=1) * self.A * rho + self.nsm
         if total:
             return mass.sum()

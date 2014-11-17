@@ -82,7 +82,7 @@ class PROD(Property):
         if property_id is None:
             i = arange(self.n)
         else:
-            i = self.get_index_by_property_id(property_id)
+            i = self.get_property_index_from_property_id(property_id)
         A = self.A[i]
         mid = self.material_id[i]
         #mat = self.model.materials.get_material(mid)
@@ -91,38 +91,38 @@ class PROD(Property):
         return A * rho + nsm
 
     def get_Area_by_property_id(self, property_id):
-        i = self.get_index_by_property_id(property_id)
+        i = self.get_property_index_from_property_id(property_id)
         A = self.A[i]
         return A
 
     def get_non_structural_mass_by_property_id(self, property_id):
-        i = self.get_index_by_property_id(property_id)
+        i = self.get_property_index_from_property_id(property_id)
         nsm = self.nsm[i]
         return nsm
 
     def get_E_by_property_id(self, property_id):
-        i = self.get_index_by_property_id(property_id)
+        i = self.get_property_index_from_property_id(property_id)
         material_id = self.material_id[i]
         E = self.model.materials.get_E(material_id)
         return E
 
     def get_G_by_property_id(self, property_id):
-        i = self.get_index_by_property_id(property_id)
+        i = self.get_property_index_from_property_id(property_id)
         material_id = self.material_id[i]
         G = self.model.materials.get_G(material_id)
         return G
 
     def get_J_by_property_id(self, property_id):
-        i = self.get_index_by_property_id(property_id)
+        i = self.get_property_index_from_property_id(property_id)
         J = self.J[i]
         return J
 
     def get_c(self, property_id):
-        i = self.get_index_by_property_id(property_id)
+        i = self.get_property_index_from_property_id(property_id)
         c = self.c[i]
         return c
 
-    def get_index_by_property_id(self, property_id):
+    def get_property_index_from_property_id(self, property_id):
         if isinstance(property_id, int):
             property_id = array([property_id])
         if property_id is None:

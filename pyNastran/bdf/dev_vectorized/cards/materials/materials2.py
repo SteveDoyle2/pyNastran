@@ -111,7 +111,7 @@ class Materials(object):
             #rho[i] = mat.rho
         #return rho
 
-    def get_density_by_material_id(self, material_id):
+    def get_density_from_material_id(self, material_id):
         n = len(material_id)
         mats = self[material_id]
         density = array([mid.get_density() if mid is not None else nan for mid in mats])

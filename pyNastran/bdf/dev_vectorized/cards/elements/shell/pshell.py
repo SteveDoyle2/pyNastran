@@ -142,7 +142,7 @@ class PSHELL(Property):
         :param property_ids:  the property_ids to write (default=None -> all)
         """
         if self.n:
-            i = self.get_index_by_property_id(property_ids)
+            i = self.get_property_index_from_property_id(property_ids)
             Mid2 = [midi if midi > 0 else '' for midi in self.material_id2[i]]
             Mid3 = [midi if midi > 0 else '' for midi in self.material_id3[i]]
             Mid4 = [midi if midi > 0 else '' for midi in self.material_id4[i]]
@@ -161,7 +161,7 @@ class PSHELL(Property):
                         tst, nsm, z1, z2, mid4]
                 f.write(print_card(card, size=size))
 
-    def get_index_by_property_id(self, property_id=None):
+    def get_property_index_from_property_id(self, property_id=None):
         if property_id is None:
             return arange(self.n)
         return searchsorted(self.property_id, property_id)
@@ -177,7 +177,7 @@ class PSHELL(Property):
         if property_id is None:
             nsm = self.nsm
         else:
-            i = self.get_index_by_property_id(property_id)
+            i = self.get_property_index_from_property_id(property_id)
             #print('i = %s' % i)
             nsm = self.nsm[i]
         return nsm
@@ -192,7 +192,7 @@ class PSHELL(Property):
         if property_id is None:
             t = self.thickness
         else:
-            i = self.get_index_by_property_id(property_id)
+            i = self.get_property_index_from_property_id(property_id)
             t = self.thickness[i]
         return t
 
@@ -208,7 +208,7 @@ class PSHELL(Property):
             t = self.thickness
             nsm = self.nsm
         else:
-            i = self.get_index_by_property_id(property_id)
+            i = self.get_property_index_from_property_id(property_id)
             t = self.thickness[i]
             nsm = self.nsm[i]
 
@@ -228,11 +228,11 @@ class PSHELL(Property):
         material_ids[j] = self.material_id2
 
         if property_id is not None:
-            i = self.get_index_by_property_id(property_id)
+            i = self.get_property_index_from_property_id(property_id)
             material_id = material_ids[i]
 
         #self.model.log.info('PSOLID.rho = %s' % rho)
-        density = self.model.materials.get_density_by_material_id(material_id)
+        density = self.model.materials.get_density_from_material_id(material_id)
         return density
 
     def get_material_id(self, property_id=None):
@@ -245,7 +245,7 @@ class PSHELL(Property):
         if property_id is None:
             mid = self.material_id
         else:
-            i = self.get_index_by_property_id(property_id)
+            i = self.get_property_index_from_property_id(property_id)
             mid = self.material_id[i]
         return mid
 

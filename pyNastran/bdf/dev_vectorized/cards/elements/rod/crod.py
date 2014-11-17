@@ -85,9 +85,9 @@ class CROD(RodElement):
 
     def _node_locations(self, xyz_cid0):
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_position_by_index()
-        n1 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 0]), :]
-        n2 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 1]), :]
+            xyz_cid0 = self.model.grid.get_position_from_node_index()
+        n1 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 0]), :]
+        n2 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 1]), :]
         return n1, n2
 
     def get_mass_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
@@ -98,17 +98,17 @@ class CROD(RodElement):
             return 0.0
 
         assert element_id is None
-        grid_cid0 = self.model.grid.get_position_by_index()
+        grid_cid0 = self.model.grid.get_position_from_node_index()
         n1, n2 = self._node_locations(xyz_cid0)
         L = n2 - n1
-        i = self.model.prod.get_index_by_property_id(self.property_id)
+        i = self.model.prod.get_property_index_from_property_id(self.property_id)
         A = self.model.prod.A[i]
         mid = self.model.prod.material_id[i]
         #J   = self.model.prod.get_J_by_material_id(mid)
         J   = self.model.prod.get_J_by_property_id(self.property_id)
 
         #rho, E = self.model.materials.get_density_E_by_material_id(mid)
-        rho = self.model.materials.get_density_by_material_id(mid)
+        rho = self.model.materials.get_density_from_material_id(mid)
         #E   = self.model.materials.get_E_by_material_id(mid)
         #return 0. if total else [0.]
 
@@ -132,10 +132,10 @@ class CROD(RodElement):
                  [ 2 1 ]
           M = mi [ 1 2 ]
         """
-        i = self.model.prod.get_index_by_property_id(self.property_id)
+        i = self.model.prod.get_property_index_from_property_id(self.property_id)
         A = self.model.prod.A[i]
         mid = self.model.prod.material_id[i]
-        rho = self.model.materials.get_density_by_material_id(mid)
+        rho = self.model.materials.get_density_from_material_id(mid)
         #========================
         xyz_cid0 = None
         #xyz1, xyz2 = self._node_locations(xyz_cid0)

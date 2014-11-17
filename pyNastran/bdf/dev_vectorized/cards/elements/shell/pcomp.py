@@ -58,7 +58,7 @@ class PCOMP(object):
         props = self.get_properties(property_id)
         mids_all = unique(self.get_material_ids(property_id))
         mids_all.sort()
-        densities = self.model.materials.get_density_by_material_id(mids_all)
+        densities = self.model.materials.get_density_from_material_id(mids_all)
 
         #print('nprops =', len(props))
         mpa = zeros(len(props), dtype='float64')

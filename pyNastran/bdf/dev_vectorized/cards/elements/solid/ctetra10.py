@@ -86,21 +86,21 @@ class CTETRA10(SolidElement):
 
     def _node_locations(self, xyz_cid0, n=4):
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_position_by_index()
+            xyz_cid0 = self.model.grid.get_position_from_node_index()
 
-        n1 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 0]), :]
-        n2 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 1]), :]
-        n3 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 2]), :]
-        n4 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 3]), :]
+        n1 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 0]), :]
+        n2 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 1]), :]
+        n3 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 2]), :]
+        n4 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 3]), :]
         if n4:
             return n1, n2, n3, n4
 
-        n5 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 4]), :]
-        n6 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 5]), :]
-        n7 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 6]), :]
-        n8 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 7]), :]
-        n9 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 8]), :]
-        n10 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 9]), :]
+        n5 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 4]), :]
+        n6 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 5]), :]
+        n7 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 6]), :]
+        n8 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 7]), :]
+        n9 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 8]), :]
+        n10 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 9]), :]
         return n1, n2, n3, n4, n5, n6, n7, n8, n9, n10
 
     def get_volume_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
@@ -180,11 +180,11 @@ class CTETRA10(SolidElement):
         if element_id is None:
             element_id = self.element_id
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_position_by_index()
+            xyz_cid0 = self.model.grid.get_position_from_node_index()
 
         V = self.get_volume_by_element_id(element_id, xyz_cid0)
         mid = self.model.properties_solid.get_mid_by_property_id(self.property_id)
-        rho = self.model.materials.get_density_by_material_id(mid)
+        rho = self.model.materials.get_density_from_material_id(mid)
 
         mass = V * rho
         if total:
