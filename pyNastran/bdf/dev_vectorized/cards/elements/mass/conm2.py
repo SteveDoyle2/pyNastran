@@ -80,12 +80,12 @@ class CONM2(VectorizedCard):
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
 
-    def get_mass(self, element_ids=None, total=False):
+    def get_mass(self, element_id=None, total=False):
         """
         mass = rho * A * L + nsm
         """
-        if element_ids is None:
-            element_ids = arange(self.n)
+        if element_id is None:
+            element_id = arange(self.n)
         #grid_cid0 = self.model.grid.get_position_by_index()
         #p = grid_cid0[self.node_id]
 
@@ -101,14 +101,14 @@ class CONM2(VectorizedCard):
             msg.append('  %-8s: %i' % ('CONM2', self.n))
         return msg
 
-    def write_bdf(self, f, size=8, is_double=False, element_ids=None):
+    def write_bdf(self, f, size=8, is_double=False, element_id=None):
         assert self.n > 0, self.n
         size = 16
         if self.n:
-            if element_ids is None:
+            if element_id is None:
                 i = arange(self.n)
             else:
-                i = searchsorted(self.element_id, element_ids)
+                i = searchsorted(self.element_id, element_id)
 
             blank = ' ' * size
             #cid = [cid if cid != 0 else '' for cid in self.coord_id]

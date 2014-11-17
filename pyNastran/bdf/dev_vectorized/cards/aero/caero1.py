@@ -135,13 +135,13 @@ class CAERO1(object):
             self._cards = []
             self._comments = []
 
-    def write_bdf(self, f, size=8, element_ids=None):
+    def write_bdf(self, f, size=8, element_id=None):
         if self.n:
-            if element_ids is None:
+            if element_id is None:
                 i = arange(self.n)
             else:
-                assert len(unique(element_ids))==len(element_ids), unique(element_ids)
-                i = searchsorted(self.element_id, element_ids)
+                assert len(unique(element_id))==len(element_id), unique(element_id)
+                i = searchsorted(self.element_id, element_id)
 
             Cid    = [cid    if cid    !=0 else '' for cid    in self.coord_id[i]]
             Nspan  = [nspan  if nspan  !=0 else '' for nspan  in self.nspan[i]]
@@ -167,12 +167,12 @@ class CAERO1(object):
     def rebuild(self):
         raise NotImplementedError()
 
-    def area(self, element_ids=None, total=False, node_ids=None, grids_cid0=None):
+    def area(self, element_id=None, total=False, node_ids=None, grids_cid0=None):
         """
         Gets the area of the CAERO1s on a total or per element basis.
 
         :param self: the CAERO1 object
-        :param element_ids: the elements to consider (default=None -> all)
+        :param element_id: the elements to consider (default=None -> all)
         :param total: should the area be summed (default=False)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
@@ -181,7 +181,7 @@ class CAERO1(object):
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
-        area, _normal = self._area_normal(element_ids=element_ids,
+        area, _normal = self._area_normal(element_id=element_id,
             node_ids=node_ids, grids_cid0=grids_cid0,
             calculate_area=True,
             calculate_normal=False)
@@ -191,12 +191,12 @@ class CAERO1(object):
         else:
             return area
 
-    def normal(self, element_ids=None, node_ids=None, grids_cid0=None):
+    def normal(self, element_id=None, node_ids=None, grids_cid0=None):
         """
         Gets the normals of the CAERO1s on per element basis.
 
         :param self: the CAERO1 object
-        :param element_ids: the elements to consider (default=None -> all)
+        :param element_id: the elements to consider (default=None -> all)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
         :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
@@ -204,7 +204,7 @@ class CAERO1(object):
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
-        area, normal = self._area_normal(element_ids=element_ids,
+        area, normal = self._area_normal(element_id=element_id,
             node_ids=node_ids, grids_cid0=grids_cid0,
             calculate_area=False,
             calculate_normal=True)
@@ -214,7 +214,7 @@ class CAERO1(object):
         else:
             return area
 
-    def _area_normal(self, element_ids=None, node_ids=None, grids_cid0=None,
+    def _area_normal(self, element_id=None, node_ids=None, grids_cid0=None,
                           calculate_area=True,
                           calculate_normal=True):
         """
@@ -222,7 +222,7 @@ class CAERO1(object):
         element basis.
 
         :param self: the CAERO1 object
-        :param element_ids: the elements to consider (default=None -> all)
+        :param element_id: the elements to consider (default=None -> all)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
         :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)

@@ -1,4 +1,4 @@
-from numpy import array
+from numpy import array, zeros
 
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -27,6 +27,8 @@ class MATS1(Material):
         self.limit2 = None
 
     def allocate(self, ncards):
+        #if ncards:
+        float_fmt = self.model.float
         #: Identification number of a MAT1, MAT2, or MAT9 entry.
         self.material_id = zeros(ncards, dtype='int32')
         #: Identification number of a TABLES1 or TABLEST entry. If H is

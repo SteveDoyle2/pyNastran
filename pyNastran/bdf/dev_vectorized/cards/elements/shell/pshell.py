@@ -142,7 +142,7 @@ class PSHELL(Property):
         :param property_ids:  the property_ids to write (default=None -> all)
         """
         if self.n:
-            i = self.get_index(property_ids)
+            i = self.get_index_by_property_id(property_ids)
             Mid2 = [midi if midi > 0 else '' for midi in self.material_id2[i]]
             Mid3 = [midi if midi > 0 else '' for midi in self.material_id3[i]]
             Mid4 = [midi if midi > 0 else '' for midi in self.material_id4[i]]
@@ -161,42 +161,42 @@ class PSHELL(Property):
                         tst, nsm, z1, z2, mid4]
                 f.write(print_card(card, size=size))
 
-    def get_index(self, property_ids=None):
-        if property_ids is None:
+    def get_index_by_property_id(self, property_id=None):
+        if property_id is None:
             return arange(self.n)
-        return searchsorted(self.property_id, property_ids)
+        return searchsorted(self.property_id, property_id)
 
-    def get_nonstructural_mass(self, property_ids=None):
+    def get_nonstructural_mass(self, property_id=None):
         """
         Gets the nonstructural mass of the PHSELLs.
 
         :param self: the PSHELL object
-        :param property_ids: the property IDs to consider (default=None -> all)
+        :param property_id: the property IDs to consider (default=None -> all)
         """
-        #print('get_nonstructural_mass; pids = %s' % property_ids)
-        if property_ids is None:
+        #print('get_nonstructural_mass; pids = %s' % property_id)
+        if property_id is None:
             nsm = self.nsm
         else:
-            i = self.get_index(property_ids)
+            i = self.get_index_by_property_id(property_id)
             #print('i = %s' % i)
             nsm = self.nsm[i]
         return nsm
 
-    def get_thickness(self, property_ids=None):
+    def get_thickness(self, property_id=None):
         """
         Gets the thickness of the PHSELLs.
 
         :param self: the PSHELL object
-        :param property_ids: the property IDs to consider (default=None -> all)
+        :param property_id: the property IDs to consider (default=None -> all)
         """
-        if property_ids is None:
+        if property_id is None:
             t = self.thickness
         else:
-            i = self.get_index(property_ids)
+            i = self.get_index_by_property_id(property_id)
             t = self.thickness[i]
         return t
 
-    def get_mass_per_area(self, property_ids=None):
+    def get_mass_per_area(self, property_id=None):
         """
         Gets the mass per area of the PHSELLs.
 
@@ -204,18 +204,18 @@ class PSHELL(Property):
         :param property_ids: the property IDs to consider (default=None -> all)
         """
         #massPerArea = self.nsm + self.Rho() * self.t
-        if property_ids is None:
+        if property_id is None:
             t = self.thickness
             nsm = self.nsm
         else:
-            i = self.get_index(property_ids)
+            i = self.get_index_by_property_id(property_id)
             t = self.thickness[i]
             nsm = self.nsm[i]
 
-        density = self.get_density(property_ids)
+        density = self.get_density(property_id)
         return nsm + density * t
 
-    def get_density(self, property_ids=None):
+    def get_density(self, property_id=None):
         """
         Gets the density of the PHSELLs.
 
@@ -227,14 +227,15 @@ class PSHELL(Property):
         material_ids = material_id.copy()
         material_ids[j] = self.material_id2
 
-        if property_ids is not None:
-            i = self.get_index(property_ids)
-            material_ids = material_ids[i]
+        if property_id is not None:
+            i = self.get_index_by_property_id(property_id)
+            material_id = material_ids[i]
 
-        density = self.model.materials.get_density(material_ids)
+        #self.model.log.info('PSOLID.rho = %s' % rho)
+        density = self.model.materials.get_density_by_material_id(material_id)
         return density
 
-    def get_material_id(self, property_ids=None):
+    def get_material_id(self, property_id=None):
         """
         Gets the material IDs of the PSHELLs.
 
@@ -244,14 +245,14 @@ class PSHELL(Property):
         if property_ids is None:
             mid = self.material_id
         else:
-            i = self.get_index(property_ids)
+            i = self.get_index(property_id)
             mid = self.material_id[i]
         return mid
 
-    def __getitem__(self, property_ids):
-        property_ids, int_flag = slice_to_iter(property_ids)
-        #print('looking for %s property_ids' % str(property_ids))
-        i = searchsorted(self.property_id, property_ids)
+    def __getitem__(self, property_id):
+        property_id, int_flag = slice_to_iter(property_id)
+        #print('looking for %s property_id' % str(property_id))
+        i = searchsorted(self.property_id, property_id)
         return self.slice_by_index(i)
 
     def slice_by_index(self, i):

@@ -23,6 +23,13 @@ class TestMass(unittest.TestCase):
         self.assertTrue(all(element.get_centroid()[0] == centroid), msg='PCOMP: centroid=%s expected=%s\n%s%s' % (element.get_centroid(), centroid, element, prop))
         self.assertTrue(all(element.get_normal()[0] == normal), msg='PCOMP: normal=%s expected=%s\n%s%s' % (element.get_normal(), normal, element, prop))
         self.assertAlmostEqual(element.get_mass()[0], mass, msg='PCOMP: mass=%s expected=%s\n%s%s' % (element.get_mass(), mass, element, prop))
+
+        self.assertAlmostEqual(element.get_area_by_element_id()[0], area, msg='PCOMP: area=%s expected=%s\n%s%s' % (element.get_area(), area, element, prop))
+        self.assertAlmostEqual(element.get_thickness_by_element_id()[0], thickness, msg='PCOMP: thickness=%s expected=%s\n%s%s' % (element.get_thickness_by_element_id(), thickness, element, prop))
+        self.assertAlmostEqual(element.get_nonstructural_mass_by_element_id()[0], nsm, msg='PCOMP: nsm=%s expected=%s\n%s%s' % (element.get_nonstructural_mass_by_element_id(), nsm, element, prop))
+        #self.assertTrue(all(element.get_centroid_by_element_id()[0] == centroid), msg='PCOMP: centroid=%s expected=%s\n%s%s' % (element.get_centroid_by_element_id(), centroid, element, prop))
+        #self.assertTrue(all(element.get_normal_by_element_id()[0] == normal), msg='PCOMP: normal=%s expected=%s\n%s%s' % (element.get_normal_by_element_id(), normal, element, prop))
+        self.assertAlmostEqual(element.get_mass_by_element_id()[0], mass, msg='PCOMP: mass=%s expected=%s\n%s%s' % (element.get_mass_by_element_id(), mass, element, prop))
         with self.assertRaises(AttributeError):
             element.Volume()
         with self.assertRaises(AttributeError):
@@ -57,11 +64,13 @@ class TestMass(unittest.TestCase):
         if rho:
             #print("rho =", element.get_density(), rho)
             self.assertAlmostEqual(element.get_density()[0], rho, msg='rho=%s expected=%s' % (element.get_density(), rho))
+            self.assertAlmostEqual(element.get_density_by_element_id()[0], rho, msg='rho=%s expected=%s' % (element.get_density(), rho))
             #self.assertAlmostEqual(element.pid.Rho(), rho, msg='rho=%s expected=%s' % (element.pid.Rho(), rho))
             #self.assertEqual(element.pid.mid.type, 'MAT1', msg='mass=%s expected=%s' % (element.pid.mid.type, 'MAT1'))
             #self.assertAlmostEqual(element.pid.mid.Rho(), rho, msg='rho=%s expected=%s' % (element.pid.mid.Rho(), rho))
 
         self.assertAlmostEqual(element.get_mass(), mass, msg='mass=%s expected=%s' % (element.get_mass(), mass))
+        self.assertAlmostEqual(element.get_mass_by_element_id(), mass, msg='mass=%s expected=%s' % (element.get_mass_by_element_id(), mass))
 
         #if E:
             #self.assertAlmostEqual(element.E(), E, msg='E=%s expected=%s' % (element.E(), E))

@@ -26,12 +26,15 @@ class ShellElement(Element):
         i = searchsorted(self.element_id, element_ids)
         return self.slice_by_index(i)
 
-    def get_mass(self, element_ids=None, total=False, node_ids=None, xyz_cid0=None):
+    def get_mass(self, element_id=None, total=False, node_ids=None, xyz_cid0=None):
+        return self.get_mass_by_element_id(element_id, total, node_ids, xyz_cid0)
+
+    def get_mass_by_element_id(self, element_id=None, total=False, node_ids=None, xyz_cid0=None):
         """
         Gets the mass of the CQUAD4s on a total or per element basis.
 
         :param self: the CQUAD4 object
-        :param element_ids: the elements to consider (default=None -> all)
+        :param element_id: the elements to consider (default=None -> all)
         :param total: should the mass be summed (default=False)
 
         :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
@@ -39,7 +42,7 @@ class ShellElement(Element):
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
-        mass, _area, _normal = self._mass_area_normal(element_ids=element_ids,
+        mass, _area, _normal = self._mass_area_normal(element_id=element_id,
             xyz_cid0=xyz_cid0,
             calculate_mass=True, calculate_area=False,
             calculate_normal=False)
@@ -50,30 +53,37 @@ class ShellElement(Element):
             #print('mass.shape = %s' % mass.shape)
             return mass
 
-    def get_normal(self, element_ids=None, xyz_cid0=None):
+    def get_normal(self, element_id=None, xyz_cid0=None):
+        return self.get_normal_by_element_id(element_id, xyz_cid0)
+
+    def get_normal(self, element_id=None, xyz_cid0=None):
         """
         Gets the normals of the CQUAD4s on per element basis.
 
         :param self: the CQUAD4 object
-        :param element_ids: the elements to consider (default=None -> all)
+        :param element_id: the elements to consider (default=None -> all)
 
         :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
 
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
-        _mass, area, normal = self._mass_area_normal(element_ids=element_ids,
+        _mass, area, normal = self._mass_area_normal(element_id=element_id,
             xyz_cid0=xyz_cid0,
             calculate_mass=False, calculate_area=False,
             calculate_normal=True)
         return normal
 
-    def get_area(self, element_ids=None, total=False, xyz_cid0=None):
+
+    def get_area(self, element_id=None, total=False, xyz_cid0=None):
+        return self.get_area_by_element_id(element_id, total, xyz_cid0)
+
+    def get_area_by_element_id(self, element_id=None, total=False, xyz_cid0=None):
         """
         Gets the area of the CQUAD4s on a total or per element basis.
 
         :param self: the CQUAD4 object
-        :param element_ids: the elements to consider (default=None -> all)
+        :param element_id: the elements to consider (default=None -> all)
         :param total: should the area be summed (default=False)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
@@ -82,7 +92,7 @@ class ShellElement(Element):
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
-        _mass, area, _normal = self._mass_area_normal(element_ids=element_ids,
+        _mass, area, _normal = self._mass_area_normal(element_id=element_id,
             xyz_cid0=xyz_cid0,
             calculate_mass=False, calculate_area=True,
             calculate_normal=False)
@@ -91,39 +101,45 @@ class ShellElement(Element):
         else:
             return area
 
-    def get_thickness(self, element_ids=None):
-        if element_ids is None:
-            element_ids = self.element_id
+    def get_thickness(self, element_id=None):
+        return self.get_thickness_by_element_id(element_id)
+
+    def get_thickness_by_element_id(self, element_id=None):
+        if element_id is None:
+            element_id = self.element_id
             property_id = self.property_id
             i = None
         else:
-            i = searchsorted(self.element_id, element_ids)
+            i = searchsorted(self.element_id, element_id)
             property_id = self.property_id[i]
-        #print 'element_ids =', element_ids
-        #print 'property_ids =', property_id
+        #print 'element_id =', element_id
+        #print 'property_id =', property_id
         t = self.model.properties_shell.get_thickness(property_id)
         return t
 
-    def get_nonstructural_mass(self, element_ids=None):
-        if element_ids is None:
-            element_ids = self.element_id
+    def get_nonstructural_mass(self, element_id=None):
+        return self.get_nonstructural_mass_by_element_id(element_id)
+
+    def get_nonstructural_mass_by_element_id(self, element_id=None):
+        if element_id is None:
+            element_id = self.element_id
             property_id = self.property_id
             i = None
         else:
-            i = searchsorted(self.element_id, element_ids)
+            i = searchsorted(self.element_id, element_id)
             property_id = self.property_id[i]
         nsm = self.model.properties_shell.get_nonstructural_mass(property_id)
         return nsm
 
-    def get_density(self, element_ids=None):
-        if element_ids is None:
-            element_ids = self.element_id
+    def get_density(self, element_id=None):
+        if element_id is None:
+            element_id = self.element_id
             property_id = self.property_id
             i = None
         else:
-            i = searchsorted(self.element_id, element_ids)
+            i = searchsorted(self.element_id, element_id)
             property_id = self.property_id[i]
-        #print('density - element_ids = %s' % element_ids)
+        #print('density - element_id = %s' % element_id)
         density = self.model.properties_shell.get_density(property_id)
         #print('density_out = %s' % density)
         return density

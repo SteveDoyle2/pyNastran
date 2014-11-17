@@ -69,13 +69,13 @@ class CTRIA6(ShellElement):
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
 
-    def write_bdf(self, f, size=8, element_ids=None):
+    def write_bdf(self, f, size=8, element_id=None):
         if self.n:
-            if element_ids is None:
+            if element_id is None:
                 i = arange(self.n)
             else:
-                assert len(unique(element_ids))==len(element_ids), unique(element_ids)
-                i = searchsorted(self.element_id, element_ids)
+                assert len(unique(element_id))==len(element_id), unique(element_id)
+                i = searchsorted(self.element_id, element_id)
             for (eid, pid, n, zoffset, t_flag, thickness) in zip(
                 self.element_id[i], self.property_id[i], self.node_ids[i],
                 self.zoffset[i], self.t_flag[i], self.thickness[i]):
@@ -106,7 +106,7 @@ class CTRIA6(ShellElement):
             n3 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[i, 2]), :]
         return n1, n2, n3
 
-    def _mass_area_normal(self, element_ids=None, xyz_cid0=None,
+    def _mass_area_normal(self, element_id=None, xyz_cid0=None,
                           calculate_mass=True, calculate_area=True,
                           calculate_normal=True):
         """
@@ -114,7 +114,7 @@ class CTRIA6(ShellElement):
         element basis.
 
         :param self: the CTRIA6 object
-        :param element_ids: the elements to consider (default=None -> all)
+        :param element_id: the elements to consider (default=None -> all)
 
         :param node_ids: the GRIDs as an (N, )  NDARRAY (or None)
         :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
@@ -123,12 +123,12 @@ class CTRIA6(ShellElement):
         :param calculate_area: should the area be calculated (default=True)
         :param calculate_normal: should the normals be calculated (default=True)
         """
-        if element_ids is None:
-            element_ids = self.element_id
+        if element_id is None:
+            element_id = self.element_id
             property_id = self.property_id
             i = None
         else:
-            i = searchsorted(self.element_id, element_ids)
+            i = searchsorted(self.element_id, element_id)
             property_id = self.property_id[i]
 
         n1, n2, n3 = self._node_locations(xyz_cid0)
@@ -159,12 +159,12 @@ class CTRIA6(ShellElement):
         grids2_cid_0 = grids_cid0[searchsorted(nids_to_get, node_ids), :]
         return grids2_cid_0
 
-    def get_centroid(self, element_ids=None, node_ids=None, xyz_cid0=None):
-        if element_ids is None:
-            element_ids = self.element_id
+    def get_centroid(self, element_id=None, node_ids=None, xyz_cid0=None):
+        if element_id is None:
+            element_id = self.element_id
             i = None
         else:
-            i = searchsorted(self.element_id, element_ids)
+            i = searchsorted(self.element_id, element_id)
         n1, n2, n3 = self._node_locations(xyz_cid0, i)
         return (n1 + n2 + n3) / 3.
 

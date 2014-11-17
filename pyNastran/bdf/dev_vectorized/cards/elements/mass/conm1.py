@@ -74,12 +74,12 @@ class CONM1(VectorizedCard):
         else:
             return mm
 
-    def write_bdf(self, f, size=8, element_ids=None):
+    def write_bdf(self, f, size=8, element_id=None):
         if self.n:
-            if element_ids is None:
+            if element_id is None:
                 i = arange(self.n)
             else:
-                i = searchsorted(self.element_id, element_ids)
+                i = searchsorted(self.element_id, element_id)
 
             Cid = [cid if cid != 0 else '' for cid in self.coord_id[i]]
             for (eid, nid, cid, m) in zip(self.element_id[i], self.node_id[i], Cid, self.mass_matrix):

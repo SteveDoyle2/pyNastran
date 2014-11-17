@@ -61,14 +61,14 @@ class CTRIAX6(object):
         else:
             self.element_id = array([], dtype='int32')
 
-    def get_index(self, element_ids=None):
-        if element_ids is None:
+    def get_index(self, element_id=None):
+        if element_id is None:
             return arange(self.n)
-        return searchsorted(element_ids, self.element_id)
+        return searchsorted(element_id, self.element_id)
 
-    def write_bdf(self, f, size=8, element_ids=None):
+    def write_bdf(self, f, size=8, element_id=None):
         if self.n:
-            i = self.get_index(element_ids)
+            i = self.get_index(element_id)
             Theta = [theta if theta != 0.0 else '' for theta in self.theta[i]]
             N0 = [n if n != 0 else '' for n in self.node_ids[i, 0]]
             N1 = [n if n != 0 else '' for n in self.node_ids[i, 1]]
@@ -89,12 +89,12 @@ class CTRIAX6(object):
     def rebuild(self):
         pass
 
-    def mass(self, element_ids=None, total=False, node_ids=None, grids_cid0=None):
+    def mass(self, element_id=None, total=False, node_ids=None, grids_cid0=None):
         """
         Gets the mass of the CTRIAX6s on a total or per element basis.
 
         :param self: the CTRIAX6 object
-        :param element_ids: the elements to consider (default=None -> all)
+        :param element_id: the elements to consider (default=None -> all)
         :param total: should the mass be summed (default=False)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
@@ -103,7 +103,7 @@ class CTRIAX6(object):
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
-        mass, _area, _normal = self._mass_area_normal(element_ids=element_ids,
+        mass, _area, _normal = self._mass_area_normal(element_id=element_id,
             node_ids=node_ids, grids_cid0=grids_cid0,
             calculate_mass=True, calculate_area=False,
             calculate_normal=False)
@@ -113,12 +113,12 @@ class CTRIAX6(object):
         else:
             return mass
 
-    def area(self, element_ids=None, total=False, node_ids=None, grids_cid0=None):
+    def area(self, element_id=None, total=False, node_ids=None, grids_cid0=None):
         """
         Gets the area of the CTRIAX6s on a total or per element basis.
 
         :param self: the CTRIAX6 object
-        :param element_ids: the elements to consider (default=None -> all)
+        :param element_id: the elements to consider (default=None -> all)
         :param total: should the area be summed (default=False)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
@@ -127,7 +127,7 @@ class CTRIAX6(object):
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
-        _mass, area, _normal = self._mass_area_normal(element_ids=element_ids,
+        _mass, area, _normal = self._mass_area_normal(element_id=element_id,
             node_ids=node_ids, grids_cid0=grids_cid0,
             calculate_mass=False, calculate_area=True,
             calculate_normal=False)
@@ -137,12 +137,12 @@ class CTRIAX6(object):
         else:
             return area
 
-    def normal(self, element_ids=None, node_ids=None, grids_cid0=None):
+    def normal(self, element_id=None, node_ids=None, grids_cid0=None):
         """
         Gets the normals of the CTRIAX6s on per element basis.
 
         :param self: the CTRIAX6 object
-        :param element_ids: the elements to consider (default=None -> all)
+        :param element_id: the elements to consider (default=None -> all)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
         :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
@@ -150,7 +150,7 @@ class CTRIAX6(object):
         ..note:: If node_ids is None, the positions of all the GRID cards
                  must be calculated
         """
-        _mass, area, normal = self._mass_area_normal(element_ids=element_ids,
+        _mass, area, normal = self._mass_area_normal(element_id=element_id,
             node_ids=node_ids, grids_cid0=grids_cid0,
             calculate_mass=False, calculate_area=False,
             calculate_normal=True)
@@ -160,7 +160,7 @@ class CTRIAX6(object):
         else:
             return area
 
-    def _mass_area_normal(self, element_ids=None, node_ids=None, grids_cid0=None,
+    def _mass_area_normal(self, element_id=None, node_ids=None, grids_cid0=None,
                           calculate_mass=True, calculate_area=True,
                           calculate_normal=True):
         """
@@ -168,7 +168,7 @@ class CTRIAX6(object):
         element basis.
 
         :param self: the CTRIAX6 object
-        :param element_ids: the elements to consider (default=None -> all)
+        :param element_id: the elements to consider (default=None -> all)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
         :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)

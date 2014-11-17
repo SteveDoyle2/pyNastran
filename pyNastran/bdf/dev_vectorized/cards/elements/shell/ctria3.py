@@ -75,13 +75,13 @@ class CTRIA3(ShellElement):
             self.element_id = array([], 'int32')
             self.property_id = array([], dtype='int32')
 
-    def write_bdf(self, f, size=8, element_ids=None):
+    def write_bdf(self, f, size=8, element_id=None):
         if self.n:
-            if element_ids is None:
+            if element_id is None:
                 i = arange(self.n)
             else:
-                assert len(unique(element_ids))==len(element_ids), unique(element_ids)
-                i = searchsorted(self.element_id, element_ids)
+                assert len(unique(element_id))==len(element_id), unique(element_id)
+                i = searchsorted(self.element_id, element_id)
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 card = ['CTRIA3', eid, pid, n[0], n[1], n[2]]
                 f.write(print_card_8(card))
@@ -94,12 +94,12 @@ class CTRIA3(ShellElement):
     def rebuild(self):
         pass
 
-    #def get_mass(self, element_ids=None, total=False, xyz_cid0=None):
+    #def get_mass(self, element_id=None, total=False, xyz_cid0=None):
         #"""
         #Gets the mass of the CTRIA3s on a total or per element basis.
 
         #:param self: the CTRIA3 object
-        #:param element_ids: the elements to consider (default=None -> all)
+        #:param element_id: the elements to consider (default=None -> all)
         #:param total: should the mass be summed (default=False)
 
         #:param node_ids: the GRIDs as an (N, )  NDARRAY (or None)
@@ -108,7 +108,7 @@ class CTRIA3(ShellElement):
         #..note:: If node_ids is None, the positions of all the GRID cards
                  #must be calculated
         #"""
-        #mass, _area, _normal = self._mass_area_normal(element_ids=element_ids,
+        #mass, _area, _normal = self._mass_area_normal(element_id=element_id,
             #xyz_cid0=xyz_cid0,
             #calculate_mass=True, calculate_area=False,
             #calculate_normal=False)
@@ -118,18 +118,18 @@ class CTRIA3(ShellElement):
         #else:
             #return mass
 
-    #def get_area(self, element_ids=None, total=False, xyz_cid0=None):
+    #def get_area(self, element_id=None, total=False, xyz_cid0=None):
         #"""
         #Gets the area of the CTRIA3s on a total or per element basis.
 
         #:param self: the CTRIA3 object
-        #:param element_ids: the elements to consider (default=None -> all)
+        #:param element_id: the elements to consider (default=None -> all)
         #:param total: should the area be summed (default=False)
 
         #:param node_ids:  the GRIDs as an (N, )  NDARRAY (or None)
         #:param xyz_cid0:  the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
         #"""
-        #_mass, area, _normal = self._mass_area_normal(element_ids=element_ids,
+        #_mass, area, _normal = self._mass_area_normal(element_id=element_id,
             #xyz_cid0=xyz_cid0,
             #calculate_mass=False, calculate_area=True,
             #calculate_normal=False)
@@ -139,12 +139,12 @@ class CTRIA3(ShellElement):
         #else:
             #return area
 
-    #def get_normal(self, element_ids=None, xyz_cid0=None):
+    #def get_normal(self, element_id=None, xyz_cid0=None):
         #"""
         #Gets the normals of the CTRIA3s on per element basis.
 
         #:param self: the CTRIA3 object
-        #:param element_ids: the elements to consider (default=None -> all)
+        #:param element_id: the elements to consider (default=None -> all)
 
         #:param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
         #:param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
@@ -152,7 +152,7 @@ class CTRIA3(ShellElement):
         #..note:: If node_ids is None, the positions of all the GRID cards
                  #must be calculated
         #"""
-        #_mass, area, normal = self._mass_area_normal(element_ids=element_ids,
+        #_mass, area, normal = self._mass_area_normal(element_id=element_id,
             #grids_cid0=grids_cid0,
             #calculate_mass=False, calculate_area=False,
             #calculate_normal=True)
@@ -175,7 +175,7 @@ class CTRIA3(ShellElement):
             n3 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[i, 2]), :]
         return n1, n2, n3
 
-    def _mass_area_normal(self, element_ids=None, xyz_cid0=None,
+    def _mass_area_normal(self, element_id=None, xyz_cid0=None,
                           calculate_mass=True, calculate_area=True,
                           calculate_normal=True):
         """
@@ -183,7 +183,7 @@ class CTRIA3(ShellElement):
         element basis.
 
         :param self: the CTRIA3 object
-        :param element_ids: the elements to consider (default=None -> all)
+        :param element_id: the elements to consider (default=None -> all)
 
         :param node_ids: the GRIDs as an (N, )  NDARRAY (or None)
         :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
@@ -192,12 +192,12 @@ class CTRIA3(ShellElement):
         :param calculate_area: should the area be calculated (default=True)
         :param calculate_normal: should the normals be calculated (default=True)
         """
-        if element_ids is None:
-            element_ids = self.element_id
+        if element_id is None:
+            element_id = self.element_id
             property_id = self.property_id
             i = None
         else:
-            i = searchsorted(self.element_id, element_ids)
+            i = searchsorted(self.element_id, element_id)
             property_id = self.property_id[i]
 
         n1, n2, n3 = self._node_locations(xyz_cid0)
@@ -303,12 +303,12 @@ class CTRIA3(ShellElement):
         ]
         Cs *= E * h * k / (2.*(1+nu))
 
-    def get_centroid(self, element_ids=None, node_ids=None, xyz_cid0=None):
-        if element_ids is None:
-            element_ids = self.element_id
+    def get_centroid(self, element_id=None, node_ids=None, xyz_cid0=None):
+        if element_id is None:
+            element_id = self.element_id
             i = None
         else:
-            i = searchsorted(self.element_id, element_ids)
+            i = searchsorted(self.element_id, element_id)
         n1, n2, n3 = self._node_locations(xyz_cid0, i)
         return (n1 + n2 + n3) / 3.
 

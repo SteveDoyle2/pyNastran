@@ -216,9 +216,9 @@ class CBAR(Element):
             return mass
 
     #=========================================================================
-    def write_bdf(self, f, size=8, element_ids=None):
+    def write_bdf(self, f, size=8, element_id=None):
         if self.n:
-            if element_ids is None:
+            if element_id is None:
                 i = arange(self.n)
             else:
                 i = searchsorted(self.element_id, self.element_id)
