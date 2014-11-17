@@ -84,7 +84,7 @@ from .cards.materials.materials import Materials
 
 # loads
 from .cards.loads.loads import Loads
-
+from .cards.loads.temp import TEMPs
 #=============================
 # dynamic
 from .cards.nonlinear.nlpci import NLPCI
@@ -345,7 +345,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             'CORD2R', 'CORD2C', 'CORD2S',
 
             # temperature cards
-            'TEMP',  # 'TEMPD',
+            'TEMP', 'TEMPD', 'TEMPP1',
             'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
             'CHBDYE', 'CHBDYG', 'CHBDYP',
             'PCONV', 'PCONVM', 'PHBDY',
@@ -648,6 +648,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         #: stores LOAD, FORCE, MOMENT, etc.
         self.loads = Loads(model)
+        self.temps = TEMPs(model)
 
         #: stores MAT1, MAT2, MAT3,...MAT10 (no MAT4, MAT5)
         self.materials = Materials(model)
@@ -949,6 +950,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.coords.allocate(card_count=card_count)
         self.elements.allocate(card_count)
         self.loads.allocate(card_count)
+        self.temps.allocate(card_count)
 
     def _cleanup_file_streams(self):
         """
@@ -1718,14 +1720,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'QBDY2':
             pass
         #========================
-        # applied temperature
-        elif name == 'TEMP':
-            #self.temp.add(card_obj, comment=comment)
-            pass
-        elif name == 'TEMPD':
-            #self.tempd.add(card_obj, comment=comment)
-            pass
-        #========================
         # design_variables
         elif name == 'DESVAR':
             #self.desvar.add(card_obj, comment=comment)
@@ -1934,6 +1928,13 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'LOAD':
             #self.model.log.debug(card_obj)
             self.loads.load.add(card_obj, comment=comment)
+
+        elif name == 'TEMPD':
+            self.temps.add_tempd(card_obj, comment=comment)
+        elif name == 'TEMP':
+            self.temps.add_temp(card_obj, comment=comment)
+        elif name == 'TEMPP1':
+            self.temps.add_tempp1(card_obj, comment=comment)
 
         #========================
         # applied loads

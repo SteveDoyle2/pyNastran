@@ -160,6 +160,7 @@ class GRID(VectorizedCard):
                 #: Superelement ID
                 self.seid[i] = integer_or_blank(card, 8, 'seid', seid0)
             i = argsort(self.node_id)
+            self.node_id = self.node_id[i]
             self.cp = self.cp[i]
             self.xyz = self.xyz[i, :]
             self.cd = self.cd[i]
@@ -174,7 +175,8 @@ class GRID(VectorizedCard):
         #return self._get_sorted_index(self.node_id, node_id, self.n, 'node_id in GRID', check=True)
 
     def get_index_by_node_id(self, node_id=None, msg=''):
-        i = self._get_sorted_index(self.node_id, node_id, self.n, 'node_id in GRID%s' % msg, check=True)
+        #assert msg != ''
+        i = self._get_sorted_index(self.node_id, node_id, self.n, 'node_id', 'node_id in GRID%s' % msg, check=True)
         return i
         #if node_id is None:
             #out_index = None
@@ -219,8 +221,8 @@ class GRID(VectorizedCard):
             i0 += nj
         return out_index
 
-    def get_position_by_node_id(self, node_id=None):
-        i = self.get_index_by_node_id(node_id)
+    def get_position_by_node_id(self, node_id=None, msg=''):
+        i = self.get_index_by_node_id(node_id, msg=msg)
         return self.get_position_by_index(i)
 
     def get_position_by_index(self, i=None):
@@ -274,9 +276,9 @@ class GRID(VectorizedCard):
         return msg
 
     def write_bdf(self, f, node_id=None, size=8, is_double=False):
-        self.model.log.debug('GRID nid = %s' % node_id)
-        self.model.log.debug('GRID nids = %s' % self.node_id)
-        i = self.get_index_by_node_id(node_id)
+        self.model.log.debug('GRID node_id = %s' % node_id)
+        self.model.log.debug('GRID self.node_id = %s' % self.node_id)
+        i = self.get_index_by_node_id(node_id, 'GRID.write_bdf')
         return self.write_bdf_by_index(f, i, size, is_double)
 
     def write_bdf_by_index(self, f, i=None, size=8, is_double=False):
