@@ -1,5 +1,5 @@
 from six.moves import StringIO
-from numpy import array, searchsorted, array_equal, setdiff1d, int64
+from numpy import array, searchsorted, array_equal, setdiff1d, int64, argsort, arange
 
 class VectorizedCard(object):
     def __init__(self, model):
@@ -28,7 +28,10 @@ class VectorizedCard(object):
         self.write_bdf(f)
         return f.getvalue().rstrip()
 
-    def _get_sorted_index(self, sorted_array, unsorted_array, n, msg, check=True):
+    def _get_sorted_index(self, sorted_array, unsorted_array, n, field_name, msg, check=True):
+        if not array_equal(argsort(sorted_array), arange(len(sorted_array))):
+            msg2 = '%s is not sorted\nsorted_array=%s' % (msg, sorted_array)
+            raise RuntimeError(msg2)
         assert isinstance(n, int)
         assert isinstance(check, bool)
         if unsorted_array is None:
@@ -44,7 +47,13 @@ class VectorizedCard(object):
                     #print('unsorted %s' % unsorted_array)
                     #print('sorted %s' % sorted_array)
                     #pass
-                    raise RuntimeError('Undefined %s\n%s' % (msg, setdiff1d(unsorted_array, sorted_array)))
+                    msg2 = 'Undefined %s\n' % msg
+                    msg2 += 'diff=%s\n' % setdiff1d(unsorted_array, sorted_array)
+                    msg2 += 'sorted %s= %s; n=%s\n' % (field_name, str(sorted_array), len(sorted_array))
+                    msg2 += 'unsorted %s = %s\n' % (field_name, unsorted_array)
+                    msg2 += 'sorted %s[i]= %s\n' % (field_name, sorted_array[i])
+                    msg2 += 'i=%s\n' % i
+                    raise RuntimeError(msg2)
         if isinstance(i, int64) or isinstance(i, int):
             i = array([i], dtype='int32')
         return i

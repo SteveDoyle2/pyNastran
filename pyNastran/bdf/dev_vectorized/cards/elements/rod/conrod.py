@@ -165,8 +165,21 @@ class CONROD(RodElement):
 
 
         #grid_cid0 = self.model.grid.get_positions_by_index(self.model.grid.get_index_by_node_id())
-        p1 = self.model.grid.get_position_by_index(self.model.grid.get_index_by_node_id(self.node_ids[:, 0]))
-        p2 = self.model.grid.get_position_by_index(self.model.grid.get_index_by_node_id(self.node_ids[:, 1]))
+        try:
+            msg = ', which is required by CONROD get_mass'
+            i1 = self.model.grid.get_index_by_node_id(self.node_ids[:, 0], msg=msg)
+            i2 = self.model.grid.get_index_by_node_id(self.node_ids[:, 1], msg=msg)
+            p1 = self.model.grid.get_position_by_index(i1)
+            p2 = self.model.grid.get_position_by_index(i2)
+        except RuntimeError:
+            for eid, (n1, n2) in zip(self.element_id, self.node_ids):
+                msg = ', which is required by CONROD element_id=%s node1=%s\n' % (eid, n1)
+                i1 = self.model.grid.get_index_by_node_id([n1], msg=msg)
+                msg = ', which is required by CONROD element_id=%s node2=%s\n' % (eid, n2)
+                i2 = self.model.grid.get_index_by_node_id([n2], msg=msg)
+                p1 = self.model.grid.get_position_by_index(i1)
+                p2 = self.model.grid.get_position_by_index(i2)
+
 
         L = p2 - p1
         rho = self.model.materials.get_density(self.material_id)

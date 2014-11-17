@@ -365,6 +365,8 @@ class WriteMesh(object):
         self._write_rigid_elements(outfile, size, card_writer)
         self._write_dmigs(outfile, size, card_writer)
         self.loads.write_bdf(outfile, size, is_double, sort_data=False)
+        self.temps.write_bdf(outfile, size, is_double, sort_data=False)
+
         self._write_dynamic(outfile, size, card_writer)
         self._write_aero(outfile, size, card_writer)
         self._write_aero_control(outfile, size, card_writer)
@@ -377,7 +379,7 @@ class WriteMesh(object):
         self._write_tables(outfile, size, card_writer)
         self._write_sets(outfile, size, card_writer)
         self._write_contact(outfile, size, card_writer)
-        self._write_rejects(outfile, size)
+        #self._write_rejects(outfile, size)
         self._write_coords(outfile, size, card_writer)
 
     def _write_constraints(self, f, size, card_writer):

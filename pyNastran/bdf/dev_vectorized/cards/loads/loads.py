@@ -56,16 +56,15 @@ class VectorizedCardDict(object):
 
     def __init__(self, model):
         """
-        Defines the PCOMP object.
+        Defines the object.
 
-        :param self: the PCOMP object
+        :param self: the object
         :param model: the BDF object
-        :param cards: the list of PCOMP cards
+        :param cards: the list of cards
         """
         self.type = type
         self.n = 0
         self.model = model
-        #self.properties = {}
         self.keys = None
         self._cards = []
         self._comments = []
@@ -117,7 +116,7 @@ class LOADs(VectorizedCardDict):
     def get_load_ids(self):
         return array(self._objs.keys(), dtype='int32')
 
-    def slice_by_load_id(self, load_ids):
+    def slice_by_load_id(self, load_id):
         return
 
     def add(self, card, comment):
