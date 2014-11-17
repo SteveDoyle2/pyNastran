@@ -1,6 +1,6 @@
 from six import iteritems
 from six.moves import zip
-from numpy import zeros, where, array, nan, unique
+from numpy import zeros, where, array, nan
 
 #from .mat1 import MAT1
 #from .mats1 import MATS1
@@ -9,28 +9,25 @@ from numpy import zeros, where, array, nan, unique
 
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 
-#from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT4, MAT5, MAT8,
-    #MAT10, MAT11) #, MATS1)
-from .mat1 import MAT1
-from .mats1 import MATS1
-
+from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT4, MAT5, MAT8,
+    MAT10, MAT11) #, MATS1)
 from pyNastran.bdf.bdfInterface.assign_type import integer
 class Materials(object):
     def __init__(self, model):
         self.model = model
         self.n = 0
 
-        self.mat1 = MAT1(model)
-        self.mats1 = MATS1(model)
+        #self.mat1 = MAT1(model)
+        #self.mats1 = MATS1(model)
 
-        #self.mat1 = {}
-        #self.mats1 = {}
+        self.mat1 = {}
+        self.mats1 = {}
         #==================
-        #self.mat2 = {}
-        #self.mat4 = {}
-        #self.mat5 = {}
-        #self.mat8 = {}
-        #self.mat10 = {}
+        self.mat2 = {}
+        self.mat4 = {}
+        self.mat5 = {}
+        self.mat8 = {}
+        self.mat10 = {}
         #self.mat2 = MAT1(model)
         #self.mat4 = MAT1(model)
         #self.mat8 = MAT1(model)
@@ -38,62 +35,55 @@ class Materials(object):
 
     def add_mat1(self, card, comment):
         #self.mat1.add(card, comment)
-        #mid = integer(card, 1, 'material_id')
-        #mat = MAT1(card=card, comment=comment)
-        self.mat1.add(card=card, comment=comment)
-        #self.mat1[mid] = mat
+        mid = integer(card, 1, 'material_id')
+        mat = MAT1(card=card, comment=comment)
+        #mat.add(card=card, comment=comment)
+        self.mat1[mid] = mat
 
     def add_mats1(self, card, comment):
-        self.mats1.add(card, comment)
-        #mid = integer(card, 1, 'material_id')
-        #mat = MATS1(card=card, comment=comment)
-        #self.mats1[mid] = mat
+        #self.mats1.add(card, comment)
+        mid = integer(card, 1, 'material_id')
+        mat = MATS1(card=card, comment=comment)
+        self.mats1[mid] = mat
 
     def add_mat2(self, card, comment):
-        self.mat2.add(card, comment)
-        #mid = integer(card, 1, 'material_id')
-        #mat = MAT2(card=card, comment=comment)
-        #self.mat2[mid] = mat
+        #self.mat2.add(card, comment)
+        mid = integer(card, 1, 'material_id')
+        mat = MAT2(card=card, comment=comment)
+        self.mat2[mid] = mat
 
     def add_mat4(self, card, comment):
-        self.mat4.add(card, comment)
-        #mid = integer(card, 1, 'material_id')
-        #mat = MAT4(card=card, comment=comment)
-        #self.mat4[mid] = mat
+        #self.mat4.add(card, comment)
+        mid = integer(card, 1, 'material_id')
+        mat = MAT4(card=card, comment=comment)
+        self.mat4[mid] = mat
 
     def add_mat8(self, card, comment):
-        self.mat8.add(card, comment)
-        #mid = integer(card, 1, 'material_id')
-        #mat = MAT8(card=card, comment=comment)
-        #self.mat8[mid] = mat
+        #self.mat8.add(card, comment)
+        mid = integer(card, 1, 'material_id')
+        mat = MAT8(card=card, comment=comment)
+        self.mat8[mid] = mat
 
     def add_mat10(self, card, comment):
-        self.mat10.add(card, comment)
-        #mid = integer(card, 1, 'material_id')
-        #mat = MAT10(card=card, comment=comment)
-        #self.mat10[mid] = mat
-
-
-    def allocate(self, card_count):
-        #self.model.log.debug('allocate')
-        n = 0
-        types = self._get_types()
-        names = self._get_type_names()
-        for name, mat in zip(names, types):
-            if name in card_count:
-                n = card_count[name]
-                mat.allocate(n)
-                self.n += n
-        self.n = n
+        #self.mat10.add(card, comment)
+        mid = integer(card, 1, 'material_id')
+        mat = MAT10(card=card, comment=comment)
+        self.mat10[mid] = mat
 
     def build(self):
         n = 0
         types = self._get_types()
-        names = self._get_type_names()
-        for name, mat in zip(names, types):
+        for mat in types:
             n += len(mat)
-            mat.build()
+            #mat.build()
         self.n = n
+        #self.mat1.build()
+        #self.mat1s.build()
+        #==================
+        #self.mat2.build()
+        #self.mat4.build()
+        #self.mat8.build()
+        #self.mat10.build()
 
     def get_stats(self):
         msg = []
@@ -123,17 +113,8 @@ class Materials(object):
 
     def get_density(self, material_id):
         n = len(material_id)
-        self.model.log.debug('material_id =%s' % material_id)
-        umids = unique(material_id)
-
-        density = zeros(n, dtype='float64')
-        for mid in umids:
-            rho = self[mid].get_density_by_material_id([mid])
-            i = where(mid==material_id)[0]
-            density[i] = rho
-
-        #mats = self[material_id]
-        #density = array([mid.get_density_by_material_id(mid) if mid is not None else nan for mid in mats])
+        mats = self[material_id]
+        density = array([mid.get_density() if mid is not None else nan for mid in mats])
         #self.model.log.debug('material_ids = %s' % material_ids)
         #self.model.log.debug("  density mats = %s" % mats)
         #self.model.log.debug('  density = %s' % density)
@@ -230,29 +211,29 @@ class Materials(object):
 
     def __getitem__(self, material_ids):
         TypeMap = {
-            'MAT1'  : (self.mat1, self.mat1.material_id),
-            #'MAT2'  : (self.mat2, self.mat2.material_id),
-            #'MAT4'  : (self.mat4, self.mat4.material_id),
-            #'MAT5'  : (self.mat5, self.mat5.material_id),
-            #'MAT8'  : (self.mat8, self.mat8.material_id),
-            #'MAT10' : (self.mat10, self.mat10.material_id),
-            'MATS1' : (self.mats1, self.mats1.material_id),
+            'MAT1'  : (self.mat1, self.mat1.keys()),
+            'MAT2'  : (self.mat2, self.mat2.keys()),
+            'MAT4'  : (self.mat4, self.mat4.keys()),
+            'MAT5'  : (self.mat5, self.mat5.keys()),
+            'MAT8'  : (self.mat8, self.mat8.keys()),
+            'MAT10' : (self.mat10, self.mat10.keys()),
+            'MATS1' : (self.mats1, self.mats1.keys()),
         }
         material_ids, int_flag = slice_to_iter(material_ids)
         out = []
-        self.model.log.debug('material_ids = %s' % material_ids)
+        #print('material_ids = %s' % material_ids)
         for mid in material_ids:
             obj = None
             for Type, (mdict, mids) in iteritems(TypeMap):
-                if mdict.n:
-                    self.model.log.debug('Type=%s mid=%s mids=%s' % (Type, mid, mids))
+                if mids:
+                    #print('mids = %s' % mids)
                     if mid in mids:
-                        self.model.log.debug(' *mid=%i Type=%s was found' % (mid, Type))
+                        #print(' *mid=%i Type=%s was found' % (mid, Type))
                         i = where(mid == mids)[0]
                         obj = mdict[mid]  #[i]
                         break
                     else:
-                        #self.model.log.debug('  mid=%i Type=%s was not found' % (mid, Type))
+                        #print('  mid=%i Type=%s was not found' % (mid, Type))
                         pass
             out.append(obj)
         return out[0] if int_flag else out
@@ -276,30 +257,33 @@ class Materials(object):
     def __iter__(self):
         types = self._get_types()
         for materials in types:
-            if materials.n:
-                for mid, mat in iteritems(materials):
-                    yield mat
+            for mid, mat in iteritems(materials):
+                yield mat
+            #if mat.type == 'MATS1':
+                #yield mat.material_id
+            #else:
+                #if mat.n:
+                    #for mid in mat.material_id:
+                        #yield mid
 
     def _get_types(self):
-        return [self.mat1,
-                #self.mat2, self.mat4, self.mat8, self.mat10,
+        return [self.mat1, self.mat2, self.mat4, self.mat8, self.mat10,
                 self.mats1,]
 
     def _get_type_names(self):
-        return ['MAT1',
-                #'MAT2', 'MAT4', 'MAT8', 'MAT10',
-                'MATS1'
-                ]
+        return ['MAT1', 'MAT2', 'MAT4', 'MAT8', 'MAT10',
+                'MATS1']
 
     def _verify(self, xref=True):
         for mid, material in sorted(iteritems(self.mat1)):
             material._verify(xref)
 
     def write_bdf(self, f, size=8, is_double=False, material_ids=None):
-        self.model.log.debug('Materials.write_bdf.n=%s' % self.n)
         if self.n:
             f.write('$MATERIALS\n')
             types = self._get_types()
             for materials in types:
-                if materials.n:
-                    materials.write_bdf(f, size=size, material_ids=material_ids)
+                for mid, mat in sorted(iteritems(materials)):
+                    if material_ids is None or mid in material_ids:
+                        #mat.write_bdf(f, size=size, material_ids=material_ids)
+                        f.write(str(mat))

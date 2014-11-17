@@ -97,7 +97,7 @@ def compare_card_content(fem1, fem2):
         #print("key =", key)
         #card1 = fem1.materials[key]
         #card2 = fem2.materials[key]
-        assert_fields(mat1, mat2, mat1.mid)
+        assert_fields(mat1, mat2, mat1.material_id)
 
     for key in fem1.creepMaterials:
         card1 = fem1.creepMaterials[key]

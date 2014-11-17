@@ -3,9 +3,10 @@ from numpy import array
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, blank, integer_or_string, string)
+from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
+from .mat1 import Material
 
-
-class MATS1(object):
+class MATS1(Material):
     """
     Specifies stress-dependent material properties for use in applications
     involving nonlinear materials. This entry is used if a MAT1, MAT2 or MAT9
@@ -15,7 +16,7 @@ class MATS1(object):
     type = 'MATS1'
 
     def __init__(self, model):
-        self.model = model
+        Material.__init__(self, model)
         self.material_id = None
         self.table_id = None
         self.Type = None
@@ -24,62 +25,93 @@ class MATS1(object):
         self.yf = None
         self.limit1 = None
         self.limit2 = None
-        self.n = 1
+
+    def allocate(self, ncards):
+        #: Identification number of a MAT1, MAT2, or MAT9 entry.
+        self.material_id = zeros(ncards, dtype='int32')
+        #: Identification number of a TABLES1 or TABLEST entry. If H is
+        #: given, then this field must be blank.
+        self.table_id = zeros(ncards, dtype='int32')
+        #: Type of material nonlinearity. ('NLELAST' for nonlinear elastic
+        #: or 'PLASTIC' for elastoplastic.)
+        self.Type = zeros(ncards, dtype='|S8')
+
+        #: Work hardening slope (slope of stress versus plastic strain) in
+        #: units of stress. For elastic-perfectly plastic cases, H=0.0.
+        #: For more than a single slope in the plastic range, the
+        #: stress-strain data must be supplied on a TABLES1 entry
+        #: referenced by TID, and this field must be blank
+        self.h = zeros(ncards, dtype=float_fmt)
+        self.hflag = zeros(ncards, dtype='bool')
+
+        #: Yield function criterion, selected by one of the following
+        #: values (1) Von Mises (2) Tresca (3) Mohr-Coulomb
+        #: (4) Drucker-Prager
+        self.yf = zeros(ncards, dtype='int32')
+
+        #: Hardening Rule, selected by one of the following values
+        #: (Integer): (1) Isotropic (Default) (2) Kinematic
+        #: (3) Combined isotropic and kinematic hardening
+        self.hr = zeros(ncards, dtype='int32')
+        #: Initial yield point
+        self.limit1 = zeros(ncards, dtype=float_fmt)
+        self.limit2 = zeros(ncards, dtype=float_fmt)
 
     def add(self, card=None, comment=''):
         if comment:
             self._comment = comment
 
         #: Identification number of a MAT1, MAT2, or MAT9 entry.
-        self.material_id = integer(card, 1, 'mid')
+        self.material_id[i] = integer(card, 1, 'mid')
         #: Identification number of a TABLES1 or TABLEST entry. If H is
         #: given, then this field must be blank.
-        self.table_id = integer_or_blank(card, 2, 'tid')
+        self.table_id[i] = integer_or_blank(card, 2, 'tid')
         #: Type of material nonlinearity. ('NLELAST' for nonlinear elastic
         #: or 'PLASTIC' for elastoplastic.)
-        self.Type = string(card, 3, 'Type')
+        self.Type[i] = string(card, 3, 'Type')
 
-        if self.Type == 'NLELAST':
-            self.h = blank(card, 4, 'h')
-            self.hr = blank(card, 6, 'hr')
-            self.yf = blank(card, 5, 'yf')
-            self.limit1 = blank(card, 7, 'yf')
-            self.limit2 = blank(card, 8, 'yf')
+        if self.Type[i] == 'NLELAST':
+            self.h[i] = blank(card, 4, 'h')
+            self.hr[i] = blank(card, 6, 'hr')
+            self.yf[i] = blank(card, 5, 'yf')
+            self.limit1[i] = blank(card, 7, 'yf')
+            self.limit2[i] = blank(card, 8, 'yf')
         else:
             #: Work hardening slope (slope of stress versus plastic strain) in
             #: units of stress. For elastic-perfectly plastic cases, H=0.0.
             #: For more than a single slope in the plastic range, the
             #: stress-strain data must be supplied on a TABLES1 entry
             #: referenced by TID, and this field must be blank
-            self.h = double_or_blank(card, 4, 'H')
-            if self.h is None:
-                self.hflag = False
+            self.h[i] = double_or_blank(card, 4, 'H')
+            if self.h[i] is None:
+                self.hflag[i] = False
             else:
-                self.hflag = True
+                self.hflag[i] = True
 
             #: Yield function criterion, selected by one of the following
             #: values (1) Von Mises (2) Tresca (3) Mohr-Coulomb
             #: (4) Drucker-Prager
-            self.yf = integer_or_blank(card, 5, 'yf', 1)
+            self.yf[i] = integer_or_blank(card, 5, 'yf', 1)
 
             #: Hardening Rule, selected by one of the following values
             #: (Integer): (1) Isotropic (Default) (2) Kinematic
             #: (3) Combined isotropic and kinematic hardening
-            self.hr = integer_or_blank(card, 6, 'hr', 1)
+            self.hr[i] = integer_or_blank(card, 6, 'hr', 1)
             #: Initial yield point
-            self.limit1 = double(card, 7, 'limit1')
+            self.limit1[i] = double(card, 7, 'limit1')
 
-            if self.yf == 3 or self.yf == 4:
+            if self.yf[i] == 3 or self.yf[i] == 4:
                 #: Internal friction angle, measured in degrees, for the
                 #: Mohr-Coulomb and Drucker-Prager yield criteria
-                self.limit2 = double(card, 8, 'limit2')
+                self.limit2[i] = double(card, 8, 'limit2')
             else:
-                #self.limit2 = blank(card, 8, 'limit2')
-                self.limit2 = None
+                #self.limit2[i] = blank(card, 8, 'limit2')
+                self.limit2[i] = None
         assert len(card) <= 9, 'len(MATS1 card) = %i' % len(card)
 
     def build(self):
-        pass
+        if self.n:
+            pass
 
     def Yf(self):
         d = {1: 'VonMises', 2: 'Tresca', 3: 'MohrCoulomb', 4: 'Drucker-Prager'}
@@ -119,7 +151,7 @@ class MATS1(object):
                         self.limit2
                     else:
                         raise NotImplementedError()
-                    
+
                 E = self.h
         return E
 
@@ -132,6 +164,6 @@ class MATS1(object):
         card = ['MATS1', self.material_id, self.table_id, self.Type,
                 self.h, self.yf, self.hr, self.limit1, self.limit2]
         f.write(print_card(card))
-        
+
     def reprFields(self):
         return self.rawFields()
