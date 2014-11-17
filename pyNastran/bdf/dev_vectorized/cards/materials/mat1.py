@@ -1,5 +1,5 @@
 from six.moves import zip
-from numpy import zeros, where, arange, searchsorted, unique
+from numpy import zeros, where, arange, searchsorted, unique, asarray
 
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -7,8 +7,39 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     string, string_or_blank, blank)
 
+from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 
-class MAT1(object):
+class Material(VectorizedCard):
+    def __init__(self, model):
+        VectorizedCard.__init__(self, model)
+
+    def __iter__(self):
+        mids = self.material_id
+        for mid in mids:
+            yield mid
+
+    def values(self):
+        mids = self.material_id
+        for mid in mids:
+            yield self.__getitem__(mid)
+
+    def items(self):
+        mids = self.material_id
+        #self.model.log.debug('mids = %s' % mids)
+        for mid in mids:
+            yield mid, self.__getitem__(mid)
+
+    def iteritems(self):
+        return self.items()
+
+    def iterkeys(self):
+        return self.keys()
+
+    def __len__(self):
+        return self.n
+
+
+class MAT1(Material):
     """
     Defines the material properties for linear isotropic materials.
 
@@ -22,33 +53,33 @@ class MAT1(object):
     """
     type = 'MAT1'
     def __init__(self, model):
-        self.model = model
-        self._cards = []
-        self._comments = []
+        Material.__init__(self, model)
 
     def add(self, card, comment):
         self._cards.append(card)
         self._comments.append(comment)
+
+    def allocate(self, ncards):
+        float_fmt = self.model.float
+        self.material_id = zeros(ncards, 'int32')
+        self.rho = zeros(ncards, float_fmt)
+        self.E = zeros(ncards, float_fmt)
+        self.G = zeros(ncards, float_fmt)
+        self.nu = zeros(ncards, float_fmt)
+        self.a = zeros(ncards, float_fmt)
+        self.TRef = zeros(ncards, float_fmt)
+        self.ge = zeros(ncards, float_fmt)
+        self.St = zeros(ncards, float_fmt)
+        self.Sc = zeros(ncards, float_fmt)
+        self.Ss = zeros(ncards, float_fmt)
+        self.mcsid = zeros(ncards, 'int32')
+        self.n = ncards
 
     def build(self):
         cards = self._cards
         ncards = len(cards)
         self.n = ncards
         if ncards:
-            float_fmt = self.model.float
-            self.material_id = zeros(ncards, 'int32')
-            self.rho = zeros(ncards, float_fmt)
-            self.E = zeros(ncards, float_fmt)
-            self.G = zeros(ncards, float_fmt)
-            self.nu = zeros(ncards, float_fmt)
-            self.a = zeros(ncards, float_fmt)
-            self.TRef = zeros(ncards, float_fmt)
-            self.ge = zeros(ncards, float_fmt)
-            self.St = zeros(ncards, float_fmt)
-            self.Sc = zeros(ncards, float_fmt)
-            self.Ss = zeros(ncards, float_fmt)
-            self.mcsid = zeros(ncards, 'int32')
-
             for (i, card) in enumerate(cards):
                 #if comment:
                 #    self._comment = comment
@@ -105,9 +136,16 @@ class MAT1(object):
             G = E / 2. / (1 + nu)
         return G
 
-    def get_density(self):
-        i = where(mid == self.material_id)[0]
+    def get_index_by_material_id(self, material_id):
+        i = searchsorted(material_id, self.material_id)
+        return i
+
+    def get_density_by_index(self, i):
         return self.rho[i]
+
+    def get_density_by_material_id(self, material_id):
+        i = self.get_index_by_material_id(material_id)
+        return self.get_density_by_index(i)
 
     def write_bdf(self, f, size=8, material_ids=None):
         if self.n:
@@ -117,8 +155,8 @@ class MAT1(object):
                 i = searchsorted(self.material_id, material_ids)
 
             assert material_ids is None
-            #print "n = ", self.n
-            #print "mids MAT1", self.material_id
+            #self.model.log.debug"n = %s" % self.n)
+            #self.model.log.debug"mids MAT1 %s" % self.material_id)
             Rho  = ['' if rhoi  == 0.0 else rhoi  for rhoi  in self.rho[i]]
             A    = ['' if ai    == 0.0 else ai    for ai    in self.a[i]]
             TRef = ['' if trefi == 0.0 else trefi for trefi in self.TRef[i]]
@@ -188,21 +226,36 @@ class MAT1(object):
         else:
             msg = 'G=%s E=%s nu=%s' % (G, E, nu)
             raise RuntimeError(msg)
-        #print 'G =', G
+        #self.model.log.debug('G = %s' % G)
         self.E[i] = E
         self.G[i] = G
         self.nu[i] = nu
 
-    def __getitem__(self, i):
-        obj = CQUAD4(self.model)
+    def __getitem__(self, material_id):
+        #self.model.log.debug('self.material_id = %s' % self.material_id)
+        #self.model.log.debug('material_id = %s' % material_id)
+        #material_id = slice_to_iter(material_id)
+        i = where(self.material_id == material_id)[0]
+        return self.slice_by_index(i)
+
+    def slice_by_index(self, i):
+        i = asarray(i)
+        #self.model.log.debug('i = %s' % i)
+        obj = MAT1(self.model)
         obj.n = len(i)
         #obj._cards = self._cards[i]
         #obj._comments = obj._comments[i]
         #obj.comments = obj.comments[i]
-        obj.element_id = self.element_id[i]
-        obj.property_id = self.property_id[i]
-        obj.node_ids = self.node_ids[i, :]
-        obj.zoffset = self.zoffset[i]
-        obj.t_flag = self.t_flag[i]
-        obj.thickness = self.thickness[i, :]
+        obj.material_id = self.material_id[i]
+        obj.rho = self.rho[i]
+        obj.E = self.E[i]
+        obj.G = self.G[i]
+        obj.nu = self.nu[i]
+        obj.a = self.a[i]
+        obj.TRef = self.TRef[i]
+        obj.ge = self.ge[i]
+        obj.St = self.St[i]
+        obj.Sc = self.Sc[i]
+        obj.Ss = self.Ss[i]
+        obj.mcsid = self.mcsid[i]
         return obj

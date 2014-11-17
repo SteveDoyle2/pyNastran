@@ -949,6 +949,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.grid.allocate(card_count)
         self.coords.allocate(card_count=card_count)
         self.elements.allocate(card_count)
+        self.materials.allocate(card_count)
         self.loads.allocate(card_count)
         self.temps.allocate(card_count)
 

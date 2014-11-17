@@ -1,3 +1,4 @@
+
 from six.moves import zip
 from collections import defaultdict
 from numpy import zeros, arange, where, searchsorted, argsort, unique, asarray, array, dot, transpose, append, array_equal
@@ -19,6 +20,9 @@ class TEMP(object):
         self.default = 0.
         self.is_default = False
         self._i = 0
+
+    def __len__(self):
+        return self.n + 1 if self.is_default else 0
 
     def allocate(self, model, card_count):
         self.model = model
@@ -79,6 +83,9 @@ class TEMPP1(object):
         self.n = 0
         self.i = 0
 
+    def __len__(self):
+        return self.n
+
     def allocate(self, card_count):
         if 'TEMPP1' in card_count:
             float_fmt = self.model.float
@@ -132,7 +139,7 @@ class TEMPP1(object):
                 f.write('TEMPP1  %8i%8i%s%s\n' % (load_id, element_id, print_float_8(tbar), print_float_8(tprime)))
         else:
             for load_id, element_id, tbar, tprime in zip(self.load_id, self.element_id, self.tbar, self.tprime):
-                f.write('TEMPP1* %16i%16i%s%s\n' % (load_id, element_id, print_float_16(tbar), print_float_16(tprime)))
+                f.write('TEMPP1* %16i%16i%s%s\n*\n' % (load_id, element_id, print_float_16(tbar), print_float_16(tprime)))
 
 
 class TEMPs(VectorizedCardDict):
@@ -146,6 +153,9 @@ class TEMPs(VectorizedCardDict):
 
     def get_temperature_id(self):
         return array(self._objs.keys(), dtype='int32')
+
+    def __len__(self):
+        return len(self._tempp1) + len(self._objs)
 
     #def slice_by_temperature_id(self, load_id):
         #return
