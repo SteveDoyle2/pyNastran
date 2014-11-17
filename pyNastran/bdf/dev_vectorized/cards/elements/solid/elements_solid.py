@@ -79,7 +79,7 @@ class ElementsSolid(object):
         self.chexa20.add(card, comment)
 
     #=========================================================================
-    def get_mass(self, element_ids=None, total=False):
+    def get_mass_by_element_id(self, element_id=None, total=False):
         types = self._get_types()
         massi = []
         for elems in types:

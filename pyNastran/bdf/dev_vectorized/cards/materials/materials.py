@@ -132,14 +132,7 @@ class Materials(object):
         return _material_id
 
     #def get_density(self, material_id):
-        #rho = zeros(len(material_id), dtype='float64')
-        #for i, mid in enumerate(material_id):
-            #mat = self.get_structural_material(mid)
-            #rho[i] = mat.rho
-        #return rho
-
-    def get_density(self, material_id):
-        return self.get_density_by_material_id(material_id)
+        #return self.get_density_by_material_id(material_id)
 
     def get_density_by_material_id(self, material_id):
         n = len(material_id)
@@ -162,7 +155,7 @@ class Materials(object):
         assert density.shape == (n, ), density.shape
         return density
 
-    def get_density_E(self, material_id):
+    def get_density_E_by_material_id(self, material_id):
         n = len(material_id)
         rho = zeros(n, dtype='float64')
         E = zeros(n, dtype='float64')
@@ -174,7 +167,7 @@ class Materials(object):
         assert E.shape == (n, ), E.shape
         return rho, E
 
-    def get_nonstructural_mass(self, material_id):
+    def get_nonstructural_mass_by_material_id(self, material_id):
         n = len(material_id)
         nsm = zeros(n)
         for i, mid in enumerate(material_id):
@@ -183,7 +176,7 @@ class Materials(object):
         assert nsm.shape == (n, ), nsm.shape
         return nsm
 
-    def get_E(self, material_id):
+    def get_E_by_material_id(self, material_id):
         n = len(material_id)
         E = zeros(n)
         for i, mid in enumerate(material_id):
@@ -192,7 +185,7 @@ class Materials(object):
         assert E.shape == (n, ), E.shape
         return E
 
-    def get_G(self, material_id):
+    def get_G_by_material_id(self, material_id):
         n = len(material_id)
         G = zeros(n)
         for i, mid in enumerate(material_id):
@@ -282,13 +275,13 @@ class Materials(object):
         #return out
         return out[0] if int_flag else out
 
-    def __getitem2__(self, material_id):
-        assert isinstance(material_id, int), 'material_id=%r' % material_id
-        types = self._get_types()
-        for mat in types:
-            if material_id in mat.material_id:
-                return mat
-        raise RuntimeError('Could not find material_id=%r' % material_id)
+    #def __getitem2__(self, material_id):
+        #assert isinstance(material_id, int), 'material_id=%r' % material_id
+        #types = self._get_types()
+        #for mat in types:
+            #if material_id in mat.material_id:
+                #return mat
+        #raise RuntimeError('Could not find material_id=%r' % material_id)
 
     def __len__(self):
         types = self._get_types()
@@ -324,11 +317,11 @@ class Materials(object):
         for mid, material in sorted(iteritems(self.mat1)):
             material._verify(xref)
 
-    def write_bdf(self, f, size=8, is_double=False, material_ids=None):
+    def write_bdf(self, f, size=8, is_double=False, material_id=None):
         self.model.log.debug('Materials.write_bdf.n=%s' % self.n)
         if self.n:
             f.write('$MATERIALS\n')
             types = self._get_types()
             for materials in types:
                 if materials.n:
-                    materials.write_bdf(f, size=size, material_ids=material_ids)
+                    materials.write_bdf(f, size=size, material_id=material_id)

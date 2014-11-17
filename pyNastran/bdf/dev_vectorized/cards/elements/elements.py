@@ -115,6 +115,7 @@ class Elements(object):
         ptypes = self._get_property_types(nlimit=False)
         self.n = 0
         for elems in etypes:
+            #if elems.n:
             self.model.log.debug('building %s' % elems.__class__.__name__)
             elems.build()
             self.ne += elems.n
@@ -122,6 +123,7 @@ class Elements(object):
                 #print nids - grids[i]
 
         for props in ptypes:
+            #if props.n:
             self.model.log.debug('building %s' % props.__class__.__name__)
             props.build()
             self.np += props.n

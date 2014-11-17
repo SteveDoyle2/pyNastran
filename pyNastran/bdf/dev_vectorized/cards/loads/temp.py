@@ -134,12 +134,13 @@ class TEMPP1(object):
         self.eids = None
 
     def write_bdf(self, f, size=8, is_double=False):
-        if size == 8:
-            for load_id, element_id, tbar, tprime in zip(self.load_id, self.element_id, self.tbar, self.tprime):
-                f.write('TEMPP1  %8i%8i%s%s\n' % (load_id, element_id, print_float_8(tbar), print_float_8(tprime)))
-        else:
-            for load_id, element_id, tbar, tprime in zip(self.load_id, self.element_id, self.tbar, self.tprime):
-                f.write('TEMPP1* %16i%16i%s%s\n*\n' % (load_id, element_id, print_float_16(tbar), print_float_16(tprime)))
+        if self.n:
+            if size == 8:
+                for load_id, element_id, tbar, tprime in zip(self.load_id, self.element_id, self.tbar, self.tprime):
+                    f.write('TEMPP1  %8i%8i%s%s\n' % (load_id, element_id, print_float_8(tbar), print_float_8(tprime)))
+            else:
+                for load_id, element_id, tbar, tprime in zip(self.load_id, self.element_id, self.tbar, self.tprime):
+                    f.write('TEMPP1* %16i%16i%s%s\n*\n' % (load_id, element_id, print_float_16(tbar), print_float_16(tprime)))
 
 
 class TEMPs(VectorizedCardDict):

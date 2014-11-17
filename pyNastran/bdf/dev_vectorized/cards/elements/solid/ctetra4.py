@@ -4,7 +4,8 @@ from itertools import count
 from numpy import zeros, arange, dot, cross, searchsorted, array, where, asarray, eye
 from numpy.linalg import norm
 
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+#from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 

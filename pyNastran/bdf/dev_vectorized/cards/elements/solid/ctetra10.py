@@ -103,7 +103,7 @@ class CTETRA10(SolidElement):
         n10 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 9]), :]
         return n1, n2, n3, n4, n5, n6, n7, n8, n9, n10
 
-    def get_volume(self, element_id=None, xyz_cid0=None, total=False):
+    def get_volume_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the volume for one or more CTETRA10 elements.
 
@@ -124,7 +124,7 @@ class CTETRA10(SolidElement):
             i += 1
         return V
 
-    def get_centroid_volume(self, element_id=None, xyz_cid0=None, total=False):
+    def get_centroid_volume_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the centroid and volume for one or more CTETRA10 elements.
 
@@ -152,7 +152,7 @@ class CTETRA10(SolidElement):
         assert volume.min() > 0.0, 'volume.min() = %f' % volume.min()
         return centroid, volume
 
-    def get_centroid(self, element_id=None, xyz_cid0=None, total=False):
+    def get_centroid_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the centroid for one or more CTETRA elements.
 
@@ -169,7 +169,7 @@ class CTETRA10(SolidElement):
             centroid = centroid.mean()
         return centroid
 
-    def get_mass(self, element_id=None, xyz_cid0=None, total=False):
+    def get_mass_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the mass for one or more CTETRA10 elements.
 
@@ -182,9 +182,9 @@ class CTETRA10(SolidElement):
         if xyz_cid0 is None:
             xyz_cid0 = self.model.grid.get_position_by_index()
 
-        V = self.get_volume(element_id, xyz_cid0)
-        mid = self.model.properties_solid.get_mid(self.property_id)
-        rho = self.model.materials.get_rho(mid)
+        V = self.get_volume_by_element_id(element_id, xyz_cid0)
+        mid = self.model.properties_solid.get_mid_by_property_id(self.property_id)
+        rho = self.model.materials.get_density_by_material_id(mid)
 
         mass = V * rho
         if total:
