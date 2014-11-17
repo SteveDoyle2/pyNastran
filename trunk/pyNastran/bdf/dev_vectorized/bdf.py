@@ -2445,7 +2445,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         mass_types = self._get_mass_types()
         massi = []
         for mass_type in mass_types:
-            massii = mass_type.get_mass(total=False)
+            massii = mass_type.get_mass_by_element_id(total=False)
             assert massii is not None, mass_type
             assert not isinstance(massii, float), mass_type
             #print("f massii =", massii)

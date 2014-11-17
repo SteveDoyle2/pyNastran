@@ -77,13 +77,12 @@ class PROD(Property):
         else:
             self.property_id = array([], dtype='int32')
 
-
-    def get_mass_per_length(self, property_ids=None):
+    def get_mass_per_length_by_proprety_id(self, property_id=None):
         # L * (A * rho + nsm)
-        if property_ids is None:
+        if property_id is None:
             i = arange(self.n)
         else:
-            i = self.get_index(property_ids)
+            i = self.get_index_by_property_id(property_id)
         A = self.A[i]
         mid = self.material_id[i]
         #mat = self.model.materials.get_material(mid)
@@ -91,56 +90,56 @@ class PROD(Property):
         nsm = self.nsm[i]
         return A * rho + nsm
 
-    def get_Area(self, property_ids):
-        i = self.get_index(property_ids)
+    def get_Area_by_property_id(self, property_id):
+        i = self.get_index_by_property_id(property_id)
         A = self.A[i]
         return A
 
-    def get_non_structural_mass(self, property_ids):
-        i = self.get_index(property_ids)
+    def get_non_structural_mass_by_property_id(self, property_id):
+        i = self.get_index_by_property_id(property_id)
         nsm = self.nsm[i]
         return nsm
 
-    def get_E(self, property_ids):
-        i = self.get_index(property_ids)
+    def get_E_by_property_id(self, property_id):
+        i = self.get_index_by_property_id(property_id)
         material_id = self.material_id[i]
         E = self.model.materials.get_E(material_id)
         return E
 
-    def get_G(self, property_ids):
-        i = self.get_index(property_ids)
+    def get_G_by_property_id(self, property_id):
+        i = self.get_index_by_property_id(property_id)
         material_id = self.material_id[i]
         G = self.model.materials.get_G(material_id)
         return G
 
-    def get_J(self, property_ids):
-        i = self.get_index(property_ids)
+    def get_J_by_property_id(self, property_id):
+        i = self.get_index_by_property_id(property_id)
         J = self.J[i]
         return J
 
-    def get_c(self, property_ids):
-        i = self.get_index(property_ids)
+    def get_c(self, property_id):
+        i = self.get_index_by_property_id(property_id)
         c = self.c[i]
         return c
 
-    def get_index(self, property_ids):
-        if isinstance(property_ids, int):
-            property_ids = array([property_ids])
-        if property_ids is None:
+    def get_index_by_property_id(self, property_id):
+        if isinstance(property_id, int):
+            property_id = array([property_id])
+        if property_id is None:
             return arange(self.n)
 
-        indexs = searchsorted(self.property_id, property_ids)
-        assert len(indexs) == len(property_ids), 'indexs=%s pids=%s' % (indexs, property_ids)
+        indexs = searchsorted(self.property_id, property_id)
+        assert len(indexs) == len(property_id), 'indexs=%s pids=%s' % (indexs, property_id)
         return indexs
 
-    def write_bdf(self, f, size=8, property_ids=None):
+    def write_bdf(self, f, size=8, property_id=None):
         if self.n:
             if self.n:
-                if property_ids is None:
+                if property_id is None:
                     i = arange(self.n)
                 else:
-                    assert len(unique(property_ids))==len(property_ids), unique(property_ids)
-                    i = searchsorted(self.property_id, property_ids)
+                    assert len(unique(property_id))==len(property_id), unique(property_id)
+                    i = searchsorted(self.property_id, property_id)
             for (pid, mid, A, J, c, nsm) in zip(
                  self.property_id, self.material_id[i], self.A[i], self.J[i], self.c[i], self.nsm[i]):
 

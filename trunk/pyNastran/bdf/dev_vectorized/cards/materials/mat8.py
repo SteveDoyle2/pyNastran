@@ -112,28 +112,29 @@ class MAT8(Material):
 
     def build(self):
         self.n = self.i
-        i = argsort(self.material_id)
-        self.model.log.info('MAT8.n = %s' % self.n)
-        self.material_id = self.material_id[i]
-        self.e11 = self.e11[i]
-        self.e22 = self.e22[i]
-        self.nu12 = self.nu12[i]
+        if self.n:
+            i = argsort(self.material_id)
+            self.model.log.info('MAT8.n = %s' % self.n)
+            self.material_id = self.material_id[i]
+            self.e11 = self.e11[i]
+            self.e22 = self.e22[i]
+            self.nu12 = self.nu12[i]
 
-        self.g12 = self.g12[i]
-        self.g1z = self.g1z[i]
-        self.g2z = self.g2z[i]
-        self.rho = self.rho[i]
-        self.a1 = self.a1[i]
-        self.a2 = self.a2[i]
-        self.TRef = self.TRef[i]
-        self.Xt = self.Xt[i]
-        self.Xc = self.Xc[i]
-        self.Yt = self.Yt[i]
-        self.Yc = self.Yc[i]
-        self.S = self.S[i]
-        self.ge = self.ge[i]
-        self.F12 = self.F12[i]
-        self.strn = self.strn[i]
+            self.g12 = self.g12[i]
+            self.g1z = self.g1z[i]
+            self.g2z = self.g2z[i]
+            self.rho = self.rho[i]
+            self.a1 = self.a1[i]
+            self.a2 = self.a2[i]
+            self.TRef = self.TRef[i]
+            self.Xt = self.Xt[i]
+            self.Xc = self.Xc[i]
+            self.Yt = self.Yt[i]
+            self.Yc = self.Yc[i]
+            self.S = self.S[i]
+            self.ge = self.ge[i]
+            self.F12 = self.F12[i]
+            self.strn = self.strn[i]
 
     def get_density_by_material_id(self, material_id=None):
         i = self.get_index_by_material_id(material_id)
@@ -209,7 +210,7 @@ class MAT8(Material):
         """
         return list_fields
 
-    def write_bdf(self, f, size=8, is_double=False):
+    def write_bdf(self, f, size=8, is_double=False, material_id=None):
         if self.n:
             for mid, e11, e22, nu12, g12, g1z, g2z, rho, a1, a2, TRef, Xt, Yt, Xc, Yc, S, ge, F12, strn in zip(
                 self.material_id, self.e11, self.e22, self.nu12, self.g12, self.g1z, self.g2z, self.rho,
@@ -242,10 +243,6 @@ class MAT8(Material):
                     f.write(print_card_8(list_fields))
                 else:
                     f.write(print_card_16(list_fields))
-
-    def __getitem__(self, material_id):
-        i = where(self.material_id == material_id)[0]
-        return self.slice_by_index(i)
 
     def slice_by_index(self, i):
         i = asarray(i)

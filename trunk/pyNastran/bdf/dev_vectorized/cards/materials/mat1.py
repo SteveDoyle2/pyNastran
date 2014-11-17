@@ -25,7 +25,6 @@ class Material(VectorizedCard):
 
     def items(self):
         mids = self.material_id
-        #self.model.log.debug('mids = %s' % mids)
         for mid in mids:
             yield mid, self.__getitem__(mid)
 
@@ -41,6 +40,11 @@ class Material(VectorizedCard):
     def get_index_by_material_id(self, material_id):
         i = searchsorted(material_id, self.material_id)
         return i
+
+    def __getitem__(self, material_id):
+        i = where(self.material_id == material_id)[0]
+        return self.slice_by_index(i)
+
 
 class MAT1(Material):
     """
@@ -146,14 +150,14 @@ class MAT1(Material):
         i = self.get_index_by_material_id(material_id)
         return self.get_density_by_index(i)
 
-    def write_bdf(self, f, size=8, material_ids=None):
+    def write_bdf(self, f, size=8, material_id=None):
         if self.n:
-            if material_ids is None:
+            if material_id is None:
                 i = arange(self.n)
             else:
-                i = searchsorted(self.material_id, material_ids)
+                i = searchsorted(self.material_id, material_id)
 
-            assert material_ids is None
+            assert material_id is None
             #self.model.log.debug"n = %s" % self.n)
             #self.model.log.debug"mids MAT1 %s" % self.material_id)
             Rho  = ['' if rhoi  == 0.0 else rhoi  for rhoi  in self.rho[i]]
@@ -229,13 +233,6 @@ class MAT1(Material):
         self.E[i] = E
         self.G[i] = G
         self.nu[i] = nu
-
-    def __getitem__(self, material_id):
-        #self.model.log.debug('self.material_id = %s' % self.material_id)
-        #self.model.log.debug('material_id = %s' % material_id)
-        #material_id = slice_to_iter(material_id)
-        i = where(self.material_id == material_id)[0]
-        return self.slice_by_index(i)
 
     def slice_by_index(self, i):
         i = asarray(i)

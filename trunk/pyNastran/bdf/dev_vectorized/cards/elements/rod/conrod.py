@@ -122,9 +122,9 @@ class CONROD(RodElement):
     def get_material_from_index(self, i):
         return self.model.materials.mat1
 
-    def get_area(self, property_ids=None):
-        A = self.A
-        return A
+    def get_area_by_property_id(self, property_id=None):
+        i = self.get_index_by_property_id(property_id)
+        return self.get_area_from_index(i)
 
     def get_E(self, property_ids=None):
         mat = self.model.materials.mat1[self.material_id[i]]

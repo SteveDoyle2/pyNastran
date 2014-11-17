@@ -242,10 +242,10 @@ class PSHELL(Property):
         :param self: the PSHELL object
         :param property_ids: the property IDs to consider (default=None -> all)
         """
-        if property_ids is None:
+        if property_id is None:
             mid = self.material_id
         else:
-            i = self.get_index(property_id)
+            i = self.get_index_by_property_id(property_id)
             mid = self.material_id[i]
         return mid
 

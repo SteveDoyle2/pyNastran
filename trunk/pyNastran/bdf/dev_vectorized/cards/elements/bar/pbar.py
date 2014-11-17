@@ -115,10 +115,10 @@ class PBAR(Property):
             self.property_id = array([], dtype='int32')
 
     #=========================================================================
-    def get_index(self, property_ids):
-        if isinstance(property_ids, int):
-            property_ids = array([property_ids])
-        if property_ids is None:
+    def get_index_by_property_id(self, property_id):
+        if isinstance(property_id, int):
+            property_id = array([property_id])
+        if property_id is None:
             return arange(self.n)
 
         indexs = searchsorted(self.property_id, property_ids)

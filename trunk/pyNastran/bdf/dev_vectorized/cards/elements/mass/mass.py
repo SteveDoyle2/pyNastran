@@ -80,31 +80,31 @@ class Mass(object):
         self.pmass.add(card, comment)
 
     #=========================================================================
-    def get_indexs(self, element_ids=None):
+    def get_index_by_element_id(self, element_id=None):
         #mass_types = self._get_types()
         #for mass_type in mass_types:
-            #element_ids.extend(mass_type.element_id)
+            #element_id.extend(mass_type.element_id)
 
         types = self._get_types()
         if types:
-            _element_ids = concatenate([mtype.element_id for mtype in types])
-            i = argsort(_element_ids)
-            return _element_ids, i
+            _element_id = concatenate([mtype.element_id for mtype in types])
+            i = argsort(_element_id)
+            return _element_id, i
         return None, None
 
-    def get_mass(self, element_ids=None, total=False):
-        assert element_ids is None
+    def get_mass_by_element_id(self, element_id=None, total=False):
+        assert element_id is None
         mass_types = self._get_types(nlimit=True)
 
-        element_ids, i = self.get_indexs(element_ids)
-        if element_ids is None:
+        element_id, i = self.get_index_by_element_id(element_id)
+        if element_id is None:
             return None
 
-        n = len(element_ids)
+        n = len(element_id)
 
         for mass_type in mass_types:
-            element_ids2 = union1d(element_ids, mass_type.element_id)
-            massi = mass_type.get_mass(element_ids2, total)
+            element_id2 = union1d(element_id, mass_type.element_id)
+            massi = mass_type.get_mass(element_id2, total)
 
         if total:
             mass = massi.sum()
@@ -113,13 +113,13 @@ class Mass(object):
         return mass
 
     #=========================================================================
-    def write_bdf(self, f, size=8, is_double=False, element_ids=None):
+    def write_bdf(self, f, size=8, is_double=False, element_id=None):
         types = self._get_types(nlimit=True)
         if types:
             f.write('$ELEMENTS_MASS\n')
         for elems in types:
             #print "MASS", elems.type
-            elems.write_bdf(f, size=size, element_ids=element_ids)
+            elems.write_bdf(f, size=size, element_id=element_id)
 
     def _get_types(self, nlimit=True):
         mtypes = [

@@ -184,7 +184,7 @@ class CBEAM(Element):
             self.property_id = array([], dtype='int32')
 
     #=========================================================================
-    def get_mass(self, grid_cid0=None, total=False):
+    def get_mass_by_element_id(self, element_id=None, grid_cid0=None, total=False):
         """
         mass = rho * A * L + nsm
         """
@@ -196,14 +196,14 @@ class CBEAM(Element):
         p1 = grid_cid0[self.node_ids[:, 0]]
         p2 = grid_cid0[self.node_ids[:, 1]]
         L = p2 - p1
-        i = self.model.properties_bar.get_index(self.property_id)
+        i = self.model.properties_bar.get_index_by_property_id(self.property_id)
         A = self.model.properties_bar.get_Area[i]
         material_id = self.model.properties_bar.material_id[i]
 
-        rho, E, J = self.model.Materials.get_rho_E_J(material_id)
-        rho = self.model.Materials.get_rho(self.mid)
-        E   = self.model.Materials.get_E(self.mid)
-        J   = self.model.Materials.get_J(self.mid)
+        rho, E, J = self.model.Materials.get_rho_E_J_by_material_id(material_id)
+        rho = self.model.Materials.get_rho_by_material_id(self.mid)
+        E   = self.model.Materials.get_E_by_material_id(self.mid)
+        J   = self.model.Materials.get_J_by_material_id(self.mid)
 
         mass = norm(L, axis=1) * A * rho + self.nsm
         if total:

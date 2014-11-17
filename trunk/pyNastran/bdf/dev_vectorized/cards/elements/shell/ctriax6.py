@@ -61,14 +61,14 @@ class CTRIAX6(object):
         else:
             self.element_id = array([], dtype='int32')
 
-    def get_index(self, element_id=None):
+    def get_index_by_element_id(self, element_id=None):
         if element_id is None:
             return arange(self.n)
         return searchsorted(element_id, self.element_id)
 
     def write_bdf(self, f, size=8, element_id=None):
         if self.n:
-            i = self.get_index(element_id)
+            i = self.get_index_by_element_id(element_id)
             Theta = [theta if theta != 0.0 else '' for theta in self.theta[i]]
             N0 = [n if n != 0 else '' for n in self.node_ids[i, 0]]
             N1 = [n if n != 0 else '' for n in self.node_ids[i, 1]]

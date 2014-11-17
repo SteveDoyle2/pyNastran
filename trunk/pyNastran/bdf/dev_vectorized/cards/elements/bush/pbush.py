@@ -25,6 +25,7 @@ class PBUSH(object):
         """
         self.model = model
         self.properties = {}
+        self.n = 0
         #self._cards = []
         #self._comments = []
 
