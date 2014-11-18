@@ -13,8 +13,8 @@ class Hypersonic(BDF):
         BDF.__init__(self, debug=debug, log=log)
         self.hyper = {}
         self.flow = {}
-        self.cardsToRead.add('HYPER')
-        self.cardsToRead.add('FLOW')
+        self.cards_to_read.add('HYPER')
+        self.cards_to_read.add('FLOW')
 
     def add_card(self, card_lines, card_name, comment='', is_list=True):
         card_name = card_name.upper()

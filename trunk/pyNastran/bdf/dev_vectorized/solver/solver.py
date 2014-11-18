@@ -2135,7 +2135,7 @@ class Solver(F06, OP2):
 
 
 def get_cards():
-    cardsToRead = set([
+    cards_to_read = set([
                       'PARAM',
                       'GRID', 'GRDSET',
 
@@ -2181,7 +2181,7 @@ def get_cards():
                       'INCLUDE',
                       'ENDDATA',
                       ])
-    return cardsToRead
+    return cards_to_read
 
 def main():
     from pyNastran.bdf.dev_vectorized.solver.solver_args import run_arg_parse

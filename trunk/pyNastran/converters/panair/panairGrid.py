@@ -2,6 +2,7 @@ from six import iteritems
 import os
 #import sys
 #import copy
+from six import PY2
 from six.moves import zip, range
 from itertools import count
 
@@ -162,7 +163,10 @@ class PanairGrid(object):
 
     def write_panair(self, outfileName):
         self.update_cases()
-        outfile = open(outfileName, 'wb')
+        if PY2:
+            outfile = open(outfileName, 'wb')
+        else:
+            outfile = open(outfileName, 'w')
         outfile.write(self.titleSection)
         outfile.write(self.write_data_check())
         outfile.write(self.symmetrySection)

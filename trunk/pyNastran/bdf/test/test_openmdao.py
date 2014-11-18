@@ -176,7 +176,7 @@ class BDFUpdater(BDF):
 
         }
         for key in self._type_map:
-            assert key in self.cardsToRead, 'key=%r is not a valid card' % key
+            assert key in self.cards_to_read, 'key=%r is not a valid card' % key
 
     def update_card(self, Type, iType, ifield, value):
         for key in self.card_count:

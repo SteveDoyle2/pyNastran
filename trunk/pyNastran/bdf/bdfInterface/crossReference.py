@@ -4,7 +4,7 @@ Links up the various cards in the BDF.
 # pylint: disable=E1101,C0103,R0902,R0904,R0914,W0611
 
 from __future__ import print_function
-from six import  iteritems
+from six import iteritems, itervalues
 import warnings
 #from pyNastran.bdf.cards.constraints import constraintObject2
 
@@ -51,17 +51,17 @@ class XrefMesh(object):
         #self.mpcObject.cross_reference(self)  # enable to output MPCs
 
         #self.spcObject = constraintObject()
-        for spcadd in self.spcadds.itervalues():
+        for spcadd in itervalues(self.spcadds):
             self.spcObject.Add(spcadd)
 
-        for spcs in self.spcs.itervalues():
+        for spcs in itervalues(self.spcs):
             for spc in spcs:
                 self.spcObject.append(spc)
 
-        for mpcadd in self.mpcadds.itervalues():
+        for mpcadd in itervalues(self.mpcadds):
             self.mpcObject.Add(mpcadd)
 
-        for mpcs in self.mpcs.itervalues():
+        for mpcs in itervalues(self.mpcs):
             for mpc in mpcs:
                 self.mpcObject.append(mpc)
         #self.mpcObject = constraintObject()
@@ -73,20 +73,20 @@ class XrefMesh(object):
         """
         # CORD2x: links the rid to coordinate systems
         # CORD1x: links g1,g2,g3 to grid points
-        for coord in self.coords.itervalues():
+        for coord in itervalues(self.coords):
             coord.cross_reference(self)
 
-        for coord in self.coords.itervalues():
+        for coord in itervalues(self.coords):
             coord.setup()
 
     def _cross_reference_aero(self):
         """
         Links up all the aero cards
         """
-        for caero in self.caeros.itervalues():
+        for caero in itervalues(self.caeros):
             caero.cross_reference(self)
 
-        for spline in self.splines.itervalues():
+        for spline in itervalues(self.splines):
             spline.cross_reference(self)
 
     def _cross_reference_nodes(self):
@@ -94,7 +94,7 @@ class XrefMesh(object):
         Links the nodes to coordinate systems
         """
         gridSet = self.gridSet
-        for n in self.nodes.itervalues():
+        for n in itervalues(self.nodes):
             try:
                 n.cross_reference(self, gridSet)
             except:
@@ -109,7 +109,7 @@ class XrefMesh(object):
         Links the elements to nodes, properties (and materials depending on
         the card).
         """
-        for elem in self.elements.itervalues():
+        for elem in itervalues(self.elements):
             try:
                 elem.cross_reference(self)
             except:
@@ -122,7 +122,7 @@ class XrefMesh(object):
         Links the mass to nodes, properties (and materials depending on
         the card).
         """
-        for mass in self.masses.itervalues():
+        for mass in itervalues(self.masses):
             try:
                 mass.cross_reference(self)
             except:
@@ -130,7 +130,7 @@ class XrefMesh(object):
                 self.log.error(msg)
                 raise
 
-        for prop in self.properties_mass.itervalues():
+        for prop in itervalues(self.properties_mass):
             try:
                 prop.cross_reference(self)
             except:
@@ -142,7 +142,7 @@ class XrefMesh(object):
         """
         Links the properties to materials
         """
-        for prop in self.properties.itervalues():
+        for prop in itervalues(self.properties):
             try:
                 prop.cross_reference(self)
             except:
@@ -155,7 +155,7 @@ class XrefMesh(object):
         Links the materials to materials (e.g. MAT1, CREEP)
         often this is a pass statement
         """
-        for mat in self.materials.itervalues():  # MAT1
+        for mat in itervalues(self.materials):  # MAT1
             try:
                 mat.cross_reference(self)
             except:
@@ -168,7 +168,7 @@ class XrefMesh(object):
                 self.MATT1, self.MATT2, self.MATT3, self.MATT4, self.MATT5,
                 self.MATT8, self.MATT9]
         for material_deps in data:
-            for mat in material_deps.itervalues():
+            for mat in itervalues(material_deps):
                 try:
                     mat.cross_reference(self)
                 except:

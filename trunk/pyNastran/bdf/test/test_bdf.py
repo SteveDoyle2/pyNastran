@@ -256,7 +256,7 @@ def compute_ints(cards1, cards2, fem1):
         star = ' '
         if diff and key not in ['INCLUDE']:
             star = '*'
-        if key not in fem1.cardsToRead:
+        if key not in fem1.cards_to_read:
             star = '-'
 
         factor1 = divide(value1, value2)

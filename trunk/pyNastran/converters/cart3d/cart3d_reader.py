@@ -1,5 +1,5 @@
 #pylint:  disable=C0103,C0111
-from six import iteritems
+from six import iteritems, PY2
 from six.moves import zip, range
 import os
 import sys
@@ -771,7 +771,10 @@ class Cart3DReader(object):
         return sline2
 
     def write_nastran(self, fname, points, elements, regions):
-        f = open(fname, 'wb')
+        if PY2:
+            f = open(fname, 'wb')
+        else:
+            f = open(fname, 'w')
         nnodes, three = points.shape
         for nid in range(nnodes):
             (x, y, z) = nodes[nid, :]

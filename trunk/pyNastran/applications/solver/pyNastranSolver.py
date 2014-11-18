@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=E0602,C0103
 from __future__ import print_function
-from six import iteritems
+from six import iteritems, PY2
 from six.moves import zip, range
 import os
 import sys
@@ -305,7 +305,7 @@ class Solver(F06, OP2):
         self.op2_pack_name = bdf_base + '_pack.op2'
 
         self.model = BDF()
-        self.model.cardsToRead = get_cards()
+        self.model.cards_to_read = get_cards()
         self.model.readBDF(bdfName)
         cc = self.model.caseControlDeck
         #print cc.subcases
@@ -314,7 +314,10 @@ class Solver(F06, OP2):
             if subcase.has_parameter('LOAD'):
                 analysisCases.append(subcase)
 
-        self.f06_file = open(self.f06_name, 'wb')
+        if PY2:
+            self.f06_file = open(self.f06_name, 'wb')
+        else:
+            self.f06_file = open(self.f06_name, 'w')
         self.op2_file = open(self.op2_name, 'wb')
         self.op2_pack_file = open(self.op2_pack_name, 'w')
 
@@ -1678,7 +1681,7 @@ class Solver(F06, OP2):
 
 
 def get_cards():
-    cardsToRead = set([
+    cards_to_read = set([
                       'PARAM',
                       'GRID', 'GRDSET',
 
@@ -1724,7 +1727,7 @@ def get_cards():
                       'INCLUDE',
                       'ENDDATA',
                       ])
-    return cardsToRead
+    return cards_to_read
 
 if __name__ == '__main__':
     if 1:

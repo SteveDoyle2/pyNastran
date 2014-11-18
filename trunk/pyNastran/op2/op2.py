@@ -251,30 +251,30 @@ class OP2( #BDF,
 
             # ===geom passers===
             # geometry
-            'GEOM1': [self._table_passer, self._table_passer],
-            'GEOM2': [self._table_passer, self._table_passer],
-            'GEOM3': [self._table_passer, self._table_passer],
-            'GEOM4': [self._table_passer, self._table_passer],
+            b'GEOM1': [self._table_passer, self._table_passer],
+            b'GEOM2': [self._table_passer, self._table_passer],
+            b'GEOM3': [self._table_passer, self._table_passer],
+            b'GEOM4': [self._table_passer, self._table_passer],
 
             # superelements
-            'GEOM1S': [self._table_passer, self._table_passer],  # GEOMx + superelement
-            'GEOM2S': [self._table_passer, self._table_passer],
-            'GEOM3S': [self._table_passer, self._table_passer],
-            'GEOM4S': [self._table_passer, self._table_passer],
+            b'GEOM1S': [self._table_passer, self._table_passer],  # GEOMx + superelement
+            b'GEOM2S': [self._table_passer, self._table_passer],
+            b'GEOM3S': [self._table_passer, self._table_passer],
+            b'GEOM4S': [self._table_passer, self._table_passer],
 
-            'GEOM1N': [self._table_passer, self._table_passer],
-            'GEOM2N': [self._table_passer, self._table_passer],
-            'GEOM3N': [self._table_passer, self._table_passer],
-            'GEOM4N': [self._table_passer, self._table_passer],
+            b'GEOM1N': [self._table_passer, self._table_passer],
+            b'GEOM2N': [self._table_passer, self._table_passer],
+            b'GEOM3N': [self._table_passer, self._table_passer],
+            b'GEOM4N': [self._table_passer, self._table_passer],
 
-            'GEOM1OLD': [self._table_passer, self._table_passer],
-            'GEOM2OLD': [self._table_passer, self._table_passer],
-            'GEOM3OLD': [self._table_passer, self._table_passer],
-            'GEOM4OLD': [self._table_passer, self._table_passer],
+            b'GEOM1OLD': [self._table_passer, self._table_passer],
+            b'GEOM2OLD': [self._table_passer, self._table_passer],
+            b'GEOM3OLD': [self._table_passer, self._table_passer],
+            b'GEOM4OLD': [self._table_passer, self._table_passer],
 
-            'EPT' : [self._table_passer, self._table_passer],  # elements
-            'EPTS': [self._table_passer, self._table_passer],  # elements - superelements
-            'EPTOLD' : [self._table_passer, self._table_passer],
+            b'EPT' : [self._table_passer, self._table_passer],  # elements
+            b'EPTS': [self._table_passer, self._table_passer],  # elements - superelements
+            b'EPTOLD' : [self._table_passer, self._table_passer],
 
             'MPT' : [self._table_passer, self._table_passer],  # materials
             'MPTS': [self._table_passer, self._table_passer],  # materials - superelements
@@ -569,90 +569,90 @@ class OP2( #BDF,
             if 0:
                 self._skip_table(table_name)
             else:
-                if table_name in ['GEOM1', 'GEOM2', 'GEOM3', 'GEOM4',  # regular
-                                  'GEOM1S', 'GEOM2S', 'GEOM3S', 'GEOM4S', # superelements
-                                  'GEOM1N',
-                                  'GEOM1OLD', 'GEOM2OLD', 'GEOM4OLD',
+                if table_name in [b'GEOM1', b'GEOM2', b'GEOM3', b'GEOM4',  # regular
+                                  b'GEOM1S', b'GEOM2S', b'GEOM3S', b'GEOM4S', # superelements
+                                  b'GEOM1N',
+                                  b'GEOM1OLD', b'GEOM2OLD', b'GEOM4OLD',
 
-                                  'EPT', 'EPTS', 'EPTOLD',
-                                  'EDTS',
-                                  'MPT', 'MPTS',
+                                  b'EPT', b'EPTS', b'EPTOLD',
+                                  b'EDTS',
+                                  b'MPT', b'MPTS',
 
-                                  'PVT0', 'CASECC',
-                                  'EDOM', 'OGPFB1',
-                                  'BGPDT', 'BGPDTS', 'BGPDTOLD',
-                                  'DYNAMIC', 'DYNAMICS',
-                                  'EQEXIN', 'EQEXINS',
-                                  'GPDT', 'ERRORN',
-                                  'DESTAB', 'R1TABRG', 'HISADD',
+                                  b'PVT0', b'CASECC',
+                                  b'EDOM', b'OGPFB1',
+                                  b'BGPDT', b'BGPDTS', b'BGPDTOLD',
+                                  b'DYNAMIC', b'DYNAMICS',
+                                  b'EQEXIN', b'EQEXINS',
+                                  b'GPDT', b'ERRORN',
+                                  b'DESTAB', b'R1TABRG', b'HISADD',
 
                                    # eigenvalues
-                                   'BLAMA', 'LAMA',
+                                   b'BLAMA', b'LAMA',
                                    # strain energy
-                                   'ONRGY1',
+                                   b'ONRGY1',
                                    # grid point weight
-                                   'OGPWG', 'OGPWGM',
+                                   b'OGPWG', b'OGPWGM',
 
                                    # other
-                                   'CONTACT', 'VIEWTB',
-                                   'KDICT', 'MONITOR', 'PERF',
+                                   b'CONTACT', b'VIEWTB',
+                                   b'KDICT', b'MONITOR', b'PERF',
                                   ]:
                     self._read_geom_table()  # DIT (agard)
-                elif table_name in ['GPL', ]:
+                elif table_name in [b'GPL', ]:
                     self._read_gpl()
-                elif table_name in ['MEFF', ]:
+                elif table_name in [b'MEFF', ]:
                     self._read_meff()
-                elif table_name in ['OMM2', ]:
+                elif table_name in [b'OMM2', ]:
                     self._read_omm2()
-                elif table_name in ['DIT']:  # tables
+                elif table_name in [b'DIT']:  # tables
                     self._read_dit()
-                elif table_name in ['KELM']:
+                elif table_name in [b'KELM']:
                     self._read_kelm()
-                elif table_name in ['PCOMPTS']: # blade
+                elif table_name in [b'PCOMPTS']: # blade
                     self._read_pcompts()
-                elif table_name == 'FOL':
+                elif table_name == b'FOL':
                     self._read_fol()
-                elif table_name in ['SDF', 'PMRF']:  #, 'PERF'
+                elif table_name in [b'SDF', b'PMRF']:  #, 'PERF'
                     self._read_sdf()
                 elif table_name in [
                                     # stress
-                                    'OES1X1', 'OES1', 'OES1X', 'OES1C', 'OESCP',
-                                    'OESNLXR', 'OESNLXD', 'OESNLBR', 'OESTRCP',
-                                    'OESNL1X', 'OESRT',
+                                    b'OES1X1', b'OES1', b'OES1X', b'OES1C', b'OESCP',
+                                    b'OESNLXR', b'OESNLXD', b'OESNLBR', b'OESTRCP',
+                                    b'OESNL1X', b'OESRT',
                                     # strain
-                                    'OSTR1X', 'OSTR1C',
+                                    b'OSTR1X', b'OSTR1C',
                                     # forces
-                                    'OEFIT', 'OEF1X', 'OEF1', 'DOEF1',
+                                    b'OEFIT', b'OEF1X', b'OEF1', b'DOEF1',
                                     # spc forces
-                                    'OQG1', 'OQGV1',
+                                    b'OQG1', b'OQGV1',
                                     # mpc forces
-                                    'OQMG1',
+                                    b'OQMG1',
                                     # ??? forces
-                                    'OQP1',
+                                    b'OQP1',
                                     # displacement/velocity/acceleration/eigenvector/temperature
-                                    'OUG1', 'OUGV1', 'BOUGV1', 'OUPV1', 'OUGV1PAT',
+                                    b'OUG1', b'OUGV1',b'BOUGV1', b'OUPV1', b'OUGV1PAT',
                                     # applied loads
-                                    'OPG1', 'OPGV1', 'OPNL1', #'OPG2',
+                                    b'OPG1', b'OPGV1', b'OPNL1', #b'OPG2',
 
                                     # grid point stresses
-                                    'OGS1',
+                                    b'OGS1',
 
                                     # other
-                                    'OPNL1', 'OFMPF2M',
-                                    'OSMPF2M', 'OPMPF2M', 'OLMPF2M', 'OGPMPF2M',
+                                    b'OPNL1', b'OFMPF2M',
+                                    b'OSMPF2M', b'OPMPF2M', b'OLMPF2M', b'OGPMPF2M',
 
-                                    'OAGPSD2', 'OAGCRM2', 'OAGRMS2', 'OAGATO2', 'OAGNO2',
-                                    'OESPSD2', 'OESCRM2', 'OESRMS2', 'OESATO2', 'OESNO2',
-                                    'OEFPSD2', 'OEFCRM2', 'OEFRMS2', 'OEFATO2', 'OEFNO2',
-                                    'OPGPSD2', 'OPGCRM2', 'OPGRMS2', 'OPGATO2', 'OPGNO2',
-                                    'OQGPSD2', 'OQGCRM2', 'OQGRMS2', 'OQGATO2', 'OQGNO2',
-                                    'OQMPSD2', 'OQMCRM2', 'OQMRMS2', 'OQMATO2', 'OQMNO2',
-                                    'OUGPSD2', 'OUGCRM2', 'OUGRMS2', 'OUGATO2', 'OUGNO2',
-                                    'OVGPSD2', 'OVGCRM2', 'OVGRMS2', 'OVGATO2', 'OVGNO2',
-                                    'OSTRPSD2', 'OSTRCRM2', 'OSTRRMS2', 'OSTRATO2', 'OSTRNO2',
-                                    'OCRUG',
-                                    'OCRPG',
-                                    'STDISP',
+                                    b'OAGPSD2', b'OAGCRM2', b'OAGRMS2', b'OAGATO2', b'OAGNO2',
+                                    b'OESPSD2', b'OESCRM2', b'OESRMS2', b'OESATO2', b'OESNO2',
+                                    b'OEFPSD2', b'OEFCRM2', b'OEFRMS2', b'OEFATO2', b'OEFNO2',
+                                    b'OPGPSD2', b'OPGCRM2', b'OPGRMS2', b'OPGATO2', b'OPGNO2',
+                                    b'OQGPSD2', b'OQGCRM2', b'OQGRMS2', b'OQGATO2', b'OQGNO2',
+                                    b'OQMPSD2', b'OQMCRM2', b'OQMRMS2', b'OQMATO2', b'OQMNO2',
+                                    b'OUGPSD2', b'OUGCRM2', b'OUGRMS2', b'OUGATO2', b'OUGNO2',
+                                    b'OVGPSD2', b'OVGCRM2', b'OVGRMS2', b'OVGATO2', b'OVGNO2',
+                                    b'OSTRPSD2', b'OSTRCRM2', 'OSTRRMS2', b'OSTRATO2', b'OSTRNO2',
+                                    b'OCRUG',
+                                    b'OCRPG',
+                                    b'STDISP',
                                     ]:
                     self._read_results_table()
                 else:
