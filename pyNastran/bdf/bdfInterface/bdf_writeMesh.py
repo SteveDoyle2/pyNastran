@@ -7,7 +7,7 @@ This file defines:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, iteritems
+from six import string_types, iteritems, itervalues, PY2
 from codecs import open
 
 #import warnings
@@ -41,7 +41,7 @@ class WriteMesh(object):
     """
     def __init__(self):
         self._auto_reject = True
-        self.cardsToRead = set([])
+        self.cards_to_read = set([])
         #WriteMeshDeprecated.__init__()
 
     def echo_bdf(self, infile_name):
@@ -51,7 +51,7 @@ class WriteMesh(object):
 
         .. todo:: maybe add the write method
         """
-        self.cardsToRead = set([])
+        self.cards_to_read = set([])
         return self.read_bdf(infile_name)
 
     def auto_reject_bdf(self, infile_name):
@@ -122,7 +122,10 @@ class WriteMesh(object):
         elif precision == 'single':
             double = False
 
-        outfile = open(out_filename, 'wb')
+        if PY2:
+            outfile = open(out_filename, 'wb')
+        else:
+            outfile = open(out_filename, 'w')
         self._write_header(outfile)
         self._write_params(outfile, size, card_writer)
 
@@ -156,7 +159,6 @@ class WriteMesh(object):
 
         :param self: the BDF object
         """
-        msg = ''
         if self.executive_control_lines:
             msg = '$EXECUTIVE CONTROL DECK\n'
             if self.sol == 600:
@@ -169,7 +171,7 @@ class WriteMesh(object):
 
             for line in self.executive_control_lines:
                 msg += line + '\n'
-            outfile.write(''.join(msg))
+            outfile.write(msg)
 
     def _write_case_control_deck(self, outfile):
         """
@@ -247,11 +249,11 @@ class WriteMesh(object):
 
         if missing_properties or self.pdampt or self.pbusht or self.pelast:
             msg = ['$UNASSOCIATED_PROPERTIES\n']
-            for card in sorted(self.pbusht.itervalues()):
+            for card in sorted(itervalues(self.pbusht)):
                 msg.append(card.write_bdf(size, card_writer))
-            for card in sorted(self.pdampt.itervalues()):
+            for card in sorted(itervalues(self.pdampt)):
                 msg.append(card.write_bdf(size, card_writer))
-            for card in sorted(self.pelast.itervalues()):
+            for card in sorted(itervalues(self.pelast)):
                 msg.append(card.write_bdf(size, card_writer))
             for card in missing_properties:
                 # this is a string...

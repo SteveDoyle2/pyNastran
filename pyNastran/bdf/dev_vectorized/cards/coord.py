@@ -1,4 +1,4 @@
-from six import iteritems
+from six import iteritems, itervalues
 from six.moves import zip
 from numpy import (array, concatenate, searchsorted, unique, zeros, array, full,
                    nan, where, vstack, dot, cross, degrees, radians, arctan2,
@@ -441,7 +441,7 @@ class Coord(object):
             yield cid
 
     def values(self):
-        for coord in self.coords.itervalues():
+        for coord in itervalues(self.coords):
             yield coord
 
     def items(self):

@@ -1,7 +1,7 @@
 #pylint: disable=W0201,C0301,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, iteritems
+from six import string_types, iteritems, PY2
 import sys
 import copy
 from datetime import date
@@ -741,7 +741,7 @@ class F06Writer(object):
         summary_header = '                                        M O D E L   S U M M A R Y\n\n'
         summary = ''
 
-        self.cardsToRead = set([
+        self.cards_to_read = set([
 
             # rigid elements
             'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3',
@@ -841,7 +841,10 @@ class F06Writer(object):
         """
         print("F06:")
         if isinstance(f06_outname, str):
-            f06 = open(f06_outname, 'wb')
+            if PY2:
+                f06 = open(f06_outname, 'wb')
+            else:
+                f06 = open(f06_outname, 'w')
             self.write_summary(f06)
         else:
             assert isinstance(f06_outname, file), 'type(f06_outname)= %s' % f06_outname

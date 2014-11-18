@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 __all__ = ['OP4']
-from six import string_types, iteritems
+from six import string_types, iteritems, PY2
 from six.moves import range
 import os
 import io
@@ -1513,7 +1513,10 @@ if __name__ == '__main__':  ## pragma: no cover
     strings = matrices()
 
     isBigMat = True
-    f = open('ascii.op4', 'wb')
+    if PY2:
+        f = open('ascii.op4', 'wb')
+    else:
+        f = open('ascii.op4', 'w')
     for fname in filenames:
         op4 = OP4()
         op4.endian = '>'

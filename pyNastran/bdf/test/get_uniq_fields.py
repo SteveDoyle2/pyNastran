@@ -61,7 +61,7 @@ class BDFuniqCard(BDF):
         """Can the card be read"""
         if cardName.startswith('='):
             return False
-        elif not cardName in self.cardsToRead:
+        elif not cardName in self.cards_to_read:
             if cardName:
                 if cardName not in self.reject_count:
                     self.log.info("RejectCardName = |%s|" % cardName)

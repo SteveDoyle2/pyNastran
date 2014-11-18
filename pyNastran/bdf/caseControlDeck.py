@@ -4,7 +4,7 @@ CaseControlDeck parsing and extraction class
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
+from six import iteritems, itervalues
 import sys
 import copy
 
@@ -492,7 +492,7 @@ class CaseControlDeck(object):
 
         :param self:  the CaseControlDeck object
         """
-        for subcase in self.subcases.itervalues():
+        for subcase in itervalues(self.subcases):
             subcase.finish_subcase()
 
     def convert_to_sol_200(self, model):
@@ -567,7 +567,7 @@ class CaseControlDeck(object):
         """
         msg = ''
         subcase0 = self.subcases[0]
-        for subcase in self.subcases.itervalues():
+        for subcase in itervalues(self.subcases):
             #print('writing subcase...')
             msg += subcase.write_subcase(subcase0)
         #if len(self.subcases) == 1:

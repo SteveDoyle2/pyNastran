@@ -7,7 +7,7 @@ Main BDF class.  Defines:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, iteritems
+from six import string_types, iteritems, itervalues
 from collections import defaultdict
 from pyNastran.utils import (object_attributes, print_bad_path)
 from pyNastran.bdf.fieldWriter import print_card_8
@@ -184,7 +184,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.__init_attributes()
 
         #: the list of possible cards that will be parsed
-        self.cardsToRead = set([
+        self.cards_to_read = set([
             'ECHOON', 'ECHOOFF',
             'PARAM',
             'GRID', 'GRDSET', 'SPOINT',  # 'RINGAX',
@@ -322,7 +322,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         caseControlCards = set(['FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
                                 'TEMP', 'TSTEPNL', 'INCLUDE'])
-        self.uniqueBulkDataCards = self.cardsToRead.difference(caseControlCards)
+        self.uniqueBulkDataCards = self.cards_to_read.difference(caseControlCards)
 
         #: / is the delete from restart card
         self.specialCards = ['DEQATN', '/']
@@ -335,7 +335,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         :param cards: a list/set of cards that should not be read
         """
         disableSet = set(cards)
-        self.cardsToRead.difference(disableSet)
+        self.cards_to_read.difference(disableSet)
 
     def __init_attributes(self):
         """
@@ -1071,7 +1071,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         if card_name.startswith('='):
             return False
-        elif card_name in self.cardsToRead:
+        elif card_name in self.cards_to_read:
             return False
         if card_name:
             if card_name not in self.reject_count:
@@ -1493,7 +1493,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             # not cards
             'debug', 'executive_control_lines',
-            'case_control_lines', 'cardsToRead', 'card_count',
+            'case_control_lines', 'cards_to_read', 'card_count',
             'isStructured', 'uniqueBulkDataCards',
             'nCardLinesMax', 'modelType', 'includeDir',
             'cardsToWrite', 'solMethod', 'log', 'doneReading',
@@ -1535,7 +1535,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             card_group = getattr(self, card_group_name)
             groups = set([])
 
-            for card in card_group.itervalues():
+            for card in itervalues(card_group):
                 if isinstance(card, list):
                     for card2 in card:
                         groups.add(card2.type)
@@ -1559,7 +1559,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         if self.rejects:
             msg.append('Rejected Cards')
             for name, counter in sorted(iteritems(self.card_count)):
-                if name not in self.cardsToRead:
+                if name not in self.cards_to_read:
                     msg.append('  %-8s %s' % (name + ':', counter))
         msg.append('')
         if return_type == 'string':
