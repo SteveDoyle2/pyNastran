@@ -396,6 +396,10 @@ class PRAC2D(CrackProperty):
         else:
             raise NotImplementedError(data)
 
+    def _verify(self, xref=True):
+        pid = self.Pid()
+        assert isinstance(pid, int)
+
     def cross_reference(self, model):
         msg = ' which is required by PRAC2D pid=%s' % self.pid
         self.mid = model.Material(self.mid, msg)  # MAT1, MAT2, MAT8
@@ -443,6 +447,10 @@ class PRAC3D(CrackProperty):
             assert len(card) <= 5, 'len(PRAC3D card) = %i' % len(card)
         else:
             raise NotImplementedError(data)
+
+    def _verify(self, xref=True):
+        pid = self.Pid()
+        assert isinstance(pid, int)
 
     def cross_reference(self, model):
         msg = ' which is required by PRAC3D pid=%s' % self.pid

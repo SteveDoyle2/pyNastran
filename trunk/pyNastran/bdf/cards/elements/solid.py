@@ -242,11 +242,11 @@ class CHEXA20(SolidElement):
 
     def write_bdf2(self, size=8, double=False):
         nodes = self.nodeIDs()
-        nodes2 = ['' if node is None else '%8i' % node for node in nodes[7:]]
+        nodes2 = ['' if node is None else '%8i' % node for node in nodes[8:]]
 
-        data = [self.type, self.eid, self.Pid()] + nodes[:7] + nodes2
+        data = [self.eid, self.Pid()] + nodes[:8] + nodes2
         msg = ('CHEXA   %8i%8i%8i%8i%8i%8i%8i%8i\n'
-               '        %8i%8i%8s%8s%8s%8s%8s%8s\n'
+               '        %8i%8%8s%8s%8s%8s%8s%8s\n'
                '        %8s%8s%8s%8s%8s%8s' % tuple(data))
         return self.comment() + msg.rstrip() + '\n'
 

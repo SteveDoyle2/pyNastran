@@ -374,7 +374,7 @@ class CDAMP5(LineDamper):
         for i, nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
         if xref:
-            assert self.pid.type in ['PDAMP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            assert self.pid.type in ['PDAMP5'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
 
     def cross_reference(self, model):
         msg = ''
