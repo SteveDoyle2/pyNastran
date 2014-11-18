@@ -919,6 +919,32 @@ class CTRIAX(TriShell):
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(nids) == 6, 'error on CTRIAX'
 
+    def _verify(self, xref=True):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        for i, nid in enumerate(nids):
+            if i < 3:
+                assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+            else:
+                assert isinstance(nid, int) or nid is None, 'nid%i is not an integer or None nid=%s' %(i, nid)
+
+        if xref:
+            assert self.pid.type in ['PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            if not self.pid.type in ['PLPLANE']:
+                t = self.Thickness()
+                assert isinstance(t, float), 'thickness=%r' % t
+                mass = self.Mass()
+                assert isinstance(mass, float), 'mass=%r' % mass
+            a,c,n = self.AreaCentroidNormal()
+            assert isinstance(a, float), 'Area=%r' % a
+            for i in range(3):
+                assert isinstance(c[i], float)
+                assert isinstance(n[i], float)
+
     def cross_reference(self, model):
         msg = ' which is required by CTRIAX eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
@@ -1002,7 +1028,7 @@ class CTRIAX6(TriShell):
             assert nid is None or isinstance(nid, int), 'nid%i is not an integer or blank; nid=%s' %(i, nid)
 
         if xref:
-            assert self.mid.type in ['MAT1'], 'mid=%s self.mid.type=%s' % (mid, self.mid.type)
+            assert self.mid.type in ['MAT1'], 'self.mid=%s self.mid.type=%s' % (self.mid, self.mid.type)
             #assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
             #if not self.pid.type in ['PLPLANE']:
                 #t = self.Thickness()
@@ -1314,6 +1340,29 @@ class CSHEAR(QuadShell):
     def Centroid(self):
         (area, centroid) = self.AreaCentroid()
         return centroid
+
+    def _verify(self, xref=True):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+        for i,nid in enumerate(nids):
+            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+
+        if xref:
+            assert self.pid.type in ['PSHEAR'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            if self.pid.type in ['PSHEAR']:
+                t = self.Thickness()
+                assert isinstance(t, float), 'thickness=%r' % t
+                mass = self.Mass()
+                assert isinstance(mass, float), 'mass=%r' % mass
+            a,c,n = self.AreaCentroidNormal()
+            assert isinstance(a, float), 'Area=%r' % a
+            for i in range(3):
+                assert isinstance(c[i], float)
+                assert isinstance(n[i], float)
 
     def Area(self):
         r"""
@@ -1779,7 +1828,7 @@ class CQUADR(QuadShell):
             #assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
-            assert self.pid.type in ['PSHELL', 'PCOMP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
             t = self.Thickness()
             a,c,n = self.AreaCentroidNormal()
             assert isinstance(t, float), 'thickness=%r' % t

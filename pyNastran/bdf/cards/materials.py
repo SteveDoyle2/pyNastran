@@ -437,6 +437,9 @@ class MAT2(AnisotropicMaterial):
             self.Ss = data[15]
             self.Mcsid = data[16]
 
+    def get_density(self):
+        return self.rho
+
     def cross_reference(self, model):
         msg = ' which is required by MAT2 mid=%s' % self.mid
         if self.mid in model.MATT2:
@@ -631,6 +634,23 @@ class MAT3(OrthotropicMaterial):
             self.TRef = data[12]
             self.ge = data[13]
 
+    def get_density(self):
+        return self.rho
+
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        :param self: the MAT1 object pointer
+        :param xref: has this model been cross referenced
+        :type xref:  bool
+        """
+        mid = self.Mid()
+        assert isinstance(mid, int), 'mid=%r' % mid
+        if xref:
+            if [self.mats3, self.matt3] == [None, None]:
+                pass
+
     def cross_reference(self, model):
         #msg = ' which is required by MAT3 mid=%s' % self.mid
         if self.mid in model.MATT3:
@@ -721,6 +741,9 @@ class MAT4(ThermalMaterial):
             self.tdelta = data[9]
             self.qlat = data[10]
 
+    def get_density(self):
+        return self.rho
+
     def cross_reference(self, model):
         #msg = ' which is required by MAT4 mid=%s' % self.mid
         if self.mid in model.MATT4:
@@ -808,6 +831,9 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         #msg = ' which is required by MAT5 mid=%s' % self.mid
         if self.mid in model.MATT5:
             self.matt5 = model.MATT5[self.mid]  # not using a method...
+
+    def get_density(self):
+        return self.rho
 
     def K(self):
         """

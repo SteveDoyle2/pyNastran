@@ -163,7 +163,7 @@ class AddMethods(object):
                 assert key not in self.properties_mass, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, self.properties_mass[key], prop)
         else:
             assert key > 0, 'pid=%s prop=%s' % (key, prop)
-            self.mass_properties[key] = prop
+            self.properties_mass[key] = prop
 
     def add_PBUSHT(self, prop, allowOverwrites=False):
         key = prop.pid

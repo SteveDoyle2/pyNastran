@@ -151,8 +151,8 @@ class CMASS1(PointMassElement):
         return self.pid.pid
 
     def rawFields(self):
-        fields = ['CMASS1', self.eid, self.Pid(), self.g1, self.c1,
-                  self.g2, self.c2]
+        fields = ['CMASS1', self.eid, self.Pid(), self.G1(), self.c1,
+                  self.G2(), self.c2]
         return fields
 
     def write_bdf(self, size, card_writer):

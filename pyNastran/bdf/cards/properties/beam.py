@@ -747,6 +747,10 @@ class PBCOMP(LineProperty):
                 self.c.append(ci)
                 self.mids.append(mid)
 
+    def _verify(self, xref=True):
+        pid = self.Pid()
+        assert isinstance(pid, int)
+
     def MassPerLength(self):
         return self.nsm + self.mid.Rho() * self.A
 

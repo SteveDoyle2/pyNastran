@@ -223,6 +223,17 @@ class CRAC2D(CrackElement):
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 18
 
+    def _verify(self, xref=True):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
+
+    def Eid(self):
+        return self.eid
+
     def nodeIDs(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
@@ -260,6 +271,17 @@ class CRAC3D(CrackElement):
             nids = data[2:]
         self.prepareNodeIDs(nids, allowEmptyNodes=True)
         assert len(self.nodes) == 64
+
+    def Eid(self):
+        return self.eid
+
+    def _verify(self, xref=True):
+        eid = self.Eid()
+        pid = self.Pid()
+        nids = self.nodeIDs()
+
+        assert isinstance(eid, int)
+        assert isinstance(pid, int)
 
     def nodeIDs(self):
         return self._nodeIDs(allowEmptyNodes=True)

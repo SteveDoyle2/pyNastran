@@ -99,6 +99,12 @@ class PDAMP5(DamperProperty):
             self.mid = data[1]
             self.b = data[2]
 
+    def _verify(self, xref=True):
+        pid = self.Pid()
+        #b = self.B()
+        assert isinstance(pid, int), 'pid=%r\n%s' % (pid, str(self))
+        #assert isinstance(b, float), 'b=%r\n%s' % (b, str(self))
+
     def cross_reference(self, model):
         self.mid = model.Material(self.mid)
 

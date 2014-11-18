@@ -879,6 +879,50 @@ class PSHEAR(ShellProperty):
             print("fields1=%s fields2=%s" % (fields1, fields2))
         return self.isSameFields(fields1, fields2)
 
+    def cross_reference(self, model):
+        msg = ' which is required by PSHEAR pid=%s' % self.pid
+        self.mid = model.Material(self.mid, msg)
+
+    def Rho(self):
+        return self.mid.Rho()
+
+    def Mid(self):
+        if isinstance(self.mid, int):
+            return self.mid
+        return self.mid.mid
+
+    def MassPerArea(self):
+        """
+        Calculates mass per area.
+
+        .. math:: \frac{m}{A} = nsm + \rho t
+        """
+        rho = self.Rho()
+        massPerArea = self.nsm + rho * self.t
+        return massPerArea
+
+    def _verify(self, xref=False):
+        pid = self.Pid()
+        midi = self.Mid()
+
+        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(midi, int), 'mid=%r' % midi
+
+        if xref:
+            assert isinstance(self.mid, Material), 'mid=%r' % self.mid
+
+            assert isinstance(self.mid, Material), 'mid=%r' % self.mid
+            assert self.mid.type in ['MAT1', ], 'pid.type=%s mid.type=%s' % (self.type, self.mid.type)
+            if self.mid.type == 'MAT1':
+                E = self.mid.E()
+                G = self.mid.G()
+                nu = self.mid.Nu()
+                rho = self.mid.Rho()
+                assert isinstance(E, float), 'E=%r' % E
+                assert isinstance(G, float), 'G=%r' % G
+                assert isinstance(nu, float), 'nu=%r' % nu
+                assert isinstance(rho, float), 'rho=%r' % rho
+
     def rawFields(self):
         list_fields = ['PSHEAR', self.pid, self.Mid(), self.t, self.nsm,
                   self.f1, self.f2]
@@ -955,7 +999,7 @@ class PSHELL(ShellProperty):
             self.z1 = data[8]
             self.z2 = data[9]
             self.mid4 = data[10]
-            #maxMid = max(self.mid,self.mid2,self.mid3,self.mid4)
+            #maxMid = max(self.mid1,self.mid2,self.mid3,self.mid4)
 
         assert self.t > 0.0, ('the thickness must be defined on the PSHELL'
                               ' card (Ti field not supported)')
