@@ -1,0 +1,56 @@
+/* -------------------------------------------------------------------  */
+/*                              PYNASTRAN                               */
+/*                      - NASTRAN FILE INTERFACE -                      */
+/*                                                                      */
+/*              A Python reader/editor/writer for the various           */
+/*                        NASTRAN file formats.                         */
+/*                       Copyright (C) 2011-2013                        */
+/*               Steven Doyle, Al Danial, Marcin Garrozik               */
+/*                                                                      */
+/*    This program is free software; you can redistribute it and/or     */
+/*    modify it under the terms of the GNU Lesser General Public        */
+/*    License as published by the Free Software Foundation;             */
+/*    version 3 of the License.                                         */
+/*                                                                      */
+/*    This program is distributed in the hope that it will be useful,   */
+/*    but WITHOUT ANY WARRANTY; without even the implied warranty of    */
+/*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the      */
+/*    GNU Lesser General Public License for more details.               */
+/*                                                                      */
+/*    You should have received a copy of the GNU Lesser General Public  */
+/*    License along with this program; if not, write to the             */
+/*    Free Software Foundation, Inc.,                                   */
+/*    675 Mass Ave, Cambridge, MA 02139, USA.                           */
+/* -------------------------------------------------------------------  */
+
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *            pyNastran            * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *        Version 0.7.0_dev        * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *           MARCH xx, 2014        * *
+                                              * *                                 * *
+                                              * *            Questions            * *
+                                              * *        mesheb82@gmail.com       * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * * * * * * * * * * * * * * * * * * * *
+
+
+                                        M O D E L   S U M M A R Y
+
+                                   NUMBER OF GRID     POINTS   =       72
+ 
+                                   NUMBER OF CTETRA   ELEMENTS =      186
+ 
+1                                                                          OCTOBER   22, 2014  pyNastran v0.7.0_dev   PAGE     1

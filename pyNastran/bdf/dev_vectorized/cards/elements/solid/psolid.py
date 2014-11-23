@@ -21,8 +21,11 @@ class PSOLID(Property):
         Property.__init__(self, model)
 
     def allocate(self, ncards):
+        self.n = ncards
         float_fmt = self.model.float
+        #: Property ID
         self.property_id = zeros(ncards, 'int32')
+        #: Material ID
         self.material_id = zeros(ncards, 'int32')
         self.cordm = zeros(ncards, 'int32')
         self.integ = zeros(ncards, dtype='|S8')
@@ -30,58 +33,45 @@ class PSOLID(Property):
         self.isop = zeros(ncards, dtype='|S8')
         self.fctn = zeros(ncards, dtype='|S8')
 
+    def add(self, card, comment):
+        i = self.i
+        self.property_id[i] = integer(card, 1, 'pid')
+        self.material_id[i] = integer(card, 2, 'mid')
+        self.cordm[i] = integer_or_blank(card, 3, 'cordm', 0)
+        self.integ[i] = integer_string_or_blank(card, 4, 'integ', '')
+        #validIntegration = ['THREE', 'TWO', 'FULL', 'BUBBLE',
+        #                    2, 3, None, 'REDUCED']
+        # ISOP
+        # ------
+        #    1.  FULL
+        #    2.
+        #    3.
+        #    REDUCED
+
+        # IN
+        # ------
+        #    1.
+        #    2.      TWO
+        #    3.      THREE
+        #    BUBBLE - 2 for CTETRA, 3 for CHEXA/CPENTA
+
+        # STRESS
+        # ------
+        #    1.  GAUSS (no midside nodes on CPENTA/CHEXA; ok on CTETRA)
+        #    2.
+        self.stress[i] = integer_string_or_blank(card, 5, 'stress', '')
+        self.isop[i] = integer_string_or_blank(card, 6, 'isop', '')
+        self.fctn[i] = string_or_blank(card, 7, 'fctn', 'SMECH')
+        assert len(card) <= 8, 'len(PSOLID card) = %i' % len(card)
+        self.i += 1
+
     def build(self):
         """
         :param self: the PSOLID object
         :param cards: the list of PSOLID cards
         """
-        cards = self._cards
-        ncards = len(cards)
-        self.n = ncards
         #print "N[%s] = %s" % (self.type, self.n)
-        if ncards:
-            float_fmt = self.model.float
-            #: Property ID
-            self.property_id = zeros(ncards, 'int32')
-            #: Material ID
-            self.material_id = zeros(ncards, 'int32')
-            self.cordm = zeros(ncards, 'int32')
-            self.integ = zeros(ncards, dtype='|S8')
-            self.stress = zeros(ncards, dtype='|S8')
-            self.isop = zeros(ncards, dtype='|S8')
-            self.fctn = zeros(ncards, dtype='|S8')
-            #print "isop", self.isop
-
-            for i, card in enumerate(cards):
-                self.property_id[i] = integer(card, 1, 'pid')
-                self.material_id[i] = integer(card, 2, 'mid')
-                self.cordm[i] = integer_or_blank(card, 3, 'cordm', 0)
-                self.integ[i] = integer_string_or_blank(card, 4, 'integ', '')
-                #validIntegration = ['THREE', 'TWO', 'FULL', 'BUBBLE',
-                #                    2, 3, None, 'REDUCED']
-                # ISOP
-                # ------
-                #    1.  FULL
-                #    2.
-                #    3.
-                #    REDUCED
-
-                # IN
-                # ------
-                #    1.
-                #    2.      TWO
-                #    3.      THREE
-                #    BUBBLE - 2 for CTETRA, 3 for CHEXA/CPENTA
-
-                # STRESS
-                # ------
-                #    1.  GAUSS (no midside nodes on CPENTA/CHEXA; ok on CTETRA)
-                #    2.
-                self.stress[i] = integer_string_or_blank(card, 5, 'stress', '')
-                self.isop[i] = integer_string_or_blank(card, 6, 'isop', '')
-                self.fctn[i] = string_or_blank(card, 7, 'fctn', 'SMECH')
-                assert len(card) <= 8, 'len(PSOLID card) = %i' % len(card)
-
+        if self.n:
             i = self.property_id.argsort()
             self.property_id = self.property_id[i]
             #print "PSOLID.property_id =", self.property_id
@@ -107,7 +97,6 @@ class PSOLID(Property):
         elif isinstance(property_id, int):
             property_id = array([property_id], dtype='int32')
         property_id = asarray(property_id)
-        #self.model.log.info('PSOLID property_id=%s' % property_id)
         n = len(property_id)
         rho = zeros(n, dtype='float64')
         upid = unique(property_id)
@@ -122,7 +111,7 @@ class PSOLID(Property):
                 msg = 'pid=%s was not found in %s' % (upid, self.property_id)
                 raise ValueError(msg)
             mid = self.material_id[j[0]]
-            rhoi = self.model.materials.get_density_from_material_id([mid])
+            rhoi = self.model.materials.get_density_by_material_id([mid])
             #print('pid=%s rho[%s]=%s' % (pid, k, rhoi))
             rho[k] = rhoi
 
@@ -134,7 +123,7 @@ class PSOLID(Property):
             raise ValueError(msg)
 
         assert rho.shape == (n, ), rho.shape
-        #self.model.log.info('PSOLID.rho = %s' % rho)
+        self.model.log.debug('rho = %s' % rho)
         return rho
 
     def write_bdf(self, f, size=8, property_id=None):

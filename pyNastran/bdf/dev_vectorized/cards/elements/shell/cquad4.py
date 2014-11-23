@@ -16,53 +16,46 @@ class CQUAD4(ShellElement):
         ShellElement.__init__(self, model)
 
     def allocate(self, ncards):
+        self.n = ncards
         float_fmt = self.model.float
+        #: Element ID
         self.element_id = zeros(ncards, 'int32')
+        #: Property ID
         self.property_id = zeros(ncards, 'int32')
+        #: Node IDs
         self.node_ids = zeros((ncards, 4), 'int32')
         self.zoffset = zeros(ncards, 'int32')
         self.t_flag = zeros(ncards, 'int32')
         self.thickness = zeros((ncards, 4), float_fmt)
+        self.i = 0
+
+    def add(self, card, comment):
+        i = self.i
+        self.element_id[i] = integer(card, 1, 'eid')
+
+        self.property_id[i] = integer(card, 2, 'pid')
+
+        self.node_ids[i, :] = [integer(card, 3, 'n1'),
+                            integer(card, 4, 'n2'),
+                            integer(card, 5, 'n3'),
+                            integer(card, 6, 'n4')]
+
+        #self.thetaMcid = integer_double_or_blank(card, 6, 'thetaMcid', 0.0)
+        #self.zOffset = double_or_blank(card, 7, 'zOffset', 0.0)
+        #blank(card, 8, 'blank')
+        #blank(card, 9, 'blank')
+
+        self.t_flag[i] = integer_or_blank(card, 10, 'TFlag', 0)
+        self.thickness[i, :] = [
+            double_or_blank(card, 11, 'T1', 1.0),
+            double_or_blank(card, 12, 'T2', 1.0),
+            double_or_blank(card, 13, 'T3', 1.0),
+            double_or_blank(card, 14, 'T4', 1.0),
+        ]
+        self.i += 1
 
     def build(self):
-        cards = self._cards
-        ncards = len(cards)
-        self.n = ncards
-        if ncards:
-            float_fmt = self.model.float
-            #: Element ID
-            self.element_id = zeros(ncards, 'int32')
-            #: Property ID
-            self.property_id = zeros(ncards, 'int32')
-            #: Node IDs
-            self.node_ids = zeros((ncards, 4), 'int32')
-
-            self.zoffset = zeros(ncards, 'int32')
-            self.t_flag = zeros(ncards, 'int32')
-            self.thickness = zeros((ncards, 4), float_fmt)
-
-            for i, card in enumerate(cards):
-                self.element_id[i] = integer(card, 1, 'eid')
-
-                self.property_id[i] = integer(card, 2, 'pid')
-
-                self.node_ids[i, :] = [integer(card, 3, 'n1'),
-                                    integer(card, 4, 'n2'),
-                                    integer(card, 5, 'n3'),
-                                    integer(card, 6, 'n4')]
-
-                #self.thetaMcid = integer_double_or_blank(card, 6, 'thetaMcid', 0.0)
-                #self.zOffset = double_or_blank(card, 7, 'zOffset', 0.0)
-                #blank(card, 8, 'blank')
-                #blank(card, 9, 'blank')
-
-                self.t_flag[i] = integer_or_blank(card, 10, 'TFlag', 0)
-                self.thickness[i, :] = [
-                    double_or_blank(card, 11, 'T1', 1.0),
-                    double_or_blank(card, 12, 'T2', 1.0),
-                    double_or_blank(card, 13, 'T3', 1.0),
-                    double_or_blank(card, 14, 'T4', 1.0),
-                ]
+        if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
             self.property_id = self.property_id[i]
@@ -70,8 +63,6 @@ class CQUAD4(ShellElement):
             self.thickness = self.thickness[i, :]
             self.t_flag = self.t_flag[i]
             assert self.node_ids.min() > 0
-            self._cards = []
-            self._comments = []
         else:
             self.element_id = array([], 'int32')
             self.property_id = array([], dtype='int32')
@@ -79,17 +70,17 @@ class CQUAD4(ShellElement):
     #=========================================================================
     def _node_locations(self, xyz_cid0, i=None):
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_position_from_node_index()
+            xyz_cid0 = self.model.grid.get_position_by_index()
         if i is None:
-            n1 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 0]), :]
-            n2 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 1]), :]
-            n3 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 2]), :]
-            n4 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 3]), :]
+            n1 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 0]), :]
+            n2 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 1]), :]
+            n3 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 2]), :]
+            n4 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 3]), :]
         else:
-            n1 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[i, 0]), :]
-            n2 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[i, 1]), :]
-            n3 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[i, 2]), :]
-            n4 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[i, 3]), :]
+            n1 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[i, 0]), :]
+            n2 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[i, 1]), :]
+            n3 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[i, 2]), :]
+            n4 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[i, 3]), :]
         return n1, n2, n3, n4
 
     def _mass_area_normal(self, element_id=None, node_ids=None, xyz_cid0=None,
@@ -126,10 +117,10 @@ class CQUAD4(ShellElement):
 
         massi = None
         if calculate_mass:
-            #t = self.model.properties_shell.get_thickness(property_id)  # PSHELL
-            #nsm = self.model.properties_shell.get_nonstructural_mass(property_id)  # PSHELL
-            #rho = self.model.properties_shell.get_density(property_id)  # MAT1
-            mpa = self.model.properties_shell.get_mass_per_area(property_id)
+            #t = self.model.properties_shell.get_thickness_by_property_id(property_id)  # PSHELL
+            #nsm = self.model.properties_shell.get_nonstructural_mass_by_property_id(property_id)  # PSHELL
+            #rho = self.model.properties_shell.get_density_by_property_id(property_id)  # MAT1
+            mpa = self.model.properties_shell.get_mass_per_area_by_property_id(property_id)
             assert mpa is not None
             #assert t is not None
             #assert nsm is not None
@@ -144,7 +135,7 @@ class CQUAD4(ShellElement):
         #print "massi =", massi
         return massi, A, normal
 
-    def get_centroid(self, element_id=None, node_ids=None, xyz_cid0=None):
+    def get_centroid_by_element_id(self, element_id=None, node_ids=None, xyz_cid0=None):
         if element_id is None:
             element_id = self.element_id
             i = None
@@ -160,7 +151,7 @@ class CQUAD4(ShellElement):
             if element_id is None:
                 i = arange(self.n)
             else:
-                assert len(unique(element_id))==len(element_id), unique(element_id)
+                assert len(unique(element_ids))==len(element_id), unique(element_id)
                 i = searchsorted(self.element_id, element_id)
             #if len(i) == 1:
                 #i = i[0]
@@ -173,9 +164,9 @@ class CQUAD4(ShellElement):
                 f.write(print_card_8(card))
 
     def _verify(self, xref=True):
-        self.get_mass()
-        self.get_area()
-        self.get_normal()
+        self.get_mass_by_element_id()
+        self.get_area_by_element_id()
+        self.get_normal_by_element_id()
 
     def rebuild(self):
         raise NotImplementedError()

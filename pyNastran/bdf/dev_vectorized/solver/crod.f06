@@ -1,0 +1,1180 @@
+/* -------------------------------------------------------------------  */
+/*                              PYNASTRAN                               */
+/*                      - NASTRAN FILE INTERFACE -                      */
+/*                                                                      */
+/*              A Python reader/editor/writer for the various           */
+/*                        NASTRAN file formats.                         */
+/*                       Copyright (C) 2011-2013                        */
+/*               Steven Doyle, Al Danial, Marcin Garrozik               */
+/*                                                                      */
+/*    This program is free software; you can redistribute it and/or     */
+/*    modify it under the terms of the GNU Lesser General Public        */
+/*    License as published by the Free Software Foundation;             */
+/*    version 3 of the License.                                         */
+/*                                                                      */
+/*    This program is distributed in the hope that it will be useful,   */
+/*    but WITHOUT ANY WARRANTY; without even the implied warranty of    */
+/*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the      */
+/*    GNU Lesser General Public License for more details.               */
+/*                                                                      */
+/*    You should have received a copy of the GNU Lesser General Public  */
+/*    License along with this program; if not, write to the             */
+/*    Free Software Foundation, Inc.,                                   */
+/*    675 Mass Ave, Cambridge, MA 02139, USA.                           */
+/* -------------------------------------------------------------------  */
+
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *            pyNastran            * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *        Version 0.7.0_dev        * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *           MARCH xx, 2014        * *
+                                              * *                                 * *
+                                              * *            Questions            * *
+                                              * *        mesheb82@gmail.com       * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * * * * * * * * * * * * * * * * * * * *
+
+
+                                        M O D E L   S U M M A R Y
+
+                                   NUMBER OF GRID     POINTS   =        3
+ 
+                                   NUMBER OF CONROD   ELEMENTS =        1
+                                   NUMBER OF CROD     ELEMENTS =        1
+ 
+1                                                                          OCTOBER   23, 2014  pyNastran v0.7.0_dev   PAGE     1
+                           O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R
+0                                                     REFERENCE POINT =        2
+                                                                M O
+                      *  1.200000E+01  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00 *
+                      *  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00 *
+                      *  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00 *
+                      *  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00 *
+                      *  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00 *
+                      *  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00 *
+                                                                 S
+                                           *  0.000000E+00  0.000000E+00  1.000000E+00 *
+                                           *  1.000000E+00  0.000000E+00  0.000000E+00 *
+                                           *  0.000000E+00  1.000000E+00  0.000000E+00 *
+                               DIRECTION
+                          MASS AXIS SYSTEM (S)     MASS              X-C.G.        Y-C.G.        Z-C.G.
+                                  X            0.000000E+00      0.000000E+00 -0.000000E+00  0.000000E+00
+                                  Y            0.000000E+00      0.000000E+00  0.000000E+00 -0.000000E+00
+                                  Z            1.200000E+01     -0.000000E+00  0.000000E+00  0.000000E+00
+                                                                I(S)
+                                           *  0.000000E+00  0.000000E+00  0.000000E+00 *
+                                           *  0.000000E+00  0.000000E+00  0.000000E+00 *
+                                           *  0.000000E+00  0.000000E+00  0.000000E+00 *
+                                                                I(Q)
+                                           *  0.000000E+00                             *
+                                           *                0.000000E+00               *
+                                           *                              0.000000E+00 *
+                                                                 Q
+                                           *  1.000000E+00  0.000000E+00  0.000000E+00 *
+                                           *  0.000000E+00  1.000000E+00  0.000000E+00 *
+                                           *  0.000000E+00  0.000000E+00  1.000000E+00 *
+
+1    pyNastran Job                                                         OCTOBER   23, 2014  pyNastran v0.7.0_dev   PAGE     2
+
+0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+O
+L
+O
+A
+D
+ 
+ 
+ 
+ 
+R
+E
+S
+U
+L
+T
+A
+N
+T
+
+
+ 
+ 
+S
+U
+B
+C
+A
+S
+E
+/
+ 
+ 
+ 
+ 
+L
+O
+A
+D
+
+
+ 
+ 
+D
+A
+R
+E
+A
+ 
+I
+D
+ 
+ 
+ 
+ 
+T
+Y
+P
+E
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+T
+1
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+T
+2
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+T
+3
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+R
+1
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+R
+2
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+R
+3
+
+
+0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+1
+ 
+ 
+ 
+ 
+ 
+F
+X
+ 
+ 
+ 
+ 
+2
+.
+3
+0
+0
+0
+0
+0
+E
++
+0
+4
+ 
+ 
+ 
+ 
+ 
+-
+-
+-
+-
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-
+-
+-
+-
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+3
+.
+3
+2
+0
+9
+8
+7
+E
++
+0
+4
+ 
+-
+2
+.
+2
+8
+0
+3
+9
+5
+E
++
+0
+4
+
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+F
+Y
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-
+-
+-
+-
+ 
+ 
+ 
+ 
+0
+.
+0
+0
+0
+0
+0
+0
+E
++
+0
+0
+ 
+ 
+ 
+ 
+ 
+-
+-
+-
+-
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+0
+.
+0
+0
+0
+0
+0
+0
+E
++
+0
+0
+ 
+ 
+ 
+ 
+ 
+-
+-
+-
+-
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+0
+.
+0
+0
+0
+0
+0
+0
+E
++
+0
+0
+
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+F
+Z
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-
+-
+-
+-
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-
+-
+-
+-
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+0
+.
+0
+0
+0
+0
+0
+0
+E
++
+0
+0
+ 
+ 
+0
+.
+0
+0
+0
+0
+0
+0
+E
++
+0
+0
+ 
+ 
+0
+.
+0
+0
+0
+0
+0
+0
+E
++
+0
+0
+ 
+ 
+ 
+ 
+ 
+-
+-
+-
+-
+
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+M
+X
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-
+-
+-
+-
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-
+-
+-
+-
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-
+-
+-
+-
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+0
+.
+0
+0
+0
+0
+0
+0
+E
++
+0
+0
+ 
+ 
+ 
+ 
+ 
+-
+-
+-
+-
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-
+-
+-
+-
+
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+M
+Y
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-
+-
+-
+-
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-
+-
+-
+-
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-
+-
+-
+-
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-
+-
+-
+-
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+0
+.
+0
+0
+0
+0
+0
+0
+E
++
+0
+0
+ 
+ 
+ 
+ 
+ 
+-
+-
+-
+-
+
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+M
+Z
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-
+-
+-
+-
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-
+-
+-
+-
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-
+-
+-
+-
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-
+-
+-
+-
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-
+-
+-
+-
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+0
+.
+0
+0
+0
+0
+0
+0
+E
++
+0
+0
+
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+T
+O
+T
+A
+L
+S
+ 
+ 
+2
+.
+3
+0
+0
+0
+0
+0
+E
++
+0
+4
+ 
+ 
+0
+.
+0
+0
+0
+0
+0
+0
+E
++
+0
+0
+ 
+ 
+0
+.
+0
+0
+0
+0
+0
+0
+E
++
+0
+0
+ 
+ 
+0
+.
+0
+0
+0
+0
+0
+0
+E
++
+0
+0
+ 
+ 
+3
+.
+3
+2
+0
+9
+8
+7
+E
++
+0
+4
+ 
+-
+2
+.
+2
+8
+0
+3
+9
+5
+E
++
+0
+4
+
+
+1
+ 
+ 
+ 
+ 
+p
+y
+N
+a
+s
+t
+r
+a
+n
+ 
+J
+o
+b
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+O
+C
+T
+O
+B
+E
+R
+ 
+ 
+ 
+2
+3
+,
+ 
+2
+0
+1
+4
+ 
+ 
+p
+y
+N
+a
+s
+t
+r
+a
+n
+ 
+v
+0
+.
+7
+.
+0
+_
+d
+e
+v
+ 
+ 
+ 
+P
+A
+G
+E
+ 
+ 
+ 
+ 
+ 
+3
+
+                                             D I S P L A C E M E N T   V E C T O R
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+             1      G      0.0            0.0            0.0            0.0            0.0            0.0
+             2      G      5.000000E-08   0.0            0.0            0.0            0.0            0.0
+             3      G      1.000000E-07   0.0            0.0            0.0            0.0            0.0
+1    pyNastran Job                                                         OCTOBER   23, 2014  pyNastran v0.7.0_dev   PAGE     4
+      DEFAULT                                                                                                                       
+0                                                                                                            SUBCASE 1              
+ 
+                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C O N R O D )
+       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
+         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
+            10   -5.000000E-01  0.0000E+00           0.0  0.0000E+00
+1    pyNastran Job                                                         OCTOBER   23, 2014  pyNastran v0.7.0_dev   PAGE     5
+      DEFAULT                                                                                                                       
+0                                                                                                            SUBCASE 1              
+ 
+                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
+       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY
+         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN
+            20   -2.500000E-01  0.0000E+00           0.0  0.0000E+00
+1    pyNastran Job                                                         OCTOBER   23, 2014  pyNastran v0.7.0_dev   PAGE     6
+
+
+0                                   * * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *
+0 SEID  PEID PROJ VERS APRCH      SEMG SEMR SEKR SELG SELR MODES DYNRED SOLLIN PVALID SOLNL LOOPID DESIGN CYCLE SENSITIVITY
+ --------------------------------------------------------------------------------------------------------------------------
+     0     0    1    1 '        '    T    T    T    T    T     F      F      T      0     F     -1            0           F
+0SEID = SUPERELEMENT ID.
+ PEID = PRIMARY SUPERELEMENT ID OF IMAGE SUPERELEMENT.
+ PROJ = PROJECT ID NUMBER.
+ VERS = VERSION ID.
+ APRCH = BLANK FOR STRUCTURAL ANALYSIS.  HEAT FOR HEAT TRANSFER ANALYSIS.
+ SEMG = STIFFNESS AND MASS MATRIX GENERATION STEP.
+ SEMR = MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES).
+ SEKR = STIFFNESS MATRIX REDUCTION STEP.
+ SELG = LOAD MATRIX GENERATION STEP.
+ SELR = LOAD MATRIX REDUCTION STEP. 
+ MODES = T (TRUE) IF NORMAL MODES OR BUCKLING MODES CALCULATED.
+ DYNRED = T (TRUE) MEANS GENERALIZED DYNAMIC AND/OR COMPONENT MODE REDUCTION PERFORMED.
+ SOLLIN = T (TRUE) IF LINEAR SOLUTION EXISTS IN DATABASE.
+ PVALID = P-DISTRIBUTION ID OF P-VALUE FOR P-ELEMENTS
+ LOOPID = THE LAST LOOPID VALUE USED IN THE NONLINEAR ANALYSIS.  USEFUL FOR RESTARTS.
+ SOLNL = T (TRUE) IF NONLINEAR SOLUTION EXISTS IN DATABASE.
+ DESIGN CYCLE = THE LAST DESIGN CYCLE (ONLY VALID IN OPTIMIZATION).
+ SENSITIVITY = SENSITIVITY MATRIX GENERATION FLAG.
+ 
+ No PARAM values were set in the Control File.
+ 
+1                                        * * * END OF JOB * * *
+ 
+ 

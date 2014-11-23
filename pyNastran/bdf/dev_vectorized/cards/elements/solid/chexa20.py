@@ -11,6 +11,7 @@ from .solid_element import SolidElement
 
 class CHEXA20(SolidElement):
     type = 'CHEXA20'
+    nnodes = 20
     def __init__(self, model):
         """
         Defines the CHEXA object.
@@ -20,33 +21,25 @@ class CHEXA20(SolidElement):
         """
         SolidElement.__init__(self, model)
 
+    def add(self, card, comment):
+        i = self.i
+        #comment = self._comments[i]
+        eid = integer(card, 1, 'element_id')
+        #if comment:
+            #self._comments[eid] = comment
+
+        #: Element ID
+        self.element_id[i] = eid
+        #: Property ID
+        self.property_id[i] = integer(card, 2, 'property_id')
+        #: Node IDs
+        nids = fields(integer, card, 'node_ids', i=3, j=23)
+        self.node_ids[i, :] = nids
+        assert len(card) == 23, 'len(CHEXA20 card) = %i' % len(card)
+        self.i += 1
+
     def build(self):
-        cards = self._cards
-        ncards = len(cards)
-
-        self.n = ncards
-        if ncards:
-            float_fmt = self.model.float
-            self.element_id = zeros(ncards, 'int32')
-            self.property_id = zeros(ncards, 'int32')
-            self.node_ids = zeros((ncards, 20), 'int32')
-
-            #comments = {}
-            for i, card in enumerate(cards):
-                #comment = self._comments[i]
-                eid = integer(card, 1, 'element_id')
-                #if comment:
-                    #self._comments[eid] = comment
-
-                #: Element ID
-                self.element_id[i] = eid
-                #: Property ID
-                self.property_id[i] = integer(card, 2, 'property_id')
-                #: Node IDs
-                nids = fields(integer, card, 'node_ids', i=3, j=23)
-                self.node_ids[i, :] = nids
-                assert len(card) == 23, 'len(CHEXA20 card) = %i' % len(card)
-
+        if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
             self.property_id = self.property_id[i]
@@ -61,7 +54,7 @@ class CHEXA20(SolidElement):
         nnodes = 8
         ndof = 3 * nnodes
         pid = self.property_id[i]
-        rho = self.model.elements.properties_solid.psolid.get_density(pid)[0]
+        rho = self.model.elements.properties_solid.psolid.get_density_by_property_id(pid)[0]
 
         n0, n1, n2, n3, n4, n5, n6, n7 = self.node_ids[i, :]
         V = volume8(positions[self.node_ids[i, 0]],
@@ -160,7 +153,7 @@ class CHEXA20(SolidElement):
         n8 = xyz_cid0[get_node_index_from_node_id(node_ids[i, 7], msg), :]
         return n1, n2, n3, n4, n5, n6, n7, n8
 
-    def get_volume(self, element_id=None, xyz_cid0=None, total=False):
+    def get_volume_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the volume for one or more elements.
 
@@ -187,7 +180,7 @@ class CHEXA20(SolidElement):
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the volume be summed; centroid be averaged (default=False)
 
-        ..see:: CHEXA20.get_volume() and CHEXA20.get_centroid() for more information.
+        ..see:: CHEXA20.get_volume_by_element_id() and CHEXA20.get_centroid_by_element_id() for more information.
         """
         n1, n2, n3, n4, n5, n6, n7, n8 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
         (A1, c1) = quad_area_centroid(n1, n2, n3, n4)
@@ -202,7 +195,7 @@ class CHEXA20(SolidElement):
         assert volume.min() > 0.0, 'volume.min() = %f' % volume.min()
         return centroid, volume
 
-    def get_centroid(self, element_id=None, xyz_cid0=None, total=False):
+    def get_centroid_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the centroid for one or more elements.
 

@@ -96,7 +96,7 @@ class Materials(object):
                 #msg.append('  %-8s: %i' % (mat.type, nmat))
         return msg
 
-    def get_material_id(self, property_id):
+    def get_material_id_by_property_id(self, property_id):
         n = len(property_id)
         types = self._get_types(nlimit=True)
         _material_id = concatenate([ptype.material_id for ptype in types])
@@ -104,24 +104,24 @@ class Materials(object):
         assert _material_id.shape == (n, ), _material_id.shape
         return _material_id
 
-    #def get_density(self, material_id):
+    #def get_density_by_material_id(self, material_id):
         #rho = zeros(len(material_id), dtype='float64')
         #for i, mid in enumerate(material_id):
             #mat = self.get_structural_material(mid)
             #rho[i] = mat.rho
         #return rho
 
-    def get_density_from_material_id(self, material_id):
+    def get_density_by_material_id(self, material_id):
         n = len(material_id)
         mats = self[material_id]
-        density = array([mid.get_density() if mid is not None else nan for mid in mats])
+        density = array([mid.get_density_by_material_id() if mid is not None else nan for mid in mats])
         #self.model.log.debug('material_ids = %s' % material_ids)
         #self.model.log.debug("  density mats = %s" % mats)
         #self.model.log.debug('  density = %s' % density)
         assert density.shape == (n, ), density.shape
         return density
 
-    def get_density_E_by_material_id(self, material_id):
+    def get_density_E(self, material_id):
         n = len(material_id)
         rho = zeros(n, dtype='float64')
         E = zeros(n, dtype='float64')
@@ -133,7 +133,7 @@ class Materials(object):
         assert E.shape == (n, ), E.shape
         return rho, E
 
-    def get_nonstructural_mass_by_material_id(self, material_id):
+    def get_nonstructural_mass(self, material_id):
         n = len(material_id)
         nsm = zeros(n)
         for i, mid in enumerate(material_id):
@@ -142,7 +142,7 @@ class Materials(object):
         assert nsm.shape == (n, ), nsm.shape
         return nsm
 
-    def get_E_by_material_id(self, material_id):
+    def get_E(self, material_id):
         n = len(material_id)
         E = zeros(n)
         for i, mid in enumerate(material_id):
@@ -151,7 +151,7 @@ class Materials(object):
         assert E.shape == (n, ), E.shape
         return E
 
-    def get_G_by_material_id(self, material_id):
+    def get_G(self, material_id):
         n = len(material_id)
         G = zeros(n)
         for i, mid in enumerate(material_id):

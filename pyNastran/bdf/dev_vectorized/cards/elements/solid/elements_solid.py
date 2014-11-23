@@ -29,6 +29,7 @@ class ElementsSolid(object):
     def allocate(self, card_count):
         etypes = self._get_types(nlimit=False)
         for etype in etypes:
+            self.model.log.debug('    allocate %s' % etype.type)
             if etype.type in card_count:
                 etype.allocate(card_count[etype.type])
             #else:
@@ -84,7 +85,7 @@ class ElementsSolid(object):
         massi = []
         for elems in types:
             if elems.n > 0:
-                massi = elems.get_mass()
+                massi = elems.get_mass_by_element_id()
 
         if total:
             mass = massi.sum()
@@ -97,7 +98,7 @@ class ElementsSolid(object):
         f.write('$ELEMENTS_SOLID\n')
         types = self._get_types(nlimit=True)
         for elems in types:
-            print(elems.type)
+            self.model.log.debug(elems.type)
             elems.write_bdf(f, size=size, element_id=element_id)
 
     def _get_types(self, nlimit=True):

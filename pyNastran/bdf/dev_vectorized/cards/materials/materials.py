@@ -12,8 +12,9 @@ from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 #from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT4, MAT5, MAT8,
     #MAT10, MAT11) #, MATS1)
 from .mat1 import MAT1
-from .mat8 import MAT8
 from .mats1 import MATS1
+
+from .mat8 import MAT8
 
 from pyNastran.bdf.bdfInterface.assign_type import integer
 class Materials(object):
@@ -23,14 +24,9 @@ class Materials(object):
 
         self.mat1 = MAT1(model)
         self.mats1 = MATS1(model)
-
-        #self.mat1 = {}
-        #self.mats1 = {}
-        #==================
         #self.mat2 = {}
         #self.mat4 = {}
         #self.mat5 = {}
-        #self.mat8 = {}
         #self.mat10 = {}
         #self.mat2 = MAT1(model)
         #self.mat4 = MAT1(model)
@@ -40,40 +36,22 @@ class Materials(object):
     def add_mat1(self, card, comment):
         #self.mat1.add(card, comment)
         #mid = integer(card, 1, 'material_id')
-        #mat = MAT1(card=card, comment=comment)
         self.mat1.add(card=card, comment=comment)
-        #self.mat1[mid] = mat
 
     def add_mats1(self, card, comment):
         self.mats1.add(card, comment)
-        #mid = integer(card, 1, 'material_id')
-        #mat = MATS1(card=card, comment=comment)
-        #self.mats1[mid] = mat
 
     def add_mat2(self, card, comment):
         self.mat2.add(card, comment)
-        #mid = integer(card, 1, 'material_id')
-        #mat = MAT2(card=card, comment=comment)
-        #self.mat2[mid] = mat
 
     def add_mat4(self, card, comment):
         self.mat4.add(card, comment)
-        #mid = integer(card, 1, 'material_id')
-        #mat = MAT4(card=card, comment=comment)
-        #self.mat4[mid] = mat
 
     def add_mat8(self, card, comment):
         self.mat8.add(card, comment)
-        #mid = integer(card, 1, 'material_id')
-        #mat = MAT8(card=card, comment=comment)
-        #self.mat8[mid] = mat
 
     def add_mat10(self, card, comment):
         self.mat10.add(card, comment)
-        #mid = integer(card, 1, 'material_id')
-        #mat = MAT10(card=card, comment=comment)
-        #self.mat10[mid] = mat
-
 
     def allocate(self, card_count):
         self.model.log.info('allocate Materials')
@@ -82,35 +60,21 @@ class Materials(object):
         names = self._get_type_names()
         for name, mat in zip(names, types):
             if name in card_count:
+                self.model.log.info('    allocate %s' % name)
                 n = card_count[name]
-                self.model.log.info('    allocate %s; n=%s' % (name, n))
-                self.model.log.info('    mat.type=%s' % mat.type)
                 mat.allocate(n)
                 self.n += n
         self.n = n
+        #aaa
 
     def build(self):
         n = 0
         types = self._get_types()
         names = self._get_type_names()
         for name, mat in zip(names, types):
-            mat.build()
             n += len(mat)
-
+            mat.build()
         self.n = n
-        self.model.log.info('Material.n = %s' % self.n)
-        i = 0
-        self.material_id_type = zeros((n, 2), dtype='int32')
-        for name, mat in zip(names, types):
-            n = len(mat)
-            if n:
-                self.material_id_type[i:i+n, 0] = mat.material_id
-                self.material_id_type[i:i+n, 1] = int(mat.type[3:])
-                i += n
-        self.model.log.info('material_id_type =\n%s' % self.material_id_type)
-        self.material_id = self.material_id_type
-        assert 0 not in self.material_id
-        #sys.exit()
 
     def get_stats(self):
         msg = []
@@ -123,7 +87,7 @@ class Materials(object):
                 #msg.append('  %-8s: %i' % (mat.type, nmat))
         return msg
 
-    def get_material_id(self, property_id):
+    def get_material_id_by_property_id(self, property_id):
         n = len(property_id)
         types = self._get_types(nlimit=True)
         _material_id = concatenate([ptype.material_id for ptype in types])
@@ -131,24 +95,26 @@ class Materials(object):
         assert _material_id.shape == (n, ), _material_id.shape
         return _material_id
 
-    #def get_density(self, material_id):
-        #return self.get_density_from_material_id(material_id)
+    #def get_density_by_material_id(self, material_id):
+        #rho = zeros(len(material_id), dtype='float64')
+        #for i, mid in enumerate(material_id):
+            #mat = self.get_structural_material(mid)
+            #rho[i] = mat.rho
+        #return rho
 
-    def get_density_from_material_id(self, material_id):
+    def get_density_by_material_id(self, material_id):
         n = len(material_id)
-        self.model.log.debug('material_id=%s' % material_id)
-        self.model.log.debug('self.material_id=%s' % self.material_id)
+        self.model.log.debug('material_id =%s' % material_id)
         umids = unique(material_id)
 
         density = zeros(n, dtype='float64')
         for mid in umids:
-            mat = self[mid]
-            rho = mat.get_density_from_material_id([mid])
+            rho = self[mid].get_density_by_material_id([mid])
             i = where(mid==material_id)[0]
             density[i] = rho
 
         #mats = self[material_id]
-        #density = array([mid.get_density_from_material_id(mid) if mid is not None else nan for mid in mats])
+        #density = array([mid.get_density_by_material_id(mid) if mid is not None else nan for mid in mats])
         #self.model.log.debug('material_ids = %s' % material_ids)
         #self.model.log.debug("  density mats = %s" % mats)
         #self.model.log.debug('  density = %s' % density)
@@ -194,7 +160,7 @@ class Materials(object):
         assert G.shape == (n, ), G.shape
         return G
 
-    #def get_index(self, property_ids):
+    #def get_index_by_material_id(self, property_ids):
         #if property_ids is None:
             #return arange(self.n)
         #return searchsorted(property_ids, self.property_id)
@@ -204,27 +170,26 @@ class Materials(object):
             return self.mat1[material_id]
         elif material_id in self.mat8:
             return self.mat2[material_id]
-        raise NotImplementedError(material_id)
+        raise RuntimeError('Could not find material_id=%r' % material_id)
 
     def get_shell_material(self, material_id):
-        if material_id in self.mats1:
-            return self.mats1[material_id]
-        elif material_id in self.mat1:
+        #if material_id in self.mats1:
+            #return self.mats1[material_id]
+        if material_id in self.mat1:
             return self.mat1[material_id]
         elif material_id in self.mat2:
             return self.mat2[material_id]
         elif material_id in self.mat8:
             return self.mat8[material_id]
+        raise RuntimeError('Could not find material_id=%r' % material_id)
 
     def get_solid_material(self, material_id):
-        if material_id in self.mats1:
-            return self.mats1[material_id]
-        elif material_id in self.mat11:
-            return self.mat11[material_id]
-
-        elif material_id in self.mat1:
+        #if material_id in self.mats1:
+            #return self.mats1[material_id]
+        #if material_id in self.mat11:
+            #return self.mat11[material_id]
+        if material_id in self.mat1:
             return self.mat1[material_id]
-
         elif material_id in self.mat9:
             return self.mat9[material_id]
         elif material_id in self.mat10:
@@ -243,7 +208,7 @@ class Materials(object):
             return self.mat5[material_id]
         raise RuntimeError('Could not find material_id=%r' % material_id)
 
-    def __getitem__(self, material_ids):
+    def __getitem__(self, material_id):
         TypeMap = {
             'MAT1'  : (self.mat1, self.mat1.material_id),
             #'MAT2'  : (self.mat2, self.mat2.material_id),
@@ -251,12 +216,13 @@ class Materials(object):
             #'MAT5'  : (self.mat5, self.mat5.material_id),
             'MAT8'  : (self.mat8, self.mat8.material_id),
             #'MAT10' : (self.mat10, self.mat10.material_id),
-            'MATS1' : (self.mats1, self.mats1.material_id),
+
+            #'MATS1' : (self.mats1, self.mats1.material_id),
         }
-        material_ids, int_flag = slice_to_iter(material_ids)
+        material_id, int_flag = slice_to_iter(material_id)
         out = []
-        self.model.log.debug('material_ids = %s' % material_ids)
-        for mid in material_ids:
+        self.model.log.debug('material_ids = %s' % material_id)
+        for mid in material_id:
             obj = None
             for Type, (mdict, mids) in iteritems(TypeMap):
                 if mdict.n:
@@ -269,19 +235,16 @@ class Materials(object):
                     else:
                         #self.model.log.debug('  mid=%i Type=%s was not found' % (mid, Type))
                         pass
-            assert obj is not None, 'could not find material_id=%s' % mid
             out.append(obj)
-        #print(out)
-        #return out
         return out[0] if int_flag else out
 
-    #def __getitem2__(self, material_id):
-        #assert isinstance(material_id, int), 'material_id=%r' % material_id
-        #types = self._get_types()
-        #for mat in types:
-            #if material_id in mat.material_id:
-                #return mat
-        #raise RuntimeError('Could not find material_id=%r' % material_id)
+    def __getitem2__(self, material_id):
+        assert isinstance(material_id, int), 'material_id=%r' % material_id
+        types = self._get_types()
+        for mat in types:
+            if material_id in mat.material_id:
+                return mat
+        raise RuntimeError('Could not find material_id=%r' % material_id)
 
     def __len__(self):
         types = self._get_types()
@@ -303,13 +266,14 @@ class Materials(object):
                 #self.mat2, self.mat4,
                 self.mat8,
                 #self.mat10,
-                self.mats1,]
+                self.mats1,
+                ]
 
     def _get_type_names(self):
         return ['MAT1',
                 #'MAT2', 'MAT4',
                 'MAT8',
-                # 'MAT10',
+                #'MAT10',
                 'MATS1'
                 ]
 
@@ -321,7 +285,14 @@ class Materials(object):
         self.model.log.debug('Materials.write_bdf.n=%s' % self.n)
         if self.n:
             f.write('$MATERIALS\n')
-            types = self._get_types()
+            types = [
+                self.mat1,
+                #self.mat2, self.mat4,
+                self.mat8,
+                #self.mat10,
+                self.mats1,
+            ]
             for materials in types:
                 if materials.n:
+                    self.model.log.debug('    writing %s' % materials.type)
                     materials.write_bdf(f, size=size, material_id=material_id)

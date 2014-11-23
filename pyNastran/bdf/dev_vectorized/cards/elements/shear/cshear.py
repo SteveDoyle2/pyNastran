@@ -13,39 +13,31 @@ class CSHEAR(Element):
         Element.__init__(self, model)
 
     def allocate(self, ncards):
+        #: Element ID
         self.element_id = zeros(ncards, 'int32')
+        #: Property ID
         self.property_id = zeros(ncards, 'int32')
+        #: Node IDs
         self.node_ids = zeros((ncards, 4), 'int32')
         self.zoffset = zeros(ncards, 'int32')
         self.t_flag = zeros(ncards, 'int32')
         self.thickness = zeros((ncards, 4), self.model.float)
 
+    def add(self, card, comment):
+        i = self.i
+        self.element_id[i] = integer(card, 1, 'eid')
+
+        self.property_id[i] = integer(card, 2, 'pid')
+
+        self.node_ids[i] = [integer(card, 3, 'n1'),
+                            integer(card, 4, 'n2'),
+                            integer(card, 5, 'n3'),
+                            integer(card, 6, 'n4')]
+        assert len(card) <= 7, 'len(CSHEAR card) = %i' % len(card)
+        self.i += 1
+
     def build(self):
-        cards = self._cards
-        ncards = len(cards)
-        self.n = ncards
-        if ncards:
-            #: Element ID
-            self.element_id = zeros(ncards, 'int32')
-            #: Property ID
-            self.property_id = zeros(ncards, 'int32')
-            #: Node IDs
-            self.node_ids = zeros((ncards, 4), 'int32')
-
-            self.zoffset = zeros(ncards, 'int32')
-            self.t_flag = zeros(ncards, 'int32')
-            self.thickness = zeros((ncards, 4), self.model.float)
-
-            for i, card in enumerate(cards):
-                self.element_id[i] = integer(card, 1, 'eid')
-
-                self.property_id[i] = integer(card, 2, 'pid')
-
-                self.node_ids[i] = [integer(card, 3, 'n1'),
-                                    integer(card, 4, 'n2'),
-                                    integer(card, 5, 'n3'),
-                                    integer(card, 6, 'n4')]
-                assert len(card) <= 7, 'len(CSHEAR card) = %i' % len(card)
+        if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
             self.property_id = self.property_id[i]
@@ -148,7 +140,7 @@ class CSHEAR(Element):
         else:
             return area
 
-    def _mass_area_normal(self, eids=None, node_ids=None, grids_cid0=None,
+    def _mass_area_normal(self, element_id=None, node_ids=None, grids_cid0=None,
                           calculate_mass=True, calculate_area=True,
                           calculate_normal=True):
         """
@@ -156,7 +148,7 @@ class CSHEAR(Element):
         element basis.
 
         :param self: the CSHEAR object
-        :param eids: the elements to consider (default=None -> all)
+        :param element_id: the elements to consider (default=None -> all)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
         :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
@@ -185,7 +177,7 @@ class CSHEAR(Element):
         if calculate_area:
             A = 0.5 * n
         if calculate_mass:
-            t = self.model.pid.get_thickness(self.pid)
+            t = self.model.pid.get_thickness_by_property_id(self.pid)
             massi = A * t
         return massi
 

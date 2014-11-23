@@ -21,6 +21,7 @@ class PBARL(Property):
         :param cards: the list of PBARL cards
         """
         Property.__init__(self, model)
+        self._cards = []
 
     def allocate(self, ncards):
         float_fmt = self.model.float

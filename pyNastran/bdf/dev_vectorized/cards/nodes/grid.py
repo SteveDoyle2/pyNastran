@@ -105,9 +105,37 @@ class GRID(VectorizedCard):
         """
         VectorizedCard.__init__(self, model)
 
+    def ressize(se3f):
+        pass
+
     def add(self, card, comment):
-        self._cards.append(card)
-        self._comments.append(comment)
+        cp0 = self.model.grdset.cp
+        cd0 = self.model.grdset.cd
+        ps0 = self.model.grdset.ps
+        seid0 = self.model.grdset.seid
+
+        i = self.i
+        #: Node ID
+        self.node_id[i] = integer(card, 1, 'nid')
+
+        #: Grid point coordinate system
+        self.cp[i] = integer_or_blank(card, 2, 'cp', cp0)
+
+        x = double_or_blank(card, 3, 'x1', 0.)
+        y = double_or_blank(card, 4, 'x2', 0.)
+        z = double_or_blank(card, 5, 'x3', 0.)
+        #: node location in local frame
+        self.xyz[i] = [x, y, z]
+
+        #: Analysis coordinate system
+        self.cd[i] = integer_or_blank(card, 6, 'cd', cd0)
+
+        #: SPC constraint
+        self.ps[i] = integer_or_blank(card, 7, 'ps', ps0)
+
+        #: Superelement ID
+        self.seid[i] = integer_or_blank(card, 8, 'seid', seid0)
+        self.i += 1
 
     def allocate(self, card_count):
         ncards = card_count['GRID']
@@ -120,37 +148,8 @@ class GRID(VectorizedCard):
         self.ps = zeros(ncards, 'int32')
 
     def build(self):
-        cards = self._cards
-        ncards = len(cards)
-
-        self.n = ncards
-        if ncards:
+        if self.n:
             self.model.log.debug('--------building grid--------')
-            cp0 = self.model.grdset.cp
-            cd0 = self.model.grdset.cd
-            ps0 = self.model.grdset.ps
-            seid0 = self.model.grdset.seid
-            for i, card in enumerate(cards):
-                #: Node ID
-                self.node_id[i] = integer(card, 1, 'nid')
-
-                #: Grid point coordinate system
-                self.cp[i] = integer_or_blank(card, 2, 'cp', cp0)
-
-                x = double_or_blank(card, 3, 'x1', 0.)
-                y = double_or_blank(card, 4, 'x2', 0.)
-                z = double_or_blank(card, 5, 'x3', 0.)
-                #: node location in local frame
-                self.xyz[i] = [x, y, z]
-
-                #: Analysis coordinate system
-                self.cd[i] = integer_or_blank(card, 6, 'cd', cd0)
-
-                #: SPC constraint
-                self.ps[i] = integer_or_blank(card, 7, 'ps', ps0)
-
-                #: Superelement ID
-                self.seid[i] = integer_or_blank(card, 8, 'seid', seid0)
             i = argsort(self.node_id)
             self.node_id = self.node_id[i]
             self.cp = self.cp[i]
@@ -159,28 +158,65 @@ class GRID(VectorizedCard):
             self.ps = self.ps[i]
             self.seid = self.seid[i]
 
-    def get_node_index_from_node_id(self, node_id=None, msg=''):
+    #def get_index_by_node_id(self, node_id, msg=''):
+        #return searchsorted(node_id, self.node_id)
+        #i_too_large = where(self.node_id[-1] < node_id)[0]
+        #if len(i_too_large):
+            #raise RuntimeError('Cannot find GRID %s, %s' % (node_id[i_too_large], msg))
+        #return self._get_sorted_index(self.node_id, node_id, self.n, 'node_id in GRID', check=True)
+
+    def get_index_by_node_id(self, node_id=None, msg=''):
         #assert msg != ''
         i = self._get_sorted_index(self.node_id, node_id, self.n, 'node_id', 'node_id in GRID%s' % msg, check=True)
         return i
+        #if node_id is None:
+            #out_index = None
+        #else:
+            #if isinstance(node_id, int):
+                #node_id = array([node_id])
+            #out_index = searchsorted(self.node_id, node_id)
+            #assert array_equal(self.node_id[out_index], node_id)
+            #self.model.log.debug('node_id = %s' % node_id)
+            ##assert len(node_id) == len(n), 'n1=%s n2=%s'  %(len(node_id), len(n))  # TODO: what is this for?
+        #return out_index
 
-    def get_node_index_by_cp(self, cp=None, i=None):
+    def get_index_by_cp(self, cp=None, i=None):
         """Find all the j-indicies where cp=cpi for some given subset of i-indicies"""
-        return _get_index_from_param('cp', self.cp, cp, i)
+        return self._get_index_by_param('cp', self.cp, cp, i)
 
-    def get_node_index_by_cd(self, cd=None, i=None):
+    def get_index_by_cd(self, cd=None, i=None):
         """Find all the j-indicies where cd=cdi for some given subset of i-indicies"""
-        return _get_index_from_param('cd', self.cd, cd, i)
+        return self._get_index_by_param('cd', self.cd, cd, i)
 
-    def get_node_index_by_seid(self, seid=None, i=None):
+    def get_index_by_seid(self, seid=None, i=None):
         """Find all the j-indicies where seid=seidi for some given subset of i-indicies"""
-        return _get_index_from_param('seid', self.seid, seid, i)
+        return self._get_index_by_param('seid', self.seid, seid, i)
+
+    def _get_index_by_param(self, name, param_data, param, i):
+        """
+        You probably shouldn't be calling this method.
+        It does the work associcated with get_index_by_cp / get_index_by_cd
+        """
+        if param is None:
+            return i
+        #param_all = unique(param_data)
+        i, n = _index_to_nslice(i, self.n)
+        out_index = array(n, dtype='int32')
+        param_data_i = param_data[i]
+
+        i0 = 0
+        for parami in param:
+            j = where(param_data_i == parami)[0]
+            nj = len(j)
+            out_index[i0:i0+nj] = j
+            i0 += nj
+        return out_index
 
     def get_position_by_node_id(self, node_id=None, msg=''):
-        i = self.get_node_index_from_node_id(node_id, msg=msg)
-        return self.get_position_from_node_index(i)
+        i = self.get_index_by_node_id(node_id, msg=msg)
+        return self.get_position_by_index(i)
 
-    def get_position_from_node_index(self, i=None):
+    def get_position_by_index(self, i=None):
         """
         in the global frame
         """
@@ -217,10 +253,11 @@ class GRID(VectorizedCard):
                 #xyzi = dot(transpose(T), dot(xyzi, T))
                 xyz[j, :] = self.model.coords.get_global_position_by_xyz(xyzi, cp)
 
+
         #assert len(node_ids) == len(cpn), 'n1=%s n2=%s'  %(len(node_ids), len(cpn))
         return xyz
 
-    def get_positions_wrt_from_node_id(self, node_id=None, coord_ids=None):
+    def get_positions_wrt(self, node_ids=None, coord_ids=None):
         raise NotImplementedError()
 
     def get_stats(self):
@@ -232,10 +269,10 @@ class GRID(VectorizedCard):
     def write_bdf(self, f, node_id=None, size=8, is_double=False):
         self.model.log.debug('GRID node_id = %s' % node_id)
         self.model.log.debug('GRID self.node_id = %s' % self.node_id)
-        i = self.get_node_index_from_node_id(node_id, 'GRID.write_bdf')
+        i = self.get_index_by_node_id(node_id, 'GRID.write_bdf')
         return self.write_bdf_by_index(f, i, size, is_double)
 
-    def write_bdf_by_node_index(self, f, i=None, size=8, is_double=False):
+    def write_bdf_by_index(self, f, i=None, size=8, is_double=False):
         """
         Write the BDF cards
 
@@ -298,13 +335,6 @@ class GRID(VectorizedCard):
         return obj
 
 def _index_to_nslice(i, n):
-    """
-    Turns an index into a slice and length
-
-    :param i: the slice-like object
-    :param n: the length of the slice
-    """
-    raise RuntimeError('is this used?')
     if i is None:
         i = slice(None, None)
         n = self.n
@@ -312,23 +342,3 @@ def _index_to_nslice(i, n):
         n = len(i)
     return i, n
 
-
-def _get_index_from_param(name, param_data, param, i):
-    """
-    You probably shouldn't be calling this method.
-    It does the work associcated with get_index_by_cp / get_index_by_cd
-    """
-    if param is None:
-        return i
-    #param_all = unique(param_data)
-    i, n = _index_to_nslice(i, self.n)
-    out_index = array(n, dtype='int32')
-    param_data_i = param_data[i]
-
-    i0 = 0
-    for parami in param:
-        j = where(param_data_i == parami)[0]
-        nj = len(j)
-        out_index[i0:i0+nj] = j
-        i0 += nj
-    return out_index

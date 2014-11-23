@@ -196,7 +196,7 @@ class CTRIAX6(object):
         if calculate_area:
             A = 0.5 * n
         if calculate_mass:
-            t = self.model.pid.get_thickness(self.pid)
+            t = self.model.pid.get_thickness_by_property_id(self.pid)
             massi = A * t
         return massi, A, normal
 

@@ -47,8 +47,11 @@ class CBUSH(Element):
         Element.__init__(self, model)
 
     def allocate(self, ncards):
+        self.n = ncards
         float_fmt = self.model.float
+        #: Element ID
         self.element_id = zeros(ncards, 'int32')
+        #: Property ID
         self.property_id = zeros(ncards, 'int32')
         self.node_ids = zeros((ncards, 2), 'int32')
         self.is_g0 = zeros(ncards, 'bool')
@@ -59,83 +62,64 @@ class CBUSH(Element):
         self.ocid = full(ncards, nan, 'int32')
         self.si = full((ncards, 3), nan, float_fmt)
 
+    def add(self, card, comment):
+        i = self.i
+        eid = integer(card, 1, 'element_id')
+        self.element_id[i] = eid
+        self.property_id[i] = integer_or_blank(card, 2, 'property_id', eid)
+        self.node_ids[i] = [integer(card, 3, 'GA'),
+                            integer(card, 4, 'GB')]
+
+        #---------------------------------------------------------
+        # x / g0
+        field5 = integer_double_or_blank(card, 5, 'x1_g0')
+        if isinstance(field5, int):
+            self.is_g0[i] = True
+            self.g0[i] = field5
+        elif isinstance(field5, float):
+            self.is_g0[i] = False
+            x = array([field5,
+                       double_or_blank(card, 6, 'x2', x2_default),
+                       double_or_blank(card, 7, 'x3', x3_default)], dtype='float64')
+            self.x[i, :] = x
+            if norm(x) == 0.0:
+                msg = 'G0 vector defining plane 1 is not defined on %s %s.\n' % (self.type, eid)
+                msg += 'G0 = %s\n' % field5
+                msg += 'X  = %s\n' % x
+                msg += '%s' % card
+                raise RuntimeError(msg)
+        #else:
+            #msg = ('field5 on %s (G0/X1) is the wrong type...eid=%s field5=%s '
+                   #'type=%s' % (self.type, eid, field5, type(field5)))
+            #raise RuntimeError(msg)
+
+        #---------------------------------------------------------
+        #: Element coordinate system identification. A 0 means the basic
+        #: coordinate system. If CID is blank, then the element coordinate
+        #: system is determined from GO or Xi.
+        #: (default=blank=element-based)
+        cid = integer_or_blank(card, 8, 'cid')
+        if cid is not None:
+            self.cid[i] = cid
+        #: Location of spring damper (0 <= s <= 1.0)
+        self.s[i] = double_or_blank(card, 9, 's', 0.5)
+        #: Coordinate system identification of spring-damper offset. See
+        #: Remark 9. (Integer > -1; Default = -1, which means the offset
+        #: point lies on the line between GA and GB
+        self.ocid[i] = integer_or_blank(card, 10, 'ocid', -1)
+        #: Components of spring-damper offset in the OCID coordinate system
+        #: if OCID > 0.
+        self.si[i, :] = [double_or_blank(card, 11, 's1'),
+                   double_or_blank(card, 12, 's2'),
+                   double_or_blank(card, 13, 's3')]
+        assert len(card) <= 14, 'len(CBUSH card) = %i' % len(card)
+        self.i += 1
+
     def build(self):
         """
         :param self: the CBUSH object
         """
-        cards = self._cards
-        ncards = len(cards)
-        self.n = ncards
-
-        if ncards:
-            float_fmt = self.model.float
-
-            #: Element ID
-            self.element_id = zeros(ncards, 'int32')
-            #: Property ID
-            self.property_id = zeros(ncards, 'int32')
-            self.node_ids = zeros((ncards, 2), 'int32')
-
-            self.is_g0 = zeros(ncards, 'bool')
-            self.g0 = full(ncards, nan, 'int32')
-            self.x = full((ncards, 3), nan, float_fmt)
-
-            self.cid = full(ncards, nan, 'int32')
-            self.s = full(ncards, nan, float_fmt)
-            self.ocid = full(ncards, nan, 'int32')
-            self.si = full((ncards, 3), nan, float_fmt)
-
-            for i, card in enumerate(cards):
-                eid = integer(card, 1, 'element_id')
-                self.element_id[i] = eid
-                self.property_id[i] = integer_or_blank(card, 2, 'property_id', eid)
-                self.node_ids[i] = [integer(card, 3, 'GA'),
-                                    integer(card, 4, 'GB')]
-
-                #---------------------------------------------------------
-                # x / g0
-                field5 = integer_double_or_blank(card, 5, 'x1_g0')
-                if isinstance(field5, int):
-                    self.is_g0[i] = True
-                    self.g0[i] = field5
-                elif isinstance(field5, float):
-                    self.is_g0[i] = False
-                    x = array([field5,
-                               double_or_blank(card, 6, 'x2', x2_default),
-                               double_or_blank(card, 7, 'x3', x3_default)], dtype='float64')
-                    self.x[i, :] = x
-                    if norm(x) == 0.0:
-                        msg = 'G0 vector defining plane 1 is not defined on %s %s.\n' % (self.type, eid)
-                        msg += 'G0 = %s\n' % field5
-                        msg += 'X  = %s\n' % x
-                        msg += '%s' % card
-                        raise RuntimeError(msg)
-                #else:
-                    #msg = ('field5 on %s (G0/X1) is the wrong type...eid=%s field5=%s '
-                           #'type=%s' % (self.type, eid, field5, type(field5)))
-                    #raise RuntimeError(msg)
-
-                #---------------------------------------------------------
-                #: Element coordinate system identification. A 0 means the basic
-                #: coordinate system. If CID is blank, then the element coordinate
-                #: system is determined from GO or Xi.
-                #: (default=blank=element-based)
-                cid = integer_or_blank(card, 8, 'cid')
-                if cid is not None:
-                    self.cid[i] = cid
-                #: Location of spring damper (0 <= s <= 1.0)
-                self.s[i] = double_or_blank(card, 9, 's', 0.5)
-                #: Coordinate system identification of spring-damper offset. See
-                #: Remark 9. (Integer > -1; Default = -1, which means the offset
-                #: point lies on the line between GA and GB
-                self.ocid[i] = integer_or_blank(card, 10, 'ocid', -1)
-                #: Components of spring-damper offset in the OCID coordinate system
-                #: if OCID > 0.
-                self.si[i, :] = [double_or_blank(card, 11, 's1'),
-                           double_or_blank(card, 12, 's2'),
-                           double_or_blank(card, 13, 's3')]
-                assert len(card) <= 14, 'len(CBUSH card) = %i' % len(card)
-
+        if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
             self.property_id = self.property_id[i]

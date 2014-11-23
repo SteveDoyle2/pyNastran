@@ -21,98 +21,43 @@ class CELAS2(SpringElement):
         """
         SpringElement.__init__(self, model)
 
-        self.element_id = []
-        #: Property ID
-        self.property_id = []
-
-        # Node IDs
-        self.node_ids = []
-
-        #: stiffness of the scalar spring
-        self.K = []
-
-        #: component number
-        self.components = []
-
-        #: damping coefficient
-        self.ge = []
-
-        #: stress coefficient
-        self.s = []
-
-    def add(self, card, comment=None):
-        self._cards.append(card)
-        self._comments.append(comment)
-
-        self.element_id.append(integer(card, 1, 'eid'))
-        self.K.append(double(card, 2, 'k'))
-        self.node_ids.append([integer(card, 3, 'G1'),
-                              integer_or_blank(card, 5, 'G2')])
-        self.components.append([integer_or_blank(card, 4, 'C1', 0),
-                              integer_or_blank(card, 6, 'C2', 0)])
-        self.ge.append(double_or_blank(card, 7, 'ge', 0.))
-        self.s.append(double_or_blank(card, 8, 's', 0.))
-        assert len(card) <= 9, 'len(CELAS2 card) = %i' % len(card) + str(card)
 
     def allocate(self, ncards):
+        #self.property_id = zeros(ncards, 'int32')
+
+        self.n = ncards
         float_fmt = self.model.float
+        #: Element ID
         self.element_id = zeros(ncards, dtype='int32')
+        # Node IDs
         self.node_ids = zeros((ncards, 2), dtype='int32')
+        #: component number
         self.components = zeros((ncards, 2), dtype='int32')
+        #: stiffness of the scalar spring
         self.K = zeros(ncards, dtype=float_fmt)
+        #: damping coefficient
         self.ge = zeros(ncards, dtype=float_fmt)
+        #: stress coefficient
         self.s = zeros(ncards, dtype=float_fmt)
+
+    def add(self, card, comment=None):
+        i = self.i
+        self.element_id[i] = integer(card, 1, 'eid')
+        self.K[i] = double(card, 2, 'k')
+        self.node_ids[i, :] = [integer(card, 3, 'G1'),
+                               integer_or_blank(card, 5, 'G2')]
+        self.components[i, :] = [integer_or_blank(card, 4, 'C1', 0),
+                                 integer_or_blank(card, 6, 'C2', 0)]
+        self.ge[i] = double_or_blank(card, 7, 'ge', 0.)
+        self.s[i] = double_or_blank(card, 8, 's', 0.)
+        assert len(card) <= 9, 'len(CELAS2 card) = %i' % len(card) + str(card)
+        self.i += 1
 
     def build(self):
         """
         :param self: the CELAS2 object
         """
-        cards = self._cards
-        ncards = len(cards)
-        self.n = ncards
-
-        if ncards:
-            float_fmt = self.model.float
-            self.element_id = array(self.element_id, 'int32')
-            self.node_ids = array(self.node_ids)
-            self.K = array(self.K, float_fmt)
-            self.components = array(self.components, 'int32')
-            self.ge = array(self.ge, float_fmt)
-            self.s = array(self.s, float_fmt)
-            return
-
-            float_fmt = self.model.float
-
-            self.element_id = zeros(ncards, 'int32')
-            #: Property ID
-            self.property_id = zeros(ncards, 'int32')
-
-            # Node IDs
-            self.node_ids = zeros((ncards, 2), 'int32')
-
-            #: stiffness of the scalar spring
-            self.K = zeros(ncards, float_fmt)
-
-            #: component number
-            self.components = zeros((ncards, 2), 'int32')
-
-            #: damping coefficient
-            self.ge = zeros(ncards, float_fmt)
-
-            #: stress coefficient
-            self.s = zeros(ncards, float_fmt)
-
-            for i, card in enumerate(cards):
-                self.element_id[i] = integer(card, 1, 'eid')
-                self.K[i] = double(card, 2, 'k')
-                self.node_ids[i] = [integer(card, 3, 'G1'),
-                                    integer(card, 5, 'G2')]
-                self.components[i] = [integer_or_blank(card, 4, 'C1', 0),
-                                      integer_or_blank(card, 6, 'C2', 0)]
-                self.ge[i] = double_or_blank(card, 7, 'ge', 0.)
-                self.s[i] = double_or_blank(card, 8, 's', 0.)
-                assert len(card) <= 9, 'len(CELAS2 card) = %i' % len(card) + str(card)
-
+        if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
             self.K = self.K[i]

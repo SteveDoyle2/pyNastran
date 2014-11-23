@@ -1,32 +1,15 @@
-"""
-All material cards are defined in this file.  This includes:
+from six.moves import zip
+from numpy import zeros, where, arange, searchsorted, unique, asarray
 
- * CREEP
- * MAT1 (isotropic solid/shell)
- * MAT2 (anisotropic)
- * MAT3 (linear orthotropic)
- * MAT4 (thermal)
- * MAT5 (thermal)
- * MAT8 (orthotropic shell)
- * MAT9 (anisotropic solid)
- * MAT10 (fluid element)
- * MATHP (hyperelastic)
-
-All cards are Material objects.
-"""
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
-from numpy import zeros, array, where, asarray, argsort, searchsorted
-
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-#from pyNastran.bdf.cards.baseCard import BaseCard, Material
-#from pyNastran.bdf.cards.tables import Table
-from .mat1 import Material
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     string, string_or_blank, blank)
-from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
+
+from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
+from pyNastran.bdf.dev_vectorized.cards.materials.mat1 import Material
 
 
 class MAT8(Material):
@@ -45,19 +28,11 @@ class MAT8(Material):
     +-----+-----+-----+------+------+-----+-----+-----+-----+
     """
     type = 'MAT8'
-    #_field_map = {
-        #1: 'mid', 2:'e11', 3:'e22', 4:'nu12', 5: 'g12', 6:'g1z', 7:'g2z',
-        #8: 'rho', 9:'a1', 10:'a2', 11:'TRef', 12:'Xt', 13:'Xc', 14:'Yt',
-        #15:'Yc', 16: 'S', 17:'ge', 18:'F12', 19:'strn',
-    #}
-
     def __init__(self, model):
         Material.__init__(self, model)
-        self.i = 0
-        self.material_id = None
-        #self.model.log.info('start MAT8')
 
     def allocate(self, ncards):
+        self.n = ncards
         float_fmt = self.model.float
         self.material_id = zeros(ncards, dtype='int32')
         self.e11 = zeros(ncards, dtype=float_fmt)
@@ -80,13 +55,10 @@ class MAT8(Material):
         self.F12 = zeros(ncards, dtype=float_fmt)
         self.strn = zeros(ncards, dtype=float_fmt)
 
-    def add(self, card=None, data=None, comment=''):
+    def add(self, card, comment):
         i = self.i
-
-        self.mats8 = None
-        self.matt8 = None
         #if comment:
-            #self._comment = comment
+        #    self._comment = comment
         self.material_id[i] = integer(card, 1, 'material_id')
         self.e11[i] = double(card, 2, 'E11')    #: ..todo:: is this the correct default
         self.e22[i] = double(card, 3, 'E22')    #: ..todo:: is this the correct default
@@ -110,11 +82,10 @@ class MAT8(Material):
         assert len(card) <= 20, 'len(MAT8 card) = %i' % len(card)
         self.i += 1
 
+
     def build(self):
-        self.n = self.i
         if self.n:
-            i = argsort(self.material_id)
-            self.model.log.info('MAT8.n = %s' % self.n)
+            i = self.material_id.argsort()
             self.material_id = self.material_id[i]
             self.e11 = self.e11[i]
             self.e22 = self.e22[i]
@@ -136,89 +107,36 @@ class MAT8(Material):
             self.F12 = self.F12[i]
             self.strn = self.strn[i]
 
-    def get_density_from_material_id(self, material_id=None):
-        i = self.get_material_index_from_material_id(material_id)
-        density = self.rho[i]
-        return density
+    def get_density_by_index(self, i):
+        return self.rho[i]
 
-    def _verify(self, xref):
-        """
-        Verifies all methods for this object work
+    def get_density_by_material_id(self, material_id):
+        i = self.get_index_by_material_id(material_id)
+        return self.get_density_by_index(i)
 
-        :param self: the MAT8 object pointer
-        :param xref: has this model been cross referenced
-        :type xref:  bool
-        """
-        mid = self.Mid()
-        E11 = self.E11()
-        E22 = self.E22()
-        nu12 = self.Nu12()
-        G12 = self.G12()
-        assert isinstance(mid, int), 'mid=%r' % mid
-        assert isinstance(E11, float), 'E11=%r' % E11
-        assert isinstance(E22, float), 'E11=%r' % E11
-        assert isinstance(G12, float), 'G12=%r' % G12
-        assert isinstance(nu12, float), 'nu12=%r' % nu12
-
-    def E11(self):
-        return self.e11
-
-    def E22(self):
-        return self.e22
-
-    def Nu12(self):
-        return self.nu12
-
-    def G12(self):
-        return self.g12
-
-    def D(self):
-        """
-        .. todo:: what about G1z and G2z
-        """
-        E11 = self.E11()
-        E22 = self.E22()
-        nu12 = self.Nu12()
-        G12 = self.G12()
-
-        D = zeros((3, 3), dtype='float32')
-        mu = 1. - nu12 * nu12 * E11 / E22    # not necessary b/c they're equal
-        D[0, 0] = E11 / mu
-        D[1, 1] = E22 / mu
-        D[0, 1] = nu12 * D[0, 0]
-        D[1, 0] = D[0, 1]
-        D[2, 2] = G12
-        return D
-
-    def rawFields(self):
-        list_fields = ['MAT8', self.mid, self.e11, self.e22, self.nu12, self.g12,
-                       self.g1z, self.g2z, self.rho, self.a1, self.a2, self.TRef,
-                       self.Xt, self.Xc, self.Yt, self.Yc, self.S, self.ge,
-                       self.F12, self.strn]
-        return list_fields
-
-    def reprFields(self):
-        """
-        Gets the fields in their simplified form
-
-        :param self:
-          the MAT8 object pointer
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
-        """
-        return list_fields
-
-    def write_bdf(self, f, size=8, is_double=False, material_id=None):
+    def write_bdf(self, f, size=8, material_id=None):
         if self.n:
-            for mid, e11, e22, nu12, g12, g1z, g2z, rho, a1, a2, TRef, Xt, Yt, Xc, Yc, S, ge, F12, strn in zip(
-                self.material_id, self.e11, self.e22, self.nu12, self.g12, self.g1z, self.g2z, self.rho,
-                self.a1, self.a2, self.TRef,
-                self.Xt, self.Yt, self.Xc, self.Yc, self.S, self.ge, self.F12, self.strn):
-                G12 = set_blank_if_default(g12, 0.)
-                G1z = set_blank_if_default(g1z, 1e8)
-                G2z = set_blank_if_default(g2z, 1e8)
+            if material_id is None:
+                i = arange(self.n)
+            else:
+                i = searchsorted(self.material_id, material_id)
+
+            assert material_id is None
+
+            #card = ['$MAT1', 'mid', 'E', 'G', 'nu', 'rho', 'a', 'TRef', 'ge']
+            #f.write(print_card_8(card))
+            #card = ['$', 'st', 'sc', 'ss', 'mcsid']
+            #f.write(print_card_8(card))
+            for (mid, e11, e22, nu12, g12, g1z, g2z, rho, a1, a2, TRef,
+                 Xt, Xc, Yt, Yc, S, ge, F12, strn) in zip(
+                               self.material_id[i], self.e11[i], self.e22[i], self.nu12[i], self.g12[i],
+                               self.g1z[i], self.g2z[i], self.rho[i], self.a1[i], self.a2[i], self.TRef[i],
+                               self.Xt[i], self.Xc[i], self.Yt[i], self.Yc[i], self.S[i], self.ge[i],
+                               self.F12[i], self.strn[i]):
+
+                g12 = set_blank_if_default(g12, 0.)
+                g1z = set_blank_if_default(g1z, 1e8)
+                g2z = set_blank_if_default(g2z, 1e8)
 
                 rho = set_blank_if_default(rho, 0.0)
                 a1 = set_blank_if_default(a1, 0.0)
@@ -236,13 +154,53 @@ class MAT8(Material):
                 F12 = set_blank_if_default(F12, 0.0)
                 strn = set_blank_if_default(strn, 0.0)
 
-                list_fields = ['MAT8', mid, e11, e22, nu12, G12, G1z,
-                          G2z, rho, a1, a2, TRef, Xt, Xc, Yt, Yc, S, ge, F12, strn]
-                if size == 8:
-                    #self.comment()
-                    f.write(print_card_8(list_fields))
-                else:
-                    f.write(print_card_16(list_fields))
+                card = ['MAT8', mid, e11, e22, nu12, g12, g1z, g2z,
+                        rho, a1, a2, TRef,
+                        Xt, Xc, Yt, Yc, S, ge, F12, strn]
+                f.write(print_card_8(card))
+
+    def reprFields(self, material_id):
+        i = where(self.material_id == material_id)[0]
+        i = i[0]
+        card = ['MAT1', self.material_id[i], self.E[i], self.G[i], self.nu[i],
+                        self.rho[i], self.a[i], self.TRef[i], self.ge[i],
+                        self.St[i], self.Sc[i], self.Ss[i], self.mcsid[i]]
+        return card
+
+    def _verify(self, xref=True):
+        pass
+
+    def set_E_G_nu(self, i, card):
+        r"""
+        \f[ G = \frac{E}{2 (1+\nu)} \f]
+        """
+        E = double_or_blank(card, 2, 'E')
+        G = double_or_blank(card, 3, 'G')
+        nu = double_or_blank(card, 4, 'nu')
+
+        if G is None and E is None:  # no E,G
+            raise RuntimeError('G=%s E=%s cannot both be None' % (G, E))
+        elif E is not None and G is not None and nu is not None:
+            pass
+        elif E is not None and nu is not None:
+            G = E / 2. / (1 + nu)
+        elif G is not None and nu is not None:
+            E = 2 * (1 + nu) * G
+        elif G is not None and E is not None:
+            nu = E / (2 * G) - 1.
+        elif G is None and nu is None:
+            G = 0.0
+            nu = 0.0
+        elif E is None and nu is None:
+            E = 0.0
+            nu = 0.0
+        else:
+            msg = 'G=%s E=%s nu=%s' % (G, E, nu)
+            raise RuntimeError(msg)
+        #self.model.log.debug('G = %s' % G)
+        self.E[i] = E
+        self.G[i] = G
+        self.nu[i] = nu
 
     def slice_by_index(self, i):
         i = asarray(i)
@@ -252,6 +210,7 @@ class MAT8(Material):
         #obj._cards = self._cards[i]
         #obj._comments = obj._comments[i]
         #obj.comments = obj.comments[i]
+
         obj.material_id = self.material_id[i]
         obj.e11 = self.e11[i]
         obj.e22 = self.e22[i]
@@ -272,4 +231,5 @@ class MAT8(Material):
         obj.ge = self.ge[i]
         obj.F12 = self.F12[i]
         obj.strn = self.strn[i]
+
         return obj

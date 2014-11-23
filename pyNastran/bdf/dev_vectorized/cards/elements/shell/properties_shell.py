@@ -1,5 +1,6 @@
 from six import  iteritems
-from numpy import concatenate, hstack, argsort, searchsorted, ndarray, unique, array
+from numpy import (concatenate, hstack, argsort, searchsorted, ndarray, unique,
+                   array, nan, full, where, isnan)
 
 from .pshell import PSHELL
 from .pcomp import PCOMP
@@ -61,37 +62,37 @@ class PropertiesShell(object):
         self.pcompg.add(card, comment)
 
     #=========================================================================
-    def get_mid(self, property_ids):
+    def get_material_id_by_property_id(self, property_id):
         types = self._get_types(nlimit=True)
-        _property_ids = concatenate([ptype.property_id for ptype in types])
-        #print _property_ids
-        return _property_ids
+        _property_id = concatenate([ptype.property_id for ptype in types])
+        #print _property_id
+        return _property_id
 
-    def get_nonstructural_mass(self, property_ids=None):
-        return self._getmethod(property_ids, 'get_nonstructural_mass')
+    def get_nonstructural_mass_by_property_id(self, property_id=None):
+        return self._getmethod(property_id, 'get_nonstructural_mass_by_property_id')
 
-    def get_mass_per_area(self, property_ids=None):
-        return self._getmethod(property_ids, 'get_mass_per_area')
+    def get_mass_per_area_by_property_id(self, property_id=None):
+        return self._getmethod(property_id, 'get_mass_per_area_by_property_id')
 
-    def get_thickness(self, property_ids=None):
+    def get_thickness_by_property_id(self, property_id=None):
         """
         Gets the thickness of the PSHELLs/PCOMPs.
 
         :param self: the ShellProperties object
-        :param property_ids: the property IDs to consider (default=None -> all)
+        :param property_id: the property IDs to consider (default=None -> all)
         """
-        return self._getmethod(property_ids, 'get_thickness')
+        return self._getmethod(property_id, 'get_thickness_by_property_id')
 
-    def get_density(self, property_ids=None):
+    def get_density_by_property_id(self, property_id=None):
         """
         Gets the density of the PSHELLs/PCOMPs.
 
         :param self: the ShellProperties object
         :param property_ids: the property IDs to consider (default=None -> all)
         """
-        return self._getmethod(property_ids, 'get_density')
+        return self._getmethod(property_id, 'get_density_by_property_id')
 
-    def _getattr(self, property_ids, method):
+    def _getattr(self, property_id, method):
         TypeMap = {
             'PSHELL': (self.pshell, self.pshell.property_id),
             'PCOMP' : (self.pcomp, self.pcomp.property_id),
@@ -100,7 +101,7 @@ class PropertiesShell(object):
         out = array([])
         for Type, (ptype, pids) in sorted(iteritems(TypeMap)):
             for pid in pids:
-                if pid in property_ids:
+                if pid in property_id:
                     value = getattr(ptype, method)
                     #assert len(value) == 1, value
                     #print('pid =', pid, value)
@@ -108,7 +109,7 @@ class PropertiesShell(object):
         #print("out = %s" % out)
         return out
 
-    def _getmethod(self, property_ids, method):
+    def _getmethod(self, property_id, method):
         #types = self._get_types(nlimit=True)
         #data = hstack([getattr(ptype, method)() for ptype in types] )
         #if property_ids is None:
@@ -119,16 +120,21 @@ class PropertiesShell(object):
             'PCOMP' : (self.pcomp, self.pcomp.property_id),
             'PCOMPG': (self.pcompg, self.pcompg.property_id),
         }
-        #print('property_ids = %s' % property_ids)
-        out = array([])
+        #self.model.log.debug('property_id = %s' % property_id)
+        n = len(property_id)
+        out = full(n, nan, dtype='float64')
         for Type, (ptype, pids) in sorted(iteritems(TypeMap)):
+            #self.model.log.debug('Type=%s pids=%s' % (Type, pids))
             for pid in pids:
-                if pid in property_ids:
+                if pid in property_id:
                     value = getattr(ptype, method)([pid])
+                    j = where(pid == property_id)[0]
                     #assert len(value) == 1, value
-                    #print('pid = %s %s' % (pid, value))
-                    out = hstack([out, value])
-        #print("out = %s" % out)
+                    #self.model.log.debug('pid = %s %s' % (pid, value))
+                    out[j] = value
+        #self.model.log.debug("out = %s" % out)
+        assert out.shape == (n, ), out.shape
+        assert isnan(out) == False, out
         return out
         #_property_ids = hstack([ptype.property_id for ptype in types])
         #assert isinstance(property_ids, ndarray), type(property_ids)
@@ -157,9 +163,9 @@ class PropertiesShell(object):
                 msg.append('  %-8s: %i' % (prop.type, nprop))
         return msg
 
-    def write_bdf(self, f, size=8, property_ids=None):
+    def write_bdf(self, f, size=8, property_id=None):
         f.write('$PROPERTIES_SHELL\n')
         types = self._get_types()
         for prop in types:
             #print('*SHELL', prop.type)
-            prop.write_bdf(f, size=size, property_ids=property_ids)
+            prop.write_bdf(f, size=size, property_id=property_id)

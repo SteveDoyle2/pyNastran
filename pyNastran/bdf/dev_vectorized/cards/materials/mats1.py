@@ -1,6 +1,7 @@
 from numpy import array, zeros
 
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, blank, integer_or_string, string)
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
@@ -17,6 +18,7 @@ class MATS1(Material):
 
     def __init__(self, model):
         Material.__init__(self, model)
+        self.n = 0
         self.material_id = None
         self.table_id = None
         self.Type = None
@@ -25,9 +27,29 @@ class MATS1(Material):
         self.yf = None
         self.limit1 = None
         self.limit2 = None
+        self.i = 0
+
+    def slice_by_index(self, i):
+        i = asarray(i)
+        obj = MATS1(self.model)
+        obj.n = len(i)
+        obj.i = self.i
+        #obj._cards = self._cards[i]
+        #obj._comments = obj._comments[i]
+        #obj.comments = obj.comments[i]
+        obj.material_id = self.material_id[i]
+        obj.table_id = self.table_id[i]
+        obj.Type = self.Type[i]
+        obj.h = self.h[i]
+        obj.hflag = self.hflag[i]
+        obj.yf = self.yf[i]
+        obj.hr = self.hr[i]
+        obj.limit1 = self.limit1[i]
+        obj.limit2 = self.limit2[i]
+        return obj
 
     def allocate(self, ncards):
-        #if ncards:
+        self.n = ncards
         float_fmt = self.model.float
         #: Identification number of a MAT1, MAT2, or MAT9 entry.
         self.material_id = zeros(ncards, dtype='int32')
@@ -62,7 +84,7 @@ class MATS1(Material):
     def add(self, card=None, comment=''):
         if comment:
             self._comment = comment
-
+        i = self.i
         #: Identification number of a MAT1, MAT2, or MAT9 entry.
         self.material_id[i] = integer(card, 1, 'mid')
         #: Identification number of a TABLES1 or TABLEST entry. If H is
@@ -84,8 +106,9 @@ class MATS1(Material):
             #: For more than a single slope in the plastic range, the
             #: stress-strain data must be supplied on a TABLES1 entry
             #: referenced by TID, and this field must be blank
-            self.h[i] = double_or_blank(card, 4, 'H')
-            if self.h[i] is None:
+            h = double_or_blank(card, 4, 'H')
+            self.h[i] = h
+            if h is None:
                 self.hflag[i] = False
             else:
                 self.hflag[i] = True
@@ -108,8 +131,10 @@ class MATS1(Material):
                 self.limit2[i] = double(card, 8, 'limit2')
             else:
                 #self.limit2[i] = blank(card, 8, 'limit2')
-                self.limit2[i] = None
+                #self.limit2[i] = None
+                pass
         assert len(card) <= 9, 'len(MATS1 card) = %i' % len(card)
+        self.i += 1
 
     def build(self):
         if self.n:
@@ -162,10 +187,29 @@ class MATS1(Material):
                   self.h, self.yf, self.hr, self.limit1, self.limit2]
         return list_fields
 
-    def write_bdf(self, f, size=8, material_ids=None):
-        card = ['MATS1', self.material_id, self.table_id, self.Type,
-                self.h, self.yf, self.hr, self.limit1, self.limit2]
-        f.write(print_card(card))
+    def write_bdf(self, f, size=8, material_id=None):
+        if size == 8:
+            for mid, table_id, Type, h, hflag, yf, hr, limit1, limit2 in zip(
+                self.material_id, self.table_id, self.Type,
+                self.h, self.hflag, self.yf, self.hr, self.limit1, self.limit2):
+                if not hflag:
+                    h = None
+                if limit2 is None:
+                    card = ['MATS1', mid, table_id, Type, h, yf, hr, limit1]
+                else:
+                    card = ['MATS1', mid, table_id, Type, h, yf, hr, limit1, limit2]
+                f.write(print_card_8(card))
+        else:
+            for mid, table_id, Type, h, hflag, yf, hr, limit1, limit2 in zip(
+                self.material_id, self.table_id, self.Type,
+                self.h, self.hflag, self.yf, self.hr, self.limit1, self.limit2):
+                if not hflag:
+                    h = None
+                if limit2 is None:
+                    card = ['MATS1', mid, table_id, Type, h, yf, hr, limit1]
+                else:
+                    card = ['MATS1', mid, table_id, Type, h, yf, hr, limit1, limit2]
+                f.write(print_card_16(card))
 
     def reprFields(self):
         return self.rawFields()
