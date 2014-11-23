@@ -57,7 +57,7 @@ class PropertiesShell(object):
         self.pcompg[card.property_id] = card
 
     #=========================================================================
-    def get_thickness(self, property_ids=None):
+    def get_thickness_by_property_id(self, property_id=None):
         """
         Gets the thickness of the PSHELLs/PCOMPs.
 
@@ -69,9 +69,9 @@ class PropertiesShell(object):
            self.pcomp.keys(),
            self.pcompg.keys(), )
         t = concatenate(
-            self.pshell.get_thickness(),
-            self.pcomp.get_thickness(),
-            self.pcompg.get_thickness(), )
+            self.pshell.get_thickness_by_property_id(),
+            self.pcomp.get_thickness_by_property_id(),
+            self.pcompg.get_thickness_by_property_id(), )
         i = argsort(_pids)
 
         t2 = t[searchsorted(property_ids, _property_ids)]

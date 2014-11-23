@@ -22,37 +22,32 @@ class CELAS1(SpringElement):
         SpringElement.__init__(self, model)
 
     def allocate(self, ncards):
+        self.n = ncards
+        #: Element ID
         self.element_id = zeros(ncards, 'int32')
+        #: Property ID
         self.property_id = zeros(ncards, 'int32')
+        #: Node IDs
         self.node_ids = zeros((ncards, 2), 'int32')
+        #: component number
         self.components = zeros((ncards, 2), 'int32')
+
+    def add(self, card, comment):
+        i = self.i
+        self.element_id[i] = integer(card, 1, 'eid')
+        self.property_id[i] = integer_or_blank(card, 2, 'pid', self.element_id[i])
+        self.node_ids[i, :] = [integer(card, 3, 'n1'),
+                               integer(card, 5, 'n2')]
+        self.components[i, :] = [integer_or_blank(card, 4, 'c1', 0),
+                                 integer_or_blank(card, 6, 'c2', 0)]
+        assert len(card) <= 7, 'len(CELAS1 card) = %i' % len(card)
+        self.i += 1
 
     def build(self):
         """
         :param self: the CELAS1 object
         """
-        cards = self._cards
-        ncards = len(cards)
-        self.n = ncards
-        if ncards:
-            #: Element ID
-            self.element_id = zeros(ncards, 'int32')
-            #: Property ID
-            self.property_id = zeros(ncards, 'int32')
-            #: Node IDs
-            self.node_ids = zeros((ncards, 2), 'int32')
-            #: component number
-            self.components = zeros((ncards, 2), 'int32')
-
-            for i, card in enumerate(cards):
-                self.element_id[i] = integer(card, 1, 'eid')
-                self.property_id[i] = integer_or_blank(card, 2, 'pid', self.element_id[i])
-                self.node_ids[i] = [integer(card, 3, 'n1'),
-                                    integer(card, 5, 'n2')]
-                self.components[i] = [integer_or_blank(card, 4, 'c1', 0),
-                                      integer_or_blank(card, 6, 'c2', 0)]
-                assert len(card) <= 7, 'len(CELAS1 card) = %i' % len(card)
-
+        if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
             self.property_id = self.property_id[i]

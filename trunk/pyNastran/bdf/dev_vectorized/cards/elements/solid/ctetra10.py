@@ -2,7 +2,9 @@ from six.moves import zip
 from numpy import zeros, arange, dot, cross, searchsorted, array, asarray
 from numpy.linalg import norm
 
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
+
 from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.solid_element import SolidElement
@@ -19,6 +21,7 @@ def volume4(n1, n2, n3, n4):
 
 class CTETRA10(SolidElement):
     type = 'CTETRA10'
+    nnodes = 10
     def __init__(self, model):
         """
         Defines the CTETRA10 object.
@@ -29,45 +32,27 @@ class CTETRA10(SolidElement):
         SolidElement.__init__(self, model)
 
     def add(self, card, comment):
-        self._cards.append(card)
-        self._comments.append(comment)
+        i = self.i
 
-    def build(self):
-        cards = self._cards
-        ncards = len(cards)
+        #comment = self._comments[i]
+        eid = integer(card, 1, 'element_id')
+        #if comment:
+            #self._comments[eid] = comment
 
-        self.n = ncards
-        if ncards:
-            #print('tet10')
-            float_fmt = self.model.float
-            self.element_id = zeros(ncards, 'int32')
-            self.property_id = zeros(ncards, 'int32')
-            self.node_ids = zeros((ncards, 10), 'int32')
+        #: Element ID
+        comment = self._comments[i]
+        element_id = integer(card, 1, 'element_id')
+        #if comment:
+            #self.comments[eid] = comment
 
-            comments = {}
-            for i, card in enumerate(cards):
-                comment = self._comments[i]
-                element_id = integer(card, 1, 'element_id')
-                #if comment:
-                    #self.comments[eid] = comment
-
-                #: Element ID
-                self.element_id[i] = element_id
-                #: Property ID
-                self.property_id[i] = integer(card, 2, 'property_id')
-                #: Node IDs
-                self.node_ids[i, :] = fields(integer, card, 'node_ids', i=3, j=13)
-                assert len(card) == 13, 'len(CTETRA10 card) = %i' % len(card)
-
-            i = self.element_id.argsort()
-            self.element_id = self.element_id[i]
-            self.property_id = self.property_id[i]
-            self.node_ids = self.node_ids[i, :]
-            self._cards = []
-            self._comments = []
-        else:
-            self.element_id = array([], dtype='int32')
-            self.property_id = array([], dtype='int32')
+        #: Element ID
+        self.element_id[i] = element_id
+        #: Property ID
+        self.property_id[i] = integer(card, 2, 'property_id')
+        #: Node IDs
+        self.node_ids[i, :] = fields(integer, card, 'node_ids', i=3, j=13)
+        assert len(card) == 13, 'len(CTETRA10 card) = %i' % len(card)
+        self.i += 1
 
     def _verify(self, xref=True):
         eid = self.Eid()
@@ -84,23 +69,24 @@ class CTETRA10(SolidElement):
             for i in range(3):
                 assert isinstance(c[i], float)
 
-    def _node_locations(self, xyz_cid0, n=4):
+    def _node_locations(self, xyz_cid0, n):
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_position_from_node_index()
+            xyz_cid0 = self.model.grid.get_position_by_index()
 
-        n1 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 0]), :]
-        n2 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 1]), :]
-        n3 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 2]), :]
-        n4 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 3]), :]
-        if n4:
+        n1 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 0]), :]
+        n2 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 1]), :]
+        n3 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 2]), :]
+        n4 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 3]), :]
+        if n == 4:
             return n1, n2, n3, n4
+        assert n == 10, n
 
-        n5 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 4]), :]
-        n6 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 5]), :]
-        n7 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 6]), :]
-        n8 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 7]), :]
-        n9 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 8]), :]
-        n10 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 9]), :]
+        n5 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 4]), :]
+        n6 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 5]), :]
+        n7 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 6]), :]
+        n8 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 7]), :]
+        n9 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 8]), :]
+        n10 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 9]), :]
         return n1, n2, n3, n4, n5, n6, n7, n8, n9, n10
 
     def get_volume_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
@@ -113,7 +99,7 @@ class CTETRA10(SolidElement):
         """
         if element_id is None:
             element_id = self.element_id
-        n1, n2, n3, n4 = self._node_locations(xyz_cid0)
+        n1, n2, n3, n4 = self._node_locations(xyz_cid0, 4)
 
         n = len(element_id)
         V = zeros(n, self.model.float)
@@ -124,7 +110,7 @@ class CTETRA10(SolidElement):
             i += 1
         return V
 
-    def get_centroid_volume_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
+    def get_centroid_volume(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the centroid and volume for one or more CTETRA10 elements.
 
@@ -137,8 +123,8 @@ class CTETRA10(SolidElement):
         if element_id is None:
             element_id = self.element_id
 
-        n1, n2, n3, n4 = self._node_locations(xyz_cid0)
-        n = len(element_id)
+        n1, n2, n3, n4 = self._node_locations(xyz_cid0, 4)
+        n = len(element_ids)
         volume = zeros(n, self.model.float)
 
         i = 0
@@ -163,7 +149,7 @@ class CTETRA10(SolidElement):
         if element_id is None:
             element_id = self.element_id
 
-        n1, n2, n3, n4 = self._node_locations(xyz_cid0)
+        n1, n2, n3, n4 = self._node_locations(xyz_cid0, 4)
         centroid = (n1 + n2 + n3 + n4) / 4.0
         if total:
             centroid = centroid.mean()
@@ -180,11 +166,11 @@ class CTETRA10(SolidElement):
         if element_id is None:
             element_id = self.element_id
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_position_from_node_index()
+            xyz_cid0 = self.model.grid.get_position_by_index()
 
         V = self.get_volume_by_element_id(element_id, xyz_cid0)
-        mid = self.model.properties_solid.get_mid_by_property_id(self.property_id)
-        rho = self.model.materials.get_density_from_material_id(mid)
+        mid = self.model.properties_solid.get_material_id_by_property_id(self.property_id)
+        rho = self.model.materials.get_density_by_material_id(mid)
 
         mass = V * rho
         if total:
@@ -206,7 +192,7 @@ class CTETRA10(SolidElement):
                 i = searchsorted(self.element_id, element_id)
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
                 card = ['CTETRA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7], n[8], n[9]]
-                f.write(print_card(card))
+                f.write(print_card_8(card))
 
     #def slice_by_index(self, i):
         #i = asarray(i)

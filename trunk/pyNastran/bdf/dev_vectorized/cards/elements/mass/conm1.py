@@ -12,47 +12,48 @@ class CONM1(VectorizedCard):
     def __init__(self, model):
         VectorizedCard.__init__(self, model)
 
+    def allocate(self, ncards):
+        self.element_id = zeros(ncards, 'int32')
+        self.node_id = zeros(ncards, 'int32')
+        self.coord_id = zeros(ncards, 'int32')
+
+        float_fmt = self.model.float
+        m = zeros((ncards, 6, 6), float_fmt)
+        self.mass_matrix = m
+
+    def add(self, card, comment):
+        i = self.i
+        self.element_id[i] = integer(card, 1, 'eid')
+        self.node_id[i] = integer(card, 2, 'nid')
+        self.coord_id[i] = integer_or_blank(card, 3, 'cid', 0)
+
+        m = self.mass_matrix
+        m[i, 0, 0] = double_or_blank(card, 4, 'M11', 0.)
+        m[i, 1, 0] = double_or_blank(card, 5, 'M21', 0.)
+        m[i, 1, 1] = double_or_blank(card, 6, 'M22', 0.)
+        m[i, 2, 0] = double_or_blank(card, 7, 'M31', 0.)
+        m[i, 2, 1] = double_or_blank(card, 8, 'M32', 0.)
+        m[i, 2, 2] = double_or_blank(card, 9, 'M33', 0.)
+        m[i, 3, 0] = double_or_blank(card, 10, 'M41', 0.)
+        m[i, 3, 1] = double_or_blank(card, 11, 'M42', 0.)
+        m[i, 3, 2] = double_or_blank(card, 12, 'M43', 0.)
+        m[i, 3, 3] = double_or_blank(card, 13, 'M44', 0.)
+        m[i, 4, 0] = double_or_blank(card, 14, 'M51', 0.)
+        m[i, 4, 1] = double_or_blank(card, 15, 'M52', 0.)
+        m[i, 4, 2] = double_or_blank(card, 16, 'M53', 0.)
+        m[i, 4, 3] = double_or_blank(card, 17, 'M54', 0.)
+        m[i, 4, 4] = double_or_blank(card, 18, 'M55', 0.)
+        m[i, 5, 0] = double_or_blank(card, 19, 'M61', 0.)
+        m[i, 5, 1] = double_or_blank(card, 20, 'M62', 0.)
+        m[i, 5, 2] = double_or_blank(card, 21, 'M63', 0.)
+        m[i, 5, 3] = double_or_blank(card, 22, 'M64', 0.)
+        m[i, 5, 4] = double_or_blank(card, 23, 'M65', 0.)
+        m[i, 5, 5] = double_or_blank(card, 24, 'M66', 0.)
+        assert len(card) <= 25, 'len(CONM1 card) = %i' % len(card)
+        self.i += 1
+
     def build(self):
-        cards = self._cards
-        ncards = len(cards)
-
-        self.n = ncards
-        if ncards:
-            self.element_id = zeros(ncards, 'int32')
-            self.node_id = zeros(ncards, 'int32')
-            self.coord_id = zeros(ncards, 'int32')
-
-            float_fmt = self.model.float
-            m = zeros((ncards, 6, 6), float_fmt)
-            self.mass_matrix = m
-
-            for i, card in enumerate(cards):
-                self.element_id[i] = integer(card, 1, 'eid')
-                self.node_id[i] = integer(card, 2, 'nid')
-                self.coord_id[i] = integer_or_blank(card, 3, 'cid', 0)
-
-                m[i, 0, 0] = double_or_blank(card, 4, 'M11', 0.)
-                m[i, 1, 0] = double_or_blank(card, 5, 'M21', 0.)
-                m[i, 1, 1] = double_or_blank(card, 6, 'M22', 0.)
-                m[i, 2, 0] = double_or_blank(card, 7, 'M31', 0.)
-                m[i, 2, 1] = double_or_blank(card, 8, 'M32', 0.)
-                m[i, 2, 2] = double_or_blank(card, 9, 'M33', 0.)
-                m[i, 3, 0] = double_or_blank(card, 10, 'M41', 0.)
-                m[i, 3, 1] = double_or_blank(card, 11, 'M42', 0.)
-                m[i, 3, 2] = double_or_blank(card, 12, 'M43', 0.)
-                m[i, 3, 3] = double_or_blank(card, 13, 'M44', 0.)
-                m[i, 4, 0] = double_or_blank(card, 14, 'M51', 0.)
-                m[i, 4, 1] = double_or_blank(card, 15, 'M52', 0.)
-                m[i, 4, 2] = double_or_blank(card, 16, 'M53', 0.)
-                m[i, 4, 3] = double_or_blank(card, 17, 'M54', 0.)
-                m[i, 4, 4] = double_or_blank(card, 18, 'M55', 0.)
-                m[i, 5, 0] = double_or_blank(card, 19, 'M61', 0.)
-                m[i, 5, 1] = double_or_blank(card, 20, 'M62', 0.)
-                m[i, 5, 2] = double_or_blank(card, 21, 'M63', 0.)
-                m[i, 5, 3] = double_or_blank(card, 22, 'M64', 0.)
-                m[i, 5, 4] = double_or_blank(card, 23, 'M65', 0.)
-                m[i, 5, 5] = double_or_blank(card, 24, 'M66', 0.)
-                assert len(card) <= 25, 'len(CONM1 card) = %i' % len(card)
+        if self.n:
             self._cards = []
             self._comments = []
         else:
@@ -62,7 +63,7 @@ class CONM1(VectorizedCard):
     def get_mass_matrix(self, i):
         return self.mass_matrix[i, :, :]
 
-    def get_mass(self, element_id=None, total=False):
+    def get_mass_by_element_id(self, element_id=None, total=False):
         m = self.mass_matrix
         if element_id is None:
             mm = m[:, 0, 0] + m[:, 1, 1] + m[:, 2, 2]

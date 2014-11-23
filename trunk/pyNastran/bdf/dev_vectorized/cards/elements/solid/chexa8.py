@@ -1,3 +1,10 @@
+"""
+This file defines:
+  -quad_area_centroid (method)
+  - CHEXA8 (class)
+    - f1
+    - f2
+"""
 from six.moves import zip, range
 from numpy import zeros, arange, unique, dot, cross, abs, searchsorted, array, where, asarray
 from numpy.linalg import norm
@@ -54,6 +61,7 @@ def quad_area_centroid(n1, n2, n3, n4):
 
 class CHEXA8(SolidElement):
     type = 'CHEXA8'
+    nnodes = 8
     def __init__(self, model):
         """
         Defines the CHEXA object.
@@ -63,58 +71,38 @@ class CHEXA8(SolidElement):
         """
         SolidElement.__init__(self, model)
 
-    def build(self):
-        cards = self._cards
-        ncards = len(cards)
+    def add(self, card, comment):
+        i = self.i
+        #comment = self._comments[i]
+        eid = integer(card, 1, 'element_id')
+        #if comment:
+            #self._comments[eid] = comment
 
-        self.n = ncards
-        if ncards:
-            float_fmt = self.model.float
-            self.element_id = zeros(ncards, 'int32')
-            self.property_id = zeros(ncards, 'int32')
-            self.node_ids = zeros((ncards, 8), 'int32')
-
-            #comments = {}
-            for i, card in enumerate(cards):
-                #comment = self._comments[i]
-                eid = integer(card, 1, 'element_id')
-                #if comment:
-                    #self._comments[eid] = comment
-
-                #: Element ID
-                self.element_id[i] = eid
-                #: Property ID
-                self.property_id[i] = integer(card, 2, 'property_id')
-                #: Node IDs
-                nids = [
-                    integer(card, 3, 'nid1'),
-                    integer(card, 4, 'nid2'),
-                    integer(card, 5, 'nid3'),
-                    integer(card, 6, 'nid4'),
-                    integer(card, 7, 'nid5'),
-                    integer(card, 8, 'nid6'),
-                    integer(card, 9, 'nid7'),
-                    integer(card, 10, 'nid8')
-                ]
-                assert 0 not in nids, '%s\n%s' % (nids, card)
-                self.node_ids[i, :] = nids
-                assert len(card) == 11, 'len(CHEXA8 card) = %i' % len(card)
-
-            i = self.element_id.argsort()
-            self.element_id = self.element_id[i]
-            self.property_id = self.property_id[i]
-            self.node_ids = self.node_ids[i, :]
-            self._cards = []
-            self._comments = []
-        else:
-            self.element_id = array([], dtype='int32')
-            self.property_id = array([], dtype='int32')
+        #: Element ID
+        self.element_id[i] = eid
+        #: Property ID
+        self.property_id[i] = integer(card, 2, 'property_id')
+        #: Node IDs
+        nids = [
+            integer(card, 3, 'nid1'),
+            integer(card, 4, 'nid2'),
+            integer(card, 5, 'nid3'),
+            integer(card, 6, 'nid4'),
+            integer(card, 7, 'nid5'),
+            integer(card, 8, 'nid6'),
+            integer(card, 9, 'nid7'),
+            integer(card, 10, 'nid8')
+        ]
+        assert 0 not in nids, '%s\n%s' % (nids, card)
+        self.node_ids[i, :] = nids
+        assert len(card) == 11, 'len(CHEXA8 card) = %i' % len(card)
+        self.i += 1
 
     def get_mass_matrix(self, i, model, positions, index0s):
         nnodes = 8
         ndof = 3 * nnodes
         pid = self.property_id[i]
-        rho = self.model.elements.properties_solid.psolid.get_density(pid)[0]
+        rho = self.model.elements.properties_solid.psolid.get_density_by_property_id(pid)[0]
 
         n0, n1, n2, n3, n4, n5, n6, n7 = self.node_ids[i, :]
         V = volume8(positions[self.node_ids[i, 0]],
@@ -213,7 +201,7 @@ class CHEXA8(SolidElement):
         n8 = xyz_cid0[get_node_index_from_node_id(node_ids[i, 7], msg), :]
         return n1, n2, n3, n4, n5, n6, n7, n8
 
-    def get_volume(self, element_id=None, xyz_cid0=None, total=False):
+    def get_volume_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the volume for one or more elements.
 
@@ -232,7 +220,29 @@ class CHEXA8(SolidElement):
             volume = abs(volume)
         return volume
 
-    def get_centroid_volume(self, element_id=None, xyz_cid0=None, total=False):
+    def get_mass_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
+        """
+        Gets the mass for one or more CTETRA elements.
+
+        :param element_ids: the elements to consider (default=None -> all)
+        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
+        :param total: should the centroid be summed (default=False)
+        """
+        if element_id is None:
+            element_id = self.element_id
+        if xyz_cid0 is None:
+            xyz_cid0 = self.model.grid.get_position_by_index()
+
+        V = self.get_volume_by_element_id(element_id, xyz_cid0)
+        mid = self.model.properties_solid.get_material_id_by_property_id(self.property_id)
+        rho = self.model.materials.get_density_by_material_id(mid)
+
+        mass = V * rho
+        if total:
+            mass = mass.sum()
+        return mass
+
+    def get_centroid_volume_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the centroid and volume for one or more elements.
 
@@ -240,7 +250,7 @@ class CHEXA8(SolidElement):
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the volume be summed; centroid be averaged (default=False)
 
-        ..see:: CHEXA8.get_volume() and CHEXA8.get_centroid() for more information.
+        ..see:: CHEXA8.get_volume_by_element_id() and CHEXA8.get_centroid_by_element_id() for more information.
         """
         n1, n2, n3, n4, n5, n6, n7, n8 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
         (A1, c1) = quad_area_centroid(n1, n2, n3, n4)
@@ -255,7 +265,7 @@ class CHEXA8(SolidElement):
         assert volume.min() > 0.0, 'volume.min() = %f' % volume.min()
         return centroid, volume
 
-    def get_centroid(self, element_id=None, xyz_cid0=None, total=False):
+    def get_centroid_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the centroid for one or more elements.
 

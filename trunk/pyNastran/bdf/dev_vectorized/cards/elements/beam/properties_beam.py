@@ -57,9 +57,9 @@ class PropertiesBeam(object):
         self.pbeaml.add(card, comment)
 
     #=========================================================================
-    def get_area(self):
+    def get_area_by_element_id(self):
         return 0.0
-    def get_mass(self):
+    def get_mass_by_element_id(self):
         return 0.0
 
     #=========================================================================

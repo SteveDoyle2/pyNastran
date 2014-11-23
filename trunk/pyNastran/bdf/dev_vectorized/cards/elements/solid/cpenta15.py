@@ -11,6 +11,7 @@ from pyNastran.bdf.dev_vectorized.cards.elements.solid.solid_element import Soli
 
 class CPENTA15(SolidElement):
     type = 'CPENTA15'
+    nnodes = 15
     def __init__(self, model):
         """
         Defines the CPENTA15 object.
@@ -20,41 +21,23 @@ class CPENTA15(SolidElement):
         """
         SolidElement.__init__(self, model)
 
-    def build(self):
-        cards = self._cards
-        ncards = len(cards)
+    def add(self, card, comment):
+        i = self.i
 
-        self.n = ncards
-        if ncards:
-            float_fmt = self.model.float
-            self.element_id = zeros(ncards, 'int32')
-            self.property_id = zeros(ncards, 'int32')
-            self.node_ids = zeros((ncards, 15), 'int32')
+        #comment = self._comments[i]
+        eid = integer(card, 1, 'element_id')
+        #if comment:
+            #self._comments[eid] = comment
 
-            #comments = {}
-            for i, card in enumerate(cards):
-                #comment = self._comments[i]
-                element_id = integer(card, 1, 'element_id')
-                #if comment:
-                    #self._comments[eid] = comment
-
-                #: Element ID
-                self.element_id[i] = eid
-                #: Property ID
-                self.property_id[i] = integer(card, 2, 'property_id')
-                #: Node IDs
-                self.node_ids[i, :] = fields(integer, card, 'node_ids', i=3, j=13)
-                assert len(card) == 13, 'len(CPENTA15 card) = %i' % len(card)
-
-            i = self.element_id.argsort()
-            self.element_id = self.element_id[i]
-            self.property_id = self.property_id[i]
-            self.node_ids = self.node_ids[i, :]
-            self._cards = []
-            self._comments = []
-        else:
-            self.element_id = array([], dtype='int32')
-            self.property_id = array([], dtype='int32')
+        #: Element ID
+        self.element_id[i] = eid
+        #: Property ID
+        self.property_id[i] = integer(card, 2, 'property_id')
+        #: Node IDs
+        nids = fields(integer, card, 'node_ids', i=3, j=13)
+        assert len(card) == 13, 'len(CPENTA15 card) = %i' % len(card)
+        self.node_ids[i, :] = nids
+        self.i += 1
 
     def _verify(self, xref=True):
         eid = self.Eid()
@@ -76,7 +59,7 @@ class CPENTA15(SolidElement):
         (A2, c2) = tri_area_centroid(n4, n5, n6)
         return (A1, A2, c1, c2)
 
-    def get_volume(self, element_id=None, xyz_cid0=None, total=False):
+    def get_volume_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the volume for one or more CPENTA15 elements.
 
@@ -94,7 +77,7 @@ class CPENTA15(SolidElement):
             volume = abs(volume)
         return volume
 
-    def get_centroid_volume(self, element_id=None, xyz_cid0=None, total=False):
+    def get_centroid_volume_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the centroid and volume for one or more CPENTA15 elements.
 
@@ -102,12 +85,12 @@ class CPENTA15(SolidElement):
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the volume be summed (default=False)
 
-        ..see:: CPENTA15.get_volume() and CPENTA15.get_centroid() for more information.
+        ..see:: CPENTA15.get_volume_by_element_id() and CPENTA15.get_centroid_by_element_id() for more information.
         """
         if element_id is None:
             element_id = self.element_id
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_position_from_node_index()
+            xyz_cid0 = self.model.grid.get_position_by_index()
 
         (A1, A2, c1, c2) = self._area_centroid(element_id, xyz_cid0)
         centroid = (c1 * A1 + c2 * A2) / (A1 + A2)
@@ -120,7 +103,7 @@ class CPENTA15(SolidElement):
         assert volume.min() > 0.0, 'volume.min() = %f' % volume.min()
         return centroid, volume
 
-    def get_centroid(self, element_id=None, xyz_cid0=None, total=False):
+    def get_centroid_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the centroid for one or more CPENTA15 elements.
 
@@ -130,7 +113,7 @@ class CPENTA15(SolidElement):
         """
         if element_id is None:
             element_id = self.element_id
-        (A1, A2, c1, c2) = self._area_centroid(self, element_id, xyz_cid0)
+        (A1, A2, c1, c2) = self._area_centroid(self, element_ids, xyz_cid0)
 
         centroid = (c1 * A1 + c2 * A2) / (A1 + A2)
         if total:

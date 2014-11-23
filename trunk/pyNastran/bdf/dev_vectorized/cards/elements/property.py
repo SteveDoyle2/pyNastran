@@ -20,7 +20,7 @@ class Property(VectorizedCard):
         for pid in pids:
             yield pid, self.__getitem__(pid)
 
-    def __getitem__(self, property_ids):
+    def __getitem__(self, property_id):
         """
         Allows for slicing:
          - elements[1:10]
@@ -29,5 +29,5 @@ class Property(VectorizedCard):
          - elements[[1,2,5]]
          - elements[array([1,2,5])]
         """
-        i = searchsorted(self.property_id, property_ids)
+        i = searchsorted(self.property_id, property_id)
         return self.slice_by_index(i)

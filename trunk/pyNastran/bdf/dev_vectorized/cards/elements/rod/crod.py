@@ -23,28 +23,33 @@ class CROD(RodElement):
         RodElement.__init__(self, model)
 
     def allocate(self, ncards):
+        self.n = ncards
+        #: Element ID
         self.element_id = zeros(ncards, 'int32')
-        ##: Property ID
+        #: Property ID
         self.property_id = zeros(ncards, 'int32')
+        #: Node IDs
         self.node_ids = zeros((ncards, 2), 'int32')
+
+    def add(self, card, comment):
+        i = self.i
+        eid = integer(card, 1, 'element_id')
+        #if comment:
+            #self._comments[eid] = comment
+
+        self.element_id[i] = integer(card, 1, 'element_id')
+        self.property_id[i] = integer_or_blank(card, 2, 'property_id', self.element_id[i])
+        self.node_ids[i] = [integer(card, 3, 'n1'),
+                            integer(card, 4, 'n2')]
+        assert len(card) == 5, 'len(CROD card) = %i' % len(card)
+        self.i += 1
 
     def build(self):
         """
         :param self: the CROD object
         """
-        cards = self._cards
-        ncards = len(cards)
-        self.n = ncards
-        if ncards:
-            for i, card in enumerate(cards):
-                self.element_id[i] = integer(card, 1, 'element_id')
-                self.property_id[i] = integer_or_blank(card, 2, 'property_id', self.element_id[i])
-                self.node_ids[i] = [integer(card, 3, 'n1'),
-                                    integer(card, 4, 'n2')]
-                assert len(card) == 5, 'len(CROD card) = %i' % len(card)
-
+        if self.n:
             i = self.element_id.argsort()
-            #print("i %s %s" % (i, type(i)))
             self.element_id = self.element_id[i]
             self.property_id = self.property_id[i]
             self.node_ids = self.node_ids[i, :]
@@ -52,31 +57,29 @@ class CROD(RodElement):
             unique_eids = unique(self.element_id)
             if len(unique_eids) != len(self.element_id):
                 raise RuntimeError('There are duplicate CROD IDs...')
-            self._cards = []
-            self._comments = []
         else:
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
 
     #=========================================================================
     def get_Area_by_property_id(self, property_id):
-        A = self.model.prod.get_Area(property_id)
+        A = self.model.prod.get_Area_by_property_id(property_id)
         return A
 
     def get_E_by_property_id(self, property_id):
-        E = self.model.prod.get_E(property_id)
+        E = self.model.prod.get_E_by_property_id(property_id)
         return E
 
-    def get_G_by_property_id(self, property_ids=None):
-        G = self.model.prod.get_G(property_id)
+    def get_G_by_property_id(self, property_id=None):
+        G = self.model.prod.get_G_by_property_id(property_id)
         return G
 
     def get_J_by_property_id(self, property_id=None):
-        J = self.model.prod.get_J(property_id)
+        J = self.model.prod.get_J_by_property_id(property_id)
         return J
 
-    def get_c_by_property_id(self, property_id=None):
-        c = self.model.prod.get_c(property_id)
+    def get_c_by_property_id(self, property_ids=None):
+        c = self.model.prod.get_c(property_ids)
         return c
 
     def get_non_structural_mass_by_property_id(self, property_id=None):
@@ -85,31 +88,30 @@ class CROD(RodElement):
 
     def _node_locations(self, xyz_cid0):
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_position_from_node_index()
-        n1 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 0]), :]
-        n2 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 1]), :]
+            xyz_cid0 = self.model.grid.get_position_by_index()
+        n1 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 0]), :]
+        n2 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 1]), :]
         return n1, n2
 
-    def get_mass_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
+    def get_mass_by_element_id(self, element_ids=None, xyz_cid0=None, total=False):
         """
         mass = rho * A * L + nsm
         """
         if self.n == 0:
             return 0.0
 
-        assert element_id is None
-        grid_cid0 = self.model.grid.get_position_from_node_index()
+        assert element_ids is None
+        grid_cid0 = self.model.grid.get_position_by_index()
         n1, n2 = self._node_locations(xyz_cid0)
         L = n2 - n1
-        i = self.model.prod.get_property_index_from_property_id(self.property_id)
+        i = self.model.prod.get_index(self.property_id)
         A = self.model.prod.A[i]
         mid = self.model.prod.material_id[i]
-        #J   = self.model.prod.get_J_by_material_id(mid)
         J   = self.model.prod.get_J_by_property_id(self.property_id)
 
-        #rho, E = self.model.materials.get_density_E_by_material_id(mid)
-        rho = self.model.materials.get_density_from_material_id(mid)
-        #E   = self.model.materials.get_E_by_material_id(mid)
+        #rho, E = self.model.materials.get_density_E(mid)
+        rho = self.model.materials.get_density_by_material_id(mid)
+        #E   = self.model.materials.get_E(mid)
         #return 0. if total else [0.]
 
         mass = norm(L, axis=1) * A * rho + self.get_non_structural_mass_by_property_id()
@@ -132,10 +134,10 @@ class CROD(RodElement):
                  [ 2 1 ]
           M = mi [ 1 2 ]
         """
-        i = self.model.prod.get_property_index_from_property_id(self.property_id)
+        i = self.model.prod.get_index(self.property_id)
         A = self.model.prod.A[i]
         mid = self.model.prod.material_id[i]
-        rho = self.model.materials.get_density_from_material_id(mid)
+        rho = self.model.materials.get_density_by_material_id(mid)
         #========================
         xyz_cid0 = None
         #xyz1, xyz2 = self._node_locations(xyz_cid0)
@@ -155,7 +157,7 @@ class CROD(RodElement):
             msg = 'invalid CONROD length=0.0\n%s' % self.__repr__()
             raise ZeroDivisionError(msg)
         #========================
-        nsm = self.get_non_structural_mass_by_property_id(self.property_id[i])
+        nsm = self.get_non_structural_mass(self.property_id[i])
         mi = (rho * A * L + nsm) / 6.
         m = array([[2., 1.],
                    [1., 2.]])  # 1D rod
@@ -195,10 +197,10 @@ class CROD(RodElement):
         #print("----------------")
         pid = self.property_id[i]
         assert isinstance(pid, int), pid
-        A = self.get_Area(pid)
-        E = self.get_E(pid)
-        G = self.get_G(pid)
-        J = self.get_J(pid)
+        A = self.get_Area_by_element_id(pid)
+        E = self.get_E_by_element_id(pid)
+        G = self.get_G_by_element_id(pid)
+        J = self.get_J_by_element_id(pid)
         #print('A=%s E=%s G=%s J=%s' % (A, E, G, J))
 
         #========================
@@ -314,11 +316,11 @@ class CROD(RodElement):
         f4 = zeros(n, 'float64')
 
 
-        As = self.get_Area_by_property_id(self.property_id)
-        Es = self.get_E_by_property_id(self.property_id)
-        Gs = self.get_G_by_property_id(self.property_id)
-        Js = self.get_J_by_property_id(self.property_id)
-        Cs = self.get_c_by_property_id(self.property_id)
+        As = self.get_Area_by_element_id(self.property_id)
+        Es = self.get_E_by_element_id(self.property_id)
+        Gs = self.get_G_by_element_id(self.property_id)
+        Js = self.get_J_by_element_id(self.property_id)
+        Cs = self.get_c_by_element_id(self.property_id)
 
         for i in range(n):
             A = As[i]

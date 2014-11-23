@@ -25,76 +25,61 @@ class PBAR(Property):
         self._comments.append(comment)
 
     def allocate(self, ncards):
+        self.n = ncards
         float_fmt = self.model.float
+        #: Property ID
         self.property_id = zeros(ncards, 'int32')
+        #: material ID
         self.material_id = zeros(ncards, 'int32')
+        #: Area
         self.area = zeros(ncards, 'float64')
+        #: I1
         self.I1 = zeros(ncards, 'float64')
+        #: I2
         self.I2 = zeros(ncards, 'float64')
+        #: Polar Moment of Inertia J -> use J()
+        #: default=1/2(I1+I2) for SOL=600, otherwise 0.0
         self.J = zeros(ncards, 'float64')
         self.nsm = zeros(ncards, 'float64')
 
+    def add(self, card, comment):
+        i = self.i
+        self.property_id[i] = integer(card, 1, 'property_id')
+        self.material_id[i] = integer(card, 2, 'material_id')
+        self.area[i] = double_or_blank(card, 3, 'area', 0.0)
+        self.I1[i] = double_or_blank(card, 4, 'I1', 0.0)
+        self.I2[i] = double_or_blank(card, 5, 'I2', 0.0)
+
+        #: .. todo:: support SOL 600 default
+        Jdefault = 0.5 * (self.I1[i] + self.I2[i])
+        self.J[i] = double_or_blank(card, 6, 'J', Jdefault)
+        self.nsm[i] = double_or_blank(card, 7, 'non-structural_mass', 0.0)
+
+        if 0:
+            self.C1 = double_or_blank(card, 9, 'C1', 0.0)
+            self.C2 = double_or_blank(card, 10, 'C2', 0.0)
+            self.D1 = double_or_blank(card, 11, 'D1', 0.0)
+            self.D2 = double_or_blank(card, 12, 'D2', 0.0)
+            self.E1 = double_or_blank(card, 13, 'E1', 0.0)
+            self.E2 = double_or_blank(card, 14, 'E2', 0.0)
+            self.F1 = double_or_blank(card, 15, 'F1', 0.0)
+            self.F2 = double_or_blank(card, 16, 'F2', 0.0)
+
+            #: default=infinite; assume 1e8
+            self.K1 = double_or_blank(card, 17, 'K1', 1e8)
+            #: default=infinite; assume 1e8
+            self.K2 = double_or_blank(card, 18, 'K2', 1e8)
+            #: I12 -> use I12()
+            self.i12 = double_or_blank(card, 19, 'I12', 0.0)
+            if self.A == 0.0 and self.i12 == 0.0:
+                assert self.K1 is None, 'K1 must be blank if A=0.0 and I12=0.0; A=%r I12=%r K1=%r' % (self.A, self.i12, self.K1)
+                assert self.K2 is None, 'K2 must be blank if A=0.0 and I12=0.0; A=%r I12=%r K2=%r' % (self.A, self.i12, self.K2)
+            assert len(card) <= 20, 'len(PBAR card) = %i' % len(card)
+
+        self.i += 1
+
     def build(self):
-        cards = self._cards
-        ncards = len(cards)
-        self.n = ncards
-
-        if ncards:
-            #: Property ID
-            self.property_id = zeros(ncards, 'int32')
-            self.material_id = zeros(ncards, 'int32')
-            self.area = zeros(ncards, 'float64')
-            self.I1 = zeros(ncards, 'float64')
-            self.I2 = zeros(ncards, 'float64')
-            self.J = zeros(ncards, 'float64')
-            self.nsm = zeros(ncards, 'float64')
-
-            for i, card in enumerate(cards):
-                #: property ID
-                self.property_id[i] = integer(card, 1, 'property_id')
-
-                #: material ID
-                self.material_id[i] = integer(card, 2, 'material_id')
-
-
-                #: material ID
-                self.area[i] = double_or_blank(card, 3, 'area', 0.0)
-
-                #: I1
-                self.I1[i] = double_or_blank(card, 4, 'I1', 0.0)
-
-                #: I2
-                self.I2[i] = double_or_blank(card, 5, 'I2', 0.0)
-
-                #: Polar Moment of Inertia J -> use J()
-                #: default=1/2(I1+I2) for SOL=600, otherwise 0.0
-                #: .. todo:: support SOL 600 default
-
-                Jdefault = 0.5 * (self.I1[i] + self.I2[i])
-                self.J[i] = double_or_blank(card, 6, 'J', Jdefault)
-                self.nsm[i] = double_or_blank(card, 7, 'non-structural_mass', 0.0)
-
-                if 0:
-                    self.C1 = double_or_blank(card, 9, 'C1', 0.0)
-                    self.C2 = double_or_blank(card, 10, 'C2', 0.0)
-                    self.D1 = double_or_blank(card, 11, 'D1', 0.0)
-                    self.D2 = double_or_blank(card, 12, 'D2', 0.0)
-                    self.E1 = double_or_blank(card, 13, 'E1', 0.0)
-                    self.E2 = double_or_blank(card, 14, 'E2', 0.0)
-                    self.F1 = double_or_blank(card, 15, 'F1', 0.0)
-                    self.F2 = double_or_blank(card, 16, 'F2', 0.0)
-
-                    #: default=infinite; assume 1e8
-                    self.K1 = double_or_blank(card, 17, 'K1', 1e8)
-                    #: default=infinite; assume 1e8
-                    self.K2 = double_or_blank(card, 18, 'K2', 1e8)
-                    #: I12 -> use I12()
-                    self.i12 = double_or_blank(card, 19, 'I12', 0.0)
-                    if self.A == 0.0 and self.i12 == 0.0:
-                        assert self.K1 is None, 'K1 must be blank if A=0.0 and I12=0.0; A=%r I12=%r K1=%r' % (self.A, self.i12, self.K1)
-                        assert self.K2 is None, 'K2 must be blank if A=0.0 and I12=0.0; A=%r I12=%r K2=%r' % (self.A, self.i12, self.K2)
-                    assert len(card) <= 20, 'len(PBAR card) = %i' % len(card)
-
+        if self.n:
             i = self.property_id.argsort()
             self.property_id = self.property_id[i]
             self.material_id = self.material_id[i]
@@ -106,50 +91,47 @@ class PBAR(Property):
             self.nsm = self.nsm[i]
 
             unique_pids = unique(self.property_id)
-
             if len(unique_pids) != len(self.property_id):
                 raise RuntimeError('There are duplicate PCOMP IDs...')
-            self._cards = []
-            self._comments = []
         else:
             self.property_id = array([], dtype='int32')
 
     #=========================================================================
-    def get_property_index_from_property_id(self, property_id):
+    def get_index(self, property_id):
         if isinstance(property_id, int):
-            property_id = array([property_id])
-        if property_id is None:
+            property_ids = array([property_id])
+        if property_ids is None:
             return arange(self.n)
 
-        indexs = searchsorted(self.property_id, property_ids)
-        assert len(indexs) == len(property_ids), 'indexs=%s pids=%s' % (indexs, property_ids)
+        indexs = searchsorted(self.property_id, property_id)
+        assert len(indexs) == len(property_id), 'indexs=%s pids=%s' % (indexs, property_id)
         return indexs
 
     #=========================================================================
-    def write_bdf(self, f, size=8, property_ids=None):
+    def write_bdf(self, f, size=8, property_id=None):
         if self.n:
-            if property_ids is None:
+            if property_id is None:
                 i = arange(self.n)
             else:
-                i = searchsorted(self.property_id, property_ids)
+                i = searchsorted(self.property_id, property_id)
 
             for (pid, mid, area, I1, I2, J) in zip(self.property_id[i], self.material_id[i],
                     self.area[i], self.I1[i], self.I2[i], self.J[i]):
                 card = ['PBAR', pid, mid, area, I1, I2, J]
                 f.write(print_card_8(card))
 
-    def get_mass_per_length(self, property_ids=None):
-        if property_ids is None:
+    def get_mass_per_length_by_property_id(self, property_id=None):
+        if property_id is None:
             i = arange(self.n)
         else:
-            i = searchsorted(self.property_id, property_ids)
+            i = searchsorted(self.property_id, property_id)
         A = self.area[i]
         mid = self.material_id[i]
-        rho = self.model.materials.get_density(mid)
+        rho = self.model.materials.get_density_by_material_id(mid)
         nsm = self.nsm[i]
         return rho * A + nsm
 
-    def __getitem__(self, property_ids):
+    def __getitem__(self, property_id):
         """
         Allows for slicing:
          - elements[1:10]
@@ -158,7 +140,7 @@ class PBAR(Property):
          - elements[[1,2,5]]
          - elements[array([1,2,5])]
         """
-        i = searchsorted(self.property_id, property_ids)
+        i = searchsorted(self.property_id, property_id)
         return self.slice_by_index(i)
 
     def slice_by_index(self, i):

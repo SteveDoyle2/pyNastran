@@ -1448,7 +1448,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         if card_name == '':  # stupid null case
             return
-
         if card_name in self.card_count:
             self.card_count[card_name] += 1
         else:
@@ -1517,6 +1516,25 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #return msg
 
     def _add_card(self, card_lines, card_name, comment='', is_list=True):
+        if card_name in ['CTETRA', 'CPENTA', 'CHEXA']:
+            card = self.process_card(card_lines)
+            if card_name == 'CTETRA':
+                if len(card) == 7:
+                    card_name = 'CTETRA4'
+                else:
+                    card_name = 'CTETRA10'
+            elif card_name == 'CPENTA':
+                if len(card) == 9:
+                    card_name = 'CPENTA6'
+                else:
+                    card_name = 'CPENTA15'
+            elif card_name == 'CHEXA':
+                if len(card) == 11:
+                    card_name = 'CHEXA8'
+                else:
+                    card_name = 'CHEXA20'
+
+
         self._increase_card_count(card_name)
 
     def add_card(self, card_lines, card_name, comment='', is_list=True):

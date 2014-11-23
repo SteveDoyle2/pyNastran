@@ -13,40 +13,32 @@ class PSHEAR(Property):
         Property.__init__(self, model)
 
     def allocate(self, ncards):
+        self.n = ncards
         float_fmt = self.model.float
         self.property_id = zeros(ncards, 'int32')
+        #: Material ID
         self.material_id = zeros(ncards, 'int32')
         self.thickness = zeros(ncards, float_fmt)
         self.nsm = zeros(ncards, float_fmt)
         self.f1 = zeros(ncards, float_fmt)
         self.f2 = zeros(ncards, float_fmt)
 
+    def add(self, card, comment):
+        i = self.i
+        self.property_id[i] = integer(card, 1, 'pid')
+        self.material_id[i] = integer(card, 2, 'mid')
+        self.thickness[i] = double(card, 3, 't')
+        self.nsm[i] = double_or_blank(card, 4, 'nsm', 0.0)
+        self.f1[i] = double_or_blank(card, 5, 'f1', 0.0)
+        self.f2[i] = double_or_blank(card, 6, 'f2', 0.0)
+        assert self.thickness[i] > 0.0
+        #assert self.f1 >= 0.0
+        #assert self.f2 >= 0.0
+        assert len(card) <= 7, 'len(PSHEAR card) = %i' % len(card)
+        self.i += 1
+
     def build(self):
-        cards = self._cards
-        ncards = len(cards)
-        self.n = ncards
-        if ncards:
-            float_fmt = self.model.float
-            self.property_id = zeros(ncards, 'int32')
-            #: Material ID
-            self.material_id = zeros(ncards, 'int32')
-            self.thickness = zeros(ncards, float_fmt)
-            self.nsm = zeros(ncards, float_fmt)
-            self.f1 = zeros(ncards, float_fmt)
-            self.f2 = zeros(ncards, float_fmt)
-
-            for i, card in enumerate(cards):
-                self.property_id[i] = integer(card, 1, 'pid')
-                self.material_id[i] = integer(card, 2, 'mid')
-                self.thickness[i] = double(card, 3, 't')
-                self.nsm[i] = double_or_blank(card, 4, 'nsm', 0.0)
-                self.f1[i] = double_or_blank(card, 5, 'f1', 0.0)
-                self.f2[i] = double_or_blank(card, 6, 'f2', 0.0)
-                assert self.thickness[i] > 0.0
-                #assert self.f1 >= 0.0
-                #assert self.f2 >= 0.0
-                assert len(card) <= 7, 'len(PSHEAR card) = %i' % len(card)
-
+        if self.n:
             i = self.property_id.argsort()
             self.property_id = self.property_id[i]
             self.material_id = self.material_id[i]
@@ -63,18 +55,18 @@ class PSHEAR(Property):
         else:
             self.property_id = array([], dtype='int32')
 
-    def get_mass_per_area(self, property_ids=None):
+    def get_mass_per_area(self, property_id=None):
         # A * (rho * t + nsm)
-        if property_ids is None:
-            property_ids = self.property_id
-            n = len(property_ids)
+        if property_id is None:
+            property_id = self.property_id
+            n = len(property_id)
             i = arange(n)
         else:
-            print('property_ids =', property_ids)
+            print('property_id =', property_id)
             n = len(property_ids)
             i = searchsorted(self.property_id, property_id)
         mpa = zeros(n, dtype='float64')
-        rho = self.model.materials.get_density(self.material_id)
+        rho = self.model.materials.get_density_by_material_id(self.material_id)
         mpa = rho * self.thickness[i] + self.nsm[i]
         return mpa
 

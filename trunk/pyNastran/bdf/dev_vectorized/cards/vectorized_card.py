@@ -5,8 +5,7 @@ class VectorizedCard(object):
     def __init__(self, model):
         self.model = model
         self.n = 0
-        self._cards = []
-        self._comments = []
+        self.i = 0
         if self.type in model._element_name_to_element_type_mapper:
             self.op2_id = model._element_name_to_element_type_mapper[self.type]
         else:

@@ -44,8 +44,11 @@ class CBEAM(Element):
         Element.__init__(self, model)
 
     def allocate(self, ncards):
+        self.n = ncards
         float_fmt = self.model.float
+        #: Element ID
         self.element_id = zeros(ncards, 'int32')
+        #: Property ID
         self.property_id = zeros(ncards, 'int32')
         self.node_ids = zeros((ncards, 2), 'int32')
         self.is_g0 = zeros(ncards, 'bool')
@@ -60,100 +63,76 @@ class CBEAM(Element):
         self.sa = zeros(ncards, 'int32')
         self.sb = zeros(ncards, 'int32')
 
+    def add(self, card, comment):
+        i = self.i
+        eid = integer(card, 1, 'element_id')
+        self.element_id[i] = eid
+        self.property_id[i] = integer_or_blank(card, 2, 'property_id', eid)
+        self.node_ids[i] = [integer(card, 3, 'GA'),
+                            integer(card, 4, 'GB')]
+
+        #---------------------------------------------------------
+        # x / g0
+        field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
+        if isinstance(field5, int):
+            self.is_g0[i] = True
+            self.g0[i] = field5
+        elif isinstance(field5, float):
+            self.is_g0[i] = False
+            x = array([field5,
+                       double_or_blank(card, 6, 'x2', 0.0),
+                       double_or_blank(card, 7, 'x3', 0.0)], dtype=float_fmt)
+            self.x[i, :] = x
+            if norm(x) == 0.0:
+                msg = 'G0 vector defining plane 1 is not defined on %s %s.\n' % (self.type, eid)
+                msg += 'G0 = %s\n' % field5
+                msg += 'X  = %s\n' % x
+                msg += '%s' % card
+                raise RuntimeError(msg)
+        else:
+            msg = ('field5 on %s (G0/X1) is the wrong type...id=%s field5=%s '
+                   'type=%s' % (self.type, self.eid, field5, type(field5)))
+            raise RuntimeError(msg)
+
+        #---------------------------------------------------------
+        # offt/bit
+        field8 = double_string_or_blank(card, 8, 'offt/bit', 'GGG')
+        if isinstance(field8, float):
+            self.is_offt[i] = False
+            self.bit[i] = field8
+        elif isinstance(field8, string_types):
+            self.is_offt[i] = True
+            offt = field8
+            msg = 'invalid offt parameter of CBEAM...offt=%s' % offt
+            assert offt[0] in ['G', 'B', 'O', 'E'], msg
+            assert offt[1] in ['G', 'B', 'O', 'E'], msg
+            assert offt[2] in ['G', 'B', 'O', 'E'], msg
+            self.offt[i] = offt
+        else:
+            msg = ('field8 on %s (offt/bit) is the wrong type...id=%s field5=%s '
+                   'type=%s' % (self.type, self.eid, field8, type(field8)))
+            raise RuntimeError(msg)
+
+        self.pin_flags[i, :] = [integer_or_blank(card, 9, 'pa', 0),
+                                integer_or_blank(card, 10, 'pb', 0)]
+
+        self.wa[i, :] = [double_or_blank(card, 11, 'w1a', 0.0),
+                         double_or_blank(card, 12, 'w2a', 0.0),
+                         double_or_blank(card, 13, 'w3a', 0.0),]
+
+        self.wb[i, :] = [double_or_blank(card, 14, 'w1b', 0.0),
+                         double_or_blank(card, 15, 'w2b', 0.0),
+                         double_or_blank(card, 16, 'w3b', 0.0),]
+        self.sa[i] = integer_or_blank(card, 17, 'sa', 0)
+        self.sb[i] = integer_or_blank(card, 18, 'sb', 0)
+        assert len(card) <= 19, 'len(CBEAM card) = %i' % len(card)
+        self.i += 1
+
     def build(self):
         """
         :param self: the CBEAM object
         """
-        cards = self._cards
-        ncards = len(cards)
-        self.n = ncards
-        if ncards:
-            float_fmt = self.model.float
-
-            #: Element ID
-            self.element_id = zeros(ncards, 'int32')
-            #: Property ID
-            self.property_id = zeros(ncards, 'int32')
-            self.node_ids = zeros((ncards, 2), 'int32')
-
-            self.is_g0 = zeros(ncards, 'bool')
-            self.g0 = full(ncards, nan, 'int32')
-            self.x = full((ncards, 3), nan, float_fmt)
-
-            self.is_offt = zeros(ncards, 'bool')
-            self.bit = full(ncards, nan, 'int32')
-            self.offt = full(ncards, nan, '|S3')
-
-            self.pin_flags = zeros((ncards, 2), 'int32')
-            self.wa = zeros((ncards, 3), float_fmt)
-            self.wb = zeros((ncards, 3), float_fmt)
-
-            self.sa = zeros(ncards, 'int32')
-            self.sb = zeros(ncards, 'int32')
-
-            for i, card in enumerate(cards):
-                eid = integer(card, 1, 'element_id')
-                self.element_id[i] = eid
-                self.property_id[i] = integer_or_blank(card, 2, 'property_id', eid)
-                self.node_ids[i] = [integer(card, 3, 'GA'),
-                                    integer(card, 4, 'GB')]
-
-                #---------------------------------------------------------
-                # x / g0
-                field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
-                if isinstance(field5, int):
-                    self.is_g0[i] = True
-                    self.g0[i] = field5
-                elif isinstance(field5, float):
-                    self.is_g0[i] = False
-                    x = array([field5,
-                               double_or_blank(card, 6, 'x2', 0.0),
-                               double_or_blank(card, 7, 'x3', 0.0)], dtype=float_fmt)
-                    self.x[i, :] = x
-                    if norm(x) == 0.0:
-                        msg = 'G0 vector defining plane 1 is not defined on %s %s.\n' % (self.type, eid)
-                        msg += 'G0 = %s\n' % field5
-                        msg += 'X  = %s\n' % x
-                        msg += '%s' % card
-                        raise RuntimeError(msg)
-                else:
-                    msg = ('field5 on %s (G0/X1) is the wrong type...id=%s field5=%s '
-                           'type=%s' % (self.type, self.eid, field5, type(field5)))
-                    raise RuntimeError(msg)
-
-                #---------------------------------------------------------
-                # offt/bit
-                field8 = double_string_or_blank(card, 8, 'offt/bit', 'GGG')
-                if isinstance(field8, float):
-                    self.is_offt[i] = False
-                    self.bit[i] = field8
-                elif isinstance(field8, string_types):
-                    self.is_offt[i] = True
-                    offt = field8
-                    msg = 'invalid offt parameter of CBEAM...offt=%s' % offt
-                    assert offt[0] in ['G', 'B', 'O', 'E'], msg
-                    assert offt[1] in ['G', 'B', 'O', 'E'], msg
-                    assert offt[2] in ['G', 'B', 'O', 'E'], msg
-                    self.offt[i] = offt
-                else:
-                    msg = ('field8 on %s (offt/bit) is the wrong type...id=%s field5=%s '
-                           'type=%s' % (self.type, self.eid, field8, type(field8)))
-                    raise RuntimeError(msg)
-
-                self.pin_flags[i, :] = [integer_or_blank(card, 9, 'pa', 0),
-                                        integer_or_blank(card, 10, 'pb', 0)]
-
-                self.wa[i, :] = [double_or_blank(card, 11, 'w1a', 0.0),
-                                 double_or_blank(card, 12, 'w2a', 0.0),
-                                 double_or_blank(card, 13, 'w3a', 0.0),]
-
-                self.wb[i, :] = [double_or_blank(card, 14, 'w1b', 0.0),
-                                 double_or_blank(card, 15, 'w2b', 0.0),
-                                 double_or_blank(card, 16, 'w3b', 0.0),]
-                self.sa[i] = integer_or_blank(card, 17, 'sa', 0)
-                self.sb[i] = integer_or_blank(card, 18, 'sb', 0)
-                assert len(card) <= 19, 'len(CBEAM card) = %i' % len(card)
-
+        if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
             self.property_id = self.property_id[i]
@@ -177,14 +156,12 @@ class CBEAM(Element):
             unique_eids = unique(self.element_id)
             if len(unique_eids) != len(self.element_id):
                 raise RuntimeError('There are duplicate CBEAM IDs...')
-            self._cards = []
-            self._comments = []
         else:
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
 
     #=========================================================================
-    def get_mass_by_element_id(self, element_id=None, grid_cid0=None, total=False):
+    def get_mass_by_element_id(self, grid_cid0=None, total=False):
         """
         mass = rho * A * L + nsm
         """
@@ -192,18 +169,18 @@ class CBEAM(Element):
             return 0.0
         return [0.0]
         if grid_cid0 is None:
-            grid_cid0 = self.model.grid.get_position_from_node_index()
+            grid_cid0 = self.model.grid.get_position_by_index()
         p1 = grid_cid0[self.node_ids[:, 0]]
         p2 = grid_cid0[self.node_ids[:, 1]]
         L = p2 - p1
-        i = self.model.properties_bar.get_property_index_from_property_id(self.property_id)
+        i = self.model.properties_bar.get_index(self.property_id)
         A = self.model.properties_bar.get_Area[i]
         material_id = self.model.properties_bar.material_id[i]
 
-        rho, E, J = self.model.Materials.get_rho_E_J_by_material_id(material_id)
-        rho = self.model.Materials.get_rho_by_material_id(self.mid)
-        E   = self.model.Materials.get_E_by_material_id(self.mid)
-        J   = self.model.Materials.get_J_by_material_id(self.mid)
+        rho, E, J = self.model.Materials.get_rho_E_J(material_id)
+        rho = self.model.Materials.get_rho(self.mid)
+        E   = self.model.Materials.get_E(self.mid)
+        J   = self.model.Materials.get_J(self.mid)
 
         mass = norm(L, axis=1) * A * rho + self.nsm
         if total:
@@ -212,9 +189,9 @@ class CBEAM(Element):
             return mass
 
     #=========================================================================
-    def write_bdf(self, f, size=8, element_id=None):
+    def write_bdf(self, f, size=8, element_ids=None):
         if self.n:
-            if element_id is None:
+            if element_ids is None:
                 i = arange(self.n)
             else:
                 i = searchsorted(self.element_id, self.element_id)

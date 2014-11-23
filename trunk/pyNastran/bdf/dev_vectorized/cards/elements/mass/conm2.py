@@ -22,46 +22,42 @@ class CONM2(VectorizedCard):
         VectorizedCard.__init__(self, model)
 
     def allocate(self, ncards):
-        self.element_id = zeros(ncards, dtype='int32')
+        float_fmt = self.model.float
+
+        #: Element ID
+        self.element_id = zeros(ncards, 'int32')
+        #: Property ID
+        self.property_id = zeros(ncards, 'int32')
+        self.node_id = zeros(ncards, 'int32')
+        self.coord_id = zeros(ncards, 'int32')
+        self.mass = zeros(ncards, float_fmt)
+        self.x = zeros((ncards, 3), float_fmt)
+        self.I = zeros((ncards, 6), float_fmt)
+
+    def add(self, card, comment):
+        i = self.i
+        self.element_id[i] = integer(card, 1, 'element_id')
+        self.node_id[i] = integer(card, 2, 'node_id')
+        self.coord_id[i] = integer_or_blank(card, 3, 'coord_id', 0)
+        self.mass[i] = double_or_blank(card, 4, 'mass', 0.)
+        self.x[i, :] = [double_or_blank(card, 5, 'x1', 0.0),
+                        double_or_blank(card, 6, 'x2', 0.0),
+                        double_or_blank(card, 7, 'x3', 0.0)]
+
+        self.I[i, :] = [double_or_blank(card, 9, 'I11', 0.0),
+                        double_or_blank(card, 10, 'I21', 0.0),
+                        double_or_blank(card, 11, 'I22', 0.0),
+                        double_or_blank(card, 12, 'I31', 0.0),
+                        double_or_blank(card, 13, 'I32', 0.0),
+                        double_or_blank(card, 14, 'I33', 0.0)]
+        assert len(card) <= 15, 'len(CONM2 card) = %i' % len(card)
+        self.i += 1
 
     def build(self):
         """
         :param self: the CONM2 object
         """
-        cards = self._cards
-        ncards = len(cards)
-        self.n = ncards
-        if ncards:
-            float_fmt = self.model.float
-
-            #: Element ID
-            self.element_id = zeros(ncards, 'int32')
-            #: Property ID
-            self.property_id = zeros(ncards, 'int32')
-            self.node_id = zeros(ncards, 'int32')
-            self.coord_id = zeros(ncards, 'int32')
-            self.mass = zeros(ncards, float_fmt)
-            self.x = zeros((ncards, 3), float_fmt)
-            self.I = zeros((ncards, 6), float_fmt)
-
-            for i, card in enumerate(cards):
-
-                self.element_id[i] = integer(card, 1, 'element_id')
-                self.node_id[i] = integer(card, 2, 'node_id')
-                self.coord_id[i] = integer_or_blank(card, 3, 'coord_id', 0)
-                self.mass[i] = double_or_blank(card, 4, 'mass', 0.)
-                self.x[i, :] = [double_or_blank(card, 5, 'x1', 0.0),
-                                double_or_blank(card, 6, 'x2', 0.0),
-                                double_or_blank(card, 7, 'x3', 0.0)]
-
-                self.I[i, :] = [double_or_blank(card, 9, 'I11', 0.0),
-                                double_or_blank(card, 10, 'I21', 0.0),
-                                double_or_blank(card, 11, 'I22', 0.0),
-                                double_or_blank(card, 12, 'I31', 0.0),
-                                double_or_blank(card, 13, 'I32', 0.0),
-                                double_or_blank(card, 14, 'I33', 0.0)]
-                assert len(card) <= 15, 'len(CONM2 card) = %i' % len(card)
-
+        if self.n:
             i = self.element_id.argsort()
             #print("iconm2 %s %s" % (i, type(i)))
             self.element_id = self.element_id[i]
@@ -80,13 +76,13 @@ class CONM2(VectorizedCard):
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
 
-    def get_mass(self, element_id=None, total=False):
+    def get_mass_by_element_id(self, element_id=None, total=False):
         """
         mass = rho * A * L + nsm
         """
         if element_id is None:
             element_id = arange(self.n)
-        #grid_cid0 = self.model.grid.get_position_from_node_index()
+        #grid_cid0 = self.model.grid.get_position_by_index()
         #p = grid_cid0[self.node_id]
 
         mass = self.mass
@@ -101,14 +97,14 @@ class CONM2(VectorizedCard):
             msg.append('  %-8s: %i' % ('CONM2', self.n))
         return msg
 
-    def write_bdf(self, f, size=8, is_double=False, element_id=None):
+    def write_bdf(self, f, size=8, is_double=False, element_ids=None):
         assert self.n > 0, self.n
         size = 16
         if self.n:
-            if element_id is None:
+            if element_ids is None:
                 i = arange(self.n)
             else:
-                i = searchsorted(self.element_id, element_id)
+                i = searchsorted(self.element_id, element_ids)
 
             blank = ' ' * size
             #cid = [cid if cid != 0 else '' for cid in self.coord_id]

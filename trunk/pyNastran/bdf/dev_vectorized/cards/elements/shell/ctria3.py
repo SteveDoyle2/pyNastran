@@ -16,10 +16,13 @@ class CTRIA3(ShellElement):
         ShellElement.__init__(self, model)
 
     def allocate(self, ncards):
+        self.n = ncards
         float_fmt = self.model.float
-        #if ncards:
+        #: Element ID
         self.element_id = zeros(ncards, dtype='int32')
+        #: Property ID
         self.property_id = zeros(ncards, dtype='int32')
+        #: Node IDs
         self.node_ids = zeros((ncards, 3), dtype='int32')
         self.zoffset = zeros(ncards, dtype='int32')
         self.t_flag = zeros(ncards, dtype='int32')
@@ -29,42 +32,30 @@ class CTRIA3(ShellElement):
             #self.property_id = array([], dtype='int32')
 
 
+    def add(self, card, comment):
+        i = self.i
+        self.element_id[i] = integer(card, 1, 'element_id')
+
+        self.property_id[i] = integer(card, 2, 'property_id')
+
+        self.node_ids[i] = [integer(card, 3, 'n1'),
+                integer(card, 4, 'n2'),
+                integer(card, 5, 'n3')]
+
+        #self.thetaMcid = integer_double_or_blank(card, 6, 'thetaMcid', 0.0)
+        #self.zOffset = double_or_blank(card, 7, 'zOffset', 0.0)
+        blank(card, 8, 'blank')
+        blank(card, 9, 'blank')
+
+        self.t_flag[i] = integer_or_blank(card, 10, 'TFlag', 0)
+        self.thickness[i] = [
+            double_or_blank(card, 11, 'T1', 1.0),
+            double_or_blank(card, 12, 'T2', 1.0),
+            double_or_blank(card, 13, 'T3', 1.0), ]
+        self.i += 1
+
     def build(self):
-        cards = self._cards
-        ncards = len(cards)
-        self.n = ncards
-        if ncards:
-            float_fmt = self.model.float
-            #: Element ID
-            self.element_id = zeros(ncards, 'int32')
-            #: Property ID
-            self.property_id = zeros(ncards, 'int32')
-            #: Node IDs
-            self.node_ids = zeros((ncards, 3), 'int32')
-
-            self.zoffset = zeros(ncards, 'int32')
-            self.t_flag = zeros(ncards, 'int32')
-            self.thickness = zeros((ncards, 3), float_fmt)
-
-            for i, card in enumerate(cards):
-                self.element_id[i] = integer(card, 1, 'element_id')
-
-                self.property_id[i] = integer(card, 2, 'property_id')
-
-                self.node_ids[i] = [integer(card, 3, 'n1'),
-                        integer(card, 4, 'n2'),
-                        integer(card, 5, 'n3')]
-
-                #self.thetaMcid = integer_double_or_blank(card, 6, 'thetaMcid', 0.0)
-                #self.zOffset = double_or_blank(card, 7, 'zOffset', 0.0)
-                blank(card, 8, 'blank')
-                blank(card, 9, 'blank')
-
-                self.t_flag[i] = integer_or_blank(card, 10, 'TFlag', 0)
-                self.thickness[i] = [
-                    double_or_blank(card, 11, 'T1', 1.0),
-                    double_or_blank(card, 12, 'T2', 1.0),
-                    double_or_blank(card, 13, 'T3', 1.0), ]
+        if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
             self.property_id = self.property_id[i]
@@ -75,31 +66,31 @@ class CTRIA3(ShellElement):
             self.element_id = array([], 'int32')
             self.property_id = array([], dtype='int32')
 
-    def write_bdf(self, f, size=8, element_id=None):
+    def write_bdf(self, f, size=8, element_ids=None):
         if self.n:
-            if element_id is None:
+            if element_ids is None:
                 i = arange(self.n)
             else:
-                assert len(unique(element_id))==len(element_id), unique(element_id)
-                i = searchsorted(self.element_id, element_id)
+                assert len(unique(element_ids))==len(element_ids), unique(element_ids)
+                i = searchsorted(self.element_id, element_ids)
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 card = ['CTRIA3', eid, pid, n[0], n[1], n[2]]
                 f.write(print_card_8(card))
 
     def _verify(self):
-        self.get_mass()
-        self.get_area()
-        self.get_normal()
+        self.get_mass_by_element_id()
+        self.get_area_by_element_id()
+        self.get_normal_by_element_id()
 
     def rebuild(self):
         pass
 
-    #def get_mass(self, element_id=None, total=False, xyz_cid0=None):
+    #def get_mass_by_element_id(self, element_ids=None, total=False, xyz_cid0=None):
         #"""
         #Gets the mass of the CTRIA3s on a total or per element basis.
 
         #:param self: the CTRIA3 object
-        #:param element_id: the elements to consider (default=None -> all)
+        #:param element_ids: the elements to consider (default=None -> all)
         #:param total: should the mass be summed (default=False)
 
         #:param node_ids: the GRIDs as an (N, )  NDARRAY (or None)
@@ -118,7 +109,7 @@ class CTRIA3(ShellElement):
         #else:
             #return mass
 
-    #def get_area(self, element_id=None, total=False, xyz_cid0=None):
+    #def get_area_by_element_id(self, element_id=None, total=False, xyz_cid0=None):
         #"""
         #Gets the area of the CTRIA3s on a total or per element basis.
 
@@ -139,7 +130,7 @@ class CTRIA3(ShellElement):
         #else:
             #return area
 
-    #def get_normal(self, element_id=None, xyz_cid0=None):
+    #def get_normal_by_element_id(self, element_id=None, xyz_cid0=None):
         #"""
         #Gets the normals of the CTRIA3s on per element basis.
 
@@ -164,15 +155,15 @@ class CTRIA3(ShellElement):
 
     def _node_locations(self, xyz_cid0, i=None):
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_position_from_node_index()
+            xyz_cid0 = self.model.grid.get_position_by_index()
         if i is None:
-            n1 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 0]), :]
-            n2 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 1]), :]
-            n3 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[:, 2]), :]
+            n1 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 0]), :]
+            n2 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 1]), :]
+            n3 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 2]), :]
         else:
-            n1 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[i, 0]), :]
-            n2 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[i, 1]), :]
-            n3 = xyz_cid0[self.model.grid.get_node_index_from_node_id(self.node_ids[i, 2]), :]
+            n1 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[i, 0]), :]
+            n2 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[i, 1]), :]
+            n3 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[i, 2]), :]
         return n1, n2, n3
 
     def _mass_area_normal(self, element_id=None, xyz_cid0=None,
@@ -193,7 +184,7 @@ class CTRIA3(ShellElement):
         :param calculate_normal: should the normals be calculated (default=True)
         """
         if element_id is None:
-            element_id = self.element_id
+            element_ids = self.element_id
             property_id = self.property_id
             i = None
         else:
@@ -207,10 +198,10 @@ class CTRIA3(ShellElement):
 
         massi = None
         if calculate_mass:
-            #t = self.model.properties_shell.get_thickness(property_id)  # PSHELL
-            #nsm = self.model.properties_shell.get_nonstructural_mass(property_id)  # PSHELL
-            #rho = self.model.properties_shell.get_density(property_id)  # MAT1
-            mpa = self.model.properties_shell.get_mass_per_area(property_id)
+            #t = self.model.properties_shell.get_thickness_by_property_id(property_id)  # PSHELL
+            #nsm = self.model.properties_shell.get_nonstructural_mass_by_property_id(property_id)  # PSHELL
+            #rho = self.model.properties_shell.get_density_by_property_id(property_id)  # MAT1
+            mpa = self.model.properties_shell.get_mass_per_area_by_property_id(property_id)
             assert mpa is not None
             #massi = rho * A * t + nsm
             massi = mpa * A
@@ -255,10 +246,8 @@ class CTRIA3(ShellElement):
         mat = model.properties_shell.get_material(pid)
         E = mat.E()
         nu = mat.Nu()
-        #t = prop.get_thickness(pid)
-        t = model.properties_shell.get_thickness(pid)
-
-
+        #t = prop.get_thickness_by_property_id(pid)
+        t = model.properties_shell.get_thickness_by_property_id(pid)
 
         # [k_bend] = [b.T] [D] [b] -> 5.16 - Przemieniecki
         # [b] - 5.139 Prz.
@@ -303,7 +292,7 @@ class CTRIA3(ShellElement):
         ]
         Cs *= E * h * k / (2.*(1+nu))
 
-    def get_centroid(self, element_id=None, node_ids=None, xyz_cid0=None):
+    def get_centroid_by_element_id(self, element_id=None, node_ids=None, xyz_cid0=None):
         if element_id is None:
             element_id = self.element_id
             i = None

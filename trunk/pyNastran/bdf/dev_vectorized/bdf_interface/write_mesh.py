@@ -183,8 +183,8 @@ class WriteMesh(object):
                 pids_all = t.property_id
                 n = 1
             elif t.n:
-                print(pids_all)
-                print(t.property_id)
+                self.model.log.debug(pids_all)
+                self.model.log.debug(t.property_id)
                 try:
                     pids_all = concatenate(pids_all, t.property_id)
                 except ValueError:
@@ -242,7 +242,7 @@ class WriteMesh(object):
         elements_by_pid = {}
         if pids is not None:
             pids_unique = unique(pids)
-            print("pids_unique = %s" % pids_unique)
+            self.model.log.debug("pids_unique = %s" % pids_unique)
             pids_unique.sort()
             if len(pids_unique) > 0:
                 f.write('$ELEMENTS_WITH_PROPERTIES\n')
@@ -253,7 +253,7 @@ class WriteMesh(object):
 
                 for t in ptypes:
                     if t.n and pid in t.property_id:
-                        print("prop.type = %s" % t.type)
+                        self.model.log.debug("prop.type = %s" % t.type)
                         t.write_bdf(f, size=size, property_ids=[pid])
                         pids_set.remove(pid)
                 n = 0

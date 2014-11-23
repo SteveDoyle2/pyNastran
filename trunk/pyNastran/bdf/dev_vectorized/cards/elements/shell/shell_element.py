@@ -1,4 +1,4 @@
-from numpy import zeros, searchsorted, where, asarray
+from numpy import zeros, searchsorted, where, asarray, nan, isnan
 
 from pyNastran.bdf.dev_vectorized.cards.elements.element import Element
 
@@ -7,14 +7,14 @@ class ShellElement(Element):
         Element.__init__(self, model)
 
     def get_index_by_element_id(self, element_id=None, msg=''):
-        i = self._get_sorted_index(self.element_id, element_id, self.n, 'element_id in %s%s' % (self.type, msg), check=True)
+        i = self._get_sorted_index(self.element_id, element_id, self.n, 'element_id', 'element_id in %s%s' % (self.type, msg), check=True)
         return i
 
-    def get_property_index_from_property_id(self, property_id=None, i=None):
+    def get_index_by_property_id(self, property_id=None, i=None):
         """Find all the j-indicies where seid=seidi for some given subset of i-indicies"""
-        return self._get_index_from_param('property_id', self.property_id, property_id, i)
+        return self._get_index_by_param('property_id', self.property_id, property_id, i)
 
-    def __getitem__(self, element_ids):
+    def __getitem__(self, element_id):
         """
         Allows for slicing:
          - elements[1:10]
@@ -23,11 +23,8 @@ class ShellElement(Element):
          - elements[[1,2,5]]
          - elements[array([1,2,5])]
         """
-        i = searchsorted(self.element_id, element_ids)
+        i = searchsorted(self.element_id, element_id)
         return self.slice_by_index(i)
-
-    def get_mass(self, element_id=None, total=False, node_ids=None, xyz_cid0=None):
-        return self.get_mass_by_element_id(element_id, total, node_ids, xyz_cid0)
 
     def get_mass_by_element_id(self, element_id=None, total=False, node_ids=None, xyz_cid0=None):
         """
@@ -53,10 +50,7 @@ class ShellElement(Element):
             #print('mass.shape = %s' % mass.shape)
             return mass
 
-    def get_normal(self, element_id=None, xyz_cid0=None):
-        return self.get_normal_by_element_id(element_id, xyz_cid0)
-
-    def get_normal(self, element_id=None, xyz_cid0=None):
+    def get_normal_by_element_id(self, element_id=None, xyz_cid0=None):
         """
         Gets the normals of the CQUAD4s on per element basis.
 
@@ -73,10 +67,6 @@ class ShellElement(Element):
             calculate_mass=False, calculate_area=False,
             calculate_normal=True)
         return normal
-
-
-    def get_area(self, element_id=None, total=False, xyz_cid0=None):
-        return self.get_area_by_element_id(element_id, total, xyz_cid0)
 
     def get_area_by_element_id(self, element_id=None, total=False, xyz_cid0=None):
         """
@@ -101,9 +91,6 @@ class ShellElement(Element):
         else:
             return area
 
-    def get_thickness(self, element_id=None):
-        return self.get_thickness_by_element_id(element_id)
-
     def get_thickness_by_element_id(self, element_id=None):
         if element_id is None:
             element_id = self.element_id
@@ -112,36 +99,38 @@ class ShellElement(Element):
         else:
             i = searchsorted(self.element_id, element_id)
             property_id = self.property_id[i]
-        #print 'element_id =', element_id
-        #print 'property_id =', property_id
-        t = self.model.properties_shell.get_thickness(property_id)
+        #print 'element_ids =', element_ids
+        #print 'property_ids =', property_id
+        t = self.model.properties_shell.get_thickness_by_property_id(property_id)
         return t
-
-    def get_nonstructural_mass(self, element_id=None):
-        return self.get_nonstructural_mass_by_element_id(element_id)
 
     def get_nonstructural_mass_by_element_id(self, element_id=None):
         if element_id is None:
-            element_id = self.element_id
+            element_ids = self.element_id
             property_id = self.property_id
             i = None
         else:
             i = searchsorted(self.element_id, element_id)
             property_id = self.property_id[i]
-        nsm = self.model.properties_shell.get_nonstructural_mass(property_id)
+        nsm = self.model.properties_shell.get_nonstructural_mass_by_property_id(property_id)
         return nsm
 
-    def get_density(self, element_id=None):
+    def get_density_by_element_id(self, element_id=None):
         if element_id is None:
             element_id = self.element_id
             property_id = self.property_id
             i = None
+            n = self.n
         else:
             i = searchsorted(self.element_id, element_id)
             property_id = self.property_id[i]
-        #print('density - element_id = %s' % element_id)
-        density = self.model.properties_shell.get_density(property_id)
-        #print('density_out = %s' % density)
+            n = len(element_id)
+
+        #print('density - element_ids = %s' % element_id)
+        density = self.model.properties_shell.get_density_by_property_id(property_id)
+        #self.model.log.debug('density_out = %s' % density)
+        assert density.shape == (n, ), density.shape
+        assert isnan(density) == False, density
         return density
 
     def slice_by_index(self, i):

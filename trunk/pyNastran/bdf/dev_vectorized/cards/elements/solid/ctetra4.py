@@ -5,7 +5,6 @@ from numpy import zeros, arange, dot, cross, searchsorted, array, where, asarray
 from numpy.linalg import norm
 
 from pyNastran.bdf.fieldWriter import print_card_8
-#from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 
@@ -23,6 +22,7 @@ def volume4(n1, n2, n3, n4):
 
 class CTETRA4(SolidElement):
     type = 'CTETRA4'
+    nnodes = 4
     def __init__(self, model):
         """
         Defines the CTETRA object.
@@ -32,48 +32,29 @@ class CTETRA4(SolidElement):
         """
         SolidElement.__init__(self, model)
 
-    def build(self):
-        cards = self._cards
-        ncards = len(cards)
+    def add(self, card, comment):
+        i = self.i
 
-        self.n = ncards
-        if ncards:
-            float_fmt = self.model.float
-            self.element_id = zeros(ncards, 'int32')
-            self.property_id = zeros(ncards, 'int32')
-            self.node_ids = zeros((ncards, 4), 'int32')
+        #comment = self._comments[i]
+        eid = integer(card, 1, 'element_id')
+        #if comment:
+            #self._comments[eid] = comment
 
-            #comments = {}
-            for i, card in enumerate(cards):
-                #comment = self._comments[i]
-                eid = integer(card, 1, 'element_id')
-                #if comment:
-                    #self._comments[eid] = comment
-
-                #: Element ID
-                self.element_id[i] = eid
-                #: Property ID
-                self.property_id[i] = integer(card, 2, 'property_id')
-                #: Node IDs
-                nids = [
-                    integer(card, 3, 'nid1'),
-                    integer(card, 4, 'nid2'),
-                    integer(card, 5, 'nid3'),
-                    integer(card, 6, 'nid4'),
-                ]
-                assert 0 not in nids, '%s\n%s' % (nids, card)
-                self.node_ids[i, :] = nids
-                assert len(card) == 7, 'len(CTETRA4 card) = %i' % len(card)
-
-            i = self.element_id.argsort()
-            self.element_id = self.element_id[i]
-            self.property_id = self.property_id[i]
-            self.node_ids = self.node_ids[i, :]
-            self._cards = []
-            self._comments = []
-        else:
-            self.element_id = array([], dtype='int32')
-            self.property_id = array([], dtype='int32')
+        #: Element ID
+        self.element_id[i] = eid
+        #: Property ID
+        self.property_id[i] = integer(card, 2, 'property_id')
+        #: Node IDs
+        nids = [
+            integer(card, 3, 'nid1'),
+            integer(card, 4, 'nid2'),
+            integer(card, 5, 'nid3'),
+            integer(card, 6, 'nid4'),
+        ]
+        assert 0 not in nids, '%s\n%s' % (nids, card)
+        self.node_ids[i, :] = nids
+        assert len(card) == 7, 'len(CTETRA4 card) = %i' % len(card)
+        self.i += 1
 
     def get_mass_matrix(self, i, model, positions, index0s):
         """
@@ -198,7 +179,7 @@ class CTETRA4(SolidElement):
         nnodes = 4
         ndof = 3 * nnodes
         pid = self.property_id[i]
-        rho = self.model.elements.properties_solid.psolid.get_density(pid)[0]
+        rho = self.model.elements.properties_solid.psolid.get_density_by_property_id(pid)[0]
 
         n0, n1, n2, n3 = self.node_ids[i, :]
         V = volume4(positions[self.node_ids[i, 0]],
@@ -225,7 +206,7 @@ class CTETRA4(SolidElement):
         nnodes = 4
         ndof = 3 * nnodes
         pid = self.property_id[i]
-        rho = self.model.elements.properties_solid.psolid.get_density(pid)[0]
+        rho = self.model.elements.properties_solid.psolid.get_density_by_property_id(pid)[0]
 
         n0, n1, n2, n3 = self.node_ids[i, :]
         V = volume4(positions[self.node_ids[i, 0]],
@@ -282,17 +263,17 @@ class CTETRA4(SolidElement):
         :param xyz_cid0: the node positions as a dictionary
         """
         grid = self.model.grid
-        get_node_index_from_node_id = self.model.grid.get_node_index_from_node_id
+        get_index_by_node_id = self.model.grid.get_index_by_node_id
         node_ids = self.node_ids
 
         msg = ', which is required by %s' % self.type
-        n1 = xyz_cid0[get_node_index_from_node_id(node_ids[i, 0], msg), :]
-        n2 = xyz_cid0[get_node_index_from_node_id(node_ids[i, 1], msg), :]
-        n3 = xyz_cid0[get_node_index_from_node_id(node_ids[i, 2], msg), :]
-        n4 = xyz_cid0[get_node_index_from_node_id(node_ids[i, 3], msg), :]
+        n1 = xyz_cid0[get_index_by_node_id(node_ids[i, 0], msg), :]
+        n2 = xyz_cid0[get_index_by_node_id(node_ids[i, 1], msg), :]
+        n3 = xyz_cid0[get_index_by_node_id(node_ids[i, 2], msg), :]
+        n4 = xyz_cid0[get_index_by_node_id(node_ids[i, 3], msg), :]
         return n1, n2, n3, n4
 
-    def get_volume(self, element_id=None, xyz_cid0=None, total=False):
+    def get_volume_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the volume for one or more elements.
 
@@ -307,6 +288,28 @@ class CTETRA4(SolidElement):
             V[i] = volume4(n1i, n2i, n3i, n4i)
             i += 1
         return V
+
+    def get_mass_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
+        """
+        Gets the mass for one or more CTETRA elements.
+
+        :param element_ids: the elements to consider (default=None -> all)
+        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
+        :param total: should the centroid be summed (default=False)
+        """
+        if element_id is None:
+            element_id = self.element_id
+        if xyz_cid0 is None:
+            xyz_cid0 = self.model.grid.get_position_by_index()
+
+        V = self.get_volume_by_element_id(element_id, xyz_cid0)
+        mid = self.model.properties_solid.get_material_id_by_property_id(self.property_id)
+        rho = self.model.materials.get_density_by_material_id(mid)
+
+        mass = V * rho
+        if total:
+            mass = mass.sum()
+        return mass
 
     def get_centroid_volume(self, element_id=None, xyz_cid0=None, total=False):
         """
@@ -336,7 +339,7 @@ class CTETRA4(SolidElement):
         assert volume.min() > 0.0, 'volume.min() = %f' % volume.min()
         return centroid, volume
 
-    def get_centroid(self, element_id=None, xyz_cid0=None, total=False):
+    def get_centroid_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the centroid for one or more elements.
 

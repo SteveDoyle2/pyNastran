@@ -56,6 +56,7 @@ class CONROD(RodElement):
         RodElement.__init__(self, model)
 
     def allocate(self, ncards):
+        self.n = ncards
         float_fmt = self.model.float
         self.element_id = zeros(ncards, 'int32')
         self.material_id = zeros(ncards, 'int32')
@@ -65,37 +66,26 @@ class CONROD(RodElement):
         self.c = zeros(ncards, float_fmt)
         self.nsm = zeros(ncards, float_fmt)
 
+    def add(self, card, comment):
+        i = self.i
+        self.element_id[i] = integer(card, 1, 'element_id')
+        self.node_ids[i] = [integer(card, 2, 'node_1'),
+                            integer(card, 3, 'node_2')]
+
+        self.material_id[i] = integer(card, 4, 'material_id')
+        self.A[i] = double(card, 5, 'Area')
+        self.J[i] = double_or_blank(card, 6, 'J', 0.0)
+        self.c[i] = double_or_blank(card, 7, 'c', 0.0)
+        self.nsm[i] = double_or_blank(card, 8, 'non_structural_mass', 0.0)
+        assert len(card) <= 9, 'len(CONROD card) = %i' % len(card)
+        self.i += 1
+
     def build(self):
         """
         :param self: the CONROD object
         :param cards: the list of CONROD cards
         """
-        cards = self._cards
-        ncards = len(cards)
-        self.n = ncards
-        if ncards:
-            float_fmt = self.model.float
-            #: Property ID
-            self.element_id = zeros(ncards, 'int32')
-            self.material_id = zeros(ncards, 'int32')
-            self.node_ids = zeros((ncards, 2), 'int32')
-            self.A = zeros(ncards, float_fmt)
-            self.J = zeros(ncards, float_fmt)
-            self.c = zeros(ncards, float_fmt)
-            self.nsm = zeros(ncards, float_fmt)
-
-            for i, card in enumerate(cards):
-                self.element_id[i] = integer(card, 1, 'element_id')
-                self.node_ids[i] = [integer(card, 2, 'node_1'),
-                                    integer(card, 3, 'node_2')]
-
-                self.material_id[i] = integer(card, 4, 'material_id')
-                self.A[i] = double(card, 5, 'Area')
-                self.J[i] = double_or_blank(card, 6, 'J', 0.0)
-                self.c[i] = double_or_blank(card, 7, 'c', 0.0)
-                self.nsm[i] = double_or_blank(card, 8, 'non_structural_mass', 0.0)
-                assert len(card) <= 9, 'len(CONROD card) = %i' % len(card)
-
+        if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
             self.node_ids = self.node_ids[i, :]
@@ -122,38 +112,38 @@ class CONROD(RodElement):
     def get_material_from_index(self, i):
         return self.model.materials.mat1
 
-    def get_area_by_property_id(self, property_id=None):
-        i = self.get_property_index_from_property_id(property_id)
-        return self.get_area_from_index(i)
+    def get_area_by_element_id(self, property_id=None):
+        A = self.A
+        return A
 
-    def get_E(self, property_id=None):
+    def get_E_by_element_id(self, property_id=None):
         mat = self.model.materials.mat1[self.material_id[i]]
         E = mat.E()
         G = mat.G()
         return E
 
-    def get_G(self, property_id=None):
+    def get_G_by_element_id(self, property_id=None):
         mat = self.model.materials.mat1[self.material_id[i]]
         E = mat.E()
         G = mat.G()
         return G
 
-    def get_J(self, property_id=None):
+    def get_J_by_element_id(self, property_id=None):
         J = self.model.prod.get_J(property_id)
         return J
 
-    def get_c(self, property_id=None):
+    def get_c_by_element_id(self, property_id=None):
         c = self.model.prod.get_c(property_id)
         return c
 
-    def get_mass(self, total=False):
+    def get_mass_by_element_id(self, total=False):
         """
         mass = rho * A * L + nsm
         """
         if self.n == 0:
             return 0.0
 
-        #i = self.model.grid.get_node_index_from_node_id()
+        #i = self.model.grid.get_index_by_node_id()
         #grid_cid0 = self.model.grid.get_positions_by_index(i)
 
 
@@ -164,25 +154,25 @@ class CONROD(RodElement):
         #p2 = grid_cid0[self.node_ids[:, 1]]
 
 
-        #grid_cid0 = self.model.grid.get_positions_by_index(self.model.grid.get_node_index_from_node_id())
+        #grid_cid0 = self.model.grid.get_positions_by_index(self.model.grid.get_index_by_node_id())
         try:
             msg = ', which is required by CONROD get_mass'
-            i1 = self.model.grid.get_node_index_from_node_id(self.node_ids[:, 0], msg=msg)
-            i2 = self.model.grid.get_node_index_from_node_id(self.node_ids[:, 1], msg=msg)
-            p1 = self.model.grid.get_position_from_node_index(i1)
-            p2 = self.model.grid.get_position_from_node_index(i2)
+            i1 = self.model.grid.get_index_by_node_id(self.node_ids[:, 0], msg=msg)
+            i2 = self.model.grid.get_index_by_node_id(self.node_ids[:, 1], msg=msg)
+            p1 = self.model.grid.get_position_by_index(i1)
+            p2 = self.model.grid.get_position_by_index(i2)
         except RuntimeError:
             for eid, (n1, n2) in zip(self.element_id, self.node_ids):
                 msg = ', which is required by CONROD element_id=%s node1=%s\n' % (eid, n1)
-                i1 = self.model.grid.get_node_index_from_node_id([n1], msg=msg)
+                i1 = self.model.grid.get_index_by_node_id([n1], msg=msg)
                 msg = ', which is required by CONROD element_id=%s node2=%s\n' % (eid, n2)
-                i2 = self.model.grid.get_node_index_from_node_id([n2], msg=msg)
-                p1 = self.model.grid.get_position_from_node_index(i1)
-                p2 = self.model.grid.get_position_from_node_index(i2)
+                i2 = self.model.grid.get_index_by_node_id([n2], msg=msg)
+                p1 = self.model.grid.get_position_by_index(i1)
+                p2 = self.model.grid.get_position_by_index(i2)
 
 
         L = p2 - p1
-        rho = self.model.materials.get_density_from_material_id(self.material_id)
+        rho = self.model.materials.get_density_by_material_id(self.material_id)
         mass = norm(L, axis=1) * self.A * rho + self.nsm
         if total:
             return mass.sum()
@@ -191,9 +181,9 @@ class CONROD(RodElement):
 
     #=========================================================================
 
-    def write_bdf(self, f, size=8, element_id=None):
+    def write_bdf(self, f, size=8, element_ids=None):
         if self.n:
-            if element_id is None:
+            if element_ids is None:
                 i = arange(self.n)
             for (eid, n12, mid, A, J, c, nsm) in zip(
                  self.element_id, self.node_ids, self.material_id, self.A, self.J,
@@ -219,7 +209,7 @@ class CONROD(RodElement):
         A = self.get_area_from_index(i)
         mat = self.model.materials.mat1[self.material_id[i]]
         mid = self.material_id[i]
-        rho = mat.get_density()
+        rho = mat.get_density_by_material_id()
         #========================
         n0, n1 = self.node_ids[i, :]
 

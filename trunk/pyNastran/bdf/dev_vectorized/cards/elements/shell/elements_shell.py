@@ -119,7 +119,7 @@ class ElementsShell(object):
 
         return element_ids, property_ids
 
-    def _unique_property_ids(self, element_id=None):
+    def _unique_property_ids(self, element_ids=None):
         types = self._get_types()
         pids = []
         for element in types:
@@ -128,15 +128,15 @@ class ElementsShell(object):
         return unique(pids)
     #=========================================================================
 
-    def get_area(self, element_id=None):
+    def get_area_by_element_id(self, element_id=None):
         pass
 
     def get_thickness_by_element_id(self, element_id=None):
-        element_id, property_ids = self._get_element_property_ids(element_id)
+        element_id, property_id = self._get_element_property_ids(element_id)
         assert len(element_id) == 1, element_id
 
         # lessen the work
-        unique_pids = unique(property_ids)
+        unique_pids = unique(property_id)
         if unique_pids is None:
             raise RuntimeError('there are no properties...')
 
@@ -146,13 +146,13 @@ class ElementsShell(object):
         # now that we have the reduced seget the p
         pids = self._unique_property_ids(element_id)
         isort = argsort(pids)
-        unique_thickness = self.model.properties_shell.get_thickness(unique_pids)
+        unique_thickness = self.model.properties_shell.get_thickness_by_property_id(unique_pids)
 
         n = len(element_id)
         thickness = zeros(n, 'float64')
-        for i, property_id in enumerate(property_ids):
-            #print("unique=%s pid=%s" % (unique_pids, property_id))
-            j = searchsorted(unique_pids, property_id)
+        for i, pid in enumerate(property_id):
+            #print("unique=%s pid=%s" % (unique_pids, pid))
+            j = searchsorted(unique_pids, pid)
             thickness[i] = unique_thickness[j]
         return thickness
 
@@ -164,8 +164,8 @@ class ElementsShell(object):
                 element_id.extend(etype.element_id)
 
         n = len(element_id)
-        #print('element_id =', element_id)
-        #print('property_id =', property_id)
+        #print('element_ids =', element_id)
+        #print('property_ids =', property_id)
         massi = zeros(n, dtype='float64')
 
         etypes = [etype.type for type in types]
@@ -176,8 +176,8 @@ class ElementsShell(object):
         for elems in types:
             #if elems.n > 0:
             try:
-                mass = elems.get_mass()
-                massi[n0:n0 + elems.n] = elems.get_mass()
+                mass = elems.get_mass_by_element_id()
+                massi[n0:n0 + elems.n] = elems.get_mass_by_element_id()
             except TypeError:  # ..todo:: remove this
                  massi[n0] = 1.
             except ValueError:  # ..todo:: remove this
@@ -191,13 +191,13 @@ class ElementsShell(object):
             mass = massi
         return mass
 
-    def write_bdf(self, f, size=8, element_id=None):
+    def write_bdf(self, f, size=8, element_ids=None):
         f.write('$ELEMENTS_SHELL\n')
         types = self._get_types(nlimit=True)
         for element in types:
             if element.n:
                 #print(element.type)
-                element.write_bdf(f, size=size, element_id=element_id)
+                element.write_bdf(f, size=size, element_ids=element_ids)
 
     def _get_types(self, nlimit=True):
         types = [self.ctria3, self.cquad4, self.ctria6, self.cquad8, self.ctriax6] #, cquad8

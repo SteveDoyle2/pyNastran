@@ -115,16 +115,22 @@ class Elements(object):
         ptypes = self._get_property_types(nlimit=False)
         self.n = 0
         for elems in etypes:
-            #if elems.n:
-            self.model.log.debug('building %s' % elems.__class__.__name__)
+            if hasattr(elems, 'type'):
+                if elems.type in self.model.card_count:
+                    self.model.log.debug('building %s' % elems.__class__.__name__)
+            else:
+                self.model.log.debug('building %s' % elems.__class__.__name__)
             elems.build()
             self.ne += elems.n
             self.validate_nodes(elems)
                 #print nids - grids[i]
 
         for props in ptypes:
-            #if props.n:
-            self.model.log.debug('building %s' % props.__class__.__name__)
+            if hasattr(props, 'type'):
+                if props.type in self.model.card_count:
+                    self.model.log.debug('building %s' % props.__class__.__name__)
+            else:
+                self.model.log.debug('building %s' % props.__class__.__name__)
             props.build()
             self.np += props.n
         self.model.log.debug('finished building %s' % self.__class__.__name__)
@@ -138,7 +144,7 @@ class Elements(object):
             self.property_ids = array(list(pids), dtype='int32')
             self.property_ids.sort()
             self.property_groups = self.build_groups(ptypes, 'property_id')
-            print('*****self.property_groups = %s' % self.property_groups)
+            self.model.log.info('self.property_groups = %s' % self.property_groups)
         #print('*****self.element_ids =', self.element_ids)
         #print('*****self.property_ids =', self.property_ids)
 
@@ -176,9 +182,13 @@ class Elements(object):
             'CELAS3'  : self.elements_spring.celas3,
             'CELAS4'  : self.elements_spring.celas4,
 
-            'CBUSH'  : self.elements_bush.cbush,
-            'CBUSH1D'  : self.elements_bush.cbush1d,
-            'CBUSH2D'  : self.elements_bush.cbush2d,
+            #'CBUSH'  : self.elements_bush.cbush,
+            #'CBUSH1D'  : self.elements_bush.cbush1d,
+            #'CBUSH2D'  : self.elements_bush.cbush2d,
+
+            'CBUSH'  : self.cbush,
+            'CBUSH1D'  : self.cbush1d,
+            'CBUSH2D'  : self.cbush2d,
 
             'CROD'  : self.crod,
             'CONROD'  : self.conrod,
@@ -282,7 +292,7 @@ class Elements(object):
         #return data
 
     def get_nodes(self, node_id, xyz_cid0, msg=''):
-        i = self.model.grid.get_node_index_from_node_id(node_id, msg=msg)
+        i = self.model.grid.get_index_by_node_id(node_id, msg=msg)
         return xyz_cid0[i, :]
 
     def _get_element_ids(self, element_ids_orig):
@@ -310,9 +320,9 @@ class Elements(object):
 
         return element_ids, element_ids_orig
 
-    def get_mass(self, element_ids_orig=None, xyz_cid0=None, sort_output=True):
+    def get_mass_by_element_id(self, element_ids_orig=None, xyz_cid0=None, sort_output=True):
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_position_from_node_index()
+            xyz_cid0 = self.model.grid.get_position_by_index()
 
         element_ids, element_ids_orig = self._get_element_ids(element_ids_orig)
         if len(element_ids) == 0:
@@ -361,7 +371,7 @@ class Elements(object):
             ]
         pid_data = self.get_element_ids_by_property_type(element_ids, exclude_types=exclude_types)
         element_ids_to_analyze = pid_data[:, 0]
-        data2 = group_elements_by_property_type_and_element_type(self.model, self, pid_data)
+        data2 = self.group_elements_by_property_type_and_element_type(self, pid_data)
 
         #self.model.log.debug('**data2 = %s' % data2)
         nelements = len(element_ids)
@@ -411,25 +421,25 @@ class Elements(object):
                 #print('prop = %s' % prop)
                 #print('  calling get_mass_per_area for pid=%s' % (pid))
                 if eType in ['CONROD']:
-                    rho = self.model.materials.get_density(elements.material_id)
+                    rho = self.model.materials.get_density_by_material_id(elements.material_id)
                     mass[ni:ni+n] = L * elements.A[i] * rho[i]  + elements.nsm[i]
                 else:
-                    mpl = prop.get_mass_per_length()
+                    mpl = prop.get_mass_per_length_by_property_id()
                     mass[ni:ni+n] = mpl * L
                     del prop
             elif eType in ['CTRIA3', 'CQUAD4', 'CSHEAR']:
                 if eType == 'CTRIA3':
                     n1, n2, n3 = elements.node_ids[i, 0], elements.node_ids[i, 1], elements.node_ids[i, 2]
-                    n1 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n1), :]
-                    n2 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n2), :]
-                    n3 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n3), :]
+                    n1 = xyz_cid0[self.model.grid.get_index_by_node_id(n1), :]
+                    n2 = xyz_cid0[self.model.grid.get_index_by_node_id(n2), :]
+                    n3 = xyz_cid0[self.model.grid.get_index_by_node_id(n3), :]
                     normal, A = _ctria3_normal_A(n1, n2, n3, calculate_area=True, normalize=True)
                 elif eType in ['CQUAD4', 'CSHEAR']:
                     n1, n2, n3, n4 = elements.node_ids[i, 0], elements.node_ids[i, 1], elements.node_ids[i, 2], elements.node_ids[i, 3]
-                    n1 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n1), :]
-                    n2 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n2), :]
-                    n3 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n3), :]
-                    n4 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n4), :]
+                    n1 = xyz_cid0[self.model.grid.get_index_by_node_id(n1), :]
+                    n2 = xyz_cid0[self.model.grid.get_index_by_node_id(n2), :]
+                    n3 = xyz_cid0[self.model.grid.get_index_by_node_id(n3), :]
+                    n4 = xyz_cid0[self.model.grid.get_index_by_node_id(n4), :]
                     normal, A = _cquad4_normal_A(n1, n2, n3, n4, calculate_area=True, normalize=True)
                 else:
                     self.model.log.debug("Element.get_mass doesn't support %s; try %s.get_mass" % (eType, eType))
@@ -437,19 +447,18 @@ class Elements(object):
                     continue
                 #print('prop = %s' % prop)
                 #print('  calling get_mass_per_area for pid=%s' % (pid))
-                mpa = prop.get_mass_per_area()
+                mpa = prop.get_mass_per_area_by_property_id()
                 mass[ni:ni+n] = mpa * A
                 del prop
             elif eType in ['CTETRA4', 'CTETRA10', 'CPENTA6', 'CPENTA15', 'CHEXA8', 'CHEXA20']:
-                print(prop)
                 rho = prop.get_density_by_property_id()
                 del prop
                 if eType in ['CTETRA4', 'CTETRA10']:
                     n1, n2, n3, n4 = elements.node_ids[i, 0], elements.node_ids[i, 1], elements.node_ids[i, 2], elements.node_ids[i, 3]
-                    n1 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n1), :]
-                    n2 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n2), :]
-                    n3 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n3), :]
-                    n4 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n4), :]
+                    n1 = xyz_cid0[self.model.grid.get_index_by_node_id(n1), :]
+                    n2 = xyz_cid0[self.model.grid.get_index_by_node_id(n2), :]
+                    n3 = xyz_cid0[self.model.grid.get_index_by_node_id(n3), :]
+                    n4 = xyz_cid0[self.model.grid.get_index_by_node_id(n4), :]
 
                     Vi = zeros(n, self.model.float)
                     i = 0
@@ -460,12 +469,12 @@ class Elements(object):
                     n1, n2, n3, n4, n5, n6 = (elements.node_ids[i, 0], elements.node_ids[i, 1],
                                               elements.node_ids[i, 2], elements.node_ids[i, 3],
                                               elements.node_ids[i, 4], elements.node_ids[i, 5], )
-                    n1 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n1), :]
-                    n2 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n2), :]
-                    n3 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n3), :]
-                    n4 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n4), :]
-                    n5 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n5), :]
-                    n6 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n6), :]
+                    n1 = xyz_cid0[self.model.grid.get_index_by_node_id(n1), :]
+                    n2 = xyz_cid0[self.model.grid.get_index_by_node_id(n2), :]
+                    n3 = xyz_cid0[self.model.grid.get_index_by_node_id(n3), :]
+                    n4 = xyz_cid0[self.model.grid.get_index_by_node_id(n4), :]
+                    n5 = xyz_cid0[self.model.grid.get_index_by_node_id(n5), :]
+                    n6 = xyz_cid0[self.model.grid.get_index_by_node_id(n6), :]
                     (A1, c1) = tri_area_centroid(n1, n2, n3)
                     (A2, c2) = tri_area_centroid(n4, n5, n6)
                     Vi = (A1 + A2) / 2. * norm(c1 - c2, axis=1)
@@ -475,14 +484,14 @@ class Elements(object):
                         elements.node_ids[i, 2], elements.node_ids[i, 3],
                         elements.node_ids[i, 4], elements.node_ids[i, 5],
                         elements.node_ids[i, 6], elements.node_ids[i, 7], )
-                    n1 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n1), :]
-                    n2 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n2), :]
-                    n3 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n3), :]
-                    n4 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n4), :]
-                    n5 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n5), :]
-                    n6 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n6), :]
-                    n7 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n7), :]
-                    n8 = xyz_cid0[self.model.grid.get_node_index_from_node_id(n8), :]
+                    n1 = xyz_cid0[self.model.grid.get_index_by_node_id(n1), :]
+                    n2 = xyz_cid0[self.model.grid.get_index_by_node_id(n2), :]
+                    n3 = xyz_cid0[self.model.grid.get_index_by_node_id(n3), :]
+                    n4 = xyz_cid0[self.model.grid.get_index_by_node_id(n4), :]
+                    n5 = xyz_cid0[self.model.grid.get_index_by_node_id(n5), :]
+                    n6 = xyz_cid0[self.model.grid.get_index_by_node_id(n6), :]
+                    n7 = xyz_cid0[self.model.grid.get_index_by_node_id(n7), :]
+                    n8 = xyz_cid0[self.model.grid.get_index_by_node_id(n8), :]
 
                     (A1, c1) = quad_area_centroid(n1, n2, n3, n4)
                     (A2, c2) = quad_area_centroid(n5, n6, n7, n8)
@@ -536,21 +545,20 @@ class Elements(object):
                     obj = TypeMap[Type][pids_extract]
                     out.append(obj)
         return out
-        #return out[0] if int_flag else out
+        return out[0] if int_flag else out
 
     def allocate(self, card_count):
         etypes = self._get_element_types(nlimit=False)
         for etype in etypes:
             if hasattr(etype, 'type'):
                 if etype.type in card_count:
+                    self.model.log.debug('allocate %s' % etype.type)
                     etype.allocate(card_count[etype.type])
                     del card_count[etype.type]
-                #else:
-                    #asdf
             else:
                 # ElementsSpring
+                self.model.log.debug('allocate %s' % etype.__class__.__name__)
                 etype.allocate(card_count)
-                #del card_count[etype.type]
 
         ptypes = self._get_property_types(nlimit=False)
         for ptype in ptypes:
@@ -638,15 +646,15 @@ class Elements(object):
             types = types2
         return types
 
-    def get_elements(self, element_ids=None):
-        if element_ids is None:
+    def get_element(self, element_id=None):
+        if element_id is None:
             out = []
             for Type, eids in iteritems(self.element_groups):
                 for i in range(len(eids)):
                     obj = TypeMap[Type].slice_by_index(i)
                     out.append(obj)
             #return self
-        return self.__getitem__(element_ids)
+        return self.__getitem__(element_id)
 
     def get_element_typemap(self):
         TypeMap = {
@@ -814,10 +822,42 @@ class Elements(object):
             #print('element_ids = %s\n--%s' % (element_ids2, out))
         return out[0] if int_flag else out
 
+    def group_elements_by_property_type_and_element_type(self, elements, pid_data):
+        """
+        group elements of the same type by property type
+           same element type & different property id (e.g. CTRIA3 PSHELL/PCOMP)  -> different group
+           different element type & same property id (e.g. CTRIA3/CQUAD4 PSHELL) -> different group
+           same element & same type -> same group
+
+        we do this in order to think about one property at a time and not
+        have to do a lot of special work to handle different methods for
+        getting the mass
+        """
+        # find unique groups
+        #print("pid_data = \n%s\n" % str(pid_data))
+        pid_eType = unique2d(pid_data[:, 1:])
+
+        data2 = {}
+        #print('model %s' % type(model))
+        eTypeMap = self.model._element_type_to_element_name_mapper
+
+        #print("pid_eType = \n%s\n" % str(pid_eType))
+        for (pid, eType) in pid_eType:
+            if pid not in elements.property_ids:
+                self.model.log.debug('Property pid=%s does not exist' % pid)
+                #continue
+            i = where(pid_data[:, 1] == pid)[0]
+            #self.model.log.debug("pid=%i eType=%s Step #1=> \n%s\n" % (pid, eType, pid_data[i, :]))
+            j = where(pid_data[i, 2] == eType)[0]
+            eids = pid_data[i[j], 0]
+            #self.model.log.debug("pid=%i eType=%s eids=%s Step #2=> \n%s\n" % (pid, eType, eids, pid_data[i[j], :]))
+            eType = eTypeMap[eType]
+            data2[(pid, eType)] = eids
+        return data2
 
 def check_duplicate(name, objs):
     unique_vals = set([])
-    print("nobjs = %s" % len(objs))
+    #print("nobjs = %s" % len(objs))
     for obj in objs:
         #print('working on %s' % obj.__class__.__name__)
         if hasattr(obj, name):
@@ -849,35 +889,3 @@ def check_duplicate(name, objs):
     #print('unique %s = %s' % (name, unique_vals))
     return unique_vals
 
-def group_elements_by_property_type_and_element_type(model, elements, pid_data):
-    """
-    group elements of the same type by property type
-       same element type & different property id (e.g. CTRIA3 PSHELL/PCOMP)  -> different group
-       different element type & same property id (e.g. CTRIA3/CQUAD4 PSHELL) -> different group
-       same element & same type -> same group
-
-    we do this in order to think about one property at a time and not
-    have to do a lot of special work to handle different methods for
-    getting the mass
-    """
-    # find unique groups
-    #print("pid_data = \n%s\n" % str(pid_data))
-    pid_eType = unique2d(pid_data[:, 1:])
-
-    data2 = {}
-    #print('model %s' % type(model))
-    eTypeMap = model._element_type_to_element_name_mapper
-
-    #print("pid_eType = \n%s\n" % str(pid_eType))
-    for (pid, eType) in pid_eType:
-        if pid not in elements.property_ids:
-            self.model.log.debug('Property pid=%s does not exist' % pid)
-            #continue
-        i = where(pid_data[:, 1] == pid)[0]
-        #self.model.log.debug("pid=%i eType=%s Step #1=> \n%s\n" % (pid, eType, pid_data[i, :]))
-        j = where(pid_data[i, 2] == eType)[0]
-        eids = pid_data[i[j], 0]
-        #self.model.log.debug("pid=%i eType=%s eids=%s Step #2=> \n%s\n" % (pid, eType, eids, pid_data[i[j], :]))
-        eType = eTypeMap[eType]
-        data2[(pid, eType)] = eids
-    return data2

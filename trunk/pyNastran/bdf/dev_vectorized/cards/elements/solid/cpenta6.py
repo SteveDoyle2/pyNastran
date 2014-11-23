@@ -27,6 +27,7 @@ def tri_area_centroid(n1, n2, n3):
 
 class CPENTA6(SolidElement):
     type = 'CPENTA6'
+    nnodes = 6
     def __init__(self, model):
         """
         Defines the CPENTA object.
@@ -36,50 +37,30 @@ class CPENTA6(SolidElement):
         """
         SolidElement.__init__(self, model)
 
-    def build(self):
-        cards = self._cards
-        ncards = len(cards)
+    def add(self, card, comment):
+        i = self.i
+        #comment = self._comments[i]
+        eid = integer(card, 1, 'element_id')
+        #if comment:
+            #self._comments[eid] = comment
 
-        self.n = ncards
-        if ncards:
-            float_fmt = self.model.float
-            self.element_id = zeros(ncards, 'int32')
-            self.property_id = zeros(ncards, 'int32')
-            self.node_ids = zeros((ncards, 6), 'int32')
-
-            #comments = {}
-            for i, card in enumerate(cards):
-                comment = self._comments[i]
-                eid = integer(card, 1, 'element_id')
-                #if comment:
-                    #self._comments[eid] = comment
-
-                #: Element ID
-                self.element_id[i] = eid
-                #: Property ID
-                self.property_id[i] = integer(card, 2, 'property_id')
-                #: Node IDs
-                nids = [
-                    integer(card, 3, 'nid1'),
-                    integer(card, 4, 'nid2'),
-                    integer(card, 5, 'nid3'),
-                    integer(card, 6, 'nid4'),
-                    integer(card, 7, 'nid5'),
-                    integer(card, 8, 'nid6'),
-                ]
-                assert 0 not in nids, '%s\n%s' % (nids, card)
-                self.node_ids[i, :] = nids
-                assert len(card) == 9, 'len(CPENTA6 card) = %i' % len(card)
-
-            i = self.element_id.argsort()
-            self.element_id = self.element_id[i]
-            self.property_id = self.property_id[i]
-            self.node_ids = self.node_ids[i, :]
-            self._cards = []
-            self._comments = []
-        else:
-            self.element_id = array([], dtype='int32')
-            self.property_id = array([], dtype='int32')
+        #: Element ID
+        self.element_id[i] = eid
+        #: Property ID
+        self.property_id[i] = integer(card, 2, 'property_id')
+        #: Node IDs
+        nids = [
+            integer(card, 3, 'nid1'),
+            integer(card, 4, 'nid2'),
+            integer(card, 5, 'nid3'),
+            integer(card, 6, 'nid4'),
+            integer(card, 7, 'nid5'),
+            integer(card, 8, 'nid6'),
+        ]
+        assert 0 not in nids, '%s\n%s' % (nids, card)
+        self.node_ids[i, :] = nids
+        assert len(card) == 9, 'len(CPENTA6 card) = %i' % len(card)
+        self.i += 1
 
     def get_mass_matrix(self, i, model, positions, index0s):
         return M, dofs, nijv
@@ -120,7 +101,7 @@ class CPENTA6(SolidElement):
         n6 = xyz_cid0[get_node_index_from_node_id(node_ids[i, 5], msg), :]
         return n1, n2, n3, n4, n5, n6
 
-    def get_volume(self, element_id=None, xyz_cid0=None, total=False):
+    def get_volume_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the volume for one or more elements.
 
@@ -141,7 +122,29 @@ class CPENTA6(SolidElement):
             volume = abs(volume)
         return volume
 
-    def get_centroid_volume(self, element_id=None, xyz_cid0=None, total=False):
+    def get_mass_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
+        """
+        Gets the mass for one or more CTETRA elements.
+
+        :param element_ids: the elements to consider (default=None -> all)
+        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
+        :param total: should the centroid be summed (default=False)
+        """
+        if element_id is None:
+            element_id = self.element_id
+        if xyz_cid0 is None:
+            xyz_cid0 = self.model.grid.get_position_by_index()
+
+        V = self.get_volume_by_element_id(element_id, xyz_cid0)
+        mid = self.model.properties_solid.get_material_id_by_property_id(self.property_id)
+        rho = self.model.materials.get_density_by_material_id(mid)
+
+        mass = V * rho
+        if total:
+            mass = mass.sum()
+        return mass
+
+    def get_centroid_volume_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the centroid and volume for one or more elements.
 
@@ -149,7 +152,7 @@ class CPENTA6(SolidElement):
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the volume be summed; centroid be averaged (default=False)
 
-        ..see:: CPENTA6.get_volume() and CPENTA6.get_centroid() for more information.
+        ..see:: CPENTA6.get_volume_by_element_id() and CPENTA6.get_centroid_by_element_id
         """
         if xyz_cid0 is None:
             xyz_cid0 = self.model.grid.get_position_from_node_index()
@@ -167,7 +170,7 @@ class CPENTA6(SolidElement):
         assert volume.min() > 0.0, 'volume.min() = %f' % volume.min()
         return centroid, volume
 
-    def get_centroid(self, element_id=None, xyz_cid0=None, total=False):
+    def get_centroid_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
         """
         Gets the centroid for one or more elements.
 

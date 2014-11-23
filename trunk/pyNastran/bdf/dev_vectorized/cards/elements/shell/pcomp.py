@@ -37,11 +37,11 @@ class PCOMP(object):
         #self._cards.append(card)
         #self._comments.append(comment)
 
-    def get_thickness(self, property_id=None):
+    def get_thickness_by_property_id(self, property_id=None):
         props = self.get_properties(property_id)
         return array([prop.get_thickness() for prop in props])
 
-    def get_nonstructural_mass(self, property_id=None):
+    def get_nonstructural_mass_by_property_id(self, property_id=None):
         props = self.get_properties(property_id)
         d = array([prop.get_nonstructural_mass() for prop in props])
         return d
@@ -52,13 +52,13 @@ class PCOMP(object):
         #print('mids PCOMP = %s' % d)
         return d
 
-    def get_mass_per_area(self, property_id=None):
+    def get_mass_per_area_by_property_id(self, property_id=None):
         #massPerArea = self.nsm + self.Rho() * self.t
 
         props = self.get_properties(property_id)
         mids_all = unique(self.get_material_ids(property_id))
         mids_all.sort()
-        densities = self.model.materials.get_density_from_material_id(mids_all)
+        densities = self.model.materials.get_density_by_material_id(mids_all)
 
         #print('nprops =', len(props))
         mpa = zeros(len(props), dtype='float64')

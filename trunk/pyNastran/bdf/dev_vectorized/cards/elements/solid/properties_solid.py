@@ -62,13 +62,13 @@ class PropertiesSolid(object):
         self.plsolid.add(card, comment)
 
     #=========================================================================
-    def get_mid(self, property_id):
+    def get_material_id_by_property_id(self, property_id):
         types = self._get_types(nlimit=True)
         _material_ids = concatenate([ptype.material_id for ptype in types])
         #print _material_ids
         return _material_ids
 
-    #def get_mid(self, property_id):
+    #def get_material_id_by_property_id(self, property_id):
         #types = self._get_types(nlimit=True)
         #_material_ids = concatenate([ptype.material_id for ptype in types])
         #print _property_id

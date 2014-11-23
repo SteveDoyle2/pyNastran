@@ -1,0 +1,317 @@
+$EXECUTIVE CONTROL DECK
+$ NASTRAN input file created by the MSC MSC.Nastran input file
+$ translator ( MSC.Patran 13.1.116 ) on January   28, 2012 at 12:59:35.
+$ Direct Text Input for Nastran System Cell Section
+$ Direct Text Input for File Management Section
+$ Linear Static Analysis, Database
+SOL 101   $ stuff
+$ Direct Text Input for Executive Control
+CEND
+$CASE CONTROL DECK
+ECHO = NONE
+TITLE = MSC.Nastran job created on 28-Jan-12 at 12:52:32
+SUBCASE 1
+   DISPLACEMENT(SORT1,REAL)=ALL
+   LOAD = 2
+   SPC = 2
+   SPCFORCES(SORT1,REAL)=ALL
+   STRESS(SORT1,REAL,VONMISES,BILIN)=ALL
+   SUBTITLE=Default
+BEGIN BULK
+$PARAMS
+PARAM    POST    -1
+PARAM   PRTMAXIM YES
+$NODES
+GRID     1              .513061 1.49287 .811943
+GRID     2              .523257 .859242 .831558
+GRID     3              .511411 .490321 .480616
+GRID     4              .499951 1.45859 1.49985
+GRID     5              .486939 1.49287 2.18777
+GRID     6              .473466 .462498 2.52883
+GRID     7              .476743 .859339 2.16805
+GRID     8              .499951 .73106  1.49985
+GRID     9              1.      1.52546 .473247
+GRID     10             1.      .442442 .452206
+GRID     11             1.      .976036 .507736
+GRID     12             1.      .527678 2.50749
+GRID     13             1.      .731012 1.81262
+GRID     14             1.      .577233 1.02027
+GRID     15             1.      1.24412 2.48353
+GRID     16             1.      1.4585  1.83091
+GRID     17             1.      1.32147 1.12276
+GRID     18             1.      .666667  0.
+GRID     19             1.      1.33347  0.
+GRID     20             .499997 1.61112  0.
+GRID     21             .499997 .388851  0.
+GRID     22             .499993 1.       0.
+GRID     23             1.       0.      0.
+GRID     24              0.      0.      0.
+GRID     25             .5       0.      0.
+GRID     26              0.     2.       0.
+GRID     27              0.     1.33333  0.
+GRID     28              0.     .666533  0.
+GRID     29             1.      2.       0.
+GRID     30             .5      2.       0.
+GRID     31             1.       0.     3.
+GRID     32             1.       0.     .7497
+GRID     33             1.       0.     1.49985
+GRID     34             1.       0.     2.25
+GRID     35             1.      2.      3.
+GRID     36             1.      2.      .7497
+GRID     37             1.      2.      1.49985
+GRID     38             1.      2.      2.25
+GRID     39              0.     2.      3.
+GRID     40              0.     2.      .7497
+GRID     41              0.     2.      1.49985
+GRID     42              0.     2.      2.25
+GRID     43              0.      0.     3.
+GRID     44              0.      0.     .7497
+GRID     45              0.      0.     1.49985
+GRID     46              0.      0.     2.25
+GRID     47             1.      1.33333 3.
+GRID     48             1.      .666533 3.
+GRID     49             .500041 2.      .439023
+GRID     50             .500067 2.      1.86596
+GRID     51             .500036 2.      1.13427
+GRID     52             .500022 2.      2.56117
+GRID     53             .5      2.      3.
+GRID     54              0.     1.52556 2.52654
+GRID     55              0.     .976206 2.49198
+GRID     56              0.     .442556 2.54759
+GRID     57              0.     .527721 .492339
+GRID     58              0.     .731134 1.18705
+GRID     59              0.     .577382 1.97938
+GRID     60              0.     1.24417 .516304
+GRID     61              0.     1.4586  1.16876
+GRID     62              0.     1.32163 1.87691
+GRID     63              0.     .666667 3.
+GRID     64              0.     1.33347 3.
+GRID     65             .500004  0.     2.56076
+GRID     66             .500005  0.     1.13366
+GRID     67             .500025  0.     1.86547
+GRID     68             .500015  0.     .438689
+GRID     69             .5       0.     3.
+GRID     70             .500008 .388889 3.
+GRID     71             .500008 1.61116 3.
+GRID     72             .500015 1.00001 3.
+$ELEMENTS_WITH_PROPERTIES
+PSOLID   1       1       0
+CTETRA   1       1       8       13      67      33
+CTETRA   2       1       8       7       62      59
+CTETRA   3       1       8       45      58      66
+CTETRA   4       1       8       7       67      13
+CTETRA   5       1       8       58      45      59
+CTETRA   6       1       7       46      6       56
+CTETRA   7       1       7       5       15      16
+CTETRA   8       1       7       34      13      12
+CTETRA   9       1       15      12      48      7
+CTETRA   10      1       7       5       62      55
+CTETRA   11      1       67      34      13      7
+CTETRA   12      1       67      46      6       7
+CTETRA   13      1       8       66      67      45
+CTETRA   14      1       5       52      42      54
+CTETRA   15      1       7       4       16      13
+CTETRA   16      1       7       15      5       72
+CTETRA   17      1       5       4       50      16
+CTETRA   18      1       5       50      62      42
+CTETRA   19      1       3       2       22      60
+CTETRA   20      1       60      3       58      57
+CTETRA   21      1       3       68      57      28
+CTETRA   22      1       3       22      21      28
+CTETRA   23      1       7       55      6       72
+CTETRA   24      1       57      66      44      68
+CTETRA   25      1       68      66      32      10
+CTETRA   26      1       11      3       14      2
+CTETRA   27      1       3       68      21      18
+CTETRA   28      1       6       7       72      48
+CTETRA   29      1       6       65      12      48
+CTETRA   30      1       6       65      70      63
+CTETRA   31      1       6       12      65      34
+CTETRA   32      1       46      59      7       67
+CTETRA   33      1       65      70      48      6
+CTETRA   34      1       56      59      7       46
+CTETRA   35      1       4       1       51      17
+CTETRA   36      1       4       37      16      17
+CTETRA   37      1       4       13      17      16
+CTETRA   38      1       4       50      16      37
+CTETRA   39      1       4       50      51      41
+CTETRA   40      1       4       50      41      62
+CTETRA   41      1       2       1       11      22
+CTETRA   42      1       2       1       60      61
+CTETRA   43      1       2       1       17      11
+CTETRA   44      1       3       2       66      14
+CTETRA   45      1       8       58      2       66
+CTETRA   46      1       1       9       20      49
+CTETRA   47      1       1       36      9       49
+CTETRA   48      1       1       40      51      49
+CTETRA   49      1       1       40      49      60
+CTETRA   50      1       1       11      22      9
+CTETRA   51      1       1       17      9       36
+CTETRA   52      1       4       2       58      61
+CTETRA   53      1       16      50      38      37
+CTETRA   54      1       1       20      9       22
+CTETRA   55      1       8       58      59      62
+CTETRA   56      1       34      6       7       67
+CTETRA   57      1       8       13      33      14
+CTETRA   58      1       68      10      18      3
+CTETRA   59      1       14      3       10      66
+CTETRA   60      1       68      21      28      3
+CTETRA   61      1       23      10      18      68
+CTETRA   62      1       3       10      18      11
+CTETRA   63      1       24      21      28      68
+CTETRA   64      1       9       20      49      29
+CTETRA   65      1       11      22      19      18
+CTETRA   66      1       28      3       60      57
+CTETRA   67      1       22      20      27      60
+CTETRA   68      1       48      7       72      15
+CTETRA   69      1       4       51      1       61
+CTETRA   70      1       9       29      49      36
+CTETRA   71      1       20      60      49      26
+CTETRA   72      1       1       49      20      60
+CTETRA   73      1       5       38      50      52
+CTETRA   74      1       5       15      71      72
+CTETRA   75      1       4       2       61      1
+CTETRA   76      1       5       38      15      16
+CTETRA   77      1       15      38      52      35
+CTETRA   78      1       52      39      54      71
+CTETRA   79      1       5       52      15      38
+CTETRA   80      1       5       50      4       62
+CTETRA   81      1       4       41      51      61
+CTETRA   82      1       2       14      11      17
+CTETRA   83      1       8       7       4       62
+CTETRA   84      1       4       61      58      62
+CTETRA   85      1       31      70      48      65
+CTETRA   86      1       7       12      13      15
+CTETRA   87      1       50      42      41      62
+CTETRA   88      1       1       22      60      20
+CTETRA   89      1       20      30      26      49
+CTETRA   90      1       22      28      60      27
+CTETRA   91      1       49      40      26      60
+CTETRA   92      1       2       61      60      58
+CTETRA   93      1       4       61      62      41
+CTETRA   94      1       8       17      4       13
+CTETRA   95      1       1       49      51      36
+CTETRA   96      1       8       59      45      67
+CTETRA   97      1       3       66      2       58
+CTETRA   98      1       8       14      2       17
+CTETRA   99      1       10      32      68      23
+CTETRA   100     1       21      25      23      68
+CTETRA   101     1       66      3       10      68
+CTETRA   102     1       6       65      56      46
+CTETRA   103     1       7       13      16      15
+CTETRA   104     1       7       6       55      56
+CTETRA   105     1       6       72      55      63
+CTETRA   106     1       6       56      63      55
+CTETRA   107     1       8       66      14      33
+CTETRA   108     1       43      56      63      65
+CTETRA   109     1       8       4       2       58
+CTETRA   110     1       4       17      51      37
+CTETRA   111     1       55      54      64      72
+CTETRA   112     1       8       4       7       13
+CTETRA   113     1       6       46      67      65
+CTETRA   114     1       65      56      63      6
+CTETRA   115     1       13      33      34      67
+CTETRA   116     1       2       1       22      60
+CTETRA   117     1       15      52      71      35
+CTETRA   118     1       8       17      13      14
+CTETRA   119     1       7       5       16      4
+CTETRA   120     1       52      54      39      42
+CTETRA   121     1       5       42      62      54
+CTETRA   122     1       17      51      37      36
+CTETRA   123     1       1       60      61      40
+CTETRA   124     1       58      66      44      57
+CTETRA   125     1       3       2       11      22
+CTETRA   126     1       21      25      68      24
+CTETRA   127     1       28      68      57      24
+CTETRA   128     1       2       60      3       58
+CTETRA   129     1       5       71      52      54
+CTETRA   130     1       58      44      66      45
+CTETRA   131     1       59      45      67      46
+CTETRA   132     1       57      24      68      44
+CTETRA   133     1       66      3       57      58
+CTETRA   134     1       68      3       57      66
+CTETRA   135     1       7       55      62      59
+CTETRA   136     1       15      47      71      72
+CTETRA   137     1       5       54      72      71
+CTETRA   138     1       9       29      19      20
+CTETRA   139     1       22      28      3       60
+CTETRA   140     1       8       2       4       17
+CTETRA   141     1       12      6       7       34
+CTETRA   142     1       56      65      43      46
+CTETRA   143     1       7       56      55      59
+CTETRA   144     1       54      64      72      71
+CTETRA   145     1       8       67      7       59
+CTETRA   146     1       5       42      52      50
+CTETRA   147     1       7       5       4       62
+CTETRA   148     1       52      71      53      39
+CTETRA   149     1       15      47      35      71
+CTETRA   150     1       52      35      53      71
+CTETRA   151     1       5       15      52      71
+CTETRA   152     1       12      31      65      34
+CTETRA   153     1       6       67      34      65
+CTETRA   154     1       6       48      72      70
+CTETRA   155     1       9       20      19      22
+CTETRA   156     1       5       16      50      38
+CTETRA   157     1       15      48      47      72
+CTETRA   158     1       4       37      51      50
+CTETRA   159     1       65      70      43      69
+CTETRA   160     1       1       17      36      51
+CTETRA   161     1       5       72      54      55
+CTETRA   162     1       11      9       19      22
+CTETRA   163     1       1       17      11      9
+CTETRA   164     1       63      65      70      43
+CTETRA   165     1       20      26      27      60
+CTETRA   166     1       51      41      40      61
+CTETRA   167     1       3       18      21      22
+CTETRA   168     1       65      69      31      70
+CTETRA   169     1       10      66      32      14
+CTETRA   170     1       55      72      64      63
+CTETRA   171     1       8       66      2       14
+CTETRA   172     1       1       61      51      40
+CTETRA   173     1       48      65      12      31
+CTETRA   174     1       4       2       1       17
+CTETRA   175     1       14      33      66      32
+CTETRA   176     1       7       12      48      6
+CTETRA   177     1       7       72      5       55
+CTETRA   178     1       8       33      67      66
+CTETRA   179     1       6       63      70      72
+CTETRA   180     1       5       55      54      62
+CTETRA   181     1       20      29      30      49
+CTETRA   182     1       18      68      21      23
+CTETRA   183     1       10      11      3       14
+CTETRA   184     1       3       22      11      18
+CTETRA   185     1       54      39      64      71
+CTETRA   186     1       8       62      4       58
+$MATERIALS
+MAT1     1      3.+7            .3      1.              70.
+$LOADS
+FORCE    1       9       0      1000.   1.       0.      0.
+FORCE    1       10      0      1000.   1.       0.      0.
+FORCE    1       11      0      1000.   1.       0.      0.
+FORCE    1       12      0      1000.   1.       0.      0.
+FORCE    1       13      0      1000.   1.       0.      0.
+FORCE    1       14      0      1000.   1.       0.      0.
+FORCE    1       15      0      1000.   1.       0.      0.
+FORCE    1       16      0      1000.   1.       0.      0.
+FORCE    1       17      0      1000.   1.       0.      0.
+FORCE    1       18      0      1000.   1.       0.      0.
+FORCE    1       19      0      1000.   1.       0.      0.
+FORCE    1       23      0      1000.   1.       0.      0.
+FORCE    1       29      0      1000.   1.       0.      0.
+FORCE    1       31      0      1000.   1.       0.      0.
+FORCE    1       32      0      1000.   1.       0.      0.
+FORCE    1       33      0      1000.   1.       0.      0.
+FORCE    1       34      0      1000.   1.       0.      0.
+FORCE    1       35      0      1000.   1.       0.      0.
+FORCE    1       36      0      1000.   1.       0.      0.
+FORCE    1       37      0      1000.   1.       0.      0.
+FORCE    1       38      0      1000.   1.       0.      0.
+FORCE    1       47      0      1000.   1.       0.      0.
+FORCE    1       48      0      1000.   1.       0.      0.
+LOAD     2      1.      1.       1
+$SPCs
+SPC1     1       123456  31      35      39      43      47      48
+         53      63      64      69      70      71      72
+SPCADD   2       1       3
+SPC1     3       456     1       THRU    72
+ENDDATA 6a7d6a3b

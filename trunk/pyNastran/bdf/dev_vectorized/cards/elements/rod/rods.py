@@ -38,7 +38,7 @@ class ElementsRod(object):
     def build(self):
         self.crod.build(self._crod)
         self.conrod.build(self._conrod)
-        
+
         self._crod = []
         self._crod_comment = []
 
@@ -47,7 +47,7 @@ class ElementsRod(object):
 
         ncrod = len(self.crod.eid)
         nconrod = len(self.conrod.eid)
-        
+
         if npshell and npcomp:
             eid = concatenate(self.pshell.eid, self.pcomp.eid)
             unique_eids = unique(eid)
@@ -76,5 +76,5 @@ class ElementsRod(object):
 
     def write_bdf(self, f, size=8, eids=None):
         #f.write('$PROPERTIES\n')
-        self.crod.write_bdf(f, size=size, eids=eids)
-        self.conrod.write_bdf(f, size=size, eids=eids)
+        self.crod.write_bdf(f, size=size, eid=eid)
+        self.conrod.write_bdf(f, size=size, eid=eid)

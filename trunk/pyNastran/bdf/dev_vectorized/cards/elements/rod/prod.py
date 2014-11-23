@@ -25,8 +25,10 @@ class PROD(Property):
         Property.__init__(self, model)
 
     def allocate(self, ncards):
+        self.n = ncards
         #print('%s ncards=%s' % (self.type, ncards))
         float_fmt = self.model.float
+        #: Property ID
         self.property_id = zeros(ncards, 'int32')
         self.material_id = zeros(ncards, 'int32')
         self.A = zeros(ncards, float_fmt)
@@ -34,33 +36,23 @@ class PROD(Property):
         self.c = zeros(ncards, float_fmt)
         self.nsm = zeros(ncards, float_fmt)
 
+    def add(self, card, comment):
+        i = self.i
+        self.property_id[i] = integer(card, 1, 'property_id')
+        self.material_id[i] = integer(card, 2, 'material_id')
+        self.A[i] = double(card, 3, 'A')
+        self.J[i] = double_or_blank(card, 4, 'J', 0.0)
+        self.c[i] = double_or_blank(card, 5, 'c', 0.0)
+        self.nsm[i] = double_or_blank(card, 6, 'nsm', 0.0)
+        assert len(card) <= 7, 'len(PROD card) = %i' % len(card)
+        self.i += 1
+
     def build(self):
         """
         :param self: the PROD object
         :param cards: the list of PROD cards
         """
-        cards = self._cards
-        ncards = len(cards)
-        self.n = ncards
-        if ncards:
-            float_fmt = self.model.float
-            #: Property ID
-            self.property_id = zeros(ncards, 'int32')
-            self.material_id = zeros(ncards, 'int32')
-            self.A = zeros(ncards, float_fmt)
-            self.J = zeros(ncards, float_fmt)
-            self.c = zeros(ncards, float_fmt)
-            self.nsm = zeros(ncards, float_fmt)
-
-            for i, card in enumerate(cards):
-                self.property_id[i] = integer(card, 1, 'property_id')
-                self.material_id[i] = integer(card, 2, 'material_id')
-                self.A[i] = double(card, 3, 'A')
-                self.J[i] = double_or_blank(card, 4, 'J', 0.0)
-                self.c[i] = double_or_blank(card, 5, 'c', 0.0)
-                self.nsm[i] = double_or_blank(card, 6, 'nsm', 0.0)
-                assert len(card) <= 7, 'len(PROD card) = %i' % len(card)
-
+        if self.n:
             i = self.property_id.argsort()
             self.property_id = self.property_id[i]
             self.material_id = self.material_id[i]
@@ -77,52 +69,53 @@ class PROD(Property):
         else:
             self.property_id = array([], dtype='int32')
 
-    def get_mass_per_length_by_proprety_id(self, property_id=None):
+
+    def get_mass_per_length_by_property_id(self, property_id=None):
         # L * (A * rho + nsm)
         if property_id is None:
             i = arange(self.n)
         else:
-            i = self.get_property_index_from_property_id(property_id)
+            i = self.get_index(property_id)
         A = self.A[i]
         mid = self.material_id[i]
         #mat = self.model.materials.get_material(mid)
-        rho = self.model.materials.get_density(mid)
+        rho = self.model.materials.get_density_by_material_id(mid)
         nsm = self.nsm[i]
         return A * rho + nsm
 
     def get_Area_by_property_id(self, property_id):
-        i = self.get_property_index_from_property_id(property_id)
+        i = self.get_index(property_id)
         A = self.A[i]
         return A
 
     def get_non_structural_mass_by_property_id(self, property_id):
-        i = self.get_property_index_from_property_id(property_id)
+        i = self.get_index(property_id)
         nsm = self.nsm[i]
         return nsm
 
-    def get_E_by_property_id(self, property_id):
-        i = self.get_property_index_from_property_id(property_id)
+    def get_E(self, property_id):
+        i = self.get_index(property_id)
         material_id = self.material_id[i]
-        E = self.model.materials.get_E(material_id)
+        E = self.model.materials.get_E_by_material_id(material_id)
         return E
 
     def get_G_by_property_id(self, property_id):
-        i = self.get_property_index_from_property_id(property_id)
+        i = self.get_index(property_id)
         material_id = self.material_id[i]
-        G = self.model.materials.get_G(material_id)
+        G = self.model.materials.get_G_by_material_id(material_id)
         return G
 
     def get_J_by_property_id(self, property_id):
-        i = self.get_property_index_from_property_id(property_id)
+        i = self.get_index(property_id)
         J = self.J[i]
         return J
 
-    def get_c(self, property_id):
-        i = self.get_property_index_from_property_id(property_id)
+    def get_c_by_property_id(self, property_id):
+        i = self.get_index(property_id)
         c = self.c[i]
         return c
 
-    def get_property_index_from_property_id(self, property_id):
+    def get_index(self, property_id):
         if isinstance(property_id, int):
             property_id = array([property_id])
         if property_id is None:
