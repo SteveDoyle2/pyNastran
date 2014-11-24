@@ -1,7 +1,8 @@
 from six.moves import zip, StringIO
 from numpy import array, zeros, arange, concatenate, searchsorted, where, unique
 
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 
@@ -23,7 +24,7 @@ class CSHEAR(Element):
         self.t_flag = zeros(ncards, 'int32')
         self.thickness = zeros((ncards, 4), self.model.float)
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         i = self.i
         self.element_id[i] = integer(card, 1, 'eid')
 
@@ -48,17 +49,20 @@ class CSHEAR(Element):
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
 
-    def write_bdf(self, f, size=8, eids=None):
+    def write_bdf(self, f, size=8, element_id=None):
         if self.n:
-            if eids is None:
+            if element_id is None:
                 i = arange(self.n)
             else:
-                assert len(unique(eids))==len(eids), unique(eids)
-                i = searchsorted(self.element_id, eids)
+                assert len(unique(element_id))==len(element_id), unique(element_id)
+                i = searchsorted(self.element_id, element_id)
 
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 card = ['CSHEAR', eid, pid, n[0], n[1], n[2], n[3]]
-                f.write(print_card(card, size=size))
+                if size == 8:
+                    f.write(print_card_8(card))
+                else:
+                    f.write(print_card_16(card))
 
 
     def _verify(self, xref=True):

@@ -2,7 +2,8 @@ from six.moves import zip, StringIO
 
 from numpy import zeros, array, arange, unique, searchsorted, where
 
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, double_or_blank)
 
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
@@ -21,7 +22,7 @@ class CONM1(VectorizedCard):
         m = zeros((ncards, 6, 6), float_fmt)
         self.mass_matrix = m
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         i = self.i
         self.element_id[i] = integer(card, 1, 'eid')
         self.node_id[i] = integer(card, 2, 'nid')
@@ -88,4 +89,7 @@ class CONM1(VectorizedCard):
                               m[2, 0], m[2, 1], m[2, 2], m[3, 0], m[3, 1], m[3, 2],
                               m[3, 3], m[4, 0], m[4, 1], m[4, 2], m[4, 3], m[4, 4],
                               m[5, 0], m[5, 1], m[5, 2], m[5, 3], m[5, 4], m[5, 5]]
-                    f.write(print_card(card, size=size))
+                    if size == 8:
+                        f.write(print_card_8(card))
+                    else:
+                        f.write(print_card_16(card))

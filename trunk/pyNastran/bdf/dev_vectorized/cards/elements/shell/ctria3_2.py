@@ -215,7 +215,7 @@ class CTRIA3s(object): # TriShell
             T2 = set_blank_if_default(T2, 1.0)
             T3 = set_blank_if_default(T3, 1.0)
 
-            fields = (['CTRIA3', eid, pid] + self.nodeIDs(eid) +
-                      [thetaMcid, zOffset, None] + [None, TFlag, T1, T2, T3])
-            msg.append(print_card(fields))
+            card = (['CTRIA3', eid, pid] + self.nodeIDs(eid) +
+                    [thetaMcid, zOffset, None] + [None, TFlag, T1, T2, T3])
+            msg.append(print_card(card))
         return ''.join(msg)

@@ -21,7 +21,7 @@ class POINT(object):
         self._cards = []
         self._comments = []
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         self._cards.append(card)
         self._comments.append(comment)
 
@@ -83,7 +83,10 @@ class POINT(object):
             Cp   = [cpi   if cpi   != cp0   else '' for cpi   in self.cp]
             for (nid, cp, xyz) in zip(self.nid, Cp, self.xyz):
                 card = ['POINT', nid, cp, xyz[0], xyz[1], xyz[2]]
-                f.write(print_card(card, size))
+                if size == 8:
+                    f.write(print_card_8(card))
+                else:
+                    f.write(print_card_16(card))
 
     def __repr__(self):
         msg = "<POINT>\n"

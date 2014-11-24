@@ -1,10 +1,17 @@
 from six.moves import zip
-from numpy import zeros, arange, where, searchsorted, argsort, unique, asarray, array, dot, transpose, append, array_equal
+from numpy import (zeros, arange, where, searchsorted, argsort, unique,
+                   asarray, array, dot, transpose, append, array_equal, isnan)
 
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
-from pyNastran.bdf.fieldWriter import print_card
+
+from pyNastran.bdf.fieldWriter import print_card_8, print_float_8, print_int_card
+from pyNastran.bdf.fieldWriter16 import print_float_16, print_card_16
+from pyNastran.bdf.field_writer_double import print_scientific_double, print_card_double
+
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, blank, integer_or_string)
+from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
+
 
 
 class Nodes(object):
@@ -20,12 +27,13 @@ class Nodes(object):
         self.grid.build()
         self.point.build()
 
-    def write_bdf(self, f, size=8, nids=None):
-        f.write('$NODES\n')
-        self.spoint.write_bdf(f, size, nids)
-        self.grdset.write_bdf(f, size, nids)
-        self.grid.write_bdf(f, size, nids)
-        self.point.write_bdf(f, size, nids)
+    def write_bdf(self, f, node_id=None, size=8, is_double=False, write_header=True):
+        if write_header:
+            f.write('$NODES\n')
+        self.spoint.write_bdf(f, node_id, size, is_double, write_header)
+        self.grdset.write_bdf(f, size, size, is_double, write_header)
+        self.grid.write_bdf(f, size, size, is_double, write_header)
+        self.point.write_bdf(f, size, size, is_double, write_header)
 
     def ndofs(self, sol):
         if self.model.sol in [101, 103, 144, 145]:
@@ -73,7 +81,7 @@ class GRDSET(object):
         #: Superelement ID
         self.seid = 0
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         self._comment = comment
         self.n = 1
         self.cp = integer_or_blank(card, 2, 'cp', 0)
@@ -84,9 +92,11 @@ class GRDSET(object):
     def write_bdf(self, f, size=8, is_double=False):
         if self.n:
             card = ['GRDSET', None, self.cp, None, None, None, self.cd, self.seid]
-            f.write(print_card(card, size))
+            if size == 8:
+                f.write(print_card_8(card))
+            else:
+                f.write(print_card_16(card))
 
-from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 
 class GRID(VectorizedCard):
     type = 'GRID'
@@ -105,10 +115,28 @@ class GRID(VectorizedCard):
         """
         VectorizedCard.__init__(self, model)
 
-    def ressize(se3f):
-        pass
+    def shrink(self, refcheck=True):
+        i = where(self.node_id==0)[0]
+        self.resize(i[0], refcheck=refcheck)
 
-    def add(self, card, comment):
+    def allocate(self, card_count):
+        if 'GRID' in card_count:
+            ncards = card_count['GRID']
+            self.n = ncards
+            float_fmt = self.model.float
+            self.node_id = zeros(ncards, 'int32')
+            self.xyz = zeros((ncards, 3), float_fmt)
+            self.cp = zeros(ncards, 'int32')
+            self.cd = zeros(ncards, 'int32')
+            self.seid = zeros(ncards, 'int32')
+            self.ps = zeros(ncards, 'int32')
+
+    #def size_check(f, *args, **kwargs):
+        #print('size_check', f.__name__)
+        #return f(*args, **kwargs)
+
+    #@size_check
+    def add(self, card, comment=''):
         cp0 = self.model.grdset.cp
         cd0 = self.model.grdset.cd
         ps0 = self.model.grdset.ps
@@ -137,16 +165,6 @@ class GRID(VectorizedCard):
         self.seid[i] = integer_or_blank(card, 8, 'seid', seid0)
         self.i += 1
 
-    def allocate(self, card_count):
-        ncards = card_count['GRID']
-        float_fmt = self.model.float
-        self.node_id = zeros(ncards, 'int32')
-        self.xyz = zeros((ncards, 3), float_fmt)
-        self.cp = zeros(ncards, 'int32')
-        self.cd = zeros(ncards, 'int32')
-        self.seid = zeros(ncards, 'int32')
-        self.ps = zeros(ncards, 'int32')
-
     def build(self):
         if self.n:
             self.model.log.debug('--------building grid--------')
@@ -158,14 +176,14 @@ class GRID(VectorizedCard):
             self.ps = self.ps[i]
             self.seid = self.seid[i]
 
-    #def get_index_by_node_id(self, node_id, msg=''):
+    #def get_node_index_by_node_id(self, node_id, msg=''):
         #return searchsorted(node_id, self.node_id)
         #i_too_large = where(self.node_id[-1] < node_id)[0]
         #if len(i_too_large):
             #raise RuntimeError('Cannot find GRID %s, %s' % (node_id[i_too_large], msg))
         #return self._get_sorted_index(self.node_id, node_id, self.n, 'node_id in GRID', check=True)
 
-    def get_index_by_node_id(self, node_id=None, msg=''):
+    def get_node_index_by_node_id(self, node_id=None, msg=''):
         #assert msg != ''
         i = self._get_sorted_index(self.node_id, node_id, self.n, 'node_id', 'node_id in GRID%s' % msg, check=True)
         return i
@@ -213,7 +231,7 @@ class GRID(VectorizedCard):
         return out_index
 
     def get_position_by_node_id(self, node_id=None, msg=''):
-        i = self.get_index_by_node_id(node_id, msg=msg)
+        i = self.get_node_index_by_node_id(node_id, msg=msg)
         return self.get_position_by_index(i)
 
     def get_position_by_index(self, i=None):
@@ -266,13 +284,13 @@ class GRID(VectorizedCard):
             msg.append('  %-8s: %i' % ('GRID', self.n))
         return msg
 
-    def write_bdf(self, f, node_id=None, size=8, is_double=False):
-        self.model.log.debug('GRID node_id = %s' % node_id)
-        self.model.log.debug('GRID self.node_id = %s' % self.node_id)
-        i = self.get_index_by_node_id(node_id, 'GRID.write_bdf')
-        return self.write_bdf_by_index(f, i, size, is_double)
+    def write_bdf(self, f, node_id=None, size=8, is_double=False, write_header=True):
+        #self.model.log.debug('GRID node_id = %s' % node_id)
+        #self.model.log.debug('GRID self.node_id = %s' % self.node_id)
+        i = self.get_node_index_by_node_id(node_id, 'GRID.write_bdf')
+        return self.write_bdf_by_index(f, i, size, is_double, write_header)
 
-    def write_bdf_by_index(self, f, i=None, size=8, is_double=False):
+    def write_bdf_by_index(self, f, i=None, size=8, is_double=False, write_header=True):
         """
         Write the BDF cards
 
@@ -280,11 +298,15 @@ class GRID(VectorizedCard):
         :param i: the indicies (default=None -> all)
         :param size: the field width (8/16)
         :param is_double: is this double precision (default=False)
+        :param write_header: should the card marker be written
         """
         if i is None:
             i = slice(None, None)
         if self.n:
-            f.write('$GRID\n')
+            if write_header:
+                f.write('$GRID\n')
+            #self.model.log.debug('GRID i = %s' % i)
+
             # default to the GRDSET defaults
             #cp0 = self.model.grdset.cp
             #cd0 = self.model.grdset.cd
@@ -297,14 +319,43 @@ class GRID(VectorizedCard):
             ps0 = -1
             seid0 = 0
             blank = ' '*8 if size==8 else ' ' * 16
-            self.model.log.debug('GRID i = %s' % i)
             Cp   = [cpi if cpi != cp0 else blank for cpi in self.cp[i]]
             Cd   = [cdi if cdi != cd0 else blank for cdi in self.cd[i]]
             Ps   = [psi if psi != ps0 else blank for psi in self.ps[i]]
             Seid = [seidi if seidi != seid0 else blank for seidi in self.seid[i]]
-            for (nid, cp, xyz, cd, ps, seid) in zip(self.node_id, Cp, self.xyz[i, :], Cd, Ps, Seid):
-                card = ['GRID', nid, cp, xyz[0], xyz[1], xyz[2], cd, ps, seid]
-                f.write(print_card(card, size))
+            if size == 8:
+                for (nid, cp, xyz, cd, ps, seid) in zip(self.node_id, Cp, self.xyz[i, :], Cd, Ps, Seid):
+                    msg = ('%-8s%8i%8s%s%s%s%s%8s%s\n' % ('GRID', nid, cp,
+                            print_float_8(xyz[0]),
+                            print_float_8(xyz[1]),
+                            print_float_8(xyz[2]),
+                            cd, ps, seid)).rstrip() + '\n'
+                    f.write(msg)
+            else:
+                if is_double:
+                    for (nid, cp, xyz, cd, ps, seid) in zip(self.node_id, Cp, self.xyz[i, :], Cd, Ps, Seid):
+                        msg = (('%-8s%16i%16s%16s%16s\n'
+                               '%-8s%16s%16s%16s%16s\n' % ('GRID*', nid,
+                                cp,
+                                print_scientific_double(xyz[0]),
+                                print_scientific_double(xyz[1]),
+                                '*',
+                                print_scientific_double(xyz[2]),
+                                cd, ps, seid))).rstrip() + '\n'
+                        f.write(msg)
+                else:
+                    for (nid, cp, xyz, cd, ps, seid) in zip(self.node_id, Cp, self.xyz[i, :], Cd, Ps, Seid):
+                        msg = (('%-8s%16i%16s%16s%16s\n'
+                               '%-8s%16s%16s%16s%16s\n' % ('GRID*', nid,
+                                cp,
+                                print_float_16(xyz[0]),
+                                print_float_16(xyz[1]),
+                                '*',
+                                print_float_16(xyz[2]),
+                                cd, ps, seid))).rstrip() + '\n'
+                        f.write(msg)
+            #return self.comment() + msg.rstrip() + '\n'
+
 
     def __repr__(self):
         msg = "<GRID>\n"

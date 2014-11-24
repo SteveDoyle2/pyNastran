@@ -3,10 +3,11 @@ from six.moves import zip, StringIO
 from numpy import array, dot, arange, zeros, unique, searchsorted
 from numpy.linalg import norm
 
-from pyNastran.bdf.fieldWriter import print_card, print_float_8
+from pyNastran.bdf.fieldWriter import print_card_8, print_float_8
+from pyNastran.bdf.fieldWriter16 import print_card_16, print_float_16
+
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
-from pyNastran.bdf.fieldWriter16 import print_float_16
 
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 
@@ -34,7 +35,7 @@ class CONM2(VectorizedCard):
         self.x = zeros((ncards, 3), float_fmt)
         self.I = zeros((ncards, 6), float_fmt)
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         i = self.i
         self.element_id[i] = integer(card, 1, 'element_id')
         self.node_id[i] = integer(card, 2, 'node_id')

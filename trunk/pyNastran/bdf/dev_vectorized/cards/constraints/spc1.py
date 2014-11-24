@@ -5,7 +5,8 @@ from itertools import count
 
 from numpy import array
 
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.cards.baseCard import expand_thru
 from pyNastran.bdf.dev_vectorized.bdf_interface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, components, components_or_blank)
@@ -58,7 +59,10 @@ class SPC1(object):
     def write_bdf(self, f, size=8):
         for comp, nodes in iteritems(self.components):
             card = ['SPC1', self.constraint_id, comp] + list(nodes)
-            f.write(print_card(card))
+            if size == 8:
+                f.write(print_card_8(card))
+            else:
+                f.write(print_card_16(card))
 
     def __repr__(self):
         f = StringIO()

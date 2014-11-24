@@ -33,7 +33,7 @@ class PSOLID(Property):
         self.isop = zeros(ncards, dtype='|S8')
         self.fctn = zeros(ncards, dtype='|S8')
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         i = self.i
         self.property_id[i] = integer(card, 1, 'pid')
         self.material_id[i] = integer(card, 2, 'mid')

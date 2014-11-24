@@ -311,7 +311,10 @@ class GRIDs(object):
             comment = self.comment(nid)
 
             fields = ['GRID', nid, cp, x, y, z, cd, ps, seid]
-            msg.append(print_card(fields, size=size))
+            if size == 8:
+                f.write(print_card_8(card))
+            else:
+                f.write(print_card_16(card))
 
             if file_exists and i % 1000 == 0:  # reduce memory usage
                 f.write(''.join(msg))

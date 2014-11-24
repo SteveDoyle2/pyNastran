@@ -1,4 +1,5 @@
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, string_or_blank)
 
@@ -93,4 +94,7 @@ class NLPARM(object):
 
     def write_bdf(self, f, size=8):
         card = self.raw_fields()
-        f.write(print_card(card, size=size))
+        if size == 8:
+            f.write(print_card_8(card))
+        else:
+            f.write(print_card_16(card))

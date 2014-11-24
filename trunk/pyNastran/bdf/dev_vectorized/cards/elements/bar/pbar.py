@@ -20,7 +20,7 @@ class PBAR(Property):
         """
         Property.__init__(self, model)
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         self._cards.append(card)
         self._comments.append(comment)
 
@@ -42,7 +42,7 @@ class PBAR(Property):
         self.J = zeros(ncards, 'float64')
         self.nsm = zeros(ncards, 'float64')
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         i = self.i
         self.property_id[i] = integer(card, 1, 'property_id')
         self.material_id[i] = integer(card, 2, 'material_id')

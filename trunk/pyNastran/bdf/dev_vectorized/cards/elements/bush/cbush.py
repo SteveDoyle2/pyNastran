@@ -2,7 +2,8 @@ from six.moves import zip
 from numpy import array, dot, arange, zeros, unique, searchsorted, full, nan, asarray, isnan
 from numpy.linalg import norm
 
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, string_or_blank, blank)
@@ -62,7 +63,7 @@ class CBUSH(Element):
         self.ocid = full(ncards, nan, 'int32')
         self.si = full((ncards, 3), nan, float_fmt)
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         i = self.i
         eid = integer(card, 1, 'element_id')
         self.element_id[i] = eid
@@ -178,7 +179,10 @@ class CBUSH(Element):
                 s = set_blank_if_default(s, 0.5)
                 card = ['CBUSH', eid, pid, n[0], n[1], x1, x2, x3,
                         cid, s, ocid, si1, si2, si3 ]
-                f.write(print_card(card))
+                if size == 8:
+                    f.write(print_card_8(card))
+                else:
+                    f.write(print_card_16(card))
 
     def slice_by_index(self, i):
         i = asarray(i)

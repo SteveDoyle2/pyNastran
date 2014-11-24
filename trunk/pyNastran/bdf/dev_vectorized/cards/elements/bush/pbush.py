@@ -29,7 +29,7 @@ class PBUSH(object):
         #self._cards = []
         #self._comments = []
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         prop = vPBUSH(card, comment=comment)
         self.properties[prop.pid] = prop
         #self._cards.append(card)

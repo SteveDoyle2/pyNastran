@@ -3,7 +3,8 @@ from six.moves import zip
 from numpy import arange, zeros, searchsorted, unique
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, string_or_blank)
 
@@ -48,7 +49,7 @@ class PLOADX1(object):
     def __rmul__(self, value):
         return self.__mul__(value)
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         self._cards.append(card)
         self._comments.append(comment)
 
@@ -117,4 +118,7 @@ class PLOADX1(object):
             for (lid, eid, p, n, theta) in zip(self.load_id[i],
                     self.element_id[i], self.p[i], self.node_ids[i], self.theta[i]):
                 card = ['PLOADX1', lid, eid, p[0], p[1], n[0], n[1], theta]
-                f.write(print_card(card))
+                if size == 8:
+                    f.write(print_card_8(card))
+                else:
+                    f.write(print_card_16(card))

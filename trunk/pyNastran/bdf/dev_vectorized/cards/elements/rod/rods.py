@@ -1,6 +1,5 @@
 from numpy import array, zeros, argsort, concatenate, searchsorted, unique, where, nan, arange
 
-from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, double,
     double_or_blank, string_or_blank)
 
@@ -23,27 +22,12 @@ class ElementsRod(object):
         aaa
         self.model = model
 
-        #: the list of CROD cards
-        self._crod = []
-
-        #: the list of CONROD cards
-        self._conrod = []
-
-        self._crod_comment = []
-        self._conrod_comment = []
-
         self.crod = CROD(self.model)
         self.conrod = CONROD(self.model)
 
     def build(self):
         self.crod.build(self._crod)
         self.conrod.build(self._conrod)
-
-        self._crod = []
-        self._crod_comment = []
-
-        self._conrod = []
-        self._conrod_comment = []
 
         ncrod = len(self.crod.eid)
         nconrod = len(self.conrod.eid)
@@ -58,12 +42,10 @@ class ElementsRod(object):
         raise NotImplementedError()
 
     def add_conrod(self, card, comment):
-        self._conrod.append(card)
-        self._conrod_comment.append(comment)
+        self.conrod.add(card, comment)
 
     def add_crod(self, card, comment):
-        self._crod.append(card)
-        self._crod_comment.append(comment)
+        self.crod.add(card, comment)
 
     def get_stats(self):
         msg = []

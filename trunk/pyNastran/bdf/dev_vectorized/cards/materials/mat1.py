@@ -46,7 +46,7 @@ class Material(VectorizedCard):
     def __len__(self):
         return self.n
 
-    def get_index_by_material_id(self, material_id):
+    def get_material_index_by_material_id(self, material_id):
         i = searchsorted(material_id, self.material_id)
         return i
 
@@ -67,10 +67,6 @@ class MAT1(Material):
     def __init__(self, model):
         Material.__init__(self, model)
 
-    #def add(self, card, comment):
-        #self._cards.append(card)
-        #self._comments.append(comment)
-
     def allocate(self, ncards):
         float_fmt = self.model.float
         self.material_id = zeros(ncards, 'int32')
@@ -87,7 +83,7 @@ class MAT1(Material):
         self.mcsid = zeros(ncards, 'int32')
         self.n = ncards
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         i = self.i
         #if comment:
         #    self._comment = comment
@@ -150,7 +146,7 @@ class MAT1(Material):
         return self.rho[i]
 
     def get_density_by_material_id(self, material_id):
-        i = self.get_index_by_material_id(material_id)
+        i = self.get_material_index_by_material_id(material_id)
         return self.get_density_by_index(i)
 
     def write_bdf(self, f, size=8, material_id=None):

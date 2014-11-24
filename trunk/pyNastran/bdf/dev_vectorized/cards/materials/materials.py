@@ -160,10 +160,10 @@ class Materials(object):
         assert G.shape == (n, ), G.shape
         return G
 
-    #def get_index_by_material_id(self, property_ids):
-        #if property_ids is None:
+    #def get_material_index_by_material_id(self, property_id):
+        #if property_id is None:
             #return arange(self.n)
-        #return searchsorted(property_ids, self.property_id)
+        #return searchsorted(property_id, self.property_id)
 
     def get_structural_material(self, material_id):
         if material_id in self.mat1:

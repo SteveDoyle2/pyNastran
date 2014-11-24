@@ -3,7 +3,8 @@ from six.moves import zip
 from numpy import zeros, searchsorted, unique
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, string_or_blank)
 
@@ -70,7 +71,7 @@ class RFORCE(object):
         self.mb = zeros(ncards, 'int32')
         self.idrf = zeros(ncards, 'int32')
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         self._cards.append(card)
         self._comments.append(comment)
 
@@ -138,6 +139,9 @@ class RFORCE(object):
                 scale_acc = set_blank_if_default(scale_acc, 0.)
                 mb = set_blank_if_default(mb, 0)
                 idrf = set_blank_if_default(idrf, 0)
-                list_fields = ['RFORCE', lid, nid, cid, scale_vel,
-                          r[0], r[1], r[2], method, scale_acc, mb, idrf]
-                f.write(print_card(card))
+                card = ['RFORCE', lid, nid, cid, scale_vel,
+                        r[0], r[1], r[2], method, scale_acc, mb, idrf]
+                if size == 8:
+                    f.write(print_card_8(card))
+                else:
+                    f.write(print_card_16(card))

@@ -5,7 +5,8 @@ from numpy.linalg import norm
 from pyNastran.bdf.dev_vectorized.cards.elements.rod.conrod import _Lambda
 from pyNastran.utils.dev import list_print
 
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 
@@ -31,7 +32,7 @@ class CROD(RodElement):
         #: Node IDs
         self.node_ids = zeros((ncards, 2), 'int32')
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         i = self.i
         eid = integer(card, 1, 'element_id')
         #if comment:
@@ -89,8 +90,8 @@ class CROD(RodElement):
     def _node_locations(self, xyz_cid0):
         if xyz_cid0 is None:
             xyz_cid0 = self.model.grid.get_position_by_index()
-        n1 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 0]), :]
-        n2 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 1]), :]
+        n1 = xyz_cid0[self.model.grid.get_node_index_by_node_id(self.node_ids[:, 0]), :]
+        n2 = xyz_cid0[self.model.grid.get_node_index_by_node_id(self.node_ids[:, 1]), :]
         return n1, n2
 
     def get_mass_by_element_id(self, element_ids=None, xyz_cid0=None, total=False):
@@ -190,7 +191,10 @@ class CROD(RodElement):
 
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 card = ['CROD', eid, pid, n[0], n[1] ]
-                f.write(print_card(card))
+                if size == 8:
+                    f.write(print_card_8(card))
+                else:
+                    f.write(print_card_16(card))
 
     #=========================================================================
     def get_stiffness_matrix(self, i, model, positions, index0s, knorm=1.0):

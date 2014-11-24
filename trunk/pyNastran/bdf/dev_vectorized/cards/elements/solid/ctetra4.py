@@ -32,7 +32,7 @@ class CTETRA4(SolidElement):
         """
         SolidElement.__init__(self, model)
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         i = self.i
 
         #comment = self._comments[i]
@@ -263,14 +263,14 @@ class CTETRA4(SolidElement):
         :param xyz_cid0: the node positions as a dictionary
         """
         grid = self.model.grid
-        get_index_by_node_id = self.model.grid.get_index_by_node_id
+        get_node_index_by_node_id = self.model.grid.get_node_index_by_node_id
         node_ids = self.node_ids
 
         msg = ', which is required by %s' % self.type
-        n1 = xyz_cid0[get_index_by_node_id(node_ids[i, 0], msg), :]
-        n2 = xyz_cid0[get_index_by_node_id(node_ids[i, 1], msg), :]
-        n3 = xyz_cid0[get_index_by_node_id(node_ids[i, 2], msg), :]
-        n4 = xyz_cid0[get_index_by_node_id(node_ids[i, 3], msg), :]
+        n1 = xyz_cid0[get_node_index_by_node_id(node_ids[i, 0], msg), :]
+        n2 = xyz_cid0[get_node_index_by_node_id(node_ids[i, 1], msg), :]
+        n3 = xyz_cid0[get_node_index_by_node_id(node_ids[i, 2], msg), :]
+        n4 = xyz_cid0[get_node_index_by_node_id(node_ids[i, 3], msg), :]
         return n1, n2, n3, n4
 
     def get_volume_by_element_id(self, element_id=None, xyz_cid0=None, total=False):

@@ -1,7 +1,8 @@
 from six.moves import zip
 from numpy import zeros
 
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, blank, integer_or_string)
 
@@ -30,7 +31,7 @@ class TEMPD(object):
         #: Default temperature
         self.temperature_default = []
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         self._comment = comment
         self.n += 1
 
@@ -51,7 +52,10 @@ class TEMPD(object):
             n = 0
             for lid, t in zip(self.load_id, self.temperature_default):
                 card = ['TEMPD', lid, t]
-                f.write(print_card(card, size))
+                if size == 8:
+                    f.write(print_card_8(card))
+                else:
+                    f.write(print_card_16(card))
 
 
 class TEMP(object):
@@ -72,7 +76,7 @@ class TEMP(object):
         self.model = model
         self._comments = []
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         self.load_id = integer(card, 1, 'load_id')
 
         self._comments.append(comment)
@@ -150,8 +154,11 @@ class TEMP(object):
             Ps   = [psi   if psi   != ps0   else '' for psi   in self.ps]
             Seid = [seidi if seidi != seid0 else '' for seidi in self.seid]
             for (nid, cp, xyz, cd, ps, seid) in zip(self.nid, Cp, self.xyz, Cd, Ps, Seid):
-                card = ['GRID', nid, cp, xyz[0], xyz[1], xyz[2], cd, ps, seid]
-                f.write(print_card(card, size))
+                card = ['TEMP', nid, cp, xyz[0], xyz[1], xyz[2], cd, ps, seid]
+                if size == 8:
+                    f.write(print_card_8(card))
+                else:
+                    f.write(print_card_16(card))
 
     def __repr__(self):
         msg = "<GRID>\n"

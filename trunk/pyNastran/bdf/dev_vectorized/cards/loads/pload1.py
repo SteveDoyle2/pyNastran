@@ -2,7 +2,8 @@ from six.moves import zip
 from numpy import arange, array, zeros, searchsorted, unique
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, string, string_or_blank)
 
@@ -120,5 +121,7 @@ class PLOAD1(object):
             for (load_id, element_id, Type, scale, x1, p1, x2, p2) in zip(self.load_id[i], self.element_id[i],
                     self.Type[i], self.scale[i], self.x1[i], self.p1[i], self.x2[i], self.p2[i]):
                 card = ['PLOAD1', load_id, element_id, Type, scale, x1, p1, x2, p2 ]
-                f.write(print_card(card))
-
+                if size == 8:
+                    f.write(print_card_8(card))
+                else:
+                    f.write(print_card_16(card))

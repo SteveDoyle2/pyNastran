@@ -37,7 +37,7 @@ class CPENTA6(SolidElement):
         """
         SolidElement.__init__(self, model)
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         i = self.i
         #comment = self._comments[i]
         eid = integer(card, 1, 'element_id')

@@ -65,7 +65,7 @@ class PBEAM(object):
     def allocate(self, ncards):
         pass
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         prop = vPBEAM(card, comment=comment)
         self.properties[prop.pid] = prop
 

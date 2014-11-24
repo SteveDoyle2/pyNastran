@@ -46,7 +46,7 @@ class PSHELL(Property):
         self.z2 = zeros(ncards, float_fmt)
         self.material_id4 = zeros(ncards, 'int32')
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         i = self.i
         self.property_id[i] = integer(card, 1, 'property_id')
         self.material_id[i] = integer(card, 2, 'material_id')
