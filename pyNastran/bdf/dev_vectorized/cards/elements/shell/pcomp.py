@@ -1,6 +1,7 @@
 from six import iteritems
 from six.moves import StringIO
-from numpy import array, zeros, arange, searchsorted, where, unique, hstack, concatenate
+from numpy import (array, zeros, arange, searchsorted, where, unique,
+                   hstack, concatenate, full, nan)
 
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 
@@ -28,6 +29,8 @@ class PCOMP(object):
         """
         self.model = model
         self.properties = {}
+        self.n = 0
+        #self.i = 0
         #self._cards = []
         #self._comments = []
 
@@ -72,6 +75,12 @@ class PCOMP(object):
             mpa[i] = mpai
         return mpa
 
+    def get_property_id_by_property_index(self):
+        asf
+
+    def get_property_id(self):
+        return self.properties.keys()
+
     def get_properties(self, property_id=None):
         props = []
         if property_id is None:
@@ -106,7 +115,7 @@ class PCOMP(object):
             self._cards = []
             self._comments = []
 
-    def write_bdf(self, f, size=8, property_ids=None):
+    def write_bdf(self, f, size=8, property_id=None):
         if size == 8:
             for pid, pcomp in sorted(iteritems(self.properties)):
                 f.write(pcomp.write_bdf(size, print_card_8))
@@ -118,20 +127,39 @@ class PCOMP(object):
         #i = asarray(i)
         #return self.__getitem__()
 
-    def __getitem__(self, property_ids):
-        property_ids, int_flag = slice_to_iter(property_ids)
-        obj = PCOMP(self.model)
+    def nPlies(self, property_id=None):
+        n = len(property_id)
+        nplies = full(n, nan, dtype='int32')
+        for pid in unique(property_id):
+            i = where(pid == property_id)[0]
+            if len(i):
+                prop = self.properties[pid]
+                np = prop.nPlies()
+                nplies[i] = np
+        return nplies
 
+    #def __getitem_old__(self, property_id):
+        #property_id, int_flag = slice_to_iter(property_id)
+        #obj = PCOMP(self.model)
+
+        #properties = {}
+        #for pid in sorted(property_id):
+            #properties[pid] = self.properties[pid]
+        #obj.n = len(property_id)
+        #obj.properties = properties
+        #obj.property_id = sorted(self.properties.keys())
+        ##obj._comments = obj._comments[index]
+        ##obj.comments = obj.comments[index]
+        #return obj
+
+    def __getitem__(self, property_id):
+        print('PCOMP.property_id = %s' % property_id)
+        property_id, int_flag = slice_to_iter(property_id)
         properties = {}
-        for pid in sorted(property_ids):
+        for pid in sorted(property_id):
             properties[pid] = self.properties[pid]
-        obj.n = len(property_ids)
-        obj.properties = properties
-        obj.property_id = sorted(self.properties.keys())
-        #obj._comments = obj._comments[index]
-        #obj.comments = obj.comments[index]
-        return obj
-
+        #print('intflag', int_flag)
+        return properties[pid] if int_flag else properties
 
     def __repr__(self):
         f = StringIO()

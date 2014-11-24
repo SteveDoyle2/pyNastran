@@ -5,6 +5,10 @@ class Property(VectorizedCard):
     def __init__(self, model):
         VectorizedCard.__init__(self, model)
 
+    def shrink(self, refcheck=True):
+        i = where(self.property_id==0)[0]
+        self.resize(i[0], refcheck=refcheck)
+
     def __iter__(self):
         pids = self.property_id
         for pid in pids:
@@ -31,3 +35,14 @@ class Property(VectorizedCard):
         """
         i = searchsorted(self.property_id, property_id)
         return self.slice_by_index(i)
+
+    def get_property_id_by_property_index(self, i=None):
+        if i is None:
+            property_id = self.property_id
+        else:
+            property_id = self.property_id[i]
+        return property_id
+
+    def get_property_index_by_property_id(self, property_id=None, msg=''):
+        i = self._get_sorted_index(self.property_id, property_id, self.n, 'property_id', 'property_id in %s%s' % (self.type, msg), check=True)
+        return i

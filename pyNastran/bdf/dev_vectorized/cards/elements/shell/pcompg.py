@@ -1,3 +1,4 @@
+from six.moves import StringIO
 from numpy import array, zeros, arange, concatenate, searchsorted, where, unique
 
 from pyNastran.bdf.fieldWriter import print_card_8
@@ -24,4 +25,7 @@ class PCOMPG(object):
         pass
 
     def __repr__(self):
-        asdf
+        f = StringIO()
+        f.write('<PCOMPG object> n=%s\n' % self.n)
+        self.write_bdf(f)
+        return f.getvalue()

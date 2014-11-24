@@ -29,8 +29,8 @@ class ElementsSolid(object):
     def allocate(self, card_count):
         etypes = self._get_types(nlimit=False)
         for etype in etypes:
-            self.model.log.debug('    allocate %s' % etype.type)
             if etype.type in card_count:
+                self.model.log.debug('    allocate %s' % etype.type)
                 etype.allocate(card_count[etype.type])
             #else:
                 #assert hasattr(ptype, 'allocate'), '%s doesnt support allocate' % ptype.type

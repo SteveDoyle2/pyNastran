@@ -27,7 +27,6 @@ class CQUAD4(ShellElement):
         self.zoffset = zeros(ncards, 'int32')
         self.t_flag = zeros(ncards, 'int32')
         self.thickness = zeros((ncards, 4), float_fmt)
-        self.i = 0
 
     def add(self, card, comment=''):
         i = self.i

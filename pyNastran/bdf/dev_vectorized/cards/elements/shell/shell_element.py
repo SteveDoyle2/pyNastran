@@ -6,9 +6,27 @@ class ShellElement(Element):
     def __init__(self, model):
         Element.__init__(self, model)
 
-    def get_index_by_element_id(self, element_id=None, msg=''):
+    def get_element_id_by_element_index(self, i=None):
+        if i is None:
+            element_id = self.element_id
+        else:
+            element_id = self.element_id[i]
+        return element_id
+
+    def get_element_index_by_element_id(self, element_id=None, msg=''):
         i = self._get_sorted_index(self.element_id, element_id, self.n, 'element_id', 'element_id in %s%s' % (self.type, msg), check=True)
         return i
+
+    def get_property_id_by_element_id(self, element_id=None):
+        i = self.get_element_index_by_element_id(element_id)
+        return self.get_property_id_by_element_index(i)
+
+    def get_property_id_by_element_index(self, i=None):
+        if i is None:
+            property_id = self.property_id
+        else:
+            property_id = self.property_id[i]
+        return property_id
 
     def get_property_index_by_property_id(self, property_id=None, i=None):
         """Find all the j-indicies where seid=seidi for some given subset of i-indicies"""
@@ -49,6 +67,26 @@ class ShellElement(Element):
         else:
             #print('mass.shape = %s' % mass.shape)
             return mass
+
+    def get_mass_per_area_by_element_id(self, element_id=None, node_ids=None, xyz_cid0=None):
+        """
+        Gets the mass per area of the CQUAD4s on a total or per element basis.
+
+        :param self: the CQUAD4 object
+        :param element_id: the elements to consider (default=None -> all)
+        :param total: should the mass be summed (default=False)
+
+        :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
+
+        ..note:: If node_ids is None, the positions of all the GRID cards
+                 must be calculated
+        """
+        mass, _area, _normal = self._mass_area_normal(element_id=element_id,
+            xyz_cid0=xyz_cid0,
+            calculate_mass=True, calculate_area=True,
+            calculate_normal=False)
+        mpa = mass / _area
+        return mpa
 
     def get_normal_by_element_id(self, element_id=None, xyz_cid0=None):
         """
