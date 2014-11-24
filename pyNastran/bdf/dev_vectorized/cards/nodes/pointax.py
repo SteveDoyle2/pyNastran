@@ -2,7 +2,8 @@ from six.moves import zip
 
 from numpy import zeros, array, where, unique, searchsorted
 
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank)
 
@@ -26,7 +27,7 @@ class POINTAX(object):
         self._cards = []
         self._comments = []
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         self._cards.append(card)
         self._comments.append(comment)
 
@@ -79,7 +80,10 @@ class POINTAX(object):
             f.write('$POINTAX\n')
             for (nid, rid, phi) in zip(self.point_id, self.ring_id, self.phi):
                 card = ['POINTAX', rid, phi]
-                f.write(print_card(card, size))
+                if size == 8:
+                    f.write(print_card_8(card))
+                else:
+                    f.write(print_card_16(card))
 
     def __repr__(self):
         msg = "<POINTAX>\n"

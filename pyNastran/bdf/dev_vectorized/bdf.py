@@ -14,6 +14,7 @@ from collections import defaultdict
 
 from numpy import unique, array
 
+from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.bdf import (to_fields, get_include_filename,
     parse_executive_control_deck, clean_empty_lines)
 from pyNastran.bdf.bdf import EIGRL
@@ -1597,7 +1598,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             return
 
         if self.echo:
-            from pyNastran.bdf.fieldWriter import print_card_8
             print(print_card_8(card_obj).rstrip())
 
         #if icard % 10000 == 0:

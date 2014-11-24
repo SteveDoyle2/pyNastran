@@ -2,7 +2,8 @@ from six.moves import zip
 
 from numpy import zeros, searchsorted, unique, where, array
 
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, string_or_blank)
 
@@ -57,7 +58,7 @@ class GRAV(object):
         self.N = zeros((ncards, 3), float_fmt)
         self.mb = zeros(ncards, 'int32')
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         self._cards.append(card)
         self._comments.append(comment)
 
@@ -120,4 +121,7 @@ class GRAV(object):
                  self.load_id, self.coord_id, self.scale, self.N, self.mb):
 
                 card = ['GRAV', lid, cid, scale, N[0], N[1], n[2], mb]
-                f.write(print_card(card))
+                if size == 8:
+                    f.write(print_card_8(card))
+                else:
+                    f.write(print_card_16(card))

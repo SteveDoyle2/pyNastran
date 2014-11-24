@@ -3,9 +3,11 @@ from six.moves import zip
 from numpy import array, arange, dot, zeros, unique, searchsorted, asarray
 from numpy.linalg import norm
 
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, integer_double_or_blank, blank)
+
 
 class PELAS(object):
     """
@@ -75,16 +77,19 @@ class PELAS(object):
         else:
             self.property_id = array([], dtype='int32')
 
-    def write_bdf(self, f, size=8, pids=None):
+    def write_bdf(self, f, size=8, property_id=None):
         if self.n:
-            if pids is None:
+            if property_id is None:
                 i = arange(self.n)
             else:
-                i = pids
+                i = property_id
 
             for (pid, k, ge, s) in zip(self.property_id[i], self.K[i], self.ge[i], self.s[i]):
                 card = ['PELAS', pid, k, ge, s]
-                f.write(print_card(card, size=size))
+                if size == 8:
+                    f.write(print_card_8(card))
+                else:
+                    f.write(print_card_16(card))
 
     def __getitem__(self, property_ids):
         """

@@ -2,7 +2,8 @@ from six.moves import zip
 
 from numpy import array, zeros, arange, concatenate, searchsorted, where, unique
 
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 
@@ -15,7 +16,7 @@ class CTRIAX6(object):
         self._cards = []
         self._comments = []
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         self._cards.append(card)
         self._comments.append(comment)
 
@@ -79,7 +80,10 @@ class CTRIAX6(object):
             for (eid, mid, n0, n1, n2, n3, n4, n5, theta) in zip(self.element_id[i], self.material_id[i],
                     N0, N1, N2, N3, N4, N5, Theta):
                 card = ['CTRIAX6', eid, mid, n0, n1, n2, n3, n4, n5, theta]
-                f.write(print_card(card, size=size))
+                if size == 8:
+                    f.write(print_card_8(card))
+                else:
+                    f.write(print_card_16(card))
 
     def _verify(self):
         self.mass()

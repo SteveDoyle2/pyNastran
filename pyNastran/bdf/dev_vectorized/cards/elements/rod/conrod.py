@@ -4,7 +4,8 @@ from numpy import arange, zeros, unique
 from numpy.linalg import norm
 from numpy import dot, searchsorted, array, transpose
 
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, blank, integer_or_string)
 
@@ -66,7 +67,7 @@ class CONROD(RodElement):
         self.c = zeros(ncards, float_fmt)
         self.nsm = zeros(ncards, float_fmt)
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         i = self.i
         self.element_id[i] = integer(card, 1, 'element_id')
         self.node_ids[i] = [integer(card, 2, 'node_1'),
@@ -143,7 +144,7 @@ class CONROD(RodElement):
         if self.n == 0:
             return 0.0
 
-        #i = self.model.grid.get_index_by_node_id()
+        #i = self.model.grid.get_node_index_by_node_id()
         #grid_cid0 = self.model.grid.get_positions_by_index(i)
 
 
@@ -154,19 +155,19 @@ class CONROD(RodElement):
         #p2 = grid_cid0[self.node_ids[:, 1]]
 
 
-        #grid_cid0 = self.model.grid.get_positions_by_index(self.model.grid.get_index_by_node_id())
+        #grid_cid0 = self.model.grid.get_positions_by_index(self.model.grid.get_node_index_by_node_id())
         try:
             msg = ', which is required by CONROD get_mass'
-            i1 = self.model.grid.get_index_by_node_id(self.node_ids[:, 0], msg=msg)
-            i2 = self.model.grid.get_index_by_node_id(self.node_ids[:, 1], msg=msg)
+            i1 = self.model.grid.get_node_index_by_node_id(self.node_ids[:, 0], msg=msg)
+            i2 = self.model.grid.get_node_index_by_node_id(self.node_ids[:, 1], msg=msg)
             p1 = self.model.grid.get_position_by_index(i1)
             p2 = self.model.grid.get_position_by_index(i2)
         except RuntimeError:
             for eid, (n1, n2) in zip(self.element_id, self.node_ids):
                 msg = ', which is required by CONROD element_id=%s node1=%s\n' % (eid, n1)
-                i1 = self.model.grid.get_index_by_node_id([n1], msg=msg)
+                i1 = self.model.grid.get_node_index_by_node_id([n1], msg=msg)
                 msg = ', which is required by CONROD element_id=%s node2=%s\n' % (eid, n2)
-                i2 = self.model.grid.get_index_by_node_id([n2], msg=msg)
+                i2 = self.model.grid.get_node_index_by_node_id([n2], msg=msg)
                 p1 = self.model.grid.get_position_by_index(i1)
                 p2 = self.model.grid.get_position_by_index(i2)
 
@@ -181,16 +182,19 @@ class CONROD(RodElement):
 
     #=========================================================================
 
-    def write_bdf(self, f, size=8, element_ids=None):
+    def write_bdf(self, f, size=8, element_id=None):
         if self.n:
-            if element_ids is None:
+            if element_id is None:
                 i = arange(self.n)
             for (eid, n12, mid, A, J, c, nsm) in zip(
                  self.element_id, self.node_ids, self.material_id, self.A, self.J,
                  self.c, self.nsm):
 
                 card = ['CONROD', eid, n12[0], n12[1], mid, A, J, c, nsm ]
-                f.write(print_card(card))
+                if size == 8:
+                    f.write(print_card_8(card))
+                else:
+                    f.write(print_card_16(card))
 
     def get_mass_matrix(self, i, model, positions, index0s, knorm=1.0):  # CROD/CONROD
         """

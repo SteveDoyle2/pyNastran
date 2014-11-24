@@ -6,7 +6,8 @@ from numpy.linalg import norm
 from ..rod.conrod import _Lambda
 from pyNastran.bdf.dev_vectorized.cards.elements.spring.spring_element import SpringElement
 
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, integer_double_or_blank, blank)
 
@@ -89,7 +90,10 @@ class CELAS2(SpringElement):
             for (eid, k, n0, n1, c0, c1, ge, s) in zip(self.element_id[i],
                     self.K[i], N0, N1, C0, C1, self.ge[i], self.s[i]):
                 card = ['CELAS2', eid, k, n0, c0, n1, c1, ge, s ]
-                f.write(print_card(card))
+                if size == 8:
+                    f.write(print_card_8(card))
+                else:
+                    f.write(print_card_16(card))
 
     def get_stiffness(self, i, model, positions, index0s, fnorm=1.0):  # CELAS2
         ki = self.K[i]

@@ -3,7 +3,8 @@ from six.moves import zip, StringIO
 from numpy import zeros, searchsorted, unique
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, string_or_blank)
 
@@ -49,7 +50,7 @@ class MOMENT(object):
     def __rmul__(self, value):
         return self.__mul__(value)
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         self._cards.append(card)
         self._comments.append(comment)
 
@@ -102,7 +103,10 @@ class MOMENT(object):
                  self.load_id, self.node_id, self.coord_id, self.mag, self.xyz):
 
                 card = ['MOMENT', lid, nid, cid, mag, xyz[0], xyz[1], xyz[2] ]
-                f.write(print_card(card))
+                if size == 8:
+                    f.write(print_card_8(card))
+                else:
+                    f.write(print_card_16(card))
 
     def __repr__(self):
         f = StringIO()

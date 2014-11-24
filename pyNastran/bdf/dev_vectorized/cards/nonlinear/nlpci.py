@@ -1,4 +1,5 @@
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, blank, string, string_or_blank)
 
@@ -22,7 +23,7 @@ class NLPCI(object):
         self.mxinc = integer_or_blank(card, 8, 'minalr', 20)
 
     #def raw_fields(self):
-        #list_fields = 
+        #list_fields =
         #return list_fields
 
     def repr_fields(self):
@@ -32,4 +33,7 @@ class NLPCI(object):
     def write_bdf(self, f, size=8):
         card = ['NLPCI', self.nlpci_id, self.Type, self.minalr,
                 self.maxalr, self.scale, None, self.desiter, self.mxinc]
-        f.write(print_card(card, size))
+        if size == 8:
+            f.write(print_card_8(card))
+        else:
+            f.write(print_card_16(card))

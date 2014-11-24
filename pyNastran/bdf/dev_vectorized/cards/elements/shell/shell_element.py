@@ -10,7 +10,7 @@ class ShellElement(Element):
         i = self._get_sorted_index(self.element_id, element_id, self.n, 'element_id', 'element_id in %s%s' % (self.type, msg), check=True)
         return i
 
-    def get_index_by_property_id(self, property_id=None, i=None):
+    def get_property_index_by_property_id(self, property_id=None, i=None):
         """Find all the j-indicies where seid=seidi for some given subset of i-indicies"""
         return self._get_index_by_param('property_id', self.property_id, property_id, i)
 

@@ -1,5 +1,7 @@
 from six.moves import StringIO
-from numpy import array, searchsorted, array_equal, setdiff1d, int64, argsort, arange
+from numpy import (array, searchsorted, array_equal, setdiff1d, int64, argsort,
+                   arange, ndarray, nan)
+from pyNastran.utils import object_attributes
 
 class VectorizedCard(object):
     def __init__(self, model):
@@ -12,9 +14,42 @@ class VectorizedCard(object):
             if self.type.startswith('C'):
                 print('there is no op2_id to apply for element=%r' % self.type)
 
-    def add(self, card, comment):
-        self._cards.append(card)
-        self._comments.append(comment)
+    def shrink(self, refcheck=True):
+        raise NotImplementedError()
+
+    def resize(self, n, refcheck=True):
+        names = object_attributes(self, mode="public")
+        for name in names:
+            attr = getattr(self, name)
+            if isinstance(attr, ndarray):
+                #self.model.log.info('resizing %r; shape=%s; size=%s' % (name, attr.shape, attr.size))
+                # resize the array
+                shape2 = list(attr.shape)
+                shape2[0] = n
+                attr.resize(tuple(shape2), refcheck=refcheck)
+
+                if n > self.n:
+                    # TODO: fill the data with nan values ideally, but it's not working
+                    if attr.ndim == 1:
+                        attr[self.n:] = 0
+                    elif attr.ndim == 2:
+                        attr[self.n:, :] = 0
+                    elif attr.ndim == 3:
+                        attr[self.n:, :, :] = 0
+                    else:
+                        raise NotImplementedError(attr.shape)
+                    #print(attr)
+            else:
+                # metadata
+                pass
+        if self.i >= n:
+            self.i = n
+        self.n = n
+
+
+    #def add(self, card, comment=''):
+        #self._cards.append(card)
+        #self._comments.append(comment)
 
     def get_stats(self):
         msg = []
@@ -31,7 +66,7 @@ class VectorizedCard(object):
         if not array_equal(argsort(sorted_array), arange(len(sorted_array))):
             msg2 = '%s is not sorted\nsorted_array=%s' % (msg, sorted_array)
             raise RuntimeError(msg2)
-        assert isinstance(n, int)
+        assert isinstance(n, int64) or isinstance(n, int), 'field_name=%s n=%s type=%s' % (field_name, n, type(n))
         assert isinstance(check, bool)
         if unsorted_array is None:
             i = None

@@ -1,6 +1,7 @@
 from numpy import zeros
 
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 
 
 class EPOINT(object):
@@ -11,7 +12,7 @@ class EPOINT(object):
         self._comments = []
         self.n = 0
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         self._cards.append(card)
         self._comments.append(comment)
 
@@ -30,7 +31,10 @@ class EPOINT(object):
         #..todo:: collapse the IDs
         if self.n:
             card = ['EPOINT'] + list(self.epoint)
-            f.write(print_card(card))
+            if size == 8:
+                f.write(print_card_8(card))
+            else:
+                f.write(print_card_16(card))
 
     def get_stats(self):
         msg = []

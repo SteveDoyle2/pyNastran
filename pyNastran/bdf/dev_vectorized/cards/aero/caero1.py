@@ -2,7 +2,8 @@ from six.moves import zip
 
 from numpy import array, zeros, arange, concatenate, searchsorted, where, unique
 
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 
@@ -40,7 +41,7 @@ class CAERO1(object):
         self._cards = []
         self._comments = []
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         self._cards.append(card)
         self._comments.append(comment)
 
@@ -158,7 +159,10 @@ class CAERO1(object):
                 card = ['CAERO1', eid, pid, cid, nspan, nchord, lspan, lchord, igid,
                             p1[0], p1[1], p1[2], x12,
                             p4[0], p4[1], p4[2], x43,]
-                f.write(print_card(card, size=size))
+                if size == 8:
+                    f.write(print_card_8(card))
+                else:
+                    f.write(print_card_16(card))
 
     def _verify(self, xref=True):
         self.area()

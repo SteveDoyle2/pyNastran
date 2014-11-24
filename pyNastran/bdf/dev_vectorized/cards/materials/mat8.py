@@ -55,7 +55,7 @@ class MAT8(Material):
         self.F12 = zeros(ncards, dtype=float_fmt)
         self.strn = zeros(ncards, dtype=float_fmt)
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         i = self.i
         #if comment:
         #    self._comment = comment
@@ -111,7 +111,7 @@ class MAT8(Material):
         return self.rho[i]
 
     def get_density_by_material_id(self, material_id):
-        i = self.get_index_by_material_id(material_id)
+        i = self.get_material_index_by_material_id(material_id)
         return self.get_density_by_index(i)
 
     def write_bdf(self, f, size=8, material_id=None):

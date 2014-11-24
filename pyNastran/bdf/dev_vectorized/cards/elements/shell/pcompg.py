@@ -1,6 +1,7 @@
 from numpy import array, zeros, arange, concatenate, searchsorted, where, unique
 
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 
@@ -13,7 +14,7 @@ class PCOMPG(object):
     def __init__(self, model):
         self.n = 0
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         pass
 
     def build(self):

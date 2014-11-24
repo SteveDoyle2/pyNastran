@@ -1,6 +1,7 @@
 from six.moves import zip, StringIO
 from numpy import array, zeros, unique, asarray, searchsorted, arange
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
     double, double_or_blank)
 
@@ -23,7 +24,7 @@ class PSHEAR(Property):
         self.f1 = zeros(ncards, float_fmt)
         self.f2 = zeros(ncards, float_fmt)
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         i = self.i
         self.property_id[i] = integer(card, 1, 'pid')
         self.material_id[i] = integer(card, 2, 'mid')
@@ -87,7 +88,10 @@ class PSHEAR(Property):
 
             for (pid, mid, t, nsm, f1, f2) in zip(self.property_id[i], self.material_id[i], self.thickness[i], self.nsm[i], self.f1[i], self.f2[i]):
                 card = ['PSHEAR', pid, mid, t, nsm, f1, f2]
-                f.write(print_card(card, size=size))
+                if size == 8:
+                    f.write(print_card_8(card))
+                else:
+                    f.write(print_card_16(card))
 
     def __getitem__(self, property_ids):
         """

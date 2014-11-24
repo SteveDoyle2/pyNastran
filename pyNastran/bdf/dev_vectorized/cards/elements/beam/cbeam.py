@@ -63,7 +63,7 @@ class CBEAM(Element):
         self.sa = zeros(ncards, 'int32')
         self.sb = zeros(ncards, 'int32')
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         i = self.i
         eid = integer(card, 1, 'element_id')
         self.element_id[i] = eid

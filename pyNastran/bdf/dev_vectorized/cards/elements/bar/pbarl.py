@@ -3,7 +3,8 @@ from numpy import array, zeros, arange, concatenate, searchsorted, where, unique
 
 from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
 
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
@@ -103,7 +104,10 @@ class PBARL(Property):
             self.model.log.debug('*pbarl write pids=%s' % self.property_id)
             for (pid, mid) in zip(self.property_id[i], self.material_id[i]):
                 card = ['PBARL', pid, mid,]
-                f.write(print_card(card))
+                if size == 8:
+                    f.write(print_card_8(card))
+                else:
+                    f.write(print_card_16(card))
 
     def slice_by_index(self, i):
         i = asarray(i)

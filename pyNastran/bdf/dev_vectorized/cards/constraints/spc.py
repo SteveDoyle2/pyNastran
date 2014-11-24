@@ -4,7 +4,8 @@ from itertools import count
 
 from numpy import array, zeros, unique, searchsorted, arange
 
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
@@ -75,4 +76,7 @@ class SPC(object):
                 card = ['SPC', self.constraint_id]
                 for node_id in node_ids:
                     card += [node_id, dof, 0.0]
-                f.write(print_card(card))
+                if size == 8:
+                    f.write(print_card_8(card))
+                else:
+                    f.write(print_card_16(card))

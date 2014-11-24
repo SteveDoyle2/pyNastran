@@ -31,7 +31,7 @@ class CTETRA10(SolidElement):
         """
         SolidElement.__init__(self, model)
 
-    def add(self, card, comment):
+    def add(self, card, comment=''):
         i = self.i
 
         #comment = self._comments[i]
@@ -73,20 +73,20 @@ class CTETRA10(SolidElement):
         if xyz_cid0 is None:
             xyz_cid0 = self.model.grid.get_position_by_index()
 
-        n1 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 0]), :]
-        n2 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 1]), :]
-        n3 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 2]), :]
-        n4 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 3]), :]
+        n1 = xyz_cid0[self.model.grid.get_node_index_by_node_id(self.node_ids[:, 0]), :]
+        n2 = xyz_cid0[self.model.grid.get_node_index_by_node_id(self.node_ids[:, 1]), :]
+        n3 = xyz_cid0[self.model.grid.get_node_index_by_node_id(self.node_ids[:, 2]), :]
+        n4 = xyz_cid0[self.model.grid.get_node_index_by_node_id(self.node_ids[:, 3]), :]
         if n == 4:
             return n1, n2, n3, n4
         assert n == 10, n
 
-        n5 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 4]), :]
-        n6 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 5]), :]
-        n7 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 6]), :]
-        n8 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 7]), :]
-        n9 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 8]), :]
-        n10 = xyz_cid0[self.model.grid.get_index_by_node_id(self.node_ids[:, 9]), :]
+        n5 = xyz_cid0[self.model.grid.get_node_index_by_node_id(self.node_ids[:, 4]), :]
+        n6 = xyz_cid0[self.model.grid.get_node_index_by_node_id(self.node_ids[:, 5]), :]
+        n7 = xyz_cid0[self.model.grid.get_node_index_by_node_id(self.node_ids[:, 6]), :]
+        n8 = xyz_cid0[self.model.grid.get_node_index_by_node_id(self.node_ids[:, 7]), :]
+        n9 = xyz_cid0[self.model.grid.get_node_index_by_node_id(self.node_ids[:, 8]), :]
+        n10 = xyz_cid0[self.model.grid.get_node_index_by_node_id(self.node_ids[:, 9]), :]
         return n1, n2, n3, n4, n5, n6, n7, n8, n9, n10
 
     def get_volume_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
