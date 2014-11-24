@@ -46,11 +46,6 @@ class VectorizedCard(object):
             self.i = n
         self.n = n
 
-
-    #def add(self, card, comment=''):
-        #self._cards.append(card)
-        #self._comments.append(comment)
-
     def get_stats(self):
         msg = []
         if self.n:
@@ -114,4 +109,3 @@ def by_converter(value, default):
         return array([value], dtype='int32')
     else:
         return asarray(value)
-

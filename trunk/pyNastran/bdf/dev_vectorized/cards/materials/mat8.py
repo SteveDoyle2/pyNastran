@@ -8,8 +8,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     string, string_or_blank, blank)
 
-from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
-from pyNastran.bdf.dev_vectorized.cards.materials.mat1 import Material
+from pyNastran.bdf.dev_vectorized.cards.materials.material import Material
 
 
 class MAT8(Material):
