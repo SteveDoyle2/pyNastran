@@ -22,8 +22,10 @@ class PropertiesShell(object):
 
     def allocate(self, card_count):
         ptypes = self._get_types(nlimit=False)
+        print('card_count = %s' % card_count)
         for ptype in ptypes:
             if ptype.type in card_count:
+                self.model.log.debug('    allocate %s' % ptype.type)
                 ptype.allocate(card_count[ptype.type])
                 del card_count[ptype.type]
             #else:
@@ -152,6 +154,8 @@ class PropertiesShell(object):
                 if ptype.n:
                     types2.append(ptype)
             types = types2
+        else:
+            print('ptypes=%s' % types)
         return types
 
     def get_stats(self):

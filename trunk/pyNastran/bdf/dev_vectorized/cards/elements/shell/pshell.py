@@ -32,6 +32,7 @@ class PSHELL(Property):
         Property.__init__(self, model)
 
     def allocate(self, ncards):
+        print('allocate PSHELL')
         self.n = ncards
         float_fmt = self.model.float
         self.property_id = zeros(ncards, 'int32')
@@ -48,6 +49,7 @@ class PSHELL(Property):
 
     def add(self, card, comment=''):
         i = self.i
+        print('adding %s; i=%s' %(card, i))
         self.property_id[i] = integer(card, 1, 'property_id')
         self.material_id[i] = integer(card, 2, 'material_id')
         self.thickness[i] = double(card, 3, 'thickness')
@@ -83,6 +85,7 @@ class PSHELL(Property):
         #    assert self.material_id4==None
         assert len(card) <= 12, 'len(PSHELL card) = %i' % len(card)
         self.i += 1
+        print('self.i = %s' % self.i)
 
     def build(self):
         if self.n:
@@ -101,9 +104,8 @@ class PSHELL(Property):
             self.material_id4 = self.material_id4[i]
 
             if len(unique(self.property_id)) != len(self.property_id):
-                raise RuntimeError('There are duplicate PSHELL IDs...')
-            self._cards = []
-            self._comments = []
+                pids = self.property_id
+                raise RuntimeError('There are duplicate PSHELL IDs...pids=%s' % pids)
         else:
             self.property_id = array([], dtype='int32')
             self.material_id = array([], dtype='int32')
@@ -235,7 +237,6 @@ class PSHELL(Property):
 
     def slice_by_index(self, i):
         i = asarray(i)
-        i = asarray(i)
         obj = PSHELL(self.model)
         obj.n = len(i)
         #obj._cards = self._cards[i]
@@ -252,6 +253,7 @@ class PSHELL(Property):
         obj.z1 = self.z1[i]
         obj.z2 = self.z2[i]
         obj.material_id4 = self.material_id4[i]
+        #print(obj)
         return obj
 
     def __repr__(self):

@@ -1,5 +1,5 @@
 from six.moves import range
-from numpy import unique
+from numpy import unique, array
 
 def slice_to_iter(ids):
     """
@@ -29,7 +29,7 @@ def slice_to_iter(ids):
     """
     int_flag = False
     if isinstance(ids, int):
-        ids2 = [ids]
+        ids2 = array([ids])
         int_flag = True
     elif isinstance(ids, slice):
         if ids.step is None:
