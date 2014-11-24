@@ -17,7 +17,7 @@ def normalize(v):
 
 class Coord(object):
     def get_global_position_by_node_id(self, node_id, cp):
-        i = self.model.grid.get_node_index_from_node_id(node_id)
+        i = self.model.grid.get_node_index_by_node_id(node_id)
         self.model.log.info('i = %s; type=%s' % (i, type(i)))
         xyz = self.model.grid.xyz[i, :]
         xyz = xyz.reshape(len(i), 3)

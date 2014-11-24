@@ -89,16 +89,16 @@ class CPENTA6(SolidElement):
         :param xyz_cid0: the node positions as a dictionary
         """
         grid = self.model.grid
-        get_node_index_from_node_id = self.model.grid.get_node_index_from_node_id
+        get_node_index_by_node_id = self.model.grid.get_node_index_by_node_id
         node_ids = self.node_ids
 
         msg = ', which is required by %s' % self.type
-        n1 = xyz_cid0[get_node_index_from_node_id(node_ids[i, 0], msg), :]
-        n2 = xyz_cid0[get_node_index_from_node_id(node_ids[i, 1], msg), :]
-        n3 = xyz_cid0[get_node_index_from_node_id(node_ids[i, 2], msg), :]
-        n4 = xyz_cid0[get_node_index_from_node_id(node_ids[i, 3], msg), :]
-        n5 = xyz_cid0[get_node_index_from_node_id(node_ids[i, 4], msg), :]
-        n6 = xyz_cid0[get_node_index_from_node_id(node_ids[i, 5], msg), :]
+        n1 = xyz_cid0[get_node_index_by_node_id(node_ids[i, 0], msg), :]
+        n2 = xyz_cid0[get_node_index_by_node_id(node_ids[i, 1], msg), :]
+        n3 = xyz_cid0[get_node_index_by_node_id(node_ids[i, 2], msg), :]
+        n4 = xyz_cid0[get_node_index_by_node_id(node_ids[i, 3], msg), :]
+        n5 = xyz_cid0[get_node_index_by_node_id(node_ids[i, 4], msg), :]
+        n6 = xyz_cid0[get_node_index_by_node_id(node_ids[i, 5], msg), :]
         return n1, n2, n3, n4, n5, n6
 
     def get_volume_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
