@@ -1,6 +1,11 @@
+from numpy import array
+
 class OLOAD_Resultant(object):
     def __init__(self):
         self.Fx = 2.3e4
+
+    def add(self, F):
+        pass
 
     def write_f06(self, f, page_stamp, page_num):
         #msg = ''
@@ -27,6 +32,12 @@ class OLOAD_Resultant(object):
         msg = '0                                                  OLOAD    RESULTANT\n'
         msg += '  SUBCASE/    LOAD\n'
         msg += '  DAREA ID    TYPE       T1            T2            T3            R1            R2            R3\n'
+        F = array([[2.3e4, 0., 0.],
+                   [0., 0., 0.],
+                   [0., 0., 0.]])
+        M = array([[0., 3.320987e4, -2.280395e4],
+                   [0., 0., 0.],
+                   [0., 0., 0.]])
         msg += '0 %8i     FX    %12.6E     ----          ----       3.320987E+04 -2.280395E+04\n' % (isubcase, Fx)
         msg += '  %8s     FY    %12s    0.000000E+00     ----       0.000000E+00     ----       0.000000E+00\n' % ('', '----')
         msg += '  %8s     FZ    %12s       ----       0.000000E+00  0.000000E+00  0.000000E+00     ----\n' % ('', '----')
@@ -35,7 +46,7 @@ class OLOAD_Resultant(object):
         msg += '  %8s     MZ    %12s       ----          ----          ----          ----       0.000000E+00\n' % ('', '----')
         msg += '  %8s     TOTALS  2.300000E+04  0.000000E+00  0.000000E+00  0.000000E+00  3.320987E+04 -2.280395E+04\n' % ('')
 
-        msg += page_stamp % self.page_num
+        msg += page_stamp % page_num
         f.write('\n'.join(msg))
         return page_num + 1
 
