@@ -1,10 +1,11 @@
-from numpy import where, searchsorted
+from numpy import array, where, searchsorted
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 
 
 class Material(VectorizedCard):
     def __init__(self, model):
         VectorizedCard.__init__(self, model)
+        self.material_id = array([], dtype='int32')
 
     def __getitem__(self, material_id):
         #self.model.log.debug('self.material_id = %s' % self.material_id)
@@ -39,7 +40,7 @@ class Material(VectorizedCard):
         return self.n
 
     def get_material_index_by_material_id(self, material_id):
-        i = searchsorted(material_id, self.material_id)
+        i = searchsorted(self.material_id, material_id)
         return i
 
 

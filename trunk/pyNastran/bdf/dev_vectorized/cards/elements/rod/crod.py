@@ -1,5 +1,5 @@
 from six.moves import zip, range
-from numpy import array, dot, arange, zeros, unique, searchsorted, transpose
+from numpy import array, dot, arange, zeros, unique, searchsorted, transpose, asarray, int64
 from numpy.linalg import norm
 
 from pyNastran.bdf.dev_vectorized.cards.elements.rod.conrod import _Lambda
@@ -24,6 +24,7 @@ class CROD(RodElement):
         RodElement.__init__(self, model)
 
     def allocate(self, ncards):
+        self.model.log.debug('  nCROD=%s' % ncards)
         self.n = ncards
         #: Element ID
         self.element_id = zeros(ncards, 'int32')
@@ -33,6 +34,7 @@ class CROD(RodElement):
         self.node_ids = zeros((ncards, 2), 'int32')
 
     def add(self, card, comment=''):
+        self.model.log.debug('  adding CROD')
         i = self.i
         eid = integer(card, 1, 'element_id')
         #if comment:
@@ -63,6 +65,9 @@ class CROD(RodElement):
             self.property_id = array([], dtype='int32')
 
     #=========================================================================
+    def get_property_id_by_element_index(self, i=None):
+        return self.property_id[i]
+
     def get_Area_by_property_id(self, property_id):
         A = self.model.prod.get_Area_by_property_id(property_id)
         return A
@@ -182,13 +187,17 @@ class CROD(RodElement):
         return(M, dofs, nIJV)
 
     #=========================================================================
-    def write_bdf(self, f, size=8, element_id=None):
+    def write_bdf(self, f, size=8, is_double=False, element_id=None):
         if self.n:
+            #print('eid %s' % element_id)
             if element_id is None:
                 i = arange(self.n)
             else:
-                i = searchsorted(self.element_id, self.element_id)
+                i = searchsorted(self.element_id, element_id)
+            if isinstance(i, int) or isinstance(i, int64):
+                i = array([i])
 
+            #print('i =', i, type(i))
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 card = ['CROD', eid, pid, n[0], n[1] ]
                 if size == 8:
@@ -435,3 +444,17 @@ class CROD(RodElement):
         return (e1, e4,
                 o1, o4,
                 f1, f4)
+
+    def slice_by_index(self, i):
+        i = asarray(i)
+        obj = CROD(self.model)
+        n = len(i)
+        obj.n = n
+        obj.i = n
+        #obj._cards = self._cards[i]
+        #obj._comments = obj._comments[i]
+        #obj.comments = obj.comments[i]
+        obj.element_id = self.element_id[i]
+        obj.property_id = self.property_id[i]
+        obj.node_ids = self.node_ids[i, :]
+        return obj
