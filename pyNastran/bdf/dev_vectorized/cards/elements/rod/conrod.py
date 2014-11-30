@@ -1,8 +1,7 @@
 from six.moves import zip, range
 
-from numpy import arange, zeros, unique
+from numpy import arange, zeros, unique, asarray, dot, searchsorted, array, transpose
 from numpy.linalg import norm
-from numpy import dot, searchsorted, array, transpose
 
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.fieldWriter16 import print_card_16
@@ -69,6 +68,7 @@ class CONROD(RodElement):
 
     def add(self, card, comment=''):
         i = self.i
+        self.model.log.debug('  adding CONROD')
         self.element_id[i] = integer(card, 1, 'element_id')
         self.node_ids[i] = [integer(card, 2, 'node_1'),
                             integer(card, 3, 'node_2')]
@@ -109,6 +109,28 @@ class CONROD(RodElement):
 
     #def get_E_from_index(self, i):
         #return self.a[i]
+
+    def get_length_by_element_index(self, i=None, positions=None):
+        if i is None:
+            i = arange(self.n)
+        #if positions is None:
+
+        print("i = %s" % i)
+        n = len(i)
+        if n == 0:
+            i = i[0]
+        n1 = self.node_ids[i, 0]
+        n2 = self.node_ids[i, 1]
+        #n1, n2 = self.node_ids[i, :]
+        p1 = positions[n1]
+        p2 = positions[n2]
+        v1 = p1 - p2
+        L = norm(p1 - p2)
+        assert L.shape == (n,), L.shape
+        return L
+
+    def get_material_id_by_element_index(self, i=None):
+        return self.material_id[i]
 
     def get_material_from_index(self, i):
         return self.model.materials.mat1
@@ -274,8 +296,6 @@ class CONROD(RodElement):
         #node1 = self.nodes[1]
 
 
-        #p0 = model.Node(n0).xyz
-        #p1 = model.Node(n1).xyz
         p0 = positions[n0]
         p1 = positions[n1]
 
@@ -485,3 +505,21 @@ class CONROD(RodElement):
         return (e1, e4,
                 o1, o4,
                 f1, f4)
+
+    def slice_by_index(self, i):
+        i = asarray(i)
+        obj = CONROD(self.model)
+        n = len(i)
+        obj.n = n
+        obj.i = n
+        #obj._cards = self._cards[i]
+        #obj._comments = obj._comments[i]
+        #obj.comments = obj.comments[i]
+        obj.element_id = self.element_id[i]
+        obj.node_ids = self.node_ids[i, :]
+        obj.material_id = self.material_id[i]
+        obj.A = self.A[i]
+        obj.J = self.J[i]
+        obj.c = self.c[i]
+        obj.nsm = self.nsm[i]
+        return obj

@@ -123,7 +123,7 @@ class Elements(object):
             elems.build()
             self.ne += elems.n
             self.validate_nodes(elems)
-                #print nids - grids[i]
+            #print nids - grids[i]
 
         for props in ptypes:
             if hasattr(props, 'type'):
@@ -567,11 +567,13 @@ class Elements(object):
         for ptype in ptypes:
             if hasattr(ptype, 'type'):
                 if ptype.type in card_count:
+                    self.model.log.debug('allocate %s' % ptype.type)
                     ptype.allocate(card_count[ptype.type])
                     del card_count[ptype.type]
                 #else:
                     #asdf
             else:
+                self.model.log.debug('allocate %s' % ptype.__class__.__name__)
                 ptype.allocate(card_count)
                 #del card_count[ptype.type]
 
@@ -650,13 +652,14 @@ class Elements(object):
         return types
 
     def get_element(self, element_id=None):
-        if element_id is None:
-            out = []
-            for Type, eids in iteritems(self.element_groups):
-                for i in range(len(eids)):
-                    obj = TypeMap[Type].slice_by_index(i)
-                    out.append(obj)
+        #if element_id is None:
+            #out = []
+            #for Type, eids in iteritems(self.element_groups):
+            #    for i in range(len(eids)):
+            #        obj = TypeMap[Type].slice_by_index(i)
+            #        out.append(obj)
             #return self
+            #return out
         return self.__getitem__(element_id)
 
     def get_element_typemap(self):
@@ -815,9 +818,9 @@ class Elements(object):
                     i = where(eid == eids)[0]
                     #print("    i = %s" % i)
                     obj = TypeMap[Type].slice_by_index(i)
-                    #print("    found eid=%s " % obj.element_id)
+                    print("    found eid=%s " % obj.element_id)
                     out.append(obj)
-                    break
+                    #break
                 #else:
                     #out.append(None)
             #print('*obj = %s' % obj)

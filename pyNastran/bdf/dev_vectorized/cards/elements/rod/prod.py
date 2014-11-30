@@ -26,7 +26,7 @@ class PROD(Property):
 
     def allocate(self, ncards):
         self.n = ncards
-        #print('%s ncards=%s' % (self.type, ncards))
+        print('%s ncards=%s' % (self.type, ncards))
         float_fmt = self.model.float
         #: Property ID
         self.property_id = zeros(ncards, 'int32')
@@ -37,6 +37,7 @@ class PROD(Property):
         self.nsm = zeros(ncards, float_fmt)
 
     def add(self, card, comment=''):
+        print('n=%s i=%s' % (self.n, self.i))
         i = self.i
         self.property_id[i] = integer(card, 1, 'property_id')
         self.material_id[i] = integer(card, 2, 'material_id')
@@ -146,9 +147,12 @@ class PROD(Property):
                 f.write(print_card_8(card))
 
     def slice_by_index(self, i):
+        print('slice PROD')
         i = asarray(i)
         obj = PROD(self.model)
-        obj.n = len(i)
+        n = len(i)
+        obj.n = n
+        obj.i = n
         #obj._cards = self._cards[i]
         #obj._comments = obj._comments[i]
         #obj.comments = obj.comments[i]

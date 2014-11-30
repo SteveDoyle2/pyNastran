@@ -5,7 +5,7 @@ from .chexa8 import CHEXA8
 from .ctetra10 import CTETRA10
 from .cpenta15 import CPENTA15
 from .chexa20 import CHEXA20
-from numpy import hstack
+from numpy import hstack, zeros, where, searchsorted, argsort, full, nan, unique
 
 class ElementsSolid(object):
     def __init__(self, model):
@@ -80,6 +80,73 @@ class ElementsSolid(object):
         self.chexa20.add(card, comment)
 
     #=========================================================================
+    def get_element_id_property_id(self):
+        etypes = self._get_types()
+        element_property = zeros((self.n, 2), dtype='int32')
+        n0 = 0
+        for etype in etypes:
+            n = etype.n
+            element_property[n0:n0+n, 0] = etype.element_id
+            element_property[n0:n0+n, 1] = etype.property_id
+            n0 += n
+        return element_property
+
+    def get_property_id_material_id(self):
+        ptypes = {
+            'PSOLID' : self.model.elements.element_solids.property_id,
+        }
+        #element_property = zeros((self.n, 2), dtype='int32')
+        #n0 = n
+        #for etype, elements in etypes.iteritems():
+        #    n = element_property.n
+        #    element_property[n0:n0+n, 0] = element_property.element_id
+        #    element_property[n0:n0+n, 1] = element_property.property_id
+        #    n0 += n
+        #return element_property
+        adf
+        return None
+
+    def get_material_id_by_element_id(self, element_id=None):
+        if element_id is None:
+            n = self.n
+            element_id = self.element_id
+        else:
+            n = len(element_id)
+
+        material_id = full(n, nan, dtype='int32')
+
+        self.model.log.debug('----get_material_id_by_element_id----')
+        self.model.log.debug('element_id = %s' % element_id)
+        etypes = self._get_types()
+        eid_pid = self.get_element_id_property_id()
+        i = argsort(eid_pid[:, 0])
+        eid_pid = eid_pid[i, :]
+
+        j = searchsorted(eid_pid[:,0], element_id)
+        pids = eid_pid[j, 1]
+        upids = unique(pids)
+        ptypes = [
+            self.model.elements.properties_solid.psolid,
+            #PLSOLID,
+        ]
+        nupid = len(upids)
+        upid_mids = zeros((nupid, 2), dtype='int32')
+        for ptype in ptypes:
+            for pid in upids:
+                if pid in ptype.property_id:
+                    i = where(pid == ptype.property_id)[0]
+                    mid = ptype.material_id[i][0]
+                    upid_mids[i] = mid
+                    j = where(pid == pids)[0]
+                    material_id[j] = mid
+        self.model.log.debug('material_id = %s' % material_id)
+        return material_id
+
+        #for elems in types:
+        #pid =
+        adf2
+        return None
+
     def get_mass_by_element_id(self, element_id=None, total=False):
         types = self._get_types()
         massi = []

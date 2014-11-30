@@ -25,6 +25,19 @@ class SolidElement(Element):
         self.write_bdf(f)
         return f.getvalue()
 
+    def get_property_id_by_element_index(self, i=None):
+        #i = self._get_sorted_index(self.element_id, element_id, self.n,
+        #                           'element_id', 'element_id in %s' % self.type, check=True)
+        return self.property_id[i]
+
+    def get_property_id_by_element_id(self, element_id=None):
+        i = self._get_sorted_index(self.element_id, element_id, self.n,
+                                   'element_id', 'element_id in %s' % self.type, check=True)
+        return self.get_property_id_by_element_index(i)
+
+    def get_material_id_by_element_id(self, element_id=None):
+        return self.model.elements.elements_solid.get_material_id_by_element_id(element_id)
+
     def _get_node_locations_by_element_id(self, element_id=None, xyz_cid0=None):
         i = self._get_sorted_index(self.element_id, element_id, self.n,
                                    'element_id', 'element_id in %s' % self.type, check=True)
@@ -137,7 +150,9 @@ class SolidElement(Element):
         #obj_class = type(name, (SolidElement, ), {})
         obj_class = self.__class__#.__class__
         obj = obj_class(self.model)
-        obj.n = len(i)
+        n = len(i)
+        obj.n = n
+        obj.i = n
         #obj._cards = self._cards[i]
         #obj._comments = obj._comments[i]
         #obj.comments = obj.comments[i]
