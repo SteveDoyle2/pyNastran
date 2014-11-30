@@ -10,9 +10,7 @@ from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, blank, integer_or_string)
-from pyNastran.bdf.fieldWriter import print_card_8
-
-from pyNastran.bdf.fieldWriter import print_float_8, print_int_card
+from pyNastran.bdf.fieldWriter import print_card_8, print_float_8, print_int_card
 from pyNastran.bdf.fieldWriter16 import print_float_16, print_card_16
 from pyNastran.bdf.field_writer_double import print_scientific_double, print_card_double
 
