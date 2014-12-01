@@ -180,7 +180,7 @@ class TEMPs(VectorizedCardDict):
 
     def write_bdf(self, f, size=8, is_double=False, load_id=None, sort_data=False):
         #self.model.log.debug('TEMPs keys=%s' % self._objs.keys())
-        for load_id, load in sorted(self._objs.iteritems()):
+        for load_id, load in sorted(iteritems(self._objs)):
             #self.model.log.debug('TEMPs write_bdf load_id=%s' % load_id)
             load.write_bdf(f, size=size, is_double=is_double)
         self._tempp1.write_bdf(f, size=size, is_double=is_double)

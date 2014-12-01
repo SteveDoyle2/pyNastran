@@ -661,7 +661,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         xref = self._xref
         #for key, card in sorted(iteritems(self.params)):
-            #try:
             #card._verify(xref)
         for key, card in sorted(iteritems(self.nodes)):
             try:

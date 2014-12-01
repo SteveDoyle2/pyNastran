@@ -1,4 +1,5 @@
 #VTK_TRIANGLE = 5
+from six import iteritems
 from six.moves import range
 from numpy import zeros, arange, mean, amax, amin
 
