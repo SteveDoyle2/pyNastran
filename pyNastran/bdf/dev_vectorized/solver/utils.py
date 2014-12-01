@@ -76,10 +76,7 @@ def departition_dense_vector(n, IsVs):
 
 
 def reverse_dict(A):
-    B = {}
-    for (key, value) in iteritems(A):
-        B[value] = key
-    return B
+    return {v: k for k, v in A.iteritems()}
 
 
 def triple(A, B):

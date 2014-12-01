@@ -1,4 +1,4 @@
-from six import iteritems
+#from six import iteritems
 from numpy import array
 
 class AGPS(object):
