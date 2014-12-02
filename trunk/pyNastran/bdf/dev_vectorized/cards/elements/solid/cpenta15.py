@@ -3,7 +3,7 @@ from numpy import zeros, arange, dot, cross, searchsorted, array, asarray
 from numpy.linalg import norm
 
 from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_blank,
+from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 from .cpenta6 import tri_area_centroid
 
@@ -22,6 +22,7 @@ class CPENTA15(SolidElement):
         SolidElement.__init__(self, model)
 
     def add(self, card, comment=''):
+        print('add...')
         i = self.i
 
         #comment = self._comments[i]
@@ -34,9 +35,25 @@ class CPENTA15(SolidElement):
         #: Property ID
         self.property_id[i] = integer(card, 2, 'property_id')
         #: Node IDs
-        nids = fields(integer, card, 'node_ids', i=3, j=13)
-        assert len(card) == 13, 'len(CPENTA15 card) = %i' % len(card)
+        nids = array([
+            integer(card, 3, 'node_id_1'),
+            integer(card, 4, 'node_id_2'),
+            integer(card, 5, 'node_id_3'),
+            integer(card, 6, 'node_id_4'),
+            integer(card, 7, 'node_id_5'),
+            integer(card, 8, 'node_id_6'),
+            integer_or_blank(card, 9, 'node_id_7', 0),
+            integer_or_blank(card, 10, 'node_id_8', 0),
+            integer_or_blank(card, 11, 'node_id_9', 0),
+            integer_or_blank(card, 12, 'node_id_10', 0),
+            integer_or_blank(card, 13, 'node_id_11', 0),
+            integer_or_blank(card, 14, 'node_id_12', 0),
+            integer_or_blank(card, 15, 'node_id_13', 0),
+            integer_or_blank(card, 16, 'node_id_14', 0),
+            integer_or_blank(card, 17, 'node_id_15', 0),
+        ], dtype='int32')
         self.node_ids[i, :] = nids
+        assert len(card) <= 17, 'len(CPENTA15 card) = %i' % len(card)
         self.i += 1
 
     def _verify(self, xref=True):
@@ -128,15 +145,17 @@ class CPENTA15(SolidElement):
         return nids
 
     def write_bdf(self, f, size=8, element_id=None):
+        self.model.log.debug('CPENTA15.write_bdf; n=%s' % self.n)
         if self.n:
             if element_id is None:
                 i = arange(self.n)
             else:
                 i = searchsorted(self.element_id, element_id)
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
-                card = ['CHEXA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7], n[8], n[9],
+                n = [ni if ni != 0 else None for ni in n]
+                card = ['CPENTA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7], n[8], n[9],
                         n[10], n[11], n[12], n[13], n[14]]
-                f.write(print_card_8(card))
+                f.write(print_card_8(card).rstrip() + '\n')
 
     #def slice_by_index(self, i):
         #i = asarray(i)

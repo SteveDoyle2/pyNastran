@@ -3,7 +3,7 @@ from numpy import zeros, arange, dot, cross, searchsorted, array, asarray
 from numpy.linalg import norm
 
 from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_blank,
+from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 
 from .chexa8 import quad_area_centroid, volume8
@@ -33,9 +33,26 @@ class CHEXA20(SolidElement):
         #: Property ID
         self.property_id[i] = integer(card, 2, 'property_id')
         #: Node IDs
-        nids = fields(integer, card, 'node_ids', i=3, j=23)
+        nids = array([
+            integer(card, 3, 'node_id_1'), integer(card, 4, 'node_id_2'),
+            integer(card, 5, 'node_id_3'), integer(card, 6, 'node_id_4'),
+            integer(card, 7, 'node_id_5'), integer(card, 8, 'node_id_6'),
+            integer(card, 9, 'node_id_7'), integer(card, 10, 'node_id_8'),
+            integer_or_blank(card, 11, 'node_id_9', 0),
+            integer_or_blank(card, 12, 'node_id_10', 0),
+            integer_or_blank(card, 13, 'node_id_11', 0),
+            integer_or_blank(card, 14, 'node_id_12', 0),
+            integer_or_blank(card, 15, 'node_id_13', 0),
+            integer_or_blank(card, 16, 'node_id_14', 0),
+            integer_or_blank(card, 17, 'node_id_15', 0),
+            integer_or_blank(card, 18, 'node_id_16', 0),
+            integer_or_blank(card, 19, 'node_id_17', 0),
+            integer_or_blank(card, 20, 'node_id_18', 0),
+            integer_or_blank(card, 21, 'node_id_19', 0),
+            integer_or_blank(card, 22, 'node_id_20', 0)
+        ], dtype='int32')
         self.node_ids[i, :] = nids
-        assert len(card) == 23, 'len(CHEXA20 card) = %i' % len(card)
+        assert len(card) <= 23, 'len(CHEXA20 card) = %i' % len(card)
         self.i += 1
 
     def build(self):
@@ -226,6 +243,7 @@ class CHEXA20(SolidElement):
                 i = searchsorted(self.element_id, element_id)
 
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
+                n = [ni if ni != 0 else None for ni in n]
                 card = ['CHEXA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7], n[8], n[9],
                         n[10], n[11], n[12], n[13], n[14], n[15], n[16], n[17], n[18], n[19]]
                 f.write(print_card_8(card))

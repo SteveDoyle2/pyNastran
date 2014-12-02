@@ -1,5 +1,5 @@
 from six.moves import zip
-from numpy import zeros, where, arange, searchsorted, unique, asarray
+from numpy import zeros, where, arange, searchsorted, unique, asarray, argsort
 
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.fieldWriter16 import print_card_16
@@ -12,7 +12,7 @@ from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 from pyNastran.bdf.dev_vectorized.cards.materials.material import Material
 
 
-class MAT1(Material):
+class MATHP(Material):
     """
     Defines the material properties for linear isotropic materials.
 
@@ -31,51 +31,154 @@ class MAT1(Material):
     def allocate(self, ncards):
         float_fmt = self.model.float
         self.material_id = zeros(ncards, 'int32')
-        self.rho = zeros(ncards, float_fmt)
-        self.E = zeros(ncards, float_fmt)
-        self.G = zeros(ncards, float_fmt)
-        self.nu = zeros(ncards, float_fmt)
-        self.a = zeros(ncards, float_fmt)
-        self.TRef = zeros(ncards, float_fmt)
-        self.ge = zeros(ncards, float_fmt)
-        self.St = zeros(ncards, float_fmt)
-        self.Sc = zeros(ncards, float_fmt)
-        self.Ss = zeros(ncards, float_fmt)
-        self.mcsid = zeros(ncards, 'int32')
+
+        self.a10 = zeros(ncards, dtype=float_fmt)
+        self.a01 = zeros(ncards, dtype=float_fmt)
+        self.d1 = zeros(ncards, dtype=float_fmt)
+        self.rho = zeros(ncards, dtype=float_fmt)
+        self.av = zeros(ncards, dtype=float_fmt)
+        self.TRef = zeros(ncards, dtype=float_fmt)
+        self.ge = zeros(ncards, dtype=float_fmt)
+
+        self.na = zeros(ncards, dtype='int32')
+        self.nd = zeros(ncards, dtype='int32')
+
+        self.a20 = zeros(ncards, dtype=float_fmt)
+        self.a11 = zeros(ncards, dtype=float_fmt)
+        self.a02 = zeros(ncards, dtype=float_fmt)
+        self.d2 = zeros(ncards, dtype=float_fmt)
+
+        self.a30 = zeros(ncards, dtype=float_fmt)
+        self.a21 = zeros(ncards, dtype=float_fmt)
+        self.a12 = zeros(ncards, dtype=float_fmt)
+        self.a03 = zeros(ncards, dtype=float_fmt)
+        self.d3 = zeros(ncards, dtype=float_fmt)
+
+        self.a40 = zeros(ncards, dtype=float_fmt)
+        self.a31 = zeros(ncards, dtype=float_fmt)
+        self.a22 = zeros(ncards, dtype=float_fmt)
+        self.a13 = zeros(ncards, dtype=float_fmt)
+        self.a04 = zeros(ncards, dtype=float_fmt)
+        self.d4 = zeros(ncards, dtype=float_fmt)
+
+        self.a50 = zeros(ncards, dtype=float_fmt)
+        self.a41 = zeros(ncards, dtype=float_fmt)
+        self.a32 = zeros(ncards, dtype=float_fmt)
+        self.a23 = zeros(ncards, dtype=float_fmt)
+        self.a14 = zeros(ncards, dtype=float_fmt)
+        self.a05 = zeros(ncards, dtype=float_fmt)
+        self.d5 = zeros(ncards, dtype=float_fmt)
+
+        self.tab1 = zeros(ncards, dtype='int32')
+        self.tab2 = zeros(ncards, dtype='int32')
+        self.tab3 = zeros(ncards, dtype='int32')
+        self.tab4 = zeros(ncards, dtype='int32')
+        self.tabd = zeros(ncards, dtype='int32')
         self.n = ncards
 
     def add(self, card, comment=''):
         i = self.i
         #if comment:
         #    self._comment = comment
-        self.material_id[i] = integer(card, 1, 'mid')
-        self.set_E_G_nu(i, card)
+        self.material_id[i] = integer(card, 1, 'material_id')
+        print('add MATHP.material_id = %s' % self.material_id)
+        a10 = double_or_blank(card, 2, 'a10', 0.)
+        a01 = double_or_blank(card, 3, 'a01', 0.)
+        self.a10[i] = a10
+        self.a01[i] = a01
+        self.d1[i] = double_or_blank(card, 4, 'd1', (a10 + a01) * 1000)
         self.rho[i] = double_or_blank(card, 5, 'rho', 0.)
-        self.a[i] = double_or_blank(card, 6, 'a', 0.0)
-        self.TRef[i] = double_or_blank(card, 7, 'TRef', 0.0)
-        self.ge[i] = double_or_blank(card, 8, 'ge', 0.0)
-        self.St[i] = double_or_blank(card, 9, 'St', 0.0)
-        self.Sc[i] = double_or_blank(card, 10, 'Sc', 0.0)
-        self.Ss[i] = double_or_blank(card, 11, 'Ss', 0.0)
-        self.mcsid[i] = integer_or_blank(card, 12, 'Mcsid', 0)
-        assert len(card) <= 13, 'len(MAT1 card) = %i' % len(card)
+        self.av[i] = double_or_blank(card, 6, 'av', 0.)
+        self.TRef[i] = double_or_blank(card, 7, 'TRef', 0.)
+        self.ge[i] = double_or_blank(card, 8, 'ge', 0.)
+
+        self.na[i] = integer_or_blank(card, 10, 'na', 1)
+        self.nd[i] = integer_or_blank(card, 11, 'nd', 1)
+
+        self.a20[i] = double_or_blank(card, 17, 'a20', 0.)
+        self.a11[i] = double_or_blank(card, 18, 'a11', 0.)
+        self.a02[i] = double_or_blank(card, 19, 'a02', 0.)
+        self.d2[i] = double_or_blank(card, 20, 'd2', 0.)
+
+        self.a30[i] = double_or_blank(card, 25, 'a30', 0.)
+        self.a21[i] = double_or_blank(card, 26, 'a21', 0.)
+        self.a12[i] = double_or_blank(card, 27, 'a12', 0.)
+        self.a03[i] = double_or_blank(card, 28, 'a03', 0.)
+        self.d3[i] = double_or_blank(card, 29, 'd3', 0.)
+
+        self.a40[i] = double_or_blank(card, 33, 'a40', 0.)
+        self.a31[i] = double_or_blank(card, 34, 'a31', 0.)
+        self.a22[i] = double_or_blank(card, 35, 'a22', 0.)
+        self.a13[i] = double_or_blank(card, 36, 'a13', 0.)
+        self.a04[i] = double_or_blank(card, 37, 'a04', 0.)
+        self.d4[i] = double_or_blank(card, 38, 'd4', 0.)
+
+        self.a50[i] = double_or_blank(card, 41, 'a50', 0.)
+        self.a41[i] = double_or_blank(card, 42, 'a41', 0.)
+        self.a32[i] = double_or_blank(card, 43, 'a32', 0.)
+        self.a23[i] = double_or_blank(card, 44, 'a23', 0.)
+        self.a14[i] = double_or_blank(card, 45, 'a14', 0.)
+        self.a05[i] = double_or_blank(card, 46, 'a05', 0.)
+        self.d5[i] = double_or_blank(card, 47, 'd5', 0.)
+
+        self.tab1[i] = integer_or_blank(card, 49, 'tab1', 0)
+        self.tab2[i] = integer_or_blank(card, 50, 'tab2', 0)
+        self.tab3[i] = integer_or_blank(card, 51, 'tab3', 0)
+        self.tab4[i] = integer_or_blank(card, 52, 'tab4', 0)
+        self.tabd[i] = integer_or_blank(card, 56, 'tabd', 0)
+        assert len(card) <= 57, 'len(MATHP card) = %i' % len(card)
         self.i += 1
 
 
     def build(self):
         if self.n:
-            i = self.material_id.argsort()
+            i = argsort(self.material_id)
+            print('build1 MATHP.material_id = %s' % self.material_id)
             self.material_id = self.material_id[i]
-            self.E = self.E[i]
-            self.G = self.G[i]
+            print('build2 MATHP.material_id = %s' % self.material_id)
+            self.a10 = self.a10[i]
+            self.a01 = self.a01[i]
+            self.d1 = self.d1[i]
             self.rho = self.rho[i]
-            self.a = self.a[i]
+            self.av = self.av[i]
             self.TRef = self.TRef[i]
             self.ge = self.ge[i]
-            self.St = self.St[i]
-            self.Sc = self.Sc[i]
-            self.Ss = self.Ss[i]
-            self.mcsid = self.mcsid[i]
+
+            self.na = self.na[i]
+            self.nd = self.nd[i]
+
+            self.a20 = self.a20[i]
+            self.a11 = self.a11[i]
+            self.a02 = self.a02[i]
+            self.d2 = self.d2[i]
+
+            self.a30 = self.a30[i]
+            self.a21 = self.a21[i]
+            self.a12 = self.a12[i]
+            self.a03 = self.a03[i]
+            self.d3 = self.d3[i]
+
+            self.a40 = self.a40[i]
+            self.a31 = self.a31[i]
+            self.a22 = self.a22[i]
+            self.a13 = self.a13[i]
+            self.a04 = self.a04[i]
+            self.d4 = self.d4[i]
+
+            self.a50 = self.a50[i]
+            self.a41 = self.a41[i]
+            self.a32 = self.a32[i]
+            self.a23 = self.a23[i]
+            self.a14 = self.a14[i]
+            self.a05 = self.a05[i]
+            self.d5 = self.d5[i]
+
+            self.tab1 = self.tab1[i]
+            self.tab2 = self.tab2[i]
+            self.tab3 = self.tab3[i]
+            self.tab4 = self.tab4[i]
+            self.tabd = self.tabd[i]
+            print('MATHP.material_id = %s' % self.material_id)
 
     def get_D_matrix(self):
         """
@@ -103,23 +206,12 @@ class MAT1(Material):
             G = E / 2. / (1 + nu)
         return G
 
-    def get_density_by_material_index(self, i=None):
-        if i is None:
-            i = slice(None)
+    def get_density_by_index(self, i):
         return self.rho[i]
 
-    def get_E_by_material_index(self, i=None):
-        if i is None:
-            i = slice(None)
-        return self.E[i]
-
-    def get_E_by_material_id(self, material_id=None):
+    def get_density_by_material_id(self, material_id):
         i = self.get_material_index_by_material_id(material_id)
-        return self.get_E_by_material_index(i)
-
-    def get_density_by_material_id(self, material_id=None):
-        i = self.get_material_index_by_material_id(material_id)
-        return self.get_density_by_material_index(i)
+        return self.get_density_by_index(i)
 
     def write_bdf(self, f, size=8, material_id=None):
         if self.n:
@@ -208,21 +300,56 @@ class MAT1(Material):
     def slice_by_index(self, i):
         i = asarray(i)
         #self.model.log.debug('i = %s' % i)
-        obj = MAT1(self.model)
-        obj.n = len(i)
+        obj = MATHP(self.model)
+        n = len(i)
+        obj.n = n
+        obj.i = n
         #obj._cards = self._cards[i]
         #obj._comments = obj._comments[i]
         #obj.comments = obj.comments[i]
         obj.material_id = self.material_id[i]
+
+        obj.a10 = self.a10[i]
+        obj.a01 = self.a01[i]
+        obj.d1 =  self.d1[i]
         obj.rho = self.rho[i]
-        obj.E = self.E[i]
-        obj.G = self.G[i]
-        obj.nu = self.nu[i]
-        obj.a = self.a[i]
+        obj.av =  self.av[i]
         obj.TRef = self.TRef[i]
         obj.ge = self.ge[i]
-        obj.St = self.St[i]
-        obj.Sc = self.Sc[i]
-        obj.Ss = self.Ss[i]
-        obj.mcsid = self.mcsid[i]
+
+        obj.na = self.na[i]
+        obj.nd = self.nd[i]
+
+        obj.a20 = self.a20[i]
+        obj.a11 = self.a11[i]
+        obj.a02 = self.a02[i]
+        obj.d2 = self.d2[i]
+
+        obj.a30 = self.a30[i]
+        obj.a21 = self.a21[i]
+        obj.a12 = self.a12[i]
+        obj.a03 = self.a03[i]
+        obj.d3 = self.d3[i]
+
+        obj.a40 = self.a40[i]
+        obj.a31 = self.a31[i]
+        obj.a22 = self.a22[i]
+        obj.a13 = self.a13[i]
+        obj.a04 = self.a04[i]
+        obj.d4 = self.d4[i]
+
+        obj.a50 = self.a50[i]
+        obj.a41 = self.a41[i]
+        obj.a32 = self.a32[i]
+        obj.a23 = self.a23[i]
+        obj.a14 = self.a14[i]
+        obj.a05 = self.a05[i]
+        obj.d5 = self.d5[i]
+
+        obj.tab1 = self.tab1[i]
+        obj.tab2 = self.tab2[i]
+        obj.tab3 = self.tab3[i]
+        obj.tab4 = self.tab4[i]
+        obj.tabd = self.tabd[i]
+        print("obj = %s" % obj.material_id)
         return obj

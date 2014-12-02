@@ -15,6 +15,7 @@ from .mat1 import MAT1
 from .mats1 import MATS1
 
 from .mat8 import MAT8
+from .mathp import MATHP
 
 from pyNastran.bdf.bdfInterface.assign_type import integer
 class Materials(object):
@@ -32,6 +33,7 @@ class Materials(object):
         #self.mat4 = MAT1(model)
         self.mat8 = MAT8(model)
         #self.mat10 = MAT1(model)
+        self.mathp = MATHP(model)
 
     def add_mat1(self, card, comment):
         #self.mat1.add(card, comment)
@@ -53,6 +55,9 @@ class Materials(object):
     def add_mat10(self, card, comment):
         self.mat10.add(card, comment)
 
+    def add_mathp(self, card, comment):
+        self.mathp.add(card, comment)
+
     def allocate(self, card_count):
         self.model.log.info('allocate Materials')
         n = 0
@@ -71,8 +76,11 @@ class Materials(object):
         n = 0
         types = self._get_types()
         names = self._get_type_names()
+        self.model.log.debug('building Materials')
         for name, mat in zip(names, types):
-            n += len(mat)
+            ni = len(mat)
+            n += ni
+            self.model.log.debug('    building %s; n=%s' % (mat.__class__.__name__, ni))
             mat.build()
         self.n = n
 
@@ -103,21 +111,26 @@ class Materials(object):
         #return rho
 
     def get_density_by_material_id(self, material_id):
+        if isinstance(material_id, int):
+            material_id = array([material_id], dtype='int32')
+
         n = len(material_id)
         self.model.log.debug('material_id =%s' % material_id)
         umids = unique(material_id)
 
         density = zeros(n, dtype='float64')
-        for mid in umids:
-            rho = self[mid].get_density_by_material_id([mid])
-            i = where(mid==material_id)[0]
-            density[i] = rho
-
-        #mats = self[material_id]
-        #density = array([mid.get_density_by_material_id(mid) if mid is not None else nan for mid in mats])
-        #self.model.log.debug('material_ids = %s' % material_ids)
-        #self.model.log.debug("  density mats = %s" % mats)
-        #self.model.log.debug('  density = %s' % density)
+        mat_types = [
+            self.mat1,
+            #self.mat2,
+            self.mat8,
+            self.mathp,
+        ]
+        for mat_type in mat_types:
+            for mid in umids:
+                if mid in mat_type.material_id:
+                    rho = mat_type.get_density_by_material_id([mid])
+                    i = where(mid == material_id)[0]
+                    density[i] = rho
         assert density.shape == (n, ), density.shape
         return density
 
@@ -125,6 +138,7 @@ class Materials(object):
         n = len(material_id)
         rho = zeros(n, dtype='float64')
         E = zeros(n, dtype='float64')
+
         for i, mid in enumerate(material_id):
             mat = self.get_structural_material(mid)
             rho[i] = mat.rho
@@ -267,6 +281,7 @@ class Materials(object):
                 self.mat8,
                 #self.mat10,
                 self.mats1,
+                self.mathp,
                 ]
 
     def _get_type_names(self):
@@ -274,7 +289,8 @@ class Materials(object):
                 #'MAT2', 'MAT4',
                 'MAT8',
                 #'MAT10',
-                'MATS1'
+                'MATS1',
+                'MATHP',
                 ]
 
     def _verify(self, xref=True):
@@ -291,6 +307,7 @@ class Materials(object):
                 self.mat8,
                 #self.mat10,
                 self.mats1,
+                self.mathp,
             ]
             for materials in types:
                 if materials.n:

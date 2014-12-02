@@ -15,9 +15,9 @@ from collections import defaultdict
 from numpy import unique, array
 
 from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.bdf import (to_fields, get_include_filename,
+from pyNastran.bdf.utils import (to_fields, get_include_filename,
     parse_executive_control_deck, clean_empty_lines)
-from pyNastran.bdf.bdf import EIGRL
+from pyNastran.bdf.cards.methods import (EIGB, EIGC, EIGR, EIGP, EIGRL)
 
 from pyNastran.utils.dev import list_print, object_attributes
 from pyNastran.utils.log import get_logger
@@ -2110,6 +2110,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.materials.add_mat8(card_obj, comment=comment)
         elif name == 'MAT10':
             self.materials.add_mat10(card_obj, comment=comment)
+        elif name == 'MATHP':
+            self.materials.add_mathp(card_obj, comment=comment)
 
         #========================
         elif name == 'RBAR':

@@ -39,7 +39,9 @@ class Material(VectorizedCard):
     def __len__(self):
         return self.n
 
-    def get_material_index_by_material_id(self, material_id):
+    def get_material_index_by_material_id(self, material_id=None):
+        if material_id is None:
+            return slice(None)
         i = searchsorted(self.material_id, material_id)
         return i
 

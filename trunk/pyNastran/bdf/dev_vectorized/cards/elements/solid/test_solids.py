@@ -5,21 +5,101 @@ from pyNastran.bdf.dev_vectorized.bdf import BDF, BDFCard
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.elements_solid import (
     ElementsSolid, CTETRA4, CPENTA6, CHEXA8, CTETRA10, CPENTA15, CHEXA20)
 
-bdf = BDF(debug=False)
-
 class TestSolids(unittest.TestCase):
 
     def test_cpenta_01(self):
-        lines = ['CPENTA,85,22,201,202,203,205,206,207,+PN2',
-                 '+PN2,209,210,217,  ,  ,  ,213,214,218']
-        card = bdf.process_card(lines)
+        model = BDF()
+        lines = ['CPENTA,85,22,201,202,203,205,206,207']
+        card = model.process_card(lines)
         card = BDFCard(card)
 
         size = 8
         f = StringIO()
-        card = CPENTA15(card)
-        card.write_bdf(f, size, 'dummy')
-        card.rawFields()
+        penta = CPENTA6(model)
+        penta.allocate(1)
+        penta.add(card)
+        penta.write_bdf(f, size)
+        #card.rawFields()
+        print(f.getvalue())
+
+    def test_cpenta_02(self):
+        model = BDF()
+        lines = ['CPENTA,85,22,201,202,203,205,206,207,+PN2',
+                 '+PN2,209,210,217,  ,  ,  ,213,214,218']
+        card = model.process_card(lines)
+        card = BDFCard(card)
+
+        size = 8
+        f = StringIO()
+        penta = CPENTA15(model)
+        penta.allocate(1)
+        penta.add(card)
+        penta.write_bdf(f, size)
+        #card.rawFields()
+        print(f.getvalue())
+
+    def test_chexa_01(self):
+        model = BDF()
+        lines = ['CHEXA,85,22,201,202,203,205,206,207,+PN2',
+                 '+PN2,209,210']
+        card = model.process_card(lines)
+        card = BDFCard(card)
+
+        size = 8
+        f = StringIO()
+        hexa = CHEXA8(model)
+        hexa.allocate(1)
+        hexa.add(card)
+        hexa.write_bdf(f, size)
+        #card.rawFields()
+        print(f.getvalue())
+
+    def test_chexa_02(self):
+        model = BDF()
+        lines = ['CHEXA,85,22,201,202,203,205,206,207,+PN2',
+                 '+PN2,209,210,217,  ,  ,  ,213,214,218']
+        card = model.process_card(lines)
+        card = BDFCard(card)
+
+        size = 8
+        f = StringIO()
+        hexa = CHEXA20(model)
+        hexa.allocate(1)
+        hexa.add(card)
+        hexa.write_bdf(f, size)
+        #card.rawFields()
+        print(f.getvalue())
+
+    def test_ctetra_01(self):
+        model = BDF()
+        lines = ['CTETRA,85,22,201,202,203,205']
+        card = model.process_card(lines)
+        card = BDFCard(card)
+
+        size = 8
+        f = StringIO()
+        hexa = CTETRA4(model)
+        hexa.allocate(1)
+        hexa.add(card)
+        hexa.write_bdf(f, size)
+        #card.rawFields()
+        print(f.getvalue())
+
+    def test_ctetra_02(self):
+        model = BDF()
+        lines = ['CTETRA,85,22,201,202,203,205,206,207,+PN2',
+                 '+PN2,209,210,217']
+        card = model.process_card(lines)
+        card = BDFCard(card)
+
+        size = 8
+        f = StringIO()
+        hexa = CTETRA10(model)
+        hexa.allocate(1)
+        hexa.add(card)
+        hexa.write_bdf(f, size)
+        #card.rawFields()
+        print(f.getvalue())
 
     def test_solid_02(self):
         """checks nonlinear static solid material"""
@@ -277,8 +357,12 @@ class TestSolids(unittest.TestCase):
             model.add_card(fields, fields[0], is_list=True)
         model.cross_reference()
 
-        mat = model.Material(mid)
-        mat.E()
+        mat = model.materials[mid]
+        print('----MAT----', type(mat))
+        print(mat)
+        print('E = %s' % mat.get_E_by_material_index())
+        print('E = %s' % mat.get_E_by_material_id())
+
 
 
 if __name__ == '__main__':  # pragma: no cover

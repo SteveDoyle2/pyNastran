@@ -1,7 +1,7 @@
-from numpy import concatenate, argsort, searchsorted, ndarray
+from numpy import concatenate, argsort, searchsorted, ndarray, hstack
 
 from .psolid import PSOLID
-#from .plsolid import PLSOLID
+from .plsolid import PLSOLID
 
 class PropertiesSolid(object):
     def __init__(self, model):
@@ -14,7 +14,7 @@ class PropertiesSolid(object):
         self.model = model
 
         self.psolid = PSOLID(self.model)
-        #self.plsolid = PLSOLID(self.model)
+        self.plsolid = PLSOLID(self.model)
         self.n = 0
 
     def allocate(self, card_count):
@@ -36,7 +36,7 @@ class PropertiesSolid(object):
             self.n += prop.n
 
         npsolid = self.psolid.n
-        self.property_id = self.psolid.property_id
+        self.property_id = hstack([self.psolid.property_id, self.plsolid.property_id])
         #print('npsolid =', npsolid)
         #assert npsolid > 0
         #nplsolid = self.plsolid.n
@@ -75,7 +75,7 @@ class PropertiesSolid(object):
         #return _property_id
 
     def _get_types(self, nlimit=True):
-        types = [self.psolid]
+        types = [self.psolid, self.plsolid]
         if nlimit:
             types2 = []
             for ptype in types:
