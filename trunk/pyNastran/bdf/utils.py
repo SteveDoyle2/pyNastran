@@ -2,6 +2,186 @@ from six import iteritems
 import os
 from numpy import unique, cross, dot
 
+
+def _clean_comment(comment, end=-1):
+    """
+    Removes specific pyNastran comment lines so duplicate lines aren't
+    created.
+
+    :param comment: the comment to possibly remove
+    """
+    if comment[:end] in ['$EXECUTIVE CONTROL DECK',
+            '$CASE CONTROL DECK',
+            '$NODES', '$SPOINTS', '$ELEMENTS',
+            '$PARAMS', '$PROPERTIES', '$ELEMENTS_WITH_PROPERTIES',
+            '$ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)',
+            '$UNASSOCIATED_PROPERTIES',
+            '$MATERIALS', '$THERMAL MATERIALS',
+            '$CONSTRAINTS', '$SPCs', '$MPCs', '$RIGID ELEMENTS',
+            '$LOADS', '$AERO', '$AERO CONTROL SURFACES',
+            '$FLUTTER', '$DYNAMIC', '$OPTIMIZATION',
+            '$COORDS', '$THERMAL', '$TABLES', '$RANDOM TABLES',
+            '$SETS', '$CONTACT', '$REJECTS', '$REJECT_LINES',
+            '$PROPERTIES_MASS', '$MASSES']:
+        comment = ''
+    return comment
+
+
+def to_fields(card_lines, card_name):
+    """
+    Converts a series of lines in a card into string versions of the field.
+    Handles large, small, and CSV formatted cards.
+
+    :param lines:     the lines of the BDF card object
+    :param card_name: the card_name -> 'GRID'
+    :returns fields:  the string formatted fields of the card
+    """
+    fields = []
+    # first line
+    line = card_lines.pop(0)
+    if '=' in line:
+        raise SyntaxError('card_name=%r\nequal signs are not supported...'
+                          'line=%r' % (card_name, line))
+
+    if '\t' in line:
+        line = line.expandtabs()
+        if ',' in line:
+            raise SyntaxError('tabs and commas in the same line are '
+                              'not supported...line=%r' % line)
+
+    if '*' in line:  # large field
+        if ',' in line:  # csv
+            new_fields = line[:72].split(',')[:5]
+            for i in range(5-len(new_fields)):
+                new_fields.append('')
+        else:  # standard
+            new_fields = [line[0:8], line[8:24], line[24:40], line[40:56],
+                          line[56:72]]
+        fields += new_fields
+        assert len(fields) == 5
+    else:  # small field
+        if ',' in line:  # csv
+            new_fields = line[:72].split(',')[:9]
+            for i in range(9 - len(new_fields)):
+                new_fields.append('')
+        else:  # standard
+            new_fields = [line[0:8], line[8:16], line[16:24], line[24:32],
+                          line[32:40], line[40:48], line[48:56], line[56:64],
+                          line[64:72]]
+        fields += new_fields
+        assert len(fields) == 9
+
+    for j, line in enumerate(card_lines): # continuation lines
+        #for i, field in enumerate(fields):
+        #    if field.strip() == '+':
+        #        raise RuntimeError('j=%s field[%s] is a +' % (j,i))
+
+        if '=' in line and card_name != 'EIGRL':
+            raise SyntaxError('card_name=%r\nequal signs are not supported...'
+                              'line=%r' % (card_name, line))
+        if '\t' in line:
+            line = line.expandtabs()
+            if ',' in line:
+                raise SyntaxError('tabs and commas in the same line are '
+                                  'not supported...line=%r' % line)
+
+        if '*' in line:  # large field
+            if ',' in line:  # csv
+                new_fields = line[:72].split(',')[1:5]
+                for i in range(4 - len(new_fields)):
+                    new_fields.append('')
+            else:  # standard
+                new_fields = [line[8:24], line[24:40], line[40:56], line[56:72]]
+            assert len(new_fields) == 4
+        else:  # small field
+            if ',' in line:  # csv
+                new_fields = line[:72].split(',')[1:9]
+                for i in range(8 - len(new_fields)):
+                    new_fields.append('')
+            else:  # standard
+                new_fields = [line[8:16], line[16:24], line[24:32],
+                              line[32:40], line[40:48], line[48:56],
+                              line[56:64], line[64:72]]
+            if len(new_fields) != 8:
+                nfields = len(new_fields)
+                msg = 'nFields=%s new_fields=%s' % (nfields, new_fields)
+                raise RuntimeError(msg)
+
+        fields += new_fields
+    return [field.strip() for field in fields]
+
+
+def get_include_filename(card_lines, include_dir=''):
+    """
+    Parses an INCLUDE file split into multiple lines (as a list).
+
+    :param card_lines:  the list of lines in the include card (all the lines!)
+    :param include_dir: the include directory (default='')
+    :returns filename:  the INCLUDE filename
+    """
+    cardLines2 = []
+    for line in card_lines:
+        line = line.strip('\t\r\n ')
+        cardLines2.append(line)
+
+    cardLines2[0] = cardLines2[0][7:].strip()  # truncate the cardname
+    filename = ''.join(cardLines2)
+    filename = filename.strip('"').strip("'")
+    if ':' in filename:
+        ifilepaths = filename.split(':')
+        filename = os.path.join(*ifilepaths)
+    filename = os.path.join(include_dir, filename)
+    return filename
+
+
+def parse_executive_control_deck(executive_control_lines):
+    """
+    Extracts the solution from the executive control deck
+    """
+    sol = None
+    method = None
+    iSolLine = None
+    for (i, eline) in enumerate(executive_control_lines):
+        uline = eline.strip().upper()  # uppercase line
+        uline = uline.split('$')[0].expandtabs()
+        if uline[:4] in ['SOL ']:
+            if ',' in uline:
+                sline = uline.split(',')  # SOL 600,method
+                solValue = sline[0].strip()
+                method = sline[1].strip()
+            else:
+                solValue = uline
+                method = None
+
+            if sol is None:
+                sol = solValue[3:].strip()
+            else:
+                raise ValueError('cannot overwrite solution existing='
+                                 '|SOL %s| new =|%s|' % (sol, uline))
+            iSolLine = i
+    return sol, method, iSolLine
+
+
+def clean_empty_lines(lines):
+    """
+    removes leading and trailing empty lines
+    don't remove internally blank lines
+    """
+    found_lines = False
+    if len(lines) < 2:
+        return lines
+
+    for i, line in enumerate(lines):
+        if not found_lines and line:
+            found_lines = True
+            n1 = i
+            n2 = i + 1
+        elif found_lines and line:
+            n2 = i + 1
+    lines2 = lines[n1:n2]
+    return lines2
+
+
 def print_filename(filename, relpath):
     """
     Takes a path such as C:/work/fem.bdf and locates the file using
