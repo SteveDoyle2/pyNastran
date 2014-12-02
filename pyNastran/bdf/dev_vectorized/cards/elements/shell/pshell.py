@@ -32,7 +32,7 @@ class PSHELL(Property):
         Property.__init__(self, model)
 
     def allocate(self, ncards):
-        print('allocate PSHELL')
+        self.model.log.debug('allocate PSHELL')
         self.n = ncards
         float_fmt = self.model.float
         self.property_id = zeros(ncards, 'int32')
@@ -49,7 +49,7 @@ class PSHELL(Property):
 
     def add(self, card, comment=''):
         i = self.i
-        print('adding %s; i=%s' %(card, i))
+        self.model.log.debug('adding %s; i=%s' %(card, i))
         self.property_id[i] = integer(card, 1, 'property_id')
         self.material_id[i] = integer(card, 2, 'material_id')
         self.thickness[i] = double(card, 3, 'thickness')
@@ -85,7 +85,7 @@ class PSHELL(Property):
         #    assert self.material_id4==None
         assert len(card) <= 12, 'len(PSHELL card) = %i' % len(card)
         self.i += 1
-        print('self.i = %s' % self.i)
+        self.model.log.debug('self.i = %s' % self.i)
 
     def build(self):
         if self.n:
@@ -141,11 +141,6 @@ class PSHELL(Property):
                     f.write(print_card_8(card))
                 else:
                     f.write(print_card_16(card))
-
-    def get_property_index_by_property_id(self, property_id=None):
-        if property_id is None:
-            return arange(self.n)
-        return searchsorted(self.property_id, property_id)
 
     def get_nonstructural_mass_by_property_id(self, property_id=None):
         """

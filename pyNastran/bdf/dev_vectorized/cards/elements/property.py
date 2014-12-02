@@ -46,3 +46,8 @@ class Property(VectorizedCard):
     def get_property_index_by_property_id(self, property_id=None, msg=''):
         i = self._get_sorted_index(self.property_id, property_id, self.n, 'property_id', 'property_id in %s%s' % (self.type, msg), check=True)
         return i
+
+    #def get_property_index_by_property_id(self, property_id=None):
+        #if property_id is None:
+            #return arange(self.n)
+        #return searchsorted(self.property_id, property_id)

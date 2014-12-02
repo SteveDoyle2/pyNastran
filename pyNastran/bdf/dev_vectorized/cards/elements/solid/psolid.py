@@ -85,8 +85,6 @@ class PSOLID(Property):
             unique_pids = unique(self.property_id)
             if len(unique_pids) != len(self.property_id):
                 raise RuntimeError('There are duplicate PSOLID IDs...')
-            self._cards = []
-            self._comments = []
         else:
             self.property_id = array([], dtype='int32')
             self.material_id = array([], dtype='int32')

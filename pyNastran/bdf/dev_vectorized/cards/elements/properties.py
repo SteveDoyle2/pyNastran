@@ -143,7 +143,7 @@ def check_duplicate(name, objs):
         if hasattr(obj, name):
             vals = getattr(obj, name)
             if len(vals):
-                print("%s vals = %s for class %s" % (name, vals, obj.__class__.__name__))
+                self.model.log.debug("%s vals = %s for class %s" % (name, vals, obj.__class__.__name__))
                 unique_vals.update(list(vals))
             #print unique_vals
         else:

@@ -65,7 +65,7 @@ class Coord(object):
                       for name in ['CORD1R', 'CORD1C', 'CORD1S',
                                    'CORD2R', 'CORD2C', 'CORD2S']
                       if name in card_count], dtype='int32').sum() + 1
-        print('nCOORDcards = %s' % ncards)
+        self.model.log.debug('nCOORDcards = %s' % ncards)
         #print('ncards coord = %s' % ncards)
         self.coord_id = zeros(ncards, dtype='int32')
         self.Type = full(ncards, nan, dtype='|S1')  # R-CORD2R, S-CORD2S, C-CORD2C
@@ -123,10 +123,10 @@ class Coord(object):
                                           coord.j[:],
                                           coord.k[:]] )
             else:
-                print('need to resolve cid=%i rid=%i Type=%s' % (cid, coord.rid, coord.Type))
+                self.model.log.debug('need to resolve cid=%i rid=%i Type=%s' % (cid, coord.rid, coord.Type))
                 cids_to_resolve.append(cid)
-        print('coord_id = %s' % self.coord_id)
-        #print('T =\n%s' % self.T)
+        self.model.log.debug('coord_id = %s' % self.coord_id)
+        #self.model.log.debug('T =\n%s' % self.T)
         self.resolve_coords(cids_to_resolve)
 
     def resolve_coords(self, cids_to_resolve):

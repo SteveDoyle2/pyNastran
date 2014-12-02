@@ -40,7 +40,7 @@ class CTETRA10(SolidElement):
             #self._comments[eid] = comment
 
         #: Element ID
-        comment = self._comments[i]
+        #comment = self._comments[i]
         element_id = integer(card, 1, 'element_id')
         #if comment:
             #self.comments[eid] = comment
@@ -50,8 +50,20 @@ class CTETRA10(SolidElement):
         #: Property ID
         self.property_id[i] = integer(card, 2, 'property_id')
         #: Node IDs
-        self.node_ids[i, :] = fields(integer, card, 'node_ids', i=3, j=13)
-        assert len(card) == 13, 'len(CTETRA10 card) = %i' % len(card)
+        nids = array([
+            integer(card, 3, 'node_id_1'),
+            integer(card, 4, 'node_id_2'),
+            integer(card, 5, 'node_id_3'),
+            integer(card, 6, 'node_id_4'),
+            integer_or_blank(card, 7, 'node_id_5', 0),
+            integer_or_blank(card, 8, 'node_id_6', 0),
+            integer_or_blank(card, 9, 'node_id_7', 0),
+            integer_or_blank(card, 10, 'node_id_8', 0),
+            integer_or_blank(card, 11, 'node_id_9', 0),
+            integer_or_blank(card, 12, 'node_id_10', 0),
+        ], dtype='int32')
+        self.node_ids[i, :] = nids
+        assert len(card) <= 13, 'len(CTETRA10 card) = %i' % len(card)
         self.i += 1
 
     def _verify(self, xref=True):
@@ -191,6 +203,7 @@ class CTETRA10(SolidElement):
             else:
                 i = searchsorted(self.element_id, element_id)
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
+                n = [ni if ni != 0 else None for ni in n]
                 card = ['CTETRA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7], n[8], n[9]]
                 f.write(print_card_8(card))
 

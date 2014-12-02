@@ -45,12 +45,12 @@ class CTETRA4(SolidElement):
         #: Property ID
         self.property_id[i] = integer(card, 2, 'property_id')
         #: Node IDs
-        nids = [
-            integer(card, 3, 'nid1'),
-            integer(card, 4, 'nid2'),
-            integer(card, 5, 'nid3'),
-            integer(card, 6, 'nid4'),
-        ]
+        nids = array([
+            integer(card, 3, 'node_id_1'),
+            integer(card, 4, 'node_id_2'),
+            integer(card, 5, 'node_id_3'),
+            integer(card, 6, 'node_id_4'),
+        ], dtype='int32')
         assert 0 not in nids, '%s\n%s' % (nids, card)
         self.node_ids[i, :] = nids
         assert len(card) == 7, 'len(CTETRA4 card) = %i' % len(card)

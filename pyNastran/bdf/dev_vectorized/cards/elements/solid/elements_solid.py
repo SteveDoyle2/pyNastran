@@ -93,7 +93,8 @@ class ElementsSolid(object):
 
     def get_property_id_material_id(self):
         ptypes = {
-            'PSOLID' : self.model.elements.element_solids.property_id,
+            'PSOLID' : self.model.elements.element_solids.psolid.property_id,
+            'PLSOLID' : self.model.elements.element_solids.plsolid.property_id,
         }
         #element_property = zeros((self.n, 2), dtype='int32')
         #n0 = n
@@ -127,7 +128,7 @@ class ElementsSolid(object):
         upids = unique(pids)
         ptypes = [
             self.model.elements.properties_solid.psolid,
-            #PLSOLID,
+            self.model.elements.properties_solid.plsolid,
         ]
         nupid = len(upids)
         upid_mids = zeros((nupid, 2), dtype='int32')

@@ -83,16 +83,16 @@ class CHEXA8(SolidElement):
         #: Property ID
         self.property_id[i] = integer(card, 2, 'property_id')
         #: Node IDs
-        nids = [
-            integer(card, 3, 'nid1'),
-            integer(card, 4, 'nid2'),
-            integer(card, 5, 'nid3'),
-            integer(card, 6, 'nid4'),
-            integer(card, 7, 'nid5'),
-            integer(card, 8, 'nid6'),
-            integer(card, 9, 'nid7'),
-            integer(card, 10, 'nid8')
-        ]
+        nids = array([
+            integer(card, 3, 'node_id_1'),
+            integer(card, 4, 'node_id_2'),
+            integer(card, 5, 'node_id_3'),
+            integer(card, 6, 'node_id_4'),
+            integer(card, 7, 'node_id_5'),
+            integer(card, 8, 'node_id_6'),
+            integer(card, 9, 'node_id_7'),
+            integer(card, 10, 'node_id_8')
+        ], dtype='int32')
         assert 0 not in nids, '%s\n%s' % (nids, card)
         self.node_ids[i, :] = nids
         assert len(card) == 11, 'len(CHEXA8 card) = %i' % len(card)

@@ -1,4 +1,5 @@
 from __future__ import print_function
+from six.moves import StringIO
 from numpy import array, allclose, array_equal
 import unittest
 
@@ -180,10 +181,9 @@ class TestCoords(unittest.TestCase):
         card_count = {
             'GRID': 3,
         }
-        #model.grid.allocate(card_count)
+        model.allocate(card_count)
         for card in cards:
             model.add_card(card, card[0], comment='comment', is_list=True)
-        model.cross_reference()
         #+------+-----+----+----+----+----+----+----+------+
         #|   0  |  1  | 2  | 3  | 4  | 5  |  6 | 7  |  8   |
         #+======+=====+====+====+====+====+====+====+======+
@@ -214,6 +214,11 @@ class TestCoords(unittest.TestCase):
 
     def test_cord1_01(self):
         model = BDF(debug=False)
+        card_count = {
+            'CCORD1R' : 1,
+            'GRID' : 3,
+        }
+        model.allocate(card_count)
         cards = [
             ['CORD1R', 1, 1, 2, 3],  # fails on self.k
             ['GRID', 1, 0, 0., 0., 0.],
@@ -276,6 +281,13 @@ class TestCoords(unittest.TestCase):
         all points are located at <30,40,50>
         """
         model = BDF(debug=False)
+        card_count = {
+            'GRID' : 3,
+            'CORD2R' : 1,
+            'CORD2C' : 1,
+            'CORD2S' : 1,
+        }
+        model.allocate(card_count)
         cards = [
             [#'$ Femap with NX Nastran Coordinate System 10 : rectangular defined in a rectangular',
             'CORD2R*               10               0             10.              5.',
@@ -311,6 +323,13 @@ class TestCoords(unittest.TestCase):
         all points are located at <30,40,50>
         """
         model = BDF(debug=False)
+        card_count = {
+            'GRID' : 3,
+            'CORD2R' : 1,
+            'CORD2C' : 2,
+            'CORD2S' : 1,
+        }
+        model.allocate(card_count)
         cards = [
             ['CORD2C*                1               0              0.              0.',
             '*                     0.              0.              0.              1.*       ',
@@ -348,6 +367,14 @@ class TestCoords(unittest.TestCase):
         all points are located at <30,40,50>
         """
         model = BDF(debug=False)
+        card_count = {
+            'GRID' : 3,
+            'CORD2R' : 1,
+            'CORD2C' : 1,
+            'CORD2S' : 2,
+        }
+        model.allocate(card_count)
+
         cards = [
             ['CORD2S*                2               0              0.              0.',
             '*                     0.              0.              0.              1.*       ',
@@ -386,10 +413,11 @@ class TestCoords(unittest.TestCase):
         card = BDFCard(card)
 
         size = 8
+        f = StringIO()
         card = CORD1C(card)
         self.assertEquals(card.Cid(), 2)
         self.assertEquals(card.Rid(), 0)
-        card.write_bdf(size, 'dummy')
+        card.write_bdf(f, size)
         card.rawFields()
 
     def test_cord1s_01(self):
@@ -398,10 +426,11 @@ class TestCoords(unittest.TestCase):
         card = BDFCard(card)
 
         size = 8
+        f = StringIO()
         card = CORD1S(card)
         self.assertEquals(card.Cid(), 2)
         self.assertEquals(card.Rid(), 0)
-        card.write_bdf(size, 'dummy')
+        card.write_bdf(f, size)
         card.rawFields()
 
     def test_cord2r_02(self):
@@ -410,6 +439,11 @@ class TestCoords(unittest.TestCase):
                  '           1.135 .089237   .9324']
 
         model = BDF(debug=False)
+        card_count = {
+            'GRID' : 1,
+            'CORD2R' : 1,
+        }
+        model.allocate(card_count)
         card = model.process_card(grid)
         model.add_card(card, card[0])
 
@@ -435,6 +469,11 @@ class TestCoords(unittest.TestCase):
     def getNodes(self, grids, grids_expected, coords):
         model = BDF(debug=False)
 
+        card_count = {
+            'GRID' : len(grids),
+            'CORD2R' : len(coords),
+        }
+        model.allocate(card_count)
         for grid in grids:
             (nid, cid, x, y, z) = grid
             model.add_card(['GRID', nid, cid, x, y, z], 'GRID')
