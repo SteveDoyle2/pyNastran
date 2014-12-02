@@ -19,6 +19,7 @@ from pyNastran.bdf.utils import (to_fields, get_include_filename,
     parse_executive_control_deck, clean_empty_lines)
 from pyNastran.bdf.cards.methods import (EIGB, EIGC, EIGR, EIGP, EIGRL)
 
+from pyNastran.utils import print_bad_path
 from pyNastran.utils.dev import list_print, object_attributes
 from pyNastran.utils.log import get_logger
 from pyNastran.utils.gui_io import load_file_dialog
@@ -2479,6 +2480,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             mass = massi
         #print('mass =', mass, type(mass))
         return mass
+
+    def get_bdf_stats(self, return_type='list'):
+        return ''
 
 def reduce_types(types):
     types2 = []

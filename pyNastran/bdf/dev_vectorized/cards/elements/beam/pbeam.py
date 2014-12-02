@@ -74,7 +74,7 @@ class PBEAM(object):
         self.property_id = array(sorted(self.properties.keys()), dtype='int32')
 
     #=========================================================================
-    def write_bdf(self, f, size=8, property_ids=None):
+    def write_bdf(self, f, size=8, property_id=None):
         if size == 8:
             for pid, prop in sorted(iteritems(self.properties)):
                 f.write(prop.write_bdf(size, print_card_8))

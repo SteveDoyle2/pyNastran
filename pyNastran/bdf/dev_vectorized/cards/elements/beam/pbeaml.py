@@ -31,19 +31,22 @@ class PBEAML(object):
         for pid in pids:
             yield pid, self.__getitem__(pid)
 
-    def __getitem__(self, property_ids):
-        property_ids, int_flag = slice_to_iter(property_ids)
-        obj = PBEAM(self.model)
+    def __getitem__(self, property_id):
+        property_id, int_flag = slice_to_iter(property_id)
+        obj = PBEAML(self.model)
 
         properties = {}
-        for pid in sorted(property_ids):
+        for pid in sorted(property_id):
             properties[pid] = self.properties[pid]
-        obj.n = len(property_ids)
+        obj.n = len(property_id)
         obj.properties = properties
         obj.property_id = sorted(self.properties.keys())
         #obj._comments = obj._comments[index]
         #obj.comments = obj.comments[index]
         return obj
+
+    def allocate(self, ncards):
+        pass
 
     def slice_by_index(self, i):
         i = asarray(i)
@@ -72,7 +75,7 @@ class PBEAML(object):
         self.property_id = array(sorted(self.properties.keys()), dtype='int32')
 
     #=========================================================================
-    def write_bdf(self, f, size=8, property_ids=None):
+    def write_bdf(self, f, size=8, property_id=None):
         if size == 8:
             for pid, prop in sorted(iteritems(self.properties)):
                 f.write(prop.write_bdf(size, print_card_8))

@@ -23,6 +23,7 @@ class CONM2(VectorizedCard):
         VectorizedCard.__init__(self, model)
 
     def allocate(self, ncards):
+        self.n = ncards
         float_fmt = self.model.float
 
         #: Element ID
@@ -98,14 +99,14 @@ class CONM2(VectorizedCard):
             msg.append('  %-8s: %i' % ('CONM2', self.n))
         return msg
 
-    def write_bdf(self, f, size=8, is_double=False, element_ids=None):
+    def write_bdf(self, f, size=8, is_double=False, element_id=None):
         assert self.n > 0, self.n
         size = 16
         if self.n:
-            if element_ids is None:
+            if element_id is None:
                 i = arange(self.n)
             else:
-                i = searchsorted(self.element_id, element_ids)
+                i = searchsorted(self.element_id, element_id)
 
             blank = ' ' * size
             #cid = [cid if cid != 0 else '' for cid in self.coord_id]

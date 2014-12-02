@@ -21,11 +21,11 @@ class ElementsSpring(object):
         self.celas4 = CELAS4(self.model)
 
     def allocate(self, card_count):
-        etypes = self._get_types(nlimit=True)
+        etypes = self._get_types(nlimit=False)
         for etype in etypes:
             if etype.type in card_count:
-                #print('etype.type =', etype.type, etype.n)
-                etype.allocate(card_count)
+                print('etype.type =', etype.type, etype.n)
+                etype.allocate(card_count[etype.type])
             #else:
                 #assert hasattr(ptype, 'allocate'), '%s doesnt support allocate' % ptype.type
 
