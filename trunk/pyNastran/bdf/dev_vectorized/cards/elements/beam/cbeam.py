@@ -81,7 +81,7 @@ class CBEAM(Element):
             self.is_g0[i] = False
             x = array([field5,
                        double_or_blank(card, 6, 'x2', 0.0),
-                       double_or_blank(card, 7, 'x3', 0.0)], dtype=float_fmt)
+                       double_or_blank(card, 7, 'x3', 0.0)])
             self.x[i, :] = x
             if norm(x) == 0.0:
                 msg = 'G0 vector defining plane 1 is not defined on %s %s.\n' % (self.type, eid)

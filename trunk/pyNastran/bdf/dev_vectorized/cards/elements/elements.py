@@ -119,6 +119,7 @@ class Elements(object):
                 if elems.type in self.model.card_count:
                     self.model.log.debug('building %s' % elems.__class__.__name__)
             else:
+                #if elems.n:
                 self.model.log.debug('building %s' % elems.__class__.__name__)
             elems.build()
             self.ne += elems.n
@@ -130,6 +131,7 @@ class Elements(object):
                 if props.type in self.model.card_count:
                     self.model.log.debug('building %s' % props.__class__.__name__)
             else:
+                #if props.n:
                 self.model.log.debug('building %s' % props.__class__.__name__)
             props.build()
             self.np += props.n

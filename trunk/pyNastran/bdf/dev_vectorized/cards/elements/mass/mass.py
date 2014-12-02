@@ -29,7 +29,7 @@ class Mass(object):
         #self.cmass5 = CMASS5(model)
 
     def allocate(self, card_count):
-        etypes = self._get_types(nlimit=True)
+        etypes = self._get_types(nlimit=False)
         for etype in etypes:
             if etype.type in card_count:
                 etype.allocate(card_count[etype.type])
@@ -47,6 +47,7 @@ class Mass(object):
             elems.build()
             self.n += elems.n
 
+        #self.model.log.debug('    elements.mass.n = %s' % self.n)
         #eid = concatenate(pshell.pid, pcomp.pid)
         #unique_eids = unique(eid)
         #if unique_eids != len(eid):
@@ -113,13 +114,13 @@ class Mass(object):
         return mass
 
     #=========================================================================
-    def write_bdf(self, f, size=8, is_double=False, element_ids=None):
+    def write_bdf(self, f, size=8, is_double=False, element_id=None):
         types = self._get_types(nlimit=True)
         if types:
             f.write('$ELEMENTS_MASS\n')
         for elems in types:
             #print "MASS", elems.type
-            elems.write_bdf(f, size=size, element_ids=element_ids)
+            elems.write_bdf(f, size=size, element_id=element_id)
 
     def _get_types(self, nlimit=True):
         mtypes = [

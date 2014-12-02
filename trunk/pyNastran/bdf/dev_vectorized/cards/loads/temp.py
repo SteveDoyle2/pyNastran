@@ -1,4 +1,4 @@
-
+from six import iteritems
 from six.moves import zip
 from collections import defaultdict
 from numpy import zeros, arange, where, searchsorted, argsort, unique, asarray, array, dot, transpose, append, array_equal
