@@ -43,7 +43,7 @@ class SolidElement(Element):
                                    'element_id', 'element_id in %s' % self.type, check=True)
         self.model.log.debug('ielem = %s' % i)
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_position_by_index()
+            xyz_cid0 = self.model.grid.get_position_by_node_index()
         return self._get_node_locations_by_index(i, xyz_cid0)
 
     def allocate(self, ncards):

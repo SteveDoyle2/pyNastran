@@ -39,11 +39,12 @@ from pyNastran.bdf.dev_vectorized.bdf import BDF
     #LOAD)
 from pyNastran.op2.test.test_op2 import OP2
 from pyNastran.f06.f06 import F06
+from pyNastran.converters.nastran.nastranIO import NastranIO as NastranIO_xref
 
-
-class NastranIO(object):
+class NastranIO(NastranIO_xref):
     def __init__(self):
         self.is_sub_panels = False
+        self.save_data = False
 
     def load_nastran_geometry(self, bdf_filename, dirname):
         self.eidMap = {}
@@ -101,34 +102,41 @@ class NastranIO(object):
             self.modelType = model.modelType
             model.read_bdf(bdf_filename, include_dir=dirname, punch=punch, xref=True)
 
-        nNodes = model.nNodes()
+        nNodes = model.grid.n
+        nElements = model.elements.ne
+
+        #nNodes = model.nNodes()
         assert nNodes > 0
-        nElements = model.nElements()
+        #nElements = model.nElements()
         assert nElements > 0
 
-        if self.is_sub_panels and 0:
-            nsub_elements_caeros = 0
-            nsub_points_caeros = 0
-            for key, caero in iteritems(model.caeros):
-                if hasattr(caero, 'panel_points_elements'):
-                    npoints, nelements = caero.get_npanel_points_elements()
-                    nsub_elements_caeros += npoints
-                    nsub_points_caeros += nelements
-                else:
-                    print('%r doesnt support panel_points_elements' % caero.type)
-            nCAeros = nsub_elements_caeros
-            nCAerosPoints = nsub_points_caeros
+        if 0:
+            if self.is_sub_panels:
+                nsub_elements_caeros = 0
+                nsub_points_caeros = 0
+                for key, caero in iteritems(model.caeros):
+                    if hasattr(caero, 'panel_points_elements'):
+                        npoints, nelements = caero.get_npanel_points_elements()
+                        nsub_elements_caeros += npoints
+                        nsub_points_caeros += nelements
+                    else:
+                        print('%r doesnt support panel_points_elements' % caero.type)
+                nCAeros = nsub_elements_caeros
+                nCAerosPoints = nsub_points_caeros
+            else:
+                nCAeros = model.nCAeros()
+                nCAerosPoints = nCAeros * 4
         else:
-            nCAeros = model.nCAeros()
-            nCAerosPoints = nCAeros * 4
+            nCAeros = 0
+            nCAerosPoints = 0
 
         # old
-        #self.nNodes = nNodes
-        #self.nElements = nElements
+        self.nNodes = nNodes
+        self.nElements = nElements
 
         # new
-        self.nNodes = model.grid.n
-        self.nElements = model.elements.n
+        #self.nNodes = model.grid.n
+        #self.nElements = model.elements.n
 
         self.log_info("nNodes=%i nElements=%i" % (self.nNodes, self.nElements))
         msg = model.get_bdf_stats(return_type='list')
@@ -169,29 +177,23 @@ class NastranIO(object):
                 i += 1
 
         # add the nodes
-        node0 = model.nodes.keys()[0]
-        position0 = model.nodes[node0].Position()
-        xmin = position0[0]
-        xmax = position0[0]
+        node_ids = model.grid.node_id
+        xyz_cid0 = model.grid.get_position_by_node_index()
+        xmax, ymax, zmax = amax(xyz_cid0, axis=0)
+        xmin, ymin, zmin = amin(xyz_cid0, axis=0)
+        self.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
+        self.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
+        self.log_info("zmin=%s xmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
 
-        ymin = position0[1]
-        ymax = position0[1]
-
-        zmin = position0[2]
-        zmax = position0[2]
-        points = model.grid.get_position_by_node_index()
-        xmax, ymax, zmax = amax(points, axis=1)
-        xmin, ymin, zmin = amin(points, axis=1)
-        for i, point in enumerate(points):
-            points.InsertPoint(i, *point)
-            self.nidMap[nid] = i
+        if self.save_data:
+            self.xyz_cid0 = xyz_cid0
+        for i, (xyz, node_id) in enumerate(zip(xyz_cid0, node_ids)):
+            points.InsertPoint(i, *xyz)
+            self.nidMap[node_id] = i
 
         dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
         self.update_axes_length(dim_max)
 
-        self.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
-        self.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
-        self.log_info("zmin=%s xmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
 
         # add the CAERO/CONM2 elements
         j = 0
@@ -249,31 +251,32 @@ class NastranIO(object):
                 self.log_info("skipping %s" % element.type)
 
         sphere_size = self._get_sphere_size(dim_max)
-        for (eid, element) in sorted(iteritems(model.masses)):
-            if isinstance(element, CONM2):
-                #del self.eidMap[eid]
+        if 0:
+            for (eid, element) in sorted(iteritems(model.elements.mass)):
+                if isinstance(element, CONM2):
+                    #del self.eidMap[eid]
 
-                #print("element", element)
-                #print("element.nid", element.nid)
-                #print('nodeIDs', model.nodes.keys())
-                xyz = element.nid.Position()
-                c = element.Centroid()
-                d = norm(xyz-c)
-                elem = vtk.vtkVertex()
-                #elem = vtk.vtkSphere()
+                    #print("element", element)
+                    #print("element.nid", element.nid)
+                    #print('nodeIDs', model.nodes.keys())
+                    xyz = element.nid.Position()
+                    c = element.Centroid()
+                    d = norm(xyz-c)
+                    elem = vtk.vtkVertex()
+                    #elem = vtk.vtkSphere()
 
-                if d == 0.:
-                    d = sphere_size
-                #elem.SetRadius(d)
-                #elem.SetCenter(points.GetPoint(self.nidMap[nid]))
-                #print(str(element))
+                    if d == 0.:
+                        d = sphere_size
+                    #elem.SetRadius(d)
+                    #elem.SetCenter(points.GetPoint(self.nidMap[nid]))
+                    #print(str(element))
 
-                points2.InsertPoint(j, *c)
-                elem.GetPointIds().SetId(0, j)
-                self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                j += 1
-            else:
-                self.log_info("skipping %s" % element.type)
+                    points2.InsertPoint(j, *c)
+                    elem.GetPointIds().SetId(0, j)
+                    self.grid2.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    j += 1
+                else:
+                    self.log_info("skipping %s" % element.type)
 
         self.mapElements(points, points2, self.nidMap, model, j, dim_max)
 
@@ -298,65 +301,104 @@ class NastranIO(object):
         pids_dict = {}
         nelements = len(model.elements)
         pids = zeros(nelements, 'int32')
-        elements = self.model.elements
+        elements = model.elements
+
+        ie = 0
+        eidMap = {}
+        self.eidMap = eidMap
+
+        #======================================================================
+        rods = [
+            elements.crod,
+            elements.conrod,
+        ]
+        for rod in rods:
+            if rod.n:
+                print('n%s = %s' % (rod.type, rod.n))
+                i1, i2 = rod.get_node_indicies()
+                eids = rod.element_id
+                for eid, ii1, ii2 in zip(eids, i1, i2):
+                    eidMap[eid] = ie
+                    elem = vtk.vtkLine()
+                    elem.GetPointIds().SetId(0, ii1)
+                    elem.GetPointIds().SetId(1, ii2)
+                    self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    ie += 1
+
         tria3s = [
-            elements.shell_elements.ctria3,
-            #elements.shell_elements.ctriar,
+            elements.elements_shell.ctria3,
+            #elements.elements_shell.ctriar,
+            #elements.elements_shell.ctriax6,
         ]
         for tria3 in tria3s:
             if tria3.n:
+                print('n%s = %s' % (tria3.type, tria3.n))
                 i1, i2, i3 = tria3.get_node_indicies()
-                for ii1, ii2, ii3 in zip(i1, i2, i3):
+                eids = tria3.element_id
+                for eid, ii1, ii2, ii3 in zip(eids, i1, i2, i3):
+                    eidMap[eid] = ie
                     elem = vtkTriangle()
                     elem.GetPointIds().SetId(0, ii1)
                     elem.GetPointIds().SetId(1, ii2)
                     elem.GetPointIds().SetId(2, ii3)
+                    ie += 1
 
         tria6s = [
-            elements.shell_elements.ctria6,
+            elements.elements_shell.ctria6,
         ]
         for tria6 in tria6s:
             if tria6.n:
                 i1, i2, i3 = tria3.get_node_indicies()
-                for ii1, ii2, ii3 in zip(i1, i2, i3):
+                eids = tria6.element_id
+                for eid, ii1, ii2, ii3 in zip(eids, i1, i2, i3):
+                    eidMap[eid] = ie
                     elem = vtkTriangle()
                     elem.GetPointIds().SetId(0, ii1)
                     elem.GetPointIds().SetId(1, ii2)
                     elem.GetPointIds().SetId(2, ii3)
+                    ie += 1
 
         quad4s = [
-            elements.shell_elements.cquad4,
-            elements.shell_elements.cshear,
-            #elements.shell_elements.cquad,
-            #elements.shell_elements.cquadr,
+            elements.elements_shell.cquad4,
+            #elements.elements_shell.cshear,
+            #elements.elements_shell.cquad,
+            #elements.elements_shell.cquadr,
         ]
         for quad4 in quad4s:
             if quad4.n:
                 i1, i2, i3, i4 = quad4.get_node_indicies()
-                for ii1, ii2, ii3, ii4 in zip(i1, i2, i3, i4):
+                eids = quad4.element_id
+                for eid, ii1, ii2, ii3, ii4 in zip(eids, i1, i2, i3, i4):
+                    eidMap[eid] = ie
                     elem = vtkQuad()
                     elem.GetPointIds().SetId(0, ii1)
                     elem.GetPointIds().SetId(1, ii2)
                     elem.GetPointIds().SetId(2, ii3)
                     elem.GetPointIds().SetId(3, ii4)
+                    ie += 1
 
         quad8s = [
-            elements.shell_elements.cquad8,
+            elements.elements_shell.cquad8,
         ]
         for quad8 in quad8s:
             if quad8.n:
                 i1, i2, i3, i4 = quad8.get_node_indicies()
-                for ii1, ii2, ii3, ii4 in zip(i1, i2, i3, i4):
+                eids = quad8.element_id
+                for eid, ii1, ii2, ii3, ii4 in zip(eids, i1, i2, i3, i4):
+                    eidMap[eid] = ie
                     elem = vtkQuad()
                     elem.GetPointIds().SetId(0, ii1)
                     elem.GetPointIds().SetId(1, ii2)
                     elem.GetPointIds().SetId(2, ii3)
                     elem.GetPointIds().SetId(3, ii4)
+                    ie += 1
 
 
-        if elements.solid_elements.ctetra4.n:
-            i1, i2, i3, i4 = elements.solid_elements.ctetra4.get_node_indicies()
-            for ii1, ii2, ii3, ii4 in zip(i1, i2, i3, i4):
+        if elements.elements_solid.ctetra4.n:
+            i1, i2, i3, i4 = elements.elements_solid.ctetra4.get_node_indicies()
+            eids = elements.elements_solid.ctetra4.element_id
+            for eid, ii1, ii2, ii3, ii4 in zip(eids, i1, i2, i3, i4):
+                eidMap[eid] = ie
                 elem = vtkTetra()
                 elem.GetPointIds().SetId(0, ii1)
                 elem.GetPointIds().SetId(1, ii2)
@@ -364,9 +406,12 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(3, ii4)
                 self.grid.InsertNextCell(elem.GetCellType(),
                                          elem.GetPointIds())
-        if elements.solid_elements.ctetra10.n:
-            i1, i2, i3, i4 = elements.solid_elements.ctetra10.get_node_indicies()
-            for ii1, ii2, ii3, ii4 in zip(i1, i2, i3, i4):
+                ie += 1
+        if elements.elements_solid.ctetra10.n:
+            i1, i2, i3, i4 = elements.elements_solid.ctetra10.get_node_indicies()
+            eids = elements.elements_solid.ctetra10.element_id
+            for eid, ii1, ii2, ii3, ii4 in zip(eids, i1, i2, i3, i4):
+                eidMap[eid] = ie
                 elem = vtkTetra()
                 elem.GetPointIds().SetId(0, ii1)
                 elem.GetPointIds().SetId(1, ii2)
@@ -374,11 +419,14 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(3, ii4)
                 self.grid.InsertNextCell(elem.GetCellType(),
                                          elem.GetPointIds())
+                ie += 1
 
 
-        if elements.solid_elements.cpenta6.n:
-            i1, i2, i3, i4, i5, i6 = elements.solid_elements.cpenta6.get_node_indicies()
-            for ii1, ii2, ii3, ii4, ii5, ii6 in zip(i1, i2, i3, i4, i5, i6):
+        if elements.elements_solid.cpenta6.n:
+            i1, i2, i3, i4, i5, i6 = elements.elements_solid.cpenta6.get_node_indicies()
+            eids = elements.elements_solid.cpenta6.element_id
+            for eid, ii1, ii2, ii3, ii4, ii5, ii6 in zip(eids, i1, i2, i3, i4, i5, i6):
+                eidMap[eid] = ie
                 elem = vtkWedge()
                 elem.GetPointIds().SetId(0, ii1)
                 elem.GetPointIds().SetId(1, ii2)
@@ -388,9 +436,12 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(5, ii6)
                 self.grid.InsertNextCell(elem.GetCellType(),
                                          elem.GetPointIds())
-        if elements.solid_elements.cpenta15.n:
-            i1, i2, i3, i4, i5, i6 = elements.solid_elements.cpenta15.get_node_indicies()
-            for ii1, ii2, ii3, ii4, ii5, ii6 in zip(i1, i2, i3, i4, i5, i6):
+                ie += 1
+        if elements.elements_solid.cpenta15.n:
+            i1, i2, i3, i4, i5, i6 = elements.elements_solid.cpenta15.get_node_indicies()
+            eids = elements.elements_solid.cpenta15.element_id
+            for eid, ii1, ii2, ii3, ii4, ii5, ii6 in zip(eids, i1, i2, i3, i4, i5, i6):
+                eidMap[eid] = ie
                 elem = vtkWedge()
                 elem.GetPointIds().SetId(0, ii1)
                 elem.GetPointIds().SetId(1, ii2)
@@ -400,11 +451,14 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(5, ii6)
                 self.grid.InsertNextCell(elem.GetCellType(),
                                          elem.GetPointIds())
+                ie += 1
 
 
-        if elements.solid_elements.chexa8.n:
-            i1, i2, i3, i4, i5, i6, i7, i8 = elements.solid_elements.chexa8.get_node_indicies()
-            for ii1, ii2, ii3, ii4, ii5, ii6, ii7, ii8 in zip(i1, i2, i3, i4, i5, i6, i7, i8):
+        if elements.elements_solid.chexa8.n:
+            i1, i2, i3, i4, i5, i6, i7, i8 = elements.elements_solid.chexa8.get_node_indicies()
+            eids = elements.elements_solid.chexa8.element_id
+            for eid, ii1, ii2, ii3, ii4, ii5, ii6, ii7, ii8 in zip(eids, i1, i2, i3, i4, i5, i6, i7, i8):
+                eidMap[eid] = ie
                 elem = vtkHexahedron()
                 elem.GetPointIds().SetId(0, ii1)
                 elem.GetPointIds().SetId(1, ii2)
@@ -416,9 +470,12 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(7, ii8)
                 self.grid.InsertNextCell(elem.GetCellType(),
                                          elem.GetPointIds())
-        if elements.solid_elements.chexa20.n:
-            i1, i2, i3, i4, i5, i6, i7, i8 = elements.solid_elements.chexa20.get_node_indicies()
-            for ii1, ii2, ii3, ii4, ii5, ii6, ii7, ii8 in zip(i1, i2, i3, i4, i5, i6, i7, i8):
+                ie += 1
+        if elements.elements_solid.chexa20.n:
+            i1, i2, i3, i4, i5, i6, i7, i8 = elements.elements_solid.chexa20.get_node_indicies()
+            eids = elements.elements_solid.chexa20.element_id
+            for eid, ii1, ii2, ii3, ii4, ii5, ii6, ii7, ii8 in zip(eids, i1, i2, i3, i4, i5, i6, i7, i8):
+                eidMap[eid] = ie
                 elem = vtkHexahedron()
                 elem.GetPointIds().SetId(0, ii1)
                 elem.GetPointIds().SetId(1, ii2)
@@ -430,6 +487,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(7, ii8)
                 self.grid.InsertNextCell(elem.GetCellType(),
                                          elem.GetPointIds())
+                ie += 1
 
         if 0:
             for (eid, element) in sorted(iteritems(model.elements)):
@@ -754,7 +812,7 @@ class NastranIO(object):
         # set to True to enable nodeIDs as an result
         nidsSet = True
         if nidsSet and self.is_nodal:
-            nids = self.model.grid.node_id
+            nids = model.grid.node_id
             #for (nid, nid2) in iteritems(self.nidMap):
             #    nids[nid2] = nid
             cases[(0, 'Node_ID', 1, 'node', '%.0f')] = nids
@@ -762,17 +820,18 @@ class NastranIO(object):
 
         # set to True to enable elementIDs as a result
         eidsSet = True
+        Types, eids, pids = model.elements.get_element_properties()
         if eidsSet and self.is_centroidal:
             #eids = zeros(nElements, dtype='int32')
             #for (eid, eid2) in iteritems(self.eidMap):
             #    eids[eid2] = eid
-            eids = model.elements.element_id
+            #eids = model.elements.element_id
             cases[(0, 'Element_ID', 1, 'centroid', '%.0f')] = eids
             eidsSet = True
 
         # subcaseID, resultType, vectorSize, location, dataFormat
         if len(model.properties) and self.is_centroidal:
-            pids = model.elements.property_id
+            #pids = model.elements.property_id
             cases[(0, 'Pid', 1, 'centroid', '%.0f')] = pids
 
         #self._plot_pressures(model, cases)
@@ -793,8 +852,8 @@ class NastranIO(object):
     def finish_nastran_io(self, cases):  # same as Cart3d version
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
-        print("ncases =", len(cases))
-        print("caseKeys =", self.caseKeys)
+        print("ncases = %s" % len(cases))
+        print("caseKeys = %s" % self.caseKeys)
 
         if len(self.caseKeys) > 1:
             print("finish_io case A")
@@ -965,10 +1024,10 @@ class NastranIO(object):
         #print(model.print_results())
 
         #case = model.displacements[1]
-        #print("case = ",case)
+        #print("case = %s" % case)
         #for nodeID,translation in sorted(iteritems(case.translations)):
-            #print("nodeID=%s t=%s" %(nodeID,translation))
-        #self.iSubcaseNameMap[self.isubcase] = [Subtitle,Label]
+            #print("nodeID=%s t=%s" % (nodeID, translation))
+        #self.iSubcaseNameMap[self.isubcase] = [Subtitle, Label]
 
         cases = {}
         subcaseIDs = model.iSubcaseNameMap.keys()
@@ -1474,18 +1533,49 @@ class NastranIO(object):
 
 def main():
     from pyNastran.gui.testing_methods import add_dummy_gui_functions
-    test = NastranIO()
-    test.is_nodal = False
-    test.is_centroidal = True
+    import pyNastran
+    from numpy import array_equal
+    pkg_path = pyNastran.__path__[0]
 
-    add_dummy_gui_functions(test)
+    bdf_op2_filenames = [
+        (os.path.join(pkg_path, '..', 'models', 'solid_bending', 'solid_bending.bdf'),
+         os.path.join(pkg_path, '..', 'models', 'solid_bending', 'solid_bending.op2'),),
 
-    #test.load_panair_geometry('SWB.INP','')
-    #test.load_nastran_geometry('bottle_shell_w_holes_pmc.bdf', '')
-    #test.load_nastran_results('bottle_shell_w_holes_pmc.op2', '')
+        (os.path.join(pkg_path, '..', 'models', 'sol_101_elements', 'static_solid_shell_bar.bdf'),
+         os.path.join(pkg_path, '..', 'models', 'sol_101_elements', 'static_solid_shell_bar.op2')),
+    ]
 
-    keys = test.resultCases.keys()
-    assert (1, 'Stress1', 1, 'centroid', '%.3f') in keys, keys
+    #bdf_filename = 'bottle_shell_w_holes_pmc.bdf'
+    #op2_filename = 'bottle_shell_w_holes_pmc.op2'
+
+    for bdf_filename, op2_filename in bdf_op2_filenames:
+        test = NastranIO()
+        test.is_nodal = False
+        test.is_centroidal = True
+        test.save_data = True
+        add_dummy_gui_functions(test)
+        test.load_nastran_geometry(bdf_filename, '')
+        test.load_nastran_results(op2_filename, '')
+
+        keys = test.resultCases.keys()
+        assert (1, 'Stress1', 1, 'centroid', '%.3f') in keys, keys
+
+        test2 = NastranIO_xref()
+        test2.is_nodal = False
+        test2.is_centroidal = True
+        test2.save_data = True
+        add_dummy_gui_functions(test2)
+        test2.load_nastran_geometry(bdf_filename, '')
+        test2.load_nastran_results(op2_filename, '')
+
+        assert test.eidMap == test2.eidMap
+        assert test.nidMap == test2.nidMap
+        assert array_equal(test.xyz_cid0, test2.xyz_cid0)
+        print(test.nidMap)
+        print(test2.nidMap)
+        del test
+        del test2
+
 
 if __name__ == '__main__':
     main()

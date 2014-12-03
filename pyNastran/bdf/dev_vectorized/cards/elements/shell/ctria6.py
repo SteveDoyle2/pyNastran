@@ -93,7 +93,7 @@ class CTRIA6(ShellElement):
 
     def _node_locations(self, xyz_cid0, i=None):
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_position_by_index()
+            xyz_cid0 = self.model.grid.get_position_by_node_index()
         if i is None:
             n1 = xyz_cid0[self.model.grid.get_node_index_by_node_id(self.node_ids[:, 0]), :]
             n2 = xyz_cid0[self.model.grid.get_node_index_by_node_id(self.node_ids[:, 1]), :]

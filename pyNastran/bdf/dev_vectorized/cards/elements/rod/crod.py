@@ -92,11 +92,21 @@ class CROD(RodElement):
         c = self.model.prod.get_non_structural_mass_by_property_id(property_id)
         return c
 
-    def _node_locations(self, xyz_cid0):
+    def get_node_indicies(self, i=None):
+        if i is None:
+            i1 = self.model.grid.get_node_index_by_node_id(self.node_ids[:, 0])
+            i2 = self.model.grid.get_node_index_by_node_id(self.node_ids[:, 1])
+        else:
+            i1 = self.model.grid.get_node_index_by_node_id(self.node_ids[i, 0])
+            i2 = self.model.grid.get_node_index_by_node_id(self.node_ids[i, 1])
+        return i1, i2
+
+    def _node_locations(self, xyz_cid0, i=None):
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_position_by_index()
-        n1 = xyz_cid0[self.model.grid.get_node_index_by_node_id(self.node_ids[:, 0]), :]
-        n2 = xyz_cid0[self.model.grid.get_node_index_by_node_id(self.node_ids[:, 1]), :]
+            xyz_cid0 = self.model.grid.get_position_by_node_index()
+        i1, i2 = self.get_node_indicies(i)
+        n1 = xyz_cid0[i1, :]
+        n2 = xyz_cid0[i2, :]
         return n1, n2
 
     def get_mass_by_element_id(self, element_ids=None, xyz_cid0=None, total=False):
@@ -107,7 +117,7 @@ class CROD(RodElement):
             return 0.0
 
         assert element_ids is None
-        grid_cid0 = self.model.grid.get_position_by_index()
+        grid_cid0 = self.model.grid.get_position_by_node_index()
         n1, n2 = self._node_locations(xyz_cid0)
         L = n2 - n1
         i = self.model.prod.get_index(self.property_id)

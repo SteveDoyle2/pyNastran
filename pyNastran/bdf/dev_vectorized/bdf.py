@@ -990,7 +990,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
                     include_dir = ''
                 else:
                     include_dir = 'include_dir=%s, ' % self.include_dir
-                msg += 'call read_bdf(bdf_filename=%r, %s%spunch=%s)' % (self.bdf_filename, include_dir, xref, True)
+                msg += 'call read_bdf(bdf_filename=%r, %spunch=%s)' % (self.bdf_filename, include_dir, True)
                 msg += ' instead.\n'
                 raise RuntimeError(msg)
             line = line.rstrip('\n\r\t ')
