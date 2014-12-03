@@ -159,7 +159,16 @@ class CONROD(RodElement):
         c = self.model.prod.get_c(property_id)
         return c
 
-    def get_mass_by_element_id(self, total=False):
+    def get_node_indicies(self, i=None):
+        if i is None:
+            i1 = self.model.grid.get_node_index_by_node_id(self.node_ids[:, 0])
+            i2 = self.model.grid.get_node_index_by_node_id(self.node_ids[:, 1])
+        else:
+            i1 = self.model.grid.get_node_index_by_node_id(self.node_ids[i, 0])
+            i2 = self.model.grid.get_node_index_by_node_id(self.node_ids[i, 1])
+        return i1, i2
+
+    def get_mass_by_element_id(self, total=False, i=None):
         """
         mass = rho * A * L + nsm
         """
@@ -180,18 +189,19 @@ class CONROD(RodElement):
         #grid_cid0 = self.model.grid.get_positions_by_index(self.model.grid.get_node_index_by_node_id())
         try:
             msg = ', which is required by CONROD get_mass'
-            i1 = self.model.grid.get_node_index_by_node_id(self.node_ids[:, 0], msg=msg)
-            i2 = self.model.grid.get_node_index_by_node_id(self.node_ids[:, 1], msg=msg)
-            p1 = self.model.grid.get_position_by_index(i1)
-            p2 = self.model.grid.get_position_by_index(i2)
+            i1, i2, i3, i4 = self.get_node_indicies(i)
+            #n1 = xyz_cid0[i1, :]
+            #n2 = xyz_cid0[i2, :]
+            p1 = self.model.grid.get_position_by_node_index(i1)
+            p2 = self.model.grid.get_position_by_node_index(i2)
         except RuntimeError:
             for eid, (n1, n2) in zip(self.element_id, self.node_ids):
                 msg = ', which is required by CONROD element_id=%s node1=%s\n' % (eid, n1)
                 i1 = self.model.grid.get_node_index_by_node_id([n1], msg=msg)
                 msg = ', which is required by CONROD element_id=%s node2=%s\n' % (eid, n2)
                 i2 = self.model.grid.get_node_index_by_node_id([n2], msg=msg)
-                p1 = self.model.grid.get_position_by_index(i1)
-                p2 = self.model.grid.get_position_by_index(i2)
+                p1 = self.model.grid.get_position_by_node_index(i1)
+                p2 = self.model.grid.get_position_by_node_index(i2)
 
 
         L = p2 - p1

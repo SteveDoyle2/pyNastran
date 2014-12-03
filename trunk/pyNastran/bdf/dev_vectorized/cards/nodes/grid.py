@@ -233,9 +233,9 @@ class GRID(VectorizedCard):
 
     def get_position_by_node_id(self, node_id=None, msg=''):
         i = self.get_node_index_by_node_id(node_id, msg=msg)
-        return self.get_position_by_index(i)
+        return self.get_position_by_node_index(i)
 
-    def get_position_by_index(self, i=None):
+    def get_position_by_node_index(self, i=None):
         """
         in the global frame
         """
@@ -272,11 +272,16 @@ class GRID(VectorizedCard):
                 #xyzi = dot(transpose(T), dot(xyzi, T))
                 xyz[j, :] = self.model.coords.get_global_position_by_xyz(xyzi, cp)
 
-
         #assert len(node_ids) == len(cpn), 'n1=%s n2=%s'  %(len(node_ids), len(cpn))
         return xyz
 
-    def get_positions_wrt(self, node_ids=None, coord_ids=None):
+    def get_position_wrt_by_node_id(self, node_id=None, coord_id=0):
+        i = self.get_node_index_by_node_id(node_id, msg=msg)
+
+    def get_position_wrt_by_node_index(self, i=None, coord_id=0):
+        if coord_id is None:
+            return self.xyz[i, :]
+        assert isinstance(coord_id, int), type(coord_id)
         raise NotImplementedError()
 
     def get_stats(self):

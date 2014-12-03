@@ -177,7 +177,7 @@ class Elements(object):
         #print("groups = %s" % groups)
         return groups
 
-    def get_elements(self, element_ids):
+    def get_elements(self, element_id):
         TypeMap = {
             'CELAS1'  : self.elements_spring.celas1,
             'CELAS2'  : self.elements_spring.celas2,
@@ -210,7 +210,7 @@ class Elements(object):
             'CHEXA20'  : self.elements_solid.chexa20,
         }
         out = []
-        for eid in element_ids:
+        for eid in element_id:
             obj = None
             for Type, eids in iteritems(self.element_groups):
                 if eid in eids:
@@ -219,8 +219,9 @@ class Elements(object):
                     out.append(obj)
         return out
 
-    def get_element_ids_by_property_type(self, element_ids, exclude_types=None):
-        #print('element_ids = %s' % element_ids)
+    def get_element_properties(self, exclude_types=None):
+        if exclude_types is None:
+            exclude_types = []
         Types = [
             self.elements_spring.celas1, self.elements_spring.celas2,
             self.elements_spring.celas3, self.elements_spring.celas4,
@@ -243,11 +244,15 @@ class Elements(object):
         del Types2
         # this isn't working...
         #Types = [Type if Type.type not in exclude_types for Type in Types]
-
         elements_without_properties = ['CELAS2', 'CELAS4', 'CONROD']
         eids = hstack([Type.element_id for Type in Types])
         pids = hstack([zeros(Type.n, dtype='int32') if Type.type in elements_without_properties
                        else Type.property_id for Type in Types])
+        return Types, eids, pids
+
+    def get_element_ids_by_property_type(self, element_ids, exclude_types=None):
+        #print('element_ids = %s' % element_ids)
+        Types, eids, pids = self.get_element_properties(exclude_types)
 
         # remove undefined properties
         existing_pids = setdiff1d(unique(pids), self.property_ids, assume_unique=True)
@@ -324,7 +329,7 @@ class Elements(object):
 
     def get_mass_by_element_id(self, element_ids_orig=None, xyz_cid0=None, sort_output=True):
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_position_by_index()
+            xyz_cid0 = self.model.grid.get_position_by_node_index()
 
         element_ids, element_ids_orig = self._get_element_ids(element_ids_orig)
         if len(element_ids) == 0:

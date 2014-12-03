@@ -83,7 +83,7 @@ class CTETRA10(SolidElement):
 
     def _node_locations(self, xyz_cid0, n):
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_position_by_index()
+            xyz_cid0 = self.model.grid.get_position_by_node_index()
 
         n1 = xyz_cid0[self.model.grid.get_node_index_by_node_id(self.node_ids[:, 0]), :]
         n2 = xyz_cid0[self.model.grid.get_node_index_by_node_id(self.node_ids[:, 1]), :]
@@ -178,7 +178,7 @@ class CTETRA10(SolidElement):
         if element_id is None:
             element_id = self.element_id
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_position_by_index()
+            xyz_cid0 = self.model.grid.get_position_by_node_index()
 
         V = self.get_volume_by_element_id(element_id, xyz_cid0)
         mid = self.model.properties_solid.get_material_id_by_property_id(self.property_id)

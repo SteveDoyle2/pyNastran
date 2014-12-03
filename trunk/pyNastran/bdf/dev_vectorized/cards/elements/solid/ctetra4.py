@@ -257,6 +257,19 @@ class CTETRA4(SolidElement):
             for i in range(3):
                 assert isinstance(c[i], float)
 
+    def get_node_indicies(self, i=None):
+        if i is None:
+            i1 = self.model.grid.get_node_index_by_node_id(self.node_ids[:, 0])
+            i2 = self.model.grid.get_node_index_by_node_id(self.node_ids[:, 1])
+            i3 = self.model.grid.get_node_index_by_node_id(self.node_ids[:, 2])
+            i4 = self.model.grid.get_node_index_by_node_id(self.node_ids[:, 3])
+        else:
+            i1 = self.model.grid.get_node_index_by_node_id(self.node_ids[i, 0])
+            i2 = self.model.grid.get_node_index_by_node_id(self.node_ids[i, 1])
+            i3 = self.model.grid.get_node_index_by_node_id(self.node_ids[i, 2])
+            i4 = self.model.grid.get_node_index_by_node_id(self.node_ids[i, 3])
+        return i1, i2, i3, i4
+
     def _get_node_locations_by_index(self, i, xyz_cid0):
         """
         :param i:        None or an array of node IDs
@@ -267,10 +280,11 @@ class CTETRA4(SolidElement):
         node_ids = self.node_ids
 
         msg = ', which is required by %s' % self.type
-        n1 = xyz_cid0[get_node_index_by_node_id(node_ids[i, 0], msg), :]
-        n2 = xyz_cid0[get_node_index_by_node_id(node_ids[i, 1], msg), :]
-        n3 = xyz_cid0[get_node_index_by_node_id(node_ids[i, 2], msg), :]
-        n4 = xyz_cid0[get_node_index_by_node_id(node_ids[i, 3], msg), :]
+        i1, i2, i3, i4 = self.get_node_indicies(i)
+        n1 = xyz_cid0[i1, :]
+        n2 = xyz_cid0[i2, :]
+        n3 = xyz_cid0[i3, :]
+        n4 = xyz_cid0[i4, :]
         return n1, n2, n3, n4
 
     def get_volume_by_element_id(self, element_id=None, xyz_cid0=None, total=False):
@@ -300,7 +314,7 @@ class CTETRA4(SolidElement):
         if element_id is None:
             element_id = self.element_id
         if xyz_cid0 is None:
-            xyz_cid0 = self.model.grid.get_position_by_index()
+            xyz_cid0 = self.model.grid.get_position_by_node_index()
 
         V = self.get_volume_by_element_id(element_id, xyz_cid0)
         mid = self.model.properties_solid.get_material_id_by_property_id(self.property_id)
