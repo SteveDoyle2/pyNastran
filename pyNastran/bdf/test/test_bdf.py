@@ -24,7 +24,7 @@ test_path = pyNastran.bdf.test.__path__[0]
 
 def run_all_files_in_folder(folder, debug=False, xref=True, check=True,
                             punch=False, cid=None):
-    print("folder = %s" % (folder))
+    print("folder = %s" % folder)
     filenames = os.listdir(folder)
     run_lots_of_files(filenames, debug=debug, xref=xref, check=check,
                       punch=punch, cid=cid)
@@ -48,7 +48,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
     for filename in filenames2:
         absFilename = os.path.abspath(os.path.join(folder, filename))
         if folder != '':
-            print("filename = %s" % (absFilename))
+            print("filename = %s" % absFilename)
         isPassed = False
         try:
             (fem1, fem2, diffCards2) = run_bdf(folder, filename, debug=debug,
@@ -74,6 +74,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
             traceback.print_exc(file=sys.stdout)
             #raise
         print('-' * 80)
+
         if isPassed:
             sys.stderr.write('%i %s' % (n, absFilename))
             n += 1
@@ -84,12 +85,22 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
 
     print('*' * 80)
     try:
-        print("diffCards1 = %s" % (list(set(diffCards))))
+        print("diffCards1 = %s" % list(set(diffCards)))
     except TypeError:
         #print "type(diffCards) =",type(diffCards)
-        print("diffCards2 = %s" % (diffCards))
+        print("diffCards2 = %s" % diffCards)
     return failedFiles
 
+
+def memory_usage_psutil():
+    # return the memory usage in MB
+    try:
+        import psutil
+    except ImportError:
+        return '???'
+    process = psutil.Process(os.getpid())
+    mem = process.get_memory_info()[0] / float(2 ** 20)
+    return mem
 
 def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False,
             cid=None, meshForm='combined', isFolder=False, print_stats=False,
@@ -165,7 +176,7 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, precision, c
         elif meshForm == 'separate':
             fem1.write_bdf(outModel, interspersed=False, size=size, precision=precision)
         else:
-            msg = "meshForm=%r allowedForms=['combined','separate']" % (meshForm)
+            msg = "meshForm=%r; allowedForms=['combined','separate']" % meshForm
             raise NotImplementedError(msg)
         #fem1.writeAsCTRIA3(outModel)
     return (outModel)
@@ -186,7 +197,7 @@ def run_fem2(bdfModel, outModel, xref, punch,
     try:
         fem2.read_bdf(outModel, xref=xref, punch=punch)
     except:
-        print("failed reading %r" % (outModel))
+        print("failed reading %r" % outModel)
         raise
 
     outModel2 = bdfModel + '_out2'

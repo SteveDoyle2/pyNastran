@@ -97,10 +97,11 @@ class BDFMethods(BDFMethodsDeprecated):
     def __init__(self):
         pass
 
-    def mass_properties(self, element_ids=None, reference_point=None, sym_axis=None,
-        num_cpus=1):
+    def mass_properties(self, element_ids=None, reference_point=None,
+                        sym_axis=None, num_cpus=1, scale=None):
         """
-        Caclulates mass properties in the global system about the reference point.
+        Caclulates mass properties in the global system about the
+        reference point.
 
         :param self: the BDF object
         :param element_ids: an array of element ids
@@ -108,6 +109,10 @@ class BDFMethods(BDFMethodsDeprecated):
             default = <0,0,0>.
         :param sym_axis: the axis to which the model is symmetric.
                          If AERO cards are used, this can be left blank
+                         allowed_values = 'x', 'y', 'z', 'xy', 'yz', 'xz', 'xyz'
+        :param scale: the WTMASS scaling value
+                      default=None -> PARAM, WTMASS is used
+                      float > 0.0
         :returns mass: the mass of the model
         :returns cg: the cg of the model as an array.
         :returns I: moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz]) or None
@@ -122,6 +127,12 @@ class BDFMethods(BDFMethodsDeprecated):
         .. math:: dx = x_{element} - x_{ref}
 
         .. seealso:: http://en.wikipedia.org/wiki/Moment_of_inertia#Moment_of_inertia_tensor
+
+        ..note::
+           This doesn't use the mass matrix formulation like Nastran.
+           It assumes m*r^2 is the dominant term.
+           If you're trying to get the mass of a single element, it
+           will be wrong, but for real models will be correct.
         """
         if reference_point is None:
             reference_point = array([0., 0., 0.])
@@ -139,17 +150,17 @@ class BDFMethods(BDFMethodsDeprecated):
         if num_cpus > 1:
             # doesn't support calculate_cg = False
             # must use num_cpus = 1
-            mass, cg, I = self._mass_properties_mp(num_cpus, elements, masses, nelements,
-                            reference_point=reference_point)
+            mass, cg, I = self._mass_properties_mp(num_cpus, elements, masses,
+                                                   nelements,
+                                                   reference_point=reference_point)
         else:
             mass, cg, I = self._mass_properties_sp(elements, masses,
                             reference_point=reference_point)
 
-        mass, cg, I = self._apply_mass_symmetry(sym_axis, mass, cg, I)
+        mass, cg, I = self._apply_mass_symmetry(sym_axis, scale, mass, cg, I)
         return (mass, cg, I)
 
-    def _mass_properties_sp(self, elements, masses,
-                        reference_point):
+    def _mass_properties_sp(self, elements, masses, reference_point):
         #Ixx Iyy Izz, Ixy, Ixz Iyz
         # precompute the CG location and make it the reference point
         I = array([0., 0., 0., 0., 0., 0., ])
@@ -203,10 +214,10 @@ class BDFMethods(BDFMethodsDeprecated):
             cg = cg / mass
         return (mass, cg, I)
 
-    def _apply_mass_symmetry(self, sym_axis, mass, cg, I):
+    def _apply_mass_symmetry(self, sym_axis, scale, mass, cg, I):
         """
-        Scales the mass & moement of inertia based on the symmetry axes and
-        WTMASS PARAM card
+        Scales the mass & moement of inertia based on the symmetry axes
+        and the PARAM WTMASS card
         """
         if sym_axis is None:
             for key, aero in iteritems(self.aero):
@@ -252,17 +263,18 @@ class BDFMethods(BDFMethodsDeprecated):
                 I[5] *= 0.0  # Iyz
                 cg[2] = 0.0
 
-        if 'WTMASS' in self.params:
+        if scale is None and 'WTMASS' in self.params:
             scale = self.params['WTMASS'].values[0]
-            mass *= scale
-            I *= scale
+        mass *= scale
+        I *= scale
         return (mass, cg, I)
 
 
     def _mass_properties_mp(self, num_cpus, elements, masses, nelements,
         reference_point=None):
         """
-        Caclulates mass properties in the global system about the reference point.
+        Caclulates mass properties in the global system about the
+        reference point.
 
         :param self: the BDF object
         :param num_cpus: the number of CPUs to use; 2 < num_cpus < 20
@@ -272,15 +284,7 @@ class BDFMethods(BDFMethodsDeprecated):
         :returns cg: the cg of the model as an array.
         :returns I: moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz])
 
-        I = mass * centroid * centroid
-
-        .. math:: I_{xx} = m (dy^2 + dz^2)
-        .. math:: I_{yz} = -m * dy * dz
-
-        where:
-        .. math:: dx = x_{element} - x_{ref}
-
-        .. seealso:: http://en.wikipedia.org/wiki/Moment_of_inertia#Moment_of_inertia_tensor
+        .. seealso:: self.mass_properties
         """
         if num_cpus <= 1:
             raise RuntimeError('num_proc must be > 1; num_cpus=%s' % num_cpus)
@@ -384,22 +388,43 @@ class BDFMethods(BDFMethodsDeprecated):
             self.nodes[nid].UpdatePosition(self, p2, coord.cid)
 
     def __gravity_load(loadcase_id):
-        gravity_i = model.loads[2][0]
-        gi = gravity_i.N * gravity_i.scale
-        mass, cg, I = model.mass_properties(reference_point=p0, sym_axis=None, num_cpus=6)
+        """
+        TODO:
+            1.  resolve the load case
+            2.  grab all of the GRAV cards and combine them into one
+                GRAV vector
+            3.  run mass_properties to get the mass
+            4.  multiply by the gravity vector
+        """
 
-    def sum_forces_moments_elements(self, p0, loadcase_id, eids, nids, include_grav=False):
+        gravity_i = model.loads[2][0]  ## TODO: hardcoded
+        gi = gravity_i.N * gravity_i.scale
+        p0 = array([0., 0., 0.])  ## TODO: hardcoded
+        mass, cg, I = model.mass_properties(reference_point=p0, sym_axis=None,
+                                            num_cpus=6)
+
+    def sum_forces_moments_elements(self, p0, loadcase_id, eids, nids,
+                                    include_grav=False):
         """
         Sum the forces/moments based on a list of nodes and elements.
 
-        :param eids:  the list of elements to include (e.g. the loads due to a PLOAD4)
-        :param nids:  the list of nodes to include (e.g. the loads due to a FORCE card)
-
-        Nodal Types  : FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2, PLOAD
+        :param eids:  the list of elements to include (e.g. the loads
+                      due to a PLOAD4)
+        :param nids:  the list of nodes to include (e.g. the loads due
+                      to a FORCE card)
+        :param p0:    the point to sum moments about
+                      type = int
+                          sum moments about the specified grid point
+                      type = (3, ) ndarray/list (e.g. [10., 20., 30]):
+                          the x, y, z location in the global frame
+        Nodal Types  : FORCE, FORCE1, FORCE2,
+                       MOMENT, MOMENT1, MOMENT2,
+                       PLOAD
         Element Types: PLOAD1, PLOAD2, PLOAD4, GRAV
 
-        If you have a CQUAD4 eid=3 with a PLOAD4 (eid=3) and a FORCE card (nid=5)
-        acting on it, you can incldue the PLOAD4, but not the FORCE card using:
+        If you have a CQUAD4 (eid=3) with a PLOAD4 (eid=3) and a FORCE
+        card (nid=5) acting on it, you can incldue the PLOAD4, but
+        not the FORCE card by using:
 
         Just pressure:
         ==============
@@ -416,6 +441,12 @@ class BDFMethods(BDFMethodsDeprecated):
         eids = [3]
         nids = [5]
 
+        ..note:: If you split the model into sections and sum the loads
+                 on each section, you may not get the same result as
+                 if you summed the loads on the total model.  This is
+                 due to the fact that nodal loads on the boundary are
+                 double/triple/etc. counted depending on how many breaks
+                 you have.
         ..todo:: not done...
         """
         if not isinstance(loadcase_id, int):
@@ -874,11 +905,11 @@ class BDFMethods(BDFMethodsDeprecated):
                 elif load.scale == 'LEPR':
                     print('LEPR continue')
                     continue
-                    raise NotImplementedError('scale=%r is not supported.  Use "FR", "LE".' % load.scale)
+                    #raise NotImplementedError('scale=%r is not supported.  Use "FR", "LE".' % load.scale)
                 elif load.scale == 'FRPR':
                     print('FRPR continue')
                     continue
-                    raise NotImplementedError('scale=%r is not supported.  Use "FR", "LE".' % load.scale)
+                    #raise NotImplementedError('scale=%r is not supported.  Use "FR", "LE".' % load.scale)
                 else:
                     raise NotImplementedError('scale=%r is not supported.  Use "FR", "LE".' % load.scale)
 
