@@ -34,27 +34,9 @@ from .cards.nodes.spoint import SPOINT
 from .cards.nodes.epoint import EPOINT
 from .cards.nodes.pointax import POINTAX
 
-
-# spring
-from .cards.elements.spring.elements_spring import ElementsSpring
-from .cards.elements.spring.pelas import PELAS
-
-# shell
-from .cards.elements.shell.elements_shell import ElementsShell
-from .cards.elements.shell.properties_shell import PropertiesShell
-
-# solid
-from .cards.elements.solid.elements_solid import ElementsSolid
-from .cards.elements.solid.properties_solid import PropertiesSolid
-
-# rods
-from .cards.elements.rod.prod import PROD
-from .cards.elements.rod.crod import CROD
-from .cards.elements.rod.conrod import CONROD
-
-# shear
-from .cards.elements.shear.cshear import CSHEAR
-from .cards.elements.shear.pshear import PSHEAR
+###################Elements##################
+from pyNastran.bdf.dev_vectorized.cards.elements.elements import Elements
+from pyNastran.bdf.dev_vectorized.cards.elements.properties import Properties
 
 # bar
 from .cards.elements.bar.cbar import CBAR, CBAROR
@@ -66,8 +48,34 @@ from .cards.elements.bar.properties_bar import PropertiesBar
 from .cards.elements.beam.cbeam import CBEAM #, CBEAMOR
 from .cards.elements.beam.properties_beam import PropertiesBeam
 
+# bush
+from pyNastran.bdf.dev_vectorized.cards.elements.bush.cbush import CBUSH
+from pyNastran.bdf.dev_vectorized.cards.elements.bush.pbush import PBUSH
+
+
 # mass
 from .cards.elements.mass.mass import Mass
+
+# rods
+from .cards.elements.rod.prod import PROD
+from .cards.elements.rod.crod import CROD
+from .cards.elements.rod.conrod import CONROD
+
+# shear
+from .cards.elements.shear.cshear import CSHEAR
+from .cards.elements.shear.pshear import PSHEAR
+
+# shell
+from .cards.elements.shell.elements_shell import ElementsShell
+from .cards.elements.shell.properties_shell import PropertiesShell
+
+# solid
+from .cards.elements.solid.elements_solid import ElementsSolid
+from .cards.elements.solid.properties_solid import PropertiesSolid
+
+# spring
+from .cards.elements.spring.elements_spring import ElementsSpring
+from .cards.elements.spring.pelas import PELAS
 
 #===========================
 # aero
@@ -168,19 +176,20 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
     def __init__(self, debug=True, log=None, precision='double'):
         """
         Initializes the BDF object
+
         :param self:  the BDF object
-        :param debug: used to set the logger if no logger is passed in
+        :param debug: used to set the logger if no logger is passed in; bool
         :param log:   a python logging module object
+        :param precision:  string of 'single'/'float32' or
+          'double'/'float64' that is used by all the objects
         """
         assert debug in [True, False], 'debug=%r' % debug
+
+        #: a hackish parameter that allows us to read the BDF twice and
+        #: know which round we're on
         self.inspect = False
 
-        if precision == 'double':
-            self.float = 'float64'
-        elif precision == 'single':
-            self.float = 'float32'
-        else:
-            raise NotImplementedError('precision=%r' % precision)
+        self.set_precision(precision)
 
         # file management parameters
         self._ifile = -1
@@ -241,7 +250,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             30 : 'CMASS1', 31 : 'CMASS2', 32 : 'CMASS3', 33 : 'CMASS4',
             34 : 'CONM1',  35 : 'CONM2',
 
-
             73 : 'CTRIA3', 74: 'CTRIA6', 75 : 'CTRIAX', 76: 'CTRIAX6',
             144 : 'CQUAD4', 145: 'CQUAD8', 146: 'CQUAD', 147: 'CQUADX',
 
@@ -249,7 +257,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             62 : 'CPENTA6', 63 : 'CPENTA15',
             64 : 'CHEXA8', 65 : 'CHEXA20',
         }
-        self._element_name_to_element_type_mapper = {v:k for k, v in iteritems(self._element_type_to_element_name_mapper)}
+        self._element_name_to_element_type_mapper = {
+            v:k for k, v in iteritems(self._element_type_to_element_name_mapper)}
 
         #: lines that were rejected b/c they were for a card that isnt supported
         self.rejects = []
@@ -263,6 +272,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #: list of case control deck lines
         self.case_control_lines = []
 
+        #: should the cards be echoed to the console as they are read; bool
+        #: ECHOON and ECHOOFF will toggle this in the BDF
         self.echo = False
 
         self.__init_attributes()
@@ -411,6 +422,20 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #: / is the delete from restart card
         self.specialCards = ['DEQATN', '/']
 
+    def set_precision(self, precision='double'):
+        """
+        Sets the float precision.
+
+        :param precision:  string of 'single'/'float32' or
+          'double'/'float64' that is used by all the objects
+        """
+        if precision in ('double', 'float64'):
+            self.float = 'float64'
+        elif precision == ('single', 'float32'):
+            self.float = 'float32'
+        else:
+            raise NotImplementedError('precision=%r' % precision)
+
     def disable_cards(self, cards):
         """
         Method for removing broken cards from the reader
@@ -536,7 +561,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.epoint = EPOINT(model)
         self.pointax = POINTAX(model)
 
-        #self.coords = {0 : CORD2R() }
         self.coords = Coord(model)
 
         #: stores rigid elements (RBE2, RBE3, RJOINT, etc.)
@@ -563,8 +587,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             def add(self, card, comment=''):
                 pass
         # bush
-        from pyNastran.bdf.dev_vectorized.cards.elements.bush.cbush import CBUSH
-        from pyNastran.bdf.dev_vectorized.cards.elements.bush.pbush import PBUSH
         self.cbush = CBUSH(model)
         self.cbush1d = DummyCard(model)
         self.cbush2d = DummyCard(model)
@@ -620,8 +642,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.properties_solid = PropertiesSolid(self)
 
         # control structure
-        from pyNastran.bdf.dev_vectorized.cards.elements.elements import Elements
-        from pyNastran.bdf.dev_vectorized.cards.elements.properties import Properties
         self.elements = Elements(self)
         self.properties = Properties(self)
 
@@ -876,6 +896,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         :param xref:  should the bdf be cross referenced (default=True)
         :param punch: indicates whether the file is a punch file (default=False)
 
+        ..todo:: this is out of date
         >>> bdf = BDF()
         >>> bdf.read_bdf(bdf_filename, xref=True)
         >>> g1 = bdf.Node(1)
@@ -948,6 +969,26 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
 
     def allocate(self, card_count):
+        """
+        Sets the size of the card objects.
+
+        :param card_count: dictionary of {card_name : ncards}, where
+          card_name is a string and ncards is an int
+
+        ..note::  Sometimes there are cards that have 2 cards per line.
+          Depending on the card (e.g. CELASx)
+        ..note::  Some cards (e.g. CTETRA4, CTETRA10) have a distinction
+          despite all being CTETRAs.  Card_count considers CTETRA4s and
+          CTETRA10s.
+
+        ..note::  Not all cards require allocation (e.g. CORD1x), so we
+          can be a more lax about how we calculate the card_count.  The
+          CORD1x cards can have 2 cards per line, so not needing this
+          is convenient.
+        ..note::  In this method, we only allocate the macro groups.
+          For example, since a CTRIA3 is an element, it is set with the
+          other elements.
+        """
         self.grid.allocate(card_count)
         self.coords.allocate(card_count=card_count)
         self.elements.allocate(card_count)
@@ -1037,7 +1078,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             #: solution 600 method modifier
             self.solMethod = method.strip()
             self.log.debug("sol=%s method=%s" % (self.sol, self.solMethod))
-        else:  # very common
+        else:
+            # very common
             self.solMethod = None
 
     def set_dynamic_syntax(self, dict_of_vars):
@@ -1083,6 +1125,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         :param self: the BDF object
         :param key:  the uppercased key
         :returns value: the dynamic value defined by dict_of_vars
+
         .. seealso:: :func: `set_dynamic_syntax`
         """
         key = key[1:].strip()
@@ -1164,10 +1207,11 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
     def is_reject(self, card_name):
         """
-        Can the card be read
+        Should the card be read?
 
         :param self: the BDF object
         :param card_name: the card_name -> 'GRID'
+        :returns is_reject:  True/False
         """
         if card_name.startswith('='):
             return False
@@ -1429,9 +1473,18 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
                 self.add_reject(comment, lines)
 
     def _add_reject(self, comment, lines):
+        """
+        The dummy add_reject method used by self.inspect=False
+        """
         pass
 
     def add_reject(self, comment, lines):
+        """
+        Appends self.rejects with the list of lines in the card
+
+        :param comment:  the card comment
+        :param lines:  the lines that are part of the card
+        """
         if comment:
             self.rejects.append([comment])
         self.rejects.append(lines)
@@ -1494,6 +1547,14 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
     def process_card(self, card_lines):
         """
         :param self: the BDF object
+        :param card_lines:  the lines that are part of the current card
+        :returns card:  a list of (typically) string fields that is
+          properly sized
+
+        ..note:: If dynamic syntax is used, then the fields may be
+                 ints/floats.
+
+        ..note:: a properly sized card's last field is a value (not None)
         """
         card_name = self._get_card_name(card_lines)
         fields = to_fields(card_lines, card_name)
@@ -1518,6 +1579,12 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #return msg
 
     def _add_card(self, card_lines, card_name, comment='', is_list=True):
+        """
+        Counts the cards that will be used in the allocate method.
+        This is the inspect=False version of add_card.
+
+        ..seealso:: self.add_card
+        """
         if card_name in ['CTETRA', 'CPENTA', 'CHEXA']:
             card = self.process_card(card_lines)
             if card_name == 'CTETRA':
@@ -1555,11 +1622,11 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         :returns card_object: the card object representation of card
 
         .. note:: this is a very useful method for interfacing with the code
-        .. note:: the cardObject is not a card-type object...so not a GRID
-                  card or CQUAD4 object.  It's a BDFCard Object.  However,
-                  you know the type (assuming a GRID), so just call the
-                  *mesh.Node(nid)* to get the Node object that was just
-                  created.
+        .. note:: the cardObject is not a card-type object...so not a
+                  GRID card or CQUAD4 object.  It's a BDFCard Object.
+                  However, you know the type (assuming a GRID), so just
+                  call the *mesh.Node(nid)* to get the Node object that
+                  was just created.
         .. warning:: cardObject is not returned
         """
         card_name = card_name.upper()
@@ -1635,11 +1702,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'CQUAD':
             self.elements_shell.add_cquad(card_obj, comment=comment)
         elif name == 'CQUADX':
-            #self.elements_shell.add_cquadx(card_obj, comment=comment)
-            pass
+            self.elements_shell.add_cquadx(card_obj, comment=comment)
         elif name == 'CQUADR':
-            #self.elements_shell.add_cquadr(card_obj, comment=comment)
-            pass
+            self.elements_shell.add_cquadr(card_obj, comment=comment)
         elif name == 'CQUAD4':
             self.elements_shell.add_cquad4(card_obj, comment=comment)
         elif name == 'CQUAD8':
@@ -1654,8 +1719,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.properties_shell.add_pcomp(card_obj, comment=comment)
         elif name == 'PCOMPG':
             self.properties_shell.add_pcompg(card_obj, comment=comment)
-            pass
-
 
         #========================
         # rotation elements/loads
@@ -1671,7 +1734,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'CTETRA':
             if len(card) == 7:
                 self.elements_solid.add_ctetra4(card_obj, comment=comment)
-            else: # 13
+            else: # length=13
                 self.elements_solid.add_ctetra10(card_obj, comment=comment)
         elif name == 'CPENTA':
             if len(card) == 9:
@@ -1690,7 +1753,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.properties_solid.add_psolid(card_obj, comment=comment)
         elif name == 'PLSOLID':
             self.properties_solid.add_plsolid(card_obj, comment=comment)
-            pass
         #========================
         # conrod/rod
         elif name == 'CROD':
@@ -2113,6 +2175,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.materials.add_mat10(card_obj, comment=comment)
         elif name == 'MATHP':
             self.materials.add_mathp(card_obj, comment=comment)
+        elif name == 'MATHE':
+            self.materials.add_mathe(card_obj, comment=comment)
 
         #========================
         elif name == 'RBAR':
@@ -2123,30 +2187,18 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             pass
         #========================
         elif name == 'CORD1R':
-            #card = CORD1R(card_obj, nCoord=0, comment=comment)
-            #self.coords[card.cid] = card
             self.coords.add_cord1r(card_obj, comment=comment)
         elif name == 'CORD1C':
-            #card = CORD1C(card_obj, nCoord=0, comment=comment)
-            #self.coords[card.cid] = card
             self.coords.add_cord1c(card_obj, comment=comment)
         elif name == 'CORD1S':
-            #card = CORD1S(card_obj, nCoord=0, comment=comment)
-            #self.coords[card.cid] = card
             self.coords.add_cord1s(card_obj, comment=comment)
 
         elif name == 'CORD2R':
-            #card = CORD2R(card_obj, comment=comment)
-            #self.coords[card.cid] = card
             self.coords.add_cord2r(card_obj, comment=comment)
         elif name == 'CORD2C':
             self.coords.add_cord2c(card_obj, comment=comment)
-            #card = CORD2C(card_obj, comment=comment)
-            #self.coords[card.cid] = card
         elif name == 'CORD2S':
             self.coords.add_cord2s(card_obj, comment=comment)
-            #card = CORD2S(card_obj, comment=comment)
-            #self.coords[card.cid] = card
 
         #========================
         elif name == 'ACMODL':
@@ -2171,7 +2223,13 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #========================
         # nonlinear
         elif name == 'TSTEP':
-            pass
+            card = TSTEP()
+            self.tstep[tid] = card
+            card.add(card_obj, comment=comment)
+        elif name == 'TSTEPNL':
+            card = TSTEPNL()
+            self.tstep[tid] = card
+            card.add(card_obj, comment=comment)
         elif name == 'NLPARM':
             card = NLPARM()
             card.add(card_obj, comment=comment)
@@ -2252,11 +2310,15 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         assert key >= 0
         self.aesurfs[key] = aesurf
 
-    def card_stats(self, return_type='string'):
+    def get_bdf_stats(self, return_type='string'):
         """
         Print statistics for the BDF
 
         :param self: the BDF object
+        :param return_type:  'string'/'list'.  'string' returns one big
+          string, while 'list' of each line in the string.  List is
+          useful for the GUI.
+
         .. note:: if a card is not supported and not added to the proper
                   lists, this method will fail
         """
@@ -2307,6 +2369,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
     def get_SPCx_ids(self, exclude_spcadd=False):
         """
+        Get the SPC/SPCADD/SPC1/SPCAX IDs.
+
         :param exclude_spcadd: you can exclude SPCADD if you just want a
             list of all the SPCs in the model.  For example, apply all the
             SPCs when there is no SPC=N in the case control deck, but you
@@ -2319,14 +2383,14 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             'SPCD': self.spcd,
         }
         if not exclude_spcadd:
-            spcs['SPCADD'] = self.spcadd,
+            spcs['SPCADD'] = self.spcadd
 
         spc_ids = []
         for spc_type, spc in iteritems(spcs):
             spc_ids.extend(spc.keys())
         return unique(spc_ids)
 
-    def SPC(self, spc_id, resolve=True, used_ids=[]):
+    def SPC(self, spc_id, resolve=True, used_ids=None):
         """
         Gets all the MPCs that are in:
           - SPCADD
@@ -2338,17 +2402,20 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
           - SPCAX
 
         :param mpc_id:  the ID to get
-        :param resolve: removes the SPCADDs by turning them into the cards they point to
-        :param used_ids: an internal parameter
+        :param resolve: removes the SPCADDs by turning them into the
+          cards they point to
+        :param used_ids: an internal parameter; default=None -> []
         """
+        if used_ids is None:
+            used_ids = []
         spc_out = []
         used_ids.append(spc_id)
         spcs = {
              'SPCADD' : self.spcadd,
-             'SPC': self.spc,
-             'SPC1': self.spc1,
-             #'SPCAX': self.spcax,
-             'SPCD': self.spcd,
+             'SPC' : self.spc,
+             'SPC1' : self.spc1,
+             #'SPCAX' : self.spcax,
+             'SPCD' : self.spcd,
         }
 
         if not resolve:
@@ -2371,7 +2438,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
                     spc_out.append(out)
         return spc_out
 
-    def MPC(self, mpc_id, resolve=True, used_ids=[]):
+    def MPC(self, mpc_id, resolve=True, used_ids=None):
         """
         Gets all the MPCs that are in:
           - MPCADD
@@ -2381,13 +2448,16 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
           - MPCAX
 
         :param mpc_id:  the ID to get
-        :param resolve: removes the MPCADDs by turning them into the cards they point to
-        :param used_ids: an internal parameter
+        :param resolve: removes the MPCADDs by turning them into the
+          cards they point to
+        :param used_ids: an internal parameter; default=None -> []
         """
+        if used_ids is None:
+            used_ids = []
         mpc_out = []
         mpcs = {
             'MPCADD' : self.mpcadd,
-            'MPC': self.mpc,
+            'MPC' : self.mpc,
             #'MPCAX'  : self.mpcax,
         }
         used_ids.append(mpc_id)
@@ -2415,6 +2485,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         return mpc_out
 
     def _get_mass_types(self):
+        """
+        Gets the list of element types that have mass
+        """
         types = [
             # O-D
             self.mass,
@@ -2431,6 +2504,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         return reduce_types(types)
 
     def _get_stiffness_types(self):
+        """
+        Gets the list of element types that have stiffness
+        """
         types = [
             # O-D
             self.elements_spring,
@@ -2448,6 +2524,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         return reduce_types(types)
 
     def _get_damping_types(self):
+        """
+        Gets the list of element types that have damping
+        """
         types = [
             # O-D
             self.cdamp1, self.cdamp2, self.cdamp3, self.cdamp4, self.cdamp5,
@@ -2462,7 +2541,10 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.elements_solid,]
         return reduce_types(types)
 
-    def mass_properties(self, total=False):
+    def mass_properties(self, total=False, sym_axis=None, scale=None):
+        """
+        ..todo:: consider calling BDF.elements.mass_properties
+        """
         mass_types = self._get_mass_types()
         massi = []
         for mass_type in mass_types:
@@ -2478,11 +2560,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             mass = massi.sum()
         else:
             mass = massi
-        #print('mass =', mass, type(mass))
         return mass
-
-    def get_bdf_stats(self, return_type='list'):
-        return ''
 
 def reduce_types(types):
     types2 = []
@@ -2497,6 +2575,8 @@ def _clean_comment(comment, end=-1):
     created.
 
     :param comment: the comment to possibly remove
+    :param end: currently leftover from the unvectorized version
+    :returns comment2: the updated comment
     """
     if comment[:end] in ['$EXECUTIVE CONTROL DECK',
             '$CASE CONTROL DECK',
