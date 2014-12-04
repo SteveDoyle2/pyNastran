@@ -43,7 +43,7 @@ from pyNastran.f06.f06 import F06
 class NastranIO(object):
     def __init__(self):
         self.is_sub_panels = False
-		self.save_data = False
+        self.save_data = False
 
     def load_nastran_geometry(self, bdf_filename, dirname):
         self.eidMap = {}
@@ -163,8 +163,6 @@ class NastranIO(object):
                 self.nidMap[nid] = i
                 i += 1
 
-        if self.save_data:
-            self.model = model
         # add the nodes
         node0 = model.nodes.keys()[0]
         position0 = model.nodes[node0].Position()
@@ -176,6 +174,15 @@ class NastranIO(object):
 
         zmin = position0[2]
         zmax = position0[2]
+        if self.save_data:
+            self.model = model
+            n = len(model.nodes)
+            xyz_cid0 = zeros((n, 3), dtype='float64')
+            for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
+                xyz = node.Position()
+                xyz_cid0[i, :] = xyz
+            self.xyz_cid0 = xyz_cid0
+
         for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
             point = node.Position()
             xmin = min(xmin, point[0])
