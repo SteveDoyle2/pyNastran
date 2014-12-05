@@ -5,7 +5,7 @@ pkg_path = pyNastran.__path__[0]
 
 ignore_dirs = ['src', 'dmap', 'solver', '__pycache__', 'converters',
     'op4_old', 'cart3d', 'panair', 'calculix', 'bars', 'case_control',
-    'gui', 'gui_qt', 'pch', 'mesh', 'LaWGS', 'old', 'solver']
+    'gui', 'gui_qt', 'pch', 'mesh', 'LaWGS', 'old', 'solver', 'test']
 mods_skip = ['spike', 'shell_backup']
 
 def get_folders_files(dirname, skip_file_sufix = ('.pyc', '.pyx', '.bdf'),
@@ -72,6 +72,8 @@ def get_doc(filenames):
         print("***************************************")
         basepath = os.path.basename(dirname)
         if basepath in ignore_dirs:
+            continue
+        if 'dev_' in basepath:
             continue
 
         print("dirname = ", dirname)
