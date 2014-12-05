@@ -151,13 +151,10 @@ def get_logger2(log=None, debug=True):
     #return SimpleLogger(level) if log is None else log
     if log is not None:
         pass
-        print('block1')
     elif debug is None:
         log = SimpleLogger('warning')
-        print('block2')
     else:
         level = 'debug' if debug else 'info'
-        print('block3; debug=%s' % debug)
         log = SimpleLogger(level)
     return log
 
