@@ -265,6 +265,8 @@ class BDFMethods(BDFMethodsDeprecated):
 
         if scale is None and 'WTMASS' in self.params:
             scale = self.params['WTMASS'].values[0]
+        elif scale is None:
+            scale = 1.0
         mass *= scale
         I *= scale
         return (mass, cg, I)

@@ -21,7 +21,7 @@ import traceback
 
 from pyNastran.utils import (object_attributes, print_bad_path)
 from pyNastran.utils.dev import list_print
-from pyNastran.utils.log import get_logger
+from pyNastran.utils.log import get_logger2
 
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
     integer_or_string, string)
@@ -140,9 +140,15 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         :param self:  the BDF object
         :param debug: used to set the logger if no logger is passed in
-        :param log:   a python logging module object
+                      True:  logs debug/info/error messages
+                      False: logs info/error messages
+                      None:  logs error messages
+        :param log:   a python logging module object;
+                      if log is set, debug is ignored and uses the
+                      settings the logging object has
+
         """
-        assert debug in [True, False], 'debug=%r' % debug
+        assert debug in [True, False, None], 'debug=%r' % debug
         self.echo = False
 
         # file management parameters
@@ -167,7 +173,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self._relpath = True
         if sys.version_info < (2, 6):
             self._relpath = False
-        self.log = get_logger(log, 'debug' if debug else 'info')
+
+        self.log = get_logger2(log, debug)
 
         #: list of all read in cards - useful in determining if entire BDF
         #: was read & really useful in debugging
