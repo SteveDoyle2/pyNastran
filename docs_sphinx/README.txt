@@ -23,5 +23,9 @@ python makeIndex.py
 # does the same thing...
 sphinx-apidoc -o output ../pyNastran
 
+
 # final command
 make html
+
+# does basically the same thing, but is more obvious...
+# sphinx-build -v -w warnings.out -d build/doctrees . _build/html > junk.out
