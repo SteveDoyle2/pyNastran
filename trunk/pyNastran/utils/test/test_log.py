@@ -9,7 +9,7 @@ pkg_path = pyNastran.__path__[0]
 
 bdf_filename = os.path.join(pkg_path, '..', 'models', 'solid_bending', 'solid_bending.bdf')
 
-class TestUtils(unittest.TestCase):
+class TestLog(unittest.TestCase):
 
     def test_log_01(self):
         print('---------------------------------------------------------------')
