@@ -378,8 +378,8 @@ def mapDeflectionsStructures_Aero(bdfModel='test_tet10.bdf', op2Filename='test_t
         #print("d = ", d)
 
     # loading aero nodes
-    cart = Cart3DReader(cart3dGeom)  # bJet.a.tri
-    (cartPoints, elements regions, loads) = cart.read()
+    cart = Cart3DReader()  # bJet.a.tri
+    (cartPoints, elements, regions, loads) = cart.read_cart3d(cart3dGeom)
     #(cartPoints, elements, regions, Cp) = cart.makeHalfModel(cartPoints, elements, regions, Cp)
     sys.stdout.flush()
 
