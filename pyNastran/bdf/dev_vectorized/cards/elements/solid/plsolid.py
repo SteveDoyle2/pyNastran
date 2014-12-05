@@ -25,11 +25,11 @@ class PLSOLID(Property):
         self.n = ncards
         float_fmt = self.model.float
         #: Property ID
-        self.property_id = zeros(ncards, 'int32')
+        self.property_id = zeros(ncards, dtype='int32')
         #: Material ID
-        self.material_id = zeros(ncards, 'int32')
+        self.material_id = zeros(ncards, dtype='int32')
         #: Location of stress and strain output
-        self.stress_strain = zeros(ncards, '|S4')
+        self.stress_strain = zeros(ncards, dtype='|S4')
 
     def add(self, card, comment=''):
         i = self.i

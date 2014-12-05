@@ -76,6 +76,7 @@ class MAT1(Material):
             self.Sc = self.Sc[i]
             self.Ss = self.Ss[i]
             self.mcsid = self.mcsid[i]
+            print('MAT1.materials = %s' % self.material_id)
 
     def get_D_matrix(self):
         """

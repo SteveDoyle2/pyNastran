@@ -212,7 +212,7 @@ class CHEXA8(SolidElement):
         node_ids = self.node_ids
 
         msg = ', which is required by %s' % self.type
-        i1, i2, i3, i4, i5, i6 = self.get_node_indicies(i)
+        i1, i2, i3, i4, i5, i6, i7, i8 = self.get_node_indicies(i)
         n1 = xyz_cid0[i1, :]
         n2 = xyz_cid0[i2, :]
         n3 = xyz_cid0[i3, :]
@@ -255,10 +255,15 @@ class CHEXA8(SolidElement):
         if xyz_cid0 is None:
             xyz_cid0 = self.model.grid.get_position_by_node_index()
 
+        n = len(element_id)
         V = self.get_volume_by_element_id(element_id, xyz_cid0)
         mid = self.model.properties_solid.get_material_id_by_property_id(self.property_id)
+        assert mid.shape == (n,), 'mid.shape=%s; n=%s' % (str(mid.shape), n)
+
         rho = self.model.materials.get_density_by_material_id(mid)
 
+        assert V.shape == (n,), 'V.shape=%s; n=%s' % (str(V.shape), n)
+        assert rho.shape == (n,), 'rho.shape=%s; n=%s' % (str(rho.shape), n)
         mass = V * rho
         if total:
             mass = mass.sum()

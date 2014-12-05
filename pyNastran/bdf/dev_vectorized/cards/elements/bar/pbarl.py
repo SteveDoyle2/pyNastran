@@ -92,12 +92,12 @@ class PBARL(Property):
         #return obj
 
     #=========================================================================
-    def write_bdf(self, f, size=8, property_ids=None):
+    def write_bdf(self, f, size=8, property_id=None):
         if self.n:
             if property_ids is None:
                 i = arange(self.n)
             else:
-                i = searchsorted(self.property_id, property_ids)
+                i = searchsorted(self.property_id, property_id)
 
             #cid = [cid if cid != 0 else '' for cid in self.coord_id]
 

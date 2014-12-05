@@ -64,9 +64,10 @@ class VectorizedCard(object):
         assert isinstance(n, int64) or isinstance(n, int), 'field_name=%s n=%s type=%s' % (field_name, n, type(n))
         assert isinstance(check, bool)
         if unsorted_array is None:
-            i = None
+            i = slice(None)
             if n == 1:
                 i = array([0], dtype='int32')
+            return i
         else:
             i = searchsorted(sorted_array, unsorted_array)
             i.astype('int32')

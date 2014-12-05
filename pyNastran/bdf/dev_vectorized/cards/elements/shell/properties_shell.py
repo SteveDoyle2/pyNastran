@@ -155,7 +155,8 @@ class PropertiesShell(object):
                     types2.append(ptype)
             types = types2
         else:
-            self.model.log.debug('ptypes=%s' % types)
+            #self.model.log.debug('ptypes=%s' % types)
+            pass
         return types
 
     def get_stats(self):
