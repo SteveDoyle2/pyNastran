@@ -180,7 +180,7 @@ class PanelBuckling(object):
             nEid = Normals[eid]
             touchingElements = []
             for edge in edges:
-                print("edge=%s" % str(edge)))
+                print("edge=%s" % str(edge))
                 #print("eid=%s edge=%s" % (eid, edge))
                 # get only the unique entries
                 touchingElements = list(set(Edges2[edge]))

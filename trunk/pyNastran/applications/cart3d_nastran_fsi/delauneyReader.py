@@ -121,7 +121,7 @@ class Tet4(object):
             weights = shepard_weight(aeroNode, nodes)
             du = array([0.,0.,0.])
             for (node, weight) in zip(nodes, weights):
-                du += weight  node
+                du += weight * node
         else:
             ux = self.mapDeflection(A, d1, d2, d3, d4, 0, aeroNode, 'x')
             uy = self.mapDeflection(A, d1, d2, d3, d4, 1, aeroNode, 'y')
@@ -131,7 +131,7 @@ class Tet4(object):
         log.info("du        = %s" % du)
         return aeroNode + du
 
-    def mapDeflection(self, A, d1, d2, d3, d4 i, aeroNode dType='x'):
+    def mapDeflection(self, A, d1, d2, d3, d4, i, aeroNode, dType='x'):
         """
         see mapDeflections...
         based on the posiition matrix, finds the ith deflection component
