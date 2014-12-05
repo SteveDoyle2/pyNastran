@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
-import unittest
+import os
 import sys
+import unittest
 from numpy import matrix, array
 
+import pyNastran
+from pyNastran.utils import is_binary, object_methods, object_attributes
+from pyNastran.utils.dev import list_print
 
-from pyNastran.utils import (is_binary, obscure, de_obscure, list_print,
-                                     object_methods, object_attributes)
-from os.path import abspath
+pkg_path = pyNastran.__path__[0]
 
 class A(object):
     def __init__(self):
@@ -41,13 +43,15 @@ class TestUtils(unittest.TestCase):
         self.b = B(7)
 
     def test_is_binary(self):
-        self.assertTrue(is_binary(abspath("test_utils.pyc")))
-        self.assertFalse(is_binary(abspath("test_utils.py")))
+        bdf_filename = os.path.join(pkg_path, '..', 'models', 'solid_bending', 'solid_bending.bdf')
+        op2_filename = os.path.join(pkg_path, '..', 'models', 'solid_bending', 'solid_bending.op2')
+        self.assertTrue(is_binary(op2_filename))
+        self.assertFalse(is_binary(bdf_filename))
 
-    def test_obscure(self):
-        for num in [0,1,5,53,231123, 34567523, 1024, 65367, 14321324, 73123434,
-                    1309872418439702897245, 955785585080806958106769948497824]:
-            self.assertEqual(de_obscure(obscure(num)), num)
+    #def test_obscure(self):
+        #for num in [0,1,5,53,231123, 34567523, 1024, 65367, 14321324, 73123434,
+        #            1309872418439702897245, 955785585080806958106769948497824]:
+        #    self.assertEqual(de_obscure(obscure(num)), num)
 
     def test_list_print(self):
         self.assertEqual(list_print(None), 'None')
