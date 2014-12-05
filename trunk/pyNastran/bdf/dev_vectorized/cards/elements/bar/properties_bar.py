@@ -80,8 +80,8 @@ class PropertiesBar(object):
                 msg.append('  %-8s: %i' % (prop.type, nprop))
         return msg
 
-    def write_bdf(self, f, size=8, property_ids=None):
+    def write_bdf(self, f, size=8, property_id=None):
         f.write('$PROPERTIES_BAR\n')
         types = self._get_types(nlimit=False)
         for prop in types:
-            prop.write_bdf(f, size=size, property_ids=property_ids)
+            prop.write_bdf(f, size=size, property_id=property_id)

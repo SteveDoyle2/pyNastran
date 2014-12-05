@@ -35,10 +35,10 @@ class Coord(object):
         #self.model.log.info('originA = %s' % origin)
 
         origin = origin.reshape(3, 1)
-        self.model.log.info('origin = %s' % origin)
+        #self.model.log.info('origin = %s' % origin)
         #self.model.log.info('T.shape=%s' % str(T.shape))
-        self.model.log.info('T=\n%s' % T)
-        self.model.log.info('xyz=%s' % xyz)
+        #self.model.log.info('T=\n%s' % T)
+        #self.model.log.info('xyz=%s' % xyz)
         #self.model.log.info('xyz.shape=%s' % str(xyz.shape))
         xyz2 = (dot(T.T, xyz.T)  + origin).T  # TODO: should this have T.T?
         #print('xyz = %s' % xyz.T)

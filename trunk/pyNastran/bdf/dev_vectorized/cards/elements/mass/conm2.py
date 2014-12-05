@@ -101,7 +101,6 @@ class CONM2(VectorizedCard):
 
     def write_bdf(self, f, size=8, is_double=False, element_id=None):
         assert self.n > 0, self.n
-        size = 16
         if self.n:
             if element_id is None:
                 i = arange(self.n)
@@ -132,6 +131,7 @@ class CONM2(VectorizedCard):
                     cardi = (carda + cardb).rstrip() + '\n'
                     f.write(cardi)
             else:
+                assert size == 16, size
                 X0 = [print_float_16(x) if x != 0.0 else blank for x in self.x[i, 0]]
                 X1 = [print_float_16(x) if x != 0.0 else blank for x in self.x[i, 1]]
                 X2 = [print_float_16(x) if x != 0.0 else '' for x in self.x[i, 2]]

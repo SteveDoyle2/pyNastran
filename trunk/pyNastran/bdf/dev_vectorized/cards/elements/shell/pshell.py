@@ -49,7 +49,7 @@ class PSHELL(Property):
 
     def add(self, card, comment=''):
         i = self.i
-        self.model.log.debug('adding %s; i=%s' %(card, i))
+        #self.model.log.debug('adding %s; i=%s' %(card, i))
         self.property_id[i] = integer(card, 1, 'property_id')
         self.material_id[i] = integer(card, 2, 'material_id')
         self.thickness[i] = double(card, 3, 'thickness')
@@ -85,7 +85,7 @@ class PSHELL(Property):
         #    assert self.material_id4==None
         assert len(card) <= 12, 'len(PSHELL card) = %i' % len(card)
         self.i += 1
-        self.model.log.debug('self.i = %s' % self.i)
+        #self.model.log.debug('self.i = %s' % self.i)
 
     def build(self):
         if self.n:
@@ -121,6 +121,12 @@ class PSHELL(Property):
         """
         if self.n:
             i = self.get_property_index_by_property_id(property_id)
+            #print('i = %s' % i)
+            #self.model.log.debug('material_id2 = %s' % self.material_id2[i])
+            #self.model.log.debug('material_id3 = %s' % self.material_id3[i])
+            #self.model.log.debug('material_id4 = %s' % self.material_id4[i])
+            #self.model.log.debug('material_id2.shpae = %s' % str(self.material_id2[i].shape))
+
             Mid2 = [midi if midi > 0 else '' for midi in self.material_id2[i]]
             Mid3 = [midi if midi > 0 else '' for midi in self.material_id3[i]]
             Mid4 = [midi if midi > 0 else '' for midi in self.material_id4[i]]

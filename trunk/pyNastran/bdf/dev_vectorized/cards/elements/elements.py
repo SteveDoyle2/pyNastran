@@ -792,7 +792,7 @@ class Elements(object):
             self.cbeam.write_bdf(f, size)
 
     def _write_alternating_elements_properties_2d(self, f, size, is_double):
-        if self.elements_shell.n or self.properties_shell.n:
+        if self.cshear.n or self.pshear.n:
             f.write('$ Shear----------------------------------------------------\n')
             self.pshear.write_bdf(f, size)
             self.cshear.write_bdf(f, size)

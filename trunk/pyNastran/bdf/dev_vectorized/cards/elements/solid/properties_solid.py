@@ -1,4 +1,4 @@
-from numpy import concatenate, argsort, searchsorted, ndarray, hstack
+from numpy import concatenate, argsort, searchsorted, ndarray, hstack, full, nan, unique, where
 
 from .psolid import PSOLID
 from .plsolid import PLSOLID
@@ -36,7 +36,9 @@ class PropertiesSolid(object):
             self.n += prop.n
 
         npsolid = self.psolid.n
+
         self.property_id = hstack([self.psolid.property_id, self.plsolid.property_id])
+        self.model.log.debug('dtype property_id=%s' % str(self.property_id.dtype))
         #print('npsolid =', npsolid)
         #assert npsolid > 0
         #nplsolid = self.plsolid.n
@@ -63,10 +65,26 @@ class PropertiesSolid(object):
 
     #=========================================================================
     def get_material_id_by_property_id(self, property_id):
-        types = self._get_types(nlimit=True)
-        _material_ids = concatenate([ptype.material_id for ptype in types])
-        #print _material_ids
-        return _material_ids
+        #i = self.get_property_index_by_property_id(property_id)
+        #material_id = self.get_material_id_by_property_index(i)
+        #return material_id
+        assert nan not in property_id, property_id
+        n = len(property_id)
+        ptypes = self._get_types(nlimit=True)
+        material_id = full(n, nan, dtype='int32')
+        upids = unique(property_id)
+        for ptype in ptypes:
+            for upid in upids:
+                if upid in ptype.property_id:
+                    i = searchsorted(ptype.property_id, upid)
+                    j = where(upid == property_id)[0]
+                    material_id[j] = ptype.material_id[i]
+                    #break
+
+        self.model.log.debug('property_id = %s' % property_id)
+        self.model.log.debug('material_id = %s' % material_id)
+        assert material_id.shape == (n,), 'material_id.shape=%s; n=%s' % (str(material_id.shape), n)
+        return material_id
 
     #def get_material_id_by_property_id(self, property_id):
         #types = self._get_types(nlimit=True)
