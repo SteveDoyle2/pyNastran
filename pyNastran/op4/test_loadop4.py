@@ -21,7 +21,7 @@ for in_file in ['test/mat_b_dn.op4',
         continue
 
     op4 = pyOP4()
-    matrices = op4.readOP4(in_file)
+    matrices = op4.read_op4(in_file)
     print('%s\n%s' % ('=' * 61, in_file))
     op4fh.print_header()
     for i in range(op4fh.nmat):
@@ -44,7 +44,7 @@ for in_file in ['test/mat_b_dn.op4',
 
             if error > 0:
                 print("Name = |%s|" % (Name))
-                print('%s:' % op4fh.name[i]))
+                print('%s:' % op4fh.name[i])
                 print("error[%s] = %s" % (Name, error))
 
                 print("cOP4:")
