@@ -5,7 +5,7 @@ from numpy.linalg import norm
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
-from .cpenta6 import tri_area_centroid
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.cpenta6 import tri_area_centroid
 
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.solid_element import SolidElement
 

@@ -1,8 +1,8 @@
-from .celas1 import CELAS1
-from .celas2 import CELAS2
+from pyNastran.bdf.dev_vectorized.cards.elements.spring.celas1 import CELAS1
+from pyNastran.bdf.dev_vectorized.cards.elements.spring.celas2 import CELAS2
 
-from .celas3 import CELAS3
-from .celas4 import CELAS4
+from pyNastran.bdf.dev_vectorized.cards.elements.spring.celas3 import CELAS3
+from pyNastran.bdf.dev_vectorized.cards.elements.spring.celas4 import CELAS4
 
 class ElementsSpring(object):
     def __init__(self, model):

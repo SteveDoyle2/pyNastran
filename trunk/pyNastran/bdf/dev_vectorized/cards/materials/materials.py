@@ -2,20 +2,20 @@ from six import iteritems
 from six.moves import zip
 from numpy import zeros, where, array, nan, unique
 
-#from .mat1 import MAT1
-#from .mats1 import MATS1
-#from .mat4 import MAT4
-#from .mat10 import MAT10
+#from pyNastran.bdf.dev_vectorized.cards.materials.mat1 import MAT1
+#from pyNastran.bdf.dev_vectorized.cards.materials.mats1 import MATS1
+#from pyNastran.bdf.dev_vectorized.cards.materials.mat4 import MAT4
+#from pyNastran.bdf.dev_vectorized.cards.materials.mat10 import MAT10
 
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 
 #from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT4, MAT5, MAT8,
     #MAT10, MAT11) #, MATS1)
-from .mat1 import MAT1
-from .mats1 import MATS1
+from pyNastran.bdf.dev_vectorized.cards.materials.mat1 import MAT1
+from pyNastran.bdf.dev_vectorized.cards.materials.mats1 import MATS1
 
-from .mat8 import MAT8
-from .mathp import MATHP
+from pyNastran.bdf.dev_vectorized.cards.materials.mat8 import MAT8
+from pyNastran.bdf.dev_vectorized.cards.materials.mathp import MATHP
 
 from pyNastran.bdf.bdfInterface.assign_type import integer
 class Materials(object):

@@ -5,7 +5,7 @@ from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, blank, integer_or_string, string)
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
-from .mat1 import Material
+from pyNastran.bdf.dev_vectorized.cards.materials.mat1 import Material
 
 class MATS1(Material):
     """

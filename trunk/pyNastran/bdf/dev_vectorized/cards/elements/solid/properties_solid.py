@@ -1,7 +1,7 @@
 from numpy import concatenate, argsort, searchsorted, ndarray, hstack, full, nan, unique, where
 
-from .psolid import PSOLID
-from .plsolid import PLSOLID
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.psolid import PSOLID
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.plsolid import PLSOLID
 
 class PropertiesSolid(object):
     def __init__(self, model):

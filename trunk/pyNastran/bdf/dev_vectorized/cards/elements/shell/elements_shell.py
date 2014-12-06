@@ -1,15 +1,15 @@
 from numpy import array, zeros, searchsorted, unique, concatenate, argsort, hstack
 
-from .ctria3 import CTRIA3
-from .ctria6 import CTRIA6
-#from .cquad import CQUAD
-#from .cquadx import CQUADX
-from .cquad4 import CQUAD4
-from .cquad8 import CQUAD8
-#from .cquad9 import CQUAD9
+from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctria3 import CTRIA3
+from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctria6 import CTRIA6
+#from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad import CQUAD
+#from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquadx import CQUADX
+from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad4 import CQUAD4
+from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad8 import CQUAD8
+#from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad9 import CQUAD9
 
-#from .ctriax import CTRIAX
-from .ctriax6 import CTRIAX6
+#from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctriax import CTRIAX
+from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctriax6 import CTRIAX6
 
 
 class ElementsShell(object):

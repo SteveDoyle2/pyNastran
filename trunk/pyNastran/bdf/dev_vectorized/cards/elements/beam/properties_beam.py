@@ -1,7 +1,7 @@
 from numpy import concatenate, argsort, searchsorted, ndarray
 
-from .pbeam import PBEAM
-from .pbeaml import PBEAML
+from pyNastran.bdf.dev_vectorized.cards.elements.beam.pbeam import PBEAM
+from pyNastran.bdf.dev_vectorized.cards.elements.beam.pbeaml import PBEAML
 
 class PropertiesBeam(object):
     def __init__(self, model):

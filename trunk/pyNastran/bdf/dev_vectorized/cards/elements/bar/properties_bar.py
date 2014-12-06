@@ -1,7 +1,7 @@
 from numpy import concatenate, argsort, searchsorted, ndarray
 
-from .pbar import PBAR
-from .pbarl import PBARL
+from pyNastran.bdf.dev_vectorized.cards.elements.bar.pbar import PBAR
+from pyNastran.bdf.dev_vectorized.cards.elements.bar.pbarl import PBARL
 
 class PropertiesBar(object):
     def __init__(self, model):
