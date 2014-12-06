@@ -197,12 +197,12 @@ class CodeAsterConverter(BDF):
         iStart = 0
         for pid, prop in sorted(iteritems(self.properties)):
             if isinstance(prop, PBARL) or isinstance(prop, PBEAML):
-                (pyCAi, iCut, iFace, iStart) = prop.writeCodeAster(
+                (pyCAi, iCut, iFace, iStart) = prop.write_code_aster(
                     iCut, iFace, iStart)
                 pyCA += pyCAi
                 isSkipped = False
             else:
-                prop = prop.writeCodeAster()
+                prop = prop.write_code_aster()
                 isSkipped = False
                 if 'skipped' in prop:
                     isSkipped = True
@@ -228,7 +228,7 @@ class CodeAsterConverter(BDF):
         mats = self.getElementsByMid()
         for mid, material in sorted(iteritems(self.materials)):
             #comm += 'GROUP_MA name = %s_%s\n' %(material.type,mid)
-            comm += material.writeCodeAster()
+            comm += material.write_code_aster()
 
             eids = mats[mid]
             #comm += '    '
@@ -299,7 +299,7 @@ class CodeAsterConverter(BDF):
 
                 #try:
                 if 1:  # LOAD card
-                    out = load.writeCodeAsterLoad(self, gridWord='N')
+                    out = load.write_code_asterLoad(self, gridWord='N')
                     if len(out) == 3:  # LOAD card
                         (commi, loadIDs, loadTypes) = out
                         comm += commi
@@ -311,7 +311,7 @@ class CodeAsterConverter(BDF):
                     #raise
             #loadcase.
             #for ID,grav in sorted(iteritems(self.gravs)):
-            #    comm += grav.writeCodeAster(mag)
+            #    comm += grav.write_code_aster(mag)
 
         #for lid_loadType,commi in sorted(iteritems(skippedLids)):
             #comm += commi

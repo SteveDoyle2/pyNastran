@@ -1,6 +1,7 @@
 from six import  iteritems
 from math import pi, degrees
-from pyNastran.bdf.bdf import BDF, to_fields, wipe_empty_fields, BDFCard
+from pyNastran.bdf.bdf import BDF, to_fields, BDFCard
+from pyNastran.bdf.cards.utils import wipe_empty_fields
 #from pyNastran.applications.hyper
 from cards import FLOW, HYPER
 from numpy import array, cross, vstack, dot

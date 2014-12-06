@@ -55,7 +55,7 @@ class FLOW(BaseCard):
     def get_Ma(self):
         pass
 
-    def rawFields(self):
+    def raw_fields(self):
         if self.mode == 'VELO':
             cards = ['$FLOW', self.flow_id, self.mode, self.Vx, self.Vy, self.Vz, None, None, None, self.p, self.q, self.r]
         else:
@@ -66,7 +66,7 @@ class FLOW(BaseCard):
 class HYPER(BaseCard):
     type = 'HYPER'
 
-    def rawFields(self):
+    def raw_fields(self):
         return ['$HYPER', self.pid, self.set, self.Type, self.gamma, self._cp]
 
     def __init__(self, card, comment=''):
