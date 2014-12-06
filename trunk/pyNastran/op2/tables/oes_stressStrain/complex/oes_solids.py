@@ -8,7 +8,7 @@ from collections import defaultdict
 from numpy import zeros, array, concatenate, string_, searchsorted, where, argwhere, ravel, abs
 from numpy.linalg import eig, eigvalsh
 
-from ..real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import writeImagFloats13E
 
 

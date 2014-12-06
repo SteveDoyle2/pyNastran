@@ -1,7 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from .oes_objects import StressObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject
 
 
 class NonlinearGapStress(StressObject):

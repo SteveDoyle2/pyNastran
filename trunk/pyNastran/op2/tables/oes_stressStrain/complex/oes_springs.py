@@ -1,7 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
-from ..real.oes_objects import StressObject, StrainObject  # ,array
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject  # ,array
 #from oes_complexObjects import complexStressObject,complexStrainObject
 
 from pyNastran.f06.f06_formatting import writeImagFloats13E # writeFloats13E

@@ -6,7 +6,7 @@ from six.moves import zip, range
 from itertools import count
 from numpy import zeros, searchsorted, ravel
 
-from .oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats8p4F
 
 class RealPlateArray(OES_Object):

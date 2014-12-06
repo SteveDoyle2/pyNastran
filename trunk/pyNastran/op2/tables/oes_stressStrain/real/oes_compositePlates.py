@@ -4,7 +4,7 @@ from six import string_types, iteritems
 from six.moves import zip, range
 from numpy import zeros, searchsorted, unique
 
-from .oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import writeFloats12E
 
 

@@ -4,7 +4,7 @@ from six import iteritems
 from six.moves import range
 from math import isnan
 
-from .real.oes_objects import StressObject, StrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 
