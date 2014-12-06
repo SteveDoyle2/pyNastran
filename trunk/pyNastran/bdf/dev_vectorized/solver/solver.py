@@ -1933,7 +1933,7 @@ class Solver(F06, OP2):
         self.iUv = self.iUo + self.iUc + self.iUr
         return
 
-    def write_OLOAD_resultant(self, Fg):
+    def write_oload_resultant(self, Fg):
         self.oload_resultant = OLOAD_Resultant()
 
     def assemble_forces(self, model, ndofs, case, Dofs):
@@ -1968,7 +1968,7 @@ class Solver(F06, OP2):
             else:
                 raise NotImplementedError(load.type)
         #print('Fg = %s' % Fg)
-        self.write_OLOAD_resultant(Fg)
+        self.write_oload_resultant(Fg)
         return Fg
 
         self.gravLoad = array([0., 0., 0.])
