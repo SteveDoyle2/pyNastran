@@ -1,3 +1,5 @@
+from six import string_types
+
 def build_table_lines(fields, nStart=1, nEnd=0):
     """
     Builds a table of the form:
@@ -44,3 +46,28 @@ def build_table_lines(fields, nStart=1, nEnd=0):
     if nSpaces < 8:
         fieldsOut += [None] * nSpaces
     return fieldsOut
+
+
+def wipe_empty_fields(card):
+    """
+    Removes an trailing Nones from the card.
+    Also converts empty strings to None.
+
+    :param card:        the fields on the card as a list
+    :returns shortCard: the card with no trailing blank fields
+    """
+    cardB = []
+    for field in card:
+        if isinstance(field, string_types):
+            field = field.strip()
+            if field == '':
+                field = None
+        cardB.append(field)
+
+    i = 0
+    iMax = 0
+    while i < len(card):
+        if cardB[i] is not None:
+            iMax = i
+        i += 1
+    return cardB[:iMax + 1]

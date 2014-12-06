@@ -15,7 +15,7 @@ from mathFunctions       import ListPrint
 #from f06Reader import f06Reader
 
 from pyNastran.op2.op2 import OP2
-from pyNastran.converters.cart3d.cart3d_reader import generic_cart3d_reader
+from pyNastran.converters.cart3d.cart3d_reader import Cart3dReader
 
 from pyNastran.utils.log import get_logger
 debug = True

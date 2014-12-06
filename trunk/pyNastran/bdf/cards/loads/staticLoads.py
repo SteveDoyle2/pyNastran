@@ -26,7 +26,7 @@ from numpy.linalg import norm
 
 from pyNastran.bdf.cards.loads.loads import Load, LoadCombination
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from ..baseCard import BaseCard, expand_thru, expand_thru_by
+from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, expand_thru_by
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     string, string_or_blank,

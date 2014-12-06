@@ -265,7 +265,7 @@ class CalculixConverter(BDF):
         #else:
             #inp += ''
 
-         subcase = 1
+        subcase = 1
         paramName = 'LOAD'
 
         #skippedLids = {}

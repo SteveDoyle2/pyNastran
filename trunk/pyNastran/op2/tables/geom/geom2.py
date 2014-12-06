@@ -9,8 +9,9 @@ from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
 from pyNastran.bdf.cards.elements.shell import (CTRIA3, CQUAD4, CTRIA6,
                                                 CQUADR, CQUAD8, CQUAD, CQUADX,
                                                 CSHEAR)
-from pyNastran.bdf.cards.elements.bars import (CROD, CBAR, CTUBE, CONROD,
-                                               CBEAM)
+from pyNastran.bdf.cards.elements.rods import CROD, CTUBE, CONROD
+from pyNastran.bdf.cards.elements.bars import CBAR
+from pyNastran.bdf.cards.elements.beam import CBEAM
 from pyNastran.bdf.cards.elements.mass import (CONM1, CONM2, CMASS1, CMASS2,
                                                CMASS3, CMASS4)
 from pyNastran.bdf.cards.elements.solid import (CTETRA4, CTETRA10, CPENTA6,

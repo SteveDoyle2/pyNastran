@@ -1,4 +1,3 @@
-#from pyNastran.converters.cart3d.cart3d_reader import generic_cart3d_reader
 from six.moves import range
 from cart3d_reader import Cart3DReader
 from numpy import array_equal, allclose
@@ -67,7 +66,7 @@ def test_2():
     f.write(lines)
     f.close()
 
-    cart3d = generic_cart3d_reader(infileName, log=None, debug=False)
+    cart3d = Cart3dReader(log=None, debug=False)
     (points, elements, regions, loads) = cart3d.read_cart3d(infileName)
 
     assert len(points) == 5, 'npoints=%s' % len(points)

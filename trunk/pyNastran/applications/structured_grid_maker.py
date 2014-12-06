@@ -1,5 +1,6 @@
 from six.moves import range
-from numpy import arange, array, where, acos, norm
+from numpy import arange, array, where
+from numpy.linalg import norm # acos
 
 from pyNastran.bdf.bdf import BDF
 

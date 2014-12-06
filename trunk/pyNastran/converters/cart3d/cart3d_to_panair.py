@@ -3,7 +3,7 @@ import os
 import sys
 
 from pyNastran.converters.panair.panairGridPatch import PanairGridHelper
-from pyNastran.converters.cart3d.cart3d_reader import generic_cart3d_reader
+from pyNastran.converters.cart3d.cart3d_reader import Cart3dReader
 
 def load_panair_file(fname='panair.in'):
     if not os.path.exists(fname):
@@ -176,7 +176,7 @@ class Cart3dToPanair(PanairGridHelper):
 
             BCMap = varmap['bcMap']
 
-            cart = generic_cart3d_reader(cart3dGeom)
+            cart = Cart3dReader()
             (points, elements, regions, loads) = cart.read_cart3d(cart3dGeom)
 
             #for pid, point in sorted(iteritems(points)):

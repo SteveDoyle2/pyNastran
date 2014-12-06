@@ -5,7 +5,7 @@ from numpy import eye, allclose, cross
 from numpy.linalg import norm
 
 
-from .bars import CBAR, LineElement
+from pyNastran.bdf.cards.elements.bars import CBAR, LineElement
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     integer_double_or_blank, double, double_or_blank,
     string_or_blank, integer_double_string_or_blank, integer_or_double)
