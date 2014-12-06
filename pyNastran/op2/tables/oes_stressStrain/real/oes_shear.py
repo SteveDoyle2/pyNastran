@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six.moves import zip, range
 from numpy import zeros
 
-from .oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 
 class RealShearArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):

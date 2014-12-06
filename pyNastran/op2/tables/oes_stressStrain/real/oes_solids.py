@@ -8,7 +8,7 @@ from itertools import count
 from numpy import array, sqrt, zeros, where, searchsorted, ravel, argwhere, unique, arange
 from numpy.linalg import eigh
 
-from .oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 

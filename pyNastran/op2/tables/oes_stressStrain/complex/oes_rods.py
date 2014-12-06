@@ -2,7 +2,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
 from six.moves import range
-from ..real.oes_objects import StressObject, StrainObject
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject
 
 
 class ComplexRodDamper(StressObject):
