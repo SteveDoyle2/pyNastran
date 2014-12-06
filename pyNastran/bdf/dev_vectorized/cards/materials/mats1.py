@@ -211,5 +211,5 @@ class MATS1(Material):
                     card = ['MATS1', mid, table_id, Type, h, yf, hr, limit1, limit2]
                 f.write(print_card_16(card))
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()

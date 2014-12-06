@@ -372,7 +372,7 @@ class Coord(BaseCard):
         """
         return self.beta_n(2)
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
 
@@ -560,7 +560,7 @@ class Cord2x(Coord):
         assert isinstance(rid, int), 'rid=%r' % rid
 
     def write_bdf(self, size=8, is_double=False):
-        card = self.reprFields()
+        card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
@@ -737,7 +737,7 @@ class Cord1x(Coord):
         return grids
 
     def write_bdf(self, size=8, is_double=False):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
