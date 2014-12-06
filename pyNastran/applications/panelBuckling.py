@@ -300,5 +300,5 @@ def main():
     p = PanelBuckling('aeroModel_2.bdf')
     p.makePanels()
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

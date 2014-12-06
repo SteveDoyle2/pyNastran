@@ -87,7 +87,7 @@ class Plot3d(object):
 
         print("finished with all blocks")
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     fname = 'HSCT-1.p3d'
     p3d = Plot3d()
     p3d.read_plot3d(fname)

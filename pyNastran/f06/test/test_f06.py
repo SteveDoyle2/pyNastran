@@ -175,5 +175,5 @@ def main():
             stopOnFailure = True
     )
 
-if __name__ == '__main__':  # f06
+if __name__ == '__main__':  # pragma: no cover
     main()

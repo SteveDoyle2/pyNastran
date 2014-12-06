@@ -121,5 +121,5 @@ def get_bcs(bdf_filename, pid_map, boundary_conditions, log=None):
     bc_set = set(boundary_condition_ids)
     assert len(bc_set) == 1, 'len(bc_set) = %s' % len(bc_set)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

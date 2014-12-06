@@ -1359,5 +1359,5 @@ def main():
     keys = test.resultCases.keys()
     assert (1, 'Stress1', 1, 'centroid', '%.3f') in keys, keys
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

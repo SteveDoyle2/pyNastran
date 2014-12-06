@@ -102,5 +102,5 @@ def main():
     print("dt = %f" % (time.time() - t0))
     sys.exit('final stop...')
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

@@ -2210,7 +2210,7 @@ def test_mass():
     grid_point = 0
     s.make_gpwg(grid_point, Mgg)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     #test_mass()
     main()
 

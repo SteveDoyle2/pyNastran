@@ -297,7 +297,7 @@ def parse_op2(contact_bdf, main_op2, subcase_id, contact_surfaces, eid_groups, n
     nerrors = len(ierrors)
     return nerrors
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     model = BDF()
     model.read_bdf('plate.bdf')
     #model.write_bdf('plate2.bdf')

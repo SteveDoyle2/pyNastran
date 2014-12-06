@@ -1095,7 +1095,7 @@ class PanairGrid(object):
         return msg
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     import sys
     infileName = sys.argv[1]
     outfileName = infileName[:-4] + '_new.inp'

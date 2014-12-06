@@ -523,5 +523,5 @@ def main():
     ca.read_bdf(bdf_filename)
     ca.write_as_calculix(bdf_filename + '.ca')  # inp, py
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

@@ -75,7 +75,7 @@ class BDFuniqCard(BDF):
         self.f.close()
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     print("enter list of filenames at the command line...")
     card_fingerprint_set = set()
     infilenames = sys.argv[1:]

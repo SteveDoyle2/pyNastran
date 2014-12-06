@@ -90,7 +90,7 @@ def nastran_to_cart3d_filename(bdf_filename, cart3d_filename, log=None, debug=Fa
     f.write(mids + '\n')
     f.close()
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     bdf_filename = 'g278.bdf'
     cart3d_filename = 'g278.tri'
     nastran_to_cart3d_filename(bdf_filename, cart3d_filename)

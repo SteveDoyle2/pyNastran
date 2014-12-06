@@ -35,7 +35,7 @@ def get_file_names_from_file_number(fds):
         names.append(os.readlink('/proc/self/fd/%d' % fd))
     return names
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     files = get_files_of_type('tests', '.bdf')
     files += get_files_of_type('tests', '.dat')
     foldersFile = 'tests/foldersRead.txt'

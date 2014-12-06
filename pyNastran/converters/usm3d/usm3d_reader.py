@@ -748,5 +748,5 @@ def main():
         node_ids, loads = model.read_flo(flo_filename, node_ids=[10])
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

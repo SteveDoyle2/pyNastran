@@ -329,7 +329,7 @@ def run(eid_to_nid_map, model, isubcase, options):
     del stress
     return vm
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     import os
     import pyNastran
     from pyNastran.bdf.bdf import BDF

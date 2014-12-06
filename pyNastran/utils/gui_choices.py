@@ -166,5 +166,5 @@ def get_choices(names=None):
         raise NotImplementedError(msg)
     return selected
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     selected = get_choices()

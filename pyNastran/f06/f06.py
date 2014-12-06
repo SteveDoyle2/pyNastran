@@ -776,7 +776,7 @@ def _parse_label_isubcase(label_isubcase):
     #assert isinstance(isubcase,int),'isubcase=%r' % isubcase
     #print("subcaseName=%s isubcase=%s" % (subcaseName, isubcase))
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     from pyNastran.f06.test.test_f06 import main
     main()
 

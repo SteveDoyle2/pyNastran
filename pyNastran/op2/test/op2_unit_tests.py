@@ -52,5 +52,5 @@ class TestOP2(Tester):
         run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, iSubcases=[],
                 write_f06=write_f06, debug=debug, stopOnFailure=True)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

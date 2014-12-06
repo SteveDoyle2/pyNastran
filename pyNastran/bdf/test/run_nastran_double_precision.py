@@ -89,5 +89,5 @@ def cmd_line():
         run_first_nastran = True
     main(bdf_name, run_first_nastran=run_first_nastran)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     cmd_line()

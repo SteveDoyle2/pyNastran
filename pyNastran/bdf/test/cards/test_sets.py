@@ -32,5 +32,5 @@ class TestSets(unittest.TestCase):
         self.assertEqual('SET1           a      1.       3       1       2       3       5       4\n'
                          '               6\n', msg3)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

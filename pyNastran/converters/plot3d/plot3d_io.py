@@ -197,7 +197,7 @@ class Plot3d_io(object):
         #self.resultCases = {}
         pass
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     print('')
 
     def removeOldGeometry(self):

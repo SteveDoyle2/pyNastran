@@ -1486,7 +1486,7 @@ def compress_column(col):
     #print("packs = ", packs)
     return packs
 
-if __name__ == '__main__':  ## pragma: no cover
+if __name__ == '__main__':  # pragma: no cover
     from pyNastran.op4.utils import write_DMIG
 
     #compress_column([14, 15, 16, 20, 21, 22, 26, 27, 28])

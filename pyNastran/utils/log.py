@@ -145,10 +145,15 @@ def get_logger(log=None, level='debug'):
 def get_logger2(log=None, debug=True):
     """
     This function is useful as it will instantiate a SimpleLogger object if log=None.
-    :param log:   a logger object or None
-    :param debug: debug = True, False, None
+    :param log:   a python logging module object;
+                  if log is set, debug is ignored and uses the
+                  settings the logging object has
+    :param debug: used to set the logger if no logger is passed in
+                  True:  logs debug/info/error messages
+                  False: logs info/error messages
+                  None:  logs error messages
+    :returns log: log or a SimpleLogger
     """
-    #return SimpleLogger(level) if log is None else log
     if log is not None:
         pass
     elif debug is None:
@@ -158,7 +163,7 @@ def get_logger2(log=None, debug=True):
         log = SimpleLogger(level)
     return log
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     # how to use a simple logger
     for nam in ["debug", "info"]:
         print('--- %s logger ---' % nam)

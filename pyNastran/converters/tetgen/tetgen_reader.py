@@ -163,5 +163,5 @@ def main():
     m.read_tetgen(base + '.node', base + '.smesh', base + '.ele', dimension_flag=3)
     m.write_nastran(base + '.bdf')
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

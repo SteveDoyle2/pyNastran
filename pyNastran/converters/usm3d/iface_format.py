@@ -160,7 +160,7 @@ class IFace(FortranFile):
         pass
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     cogsg_obj = Usm3dReader()
     model = 'new2'
     cogsg_obj.read_cogsg(model + '.cogsg')

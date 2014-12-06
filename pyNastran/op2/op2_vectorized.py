@@ -227,7 +227,7 @@ class OP2_Vectorized(OP2):
             setattr(self, result_type, result)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     import pyNastran
     pkg_path = pyNastran.__path__[0]
 

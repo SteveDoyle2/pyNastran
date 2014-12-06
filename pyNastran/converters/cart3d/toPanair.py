@@ -231,7 +231,7 @@ class Cart3dToPanair(PanairGridHelper):
             #sys.exit()
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     panairIn = sys.argv[1]
     cart3dGeom = sys.argv[2]
     outfilename = sys.argv[3]

@@ -50,5 +50,5 @@ class TestFormatting(unittest.TestCase):
         actuali = actual[0]
         self.assertEqual(actuali, expected, msg='\nactual  =%r len(actual)=%i\nexpected=%r len(expected)=%i' % (actuali, len(actuali), expected, len(expected)))
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

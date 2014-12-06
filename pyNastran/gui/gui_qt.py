@@ -156,7 +156,7 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         self.background_col = settings.value("backgroundColor", (0.1, 0.2, 0.4)).toPyObject()
 
         self.init_ui()
-        self.vtk_interactor.SetPicker(self.cell_picker)
+        self.init_cell_picker()
 
         self.restoreState(settings.value("mainWindowState").toByteArray())
 
@@ -178,6 +178,29 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
 
         if script:
             self.on_run_script(script)
+
+    def create_cell_picker(self):
+        # cell picker
+        self.cell_picker = vtk.vtkCellPicker()
+        self.cell_picker.SetTolerance(0.0005)
+
+    def init_cell_picker(self):
+        #self.vtk_interactor.SetPicker(self.cell_picker)
+
+        def annotatePick(object, event):
+            #global self.picker, picker_textActor, picker_textMapper
+            if self.picker.GetCellId() < 0:
+                #self.picker_textActor.VisibilityOff()
+                pass
+            else:
+                selPt = picker.GetSelectionPoint()
+                pickPos = picker.GetPickPosition()
+
+                self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
+                self.picker_textActor.SetPosition(selPt[:2])
+                self.picker_textActor.VisibilityOn()
+
+        self.cell_picker.AddObserver("EndPickEvent", annotatePick)
 
     def on_cell_picker(self):
         worldPosition = self.cell_picker.GetPickPosition()
@@ -515,9 +538,7 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         self.edgeActor = vtk.vtkActor()
         self.edgeMapper = vtk.vtkPolyDataMapper()
 
-        # cell picker
-        self.cell_picker = vtk.vtkCellPicker()
-        self.cell_picker.SetTolerance(0.0005)
+        self.create_cell_picker()
 
         # scalar bar
         self.scalarBar = vtk.vtkScalarBarActor()
