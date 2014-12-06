@@ -5,7 +5,7 @@ class AddCard(object):
     def add_PARAM(self, param, allowOverwrites=False):
         key = param.key
         if key in self.params and not allowOverwrites:
-            if not param.isSameCard(self.params[key]):
+            if not param._is_same_card(self.params[key]):
                 #assert param.key not in self.params,'key=%s param=%s oldPARAM=%s' %(key,param,self.params[key])
                 self.log.warning('key=%s param=%s oldPARAM=%s' %
                                 (key, param, self.params[key]))

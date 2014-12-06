@@ -131,7 +131,7 @@ class CELAS1(SpringElement):
             #for nodeID, node in zip(nodeIDs, self.nodes):
                 #assert node.node.nid
 
-    def isSameCard(self, elem, debug=False):
+    def _is_same_card(self, elem, debug=False):
         if self.type != elem.type:
             return False
         fields1 = [self.eid] + self.nodes + [self.pid, self.c1, self.c2]
@@ -284,7 +284,7 @@ class CELAS2(SpringElement):
             #for nodeID, node in zip(nodeIDs, self.nodes):
                 #assert node.node.nid
 
-    def isSameCard(self, elem, debug=False):
+    def _is_same_card(self, elem, debug=False):
         if self.type != elem.type:
             return False
         fields1 = [self.eid] + self.nodes + [self.k, self.c1, self.c2]
@@ -296,7 +296,7 @@ class CELAS2(SpringElement):
     def K(self):
         return self.k
 
-    def writeCodeAster(self):
+    def write_code_aster(self):
         nodes = self.nodeIDs()
         msg = ''
         msg += 'DISCRET=_F( # CELAS2\n'
@@ -421,7 +421,7 @@ class CELAS3(SpringElement):
             self.s1 = data[2]
             self.s2 = data[3]
 
-    def isSameCard(self, elem, debug=False):
+    def _is_same_card(self, elem, debug=False):
         if self.type != elem.type:
             return False
         fields1 = [self.eid, self.pid, self.s1, self.s2]
@@ -517,7 +517,7 @@ class CELAS4(SpringElement):
             self.s1 = data[2]
             self.s2 = data[3]
 
-    def isSameCard(self, elem, debug=False):
+    def _is_same_card(self, elem, debug=False):
         if self.type != elem.type:
             return False
         fields1 = [self.eid, self.k, self.s1, self.s2]

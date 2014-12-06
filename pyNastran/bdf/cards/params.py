@@ -189,7 +189,7 @@ class PARAM(BaseCard):
         if value2 is not None:
             self.values.append(value2)
 
-    #def isSameCard(self, param, debug=False):
+    #def _is_same_card(self, param, debug=False):
         #fields1 = [self.key] + self.values
         #fields2 = [param.key] + param.values
         #for (field1, field2) in zip(fields1, fields2):

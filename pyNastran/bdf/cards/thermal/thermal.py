@@ -18,7 +18,7 @@ class ThermalCard(BaseCard):
         raise NotImplementedError('%s has not defined the cross_reference '
                                   'method' % self.type)
 
-    def isSameCard(self, obj, debug=False):
+    def _is_same_card(self, obj, debug=False):
         return False
 
 
