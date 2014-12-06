@@ -27,7 +27,7 @@ class Subcase(object):
         self.id = id
         self.params = {}
         self.sol = None
-        #print "\n***adding subcase %s***" %(self.id)
+        #print("\n***adding subcase %s***" % self.id)
 
     def get_stress_code(self, key, options, value):
         """
