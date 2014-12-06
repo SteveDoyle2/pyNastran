@@ -7,7 +7,7 @@ from pyNastran.bdf.bdf import BDF, BDFCard, DMIG
 from numpy import array, array_equal, sqrt, sin, cos, radians
 
 root_path = pyNastran.__path__[0]
-test_path = os.path.join(root_path, 'bdf', 'test')
+test_path = os.path.join(root_path, 'bdf', 'cards', 'test')
 
 class TestDMIG(unittest.TestCase):
 
@@ -16,7 +16,7 @@ class TestDMIG(unittest.TestCase):
         Tests DMIG reading
         """
         model = BDF(debug=False)
-        bdf_name = os.path.join(test_path, 'cards', 'dmig.bdf')
+        bdf_name = os.path.join(test_path, 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
         out = model.dmigs['REALS'].getMatrix(isSparse=False)
 
@@ -33,7 +33,7 @@ class TestDMIG(unittest.TestCase):
 
     def test_dmig_2(self):
         model = BDF(debug=False)
-        bdf_name = os.path.join(test_path, 'cards', 'dmig.bdf')
+        bdf_name = os.path.join(test_path, 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
 
         out = model.dmigs['REAL'].getMatrix(isSparse=False)
@@ -52,7 +52,7 @@ class TestDMIG(unittest.TestCase):
 
     def test_dmig_3(self):
         model = BDF(debug=False)
-        bdf_name = os.path.join(test_path, 'cards', 'dmig.bdf')
+        bdf_name = os.path.join(test_path, 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
         out = model.dmigs['IMAG'].getMatrix(isSparse=False)
 
@@ -73,7 +73,7 @@ class TestDMIG(unittest.TestCase):
 
     def test_dmig_4(self):
         model = BDF(debug=False)
-        bdf_name = os.path.join(test_path, 'cards', 'dmig.bdf')
+        bdf_name = os.path.join(test_path, 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
 
         out = model.dmigs['IMAGS'].getMatrix(isSparse=False)
@@ -97,7 +97,7 @@ class TestDMIG(unittest.TestCase):
 
     def test_dmig_5(self):
         model = BDF(debug=False)
-        bdf_name = os.path.join(test_path, 'cards', 'dmig.bdf')
+        bdf_name = os.path.join(test_path, 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
         out = model.dmigs['POLE'].getMatrix(isSparse=False)
 
