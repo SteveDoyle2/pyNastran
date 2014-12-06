@@ -877,7 +877,7 @@ class PSHEAR(ShellProperty):
         fields2 = prop.raw_fields()
         if debug:
             print("fields1=%s fields2=%s" % (fields1, fields2))
-        return self.isSameFields(fields1, fields2)
+        return self._is_same_fields(fields1, fields2)
 
     def cross_reference(self, model):
         msg = ' which is required by PSHEAR pid=%s' % self.pid

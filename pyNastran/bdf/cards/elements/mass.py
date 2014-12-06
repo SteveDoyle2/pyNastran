@@ -314,7 +314,7 @@ class CMASS3(PointMassElement):
         fields2 = [elem.eid, elem.Pid(), elem.s1, elem.s2]
         if debug:
             print("fields1=%s fields2=%s" % (fields1, fields2))
-        return self.isSameFields(fields1, fields2)
+        return self._is_same_fields(fields1, fields2)
 
     def cross_reference(self, model):
         """
@@ -375,7 +375,7 @@ class CMASS4(PointMassElement):
         fields2 = [elem.eid, elem.Pid(), elem.s1, elem.s2]
         if debug:
             print("fields1=%s fields2=%s" % (fields1, fields2))
-        return self.isSameFields(fields1, fields2)
+        return self._is_same_fields(fields1, fields2)
 
     def cross_reference(self, model):
         """
