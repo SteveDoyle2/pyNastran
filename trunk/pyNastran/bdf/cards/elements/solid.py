@@ -119,7 +119,7 @@ class SolidElement(Element):
             print("self.pid.mid = %s" % (str(self.pid.mid)))
             raise
 
-    def isSameCard(self, elem, debug=False):
+    def _is_same_card(self, elem, debug=False):
         if self.type != elem.type:
             return False
         fields1 = [self.eid, self.Pid()] + self.nodes

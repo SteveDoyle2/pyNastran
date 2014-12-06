@@ -95,7 +95,7 @@ class CDAMP1(LineDamper):
     def nodeIDs(self):
         return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True) ]
 
-    def isSameCard(self, elem, debug=False):
+    def _is_same_card(self, elem, debug=False):
         if self.type != elem.type:
             return False
         fields1 = [self.eid, self.Pid()] + self.nodeIDs() + [self.c1, self.c2]

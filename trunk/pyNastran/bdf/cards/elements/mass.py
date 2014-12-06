@@ -307,7 +307,7 @@ class CMASS3(PointMassElement):
     def Mass(self):
         return self.pid.mass
 
-    def isSameCard(self, elem, debug=False):
+    def _is_same_card(self, elem, debug=False):
         if self.type != elem.type:
             return False
         fields1 = [self.eid, self.Pid(), self.s1, self.s2]
@@ -368,7 +368,7 @@ class CMASS4(PointMassElement):
     def Mass(self):
         return self.mass
 
-    def isSameCard(self, elem, debug=False):
+    def _is_same_card(self, elem, debug=False):
         if self.type != elem.type:
             return False
         fields1 = [self.eid, self.Pid(), self.s1, self.s2]
@@ -763,7 +763,7 @@ class CONM2(PointMassElement):
             return self.cid
         return self.cid.cid
 
-    def writeCodeAster(self):
+    def write_code_aster(self):
         msg = ''
         msg += "    DISCRET=_F(\n"
         msg += "             'CARA='M_T_D_N'\n"

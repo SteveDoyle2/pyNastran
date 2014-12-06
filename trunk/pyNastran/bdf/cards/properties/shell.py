@@ -419,7 +419,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
                 raise NotImplementedError('method=%r is not supported' % method)
             return massPerArea
 
-    def isSameCard(self, prop, debug=False):
+    def _is_same_card(self, prop, debug=False):
         if self.type != prop.type:
             return False
         fields2 = [prop.nsm, prop.sb, prop.ft, prop.TRef, prop.ge, prop.lam]
@@ -870,7 +870,7 @@ class PSHEAR(ShellProperty):
             self.f1 = data[4]
             self.f2 = data[5]
 
-    def isSameCard(self, prop, debug=False):
+    def _is_same_card(self, prop, debug=False):
         if self.type != prop.type:
             return False
         fields1 = self.raw_fields()
@@ -1137,7 +1137,7 @@ class PSHELL(ShellProperty):
         msg += '%s\n\n' % (self.t)
         return msg
 
-    def writeCodeAster(self):
+    def write_code_aster(self):
         """
         * http://www.caelinux.org/wiki/index.php/Contrib:KeesWouters/shell/static
         * http://www.caelinux.org/wiki/index.php/Contrib:KeesWouters/platedynamics

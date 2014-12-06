@@ -62,12 +62,12 @@ class BaseCard(BaseCardDeprecated):
             value = self._get_field_helper(n)
         return value
 
-    def writeCodeAster(self):
-        return ('# skipping %s  because writeCodeAster is not implemented\n'
+    def write_code_aster(self):
+        return ('# skipping %s  because write_code_aster is not implemented\n'
                 % self.type)
 
-    #def writeCodeAsterLoad(self, model, gridWord='node'):
-        #return ('# skipping %s (lid=%s) because writeCodeAsterLoad is '
+    #def write_code_asterLoad(self, model, gridWord='node'):
+        #return ('# skipping %s (lid=%s) because write_code_asterLoad is '
                 #'not implemented\n' % (self.type, self.lid))
 
     def _verify(self, xref):
@@ -87,7 +87,7 @@ class BaseCard(BaseCardDeprecated):
                 return False
         return True
 
-    def isSameCard(self, card):
+    def _is_same_card(self, card):
         if self.type != card.type:
             return False
         fields1 = self.raw_fields()

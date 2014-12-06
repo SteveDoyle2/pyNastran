@@ -65,7 +65,7 @@ class RBAR(RigidElement):
             self.cmb = data[6]
             self.alpha = data[7]
 
-    # def convertToMPC(self, mpcID):
+    # def convert_to_MPC(self, mpcID):
     #     """
     #     -Ai*ui + Aj*uj = 0
     #     where ui are the base DOFs (max=6)
@@ -86,7 +86,7 @@ class RBAR(RigidElement):
     #             card += [gm, cm, Ai]
     #     return card
 
-    #def writeCodeAster(self):
+    #def write_code_aster(self):
         #msg = ''
         #msg += "BLOCAGE=AFFE_CHAR_MECA(  # RBAR\n"
         #msg += "        MODELE=MODELE,\n"  # rigid element
@@ -324,7 +324,7 @@ class RBE2(RigidElement):
         self.gn = str(self.gn)
         self.cm = str(self.cm)
 
-    def convertToMPC(self, mpcID):
+    def convert_to_MPC(self, mpcID):
         """
         .. math:: -A_i u_i + A_j u_j = 0
 
@@ -346,7 +346,7 @@ class RBE2(RigidElement):
                 card += [gm, cm, Ai]
         return card
 
-    def writeCodeAster(self):
+    def write_code_aster(self):
         """
         Converts to a LIAISON SOLIDE for dofs 123456.
         For other dof combinations, general MPC equations are written
