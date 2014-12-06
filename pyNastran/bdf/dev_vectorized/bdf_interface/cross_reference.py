@@ -1,7 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
-from ..cards.loads.loadcase import LoadCase
+from pyNastran.bdf.dev_vectorized.cards.loads.loadcase import LoadCase
 
 
 class XRefMesh(object):

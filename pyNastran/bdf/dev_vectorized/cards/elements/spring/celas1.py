@@ -2,7 +2,7 @@ from six.moves import range
 from numpy import dot, array, zeros, unique, searchsorted, transpose, where, arange
 from numpy.linalg import norm
 
-from ..rod.conrod import _Lambda
+from pyNastran.bdf.dev_vectorized.cards.elements.rod.conrod import _Lambda
 from pyNastran.bdf.dev_vectorized.cards.elements.spring.spring_element import SpringElement
 
 from pyNastran.bdf.fieldWriter import print_card_8

@@ -2,9 +2,9 @@ from six import  iteritems
 from numpy import (concatenate, hstack, argsort, searchsorted, ndarray, unique,
                    array, nan, full, where, isnan)
 
-from .pshell import PSHELL
-from .pcomp import PCOMP
-from .pcompg import PCOMPG
+from pyNastran.bdf.dev_vectorized.cards.elements.shell.pshell import PSHELL
+from pyNastran.bdf.dev_vectorized.cards.elements.shell.pcomp import PCOMP
+from pyNastran.bdf.dev_vectorized.cards.elements.shell.pcompg import PCOMPG
 
 class PropertiesShell(object):
     def __init__(self, model):

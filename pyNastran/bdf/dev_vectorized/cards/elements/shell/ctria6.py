@@ -5,7 +5,7 @@ from numpy import (array, zeros, arange, concatenate, searchsorted, where,
 from numpy.linalg import norm
 
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.shell_element import ShellElement
-from .ctria3 import _ctria3_normal_A
+from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctria3 import _ctria3_normal_A
 
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,

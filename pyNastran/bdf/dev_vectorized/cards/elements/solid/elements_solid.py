@@ -1,10 +1,10 @@
-from .ctetra4 import CTETRA4
-from .cpenta6 import CPENTA6
-from .chexa8 import CHEXA8
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.ctetra4 import CTETRA4
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.cpenta6 import CPENTA6
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.chexa8 import CHEXA8
 
-from .ctetra10 import CTETRA10
-from .cpenta15 import CPENTA15
-from .chexa20 import CHEXA20
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.ctetra10 import CTETRA10
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.cpenta15 import CPENTA15
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.chexa20 import CHEXA20
 from numpy import hstack, zeros, where, searchsorted, argsort, full, nan, unique
 
 class ElementsSolid(object):

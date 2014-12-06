@@ -6,8 +6,8 @@ from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 
-from .chexa8 import quad_area_centroid, volume8
-from .solid_element import SolidElement
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.chexa8 import quad_area_centroid, volume8
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.solid_element import SolidElement
 
 class CHEXA20(SolidElement):
     type = 'CHEXA20'

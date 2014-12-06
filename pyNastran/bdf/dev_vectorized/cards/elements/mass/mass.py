@@ -1,13 +1,13 @@
 from numpy import zeros, array, union1d, searchsorted, concatenate, argsort
-from .conm1 import CONM1
-from .conm2 import CONM2
+from pyNastran.bdf.dev_vectorized.cards.elements.mass.conm1 import CONM1
+from pyNastran.bdf.dev_vectorized.cards.elements.mass.conm2 import CONM2
 
-#from .pmass import PMASS
-#from .cmass1 import CMASS1
-#from .cmass2 import CMASS2
-#from .cmass3 import CMASS3
-#from .cmass4 import CMASS4
-#from .cmass5 import CMASS5
+#from pyNastran.bdf.dev_vectorized.cards.elements.mass.pmass import PMASS
+#from pyNastran.bdf.dev_vectorized.cards.elements.mass.cmass1 import CMASS1
+#from pyNastran.bdf.dev_vectorized.cards.elements.mass.cmass2 import CMASS2
+#from pyNastran.bdf.dev_vectorized.cards.elements.mass.cmass3 import CMASS3
+#from pyNastran.bdf.dev_vectorized.cards.elements.mass.cmass4 import CMASS4
+#from pyNastran.bdf.dev_vectorized.cards.elements.mass.cmass5 import CMASS5
 
 class Mass(object):
     def __init__(self, model):

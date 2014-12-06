@@ -1,4 +1,4 @@
-from .caero1 import CAERO1
+from pyNastran.bdf.dev_vectorized.cards.aero.caero1 import CAERO1
 #from .caero2 import CAERO2
 #from .caero3 import CAERO3
 #from .caero4 import CAERO4
