@@ -134,6 +134,7 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         self.show_debug = True
         self.show_gui = True
         self.show_command = True
+        self.coord_id = 0
 
         self.nCases = 0
         self.iCase = 0
@@ -542,9 +543,74 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
 
         # scalar bar
         self.scalarBar = vtk.vtkScalarBarActor()
-        self.create_axes()
+        self.create_global_axes()
 
-    def create_axes(self):
+    def create_coordinate_system(self, origin=None, matrix_3x3=None, Type='xyz'):
+        """
+        Creates a coordinate system
+
+        :param origin:
+          the origin as (3,) ndarray/list/tuple
+        :param matrix_3x3:
+          a standard 3x3 Nastran-style coordinate system
+        :param Type:
+          a string of 'xyz', 'Rtz', 'Rtp' (xyz, cylindrical, spherical)
+          that changes the axis names
+
+        ..todo::
+          Type is not supported ('xyz' ONLY)
+        ..todo::
+          Can only set one coordinate system
+        ..seealso::
+          http://en.wikipedia.org/wiki/Homogeneous_coordinates
+          http://www3.cs.stonybrook.edu/~qin/courses/graphics/camera-coordinate-system.pdf
+          http://www.vtk.org/doc/nightly/html/classvtkTransform.html#ad58b847446d791391e32441b98eff151
+        """
+        self.transform = vtk.vtkTransform()
+        if origin is not None:
+            self.transform.Translate(*origin)
+
+        #cid = 5
+        #coord = self.model.coords[cid]
+        if matrix_3x3 is not None:
+            m = eye(4, dtype='float32')
+            m[:3, :3] = matrix_3x3
+            self.transform.SetMatrix(m)
+
+        self.axes = vtk.vtkAxesActor()
+        self.axes.SetUserTransform(self.transform)
+        if Type != 'xyz':
+            if Type == 'Rtz':
+                x = u'R'
+                y = u'θ'
+                z = 'z'
+
+                x = 'R'
+                y = 'theta'
+                z = 'z'
+
+            elif Type == 'Rtp':
+                x = u'R'
+                #y = u'θ'
+                #z = u'ϕ'
+
+                #x = 'R'
+                y = 'theta'
+                z = 'phi'
+            else:
+                raise RuntimeError('invalid axis type; Type=%r' % Type)
+
+            self.axes.SetXAxisLabelText(x)
+            self.axes.SetYAxisLabelText(y)
+            self.axes.SetZAxisLabelText(z)
+
+        self.coord_id += 1
+        return self.coord_id - 1
+
+    def create_global_axes(self):
+        #self.create_coordinate_system(origin=None, matrix_3x3=None, Type='Rtp')
+        #return
+
         self.transform = vtk.vtkTransform()
         #self.transform.Translate(0.0, 0.0, 0.0)
 
