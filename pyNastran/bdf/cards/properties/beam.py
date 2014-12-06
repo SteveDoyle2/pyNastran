@@ -357,7 +357,7 @@ class PBEAM(IntegratedLineProperty):
             msg += " )),\n"
         return (msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['PBEAM', self.pid, self.Mid()]
 
         i = 0
@@ -668,7 +668,7 @@ class PBEAML(IntegratedLineProperty):
         iCut += 1
         return (msg + msg2, iCut, iFace, iStart)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['PBEAML', self.pid, self.Mid(), self.group, self.Type,
                        None, None, None, None]
         #print("self.nsm = ",self.nsm)
@@ -685,7 +685,7 @@ class PBEAML(IntegratedLineProperty):
 
     def reprFields(self):
         #group = set_blank_if_default(self.group, 'MSCBMLO')
-        list_fields = self.rawFields()
+        list_fields = self.raw_fields()
         #list_fields[3] = group
         return list_fields
 
@@ -758,7 +758,7 @@ class PBCOMP(LineProperty):
         msg = ' which is required by PBCOMP mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['PBCOMP', self.pid, self.Mid(), self.A, self.i1,
                        self.i2, self.i12, self.j, self.nsm, self.k1, self.k2,
                        self.m1, self.m2, self.n1, self.n2, self.symopt, None]

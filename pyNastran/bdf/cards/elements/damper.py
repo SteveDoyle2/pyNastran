@@ -112,14 +112,14 @@ class CDAMP1(LineDamper):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         nodes = self.nodeIDs()
         fields = ['CDAMP1', self.eid, self.Pid(), nodes[0], self.c1,
                   nodes[1], self.c2]
         return fields
 
     def write_bdf(self, size, card_writer):
-        card = self.rawFields()
+        card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -188,14 +188,14 @@ class CDAMP2(LineDamper):
     def nodeIDs(self):
         return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True) ]
 
-    def rawFields(self):
+    def raw_fields(self):
         nodes = self.nodeIDs()
         fields = ['CDAMP2', self.eid, self.b, nodes[0], self.c1,
                   nodes[1], self.c2]
         return fields
 
     def write_bdf(self, size, card_writer):
-        card = self.rawFields()
+        card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -257,13 +257,13 @@ class CDAMP3(LineDamper):
     def nodeIDs(self):
         return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True) ]
 
-    def rawFields(self):
+    def raw_fields(self):
         nodes = self.nodeIDs()
         list_fields = ['CDAMP3', self.eid, self.pid, nodes[0], nodes[1]]
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.rawFields()
+        card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -321,13 +321,13 @@ class CDAMP4(LineDamper):
     def nodeIDs(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
-    def rawFields(self):
+    def raw_fields(self):
         nodes = self.nodeIDs()
         list_fields = ['CDAMP4', self.eid, self.b, nodes[0], nodes[1]]
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.rawFields()
+        card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -390,13 +390,13 @@ class CDAMP5(LineDamper):
     def nodeIDs(self):
         return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True) ]
 
-    def rawFields(self):
+    def raw_fields(self):
         nodes = self.nodeIDs()
         list_fields = ['CDAMP5', self.eid, self.Pid(), nodes[0], nodes[1]]
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.rawFields()
+        card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -453,13 +453,13 @@ class CVISC(LineDamper):
     def nodeIDs(self):
         return [0 if nid is None else nid for nid in self._nodeIDs(allowEmptyNodes=True) ]
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['CVISC', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
-        card = self.rawFields()
+        card = self.raw_fields()
         return self.comment() + print_card_8(card)

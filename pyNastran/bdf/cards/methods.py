@@ -89,7 +89,7 @@ class EIGB(Method):
     def cross_reference(self, model):
         pass
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['EIGB', self.sid, self.method, self.L1, self.L2, self.nep,
                   self.ndp, self.ndn, None, self.norm, self.G, self.C]
         return list_fields
@@ -264,7 +264,7 @@ class EIGC(Method):
     def reprMethod(self):
         return self.rawMethod()
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['EIGC', self.sid, self.method, self.norm, self.G, self.C,
                   self.E, self.ndo, None]
         list_fields += self.rawMethod()
@@ -322,13 +322,13 @@ class EIGP(Method):
     def cross_reference(self, model):
         pass
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['EIGP', self.alpha1, self.omega1, self.m1,
                   self.alpha2, self.omega2, self.m2]
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -394,7 +394,7 @@ class EIGR(Method):
     def cross_reference(self, model):
         pass
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['EIGR', self.sid, self.method, self.f1, self.f2, self.ne,
                   self.nd, None, None, self.norm, self.G, self.C]
         return list_fields
@@ -480,7 +480,7 @@ class EIGRL(Method):
             #elif mdoel.is_buckling_solution():
                 #self.norm = 'MAX'
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['EIGRL', self.sid, self.v1, self.v2, self.nd,
                        self.msglvl, self.maxset, self.shfscl, self.norm]
         for (option, value) in zip(self.options, self.values):

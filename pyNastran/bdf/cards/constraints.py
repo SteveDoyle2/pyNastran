@@ -157,7 +157,7 @@ class Constraint(BaseCard):
     def __init__(self, card, data):
         pass
 
-    def rawFields(self):
+    def raw_fields(self):
         fields = [self.type, self.conid]
         return fields
 
@@ -199,14 +199,14 @@ class SUPORT1(Constraint):
         assert len(self.IDs) > 0
         assert len(self.IDs) == len(self.Cs)
 
-    def rawFields(self):
+    def raw_fields(self):
         fields = ['SUPORT1', self.conid]
         for ID, c in zip(self.IDs, self.Cs):
             fields += [ID, c]
         return fields
 
     def write_bdf(self, size, card_writer):
-        card = self.rawFields()
+        card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -248,14 +248,14 @@ class SUPORT(Constraint):
         assert len(self.IDs) > 0
         assert len(self.IDs) == len(self.Cs)
 
-    def rawFields(self):
+    def raw_fields(self):
         fields = ['SUPORT']
         for ID, c in zip(self.IDs, self.Cs):
             fields += [ID, c]
         return fields
 
     def write_bdf(self, size, card_writer):
-        card = self.rawFields()
+        card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -321,7 +321,7 @@ class MPC(Constraint):
     def nodeIDs(self):
         return self.gids
 
-    def rawFields(self):  # MPC
+    def raw_fields(self):  # MPC
         fields = ['MPC', self.conid]
         for (i, gid, constraint, enforced) in zip(count(), self.gids,
              self.constraints, self.enforced):
@@ -357,7 +357,7 @@ class MPC(Constraint):
         return self.comment() + msg.rstrip() + '\n'
 
     def write_bdf(self, size, card_writer):
-        card = self.rawFields()
+        card = self.raw_fields()
         return self.comment() + card_writer(card)
 
 
@@ -420,7 +420,7 @@ class SPC(Constraint):
         #            dofCount+=6
         return dofCount
 
-    def rawFields(self):
+    def raw_fields(self):
         fields = ['SPC', self.conid]
         for (gid, constraint, enforced) in zip(self.gids, self.constraints,
                 self.enforced):
@@ -428,7 +428,7 @@ class SPC(Constraint):
         return fields
 
     def write_bdf(self, size, card_writer):
-        card = self.rawFields()
+        card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -452,7 +452,7 @@ class SPCD(SPC):
         if comment:
             self._comment = comment
 
-    def rawFields(self):
+    def raw_fields(self):
         fields = ['SPCD', self.conid]
         for (gid, constraint, enforced) in zip(self.gids, self.constraints,
                 self.enforced):
@@ -460,7 +460,7 @@ class SPCD(SPC):
         return fields
 
     def write_bdf(self, size, card_writer):
-        card = self.rawFields()
+        card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -502,12 +502,12 @@ class SPCAX(Constraint):
     def cross_reference(self, i, node):
         pass
 
-    def rawFields(self):
+    def raw_fields(self):
         fields = ['SPCAX', self.conid, self.rid, self.hid, self.c, self.d]
         return fields
 
     def write_bdf(self, size, card_writer):
-        card = self.rawFields()
+        card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -545,7 +545,7 @@ class SPC1(Constraint):
     def cross_reference(self, i, node):
         self.nodes[i] = node
 
-    def rawFields(self):  # SPC1
+    def raw_fields(self):  # SPC1
         #test = [i for i in range(self.nodes[0], self.nodes[-1]+1)]
         #print("self.nodes = ",self.nodes)
         #print("test       = ",test)
@@ -558,7 +558,7 @@ class SPC1(Constraint):
         return fields
 
     def write_bdf(self, size, card_writer):
-        card = self.rawFields()
+        card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
 #class ADDConstraint(Constraint):
@@ -632,7 +632,7 @@ class SPCADD(ConstraintADD):
         self.sets.sort()
         self.sets[i] = node
 
-    def rawFields(self):
+    def raw_fields(self):
         fields = ['SPCADD', self.conid]  # +self.sets
         for setID in self.sets:
             fields.append(setID)
@@ -640,7 +640,7 @@ class SPCADD(ConstraintADD):
         #return self._reprSpcMpcAdd(fields)
 
     def write_bdf(self, size, card_writer):
-        card = self.rawFields()
+        card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -670,7 +670,7 @@ class MPCADD(ConstraintADD):
         self.sets.sort()
         self.sets[i] = node
 
-    def rawFields(self):
+    def raw_fields(self):
         fields = ['MPCADD', self.conid]  # +self.sets
         for setID in self.sets:
             fields.append(setID)
@@ -678,5 +678,5 @@ class MPCADD(ConstraintADD):
         #return self._reprSpcMpcAdd(fields)
 
     def write_bdf(self, size, card_writer):
-        card = self.rawFields()
+        card = self.raw_fields()
         return self.comment() + print_card_8(card)

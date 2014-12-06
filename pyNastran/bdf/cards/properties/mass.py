@@ -60,13 +60,13 @@ class NSM(PointProperty):
             self.value = data[3]
         assert self.Type in self.validProperties
 
-    def rawFields(self):
+    def raw_fields(self):
         #nodes = self.nodeIDs()
         list_fields = ['NSM', self.sid, self.Type, self.id, self.value]
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -104,12 +104,12 @@ class PMASS(PointProperty):
     def Mass(self):
         return self.mass
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['PMASS', self.pid, self.mass]
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()

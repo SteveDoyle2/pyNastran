@@ -150,7 +150,7 @@ class CMASS1(PointMassElement):
             return self.pid
         return self.pid.pid
 
-    def rawFields(self):
+    def raw_fields(self):
         fields = ['CMASS1', self.eid, self.Pid(), self.G1(), self.c1,
                   self.G2(), self.c2]
         return fields
@@ -258,7 +258,7 @@ class CMASS2(PointMassElement):
             return self.g2
         return self.g2.nid
 
-    def rawFields(self):
+    def raw_fields(self):
         fields = ['CMASS2', self.eid, self.mass, self.G1(),
                   self.c1, self.G2(), self.c2]
         return fields
@@ -325,7 +325,7 @@ class CMASS3(PointMassElement):
         #self.s2 = model.Node(self.s2, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         fields = ['CMASS3', self.eid, self.Pid(), self.s1, self.s2]
         return fields
 
@@ -384,7 +384,7 @@ class CMASS4(PointMassElement):
         #self.s2 = model.Node(self.s2)
         pass
 
-    def rawFields(self):
+    def raw_fields(self):
         fields = ['CMASS4', self.eid, self.mass, self.s1, self.s2]
         return fields
 
@@ -557,7 +557,7 @@ class CONM1(PointMassElement):
     def MassMatrix(self):
         return self.massMatrix
 
-    def rawFields(self):
+    def raw_fields(self):
         cid = set_blank_if_default(self.Cid(), 0)
         nid = self.Nid()
         m = self.massMatrix
@@ -568,7 +568,7 @@ class CONM1(PointMassElement):
         return list_fields
 
     def reprFields(self):
-        list_fields = self.rawFields()
+        list_fields = self.raw_fields()
         list_fields2 = list_fields[0:4]
         for field in list_fields[4:]:
             val = set_blank_if_default(field, 0.)
@@ -771,7 +771,7 @@ class CONM2(PointMassElement):
         msg += "              VALE=%g),\n" % self.mass
         return msg
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = (['CONM2', self.eid, self.Nid(), self.Cid(), self.mass] +
                   list(self.X) + [None] + list(self.I))
         return list_fields

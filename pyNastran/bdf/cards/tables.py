@@ -171,7 +171,7 @@ class TABLED1(Table):
         assert self.yaxis in ['LINEAR', 'LOG'], 'yaxis=|%s|' % (self.yaxis)
         self.parse_fields(xy, nrepeated=2, isData=isData)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['TABLED1', self.tid, self.xaxis, self.yaxis, None,
                   None, None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
@@ -179,7 +179,7 @@ class TABLED1(Table):
     def reprFields(self):
         #xaxis = set_blank_if_default(self.xaxis, 'LINEAR')
         #yaxis = set_blank_if_default(self.yaxis, 'LINEAR')
-        return self.rawFields()
+        return self.raw_fields()
 
 
 class TABLED2(Table):
@@ -213,13 +213,13 @@ class TABLED2(Table):
             isData = True
         self.parse_fields(xy, nrepeated=2, isData=isData)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['TABLED2', self.tid, self.x1, None, None, None,
                        None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
 
 class TABLED3(Table):
@@ -256,13 +256,13 @@ class TABLED3(Table):
             isData = True
         self.parse_fields(xy, nrepeated=2, isData=isData)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['TABLED3', self.tid, self.x1, self.x2, None,
                        None, None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
 
 class TABLED4(Table):
@@ -305,13 +305,13 @@ class TABLED4(Table):
             isData = True
         self.parse_fields(xy, nrepeated=2, isData=isData)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['TABLED4', self.tid, self.x1, self.x2, self.x3, self.x4,
                        None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
 
 class TABDMP1(Table):
@@ -347,13 +347,13 @@ class TABDMP1(Table):
             isData = True
         self.parse_fields(xy, nrepeated=2, isData=isData)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['TABDMP1', self.tid, self.Type, None, None, None, None,
                        None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
 
 class TABLEM1(Table):
@@ -385,7 +385,7 @@ class TABLEM1(Table):
             isData = True
         self.parse_fields(xy, nrepeated=2, isData=isData)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['TABLEM1', self.tid, None, None, None, None,
                   None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
@@ -422,13 +422,13 @@ class TABLEM2(Table):
             isData = True
         self.parse_fields(xy, nrepeated=2, isData=isData)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['TABLEM2', self.tid, self.x1, None, None, None,
                        None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
 
 class TABLEM3(Table):
@@ -465,13 +465,13 @@ class TABLEM3(Table):
             isData = True
         self.parse_fields(xy, nrepeated=2, isData=isData)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['TABLEM3', self.tid, self.x1, self.x2, None,
                   None, None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
 
 class TABLEM4(Table):
@@ -513,13 +513,13 @@ class TABLEM4(Table):
             isData = True
         self.parse_fields(xy, nrepeated=1, isData=isData)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['TABLEM4', self.tid, self.x1, self.x2, self.x3, self.x4,
                   None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
 
 class TABLES1(Table):
@@ -554,13 +554,13 @@ class TABLES1(Table):
             isData = True
         self.parse_fields(xy, nrepeated=2, isData=isData)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['TABLES1', self.tid, self.Type, None, None, None,
                   None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
 
 class TABLEST(Table):
@@ -593,13 +593,13 @@ class TABLEST(Table):
             isData = True
         self.parse_fields(xy, nrepeated=2, isData=isData)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['TABLEST', self.tid, None, None, None, None,
                   None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
 
 class RandomTable(BaseCard):
@@ -655,7 +655,7 @@ class TABRND1(RandomTable):
             raise ValueError('axis=|%s|' % (axis))
         return axisType
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['TABRND1', self.tid, self.xaxis, self.yaxis, None, None,
                   None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
@@ -695,12 +695,12 @@ class TABRNDG(RandomTable):
         else:
             raise NotImplementedError()
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['TABRNDG', self.tid, self.Type, self.LU, self.WG]
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
 
 class TIC(Table):
@@ -731,9 +731,9 @@ class TIC(Table):
             self.U0 = data[3]
             self.V0 = data[4]
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['TIC', self.sid, self.G, self.C, self.U0, self.V0]
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()

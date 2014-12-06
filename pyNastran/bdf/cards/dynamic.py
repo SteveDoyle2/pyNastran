@@ -78,7 +78,7 @@ class FREQ(BaseCard):
         """
         self.addFrequencies(freq.freqs)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['FREQ', self.sid] + self.freqs
         return list_fields
 
@@ -201,13 +201,13 @@ class FREQ4(FREQ):
         self.nfm = integer_or_blank(card, 5, 'nfm', 3)
         assert len(card) <= 6, 'len(FREQ card) = %i' % len(card)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['FREQ4', self.sid, self.f1, self.f2, self.fspd,
                        self.nfm]
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -246,14 +246,14 @@ class NLPCI(BaseCard):
         self.desiter = double_or_blank(card, 7, 'minalr', 12)
         self.mxinc = integer_or_blank(card, 8, 'minalr', 20)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['NLPCI', self.nlparm_id, self.Type, self.minalr,
                        self.maxalr, self.scale, None, self.desiter, self.mxinc]
         return list_fields
 
     def reprFields(self):
         #minalr = set_blank_if_default(self.minalr, 0.25)
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -298,14 +298,14 @@ class TSTEP(BaseCard):
             self.DT.append(dt)
             self.NO.append(no)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['TSTEP', self.sid]
         for (N, dt, no) in zip(self.N, self.DT, self.NO):
             list_fields += [N, dt, no, None, None, None, None, None]
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -411,7 +411,7 @@ class TSTEPNL(BaseCard):
             self.rTolB = rTolB
             self.minIter = None  # not listed in DMAP 2005
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['TSTEPNL', self.sid, self.ndt, self.dt, self.no,
                   self.method, self.kStep, self.maxIter, self.conv, self.epsU,
                   self.epsP, self.epsW, self.maxDiv, self.maxQn, self.MaxLs,
@@ -542,7 +542,7 @@ class NLPARM(BaseCard):
             self.maxR = maxR
             self.rTolB = rTolB
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['NLPARM', self.nid, self.ninc, self.dt, self.kMethod,
                   self.kStep, self.maxIter, self.conv, self.intOut, self.epsU,
                   self.epsP, self.epsW, self.maxDiv, self.maxQn, self.maxLs,

@@ -610,7 +610,7 @@ class PCOMP(CompositeShellProperty):
             assert isinstance(rho, float), 'rho=%r' % rho
             assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['PCOMP', self.pid, self.z0, self.nsm, self.sb, self.ft,
                   self.TRef, self.ge, self.lam, ]
         for (iply, ply) in enumerate(self.plies):
@@ -749,7 +749,7 @@ class PCOMPG(CompositeShellProperty):
         gPlyID = self.plies[iply][4]
         return gPlyID
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['PCOMPG', self.pid, self.z0, self.nsm, self.sb, self.ft,
                   self.TRef, self.ge, self.lam, ]
         for (iply, ply) in enumerate(self.plies):
@@ -823,7 +823,7 @@ class PLPLANE(ShellProperty):
             return self.cid
         return self.cid.cid
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['PLPLANE', self.pid, self.Mid(), self.Cid(), self.str]
         return list_fields
 
@@ -873,8 +873,8 @@ class PSHEAR(ShellProperty):
     def isSameCard(self, prop, debug=False):
         if self.type != prop.type:
             return False
-        fields1 = self.rawFields()
-        fields2 = prop.rawFields()
+        fields1 = self.raw_fields()
+        fields2 = prop.raw_fields()
         if debug:
             print("fields1=%s fields2=%s" % (fields1, fields2))
         return self.isSameFields(fields1, fields2)
@@ -923,7 +923,7 @@ class PSHEAR(ShellProperty):
                 assert isinstance(nu, float), 'nu=%r' % nu
                 assert isinstance(rho, float), 'rho=%r' % rho
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['PSHEAR', self.pid, self.Mid(), self.t, self.nsm,
                   self.f1, self.f2]
         return list_fields
@@ -1158,7 +1158,7 @@ class PSHELL(ShellProperty):
         msg += "              VALE=(%g),),\n" % self.nsm
         return msg
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['PSHELL', self.pid, self.Mid1(), self.t, self.Mid2(),
                   self.twelveIt3, self.Mid3(), self.tst, self.nsm, self.z1,
                   self.z2, self.Mid4()]

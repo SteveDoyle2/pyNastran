@@ -151,13 +151,13 @@ class MATS1(MaterialDependence):
             return self.tid.tid
         return self.tid
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['MATS1', self.Mid(), self.Tid(), self.Type,
                   self.h, self.yf, self.hr, self.limit1, self.limit2]
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -261,7 +261,7 @@ class MATT1(MaterialDependence):
     def ss_table(self):
         return self._get_table('_ss_table')
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['MATT1', self.Mid(), self.E_table(), self.G_table(),
             self.nu_table(), self.rho_table(), self.A_table(), self.ge_table(),
             self.st_table(), self.sc_table(), self.ss_table(),
@@ -269,7 +269,7 @@ class MATT1(MaterialDependence):
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -384,7 +384,7 @@ class MATT2(MaterialDependence):
     def ss_table(self):
         return self._get_table('_ss_table')
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['MATT2', self.Mid(), self.G11_table(), self.G12_table(),
                        self.G13_table(), self.G22_table(), self.G23_table(),
                        self.G33_table(), self.rho_table(), self.A1_table(),
@@ -394,7 +394,7 @@ class MATT2(MaterialDependence):
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -464,7 +464,7 @@ class MATT4(MaterialDependence):
     def Hgen_table(self):
         return self._get_table('_Hgen_table')
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['MATT4', self.Mid(), self.K_table(), self.Cp_table(),
                        None,
                        self.H_table(), self.mu_table(), self.Hgen_table()
@@ -472,7 +472,7 @@ class MATT4(MaterialDependence):
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -557,7 +557,7 @@ class MATT5(MaterialDependence):
     def Hgen_table(self):
         return self._get_table('_hgen_table')
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['MATT5', self.Mid(),
                        self.Kxx_table(), self.Kxy_table(), self.Kxz_table(),
                        self.Kyy_table(), self.Kyz_table(), self.Kzz_table(),
@@ -565,7 +565,7 @@ class MATT5(MaterialDependence):
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()

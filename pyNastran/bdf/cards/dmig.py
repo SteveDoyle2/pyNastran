@@ -703,7 +703,7 @@ class DMI(NastranMatrix):
             return True
         return False
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['DMI', self.name, 0, self.form, self.tin,
                   self.tout, None, self.nRows, self.nCols]
 

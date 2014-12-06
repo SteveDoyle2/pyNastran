@@ -17,7 +17,7 @@ class TestLoads(unittest.TestCase):
         size = 8
         card = DAREA(card)
         card.write_bdf(size, 'dummy')
-        card.rawFields()
+        card.raw_fields()
 
     def test_pload4_01(self):
         lines = ['PLOAD4  1000    1       -60.    -60.    60.             1']
@@ -27,7 +27,7 @@ class TestLoads(unittest.TestCase):
         size = 8
         card = PLOAD4(card)
         card.write_bdf(size, 'dummy')
-        card.rawFields()
+        card.raw_fields()
 
     def test_pload4_02(self):
         lines = ['PLOAD4  1       101     1.                              10000   10011']
@@ -37,7 +37,7 @@ class TestLoads(unittest.TestCase):
         size = 8
         card = PLOAD4(card)
         card.write_bdf(size, 'dummy')
-        card.rawFields()
+        card.raw_fields()
 
     def test_aestat_01(self):
         lines = ['AESTAT  502     PITCH']
@@ -47,7 +47,7 @@ class TestLoads(unittest.TestCase):
         size = 8
         card = AESTAT(card)
         card.write_bdf(size, 'dummy')
-        card.rawFields()
+        card.raw_fields()
 
     def test_dmi_01(self):
         lines = ['DMI,Q,0,6,1,0,,4,4']
@@ -67,7 +67,7 @@ class TestLoads(unittest.TestCase):
         size = 8
         card = SET1(card)
         card.write_bdf(size, 'dummy')
-        card.rawFields()
+        card.raw_fields()
 
 
 if __name__ == '__main__':  # pragma: no cover

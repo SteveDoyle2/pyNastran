@@ -110,7 +110,7 @@ class CREEP(Material):
             return self.mid
         return self.mid.mid
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['CREEP', self.Mid(), self.T0, self.exp, self.form,
                   self.tidkp, self.tidcp, self.tidcs, self.thresh, self.Type,
                   self.a, self.b, self.c, self.d, self.e, self.f, self.g]
@@ -318,7 +318,7 @@ class MAT1(IsotropicMaterial):
         if self.mid in model.MATT1:
             self.matt1 = model.MATT1[self.mid]  # not using a method...
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['MAT1', self.mid, self.e, self.g, self.nu, self.rho, self.a,
                   self.TRef, self.ge, self.St, self.Sc, self.Ss, self.Mcsid]
         return list_fields
@@ -537,7 +537,7 @@ class MAT2(AnisotropicMaterial):
             msg += '%s,%s\n\n' % (self.a, self.a * self.TRef)
         return msg
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['MAT2', self.mid, self.G11, self.G12, self.G13, self.G22,
                   self.G23, self.G33, self.rho, self.a1, self.a2, self.a3,
                   self.TRef, self.ge, self.St, self.Sc, self.Ss,
@@ -656,7 +656,7 @@ class MAT3(OrthotropicMaterial):
         if self.mid in model.MATT3:
             self.matt3 = model.MATT3[self.mid]  # not using a method...
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['MAT3', self.mid, self.ex, self.eth, self.ez, self.nuxth,
                   self.nuthz, self.nuzx, self.rho, None, None, self.gzx,
                   self.ax, self.ath, self.az, self.TRef, self.ge]
@@ -749,7 +749,7 @@ class MAT4(ThermalMaterial):
         if self.mid in model.MATT4:
             self.matt4 = model.MATT4[self.mid]  # not using a method...
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['MAT4', self.mid, self.k, self.cp, self.rho, self.H, self.mu,
                   self.hgen, self.refEnthalpy, self.tch, self.tdelta,
                   self.qlat]
@@ -844,7 +844,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
                    [self.kxz, self.kyz, self.kzz]])
         return k
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['MAT5', self.mid, self.kxx, self.kxy, self.kxz, self.kyy,
                   self.kyz, self.kzz, self.cp, self.rho, self.hgen]
         return list_fields
@@ -1005,7 +1005,7 @@ class MAT8(OrthotropicMaterial):
         D[2, 2] = G12
         return D
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['MAT8', self.mid, self.e11, self.e22, self.nu12, self.g12,
                        self.g1z, self.g2z, self.rho, self.a1, self.a2, self.TRef,
                        self.Xt, self.Xc, self.Yt, self.Yc, self.S, self.ge,
@@ -1178,7 +1178,7 @@ class MAT9(AnisotropicMaterial):
              [self.G16, self.G26, self.G36, self.G46, self.G56, self.G66]])
         return D
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = (['MAT9', self.mid, self.G11, self.G12, self.G13, self.G14,
                    self.G15, self.G16, self.G22, self.G23, self.G24, self.G25,
                    self.G26, self.G33, self.G34, self.G35, self.G36, self.G44,
@@ -1299,7 +1299,7 @@ class MAT10(Material):
         self.rho = rho
         self.c = c
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['MAT10', self.mid, self.bulk, self.rho, self.c, self.ge]
         return list_fields
 
@@ -1400,7 +1400,7 @@ class MAT11(Material):
         assert self.nu13 is not None, msg + 'NU13 defined'
         assert self.nu23 is not None, msg + 'NU23 defined'
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['MAT11', self.mid, self.e1, self.e2, self.e3, self.nu12,
                   self.nu13, self.g12, self.g13, self.g23, self.rho, self.a1,
                   self.a2, self.a3, self.TRef, self.ge]
@@ -1551,7 +1551,7 @@ class MATHP(HyperelasticMaterial):
             self.tab4 = tab4
             self.tabd = tab5
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['MATHP', self.mid, self.a10, self.a01, self.d1, self.rho,
                   self.av, self.TRef, self.ge,
                   None, self.na, self.nd, None, None, None, None, None,
@@ -1651,7 +1651,7 @@ class EQUIV(Material):
         else:
             raise NotImplementedError(data)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['EQUIV', self.Mid(), self.field2, self.field3,
                        self.field4, self.field5, self.field6, self.field7]
         return list_fields

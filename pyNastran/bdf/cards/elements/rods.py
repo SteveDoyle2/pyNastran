@@ -419,15 +419,15 @@ class CROD(RodElement):
         massPerLength = self.pid.mid.rho * self.pid.A + self.pid.nsm
         return massPerLength
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['CROD', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
-        card = self.rawFields()
+        card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -523,7 +523,7 @@ class CTUBE(RodElement):
     def Centroid(self):
         return (self.nodes[0].Position() + self.nodes[1].Position()) / 2.
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['CTUBE', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
 
@@ -668,7 +668,7 @@ class CONROD(RodElement):
             msg += "              VALE=(%g),\n" % self.Radius()
         return msg
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['CONROD', self.eid] + self.nodeIDs() + [
                   self.Mid(), self.A, self.j, self.c, self.nsm]
         return list_fields

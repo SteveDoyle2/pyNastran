@@ -22,7 +22,7 @@ class TestBeams(unittest.TestCase):
         #print(print_card(card))
         card = BDFCard(card)
         card2 = PBEAM(card)
-        fields = card2.rawFields()
+        fields = card2.raw_fields()
 
         lines_expected = ['PBEAM         39       6     2.9     3.5    5.97      0.      0.      0.',
                           '              0.      0.      2.     -4.      0.      0.      0.      0.',
@@ -60,7 +60,7 @@ class TestBeams(unittest.TestCase):
         card = bdf.process_card(lines)
         card = BDFCard(card)
         card2 = PBEAM(card)
-        fields = card2.rawFields()
+        fields = card2.raw_fields()
 
         lines_expected = ['PBEAM         39       6     2.9     3.5    5.97      0.      0.      0.',
                           '              0.      0.      2.     -4.      0.      0.      0.      0.',
@@ -85,7 +85,7 @@ class TestBeams(unittest.TestCase):
         card = bdf.process_card(lines)
         card = BDFCard(card)
         card2 = PBEAM(card)
-        fields = card2.rawFields()
+        fields = card2.raw_fields()
 
         lines_expected = ['PBEAM         39       6     2.9     3.5    5.97      0.      0.      0.',
                           '              0.      0.      2.     -4.      0.      0.      0.      0.',
@@ -104,7 +104,7 @@ class TestBeams(unittest.TestCase):
         card = bdf.process_card(lines)
         card = BDFCard(card)
         card2 = PBEAM(card)
-        fields = card2.rawFields()
+        fields = card2.raw_fields()
         lines_expected = ['PBEAM         39       6     2.9     3.5    5.97      0.      0.      0.',
                           '              0.      0.      2.     -4.      0.      0.      0.      0.',
                           '              1.      1.     1.1      0.     2.1     2.1     .21     .21',
@@ -119,7 +119,7 @@ class TestBeams(unittest.TestCase):
         #print(print_card(card))
         card = BDFCard(card)
         card2 = PBEAM(card)
-        fields = card2.rawFields()
+        fields = card2.raw_fields()
         msg = print_card(fields)
 
         lines_expected = ['PBEAM         39       6     2.9     3.5    5.97      0.      0.      0.',
@@ -177,7 +177,7 @@ class TestBeams(unittest.TestCase):
         card = bdf.process_card(lines)
         card = BDFCard(card)
         card2 = PBEAM(card)
-        fields = card2.rawFields()
+        fields = card2.raw_fields()
 
         lines_expected = ['PBEAM          1       1      1.     60.      1.      0.      0.      0.',
                           '              5.      0.     -5.      0.      0.      0.      0.      0.',
@@ -198,7 +198,7 @@ class TestBeams(unittest.TestCase):
             card2 = PBEAM(card)
 
         if 0:
-            fields = card2.rawFields()
+            fields = card2.raw_fields()
             msg = print_card(fields)
 
             lines_actual = msg.rstrip().split('\n')
@@ -242,7 +242,7 @@ class TestBeams(unittest.TestCase):
         card2 = PBEAM(card)
 
         if 1:
-            fields = card2.rawFields()
+            fields = card2.raw_fields()
             msg = print_card(fields)
             size = 16
             msg = card2.write_bdf(size, 'dummy')

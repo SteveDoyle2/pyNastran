@@ -19,7 +19,7 @@ class TestRods(unittest.TestCase):
         size = 8
         card = CROD(card)
         card.write_bdf(size, 'dummy')
-        card.rawFields()
+        card.raw_fields()
         self.assertEquals(card.Eid(), 10)
         self.assertEquals(card.Pid(), 100)
 
@@ -36,7 +36,7 @@ class TestRods(unittest.TestCase):
         size = 8
         card = CONROD(card)
         card.write_bdf(size, 'dummy')
-        card.rawFields()
+        card.raw_fields()
         self.assertEquals(card.Eid(), eid)
         self.assertEquals(card.Mid(), mid)
 

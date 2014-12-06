@@ -28,7 +28,7 @@ class NLPCI(object):
 
     def repr_fields(self):
         #minalr = set_blank_if_default(self.minalr, 0.25)
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, f, size=8):
         card = ['NLPCI', self.nlpci_id, self.Type, self.minalr,

@@ -160,7 +160,7 @@ class CQUAD4s(object):
             self.thetaMcid, zOffset]
         return self.print_card(fields1) + self.print_card(fields2)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ([self.type, self.eid, self.Pid()] + self.nodeIDs() +
                   [self.thetaMcid, self.zOffset, self.TFlag, self.T1, self.T2,
                    self.T3, self.T4])

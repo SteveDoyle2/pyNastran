@@ -12,7 +12,7 @@ class TestRigid(unittest.TestCase):
         card = BDFCard(card)
         #print(card)
         card2 = RBE3(card)
-        fields = card2.rawFields()
+        fields = card2.raw_fields()
         msg = print_card(fields).rstrip()
         #print(msg)
         lines_expected = ['RBE3           6               3  123456      1.  123456      41       4',
@@ -33,7 +33,7 @@ class TestRigid(unittest.TestCase):
         card = BDFCard(card)
         #print(card)
         card2 = RBE2(card)
-        fields = card2.rawFields()
+        fields = card2.raw_fields()
         msg = print_card(fields).rstrip()
         #print(msg)
         lines_expected = ['RBE2      100045  166007  123456  117752  101899  117766  101898  117748',
@@ -54,7 +54,7 @@ class TestRigid(unittest.TestCase):
         card = BDFCard(card)
         #print(card)
         card2 = RBE2(card)
-        fields = card2.rawFields()
+        fields = card2.raw_fields()
         msg = print_card(fields).rstrip()
         #print(msg)
         lines_expected = ['RBE2      100045  166007  123456  117752  101899  117766  101898  117748',
@@ -76,7 +76,7 @@ class TestRigid(unittest.TestCase):
         card = BDFCard(card)
         #print(card)
         card2 = RBE1(card)
-        fields = card2.rawFields()
+        fields = card2.raw_fields()
         msg = print_card(fields).rstrip()
         #print(msg)
 
@@ -101,7 +101,7 @@ class TestRigid(unittest.TestCase):
         card = BDFCard(card)
         #print(card)
         card2 = RBE1(card)
-        fields = card2.rawFields()
+        fields = card2.raw_fields()
         msg = print_card(fields).rstrip()
         #print(msg)
 
@@ -127,7 +127,7 @@ class TestRigid(unittest.TestCase):
         card = BDFCard(card)
         #print(card)
         card2 = RBE1(card)
-        fields = card2.rawFields()
+        fields = card2.raw_fields()
         msg = print_card(fields).rstrip()
         #print(msg)
 

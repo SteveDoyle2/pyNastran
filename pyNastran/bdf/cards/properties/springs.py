@@ -79,7 +79,7 @@ class PELAS(SpringProperty):
         assert isinstance(ge, float), 'ge=%r' % ge
         assert isinstance(s, float), 'ge=%r' % s
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['PELAS', self.pid, self.k, self.ge, self.s]
         return list_fields
 

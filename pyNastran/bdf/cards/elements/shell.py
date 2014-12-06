@@ -545,7 +545,7 @@ class CTRIA3(TriShell):
     def nodeIDs(self):
         return self._nodeIDs(allowEmptyNodes=False)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = (['CTRIA3', self.eid, self.Pid()] + self.nodeIDs() +
                   [self.thetaMcid, self.zOffset, None] + [None, self.TFlag,
                    self.T1, self.T2, self.T3])
@@ -737,7 +737,7 @@ class CTRIA6(TriShell):
     def nodeIDs(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = (['CTRIA6', self.eid, self.Pid()] + self.nodeIDs() +
                   [self.thetaMcid, self.zOffset, None] + [None, self.TFlag,
                   self.T1, self.T2, self.T3])
@@ -871,7 +871,7 @@ class CTRIAR(TriShell):
     def nodeIDs(self):
         return self._nodeIDs(allowEmptyNodes=False)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = [self.eid, self.Pid()] + self.nodeIDs() + [self.thetaMcid,
                   self.zOffset, self.TFlag, self.T1, self.T2, self.T3]
         return list_fields
@@ -953,7 +953,7 @@ class CTRIAX(TriShell):
     def nodeIDs(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
-    def rawFields(self):
+    def raw_fields(self):
         nodeIDs = self.nodeIDs()
         list_fields = ['CTRIAX', self.eid, self.Pid()] + nodeIDs + [self.thetaMcid]
         return list_fields
@@ -1100,7 +1100,7 @@ class CTRIAX6(TriShell):
     def nodeIDs(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = (['CTRIAX6', self.eid, self.Mid(), self.Pid()] +
                   self.nodeIDs() +  [self.theta])
         return list_fields
@@ -1390,12 +1390,12 @@ class CSHEAR(QuadShell):
     def nodeIDs(self):
         return self._nodeIDs(allowEmptyNodes=False)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['CSHEAR', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -1720,7 +1720,7 @@ class CQUAD4(QuadShell):
             self.thetaMcid, zOffset]
         return self.print_card(fields1) + self.print_card(fields2)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ([self.type, self.eid, self.Pid()] + self.nodeIDs() +
                   [self.thetaMcid, self.zOffset, self.TFlag, self.T1, self.T2,
                    self.T3, self.T4])
@@ -1860,7 +1860,7 @@ class CQUADR(QuadShell):
     def nodeIDs(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = (['CQUADR', self.eid, self.Pid()] + self.nodeIDs() +
                   [self.thetaMcid, self.zOffset, None, self.TFlag, self.T1,
                    self.T2, self.T3, self.T4])
@@ -1935,7 +1935,7 @@ class CQUAD(QuadShell):
     def nodeIDs(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['CQUAD', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
 
@@ -2104,7 +2104,7 @@ class CQUAD8(QuadShell):
     def nodeIDs(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['CQUAD8', self.eid, self.Pid()] + self.nodeIDs() + [
             self.T1, self.T2, self.T3, self.T4, self.thetaMcid, self.zOffset,
             self.TFlag]
@@ -2178,12 +2178,12 @@ class CQUADX(QuadShell):
     def nodeIDs(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['CQUADX', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf2(self, size=8, double=False):
         nodes = self.nodeIDs()

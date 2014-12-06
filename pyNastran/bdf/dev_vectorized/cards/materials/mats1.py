@@ -182,7 +182,7 @@ class MATS1(Material):
                 E = self.h
         return E
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['MATS1', self.Mid(), self.Tid(), self.Type,
                   self.h, self.yf, self.hr, self.limit1, self.limit2]
         return list_fields
@@ -212,4 +212,4 @@ class MATS1(Material):
                 f.write(print_card_16(card))
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()

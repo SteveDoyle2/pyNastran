@@ -197,15 +197,15 @@ class PARAM(BaseCard):
         #        return False
         #return True
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['PARAM', self.key] + self.values
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size=8, is_double=False):
-        card = self.rawFields()
+        card = self.raw_fields()
         if size == 8:
             return self.comment() + print_card_8(card)  # works
         return self.comment() + print_card_16(card)

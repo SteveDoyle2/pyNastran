@@ -43,7 +43,7 @@ class DCONSTR(OptConstraint):
             self.lowfq = data[4]
             self.highfq = data[5]
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['DCONSTR', self.oid, self.rid, self.lid,
                   self.uid, self.lowfq, self.highfq]
         return list_fields
@@ -78,7 +78,7 @@ class DESVAR(OptConstraint):
         else:
             raise NotImplementedError(data)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['DESVAR', self.oid, self.label, self.xinit, self.xlb,
                   self.xub, self.delx, self.ddval]
         return list_fields
@@ -118,7 +118,7 @@ class DDVAL(OptConstraint):
         else:
             raise NotImplementedError(data)
 
-    def rawFields(self):
+    def raw_fields(self):
         self.ddvals.sort()
         list_fields = ['DDVAL', self.oid] + self.ddvals
         return list_fields
@@ -212,7 +212,7 @@ class DOPTPRM(OptConstraint):
             val = integer_double_or_blank(card, i + 2, '%s_value' % param, default_value)
             self.params[param] = val
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['DOPTPRM']
         for param, val in sorted(iteritems(self.params)):
             list_fields += [param, val]
@@ -253,7 +253,7 @@ class DLINK(OptConstraint):
             self.IDv.append(IDv)
             self.Ci.append(Ci)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['DLINK', self.oid, self.ddvid, self.c0, self.cmult]
         for (idv, ci) in zip(self.IDv, self.Ci):
             list_fields += [idv, ci]
@@ -305,7 +305,7 @@ class DRESP1(OptConstraint):
             #print(str(self))
         #assert len(self.others)==0
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['DRESP1', self.oid, self.label, self.rtype, self.ptype,
                   self.region, self.atta, self.attb, self.atti] + self.others
         return list_fields
@@ -390,7 +390,7 @@ class DRESP2(OptConstraint):
             list_fields += self.buildTableLines(fields2, nStart=i, nEnd=j)
         return list_fields
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['DRESP2', self.oid, self.label, self.eqidFunc,
                   self.region, self.method, self.c1, self.c2, self.c3]
         list_fields += self.packParams()
@@ -426,7 +426,7 @@ class DSCREEN(OptConstraint):
         self.nstr = integer(card, 3, 'nstr', 20)
         assert len(card) == 4, 'len(DSCREEN card) = %i' % len(card)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['DSCREEN', self.rType, self.trs, self.nstr]
         return list_fields
 
@@ -494,7 +494,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
             return self.mid
         return self.mid.mid
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['DVMREL1', self.oid, self.Type, self.Mid(),
                   self.mpName, self.mpMin, self.mpMax, self.c0, None]
         for (dvid, coeff) in zip(self.dvids, self.coeffs):
@@ -567,7 +567,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
             return self.pid
         return self.pid.pid
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['DVPREL1', self.oid, self.Type, self.Pid(),
                   self.pNameFid, self.pMin, self.pMax, self.c0, None]
         for (dvid, coeff) in zip(self.dvids, self.coeffs):
@@ -691,7 +691,7 @@ class DVPREL2(OptConstraint):
     def OptValue(self):  #: .. todo:: not implemented
         self.pid.OptValue(self.pNameFid)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['DVPREL2', self.oid, self.Type, self.Pid(),
                   self.pNameFid, self.pMin, self.pMax, self.eqID, None]
         if self.dvids:
@@ -706,7 +706,7 @@ class DVPREL2(OptConstraint):
         """
         ..todo:: finish reprFields for DVPREL2
         """
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()

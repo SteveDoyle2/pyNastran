@@ -734,7 +734,7 @@ class PBAR(LineProperty):
         msg += "                    VALE=(1.0,0.0,0.0,),),\n"
         return (msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['PBAR', self.pid, self.Mid(), self.A, self.i1, self.i2,
                   self.j, self.nsm, None, self.C1, self.C2, self.D1, self.D2,
                   self.E1, self.E2, self.F1, self.F2, self.K1, self.K2,
@@ -1133,7 +1133,7 @@ class PBARL(LineProperty):
         iStart += len(self.dim)
         return msg + msg2, iCut, iFace, iStart
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['PBARL', self.pid, self.Mid(), self.group, self.Type,
                        None, None, None, None] + self.dim + [self.nsm]
         return list_fields
