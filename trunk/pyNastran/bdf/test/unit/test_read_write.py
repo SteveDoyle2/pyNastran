@@ -129,6 +129,11 @@ class TestReadWrite(unittest.TestCase):
         #print('nodes =', model.nodes)
         self.assertEquals(len(model.nodes), 3)
 
+    def test_read_bad_01():
+        model = BDF()
+        model.active_filenames = ['fake.file']
+        model._open_file(self, 'fake.file')
+
 if __name__ == '__main__':  # pragma: no cover
     # passes if you're in the local folder, fails if you aren't
     #model2 = BDF(debug=False)

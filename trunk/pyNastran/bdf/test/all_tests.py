@@ -34,7 +34,7 @@ from pyNastran.bdf.test.unit.test_read_write import *
 from pyNastran.bdf.test.unit.test_sum_loads import *
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     import unittest
     unittest.main()
 
