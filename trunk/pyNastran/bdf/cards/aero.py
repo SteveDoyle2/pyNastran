@@ -28,8 +28,7 @@ from numpy import array, pi, linspace, zeros, arange, repeat, dot
 
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru,
-                                          wipe_empty_fields)
+from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
 from pyNastran.bdf.bdfInterface.assign_type import (fields,
     integer, integer_or_blank,
     double, double_or_blank,
@@ -37,8 +36,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (fields,
     integer_or_string, double_string_or_blank,
     blank, interpret_value)
 from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.bdfInterface.BDF_Card import wipe_empty_fields
-
+from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 class AEFACT(BaseCard):
     """

@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import sys
-from pyNastran.bdf.bdf import BDF, to_fields, BDFCard, interpret_value, wipe_empty_fields
+from pyNastran.bdf.bdf import BDF, to_fields, BDFCard, interpret_value
+from pyNastran.bdf.cards.utils import wipe_empty_fields
 import logging
 
 logger = logging.getLogger("bdfuniq")

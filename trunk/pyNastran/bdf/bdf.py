@@ -101,10 +101,11 @@ from .caseControlDeck import CaseControlDeck
 from .bdf_Methods import BDFMethods
 from .bdfInterface.getCard import GetMethods
 from .bdfInterface.addCard import AddMethods
-from .bdfInterface.BDF_Card import BDFCard, wipe_empty_fields
+from .bdfInterface.BDF_Card import BDFCard
 from .bdfInterface.assign_type import interpret_value
 from .bdfInterface.bdf_writeMesh import WriteMesh
 from .bdfInterface.crossReference import XrefMesh
+from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 
 #class BDFDeprecated(object):

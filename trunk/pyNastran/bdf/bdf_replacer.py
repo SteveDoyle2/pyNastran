@@ -2,7 +2,8 @@ from __future__ import (nested_scopes, absolute_import,
                         print_function, unicode_literals)
 
 from .fieldWriter import print_card_8
-from .bdfInterface.BDF_Card import BDFCard, wipe_empty_fields
+from .bdfInterface.BDF_Card import BDFCard
+from pyNastran.bdf.cards.utils import wipe_empty_fields
 from .bdfInterface.assign_type import interpret_value
 from pyNastran.bdf.bdf import BDF, to_fields
 

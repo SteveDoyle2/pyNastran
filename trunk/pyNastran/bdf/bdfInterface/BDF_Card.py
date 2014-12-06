@@ -1,6 +1,7 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from pyNastran.bdf.cards.utils import wipe_empty_fields
 from six import string_types
 from six.moves import range
 import sys
@@ -220,28 +221,3 @@ class BDFCard(object):
     def getOldField(self, i):
         """Used for nastran = format"""
         return self.oldCard.field(i)
-
-
-def wipe_empty_fields(card):
-    """
-    Removes an trailing Nones from the card.
-    Also converts empty strings to None.
-
-    :param card:        the fields on the card as a list
-    :returns shortCard: the card with no trailing blank fields
-    """
-    cardB = []
-    for field in card:
-        if isinstance(field, string_types):
-            field = field.strip()
-            if field == '':
-                field = None
-        cardB.append(field)
-
-    i = 0
-    iMax = 0
-    while i < len(card):
-        if cardB[i] is not None:
-            iMax = i
-        i += 1
-    return cardB[:iMax + 1]
