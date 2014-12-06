@@ -82,16 +82,16 @@ class MarginChecker(object):
         for key in self.cases:
             print("case[%s] = %s" % (key, self.cases[key]))
 
-    def readFiles(self):
+    def read_files(self):
         i = 0
         for fname, subcaseList in sorted(iteritems(self.cases)):
             #print("case[%s] = %s" % (key, self.cases[key]))
             subcaseList = list(set(subcaseList))
             print("subcaseList[%s] = %s" % (fname, subcaseList))
 
-            op2 = OP2(fname, debug=False)
+            op2 = OP2(debug=False)
             op2.set_subcases(subcaseList)
-            op2.readOP2()
+            op2.read_op2(fname)
 
             for subcaseID in subcaseList:
                 print("subcaseID = %s" % subcaseID)
@@ -104,16 +104,16 @@ class MarginChecker(object):
                 #self.compositePlateStressResults[i] = op2.compositePlateStress
                 #self.compositePlateStrainResults[i] = op2.compositePlateStrain
 
-                self.cleanStress(i, op2, subcaseID)
+                self.clean_stress(i, op2, subcaseID)
                 i += 1
 
             del op2  # makes sure that unneeded data is not stored to save memory
 
-    def cleanStress(self, i, op2, subcaseID):
-        self.cleanSolidStress(i, op2, subcaseID)
-        self.cleanPlateStress(i, op2, subcaseID)
+    def clean_stress(self, i, op2, subcaseID):
+        self.clean_solid_stress(i, op2, subcaseID)
+        self.clean_plate_stress(i, op2, subcaseID)
 
-    def cleanPlateStress(self, i, op2, subcaseID):
+    def clean_plate_stress(self, i, op2, subcaseID):
         if subcaseID in op2.plateStress:
             self.plateStressResults[i] = op2.plateStress[subcaseID]
             stress = op2.plateStress[subcaseID]
@@ -126,7 +126,7 @@ class MarginChecker(object):
             del stress.angle
             del stress.ovmShear
 
-    def cleanSolidStress(self, i, op2, subcaseID):
+    def clean_solid_stress(self, i, op2, subcaseID):
         if subcaseID in op2.solidStress:
             self.solidStressResults[i] = op2.solidStress[subcaseID]
             stress = op2.solidStress[subcaseID]
@@ -141,7 +141,7 @@ class MarginChecker(object):
             #del stress.txz
             del stress.ovmShear
 
-    def checkDeflections(self, maxDeflection):
+    def check_deflections(self, maxDeflection):
         """
         @param maxDeflection [x,y,z,combined] abs values are used
         """
@@ -182,7 +182,7 @@ class MarginChecker(object):
             print("case=%-6s minMargin[%s] = %g" % (
                 self.caseNames[case], nid, minMargin))
 
-    def checkVonMises(self, vmFactors=[[1.]], caseNames=['Case1'], Fty=100.):
+    def check_von_mises(self, vmFactors=[[1.]], caseNames=['Case1'], Fty=100.):
         r"""
         currently only handles von mises stress for solid elements...
         @param self the object pointer
@@ -201,7 +201,7 @@ class MarginChecker(object):
         print("vmFactors = ", self.vmFactors)
         print("caseNames = ", self.caseNames)
         (stressP, eidList) = self.processSolidStress()
-        (stressP, eidList) = self.processPlateStress()
+        (stressP, eidList) = self.process_plate_stress()
         #print stressP
         self.stressP = stressP
 
@@ -218,7 +218,7 @@ class MarginChecker(object):
             print("case=%-6s minMargin[%s] = %g" % (
                 self.caseNames[case], eid, minMargin))
 
-    def processPlateStress(self):
+    def process_plate_stress(self):
         r"""
         \f[ \sigma_v = \sqrt{\sigma_1^2- \sigma_1\sigma_2+ \sigma_2^2 + 3\sigma_{12}^2} \f]
         ovm^2 = o1^2 - o1*o2 + o2^2 + 3*o12^2
@@ -364,7 +364,7 @@ class MarginChecker(object):
         """required for fatigue"""
         pass
 
-    def damageCount(self):
+    def damage_count(self):
         """required for fatigue"""
         # 1.  get principal stresses at different loading combinations
         # 2.  rainflow count
@@ -422,8 +422,8 @@ def main():
     #caseNames = ['tens','bend','mBend','comp','cBend','tBend','cmBend','tmBend']
     caseNames = ['tmBend']
     a = MarginChecker(filenames, subcases, IDs)
-    a.readFiles()
-    a.checkVonMises(vmFactors, caseNames, Fty)
+    a.read_files()
+    a.check_von_mises(vmFactors, caseNames, Fty)
     #a.checkDeflections(0.018)
 
 if __name__ == '__main__':  # pragma: no cover
