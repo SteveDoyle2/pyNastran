@@ -172,7 +172,7 @@ class CBUSH(BushElement):
         if self.cid is not None:
             self.cid = model.Coord(self.cid, msg=msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         if self.g0 is not None:
             x = [self.g0, None, None]
         else:
@@ -257,16 +257,13 @@ class CBUSH1D(BushElement):
     def nodeIDs(self):
         return [self.Ga(), self.Gb()]
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['CBUSH1D', self.eid, self.Pid(), self.Ga(), self.Gb(),
                   self.Cid()]
         return list_fields
 
-    #def reprFields(self):
-        #return self.rawFields()
-
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -339,14 +336,11 @@ class CBUSH2D(BushElement):
         if self.sptid is not None:
             pass
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['CBUSH2D', self.eid, self.Pid(), self.Ga(), self.Gb(),
                   self.Cid(), self.plane, self.sptid]
         return list_fields
 
-    #def reprFields(self):
-        #return self.rawFields()
-
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)

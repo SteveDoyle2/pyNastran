@@ -156,7 +156,7 @@ class CMASS1(PointMassElement):
         return fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -330,7 +330,7 @@ class CMASS3(PointMassElement):
         return fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -389,7 +389,7 @@ class CMASS4(PointMassElement):
         return fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 

@@ -113,7 +113,7 @@ class RINGAX(Ring):
         :type card_writer:
           function
         """
-        card = self.reprFields()
+        card = self.repr_fields()
         f.write(card_writer(card))
 
 
@@ -183,7 +183,7 @@ class SPOINT(Node):
         :param size:   unused
         :param double: unused
         """
-        card = self.reprFields()
+        card = self.repr_fields()
         if 'THRU' not in card:
             return self.comment() + print_int_card(card)
         else:
