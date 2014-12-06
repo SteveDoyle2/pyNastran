@@ -5,7 +5,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import range
 import sys
-from pyNastran.bdf.bdfInterface.BDF_Card import wipe_empty_fields
+from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 def print_scientific_double(value):
     """

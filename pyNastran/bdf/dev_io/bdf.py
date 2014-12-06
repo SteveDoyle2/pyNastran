@@ -101,7 +101,8 @@ from pyNastran.bdf.caseControlDeck import CaseControlDeck
 from pyNastran.bdf.bdf_Methods import BDFMethods
 from pyNastran.bdf.bdfInterface.getCard import GetMethods
 from pyNastran.bdf.bdfInterface.addCard import AddMethods
-from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard, wipe_empty_fields
+from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
+from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 from pyNastran.bdf.bdfInterface.bdf_writeMesh import WriteMesh
 from pyNastran.bdf.bdfInterface.crossReference import XrefMesh

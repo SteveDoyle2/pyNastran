@@ -34,7 +34,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
 from pyNastran.bdf.fieldWriter import print_card_8, print_field_8
 from pyNastran.bdf.fieldWriter16 import print_card_16
-from pyNastran.bdf.bdfInterface.BDF_Card import wipe_empty_fields
+from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 def _triangle_area_centroid_normal(nodes):
     """

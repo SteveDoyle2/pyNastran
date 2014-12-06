@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import  iteritems
 from six.moves import range
 
-from ...bdfInterface.BDF_Card import wipe_empty_fields
+from pyNastran.bdf.cards.utils import wipe_empty_fields
 from .thermal import ThermalCard
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from ..baseCard import (expand_thru, expand_thru_by,

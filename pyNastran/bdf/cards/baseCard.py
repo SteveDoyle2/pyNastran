@@ -8,7 +8,6 @@ from pyNastran.bdf.fieldWriter import print_card, is_same
                                #print_card_8, set_default_if_blank, print_card
 #from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
-from pyNastran.bdf.bdfInterface.BDF_Card import wipe_empty_fields
 
 
 class BaseCardDeprecated(object):
