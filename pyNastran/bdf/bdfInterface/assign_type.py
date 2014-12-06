@@ -118,10 +118,13 @@ def integer_double_string_or_blank(card, n, fieldname, default=None):
         return svalue
 
     svalue = svalue.strip().upper()
-    if svalue:  # integer/float/string
-        if '.' in svalue:  # float
+    if svalue:
+        # integer/float/string
+        if '.' in svalue:
+            # float
             value = double(card, n, fieldname)
-        elif svalue.isdigit():  # int
+        elif svalue.isdigit():
+            # int
             try:
                 value = int(svalue)
             except ValueError:
@@ -217,7 +220,6 @@ def integer_or_blank(card, n, fieldname, default=None):
 
     Type = _get_type(svalue)
     raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
-    #return default
 
 def double(card, n, fieldname):
     """
@@ -242,20 +244,24 @@ def double(card, n, fieldname):
         Type = _get_type(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
 
-    if svalue.isdigit(): # if only int
+    if svalue.isdigit():
+        # if only int
         Type = _get_type(int(svalue))
         raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
 
     #svalue = svalue.strip()
-    try:  # 1.0, 1.0E+3, 1.0E-3
+    try:
+        # 1.0, 1.0E+3, 1.0E-3
         value = float(svalue)
     except TypeError:
         Type = _get_type(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
-    except ValueError:  # 1D+3, 1D-3, 1-3
+    except ValueError:
+        # 1D+3, 1D-3, 1-3
         try:
             svalue = svalue.upper()
-            if 'D' in svalue:  # 1.0D+3, 1.0D-3
+            if 'D' in svalue:
+                # 1.0D+3, 1.0D-3
                 svalue2 = svalue.replace('D','E')
                 return float(svalue2)
 
@@ -328,15 +334,18 @@ def double_or_string(card, n, fieldname):
     elif isinstance(svalue, string_types):
         svalue = svalue.strip().upper()
 
-    if '.' in svalue: # float
+    if '.' in svalue:
+        # float
         try:
             return double(card, n, fieldname)
         except:
             Type = _get_type(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be an float or string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
-    elif svalue.isdigit(): # fail
+    elif svalue.isdigit():
+        # fail
         pass
-    elif svalue: # string
+    elif svalue:
+        # string
         return str(svalue)
     Type = _get_type(svalue)
     raise SyntaxError('%s = %r (field #%s) on card must be an float or string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
@@ -404,13 +413,15 @@ def integer_or_double(card, n, fieldname):
         Type = _get_type(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an integer or float (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
 
-    if '.' in svalue:  # float/exponent
+    if '.' in svalue:
+        # float/exponent
         try:
             value = double(card, n, fieldname)
         except ValueError:
             Type = _get_type(svalue)
             raise SyntaxError('%s = %r (field #%s) on card must be a integer or a float (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
-    else:  # int
+    else:
+        # int
         try:
             value = int(svalue)
         except:
@@ -441,7 +452,8 @@ def integer_double_or_blank(card, n, fieldname, default=None):
     elif svalue is None:
         return default
 
-    if svalue:  # integer/float
+    if svalue:
+        # integer/float
         try:
             return integer_or_double(card, n, fieldname)
         except:
@@ -472,7 +484,8 @@ def integer_or_string(card, n, fieldname):
         Type = _get_type(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an integer or string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
 
-    if svalue.isdigit():  # int
+    if svalue.isdigit():
+        # int
         try:
             value = int(svalue)
         except ValueError:
@@ -481,7 +494,8 @@ def integer_or_string(card, n, fieldname):
     elif isinstance(svalue, float):
         Type = _get_type(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an integer or string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
-    else:  # string
+    else:
+        # string
         value = double_or_string(card, n, fieldname)
         if isinstance(value, float):
             Type = _get_type(svalue)
@@ -512,7 +526,8 @@ def integer_string_or_blank(card, n, fieldname, default=None):
         Type = _get_type(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an integer or string (not %s).\ncard=%s' % (fieldname, svalue, n, Type, card) )
 
-    if svalue.strip():  # integer/string
+    if svalue.strip():
+        # integer/string
         try:
             return integer_or_string(card, n, fieldname)
         except:
@@ -562,9 +577,11 @@ def integer_double_or_string(card, n, fieldname):
 
     svalue = str(svalue.strip())
     if svalue:  # integer/float/string
-        if '.' in svalue:  # float
+        if '.' in svalue:
+            # float
             value = double(card, n, fieldname)
-        elif svalue.isdigit():  # int
+        elif svalue.isdigit():
+            # int
             try:
                 value = int(svalue)
             except ValueError:
@@ -650,84 +667,85 @@ def string_or_blank(card, n, fieldname, default=None):
 # string/blank - done
 
 
-def interpret_value(valueRaw, card=''):
+def interpret_value(value_raw, card=''):
     """Converts a value from nastran format into python format."""
-    if valueRaw is None:
+    if value_raw is None:
         return None
 
     try:
-        valueIn = valueRaw.lstrip().rstrip(' *').upper()
-    except AttributeError:  # it's already an int/float
-        msg = 'valueRaw=%s type=%s' % (valueRaw, type(valueRaw))
-        assert isinstance(valueRaw, int) or isinstance(valueRaw, float), msg
-        return valueRaw
+        value_in = value_raw.lstrip().rstrip(' *').upper()
+    except AttributeError:
+        # it's already an int/float
+        msg = 'valueRaw=%s type=%s' % (value_raw, type(value_raw))
+        assert isinstance(value_raw, int) or isinstance(value_raw, float), msg
+        return value_raw
 
-    if len(valueIn) == 0:
+    if len(value_in) == 0:
         # blank / None
         return None
 
-    if valueIn[0].isalpha():
+    if value_in[0].isalpha():
         # string
-        return valueIn
+        return value_in
 
-    if '=' in valueIn or '(' in valueIn or '*' in valueRaw:
-        return valueRaw.strip()
+    if '=' in value_in or '(' in value_in or '*' in value_raw:
+        return value_raw.strip()
 
     # int, float, string, exponent
-    valuePositive = valueIn.strip('+-')
-    if valuePositive.isdigit():
+    value_positive = value_in.strip('+-')
+    if value_positive.isdigit():
         # int
-        return int(valueIn)
+        return int(value_in)
     try:
-        value = float(valueIn)
+        value = float(value_in)
         # float
         return value
     except ValueError:
         pass
 
-    #if('=' in valueIn or '(' in valueIn or ')' in valueIn):
+    #if('=' in value_in or '(' in value_in or ')' in value_in):
     #    print("=()!")
-    #    return valueIn
+    #    return value_in
 
     # if there are non-floats/scientific notation -> string
-    noED = list(set(valueIn) - set('ED 1234567890+-'))
+    noED = list(set(value_in) - set('ED 1234567890+-'))
     word = ''.join(noED)
     if word.isalpha():
         # word
-        return valueIn
+        return value_in
 
-    v0 = valueIn[0]
+    v0 = value_in[0]
     if '-' == v0 or '+' == v0:
-        valueLeft = valueIn[1:]  # truncate the sign for now
+        # truncate the sign for now
+        value_left = value_in[1:]
     else:
-        v0 = '+'  # inplied positive value
-        valueLeft = valueIn
+        # inplied positive value
+        v0 = '+'
+        value_left = value_in
 
-    #print("valueIn = %r" % valueIn)
-    #print("v0 = %r" % v0)
     if v0 == '-':
         vFactor = -1.
     elif v0 == '+' or v0.isdigit():
         vFactor = 1.
     else:
         msg = ('the only 2 cases for a float/scientific are +/- for v0...'
-               'valueRaw=%r v0=%r card=%s' % (valueRaw, v0, card))
+               'valueRaw=%r v0=%r card=%s' % (value_raw, v0, card))
         raise SyntaxError(msg)
 
     # dont include the 1st character, find the exponent
-    vm = valueIn.find('-', 1)
-    vp = valueIn.find('+', 1)
+    vm = value_in.find('-', 1)
+    vp = value_in.find('+', 1)
     if vm > 0:
-        sline = valueLeft.split('-')
-        expFactor = -1.
+        sline = value_left.split('-')
+        exp_factor = -1.
     elif vp > 0:
-        sline = valueLeft.split('+')
-        expFactor = 1.
+        sline = value_left.split('+')
+        exp_factor = 1.
     else:
         msg = ("I thought this was in scientific notation, but i can't find "
-               "the exponent sign...valueRaw=%r valueLeft=%r "
+               "the exponent sign...value_raw=%r fname, =%r "
                "card=%s\nYou also might have mixed tabs/spaces/commas."
-               % (valueRaw, valueLeft, card))
+               % (value_raw, value_left, card))
         raise SyntaxError(msg)
 
     if 'D' == sline[0][-1]:
@@ -735,25 +753,23 @@ def interpret_value(valueRaw, card=''):
 
     try:
         s0 = vFactor * float(sline[0])
-        s1 = expFactor * int(sline[1])
+        s1 = exp_factor * int(sline[1])
     except ValueError:
-        msg = "vm=%s vp=%s valueRaw=%r sline=%s" % (vm, vp, valueRaw, sline)
+        msg = "vm=%s vp=%s value_raw=%r sline=%s" % (vm, vp, value_raw, sline)
         raise SyntaxError('cannot parse sline[0] into a float and sline[1] '
                           'into an integer\n%s\nYou HAVE mixed '
                           'tabs/spaces/commas!  Fix it!' % msg)
 
     value = s0 * 10 ** (s1)
-    #print("valueOut = %r" % value)
-
     # scientific
     return value
 
 
-def string_parser(stringIn):
+def string_parser(string_in):
     """not used"""
-    typeCheck = ''
+    type_check = ''
     n = 0
-    for (i, s) in enumerate(stringIn):
+    for (i, s) in enumerate(string_in):
         if s in "+-":
             state = '+'
         elif s == " ":
@@ -770,49 +786,44 @@ def string_parser(stringIn):
             msg = "s=|%r|" % s
             raise SyntaxError(msg)
 
-        #print("s=%s stringIn[i-1]=%s" % (state, typeCheck[i-1]))
-        #print("i=%s s=%s typeCheck=%s" % (i, s, typeCheck))
         if i == 0:
-            typeCheck += state
+            type_check += state
             n += 1
-        elif typeCheck[n - 1] != state:
-            typeCheck += state
+        elif type_check[n - 1] != state:
+            type_check += state
             n += 1
         elif state in 'e .+':  # double e, space, dot, plus
             return 'string'
 
-    if typeCheck == ' ':
+    if type_check == ' ':
         return None
 
-    typeCheck = typeCheck.strip()
-    if typeCheck in ['1', '+1']:  # integer
-        return int(stringIn)
+    type_check = type_check.strip()
+    if type_check in ['1', '+1']:  # integer
+        return int(string_in)
 
-    elif typeCheck in ['1.', '1.1', '.1',  # float
+    elif type_check in ['1.', '1.1', '.1',  # float
                        '+1.', '+1.1', '+.1']:
-        return float(stringIn)
+        return float(string_in)
 
-    elif typeCheck in ['1.1e1', '1.1e+1', '1.e1', '1.e+1',  # python scientific
+    elif type_check in ['1.1e1', '1.1e+1', '1.e1', '1.e+1',  # python scientific
                        '+1.1e1', '+1.1e+1', '+1.e1', '+1.e+1',
                        '.1e1', '.1e+1', '+.1e1', '+.1e+1', ]:
-        return float(stringIn)
+        return float(string_in)
 
-    elif typeCheck in ['1+1', '+1+1', '.1+1', '+.1+1']:  # nastran scientific
-        stringReversed = stringIn[::-1]
-        i = stringReversed.index('+')
-        lString = list(stringIn)
-        lString.insert(-i - 1, 'e')
-        #print("lString = ", lString)
-        out = ''.join(lString)
-        print("out = %s" % out)
+    elif type_check in ['1+1', '+1+1', '.1+1', '+.1+1']:  # nastran scientific
+        string_reversed = string_in[::-1]
+        i = string_reversed.index('+')
+        list_string = list(string_in)
+        list_string.insert(-i - 1, 'e')
+
+        out = ''.join(list_string)
         return float(out)
     else:
-        #print("string = ", stringIn)
-        #print("typeCheck = ", typeCheck)
-        #return 'string'
-        return stringIn
+        # string
+        return string_in
 
-    print("typeCheck = %r" % typeCheck)
+    print("type_check = %r" % type_check)
     raise RuntimeError('error parsing a card...this should never happen...')
 
 if __name__ == '__main__':  # pragma: no cover
