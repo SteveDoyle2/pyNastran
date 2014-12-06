@@ -178,5 +178,5 @@ def run():
     c2 = get_doc(files)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     run()
