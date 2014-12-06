@@ -138,7 +138,7 @@ class CELAS1(SpringElement):
         fields2 = [elem.eid] + elem.nodes + [elem.pid, elem.c1, elem.c2]
         if debug:
             print("fields1=%s fields2=%s" % (fields1, fields2))
-        return self.isSameFields(fields1, fields2)
+        return self._is_same_fields(fields1, fields2)
 
     def K(self):
         return self.pid.k
@@ -291,7 +291,7 @@ class CELAS2(SpringElement):
         fields2 = [elem.eid] + elem.nodes + [elem.k, elem.c1, elem.c2]
         if debug:
             print("fields1=%s fields2=%s" % (fields1, fields2))
-        return self.isSameFields(fields1, fields2)
+        return self._is_same_fields(fields1, fields2)
 
     def K(self):
         return self.k
@@ -428,7 +428,7 @@ class CELAS3(SpringElement):
         fields2 = [elem.eid, elem.pid, elem.s1, elem.s2]
         if debug:
             print("fields1=%s fields2=%s" % (fields1, fields2))
-        return self.isSameFields(fields1, fields2)
+        return self._is_same_fields(fields1, fields2)
 
     def K(self):
         return self.pid.k
@@ -524,7 +524,7 @@ class CELAS4(SpringElement):
         fields2 = [elem.eid, elem.k, elem.s1, elem.s2]
         if debug:
             print("fields1=%s fields2=%s" % (fields1, fields2))
-        return self.isSameFields(fields1, fields2)
+        return self._is_same_fields(fields1, fields2)
 
     def K(self):
         return self.k

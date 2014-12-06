@@ -571,7 +571,7 @@ class AddMethods(object):
         key = freq.sid
         assert key > 0
         if key in self.frequencies:
-            self.frequencies[key].addFrequencyObject(freq)
+            self.frequencies[key].add_frequency_object(freq)
         else:
             self.frequencies[key] = freq
         #assert key not in self.frequencies,'\nfreq=\n%s oldFreq=\n%s' %(freq,self.frequencies[key])

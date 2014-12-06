@@ -55,7 +55,7 @@ class FREQ(BaseCard):
     def getFreqs(self):
         return self.freqs
 
-    def addFrequencies(self, freqs):
+    def add_frequencies(self, freqs):
         """
         Combines the frequencies from 1 FREQx object with another.
         All FREQi entries with the same frequency set identification numbers
@@ -69,14 +69,14 @@ class FREQ(BaseCard):
         self.freqs += freqs
         self.cleanFreqs()
 
-    def addFrequencyObject(self, freq):
+    def add_frequency_object(self, freq):
         """
         :param self: the object pointer
         :param freq: a FREQx object
 
         .. seealso:: :func:`addFrequencies`
         """
-        self.addFrequencies(freq.freqs)
+        self.add_frequencies(freq.freqs)
 
     def raw_fields(self):
         list_fields = ['FREQ', self.sid] + self.freqs

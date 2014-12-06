@@ -126,7 +126,7 @@ class SolidElement(Element):
         fields2 = [elem.eid, elem.Pid()] + elem.nodes
         if debug:
             print("fields1=%s fields2=%s" % (fields1, fields2))
-        return self.isSameFields(fields1, fields2)
+        return self._is_same_fields(fields1, fields2)
 
     def raw_fields(self):
         list_fields = [self.type, self.eid, self.Pid()] + self.nodeIDs()

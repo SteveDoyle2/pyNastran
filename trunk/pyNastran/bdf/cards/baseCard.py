@@ -81,7 +81,7 @@ class BaseCard(BaseCardDeprecated):
         print('# skipping _verify (type=%s) because _verify is '
               'not implemented\n' % self.type)
 
-    def isSameFields(self, fields1, fields2):
+    def _is_same_fields(self, fields1, fields2):
         for (field1, field2) in zip(fields1, fields2):
             if not is_same(field1, field2):
                 return False
@@ -92,7 +92,7 @@ class BaseCard(BaseCardDeprecated):
             return False
         fields1 = self.raw_fields()
         fields2 = card.raw_fields()
-        return self.isSameFields(fields1, fields2)
+        return self._is_same_fields(fields1, fields2)
 
     def printRawFields(self, size=8):
         """A card's raw fields include all defaults for all fields"""
