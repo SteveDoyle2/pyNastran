@@ -74,5 +74,5 @@ def main():
         print('torsion stress[%s] = %s' % (eid, subcase1.torsion[eid]))
         print('        stress[%s] = %s\n' % (eid, calculate_stress(subcase1.axial[eid], subcase1.torsion[eid])))
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()
