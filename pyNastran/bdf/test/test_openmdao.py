@@ -273,6 +273,19 @@ class TestOpenMDAO(unittest.TestCase):
             self.assertRaises(IndexError, model.update_card, Type, iType, ifield, value)
             #print("tried to apply %r=%s" % (Type, iType))
 
+    def test_openmaod_bad_3(self):
+        params_bad = {1 : '10'}
+        params_good = {'cat' : '10'}
+        model = BDF()
+
+        with self.assertRaises(TypeError):
+            model.set_dynamic_syntax(params_bad)
+
+        model.set_dynamic_syntax(params_good)
+        val = model._parse_dynamic_syntax('cat')
+        self.assertEqual('10', val)
+        with self.assertRaises(KeyError):
+            self._parse_dynamic_syntax(key)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
