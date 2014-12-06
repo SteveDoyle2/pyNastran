@@ -1524,7 +1524,7 @@ class Solver(F06, OP2):
         return (isMPC)
 
     def assemble_forces(self, model, i, case, Dofs):
-        """very similar to writeCodeAster loads"""
+        """very similar to write_code_aster loads"""
         Fg = zeros(i, 'float64')
         #print(model.loads)
         (loadID, junk) = model.caseControlDeck.get_subcase_parameter(case.id, 'LOAD')
