@@ -10,8 +10,8 @@ from pyNastran.bdf.fieldWriter import print_field, print_card
 
 def assert_fields(card1, card2):
     try:
-        fields1 = wipe_empty_fields(card1.reprFields())
-        fields2 = wipe_empty_fields(card2.reprFields())
+        fields1 = wipe_empty_fields(card1.repr_fields())
+        fields2 = wipe_empty_fields(card2.repr_fields())
     except:
         print("card1 = \n%s" % (card1))
         print("card2 = \n%s" % (card2))

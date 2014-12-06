@@ -11,7 +11,24 @@ from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 from pyNastran.bdf.bdfInterface.BDF_Card import wipe_empty_fields
 
 
-class BaseCard(object):
+class BaseCardDeprecated(object):
+    """
+    Deprecated in:
+      - version 0.7
+    Removed in:
+      - version 0.8
+    """
+    def rawFields(self):
+        """
+        gets the "raw" card without any processing as a list for printing
+        """
+        return self.raw_fields()
+
+    def reprFields(self):
+        """gets the card's fields"""
+        return self.repr_fields()
+
+class BaseCard(BaseCardDeprecated):
     def __init__(self):
         pass
 
@@ -49,9 +66,9 @@ class BaseCard(object):
         return ('# skipping %s  because writeCodeAster is not implemented\n'
                 % self.type)
 
-    def writeCodeAsterLoad(self, model, gridWord='node'):
-        return ('# skipping %s (lid=%s) because writeCodeAsterLoad is '
-                'not implemented\n' % (self.type, self.lid))
+    #def writeCodeAsterLoad(self, model, gridWord='node'):
+        #return ('# skipping %s (lid=%s) because writeCodeAsterLoad is '
+                #'not implemented\n' % (self.type, self.lid))
 
     def _verify(self, xref):
         """
@@ -120,24 +137,25 @@ class BaseCard(object):
     def isSameCard(self, card):
         if self.type != card.type:
             return False
-        fields1 = self.rawFields()
-        fields2 = card.rawFields()
+        fields1 = self.raw_fields()
+        fields2 = card.raw_fields()
         return self.isSameFields(fields1, fields2)
 
     def printRawFields(self, size=8):
         """A card's raw fields include all defaults for all fields"""
-        list_fields = self.rawFields()
+        list_fields = self.raw_fields()
         return print_card(list_fields, size=size)
 
-    def reprFields(self):
-        return self.rawFields()
+    def repr_fields(self):
+        """gets the "raw" card without any processing as a list for printing"""
+        return self.raw_fields()
 
     def print_card(self, size=8):
-        list_fields = self.reprFields()
+        list_fields = self.repr_fields()
         return self.comment() + print_card(list_fields, size=size)
 
     def repr_card(self, size=8):
-        list_fields = self.reprFields()
+        list_fields = self.repr_fields()
         return print_card(list_fields, size=size)
 
     def __repr__(self):
@@ -149,7 +167,7 @@ class BaseCard(object):
             return self.print_card()
         except:
             print('problem printing %s card' % self.type)
-            fields = self.reprFields()
+            fields = self.repr_fields()
             print("fields = ", fields)
             raise
 

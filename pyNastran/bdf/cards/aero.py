@@ -62,8 +62,14 @@ class AEFACT(BaseCard):
         if card:
             #: Set identification number. (Unique Integer > 0)
             self.sid = integer(card, 1, 'sid')
+
+            Di = []
+            for i in range(2, len(card)):
+                di = double(card, i, 'Di_%i' % (i - 1))
+                Di.append(di)
+
             #: Number (float)
-            self.Di = array([interpret_value(field) for field in card.fields(2)], dtype='float64')  # TODO: change to double
+            self.Di = array(Di, dtype='float64')
         else:
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
@@ -83,7 +89,7 @@ class AEFACT(BaseCard):
         return fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -189,12 +195,12 @@ class AELIST(BaseCard):
             #: surface. (Integer > 0 or 'THRU')
             eids = fields(integer_or_string, card, 'eid', i=2, j=len(card))
             self.elements = expand_thru(eids)
-            self.cleanIDs()
+            self.clean_ids()
         else:
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
-    def cleanIDs(self):
+    def clean_ids(self):
         self.elements = list(set(self.elements))
         self.elements.sort()
 
@@ -213,7 +219,7 @@ class AELIST(BaseCard):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -763,7 +769,7 @@ class CSSCHD(BaseCard):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -1778,7 +1784,7 @@ class FLFACT(BaseCard):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -1954,7 +1960,7 @@ class FLUTTER(BaseCard):
         #return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -2013,7 +2019,7 @@ class GUST(BaseCard):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -2086,7 +2092,7 @@ class MKAERO1(BaseCard):
         return self.machs, self.rFreqs
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -2145,7 +2151,7 @@ class MKAERO2(BaseCard):
         return self.machs, self.rFreqs
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -2219,7 +2225,7 @@ class PAERO1(BaseCard):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -2331,7 +2337,7 @@ class PAERO2(BaseCard):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -2426,7 +2432,7 @@ class PAERO3(BaseCard):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -2988,5 +2994,5 @@ class TRIM(BaseCard):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)

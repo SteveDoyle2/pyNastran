@@ -172,7 +172,7 @@ class CGAP(Element):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -242,7 +242,7 @@ class CRAC2D(CrackElement):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -291,5 +291,5 @@ class CRAC3D(CrackElement):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)

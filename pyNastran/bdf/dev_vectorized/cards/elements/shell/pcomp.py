@@ -393,7 +393,7 @@ class BaseCard(object):
         return ''
 
     def print_card(self, size=8):
-        list_fields = self.reprFields()
+        list_fields = self.repr_fields()
         return self.comment() + print_card(list_fields, size=size)
 
 
@@ -406,7 +406,7 @@ class BaseCard(object):
             return self.print_card()
         except:
             print('problem printing %s card' % self.type)
-            fields = self.reprFields()
+            fields = self.repr_fields()
             print("fields = ", fields)
             raise
 

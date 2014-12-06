@@ -97,7 +97,7 @@ class BSURF(BaseCard):
         return fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -158,7 +158,7 @@ class BSURFS(BaseCard):
         return fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)  # I think this is right...
 
 
@@ -223,7 +223,7 @@ class BCTSET(BaseCard):
         return fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -266,7 +266,7 @@ class BCRPARA(BaseCard):
         return fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -349,7 +349,7 @@ class BCTPARA(BaseCard):
         return fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -398,5 +398,5 @@ class BCTADD(BaseCard):
         return fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
