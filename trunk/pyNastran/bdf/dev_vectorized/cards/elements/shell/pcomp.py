@@ -961,7 +961,7 @@ class PCOMPi(CompositeShellProperty):
             list_fields += [mid, t, theta, sout]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         nsm = set_blank_if_default(self.nsm, 0.0)
         sb = set_blank_if_default(self.sb, 0.0)
         TRef = set_blank_if_default(self.TRef, 0.0)
@@ -978,5 +978,5 @@ class PCOMPi(CompositeShellProperty):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)

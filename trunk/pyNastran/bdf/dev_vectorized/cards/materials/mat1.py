@@ -163,7 +163,7 @@ class MAT1(Material):
                 card = ['MAT1', mid, E, G, nu, rho, a, TRef, ge, st, sc, ss, mcsid]
                 f.write(print_card_8(card))
 
-    def reprFields(self, material_id):
+    def repr_fields(self, material_id):
         i = where(self.material_id == material_id)[0]
         i = i[0]
         card = ['MAT1', self.material_id[i], self.E[i], self.G[i], self.nu[i],

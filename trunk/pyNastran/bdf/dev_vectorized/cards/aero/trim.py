@@ -64,7 +64,7 @@ class TRIM(object):
             self.uxs.append(ux)
             i += 2
 
-    def reprFields(self):
+    def repr_fields(self):
         return self._repr_fields()
 
     def _repr_fields(self):

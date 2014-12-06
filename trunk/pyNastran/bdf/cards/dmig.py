@@ -146,7 +146,7 @@ class NastranMatrix(BaseCard):
         if self.isComplex():
             self.Complex = []
 
-    def writeCodeAster(self):
+    def write_code_aster(self):
         """
         assume set 1 = MAAX1,MAAX2, etc. and 100/n % on each
         """

@@ -1937,7 +1937,7 @@ class Solver(F06, OP2):
         self.oload_resultant = OLOAD_Resultant()
 
     def assemble_forces(self, model, ndofs, case, Dofs):
-        """very similar to writeCodeAster loads"""
+        """very similar to write_code_aster loads"""
         self.log.info('assemble forces')
         Fg = zeros(ndofs, 'float64')
         #print(model.loads)
