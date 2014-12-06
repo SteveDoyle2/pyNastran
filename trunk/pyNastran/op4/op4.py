@@ -1012,7 +1012,7 @@ class OP4(object):
         return (icol, irow, nWords)
 
 #--------------------------------------------------------------------------
-    def _getTypeNWV(self, A, precision='default'):
+    def _get_type_nwv(self, A, precision='default'):
         """
         Determines the Type and number of words per value
         an entry in the matrix takes up.
@@ -1173,7 +1173,7 @@ class OP4(object):
         assert isinstance(name, str), 'name=%s' % name
         #A = A.tolil() # list-of-lists sparse matrix
         #print dir(A)
-        (Type, NWV) = self._getTypeNWV(A.data[0], precision)
+        (Type, NWV) = self._get_type_nwv(A.data[0], precision)
         if Type in [3, 4]:
             complex_factor = 2
         else: # 1, 2
@@ -1289,7 +1289,7 @@ class OP4(object):
         """
         A = matrix
         #print('A =', A)
-        (Type, NWV) = self._getTypeNWV(A[0, 0], precision)
+        (Type, NWV) = self._get_type_nwv(A[0, 0], precision)
 
         (nrows, ncols) = A.shape
         #if nrows==ncols and form==2:
@@ -1346,7 +1346,7 @@ class OP4(object):
         return (iStart, iEnd)
 
     def _write_dense_matrix_ascii(self, f, name, A, form=2, precision='default'):
-        (Type, NWV) = self._getTypeNWV(A[0, 0], precision)
+        (Type, NWV) = self._get_type_nwv(A[0, 0], precision)
 
         (nrows, ncols) = A.shape
         msg = '%8i%8i%8i%8i%-8s1P,3E23.16\n' % (ncols, nrows, form, Type, name)

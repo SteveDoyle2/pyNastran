@@ -111,7 +111,27 @@ class DEQATN(BaseCard):  # needs work...
         return ''.join(list_fields)
 
 
-class NastranMatrix(BaseCard):
+
+class DeprecatedNastranMatrix(object):
+    """
+    Will be deprecated in:
+      - v0.7
+    Will be removed in:
+      - v0.8
+    """
+    def isComplex(self):
+        return self.is_complex()
+
+    def isReal(self):
+        return self.is_real()
+
+    def isPolar(self):
+        return self.is_polar()
+
+    def getMatrix(self, isSparse=False, applySymmetry=True):
+        return self.get_matrix(is_sparse=isSparse, apply_symmetry=applySymmetry)
+
+class NastranMatrix(BaseCard, DeprecatedNastranMatrix):
     """
     Base class for the DMIG, DMIJ, DMIJI, DMIK matrices
     """
@@ -143,7 +163,7 @@ class NastranMatrix(BaseCard):
         self.GCj = []
         self.GCi = []
         self.Real = []
-        if self.isComplex():
+        if self.is_complex():
             self.Complex = []
 
     def write_code_aster(self):
@@ -164,7 +184,7 @@ class NastranMatrix(BaseCard):
         comm = 'K_Mtx=ASSE_MATRICE(MATR_ELEM=ElMtx_K,NUME_DDL=%s,);'
         return comm
 
-    def addColumn(self, card=None, data=None, comment=''):
+    def _add_column(self, card=None, data=None, comment=''):
         if comment:
             if hasattr(self, '_comment'):
                 self._comment += comment
@@ -189,8 +209,8 @@ class NastranMatrix(BaseCard):
         for i in range(nloops):
             self.GCj.append((Gj, Cj))
 
-        if self.isComplex():
-            if self.isPolar():
+        if self.is_complex():
+            if self.is_polar():
                 for i in range(nloops):
                     n = 5 + 4 * i
                     Gi = integer(card, n, 'Gi')
@@ -229,40 +249,40 @@ class NastranMatrix(BaseCard):
 
         msg = '(len(GCj)=%s len(GCi)=%s' % (len(self.GCj), len(self.GCi))
         assert len(self.GCj) == len(self.GCi), msg
-        #if self.isComplex():
+        #if self.is_complex():
             #self.Complex(double(card, v, 'complex')
 
-    def getMatrix(self, isSparse=False, applySymmetry=True):
+    def get_matrix(self, is_sparse=False, apply_symmetry=True):
         """
         Builds the Matrix
 
         :param self:     the object pointer
-        :param isSparse: should the matrix be returned as a sparse matrix (default=True).
-                         Slower for dense matrices.
-        :param applySymmetry: If the matrix is symmetric (ifo=6), returns a symmetric matrix.
-                              Supported as there are symmetric matrix routines.
+        :param is_sparse: should the matrix be returned as a sparse matrix (default=True).
+                          Slower for dense matrices.
+        :param apply_symmetry: If the matrix is symmetric (ifo=6), returns a symmetric matrix.
+                               Supported as there are symmetric matrix routines.
 
         :returns M:    the matrix
         :returns rows: dictionary of keys=rowID,    values=(Grid,Component) for the matrix
         :returns cols: dictionary of keys=columnID, values=(Grid,Component) for the matrix
         .. warning:: isSparse WILL fail
         """
-        return getMatrix(self, isSparse=isSparse, applySymmetry=applySymmetry)
+        return get_matrix(self, is_sparse=is_sparse, apply_symmetry=apply_symmetry)
 
     def rename(self, new_name):
         self.name = new_name
 
-    def isReal(self):
-        return not self.isComplex()
+    def is_real(self):
+        return not self.is_complex()
 
-    def isComplex(self):
+    def is_complex(self):
         if self.tin in [1, 2]: # real
             return False
         elif self.tin in [3, 4]: # complex
             return True
         raise ValueError('Matrix %r must have a value of TIN = [1, 2, 3, 4].\nTIN defines the type (real, complex) of the matrix.  TIN=%r.' % (self.name, self.tin))
 
-    def isPolar(self):
+    def is_polar(self):
         """
         Used by:
           - DMIG
@@ -293,7 +313,7 @@ class NastranMatrix(BaseCard):
         elif Type == 4:
             dType = 'complex128'
         elif Type == 0:
-            if self.isComplex():
+            if self.is_complex():
                 dType = 'complex128'
             else:
                 dType = 'float64'
@@ -311,8 +331,8 @@ class NastranMatrix(BaseCard):
                   self.tout, self.polar, None, self.ncol]
         msg += print_card(list_fields)
 
-        if self.isComplex():
-            if self.isPolar():
+        if self.is_complex():
+            if self.is_polar():
                 for (GCi, GCj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
                     magi = sqrt(reali**2 + complexi**2)
                     if reali == 0.0:
@@ -344,8 +364,8 @@ class NastranMatrix(BaseCard):
                   self.tout, self.polar, None, self.ncol]
         msg += print_card(list_fields)
 
-        if self.isComplex():
-            if self.isPolar():
+        if self.is_complex():
+            if self.is_polar():
                 for (GCi, GCj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
                     magi = sqrt(reali**2 + complexi**2)
                     if reali == 0.0:
@@ -368,15 +388,15 @@ class NastranMatrix(BaseCard):
         return msg
 
 
-def getMatrix(self, isSparse=False, applySymmetry=True):
+def get_matrix(self, is_sparse=False, apply_symmetry=True):
     """
     Builds the Matrix
 
     :param self:     the object pointer
-    :param isSparse: should the matrix be returned as a sparse matrix (default=True).
-                     Slower for dense matrices.
-    :param applySymmetry: If the matrix is symmetric (ifo=6), returns a symmetric matrix.
-                          Supported as there are symmetric matrix routines.
+    :param is_sparse: should the matrix be returned as a sparse matrix (default=True).
+                      Slower for dense matrices.
+    :param apply_symmetry: If the matrix is symmetric (ifo=6), returns a symmetric matrix.
+                           Supported as there are symmetric matrix routines.
 
     :returns M:    the matrix
     :returns rows: dictionary of keys=rowID,    values=(Grid,Component) for the matrix
@@ -415,14 +435,14 @@ def getMatrix(self, isSparse=False, applySymmetry=True):
     #        A[i,j] = k
 
     #is_sparse = False
-    if isSparse:
+    if is_sparse:
         data = []
         rows2 = []
         cols2 = []
 
         nrows = 0
         ncols = 0
-        if self.isComplex():
+        if self.is_complex():
             #: no check for symmetry
             for (GCj, GCi, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
                 i = rows[GCi]
@@ -462,9 +482,9 @@ def getMatrix(self, isSparse=False, applySymmetry=True):
         #print(M.todense())
         #print(M)
     else:
-        if self.isComplex():
+        if self.is_complex():
             M = zeros((i, j), dtype='complex128')
-            if self.ifo == 6 and applySymmetry:  # symmetric
+            if self.ifo == 6 and apply_symmetry:  # symmetric
                 for (GCj, GCi, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
                     i = rows[GCi]
                     j = cols[GCj]
@@ -477,7 +497,7 @@ def getMatrix(self, isSparse=False, applySymmetry=True):
                     M[i, j] = complex(reali, complexi)
         else:
             M = zeros((i, j), dtype='float64')
-            if self.ifo == 6 and applySymmetry:  # symmetric
+            if self.ifo == 6 and apply_symmetry:  # symmetric
                 for (GCj, GCi, reali) in zip(self.GCj, self.GCi, self.Real):
                     i = rows[GCi]
                     j = cols[GCj]
@@ -612,14 +632,14 @@ class DMI(NastranMatrix):
         self.GCi = []
         self.Real = []
 
-        if self.isComplex():
+        if self.is_complex():
             self.Complex = []
 
-    def addColumn(self, card=None, data=None):
-        if not self.isComplex():  # real
-            self.readReal(card)
+    def _add_column(self, card=None, data=None):
+        if not self.is_complex():  # real
+            self._read_real(card)
 
-    def readReal(self, card):
+    def _read_real(self, card):
         # column number
         j = integer(card, 2, 'icol')
 
@@ -661,7 +681,7 @@ class DMI(NastranMatrix):
                         i += 1
                         isDoneReadingFloats = True
 
-    # def readComplex(self, card):
+    # def _read_complex(self, card):
     #     msg = 'complex matrices not supported in the DMI reader...'
     #     raise NotImplementedError(msg)
     #     # column number
@@ -695,10 +715,10 @@ class DMI(NastranMatrix):
     def rename(self, newName):
         self.name = newName
 
-    def isReal(self):
-        return not self.isComplex()
+    def is_real(self):
+        return not self.is_complex()
 
-    def isComplex(self):
+    def is_complex(self):
         if self.tin in [3, 4]:
             return True
         return False
@@ -707,7 +727,7 @@ class DMI(NastranMatrix):
         list_fields = ['DMI', self.name, 0, self.form, self.tin,
                   self.tout, None, self.nRows, self.nCols]
 
-        if self.isComplex():
+        if self.is_complex():
             for (GCi, GCj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
                 list_fields += ['DMI', self.name, GCj, GCi, reali, imagi]
         else:
@@ -723,7 +743,7 @@ class DMI(NastranMatrix):
         msg += print_card(list_fields)
         #msg += self.print_card(list_fields,size=16,isD=False)
 
-        if self.isComplex():
+        if self.is_complex():
             for (GCi, GCj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
                 list_fields = ['DMI', self.name, GCj, GCi, reali, imagi]
                 msg += print_card(list_fields)
@@ -746,7 +766,7 @@ class DMI(NastranMatrix):
         msg += self.print_card(list_fields)
         #msg += self.print_card(list_fields,size=16,isD=False)
 
-        if self.isComplex():
+        if self.is_complex():
             for (GCi, GCj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
                 list_fields = [self.type, self.name, GCj, GCi, reali, imagi]
                 msg += self.print_card(list_fields)

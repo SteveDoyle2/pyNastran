@@ -18,14 +18,14 @@ class BaseCardDeprecated(object):
       - version 0.8
     """
     def rawFields(self):
-        """
-        gets the "raw" card without any processing as a list for printing
-        """
         return self.raw_fields()
 
     def reprFields(self):
-        """gets the card's fields"""
         return self.repr_fields()
+
+    def printRawFields(self, size=8):
+        return self.print_raw_fields(size=size)
+
 
 class BaseCard(BaseCardDeprecated):
     def __init__(self):
@@ -93,13 +93,13 @@ class BaseCard(BaseCardDeprecated):
         fields2 = card.raw_fields()
         return self._is_same_fields(fields1, fields2)
 
-    def printRawFields(self, size=8):
+    def print_raw_fields(self, size=8):
         """A card's raw fields include all defaults for all fields"""
         list_fields = self.raw_fields()
         return print_card(list_fields, size=size)
 
     def repr_fields(self):
-        """gets the "raw" card without any processing as a list for printing"""
+        """gets the card's fields"""
         return self.raw_fields()
 
     def print_card(self, size=8):

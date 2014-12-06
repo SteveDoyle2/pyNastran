@@ -315,24 +315,24 @@ class PBUSH1D(BushingProperty):
                                            'generIDCDV', self.generIDTDV)
         self.vars.append('GENER')
 
-    def _shockFields(self):
+    def _shock_fields(self):
         list_fields = ['SHOCKA', self.shockType, self.shockCVT, self.shockCVC,
                   self.shockExpVT, self.shockExpVC, self.shockIDTS, None, None,
                   self.shockIDETS, self.shockIDECS, self.shockIDETSD,
                   self.shockIDECSD]
         return list_fields
 
-    def _springFields(self):
+    def _spring_fields(self):
         list_fields = ['SPRING', self.springType, self.springIDT,
                        self.springIDC, self.springIDTDU, self.springIDCDU]
         return list_fields
 
-    def _damperFields(self):
+    def _damper_fields(self):
         list_fields = ['DAMPER', self.damperType, self.damperIDT,
                        self.damperIDC, self.damperIDTDV, self.damperIDCDV]
         return list_fields
 
-    def _generFields(self):
+    def _gener_fields(self):
         list_fields = ['GENER', None, self.generIDT, self.generIDC,
                   self.generIDTDU, self.generIDCDU, self.generIDTDV,
                   self.generIDCDV]
@@ -343,13 +343,13 @@ class PBUSH1D(BushingProperty):
                   self.sa, self.se, None]
         for var in self.vars:
             if var == 'SHOCKA':
-                list_fields += self._shockFields()
+                list_fields += self._shock_fields()
             elif var == 'SPRING':
-                list_fields += self._springFields()
+                list_fields += self._spring_fields()
             elif var == 'DAMPER':
-                list_fields += self._damperFields()
+                list_fields += self._damper_fields()
             elif var == 'GENER':
-                list_fields += self._generFields()
+                list_fields += self._gener_fields()
             else:
                 msg = 'var=%s not supported PBUSH1D field...' % var
                 raise RuntimeError(msg)
