@@ -963,7 +963,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                             msg = 'cannot find DMIG name=%r in names=%s' \
                                 % (name, self.dmigs.keys())
                             raise KeyError(msg)
-                        dmig.addColumn(card_obj, comment=comment)
+                        dmig._add_column(card_obj, comment=comment)
 
             else:
                 for comment, card_lines in card:
@@ -1345,7 +1345,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                         msg = 'cannot find DMIG name=%r in names=%s' \
                             % (name, self.dmigs.keys())
                         raise KeyError(msg)
-                    dmig.addColumn(card_obj, comment=comment)
+                    dmig._add_column(card_obj, comment=comment)
 
             elif card_name in ['DMI', 'DMIJ', 'DMIJI', 'DMIK']:
                 field2 = integer(card_obj, 2, 'flag')
@@ -1353,7 +1353,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     getattr(self, 'add_' + card_name)(_get_cls(card_name))
                 else:
                     name = string(card_obj, 1, 'name')
-                    getattr(self, card_name.lower() + 's')[name].addColumn(card_obj)
+                    getattr(self, card_name.lower() + 's')[name]._add_column(card_obj)
             # dynamic
             elif card_name == 'DAREA':
                 self.add_DAREA(DAREA(card_obj, comment=comment))

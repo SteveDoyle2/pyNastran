@@ -18,7 +18,7 @@ class TestDMIG(unittest.TestCase):
         model = BDF(debug=False)
         bdf_name = os.path.join(test_path, 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
-        out = model.dmigs['REALS'].getMatrix(isSparse=False)
+        out = model.dmigs['REALS'].get_matrix(is_sparse=False)
 
         REALS_actual, rowsReversed, colsReversed = out
         #print "---REALS_actual---\n", REALS_actual
@@ -36,7 +36,7 @@ class TestDMIG(unittest.TestCase):
         bdf_name = os.path.join(test_path, 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
 
-        out = model.dmigs['REAL'].getMatrix(isSparse=False)
+        out = model.dmigs['REAL'].get_matrix(is_sparse=False)
         REAL_actual, rowsReversed, colsReversed = out
         #print "---REAL_actual---\n", REAL_actual
         REAL_expected = [
@@ -54,7 +54,7 @@ class TestDMIG(unittest.TestCase):
         model = BDF(debug=False)
         bdf_name = os.path.join(test_path, 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
-        out = model.dmigs['IMAG'].getMatrix(isSparse=False)
+        out = model.dmigs['IMAG'].get_matrix(is_sparse=False)
 
         IMAG_actual, rowsReversed, colsReversed = out
         #print "---IMAG_actual---\n", IMAG_actual
@@ -76,7 +76,7 @@ class TestDMIG(unittest.TestCase):
         bdf_name = os.path.join(test_path, 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
 
-        out = model.dmigs['IMAGS'].getMatrix(isSparse=False)
+        out = model.dmigs['IMAGS'].get_matrix(is_sparse=False)
         IMAGS_actual, rowsReversed, colsReversed = out
         #print "---IMAGS_actual---\n", IMAGS_actual
         IMAGS_expected_real = [
@@ -99,7 +99,7 @@ class TestDMIG(unittest.TestCase):
         model = BDF(debug=False)
         bdf_name = os.path.join(test_path, 'dmig.bdf')
         model.read_bdf(bdf_name, xref=False, punch=True)
-        out = model.dmigs['POLE'].getMatrix(isSparse=False)
+        out = model.dmigs['POLE'].get_matrix(is_sparse=False)
 
         POLE_actual, rowsReversed, colsReversed = out
         #print "---POLE_actual---\n", POLE_actual
