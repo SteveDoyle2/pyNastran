@@ -127,10 +127,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
     #: this is a nastran model
     modelType = 'nastran'
 
-    #: Flips between a dictionary based storage BDF storage method and
-    #: a list based method.  Don't modify this.
-    _isDict = True
-
     #: required for sphinx bug
     #: http://stackoverflow.com/questions/11208997/autoclass-and-instance-attributes
     #__slots__ = ['_is_dynamic_syntax']
@@ -156,18 +152,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.include_dir = ''
         self.active_filename = None
         self.active_filenames = []
-        if self._isDict:
-            self._stored_Is = {}
-            self._stored_lines = {}
-            self._stored_comments = {}
-            self._line_streams = {}
-            self._card_streams = {}
-        else:
-            self._stored_Is = []
-            self._stored_lines = []
-            self._stored_comments = []
-            self._line_streams = []
-            self._card_streams = []
+        self._stored_Is = {}
+        self._stored_lines = {}
+        self._stored_comments = {}
+        self._line_streams = {}
+        self._card_streams = {}
         self._break_comment = None
 
         self._relpath = True
@@ -780,18 +769,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self._break_comment = False  # speeds up self._get_line()
         while self._get_line():
             pass
-        if self._isDict:
-            self._stored_Is = {}
-            self._stored_lines = {}
-            self._stored_comments = {}
-            self._line_streams = {}
-            self._card_streams = {}
-        else:
-            self._stored_Is = []
-            self._stored_lines = []
-            self._stored_comments = []
-            self._line_streams = []
-            self._card_streams = []
+        self._stored_Is = {}
+        self._stored_lines = {}
+        self._stored_comments = {}
+        self._line_streams = {}
+        self._card_streams = {}
         #del self._break_comment
 
     def _read_executive_control_deck(self):
@@ -1018,12 +1000,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self._stored_comments[self._ifile] = []
 
         line_gen = self._stream_line()
-        if self._isDict:
-            self._line_streams[self._ifile] = line_gen
-            self._card_streams[self._ifile] = self._stream_card(line_gen)
-        else:
-            self._line_streams.append(line_gen)
-            self._card_streams.append(self._stream_card(line_gen))
+        self._line_streams[self._ifile] = line_gen
+        self._card_streams[self._ifile] = self._stream_card(line_gen)
 
 
     def _close_file(self):
@@ -1035,18 +1013,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             self._ifile = -1
             self.active_filename = None
             return
-        if self._isDict:
-            del self._stored_Is[self._ifile]
-            del self._stored_lines[self._ifile]
-            del self._stored_comments[self._ifile]
-            del self._line_streams[self._ifile]
-            del self._card_streams[self._ifile]
-        else:
-            self._stored_Is.pop()
-            self._stored_lines.pop()
-            self._stored_comments.pop()
-            self._line_streams.pop()
-            self._card_streams.pop()
+        del self._stored_Is[self._ifile]
+        del self._stored_lines[self._ifile]
+        del self._stored_comments[self._ifile]
+        del self._line_streams[self._ifile]
+        del self._card_streams[self._ifile]
         self._ifile -= 1
 
         self.active_filenames.pop()
