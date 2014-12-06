@@ -370,7 +370,7 @@ class Coord(BaseCard):
         """
         return self.beta_n(2)
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
 
@@ -555,7 +555,7 @@ class Cord2x(Coord):
         assert isinstance(rid, int), 'rid=%r' % rid
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
     def cross_reference(self, model):
@@ -735,7 +735,7 @@ class Cord1x(Coord):
         return grids
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 

@@ -116,7 +116,7 @@ class CREEP(Material):
                   self.a, self.b, self.c, self.d, self.e, self.f, self.g]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         """
         Gets the fields in their simplified form
 
@@ -136,7 +136,7 @@ class CREEP(Material):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -301,7 +301,7 @@ class MAT1(IsotropicMaterial):
             msg += '%s,%s\n\n' % (self.a, self.a * self.TRef)
         return msg
 
-    def writeCodeAster(self):
+    def write_code_aster(self):
         msg = 'M%s = DEFI_MATRIAU(ELAS=_F(E=%g, # MAT1 mid=%s\n' % (
             self.mid, self.e, self.mid)
         #msg  = 'M%s = DEFI_MATRIAU(ELAS=_F( # MAT1\n' %(self.mid)
@@ -336,7 +336,7 @@ class MAT1(IsotropicMaterial):
         #      % (self.e, self.nu,self.g, G_default, G))
         return G
 
-    def reprFields(self):
+    def repr_fields(self):
         """
         Gets the fields in their simplified form
 
@@ -364,7 +364,7 @@ class MAT1(IsotropicMaterial):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
@@ -544,7 +544,7 @@ class MAT2(AnisotropicMaterial):
                   self.Mcsid]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         """
         Gets the fields in their simplified form
 
@@ -570,7 +570,7 @@ class MAT2(AnisotropicMaterial):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -662,7 +662,7 @@ class MAT3(OrthotropicMaterial):
                   self.ax, self.ath, self.az, self.TRef, self.ge]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         """
         Gets the fields in their simplified form
 
@@ -685,7 +685,7 @@ class MAT3(OrthotropicMaterial):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -755,7 +755,7 @@ class MAT4(ThermalMaterial):
                   self.qlat]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         """
         Gets the fields in their simplified form
 
@@ -774,7 +774,7 @@ class MAT4(ThermalMaterial):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -849,7 +849,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
                   self.kyz, self.kzz, self.cp, self.rho, self.hgen]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         """
         Gets the fields in their simplified form
 
@@ -875,7 +875,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -1015,7 +1015,7 @@ class MAT8(OrthotropicMaterial):
     def get_density(self):
         return self.rho
 
-    def reprFields(self):
+    def repr_fields(self):
         """
         Gets the fields in their simplified form
 
@@ -1051,7 +1051,7 @@ class MAT8(OrthotropicMaterial):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
@@ -1186,7 +1186,7 @@ class MAT9(AnisotropicMaterial):
                   + self.A + [self.TRef, self.ge])
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         """
         Gets the fields in their simplified form
 
@@ -1213,7 +1213,7 @@ class MAT9(AnisotropicMaterial):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -1303,7 +1303,7 @@ class MAT10(Material):
         list_fields = ['MAT10', self.mid, self.bulk, self.rho, self.c, self.ge]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         """
         Gets the fields in their simplified form
 
@@ -1319,7 +1319,7 @@ class MAT10(Material):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
@@ -1406,7 +1406,7 @@ class MAT11(Material):
                   self.a2, self.a3, self.TRef, self.ge]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         """
         Gets the fields in their simplified form
 
@@ -1431,7 +1431,7 @@ class MAT11(Material):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
@@ -1566,7 +1566,7 @@ class MATHP(HyperelasticMaterial):
                   self.tab1, self.tab2, self.tab4, None, None, None, self.tabd]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         """
         Gets the fields in their simplified form
 
@@ -1624,7 +1624,7 @@ class MATHP(HyperelasticMaterial):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 

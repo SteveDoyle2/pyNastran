@@ -457,7 +457,7 @@ class CVISC(LineDamper):
         list_fields = ['CVISC', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):

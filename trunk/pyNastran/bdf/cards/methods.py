@@ -94,7 +94,7 @@ class EIGB(Method):
                   self.ndp, self.ndn, None, self.norm, self.G, self.C]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         #method = set_blank_if_default(self.method,'INV')
         nep = set_blank_if_default(self.nep, 0)
         ndp = set_blank_if_default(self.ndp, 3 * self.nep)
@@ -106,7 +106,7 @@ class EIGB(Method):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -270,7 +270,7 @@ class EIGC(Method):
         list_fields += self.rawMethod()
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         if self.E is None:
             E = None
         else:
@@ -281,7 +281,7 @@ class EIGC(Method):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -327,11 +327,11 @@ class EIGP(Method):
                   self.alpha2, self.omega2, self.m2]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -399,7 +399,7 @@ class EIGR(Method):
                   self.nd, None, None, self.norm, self.G, self.C]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         method = set_blank_if_default(self.method, 'LAN')
         norm = set_blank_if_default(self.norm, 'MASS')
         list_fields = ['EIGR', self.sid, method, self.f1, self.f2, self.ne,
@@ -407,7 +407,7 @@ class EIGR(Method):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -487,7 +487,7 @@ class EIGRL(Method):
             list_fields += [option + '=' + str(value)]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         msglvl = set_blank_if_default(self.msglvl, 0)
         list_fields = ['EIGRL', self.sid, self.v1, self.v2, self.nd, msglvl,
                   self.maxset, self.shfscl, self.norm]
@@ -496,7 +496,7 @@ class EIGRL(Method):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)

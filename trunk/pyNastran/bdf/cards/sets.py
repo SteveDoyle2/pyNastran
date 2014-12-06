@@ -29,15 +29,15 @@ class Set(BaseCard):
         return collapse_thru(self.IDs)
 
 
-    def reprFields(self):
+    def repr_fields(self):
         list_fields = self.raw_fields()
         return list_fields
 
     def __repr__(self):
-        return self.comment() + print_card_8(self.reprFields())
+        return self.comment() + print_card_8(self.repr_fields())
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 

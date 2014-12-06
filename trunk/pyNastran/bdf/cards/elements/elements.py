@@ -59,11 +59,11 @@ class CFAST(Element):
                   self.gs, self.ga, self.gb, self.xs, self.ys, self.zs]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 

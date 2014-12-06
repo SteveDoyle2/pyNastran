@@ -176,7 +176,7 @@ class TABLED1(Table):
                   None, None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         #xaxis = set_blank_if_default(self.xaxis, 'LINEAR')
         #yaxis = set_blank_if_default(self.yaxis, 'LINEAR')
         return self.raw_fields()
@@ -218,7 +218,7 @@ class TABLED2(Table):
                        None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
 
@@ -261,7 +261,7 @@ class TABLED3(Table):
                        None, None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
 
@@ -310,7 +310,7 @@ class TABLED4(Table):
                        None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
 
@@ -352,7 +352,7 @@ class TABDMP1(Table):
                        None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
 
@@ -427,7 +427,7 @@ class TABLEM2(Table):
                        None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
 
@@ -470,7 +470,7 @@ class TABLEM3(Table):
                   None, None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
 
@@ -518,7 +518,7 @@ class TABLEM4(Table):
                   None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
 
@@ -559,7 +559,7 @@ class TABLES1(Table):
                   None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
 
@@ -598,7 +598,7 @@ class TABLEST(Table):
                   None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
 
@@ -660,7 +660,7 @@ class TABRND1(RandomTable):
                   None, None, None] + self.table.fields() + ['ENDT']
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         xaxis = set_blank_if_default(self.xaxis, 'LINEAR')
         yaxis = set_blank_if_default(self.yaxis, 'LINEAR')
         list_fields = ['TABRND1', self.tid, xaxis, yaxis, None, None,
@@ -699,7 +699,7 @@ class TABRNDG(RandomTable):
         list_fields = ['TABRNDG', self.tid, self.Type, self.LU, self.WG]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
 
@@ -735,5 +735,5 @@ class TIC(Table):
         list_fields = ['TIC', self.sid, self.G, self.C, self.U0, self.V0]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()

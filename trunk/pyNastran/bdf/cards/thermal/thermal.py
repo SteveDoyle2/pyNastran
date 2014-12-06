@@ -147,7 +147,7 @@ class CHBDYE(ThermalElement):
                   self.radMidBack]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         """
         .. todo:: is this done
         """
@@ -158,7 +158,7 @@ class CHBDYE(ThermalElement):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -235,7 +235,7 @@ class CHBDYG(ThermalElement):
                   ] + self.grids
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         iViewFront = set_blank_if_default(self.iViewFront, 0)
         iViewBack = set_blank_if_default(self.iViewBack, 0)
         radMidFront = set_blank_if_default(self.radMidFront, 0)
@@ -246,7 +246,7 @@ class CHBDYG(ThermalElement):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -338,7 +338,7 @@ class CHBDYP(ThermalElement):
                   self.e1, self.e2, self.e3]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         iViewFront = set_blank_if_default(self.iViewFront, 0)
         iViewBack = set_blank_if_default(self.iViewBack, 0)
         radMidFront = set_blank_if_default(self.radMidFront, 0)
@@ -353,7 +353,7 @@ class CHBDYP(ThermalElement):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 # Elements
@@ -425,7 +425,7 @@ class PCONV(ThermalProperty):
                   self.ce, self.e1, self.e2, self.e3]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         form = set_blank_if_default(self.form, 0)
         expf = set_blank_if_default(self.expf, 0.0)
         ftype = set_blank_if_default(self.ftype, 0)
@@ -436,7 +436,7 @@ class PCONV(ThermalProperty):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -491,7 +491,7 @@ class PCONVM(ThermalProperty):
                   self.flag, self.coef, self.expr, self.exppi, self.exppo]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         form = set_blank_if_default(self.form, 0)
         flag = set_blank_if_default(self.flag, 0)
         expr = set_blank_if_default(self.expr, 0.0)
@@ -502,7 +502,7 @@ class PCONVM(ThermalProperty):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -543,13 +543,13 @@ class PHBDY(ThermalProperty):
         list_fields = ['PHBDY', self.pid, self.af, self.d1, self.d2]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         d2 = set_blank_if_default(self.d2, self.d1)
         list_fields = ['PHBDY', self.pid, self.af, self.d1, d2]
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -617,7 +617,7 @@ class CONV(ThermalBC):
                   self.cntrlnd] + self.ta
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         flmnd = set_blank_if_default(self.flmnd, 0)
         cntrlnd = set_blank_if_default(self.cntrlnd, 0)
 
@@ -630,7 +630,7 @@ class CONV(ThermalBC):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -678,7 +678,7 @@ class CONVM(ThermalBC):
                   self.cntmdot, self.ta1, self.ta2, self.mdot]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         filmNode = set_blank_if_default(self.filmNode, 0)
         ta2 = set_blank_if_default(self.ta2, self.ta1)
         mdot = set_blank_if_default(self.mdot, 1.0)
@@ -687,7 +687,7 @@ class CONVM(ThermalBC):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -721,12 +721,12 @@ class RADM(ThermalBC):
     #def cross_reference(self,model):
     #    pass
 
-    def reprFields(self):
+    def repr_fields(self):
         list_fields = ['RADM', self.radmid, self.absorb] + self.emissivity
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -789,14 +789,14 @@ class RADBC(ThermalBC):
                        self.Eids())
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         cntrlnd = set_blank_if_default(self.cntrlnd, 0)
         eids = collapse_thru_by(self.Eids())
         list_fields = ['RADBC', self.nodamb, self.famb, cntrlnd] + eids
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 # Boundary Conditions

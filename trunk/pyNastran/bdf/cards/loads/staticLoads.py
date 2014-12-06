@@ -271,7 +271,7 @@ class LOAD(LoadCombination):
             list_fields += [scaleFactor, self.LoadID(loadID)]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
@@ -374,7 +374,7 @@ class GRAV(BaseCard):
                        self.mb]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         N = []
         for n in self.N:
             N.append(set_blank_if_default(n, 0.0))
@@ -698,7 +698,7 @@ class FORCE(Force):
                        self.mag] + list(self.xyz)
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         cid = set_blank_if_default(self.Cid(), 0)
         list_fields = ['FORCE', self.sid, self.node, cid,
                        self.mag] + list(self.xyz)
@@ -768,7 +768,7 @@ class FORCE1(Force):
         list_fields = ['FORCE1', self.sid, node, self.mag, g1, g2]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
@@ -858,7 +858,7 @@ class FORCE2(Force):
         list_fields = ['FORCE2', self.sid, node, self.mag, g1, g2, g3, g4]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
@@ -916,7 +916,7 @@ class MOMENT(Moment):
                   self.mag] + list(self.xyz)
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         cid = set_blank_if_default(self.Cid(), 0)
         list_fields = ['MOMENT', self.sid, self.node, cid,
                   self.mag] + list(self.xyz)
@@ -995,7 +995,7 @@ class MOMENT1(Moment):
         list_fields = ['MOMENT1', self.sid, node, self.mag, g1, g2]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
@@ -1089,7 +1089,7 @@ class MOMENT2(Moment):
         list_fields = ['MOMENT2', self.sid, node, self.mag, g1, g2, g3, g4]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
@@ -1136,7 +1136,7 @@ class PLOAD(Load):
         list_fields = ['PLOAD', self.sid, self.p] + self.nodeIDs()
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
@@ -1350,7 +1350,7 @@ class PLOAD1(Load):
                   self.x1, self.p1, self.x2, self.p2]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
@@ -1399,7 +1399,7 @@ class PLOAD2(Load):
             list_fields += self.eids
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
@@ -1593,7 +1593,7 @@ class PLOAD4(Load):
         list_fields.append(ldir)
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
@@ -1638,7 +1638,7 @@ class PLOADX1(Load):
                   self.ga, self.gb, self.theta]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):

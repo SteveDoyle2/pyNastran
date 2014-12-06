@@ -423,7 +423,7 @@ class CROD(RodElement):
         list_fields = ['CROD', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
@@ -673,7 +673,7 @@ class CONROD(RodElement):
                   self.Mid(), self.A, self.j, self.c, self.nsm]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         j = set_blank_if_default(self.j, 0.0)
         c = set_blank_if_default(self.c, 0.0)
         nsm = set_blank_if_default(self.nsm, 0.0)
@@ -682,7 +682,7 @@ class CONROD(RodElement):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)

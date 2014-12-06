@@ -409,7 +409,7 @@ class AESURF(BaseCard):
                   self.hmulim, self.tqllim, self.tqulim]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         """
         Gets the fields in their simplified form
 
@@ -435,7 +435,7 @@ class AESURF(BaseCard):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -584,7 +584,7 @@ class AERO(Aero):
                   self.rhoRef, self.symXZ, self.symXY]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         """
         Gets the fields in their simplified form
 
@@ -602,7 +602,7 @@ class AERO(Aero):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -663,7 +663,7 @@ class AEROS(Aero):
                   self.bRef, self.Sref, self.symXZ, self.symXY]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         """
         Gets the fields in their simplified form
 
@@ -681,7 +681,7 @@ class AEROS(Aero):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -1033,7 +1033,7 @@ class CAERO1(BaseCard):
             return self.lspan
         return self.lspan.sid
 
-    def reprFields(self):
+    def repr_fields(self):
         """
         Gets the fields in their simplified form
 
@@ -1055,7 +1055,7 @@ class CAERO1(BaseCard):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -1231,7 +1231,7 @@ class CAERO2(BaseCard):
                   + [self.x12])
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         """
         Gets the fields in their simplified form
 
@@ -1249,7 +1249,7 @@ class CAERO2(BaseCard):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -1323,7 +1323,7 @@ class CAERO3(BaseCard):
                    list(self.p4) + [self.x43])
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         """
         Gets the fields in their simplified form
 
@@ -1341,7 +1341,7 @@ class CAERO3(BaseCard):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -1420,7 +1420,7 @@ class CAERO4(BaseCard):
                         list(self.p4) + [self.x43])
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         """
         Gets the fields in their simplified form
 
@@ -1438,7 +1438,7 @@ class CAERO4(BaseCard):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -1580,7 +1580,7 @@ class CAERO5(BaseCard):
             return self.pid
         return self.pid.pid
 
-    def reprFields(self):
+    def repr_fields(self):
         """
         Gets the fields in their simplified form
 
@@ -1601,7 +1601,7 @@ class CAERO5(BaseCard):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 def points_elements_from_quad_points(p1, p2, p3, p4, x, y):
@@ -1953,7 +1953,7 @@ class FLUTTER(BaseCard):
                   self.get_mach(), self.get_rfreq_vel(), imethod, nValue, self.epsilon]
         return list_fields
 
-    #def reprFields(self):
+    #def repr_fields(self):
         #(imethod, nValue) = self._reprNValueOMax()
         #list_fields = ['FLUTTER', self.sid, self.method, self.get_density(), self.get_mach(),
         #          self.get_rfreq_vel(), imethod, nValue, self.epsilon]
@@ -2534,7 +2534,7 @@ class SPLINE1(Spline):
                   self.melements]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         dz = set_blank_if_default(self.dz, 0.)
         method = set_blank_if_default(self.method, 'IPS')
         usage = set_blank_if_default(self.usage, 'BOTH')
@@ -2547,7 +2547,7 @@ class SPLINE1(Spline):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -2642,7 +2642,7 @@ class SPLINE2(Spline):
                   self.dthy, None, self.usage]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         dz = set_blank_if_default(self.dz, 0.)
         usage = set_blank_if_default(self.usage, 'BOTH')
         list_fields = ['SPLINE2', self.eid, self.CAero(), self.id1, self.id2,
@@ -2651,7 +2651,7 @@ class SPLINE2(Spline):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -2751,7 +2751,7 @@ class SPLINE4(Spline):
                   self.melements]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         dz = set_blank_if_default(self.dz, 0.)
         method = set_blank_if_default(self.method, 'IPS')
         usage = set_blank_if_default(self.usage, 'BOTH')
@@ -2764,7 +2764,7 @@ class SPLINE4(Spline):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -2859,7 +2859,7 @@ class SPLINE5(Spline):
                   self.thy, None, self.usage]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         dz = set_blank_if_default(self.dz, 0.)
         usage = set_blank_if_default(self.usage, 'BOTH')
         list_fields = ['SPLINE5', self.eid, self.CAero(), self.AEList(), None,
@@ -2868,7 +2868,7 @@ class SPLINE5(Spline):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 

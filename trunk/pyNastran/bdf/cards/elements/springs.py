@@ -59,7 +59,7 @@ class SpringElement(Element):
     def Mass(self):
         return 0.0
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def __repr__(self):
@@ -204,7 +204,7 @@ class CELAS1(SpringElement):
         return (axial_strain, axial_stress, axial_force)
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -331,7 +331,7 @@ class CELAS2(SpringElement):
                   nodes[1], self.c2, self.ge, self.s]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         nodes = self.nodeIDs()
         ge = set_blank_if_default(self.ge, 0.)
         s = set_blank_if_default(self.s, 0.)
@@ -390,7 +390,7 @@ class CELAS2(SpringElement):
         return (axial_strain, axial_stress, axial_force)
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -477,14 +477,14 @@ class CELAS3(SpringElement):
         axial_stress = axial_force * s
         return (axial_strain, axial_stress, axial_force)
 
-    #def reprFields(self):
+    #def repr_fields(self):
         #s1 = set_blank_if_default(self.s1,0)
         #s2 = set_blank_if_default(self.s2,0)
         #list_fields = ['CELAS3',self.eid,self.Pid(),s1,s2]
         #return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -570,12 +570,12 @@ class CELAS4(SpringElement):
         axial_stress = axial_force * s
         return (axial_strain, axial_stress, axial_force)
 
-    #def reprFields(self):
+    #def repr_fields(self):
         #s1 = set_blank_if_default(self.s1, 0)
         #s2 = set_blank_if_default(self.s2, 0)
         #list_fields = ['CELAS4',self.eid,self.Pid(),s1,s2]
         #return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)

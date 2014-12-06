@@ -719,7 +719,7 @@ class PBAR(LineProperty):
     def I12(self):
         return self.i12
 
-    def writeCodeAster(self):  # PBAR
+    def write_code_aster(self):  # PBAR
         a = self.Area()
         iy = self.I11()
         iz = self.I22()
@@ -741,7 +741,7 @@ class PBAR(LineProperty):
                   self.i12]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         #A  = set_blank_if_default(self.A,0.0)
         i1 = set_blank_if_default(self.i1, 0.0)
         i2 = set_blank_if_default(self.i2, 0.0)
@@ -769,7 +769,7 @@ class PBAR(LineProperty):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         #return self.comment() + card_writer(card)  #is this allowed???
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -1117,7 +1117,7 @@ class PBARL(LineProperty):
     def I22(self):
         return self.I2()
 
-    def writeCodeAster(self, iCut=0, iFace=0, iStart=0):  # PBARL
+    def write_code_aster(self, iCut=0, iFace=0, iStart=0):  # PBARL
         msg = '# BAR Type=%s pid=%s\n' % (self.type, self.pid)
         msg2 = ''
         msg += self.CA_Section(iFace, iStart, self.dim)
@@ -1138,14 +1138,14 @@ class PBARL(LineProperty):
                        None, None, None, None] + self.dim + [self.nsm]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         group = set_blank_if_default(self.group, 'MSCBMLO')
         list_fields = ['PBARL', self.pid, self.Mid(), group, self.Type, None,
                        None, None, None] + self.dim + [self.nsm]
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         #return self.comment() + card_writer(card)  #is this allowed???
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -1193,7 +1193,7 @@ class PBEAM3(LineProperty):  # not done, cleanup
         msg = ' which is required by PBEAM3 mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
 
-    def reprFields(self):
+    def repr_fields(self):
         """.. todo:: not done"""
         list_fields = ['PBEAM3', self.pid, self.Mid(), ]  # other
         return list_fields
@@ -1298,7 +1298,7 @@ class PBEND(LineProperty):
         msg = ' which is required by PBEND mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
 
-    def reprFields(self):
+    def repr_fields(self):
         list_fields = ['PBEND', self.pid, self.Mid(), ]  # other
         if self.beamType == 1:
             list_fields += [self.A, self.i1, self.i2, self.j, self.rb,
@@ -1313,7 +1313,7 @@ class PBEND(LineProperty):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         #return self.comment() + card_writer(card)  #is this allowed???
         if size == 8:
             return self.comment() + print_card_8(card)

@@ -201,7 +201,7 @@ class PARAM(BaseCard):
         list_fields = ['PARAM', self.key] + self.values
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size=8, is_double=False):

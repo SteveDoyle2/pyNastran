@@ -87,7 +87,7 @@ class PFAST(Property):
                   self.ge]
         return fields
 
-    def reprFields(self):
+    def repr_fields(self):
         mcid = set_blank_if_default(self.mcid, -1)
         mflag = set_blank_if_default(self.mflag, 0)
         kr1 = set_blank_if_default(self.kr1, 0.0)
@@ -101,7 +101,7 @@ class PFAST(Property):
         return fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         #return self.comment() + card_writer(card)  #is this allowed???
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -169,7 +169,7 @@ class PGAP(Property):
                   self.kt, self.mu1, self.mu2, self.tmax, self.mar, self.trmin]
         return fields
 
-    def reprFields(self):
+    def repr_fields(self):
         u0 = set_blank_if_default(self.u0, 0.)
         f0 = set_blank_if_default(self.f0, 0.)
         ka = set_blank_if_default(self.ka, 1.e8)
@@ -186,7 +186,7 @@ class PGAP(Property):
         return fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         #return self.comment() + card_writer(card)  #is this allowed???
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -326,7 +326,7 @@ class PSOLID(SolidProperty):
                   self.stress, self.isop, self.fctn]
         return fields
 
-    def reprFields(self):
+    def repr_fields(self):
         cordm = set_blank_if_default(self.cordm, 0)
         fctn = set_blank_if_default(self.fctn, 'SMECH')
         fields = ['PSOLID', self.pid, self.Mid(), cordm, self.integ,
@@ -334,7 +334,7 @@ class PSOLID(SolidProperty):
         return fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         # this card has integers & strings, so it uses...
         return self.comment() + print_card_8(card)
 
@@ -409,7 +409,7 @@ class PRAC2D(CrackProperty):
                   self.iPlane, self.nsm, self.gamma, self.phi]
         return fields
 
-    def reprFields(self):
+    def repr_fields(self):
         nsm = set_blank_if_default(self.nsm, 0.)
         gamma = set_blank_if_default(self.gamma, 0.5)
         phi = set_blank_if_default(self.phi, 180.)
@@ -460,7 +460,7 @@ class PRAC3D(CrackProperty):
         fields = ['PRAC3D', self.pid, self.Mid(), self.gamma, self.phi]
         return fields
 
-    def reprFields(self):
+    def repr_fields(self):
         gamma = set_blank_if_default(self.gamma, 0.5)
         phi = set_blank_if_default(self.phi, 180.)
         fields = ['PRAC3D', self.pid, self.Mid(), gamma, phi]
@@ -547,7 +547,7 @@ class PCONEAX(Property):
                   self.nsm, self.z1, self.z2] + self.phi
         return fields
 
-    def reprFields(self):
+    def repr_fields(self):
         nsm = set_blank_if_default(self.nsm, 0.0)
         mid1 = set_blank_if_default(self.Mid1(), 0)
         mid2 = set_blank_if_default(self.Mid2(), 0)
@@ -560,7 +560,7 @@ class PCONEAX(Property):
         return fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         #return self.comment() + card_writer(card)  #is this allowed???
         if size == 8:
             return self.comment() + print_card_8(card)

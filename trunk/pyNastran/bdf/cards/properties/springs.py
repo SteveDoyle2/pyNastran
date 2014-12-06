@@ -83,14 +83,14 @@ class PELAS(SpringProperty):
         list_fields = ['PELAS', self.pid, self.k, self.ge, self.s]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         ge = set_blank_if_default(self.ge, 0.)
         s = set_blank_if_default(self.s, 0.)
         list_fields = ['PELAS', self.pid, self.k, ge, s]
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 

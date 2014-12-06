@@ -263,14 +263,14 @@ class CMASS2(PointMassElement):
                   self.c1, self.G2(), self.c2]
         return fields
 
-    def reprFields(self):
+    def repr_fields(self):
         mass = set_blank_if_default(self.mass, 0.)
         fields = ['CMASS2', self.eid, mass, self.G1(), self.c1,
                   self.G2(), self.c2]
         return fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -567,7 +567,7 @@ class CONM1(PointMassElement):
                   m[5, 0], m[5, 1], m[5, 2], m[5, 3], m[5, 4], m[5, 5]]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         list_fields = self.raw_fields()
         list_fields2 = list_fields[0:4]
         for field in list_fields[4:]:
@@ -576,7 +576,7 @@ class CONM1(PointMassElement):
         return list_fields2
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -776,7 +776,7 @@ class CONM2(PointMassElement):
                   list(self.X) + [None] + list(self.I))
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         I = []
         for i in self.I:
             if i == 0.:
@@ -796,7 +796,7 @@ class CONM2(PointMassElement):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)

@@ -619,7 +619,7 @@ class PCOMP(CompositeShellProperty):
             list_fields += [mid, t, theta, sout]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         nsm = set_blank_if_default(self.nsm, 0.0)
         sb = set_blank_if_default(self.sb, 0.0)
         TRef = set_blank_if_default(self.TRef, 0.0)
@@ -636,7 +636,7 @@ class PCOMP(CompositeShellProperty):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -758,7 +758,7 @@ class PCOMPG(CompositeShellProperty):
             list_fields += [gPlyID, mid, t, theta, sout, None, None, None]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         nsm = set_blank_if_default(self.nsm, 0.0)
         sb = set_blank_if_default(self.sb, 0.0)
         TRef = set_blank_if_default(self.TRef, 0.0)
@@ -776,7 +776,7 @@ class PCOMPG(CompositeShellProperty):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -827,12 +827,12 @@ class PLPLANE(ShellProperty):
         list_fields = ['PLPLANE', self.pid, self.Mid(), self.Cid(), self.str]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         list_fields = ['PLPLANE', self.pid, self.Mid(), self.Cid(), self.str]
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -1164,7 +1164,7 @@ class PSHELL(ShellProperty):
                   self.z2, self.Mid4()]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         twelveIt3 = set_blank_if_default(self.twelveIt3, 1.0)
         tst = set_blank_if_default(self.tst, 0.833333)
         nsm = set_blank_if_default(self.nsm, 0.0)
@@ -1178,7 +1178,7 @@ class PSHELL(ShellProperty):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         if size == 16:
             return self.comment() + print_card_16(card)
         return self.comment() + card_writer(card)
