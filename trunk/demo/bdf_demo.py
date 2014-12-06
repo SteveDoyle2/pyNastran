@@ -91,11 +91,11 @@ print("wrt4 =", n1.PositionWRT(bdf2, 4))
 
 n1 = bdf2.nodes[1]
 n1.xyz[1] = -7.5
-print("repr  =", n1.reprFields())
-print("raw   =", n1.rawFields())
+print("repr  =", n1.repr_fields())
+print("raw   =", n1.raw_fields())
 
 #n1.xyz[1] = 100000000000.
-print("repr2 =", n1.reprFields())
+print("repr2 =", n1.repr_fields())
 print(n1)
 
 # <codecell>
