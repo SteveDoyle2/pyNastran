@@ -23,8 +23,9 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer,
     integer_or_double, integer_double_or_blank, integer_or_blank,
     double_or_blank, integer_double_or_string, components, components_or_blank,
     blank, fields, string, interpret_value)
-# integer_or_double, double,
 from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.cards.utils import build_table_lines
+
 
 class RigidElement(Element):
     def cross_reference(self, model):
@@ -97,14 +98,14 @@ class RBAR(RigidElement):
                   self.cnb, self.cma, self.cmb, self.alpha]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         alpha = set_blank_if_default(self.alpha, 0.0)
         list_fields = ['RBAR', self.eid, self.ga, self.gb, self.cna, self.cnb,
                   self.cma, self.cmb, alpha]
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -139,13 +140,13 @@ class RBAR1(RigidElement):
         list_fields = ['RBAR1', self.eid, self.ga, self.gb, self.cb, self.alpha]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         alpha = set_blank_if_default(self.alpha, 0.0)
         list_fields = ['RBAR1', self.eid, self.ga, self.gb, self.cb, alpha]
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -252,11 +253,11 @@ class RBE1(RigidElement):  # maybe not done, needs testing
             list_fields += [self.alpha]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -380,13 +381,13 @@ class RBE2(RigidElement):
         list_fields = ['RBE2', self.eid, self.gn, self.cm] + self.Gmi + [self.alpha]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         alpha = set_blank_if_default(self.alpha, 0.)
         list_fields = ['RBE2', self.eid, self.gn, self.cm] + self.Gmi + [alpha]
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -529,7 +530,7 @@ class RBE3(RigidElement):
             fields2 = ['UM']
             for (gmi, cmi) in zip(self.Gmi, self.Cmi):
                 fields2 += [gmi, cmi]
-            list_fields += self.buildTableLines(fields2, i=1, j=1)  ## ..todo:: what's going on here with the arguments???
+            list_fields += build_table_lines(fields2, i=1, j=1)  ## ..todo:: what's going on here with the arguments???
 
         if self.Gmi:
             list_fields += ['UM']
@@ -547,9 +548,9 @@ class RBE3(RigidElement):
             list_fields += ['ALPHA', self.alpha]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)

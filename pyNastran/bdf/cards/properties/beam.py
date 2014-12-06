@@ -381,7 +381,7 @@ class PBEAM(IntegratedLineProperty):
         list_fields += footer
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         list_fields = ['PBEAM', self.pid, self.Mid()]
         #print("c1=%r c2=%r" % (self.c1, self.c2))
         #print("d1=%r d2=%r" % (self.d1, self.d2))
@@ -455,7 +455,7 @@ class PBEAM(IntegratedLineProperty):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         #return self.comment() + card_writer(card)  #is this allowed???
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -683,7 +683,7 @@ class PBEAML(IntegratedLineProperty):
         #raise NotImplementedError('verify PBEAML...')
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         #group = set_blank_if_default(self.group, 'MSCBMLO')
         list_fields = self.raw_fields()
         #list_fields[3] = group
@@ -691,7 +691,7 @@ class PBEAML(IntegratedLineProperty):
 
     def write_bdf(self, size, card_writer):
         """..todo:: having bug with PBEAML"""
-        card = self.reprFields()
+        card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)  #is this allowed???
@@ -766,7 +766,7 @@ class PBCOMP(LineProperty):
             list_fields += [yi, zi, ci, mid, None, None, None, None]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         area = set_blank_if_default(self.A, 0.0)
         j = set_blank_if_default(self.j, 0.0)
         i1 = set_blank_if_default(self.i1, 0.0)
@@ -794,7 +794,7 @@ class PBCOMP(LineProperty):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         #return self.comment() + card_writer(card)  #is this allowed???
         if size == 8:
             return self.comment() + print_card_8(card)

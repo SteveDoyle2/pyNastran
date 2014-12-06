@@ -109,7 +109,7 @@ class PROD(Property):
                   self.nsm]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         j = set_blank_if_default(self.j, 0.0)
         c = set_blank_if_default(self.c, 0.0)
         nsm = set_blank_if_default(self.nsm, 0.0)
@@ -117,7 +117,7 @@ class PROD(Property):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         #return self.comment() + card_writer(card)  #is this allowed???
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -254,7 +254,7 @@ class PTUBE(Property):
                        self.nsm, self.OD2]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         t = set_blank_if_default(self.t, self.OD1 / 2.)
         nsm = set_blank_if_default(self.nsm, 0.0)
         OD2 = set_blank_if_default(self.OD2, self.OD1)
@@ -262,7 +262,7 @@ class PTUBE(Property):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         #return self.comment() + card_writer(card)  #is this allowed???
         if size == 8:
             return self.comment() + print_card_8(card)

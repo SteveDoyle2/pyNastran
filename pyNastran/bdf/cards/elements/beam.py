@@ -572,7 +572,7 @@ class CBEAM(CBAR):
                   self.pa, self.pb] + list(self.wa) + list(self.wb) + [self.sa, self.sb]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         w1a = set_blank_if_default(self.wa[0], 0.0)
         w2a = set_blank_if_default(self.wa[1], 0.0)
         w3a = set_blank_if_default(self.wa[2], 0.0)
@@ -591,7 +591,7 @@ class CBEAM(CBAR):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)

@@ -181,7 +181,7 @@ class CBUSH(BushElement):
                   [self.Cid(), self.s, self.ocid] + self.si)
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         if self.g0 is not None:
             x = [self.g0, None, None]
         else:
@@ -194,7 +194,7 @@ class CBUSH(BushElement):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
 

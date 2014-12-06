@@ -679,7 +679,7 @@ class CBAR(LineElement):
                   x3, offt, self.pa, self.pb] + list(self.wa) + list(self.wb)
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         pa = set_blank_if_default(self.pa, 0)
         pb = set_blank_if_default(self.pb, 0)
 
@@ -697,7 +697,7 @@ class CBAR(LineElement):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
@@ -767,7 +767,7 @@ class CBEAM3(CBAR):
                   list(self.wa) + list(self.wb) + list(self.wc) + list(self.tw) + list(self.s)
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         w1a = set_blank_if_default(self.wa[0], 0.0)
         w2a = set_blank_if_default(self.wa[1], 0.0)
         w3a = set_blank_if_default(self.wa[2], 0.0)
@@ -790,7 +790,7 @@ class CBEAM3(CBAR):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -863,11 +863,11 @@ class CBEND(LineElement):
                   x1, x2, x3, self.geom]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         else:

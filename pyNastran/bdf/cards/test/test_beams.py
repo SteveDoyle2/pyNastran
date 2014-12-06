@@ -273,7 +273,7 @@ class TestBeams(unittest.TestCase):
         card2 = BDFCard(card)
         #with self.assertRaises(AssertionError):  # A=0, I12=0, K1=0
         pbeam = PBEAM(card2)
-        fields2 = pbeam.reprFields()
+        fields2 = pbeam.repr_fields()
         assert fields == fields
 
 

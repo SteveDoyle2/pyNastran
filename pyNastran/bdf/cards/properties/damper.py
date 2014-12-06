@@ -62,11 +62,11 @@ class PDAMP(DamperProperty):
         list_fields = ['PDAMP', self.pid, self.b]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -113,7 +113,7 @@ class PDAMP5(DamperProperty):
             return self.mid
         return self.mid.mid
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def raw_fields(self):
@@ -121,7 +121,7 @@ class PDAMP5(DamperProperty):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -160,7 +160,7 @@ class PDAMPT(DamperProperty):
             return self.tbid
         return self.tbid.tid
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def raw_fields(self):
@@ -168,7 +168,7 @@ class PDAMPT(DamperProperty):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -202,11 +202,11 @@ class PVISC(DamperProperty):
         list_fields = ['PVISC', self.pid, self.ce, self.cr]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         cr = set_blank_if_default(self.cr, 0.)
         list_fields = ['PVISC', self.pid, self.ce, cr]
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)

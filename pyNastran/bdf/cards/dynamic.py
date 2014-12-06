@@ -206,11 +206,11 @@ class FREQ4(FREQ):
                        self.nfm]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
@@ -251,12 +251,12 @@ class NLPCI(BaseCard):
                        self.maxalr, self.scale, None, self.desiter, self.mxinc]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         #minalr = set_blank_if_default(self.minalr, 0.25)
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
@@ -304,11 +304,11 @@ class TSTEP(BaseCard):
             list_fields += [N, dt, no, None, None, None, None, None]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
@@ -419,7 +419,7 @@ class TSTEPNL(BaseCard):
                   self.rb, self.maxR, self.uTol, self.rTolB, self.minIter]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         #no = set_blank_if_default(self.no,1)
         no = self.no
         method = set_blank_if_default(self.method, 'ADAPT')
@@ -458,7 +458,7 @@ class TSTEPNL(BaseCard):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
@@ -550,7 +550,7 @@ class NLPARM(BaseCard):
                   self.maxR, None, self.rTolB]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         ninc = set_blank_if_default(self.ninc, 10)
         dt = set_blank_if_default(self.dt, 0.0)
         kMethod = set_blank_if_default(self.kMethod, 'AUTO')
@@ -577,7 +577,7 @@ class NLPARM(BaseCard):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card) # having trouble with double precision...
         return self.comment() + print_card_16(card)

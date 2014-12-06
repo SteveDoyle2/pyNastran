@@ -459,7 +459,7 @@ class GRDSET(Node):
                   self.Cd(), self.ps, self.SEid()]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         """
         Gets the fields in their simplified form
 
@@ -492,7 +492,7 @@ class GRDSET(Node):
         :type card_writer:
           function
         """
-        card = self.reprFields()
+        card = self.repr_fields()
         f.write(print_card_8(card))
 
 
@@ -589,7 +589,7 @@ class GRIDB(Node):
                   self.Cd(), self.ps, self.idf]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         """
         Gets the fields in their simplified form
 
@@ -623,7 +623,7 @@ class GRIDB(Node):
         :type card_writer:
           function
         """
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -930,7 +930,7 @@ class GRID(Node):
                       [self.Cd(), self.ps, self.SEid()]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         """
         Gets the fields in their simplified form
 
@@ -1012,7 +1012,7 @@ class GRID(Node):
         :type card_writer:
           function
         """
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -1225,7 +1225,7 @@ class POINT(Node):
         list_fields = ['POINT', self.nid, self.Cp()] + list(self.xyz)
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         """
         Gets the fields in their simplified form
 
@@ -1255,5 +1255,5 @@ class POINT(Node):
         :type card_writer:
           function
         """
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)

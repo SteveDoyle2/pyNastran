@@ -80,13 +80,13 @@ class QBDY1(ThermalLoad):
         list_fields = ['QBDY1', self.sid, self.qFlux] + self.Eids()
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         eids = collapse_thru_by(self.Eids())
         list_fields = ['QBDY1', self.sid, self.qFlux] + eids
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -142,11 +142,11 @@ class QBDY2(ThermalLoad):  # not tested
         list_fields = ['QBDY2', self.sid, self.Eid()] + self.qFlux
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -201,7 +201,7 @@ class QBDY3(ThermalLoad):
                   collapse_thru_by(eids))
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         cntrlnd = set_blank_if_default(self.cntrlnd, 0)
         eids = self.Eids()
         eids.sort()
@@ -215,7 +215,7 @@ class QBDY3(ThermalLoad):
         return []
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -268,11 +268,11 @@ class QHBDY(ThermalLoad):
         list_fields = ['QHBDY', self.sid, self.flag, self.Q0, self.af] + self.grids
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -328,7 +328,7 @@ class TEMP(ThermalLoad):
                 list_fields += [None, 'TEMP', self.lid]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         """Writes the TEMP card"""
         return self.raw_fields()
 
@@ -339,7 +339,7 @@ class TEMP(ThermalLoad):
         return []
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 # Loads
@@ -380,7 +380,7 @@ class TEMPD(ThermalLoadDefault):
     def cross_reference(self, model):
         pass
 
-    def reprFields(self):
+    def repr_fields(self):
         """Writes the TEMPD card"""
         list_fields = ['TEMPD']
 
@@ -392,5 +392,5 @@ class TEMPD(ThermalLoadDefault):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)

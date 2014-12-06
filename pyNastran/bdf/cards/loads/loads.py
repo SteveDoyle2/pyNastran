@@ -208,7 +208,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         list_fields = ['LSEQ', self.sid, self.exciteID, self.Lid(), self.Tid()]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
@@ -230,7 +230,7 @@ class DLOAD(LoadCombination):
             list_fields += [scaleFactor, self.LoadID(loadID)]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
@@ -335,7 +335,7 @@ class SLOAD(Load):
             list_fields += [self.Nid(nid), mag]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
@@ -424,7 +424,7 @@ class TLOAD1(TabularLoad):
                   self.Tid(), self.us0, self.vs0]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         us0 = set_blank_if_default(self.us0, 0.0)
         vs0 = set_blank_if_default(self.vs0, 0.0)
         list_fields = ['TLOAD1', self.sid, self.exciteID, self.delay, self.Type,
@@ -432,7 +432,7 @@ class TLOAD1(TabularLoad):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -520,7 +520,7 @@ class TLOAD2(TabularLoad):
                   self.us0, self.vs0]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         frequency = set_blank_if_default(self.frequency, 0.0)
         phase = set_blank_if_default(self.phase, 0.0)
         c = set_blank_if_default(self.c, 0.0)
@@ -533,7 +533,7 @@ class TLOAD2(TabularLoad):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -586,7 +586,7 @@ class RFORCE(Load):
                   self.mb, self.idrf]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         #method = set_blank_if_default(self.method,1)
         racc = set_blank_if_default(self.racc, 0.)
         mb = set_blank_if_default(self.mb, 0)
@@ -597,7 +597,7 @@ class RFORCE(Load):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
@@ -680,14 +680,14 @@ class RLOAD1(TabularLoad):
                   self.Tc(), self.Td(), self.Type]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         Type = set_blank_if_default(self.Type, 'LOAD')
         list_fields = ['RLOAD1', self.sid, self.exciteID, self.delay, self.dphase,
                   self.Tc(), self.Td(), Type]
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -769,14 +769,14 @@ class RLOAD2(TabularLoad):
                   self.Tb(), self.Tp(), self.Type]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         Type = set_blank_if_default(self.Type, 0.0)
         list_fields = ['RLOAD2', self.sid, self.exciteID, self.delay, self.dphase,
                   self.Tb(), self.Tp(), Type]
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
 
 
@@ -841,9 +841,9 @@ class RANDPS(RandomLoad):
                   self.Tid()]
         return list_fields
 
-    def reprFields(self):
+    def repr_fields(self):
         return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
-        card = self.reprFields()
+        card = self.repr_fields()
         return self.comment() + card_writer(card)
