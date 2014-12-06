@@ -26,85 +26,85 @@ from pyNastran.utils.log import get_logger2
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
     integer_or_string, string)
 
-from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
-from .cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
+from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
+from pyNastran.bdf.cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
                                           PRAC2D, PRAC3D, PCONEAX)
 
-from .cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4,
+from pyNastran.bdf.cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4,
                                      SpringElement)
-from .cards.properties.springs import PELAS, PELAST
+from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
-from .cards.elements.solid import (CTETRA4, CTETRA10, CPENTA6, CPENTA15,
+from pyNastran.bdf.cards.elements.solid import (CTETRA4, CTETRA10, CPENTA6, CPENTA15,
                                    CHEXA8, CHEXA20, SolidElement)
-from .cards.elements.rigid import (RBAR, RBAR1, RBE1, RBE2, RBE3, RigidElement)
+from pyNastran.bdf.cards.elements.rigid import (RBAR, RBAR1, RBE1, RBE2, RBE3, RigidElement)
 
-from .cards.elements.shell import (CQUAD, CQUAD4, CQUAD8, CQUADR, CQUADX,
+from pyNastran.bdf.cards.elements.shell import (CQUAD, CQUAD4, CQUAD8, CQUADR, CQUADX,
                                    CSHEAR, CTRIA3, CTRIA6, CTRIAX,
                                    CTRIAX6, CTRIAR, ShellElement)
-from .cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE
-from .cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
-from .cards.properties.bush import PBUSH, PBUSH1D
-from .cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
+from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE
+from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
+from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D
+from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
                                     CDAMP5, DamperElement)
-from .cards.properties.damper import (PVISC, PDAMP, PDAMP5, PDAMPT)
-from .cards.elements.rods import CROD, CONROD, CTUBE, RodElement
-from .cards.elements.bars import CBAR, CBEND, LineElement, CBEAM3
-from .cards.elements.beam import CBEAM
-from .cards.properties.rods import PROD, PTUBE
-from .cards.properties.bars import (PBAR, PBARL, )  # PBEND
-from .cards.properties.beam import  PBEAM, PBEAML, PBCOMP
-from .cards.elements.mass import (CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4,
+from pyNastran.bdf.cards.properties.damper import (PVISC, PDAMP, PDAMP5, PDAMPT)
+from pyNastran.bdf.cards.elements.rods import CROD, CONROD, CTUBE, RodElement
+from pyNastran.bdf.cards.elements.bars import CBAR, CBEND, LineElement, CBEAM3
+from pyNastran.bdf.cards.elements.beam import CBEAM
+from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
+from pyNastran.bdf.cards.properties.bars import (PBAR, PBARL, )  # PBEND
+from pyNastran.bdf.cards.properties.beam import  PBEAM, PBEAML, PBCOMP
+from pyNastran.bdf.cards.elements.mass import (CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4,
                                   PointElement, PointMassElement)  # CMASS5
-from .cards.properties.mass import (PMASS, NSM)
-from .cards.aero import (AEFACT, AELINK, AELIST, AEPARM, AESTAT, AESURF,
+from pyNastran.bdf.cards.properties.mass import (PMASS, NSM)
+from pyNastran.bdf.cards.aero import (AEFACT, AELINK, AELIST, AEPARM, AESTAT, AESURF,
                          AESURFS, AERO, AEROS, CSSCHD,
                          CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
                          PAERO1, PAERO2, PAERO3,
                          FLFACT, FLUTTER, GUST, MKAERO1,
                          MKAERO2, SPLINE1, SPLINE2, SPLINE4,
                          SPLINE5, TRIM)
-from .cards.constraints import (SPC, SPCADD, SPCD, SPCAX, SPC1,
+from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCD, SPCAX, SPC1,
                                 MPC, MPCADD, SUPORT1, SUPORT,
                                 ConstraintObject)
-from .cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
+from pyNastran.bdf.cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
                                       CORD2R, CORD2C, CORD2S, CORD3G)
-from .cards.dmig import (DEQATN, DMIG, DMI, DMIJ, DMIK, DMIJI, NastranMatrix)
-from .cards.dynamic import (FREQ, FREQ1, FREQ2, FREQ4, TSTEP, TSTEPNL, NLPARM,
+from pyNastran.bdf.cards.dmig import (DEQATN, DMIG, DMI, DMIJ, DMIK, DMIJI, NastranMatrix)
+from pyNastran.bdf.cards.dynamic import (FREQ, FREQ1, FREQ2, FREQ4, TSTEP, TSTEPNL, NLPARM,
                             NLPCI)
-from .cards.loads.loads import (LSEQ, SLOAD, DLOAD, DAREA, TLOAD1, TLOAD2,
+from pyNastran.bdf.cards.loads.loads import (LSEQ, SLOAD, DLOAD, DAREA, TLOAD1, TLOAD2,
                                 RLOAD1, RLOAD2, RANDPS, RFORCE)
-from .cards.loads.staticLoads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
+from pyNastran.bdf.cards.loads.staticLoads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
                                       FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
                                       PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1)
 
-from .cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
+from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                               MAT8, MAT9, MAT10, MAT11,
                               MATHP, CREEP, EQUIV)
-from .cards.material_deps import (MATT1, MATT2, MATT4, MATT5, MATS1)  # TODO: add MATT3, MATT8, MATT9
+from pyNastran.bdf.cards.material_deps import (MATT1, MATT2, MATT4, MATT5, MATS1)  # TODO: add MATT3, MATT8, MATT9
 
-from .cards.methods import (EIGB, EIGC, EIGR, EIGP, EIGRL)
-from .cards.nodes import GRID, GRDSET, SPOINTs
-from .cards.optimization import (DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
+from pyNastran.bdf.cards.methods import (EIGB, EIGC, EIGR, EIGP, EIGRL)
+from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs
+from pyNastran.bdf.cards.optimization import (DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
                                  DRESP1, DRESP2, DVMREL1, DVPREL1, DVPREL2)
-from .cards.params import PARAM
-from .cards.sets import (ASET, BSET, CSET, QSET,
+from pyNastran.bdf.cards.params import PARAM
+from pyNastran.bdf.cards.sets import (ASET, BSET, CSET, QSET,
                          ASET1, BSET1, CSET1, QSET1,
                          SET1, SET3, SESET, SEQSEP, RADSET)
-from .cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD)
-from .cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
+from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD)
+from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                     PHBDY, CONV, RADM, RADBC,)
-from .cards.tables import (TABLED1, TABLED2, TABLED3, TABLED4,
+from pyNastran.bdf.cards.tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                            TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                            TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG, TIC)
-from .cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA
-from .caseControlDeck import CaseControlDeck
-from .bdf_Methods import BDFMethods
-from .bdfInterface.getCard import GetMethods
-from .bdfInterface.addCard import AddMethods
-from .bdfInterface.BDF_Card import BDFCard
-from .bdfInterface.assign_type import interpret_value
-from .bdfInterface.bdf_writeMesh import WriteMesh
-from .bdfInterface.crossReference import XrefMesh
+from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA
+from pyNastran.bdf.caseControlDeck import CaseControlDeck
+from pyNastran.bdf.bdf_Methods import BDFMethods
+from pyNastran.bdf.bdfInterface.getCard import GetMethods
+from pyNastran.bdf.bdfInterface.addCard import AddMethods
+from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
+from pyNastran.bdf.bdfInterface.assign_type import interpret_value
+from pyNastran.bdf.bdfInterface.bdf_writeMesh import WriteMesh
+from pyNastran.bdf.bdfInterface.crossReference import XrefMesh
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 
