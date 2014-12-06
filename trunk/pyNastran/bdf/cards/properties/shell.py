@@ -27,6 +27,12 @@ class ShellProperty(Property):
         Property.__init__(self, card, data)
 
 class DeprecatedCompositeShellProperty(object):
+    """
+    To be deprecated in:
+      - Version 0.7
+    To be removed in:
+      - Version 0.8
+    """
     def MassPerArea(self, iply='all', method='nplies'):
         return self.get_mass_per_area(iply, method)
 
@@ -50,6 +56,7 @@ class DeprecatedCompositeShellProperty(object):
 
     def sout(self, iply):
         return self.get_sout(iply)
+
 
 class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
     def __init__(self, card, data):
