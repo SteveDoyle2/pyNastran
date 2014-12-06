@@ -11,7 +11,7 @@ class TestConstraints(unittest.TestCase):
         size = 8
         card = SUPORT(card)
         card.write_bdf(size, 'dummy')
-        card.rawFields()
+        card.raw_fields()
 
     def test_suport_02(self):
         card = ['SUPORT']
@@ -68,7 +68,7 @@ class TestConstraints(unittest.TestCase):
         size = 8
         card = SUPORT1(card)
         card.write_bdf(size, 'dummy')
-        card.rawFields()
+        card.raw_fields()
 
     def test_suport1_02(self):
         card = ['SUPORT1', '1']

@@ -54,13 +54,13 @@ class CFAST(Element):
         self.ga = model.Node(self.ga, msg=msg)
         self.gb = model.Node(self.gb, msg=msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['CFAST', self.eid, self.Pid(), self.Type, self.ida, self.idb,
                   self.gs, self.ga, self.gb, self.xs, self.ys, self.zs]
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -162,7 +162,7 @@ class CGAP(Element):
             return self.gb
         return self.gb.nid
 
-    def rawFields(self):
+    def raw_fields(self):
         if self.g0 is not None:
             x = [self.g0, None, None]
         else:
@@ -237,7 +237,7 @@ class CRAC2D(CrackElement):
     def nodeIDs(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['CRAC2D', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
 
@@ -286,7 +286,7 @@ class CRAC3D(CrackElement):
     def nodeIDs(self):
         return self._nodeIDs(allowEmptyNodes=True)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['CRAC3D', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
 

@@ -564,7 +564,7 @@ class CBEAM(CBAR):
         K[11,7] = -6 * E * Iz / L2
         return K
 
-    def rawFields(self):
+    def raw_fields(self):
         (x1, x2, x3) = self.getX_G0_defaults()
         offt = self.getOfft_Bit_defaults()
         ga, gb = self.nodeIDs()

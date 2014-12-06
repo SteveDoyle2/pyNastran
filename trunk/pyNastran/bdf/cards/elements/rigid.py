@@ -92,7 +92,7 @@ class RBAR(RigidElement):
         #msg += "        \n"
         #return msg
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['RBAR', self.eid, self.ga, self.gb, self.cna,
                   self.cnb, self.cma, self.cmb, self.alpha]
         return list_fields
@@ -135,7 +135,7 @@ class RBAR1(RigidElement):
             self.cb = data[3]
             self.alpha = data[4]
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['RBAR1', self.eid, self.ga, self.gb, self.cb, self.alpha]
         return list_fields
 
@@ -219,7 +219,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         #print(self)
         #sys.exit()
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = [self.type, self.eid]
 
         for (i, gn, cn) in zip(count(), self.Gni, self.Cni):
@@ -253,7 +253,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -376,7 +376,7 @@ class RBE2(RigidElement):
         #msg += "        \n"
         return msg
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['RBE2', self.eid, self.gn, self.cm] + self.Gmi + [self.alpha]
         return list_fields
 
@@ -515,7 +515,7 @@ class RBE3(RigidElement):
     #             card += [gm, cm, Ai]
     #     return card
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['RBE3', self.eid, None, self.refgrid, self.refc]
         for (wt, ci, Gij) in self.WtCG_groups:
             #print 'wt=%s ci=%s Gij=%s' %(wt,ci,Gij)
@@ -548,7 +548,7 @@ class RBE3(RigidElement):
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()

@@ -74,7 +74,7 @@ class AEFACT(BaseCard):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -136,7 +136,7 @@ class AELINK(BaseCard):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -153,7 +153,7 @@ class AELINK(BaseCard):
         return fields
 
     def write_bdf(self, size, card_writer):
-        card = self.rawFields()
+        card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -204,7 +204,7 @@ class AELIST(BaseCard):
         self.elements = list(set(self.elements))
         self.elements.sort()
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -254,7 +254,7 @@ class AEPARM(BaseCard):
             self.units = data[2]
             assert len(data) == 3, 'data = %s' % data
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -269,7 +269,7 @@ class AEPARM(BaseCard):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.rawFields()
+        card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -301,7 +301,7 @@ class AESTAT(BaseCard):
             self.label = data[1]
             assert len(data) == 2, 'data = %s' % data
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -316,7 +316,7 @@ class AESTAT(BaseCard):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.rawFields()
+        card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -392,7 +392,7 @@ class AESURF(BaseCard):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -474,7 +474,7 @@ class AESURFS(BaseCard):  # not integrated
             self.list2 = data[3]
             assert len(data) == 4, 'data = %s' % data
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -490,7 +490,7 @@ class AESURFS(BaseCard):  # not integrated
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.rawFields()
+        card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -569,7 +569,7 @@ class AERO(Aero):
         # T is the tabular function
         #angle = self.wg*self.t*(t-(x-self.x0)/self.V)
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -648,7 +648,7 @@ class AEROS(Aero):
             self.symXY = data[6]
             assert len(data) == 7, 'data = %s' % data
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -753,7 +753,7 @@ class CSSCHD(BaseCard):
             return self.lSchd
         return self.lSchd.sid
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -1005,7 +1005,7 @@ class CAERO1(BaseCard):
         self.x12 = self.p2[0] - self.p1[0]
         self.x43 = self.p4[0] - self.p3[0]
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -1215,7 +1215,7 @@ class CAERO2(BaseCard):
         x12 = self.p2 - self.p1
         self.x12 = x12[0]
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -1307,7 +1307,7 @@ class CAERO3(BaseCard):
             return self.pid
         return self.pid.pid
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -1404,7 +1404,7 @@ class CAERO4(BaseCard):
             return self.pid
         return self.pid.pid
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -1769,7 +1769,7 @@ class FLFACT(BaseCard):
             self.sid = data[0]
             self.factors = data[1:]
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -1937,7 +1937,7 @@ class FLUTTER(BaseCard):
         else:
             return(self.imethod, self.nValue)
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -2004,7 +2004,7 @@ class GUST(BaseCard):
         #angle = self.wg*self.t*(t-(x-self.x0)/self.V) # T is the tabular
         #return angle
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -2065,7 +2065,7 @@ class MKAERO1(BaseCard):
         for f in mkaero.rFreqs:
             self.rFreqs.append(f)
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -2131,7 +2131,7 @@ class MKAERO2(BaseCard):
         for f in mkaero.rFreqs:
             self.rFreqs.append(f)
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -2210,7 +2210,7 @@ class PAERO1(BaseCard):
     def Bodies(self):
         return self.Bi
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -2319,7 +2319,7 @@ class PAERO2(BaseCard):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -2415,7 +2415,7 @@ class PAERO3(BaseCard):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -2518,7 +2518,7 @@ class SPLINE1(Spline):
         self.caero = model.CAero(self.caero, msg=msg)
         self.setg = model.Set(self.setg, msg=msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -2626,7 +2626,7 @@ class SPLINE2(Spline):
             return self.setg
         return self.setg.sid
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -2735,7 +2735,7 @@ class SPLINE4(Spline):
         #self.setg = model.Set(self.setg, msg=msg)
         #self.aelist = model.AEList(self.aelist, msg=msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -2843,7 +2843,7 @@ class SPLINE5(Spline):
         self.setg = model.Set(self.setg, msg=msg)
         self.aelist = model.AEList(self.aelist, msg=msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -2975,7 +2975,7 @@ class TRIM(BaseCard):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 

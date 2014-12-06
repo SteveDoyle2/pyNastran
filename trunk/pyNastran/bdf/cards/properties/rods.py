@@ -104,7 +104,7 @@ class PROD(Property):
         msg += "                    VALE=(1.0,0.0,0.0,),),\n"
         return (msg, iCut, iFace, iStart)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['PROD', self.pid, self.Mid(), self.A, self.j, self.c,
                   self.nsm]
         return list_fields
@@ -249,7 +249,7 @@ class PTUBE(Property):
         #m[0, 0] = 1.
         #return m
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['PTUBE', self.pid, self.Mid(), self.OD1, self.t,
                        self.nsm, self.OD2]
         return list_fields

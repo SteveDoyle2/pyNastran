@@ -952,7 +952,7 @@ class PCOMPi(CompositeShellProperty):
                                        '\nPCOMP = %s' % (sout, data))
                 self.plies.append([mid, t, theta, sout])
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['PCOMP', self.pid, self.z0, self.nsm, self.sb, self.ft,
                   self.TRef, self.ge, self.lam, ]
         for (iply, ply) in enumerate(self.plies):

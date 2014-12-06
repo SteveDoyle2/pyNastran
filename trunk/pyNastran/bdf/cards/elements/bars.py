@@ -669,7 +669,7 @@ class CBAR(LineElement):
             print("Lambda* = \n" + str(Lambda))
         return Lambda
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         .. todo:: not perfectly accurate b/c ???
         """
@@ -760,7 +760,7 @@ class CBEAM3(CBAR):
         L = norm(self.gb.Position() - self.ga.Position())
         return L
 
-    def rawFields(self):
+    def raw_fields(self):
         (x1, x2, x3) = self.getX_G0_defaults()
         (ga, gb, gc) = self.nodeIDs()
         list_fields = ['CBEAM3', self.eid, self.Pid(), ga, gb, gc, x1, x2, x3] + \
@@ -857,14 +857,14 @@ class CBEND(LineElement):
             raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
         return self.pid.Area()
 
-    def rawFields(self):
+    def raw_fields(self):
         (x1, x2, x3) = self.getX_G0_defaults()
         list_fields = ['CBEND', self.eid, self.Pid(), self.Ga(), self.Gb(),
                   x1, x2, x3, self.geom]
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()

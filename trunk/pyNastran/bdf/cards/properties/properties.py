@@ -81,7 +81,7 @@ class PFAST(Property):
     def Mass(self):
         return self.mass
 
-    def rawFields(self):
+    def raw_fields(self):
         fields = ['PFAST', self.pid, self.d, self.Mcid(), self.mflag, self.kt1,
                   self.kt2, self.kt3, self.kr1, self.kr2, self.kr3, self.mass,
                   self.ge]
@@ -164,7 +164,7 @@ class PGAP(Property):
     def cross_reference(self, model):
         pass
 
-    def rawFields(self):
+    def raw_fields(self):
         fields = ['PGAP', self.pid, self.u0, self.f0, self.ka, self.kb,
                   self.kt, self.mu1, self.mu2, self.tmax, self.mar, self.trmin]
         return fields
@@ -239,7 +239,7 @@ class PLSOLID(SolidProperty):
         msg = ' which is required by PLSOLID pid=%s' % self.pid
         self.mid = model.HyperelasticMaterial(self.mid, msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         stress_strain = set_blank_if_default(self.str, 'GRID')
         fields = ['PLSOLID', self.pid, self.Mid(), stress_strain]
         return fields
@@ -321,7 +321,7 @@ class PSOLID(SolidProperty):
             self.mid, elementSet)
         return msg
 
-    def rawFields(self):
+    def raw_fields(self):
         fields = ['PSOLID', self.pid, self.Mid(), self.cordm, self.integ,
                   self.stress, self.isop, self.fctn]
         return fields
@@ -404,7 +404,7 @@ class PRAC2D(CrackProperty):
         msg = ' which is required by PRAC2D pid=%s' % self.pid
         self.mid = model.Material(self.mid, msg)  # MAT1, MAT2, MAT8
 
-    def rawFields(self):
+    def raw_fields(self):
         fields = ['PRAC2D', self.pid, self.Mid(), self.thick,
                   self.iPlane, self.nsm, self.gamma, self.phi]
         return fields
@@ -456,7 +456,7 @@ class PRAC3D(CrackProperty):
         msg = ' which is required by PRAC3D pid=%s' % self.pid
         self.mid = model.Material(self.mid, msg)  # MAT1, MAT9
 
-    def rawFields(self):
+    def raw_fields(self):
         fields = ['PRAC3D', self.pid, self.Mid(), self.gamma, self.phi]
         return fields
 
@@ -541,7 +541,7 @@ class PCONEAX(Property):
             return self.mid3.mid
         return self.mid3
 
-    def rawFields(self):
+    def raw_fields(self):
         fields = ['PCONEAX', self.pid, self.Mid1(), self.t1,
                   self.Mid2(), self.i, self.Mid3(), self.t2,
                   self.nsm, self.z1, self.z2] + self.phi

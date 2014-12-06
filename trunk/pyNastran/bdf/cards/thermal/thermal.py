@@ -141,7 +141,7 @@ class CHBDYE(ThermalElement):
     def Eid2(self):
         return self.eid2
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['CHBDYE', self.eid, self.eid2, self.side,
                   self.iViewFront, self.iViewBack, self.radMidFront,
                   self.radMidBack]
@@ -229,7 +229,7 @@ class CHBDYG(ThermalElement):
     def Eid(self):
         return self.eid
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['CHBDYG', self.eid, None, self.Type, self.iViewFront,
                   self.iViewBack, self.radMidFront, self.radMidBack, None,
                   ] + self.grids
@@ -331,7 +331,7 @@ class CHBDYP(ThermalElement):
     def Eid(self):
         return self.eid
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['CHBDYP', self.eid, self.Pid(), self.Type,
                   self.iViewFront, self.iViewBack, self.g1, self.g2, self.g0,
                   self.radMidFront, self.radMidBack, self.gmid, self.ce,
@@ -419,7 +419,7 @@ class PCONV(ThermalProperty):
     #def cross_reference(self,model):
     #    pass
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['PCONV', self.pconid, self.mid, self.form, self.expf,
                   self.ftype, self.tid, None, None, self.chlen, self.gidin,
                   self.ce, self.e1, self.e2, self.e3]
@@ -486,7 +486,7 @@ class PCONVM(ThermalProperty):
     #def cross_reference(self,model):
     #    pass
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['PCONVM', self.pconid, self.mid, self.form,
                   self.flag, self.coef, self.expr, self.exppi, self.exppo]
         return list_fields
@@ -539,7 +539,7 @@ class PHBDY(ThermalProperty):
     #def cross_reference(self,model):
     #    pass
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['PHBDY', self.pid, self.af, self.d1, self.d2]
         return list_fields
 
@@ -612,7 +612,7 @@ class CONV(ThermalBC):
             return self.ta
         return self.ta[i]
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['CONV', self.eid, self.pconID, self.flmnd,
                   self.cntrlnd] + self.ta
         return list_fields
@@ -673,7 +673,7 @@ class CONVM(ThermalBC):
             return self.filmNode
         return self.filmNode.nid
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['CONVM', self.eid, self.pconvmID, self.filmNode,
                   self.cntmdot, self.ta1, self.ta2, self.mdot]
         return list_fields
@@ -784,7 +784,7 @@ class RADBC(ThermalBC):
             return eid
         return eid.eid
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = (['RADBC', self.nodamb, self.famb, self.cntrlnd] +
                        self.Eids())
         return list_fields

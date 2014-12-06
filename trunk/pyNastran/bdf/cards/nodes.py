@@ -83,7 +83,7 @@ class RINGAX(Ring):
             self.ps = data[3]
             assert len(data) == 4, data
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -158,7 +158,7 @@ class SPOINT(Node):
         """
         pass
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -284,7 +284,7 @@ class SPOINTs(Node):
             spoints.append(SPOINT(nid))
         return spoints
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -309,7 +309,7 @@ class SPOINTs(Node):
         :param size:   unused
         :param double: unused
         """
-        card = self.rawFields()
+        card = self.raw_fields()
         if 'THRU' not in card:
             return self.comment() + print_int_card(card)
         else:
@@ -444,7 +444,7 @@ class GRDSET(Node):
         assert isinstance(ps, str), 'ps=%r' % ps
         assert isinstance(seid, int), 'seid=%r' % seid
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -574,7 +574,7 @@ class GRIDB(Node):
         else:
             return self.cd.cid
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -915,7 +915,7 @@ class GRID(Node):
         if self.cd != -1:
             self.cd = model.Coord(self.cd, msg=msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
@@ -1211,7 +1211,7 @@ class POINT(Node):
         """
         self.cp = model.Coord(self.cp)
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         Gets the fields in their unmodified form
 

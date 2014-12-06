@@ -12,7 +12,7 @@ class TestTables(unittest.TestCase):
         card = BDFCard(card)
         #print(card)
         card2 = TABDMP1(card)
-        fields = card2.rawFields()
+        fields = card2.raw_fields()
         msg = print_card(fields).rstrip()
         #print(msg)
         lines_expected = ['TABDMP1      100       G',

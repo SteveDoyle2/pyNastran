@@ -69,7 +69,7 @@ class TestMaterials(unittest.TestCase):
         #with self.assertRaises(RuntimeError):  # temporary RuntimeError
         card2 = MAT8(card)
 
-        fields = card2.rawFields()
+        fields = card2.raw_fields()
         msg = print_card(fields)
         #f = StringIO.StringIO()
         size = 16
@@ -100,7 +100,7 @@ class TestMaterials(unittest.TestCase):
         card = BDFCard(card)
         card2 = MAT11(card)
 
-        fields = card2.rawFields()
+        fields = card2.raw_fields()
         msg = print_card(fields)
         #f = StringIO.StringIO()
         size = 8

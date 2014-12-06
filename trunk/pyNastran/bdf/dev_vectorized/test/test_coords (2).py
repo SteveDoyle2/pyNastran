@@ -134,7 +134,7 @@ class TestCoords(unittest.TestCase):
         self.assertEquals(card.Cid(), 2)
         self.assertEquals(card.Rid(), 0)
         card.write_bdf(size, 'dummy')
-        card.rawFields()
+        card.raw_fields()
 
     def test_cord2c_01(self):
         lines = [
@@ -389,7 +389,7 @@ class TestCoords(unittest.TestCase):
         self.assertEquals(card.Cid(), 2)
         self.assertEquals(card.Rid(), 0)
         card.write_bdf(size, 'dummy')
-        card.rawFields()
+        card.raw_fields()
 
     def test_cord1s_01(self):
         lines = ['cord1s,2,1,4,3']
@@ -401,7 +401,7 @@ class TestCoords(unittest.TestCase):
         self.assertEquals(card.Cid(), 2)
         self.assertEquals(card.Rid(), 0)
         card.write_bdf(size, 'dummy')
-        card.rawFields()
+        card.raw_fields()
 
     def test_cord2r_1(self):
         grid = ['GRID       20143       7 -9.31-4  .11841 .028296']

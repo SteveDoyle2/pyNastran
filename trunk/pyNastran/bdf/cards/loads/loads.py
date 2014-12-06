@@ -204,15 +204,15 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             return self.tid
         return self.tid.tid
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['LSEQ', self.sid, self.exciteID, self.Lid(), self.Tid()]
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
-        card = self.rawFields()
+        card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -224,17 +224,17 @@ class DLOAD(LoadCombination):
         if comment:
             self._comment = comment
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['DLOAD', self.sid, self.scale]
         for (scaleFactor, loadID) in zip(self.scaleFactors, self.loadIDs):
             list_fields += [scaleFactor, self.LoadID(loadID)]
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
-        card = self.rawFields()
+        card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -266,12 +266,12 @@ class DAREA(BaseCard):
             self.scale = data[3]
             assert len(data) == 4, 'data = %s' % data
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['DAREA', self.sid, self.p, self.c, self.scale]
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.rawFields()
+        card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -329,17 +329,17 @@ class SLOAD(Load):
         """
         return []
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['SLOAD', self.sid]
         for (nid, mag) in zip(self.nids, self.mags):
             list_fields += [self.Nid(nid), mag]
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
-        card = self.rawFields()
+        card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
 
@@ -419,7 +419,7 @@ class TLOAD1(TabularLoad):
             return self.tid
         return self.tid.tid
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['TLOAD1', self.sid, self.exciteID, self.delay, self.Type,
                   self.Tid(), self.us0, self.vs0]
         return list_fields
@@ -514,7 +514,7 @@ class TLOAD2(TabularLoad):
         # delay
         # exciteID
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['TLOAD2', self.sid, self.exciteID, self.delay, self.Type,
                   self.T1, self.T2, self.frequency, self.phase, self.c, self.b,
                   self.us0, self.vs0]
@@ -580,7 +580,7 @@ class RFORCE(Load):
     def getLoads(self):
         return [self]
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['RFORCE', self.sid, self.Nid(), self.Cid(), self.scale,
                   self.r1, self.r2, self.r3, self.method, self.racc,
                   self.mb, self.idrf]
@@ -675,7 +675,7 @@ class RLOAD1(TabularLoad):
             return self.td
         return self.td.tid
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['RLOAD1', self.sid, self.exciteID, self.delay, self.dphase,
                   self.Tc(), self.Td(), self.Type]
         return list_fields
@@ -764,7 +764,7 @@ class RLOAD2(TabularLoad):
             return self.tp
         return self.tp.tid
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['RLOAD2', self.sid, self.exciteID, self.delay, self.dphase,
                   self.Tb(), self.Tp(), self.Type]
         return list_fields
@@ -836,13 +836,13 @@ class RANDPS(RandomLoad):
             return self.tid
         return self.tid.tid
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['RANDPS', self.sid, self.j, self.k, self.x, self.y,
                   self.Tid()]
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()

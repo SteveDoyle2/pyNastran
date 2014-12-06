@@ -63,7 +63,7 @@ class BSURF(BaseCard):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         fields = ['BSURF', self.sid]
         return fields + list(self.eids)
 
@@ -151,7 +151,7 @@ class BSURFS(BaseCard):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         fields = ['BSURFS', self.id, None, None, None]
         for eid, g1, g2, g3 in zip(self.eids, self.g1s, self.g2s, self.g3s):
             fields += [eid, g1, g2, g3]
@@ -215,7 +215,7 @@ class BCTSET(BaseCard):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         fields = ['BCTSET', self.csid]
         for sid, tid, fric, mind, maxd in zip(self.sids, self.tids, self.frictions,
                                               self.min_distances, self.max_distances):
@@ -261,7 +261,7 @@ class BCRPARA(BaseCard):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         fields = ['BCRPARA', self.crid, self.surf, self.offset, self.Type, self.mgp]
         return fields
 
@@ -341,7 +341,7 @@ class BCTPARA(BaseCard):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         fields = ['BCTPARA', self.csid]
         for key, value in sorted(iteritems(self.params)):
             fields.append(key)
@@ -393,7 +393,7 @@ class BCTADD(BaseCard):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         fields = ['BCTADD'] + self.S
         return fields
 

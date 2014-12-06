@@ -30,7 +30,7 @@ class Set(BaseCard):
 
 
     def reprFields(self):
-        list_fields = self.rawFields()
+        list_fields = self.raw_fields()
         return list_fields
 
     def __repr__(self):
@@ -80,7 +80,7 @@ class ABCQSet(Set):
             self.IDs.append(ID)
             self.components.append(component)
 
-    def rawFields(self):
+    def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
         list_fields = [self.type]  # ASET, BSET
         for (ID, comp) in zip(self.IDs, self.components):
@@ -88,7 +88,7 @@ class ABCQSet(Set):
         return list_fields
 
     def __repr__(self):
-        list_fields = self.rawFields()
+        list_fields = self.raw_fields()
         return self.comment() + print_card_8(list_fields)
 
 
@@ -195,13 +195,13 @@ class ABQSet1(Set):
         #:  Identifiers of grids points. (Integer > 0)
         self.IDs = expand_thru(IDs)
 
-    def rawFields(self):
+    def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
         list_fields = [self.type, self.components] + collapse_thru(self.IDs)
         return list_fields
 
     def __repr__(self):
-        list_fields = self.rawFields()
+        list_fields = self.raw_fields()
         return self.comment() + print_card_8(list_fields)
 
 
@@ -261,13 +261,13 @@ class CSET1(Set):
             IDs = fields(integer_or_string, 'ID', i=2, j=len(card))
             self.IDs = expand_thru(IDs)
 
-    def rawFields(self):
+    def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
         list_fields = ['CSET1', self.components] + collapse_thru(self.IDs)
         return list_fields
 
     def __repr__(self):
-        list_fields = self.rawFields()
+        list_fields = self.raw_fields()
         return self.comment() + print_card_8(list_fields)
 
 
@@ -336,9 +336,8 @@ class SET1(Set):
         return self.isSkin
 
     #def rawFields(self):
-        #"""gets the "raw" card without any processing as a list for printing"""
 
-    def rawFields(self):
+    def raw_fields(self):
         skin = []
         if self.isSkin:
             skin = ['SKIN']
@@ -423,7 +422,7 @@ class SET3(Set):
             return True
         return False
 
-    def rawFields(self):
+    def raw_fields(self):
         """Gets the "raw" card without any processing as a list for printing"""
         list_fields = ['SET3', self.sid, self.desc] + self.SetIDs()
         return list_fields
@@ -460,7 +459,7 @@ class SESET(SetSuper):
         self.IDs += seset.IDs
         self.cleanIDs()
 
-    def rawFields(self):
+    def raw_fields(self):
         return ['SESET', self.seid] + collapse_thru(self.IDs)
 
     def __repr__(self):
@@ -514,7 +513,7 @@ class SEBSET(Set):
             self.components.append(component)
             self.IDs.append(ID)
 
-    def rawFields(self):
+    def raw_fields(self):
         """
         gets the "raw" card without any processing as a list for printing
         """
@@ -547,13 +546,13 @@ class SEBSET1(Set):
         IDs = fields(integer_or_string, card, 2, 'ID')
         self.IDs = expand_thru(IDs)
 
-    def rawFields(self):
+    def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
         list_fields = ['SEBSET1', self.components] + collapse_thru(self.IDs)
         return list_fields
 
     def __repr__(self):
-        list_fields = self.rawFields()
+        list_fields = self.raw_fields()
         return self.comment() + print_card_8(list_fields)
 
 class SEQSET1(Set):
@@ -580,7 +579,7 @@ class SEQSET1(Set):
         IDs = fields(integer_or_string, card, i=2, j=len(card))
         self.IDs = expand_thru(IDs)
 
-    def rawFields(self):
+    def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
         list_fields = ['SEQSET1', self.components] + collapse_thru(self.IDs)
         return list_fields
@@ -609,7 +608,7 @@ class SEQSEP(SetSuper):  # not integrated...is this an SESET ???
         self.IDs = expand_thru(IDs)
         self.cleanIDs()
 
-    def rawFields(self):
+    def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
         list_fields = ['SEQSEP', self.ssid, self.psid] + self.SetIDs()
         return list_fields
@@ -645,7 +644,7 @@ class RADSET(Set):  # not integrated
         self.IDs += radset.IDs
         self.cleanIDs()
 
-    def rawFields(self):
+    def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
         list_fields = ['RADSET', self.seid] + self.SetIDs()
         return list_fields

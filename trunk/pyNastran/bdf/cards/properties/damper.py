@@ -58,12 +58,12 @@ class PDAMP(DamperProperty):
         assert isinstance(pid, int), 'pid=%r\n%s' % (pid, str(self))
         assert isinstance(b, float), 'b=%r\n%s' % (b, str(self))
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['PDAMP', self.pid, self.b]
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -114,9 +114,9 @@ class PDAMP5(DamperProperty):
         return self.mid.mid
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['PDAMP5', self.pid, self.Mid(), self.b]
         return list_fields
 
@@ -161,9 +161,9 @@ class PDAMPT(DamperProperty):
         return self.tbid.tid
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['PDAMPT', self.pid, self.Tbid()]
         return list_fields
 
@@ -198,7 +198,7 @@ class PVISC(DamperProperty):
         pid = self.Pid()
         assert isinstance(pid, int), 'pid=%r' % pid
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['PVISC', self.pid, self.ce, self.cr]
         return list_fields
 

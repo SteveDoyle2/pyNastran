@@ -128,12 +128,12 @@ class SolidElement(Element):
             print("fields1=%s fields2=%s" % (fields1, fields2))
         return self.isSameFields(fields1, fields2)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = [self.type, self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        card = self.rawFields()
+        card = self.raw_fields()
         msg1 = self.comment() + print_card_8(card)
         msg2 = self.write_bdf2()
         assert msg1 == msg2, 'write_bdf != write_bdf2\n%s---\n%s\n%r\n%r' % (msg1, msg2, msg1, msg2)
@@ -537,7 +537,7 @@ class CPENTA6(SolidElement):
         V = (A1 + A2) / 2. * norm(c1 - c2)
         return abs(V)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['CPENTA', self.eid, self.Pid()] + self._nodeIDs(allowEmptyNodes=False)
         return list_fields
 

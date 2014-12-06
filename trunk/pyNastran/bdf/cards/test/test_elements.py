@@ -17,7 +17,7 @@ class TestElements(unittest.TestCase):
         self.assertEquals(card.Eid(), 101)
         self.assertEquals(card.Pid(), 102)
         card.write_bdf(size, 'dummy')
-        card.rawFields()
+        card.raw_fields()
 
     def test_cdamp1_01(self):
         lines = ['CDAMP1, 2001, 20, 1001, 1']
@@ -29,7 +29,7 @@ class TestElements(unittest.TestCase):
         self.assertEquals(card.Eid(), 2001)
         self.assertEquals(card.Pid(), 20)
         card.write_bdf(size, 'dummy')
-        card.rawFields()
+        card.raw_fields()
 
     def test_cgap_01(self):
         lines = ['CGAP    899     90      21      99      0.      1.      0.      0']
@@ -41,7 +41,7 @@ class TestElements(unittest.TestCase):
         self.assertEquals(card.Eid(), 899)
         self.assertEquals(card.Pid(), 90)
         card.write_bdf(size, 'dummy')
-        card.rawFields()
+        card.raw_fields()
 
     def test_pgap_01(self):
         lines = ['PGAP    90                      1.E+5']
@@ -52,7 +52,7 @@ class TestElements(unittest.TestCase):
         card = PGAP(card)
         card.write_bdf(size, 'dummy')
         self.assertEquals(card.Pid(), 90)
-        card.rawFields()
+        card.raw_fields()
 
 
 if __name__ == '__main__':  # pragma: no cover

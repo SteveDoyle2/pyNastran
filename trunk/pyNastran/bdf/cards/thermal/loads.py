@@ -76,7 +76,7 @@ class QBDY1(ThermalLoad):
             eids.append(self.Eid(eid))
         return eids
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['QBDY1', self.sid, self.qFlux] + self.Eids()
         return list_fields
 
@@ -138,12 +138,12 @@ class QBDY2(ThermalLoad):  # not tested
     def nQFluxTerms(self):
         return len(self.qFlux)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['QBDY2', self.sid, self.Eid()] + self.qFlux
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -194,7 +194,7 @@ class QBDY3(ThermalLoad):
             return eid
         return eid.eid
 
-    def rawFields(self):
+    def raw_fields(self):
         eids = self.Eids()
         eids.sort()
         list_fields = (['QBDY3', self.sid, self.Q0, self.cntrlnd] +
@@ -264,12 +264,12 @@ class QHBDY(ThermalLoad):
     def cross_reference(self, model):
         pass
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['QHBDY', self.sid, self.flag, self.Q0, self.af] + self.grids
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -318,7 +318,7 @@ class TEMP(ThermalLoad):
     def cross_reference(self, model):
         pass
 
-    def rawFields(self):
+    def raw_fields(self):
         """Writes the TEMP card"""
         list_fields = ['TEMP', self.sid]
         nTemps = len(self.temperatures) - 1
@@ -330,7 +330,7 @@ class TEMP(ThermalLoad):
 
     def reprFields(self):
         """Writes the TEMP card"""
-        return self.rawFields()
+        return self.raw_fields()
 
     def getLoads(self):
         """

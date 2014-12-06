@@ -60,7 +60,7 @@ class SpringElement(Element):
         return 0.0
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def __repr__(self):
         return self.print_card(8)
@@ -148,7 +148,7 @@ class CELAS1(SpringElement):
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         nodes = self.nodeIDs()
         list_fields = ['CELAS1', self.eid, self.Pid(), nodes[0],
                   self.c1, nodes[1], self.c2]
@@ -325,7 +325,7 @@ class CELAS2(SpringElement):
         return self._nodeIDs(allowEmptyNodes=True,
                              msg=str(['CELAS2', self.eid]))
 
-    def rawFields(self):
+    def raw_fields(self):
         nodes = self.nodeIDs()
         list_fields = ['CELAS2', self.eid, self.k, nodes[0], self.c1,
                   nodes[1], self.c2, self.ge, self.s]
@@ -438,7 +438,7 @@ class CELAS3(SpringElement):
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['CELAS3', self.eid, self.Pid(), self.s1, self.s2]
         return list_fields
 
@@ -533,7 +533,7 @@ class CELAS4(SpringElement):
         msg = ' which is required by CELAS4 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['CELAS4', self.eid, self.k, self.s1, self.s2]
         return list_fields
 

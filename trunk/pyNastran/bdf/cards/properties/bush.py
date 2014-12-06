@@ -128,7 +128,7 @@ class PBUSH(BushingProperty):
         self.et = double_or_blank(card, iStart + 4, 'et', 1.)
         self.vars.append('RCV')
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['PBUSH', self.pid]
         for var in self.vars:
             if var == 'K':
@@ -151,7 +151,7 @@ class PBUSH(BushingProperty):
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
@@ -338,7 +338,7 @@ class PBUSH1D(BushingProperty):
                   self.generIDCDV]
         return list_fields
 
-    def rawFields(self):
+    def raw_fields(self):
         list_fields = ['PBUSH1D', self.pid, self.k, self.c, self.m, None,
                   self.sa, self.se, None]
         for var in self.vars:
@@ -360,7 +360,7 @@ class PBUSH1D(BushingProperty):
         return list_fields
 
     def reprFields(self):
-        return self.rawFields()
+        return self.raw_fields()
 
     def write_bdf(self, size, card_writer):
         card = self.reprFields()
