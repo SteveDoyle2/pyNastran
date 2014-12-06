@@ -109,7 +109,7 @@ def dense_square_test(dimension, is_binary=True):
         plt.ylabel('Time [seconds]')
         plt.title('Dense Square Matrix Load Performance')
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     #is_cyfiles = False
     is_cyfiles = True
 

@@ -55,7 +55,7 @@ def cart3d_to_stl_filename(cart3d_filename, stl_filename, log=None, debug=False)
                 i += 1
         f.close()
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     bdf_filename = 'g278.bdf'
     cart3d_filename = 'g278.tri'
     nastran_to_cart3d(bdf_filename, cart3d_filename)

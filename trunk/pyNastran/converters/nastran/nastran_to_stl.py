@@ -88,7 +88,7 @@ def nastran_to_stl_filename(bdf_filename, stl_filename, log=None):
     f.write('endsolid\n')
     f.close()
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     bdf_filename = 'g278.bdf'
     stl_filename = 'g278.stl'
     nastran_to_stl_filename(bdf_filename, stl_filename)

@@ -197,7 +197,7 @@ def main():
     #test.load_shabp_geometry('SWB.INP','')
     test.load_shabp_geometry('models/NAC6.INP', '')
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()
 
 

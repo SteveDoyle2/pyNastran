@@ -96,7 +96,8 @@ class LaWGS_IO(object):
 
     def _fill_lawgs_case(self, cases, ID, regions, loads):
         pass
-if __name__ == '__main__':
+
+if __name__ == '__main__':  # pragma: no cover
     print('')
 
     def removeOldGeometry(self):

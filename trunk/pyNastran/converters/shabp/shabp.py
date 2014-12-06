@@ -415,7 +415,7 @@ class SHABP(ShabpOut):
         #3142
         #print 'done with trailer'
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     import sys
     s = SHABP()
     s.read_shabp(sys.argv[1])

@@ -963,8 +963,6 @@ class EventsHandler(object):
         dlg.ShowModal()
         dlg.Destroy()
 
-#end Events class
-
 #------------------------------------------------------------------------------
 
 def main():
@@ -975,9 +973,7 @@ def main():
     print("launching gui")
     app.MainLoop()
 
-#end class
-
 #==============================================================================
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

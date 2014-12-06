@@ -110,7 +110,7 @@ def check(points, points2):
             assert allclose(abs_sum_delta, 0.0, atol=1e-6), 'n=%s p1=%s p2=%s diff=%s\nsum(abs(p1-p2))=%s' % (nid, str(p1), str(p2), str(p1-p2), abs_sum_delta)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     import time
     t0 = time.time()
     #test_1()

@@ -188,7 +188,7 @@ def _parseEntry(lines):
     #print("done with %s" % key)
     return (i, key, value, options, paramType)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     pass
     #print(_parseEntry(['SET =ALL']))
     #print(_parseEntry(['SET 77=5']))

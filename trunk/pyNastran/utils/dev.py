@@ -180,7 +180,7 @@ def write_array(a, nspaces=0):
     return msg
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     from numpy import array, zeros
     class C(object):
         def __init__(self):

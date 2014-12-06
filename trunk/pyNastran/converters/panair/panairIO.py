@@ -206,7 +206,7 @@ def main():
     #test.load_panair_geometry('SWB.INP','')
     test.load_panair_geometry('models/NAC6.INP', '')
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()
 
 

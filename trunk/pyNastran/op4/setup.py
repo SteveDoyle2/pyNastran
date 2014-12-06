@@ -27,7 +27,7 @@ def configuration(parent_package='', top_path=None):
     return config
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     # Retrieve the parameters of our local configuration
     params = configuration(top_path='').todict()
 

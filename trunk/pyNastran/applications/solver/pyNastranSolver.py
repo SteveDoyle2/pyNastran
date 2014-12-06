@@ -1729,7 +1729,7 @@ def get_cards():
                       ])
     return cards_to_read
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     if 1:
         inputs = sys.argv[1:]
         fnorm = 1.0

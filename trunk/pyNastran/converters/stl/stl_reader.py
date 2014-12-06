@@ -501,5 +501,5 @@ def main():
     # write the model
     model._write_stl_ascii(stl_geom_out, 'sphere', nodes, elements)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

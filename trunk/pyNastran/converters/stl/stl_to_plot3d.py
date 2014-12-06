@@ -58,7 +58,7 @@ def stl_to_plot3d_filename(stl_filename, p3d_filename, log=None, ascii=True):
         #zzzz
     p3d.close()
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     stl_filename = 'spw.out.STL'
     p3d_filename = 'spw.out.p3d'
     stl_to_plot3d_filename(stl_filename, p3d_filename)

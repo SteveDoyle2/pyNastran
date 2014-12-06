@@ -179,7 +179,7 @@ def test_abs_max_min_vector():
         #[0.0, 2.0, 4.0],
     #]))
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     #print(iformat('4si3f'))
     test_abs_max_min_global()
     test_abs_max_min_vector()

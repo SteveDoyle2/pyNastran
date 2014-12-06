@@ -44,7 +44,7 @@ def to_cart3d(bdf_filename, cart3d_filename):
     f.write(mids + '\n')
     f.close()
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     bdf_filename = 'g278.bdf'
     cart3d_filename = 'g278.tri'
     to_cart3d(bdf_filename, cart3d_filename)

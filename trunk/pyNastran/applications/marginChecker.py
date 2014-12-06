@@ -426,5 +426,5 @@ def main():
     a.checkVonMises(vmFactors, caseNames, Fty)
     #a.checkDeflections(0.018)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

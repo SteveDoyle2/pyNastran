@@ -278,5 +278,5 @@ class TestLoadSum(unittest.TestCase):
             self.assertTrue(allclose(F1_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F1_expected, F))
             self.assertTrue(allclose(M1_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M1_expected, M))
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

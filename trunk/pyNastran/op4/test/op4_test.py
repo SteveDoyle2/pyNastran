@@ -244,7 +244,7 @@ class TestOP4(unittest.TestCase):
             del form1b, form2b, form3b
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     #failed_test1()
     #print "*********"
     #failed_test2()

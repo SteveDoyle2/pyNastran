@@ -247,5 +247,5 @@ class BaseCard_Test(Tester):
                          collapse_thru_by(data))
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

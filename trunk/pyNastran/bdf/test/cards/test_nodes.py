@@ -46,5 +46,5 @@ class TestNodes(unittest.TestCase):
             self.assertEqual(msg, card), ref
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

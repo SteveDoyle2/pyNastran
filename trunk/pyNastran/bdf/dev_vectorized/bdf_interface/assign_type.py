@@ -833,7 +833,7 @@ def string_parser(stringIn):
     print("typeCheck = %r" % typeCheck)
     raise RuntimeError('error parsing a card...this should never happen...')
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     print(string_parser('123'))
     print(string_parser('+123'))
     print(string_parser('.234'))

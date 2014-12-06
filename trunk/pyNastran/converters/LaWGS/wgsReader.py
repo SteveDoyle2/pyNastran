@@ -255,6 +255,6 @@ class LaWGS(object):
         for (name, panel) in sorted(iteritems(self.panels)):
             panel.write_as_plot3d(f)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     lawgs = LaWGS('tmx1242.wgs')
     lawgs.readLaWGS()

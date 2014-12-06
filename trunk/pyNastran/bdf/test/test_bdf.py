@@ -476,5 +476,5 @@ def main():
     print("total time:  %.2f sec" % (time.time() - t0))
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

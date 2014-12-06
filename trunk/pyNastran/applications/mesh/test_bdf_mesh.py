@@ -119,5 +119,5 @@ class TestMeshTools(unittest.TestCase):
         self.assertEqual(set([1]), free_nids)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

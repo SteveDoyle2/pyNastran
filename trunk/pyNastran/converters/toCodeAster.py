@@ -393,5 +393,5 @@ def main():
     ca.readBDF(model)
     ca.writeAsCodeAster(model)  # comm, py
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

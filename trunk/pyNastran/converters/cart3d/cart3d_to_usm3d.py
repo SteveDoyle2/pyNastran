@@ -49,7 +49,7 @@ def cart3d_to_usm3d_bc_filename(cart3d_filename, usm3d_bc_filename, log=None, de
         usm3d_bc.write('%-8s %-8s %-8s %-8s %s\n' % (i+1, iregion, n1, n2, n3))
     usm3d_bc.close()
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     cart3d_filename = 'threePlugs.a.tri'
     usm3d_bc_filename = 'threePlugs.bc'
     cart3d_to_usm3d_bc_filename(cart3d_filename, usm3d_bc_filename)

@@ -49,7 +49,7 @@ def stl_to_nastran_filename(stl_filename, bdf_filename,
     bdf.write('ENDDATA\n')
     bdf.close()
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     import os
 
     import pyNastran

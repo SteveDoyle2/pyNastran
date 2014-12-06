@@ -199,6 +199,6 @@ def main():
     h.write_bdf('hyper_pressure.bdf')
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()
 

@@ -128,5 +128,5 @@ def main():
     igs.read_iges(igs_name)
     igs.write_iges(igs_name2)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

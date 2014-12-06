@@ -89,7 +89,7 @@ def read_real_table(pch, line):
     print('\n'.join(lines))
     return line
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     pch = PCH()
     pchname = 'nltnln02.pch'
     pch.read_pch(pchname)
