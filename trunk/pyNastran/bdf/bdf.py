@@ -85,13 +85,13 @@ from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs
 from pyNastran.bdf.cards.optimization import (DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
                                  DRESP1, DRESP2, DVMREL1, DVPREL1, DVPREL2)
 from pyNastran.bdf.cards.params import PARAM
-from pyNastran.bdf.cards.sets import (ASET, BSET, CSET, QSET,
+from pyNastran.bdf.cards.bdf_sets import (ASET, BSET, CSET, QSET,
                          ASET1, BSET1, CSET1, QSET1,
                          SET1, SET3, SESET, SEQSEP, RADSET)
 from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD)
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                     PHBDY, CONV, RADM, RADBC,)
-from pyNastran.bdf.cards.tables import (TABLED1, TABLED2, TABLED3, TABLED4,
+from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                            TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                            TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG, TIC)
 from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA
