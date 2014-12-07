@@ -1,7 +1,6 @@
 # pylint: disable=C0103,R0911,R0912,R0914,R0915
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-import warnings
 
 
 #def isLargeField(card):

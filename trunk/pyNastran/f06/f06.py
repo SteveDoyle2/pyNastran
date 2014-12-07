@@ -21,18 +21,8 @@ from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import RealGridPointFo
 from pyNastran.utils import is_binary
 from pyNastran.f06.errors import FatalError
 
-#class F06Deprecated(object):
-    #def __init__(self, f06_filename):
-        #self.f06FileName = f06_filename
-        #self.f06_filename = None
-    #def read_f06(self, f06_filename):
-        #pass
-    #def readF06(self):
-        #"""... seealso::: read_f06"""
-        #self.read_f06(self.f06_filename)
 
-
-class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
+class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
     def stop_after_reading_grid_point_weight(self, stop=True):
         self._stop_after_reading_mass = stop
 
@@ -52,7 +42,6 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer): #, F06Deprecated):
         OUG.__init__(self)
         LAMA.__init__(self)
         MAX_MIN.__init__(self)
-        #F06Deprecated.__init__(self, f06_filename)
         #F06Writer.__init__(self)
 
         self._subtitle = None

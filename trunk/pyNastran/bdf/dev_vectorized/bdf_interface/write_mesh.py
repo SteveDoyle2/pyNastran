@@ -1,11 +1,11 @@
 """
 This file defines:
-  - WriteMeshDeprecated (NA for major releases)
   - WriteMesh
 """
 from six import string_types, iteritems
 from pyNastran.bdf.utils import print_filename
 from numpy import array, unique, concatenate, intersect1d, where
+
 
 class WriteMesh(object):
     """

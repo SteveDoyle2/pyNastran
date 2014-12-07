@@ -16,7 +16,6 @@ from pyNastran.bdf.fieldWriter import print_card_8
 import io
 import os
 import sys
-import warnings
 import traceback
 
 from pyNastran.utils import (object_attributes, print_bad_path)
@@ -108,19 +107,6 @@ from pyNastran.bdf.bdfInterface.bdf_writeMesh import WriteMesh
 from pyNastran.bdf.bdfInterface.crossReference import XrefMesh
 
 
-#class BDFDeprecated(object):
-    #def updateSolution(self, sol, method=None):
-        #"""
-        #.. deprecated: will be replaced in version 0.7 with
-        #               :func: update_solution
-        #"""
-        #warnings.warn('updateSolution has been deprecated; use '
-        #              'update_solution', DeprecationWarning, stacklevel=2)
-        #self.update_solution(sol, method)
-    #def __init__(self):
-        #pass
-
-# BDFDeprecated
 class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
     """
     NASTRAN BDF Reader/Writer/Editor class.

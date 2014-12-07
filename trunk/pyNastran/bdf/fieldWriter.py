@@ -7,7 +7,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import string_types
 from six.moves import range
 import sys
-import warnings
 from numpy import allclose, isinf, float32
 
 def set_string8_blank_if_default(value, default):

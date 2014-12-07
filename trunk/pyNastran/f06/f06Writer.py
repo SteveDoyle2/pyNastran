@@ -5,7 +5,6 @@ from six import string_types, iteritems, PY2
 import sys
 import copy
 from datetime import date
-import warnings
 
 import pyNastran
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
@@ -165,14 +164,8 @@ def make_end(end_flag=False):
     return '\n'.join(lines+lines2+lines3)
 
 
-#class F06WriterDeprecated(object):
-#    def __init__(self):
-#        pass
-
 class F06Writer(object):
-#class F06Writer(F06WriterDeprecated):
     def __init__(self):
-        #F06WriterDeprecated.__init__(self)
         self.card_count = {}
 
         #: BDF Title

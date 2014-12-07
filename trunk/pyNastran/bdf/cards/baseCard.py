@@ -8,23 +8,7 @@ from pyNastran.bdf.fieldWriter import print_card, is_same
                                #print_card_8, set_default_if_blank, print_card
 #from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
-
-
-class BaseCardDeprecated(object):
-    """
-    Deprecated in:
-      - version 0.7
-    Removed in:
-      - version 0.8
-    """
-    def rawFields(self):
-        return self.raw_fields()
-
-    def reprFields(self):
-        return self.repr_fields()
-
-    def printRawFields(self, size=8):
-        return self.print_raw_fields(size=size)
+from pyNastran.bdf.deprecated import BaseCardDeprecated, ElementDeprecated
 
 
 class BaseCard(BaseCardDeprecated):
@@ -175,7 +159,7 @@ class Material(BaseCard):
         return self.mid
 
 
-class Element(BaseCard):
+class Element(BaseCard, ElementDeprecated):
     pid = 0  # CONM2, rigid
 
     def __init__(self, card, data):
@@ -197,7 +181,7 @@ class Element(BaseCard):
         else:
             return self.pid.pid
 
-    def nodePositions(self, nodes=None):
+    def get_node_positions(self, nodes=None):
         """returns the positions of multiple node objects"""
         if not nodes:
             nodes = self.nodes
@@ -252,18 +236,18 @@ class Element(BaseCard):
                   self.type, nodes, allowEmptyNodes, msg))
             raise
 
-    def prepareNodeIDs(self, nids, allowEmptyNodes=False):
+    def prepare_node_ids(self, nids, allow_empty_nodes=False):
         """Verifies all node IDs exist and that they're integers"""
         self.nodes = []
         for nid in nids:
             if isinstance(nid, int):
                 self.nodes.append(nid)
-            elif nid is None and allowEmptyNodes:
+            elif nid is None and allow_empty_nodes:
                 self.nodes.append(None)
             else:  # string???
                 #self.nodes.append(int(nid))
                 raise RuntimeError('this element may not have missing '
-                                   'nodes...nids=%s allowEmptyNodes=False'
+                                   'nodes...nids=%s allow_empty_nodes=False'
                                    % nids)
 
     @property  # I think this means you can just call it as an attribute...
@@ -384,10 +368,11 @@ def expand_thru_by(fields, set_fields=True, sort_fields=False):
     :param sort_fields: should the fields be sorted at the end? (default=False)
 
     .. todo:: not tested
-    .. note:: used for QBDY3, ???
+    .. note:: used for QBDY3 and what else ???
     """
     # ..todo:  should this be removed...is the field capitalized when read in?
-    fields = [field.upper() if isinstance(field, string_types) else field for field in fields]
+    fields = [field.upper()
+              if isinstance(field, string_types) else field for field in fields]
 
     if len(fields) == 1:
         return [interpret_value(fields[0])]
@@ -435,7 +420,8 @@ def expand_thru_exclude(self, fields):
     .. warning:: hasnt been tested
     """
     # ..todo:  should this be removed...is the field capitalized when read in?
-    fields = [interpret_value(field.upper()) if isinstance(field, string_types) else field for field in fields]
+    fields = [interpret_value(field.upper())
+              if isinstance(field, string_types) else field for field in fields]
 
     fieldsOut = []
     nFields = len(fields)

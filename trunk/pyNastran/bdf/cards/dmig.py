@@ -9,6 +9,7 @@ from math import log, sin, cos, radians, atan2
 from numpy import zeros  # average
 from scipy.sparse import coo_matrix
 
+from pyNastran.bdf.deprecated import DeprecatedNastranMatrix
 from pyNastran.bdf.cards.baseCard import BaseCard, print_card
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, string, blank, components, interpret_value)
@@ -110,26 +111,6 @@ class DEQATN(BaseCard):  # needs work...
             list_fields += ['        ' + eqLine]
         return ''.join(list_fields)
 
-
-
-class DeprecatedNastranMatrix(object):
-    """
-    Will be deprecated in:
-      - v0.7
-    Will be removed in:
-      - v0.8
-    """
-    def isComplex(self):
-        return self.is_complex()
-
-    def isReal(self):
-        return self.is_real()
-
-    def isPolar(self):
-        return self.is_polar()
-
-    def getMatrix(self, isSparse=False, applySymmetry=True):
-        return self.get_matrix(is_sparse=isSparse, apply_symmetry=applySymmetry)
 
 class NastranMatrix(BaseCard, DeprecatedNastranMatrix):
     """

@@ -15,6 +15,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six.moves import zip, range
 from numpy import array
 
+from pyNastran.bdf.deprecated import DeprecatedCompositeShellProperty
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import Property, Material
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, double,
@@ -25,37 +26,6 @@ from pyNastran.bdf.fieldWriter16 import print_card_16
 class ShellProperty(Property):
     def __init__(self, card, data):
         Property.__init__(self, card, data)
-
-class DeprecatedCompositeShellProperty(object):
-    """
-    To be deprecated in:
-      - Version 0.7
-    To be removed in:
-      - Version 0.8
-    """
-    def MassPerArea(self, iply='all', method='nplies'):
-        return self.get_mass_per_area(iply, method)
-
-    def Thickness(self, iply='all'):
-        return self.get_thickness(iply)
-
-    def nPlies(self):
-        return self.get_nplies()
-
-    def Nsm(self):
-        return self.get_nonstructural_mass()
-
-    def isSymmetrical(self):
-        return self.is_symmetrical()
-
-    def Rho(self, iply):
-        return self.get_density(iply)
-
-    def Theta(self, iply):
-        return self.get_theta(iply)
-
-    def sout(self, iply):
-        return self.get_sout(iply)
 
 
 class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
