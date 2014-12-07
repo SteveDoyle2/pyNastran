@@ -27,7 +27,7 @@ from six.moves import range
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.utils.dev import list_print
-from pyNastran.bdf.bdfInterface.assign_type import (integer,  # fields,
+from pyNastran.bdf.bdfInterface.assign_type import (integer,
     integer_or_blank, double, components, string, string_or_blank)
 
 class Table(BaseCard):
