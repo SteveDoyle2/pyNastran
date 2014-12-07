@@ -25,62 +25,9 @@ from numpy import array, cross, zeros, dot, allclose
 from numpy.linalg import norm
 
 
+from pyNastran.bdf.deprecated import BDFMethodsDeprecated
 from pyNastran.bdf.cards.loads.staticLoads import Moment, Force, LOAD
 #from pyNastran.bdf.cards.elements.shell import ShellElement
-
-
-class BDFMethodsDeprecated(object):
-
-    def MassProperties(self):
-        """
-        .. seealso:: mass_properties
-        .. deprecated: will be replaced in version 0.7 with mass_properties
-        """
-        return self.mass_properties()
-
-    def Mass(self):
-        """
-        .. seealso:: mass
-        .. deprecated: will be replaced in version 0.7 with mass
-        """
-        return self.mass()
-
-
-    def mass(self, element_ids=None, sym_axis=None):
-        """Calculates mass in the global coordinate system"""
-        mass, cg, I = self.mass_properties(element_ids=element_ids,
-                                           reference_point=None,
-                                           sym_axis=sym_axis,
-                                           num_cpus=1)
-        return mass
-
-    def resolveGrids(self, cid=0):
-        """
-        .. seealso:: resolve_grids
-        .. deprecated: will be replaced in version 0.7 with resolve_grids
-        """
-        return self.resolve_grids(cid)
-
-    def unresolveGrids(self, femOld):
-        """
-        .. seealso:: unresolve_grids
-        .. deprecated: will be replaced in version 0.7 with unresolve_grids
-        """
-        return self.unresolve_grids(femOld)
-
-    #def sumForces(self):
-        #"""
-        #.. seealso:: sum_forces
-        #.. deprecated: will be replaced in version 0.7 with sum_forces
-        #"""
-        #return self.sum_forces()
-
-    #def sumMoments(self, p0):
-        #"""
-        #.. seealso:: sum_moments
-        #.. deprecated: will be replaced in version 0.7 with sum_moments
-        #"""
-        #return self.sum_moments(p0)
 
 
 def _mass_properties_mass_mp_func(element):

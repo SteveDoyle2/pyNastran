@@ -2,7 +2,6 @@
 # coding: utf-8
 """
 This file defines:
-  - WriteMeshDeprecated (NA for major releases)
   - WriteMesh
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
@@ -10,27 +9,12 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import string_types, iteritems, itervalues, PY2
 from codecs import open
 
-#import warnings
 from pyNastran.bdf.utils import print_filename
 from pyNastran.utils.gui_io import save_file_dialog
 from pyNastran.bdf.fieldWriter import print_card, print_card_8
 from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
-
-#class WriteMeshDeprecated(object):
-    #def __init__(self):
-        #pass
-    #def writeBDF(self, outFileName='fem.out.bdf', size=8, debug=False):
-        #"""
-        #.. seealso:: write_bdf
-        #.. deprecated:: will be replaced in version 0.7
-        #                with write_bdf with interspersed=False
-        #"""
-        #warnings.warn('writeBDF has been deprecated; use '
-        #              'write_bdf', DeprecationWarning, stacklevel=2)
-        #self.write_bdf(out_filename=outFileName, interspersed=False,
-        #               size=size, debug=debug)
 
 class WriteMesh(object):
     """
@@ -42,7 +26,6 @@ class WriteMesh(object):
     def __init__(self):
         self._auto_reject = True
         self.cards_to_read = set([])
-        #WriteMeshDeprecated.__init__()
 
     def echo_bdf(self, infile_name):
         """

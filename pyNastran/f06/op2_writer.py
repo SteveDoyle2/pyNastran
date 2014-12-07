@@ -39,14 +39,8 @@ def make_stamp(Title, today=None):
     return out
 
 
-#class OP2WriterDeprecated(object):
-#    def __init__(self):
-#        pass
-
 class OP2Writer(object):
-#class OP2Writer(OP2WriterDeprecated):
     def __init__(self):
-        #OP2WriterDeprecated.__init__(self)
         self.card_count = {}
 
         #: BDF Title

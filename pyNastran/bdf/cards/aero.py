@@ -26,7 +26,7 @@ from six.moves import zip, range
 from itertools import count
 from numpy import array, pi, linspace, zeros, arange, repeat, dot
 
-
+from pyNastran.bdf.deprecated import AeroDeprecated, CAERO1Deprecated, CAERO2Deprecated
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
 from pyNastran.bdf.bdfInterface.assign_type import (fields,
@@ -492,37 +492,37 @@ class AESURFS(BaseCard):  # not integrated
         return self.comment() + print_card_8(card)
 
 
-class Aero(BaseCard):
+class Aero(BaseCard, AeroDeprecated):
     """Base class for AERO and AEROS cards."""
     def __init__(self, card, data):
         self.symXY = None
         self.symXZ = None
 
-    def IsSymmetricalXY(self):
+    def is_symmetric_xy(self):
         if self.symXY == 1:
             return True
         return False
 
-    def IsSymmetricalXZ(self):
+    def is_symmetric_xz(self):
         if self.symXZ == 1:
             return True
         return False
 
-    def EnableGroundEffect(self):
-        self.symXY = -1
-
-    def DisableGroundEffect(self):
-        self.symXY = 1
-
-    def IsAntiSymmetricalXY(self):
+    def is_anti_symmetric_xy(self):
         if self.symXY == -1:
             return True
         return False
 
-    def IsAntiSymmetricalXZ(self):
+    def is_anti_symmetric_xz(self):
         if self.symXY == -1:
             return True
         return False
+
+    def set_ground_effect(self, enable):
+        if enable:
+            self.symXY = -1
+        else:
+            self.symXY = 1
 
 
 class AERO(Aero):
@@ -771,7 +771,7 @@ class CSSCHD(BaseCard):
         return self.comment() + print_card_8(card)
 
 
-class CAERO1(BaseCard):
+class CAERO1(BaseCard, CAERO1Deprecated):
     """
     Defines an aerodynamic macro element (panel) in terms of two leading edge
     locations and side chords. This is used for Doublet-Lattice theory for
@@ -934,7 +934,7 @@ class CAERO1(BaseCard):
             assert isinstance(self.lspan, int), self.lspan
             self.lspan = model.AEFact(self.lspan, msg)
 
-    def Points(self):
+    def get_points(self):
         p1, matrix = self.cp.transformToGlobal(self.p1)
         p4, matrix = self.cp.transformToGlobal(self.p4)
         p2 = p1 + array([self.x12, 0., 0.])
@@ -994,8 +994,7 @@ class CAERO1(BaseCard):
         assert nspan >= 1, msg
         return points_elements_from_quad_points(p1, p2, p3, p4, x, y)
 
-
-    def SetPoints(self, points):
+    def set_points(self, points):
         self.p1 = points[0]
         self.p2 = points[1]
         self.p3 = points[2]
@@ -1057,7 +1056,7 @@ class CAERO1(BaseCard):
         return self.comment() + print_card_8(card)
 
 
-class CAERO2(BaseCard):
+class CAERO2(BaseCard, CAERO2Deprecated):
     """
     Aerodynamic Body Connection
     Defines aerodynamic slender body and interference elements for
@@ -1200,14 +1199,14 @@ class CAERO2(BaseCard):
         self.cp = model.Coord(self.cp, msg=msg)
         #self.lsb = model.AeFact(self.lsb, msg=msg) # not added
 
-    def Points(self):
+    def get_points(self):
         (p1, matrix) = self.cp.transformToGlobal(self.p1)
         p2 = p1 + array([self.x12, 0., 0.])
         #print("x12 = ",self.x12)
         #print("pcaero[%s] = %s" %(self.eid,[p1,p2]))
         return [p1, p2]
 
-    def SetPoints(self, points):
+    def set_points(self, points):
         self.p1 = points[0]
         self.p2 = points[1]
         x12 = self.p2 - self.p1
@@ -1602,6 +1601,7 @@ class CAERO5(BaseCard):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
+
 def points_elements_from_quad_points(p1, p2, p3, p4, x, y):
     nx = x.shape[0]
     ny = y.shape[0]
@@ -1642,6 +1642,7 @@ def points_elements_from_quad_points(p1, p2, p3, p4, x, y):
     elements[:, 2] = ipoints[1:, 1:].ravel()    # (i+1,j+1)
     elements[:, 3] = ipoints[:-1, 1:].ravel()   # (i,j+1  )
     return points, elements
+
 
 class PAERO5(object):
     def __init__(self):
@@ -1916,7 +1917,7 @@ class FLUTTER(BaseCard):
             return self.rfreq_vel
         return self.rfreq_vel.sid
 
-    def _rawNValueOMax(self):
+    def _get_raw_nvalue_omax(self):
         if self.method in ['K', 'KE']:
             #assert self.imethod in ['L', 'S'], 'imethod = %s' % self.imethod
             return(self.imethod, self.nValue)
@@ -1925,7 +1926,7 @@ class FLUTTER(BaseCard):
         else:
             return(self.imethod, self.nValue)
 
-    def _reprNValueOMax(self):
+    def _repr_nvalue_omax(self):
         if self.method in ['K', 'KE']:
             imethod = set_blank_if_default(self.imethod, 'L')
             #assert self.imethod in ['L', 'S'], 'imethod = %s' % self.imethods
@@ -1946,7 +1947,7 @@ class FLUTTER(BaseCard):
         :type fields:
           LIST
         """
-        (imethod, nValue) = self._rawNValueOMax()
+        (imethod, nValue) = self._get_raw_nvalue_omax()
         list_fields = ['FLUTTER', self.sid, self.method, self.get_density(),
                   self.get_mach(), self.get_rfreq_vel(), imethod, nValue, self.epsilon]
         return list_fields

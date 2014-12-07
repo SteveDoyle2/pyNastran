@@ -3,7 +3,6 @@
 """
 Main BDF class.  Defines:
   - BDF
-  - BDFDeprecated (unused for major releases)
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -16,7 +15,6 @@ from pyNastran.bdf.utils import (to_fields, get_include_filename,
 import io
 import os
 import sys
-import warnings
 import traceback
 
 from pyNastran.utils import (object_attributes, print_bad_path)
@@ -108,19 +106,6 @@ from pyNastran.bdf.bdfInterface.crossReference import XrefMesh
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 
-#class BDFDeprecated(object):
-    #def updateSolution(self, sol, method=None):
-        #"""
-        #.. deprecated: will be replaced in version 0.7 with
-        #               :func: update_solution
-        #"""
-        #warnings.warn('updateSolution has been deprecated; use '
-        #              'update_solution', DeprecationWarning, stacklevel=2)
-        #self.update_solution(sol, method)
-    #def __init__(self):
-        #pass
-
-# BDFDeprecated
 class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
     """
     NASTRAN BDF Reader/Writer/Editor class.

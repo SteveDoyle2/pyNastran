@@ -8,7 +8,6 @@ from six import string_types, iteritems
 import io
 import os
 import sys
-import warnings
 import traceback
 from collections import defaultdict
 
