@@ -3,6 +3,30 @@ import pyNastran
 pkg_name = pyNastran.__path__[0]
 #from shutil import rmtree
 
+def get_base_import_names():
+    publics = []
+    for module_name in ['__future__', 'os', 'os.path', 'six', 'six.moves',
+                        'numpy', 'numpy.linalg', 'scipy', 'vtk', 'docopt', 'wx',
+                        'types', 'math', 'h5py', 'sympy', 'tables', 'struct']:
+        module = importlib.import_module(module_name)
+        public = [key for key in sorted(module.__dict__)
+                  if not key.startswith('__') and not key.endswith('__')]
+        publics += public
+
+    publics += ['scipy', 'main', 'wx', 'range', 'iteritems', 'zip', 'unittest',
+        'traceback', 'logging', 'io', 'run', 'string', 'mp', 'quad', 'splev',
+        'splrep', 'pkg_path', 'is_wx', 'pyNastran', 'testpath', 'rootpath',
+        'log_formater', 'log_handler_file', 'logger', 'get_logger', 'get_logger2',
+        'bdf', 'comment_bad', 'comment_good', 'model', 'root_path',
+        'unpack', 'pack',
+        'make_log', 'platform', 'stderr_logging', 'utils', 'date',
+        #'coo_matrix', 'dim', '_TemporarilyImmutableSet', 'BaseSet', 'ImmutableSet',
+        #'ifilterfalse',  'Array', 'Atom', 'BoolAtom', 'BoolCol', 'CArray',
+        #'ClosedFileError', 'ClosedNodeError', 'Complex128Col', 'Complex32Atom',
+        #'Complex32Col', 'Complex64Atom', 'Complex64Col', 'ComplexAtom',
+
+        ]
+    return publics
 
 def get_folders_files(dirname, skip_file_sufix = ('.pyc', '.pyx', '.bdf', '.cpp'),
                             skip_directories = ('.svn', '.idea', '.settings',
@@ -11,7 +35,7 @@ def get_folders_files(dirname, skip_file_sufix = ('.pyc', '.pyx', '.bdf', '.cpp'
                             'converters', # bad
                             'nastranwrapper-using_pynastran', # bad
                             #'bdf', # done
-                            'op2', # done
+                            #'op2', # done
                             'op4', # cop4
                             'pch', # bad
                             )):
@@ -70,27 +94,46 @@ def get_class_function_list(filename):
 
 import sys
 import importlib
+from pyNastran.utils import object_methods
 
 def main():
+    base_imports = get_base_import_names()
+
     #rmtree(pkg_name, 'nastranwrapper-using_pynastran')
     #cleanup()
     folders, fnames = get_folders_files(pkg_name)
     for fname in fnames:
         class_names, function_names = get_class_function_list(fname)
         if len(class_names + function_names):
-            #print(fname)
 
             dirname = os.path.dirname(fname)
             basename = os.path.basename(fname).split('.')[0]
             basename2 = fname.split('.')[0]
             #print('basename =', basename)
+            if 'gui' in fname or 'test' in fname:
+                continue
             sys.path.append(dirname)
-            print(importlib.import_module(basename))
+            module = importlib.import_module(basename)
 
-            for class_name in class_names:
-                pass
-            for function_name in function_names :
-                pass
+            # remove __methods__
+            public = [key for key in sorted(module.__dict__)
+                      if not key.startswith('__') and not key.endswith('__')
+                      and key not in base_imports and 'test' not in key.lower()]
+            if public:
+                print(fname)
+                print(public)
+
+                for class_name in class_names:
+                    try:
+                        class_obj = getattr(module, class_name)
+                    except AttributeError:
+                        print('bad_module=%s' % fname)
+                        raise
+                    object_methods(class_obj)
+                print('')
+
+            #for function_name in function_names :
+                #print(object_methods(class_obj))
 
 if __name__ == '__main__':
     main()
