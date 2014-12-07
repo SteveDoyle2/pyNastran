@@ -2,7 +2,7 @@ from six.moves import range
 from struct import unpack
 
 from pyNastran.bdf.cards.aero import GUST
-from pyNastran.bdf.cards.tables import (TABLED1, TABLED2, TABLED3, TABLEM1,
+from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLEM1,
                                         TABLEM2, TABLEM3, TABLEM4)
 
 

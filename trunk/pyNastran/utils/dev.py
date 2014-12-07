@@ -1,7 +1,5 @@
 from six import string_types, iteritems
 import os
-from os.path import splitext, getsize
-from os.path import join as pjoin
 
 from numpy import array, ndarray
 
@@ -17,8 +15,8 @@ def get_files_of_type(dirname, extension='.txt', maxSize=100.):
     :param maxSize:   size in MB for max file size
     :returns: list of all the files with a given extension in the specified directory
     """
-    return [pjoin(dirname, f) for f in os.listdir(dirname) if extension in
-            splitext(f)[1] and getsize(pjoin(dirname, f)) / (1048576.) <= maxSize]
+    return [os.path.join(dirname, f) for f in os.listdir(dirname) if extension in
+            os.path.splitext(f)[1] and os.path.getsize(pjoin(dirname, f)) / (1048576.) <= maxSize]
 
 
 def list_print(lst, float_fmt='%-4.2f'):
