@@ -51,9 +51,11 @@ from .cards.elements.beam.properties_beam import PropertiesBeam
 from pyNastran.bdf.dev_vectorized.cards.elements.bush.cbush import CBUSH
 from pyNastran.bdf.dev_vectorized.cards.elements.bush.pbush import PBUSH
 
-
 # mass
 from .cards.elements.mass.mass import Mass
+
+# rigid
+from .cards.elements.rigid.rbe2 import RBE2
 
 # rods
 from .cards.elements.rod.prod import PROD
@@ -553,7 +555,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.coords = Coord(model)
 
         #: stores rigid elements (RBE2, RBE3, RJOINT, etc.)
-        self.rigidElements = {}
+        #self.rigidElements = {}
+        self.rbe2 = RBE2(model)
 
         #self.properties_spring = PropertiesSpring(model)
         #self.properties_rod = PropertiesRod(v)
@@ -2153,7 +2156,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'RBAR':
             pass
         elif name == 'RBE2':
-            pass
+            self.elements.rbe2.add(card_obj, comment=comment)
         elif name == 'RBE3':
             pass
         #========================

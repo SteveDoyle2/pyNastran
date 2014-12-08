@@ -26,7 +26,16 @@ class PBARL(Property):
 
     def allocate(self, ncards):
         float_fmt = self.model.float
-        pass
+        self.property_id = zeros(ncards, 'int32')
+        self.material_id = zeros(ncards, 'int32')
+
+    def add(self, card, comment):
+        i = self.i
+        #: Property ID
+        self.property_id[i] = integer(card, 1, 'property_id')
+        #: Material ID
+        self.material_id[i] = integer(card, 2, 'material_id')
+        self.i += 1
 
     def build(self):
         cards = self._cards
@@ -34,14 +43,6 @@ class PBARL(Property):
         self.n = ncards
 
         if ncards:
-            #: Property ID
-            self.property_id = zeros(ncards, 'int32')
-            self.material_id = zeros(ncards, 'int32')
-
-            ncards = len(cards)
-            for i, card in enumerate(cards):
-                self.property_id[i] = integer(card, 1, 'property_id')
-                self.material_id[i] = integer(card, 2, 'material_id')
             i = self.property_id.argsort()
             self.property_id = self.property_id[i]
             self.material_id = self.material_id[i]

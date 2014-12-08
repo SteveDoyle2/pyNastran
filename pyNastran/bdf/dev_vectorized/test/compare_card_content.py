@@ -44,7 +44,6 @@ def compare_card_content(fem1, fem2):
     assert len(fem1.params) == len(fem2.params), 'len(fem1.params)=%i len(fem2.params)=%i' % (len(fem1.params), len(fem2.params))
     assert len(fem1.nodes) == len(fem2.nodes), 'len(fem1.nodes)=%i len(fem2.nodes)=%i' % (len(fem1.nodes), len(fem2.nodes))
     assert len(fem1.elements) == len(fem2.elements), 'len(fem1.elements)=%i len(fem2.elements)=%i' % (len(fem1.elements), len(fem2.elements))
-    assert len(fem1.rigidElements) == len(fem2.rigidElements), 'len(fem1.rigidElements)=%i len(fem2.rigidElements)=%i' % (len(fem1.rigidElements), len(fem2.rigidElements))
     assert len(fem1.properties) == len(fem2.properties), 'len(fem1.properties)=%i len(fem2.properties)=%i' % (len(fem1.properties), len(fem2.properties))
     assert len(fem1.materials) == len(fem2.materials), 'len(fem1.materials)=%i len(fem2.materials)=%i' % (len(fem1.materials), len(fem2.materials))
     assert len(fem1.creepMaterials) == len(fem2.creepMaterials), 'len(fem1.creepMaterials)=%i len(fem2.creepMaterials)=%i' % (len(fem1.creepMaterials), len(fem2.creepMaterials))
@@ -83,9 +82,10 @@ def compare_card_content(fem1, fem2):
         card2 = fem2.elements[key]
         assert_fields(card1, card2, key)
 
-    for key in fem1.rigidElements:
-        card1 = fem1.rigidElements[key]
-        card2 = fem2.rigidElements[key]
+        assert len(fem1.rbe2) == len(fem2.rbe2), 'len(fem1.rbe2)=%i len(fem2.rbe2)=%i' % (len(fem1.rbe2), len(fem2.rbe2))
+    for key in fem1.rbe2:
+        card1 = fem1.rbe2[key]
+        card2 = fem2.rbe2[key]
         assert_fields(card1, card2, key)
 
     for key in fem1.properties:
