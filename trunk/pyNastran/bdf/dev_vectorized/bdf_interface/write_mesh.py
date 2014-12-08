@@ -362,7 +362,7 @@ class WriteMesh(object):
         :returns msg: part of the bdf
         """
         is_double = False
-        self._write_rigid_elements(outfile, size, card_writer)
+        self._write_rigid_elements(outfile, size, is_double)
         self._write_dmigs(outfile, size, card_writer)
         self.loads.write_bdf(outfile, size, is_double, sort_data=False)
         self.temps.write_bdf(outfile, size, is_double, sort_data=False)
@@ -587,18 +587,9 @@ class WriteMesh(object):
                         msg.append(str(reject2) + '\n')
         outfile.write(''.join(msg))
 
-    def _write_rigid_elements(self, outfile, size, card_writer):
+    def _write_rigid_elements(self, outfile, size, is_double):
         """Writes the rigid elements in a sorted order"""
-        if self.rigidElements:
-            msg = ['$RIGID ELEMENTS\n']
-            for (eid, element) in sorted(iteritems(self.rigidElements)):
-                try:
-                    msg.append(element.write_bdf(size, card_writer))
-                except:
-                    print('failed printing element...'
-                          'type=%s eid=%s' % (element.type, eid))
-                    raise
-            outfile.write(''.join(msg))
+        self.rbe2.write_bdf(outfile, size, is_double)
 
     def _write_sets(self, outfile, size, card_writer):
         """Writes the SETx cards sorted by ID"""

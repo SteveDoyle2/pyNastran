@@ -36,6 +36,8 @@ class Elements(object):
         #: stores PSHEAR
         self.pshear = model.pshear
 
+        # rigid
+        self.rbe2 = model.rbe2
 
         # spring
         self.elements_spring = model.elements_spring
@@ -601,6 +603,9 @@ class Elements(object):
                  #self.elements_spring.celas4,
 
                  self.cbush,
+
+                 # rigid
+                 self.rbe2,
 
                  #self.elements_shell.ctria3,
                  #self.elements_shell.cquad4,
