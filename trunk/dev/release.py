@@ -102,6 +102,7 @@ def main():
     #rmtree(pkg_name, 'nastranwrapper-using_pynastran')
     #cleanup()
     folders, fnames = get_folders_files(pkg_name)
+    n = len(sys.path)
     for fname in fnames:
         class_names, function_names = get_class_function_list(fname)
         if len(class_names + function_names):
@@ -112,7 +113,7 @@ def main():
             #print('basename =', basename)
             if 'gui' in fname or 'test' in fname:
                 continue
-            sys.path.append(dirname)
+            sys.path.insert(n, dirname)
             module = importlib.import_module(basename)
 
             # remove __methods__
@@ -134,6 +135,9 @@ def main():
 
             #for function_name in function_names :
                 #print(object_methods(class_obj))
+            #sys.path.pop()
+            #del module
+            del sys.modules[basename]
 
 if __name__ == '__main__':
     main()
