@@ -2,44 +2,32 @@
 
 ---DONE---
 
-both
-====
- - cart3d input/output
- - nastran input/output
- - lawgs input
- - panair input
- - usm3d volume (postgrid) and results (.flo)
- - tetgen input
- - edges
- - nodal or centroidal
- - window title
- - auto-importing (meaning...)
- - loading of geometry/results from command line
- - implicit pulldown for formats
- - zoom/rotate/snap to axis
- - screenshot
-
-wx unique
-=========
- - hotkeys for zoom/rotate/snap to axis
- - explcit pulldown for formats
-
 PyQt4 unique (PySide is broken)
 ===============================
  - logger
- - global axis
-   - hide support
+
+ - buttons/pulldowns
+   - implicit pulldown for formats
+   - zoom/rotate/snap to axis
+   - screenshot
+   - auto-reload
+
  - auto-reload button.  Useful for:
     - modifying Panair file
     - dynamically updating files
     - incrementing files for Usm3d (e.g. running a job and want to watch the
       flow develop without having to click load_results)
- - S/HABP input
- - Panair output
- - zoom/rotate/snap buttons
- - default filename for pictures
- - python scripting
- - pretty title that tells you your "format - infile - outfile"
+
+ - formats
+   - cart3d input/output
+   - nastran input/output
+   - lawgs input
+   - panair input
+   - usm3d volume (postgrid) and results (.flo)
+   - tetgen input
+   - S/HABP input
+   - Panair output
+
  - legend menu to edit properties for:
    - title
    - min value
@@ -51,38 +39,21 @@ PyQt4 unique (PySide is broken)
    - can't move legend***
    - can't show/hide legend***
 
-----------------------------------------------------
----NOT DONE---
+ - global axis
+   - hide support
+   - additional Nastran coordinate systems supported using a script
 
-both
- - make both nodal/centroidal work regardless of flag
- - make vector results work
- - marker plots (arrows) & scale
- - displacement plots & scale
- - cell picker to get element/node info
- - usm3d surface/boundary layer/incomplete volume
- - results selector window rather than cycling
- - load file from * with a specific file type
+ - minor features
+   - default filename for pictures
+   - pretty title that tells you your "format - infile - outfile"
+   - window title
 
---------------
-wx
- - axis
  - zoom/rotate/snap buttons
- - reload button
- - logging
- - plot3d hooks
- - default filename for pictues
- - python scripting
- - pretty title that tells you your "format - infile - outfile"
- - panair results (probably close)
- - shabp input
- - legend menu
-
---------------
-qt
- - zoom/rotate/snap hotkeys
- - unbreak hotkeys (p, r, ???)
- - explcit pulldown for formats
+ - command line
+   - loading of geometry/results from command line
+   - python scripting
+   - edges
+   - nodal or centroidal
 
 ----------------------------------------------------
 ---Format Specific---
@@ -91,6 +62,9 @@ Nastran
 =======
  - load geometry -> .bdf/nas/dat
    - shows CAERO panels
+   - change between sub-element and element using self.is_sub_panels and a script (Qt)
+   - display additional coordinate system IDs (Qt)
+
  - load results -> op2/f06
    - SOL 101
      - (nodal/centroidal) stress
@@ -100,8 +74,6 @@ Nastran
 
  - ***multiple op2 files
  - ***show/hide elements based on picking
- - ***coordinate systems include Coord ID
- - ***multiple coordinate systems shown
  - ***transient-style results (need a results sidebar for that)
  - ***different nodal averaging methods (e.g.derive/avg, avg/derive)
  - ***interface loads
@@ -111,9 +83,6 @@ Nastran
  - ***data label for CAERO cards
    - as a element numbr
    - as a color (e.g. element ID for the CAERO card)
- - change between sub-element and element using self.is_sub_panels and a script
-   - PyQt
-   - ***wx
 
 Cart3d
 ======
@@ -189,33 +158,46 @@ Usm3d
 #-------------------------
 #BUGS
 
-- qt
--------
- - Qt
-   =======
+Qt
+=======
 
- - nastran
-   =======
-   - single results (e.g. pid) can't have their legends edited
-   - the Isat model seems to have something wrong with the Pid
-   - what do elements with pid=0 correspond to?
-     - CONROD
-     - CELAS2/4
-     - buggy cards
- 
- - panair
-   =======
- 
- - cart3d
-   =======
- 
- - shabp
-   =======
-   - trailer doesn't always parse properly
+nastran
+=======
+- single results (e.g. pid) can't have their legends edited
+  - is this still true?
+- the Isat model seems to have something wrong with the Pid
+  - is this still true?
+- what do elements with pid=0 correspond to?
+  - CONROD
+  - CELAS2/4
+  - buggy cards
 
- - plot3d
-   =======
-   - doesn't work at all
+panair
+=======
 
-- wx
--------
+cart3d
+=======
+
+shabp
+=======
+- trailer doesn't always parse properly
+
+plot3d
+=======
+- doesn't work at all
+
+
+----------------------------------------------------
+---NOT DONE---
+
+ - make both nodal/centroidal work regardless of flag
+ - make vector results work
+ - marker plots (arrows) & scale
+ - displacement plots & scale
+ - cell picker to get element/node info
+ - usm3d surface/boundary layer/incomplete volume
+ - results selector window rather than cycling
+ - load file from * with a specific file type
+ - zoom/rotate/snap hotkeys
+ - unbreak hotkeys (p, r, ???)
+ - explcit pulldown for formats

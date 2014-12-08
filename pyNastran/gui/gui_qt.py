@@ -1460,7 +1460,7 @@ def main():
     QtGui.QApplication.setApplicationName("pyNastran")
     QtGui.QApplication.setApplicationVersion(pyNastran.__version__)
 
-    inputs = get_inputs('qt')
+    inputs = get_inputs()
     window = MainWindow(inputs)
     sys.exit(app.exec_())
 

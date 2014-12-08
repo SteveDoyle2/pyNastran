@@ -3,13 +3,13 @@ import sys
 import pyNastran
 from docopt import docopt
 
-def run_arg_parse(mode):
+def run_arg_parse():
     msg  = "Usage:\n"
-    msg += "  pyNastranGUI_%s [-f FORMAT] [-i INPUT] [-o OUTPUT]\n" % mode
+    msg += "  pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT]\n"
     msg += '                  [-s SHOT] [-m MAGNIFY] [-p SCRIPT]\n'  #  [-r XYZ]
     msg += '                  [-q] [-e] [-n | -c]\n'
-    msg += '  pyNastranGUI_%s -h | --help\n' % mode
-    msg += '  pyNastranGUI_%s -v | --version\n' % mode
+    msg += '  pyNastranGUI -h | --help\n'
+    msg += '  pyNastranGUI -v | --version\n'
     msg += "\n"
     msg += "Options:\n"
     msg += "  -h, --help                  show this help message and exit\n"
@@ -72,8 +72,7 @@ def run_arg_parse(mode):
             magnify, rotation, script, debug)
 
 
-def get_inputs(mode='wx'):
-    assert mode in ['wx', 'qt']
+def get_inputs():
     is_edges = False
     format = None
     input = None
