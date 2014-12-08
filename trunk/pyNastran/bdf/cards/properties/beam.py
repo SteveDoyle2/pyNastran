@@ -15,7 +15,7 @@ from six.moves import zip, range
 from itertools import count
 from numpy import pi, array
 
-from .bars import IntegratedLineProperty, LineProperty, _bar_areaL
+from pyNastran.bdf.cards.properties.bars import IntegratedLineProperty, LineProperty, _bar_areaL
 from pyNastran.bdf.fieldWriter import (set_blank_if_default,
                                        set_default_if_blank)
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,

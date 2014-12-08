@@ -5,9 +5,9 @@ from six import  iteritems
 from six.moves import range
 
 from pyNastran.bdf.cards.utils import wipe_empty_fields
-from .thermal import ThermalCard
+from pyNastran.bdf.cards.thermal.thermal import ThermalCard
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from ..baseCard import (expand_thru, expand_thru_by,
+from pyNastran.bdf.cards.baseCard import (expand_thru, expand_thru_by,
     collapse_thru_by) # collapse_thru,
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
