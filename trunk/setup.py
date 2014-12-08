@@ -16,9 +16,7 @@ packages = find_packages()+['gui/icons/*.*']
 
 py2_gui_scripts = []
 if sys.version_info <= (3,):
-    py2_gui_scripts = ['pyNastranGUI = pyNastran.gui.gui:main',
-                       'pyNastranGUI_wx = pyNastran.gui.gui_wx:main',
-                       'pyNastranGUI_qt = pyNastran.gui.gui_qt:main',]
+    py2_gui_scripts = ['pyNastranGUI = pyNastran.gui.gui:main',]
 
 # set up all icons
 icon_path = os.path.join('pyNastran', 'gui', 'icons')
@@ -54,7 +52,7 @@ setup(name='pyNastran',
           # -*- Extra requirements: -*-
           'numpy >= 1.8.0',
           'scipy >= 0.13.0',
-          'docopt == 0.6.1',
+          'docopt == 0.6.2',
 #          'matplotlib >= 1.3.0',
           'vtk >= 5.10.0',
           'pillow >= 2.0.0',
