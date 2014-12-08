@@ -3,6 +3,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from numpy import array
 
+from pyNastran.bdf.deprecated import GridDeprecated, PointDeprecated, SPOINTsDeprecated
+
 from pyNastran.bdf.fieldWriter import set_string8_blank_if_default
 from pyNastran.bdf.fieldWriter16 import set_string16_blank_if_default
 
@@ -237,7 +239,7 @@ class SPOINTs(Node):
             assert isinstance(data[0], int), data
         self.spoints = set(expand_thru(fields))
 
-    def nDOF(self):
+    def get_ndof(self):
         """
         Returns the number of degrees of freedom for the SPOINTs class
 
@@ -627,7 +629,7 @@ class GRIDB(Node):
         return self.comment() + card_writer(card)
 
 
-class GRID(Node):
+class GRID(Node, GridDeprecated):
     """
     +------+-----+----+----+----+----+----+----+------+
     |   1  |  2  | 3  | 4  | 5  | 6  |  7 | 8  |  9   |
@@ -821,7 +823,7 @@ class GRID(Node):
         if xref:
             pos_xyz = self.Position()
 
-    def nDOF(self):
+    def get_ndof(self):
         """
         Gets the number of degrees of freedom for the GRID
 
@@ -831,7 +833,7 @@ class GRID(Node):
         """
         return 6
 
-    def UpdatePosition(self, model, xyz, cid=0):
+    def set_position(self, model, xyz, cid=0):
         """
         Updates the GRID location
 
@@ -845,7 +847,7 @@ class GRID(Node):
         msg = ' which is required by GRID nid=%s' % self.nid
         self.cp = model.Coord(cid, msg=msg)
 
-    def Position(self, debug=False):
+    def get_position(self, debug=False):
         """
         Gets the point in the global XYZ coordinate system.
 
@@ -859,7 +861,7 @@ class GRID(Node):
         xyz, matrix = self.cp.transformToGlobal(self.xyz, debug=debug)
         return xyz
 
-    def PositionWRT(self, model, cid, debug=False):
+    def get_position_wrt(self, model, cid, debug=False):
         """
         Gets the location of the GRID which started in some arbitrary
         system and returns it in the desired coordinate system
@@ -1016,7 +1018,7 @@ class GRID(Node):
         return self.comment() + card_writer(card)
 
 
-class POINT(Node):
+class POINT(Node, PointDeprecated):
     """
     +-------+-----+----+----+----+----+----+----+-----+
     |   1   |  2  | 3  | 4  | 5  | 6  |  7 | 8  |  9  |
@@ -1123,7 +1125,7 @@ class POINT(Node):
         assert self.nid > 0, 'nid=%s' % (self.nid)
         assert self.cp >= 0, 'cp=%s' % (self.cp)
 
-    def nDOF(self):
+    def get_ndof(self):
         """
         Gets the number of degrees of freedom for the POINT
 
@@ -1133,7 +1135,7 @@ class POINT(Node):
         """
         return 6
 
-    def UpdatePosition(self, model, xyz, cid=0):
+    def set_position(self, model, xyz, cid=0):
         """
         Updates the POINT location
 
@@ -1147,7 +1149,7 @@ class POINT(Node):
         msg = ' which is required by POINT nid=%s' % self.nid
         self.cp = model.Coord(cid, msg=msg)
 
-    def Position(self, debug=False):
+    def get_position(self, debug=False):
         """
         Gets the point in the global XYZ coordinate system.
 
@@ -1159,7 +1161,7 @@ class POINT(Node):
         p, matrix = self.cp.transformToGlobal(self.xyz, debug=debug)
         return p
 
-    def PositionWRT(self, model, cid, debug=False):
+    def get_position_wrt(self, model, cid, debug=False):
         """
         Gets the location of the POINT which started in some arbitrary
         system and returns it in the desired coordinate system
