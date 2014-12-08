@@ -425,16 +425,16 @@ class RBE3(RigidElement):
         except ValueError:
             iAlpha = None
             iUmStop = iWtMax
-        #print "iAlpha = ",iAlpha
+        #print("iAlpha = %s" % iAlpha)
         try:
             iUm = fields.index('UM') + iOffset
             iWtMax = iUm
         except ValueError:
             iUm = None
-        #print "iAlpha=%s iUm=%s" %(iAlpha,iUm)
-        #print "iAlpha=%s iWtMax=%s" %(iAlpha,iWtMax)
+        #print("iAlpha=%s iUm=%s" % (iAlpha, iUm))
+        #print("iAlpha=%s iWtMax=%s" % (iAlpha, iWtMax))
 
-        #print "iUM = ",iUM
+        #print("iUM = ", iUM)
         self.WtCG_groups = []
 
         i = iOffset
@@ -470,12 +470,12 @@ class RBE3(RigidElement):
 
         self.Gmi = []
         self.Cmi = []
-        #print ""
+        #print("")
         if iUm:
-            #print('UM =', card.field(iUm))  # UM
+            #print('UM = %s' % card.field(iUm))  # UM
             i = iUm + 1
             n = 1
-            #print("i=%s iUmStop=%s" % (i,iUmStop))
+            #print("i=%s iUmStop=%s" % (i, iUmStop))
             for j in range(i, iUmStop, 2):
 
                 gm_name = 'gm' + str(n)
@@ -483,7 +483,7 @@ class RBE3(RigidElement):
                 gmi = integer_or_blank(card, j, gm_name)
                 if gmi is not None:
                     cmi = components(card, j + 1, cm_name)
-                    #print "gmi=%s cmi=%s" %(gmi,cmi)
+                    #print "gmi=%s cmi=%s" % (gmi, cmi)
                     self.Gmi.append(gmi)
                     self.Cmi.append(cmi)
 
@@ -492,7 +492,7 @@ class RBE3(RigidElement):
         else:
             #: thermal expansion coefficient
             self.alpha = 0.0
-        #print self
+        #print(self)
 
     # def convertToMPC(self, mpcID):
     #     """
@@ -518,7 +518,7 @@ class RBE3(RigidElement):
     def raw_fields(self):
         list_fields = ['RBE3', self.eid, None, self.refgrid, self.refc]
         for (wt, ci, Gij) in self.WtCG_groups:
-            #print 'wt=%s ci=%s Gij=%s' %(wt,ci,Gij)
+            #print('wt=%s ci=%s Gij=%s' % (wt, ci, Gij))
             list_fields += [wt, ci] + Gij
         nSpaces = 8 - (len(list_fields) - 1) % 8  # puts UM onto next line
 
@@ -534,8 +534,8 @@ class RBE3(RigidElement):
         if self.Gmi:
             list_fields += ['UM']
         if self.Gmi:
-            #print "Gmi = ",self.Gmi
-            #print "Cmi = ",self.Cmi
+            #print("Gmi = %s" % self.Gmi)
+            #print("Cmi = %s" % self.Cmi)
             for (gmi, cmi) in zip(self.Gmi, self.Cmi):
                 list_fields += [gmi, cmi]
 
