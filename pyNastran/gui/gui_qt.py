@@ -30,7 +30,7 @@ fmode = 1
 assert fmode in [1, 2]
 
 # 3rd party
-from numpy import ndarray
+from numpy import ndarray, eye
 import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
@@ -545,7 +545,7 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         self.scalarBar = vtk.vtkScalarBarActor()
         self.create_global_axes()
 
-    def create_coordinate_system(self, origin=None, matrix_3x3=None, Type='xyz'):
+    def create_coordinate_system(self, label='', origin=None, matrix_3x3=None, Type='xyz', add_to_ren=True):
         """
         Creates a coordinate system
 
@@ -566,19 +566,28 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
           http://www3.cs.stonybrook.edu/~qin/courses/graphics/camera-coordinate-system.pdf
           http://www.vtk.org/doc/nightly/html/classvtkTransform.html#ad58b847446d791391e32441b98eff151
         """
-        self.transform = vtk.vtkTransform()
-        if origin is not None:
-            self.transform.Translate(*origin)
+        if add_to_ren == True:
+            return
+        coord_id = self.coord_id
 
-        #cid = 5
-        #coord = self.model.coords[cid]
-        if matrix_3x3 is not None:
+        transform = vtk.vtkTransform()
+        if origin is None and matrix_3x3 is None:
+            pass
+        elif origin is not None and matrix_3x3 is None:
+            print('origin%s = %s' % (label, str(origin)))
+            transform.Translate(*origin)
+        elif matrix_3x3 is not None:  # origin can be None
             m = eye(4, dtype='float32')
             m[:3, :3] = matrix_3x3
-            self.transform.SetMatrix(m)
+            if origin is not None:
+                m[:3, 3] = origin
+            transform.SetMatrix(m.ravel())
+        else:
+            raise RuntimeError('unexpected coordinate system')
 
-        self.axes = vtk.vtkAxesActor()
-        self.axes.SetUserTransform(self.transform)
+        axes = vtk.vtkAxesActor()
+        axes.SetUserTransform(transform)
+
         if Type != 'xyz':
             if Type == 'Rtz':
                 x = u'R'
@@ -600,16 +609,34 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
             else:
                 raise RuntimeError('invalid axis type; Type=%r' % Type)
 
-            self.axes.SetXAxisLabelText(x)
-            self.axes.SetYAxisLabelText(y)
-            self.axes.SetZAxisLabelText(z)
+            x = '%s%s' % (x, label)
+            y = '%s%s' % (y, label)
+            z = '%s%s' % (z, label)
+            axes.SetXAxisLabelText(x)
+            axes.SetYAxisLabelText(y)
+            axes.SetZAxisLabelText(z)
+        else:
+            if label:
+                x = 'x%s' % label
+                y = 'y%s' % label
+                z = 'z%s' % label
+                axes.SetXAxisLabelText(x)
+                axes.SetYAxisLabelText(y)
+                axes.SetZAxisLabelText(z)
 
+        self.transform[coord_id] = transform
+        self.axes[coord_id] = axes
         self.coord_id += 1
-        return self.coord_id - 1
+        if add_to_ren:
+            self.rend.AddActor(axes)
+        return self.coord_id
 
     def create_global_axes(self):
+        self.transform = {}
+        self.axes = {}
         #self.create_coordinate_system(origin=None, matrix_3x3=None, Type='Rtp')
-        #return
+        self.create_coordinate_system(label='', origin=None, matrix_3x3=None, Type='xyz', add_to_ren=False)
+        return
 
         self.transform = vtk.vtkTransform()
         #self.transform.Translate(0.0, 0.0, 0.0)
@@ -660,7 +687,8 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         self.textActors = {}
 
 
-        self.rend.AddActor(self.axes)
+        for cid, axes in self.axes.iteritems():
+            self.rend.AddActor(axes)
         self.addGeometry()
         self.addAltGeometry()
         self.rend.GetActiveCamera().ParallelProjectionOn()
