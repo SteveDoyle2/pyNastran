@@ -30,7 +30,8 @@ class GuiCommon(object):
         # scale based on model length
         dim_max *= 0.10
         if hasattr(self, 'axes'):
-            self.axes.SetTotalLength(dim_max, dim_max, dim_max)
+            for cid, axes in iteritems(self.axes):
+                axes.SetTotalLength(dim_max, dim_max, dim_max)
 
     def update_text_actors(self, case, subcaseID, subtitle, min_value, max_value, label):
         self.textActors[0].SetInput('Max:  %g' % max_value)  # max
