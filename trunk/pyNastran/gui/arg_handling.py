@@ -91,7 +91,7 @@ def get_inputs():
     else:
         if len(sys.argv) > 1:
             (is_edges, is_nodal, is_centroidal, format, input, output, shots, magnify,
-             rotation, script, debug) = run_arg_parse(mode)
+             rotation, script, debug) = run_arg_parse()
 
     if format is not None and is_centroidal == is_nodal:
         if format.lower() == 'nastran':
