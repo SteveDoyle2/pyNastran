@@ -38,6 +38,7 @@ class Elements(object):
 
         # rigid
         self.rbe2 = model.rbe2
+        self.rbe3 = model.rbe3
 
         # spring
         self.elements_spring = model.elements_spring
@@ -605,6 +606,7 @@ class Elements(object):
 
                  # rigid
                  self.rbe2,
+                 self.rbe3,
 
                  #self.elements_shell.ctria3,
                  #self.elements_shell.cquad4,

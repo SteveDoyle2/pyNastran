@@ -590,6 +590,7 @@ class WriteMesh(object):
     def _write_rigid_elements(self, outfile, size, is_double):
         """Writes the rigid elements in a sorted order"""
         self.rbe2.write_bdf(outfile, size, is_double)
+        self.rbe3.write_bdf(outfile, size, is_double)
 
     def _write_sets(self, outfile, size, card_writer):
         """Writes the SETx cards sorted by ID"""

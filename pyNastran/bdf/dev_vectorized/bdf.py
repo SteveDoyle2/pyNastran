@@ -56,6 +56,7 @@ from .cards.elements.mass.mass import Mass
 
 # rigid
 from .cards.elements.rigid.rbe2 import RBE2
+from .cards.elements.rigid.rbe3 import RBE3
 
 # rods
 from .cards.elements.rod.prod import PROD
@@ -557,6 +558,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #: stores rigid elements (RBE2, RBE3, RJOINT, etc.)
         #self.rigidElements = {}
         self.rbe2 = RBE2(model)
+        self.rbe3 = RBE3(model)
 
         #self.properties_spring = PropertiesSpring(model)
         #self.properties_rod = PropertiesRod(v)
@@ -2158,7 +2160,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'RBE2':
             self.elements.rbe2.add(card_obj, comment=comment)
         elif name == 'RBE3':
-            pass
+            self.elements.rbe3.add(card_obj, comment=comment)
         #========================
         elif name == 'CORD1R':
             self.coords.add_cord1r(card_obj, comment=comment)
