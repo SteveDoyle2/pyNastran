@@ -112,7 +112,7 @@ class RBE2(object):
 
 
     def add(self, card, comment=''):
-        self.model.log.debug('RBE2.add')
+        #self.model.log.debug('RBE2.add')
         i = self.i
         #if comment:
             #self._comment = comment
@@ -140,7 +140,7 @@ class RBE2(object):
         Gmi = []
         for k in range(len(card) - 4 - n):
             gmi = integer(card, j + k, 'Gm%i' % (k + 1))
-            print('GM%i = %s' % (k, gmi))
+            #print('GM%i = %s' % (k + 1, gmi))
             Gmi.append(gmi)
         self.gmi[i] = Gmi
         self.i += 1
@@ -164,7 +164,6 @@ class RBE2(object):
         #self.cm = str(self.cm)
 
     def build(self):
-        print(self.cm)
         if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]

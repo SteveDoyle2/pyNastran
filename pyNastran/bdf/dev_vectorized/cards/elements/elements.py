@@ -534,9 +534,9 @@ class Elements(object):
         return eids2, mass
 
     def get_properties(self, property_id=None):
-        self.model.log.debug('property_idA = %s' % property_id)
+        #self.model.log.debug('property_idA = %s' % property_id)
         property_id, int_flag = slice_to_iter(property_id)
-        self.model.log.debug('property_idB = %s int_flag=%s' % (property_id, int_flag))
+        #self.model.log.debug('property_idB = %s int_flag=%s' % (property_id, int_flag))
         TypeMap = self.get_property_typemap()
         out = []
         #print('property_id = %s' % property_id)
@@ -545,7 +545,6 @@ class Elements(object):
                 if not isinstance(pid, int):
                     self.model.log.debug('pids = %s' % pids)
                     self.model.log.debug('pid  = %s' % pid)
-                    aaa
 
                 if pid in pids:
                     i = where(pid == pids)[0]
@@ -556,7 +555,7 @@ class Elements(object):
                     obj = TypeMap[Type][pids_extract]
                     out.append(obj)
         #return out
-        self.model.log.debug('out[0] = %s' % out[0])
+        #self.model.log.debug('out[0] = %s' % out[0])
         return out[0] if int_flag else out
 
     def allocate(self, card_count):

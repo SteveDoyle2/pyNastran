@@ -38,7 +38,7 @@ class PropertiesSolid(object):
         npsolid = self.psolid.n
 
         self.property_id = hstack([self.psolid.property_id, self.plsolid.property_id])
-        self.model.log.debug('dtype property_id=%s' % str(self.property_id.dtype))
+        #self.model.log.debug('dtype property_id=%s' % str(self.property_id.dtype))
         #print('npsolid =', npsolid)
         #assert npsolid > 0
         #nplsolid = self.plsolid.n
