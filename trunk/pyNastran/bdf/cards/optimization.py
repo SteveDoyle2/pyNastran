@@ -360,7 +360,7 @@ class DRESP2(OptConstraint):
 
         #print self
 
-    def packParams(self):
+    def _pack_params(self):
         # # the amount of padding at the [beginning,end] of the 2nd line
         packLength = {
              'DESVAR':  [1, 0],
@@ -394,7 +394,7 @@ class DRESP2(OptConstraint):
     def raw_fields(self):
         list_fields = ['DRESP2', self.oid, self.label, self.eqidFunc,
                   self.region, self.method, self.c1, self.c2, self.c3]
-        list_fields += self.packParams()
+        list_fields += self._pack_params()
         return list_fields
 
     def repr_fields(self):
@@ -404,7 +404,7 @@ class DRESP2(OptConstraint):
 
         list_fields = ['DRESP2', self.oid, self.label, self.eqidFunc,
                   self.region, method, c1, c2, self.c3]
-        list_fields += self.packParams()
+        list_fields += self._pack_params()
         return list_fields
 
     def write_bdf(self, size, card_writer):
@@ -611,8 +611,10 @@ class DVPREL2(OptConstraint):
             self._comment = comment
         #: Unique identification number
         self.oid = integer(card, 1, 'oid')
+
         #: Name of a property entry, such as PBAR, PBEAM, etc
         self.Type = string(card, 2, 'Type')
+
         #: Property entry identification number
         self.pid = integer(card, 3, 'pid')
         #: Property name, such as 'T', 'A', or field position of the property
@@ -620,6 +622,7 @@ class DVPREL2(OptConstraint):
         #: analysis model. Property names that begin with an integer such as
         #: 12I/T**3 may only be referred to by field position.
         #: (Character or Integer 0)
+
         self.pNameFid = integer_or_string(card, 4, 'pName_FID')
         #: Minimum value allowed for this property. If FID references a stress
         #: recovery location field, then the default value for PMIN is -1.0+35.
