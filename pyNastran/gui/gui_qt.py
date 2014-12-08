@@ -566,8 +566,6 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
           http://www3.cs.stonybrook.edu/~qin/courses/graphics/camera-coordinate-system.pdf
           http://www.vtk.org/doc/nightly/html/classvtkTransform.html#ad58b847446d791391e32441b98eff151
         """
-        if add_to_ren == True:
-            return
         coord_id = self.coord_id
 
         transform = vtk.vtkTransform()
