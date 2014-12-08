@@ -2,7 +2,7 @@
 #labels Featured
 
 = Setup Note =
-Download the entire package from the [http://code.google.com/p/pynastran/downloads/list Downloads] page or just the [https://sourceforge.net/projects/pynastran/files/?source=navbar GUI].
+Download the entire package from subversion or just the [https://sourceforge.net/projects/pynastran/files/?source=navbar GUI] executable.
 
 If you download the source, make sure you follow the [http://code.google.com/p/pynastran/wiki/InstallationGuide Installation Guide] and use *setup.py develop* and not *setup.py install*.  
 
