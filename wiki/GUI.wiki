@@ -2,19 +2,17 @@
 #labels Featured
 
 = Setup Note =
-Download the entire package from the [http://code.google.com/p/pynastran/downloads/list Downloads] page or just the GUI.
+Download the entire package from the [http://code.google.com/p/pynastran/downloads/list Downloads] page or just the [https://sourceforge.net/projects/pynastran/files/?source=navbar GUI].
 
 If you download the source, make sure you follow the [http://code.google.com/p/pynastran/wiki/InstallationGuide Installation Guide] and use *setup.py develop* and not *setup.py install*.  
 
-If you're using Python 3.x, the GUI will *not* work because [http://wiki.wxpython.org/TentativeRoadmap wxPython] does not support Python 3.x (but it is [http://wiki.wxpython.org/ProjectPhoenix very close]).  Same with [http://www.vtk.org/Wiki/VTK/Python_Wrapping_FAQ VTK].
+If you're using Python 3.x, the GUI will *not* work because [http://www.vtk.org/Wiki/VTK/Python_Wrapping_FAQ VTK] does not support Python 3.
 
 = Introduction =
 
-The Graphical User Interface (GUI) was first introduced in version 0.3.0.  It is capable of displaying a BDF.  Work has begun on displaying the OP2, but is still preliminary.
+The Graphical User Interface (GUI) looks like:
 
-The GUI looks like:
-
-https://pynastran.googlecode.com/svn/trunk/pyNastran/gui/guiDemo.png
+https://pynastran.googlecode.com/svn/trunk/pyNastran/gui/qt.png
 
 = Running the GUI =
 On the command line:
@@ -23,80 +21,66 @@ On the command line:
 
 To view the options:
 >> pyNastranGUI --help
-usage: pyNastranGUI-script.py [-h] [-q] [-g] [-v]
 
-Tests to see if an OP2 will work with pyNastran.
+Usage:
+  pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT]
+                  [-s SHOT] [-m MAGNIFY] [-p SCRIPT]
+                  [-q] [-e] [-n | -c]
+  pyNastranGUI -h | --help
+  pyNastranGUI -v | --version
 
-optional arguments:
-  -h, --help     show this help message and exit
-  -q, --quiet    Prints debug messages (default=True)
-  -g, --edges    Shows element edges as black lines (this option was changed to -e in the executable version and will be -e in future versions)
-  -v, --version  show program's version number and exit
+Options:
+  -h, --help                  show this help message and exit
+  -f FORMAT, --format FORMAT  format type (cart3d, lawgs, nastran, panair,
+                                           stl, tetgen, usm3d)
+  -i INPUT, --input INPUT     path to input file
+  -o OUTPUT, --output OUTPUT  path to output file
+  -p SCRIPT, --pyscript SCIPRT  path to script file
+  -s SHOT, --shots SHOT       path to screenshot (only 1 for now)
+  -m MAGNIFY, --magnify       MAGNIFY how much should the resolution on a picture be magnified (default=1)
+  -q, --quiet                 prints debug messages (default=True)
+  -e, --edges                 shows element edges as black lines (default=False)
+  -n, --nodalResults          plots nodal results (default)
+  -c, --centroidalResults     plots centroidal results
+  -v, --version               show program's version number and exit
 }}}
 
 The *solidBending.bdf* and *solidBending.op2* files have been included as examples that work in the GUI.  They are inside the "models" folder (at the same level as setup.py).
 
 = Features =
- * Load BDF file window (menu/button)
- * Load OP2 file window (menu)
- * Multiple Results Outputs
-   * Centroidal Results Only (e.g. StressXX, StressYY, vonMisesStress)
-   * Cycle through Results with 'L' key
-   * Contour Plots
-   * Words that displays subcase ID, subtitle, max value, and the min value
- * Wireframe Mode (button/keyboard)
- * Surface/Solid Mode (menu/button/keyboard)
+ * Nastran, Panair, Cart3d, STL, Usm3d support
+   * limited results support
+ * Command line interface
+ * Scripting capability
  * Take a Screenshot (menu/button/keyboard)
  * Snap to Axis (keyboard)
  * Change Background Color (menu)
 
 = Supported Elements =
- * CQUAD4 / CQUAD8 (CQUAD5/6/7 represented as CQUAD4)
+ * CQUAD4 / CQUAD8
  * CTRIA3 / CTRIA6
  * CTETRA4 / CTETRA10
  * CHEXA8 / CHEXA20
  * CPENTA6 / CPENTA15
  * CSHEAR
- * CQUADR / CTRIAR (v0.5)
+ * CQUADR / CTRIAR
  * CBAR / CBEAM / CROD / CONROD / CELASx (displayed as lines)
  * CAERO1 (shown in yellow)
  * CONM2 (shown in yellow as points)
  
-
 = BDF Requirements =
  * Entire model can be cross-referenced
  * Same requirements as BDF (include an executive/case control deck, define all cross-referenced cards, etc.)
 
-= Mouse Controls =
-|| *Command* || *Purpose* ||
-|| Left Mouse Button || Rotate in 3D ||
-|| Right Mouse Button || Zoom In/Out ||
-|| Middle Mouse Button || Pan/Recenter Rotation Point ||
-|| Shift + Left Mouse Button || Pan/Recenter Rotation Point ||
-
-= Keyboard Controls =
-
-|| *Key* || *Purpose* ||
-|| i || Take a Picture (Image) ||
-|| L   || Cycle through OP2 results ||
-|| m/M || Increase/decrease magnification 1.1 times ||
-|| o/O || Rotate clockwise/counter-clockwise 5 degrees ||
-|| s   || Display surface mode    ||
-|| w   || Display wireframe mode  ||
-|| h   || Hide the scale bar and text  ||
-|| x/X || Snap to x/-x axis ||
-|| y/Y || Snap to y/-y axis ||
-|| z/Z || Snap to z/-z axis ||
+= Scripting =
+GUI commands are logged to the window with their call signature.  Users may then use a custom Python script to take many pictures, show the sub-caero panels, etc.  A sample CAERO script that shows individual CAERO subpanels (instead of just the outline of the CAERO panel) is provided with the download.
 
 == Graphical Issues ==
 You'll have the best performance if you run the GUI on Windows with an new NVIDIA graphics card and on a desktop.
 
 If you're having issues, you should update the driver for your graphics card, especially if you have a laptop or Radeon card. For a desktop machine, go to the web site of the manufacturer of the graphics card. For a laptop, you should normally go to the web site of the laptop manufacturer, though for NVIDIA you may now find a newer driver available from NVIDIA.
 
-== TODO ==
- * Add a bar on the right hand side with OP2 results so you can select one, rather than cycling through them with the keyboard
- * support composite elements
- * allow edges to be shown without passing in a command line argument
- * Allow point picking (p)
- * Allow element picking (e)
- * Display element edges (d)
+Issues include:
+
+  1. the backfaces of elements not being colored
+  2. the GUI not working
