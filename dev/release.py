@@ -95,6 +95,17 @@ def get_class_function_list(filename):
 import sys
 import importlib
 from pyNastran.utils import object_methods
+import inspect
+
+def get_function_args(function, function_name):
+    f = inspect.getargspec(function_name)
+    print(f)
+    msg = '%s('
+    for argi in f.args:
+        msg += argi + ', '
+    msg += ')'
+    print(msg)
+    asf
 
 def main():
     base_imports = get_base_import_names()
@@ -125,16 +136,25 @@ def main():
                 print(public)
 
                 for class_name in class_names:
+                    if class_name not in public:
+                        continue
                     try:
                         class_obj = getattr(module, class_name)
                     except AttributeError:
                         print('bad_module=%s' % fname)
                         raise
                     object_methods(class_obj)
+
+                if function_names:
+                    for function_name in function_names:
+                        func = getattr(module, function_name)
+                        fargs = get_function_args(func, function_name)
+
+                    #print(function_names)
                 print('')
 
-            #for function_name in function_names :
-                #print(object_methods(class_obj))
+                #for function_name in function_names:
+                    #print(object_methods(class_obj))
             #sys.path.pop()
             #del module
             del sys.modules[basename]

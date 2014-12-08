@@ -303,11 +303,10 @@ class RBE2(RigidElement):
                 n = 0
                 self.alpha = 0.0
 
-            j=4
+            j = 4
             self.Gmi = []
-            for i in range(len(card)-4-n):
-                gmi = integer(card, j + i, 'Gm%i' % (i + 1))
-                #print('gm%i = %s' % (i + 1, gmi))
+            for k in range(len(card) - 4 - n):
+                gmi = integer(card, j + k, 'Gm%i' % (k + 1))
                 self.Gmi.append(gmi)
         else:
             self.eid = data[0]
