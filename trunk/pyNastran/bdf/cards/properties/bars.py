@@ -817,17 +817,16 @@ class PBARL(LineProperty):
             #: Section Type (e.g. 'ROD', 'TUBE', 'I', 'H')
             self.Type = string(card, 4, 'Type')
 
-            #nDim = len(self.dim)-1
-            nDim = self.validTypes[self.Type]
-            j = 9 + nDim + 1
+            ndim = self.validTypes[self.Type]
+            j = 9 + ndim + 1
 
             #: dimension list
             self.dim = fields(double_or_blank, card, 'dim', i=9, j=j)
 
             #: non-structural mass
-            self.nsm = double_or_blank(card, 9 + nDim + 1, 'nsm', 0.0)
+            self.nsm = double_or_blank(card, 9 + ndim + 1, 'nsm', 0.0)
 
-            if nDim > 0:
+            if ndim > 0:
                 self.nsm = set_default_if_blank(self.dim.pop(), 0.0)
             else:
                 self.nsm = 0.0

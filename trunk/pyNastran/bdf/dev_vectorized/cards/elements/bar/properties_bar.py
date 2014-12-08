@@ -21,10 +21,14 @@ class PropertiesBar(object):
         ptypes = self._get_types(nlimit=False)
         for ptype in ptypes:
             if ptype.type in card_count:
+                if hasattr(ptype, 'n'):
+                    self.model.log.debug('    building %s.n = %s' % (ptype.__class__.__name__, ptype.n))
+                else:
+                    raise RuntimeError(ptype)
                 ptype.allocate(card_count[ptype.type])
                 del card_count[ptype.type]
-            #else:
-                #assert hasattr(etype, 'allocate'), '%s doesnt support allocate' % etype.type
+            else:
+                assert hasattr(etype, 'allocate'), '%s doesnt support allocate' % etype.type
 
     def build(self):
         self.pbar.build()
@@ -84,4 +88,5 @@ class PropertiesBar(object):
         f.write('$PROPERTIES_BAR\n')
         types = self._get_types(nlimit=False)
         for prop in types:
+            #print('prop.type = %s' % prop.type)
             prop.write_bdf(f, size=size, property_id=property_id)
