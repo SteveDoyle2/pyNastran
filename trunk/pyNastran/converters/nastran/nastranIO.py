@@ -42,7 +42,15 @@ from pyNastran.f06.f06 import F06
 
 class NastranIO(object):
     def __init__(self):
+        #: flips the nastran CAERO subpaneling
+        #:   False -> borders of CAEROs can be seen
+        #:   True  -> individual subpanels can be seen
         self.is_sub_panels = False
+
+        #: coordinate systems can be messy, so this is the
+        #: list of coords to show
+        self.show_cids = []
+
         self.save_data = False
 
     def load_nastran_geometry(self, bdf_filename, dirname):
@@ -186,9 +194,12 @@ class NastranIO(object):
         for cid, coord in sorted(model.coords.iteritems()):
             if cid == 0:
                 continue
-            origin = coord.origin
-            beta = coord.beta()
-            self.create_coordinate_system(label=cid, origin=origin, matrix_3x3=beta, Type='xyz', add_to_ren=True)
+            if cid in self.show_cids:
+                origin = coord.origin
+                beta = coord.beta()
+                self.create_coordinate_system(label=cid, origin=origin, matrix_3x3=beta, Type='xyz', add_to_ren=True)
+            else:
+                print('skipping cid=%s' % cid)
 
         for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
             point = node.Position()
