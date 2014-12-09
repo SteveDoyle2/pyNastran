@@ -14,6 +14,9 @@ class VectorizedCard(object):
             if self.type.startswith('C'):
                 print('there is no op2_id to apply for element=%r' % self.type)
 
+    def __len__(self):
+        return self.n
+
     def shrink(self, refcheck=True):
         raise NotImplementedError()
 

@@ -16,8 +16,6 @@ from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
 
 class PCOMP(Property):
     type = 'PCOMP'
-    def __len__(self):
-        return self.n
 
     def allocate(self, ncards):
         self.n = 0

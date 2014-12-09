@@ -52,55 +52,57 @@ from pyNastran.bdf.dev_vectorized.cards.elements.bush.cbush import CBUSH
 from pyNastran.bdf.dev_vectorized.cards.elements.bush.pbush import PBUSH
 
 # mass
-from .cards.elements.mass.mass import Mass
+from pyNastran.bdf.dev_vectorized.cards.elements.mass.mass import Mass
 
 # rigid
-from .cards.elements.rigid.rbe2 import RBE2
-from .cards.elements.rigid.rbe3 import RBE3
+from pyNastran.bdf.dev_vectorized.cards.elements.rigid.rbe2 import RBE2
+from pyNastran.bdf.dev_vectorized.cards.elements.rigid.rbe3 import RBE3
 
 # rods
-from .cards.elements.rod.prod import PROD
-from .cards.elements.rod.crod import CROD
-from .cards.elements.rod.conrod import CONROD
+from pyNastran.bdf.dev_vectorized.cards.elements.rod.prod import PROD
+from pyNastran.bdf.dev_vectorized.cards.elements.rod.crod import CROD
+from pyNastran.bdf.dev_vectorized.cards.elements.rod.conrod import CONROD
 
 # shear
-from .cards.elements.shear.cshear import CSHEAR
-from .cards.elements.shear.pshear import PSHEAR
+from pyNastran.bdf.dev_vectorized.cards.elements.shear.cshear import CSHEAR
+from pyNastran.bdf.dev_vectorized.cards.elements.shear.pshear import PSHEAR
 
 # shell
-from .cards.elements.shell.elements_shell import ElementsShell
-from .cards.elements.shell.properties_shell import PropertiesShell
+from pyNastran.bdf.dev_vectorized.cards.elements.shell.elements_shell import ElementsShell
+from pyNastran.bdf.dev_vectorized.cards.elements.shell.properties_shell import PropertiesShell
 
 # solid
-from .cards.elements.solid.elements_solid import ElementsSolid
-from .cards.elements.solid.properties_solid import PropertiesSolid
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.elements_solid import ElementsSolid
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.properties_solid import PropertiesSolid
 
 # spring
-from .cards.elements.spring.elements_spring import ElementsSpring
-from .cards.elements.spring.pelas import PELAS
+from pyNastran.bdf.dev_vectorized.cards.elements.spring.elements_spring import ElementsSpring
+from pyNastran.bdf.dev_vectorized.cards.elements.spring.pelas import PELAS
 
 #===========================
 # aero
 
-from .cards.aero.caero import CAero
-from .cards.aero.paero import PAero
-from .cards.aero.trim import TRIM
-#from .cards.aero.aero import AERO
-#from .cards.aero.aeros import AEROS
+from pyNastran.bdf.dev_vectorized.cards.aero.caero import CAero
+from pyNastran.bdf.dev_vectorized.cards.aero.paero import PAero
+from pyNastran.bdf.dev_vectorized.cards.aero.spline1 import SPLINE1
+
+from pyNastran.bdf.dev_vectorized.cards.aero.trim import TRIM
+from pyNastran.bdf.dev_vectorized.cards.aero.aero import AERO
+from pyNastran.bdf.dev_vectorized.cards.aero.aeros import AEROS
 
 #===========================
 
 # materials
-from .cards.materials.materials import Materials
+from pyNastran.bdf.dev_vectorized.cards.materials.materials import Materials
 
 
 # loads
-from .cards.loads.loads import Loads
-from .cards.loads.temp import TEMPs
+from pyNastran.bdf.dev_vectorized.cards.loads.loads import Loads
+from pyNastran.bdf.dev_vectorized.cards.loads.temp import TEMPs
 #=============================
 # dynamic
-from .cards.nonlinear.nlpci import NLPCI
-from .cards.nonlinear.nlparm import NLPARM
+from pyNastran.bdf.dev_vectorized.cards.nonlinear.nlpci import NLPCI
+from pyNastran.bdf.dev_vectorized.cards.nonlinear.nlparm import NLPARM
 
 #=============================
 
@@ -658,6 +660,16 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.caero1 = self.caero.caero1
         self.paero1 = self.paero.paero1
 
+        self.spline1 = SPLINE1(model)
+        #self.spline2 = SPLINE2(model)
+        #self.spline3 = SPLINE3(model)
+        #self.spline4 = SPLINE4(model)
+        #self.spline5 = SPLINE5(model)
+
+        self.aero = AERO(model)
+        self.aeros = AEROS(model)
+
+        #===================================
         #: stores coordinate systems
         #self.coord = Coord(model)
 
@@ -671,18 +683,12 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #: stores MAT1, MAT2, MAT3,...MAT10 (no MAT4, MAT5)
         self.materials = Materials(model)
 
-
         self.__define_unvectorized()
 
     def __define_unvectorized(self):
-        self.aero = {}
-        self.aeros = {}
-
         #: stores TRIM
         self.trim = {}
         self.trims = {}
-        #self.aero = AERO(model)
-        #self.aeros = AEROS(model)
         #===================================
         # optimization
         #self.dconstr = DCONSTR(model)
@@ -996,6 +1002,12 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.caero1.allocate(card_count['CAERO1'])
         if 'PAERO1' in card_count:
             self.paero1.allocate(card_count['PAERO1'])
+        if 'SPLINE1' in card_count:
+            self.spline1.allocate(card_count['SPLINE1'])
+        if 'AERO' in card_count:
+            self.aero.allocate(card_count['AERO'])
+        if 'AEROS' in card_count:
+            self.aeros.allocate(card_count['AEROS'])
 
 
     def _cleanup_file_streams(self):
@@ -1846,15 +1858,15 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             pass
         #========================
         elif name == 'SPLINE1':
-            pass
+            self.spline1.add(card_obj, comment=comment)
         elif name == 'SPLINE2':
-            pass
+            self.spline2.add(card_obj, comment=comment)
         elif name == 'SPLINE3':
-            pass
+            self.spline3.add(card_obj, comment=comment)
         elif name == 'SPLINE4':
-            pass
+            self.spline4.add(card_obj, comment=comment)
         elif name == 'SPLINE5':
-            pass
+            self.spline5.add(card_obj, comment=comment)
         #========================
         # caero/paero
         elif name == 'CAERO1':
@@ -1879,6 +1891,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'PAERO5':
             self.paero.add_paero5(card_obj, comment=comment)
 
+        elif name == 'SPLINE1':
+            self.spline1.add(card_obj, comment=comment)
 
         elif name == 'TRIM':
             trim = TRIM(self)

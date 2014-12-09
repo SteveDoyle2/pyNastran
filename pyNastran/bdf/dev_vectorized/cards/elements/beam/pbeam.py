@@ -9,11 +9,8 @@ from pyNastran.bdf.cards.properties.beam import PBEAM as vPBEAM
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 
 
-class PBEAM(object):
+class PBEAM(Property):
     type = 'PBEAM'
-
-    def __len__(self):
-        return self.n
 
     def __iter__(self):
         pids = self.property_id

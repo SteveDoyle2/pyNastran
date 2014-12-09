@@ -12,8 +12,6 @@ from pyNastran.bdf.cards.properties.bush import PBUSH as vPBUSH
 
 class PBUSH(object):
     type = 'PBUSH'
-    def __len__(self):
-        return self.n
 
     def __init__(self, model):
         """

@@ -33,6 +33,12 @@ class PAERO1(VectorizedCard):
             self.b[i, j-2] = integer_or_blank(card, j, 'b%i' % j-2, 0)
         self.i += 1
 
+    def build(self):
+        if self.n:
+            i = self.property_id.argsort()
+            self.property_id = self.property_id[i]
+            self.b = self.b[i, :]
+
     #def get_bodies(self):
         #return self.Bi
 

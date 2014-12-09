@@ -36,9 +36,6 @@ class Material(VectorizedCard):
     def iterkeys(self):
         return self.keys()
 
-    def __len__(self):
-        return self.n
-
     def get_material_index_by_material_id(self, material_id=None):
         if material_id is None:
             return slice(None)
