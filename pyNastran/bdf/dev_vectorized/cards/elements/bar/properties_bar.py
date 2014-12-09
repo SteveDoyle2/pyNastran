@@ -28,7 +28,7 @@ class PropertiesBar(object):
                 ptype.allocate(card_count[ptype.type])
                 del card_count[ptype.type]
             else:
-                assert hasattr(etype, 'allocate'), '%s doesnt support allocate' % etype.type
+                assert hasattr(ptype, 'allocate'), '%s doesnt support allocate' % ptype.type
 
     def build(self):
         self.pbar.build()

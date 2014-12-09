@@ -654,7 +654,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.caero = CAero(model)
         #: stores PAERO1, PAERO2, PAERO3, PAERO4, PAERO5
         self.paero = PAero(model)
-        self.paeros = {}
+
+        self.caero1 = self.caero.caero1
+        self.paero1 = self.paero.paero1
 
         #: stores coordinate systems
         #self.coord = Coord(model)
@@ -989,6 +991,12 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.materials.allocate(card_count)
         self.loads.allocate(card_count)
         self.temps.allocate(card_count)
+
+        if 'CAERO1' in card_count:
+            self.caero1.allocate(card_count['CAERO1'])
+        if 'PAERO1' in card_count:
+            self.paero1.allocate(card_count['PAERO1'])
+
 
     def _cleanup_file_streams(self):
         """

@@ -23,6 +23,8 @@ from pyNastran.utils.dev import list_print
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, string_or_blank)
 from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_double import print_card_double
 
 
 def normalize(v):
@@ -43,7 +45,6 @@ def normalize(v):
 
 
 class Coord(BaseCard):
-    type = 'COORD'
 
     def __repr__(self):
         aaa

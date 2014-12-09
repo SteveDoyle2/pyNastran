@@ -2,12 +2,16 @@ from six import iteritems, itervalues
 from six.moves import zip
 from numpy import (array, concatenate, searchsorted, unique, zeros, array, full,
                    nan, where, vstack, dot, cross, degrees, radians, arctan2,
-                   cos, sin, hstack, array_equal, allclose, eye, ndarray)
+                   cos, sin, hstack, array_equal, allclose, eye, ndarray, arange)
 from numpy.linalg import norm
 
 from pyNastran.bdf.cards.coordinateSystems import (
     CORD1R, CORD1C, CORD1S,
     CORD2R, CORD2C, CORD2S)
+
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_double import print_card_double
 
 def normalize(v):
     print(v)
@@ -45,6 +49,24 @@ class Coord(object):
         #print('xyz2 = %s' % xyz2)
         assert xyz.shape == xyz2.shape, "xyz.shape=%s xyz2.shape=%s" % (xyz.shape, xyz2.shape)
         return xyz2
+
+    def write_bdf(self, f, size, is_double, coord_id=None):
+        assert size in [8, 16], size
+        assert is_double in [True, False], is_double
+
+        if self.n:
+            #if coord_id is None:
+            i = arange(self.n)
+            #else:
+                #assert len(unique(coord_id))==len(coord_id), unique(coord_id)
+                #i = searchsorted(self.coord_id, coord_id)
+
+            if size == 8:
+                for cid, coord in iteritems(self.coords):
+                    if cid > 0:
+                        list_fields = [coord.type, cid, coord.rid] + list(coord.e1) + list(coord.e2) + list(coord.e3)
+                        f.write(print_card_8(list_fields))
+
 
     def __repr__(self):
         return self.__str__()
@@ -181,7 +203,6 @@ class Coord(object):
         #print('is_resolved = %s' % self.is_resolved)
         #print('origin = \n%s' % self.origin)
         #print('T = \n%s' % self.T)
-        #aaa
 
     def resolve_coord1(self, i, coord, xyz,
                        r, ref_coord_type, ref_coord):

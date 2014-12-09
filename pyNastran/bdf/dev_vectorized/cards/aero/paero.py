@@ -1,4 +1,4 @@
-#from .paero1 import PAERO1
+from .paero1 import PAERO1
 #from .paero2 import PAERO2
 #from .paero3 import PAERO3
 #from .paero4 import PAERO4
@@ -13,7 +13,7 @@ class PAero(object):
         """
         self.model = model
 
-        #self.paero1 = PAERO1(self.model)
+        self.paero1 = PAERO1(self.model)
         #self.paero2 = PAERO2(self.model)
         #self.paero3 = PAERO3(self.model)
         #self.paero4 = PAERO4(self.model)
@@ -32,31 +32,26 @@ class PAero(object):
         raise NotImplementedError()
 
     def add_paero1(self, card, comment):
-        #self.paero1.add(card, comment)
-        pass
+        self.paero1.add(card, comment)
 
     def add_paero2(self, card, comment):
-        #self.paero2.add(card, comment)
-        pass
+        self.paero2.add(card, comment)
 
     def add_paero3(self, card, comment):
-        #self.paero3.add(card, comment)
-        pass
+        self.paero3.add(card, comment)
 
     def add_paero4(self, card, comment):
-        #self.paero4.add(card, comment)
-        pass
+        self.paero4.add(card, comment)
 
     def add_paero5(self, card, comment):
-        #self.paero5.add(card, comment)
-        pass
+        self.paero5.add(card, comment)
 
     #===========
     def write_bdf(self, f, size=8, element_ids=None):
         f.write('$AERO\n')
         types = self._get_types()
         for elems in types:
-            #print "AERO", elems.type
+            #print("AERO", elems.type)
             elems.write_bdf(f, size=size, element_ids=element_ids)
 
     def _get_types(self):
