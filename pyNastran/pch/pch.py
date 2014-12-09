@@ -1,19 +1,19 @@
-import os
 import sys
 
 
 class PCH(object):
-    def __init__(self, pch_filename, makeGeom=False, debug=False):
-        self.pch_filename = pch_filename
+    def __init__(self, makeGeom=False, debug=False):
         self.eigenvalues = {}
         self.displacements = {}
         self.velocities = {}
         self.accelerations = {}
+        self.pch_filename = None
 
     def set_subcases(self, isubcases):
         pass
 
-    def read_pch(self):
+    def read_pch(self, pch_filename):
+        self.pch_filename = pch_filename
         with open(self.pch_filename, 'r') as pch:
 
             for line in pch.readline()[:72]:
@@ -39,13 +39,13 @@ class PCH(object):
                         value = None
                     if key:
                         headers[key] = value
-                        print("key=|%s| value=|%s|" % (key, value))
+                        print("key=%r value=%r" % (key, value))
 
                 if 'REAL OUTPUT' in headers:  # MAGNITUDE-PHASE OUTPUT
-                    print("***real",)
+                    print("***real")
                     if 'DISPLACEMENTS' in headers:
                         print("displacements")
-                        print(pch.readline().strip(), '***'
+                        print(pch.readline().strip())
                         line = read_real_table(pch, line)
                     elif 'VELOCITY' in headers:
                         print("velocity")
@@ -72,27 +72,30 @@ class PCH(object):
                     break
 
 
-def read_real_table(pch, line):
+def read_real_table(f, line):
     """
     reads displacemnt, velocity, acceleration, spc/mpc forces,
     temperature, load vector
     """
     #print("?",line)
-    #a = pch.readline()
+    #a = f.readline()
     #print("xxxxx",a)
     line = ''
     lines = []
     while '$' not in line:
-        line = pch.readline()
+        line = f.readline()
         print("?|%s|" % line)
         lines.append(line)
     print('\n'.join(lines))
     return line
 
-if __name__ == '__main__':  # pragma: no cover
+def main():
     pch = PCH()
     pchname = 'nltnln02.pch'
     pch.read_pch(pchname)
+
+if __name__ == '__main__':  # pragma: no cover
+    main()
 
 #$TITLE   = QUADR -- THICK CYLINDER ( NU = 0.4999 )                             1
 #$SUBTITLE= QAJOB-Q404K003                                                      2
