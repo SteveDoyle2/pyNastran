@@ -2,6 +2,7 @@ from .paero1 import PAERO1
 #from .paero2 import PAERO2
 #from .paero3 import PAERO3
 #from .paero4 import PAERO4
+#from .paero5 import PAERO5
 
 class PAero(object):
     def __init__(self, model):
@@ -17,6 +18,7 @@ class PAero(object):
         #self.paero2 = PAERO2(self.model)
         #self.paero3 = PAERO3(self.model)
         #self.paero4 = PAERO4(self.model)
+        #self.paero5 = PAERO5(self.model)
 
     def build(self):
         types = self._get_types()
@@ -55,8 +57,10 @@ class PAero(object):
             elems.write_bdf(f, size=size, element_ids=element_ids)
 
     def _get_types(self):
-        types = [#self.paero1, self.paero2, self.paero3, self.paero4, self.paero5,
-                 ]
+        types = [
+            self.paero1,
+            #self.paero2, self.paero3, self.paero4, self.paero5,
+        ]
         return types
 
     def get_stats(self):

@@ -9,8 +9,6 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 
 class PCOMPG(object):
     type = 'PCOMPG'
-    def __len__(self):
-        return self.n
 
     def __init__(self, model):
         self.n = 0

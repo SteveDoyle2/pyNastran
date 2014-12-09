@@ -329,10 +329,11 @@ class WriteMesh(object):
         #self.caero.write_bdf(f, size)
         #for key, trim in sorted(iteritems(self.trim)):
             #trim.write_bdf(f, size)
-        #self.aero.write_bdf(f, size)
-        #self.aeros.write_bdf(f, size)
+        self.aero.write_bdf(outfile, size, is_double)
+        self.aeros.write_bdf(outfile, size, is_double)
         self.caero1.write_bdf(outfile, size, is_double)
         self.paero1.write_bdf(outfile, size, is_double)
+        self.spline1.write_bdf(outfile, size, is_double)
 
         #self.caero2.write_bdf(f, size, is_double)
         #self.paero2.write_bdf(f, size, is_double)

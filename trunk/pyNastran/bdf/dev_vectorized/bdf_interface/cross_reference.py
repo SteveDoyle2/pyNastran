@@ -30,9 +30,10 @@ class XRefMesh(object):
     def _build_aero(self):
         self.caero.build()
         self.paero.build()
+        self.spline1.build()
         #self.trim.build()
-        #self.aero.build()
-        #self.aeros.build()
+        self.aero.build()
+        self.aeros.build()
 
     def _build_elements_properties(self):
         #self.elements_rod.build()

@@ -13,9 +13,6 @@ class PBEAML(object):
 #class PBEAML(Property):
     type = 'PBEAML'
 
-    def __len__(self):
-        return self.n
-
     def __iter__(self):
         pids = self.property_id
         for pid in pids:
