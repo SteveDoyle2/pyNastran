@@ -6,14 +6,14 @@ from traceback import print_exc
 import pyNastran
 from pyNastran.pch.pch import PCH
 
-def parse_table_names_from_F06(f06Name):
+def parse_table_names_from_F06(f06_filename):
     """gets the pch names from the f06"""
-    infile = open(f06Name,'r')
+    infile = open(f06_filename, 'r')
     marker = 'NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS'
     names = []
     for line in infile:
         if marker in line:
-            word = line.replace(marker,'').strip().strip('.')
+            word = line.replace(marker, '').strip().strip('.')
             names.append(word)
 
     infile.close()
@@ -30,9 +30,9 @@ def get_failed_files(filename):
     return files
 
 def run_lots_of_files(files ,makeGeom=True, writeBDF=False, write_f06=True,
-                   write_matlab=True, delete_f06=True, print_results=True,
-                   debug=True, saveCases=True, skipFiles=[],
-                   stopOnFailure=False, nStart=0, nStop=1000000000):
+                      write_matlab=True, delete_f06=True, print_results=True,
+                      debug=True, saveCases=True, skipFiles=[],
+                      stopOnFailure=False, nStart=0, nStop=1000000000):
     n = ''
     iSubcases = []
     failedCases = []
@@ -44,7 +44,7 @@ def run_lots_of_files(files ,makeGeom=True, writeBDF=False, write_f06=True,
         baseName = os.path.basename(pchfile)
         #if baseName not in skipFiles and not baseName.startswith('acms') and i not in nSkip:
         if baseName not in skipFiles and '#' not in pchfile:
-            print("%"*80)
+            print("%" * 80)
             print('file=%s\n' % pchfile)
             n = '%s ' %(i)
             sys.stderr.write('%sfile=%s\n' %(n, pchfile))
@@ -57,20 +57,20 @@ def run_lots_of_files(files ,makeGeom=True, writeBDF=False, write_f06=True,
             if not isPassed:
                 sys.stderr.write('**file=%s\n' % pchfile)
                 failedCases.append(pchfile)
-                nFailed +=1
+                nFailed += 1
             else:
-                nPassed +=1
+                nPassed += 1
             #sys.exit('end of test...test_pch.py')
 
     if saveCases:
-        f = open('failedCases.in','wb')
+        f = open('failedCases.in', 'wb')
         for pchfile in failedCases:
             f.write('%s\n' % pchfile)
         f.close()
 
     seconds = time.time()-t0
     minutes = seconds/60.
-    print("dt = %s seconds = %s minutes" %(seconds,minutes))
+    print("dt = %s seconds = %s minutes" % (seconds, minutes))
 
     #pch = PCH('test_tet10_subcase_1.pch')
     #pch.read_pch()
@@ -79,20 +79,20 @@ def run_lots_of_files(files ,makeGeom=True, writeBDF=False, write_f06=True,
     print(msg)
     sys.exit(msg)
 
-def run_pch(pchFileName, makeGeom=False, writeBDF=False, write_f06=True,
-            write_matlab=True, isMagPhase=False, delete_f06=False,
+def run_pch(pch_filename, makeGeom=False, writeBDF=False, write_f06=True,
+            isMagPhase=False, delete_f06=False,
             print_results=True, iSubcases=[], debug=False, stopOnFailure=True):
-    assert '.pch' in pchFileName.lower(), 'pchFileName=%s is not an PCH' % pchFileName
+    assert '.pch' in pch_filename.lower(), 'pch_filename=%s is not an PCH' % pch_filename
     isPassed = False
     stopOnFailure = False
     #debug = True
     try:
-        pch = PCH(pchFileName, makeGeom=makeGeom, debug=debug)
+        pch = PCH(makeGeom=makeGeom, debug=debug)
         pch.set_subcases(iSubcases)
 
         #pch.read_bdf(pch.bdfFileName,includeDir=None,xref=False)
         #pch.write_bdf_as_patran()
-        pch.read_pch()
+        pch.read_pch(pch_filename)
         print("---stats for %s---" % pchFileName)
         pch.get_pch_stats()
         #print(pch.get_pch_stats())
@@ -105,10 +105,6 @@ def run_pch(pchFileName, makeGeom=False, writeBDF=False, write_f06=True,
             pch.write_f06(model+'.f06.out', isMagPhase=isMagPhase)
             if delete_f06:
                 os.remove(model+'.f06.out')
-
-        if write_matlab:
-            (model, ext) = os.path.splitext(pchFileName)
-            pch.write_matlab(model+'.m', isMagPhase=isMagPhase)
 
         #print(pch.print_results())
         if print_results:
@@ -199,8 +195,7 @@ def run_arg_parse():
     parser.add_argument('-g','--geometry', dest='geometry',    action='store_true', help='Reads the PCH for geometry, which can be written out')
     parser.add_argument('-w','--writeBDF', dest='writeBDF',    action='store_true', help='Writes the bdf to fem.bdf.out')
     parser.add_argument('-f','--write_f06', dest='write_f06',    action='store_true', help='Writes the f06 to fem.f06.out')
-    parser.add_argument('-z','--magPhase', dest='isMagPhase',  action='store_true', help='F06/Matlab Writer writes Magnitude/Phase instead of Real/Imaginary (still stores Real/Imag)')
-    parser.add_argument('-m','--matlab',   dest='write_matlab', action='store_true', help='Matlab Writer is enabled (fails for transient; limited support)')
+    parser.add_argument('-z','--magPhase', dest='isMagPhase',  action='store_true', help='F06 Writer writes Magnitude/Phase instead of Real/Imaginary (still stores Real/Imag)')
     parser.add_argument('-p','--print_results',dest='print_results',  action='store_true', help='Prints objects to screen which can require lots of memory')
     parser.add_argument('-v','--version',action='version',version=ver)
 
@@ -216,18 +211,23 @@ def run_arg_parse():
     writeBDF      = args.writeBDF
     write_f06     = args.write_f06
     isMagPhase    = args.isMagPhase
-    write_matlab  = args.write_matlab
     print_results = args.print_results
     pchFileName   = args.pchFileName[0]
 
-    return (pchFileName,makeGeom,writeBDF,write_f06,write_matlab,isMagPhase,print_results,debug)
+    return (pchFileName, makeGeom, writeBDF, write_f06, isMagPhase, print_results, debug)
 
 def main():
-    (pchFileName,makeGeom,writeBDF,write_f06,write_matlab,isMagPhase,print_results,debug) = run_arg_parse()
+    (pch_filename, makeGeom, writeBDF, write_f06, isMagPhase, print_results, debug) = run_arg_parse()
 
     if os.path.exists('skippedCards.out'):
         os.remove('skippedCards.out')
-    run_pch(pchFileName,makeGeom=makeGeom,writeBDF=writeBDF,write_f06=write_f06,write_matlab=write_matlab,isMagPhase=isMagPhase,print_results=print_results,debug=debug)
+    run_pch(pch_filename,
+            makeGeom=makeGeom,
+            writeBDF=writeBDF,
+            write_f06=write_f06,
+            isMagPhase=isMagPhase,
+            print_results=print_results,
+            debug=debug)
 
 if __name__=='__main__':  # pch
     main()
