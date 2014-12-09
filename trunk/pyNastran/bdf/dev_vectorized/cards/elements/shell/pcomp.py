@@ -293,19 +293,14 @@ class PCOMP(Property):
                     self.t[i, iply] = t
                     self.theta[i, iply] = theta
                     self.sout[i, iply] = sout
-            self.model.log.debug('PCOMP.material_id = %s' % self.material_id)
-            return
-            ncards = len(cards)
-            for i, card in enumerate(cards):
-                self.property_id[i] = integer(card, 1, 'pid')
+            #self.model.log.debug('PCOMP.material_id = %s' % self.material_id)
+
             i = self.property_id.argsort()
             self.property_id = self.property_id[i]
             unique_pids = unique(self.property_id)
 
             if len(unique_pids) != len(self.property_id):
                 raise RuntimeError('There are duplicate PCOMP IDs...')
-            self._cards = []
-            self._comments = []
         else:
             self.property_id = array([], dtype='int32')
             #self.material_id = array([], dtype='int32')
@@ -317,10 +312,6 @@ class PCOMP(Property):
         else:
             for pid, pcomp in sorted(iteritems(self.properties)):
                 f.write(pcomp.write_bdf(size, print_card_16))
-
-    #def slice_by_index(self, i):
-        #i = asarray(i)
-        #return self.__getitem__()
 
     #def __getitem_old__(self, property_id):
         #property_id, int_flag = slice_to_iter(property_id)
