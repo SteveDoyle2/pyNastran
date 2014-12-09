@@ -172,12 +172,13 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
             iSubcases=[], exclude=[], debug=False, stopOnFailure=True):
     assert '.op2' in op2FileName.lower(), 'op2FileName=%s is not an OP2' % op2FileName
     isPassed = False
+
     if isinstance(iSubcases, string_types):
         if '_' in iSubcases:
             iSubcases = [int(i) for i in iSubcases.split('_')]
         else:
             iSubcases = [int(iSubcases)]
-    print('iSubcases =', iSubcases)
+    print('iSubcases = %s' % iSubcases)
 
     #debug = True
     try:
