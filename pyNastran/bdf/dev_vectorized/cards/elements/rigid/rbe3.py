@@ -88,7 +88,6 @@ class RBE3(object):
         self.i = n
 
     def allocate(self, ncards):
-        bbasdf
         self.n = ncards
         float_fmt = self.model.float
 

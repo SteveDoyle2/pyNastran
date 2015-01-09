@@ -40,10 +40,6 @@ Overall F06 Reader/Writer
 Added F06 Reader
 Added F06 Writer
 
-Overall GUI
-Added GUI
-GUI Bug Fixes
-
 Solver
    - not released
    - rewriting pyNastran solver (SOL 101)
@@ -103,6 +99,10 @@ F06:
    - added FORCES IN CQUAD4s (bilinear)
    - added LOAD VECTOR
    - supports SPOINTs now
+
+GUI:
+ - removed wx GUI
+ - added qt GUI (see pyNastran/gui/todo.txt)
 
 -----------------------v0.6.1 released 2013/06/13-----------------------
 BDF Bug Fixes
