@@ -44,7 +44,7 @@ def list_print(lst, float_fmt='%-4.2f'):
 
         if isinstance(lst, ndarray) and lst.ndim == 2:
             r,c = lst.shape
-            return ("["+",\n ".join(["["+",".join(['%-10g' % lst[i, j]
+            return ("["+",\n ".join(["["+",".join([float_fmt % lst[i, j]
                                 for j in range(c)])+"]" for i in range(r)])+"]")
         return "[" + ", ".join([_print(a) for a in lst]) + "]"
     except: # not a list
