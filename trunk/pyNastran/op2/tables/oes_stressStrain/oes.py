@@ -1980,6 +1980,8 @@ class OES(OP2Common):
                 result_name = 'nonlinearBeamStrain'
             self._found_results.add(result_name)
             if self.format_code == 1 and self.num_wide == numwide_real:
+                msg = result_name
+                return self._not_implemented_or_skip(data, msg)
                 if self.isStress():
                     raise NotImplementedError('Nonlinear CBEAM Stress')
                     # TODO: why does this use nonlinear gap stress???

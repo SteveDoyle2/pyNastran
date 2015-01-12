@@ -159,14 +159,15 @@ class OPG(OP2Common):
             result_name = 'thermalLoadVectors'
             storage_obj = self.thermalLoadVectors
 
-            ComplexThermalLoadVectorObject = None
+            RealThermalLoadVectorArray = None
             RealThermalLoadVectorVector = None
             ComplexThermalLoadVectorVector = None
+            ComplexThermalLoadVectorArray = None
             if result_name not in self._saved_results:
                 return len(data)
             self._found_results.add(result_name)
             n = self._read_table(data, result_name, storage_obj,
-                                 RealThermalLoadVector, ComplexThermalLoadVector,
+                                 RealThermalLoadVector, ComplexThermalLoadVectorVector,
                                  RealThermalLoadVectorArray, ComplexThermalLoadVectorArray,
                                  'node', random_code=self.random_code)
         else:
@@ -181,13 +182,14 @@ class OPG(OP2Common):
             result_name = 'forceVectors'
             storage_obj = self.forceVectors
             ForceVectorVector = None
-            ComplexForceVectorVector = None
+            ComplexForceVectorArray = None
+            RealForceVectorArray = None
             if result_name not in self._saved_results:
                 return len(data)
             self._found_results.add(result_name)
             n = self._read_table(data, result_name, storage_obj,
                                  RealForceVector, ComplexForceVector,
-                                 RealForceVectorArray, ComplexForceVector,
+                                 RealForceVectorArray, ComplexForceVectorArray,
                                  'node', random_code=self.random_code)
         #elif self.thermal == 1:
             #result_name = 'thermalForceVectors'
