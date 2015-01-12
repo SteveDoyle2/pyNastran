@@ -16,7 +16,7 @@ def get_files_of_type(dirname, extension='.txt', maxSize=100.):
     :returns: list of all the files with a given extension in the specified directory
     """
     return [os.path.join(dirname, f) for f in os.listdir(dirname) if extension in
-            os.path.splitext(f)[1] and os.path.getsize(pjoin(dirname, f)) / (1048576.) <= maxSize]
+            os.path.splitext(f)[1] and os.path.getsize(os.path.join(dirname, f)) / (1048576.) <= maxSize]
 
 
 def list_print(lst, float_fmt='%-4.2f'):
