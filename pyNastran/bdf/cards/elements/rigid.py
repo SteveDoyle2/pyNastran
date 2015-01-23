@@ -263,7 +263,26 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
 class RBE2(RigidElement):
     type = 'RBE2'
+    _field_map = {1: 'eid', 2:'gn',3:'cm'}
 
+    def _update_field_helper(self, n, value):
+        """
+        Updates complicated parameters on the GRID card
+
+        :param self:  the GRID object pointer
+        :param n:     the field number to update
+        :type n:      int
+        :param value: the value for the appropriate field
+        :type field:  varies
+        """
+        list_fields = ['RBE2', self.eid, self.gn, self.cm] + self.Gmi + [alpha]
+        if n > 3 and n <= 3 + len(self.Gmi):
+            self.Gmi[n-4] = value
+        elif n == 4 + len(self.Gmi):
+            self.alpha = value
+        else:
+            raise KeyError('Field %r is an invalid %s entry.' % (n, self.type))
+        return value
     def __init__(self, card=None, data=None, comment=''):
         """
         +-------+-----+-----+-----+------+-------+-----+-----+-----+
@@ -305,8 +324,9 @@ class RBE2(RigidElement):
 
             j = 4
             self.Gmi = []
-            for k in range(len(card) - 4 - n):
-                gmi = integer(card, j + k, 'Gm%i' % (k + 1))
+            for i in range(len(card)-4-n):
+                gmi = integer(card, j + i, 'Gm%i' % (i + 1))
+                #print('gm%i = %s' % (i + 1, gmi))
                 self.Gmi.append(gmi)
         else:
             self.eid = data[0]
@@ -316,7 +336,7 @@ class RBE2(RigidElement):
             self.alpha = data[4]
             print("eid=%s gn=%s cm=%s Gmi=%s alpha=%s"
                   % (self.eid, self.gn, self.cm, self.Gmi, self.alpha))
-            raise NotImplementedError('RBE2 data...')
+            #raise NotImplementedError('RBE2 data...')
 
         assert self.gn is not None, 'gn=%s' % self.gn
         assert self.cm is not None, 'cm=%s' % self.cm

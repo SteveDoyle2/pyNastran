@@ -14,7 +14,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from math import sqrt, degrees, radians, atan2, acos, sin, cos
 from six.moves import zip, range
 
-from numpy import array, cross, dot, transpose, zeros, vstack
+from numpy import array, cross, dot, transpose, zeros, vstack, ndarray
 from numpy.linalg import norm
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -373,6 +373,34 @@ class Coord(BaseCard):
     def repr_fields(self):
         return self.raw_fields()
 
+    def move_origin(self, xyz):
+        """
+        Move the coordinate system to a new origin while maintaining the orientation
+        :param self:  the coordinate system object
+        :param xyz: the new origin point to move the coordinate to in the global coordinate system
+        """
+        if self.i == None:
+            self.setup()
+
+        if not isinstance(xyz,ndarray):
+            msg = 'xyz must be type ndarray'
+            raise TypeError(msg)
+        if xyz.shape == (1,3):
+            xyz.reshape(3,1)
+
+        if xyz.shape == (3,):
+            e12 = self.e2 - self.e1
+            e13 = self.e3 - self.e1
+            if self.rid == 0:
+                self.e1 = xyz
+            else:
+                self.e1 = self.rid.transformToLocal(xyz,self.rid.beta())
+            self.e2 = self.e1 + e12
+            self.e3 = self.e1 + e13
+            self.origin = xyz
+        else:
+            msg = 'xyz must be 3 by 1 dim\nxyz is %s'%xyz.shape
+            raise RuntimeError(msg)
 
 class RectangularCoord(object):
     def coordToXYZ(self, p):
@@ -555,7 +583,7 @@ class Cord2x(Coord):
         assert isinstance(rid, int), 'rid=%r' % rid
 
     def write_bdf(self, size, card_writer):
-        card = self.repr_fields()
+        card = self.reprFields()
         return self.comment() + card_writer(card)
 
     def cross_reference(self, model):
@@ -1029,7 +1057,7 @@ class CORD2S(Cord2x, SphericalCoord):
         """
         Cord2x.__init__(self, card, data, comment)
 
-    def raw_fields(self):
+    def rawFields(self):
         rid = set_blank_if_default(self.Rid(), 0)
         list_fields = (['CORD2S', self.cid, rid] + list(self.e1) +
                        list(self.e2) + list(self.e3))
