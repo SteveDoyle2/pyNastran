@@ -4,9 +4,40 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import string_types, iteritems
 #import sys
 from numpy import ndarray
-
-from pyNastran.bdf.deprecated import GetMethodsDeprecated
+import warnings
 from pyNastran.bdf.cards.nodes import SPOINT
+
+class GetMethodsDeprecated(object):
+
+    def getElementIDsWithPID(self, pid):
+        """
+        Gets all the element IDs with a specific property ID
+
+        :param pid: property ID
+        :returns elementIDs: as a list
+
+        .. deprecated:: will be removed in version 0.8
+
+        The same functionality may be used by calling
+          >>> self.getElementIDsWithPIDs([pid], mode='list')
+        """
+        warnings.warn('getElementIDsWithPID has been deprecated; use '
+                      'getElementIDsWithPIDs', DeprecationWarning, stacklevel=2)
+        return self.getElementIDsWithPIDs([pid], mode='list')
+
+    #def Grav(self, sid, msg=''):
+        #"""
+        #.. deprecated:: will be removed in version 0.7
+        #"""
+        #raise DeprecationWarning('use Load(sid) instead of Grav(sid)')
+        #return self.Load(sid, msg)
+
+    def Flfact(self, sid, msg):
+        """
+        .. deprecated:: will be removed in version 0.8
+        """
+        raise DeprecationWarning('use FLFACT(sid) instead of Flfact(sid)')
+        return self.FLFACT(sid, msg)
 
 
 class GetMethods(GetMethodsDeprecated):
@@ -16,13 +47,13 @@ class GetMethods(GetMethodsDeprecated):
     #--------------------
     # NODE CARDS
 
-    def get_nnodes(self):
+    def nNodes(self):
         return len(self.nodes)
 
-    def get_node_ids(self):
+    def nodeIDs(self):
         return self.nodes.keys()
 
-    def get_nodes(self):
+    def getNodes(self):
         nodes = []
         for (nid, node) in sorted(iteritems(self.nodes)):
             nodes.append(node)
@@ -141,15 +172,16 @@ class GetMethods(GetMethodsDeprecated):
         #pids = get_x_associated_with_y(self, self.elements, 'pid', 'pid')
         #mids = get_x_associated_with_y(self, self.properties, 'mid', 'mid')
 
-    def get_node_ids_with_element(self, eid):
+
+    def getNodeIDsWithElement(self, eid):
         return self.getNodeIDsWithElements([eid])
 
-    def get_node_ids_with_elements(self, eids, msg=''):
+    def getNodeIDsWithElements(self, eids, msg=''):
         nids2 = set([])
         for eid in eids:
             element = self.Element(eid, msg=msg)
             self.log.debug("element.pid = %s" % (element.pid))
-            nids = set(element.nids)
+            nids = set(inode.nid for inode in element.nodes)
             nids2 = nids2.union(nids)
         return nids2
 
@@ -168,21 +200,23 @@ class GetMethods(GetMethodsDeprecated):
         """
         Returns a series of node objects given a list of node IDs
         """
+        #print("nids",nids, allowEmptyNodes)
         nodes = []
         for nid in nids:
+            #print("nid = %s" %(nid))
             nodes.append(self.Node(nid, allowEmptyNodes, msg))
         return nodes
 
     #--------------------
     # ELEMENT CARDS
 
-    def get_nelements(self):
+    def nElements(self):
         return len(self.elements)
 
-    def get_element_ids(self):
+    def elementIDs(self):
         return self.elements.keys()
 
-    def get_element_ids_with_pids(self, pids, mode='list'):
+    def getElementIDsWithPIDs(self, pids, mode='list'):
         """
         Gets all the element IDs with a specific property ID.
 
@@ -217,7 +251,7 @@ class GetMethods(GetMethodsDeprecated):
                     pass
         return eids2
 
-    def get_node_id_to_element_ids_map(self):
+    def getNodeIDToElementIDsMap(self):
         """
         Returns a dictionary that maps a node ID to a list of elemnents
 
@@ -243,7 +277,7 @@ class GetMethods(GetMethodsDeprecated):
                 pass
         return nidToElementsMap
 
-    def get_property_id_to_element_ids_map(self):
+    def getPropertyIDToElementIDsMap(self):
         """
         Returns a dictionary that maps a property ID to a list of elemnents
         """
@@ -262,7 +296,7 @@ class GetMethods(GetMethodsDeprecated):
                 pidToEidsMap[pid].append(eid)
         return (pidToEidsMap)
 
-    def get_material_id_to_property_ids_map(self):
+    def getMaterialIDToPropertyIDsMap(self):
         """
         Returns a dictionary that maps a material ID to a list of properties
 
@@ -317,7 +351,7 @@ class GetMethods(GetMethodsDeprecated):
     #--------------------
     # PROPERTY CARDS
 
-    def get_property_ids(self):
+    def propertyIDs(self):
         return self.properties.keys()
 
     def Property(self, pid, msg=''):
@@ -350,13 +384,13 @@ class GetMethods(GetMethodsDeprecated):
     #--------------------
     # MATERIAL CARDS
 
-    def get_structural_material_ids(self):
+    def structuralMaterialIDs(self):
         return self.materials.keys()
 
-    def get_material_ids(self):
+    def materialIDs(self):
         return self.materials.keys() + self.thermalMaterials.keys()
 
-    def get_thermal_material_ids(self):
+    def thermalMaterialIDs(self):
         return self.thermalMaterials.keys()
 
     def Material(self, mid, msg=''):
@@ -402,6 +436,7 @@ class GetMethods(GetMethodsDeprecated):
     # LOADS
 
     def Load(self, sid, msg=''):
+        #print('sid=%s self.loads=%s' %(sid,(self.loads.keys())))
         assert isinstance(sid, int), 'sid=%s is not an integer\n' % sid
         if sid in self.loads:
             load = self.loads[sid]
@@ -413,6 +448,7 @@ class GetMethods(GetMethodsDeprecated):
     # SPCs
 
     def SPC(self, conid, msg=''):
+        #print('conid=%s self.spcs=%s' %(conid,(self.spcs.keys())))
         assert isinstance(conid, int), 'conid=%s is not an integer\n' % conid
         if conid in self.spcs:
             constraint = self.spcs[conid]
@@ -429,12 +465,12 @@ class GetMethods(GetMethodsDeprecated):
             raise KeyError('cid=%s not found%s.  Allowed Cids=%s'
                            % (cid, msg, self.coordIDs()))
 
-    def get_coord_ids(self):
+    def coordIDs(self):
         return sorted(self.coords.keys())
     #--------------------
     # AERO CARDS
 
-    def get_ncaeros(self):
+    def nCAeros(self):
         return len(self.caeros)
 
     def AEList(self, aelist, msg=''):
