@@ -145,12 +145,28 @@ class GetMethods(GetMethodsDeprecated):
         return self.getNodeIDsWithElements([eid])
 
     def get_node_ids_with_elements(self, eids, msg=''):
+        """
+        Get the node IDs associated with a list of element IDs
+
+        :param self: the BDF object
+        :param eids: list of element ID
+        :param msg:  a additional message to print out if an element is not found
+
+        :returns node_ids: set of node IDs
+
+
+        Example
+        -------
+          >>> eids = [1, 2, 3]  # list of elements with pid=1
+          >>> msg = ' which are required for pid=1'
+          >>> node_ids = bdf.get_node_ids_with_elements(eids, msg=msg)
+        """
         nids2 = set([])
         for eid in eids:
             element = self.Element(eid, msg=msg)
             self.log.debug("element.pid = %s" % (element.pid))
-            nids = set(element.nids)
-            nids2 = nids2.union(nids)
+            nids = set(element.nodeIDs())
+            nids2.update(nids)
         return nids2
 
     def Node(self, nid, allowEmptyNodes=False, msg=''):
