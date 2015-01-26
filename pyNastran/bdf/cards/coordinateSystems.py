@@ -375,32 +375,69 @@ class Coord(BaseCard):
 
     def move_origin(self, xyz):
         """
-        Move the coordinate system to a new origin while maintaining the orientation
+        Move the coordinate system to a new origin while maintaining
+        the orientation
+
         :param self:  the coordinate system object
-        :param xyz: the new origin point to move the coordinate to in the global coordinate system
+        :param xyz: the new origin point to move the coordinate to in
+                    the global coordinate system
         """
         if self.i == None:
             self.setup()
 
-        if not isinstance(xyz,ndarray):
+        if not isinstance(xyz, ndarray):
             msg = 'xyz must be type ndarray'
             raise TypeError(msg)
         if xyz.shape == (1,3):
             xyz.reshape(3,1)
 
-        if xyz.shape == (3,):
-            e12 = self.e2 - self.e1
-            e13 = self.e3 - self.e1
-            if self.rid == 0:
-                self.e1 = xyz
-            else:
-                self.e1 = self.rid.transformToLocal(xyz,self.rid.beta())
-            self.e2 = self.e1 + e12
-            self.e3 = self.e1 + e13
-            self.origin = xyz
-        else:
-            msg = 'xyz must be 3 by 1 dim\nxyz is %s'%xyz.shape
+        if xyz.shape != (3,):
+            msg = 'xyz must be 3 by 1 dim\nxyz is %s' % xyz.shape
             raise RuntimeError(msg)
+
+        if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
+            e1 = self.rid.transformToGlobal(self.e1)
+            e2 = self.rid.transformToGlobal(self.e2)
+            e3 = self.rid.transformToGlobal(self.e3)
+            e12 = e2 - e1
+            e13 = e3 - e1
+            beta = self.rid.beta()
+            self.e1 = self.rid.transformToLocal(xyz, beta)
+            self.e2 = self.rid.transformToLocal(xyz + e12, beta)
+            self.e3 = self.rid.transformToLocal(xyz + e13, beta)
+        else:
+            raise RuntimeError('Cannot move %s; cid=%s' % (self.type, self.cid))
+        self.origin = xyz
+
+    def __update_rid(self, rid):
+        raise NotImplementedError()
+        if self.i == None:
+            self.setup()
+
+def __define_cid(Type, cid, rid, origin, i=None, j=None, k=None):
+    raise NotImplementedError('not done!')
+    if i is None:
+        if j is not None and k is not None:
+            # good
+        elif j is None:
+            pass
+        elif k is None:
+            pass
+        else:
+            raise RuntimeError('j and k are None')
+    else:
+        if j is not None and k is not None:
+            # good
+        elif j is None:
+            pass
+        elif k is None:
+            pass
+        else:
+            raise RuntimeError('j and k are None')
+    # create cross vectors
+    return [Type, cid, rid] + origin
+
+
 
 class RectangularCoord(object):
     def coordToXYZ(self, p):
