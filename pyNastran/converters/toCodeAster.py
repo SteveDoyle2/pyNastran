@@ -1,4 +1,4 @@
-
+import os
 from six import iteritems
 from pyNastran.bdf.bdf import BDF, PBARL, PBEAML  # PBAR,PBEAM,
 
@@ -35,7 +35,7 @@ class CodeAsterConverter(BDF):
       SPC, SPC1, MPC,
       RBE2, RBE3
     """
-    def __init__(self, language='english'):
+    def __init__(self, language='english', encoding='ascii'):
         self.language = 'english'
         BDF.__init__(self)
 
@@ -71,13 +71,16 @@ class CodeAsterConverter(BDF):
 
     def getElementsByType(self):
         """
-        builds a dictionary where the key is the element type and the value is
-        a list of element IDs
+        builds a dictionary where the key is the element type and the
+        value is a list of element IDs
         """
         elems = {}
         #for eid,elements in self.elements:
             #elems[eid] = []
         for eid, element in iteritems(self.elements):
+            if not hasattr(element, 'asterType'):
+                print('rejecting: %s' % element.type)
+                continue
             Type = element.asterType
             if Type not in elems:
                 elems[Type] = []
@@ -88,7 +91,10 @@ class CodeAsterConverter(BDF):
         return elems
 
     def getPropertiesByMid(self):
-        """builds a dictionary where the key is the material ID and the value is a list of property IDs"""
+        """
+        builds a dictionary where the key is the material ID and the
+        value is a list of property IDs
+        """
         mats = {0: []}
 
         for mid in self.materials:
@@ -140,7 +146,7 @@ class CodeAsterConverter(BDF):
             mail += ''
 
         mail += 'COOR_3D\n'
-        form = '    %s%-' + str(self.maxNIDlen) + 's %8s %8s %8s\n'
+        form = '    %s%-' + str(self.max_nid_len) + 's %8s %8s %8s\n'
 
         for nid, node in sorted(iteritems(self.nodes)):
             p = node.Position()
@@ -159,8 +165,8 @@ class CodeAsterConverter(BDF):
 
         elems = self.getElementsByType()
 
-        formE = '    %s%-' + str(self.maxEIDlen) + 's '
-        formG = '%s%-' + str(self.maxNIDlen) + 's '
+        formE = '    %s%-' + str(self.max_eid_len) + 's '
+        formG = '%s%-' + str(self.max_nid_len) + 's '
         for Type, eids in sorted(iteritems(elems)):
             mail += '%s\n' % (Type)
             for eid in eids:
@@ -304,7 +310,7 @@ class CodeAsterConverter(BDF):
                         (commi, loadIDs, loadTypes) = out
                         comm += commi
                     else:  # FORCEx, MOMENTx, GRAV
-                        #skippedLids[(load.lid,load.type)] = out
+                        #skippedLids[(load.lid, load.type)] = out
                         comm += out
                 #except:
                     #print('failed printing load...type=%s key=%s' % (load.type, key))
@@ -329,16 +335,16 @@ class CodeAsterConverter(BDF):
     def breaker(self):
         return '#-------------------------------------------------------------------------\n'
 
-    def buildMaxs(self):
-        self.maxNIDlen = len(str(max(self.nodes)))
-        self.maxEIDlen = len(str(max(self.elements)))
-        self.maxPIDlen = len(str(max(self.properties)))
-        self.maxMIDlen = len(str(max(self.materials)))
+    def build_maxs(self):
+        self.max_nid_len = len(str(max(self.nodes)))
+        self.max_eid_len = len(str(max(self.elements)))
+        self.max_pid_len = len(str(max(self.properties)))
+        self.max_mid_len = len(str(max(self.materials)))
 
-    def writeAsCodeAster(self, fname='fem'):
+    def write_as_code_aster(self, model):
         comm = ''
         mail = ''
-        self.buildMaxs()  # gets number of nodes/elements/properties/materials
+        self.build_maxs()  # gets number of nodes/elements/properties/materials
 
         comm += '# BEGIN BULK\n'
         comm += 'DEBUT();\n\n'
@@ -360,15 +366,15 @@ class CodeAsterConverter(BDF):
         mail += self.CA_Elements(elemWord='E', gridWord='N')
         comm += self.CA_Materials()
         comm += self.CA_MaterialField()
-        (commi, pyCA) = self.CA_Properties()
+        commi, pyCA = self.CA_Properties()
         comm += commi
         comm += self.CA_Loads()
         comm += self.CA_SPCs()
 
         comm += 'FIN();\n'
         comm += '# ENDDATA\n'
-        print("writing fname=%s" % (fname + '.comm'))
-        f = open(fname + '.comm', 'wb')
+        print("writing fname=%s" % (model + '.comm'))
+        f = open(model + '.comm', 'wb')
         f.write(comm)
         f.close()
 
@@ -387,11 +393,38 @@ class CodeAsterConverter(BDF):
 
 def main():
     import sys
+    import pyNastran
+    from docopt import docopt
+    msg  = "Usage:\n"
+    msg += "  nastranToCodeAster [-o] BDF_FILENAME\n" #
+    msg += '  nastranToCodeAster -h | --help\n'
+    msg += '  nastranToCodeAster -v | --version\n'
+    msg += '\n'
+
+    msg += "Positional Arguments:\n"
+    msg += "  BDF_FILENAME   path to BDF/DAT/NAS file\n"
+    msg += '\n'
+
+    msg += 'Options:\n'
+    msg += '  -o, --output    prints debug messages (default=False)\n'
+    msg += '  -h, --help     show this help message and exit\n'
+    msg += "  -v, --version  show program's version number and exit\n"
+
+    if len(sys.argv) == 1:
+        sys.exit(msg)
+
+    ver = str(pyNastran.__version__)
+    data = docopt(msg, version=ver)
+
+    for key, value in sorted(iteritems(data)):
+        print("%-12s = %r" % (key.strip('--'), value))
+
+    bdf_filename = data['BDF_FILENAME']
+    fname_base, extension = os.path.splitext(bdf_filename)
+
     ca = CodeAsterConverter()
-    #model = 'solidBending'
-    model = sys.argv[1]
-    ca.readBDF(model)
-    ca.writeAsCodeAster(model)  # comm, py
+    ca.read_bdf(bdf_filename)
+    ca.write_as_code_aster(fname_base)  # comm, py
 
 if __name__ == '__main__':  # pragma: no cover
     main()
