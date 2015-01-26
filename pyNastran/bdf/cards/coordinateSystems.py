@@ -414,29 +414,54 @@ class Coord(BaseCard):
         if self.i == None:
             self.setup()
 
-def __define_cid(Type, cid, rid, origin, i=None, j=None, k=None):
-    raise NotImplementedError('not done!')
+
+def define_coord(model, Type, cid, origin, rid=0, i=None, j=None, k=None):
+    """
+    Create a coordinate system based on 2 or 3 unit vectors
+
+    :param model: a BDF object
+    :param Type:  'CORD2R', 'CORD2C', 'CORD2S'
+    :param cid:  the new coordinate system id
+    :param origin: a (3,) ndarray defining the location of the origin in
+                   the global coordinate frame
+    :param rid:  the new reference coordinate system id
+    :param i:    the i unit vector (default=None)
+    :param j:    the j unit vector (default=None)
+    :param k:    the k unit vector (default=None)
+
+    TODO: hasn't been tested...
+    """
+    assert Type in ['CORD2R', 'CORD2C', 'CORD2S'], Type
+    # create cross vectors
     if i is None:
         if j is not None and k is not None:
-            # good
-        elif j is None:
-            pass
-        elif k is None:
-            pass
+            i = cross(k, j)
         else:
-            raise RuntimeError('j and k are None')
+            raise RuntimeError('i, j and k are None')
     else:
+        # i is defined
         if j is not None and k is not None:
-            # good
+            # all 3 vectors are defined
+            pass
         elif j is None:
-            pass
+            j = cross(k, i)
         elif k is None:
-            pass
+            k = cross(i, j)
         else:
-            raise RuntimeError('j and k are None')
-    # create cross vectors
-    return [Type, cid, rid] + origin
+            raise RuntimeError('j or k are None; j=%s k=%s' % (j, k))
 
+    # define e1, e2, e3
+    rcoord = model.Coord(rid, 'which is required to create cid=%s' % cid)
+    beta = vstack([i, j, k])  # hstack?
+    e1 = rcoord.transformToLocal(origin, beta)
+    e2 = rcoord.transformToLocal(origin + k, beta) # point on z axis
+    e3 = rcoord.transformToLocal(origin + i, beta) # point on x-z plane / point on x axis
+    card = [Type, cid, rid] + list(e1) + list(e2) + list(e3)
+    model.add_card(Type, card, is_list=True)
+
+    coord = model.Coord(cid)
+    if model.xref:
+        coord.cross_reference(model)
 
 
 class RectangularCoord(object):
