@@ -387,9 +387,9 @@ class Coord(BaseCard):
 
         xyz = _fix_xyz_shape(xyz)
         if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
-            e1 = self.rid.transformToGlobal(self.e1)
-            e2 = self.rid.transformToGlobal(self.e2)
-            e3 = self.rid.transformToGlobal(self.e3)
+            e1 = self.rid.transformNodeToGlobal(self.e1)
+            e2 = self.rid.transformNodeToGlobal(self.e2)
+            e3 = self.rid.transformNodeToGlobal(self.e3)
             e12 = e2 - e1
             e13 = e3 - e1
             beta = self.rid.beta()
@@ -484,35 +484,45 @@ def define_coord_e123(model, Type, cid, origin, rid=0,
     :param zaxis:  a (3,) ndarray defining the z axis (default=None)
 
     ..note:: one axis (xaxis, yaxis, zaxis) and one plane
-             (xyplane, yzplane, xz plane) must be defined
+             (xyplane, yzplane, xz plane) must be defined; the others
+             must be None
+    ..note:: the axes and planes are defined in the rid coordinate system
 
     TODO: hasn't been tested...
     """
     assert Type in ['CORD2R', 'CORD2C', 'CORD2S'], Type
     origin = _fix_xyz_shape(origin)
+    rcoord = model.Coord(rid)
 
     # check for overdefined axes
     if xaxis is not None:
         assert yaxis is None and zaxis is None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
         xaxis = _fix_xyz_shape(xaxis)
+        xaxis = rcoord.transformNodeToGlobal(xaxis)
+
     elif yaxis is not None:
         assert zaxis is None, 'zaxis=%s' % (zaxis)
         yaxis = _fix_xyz_shape(yaxis)
+        yaxis = rcoord.transformNodeToGlobal(yaxis)
     else:
         zaxis = _fix_xyz_shape(zaxis)
+        zaxis = rcoord.transformNodeToGlobal(zaxis)
 
     # check for invalid planes
     if xyplane is not None:
         assert yzplane is None and xzplane is None, 'yzplane=%s xzplane=%s' % (yzplane, xzplane)
         assert xaxis is not None or yaxis is not None, 'xaxis=%s yaxis=%s' % (xaxis, yaxis)
         xyplane = _fix_xyz_shape(xyplane)
+        xyplane = rcoord.transformNodeToGlobal(xyplane)
     elif yzplane is not None:
         assert xzplane is None, 'xzplane=%s' % (xzplane)
         assert yaxis is not None or zaxis is not None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
         yzplane = _fix_xyz_shape(yzplane)
+        yzplane = rcoord.transformNodeToGlobal(yzplane)
     else:
         assert xaxis is not None or zaxis is not None, 'xaxis=%s zaxis=%s' % (xaxis, zaxis)
         xzplane = _fix_xyz_shape(xzplane)
+        xzplane = rcoord.transformNodeToGlobal(xzplane)
 
     if xyplane is not None:
         if xaxis is not None:
