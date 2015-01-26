@@ -66,6 +66,17 @@ class Coord(object):
                     if cid > 0:
                         list_fields = [coord.type, cid, coord.rid] + list(coord.e1) + list(coord.e2) + list(coord.e3)
                         f.write(print_card_8(list_fields))
+            else:
+                if is_double:
+                    for cid, coord in iteritems(self.coords):
+                        if cid > 0:
+                            list_fields = [coord.type, cid, coord.rid] + list(coord.e1) + list(coord.e2) + list(coord.e3)
+                            f.write(print_card_16(list_fields))
+                else:
+                    for cid, coord in iteritems(self.coords):
+                        if cid > 0:
+                            list_fields = [coord.type, cid, coord.rid] + list(coord.e1) + list(coord.e2) + list(coord.e3)
+                            f.write(print_card_double(list_fields))
 
 
     def __repr__(self):
@@ -269,9 +280,9 @@ class Coord(object):
         T = self.T[r, :, :].reshape(3, 3)
         #e1 = coord.origin
 
-        #print("  coord.e1 = %s" % coord.e1)
-        #print("  coord.e2 = %s" % coord.e2)
-        #print("  coord.e3 = %s" % coord.e3)
+        print("  coord.e1 = %s" % coord.e1)
+        print("  coord.e2 = %s" % coord.e2)
+        print("  coord.e3 = %s" % coord.e3)
         #print("  T[%i] = %s" % (i, T))
         # transform coord.e2/e3 to the global
         if ref_coord_type == 'R':  # Rectangular
@@ -282,9 +293,17 @@ class Coord(object):
             e2 = e123[0, :]
             e3 = e123[1, :]
         elif ref_coord_type == 'C':  # Cylindrical
-            e1 = dot(T, self.cylindrical_to_rectangular(coord.e1))
-            e2 = dot(T, self.cylindrical_to_rectangular(coord.e2))
-            e3 = dot(T, self.cylindrical_to_rectangular(coord.e3))
+            #e1 = dot(T, self.cylindrical_to_rectangular(coord.e1))
+            #e2 = dot(T, self.cylindrical_to_rectangular(coord.e2))
+            #e3 = dot(T, self.cylindrical_to_rectangular(coord.e3))
+
+            pts = vstack([coord.e1, coord.e2, coord.e3])
+            e123 = dot(T, self.spherical_to_rectangular(pts).T).T
+            #assert array_equal(e123, _e123), "e123=\n%s\n\n_e123=\n%s" % (e123, _e123)
+            e1 = e123[0, :]
+            e2 = e123[1, :]
+            e3 = e123[2, :]
+
         elif ref_coord_type == 'S':  # Spherical
             #print([coord.e1, coord.e2, coord.e3])
             # column
@@ -304,6 +323,7 @@ class Coord(object):
             #assert array_equal(t123, _t123), "t123=\n%s\n\n_t123=\n%s" % (t123, _t123)
 
             #e123 = dot(T, t123).T
+            bbb
             e123 = dot(T, self.spherical_to_rectangular(pts).T).T
             #assert array_equal(e123, _e123), "e123=\n%s\n\n_e123=\n%s" % (e123, _e123)
             e1 = e123[0, :]
@@ -323,14 +343,19 @@ class Coord(object):
             #e2 = dot(T, self.spherical_to_rectangular(coord, coord.e2))
             #e3 = dot(T, self.spherical_to_rectangular(coord, coord.e3))
             #raise NotImplementedError(ref_coord)
+        else:
+            raise RuntimeError(ref_coord_type)
         #e2, rid_matrix = self.rid.transformToGlobal(coord.e2)
         #e3, rid_matrix = self.rid.transformToGlobal(coord.e3)
-        #print("  e2 = %s" % e2)
-        #print("  e3 = %s" % e3)
+        print("  e1 = %s" % e1)
+        print("  e2 = %s" % e2)
+        print("  e3 = %s" % e3)
         e13 = e3 - e1
         e12 = e2 - e1
         coord.k = normalize(e12)
+        print('k = %s' % coord.k)
         coord.j = normalize(cross(coord.k, e13))
+        print('j = %s' % coord.j)
         coord.i = cross(coord.j, coord.k)
 
         #print("  e13 = %s" % e13)
