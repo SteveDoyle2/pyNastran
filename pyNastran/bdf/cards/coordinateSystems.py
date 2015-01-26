@@ -385,16 +385,7 @@ class Coord(BaseCard):
         if self.i == None:
             self.setup()
 
-        if not isinstance(xyz, ndarray):
-            msg = 'xyz must be type ndarray'
-            raise TypeError(msg)
-        if xyz.shape == (1,3):
-            xyz.reshape(3,1)
-
-        if xyz.shape != (3,):
-            msg = 'xyz must be 3 by 1 dim\nxyz is %s' % xyz.shape
-            raise RuntimeError(msg)
-
+        xyz = _fix_xyz_shape(xyz)
         if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
             e1 = self.rid.transformToGlobal(self.e1)
             e2 = self.rid.transformToGlobal(self.e2)
@@ -415,16 +406,163 @@ class Coord(BaseCard):
             self.setup()
 
 
-def define_coord(model, Type, cid, origin, rid=0, i=None, j=None, k=None):
+def _fix_xyz_shape(xyz):
     """
-    Create a coordinate system based on 2 or 3 unit vectors
+    Checks the shape of a grid point location and fixes it if possible
+    """
+    if not isinstance(xyz, ndarray):
+        msg = 'xyz must be type ndarray'
+        raise TypeError(msg)
+    if xyz.shape == (1,3):
+        xyz.reshape(3,1)
+
+    if xyz.shape != (3,):
+        msg = 'xyz must be 3 by 1 dim\nxyz is %s' % xyz.shape
+        raise RuntimeError(msg)
+    return xyz
+
+
+def define_spherical_cutting_plane(model, origin, rid, cids, thetas, phis):
+    """
+    Creates a series of coordinate systems defined as constant origin,
+    with a series of theta and phi angles, which are defined about the
+    aerodynamic axis <1, 0, 0>.  This is intended to be with a
+    supersonic mach plane for calculating wave drag where:
+        .. math::  \theta = \mu = \frac{1}{\sqrt(Mach^2 - 1)}
+        .. math::  \phi = [-\pi, \pi]
+
+    :param model: a BDF object
+    :param origin: a (3,) ndarray defining the location of the origin in
+                   the global coordinate frame
+    :param rid:  the new spherical reference coordinate system id
+    :param cids:  list of new coordinate system ids
+    :param thetas:  list of thetas (in radians)
+    :param phis:  list of phis (in radians)
+
+    ..note:: creates 1 CORD2S and ncid CORD2R coordinate systems
+
+    TODO: hasn't been tested...
+    """
+    assert len(cids) == len(thetas), 'len(cids)=%s len(thetas)=%s; must be equal' % (len(cids, len(thetas)))
+    assert len(cids) == len(phis), 'len(cids)=%s len(phis)=%s; must be equal' % (len(cids, len(phis)))
+
+    # check for dupliate coords
+    assert rid not in model.coords
+    for cid in cids:
+        assert cid not in model.coords
+
+    # create the spherical coordinate system
+    origin = _fix_xyz_shape(origin)
+    e2 = origin + array([0., 0., 1.])
+    e3 = origin + array([1., 0., 0.])
+    card = ['CORD2S', rid, 0] + list(origin) + list(e2) + list(e3)
+    model.add_card(card, card[0], is_list=True)
+
+    # create the mach planes
+    for cid, theta, phi in zip(cids, thetas, phis):
+        e2 = [1.0, theta, 0.]
+        e3 = [1.0, theta, phi]
+        card = ['CORD2R', cid, rid] + [0., 0., 0.] + e2 + e3
+        model.add_card(card, card[0], is_list=True)
+
+
+def define_coord_e123(model, Type, cid, origin, rid=0,
+                      xaxis=None, yaxis=None, zaxis=None,
+                      xyplane=None, yzplane=None, xzplane=None):
+    """
+    Create a coordinate system based on a defined axis and point on the
+    plane.  This is the generalized version of the CORDx card.
 
     :param model: a BDF object
     :param Type:  'CORD2R', 'CORD2C', 'CORD2S'
     :param cid:  the new coordinate system id
     :param origin: a (3,) ndarray defining the location of the origin in
                    the global coordinate frame
-    :param rid:  the new reference coordinate system id
+    :param rid:  the new reference coordinate system id (default=0)
+    :param xaxis:  a (3,) ndarray defining the x axis (default=None)
+    :param yaxis:  a (3,) ndarray defining the y axis (default=None)
+    :param zaxis:  a (3,) ndarray defining the z axis (default=None)
+
+    ..note:: one axis (xaxis, yaxis, zaxis) and one plane
+             (xyplane, yzplane, xz plane) must be defined
+
+    TODO: hasn't been tested...
+    """
+    assert Type in ['CORD2R', 'CORD2C', 'CORD2S'], Type
+    origin = _fix_xyz_shape(origin)
+
+    # check for overdefined axes
+    if xaxis is not None:
+        assert yaxis is None and zaxis is None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
+        xaxis = _fix_xyz_shape(xaxis)
+    elif yaxis is not None:
+        assert zaxis is None, 'zaxis=%s' % (zaxis)
+        yaxis = _fix_xyz_shape(yaxis)
+    else:
+        zaxis = _fix_xyz_shape(zaxis)
+
+    # check for invalid planes
+    if xyplane is not None:
+        assert yzplane is None and xzplane is None, 'yzplane=%s xzplane=%s' % (yzplane, xzplane)
+        assert xaxis is not None or yaxis is not None, 'xaxis=%s yaxis=%s' % (xaxis, yaxis)
+        xyplane = _fix_xyz_shape(xyplane)
+    elif yzplane is not None:
+        assert xzplane is None, 'xzplane=%s' % (xzplane)
+        assert yaxis is not None or zaxis is not None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
+        yzplane = _fix_xyz_shape(yzplane)
+    else:
+        assert xaxis is not None or zaxis is not None, 'xaxis=%s zaxis=%s' % (xaxis, zaxis)
+        xzplane = _fix_xyz_shape(xzplane)
+
+    if xyplane is not None:
+        if xaxis is not None:
+            i = xaxis / norm(xaxis)
+            khat = cross(i, xyplane)  # xyplane is "defining" yaxis
+            k = khat / norm(khat)
+            j = cross(k, i)
+        elif yaxis is not None:
+            j = yaxis / norm(yaxis)
+            khat = cross(xyplane, j)  # xyplane is "defining" xaxis
+            k = khat / norm(khat)
+            i = cross(j, k)
+
+    elif yzplane is not None:
+        if yaxis is not None:
+            j = yaxis / norm(yaxis)
+            ihat = cross(j, yzplane)  # yzplane is "defining" zaxis
+            i = ihat / norm(ihat)
+            k = cross(i, j)
+        elif zaxis is not None:
+            k = zaxis / norm(zaxis)
+            ihat = cross(yzplane, zaxis)  # yzplane is "defining" yaxis
+            i = ihat / norm(ihat)
+            j = cross(k, i)
+
+    elif xzplane is not None:
+        if xaxis is not None:
+            i = xaxis / norm(xaxis)
+            jhat = cross(xzplane, i)  # xzplane is "defining" zaxis
+            j = jhat / norm(jhat)
+            k = cross(i, j)
+        elif zaxis is not None:
+            # standard
+            k = zaxis / norm(zaxis)
+            jhat = cross(k, xzplane) # xzplane is "defining" xaxis
+            j = jhat / norm(jhat)
+            i = cross(j, k)
+    define_coord_ijk(model, Type, cid, origin, rid, i, j, k)
+
+
+def define_coord_ijk(model, Type, cid, origin, rid=0, i=None, j=None, k=None):
+    """
+    Create a coordinate system based on 2 or 3 perpendicular unit vectors
+
+    :param model: a BDF object
+    :param Type:  'CORD2R', 'CORD2C', 'CORD2S'
+    :param cid:  the new coordinate system id
+    :param origin: a (3,) ndarray defining the location of the origin in
+                   the global coordinate frame
+    :param rid:  the new reference coordinate system id (default=0)
     :param i:    the i unit vector (default=None)
     :param j:    the j unit vector (default=None)
     :param k:    the k unit vector (default=None)
@@ -432,6 +570,8 @@ def define_coord(model, Type, cid, origin, rid=0, i=None, j=None, k=None):
     TODO: hasn't been tested...
     """
     assert Type in ['CORD2R', 'CORD2C', 'CORD2S'], Type
+    origin = _fix_xyz_shape(origin)
+
     # create cross vectors
     if i is None:
         if j is not None and k is not None:
