@@ -1202,8 +1202,8 @@ class CAERO2(BaseCard, CAERO2Deprecated):
     def get_points(self):
         (p1, matrix) = self.cp.transformToGlobal(self.p1)
         p2 = p1 + array([self.x12, 0., 0.])
-        #print("x12 = ",self.x12)
-        #print("pcaero[%s] = %s" %(self.eid,[p1,p2]))
+        #print("x12 = %s" % self.x12)
+        #print("pcaero[%s] = %s" % (self.eid, [p1,p2]))
         return [p1, p2]
 
     def set_points(self, points):
@@ -2451,7 +2451,8 @@ class SPLINE1(Spline):
       | SPLINE1 | EID   | CAERO | BOX1 | BOX2 | SETG | DZ | METH | USAGE |
       +---------+-------+-------+------+------+------+----+------+-------+
       | NELEM   | MELEM |
-      +---------+-------+-------+------+------+------+----+      | SPLINE1 |   3   |  111  | 115  | 122  |  14  | 0. |
+      +---------+-------+-------+------+------+------+----+
+      | SPLINE1 |   3   |  111  | 115  | 122  |  14  | 0. |
       +---------+-------+-------+------+------+------+----+
     """
     type = 'SPLINE1'
