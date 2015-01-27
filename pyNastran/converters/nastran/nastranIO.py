@@ -191,7 +191,7 @@ class NastranIO(object):
                 xyz_cid0[i, :] = xyz
             self.xyz_cid0 = xyz_cid0
 
-        for cid, coord in sorted(model.coords.iteritems()):
+        for cid, coord in sorted(iteritems(model.coords)):
             if cid == 0:
                 continue
             if cid in self.show_cids:
@@ -199,7 +199,7 @@ class NastranIO(object):
                 beta = coord.beta()
                 self.create_coordinate_system(label=cid, origin=origin, matrix_3x3=beta, Type='xyz', add_to_ren=True)
             else:
-                print('skipping cid=%s' % cid)
+                print('skipping cid=%s; use a script and set self.show_cids=[%s] to view' % (cid, cid))
 
         for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
             point = node.Position()
