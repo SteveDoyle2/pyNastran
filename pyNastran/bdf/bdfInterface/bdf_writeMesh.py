@@ -8,6 +8,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types, iteritems, itervalues, PY2
 from codecs import open
+import warnings
 
 from pyNastran.bdf.utils import print_filename
 from pyNastran.utils.gui_io import save_file_dialog
@@ -47,7 +48,7 @@ class WriteMesh(object):
         self._auto_reject = True
         return self.read_bdf(infile_name)
 
-    def _output_helper(self, out_filename, interspersed, size, precision):
+    def _output_helper(self, out_filename, interspersed, size, is_double):
         """
         Performs type checking on the write_bdf inputs
         """
@@ -63,11 +64,11 @@ class WriteMesh(object):
             raise TypeError('out_filename=%r must be a string' % out_filename)
 
         if size == 8:
-            assert precision == 'single', 'precision=%r' % precision
+            assert double_precision == False, 'is_double=%r' % is_double
             card_writer = print_card_8
         elif size == 16:
-            assert precision in ['single', 'double'], 'precision=%r' % precision
-            if precision == 'single':
+            assert is_double in [True, False], 'is_double=%r' % is_double
+            if is_double == 'single':
                 card_writer = print_card_16
             else:
                 card_writer = print_card_double
@@ -80,7 +81,7 @@ class WriteMesh(object):
         return out_filename, card_writer
 
     def write_bdf(self, out_filename=None, interspersed=True,
-                  size=8, precision='single', enddata=None):
+                  size=8, precision=None, is_double=False, enddata=None):
         """
         Writes the BDF.
 
@@ -93,17 +94,22 @@ class WriteMesh(object):
               much easier to compare to a Patran-formatted bdf and is
               more clear. (default=True)
         :param size:  the field size (8 is recommended)
-        :param precision:  'single', 'double'
+        :param precision:  'single', 'double', None (None -> )
         :param enddata:  Flag to enable/disable writing ENDDATA
                          (default=None -> depends on input BDF)
         """
-        out_filename, card_writer = self._output_helper(out_filename,
-                                            interspersed, size, precision)
+        if precision is not None:
+            if precision == 'double':
+                is_double = True
+            elif precision == 'single':
+                is_double = False
+            else:
+                raise ValueError('invalid precision=%r' % precision)
+            warnings.warn("'precision' has been replaced by "
+                          "'is_double'; 'single' -> False, 'double' -> True")
 
-        if precision == 'double':
-            double = True
-        elif precision == 'single':
-            double = False
+            out_filename, card_writer = self._output_helper(out_filename,
+                                                interspersed, size, is_double)
 
         if PY2:
             outfile = open(out_filename, 'wb')
@@ -111,8 +117,7 @@ class WriteMesh(object):
             outfile = open(out_filename, 'w')
         self._write_header(outfile)
         self._write_params(outfile, size, card_writer)
-
-        self._write_nodes(outfile, size, card_writer, double)
+        self._write_nodes(outfile, size, card_writer, is_double)
 
         if interspersed:
             self._write_elements_properties(outfile, size, card_writer)
@@ -122,7 +127,7 @@ class WriteMesh(object):
         self._write_materials(outfile, size, card_writer)
 
         self._write_masses(outfile, size, card_writer)
-        self._write_common(outfile, size, double, card_writer)
+        self._write_common(outfile, size, is_double, card_writer)
         if (enddata is None and 'ENDDATA' in self.card_count) or enddata:
             outfile.write('ENDDATA\n')
         outfile.close()
