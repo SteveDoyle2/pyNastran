@@ -1,4 +1,6 @@
 import warnings
+from numpy import array
+
 
 class BaseCardDeprecated(object):
     """
@@ -15,6 +17,55 @@ class BaseCardDeprecated(object):
 
     def printRawFields(self, size=8):
         return self.print_raw_fields(size=size)
+
+class CoordDeprecated(object):
+    def T(self):
+        r"""
+        Gets the 6 x 6 transformation
+
+        .. math:: [\lambda] = [B_{ij}]
+
+        .. math::
+          [T] =
+          \left[
+            \begin{array}{cc}
+            \lambda  & 0 \\
+            0  & \lambda \\
+            \end{array}
+          \right]
+        """
+        return self.beta_n(2)
+
+    def transformToGlobal(self, p, debug=False):
+        """
+        Transforms a node from the local frame to the global frame
+
+        :param p: the xyz point in the local frame
+        :param debug: debug flag (default=False; unused)
+
+        :retval p2: the xyz point in the global frame
+        :retval matrix: the transformation matrix
+        """
+        if self.cid == 0:
+            return p, array([[1., 0., 0.],
+                             [0., 1., 0.],
+                             [0., 0., 1.]], dtype='float64')
+
+        p2 = self.transform_node_to_global(p)
+        matrix = self.beta()
+        return p2, matrix
+
+    def transformVectorToGlobal(self, p):
+        return self.transform_vector_to_global(p)
+
+    def transformNodeToGlobal(self, p):
+        return self.transform_node_to_global(p)
+
+    def transformToLocal(self, p, beta, debug=False):
+        return self.transform_node_to_local(p, debug)
+
+    def transform_to_local(self, p, beta, debug=False):
+        return self.transform_node_to_local(p, debug)
 
 
 class AeroDeprecated(object):
