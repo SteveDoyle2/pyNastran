@@ -221,7 +221,7 @@ class Coord(BaseCard, CoordDeprecated):
         #Mdelta = cross(r, Fg)
         #return Fg, Mg + Mdelta
 
-    def transform_vector_to_global(self, p):
+    def transform_vector_to_global(self, p, debug=False):
         """
         Transforms a generalized vector from the local frame to the
         global frame.  A generalized vector is unchanged when you shift
@@ -257,7 +257,7 @@ class Coord(BaseCard, CoordDeprecated):
         p3 = dot(p2, matrix)
         return p3
 
-    def transform_node_to_global(self, p):
+    def transform_node_to_global(self, p, debug=False):
         r"""
         Transforms a point from the local coordinate system to the reference
         coordinate frames "global" coordinate system.
@@ -338,7 +338,7 @@ class Coord(BaseCard, CoordDeprecated):
         beta = self.beta()
         return self._transform_node_to_local(p, beta, debug)
 
-    def transform_vector_to_local(self, p):
+    def transform_vector_to_local(self, p, debug=False):
         """
         see transform_node_to_local, but set the origin to <0, 0, 0>
         """

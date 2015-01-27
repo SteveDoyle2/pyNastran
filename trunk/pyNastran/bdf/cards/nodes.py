@@ -858,7 +858,7 @@ class GRID(Node, GridDeprecated):
                        coordinate system
         :type xyz:     TYPE = NDARRAY.  SIZE=(3,)
         """
-        xyz, matrix = self.cp.transformToGlobal(self.xyz, debug=debug)
+        xyz = self.cp.transform_node_to_global(self.xyz, debug=debug)
         return xyz
 
     def get_position_wrt(self, model, cid, debug=False):
@@ -881,13 +881,12 @@ class GRID(Node, GridDeprecated):
             return self.xyz
 
         # converting the xyz point arbitrary->global
-        p, matrixDum = self.cp.transformToGlobal(self.xyz, debug=debug)
-        msg = ' which is required by %s nid=%s' % (self.type, self.nid)
-        coordB = model.Coord(cid, msg=msg)
+        p = self.cp.transform_node_to_global(self.xyz, debug=debug)
 
         # a matrix global->local matrix is found
-        matrix = coordB.beta()
-        xyz = coordB.transformToLocal(p, matrix, debug=debug)
+        msg = ' which is required by %s nid=%s' % (self.type, self.nid)
+        coordB = model.Coord(cid, msg=msg)
+        xyz = coordB.transform_node_to_local(p, debug=debug)
         return xyz
 
     def cross_reference(self, model, grdset=None):
@@ -1158,7 +1157,7 @@ class POINT(Node, PointDeprecated):
         :returns position: the position of the POINT in the globaly
                            coordinate system
         """
-        p, matrix = self.cp.transformToGlobal(self.xyz, debug=debug)
+        p = self.cp.transform_node_to_global(self.xyz, debug=debug)
         return p
 
     def get_position_wrt(self, model, cid, debug=False):
@@ -1181,13 +1180,12 @@ class POINT(Node, PointDeprecated):
             return self.xyz
 
         # converting the xyz point arbitrary->global
-        p, matrixDum = self.cp.transformToGlobal(self.xyz, debug=debug)
-        msg = ' which is required by %s nid=%s' % (self.type, self.nid)
-        coordB = model.Coord(cid, msg=msg)
+        p = self.cp.transform_node_to_global(self.xyz, debug=debug)
 
         # a matrix global->local matrix is found
-        matrix = coordB.beta()
-        xyz = coordB.transformToLocal(p, matrix, debug=debug)
+        msg = ' which is required by %s nid=%s' % (self.type, self.nid)
+        coordB = model.Coord(cid, msg=msg)
+        xyz = coordB.transform_node_to_local(p, debug=debug)
         return xyz
 
     def Cp(self):
