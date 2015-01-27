@@ -64,7 +64,7 @@ class WriteMesh(object):
             raise TypeError('out_filename=%r must be a string' % out_filename)
 
         if size == 8:
-            assert double_precision == False, 'is_double=%r' % is_double
+            assert is_double == False, 'is_double=%r' % is_double
             card_writer = print_card_8
         elif size == 16:
             assert is_double in [True, False], 'is_double=%r' % is_double
@@ -105,11 +105,10 @@ class WriteMesh(object):
                 is_double = False
             else:
                 raise ValueError('invalid precision=%r' % precision)
-            warnings.warn("'precision' has been replaced by "
-                          "'is_double'; 'single' -> False, 'double' -> True")
+            warnings.warn("'precision' has been replaced by 'is_double'; 'single' -> False, 'double' -> True")
 
-            out_filename, card_writer = self._output_helper(out_filename,
-                                                interspersed, size, is_double)
+        out_filename, card_writer = self._output_helper(out_filename,
+                                            interspersed, size, is_double)
 
         if PY2:
             outfile = open(out_filename, 'wb')
