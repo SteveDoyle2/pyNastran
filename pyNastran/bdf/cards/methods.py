@@ -166,17 +166,19 @@ class EIGC(Method):
             fields = [interpret_value(field) for field in card[9:] ]
             self.alphaAjs = []
             self.omegaAjs = []
-            nFields = len(fields)
-            nRows = nFields // 8
-            if nFields % 7 > 0:
-                nRows += 1
+            nfields = len(fields)
+            nrows = nfields // 8
+            if nfields % 8 > 0:
+                nrows += 1
+            if nrows == 0:
+                raise RuntimeError('invalid row count=0; nfields=%s \ncard=%s\nfields=%s' % (nfields, card, fields))
 
             if self.method == 'CLAN':
-                self.loadCLAN(nRows, card)
+                self.loadCLAN(nrows, card)
             elif self.method in ['HESS', 'INV']:  # HESS, INV
-                self.loadHESS_INV(nRows, card)
+                self.loadHESS_INV(nrows, card)
             else:
-                msg = 'invalid EIGC method...method=|%r|' % (self.method)
+                msg = 'invalid EIGC method...method=%r' % self.method
                 raise RuntimeError(msg)
             #assert card.nFields() < 8, 'card = %s' % card
         else:
@@ -245,6 +247,11 @@ class EIGC(Method):
                 list_fields += [alphaA, omegaA, alphaB, omegaB, Lj, NEj, NDj, None]
 
         elif self.method == 'CLAN':
+            assert len(self.alphaAjs) == len(self.omegaAjs)
+            assert len(self.alphaAjs) == len(self.mblkszs)
+            assert len(self.alphaAjs) == len(self.iblkszs)
+            assert len(self.alphaAjs) == len(self.ksteps)
+            assert len(self.alphaAjs) == len(self.NJIs)
             for (alphaA, omegaA, mblksz, iblksz, kstep, Nj) in zip(
                     self.alphaAjs, self.omegaAjs, self.mblkszs, self.iblkszs,
                     self.ksteps, self.NJIs):
@@ -257,7 +264,7 @@ class EIGC(Method):
                 list_fields += [alphaA, omegaA, mblksz, iblksz,
                            kstep, None, Nj, None]
         else:
-            msg = 'invalid EIGC method...method=|%r|' % (self.method)
+            msg = 'invalid EIGC method...method=%r' % self.method
             raise RuntimeError(msg)
         return list_fields
 

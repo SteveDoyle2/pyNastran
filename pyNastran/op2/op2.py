@@ -447,7 +447,7 @@ class OP2( #BDF,
                 "All files (*.*)|*.*"
             wildcard_qt = "Nastran OP2 (*.op2);;All files (*)"
             title = 'Please select a OP2 to load'
-            op2_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)
+            op2_filename = load_file_dialog(title, wildcard_wx, wildcard_qt, dirname='')
             assert op2_filename is not None, op2_filename
 
         if not is_binary(op2_filename):
