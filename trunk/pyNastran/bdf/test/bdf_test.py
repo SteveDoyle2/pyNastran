@@ -44,8 +44,9 @@ if __name__ == '__main__':  # pragma: no cover
     debug = False
 
     saveCases = True
-    regenerate = False
+    regenerate = True
     stopOnFailure = False
+    nastran = r'C:\MSC.Software\MSC.Nastran\bin\nastran.exe scr=yes bat=no old=no '
 
     if regenerate:
         files2 = get_all_files(foldersFile, '.bdf')
@@ -73,7 +74,7 @@ if __name__ == '__main__':  # pragma: no cover
     xref = True
     debug = False
     failed_files = run_lots_of_files(files, debug=debug, xref=xref,
-                                     check=check, cid=cid)
+                                     check=check, cid=cid, nastran=nastran)
     ntotal = len(files)
     nfailed = len(failed_files)
     npassed = ntotal - nfailed
