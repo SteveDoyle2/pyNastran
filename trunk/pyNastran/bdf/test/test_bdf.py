@@ -142,15 +142,34 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
             dirname = os.path.dirname(bdfModel)
             basename = os.path.basename(bdfModel).split('.')[0]
 
-            outModel2 = os.path.join(dirname, 'out_%s.bdf' % basename)
             op2_model = os.path.join(dirname, 'out_%s.op2' % basename)
-            op2_model2 = os.path.join(os.getcwd(), 'out_%s.op2' % basename)
-            print(outModel2)
-            if os.path.exists(outModel2):
-                os.remove(outModel2)
-            os.rename(outModel, outModel2)
-            os.system(nastran + outModel2)
+
+            cwd = os.getcwd()
+            bdf_model2 = os.path.join(cwd, 'out_%s.bdf' % basename)
+            op2_model2 = os.path.join(cwd, 'out_%s.op2' % basename)
+            f06_model2 = os.path.join(cwd, 'out_%s.f06' % basename)
+            print(bdf_model2)
+            if os.path.exists(bdf_model2):
+                os.remove(bdf_model2)
+
+            # make sure we're writing an OP2
+            bdf = BDF()
+            bdf.read_bdf(outModel)
+            if 'POST' in bdf.params:
+                post = bdf.params['POST']
+                #print('post = %s' % post)
+                post.update_values(value1=-1)
+                #print('post = %s' % post)
+            else:
+                card = ['PARAM', 'POST', -1]
+                bdf.add_card(card, 'PARAM', is_list=True)
+            bdf.write_bdf(bdf_model2)
+
+            #os.rename(outModel, outModel2)
+            os.system(nastran + bdf_model2)
             op2 = OP2()
+            if not os.path.exists(op2_model2):
+                raise RuntimeError('%s failed' % f06_model2)
             op2.read_op2(op2_model2)
             print(op2.get_op2_stats())
 
