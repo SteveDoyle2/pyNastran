@@ -44,7 +44,7 @@ if __name__ == '__main__':  # pragma: no cover
     debug = False
 
     saveCases = True
-    regenerate = True
+    regenerate = False
     stopOnFailure = False
 
     if regenerate:

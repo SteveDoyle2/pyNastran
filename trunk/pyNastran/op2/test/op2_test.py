@@ -37,23 +37,26 @@ def parse_skipped_cards(fname):
     return filesToAnalyze
 
 
-def get_all_files(foldersFile,fileType):
-    f = open(foldersFile,'r')
+def get_all_files(folders_file, file_type):
+    f = open(folders_file, 'r')
     lines = f.readlines()
     files2 = []
     for line in lines:
-        moveDir = os.path.join('r"'+line.strip()+'"')
-        moveDir = line.strip()
-        if moveDir and moveDir[0] != '#':
-            print("moveDir = %s" % moveDir)
-            assert os.path.exists(moveDir), '%s doesnt exist' % (moveDir)
-            files2 += get_files_of_type(moveDir, fileType, maxSize=4.2)
+        move_dir = os.path.join('r"'+line.strip()+'"')
+        move_dir = line.strip()
+        if move_dir and move_dir[0] != '#':
+            if not os.path.exists(move_dir):
+                print("***move_dir doesn't exist = %s" % move_dir)
+                continue
+            print("move_dir = %s" % move_dir)
+            #assert os.path.exists(moveDir), '%s doesnt exist' % move_dir
+            files2 += get_files_of_type(move_dir, file_type, maxSize=4.2)
     return files2
 
 
 def main():
     # works
-    files = get_files_of_type('tests','.op2')
+    files = get_files_of_type('tests', '.op2')
 
     foldersFile = 'tests/foldersRead.txt'
 
@@ -74,14 +77,14 @@ def main():
     if getSkipCards:
         files2 = parse_skipped_cards('skippedCards.out')
     elif regenerate:
-        files2 = get_all_files(foldersFile,'.op2')
+        files2 = get_all_files(foldersFile, '.op2')
         files2 += files
         files2.sort()
     else:
         files2 = get_failed_files('failedCases.in')
     files = files2
 
-    skipFiles = ['nltrot99.op2','rot12901.op2','plan20s.op2'] # giant
+    skipFiles = ['nltrot99.op2', 'rot12901.op2', 'plan20s.op2'] # giant
 
     nStart = 0
     nStop = 10000

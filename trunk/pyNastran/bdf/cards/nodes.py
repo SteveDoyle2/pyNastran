@@ -9,7 +9,7 @@ from pyNastran.bdf.fieldWriter import set_string8_blank_if_default
 from pyNastran.bdf.fieldWriter16 import set_string16_blank_if_default
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru
+from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru, collapse_thru_packs
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, blank, integer_or_string)
 from pyNastran.bdf.fieldWriter import print_card_8, print_float_8, print_int_card
@@ -171,13 +171,22 @@ class SPOINT(Node):
         :type fields:
           LIST
         """
+        lists_fields = []
         if isinstance(self.nid, int):
             list_fields = ['SPOINT', self.nid]
+            lists_fields.append(list_fields)
         else:
-            list_fields = ['SPOINT'] + collapse_thru(self.nid)
-        return list_fields
+            singles, doubles = collapse_thru_packs(self.nid)
+            #list_fields = ['SPOINT'] + collapse_thru(self.nid)
+            if singles:
+                list_fields = ['SPOINT'] + singles
+            if doubles:
+                for spoint_double in doubles:
+                    list_fields = ['SPOINT'] + spoint_double
+                    lists_fields.append(list_fields)
+        return lists_fields
 
-    def write_bdf2(self, size=8, double=False):
+    def write_bdf2(self, size=8, is_double=False):
         """
         The writer method used by BDF.write_bdf
 
@@ -185,11 +194,14 @@ class SPOINT(Node):
         :param size:   unused
         :param double: unused
         """
-        card = self.repr_fields()
-        if 'THRU' not in card:
-            return self.comment() + print_int_card(card)
-        else:
-            return self.comment() + print_card_8(card)
+        lists_fields = self.repr_fields()
+        msg = self.comment()
+        for list_fields in lists_fields:
+            if 'THRU' not in list_fields:
+                msg += print_int_card(list_fields)
+            else:
+                msg += print_card_8(list_fields)
+        return msg
 
 
 class SPOINTs(Node):
@@ -299,11 +311,18 @@ class SPOINTs(Node):
         """
         spoints = list(self.spoints)
         spoints.sort()
-        spoints = collapse_thru(spoints)
-        list_fields = ['SPOINT'] + spoints
-        return list_fields
+        singles, doubles = collapse_thru_packs(spoints)
+        #list_fields = ['SPOINT'] + collapse_thru(self.nid)
+        lists_fields = []
+        if singles:
+            list_fields = ['SPOINT'] + singles
+        if doubles:
+            for spoint_double in doubles:
+                list_fields = ['SPOINT'] + spoint_double
+                lists_fields.append(list_fields)
+        return lists_fields
 
-    def write_bdf2(self, size=8, double=False):
+    def write_bdf2(self, size=8, is_double=False):
         """
         The writer method used by BDF.write_bdf
 
@@ -311,11 +330,14 @@ class SPOINTs(Node):
         :param size:   unused
         :param double: unused
         """
-        card = self.raw_fields()
-        if 'THRU' not in card:
-            return self.comment() + print_int_card(card)
-        else:
-            return self.comment() + print_card_8(card)
+        lists_fields = self.repr_fields()
+        msg = self.comment()
+        for list_fields in lists_fields:
+            if 'THRU' not in list_fields:
+                msg += print_int_card(list_fields)
+            else:
+                msg += print_card_8(list_fields)
+        return msg
 
 
 class GRDSET(Node):
@@ -416,6 +438,15 @@ class GRDSET(Node):
         else:
             return self.cp.cid
 
+    def Ps(self):
+        """
+        Gets the GRID-based SPC
+
+        :param self: the GRID object pointer
+        :returns ps: the GRID-based SPC
+        """
+        return self.ps
+
     def SEid(self):
         """
         Gets the Superelement ID
@@ -479,7 +510,7 @@ class GRDSET(Node):
         list_fields = ['GRDSET', None, cp, None, None, None, cd, ps, seid]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf2(self, f, size, is_double):
         """
         The writer method used by BDF.write_bdf
 
@@ -949,7 +980,7 @@ class GRID(Node, GridDeprecated):
                                                                  seid]
         return list_fields
 
-    def write_bdf2(self, size=8, double=False):
+    def write_bdf2(self, size=8, is_double=False):
         """
         The writer method used by BDF.write_bdf
 
@@ -966,8 +997,8 @@ class GRID(Node, GridDeprecated):
         """
         xyz = self.xyz
         if size == 8:
-            cp   = set_string8_blank_if_default(self.Cp(), 0)
-            cd   = set_string8_blank_if_default(self.Cd(), 0)
+            cp = set_string8_blank_if_default(self.Cp(), 0)
+            cd = set_string8_blank_if_default(self.Cd(), 0)
             seid = set_string8_blank_if_default(self.SEid(), 0)
             msg = '%-8s%8i%8s%s%s%s%s%8s%s\n' % ('GRID', self.nid, cp,
                     print_float_8(xyz[0]),
@@ -975,8 +1006,8 @@ class GRID(Node, GridDeprecated):
                     print_float_8(xyz[2]),
                     cd, self.ps, seid)
         else:
-            cp   = set_string16_blank_if_default(self.Cp(), 0)
-            cd   = set_string16_blank_if_default(self.Cd(), 0)
+            cp = set_string16_blank_if_default(self.Cp(), 0)
+            cd = set_string16_blank_if_default(self.Cd(), 0)
             seid = set_string16_blank_if_default(self.SEid(), 0)
             if double:
                 msg = ('%-8s%16i%16s%16s%16s\n'

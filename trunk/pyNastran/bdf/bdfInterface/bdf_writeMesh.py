@@ -292,7 +292,7 @@ class WriteMesh(object):
                 msg.append(aefact.write_bdf(size, card_writer))
             outfile.write(''.join(msg))
 
-    def _write_common(self, outfile, size, double, card_writer):
+    def _write_common(self, outfile, size, is_double, card_writer):
         """
         Write the common outputs so none get missed...
 
@@ -315,7 +315,7 @@ class WriteMesh(object):
         self._write_sets(outfile, size, card_writer)
         self._write_contact(outfile, size, card_writer)
         self._write_rejects(outfile, size)
-        self._write_coords(outfile, size, double)
+        self._write_coords(outfile, size, is_double)
 
     def _write_constraints(self, outfile, size, card_writer):
         """Writes the constraint cards sorted by ID"""
@@ -368,14 +368,14 @@ class WriteMesh(object):
                 msg.append(bsurfsi.write_bdf(size, card_writer))
             outfile.write(''.join(msg))
 
-    def _write_coords(self, outfile, size, double):
+    def _write_coords(self, outfile, size, is_double):
         """Writes the coordinate cards in a sorted order"""
         msg = []
         if len(self.coords) > 1:
             msg.append('$COORDS\n')
         for (unused_id, coord) in sorted(iteritems(self.coords)):
             if unused_id != 0:
-                msg.append(coord.write_bdf(size, double))
+                msg.append(coord.write_bdf(size, is_double))
         outfile.write(''.join(msg))
 
     def _write_dmigs(self, outfile, size, card_writer):
@@ -507,7 +507,7 @@ class WriteMesh(object):
                 msg.append(material.write_bdf(size, card_writer))
             outfile.write(''.join(msg))
 
-    def _write_nodes(self, outfile, size, card_writer, double):
+    def _write_nodes(self, outfile, size, card_writer, is_double):
         """
         Writes the NODE-type cards
 
@@ -516,7 +516,7 @@ class WriteMesh(object):
         if self.spoints:
             msg = []
             msg.append('$SPOINTS\n')
-            msg.append(self.spoints.write_bdf2(size, double))
+            msg.append(self.spoints.write_bdf2(size, is_double))
             outfile.write(''.join(msg))
 
         if self.nodes:
@@ -525,7 +525,7 @@ class WriteMesh(object):
             if self.gridSet:
                 msg.append(self.gridSet.print_card(size))
             for (nid, node) in sorted(iteritems(self.nodes)):
-                msg.append(node.write_bdf2(size, double))
+                msg.append(node.write_bdf2(size, is_double))
             outfile.write(''.join(msg))
         if 0:  # not finished
             self._write_nodes_associated(outfile, size, card_writer)

@@ -102,6 +102,13 @@ def memory_usage_psutil():
     mem = process.get_memory_info()[0] / float(2 ** 20)
     return mem
 
+def get_double_from_precision(precision):
+    if precision == 'single':
+        double = False
+    elif precision == 'double':
+        precision = True
+    return double
+
 def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False,
             cid=None, meshForm='combined', isFolder=False, print_stats=False,
             sum_load=False, size=8, precision='single',
@@ -165,6 +172,7 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, precision, c
         raise
     #fem1.sumForces()
 
+    double = get_double_from_precision(precision)
     if fem1._auto_reject:
         outModel = bdfModel + '.rej'
     else:
@@ -172,9 +180,9 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, precision, c
         if cid is not None and xref:
             fem1.resolveGrids(cid=cid)
         if meshForm == 'combined':
-            fem1.write_bdf(outModel, interspersed=False, size=size, precision=precision)
+            fem1.write_bdf(outModel, interspersed=False, size=size, is_double=double)
         elif meshForm == 'separate':
-            fem1.write_bdf(outModel, interspersed=False, size=size, precision=precision)
+            fem1.write_bdf(outModel, interspersed=False, size=size, is_double=double)
         else:
             msg = "meshForm=%r; allowedForms=['combined','separate']" % meshForm
             raise NotImplementedError(msg)
@@ -188,6 +196,7 @@ def run_fem2(bdfModel, outModel, xref, punch,
     assert os.path.exists(bdfModel), bdfModel
     assert os.path.exists(outModel), outModel
 
+    double = get_double_from_precision(precision)
     if reject:
         fem2 = BDFReplacer(bdfModel + '.rej', debug=debug, log=None)
     else:
@@ -209,7 +218,7 @@ def run_fem2(bdfModel, outModel, xref, punch,
             loadcase_id, options = fem2.caseControlDeck.get_subcase_parameter(isubcase, 'LOAD')
             F, M = fem2.sum_forces_moments(p0, loadcase_id, include_grav=False)
             print('  isubcase=%i F=%s M=%s' % (isubcase, F, M))
-    fem2.write_bdf(outModel2, interspersed=False, size=size, precision=precision)
+    fem2.write_bdf(outModel2, interspersed=False, size=size, is_double=double)
     #fem2.writeAsCTRIA3(outModel2)
     os.remove(outModel2)
     return (fem2)
