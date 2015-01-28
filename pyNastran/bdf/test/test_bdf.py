@@ -12,6 +12,7 @@ warnings.simplefilter('always')
 numpy.seterr(all='raise')
 import traceback
 
+from pyNastran.op2.op2 import OP2
 from pyNastran.utils import print_bad_path
 from pyNastran.bdf.bdf import BDF, NastranMatrix
 from pyNastran.bdf.bdf_replacer import BDFReplacer
@@ -23,15 +24,15 @@ test_path = pyNastran.bdf.test.__path__[0]
 
 
 def run_all_files_in_folder(folder, debug=False, xref=True, check=True,
-                            punch=False, cid=None):
+                            punch=False, cid=None, nastran=''):
     print("folder = %s" % folder)
     filenames = os.listdir(folder)
     run_lots_of_files(filenames, debug=debug, xref=xref, check=check,
-                      punch=punch, cid=cid)
+                      punch=punch, cid=cid, nastran=nastran)
 
 
 def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
-                      punch=False, cid=None):
+                      punch=False, cid=None, nastran=''):
     filenames = list(set(filenames))
     filenames.sort()
 
@@ -53,7 +54,8 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
         try:
             (fem1, fem2, diffCards2) = run_bdf(folder, filename, debug=debug,
                                                xref=xref, check=check, punch=punch,
-                                               cid=cid, isFolder=True, dynamic_vars={})
+                                               cid=cid, isFolder=True, dynamic_vars={},
+                                               nastran=nastran)
             del fem1
             del fem2
             diffCards += diffCards
@@ -112,7 +114,7 @@ def get_double_from_precision(precision):
 def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False,
             cid=None, meshForm='combined', isFolder=False, print_stats=False,
             sum_load=False, size=8, precision='single',
-            reject=False, dynamic_vars={}):
+            reject=False, nastran='', dynamic_vars={}):
     bdfModel = str(bdfFilename)
     print("bdfModel = %r" % bdfModel)
     if isFolder:
@@ -135,6 +137,22 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
         (outModel) = run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, precision, cid)
         (fem2)     = run_fem2(      bdfModel, outModel, xref, punch, sum_load, size, precision, reject, debug=debug, log=None)
         (diffCards) = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
+        nastran = 'nastran scr=yes bat=no old=no '
+        if nastran:
+            dirname = os.path.dirname(bdfModel)
+            basename = os.path.basename(bdfModel).split('.')[0]
+
+            outModel2 = os.path.join(dirname, 'out_%s.bdf' % basename)
+            op2_model = os.path.join(dirname, 'out_%s.op2' % basename)
+            op2_model2 = os.path.join(os.getcwd(), 'out_%s.op2' % basename)
+            print(outModel2)
+            if os.path.exists(outModel2):
+                os.remove(outModel2)
+            os.rename(outModel, outModel2)
+            os.system(nastran + outModel2)
+            op2 = OP2()
+            op2.read_op2(op2_model2)
+            print(op2.get_op2_stats())
 
     except KeyboardInterrupt:
         sys.exit('KeyboardInterrupt...sys.exit()')
