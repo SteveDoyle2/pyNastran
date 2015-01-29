@@ -557,11 +557,11 @@ def build_thru_packs(packs, maxDV=1):
         if firstVal == lastVal:
             singles.append(firstVal)
         else:
-            if lastVal - firstVal > 2:
+            if by == 1:
                 double = [firstVal, 'THRU', lastVal]
                 doubles.append(double)
             else:
-                for val in range(lastVal, firstVal+1, by):
+                for val in range(firstVal, lastVal + 1, by):
                     singles.append(val)
     return singles, doubles
 
