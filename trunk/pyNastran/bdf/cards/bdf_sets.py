@@ -349,7 +349,7 @@ class SET1(Set):
         if self.isSkin:
             skin = ['SKIN']
 
-        return self.comment() + print_card_8(['SET1', self.sid] + skin + self.IDs)
+        #return self.comment() + print_card_8(['SET1', self.sid] + skin + self.IDs)
 
         field_packs = []
         singles, doubles = collapse_thru_packs(self.IDs)

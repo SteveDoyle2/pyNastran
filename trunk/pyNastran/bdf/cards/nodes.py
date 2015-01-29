@@ -311,11 +311,31 @@ class SPOINTs(Node):
         """
         spoints = list(self.spoints)
         spoints.sort()
+        return ['SPOINT'] + spoints
+
+    def _get_compressed_spoints(self):
+        """
+        Gets the spoints in sorted, short form.
+
+          uncompresed:  SPOINT,1,3,5
+          compressed:   SPOINT,1,3,5
+
+          uncompresed:  SPOINT,1,2,3,4,5
+          compressed:   SPOINT,1,THRU,5
+
+          uncompresed:  SPOINT,1,2,3,4,5,7
+          compressed:   SPOINT,7
+                        SPOINT,1,THRU,5
+        """
+        spoints = list(self.spoints)
+        spoints.sort()
+
         singles, doubles = collapse_thru_packs(spoints)
-        #list_fields = ['SPOINT'] + collapse_thru(self.nid)
+
         lists_fields = []
         if singles:
             list_fields = ['SPOINT'] + singles
+            lists_fields.append(list_fields)
         if doubles:
             for spoint_double in doubles:
                 list_fields = ['SPOINT'] + spoint_double
@@ -330,7 +350,7 @@ class SPOINTs(Node):
         :param size:   unused
         :param double: unused
         """
-        lists_fields = self.repr_fields()
+        lists_fields = self._get_compressed_spoints()
         msg = self.comment()
         for list_fields in lists_fields:
             if 'THRU' not in list_fields:
