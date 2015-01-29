@@ -138,7 +138,7 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
         (fem2)     = run_fem2(      bdfModel, outModel, xref, punch, sum_load, size, precision, reject, debug=debug, log=None)
         (diffCards) = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
         nastran = 'nastran scr=yes bat=no old=no '
-        if nastran:
+        if nastran and 0:
             dirname = os.path.dirname(bdfModel)
             basename = os.path.basename(bdfModel).split('.')[0]
 
