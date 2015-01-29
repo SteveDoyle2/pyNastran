@@ -177,7 +177,6 @@ class SPOINT(Node):
             lists_fields.append(list_fields)
         else:
             singles, doubles = collapse_thru_packs(self.nid)
-            #list_fields = ['SPOINT'] + collapse_thru(self.nid)
             if singles:
                 list_fields = ['SPOINT'] + singles
             if doubles:
@@ -192,7 +191,7 @@ class SPOINT(Node):
 
         :param self:   the SPOINT object pointer
         :param size:   unused
-        :param double: unused
+        :param is_double: unused
         """
         lists_fields = self.repr_fields()
         msg = self.comment()
@@ -348,7 +347,7 @@ class SPOINTs(Node):
 
         :param self:   the SPOINT object pointer
         :param size:   unused
-        :param double: unused
+        :param is_double: unused
         """
         lists_fields = self._get_compressed_spoints()
         msg = self.comment()
@@ -1010,9 +1009,9 @@ class GRID(Node, GridDeprecated):
           the size of the card (8/16)
         :type size:
           int
-        :param double
+        :param isdouble:
           should this card be written with double precision (default=False)
-        :type double
+        :type is_double:
           bool
         """
         xyz = self.xyz
