@@ -1,0 +1,8 @@
+C:\Users\sdoyle\Dropbox\pyNastran_examples\move_tpl
+C:\Users\sdoyle\Dropbox\pyNastran_examples\move_tpl\works
+C:\Users\sdoyle\Dropbox\pyNastran_examples\demo
+C:\Users\sdoyle\Dropbox\pyNastran_examples\demo_sort2_post_m2
+C:\Users\sdoyle\Dropbox\pyNastran_examples\solid_shell_bar
+C:\Users\sdoyle\Dropbox\pyNastran_examples\solid_shell_bar_m2
+C:\Users\sdoyle\Dropbox\pyNastran_examples\iSat
+
