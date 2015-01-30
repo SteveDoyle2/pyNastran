@@ -179,6 +179,17 @@ class Cart3dIO(object):
             cases[(ID, 'Region', 1, 'centroid', '%.0f')] = regions
             cases[(ID, 'ElementID', 1, 'centroid', '%.0f')] = arange(1, nelements+1)
 
+            if 0:
+                from pyNastran.converters.cart3d.cart3d_to_quad import get_normal_groups
+                normal, normal_groups = get_normal_groups(nodes, elements)
+                groups = zeros(nelements, dtype='int32')
+                for igroup, normal_group in enumerate(normal_groups):
+                    if igroup % 2 == 0:
+                        continue
+                    for ni in normal_group:
+                        groups[ni] = igroup + 1
+                cases[(ID, 'Quad Group', 1, 'centroid', '%.0f')] = groups
+
             # these are actually nodal results, so we convert to the centroid
             # by averaging the data (e.g. the Cp data)
             for key in result_names:
@@ -187,7 +198,7 @@ class Cart3dIO(object):
                     n1 = elements[:, 0]
                     n2 = elements[:, 1]
                     n3 = elements[:, 2]
-                    elemental_result = (nodal_data[n1] + nodal_data[n2] + nodal_data[n3])/3.0
+                    elemental_result = (nodal_data[n1] + nodal_data[n2] + nodal_data[n3]) / 3.0
                     cases[(ID, key, 1, 'centroid', '%.3f')] = elemental_result
         elif self.is_nodal:
             cases[(ID, 'NodeID', 1, 'node', '%.0f')] = arange(1, nnodes+1)
