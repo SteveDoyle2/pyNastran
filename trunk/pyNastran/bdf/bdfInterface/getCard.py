@@ -270,13 +270,13 @@ class GetMethods(GetMethodsDeprecated):
 
         for eid in self.elementIDs():
             element = self.Element(eid)
-            #print(dir(element))
+
             if hasattr(element, 'pid'):
                 pid = element.Pid()
                 if pid == 0:  # CONM2
                     continue
                 pidToEidsMap[pid].append(eid)
-        return (pidToEidsMap)
+        return pidToEidsMap
 
     def get_material_id_to_property_ids_map(self):
         """
