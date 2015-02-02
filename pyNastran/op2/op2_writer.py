@@ -10,7 +10,7 @@ import warnings
 
 import pyNastran
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
-
+from struct import pack
 
 def make_stamp(Title, today=None):
     if 'Title' is None:
@@ -326,6 +326,9 @@ class OP2Writer(object):
             op2 = op2_outname
             op2_outname = op2.name
             print('op2_outname =', op2_outname)
+
+        data = [4, 2, 4]
+        op2.write(pack('3i', *data))
 
         if self.grid_point_weight.reference_point is not None:
             if has_attr(result, 'write_op2'):

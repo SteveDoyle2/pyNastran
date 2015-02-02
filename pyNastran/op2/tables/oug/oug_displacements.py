@@ -15,7 +15,22 @@ class Struct(object):
             return self.s.pack(*data)
         return self.s.pack(data)
 
+def write_markers(f, fascii, msg, markers):
+    s = sStruct('3i')
+    for marker in markers:
+        fascii.write('%s=%s ' % (msg, [4, marker, 4]))
+        data = [4, marker, 4]
+        f.write(s.pack(*data))
+
 from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray, RealTableObject, ComplexTableObject
+
+def write_table_header(f, fascii, table_name):
+    table0 = [
+        4, 2, 4,
+        8, table_name, 8,
+    ]
+    table0_format = '4i 4s i'
+    f.write(pack(fascii, 'OUG header0', table0_format, table0))
 
 
 def make_pack_form(data):
@@ -86,94 +101,80 @@ class RealDisplacement(RealTableObject):  # approach_code=1, thermal=0
             return self._write_f06_transient_block(words, header, pageStamp, page_num, f)
         return self._write_f06_block(words, header, pageStamp, page_num, f)
 
-    def _write_table_header(self, f):
-        header = [
-            # table 1
-            4, 0, 4,
-            4, -1, 4,
-            4, 0, 4,  # 9i
+    def _write_table_header(self, f, fascii):
+        #get_nmarkers- [4, 0, 4]
+        #marker = [4, 2, 4]
+        #table_header = [8, 'BOUGV1  ', 8]
+        write_table_header(f, fascii, self.table_name)
 
-            4, 2, 4,  # 3i
-            8, self.table_name, 8,  # 1i, 8s, 1i
-            4, 2, 4,  #3i
 
-            #===============
-            # table 2
-            4, 0, 4,
-            4, -2, 4,
-            4, 0, 4,  # 9i
+        #read_markers -> [4, -1, 4]
+        #get_nmarkers- [4, 0, 4]
+        #read_record - marker = [4, 7, 4]
+        #read_record - record = [28, recordi, 28]
 
-            4, 7, 4,
+        write_markers(f, fascii, 'OUG header1a', [-1, 0, 7])
+
+        table1_fmt = '9i'
+        table1 = [
+            28,
+            1, 2, 3, 4, 5, 6, 7,
+            28,
+        ]
+        f.write(pack(fascii, 'OUG header1b', table1_fmt, table1))
+
+        import datetime
+        today = datetime.datetime.today()
+        month = today.month
+        day = today.day
+        year = today.year - 2000
+        #recordi = [subtable_name, month, day, year, 0, 1]
+
+        write_markers(f, fascii, 'OUG header2a', [0, -2, 0, 7])
+        table2 = [
             28,  # 4i -> 13i
-            'OUG1    ', 3, 6, 14, 0, 1,   # subtable,todays date 3/6/2014, 0, 1
+            'OUG1    ', month, day, year, 0, 1,   # subtable,todays date 3/6/2014, 0, 1
             28,
             ]
-        #header_format = '13i 4s 4i' + '13i 8s 6i'
-        header_format = '13i4s4i' + '13i8s6i'
-        f.write(Struct(fascii, 'OUG header', header_format).pack(header))
+        table2_format = 'i8s6i'
+        f.write(pack(fascii, 'OUG header2b', table2_format, table2))
 
     def write_op2(self, f, fascii, is_mag_phase=False):
-        if 0:
-            #recordi = ['OUG1    ', 2, 26, 14, 0, 1]
-            #[subtable_name, month=2, day=26, year=2014, zero=0, one=1]
-            subtable_name = 'OUG1    '
-            month = 1
-            day = 30
-            year = 2014
-            recordi = [subtable_name, month, day, year, 0, 1]
+        self._write_table_header(f, fascii)
+        #recordi = ['OUG1    ', 2, 26, 14, 0, 1]
+        #[subtable_name, month=2, day=26, year=2014, zero=0, one=1]
+        subtable_name = 'OUG1    '
 
-            approach_code = 1
-            table_code = 1
-            isubcase = 1
-            lsdvmn = 1
-            random_code = 0
-            format_code = 1
-            num_wide = 8
-            acoustic_flag = 0
-            thermal = 0
-            Title = ' ' * 128
-            subtitle = ' ' * 128
-            label = ' ' * 128
-            ftable3 = '24i 128s 128s 128s'
-            oCode = 0
-            table3 = [
-                aCode, tCode, 0, isubcase, lsdvmn,
-                0, 0, random_code, format_code, num_wide,
-                oCode, acoustic_flag, 0, 0, 0,
-                0, 0, 0, 0, 0,
-                0, thermal, thermal, 0, Title,
-                subtitle, label, ]
-            #table3 = [approach_code, table_code, 0, isubcase, lsdvmn,
-                         #0, 0, random_code, format_code, num_wide,
-                         #0, acoustic_flag, acoustic_flag, 0, 0,
-                         #0, 0, 0, 0, 0,
-                         #0, thermal, thermal, 0,
-                         #Title, subtitle, label,
-            #]
-            pack(ftable3, *table3)
-            fdata = '7i 8s 8i 8s 6i'
+        aCode = 1
+        tCode = 1
+        approach_code = 0 #self.approach_code
+        table_code = self.table_code
+        isubcase = self.isubcase
+        lsdvmn = 1
+        random_code = 0
+        format_code = 1
+        num_wide = self.num_wide
+        acoustic_flag = 0
+        thermal = 0
+        Title = '%-128s' % self.Title
+        subtitle = '%-128s' % self.subtitle
+        label = '%-128s' % self.label
+        ftable3 = '24i 128s 128s 128s'
+        oCode = 0
+        table3 = [
+            aCode, tCode, 0, isubcase, lsdvmn,
+            0, 0, random_code, format_code, num_wide,
+            oCode, acoustic_flag, 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, thermal, thermal, 0, Title,
+            subtitle, label, ]
 
-            fmt_start = '6i'
-            fmt_end = '3i'
-            table_num = 3
-            start = [
-                4, 146, 4,
-                4, 584, 4,
-                ]
-            end = [4, 584, 4]
+        write_markers(f, fascii, 'OUG header3a', [-3, 1, 0])
+        write_markers(f, fascii, 'OUG header3b', [146])
 
-            data = start + [
-                4,0,4,
-                4,2,4,
-                8, 'OUGV1   ', 8,
-
-                4, 0, 4,
-                4, 7, 4,
-                28] + recordi + [28,
-            ] + table3 + end
-
-            out = pack(fascii, 'table3', fmt_start + fdata + ftable3 + fmt_end, *data)
-            f.write(out)
+        data = [584] + table3 + [584]
+        fmt = 'i' + ftable3 + 'i'
+        f.write(pack(fascii, 'OUG header 3c', fmt, data))
 
         if self.nonlinear_factor is not None:
             return self._write_op2_transient_block(f, fascii)
@@ -201,8 +202,10 @@ class RealDisplacement(RealTableObject):  # approach_code=1, thermal=0
         for nodeID, translation in sorted(iteritems(self.translations)):
             rotation = self.rotations[nodeID]
             grid_type = self.gridTypes[nodeID]
-            grid_type = 1
-            #print('grid_type=%s' % grid_type)
+            if grid_type == 'G':
+                grid_type = 1
+            else:
+                raise RuntimeError(gridType)
 
             (dx, dy, dz) = translation
             (rx, ry, rz) = rotation
