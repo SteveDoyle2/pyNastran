@@ -7,6 +7,7 @@ from traceback import print_exc
 import pyNastran
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.op2 import OP2
+from pyNastran.op2.op2_geom import OP2Geom
 from pyNastran.op2.op2_vectorized import OP2_Vectorized as OP2V
 
 # we need to check the memory usage
@@ -189,7 +190,10 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
         if is_vector:
             op2 = OP2V(make_geom=make_geom, debug=debug, debug_file=debug_file)
         else:
-            op2 = OP2(make_geom=make_geom, debug=debug, debug_file=debug_file)
+            if make_geom:
+                op2 = OP2Geom(make_geom=make_geom, debug=debug, debug_file=debug_file)
+            else:
+                op2 = OP2(debug=debug, debug_file=debug_file)
 
         op2.set_subcases(iSubcases)
         op2.remove_results(exclude)
@@ -321,7 +325,7 @@ def main():
     #msg += "test_op2 [-q] [-f] [-z] [-t] [-s <sub>] OP2_FILENAME\n"
 
     # current
-    msg += "test_op2 [-q] [-f] [-o] [-z] [-t] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
+    msg += "test_op2 [-q] [-g] [-w] [-f] [-o] [-z] [-t] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
     msg += "  test_op2 -h | --help\n"
     msg += "  test_op2 -v | --version\n"
     msg += "\n"
@@ -332,8 +336,8 @@ def main():
     msg += "\n"
     msg += "Options:\n"
     msg += "  -q, --quiet          Suppresses debug messages (default=False)\n"
-    #msg += "  -g, --geometry       Reads the OP2 for geometry, which can be written out (default=False)\n"
-    #msg += "  -w, --write_bdf      Writes the bdf to fem.test_op2.bdf (default=False)\n"
+    msg += "  -g, --geometry       Reads the OP2 for geometry, which can be written out (default=False)\n"
+    msg += "  -w, --write_bdf      Writes the bdf to fem.test_op2.bdf (default=False)\n"
     msg += "  -f, --write_f06      Writes the f06 to fem.test_op2.f06 (default=True)\n"
     msg += "  -o, --write_op2      Writes the op2 to fem.test_op2.op2 (default=False)\n"
     msg += "  -z, --is_mag_phase   F06 Writer writes Magnitude/Phase instead of\n"
@@ -359,8 +363,8 @@ def main():
     import time
     t0 = time.time()
     run_op2(data['OP2_FILENAME'],
-            #make_geom     = data['--geometry'],
-            #write_bdf     = data['--write_bdf'],
+            make_geom     = data['--geometry'],
+            write_bdf     = data['--write_bdf'],
             write_f06     = data['--write_f06'],
             write_op2     = data['--write_op2'],
             is_mag_phase  = data['--is_mag_phase'],

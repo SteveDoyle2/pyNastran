@@ -1,5 +1,5 @@
 # pylint: disable=W0612,C0103,C0301,C0302,C0303,W0613,C0111,R0914,C0326,R0201
-from six.moves import StringIO, range
+from six.moves import range
 from struct import unpack, Struct
 
 from pyNastran.bdf.cards.elements.elements import CGAP
@@ -28,7 +28,6 @@ class GEOM2(object):
         return self._read_geom_4(self._geom2_map, data)
 
     def __init__(self):
-        self.skippedCardsFile = StringIO.StringIO()
         self.card_count = {}
         self._geom2_map = {
             (2408,   24,  180): ['CBAR', self._readCBAR],       # record 8
