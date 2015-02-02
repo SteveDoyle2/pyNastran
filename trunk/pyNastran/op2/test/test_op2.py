@@ -182,10 +182,14 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
 
     #debug = True
     try:
+        debug_file = None
+        if write_op2:
+            debug_file = 'debug.out'
+
         if is_vector:
-            op2 = OP2V(make_geom=make_geom, debug=debug)
+            op2 = OP2V(make_geom=make_geom, debug=debug, debug_file=debug_file)
         else:
-            op2 = OP2(make_geom=make_geom, debug=debug)
+            op2 = OP2(make_geom=make_geom, debug=debug, debug_file=debug_file)
 
         op2.set_subcases(iSubcases)
         op2.remove_results(exclude)
