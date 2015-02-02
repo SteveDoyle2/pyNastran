@@ -127,8 +127,8 @@ class Usm3dIO(object):
             raise RuntimeError()
         self.nElements = ntris + ntets
 
-        print("nNodes = ",self.nNodes)
-        print("nElements = ", self.nElements)
+        print("nNodes = %i" % self.nNodes)
+        print("nElements = %i" % self.nElements)
 
         self.grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)
