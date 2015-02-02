@@ -163,32 +163,6 @@ class RealTableArray(TableArray):  # displacement style table
 
         f.write(Struct(Formats).pack(*headers))
 
-    def _write_table_header(self, f):
-        header = [
-            # table 1
-            4, 0, 4,
-            4, -1, 4,
-            4, 0, 4,  # 9i
-
-            4, 2, 4,  # 3i
-            8, self.table_name, 8,  # 1i, 8s, 1i
-            4, 2, 4,  #3i
-
-            #===============
-            # table 2
-            4, 0, 4,
-            4, -2, 4,
-            4, 0, 4,  # 9i
-
-            4, 7, 4,
-            28,  # 4i -> 13i
-            'OUG1    ', 3, 6, 14, 0, 1,   # subtable,todays date 3/6/2014, 0, 1
-            28,
-            ]
-        #header_format = '13i 4s 4i' + '13i 8s 6i'
-        header_format = '13i4s4i' + '13i8s6i'
-        f.write(Struct(header_format).pack(*header))
-
     def write_op2(self, f, is_mag_phase=False):
         #print('data_code =', self.data_code)
         self._write_table_header(f)
