@@ -58,12 +58,10 @@ def print_float_16(value):
     Prints a float in nastran 16-character width syntax
     using the highest precision possbile.
     .. seealso:: print_float_8
-    .. warning:: completely unimplemented & untested
     """
     if value == 0.0:
         return '%16s' % '0.'
     elif value > 0.:  # positive, not perfect...
-
         if value < 5e-16:
             field = print_scientific_16(value)
             return field
@@ -130,20 +128,23 @@ def print_float_16(value):
             field2 = "%16.14f" % value  # small value
             field2 = field2.strip('0 ')
 
-            field1 = '-' + field.strip(' 0-').replace('-', 'e-')  # get rid of the first minus sign, add it on afterwards
+            # get rid of the first minus sign, add it on afterwards
+            field1 = '-' + field.strip(' 0-').replace('-', 'e-')
 
             if len(field2) <= 16 and float(field1) == float(field2):
                 field = field2.rstrip(' 0')
                 field = field.replace('-0.', '-.')
             return '%16s' % field
         elif value > -0.1:
-            field = "%16.14f" % value   # -0.01 >x>-0.1...should be 5 (maybe scientific...)
+            # -0.01 >x>-0.1...should be 5 (maybe scientific...)
+            field = "%16.14f" % value
             field = field.replace('-0.', '-.')
         elif value > -1.:
-            field = "%16.14f" % value   # -0.1  >x>-1.....should be 6, but the baseline 0 is kept...
+            # -0.1  >x>-1.....should be 6, but the baseline 0 is kept...
+            field = "%16.14f" % value
             field = field.replace('-0.', '-.')
         elif value > -10.:
-            field = "%16.13f" % value   # -1    >x>-10
+            field = "%16.13f" % value  # -1    >x>-10
         elif value > -100.:
             field = "%16.12f" % value  #       -1 > x >      -10
         elif value > -1000.:
@@ -151,7 +152,7 @@ def print_float_16(value):
         elif value > -10000.:
             field = "%16.10f" % value  #     -100 > x >    -1000
         elif value > -100000.:
-            field = "%16.9f" % value  #    -1000 > x >   -10000
+            field = "%16.9f" % value   #    -1000 > x >   -10000
         elif value > -1000000.:
             field = "%16.8f" % value   #  -10,000 > x > -100,000
         elif value > -10000000.:

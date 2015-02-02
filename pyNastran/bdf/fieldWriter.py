@@ -63,7 +63,8 @@ def print_scientific_8(value):
 
     sign = '-' if abs(value) < 1. else '+'
 
-    sExp2 = str(exponent).strip('-+')  # the exponent will be added later...
+    # the exponent will be added later...
+    sExp2 = str(exponent).strip('-+')
     value2 = float(svalue)
 
     leftover = 5 - len(sExp2)
