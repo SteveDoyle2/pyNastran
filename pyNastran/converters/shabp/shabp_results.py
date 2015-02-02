@@ -83,6 +83,34 @@ class ShabpOut(object):
             line,i = self.readline(f, i)
         #print line
 
+        line, i, Cp_dict_components, delta_dict_components, ncases = self._read_inviscid_pressure(f, i)
+        #self._read_viscous2(line, i)
+
+    def read_viscous2(self, f, i):
+        while '*** SKIN FRICTION FORCE PROGRAM' not in line:
+            line, i = self.readline(f, i)
+        line, i = self.readline_n(f, i, 2)
+        assert 'Alpha' in line, line
+
+        nstreamlines = 19
+        streamlines = []
+        for istreamline in xrange(nstreamlines):
+            # streamline 1
+            streamline = []
+            line, i = self.readline(f, i)
+
+            #                Skin          Heat Adiabatic
+            #    Wetted  Friction      Transfer      Wall      Wall                  Wall  Flow
+            #  Distance    Coeff.        Coeff.  Enthalpy     Temp.   Heat Flux  Pressure  Regime           X         Y         Z  RE_TH/ML     MACHL
+            #      (in)   (---)     (lbm/ft2/s)  (Btu/lb)       (F) (Btu/ft2-s) (lbf/ft2)  (---)           (in)      (in)      (in)
+            line, i = self.readline_n(f, i, 4)
+            while 'Streamline:' not in line and line.strip() != '':
+                line, i = self.readline(f, i)
+                streamline.append(line.strip())
+            streamlines.append(streamline)
+        return streamlines
+
+    def _read_inviscid_pressure(f, i):
         npatches = 44
         #6
         #0ELEMENT DATA   MACH=  6.000  ALT =  50000.  S REF =196272.0  SPAN =  669.6  IMPACT =  1  IMPACI =  3
@@ -196,7 +224,7 @@ class ShabpOut(object):
             delta_dict_components[icomponent] = Delta
             #print '^%r' % line.strip()
         #print "done"
-        return Cp_dict_components, delta_dict_components, ncases
+        return line, i, Cp_dict_components, delta_dict_components, ncases
 
 
 if __name__ == '__main__':  # pragma: no cover
