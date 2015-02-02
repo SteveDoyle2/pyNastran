@@ -320,6 +320,7 @@ class OP2Writer(object):
         """
         if isinstance(op2_outname, str):
             op2 = open(op2_outname, 'wb')
+            op2ascii = open(op2_outname+'.txt', 'wb')
         else:
             assert isinstance(op2_outname, file), 'type(op2_outname)= %s' % op2_outname
             op2 = op2_outname
@@ -330,6 +331,8 @@ class OP2Writer(object):
             if has_attr(result, 'write_op2'):
                 print("grid_point_weight")
                 self.grid_point_weight.write_op2(op2, page_stamp, self.page_num)
+            else:
+                print("*op2 - grid_point_weight not written")
 
         #print "page_stamp = %r" % page_stamp
         #print "stamp      = %r" % stamp
@@ -341,9 +344,12 @@ class OP2Writer(object):
             header
             #print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
             if has_attr(result, 'write_op2'):
-                result.write_op2(op2)
+                result.write_op2(op2, op2ascii)
                 if delete_objects:
                     del result
+            else:
+                print("*op2 - %s not written" % result.__class__.__name__)
+                asdf
 
         # then eigenvectors
         # has a special header
@@ -352,9 +358,12 @@ class OP2Writer(object):
 
             if hasattr(result, 'write_op2'):
                 print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
-                result.write_op2(op2, is_mag_phase=is_mag_phase)
+                result.write_op2(op2, op2ascii, is_mag_phase=is_mag_phase)
                 if delete_objects:
                     del result
+            else:
+                print("*op2 - %s not written" % result.__class__.__name__)
+                asdf
 
         # finally, we writte all the other tables
         # nastran puts the tables in order of the Case Control deck,
@@ -553,9 +562,12 @@ class OP2Writer(object):
                     if isubcase in res_type:
                         result = res_type[isubcase]
                         if hasattr(result, 'write_op2'):
-                            result.write_op2(op2)
+                            result.write_op2(op2, op2ascii)
                             res_length = max(len(result.__class__.__name__), res_length)
                             continue
+                        else:
+                            print("*op2 - %s not written" % result.__class__.__name__)
+
                 if res_length == 0:
                     return
 
@@ -572,5 +584,8 @@ class OP2Writer(object):
                                 element_name = ' - ' + result.element_name
 
                             print(res_format % (result.__class__.__name__, isubcase, element_name))
-                            result.write_op2(op2, is_mag_phase=False)
+                            result.write_op2(op2, op2ascii, is_mag_phase=False)
+                        else:
+                            print("*op2 - %s not written" % result.__class__.__name__)
+
         op2.close()
