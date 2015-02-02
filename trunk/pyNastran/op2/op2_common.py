@@ -442,20 +442,21 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
 
     def _read_geom_4(self, mapper, data):
         if not self.make_geom:
-            ad
             return len(data)
         n = 0
         keys = unpack('3i', data[n:n+12])
         n += 12
         if len(data) == 12:
+            self.binary_debug.write('  keys=%s -> pass\n' % str(keys))
             pass
-            #print('pass')
         elif keys in mapper:
             func = mapper[keys]
             if isinstance(func, list):
                 name, func = func
+                self.binary_debug.write('  found keys=%s -> name=%s\n' % (str(keys), name))
                 print("  found keys=(%5s,%4s,%4s) name=%s" % (keys[0], keys[1], keys[2], name))
             else:
+                self.binary_debug.write('  found keys=%s -> name=???\n' % str(keys))
                 print("  found keys=(%5s,%4s,%4s)" % (keys[0], keys[1], keys[2]))
             n = func(data, n)  # gets all the grid/mat cards
         else:

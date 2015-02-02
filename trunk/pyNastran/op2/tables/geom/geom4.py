@@ -228,7 +228,9 @@ class GEOM4(object):
         while n2 < n:
             eData = data[n:n+12]
             n += 12
-            (sid, g, thru_flag, n1) = unpack('4i', eData)
+            out = unpack('4i', eData)
+            (sid, g, thru_flag, n1) = out
+            self.binary_debug.write('  SPC1=%s\n' % str(out))
             eData = data[n:n + 12]
 
             nids = [n1]
@@ -241,6 +243,7 @@ class GEOM4(object):
                 n2 = unpack(b'i', data[n:n+4])
                 n += 4
                 nids.append(n2)
+            self.binary_debug.write('   nids=%s\n' % str(nids[1:]))
             nentries += 1
             constraint = SPC1(None, [sid, g, nids])
             self.add_constraint_SPC(constraint)
@@ -260,7 +263,9 @@ class GEOM4(object):
         nEntries = len(data) // 20  # 5*4
         for i in range(nEntries):
             eData = data[n:n + 20]
-            (sid, ID, c, xxx, dx) = s.unpack(eData)
+            out = s.unpack(eData)
+            (sid, ID, c, xxx, dx) = out
+            self.binary_debug.write('  SPCD=%s\n' % str(out))
 
             constraint = SPCD(None, [sid, ID, c, dx])
             self.add_constraint_SPC(constraint)

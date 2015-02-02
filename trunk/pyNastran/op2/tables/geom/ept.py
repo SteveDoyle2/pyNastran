@@ -195,6 +195,7 @@ class EPT(object):
             eData = data[n:n+20]
             n += 20
             dataIn = list(s1.unpack(eData))
+            self.binary_debug.write('  PBEAM=%s\n' % str(dataIn))
             #print("len(out) = ",len(out))
             #print(out)
             (pid, mid, nsegs, ccf, x) = dataIn
@@ -206,6 +207,7 @@ class EPT(object):
                 (so, xxb, a, i1, i2, i12, j, nsm, c1, c2,
                     d1, d2, e1, e2, f1, f2) = pack
                 dataIn.append(pack)
+                self.binary_debug.write('     %s\n' % str(pack))
 
             eData = data[n:n+44]
 
@@ -255,6 +257,7 @@ class EPT(object):
             isSymmetrical = 'NO'
             eData = data[n:n+32]
             out = s1.unpack(eData)
+            self.binary_debug.write('  PCOMP=%s\n' % str(out))
             (pid, nLayers, z0, nsm, sb, ft, Tref, ge,) = out
 
             eData = data[n:n+16 * (nLayers)]
@@ -318,6 +321,7 @@ class EPT(object):
             eData = data[n:n+16]
             out = s.unpack(eData)
             #(pid,k,ge,s) = out
+            self.binary_debug.write('  PELAS=%s\n' % str(out))
             prop = PELAS(data=out)
             self.addOp2Property(prop)
             n += ntotal
@@ -336,6 +340,7 @@ class EPT(object):
         for i in range(nproperties):
             eData = data[n:n+44]
             out = s.unpack(eData)
+            self.binary_debug.write('  PGAP=%s\n' % str(out))
             #(pid,u0,f0,ka,kb,kt,mu1,mu2,tmax,mar,trmin) = out
             prop = PGAP(None, out)
             self.addOp2Property(prop)
@@ -363,6 +368,7 @@ class EPT(object):
             eData = data[n:n + 8]
             out = s.unpack(eData)
             #out = (pid,mass)
+            self.binary_debug.write('  PMASS=%s\n' % str(out))
             prop = PMASS(data=out)
             self.addOp2Property(prop)
             n += 8
@@ -381,6 +387,7 @@ class EPT(object):
             out = s.unpack(eData)
             (pid, mid, a, j, c, nsm) = out
             prop = PROD(None, out)
+            self.binary_debug.write('  PROD=%s\n' % str(out))
             self.addOp2Property(prop)
             n += ntotal
         self.card_count['PROD'] = nproperties
@@ -397,6 +404,7 @@ class EPT(object):
             eData = data[n:n+24]
             out = s.unpack(eData)
             (pid, mid, t, nsm, f1, f2) = out
+            self.binary_debug.write('  PSHEAR=%s\n' % str(out))
             prop = PSHEAR(data=out)
             self.addOp2Property(prop)
             n += 24
@@ -414,6 +422,7 @@ class EPT(object):
             eData = data[n:n+44]
             out = s.unpack(eData)
             (pid, mid1, t, mid2, bk, mid3, ts, nsm, z1, z2, mid4) = out
+            self.binary_debug.write('  PSHELL=%s\n' % str(out))
             prop = PSHELL(None, out)
 
             if max(pid, mid1, mid2, mid3, mid4) > 1e8:
@@ -435,9 +444,11 @@ class EPT(object):
         nproperties = (len(data) - n) // ntotal
         for i in range(nproperties):
             eData = data[n:n+28]
-            (pid, mid, cid, inp, stress, isop, fctn) = s.unpack(eData)
-            dataIn = [pid, mid, cid, inp, stress, isop, fctn]
-            prop = PSOLID(None, dataIn)
+            out = s.unpack(eData)
+            #(pid, mid, cid, inp, stress, isop, fctn) = out
+            #dataIn = [pid, mid, cid, inp, stress, isop, fctn]
+            self.binary_debug.write('  PSOLID=%s\n' % str(out))
+            prop = PSOLID(None, out)
             self.addOp2Property(prop)
             n += ntotal
         self.card_count['PSOLID'] = nproperties
@@ -460,6 +471,7 @@ class EPT(object):
             eData = data[n:n+20]  # or 24???
             (pid, mid, OD, t, nsm) = s.unpack(eData)
             dataIn = [pid, mid, OD, t, nsm]
+            self.binary_debug.write('  PTUBE=%s\n' % str(out))
             prop = PTUBE(None, dataIn)
             self.addOp2Property(prop)
             n += 20
@@ -477,6 +489,7 @@ class EPT(object):
         for i in range(nproperties):
             eData = data[n:n+12]
             out = s.unpack(eData)
+            self.binary_debug.write('  PVISC=%s\n' % str(out))
             #(pid,ce,cr) = out
             prop = PVISC(data=out)
             self.addOp2Property(prop)
