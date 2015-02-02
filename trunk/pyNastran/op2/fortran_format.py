@@ -92,6 +92,7 @@ class FortranFormat(object):
             data = self.read_block()
             imarker, = unpack(b'i', data)
             assert marker == imarker, 'marker=%r imarker=%r; markers=%s i=%s' % (marker, imarker, markers, i)
+            self.binary_debug.write('  read_markers -> [4, %i, 4]\n' % marker)
 
     def get_nmarkers(self, n, rewind=True):
         """

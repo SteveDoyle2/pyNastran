@@ -475,6 +475,8 @@ class OP2(LAMA, ONR, OGPF,
         else:
             raise NotImplementedError(markers)
 
+        #table_name = self.read_table_name(rewind=False, stop_on_failure=False)
+        #asdf
         #=================
         table_name = self.read_table_name(rewind=True, stop_on_failure=False)
         if table_name is None:
@@ -1148,8 +1150,8 @@ class OP2(LAMA, ONR, OGPF,
         month, day, year = self._set_op2_date(month, day, year)
 
         #self.log.debug("%s/%s/%4i zero=%s one=%s" % (month, day, year, zero, one))
-        if self.debug:
-            self.binary_debug.write('  [subtable_name, month=%i, day=%i, year=%i, zero=%i, one=%i]\n\n' % (month, day, year, zero, one))
+        #if self.debug:
+        self.binary_debug.write('  [subtable_name, month=%i, day=%i, year=%i, zero=%i, one=%i]\n\n' % (month, day, year, zero, one))
         #assert zero == 0  # is this the RTABLE indicator???
         assert one == 1
 
