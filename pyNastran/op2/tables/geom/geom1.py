@@ -1,5 +1,5 @@
 #pylint: disable=C0301,C0103,W0612,R0914,C0326
-from six.moves import range, StringIO
+from six.moves import range
 from struct import unpack, Struct
 
 from pyNastran.bdf.cards.nodes import GRID
@@ -21,7 +21,6 @@ class GEOM1(object):
         return self._read_geom_4(self._geom1_map, data)
 
     def __init__(self):
-        self.skippedCardsFile = StringIO.StringIO()
         self.card_count = {}
         self._geom1_map = {
             (1701,  17,  6): ['CORD1C', self._readCord1C],  # record 1
@@ -57,8 +56,8 @@ class GEOM1(object):
         (1701,17,6) - the marker for Record 1
         """
         s = Struct(b'6i')
-        nEntries = (len(data) - n) // 24
-        for i in range(nEntries):
+        nentries = (len(data) - n) // 24
+        for i in range(nentries):
             eData = data[n:n + 24]  # 6*4
             (cid, one, two, g1, g2, g3) = s.unpack(eData)
             assert one in [1, 2], one
@@ -182,6 +181,7 @@ class GEOM1(object):
         s = Struct(b'ii3f3i')
         ntotal = 32
         nentries = (len(data) - n) // ntotal
+        print('reading nGRID=%i' % nentries)
         for i in range(nentries):
             edata = data[n:n + 32]
             out = s.unpack(edata)

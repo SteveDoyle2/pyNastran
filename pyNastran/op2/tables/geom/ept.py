@@ -1,7 +1,7 @@
 #pylint: disable=C0301,W0612,C0111,R0201,C0103,W0613,R0914,C0326
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import StringIO, range
+from six.moves import range
 from struct import unpack, Struct
 
 from pyNastran.bdf.bdf import (NSM, PBAR, PBARL, PBEAM,
@@ -22,7 +22,6 @@ class EPT(object):
         return self._read_geom_4(self._ept_map, data)
 
     def __init__(self):
-        self.skippedCardsFile = StringIO.StringIO()
         self.card_count = {}
         self.bigProperties = {}
         self._ept_map = {
@@ -373,6 +372,7 @@ class EPT(object):
         """
         PROD(902,9,29) - the marker for Record 49
         """
+        print('  nstart=%i' % n)
         ntotal = 24  # 6*4
         s = Struct(b'2i4f')
         nproperties = (len(data) - n) // ntotal
@@ -384,6 +384,8 @@ class EPT(object):
             self.addOp2Property(prop)
             n += ntotal
         self.card_count['PROD'] = nproperties
+        print('  nend=%i' % n)
+        return n
 
     def _readPSHEAR(self, data, n):
         """
@@ -421,7 +423,7 @@ class EPT(object):
                 self.addOp2Property(prop)
             n += ntotal
         self.card_count['PSHELL'] = nproperties
-
+        return n
 
     def _readPSOLID(self, data, n):
         """
@@ -439,6 +441,7 @@ class EPT(object):
             self.addOp2Property(prop)
             n += ntotal
         self.card_count['PSOLID'] = nproperties
+        return n
 
 # PSOLIDL
 # PTRIA6

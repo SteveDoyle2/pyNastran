@@ -13,16 +13,6 @@ from numpy import array
 from pyNastran.f06.errors import FatalError
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 
-#from pyNastran.op2.tables.geom.geom1 import GEOM1
-#from pyNastran.op2.tables.geom.geom2 import GEOM2
-#from pyNastran.op2.tables.geom.geom3 import GEOM3
-#from pyNastran.op2.tables.geom.geom4 import GEOM4
-
-#from pyNastran.op2.tables.geom.ept import EPT
-#from pyNastran.op2.tables.geom.mpt import MPT
-
-#from pyNastran.op2.tables.geom.dit import DIT
-#from pyNastran.op2.tables.geom.dynamics import DYNAMICS
 #============================
 
 from pyNastran.op2.tables.lama_eigenvalues.lama import LAMA
@@ -58,9 +48,8 @@ class TrashWriter(object):
     def close(self, *args, **kwargs):
         pass
 
-class OP2( #BDF,
-          #GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
-          LAMA, ONR, OGPF,
+
+class OP2(LAMA, ONR, OGPF,
           OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
     """
     Defines an interface for the Nastran OP2 file.
@@ -110,34 +99,18 @@ class OP2( #BDF,
             expected_times[isubcase] = array(eTimes)
         self.expected_times = expected_times
 
-    def __init__(self, make_geom=False,
-                 debug=False, log=None, debug_file=None):
+    def __init__(self, debug=False, log=None, debug_file=None):
         """
         Initializes the OP2 object
 
-        :param make_geom: reads the BDF tables (default=False)
         :param debug: enables the debug log and sets the debug in the logger (default=False)
         :param log: a logging object to write debug messages to
          (.. seealso:: import logging)
         :param debug_file: sets the filename that will be written to (default=None -> no debug)
         """
-        assert isinstance(make_geom, bool), 'make_geom=%r' % make_geom
         assert isinstance(debug, bool), 'debug=%r' % debug
 
-        self.make_geom = make_geom
-
-        #BDF.__init__(self, debug=debug, log=log)
         self.log = get_logger(log, 'debug' if debug else 'info')
-
-        #GEOM1.__init__(self)
-        #GEOM2.__init__(self)
-        #GEOM3.__init__(self)
-        #GEOM4.__init__(self)
-
-        #EPT.__init__(self)
-        #MPT.__init__(self)
-        #DIT.__init__(self)
-        #DYNAMICS.__init__(self)
 
         LAMA.__init__(self)
         ONR.__init__(self)

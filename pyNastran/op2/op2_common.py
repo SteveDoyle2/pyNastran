@@ -9,7 +9,7 @@ from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.utils import object_attributes
 
 from pyNastran.f06.f06Writer import F06Writer
-from pyNastran.f06.op2_writer import OP2Writer
+from pyNastran.op2.op2_writer import OP2Writer
 from pyNastran.op2.op2Codes import Op2Codes
 
 class OP2Common(Op2Codes, F06Writer, OP2Writer):
@@ -442,19 +442,21 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
 
     def _read_geom_4(self, mapper, data):
         if not self.make_geom:
+            ad
             return len(data)
         n = 0
         keys = unpack('3i', data[n:n+12])
         n += 12
         if len(data) == 12:
             pass
+            #print('pass')
         elif keys in mapper:
             func = mapper[keys]
             if isinstance(func, list):
                 name, func = func
-                print("found keys=(%5s,%4s,%4s) name=%s" % (keys[0], keys[1], keys[2], name))
+                print("  found keys=(%5s,%4s,%4s) name=%s" % (keys[0], keys[1], keys[2], name))
             else:
-                print("found keys=(%5s,%4s,%4s)" % (keys[0], keys[1], keys[2]))
+                print("  found keys=(%5s,%4s,%4s)" % (keys[0], keys[1], keys[2]))
             n = func(data, n)  # gets all the grid/mat cards
         else:
             raise NotImplementedError('keys=%s not found' % str(keys))

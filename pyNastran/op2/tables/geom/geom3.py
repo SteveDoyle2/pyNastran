@@ -1,5 +1,5 @@
 #pylint: disable=C0103,C0111,C0301,W0612,W0613,R0914,C0326,R0201
-from six.moves import StringIO, range
+from six.moves import range
 from struct import unpack, Struct
 
 from pyNastran.bdf.cards.loads.staticLoads import (FORCE, FORCE1, FORCE2, GRAV,
@@ -22,7 +22,6 @@ class GEOM3(object):
         return self._read_geom_4(self._geom3_map, data)
 
     def __init__(self):
-        self.skippedCardsFile = StringIO.StringIO()
         self.card_count = {}
         self._geom3_map = {
             (4201, 42,  18): ['FORCE', self._readFORCE],   # record 3

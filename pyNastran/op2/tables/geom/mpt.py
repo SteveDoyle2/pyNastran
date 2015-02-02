@@ -1,7 +1,7 @@
 #pylint: disable=C0111,C0103,C0301,W0612,W0613,R0914,R0201
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import StringIO, range
+from six.moves import range
 from struct import unpack, Struct
 
 from pyNastran.bdf.cards.materials import (CREEP, MAT1, MAT2, MAT3, MAT4, MAT5,
@@ -30,7 +30,6 @@ class MPT(object):
         return self._read_geom_4(self._mpt_map, data)
 
     def __init__(self):
-        self.skippedCardsFile = StringIO.StringIO()
         self.card_count = {}
         self.bigMaterials = {}
         self._mpt_map = {
