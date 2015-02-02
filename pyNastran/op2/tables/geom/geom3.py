@@ -81,8 +81,9 @@ class GEOM3(object):
         nEntries = (len(data) - n) // ntotal
         s = Struct(b'iiiffff')
         for i in range(nEntries):
-            eData = data[n:n + 28]
-            (sid, g, cid, f, n1, n2, n3) = s.unpack(eData)
+            out = s.unpack(data[n:n + 28])
+            (sid, g, cid, f, n1, n2, n3) = out
+            self.binary_debug.write('  FORCE=%s\n' % str(out))
             load = FORCE(None, [sid, g, cid, f, n1, n2, n3])
             self.add_load(load)
             n += 28
@@ -98,7 +99,9 @@ class GEOM3(object):
         nEntries = (len(data) - n) // ntotal
         for i in range(nEntries):
             eData = data[n:n + 20]
-            (sid, g, f, n1, n2) = s.unpack(eData)
+            out = s.unpack(eData)
+            out = (sid, g, f, n1, n2)
+            self.binary_debug.write('  FORCE1=%s\n' % str(out))
             load = FORCE1(None, [sid, g, f, n1, n2])
             self.add_load(load)
             n += 20
@@ -114,8 +117,8 @@ class GEOM3(object):
         s = Struct(b'iif4i')
         nEntries = (len(data) - n) // ntotal
         for i in range(nEntries):
-            eData = data[n:n + 28]
-            (sid, g, f, n1, n2, n3, n4) = s.unpack(eData)
+            (sid, g, f, n1, n2, n3, n4) = s.unpack(data[n:n + 28])
+            self.binary_debug.write('  FORCE2=%s\n' % str(out))
             load = FORCE2(None, [sid, g, f, n1, n2, n3, n4])
             self.add_load(load)
             n += 28
@@ -154,7 +157,9 @@ class GEOM3(object):
         while (len(data) - n) >= 16:
             eData = data[n:n+16]
             n += 16
-            (sid, s, si, l1) = unpack('iffi', eData)
+            out = unpack('iffi', eData)
+            (sid, s, si, l1) = out
+            self.binary_debug.write('  LOAD=%s\n' % str(out))
             Si = [si]
             L1 = [l1]
             #print(Si, L1)
@@ -170,6 +175,7 @@ class GEOM3(object):
                     break
                 Si.append(si)
                 L1.append(l1)
+                self.binary_debug.write('       [%s,%s]\n' % (si, l1))
                 #print(Si, L1)
 
             dataIn = [sid, s, Si, L1]
@@ -203,6 +209,7 @@ class GEOM3(object):
         for i in range(nEntries):
             eData = data[n:n + 28]
             out = s.unpack(eData)
+            self.binary_debug.write('  MOMENT=%s\n' % str(out))
             (sid, g, cid, m, n1, n2, n3) = out
             load = MOMENT(None, out)
             self.add_load(load)
@@ -220,6 +227,7 @@ class GEOM3(object):
         for i in range(nEntries):
             eData = data[n:n + 20]
             out = unpack('iifii', eData)
+            self.binary_debug.write('  MOMENT1=%s\n' % str(out))
             (sid, g, m, n1, n2) = out
             load = MOMENT1(None, out)
             self.add_load(load)
@@ -237,6 +245,7 @@ class GEOM3(object):
         for i in range(nEntries):
             eData = data[n:n + 28]
             out = unpack('iif4i', eData)
+            self.binary_debug.write('  MOMENT2=%s\n' % str(out))
             (sid, g, m, n1, n2, n3, n4) = out
 
             load = MOMENT2(None, out)
@@ -259,6 +268,7 @@ class GEOM3(object):
         for i in range(nEntries):
             eData = data[n:n + 32]
             out = s.unpack(eData)
+            self.binary_debug.write('  PLOAD1=%s\n' % str(out))
             (sid, eid, Type, scale, x1, p1, x2, p2) = out
             #print("PLOAD1 = ", out)
             load = PLOAD1(None, out)
@@ -277,6 +287,7 @@ class GEOM3(object):
         for i in range(nEntries):
             eData = data[n:n + 12]
             out = unpack('ifi', eData)
+            self.binary_debug.write('  PLOAD2=%s\n' % str(out))
             (sid, p, eid) = out
             load = PLOAD2(None, out)
             self.add_load(load)
@@ -294,6 +305,7 @@ class GEOM3(object):
         for i in range(nEntries):
             eData = data[n:n + 20]
             out = unpack('if3i', eData)
+            self.binary_debug.write('  PLOAD3=%s\n' % str(out))
             (sid, p, eid, n1, n2) = out
             load = PLOAD3(None, out)  # undefined
             self.add_load(load)
@@ -312,6 +324,7 @@ class GEOM3(object):
             eData = data[n:n + 48]
                          #iiffffiiifffi   ssssssssssssssss
             out = unpack('2i4f3i3f', eData)
+            self.binary_debug.write('  PLOAD4=%s\n' % str(out))
             (sid, eid, p1, p2, p3, p4, g1, g34, cid, n1, n2, n3) = out
             #s1,s2,s3,s4,s5,s6,s7,s8,L1,L2,L3,L4,L5,L6,L7,L8
             #sdrlA = s1+s2+s3+s4
@@ -346,6 +359,7 @@ class GEOM3(object):
         for i in range(nEntries):
             eData = data[n:n + 12]
             out = unpack('ifi', eData)
+            self.binary_debug.write('  QBDY1=%s\n' % str(out))
             (sid, q0, eid) = out
             load = QBDY1(None, out)
             self.add_thermal_load(load)
@@ -362,7 +376,8 @@ class GEOM3(object):
         nEntries = (len(data) - n) // ntotal
         for i in range(nEntries):
             eData = data[n:n + 40]
-            out = unpack('iiffffffff', eData)
+            out = unpack('ii8f', eData)
+            self.binary_debug.write('  QBDY2=%s\n' % str(out))
             (sid, eid, q1, q2, q3, q4, q5, q6, q7, q8) = out
             load = QBDY2(None, out)
             self.add_thermal_load(load)
@@ -398,6 +413,7 @@ class GEOM3(object):
         for i in range(nEntries):
             eData = data[n:n + 12]
             out = unpack('iif', eData)
+            self.binary_debug.write('  TEMP=%s\n' % str(out))
             (sid, g, T) = out
             if g < 10000000:
                 load = TEMP(None, out)
@@ -419,6 +435,7 @@ class GEOM3(object):
         for i in range(nEntries):
             eData = data[n:n + 8]
             out = unpack('if', eData)
+            self.binary_debug.write('  TEMPD=%s\n' % str(out))
             (sid, T) = out
             load = TEMPD(None, out)
             #self.add_thermal_load(load)

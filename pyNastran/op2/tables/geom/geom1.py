@@ -59,9 +59,11 @@ class GEOM1(object):
         nentries = (len(data) - n) // 24
         for i in range(nentries):
             eData = data[n:n + 24]  # 6*4
-            (cid, one, two, g1, g2, g3) = s.unpack(eData)
+            out = s.unpack(eData)
+            (cid, one, two, g1, g2, g3) = out
             assert one in [1, 2], one
             assert two in [1, 2], two
+            self.binary_debug.write('  CORD1C=%s\n' % str(out))
             dataIn = [cid, g1, g2, g3]
             coord = CORD1C(None, None, dataIn)
             self.add_coord(coord)
@@ -77,7 +79,9 @@ class GEOM1(object):
         nEntries = (len(data) - n) // 24
         for i in range(nEntries):
             eData = data[n:n + 24]  # 6*4
-            (cid, one1, one2, g1, g2, g3) = s.unpack(eData)
+            out = s.unpack(eData)
+            (cid, one1, one2, g1, g2, g3) = out
+            self.binary_debug.write('  CORD1R=%s\n' % str(out))
             assert one1 == 1, one1
             assert one2 == 1, one2
             dataIn = [cid, g1, g2, g3]
@@ -95,7 +99,9 @@ class GEOM1(object):
         nEntries = (len(data) - n) // 24
         for i in range(nEntries):
             edata = data[n:n + 24]  # 6*4
-            (cid, three, one, g1, g2, g3) = s.unpack(edata)
+            out = s.unpack(edata)
+            (cid, three, one, g1, g2, g3) = out
+            self.binary_debug.write('  CORD1S=%s\n' % str(out))
             assert three == 3, three
             assert one == 1, one
             dataIn = [cid, g1, g2, g3]
@@ -113,11 +119,13 @@ class GEOM1(object):
         nEntries = (len(data) - n) // 52
         for i in range(nEntries):
             eData = data[n:n + 52]  # 13*4
-            (cid, two1, two2, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3) = s.unpack(eData)
+            out = s.unpack(eData)
+            (cid, two1, two2, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3) = out
             assert two1 == 2, two1
             assert two2 == 2, two2
             dataIn = [cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3]
             coord = CORD2C(None, dataIn)
+            self.binary_debug.write('  CORD2C=%s\n' % str(out))
             self.add_coord(coord, allowOverwrites=True)
             n += 52
         self.card_count['CORD2C'] = nEntries
@@ -136,6 +144,7 @@ class GEOM1(object):
             assert two == 2, two
             dataIn = [cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3]
             #print("cid=%s one=%s two=%s rid=%s a1=%s a2=%s a3=%s b1=%s b2=%s b3=%s c1=%s c2=%s c3=%s" %(cid,one,two,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3))
+            self.debug_file.write('CORD2R=%s' % data)
             coord = CORD2R(None, dataIn)
             self.add_coord(coord, allowOverwrites=True)
             n += 52
@@ -150,9 +159,10 @@ class GEOM1(object):
         nEntries = (len(data) - n) // 52
         for i in range(nEntries):
             eData = data[n:n + 52]  # 13*4
-            (cid, sixty5, eight, rid, a1, a2, a3, b1, b2, b3,
-                c1, c2, c3) = s.unpack(eData)
+            out = s.unpack(eData)
+            (cid, sixty5, eight, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3) = out
             dataIn = [cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3]
+            self.binary_debug.write('  CORD2S=%s\n' % str(out))
             coord = CORD2S(dataIn)
             self.add_coord(coord, allowOverwrites=True)
             n += 52
@@ -168,9 +178,10 @@ class GEOM1(object):
         nEntries = (len(data) - n) // 16
         for i in range(nEntries):
             eData = data[n:n + 16]  # 4*4
-            (cid, n1, n2, n3) = s.unpack(eData)
-            dataIn = [cid, n1, n2, n3]
-            coord = CORD3G(None, dataIn)
+            out = s.unpack(eData)
+            (cid, n1, n2, n3) = out
+            coord = CORD3G(None, out)
+            self.binary_debug.write('  CORD3G=%s\n' % str(out))
             self.add_coord(coord, allowOverwrites=True)
             n += 16
         self.card_count['CORD3G'] = nEntries
@@ -186,6 +197,7 @@ class GEOM1(object):
             edata = data[n:n + 32]
             out = s.unpack(edata)
             (nID, cp, x1, x2, x3, cd, ps, seid) = out
+            self.binary_debug.write('  GRID=%s\n' % str(out))
             if cd >= 0 and nID < 10000000:
                 node = GRID(None, out)
                 self.add_node(node)
@@ -197,5 +209,5 @@ class GEOM1(object):
 
     def _readSEQGP(self, data, n):
         """(5301,53,4) - the marker for Record 27"""
-        self.skippedCardsFile.write('skipping SEQGP in GEOM1\n')
+        self.log.debug('skipping SEQGP in GEOM1\n')
         return n

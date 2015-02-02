@@ -102,7 +102,7 @@ class GEOM2(object):
             # record 90
             # record 91
             # record 92
-            (5959, 59, 282): ['CTRIA4', self._readCTRIA3],   # record 93 - maybe buggy on theta/Mcsid field
+            (5959, 59, 282): ['CTRIA3', self._readCTRIA3],   # record 93 - maybe buggy on theta/Mcsid field
             # record 94
             (4801, 48, 327): ['CTRIA6', self._readCTRIA6],   # record 95 - buggy
             # record 96
@@ -207,7 +207,7 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n + 64]  # 16*4
             f, = unpack(b'i', eData[28:32])
-            if   f == 0:
+            if f == 0:
                 out = unpack(b'4i3f3i6f', eData)
                 (eid, pid, ga, gb, x1, x2, x3, f, pa, pb,
                     w1a, w2a, w3a, w1b, w2b, w3b) = out
@@ -317,6 +317,7 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n + 24]  # 6*4
             out = unpack(b'6i', eData)
+            self.binary_debug.write('  CDAMP1=%s\n' % str(out))
             (eid, pid, g1, g2, c1, c2) = out
             elem = CDAMP1(None, out)
             self.addOp2Element(elem)
@@ -332,6 +333,7 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n + 24]  # 6*4
             out = unpack(b'if4i', eData)
+            self.binary_debug.write('  CDAMP2=%s\n' % str(out))
             (eid, b, g1, g2, c1, c2) = out
             elem = CDAMP2(None, out)
             self.addOp2Element(elem)
@@ -348,6 +350,7 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n + 16]  # 4*4
             out = s.unpack(eData)
+            self.binary_debug.write('  CDAMP3=%s\n' % str(out))
             (eid, pid, s1, s2) = out
             elem = CDAMP3(None, out)
             self.addOp2Element(elem)
@@ -364,6 +367,7 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n + 16]  # 4*4
             out = s.unpack(eData)
+            self.binary_debug.write('  CDAMP4=%s\n' % str(out))
             (eid, b, s1, s2) = out
             elem = CDAMP4(None, out)
             self.addOp2Element(elem)
@@ -380,6 +384,7 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n + 16]  # 4*4
             out = s.unpack(eData)
+            self.binary_debug.write('  CDAMP5=%s\n' % str(out))
             (eid, pid, s1, s2) = out
             elem = CDAMP5(None, out)
             self.addOp2Element(elem)
@@ -406,6 +411,7 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n+24]
             out = s.unpack(eData)
+            self.binary_debug.write('  CELAS1=%s\n' % str(out))
             (eid, pid, g1, g2, c1, c2) = out
             elem = CELAS1(None, out)
             self.addOp2Element(elem)
@@ -423,6 +429,7 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n+32]
             out = s1.unpack(eData)
+            self.binary_debug.write('  CELAS2=%s\n' % str(out))
             (eid, k, g1, g2, c1, c2, ge, s) = out
             elem = CELAS2(None, out)
             self.addOp2Element(elem)
@@ -440,6 +447,7 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n+16]
             out = s.unpack(eData)
+            self.binary_debug.write('  CELAS3=%s\n' % str(out))
             (eid, pid, s1, s2) = out
             elem = CELAS3(None, out)
             self.addOp2Element(elem)
@@ -456,6 +464,7 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n + 16]  # 4*4
             out = s.unpack(eData)
+            self.binary_debug.write('  CELAS4=%s\n' % str(out))
             (eid, k, s1, s2) = out
             elem = CELAS4(None, out)
             self.addOp2Element(elem)
@@ -471,11 +480,13 @@ class GEOM2(object):
         CFLUID2(8515,85,209) - the marker for Record 35
         """
         return n
+
     def _readCFLUID3(self, data, n):
         """
         CFLUID3(8615,86,210) - the marker for Record 36
         """
         return n
+
     def _readCFLUID4(self, data, n):
         """
         CFLUID4(8715,87,211) - the marker for Record 37
@@ -524,8 +535,10 @@ class GEOM2(object):
         nelements = (len(data) - n) // ntotal
         for i in range(nelements):
             eData = data[n:n+64]
+            out = s.unpack(eData)
             (eid, blank, Type, iviewf, iviewb, radmidf, radmidb, blank2,
-             g1, g2, g3, g4, g5, g6, g7, g8) = s.unpack(eData)
+             g1, g2, g3, g4, g5, g6, g7, g8) = out
+            self.binary_debug.write('  CHBDYG=%s\n' % str(out))
             dataIn = [eid, Type, iviewf, iviewb, radmidf, radmidb,
                       g1, g2, g3, g4, g5, g6, g7, g8]
             elem = CHBDYG(None, dataIn)
@@ -546,6 +559,7 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n+88]
             out = s.unpack(edata)
+            self.binary_debug.write('  CHEXA=%s\n' % str(out))
             (eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
              g11, g12, g13, g14, g15, g16, g17, g18, g19, g20) = out
 
@@ -576,7 +590,8 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n + 24]  # 6*4
             out = s.unpack(eData)
-            #(eid,pid,g1,g2,c1,c2) = out
+            self.binary_debug.write('  CMASS1=%s\n' % str(out))
+            #(eid, pid, g1, g2, c1, c2) = out
             elem = CMASS1(None, out)
             self.addOp2Element(elem)
             n += 24
@@ -592,6 +607,7 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n + 24]  # 6*4
             out = s.unpack(eData)
+            self.binary_debug.write('  CMASS2=%s\n' % str(out))
             #(eid, m, g1, g2, c1, c2) = out
             elem = CMASS2(None, out)
             self.addOp2Element(elem)
@@ -608,6 +624,7 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n + 16]  # 4*4
             out = s.unpack(eData)
+            self.binary_debug.write('  CMASS3=%s\n' % str(out))
             #(eid, pid, s1, s2) = out
             elem = CMASS3(None, out)
             self.addOp2Element(elem)
@@ -647,6 +664,7 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n + 96]  # 24*4
             out = s.unpack(eData)
+            self.binary_debug.write('  CONM1=%s\n' % str(out))
             (eid, g, cid, m1, m2a, m2b, m3a, m3b, m3c, m4a, m4b, m4c, m4d,
              m5a, m5b, m5c, m5d, m5e, m6a, m6b, m6c, m6d, m6e, m6f) = out
             elem = CONM1(None, out)
@@ -665,6 +683,7 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n+52]
             out = s.unpack(eData)
+            self.binary_debug.write('  CONM2=%s\n' % str(out))
             (eid, g, cid, m, x1, x2, x3, i1, i2a, i2b, i3a, i3b, i3c) = out
             elem = CONM2(None, out)
             self.addOp2Element(elem)
@@ -682,6 +701,7 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n+32]
             out = s.unpack(eData)
+            self.binary_debug.write('  CONROD=%s\n' % str(out))
             (eid, n1, n2, mid, a, j, c, nsm) = out
             elem = CONROD(None, out)
             self.addOp2Element(elem)
@@ -700,6 +720,7 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n+80]
             out = s.unpack(eData)
+            self.binary_debug.write('  CONV=%s\n' % str(out))
             (eid, pconID, flmnd, cntrlnd,
              ta1, ta2, ta3, ta5, ta6, ta7, ta8,
              wt1, wt2, wt3, wt5, wt6, wt7, wt8) = out
@@ -716,13 +737,14 @@ class GEOM2(object):
         """
         CONVM(8908,89,422) - the marker for Record 60
         """
-        return
+        return n
         ntotal = 28  # 7*4
         s = Struct(b'7i')
         nelements = (len(data) - n) // ntotal
         for i in range(nelements):
             eData = data[n:n+28]
             out = unpack(eData)
+            self.binary_debug.write('  CONVM=%s\n' % str(out))
             (eid, pconID, flmnd, cntrlnd,
              [ta1, ta2, ta3]) = out
             dataIn = [eid, pconID, flmnd, cntrlnd,
@@ -744,6 +766,7 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n + 68]  # 17*4
             out = s.unpack(eData)
+            self.binary_debug.write('  CPENTA=%s\n' % str(out))
             (eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
              g11, g12, g13, g14, g15) = out
 
@@ -774,10 +797,12 @@ class GEOM2(object):
         """common method for CQUAD, CQUADX"""
         s = Struct(b'11i')
         nelements = (len(data) - n) // 44  # 11*4
+        self.binary_debug.write('ndata=%s\n' % (nelements * 44))
         for i in range(nelements):
             eData = data[n:n + 44]
-            (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8,
-                n9) = s.unpack(eData)
+            out = s.unpack(eData)
+            (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9) = out
+            self.binary_debug.write('  %s=%s\n' % (Element.type, str(out)))
             #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4))
             #dataInit = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
             data = [eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9]
@@ -800,10 +825,13 @@ class GEOM2(object):
         """
         nelements = (len(data) - n) // 56
         s = Struct(b'6iffii4f')
+        self.binary_debug.write('ndata=%s\n' % (nelements * 44))
         for i in range(nelements):
             eData = data[n:n + 56]  # 14*4
+            out = s.unpack(eData)
             (eid, pid, n1, n2, n3, n4, theta, zoffs, blank, tflag,
-                t1, t2, t3, t4) = s.unpack(eData)
+             t1, t2, t3, t4) = out
+            self.binary_debug.write('  %s=%s\n' % (Element.type, str(out)))
             #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s blank=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,blank,tflag,t1,t2,t3,t4))
             dataInit = [eid, pid, n1, n2, n3, n4, theta, zoffs,
                         tflag, t1, t2, t3, t4]
@@ -826,6 +854,7 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n + 64]
             out = s.unpack(eData)
+            self.binary_debug.write('  CQUAD8=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
                 t3, t4, theta, tflag) = out
             #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4))
@@ -865,6 +894,7 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n + 16]
             out = s.unpack(eData)
+            self.binary_debug.write('  CROD=%s\n' % str(out))
             (eid, pid, n1, n2) = out
             elem = CROD(None, out)
             self.addOp2Element(elem)
@@ -884,6 +914,7 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n + 24]
             out = s.unpack(eData)
+            self.binary_debug.write('  CSHEAR=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4) = out
             elem = CSHEAR(None, out)
             self.addOp2Element(elem)
@@ -905,6 +936,7 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n+108]
             out = s.unpack(eData)
+            self.binary_debug.write('  CTETP=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12,
              f1, f2, f3, f4, b1, ee1, ee2, ee3, ee4) = out
             #print("out = ",out)
@@ -929,6 +961,7 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n + 48]
             out = s.unpack(eData)
+            self.binary_debug.write('  CTETRA=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = out
             #print("out = ",out)
 
@@ -962,6 +995,7 @@ class GEOM2(object):
             #print("eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %(eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3))
             (eid, pid, n1, n2, n3, theta, zoffs, blank1,
                 blank2, tflag, t1, t2, t3) = out
+            self.binary_debug.write('  CTRIA3=%s\n' % str(out))
             dataIn = [eid, pid, n1, n2, n3, theta, zoffs, tflag, t1, t2, t3]
             elem = CTRIA3(None, dataIn)
             self.addOp2Element(elem)
@@ -982,6 +1016,7 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n + 52]
             out = s.unpack(eData)
+            self.binary_debug.write('  CTRIA6=%s\n' % str(out))
             #print("eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %(eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3))
             (eid, pid, n1, n2, n3, n4, n5, n6, theta, t1, t2, t3, tflag) = out
             elem = CTRIA6(None, out)
@@ -1015,6 +1050,7 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n + 16]  # 4*4
             out = s.unpack(eData)
+            self.binary_debug.write('  CTUBE=%s\n' % str(out))
             (eid, pid, n1, n2) = out
             elem = CTUBE(None, out)
             self.addOp2Element(elem)
@@ -1029,6 +1065,7 @@ class GEOM2(object):
         for i in range(nelements):
             eData = data[n:n + 16]  # 4*4
             out = s.unpack(eData)
+            self.binary_debug.write('  CVISC=%s\n' % str(out))
             #(eid,pid,n1,n2) = out
             elem = CVISC(None, out)
             self.addOp2Element(elem)
@@ -1071,6 +1108,7 @@ class GEOM2(object):
         npoints = (len(data) - n) // 4
         fmt = b'%ii' % npoints
         nids = unpack(fmt, data[n:])
+        self.binary_debug.write('SPOINT=%s\n' % str(nids))
         spoint = SPOINTs(None, list(nids))
         self.add_SPOINT(spoint)
         self.card_count['SPOINT'] = npoints
