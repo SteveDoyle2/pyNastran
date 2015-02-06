@@ -61,14 +61,14 @@ class TestUtils(unittest.TestCase):
             self.assertEqual(list_print(a), b)
         r = ('[[1         ,2         ,3         ],\n [4         ,5         ,6'
              '         ],\n [7         ,8         ,9         ]]')
-        self.assertEqual(list_print(array([(1,2,3),(4,5,6),(7,8,9)])), r)
-        self.assertEqual(list_print(matrix([(1,2,3),(4,5,6),(7,8,9)])), r)
-        self.assertEqual(list_print(array([(1.0,2,3.),(4.,5.,6),(7.0,8,9)])), r)
-        self.assertEqual(list_print(matrix([(1,2,3.0),(4,5.0,6),(7.,8,9.0)])), r)
+        self.assertEqual(list_print(array([(1,2,3),(4,5,6),(7,8,9)]), float_fmt='%-10g'), r)
+        self.assertEqual(list_print(matrix([(1,2,3),(4,5,6),(7,8,9)]), float_fmt='%-10g'), r)
+        self.assertEqual(list_print(array([(1.0,2,3.),(4.,5.,6),(7.0,8,9)]), float_fmt='%-10g'), r)
+        self.assertEqual(list_print(matrix([(1,2,3.0),(4,5.0,6),(7.,8,9.0)]), float_fmt='%-10g'), r)
 
         r = "[[1.1       ,2.234     ,3.00001   ],\n [4.001     ,5         ,6.2       ]]"
-        self.assertEqual(list_print(array([(1.1,2.234,3.00001),(4.001,5.0000005,6.2)])), r)
-        self.assertEqual(list_print(matrix([(1.1,2.234,3.00001),(4.001,5.0000005,6.2)])), r)
+        self.assertEqual(list_print(array([(1.1,2.234,3.00001),(4.001,5.0000005,6.2)]), float_fmt='%-10g'), r)
+        self.assertEqual(list_print(matrix([(1.1,2.234,3.00001),(4.001,5.0000005,6.2)]), float_fmt='%-10g'), r)
 
         self.assertEqual(list_print(['a',None,11,'']), '[a, None, 11, ]')
         self.assertEqual(list_print(('a',None,11,'')), '[a, None, 11, ]')
