@@ -112,7 +112,7 @@ def get_failed_files(filename):
 
 
 def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
-                   delete_f06=True, write_op2=True, is_vector=False,
+                   delete_f06=True, write_op2=False, is_vector=False,
                    debug=True, saveCases=True, skipFiles=[],
                    stopOnFailure=False, nStart=0, nStop=1000000000):
     n = ''
@@ -168,7 +168,7 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
 
 
 def run_op2(op2FileName, make_geom=False, write_bdf=False,
-            write_f06=True, write_op2=True, is_mag_phase=False,
+            write_f06=True, write_op2=False, is_mag_phase=False,
             is_vector=False, delete_f06=False,
             iSubcases=[], exclude=[], debug=False, stopOnFailure=True):
     assert '.op2' in op2FileName.lower(), 'op2FileName=%s is not an OP2' % op2FileName
