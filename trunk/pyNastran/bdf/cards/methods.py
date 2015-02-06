@@ -170,8 +170,8 @@ class EIGC(Method):
             nrows = nfields // 8
             if nfields % 8 > 0:
                 nrows += 1
-            if nrows == 0:
-                raise RuntimeError('invalid row count=0; nfields=%s \ncard=%s\nfields=%s' % (nfields, card, fields))
+            #if nrows == 0:
+                #raise RuntimeError('invalid row count=0; nfields=%s \ncard=%s\nfields=%s' % (nfields, card, fields))
 
             if self.method == 'CLAN':
                 self.loadCLAN(nrows, card)
