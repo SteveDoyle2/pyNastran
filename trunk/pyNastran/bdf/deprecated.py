@@ -236,7 +236,7 @@ class GetMethodsDeprecated(object):
 
     def getNodeIDsWithElements(self, eids, msg=''):
         """deprecated"""
-        return self.get_node_ids_with_elements(self, eids, msg=msg)
+        return self.get_node_ids_with_elements(eids, msg=msg)
 
     def nElements(self):
         """deprecated"""

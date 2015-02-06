@@ -191,6 +191,66 @@ class TestShells(unittest.TestCase):
         model = BDF(debug=False)
         self._make_ctria3(model, rho, nu, G, E, t, nsm)
 
+    def test_CQUAD4_01(self):
+        model = BDF(debug=False)
+        eid = 10
+        pid = 20
+        mid = 30
+        n1 = 1
+        n2 = 2
+        n3 = 3
+        n4 = 4
+        n5 = 5
+        n6 = 6
+        A = 2.
+        t = rho = nsm = E = G = nu = 0.1
+        mid2 = mid3 = mid4 = twelveIt3 = tst = z1 = z2 = None
+
+        mass = A * (t * rho + nsm)
+        cards = [
+            ['grid', n1, 0, 0., 0., 0.],
+            ['grid', n2, 0, 2., 0., 0.],
+            ['grid', n3, 0, 2., 1., 0.],
+            ['grid', n4, 0, 0., 1., 0.],
+            ['grid', n5, 0, 0., 0., 0.],
+            ['grid', n6, 0, 2., 0., 0.],
+
+            ['cquad4', eid, pid, n1, n2, n3, n4],
+            ['cquad4', eid+1, pid, n5, n6, n3, n4],
+            ['pshell', pid, mid, t, mid2, twelveIt3, mid3, tst, nsm, z1, z2],
+            ['mat1', mid, E, G, nu, rho],
+        ]
+        for fields in cards:
+            model.add_card(fields, fields[0], is_list=True)
+
+        # get node IDs without cross referencing
+        eids = [10]
+        nids = model.getNodeIDsWithElements(eids)
+        assert nids == set([1, 2, 3, 4]), nids
+
+        eids = [11]
+        nids = model.getNodeIDsWithElements(eids)
+        assert nids == set([3, 4, 5, 6]), nids
+
+        eids = [10, 11]
+        nids = model.getNodeIDsWithElements(eids)
+        assert nids == set([1, 2, 3, 4, 5, 6]), nids
+
+        # get node IDs with cross referencing
+        model.cross_reference()
+        eids = [10]
+        nids = model.getNodeIDsWithElements(eids)
+        assert nids == set([1, 2, 3, 4]), nids
+
+        eids = [11]
+        nids = model.getNodeIDsWithElements(eids)
+        assert nids == set([3, 4, 5, 6]), nids
+
+        eids = [10, 11]
+        nids = model.getNodeIDsWithElements(eids)
+        assert nids == set([1, 2, 3, 4, 5, 6]), nids
+
+
 
     def test_PCOMP_01(self):
         """
