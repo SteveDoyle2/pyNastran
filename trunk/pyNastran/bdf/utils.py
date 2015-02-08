@@ -195,6 +195,7 @@ def print_filename(filename, relpath):
         return os.path.relpath(filename)
     return filename
 
+
 def parse_patran_syntax(node_sets):
     """
     Parses Patran's syntax for compressing nodes/elements
@@ -241,6 +242,7 @@ def parse_patran_syntax(node_sets):
         else:
             nodes.append(int(snode))
     return unique(nodes)
+
 
 def parse_patran_syntax_dict(node_sets):
     """
@@ -290,6 +292,7 @@ def parse_patran_syntax_dict(node_sets):
         data[key] = unique(ints)
     return data
 
+
 def Position(xyz, cid, model, is_cid_int=True):
     """
     Gets the point in the global XYZ coordinate system.
@@ -311,6 +314,7 @@ def Position(xyz, cid, model, is_cid_int=True):
         cp = cid
     xyz2, matrix = cp.transformToGlobal(xyz)
     return xyz2
+
 
 def TransformLoadWRT(F, M, cid, cid_new, model, is_cid_int=True):
     """
@@ -374,6 +378,7 @@ def TransformLoadWRT(F, M, cid, cid_new, model, is_cid_int=True):
     M_local = coordB.XYZtoCoord(Mxyz_local_2)
 
     return Fxyz_local_2, Mxyz_local_2
+
 
 def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
     """

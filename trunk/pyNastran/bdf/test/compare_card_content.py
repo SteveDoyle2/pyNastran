@@ -166,7 +166,8 @@ def compare_card_content(fem1, fem2):
     for key in fem1.sets:
         card1 = fem1.sets[key]
         card2 = fem2.sets[key]
-        assert_fields(card1, card2)
+        assert card1 == card2, card1.symmetric_difference(card2)
+        #assert_fields(card1, card2)
 
     for key in fem1.setsSuper:
         card1 = fem1.setsSuper[key]
