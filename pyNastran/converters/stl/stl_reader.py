@@ -10,7 +10,7 @@ from docopt import docopt
 from numpy import array, zeros, ndarray, cross, where
 from numpy.linalg import norm
 
-#from struct import unpack
+from struct import unpack, Struct
 import pyNastran
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.utils import is_binary
@@ -46,23 +46,107 @@ class STLReader(object):
         self.log.info("---starting reading STL file...%r---" % self.infilename)
 
         if is_binary(stl_filename):
-            self.log.debug("***is_binary")
-            aaa
-            self.infile = open(stl_filename, 'rb')
-            (self.nPoints, self.nElements) = self.read_header_binary()
-            points = self.read_points_binary(self.nPoints)
-            elements = self.read_elements_binary(self.nElements)
-            regions = self.read_regions_binary(self.nElements)
-            loads = {}
+            self.read_binary_stl(stl_filename)
         else:
-            self.infile = open(stl_filename, 'r')
-            self.read_ascii()
+            self.read_ascii_stl(stl_filename)
 
-        self.infile.close()
         #self.log.info("nPoints=%s  nElements=%s" % (self.nPoints, self.nElements))
         self.log.info("---finished reading STL file...%r---" % self.infilename)
         #assert self.nPoints > 0, 'nPoints=%s' % self.nPoints
         #assert self.nElements > 0, 'nElements=%s' % self.nElements
+
+
+    def write_binary_stl(self, stl_filename):
+        """Write an STL binary file."""
+        f = open(stl_filename, "wb")
+
+        self.header.ljust(80, '\0')
+
+        f.write(self.header)
+        a = [0.,0.,0.]
+        b = [0.,0.,0.]
+        c = [0.,0.,0.]
+        nelements, three = self.elements.shape
+        f.write(struct.pack('i', nelements))
+        elements = self.elements
+
+        p1 = elements[:, 0]
+        p2 = elements[:, 1]
+        p3 = elements[:, 2]
+        a = p2 - p1
+        b = p3 - p1
+        n = cross(a, b)
+        n /= norm(n, axis=1)
+        for element in elements:
+            a = points[element[0]]
+            b = points[element[0]]
+            c = points[element[0]]
+            ab = [b[0]-a[0],b[1]-a[1],b[2]-a[2]]
+            ac = [c[0]-a[0],c[1]-a[1],c[2]-a[2]]
+            n = [ab[1]*ac[2]-ab[2]*ac[1],
+                 ab[2]*ac[0]-ab[0]*ac[2],
+                 ab[0]*ac[1]-ab[1]*ac[0]]
+            data = struct.pack('ffffffffffffH',
+                n[0],n[1],n[2],a[0],a[1],a[2],b[0],b[1],b[2],
+                c[0],c[1],c[2],0)
+            f.write(data)
+        f.close()
+
+    def read_binary_stl(self, stl_filename):
+        """Read an STL binary file."""
+        self.infile = open(stl_filename, 'rb')
+        data = self.infile.read()
+        self.infile.close()
+        self.header = data[:80]
+        nfacets, = unpack('i', data[80:84])
+        j = 84
+
+        inode = 0
+        ielement = 0
+        nodes_dict = {}
+        elements = []
+
+        s = Struct('12fH')
+        for ii in range(nfacets):
+            (nx, ny, nz, ax, ay, az, bx, by, bz, cx, cy, cz, i) = \
+                s.unpack(data[j:j+50])
+
+            t1 = (ax, ay, az)
+            t2 = (bx, by, bz)
+            t3 = (cx, cy, cz)
+            if t1 in nodes_dict:
+                i1 = nodes_dict[t1]
+            else:
+                i1 = inode
+                nodes_dict[t1] = inode
+                inode += 1
+
+            if t2 in nodes_dict:
+                i2 = nodes_dict[t2]
+            else:
+                i2 = inode
+                nodes_dict[t2] = inode
+                inode += 1
+
+            if t3 in nodes_dict:
+                i3 = nodes_dict[t3]
+            else:
+                i3 = inode
+                nodes_dict[t3] = inode
+                inode += 1
+            element = [i1, i2, i3]
+            elements.append(element)
+            ielement += 1
+            j += 50
+        assert inode > 0, inode
+        nnodes = inode + 1 # accounting for indexing
+        self.elements = array(elements, 'int32')
+        nodes = zeros((nnodes, 3), 'float64')
+
+        for node, inode in iteritems(nodes_dict):
+            nodes[inode] = node
+        self.nodes = nodes
+
 
     def get_normals(self, elements, nodes=None):
         if nodes is None:
@@ -322,7 +406,8 @@ class STLReader(object):
         out.write(msg)
 
 
-    def read_ascii(self):
+    def read_ascii_stl(self):
+        self.infile = open(stl_filename, 'r')
         f = self.infile
         line = f.readline()
         inode = 0
@@ -387,12 +472,9 @@ class STLReader(object):
                         nodes_dict[t3] = inode
                         inode += 1
                     element = [i1, i2, i3]
-                    #print "element =", inode, ielement, element
                     elements.append(element)
                     ielement += 1
                     line = f.readline()  # facet
-                #print "ielement =", ielement
-                #nelements = ielement
                 #print "end of solid..."
                 #print "*line = %r" % line
             elif 'endsolid' in line:
@@ -402,20 +484,16 @@ class STLReader(object):
                 #line = f.readline()
                 raise NotImplementedError('multiple solids are not supported')
                 #break
+        self.infile.close()
 
         assert inode > 0
         nnodes = inode + 1 # accounting for indexing
         self.elements = array(elements, 'int32')
         nodes = zeros((nnodes, 3), 'float64')
 
-        #print "end of while loop..."
-        #print "nnodes = ", nnodes
-        #print "nodes =", nodes.shape
-        #print "elements =", elements.shape
         for node, inode in iteritems(nodes_dict):
             nodes[inode] = node
         self.nodes = nodes
-        #print "***"
 
 
 def run_arg_parse():
