@@ -558,8 +558,12 @@ def build_thru_packs(packs, maxDV=1):
             singles.append(firstVal)
         else:
             if by == 1:
-                double = [firstVal, 'THRU', lastVal]
-                doubles.append(double)
+                if lastVal - firstVal < 3: # dont make extra THRU cards
+                    for val in range(firstVal, lastVal + 1):
+                        singles.append(val)
+                else:
+                    double = [firstVal, 'THRU', lastVal]
+                    doubles.append(double)
             else:
                 for val in range(firstVal, lastVal + 1, by):
                     singles.append(val)
