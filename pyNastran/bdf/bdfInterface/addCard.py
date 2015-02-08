@@ -576,32 +576,35 @@ class AddMethods(object):
             self.frequencies[key] = freq
         #assert key not in self.frequencies,'\nfreq=\n%s oldFreq=\n%s' %(freq,self.frequencies[key])
 
-    def add_SET(self, setObj):
-        key = setObj.sid
-        assert key not in self.sets, '\nSET=\n%s oldSET=\n%s' % (
-            setObj, self.sets[key])
+    def add_SET(self, set_obj):
+        key = set_obj.sid
+        #assert key not in self.sets, '\nSET=\n%s oldSET=\n%s' % (
+            #setObj, self.sets[key])
         assert key >= 0
-        self.sets[key] = setObj
+        if key in self.sets:
+            self.sets[key].add_set(set_obj)
+        else:
+            self.sets[key] = set_obj
 
-    def add_ASET(self, setObj):
-        self.asets.append(setObj)
+    def add_ASET(self, set_obj):
+        self.asets.append(set_obj)
 
-    def add_BSET(self, setObj):
-        self.bsets.append(setObj)
+    def add_BSET(self, set_obj):
+        self.bsets.append(set_obj)
 
-    def add_CSET(self, setObj):
-        self.csets.append(setObj)
+    def add_CSET(self, set_obj):
+        self.csets.append(set_obj)
 
-    def add_QSET(self, setObj):
-        self.qsets.append(setObj)
+    def add_QSET(self, set_obj):
+        self.qsets.append(set_obj)
 
-    def add_SESET(self, setObj):
-        key = setObj.seid
+    def add_SESET(self, set_obj):
+        key = set_obj.seid
         assert key >= 0
         if key in self.setsSuper:
-            oldSet = self.setsSuper[key]
-            setObj.add_SESET_Object(oldSet)
-        self.setsSuper[key] = setObj
+            old_set = self.setsSuper[key]
+            set_obj.add_SESET_Object(old_set)
+        self.setsSuper[key] = set_obj
 
     def add_table(self, table):
         key = table.tid

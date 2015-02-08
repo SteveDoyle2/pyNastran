@@ -6,3 +6,33 @@ C:\Users\sdoyle\Dropbox\pyNastran_examples\solid_shell_bar
 C:\Users\sdoyle\Dropbox\pyNastran_examples\solid_shell_bar_m2
 C:\Users\sdoyle\Dropbox\pyNastran_examples\iSat
 
+D:\work\move\2_Optimization
+D:\work\move\3_LoadCases_Final
+D:\work\move\blade
+D:\work\move\damage_panel
+#D:\work\move\hard_demo
+#D:\work\move\move_tpl
+D:\work\move\piston
+D:\work\move\ramjet
+D:\work\move\solid_shell_bar
+D:\work\move\springNonlinear
+D:\work\move\test_tet10
+D:\work\pyNastran_old\pyNastran_backup\models\spacecraft
+D:\work\pyNastran_old\pyNastran_backup\models
+D:\work\pyNastran_old\pyNastran_backup\models\broken
+D:\work\pyNastran_old\pyNastran_backup\model
+D:\work\pyNastran_old\pyNastran_backup\model - Copy
+D:\work\pyNastran_old\pyNastran_backup\pyNastran\op2\test\tests\fem4\thermal
+D:\work\pyNastran_old\pyNastran_backup\pyNastran\op2\test\tests\fem4\statics
+D:\work\pyNastran_old\pyNastran_backup\pyNastran\op2\test\tests\m4
+D:\work\pyNastran_old\pyNastran_backup\pyNastran\op2\test\tests\nastran\statics
+D:\work\pyNastran_old\pyNastran_backup\pyNastran\op2\test\tests\nastran\thermal
+D:\work\pyNastran_old\pyNastran_backup\pyNastran\op2\test\tests\op2s
+
+D:\work\move\Dropbox\pyNastran_examples\move_tpl
+D:\work\move\Dropbox\pyNastran_examples\move_tpl\works
+D:\work\move\Dropbox\pyNastran_examples\demo
+D:\work\move\Dropbox\pyNastran_examples\demo_sort2_post_m2
+D:\work\move\Dropbox\pyNastran_examples\solid_shell_bar
+D:\work\move\Dropbox\pyNastran_examples\solid_shell_bar_m2
+D:\work\move\Dropbox\pyNastran_examples\iSat

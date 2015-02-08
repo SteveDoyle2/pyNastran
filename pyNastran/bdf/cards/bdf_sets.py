@@ -28,7 +28,6 @@ class Set(BaseCard):
         """gets the IDs of the SETx"""
         return collapse_thru(self.IDs)
 
-
     def repr_fields(self):
         list_fields = self.raw_fields()
         return list_fields
@@ -332,10 +331,24 @@ class SET1(Set):
         self.IDs = expand_thru(IDs[i:])
         self.cleanIDs()
 
+    def __eq__(self, set1):
+        self.cleanIDs()
+        set1.cleanIDs()
+        if self.IDs == set1.IDs:
+            return True
+        return False
+
+    def symmetric_difference(self, set1):
+        s1 = set(self.IDs)
+        s2 = set(set1.IDs)
+        return s1.symmetric_difference(s2)
+
+    def add_set(self, set1):
+        self.IDs += set1.IDs
+        self.cleanIDs()
+
     def IsSkin(self):
         return self.isSkin
-
-    #def rawFields(self):
 
     def raw_fields(self):
         skin = []
