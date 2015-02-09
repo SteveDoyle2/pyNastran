@@ -14,21 +14,6 @@ from scipy.interpolate import splrep, splev
 from scipy.integrate import quad
 
 
-if sys.version_info < (3, 0):
-    """
-    "fixes" bug where scipy screws up return code handling
-    for example:
-        >>> import sys
-        >>> import scipy.sparse
-        >>> sys.exit(1)
-
-    The program's return code is 0
-
-    .. note:: Python v3.0+ doesn't have scipy.weave
-    .. note:: This is a 64-bit, Windows 7 specific bug as far as I know.
-    """
-    import scipy.weave
-
 # should future proof this as it handles 1.9.0.dev-d1dbf8e, 1.10.2, and 1.6.2
 #_numpy_version = [int(i) for i in numpy.__version__.split('.') if i.isdigit()]
 
