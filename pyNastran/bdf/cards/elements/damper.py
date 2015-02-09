@@ -110,7 +110,16 @@ class CDAMP1(LineDamper):
     def cross_reference(self, model):
         msg = ' which is required by CDAMP1 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allowEmptyNodes=True, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
+        pid = self.pid
+        if pid in model.properties:
+            self.pid = model.Property(pid, msg=msg)
+        elif pid in model.pdampt:
+            self.pid = model.pdampt[pid]
+        else:
+            pids = model.properties.keys() + model.pdampt.keys()
+            pids.sort()
+            msg = 'pid=%i not found which is required by CDAMP1 eid=%i.  Allowed Pids=%s' % (self.pid, self.eid, pids)
+            raise KeyError(msg)
 
     def raw_fields(self):
         nodes = self.nodeIDs()

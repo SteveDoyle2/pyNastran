@@ -612,6 +612,13 @@ class WriteMesh(object):
             msg = ['$PROPERTIES\n']
             for (unused_pid, prop) in sorted(iteritems(self.properties)):
                 msg.append(prop.write_bdf(size, card_writer))
+
+            for card in sorted(itervalues(self.pbusht)):
+                msg.append(card.write_bdf(size, card_writer))
+            for card in sorted(itervalues(self.pdampt)):
+                msg.append(card.write_bdf(size, card_writer))
+            for card in sorted(itervalues(self.pelast)):
+                msg.append(card.write_bdf(size, card_writer))
             outfile.write(''.join(msg))
 
     def _write_rejects(self, outfile, size):
