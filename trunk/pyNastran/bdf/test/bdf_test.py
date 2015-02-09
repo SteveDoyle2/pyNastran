@@ -47,6 +47,7 @@ if __name__ == '__main__':  # pragma: no cover
     regenerate = True
     stopOnFailure = False
     nastran = r'C:\MSC.Software\MSC.Nastran\bin\nastran.exe scr=yes bat=no old=no '
+    nastran = ''
 
     if regenerate:
         files2 = get_all_files(foldersFile, '.bdf')

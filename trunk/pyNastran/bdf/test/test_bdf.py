@@ -116,7 +116,7 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
             sum_load=False, size=8, precision='single',
             reject=False, nastran='', dynamic_vars={}):
     bdfModel = str(bdfFilename)
-    print("bdfModel = %r" % bdfModel)
+    print("bdfModel = %s" % bdfModel)
     if isFolder:
         bdfModel = os.path.join(test_path, folder, bdfFilename)
 

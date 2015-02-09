@@ -823,8 +823,21 @@ class FORCE2(Force):
 
         v12 = self.g2.Position() - self.g1.Position()
         v34 = self.g4.Position() - self.g3.Position()
-        v12 /= norm(v12)
-        v34 /= norm(v34)
+        try:
+            v12 /= norm(v12)
+        except FloatingPointError:
+            msg = 'v12=%s norm(v12)=%s\n' % (v12, norm(v12))
+            msg += 'g1.Position()=%s\n' % self.g1.Position()
+            msg += 'g2.Position()=%s' % self.g2.Position()
+            raise FloatingPointError(msg)
+
+        try:
+            v34 /= norm(v34)
+        except FloatingPointError:
+            msg = 'v34=%s norm(v34)=%s\n' % (v34, norm(v34))
+            msg += 'g3.Position()=%s\n' % self.g3.Position()
+            msg += 'g4.Position()=%s' % self.g4.Position()
+            raise FloatingPointError(msg)
         self.xyz = cross(v12, v34)
         self.normalize()
 

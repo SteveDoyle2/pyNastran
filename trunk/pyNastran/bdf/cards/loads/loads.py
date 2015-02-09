@@ -824,7 +824,8 @@ class RANDPS(RandomLoad):
     def cross_reference(self, model):
         if self.tid:
             msg = ' which is required by RANDPS sid=%s' % (self.sid)
-            self.tid = model.Table(self.tid, msg=msg)
+            #self.tid = model.Table(self.tid, msg=msg)
+            self.tid = model.RandomTable(self.tid, msg=msg)
 
     def getLoads(self):
         return [self]

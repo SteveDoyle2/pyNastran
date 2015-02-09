@@ -136,6 +136,8 @@ class PTUBE(Property):
             self.mid = integer(card, 2, 'mid')
             self.OD1 = double(card, 3, 'OD1')
             self.t = double_or_blank(card, 4, 't')
+            if self.t is None:
+                self.t = self.OD1 / 2.
             self.nsm = double_or_blank(card, 5, 'nsm', 0.0)
             self.OD2 = double_or_blank(card, 6, 'OD2', self.OD1)
             assert len(card) <= 7, 'len(PTUBE card) = %i' % len(card)
@@ -190,7 +192,7 @@ class PTUBE(Property):
 
     def J(self):
         Dout = self.OD1
-        if self.t == 0:
+        if self.t == 0.0:
             return pi / 8. * Dout**4
         Din = Dout - 2 * self.t
         return pi / 8. * (Dout**4 - Din**2)

@@ -602,7 +602,7 @@ class TABLEST(Table):
         return self.raw_fields()
 
 
-class RandomTable(BaseCard):
+class RandomTable(Table):
     type = 'TABLE??'
 
     def __init__(self, card, data):

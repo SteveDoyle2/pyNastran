@@ -170,7 +170,7 @@ class AddMethods(object):
 
         if key in self.pbusht and not allowOverwrites:
             if not prop._is_same_card(self.pbusht[key]):
-                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.pdampt[key],prop))
+                #print('pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.pbusht[key],prop))
                 assert key not in self.pbusht, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (key, self.pbusht[key], prop)
         else:
             assert key > 0, 'pid=%s prop=%s' % (key, prop)
@@ -196,7 +196,6 @@ class AddMethods(object):
 
     def add_PDAMPT(self, prop, allowOverwrites=False):
         key = prop.pid
-
         if key in self.pdampt and not allowOverwrites:
             if not prop._is_same_card(self.pdampt[key]):
                 #print('pid=%s\noldProperty=\n%snewProperty=\n%s' %(key,self.pdampt[key],prop))
