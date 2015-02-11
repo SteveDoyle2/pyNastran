@@ -10,7 +10,7 @@ from docopt import docopt
 from numpy import array, zeros, ndarray, cross, where
 from numpy.linalg import norm
 
-from struct import unpack, Struct
+from struct import unpack, Struct, pack
 import pyNastran
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.utils import is_binary
@@ -67,26 +67,28 @@ class STLReader(object):
         b = [0.,0.,0.]
         c = [0.,0.,0.]
         nelements, three = self.elements.shape
-        f.write(struct.pack('i', nelements))
+        f.write(pack('i', nelements))
         elements = self.elements
 
-        p1 = elements[:, 0]
-        p2 = elements[:, 1]
-        p3 = elements[:, 2]
+        p1 = self.nodes[elements[:, 0], :]
+        p2 = self.nodes[elements[:, 1], :]
+        p3 = self.nodes[elements[:, 2], :]
         a = p2 - p1
         b = p3 - p1
+        print(a)
+        print(b)
         n = cross(a, b)
-        n /= norm(n, axis=1)
+        #n /= norm(n, axis=1)
         for element in elements:
-            a = points[element[0]]
-            b = points[element[0]]
-            c = points[element[0]]
+            a = self.nodes[element[0], :]
+            b = self.nodes[element[1], :]
+            c = self.nodes[element[2], :]
             ab = [b[0]-a[0],b[1]-a[1],b[2]-a[2]]
             ac = [c[0]-a[0],c[1]-a[1],c[2]-a[2]]
             n = [ab[1]*ac[2]-ab[2]*ac[1],
                  ab[2]*ac[0]-ab[0]*ac[2],
                  ab[0]*ac[1]-ab[1]*ac[0]]
-            data = struct.pack('ffffffffffffH',
+            data = pack('ffffffffffffH',
                 n[0],n[1],n[2],a[0],a[1],a[2],b[0],b[1],b[2],
                 c[0],c[1],c[2],0)
             f.write(data)
@@ -169,8 +171,9 @@ class STLReader(object):
         #print "v123", v123
         n = norm(v123, axis=1)
         inan = where(n==0)[0]
-        if len(inan) > 0:
-            raise RuntimeError(inan)
+        n[inan] = array([1., 0., 0.])
+        #if len(inan) > 0:
+        #    raise RuntimeError(inan)
         #from numpy import divide
 
         # we need to divide our (n,3) array in 3 steps
