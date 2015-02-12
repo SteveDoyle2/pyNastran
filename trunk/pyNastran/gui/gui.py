@@ -183,34 +183,90 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
     def create_cell_picker(self):
         # cell picker
         self.cell_picker = vtk.vtkCellPicker()
-        self.cell_picker.SetTolerance(0.0005)
+        #self.point_picker = vtk.vtkPointPicker()
+        #self.cell_picker.SetTolerance(0.0005)
+
+    def mousePressEvent(self, ev):
+        print('press x,y = (%s, %s)' % (ev.x(), ev.y()))
+        if self.is_pick:
+            #self.___saveX = ev.x()
+            #self.___saveY = ev.y()
+            pass
+        else:
+            self.iren.mousePressEvent(ev)
+
+    def LeftButtonPressEvent(self, ev):
+        asfd
+
+    def mouseReleaseEvent(self, ev):
+        print('release x,y = (%s, %s)' % (ev.x(), ev.y()))
+        if self.is_pick:
+            pass
+        else:
+            self.iren.mousePressEvent(ev)
 
     def init_cell_picker(self):
-        #self.vtk_interactor.SetPicker(self.cell_picker)
+        self.is_pick = False
+        self.vtk_interactor.SetPicker(self.cell_picker)
+        #self.vtk_interactor.SetPicker(self.point_picker)
 
-        def annotatePick(object, event):
-            #global self.picker, picker_textActor, picker_textMapper
-            if self.picker.GetCellId() < 0:
+        def annotate_cell_picker(object, event):
+            self.log_command("annotate_cell_picker()")
+            picker = self.cell_picker
+            if picker.GetCellId() < 0:
                 #self.picker_textActor.VisibilityOff()
                 pass
             else:
+                worldPosition = picker.GetPickPosition()
+                cell_id = picker.GetCellId()
+                #ds = picker.GetDataSet()
                 selPt = picker.GetSelectionPoint()
-                pickPos = picker.GetPickPosition()
+                self.log_command("annotate_picker()")
+                self.log_info("worldPosition = %s" % str(worldPosition))
+                self.log_info("cell_id = %s" % cell_id)
+                #self.log_info("data_set = %s" % ds)
+                self.log_info("selPt = %s" % str(selPt))
 
-                self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
-                self.picker_textActor.SetPosition(selPt[:2])
-                self.picker_textActor.VisibilityOn()
+                #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
+                #self.picker_textActor.SetPosition(selPt[:2])
+                #self.picker_textActor.VisibilityOn()
 
-        self.cell_picker.AddObserver("EndPickEvent", annotatePick)
+        def annotate_point_picker(object, event):
+            self.log_command("annotate_point_picker()")
+            picker = self.cell_picker
+            if picker.GetPointId() < 0:
+                #self.picker_textActor.VisibilityOff()
+                pass
+            else:
+                worldPosition = picker.GetPickPosition()
+                point_id = picker.GetPointId()
+                #ds = picker.GetDataSet()
+                selPt = picker.GetSelectionPoint()
+                self.log_command("annotate_picker()")
+                self.log_info("worldPosition = %s" % str(worldPosition))
+                self.log_info("point_id = %s" % point_id)
+                #self.log_info("data_set = %s" % ds)
+                self.log_info("selPt = %s" % str(selPt))
+
+                #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
+                #self.picker_textActor.SetPosition(selPt[:2])
+                #self.picker_textActor.VisibilityOn()
+
+        self.cell_picker.AddObserver("EndPickEvent", annotate_cell_picker)
+        #self.point_picker.AddObserver("EndPickEvent", annotate_point_picker)
 
     def on_cell_picker(self):
-        worldPosition = self.cell_picker.GetPickPosition()
-        cell_id = self.cell_picker.GetCellId()
-        ds = self.cell_picker.GetDataSet()
         self.log_command("on_cell_picker()")
+        picker = self.cell_picker
+        worldPosition = picker.GetPickPosition()
+        cell_id = picker.GetCellId()
+        #ds = picker.GetDataSet()
+        selPt = picker.GetSelectionPoint()  # get x,y pixel coordinate
+
         self.log_info("worldPosition = %s" % str(worldPosition))
         self.log_info("cell_id = %s" % cell_id)
-        self.log_info("data_set = %s" % ds)
+        self.log_info("selPt = %s" % str(selPt))
+        #self.log_info("data_set = %s" % ds)
 
     def _setup_supported_formats(self):
         self.formats = {
@@ -671,6 +727,7 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
 
         #Qt VTK RenderWindowInteractor
         self.vtk_interactor = QVTKRenderWindowInteractor(parent=vtk_frame)
+        self.iren = self.vtk_interactor
         vtk_hbox.addWidget(self.vtk_interactor)
         vtk_frame.setLayout(vtk_hbox)
         vtk_frame.setFrameStyle(QtGui.QFrame.NoFrame | QtGui.QFrame.Plain)
