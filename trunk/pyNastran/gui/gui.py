@@ -645,7 +645,7 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         if Type != 'xyz':
             if Type == 'Rtz':
                 x = u'R'
-                y = u'θ'
+                y = u'?'
                 z = 'z'
 
                 x = 'R'
@@ -654,8 +654,8 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
 
             elif Type == 'Rtp':
                 x = u'R'
-                #y = u'θ'
-                #z = u'ϕ'
+                #y = u'?'
+                #z = u'?'
 
                 #x = 'R'
                 y = 'theta'
@@ -690,33 +690,16 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         self.axes = {}
         #self.create_coordinate_system(origin=None, matrix_3x3=None, Type='Rtp')
         self.create_coordinate_system(label='', origin=None, matrix_3x3=None, Type='xyz', add_to_ren=False)
-        return
-
-        self.transform = vtk.vtkTransform()
-        #self.transform.Translate(0.0, 0.0, 0.0)
-
-        self.axes = vtk.vtkAxesActor()
-
-        # kind of a silly default, but it's obvious
-        #self.axes.SetTotalLength(10., 20., 30.)
-
-        #  The axes are positioned with a user transform
-        self.axes.SetUserTransform(self.transform)
-
-        # properties of the axes labels can be set as follows
-        # this sets the x axis label to red
-        #self.axes.GetXAxisCaptionActor2D().GetCaptionTextProperty().SetColor(1,0,0)
-
-        # the actual text of the axis label can be changed:
-        # self.axes.SetXAxisLabelText("test")
 
     def on_show_hide_axes(self):
         # this method should handle all the coords when
         # there are more then one
         if self._is_axes_shown:
-            self.axes.VisibilityOff()
+            for key, axis in iteritems(self.axes):
+                axis.VisibilityOff()
         else:
-            self.axes.VisibilityOn()
+            for key, axis in iteritems(self.axes):
+                axis.VisibilityOn()
         self._is_axes_shown = not(self._is_axes_shown)
 
     def build_vtk_frame(self):
