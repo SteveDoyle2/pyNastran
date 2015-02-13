@@ -615,12 +615,18 @@ class Cart3DReader(object):
     def read_results_ascii(self, i, infile, result_names=None):
         """
         Reads the Cp results.
-        Cp = (p - 1/gamma) / (0.5*M_inf*M_inf)
-        (pV)^2 = (pu)^2+(pv)^2+(pw)^2
-        M^2 = (pV)^2/rho^2
+        Results are read on a nodal basis from the following table:
+          Cp
+          rho,rhoU,rhoV,rhoW,rhoE
 
-        # ???
-        p = (gamma-1)*(e- (rhoU**2+rhoV**2+rhoW**2)/(2.*rho))
+        With the following definitions:
+          Cp = (p - 1/gamma) / (0.5*M_inf*M_inf)
+          rhoVel^2 = rhoU^2+rhoV^2+rhoW^2
+          M^2 = rhoVel^2/rho^2
+
+        Thus:
+          p = (gamma-1)*(e- (rhoU**2+rhoV**2+rhoW**2)/(2.*rho))
+          p_dimensional = qInf * Cp + pInf
 
         # ???
         rho,rhoU,rhoV,rhoW,rhoE
