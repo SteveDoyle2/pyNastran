@@ -72,25 +72,10 @@ class VTKWindow():
     def __init__(self):
         pass
 
-class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, Plot3d_io):
+class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def __init__(self, inputs):
         QtGui.QMainWindow.__init__(self)
         GuiCommon.__init__(self)
-
-        NastranIO.__init__(self)
-        Cart3dIO.__init__(self)
-        PanairIO.__init__(self)
-        ShabpIO.__init__(self)
-        LaWGS_IO.__init__(self)
-        STL_IO.__init__(self)
-        TetgenIO.__init__(self)
-        Usm3dIO.__init__(self)
-        Plot3d_io.__init__(self)
-        self.modelType = None
-
-        settings = QtCore.QSettings()
-        self.supported_formats = []
-        self._setup_supported_formats()
 
         self.Title = None
         self.min_value = None
@@ -107,18 +92,11 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         self.is_centroidal = inputs['is_centroidal']
         self.magnify = inputs['magnify']
         assert self.is_centroidal != self.is_nodal, "is_centroidal and is_nodal can't be the same and are set to \"%s\"" % self.is_nodal
-        format = inputs['format']  # the active format loaded into the gui
-        input = inputs['input']
-        output = inputs['output']
-        script = inputs['script']
 
         #self.format = ''
         debug = inputs['debug']
         self.debug = debug
         assert debug in [True, False], 'debug=%s' % debug
-        shots = inputs['shots']
-        if shots is None:
-            shots = []
 
         #-------------
         # file
@@ -141,149 +119,9 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         self.nNodes = 0
         self.nElements = 0
 
-        #-------------
-        # logging
-
-        self.log = SimpleLogger('debug', lambda x, y: self.logg_msg(x, y))
-        # logging needs synchronizing, so the messages from different threads
-        # would not be interleave
-        self.log_mutex = QtCore.QReadWriteLock()
-
-        #-------------
-        self.create_vtk_actors()
-
-        # build GUI and restore saved application state
-        self.restoreGeometry(settings.value("mainWindowGeometry").toByteArray())
-        self.background_col = settings.value("backgroundColor", (0.1, 0.2, 0.4)).toPyObject()
-
-        self.init_ui()
-        self.init_cell_picker()
-
-        self.restoreState(settings.value("mainWindowState").toByteArray())
-
-        #-------------
-        # loading
-        self.show()
-
-        #inputs['format'] = 'nastran'
-        #inputs['input'] = 'solid_bending.bdf'
-        self.load_batch_inputs(inputs)
-        #self.on_load_geometry('solid_bending.bdf', 'nastran')
-        #self.on_load_results('solid_bending.op2')
-        #self.vtk_interactor.Modified()
-
-        if shots:
-        #for shot in shots:
-            self.on_take_screenshot(shots)
-            sys.exit('took screenshot %r' % shots)
-
-        if script:
-            self.on_run_script(script)
-
-    def create_cell_picker(self):
-        # cell picker
-        self.cell_picker = vtk.vtkCellPicker()
-        #self.point_picker = vtk.vtkPointPicker()
-        #self.cell_picker.SetTolerance(0.0005)
-
-    def mousePressEvent(self, ev):
-        print('press x,y = (%s, %s)' % (ev.x(), ev.y()))
-        if self.is_pick:
-            #self.___saveX = ev.x()
-            #self.___saveY = ev.y()
-            pass
-        else:
-            self.iren.mousePressEvent(ev)
-
-    def LeftButtonPressEvent(self, ev):
-        asfd
-
-    def mouseReleaseEvent(self, ev):
-        print('release x,y = (%s, %s)' % (ev.x(), ev.y()))
-        if self.is_pick:
-            pass
-        else:
-            self.iren.mousePressEvent(ev)
-
-    def init_cell_picker(self):
-        self.is_pick = False
-        self.vtk_interactor.SetPicker(self.cell_picker)
-        #self.vtk_interactor.SetPicker(self.point_picker)
-
-        def annotate_cell_picker(object, event):
-            self.log_command("annotate_cell_picker()")
-            picker = self.cell_picker
-            if picker.GetCellId() < 0:
-                #self.picker_textActor.VisibilityOff()
-                pass
-            else:
-                worldPosition = picker.GetPickPosition()
-                cell_id = picker.GetCellId()
-                #ds = picker.GetDataSet()
-                selPt = picker.GetSelectionPoint()
-                self.log_command("annotate_picker()")
-                self.log_info("worldPosition = %s" % str(worldPosition))
-                self.log_info("cell_id = %s" % cell_id)
-                #self.log_info("data_set = %s" % ds)
-                self.log_info("selPt = %s" % str(selPt))
-
-                #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
-                #self.picker_textActor.SetPosition(selPt[:2])
-                #self.picker_textActor.VisibilityOn()
-
-        def annotate_point_picker(object, event):
-            self.log_command("annotate_point_picker()")
-            picker = self.cell_picker
-            if picker.GetPointId() < 0:
-                #self.picker_textActor.VisibilityOff()
-                pass
-            else:
-                worldPosition = picker.GetPickPosition()
-                point_id = picker.GetPointId()
-                #ds = picker.GetDataSet()
-                selPt = picker.GetSelectionPoint()
-                self.log_command("annotate_picker()")
-                self.log_info("worldPosition = %s" % str(worldPosition))
-                self.log_info("point_id = %s" % point_id)
-                #self.log_info("data_set = %s" % ds)
-                self.log_info("selPt = %s" % str(selPt))
-
-                #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
-                #self.picker_textActor.SetPosition(selPt[:2])
-                #self.picker_textActor.VisibilityOn()
-
-        self.cell_picker.AddObserver("EndPickEvent", annotate_cell_picker)
-        #self.point_picker.AddObserver("EndPickEvent", annotate_point_picker)
-
-    def on_cell_picker(self):
-        self.log_command("on_cell_picker()")
-        picker = self.cell_picker
-        worldPosition = picker.GetPickPosition()
-        cell_id = picker.GetCellId()
-        #ds = picker.GetDataSet()
-        selPt = picker.GetSelectionPoint()  # get x,y pixel coordinate
-
-        self.log_info("worldPosition = %s" % str(worldPosition))
-        self.log_info("cell_id = %s" % cell_id)
-        self.log_info("selPt = %s" % str(selPt))
-        #self.log_info("data_set = %s" % ds)
-
-    def _setup_supported_formats(self):
-        self.formats = {
-            'nastran' : is_nastran,
-            'panair' : is_panair,
-            'cart3d' : is_cart3d,
-            'lawgs' : is_lawgs,
-            'plot3d' : is_plot3d,
-            'shabp' : is_shabp,
-            'stl' : is_stl,
-            'tecplot' : is_tecplot,
-            'usm3d' : is_usm3d,
-        }
-        for (name, is_on) in sorted(iteritems(self.formats)):
-            if is_on:
-                self.supported_formats.append(name)
-        print("formats =", self.supported_formats)
+        self.base_window_title = "pyNastran v%s"  % pyNastran.__version__
+        self.supported_formats = []
+        self.modelType = None
 
     def load_batch_inputs(self, inputs):
         if not inputs['format']:
@@ -360,246 +198,6 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         if col.isValid():
             self.background_col = col.getRgbF()[:3]
             self.rend.SetBackground(*self.background_col)
-
-    def about_dialog(self):
-        """ Display about dialog """
-        if fmode == 1:  # PyQt
-            copyright = pyNastran.__pyqt_copyright__
-        else:
-            copyright = pyNastran.__copyright__
-
-        about = [
-            'pyNastran QT GUI',
-            '',
-            'pyNastran v%s' % pyNastran.__version__,
-            copyright,
-            pyNastran.__author__,
-            '',
-            '%s' % pyNastran.__website__,
-            '',
-            'Mouse',
-            'Left Click - Rotate',
-            'Middle Click - Pan/Recenter Rotation Point',
-            'Shift + Left Click - Pan/Recenter Rotation Point',
-            'Right Mouse / Wheel - Zoom',
-            '',
-            'Keyboard Controls',
-            #'r   - reset camera view',
-            #'X/x - snap to x axis',
-            #'Y/y - snap to y axis',
-            #'Z/z - snap to z axis',
-            #'',
-            #'h   - show/hide legend & info',
-            'CTRL+I - take a screenshot (image)',
-            'CTRL+L - cycle op2 results',
-            #'m/M    - scale up/scale down by 1.1 times',
-            #'o/O    - rotate counter-clockwise/clockwise 5 degrees',
-            's      - view model as a surface',
-            'w      - view model as a wireframe',
-            '',
-            'Reload Model:  using the same filename reload the model',
-        ]
-        QtGui.QMessageBox.about(self, "About pyNastran GUI", "\n".join(about))
-
-    def set_window_title(self, msg):
-        msg2 = "pyNastran v%s - "  % pyNastran.__version__
-        msg2 += msg
-        self.setWindowTitle(msg)
-
-    def _build_menubar(self):
-        ## menubar
-        self.menubar = self.menuBar()
-        self.menu_file = self.menubar.addMenu('&File')
-        self.menu_view = self.menubar.addMenu('&View')
-        self.menu_window = self.menubar.addMenu('&Window')
-        self.menu_help = self.menubar.addMenu('&Help')
-
-        ## toolbar
-        self.toolbar = self.addToolBar('Show toolbar')
-        self.toolbar.setObjectName('main_toolbar')
-
-        # prepare actions that will  be used in application
-        actions = {}
-        pth = os.path.join(icon_path, 'tbdf.png')
-        #print(print_bad_path(pth))
-
-        # http://docs.python.org/2/library/sys.html#sys.platform
-        #System  platform value
-        #Linux (2.x and 3.x) 'linux2'
-        #Windows 'win32'
-        #Windows/Cygwin  'cygwin'
-        #Mac OS X    'darwin'
-        #print(sys.platform)
-        #quit_key = 'Alt+F4' if sys.platform in ['win32', 'cygwin'] else 'Ctrl+Q'
-
-        checkables = ['show_info', 'show_debug', 'show_gui', 'show_command']
-        if os.path.exists(script_path):
-            scripts = [script for script in os.listdir(script_path) if '.py' in script ]
-        else:
-            scripts = []
-
-        scripts = tuple(scripts)
-
-        tools = [
-          ('exit', '&Exit', os.path.join(icon_path, 'texit.png'), 'Ctrl+Q', 'Exit application', QtGui.qApp.quit),
-          ('load_geometry', 'Load &Geometry', os.path.join(icon_path, 'load_geometry.png'), 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),  ## @todo no picture...
-          ('load_results', 'Load &Results',   os.path.join(icon_path, 'load_results.png'), 'Ctrl+R', 'Loads a results file', self.on_load_results),  ## @todo no picture...
-          ('back_col', 'Change background color', os.path.join(icon_path, 'tcolorpick.png'), None, 'Choose a background color', self.change_background_col),
-          ('legend', 'Modify legend', os.path.join(icon_path, 'legend.png'), None, 'Set Legend', self.set_legend),
-          ('axis', 'Show/Hide Axis', os.path.join(icon_path, 'axis.png'), None, 'Show/Hide Global Axis', self.on_show_hide_axes),
-
-          ('wireframe', 'Wireframe Model', os.path.join(icon_path, 'twireframe.png'), 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
-          ('surface', 'Surface Model', os.path.join(icon_path, 'tsolid.png'), 's', 'Show Model as a Surface Model', self.on_surface),
-          ('edges', 'Show/Hide Edges', os.path.join(icon_path, 'tedges.png'), 'e', 'Show/Hide Model Edges', self.on_flip_edges),
-
-          ('show_info', 'Show INFO', os.path.join(icon_path, 'show_info.png'), None, 'Show "INFO" messages', self.on_show_info),
-          ('show_debug', 'Show DEBUG', os.path.join(icon_path, 'show_debug.png'), None, 'Show "DEBUG" messages', self.on_show_debug),
-          ('show_gui', 'Show GUI', os.path.join(icon_path, 'show_gui.png'), None, 'Show "GUI" messages', self.on_show_gui),
-          ('show_command', 'Show COMMAND', os.path.join(icon_path, 'show_command.png'), None, 'Show "COMMAND" messages', self.on_show_command),
-
-          ('magnify', 'Magnify', os.path.join(icon_path, 'plus_zoom.png'), 'M', 'Increase Magnfication', self.on_increase_magnification),
-          ('shrink', 'Shrink', os.path.join(icon_path, 'minus_zoom.png'), 'm', 'Decrease Magnfication', self.on_decrease_magnification),
-
-          ('cell_pick', 'Cell Pick', '', 'CTRL+K', 'PickTip', self.on_cell_picker),
-
-          ('rotate_clockwise', 'Rotate Clockwise', os.path.join(icon_path, 'tclock.png'), 'o', 'Rotate Clockwise', self.on_rotate_clockwise),
-          ('rotate_cclockwise', 'Rotate Counter-Clockwise', os.path.join(icon_path, 'tcclock.png'), 'O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
-
-          ('scshot', 'Take a Screenshot', os.path.join(icon_path, 'tcamera.png'), 'CTRL+I', 'Take a Screenshot of current view', self.take_screenshot),
-          ('about', 'About pyNastran GUI', os.path.join(icon_path, 'tabout.png'), 'CTRL+H', 'About pyNastran GUI and help on shortcuts', self.about_dialog),
-          ('creset', 'Reset camera view', os.path.join(icon_path, 'trefresh.png'), 'r', 'Reset the camera view to default', self.on_reset_camera),
-          ('reload', 'Reload model', os.path.join(icon_path, 'treload.png'), 'r', 'Reload the model', self.on_reload),
-
-          ('cycle_res', 'Cycle Results', os.path.join(icon_path, 'cycle_results.png'), 'CTRL+L', 'Changes the result case', self.cycleResults),
-
-          ('x', 'Flips to +X Axis', os.path.join(icon_path, 'plus_x.png'), 'x', 'Flips to +X Axis', lambda: self.update_camera('+x')),
-          ('y', 'Flips to +Y Axis', os.path.join(icon_path, 'plus_y.png'), 'y', 'Flips to +Y Axis', lambda: self.update_camera('+y')),
-          ('z', 'Flips to +Z Axis', os.path.join(icon_path, 'plus_z.png'), 'z', 'Flips to +Z Axis', lambda: self.update_camera('+z')),
-
-          ('X', 'Flips to -X Axis', os.path.join(icon_path, 'minus_x.png'), 'X', 'Flips to -X Axis', lambda: self.update_camera('-x')),
-          ('Y', 'Flips to -Y Axis', os.path.join(icon_path, 'minus_y.png'), 'Y', 'Flips to -Y Axis', lambda: self.update_camera('-y')),
-          ('Z', 'Flips to -Z Axis', os.path.join(icon_path, 'minus_z.png'), 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
-          ('script', 'Run Python script', os.path.join(icon_path, 'python48.png'), None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
-        ]
-
-        if 0:
-            print('script_path =', script_path)
-            print('scripts =', scripts)
-            self.menu_scripts = self.menubar.addMenu('&Scripts')
-            for script in scripts:
-                fname = os.path.join(script_path, script)
-                tool = (script, script, os.path.join(icon_path, 'python48.png'), None, '', lambda: self.on_run_script(fname) )
-                tools.append(tool)
-        else:
-            self.menu_scripts = None
-
-        for (nam, txt, icon, shortcut, tip, func) in tools:
-            #print("name=%s txt=%s icon=%s short=%s tip=%s func=%s" % (nam, txt, icon, short, tip, func))
-            #if icon is None:
-                #print("missing_icon = %r!!!" % nam)
-                #icon = os.path.join(icon_path, 'no.png')
-
-            if icon is None:
-                print("missing_icon = %r!!!" % nam)
-                #print(print_bad_path(icon))
-            #elif not "/" in icon:
-                #ico = QtGui.QIcon.fromTheme(icon)
-            else:
-                ico = QtGui.QIcon()
-                ico.addPixmap(QtGui.QPixmap(icon), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-
-            if nam in checkables:
-                actions[nam] = QtGui.QAction(ico, txt, self, checkable=True)
-                actions[nam].setChecked(True)
-            else:
-                actions[nam] = QtGui.QAction(ico, txt, self)
-
-            if shortcut:
-                actions[nam].setShortcut(shortcut)
-            if tip:
-                actions[nam].setStatusTip(tip)
-            if func:
-                actions[nam].triggered.connect(func)
-
-        actions['toolbar'] = self.toolbar.toggleViewAction()
-        actions['toolbar'].setStatusTip("Show/Hide application toolbar")
-
-        actions['reswidget'] = self.res_dock.toggleViewAction()
-        actions['reswidget'].setStatusTip("Show/Hide results selection")
-
-        actions['logwidget'] = self.log_dock.toggleViewAction()
-        actions['logwidget'].setStatusTip("Show/Hide application log")
-
-        menu_items = [(self.menu_file, ('load_geometry', 'load_results', 'script', '', 'exit')),
-                      (self.menu_view,  ('scshot', '', 'wireframe', 'surface', 'creset', '', 'back_col', 'legend','axis', '', 'show_info', 'show_debug', 'show_gui', 'show_command')),
-                      (self.menu_window,('toolbar', 'reswidget', 'logwidget' )),
-                      (self.menu_help,  ('about',)),
-                      (self.menu_scripts, scripts),
-                      (self.toolbar, ('cell_pick', 'reload', 'load_geometry', 'load_results', 'cycle_res',
-                                      'x', 'y', 'z', 'X', 'Y', 'Z',
-                                      'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
-                                      'wireframe', 'surface', 'edges', 'creset', 'scshot', '', 'exit'))]
-        # populate menus and toolbar
-        for menu, items in menu_items:
-            if menu is None:
-                continue
-            for i in items:
-                if not i:
-                    menu.addSeparator()
-                else:
-                    menu.addAction(actions[i] if isinstance(i, string_types) else i())
-
-    def init_ui(self):
-        """ Initialize user iterface"""
-        self.resize(800, 600)
-        self.statusBar().showMessage('Ready')
-
-        # windows title and aplication icon
-        self.setWindowTitle('Statusbar')
-        self.setWindowIcon(QtGui.QIcon(os.path.join(icon_path, 'logo.png')))
-        self.set_window_title("pyNastran v%s"  % pyNastran.__version__)
-
-        #=========== Results widget ===================
-        self.res_dock = QtGui.QDockWidget("Results", self)
-        self.res_dock.setObjectName("results_obj")
-        self.res_widget = QtGui.QTextEdit()
-        self.res_widget.setReadOnly(True)
-        self.res_dock.setWidget(self.res_widget)
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.res_dock)
-        #=========== Logging widget ===================
-        self.log_dock = QtGui.QDockWidget("Application log", self)
-        self.log_dock.setObjectName("application_log")
-        self.log_widget = QtGui.QTextEdit()
-        self.log_widget.setReadOnly(True)
-        self.log_dock.setWidget(self.log_widget)
-        self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock)
-        #===============================================
-
-        self._build_menubar()
-
-        # right sidebar
-        self.res_dock.hide()
-
-        self.build_vtk_frame()
-
-    def create_vtk_actors(self):
-        # vtk actors
-        self.grid = vtk.vtkUnstructuredGrid()
-        #gridResult = vtk.vtkFloatArray()
-
-        self.grid2 = vtk.vtkUnstructuredGrid()
-        #self.emptyResult = vtk.vtkFloatArray()
-        #self.vectorResult = vtk.vtkFloatArray()
-
-        # edges
-        self.edgeActor = vtk.vtkActor()
-        self.edgeMapper = vtk.vtkPolyDataMapper()
-
-        self.create_cell_picker()
-
-        # scalar bar
-        self.scalarBar = vtk.vtkScalarBarActor()
-        self.create_global_axes()
 
     def create_coordinate_system(self, label='', origin=None, matrix_3x3=None, Type='xyz', add_to_ren=True):
         """
@@ -774,7 +372,6 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
             return
         key = self.caseKeys[self.iCase]
         case = self.resultCases[key]
-        #print("len(case) = %i" % len(case))
         (subcaseID, resultType, vectorSize, location, data_format) = key
 
         data = {
@@ -789,7 +386,6 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         legend = LegendPropertiesWindow(data, win_parent=self)
         legend.show()
         legend.exec_()
-        #print("out_data", data)
 
         if data['clicked_ok']:
             Title = data['name']
@@ -807,7 +403,6 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
                       data_format='%.0f', is_blue_to_red=True, is_discrete=True):
         key = self.caseKeys[self.iCase]
         case = self.resultCases[key]
-        #print("len(case) = %i" % len(case))
         (subcase_id, _resultType, vectorSize, location, _data_format) = key
 
         try:
@@ -1008,6 +603,410 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
         self.scalarBar.VisibilityOff()
         #return scalarBar
 
+    def _create_load_file_dialog(self, qt_wildcard, Title):
+        # getOpenFileName return QString and we want Python string
+        fname, wildcard_level = QtGui.QFileDialog.getOpenFileNameAndFilter(self, Title, self.last_dir, qt_wildcard)
+        return str(wildcard_level), str(fname)
+
+
+class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, Plot3d_io):
+    def __init__(self, inputs):
+        GuiCommon2.__init__(self, inputs)
+
+        NastranIO.__init__(self)
+        Cart3dIO.__init__(self)
+        PanairIO.__init__(self)
+        ShabpIO.__init__(self)
+        LaWGS_IO.__init__(self)
+        STL_IO.__init__(self)
+        TetgenIO.__init__(self)
+        Usm3dIO.__init__(self)
+        Plot3d_io.__init__(self)
+
+        self._setup_supported_formats()
+
+
+        #-------------
+        # logging
+
+        self.log = SimpleLogger('debug', lambda x, y: self.logg_msg(x, y))
+        # logging needs synchronizing, so the messages from different threads
+        # would not be interleave
+        self.log_mutex = QtCore.QReadWriteLock()
+
+        settings = QtCore.QSettings()
+        self.create_vtk_actors()
+
+        # build GUI and restore saved application state
+        self.restoreGeometry(settings.value("mainWindowGeometry").toByteArray())
+        self.background_col = settings.value("backgroundColor", (0.1, 0.2, 0.4)).toPyObject()
+
+        self.init_ui()
+        self.init_cell_picker()
+
+        self.restoreState(settings.value("mainWindowState").toByteArray())
+
+        #-------------
+        # loading
+        self.show()
+
+        self.load_batch_inputs(inputs)
+
+        #-------------
+        shots = inputs['shots']
+        format = inputs['format']  # the active format loaded into the gui
+        input = inputs['input']
+        output = inputs['output']
+        script = inputs['script']
+        #-------------
+
+        if shots is None:
+            shots = []
+
+        if shots:
+        #for shot in shots:
+            self.on_take_screenshot(shots)
+            sys.exit('took screenshot %r' % shots)
+
+        if script:
+            self.on_run_script(script)
+
+    def create_cell_picker(self):
+        # cell picker
+        self.cell_picker = vtk.vtkCellPicker()
+        #self.point_picker = vtk.vtkPointPicker()
+        #self.cell_picker.SetTolerance(0.0005)
+
+    def mousePressEvent(self, ev):
+        print('press x,y = (%s, %s)' % (ev.x(), ev.y()))
+        if self.is_pick:
+            #self.___saveX = ev.x()
+            #self.___saveY = ev.y()
+            pass
+        else:
+            self.iren.mousePressEvent(ev)
+
+    def LeftButtonPressEvent(self, ev):
+        asfd
+
+    def mouseReleaseEvent(self, ev):
+        print('release x,y = (%s, %s)' % (ev.x(), ev.y()))
+        if self.is_pick:
+            pass
+        else:
+            self.iren.mousePressEvent(ev)
+
+    def init_cell_picker(self):
+        self.is_pick = False
+        self.vtk_interactor.SetPicker(self.cell_picker)
+        #self.vtk_interactor.SetPicker(self.point_picker)
+
+        def annotate_cell_picker(object, event):
+            self.log_command("annotate_cell_picker()")
+            picker = self.cell_picker
+            if picker.GetCellId() < 0:
+                #self.picker_textActor.VisibilityOff()
+                pass
+            else:
+                worldPosition = picker.GetPickPosition()
+                cell_id = picker.GetCellId()
+                #ds = picker.GetDataSet()
+                selPt = picker.GetSelectionPoint()
+                self.log_command("annotate_picker()")
+                self.log_info("worldPosition = %s" % str(worldPosition))
+                self.log_info("cell_id = %s" % cell_id)
+                #self.log_info("data_set = %s" % ds)
+                self.log_info("selPt = %s" % str(selPt))
+
+                #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
+                #self.picker_textActor.SetPosition(selPt[:2])
+                #self.picker_textActor.VisibilityOn()
+
+        def annotate_point_picker(object, event):
+            self.log_command("annotate_point_picker()")
+            picker = self.cell_picker
+            if picker.GetPointId() < 0:
+                #self.picker_textActor.VisibilityOff()
+                pass
+            else:
+                worldPosition = picker.GetPickPosition()
+                point_id = picker.GetPointId()
+                #ds = picker.GetDataSet()
+                selPt = picker.GetSelectionPoint()
+                self.log_command("annotate_picker()")
+                self.log_info("worldPosition = %s" % str(worldPosition))
+                self.log_info("point_id = %s" % point_id)
+                #self.log_info("data_set = %s" % ds)
+                self.log_info("selPt = %s" % str(selPt))
+
+                #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
+                #self.picker_textActor.SetPosition(selPt[:2])
+                #self.picker_textActor.VisibilityOn()
+
+        self.cell_picker.AddObserver("EndPickEvent", annotate_cell_picker)
+        #self.point_picker.AddObserver("EndPickEvent", annotate_point_picker)
+
+    def on_cell_picker(self):
+        self.log_command("on_cell_picker()")
+        picker = self.cell_picker
+        worldPosition = picker.GetPickPosition()
+        cell_id = picker.GetCellId()
+        #ds = picker.GetDataSet()
+        selPt = picker.GetSelectionPoint()  # get x,y pixel coordinate
+
+        self.log_info("worldPosition = %s" % str(worldPosition))
+        self.log_info("cell_id = %s" % cell_id)
+        self.log_info("selPt = %s" % str(selPt))
+        #self.log_info("data_set = %s" % ds)
+
+    def _setup_supported_formats(self):
+        self.formats = {
+            'nastran' : is_nastran,
+            'panair' : is_panair,
+            'cart3d' : is_cart3d,
+            'lawgs' : is_lawgs,
+            'plot3d' : is_plot3d,
+            'shabp' : is_shabp,
+            'stl' : is_stl,
+            'tecplot' : is_tecplot,
+            'usm3d' : is_usm3d,
+        }
+        for (name, is_on) in sorted(iteritems(self.formats)):
+            if is_on:
+                self.supported_formats.append(name)
+        print("formats =", self.supported_formats)
+
+    def about_dialog(self):
+        """ Display about dialog """
+        if fmode == 1:  # PyQt
+            copyright = pyNastran.__pyqt_copyright__
+        else:
+            copyright = pyNastran.__copyright__
+
+        about = [
+            'pyNastran QT GUI',
+            '',
+            'pyNastran v%s' % pyNastran.__version__,
+            copyright,
+            pyNastran.__author__,
+            '',
+            '%s' % pyNastran.__website__,
+            '',
+            'Mouse',
+            'Left Click - Rotate',
+            'Middle Click - Pan/Recenter Rotation Point',
+            'Shift + Left Click - Pan/Recenter Rotation Point',
+            'Right Mouse / Wheel - Zoom',
+            '',
+            'Keyboard Controls',
+            #'r   - reset camera view',
+            #'X/x - snap to x axis',
+            #'Y/y - snap to y axis',
+            #'Z/z - snap to z axis',
+            #'',
+            #'h   - show/hide legend & info',
+            'CTRL+I - take a screenshot (image)',
+            'CTRL+L - cycle op2 results',
+            #'m/M    - scale up/scale down by 1.1 times',
+            #'o/O    - rotate counter-clockwise/clockwise 5 degrees',
+            's      - view model as a surface',
+            'w      - view model as a wireframe',
+            '',
+            'Reload Model:  using the same filename reload the model',
+        ]
+        QtGui.QMessageBox.about(self, "About pyNastran GUI", "\n".join(about))
+
+    def set_window_title(self, msg):
+        msg2 = "pyNastran v%s - "  % pyNastran.__version__
+        msg2 += msg
+        self.setWindowTitle(msg)
+
+    def _build_menubar(self):
+        ## menubar
+        self.menubar = self.menuBar()
+        self.menu_file = self.menubar.addMenu('&File')
+        self.menu_view = self.menubar.addMenu('&View')
+        self.menu_window = self.menubar.addMenu('&Window')
+        self.menu_help = self.menubar.addMenu('&Help')
+
+        ## toolbar
+        self.toolbar = self.addToolBar('Show toolbar')
+        self.toolbar.setObjectName('main_toolbar')
+
+        # prepare actions that will  be used in application
+        actions = {}
+        pth = os.path.join(icon_path, 'tbdf.png')
+        #print(print_bad_path(pth))
+
+        checkables = ['show_info', 'show_debug', 'show_gui', 'show_command']
+        if os.path.exists(script_path):
+            scripts = [script for script in os.listdir(script_path) if '.py' in script ]
+        else:
+            scripts = []
+
+        scripts = tuple(scripts)
+
+        tools = [
+          ('exit', '&Exit', os.path.join(icon_path, 'texit.png'), 'Ctrl+Q', 'Exit application', QtGui.qApp.quit),
+          ('load_geometry', 'Load &Geometry', os.path.join(icon_path, 'load_geometry.png'), 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),  ## @todo no picture...
+          ('load_results', 'Load &Results',   os.path.join(icon_path, 'load_results.png'), 'Ctrl+R', 'Loads a results file', self.on_load_results),  ## @todo no picture...
+          ('back_col', 'Change background color', os.path.join(icon_path, 'tcolorpick.png'), None, 'Choose a background color', self.change_background_col),
+          ('legend', 'Modify legend', os.path.join(icon_path, 'legend.png'), None, 'Set Legend', self.set_legend),
+          ('axis', 'Show/Hide Axis', os.path.join(icon_path, 'axis.png'), None, 'Show/Hide Global Axis', self.on_show_hide_axes),
+
+          ('wireframe', 'Wireframe Model', os.path.join(icon_path, 'twireframe.png'), 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
+          ('surface', 'Surface Model', os.path.join(icon_path, 'tsolid.png'), 's', 'Show Model as a Surface Model', self.on_surface),
+          ('edges', 'Show/Hide Edges', os.path.join(icon_path, 'tedges.png'), 'e', 'Show/Hide Model Edges', self.on_flip_edges),
+
+          ('show_info', 'Show INFO', os.path.join(icon_path, 'show_info.png'), None, 'Show "INFO" messages', self.on_show_info),
+          ('show_debug', 'Show DEBUG', os.path.join(icon_path, 'show_debug.png'), None, 'Show "DEBUG" messages', self.on_show_debug),
+          ('show_gui', 'Show GUI', os.path.join(icon_path, 'show_gui.png'), None, 'Show "GUI" messages', self.on_show_gui),
+          ('show_command', 'Show COMMAND', os.path.join(icon_path, 'show_command.png'), None, 'Show "COMMAND" messages', self.on_show_command),
+
+          ('magnify', 'Magnify', os.path.join(icon_path, 'plus_zoom.png'), 'M', 'Increase Magnfication', self.on_increase_magnification),
+          ('shrink', 'Shrink', os.path.join(icon_path, 'minus_zoom.png'), 'm', 'Decrease Magnfication', self.on_decrease_magnification),
+
+          ('cell_pick', 'Cell Pick', '', 'CTRL+K', 'PickTip', self.on_cell_picker),
+
+          ('rotate_clockwise', 'Rotate Clockwise', os.path.join(icon_path, 'tclock.png'), 'o', 'Rotate Clockwise', self.on_rotate_clockwise),
+          ('rotate_cclockwise', 'Rotate Counter-Clockwise', os.path.join(icon_path, 'tcclock.png'), 'O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
+
+          ('scshot', 'Take a Screenshot', os.path.join(icon_path, 'tcamera.png'), 'CTRL+I', 'Take a Screenshot of current view', self.take_screenshot),
+          ('about', 'About pyNastran GUI', os.path.join(icon_path, 'tabout.png'), 'CTRL+H', 'About pyNastran GUI and help on shortcuts', self.about_dialog),
+          ('creset', 'Reset camera view', os.path.join(icon_path, 'trefresh.png'), 'r', 'Reset the camera view to default', self.on_reset_camera),
+          ('reload', 'Reload model', os.path.join(icon_path, 'treload.png'), 'r', 'Reload the model', self.on_reload),
+
+          ('cycle_res', 'Cycle Results', os.path.join(icon_path, 'cycle_results.png'), 'CTRL+L', 'Changes the result case', self.cycleResults),
+
+          ('x', 'Flips to +X Axis', os.path.join(icon_path, 'plus_x.png'), 'x', 'Flips to +X Axis', lambda: self.update_camera('+x')),
+          ('y', 'Flips to +Y Axis', os.path.join(icon_path, 'plus_y.png'), 'y', 'Flips to +Y Axis', lambda: self.update_camera('+y')),
+          ('z', 'Flips to +Z Axis', os.path.join(icon_path, 'plus_z.png'), 'z', 'Flips to +Z Axis', lambda: self.update_camera('+z')),
+
+          ('X', 'Flips to -X Axis', os.path.join(icon_path, 'minus_x.png'), 'X', 'Flips to -X Axis', lambda: self.update_camera('-x')),
+          ('Y', 'Flips to -Y Axis', os.path.join(icon_path, 'minus_y.png'), 'Y', 'Flips to -Y Axis', lambda: self.update_camera('-y')),
+          ('Z', 'Flips to -Z Axis', os.path.join(icon_path, 'minus_z.png'), 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
+          ('script', 'Run Python script', os.path.join(icon_path, 'python48.png'), None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
+        ]
+
+        if 0:
+            print('script_path =', script_path)
+            print('scripts =', scripts)
+            self.menu_scripts = self.menubar.addMenu('&Scripts')
+            for script in scripts:
+                fname = os.path.join(script_path, script)
+                tool = (script, script, os.path.join(icon_path, 'python48.png'), None, '', lambda: self.on_run_script(fname) )
+                tools.append(tool)
+        else:
+            self.menu_scripts = None
+
+        for (nam, txt, icon, shortcut, tip, func) in tools:
+            #print("name=%s txt=%s icon=%s short=%s tip=%s func=%s" % (nam, txt, icon, short, tip, func))
+            #if icon is None:
+                #print("missing_icon = %r!!!" % nam)
+                #icon = os.path.join(icon_path, 'no.png')
+
+            if icon is None:
+                print("missing_icon = %r!!!" % nam)
+                #print(print_bad_path(icon))
+            #elif not "/" in icon:
+                #ico = QtGui.QIcon.fromTheme(icon)
+            else:
+                ico = QtGui.QIcon()
+                ico.addPixmap(QtGui.QPixmap(icon), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+
+            if nam in checkables:
+                actions[nam] = QtGui.QAction(ico, txt, self, checkable=True)
+                actions[nam].setChecked(True)
+            else:
+                actions[nam] = QtGui.QAction(ico, txt, self)
+
+            if shortcut:
+                actions[nam].setShortcut(shortcut)
+            if tip:
+                actions[nam].setStatusTip(tip)
+            if func:
+                actions[nam].triggered.connect(func)
+
+        actions['toolbar'] = self.toolbar.toggleViewAction()
+        actions['toolbar'].setStatusTip("Show/Hide application toolbar")
+
+        actions['reswidget'] = self.res_dock.toggleViewAction()
+        actions['reswidget'].setStatusTip("Show/Hide results selection")
+
+        actions['logwidget'] = self.log_dock.toggleViewAction()
+        actions['logwidget'].setStatusTip("Show/Hide application log")
+
+        menu_items = [(self.menu_file, ('load_geometry', 'load_results', 'script', '', 'exit')),
+                      (self.menu_view,  ('scshot', '', 'wireframe', 'surface', 'creset', '', 'back_col', 'legend','axis', '', 'show_info', 'show_debug', 'show_gui', 'show_command')),
+                      (self.menu_window,('toolbar', 'reswidget', 'logwidget' )),
+                      (self.menu_help,  ('about',)),
+                      (self.menu_scripts, scripts),
+                      (self.toolbar, ('cell_pick', 'reload', 'load_geometry', 'load_results', 'cycle_res',
+                                      'x', 'y', 'z', 'X', 'Y', 'Z',
+                                      'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
+                                      'wireframe', 'surface', 'edges', 'creset', 'scshot', '', 'exit'))]
+        # populate menus and toolbar
+        for menu, items in menu_items:
+            if menu is None:
+                continue
+            for i in items:
+                if not i:
+                    menu.addSeparator()
+                else:
+                    menu.addAction(actions[i] if isinstance(i, string_types) else i())
+
+    def init_ui(self):
+        """ Initialize user iterface"""
+        self.resize(800, 600)
+        self.statusBar().showMessage('Ready')
+
+        # windows title and aplication icon
+        self.setWindowTitle('Statusbar')
+        self.setWindowIcon(QtGui.QIcon(os.path.join(icon_path, 'logo.png')))
+        self.set_window_title("pyNastran v%s"  % pyNastran.__version__)
+
+        #=========== Results widget ===================
+        self.res_dock = QtGui.QDockWidget("Results", self)
+        self.res_dock.setObjectName("results_obj")
+        self.res_widget = QtGui.QTextEdit()
+        self.res_widget.setReadOnly(True)
+        self.res_dock.setWidget(self.res_widget)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.res_dock)
+        #=========== Logging widget ===================
+        self.log_dock = QtGui.QDockWidget("Application log", self)
+        self.log_dock.setObjectName("application_log")
+        self.log_widget = QtGui.QTextEdit()
+        self.log_widget.setReadOnly(True)
+        self.log_dock.setWidget(self.log_widget)
+        self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock)
+        #===============================================
+
+        self._build_menubar()
+
+        # right sidebar
+        self.res_dock.hide()
+
+        self.build_vtk_frame()
+
+    def create_vtk_actors(self):
+        # vtk actors
+        self.grid = vtk.vtkUnstructuredGrid()
+        #gridResult = vtk.vtkFloatArray()
+
+        self.grid2 = vtk.vtkUnstructuredGrid()
+        #self.emptyResult = vtk.vtkFloatArray()
+        #self.vectorResult = vtk.vtkFloatArray()
+
+        # edges
+        self.edgeActor = vtk.vtkActor()
+        self.edgeMapper = vtk.vtkPolyDataMapper()
+
+        self.create_cell_picker()
+
+        # scalar bar
+        self.scalarBar = vtk.vtkScalarBarActor()
+        self.create_global_axes()
+
     def on_reload(self):
         Title = self.Title
         if self.format == 'usm3d':
@@ -1207,13 +1206,6 @@ class MainWindow(QtGui.QMainWindow, GuiCommon, NastranIO, Cart3dIO, ShabpIO, Pan
             msg = '%s - %s' % (self.format, self.infile_name)
         self.set_window_title(msg)
         self.log_command("on_load_geometry(infile_name=%r, geometry_format=%r)" % (infile_name, self.format))
-
-    def _create_load_file_dialog(self, qt_wildcard, Title):
-        # getOpenFileName return QString and we want Python string
-        fname, wildcard_level = QtGui.QFileDialog.getOpenFileNameAndFilter(self, Title, self.last_dir, qt_wildcard)
-        #print("d =", d) # fname, wildcard_level
-        #fname = str(QtGui.QFileDialog.getOpenFileName(self, Title, self.last_dir, wildcard))
-        return str(wildcard_level), str(fname)
 
     def on_load_results(self, out_filename=None):
             geometry_format = self.format
