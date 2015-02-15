@@ -35,6 +35,7 @@ from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO,
     is_nastran, is_cart3d, is_panair, is_lawgs,
     is_shabp, is_stl, is_tecplot, is_tetgen, is_usm3d, is_plot3d)
 from pyNastran.gui.arg_handling import get_inputs
+from pyNastran.gui.gui_common import GuiCommon2
 
 try:
     pkg_path = sys._MEIPASS #@UndefinedVariable
@@ -61,8 +62,6 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 class VTKWindow():
     def __init__(self):
         pass
-
-from pyNastran.gui.gui_common import GuiCommon2
 
 class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, Plot3d_io):
 
@@ -226,7 +225,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
             #'',
             #'h   - show/hide legend & info',
             'CTRL+I - take a screenshot (image)',
-            'CTRL+L - cycle op2 results',
+            'CTRL+L - cycle results',
             #'m/M    - scale up/scale down by 1.1 times',
             #'o/O    - rotate counter-clockwise/clockwise 5 degrees',
             's      - view model as a surface',
