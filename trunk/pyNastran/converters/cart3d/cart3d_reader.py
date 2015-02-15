@@ -22,6 +22,45 @@ def convert_to_float(svalues):
     return values
 
 
+def comp2tri(self, in_filenames, out_filename,
+             is_binary=False, float_fmt='%6.7f'):
+    """
+    Combines multiple Cart3d files (binary or ascii) into a single file.
+
+    :param in_filenames: list of filenames
+    :param out_filename: output filename
+    :param is_binary: is the output filename binary (default=False)
+    :param float_fmt: the format string to use for ascii writing (default='%6.7f')
+
+    ..note:: assumes loads is None
+    """
+    points = []
+    elements = []
+    regions = []
+
+    ne = 0
+    np = 0
+    nr = 0
+    model = Cart3dReader()
+    for infilename in in_filenames:
+        point, element, region, load = model.read_cart3d(infilename)
+        np, three = point.shape
+        ne, three = element.shape
+        nr += len(unique(region))
+        element += np - 1
+        region += nr
+
+        points.append(point)
+        elements.append(element)
+        regions.append(region)
+    points = vstack(points)
+    elements = vstack(elements)
+    regions = vstack(regions)
+    self.write_cart3d(out_filename,
+                      points, elements, regions,
+                      loads=None, is_binary=False, float_fmt=float_fmt)
+
+
 class Cart3DReader(object):
     modelType = 'cart3d'
     isStructured = False

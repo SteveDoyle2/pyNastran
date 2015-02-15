@@ -75,6 +75,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.supported_formats = []
         self.modelType = None
 
+        self.tools = []
+        self.checkables = []
+
+        # initializes tools/checkables
+        self.set_tools()
+
     def set_window_title(self, msg):
         msg2 = "%s - "  % self.base_window_title
         msg2 += msg
@@ -128,8 +134,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if is_failed:
             return
         if output:
-            #print("218-format=%r" % form)
-            #print("219-output=%r" % output)
             self.on_load_results(output)
         self._simulate_key_press('r')
         self.vtk_interactor.Modified()
@@ -139,6 +143,57 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def set_icon_path(self, icon_path):
         self._icon_path = icon_path
+
+    def set_tools(self, tools=None, checkables=None):
+        if checkables is None:
+            checkables = ['show_info', 'show_debug', 'show_gui', 'show_command']
+        if tools is None:
+            tools = [
+              ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', QtGui.qApp.quit),
+              ('load_geometry', 'Load &Geometry', 'load_geometry.png', 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),  ## @todo no picture...
+              ('load_results', 'Load &Results',   'load_results.png', 'Ctrl+R', 'Loads a results file', self.on_load_results),  ## @todo no picture...
+              ('back_col', 'Change background color', 'tcolorpick.png', None, 'Choose a background color', self.change_background_col),
+              ('legend', 'Modify legend', 'legend.png', None, 'Set Legend', self.set_legend),
+              ('axis', 'Show/Hide Axis', 'axis.png', None, 'Show/Hide Global Axis', self.on_show_hide_axes),
+
+              ('wireframe', 'Wireframe Model', 'twireframe.png', 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
+              ('surface', 'Surface Model', 'tsolid.png', 's', 'Show Model as a Surface Model', self.on_surface),
+              ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edges),
+
+              ('show_info', 'Show INFO', 'show_info.png', None, 'Show "INFO" messages', self.on_show_info),
+              ('show_debug', 'Show DEBUG', 'show_debug.png', None, 'Show "DEBUG" messages', self.on_show_debug),
+              ('show_gui', 'Show GUI', 'show_gui.png', None, 'Show "GUI" messages', self.on_show_gui),
+              ('show_command', 'Show COMMAND', 'show_command.png', None, 'Show "COMMAND" messages', self.on_show_command),
+
+              ('magnify', 'Magnify', 'plus_zoom.png', 'M', 'Increase Magnfication', self.on_increase_magnification),
+              ('shrink', 'Shrink', 'minus_zoom.png', 'm', 'Decrease Magnfication', self.on_decrease_magnification),
+
+              ('cell_pick', 'Cell Pick', '', 'CTRL+K', 'PickTip', self.on_cell_picker),
+
+              ('rotate_clockwise', 'Rotate Clockwise', 'tclock.png', 'o', 'Rotate Clockwise', self.on_rotate_clockwise),
+              ('rotate_cclockwise', 'Rotate Counter-Clockwise', 'tcclock.png', 'O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
+
+              ('scshot', 'Take a Screenshot', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.take_screenshot),
+              ('about', 'About pyNastran GUI', 'tabout.png', 'CTRL+H', 'About pyCart3d GUI and help on shortcuts', self.about_dialog),
+              ('creset', 'Reset camera view', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera),
+              ('reload', 'Reload model', 'treload.png', 'r', 'Reload the model', self.on_reload),
+
+              ('cycle_res', 'Cycle Results', 'cycle_results.png', 'CTRL+L', 'Changes the result case', self.cycleResults),
+
+              ('x', 'Flips to +X Axis', 'plus_x.png', 'x', 'Flips to +X Axis', lambda: self.update_camera('+x')),
+              ('y', 'Flips to +Y Axis', 'plus_y.png', 'y', 'Flips to +Y Axis', lambda: self.update_camera('+y')),
+              ('z', 'Flips to +Z Axis', 'plus_z.png', 'z', 'Flips to +Z Axis', lambda: self.update_camera('+z')),
+
+              ('X', 'Flips to -X Axis', 'minus_x.png', 'X', 'Flips to -X Axis', lambda: self.update_camera('-x')),
+              ('Y', 'Flips to -Y Axis', 'minus_y.png', 'Y', 'Flips to -Y Axis', lambda: self.update_camera('-y')),
+              ('Z', 'Flips to -Z Axis', 'minus_z.png', 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
+              ('script', 'Run Python script', 'python48.png', None, 'Runs pyCart3dGUI in batch mode', self.on_run_script),
+            ]
+        self.tools = tools
+        self.checkables = checkables
+
+    def add_tools(self, tools):
+        self.tools += tools
 
     def _build_menubar(self):
         ## menubar
@@ -152,12 +207,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.toolbar = self.addToolBar('Show toolbar')
         self.toolbar.setObjectName('main_toolbar')
 
-        # prepare actions that will  be used in application
-        actions = {}
-        #pth = os.path.join(icon_path, 'tbdf.png')
-        #print(print_bad_path(pth))
-
-        checkables = ['show_info', 'show_debug', 'show_gui', 'show_command']
         if self._script_path is not None and os.path.exists(self._script_path):
             scripts = [script for script in os.listdir(self._script_path) if '.py' in script ]
         else:
@@ -165,93 +214,18 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         scripts = tuple(scripts)
 
-        icon_path = self._icon_path
-        tools = [
-          ('exit', '&Exit', os.path.join(icon_path, 'texit.png'), 'Ctrl+Q', 'Exit application', QtGui.qApp.quit),
-          ('load_geometry', 'Load &Geometry', os.path.join(icon_path, 'load_geometry.png'), 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),  ## @todo no picture...
-          ('load_results', 'Load &Results',   os.path.join(icon_path, 'load_results.png'), 'Ctrl+R', 'Loads a results file', self.on_load_results),  ## @todo no picture...
-          ('back_col', 'Change background color', os.path.join(icon_path, 'tcolorpick.png'), None, 'Choose a background color', self.change_background_col),
-          ('legend', 'Modify legend', os.path.join(icon_path, 'legend.png'), None, 'Set Legend', self.set_legend),
-          ('axis', 'Show/Hide Axis', os.path.join(icon_path, 'axis.png'), None, 'Show/Hide Global Axis', self.on_show_hide_axes),
-
-          ('wireframe', 'Wireframe Model', os.path.join(icon_path, 'twireframe.png'), 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
-          ('surface', 'Surface Model', os.path.join(icon_path, 'tsolid.png'), 's', 'Show Model as a Surface Model', self.on_surface),
-          ('edges', 'Show/Hide Edges', os.path.join(icon_path, 'tedges.png'), 'e', 'Show/Hide Model Edges', self.on_flip_edges),
-
-          ('show_info', 'Show INFO', os.path.join(icon_path, 'show_info.png'), None, 'Show "INFO" messages', self.on_show_info),
-          ('show_debug', 'Show DEBUG', os.path.join(icon_path, 'show_debug.png'), None, 'Show "DEBUG" messages', self.on_show_debug),
-          ('show_gui', 'Show GUI', os.path.join(icon_path, 'show_gui.png'), None, 'Show "GUI" messages', self.on_show_gui),
-          ('show_command', 'Show COMMAND', os.path.join(icon_path, 'show_command.png'), None, 'Show "COMMAND" messages', self.on_show_command),
-
-          ('magnify', 'Magnify', os.path.join(icon_path, 'plus_zoom.png'), 'M', 'Increase Magnfication', self.on_increase_magnification),
-          ('shrink', 'Shrink', os.path.join(icon_path, 'minus_zoom.png'), 'm', 'Decrease Magnfication', self.on_decrease_magnification),
-
-          ('cell_pick', 'Cell Pick', '', 'CTRL+K', 'PickTip', self.on_cell_picker),
-
-          ('rotate_clockwise', 'Rotate Clockwise', os.path.join(icon_path, 'tclock.png'), 'o', 'Rotate Clockwise', self.on_rotate_clockwise),
-          ('rotate_cclockwise', 'Rotate Counter-Clockwise', os.path.join(icon_path, 'tcclock.png'), 'O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
-
-          ('scshot', 'Take a Screenshot', os.path.join(icon_path, 'tcamera.png'), 'CTRL+I', 'Take a Screenshot of current view', self.take_screenshot),
-          ('about', 'About pyNastran GUI', os.path.join(icon_path, 'tabout.png'), 'CTRL+H', 'About pyNastran GUI and help on shortcuts', self.about_dialog),
-          ('creset', 'Reset camera view', os.path.join(icon_path, 'trefresh.png'), 'r', 'Reset the camera view to default', self.on_reset_camera),
-          ('reload', 'Reload model', os.path.join(icon_path, 'treload.png'), 'r', 'Reload the model', self.on_reload),
-
-          ('cycle_res', 'Cycle Results', os.path.join(icon_path, 'cycle_results.png'), 'CTRL+L', 'Changes the result case', self.cycleResults),
-
-          ('x', 'Flips to +X Axis', os.path.join(icon_path, 'plus_x.png'), 'x', 'Flips to +X Axis', lambda: self.update_camera('+x')),
-          ('y', 'Flips to +Y Axis', os.path.join(icon_path, 'plus_y.png'), 'y', 'Flips to +Y Axis', lambda: self.update_camera('+y')),
-          ('z', 'Flips to +Z Axis', os.path.join(icon_path, 'plus_z.png'), 'z', 'Flips to +Z Axis', lambda: self.update_camera('+z')),
-
-          ('X', 'Flips to -X Axis', os.path.join(icon_path, 'minus_x.png'), 'X', 'Flips to -X Axis', lambda: self.update_camera('-x')),
-          ('Y', 'Flips to -Y Axis', os.path.join(icon_path, 'minus_y.png'), 'Y', 'Flips to -Y Axis', lambda: self.update_camera('-y')),
-          ('Z', 'Flips to -Z Axis', os.path.join(icon_path, 'minus_z.png'), 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
-          ('script', 'Run Python script', os.path.join(icon_path, 'python48.png'), None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
-        ]
-
         if 0:
             print('script_path =', script_path)
             print('scripts =', scripts)
             self.menu_scripts = self.menubar.addMenu('&Scripts')
             for script in scripts:
                 fname = os.path.join(script_path, script)
-                tool = (script, script, os.path.join(icon_path, 'python48.png'), None, '', lambda: self.on_run_script(fname) )
+                tool = (script, script, 'python48.png', None, '', lambda: self.on_run_script(fname) )
                 tools.append(tool)
         else:
             self.menu_scripts = None
 
-        for (nam, txt, icon, shortcut, tip, func) in tools:
-            #print("name=%s txt=%s icon=%s short=%s tip=%s func=%s" % (nam, txt, icon, short, tip, func))
-            #if icon is None:
-                #print("missing_icon = %r!!!" % nam)
-                #icon = os.path.join(icon_path, 'no.png')
-
-            if icon is None:
-                print("missing_icon = %r!!!" % nam)
-                #print(print_bad_path(icon))
-            #elif not "/" in icon:
-                #ico = QtGui.QIcon.fromTheme(icon)
-            else:
-                ico = QtGui.QIcon()
-                ico.addPixmap(QtGui.QPixmap(icon), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-
-            if nam in checkables:
-                actions[nam] = QtGui.QAction(ico, txt, self, checkable=True)
-                actions[nam].setChecked(True)
-            else:
-                actions[nam] = QtGui.QAction(ico, txt, self)
-
-            if shortcut:
-                actions[nam].setShortcut(shortcut)
-            if tip:
-                actions[nam].setStatusTip(tip)
-            if func:
-                actions[nam].triggered.connect(func)
-
-        actions['toolbar'] = self.toolbar.toggleViewAction()
-        actions['toolbar'].setStatusTip("Show/Hide application toolbar")
-
-        actions['reswidget'] = self.res_dock.toggleViewAction()
-        actions['reswidget'].setStatusTip("Show/Hide results selection")
+        actions = self._prepare_actions(self._icon_path, self.tools, self.checkables)
 
         menu_window = ['toolbar', 'reswidget']
         menu_view = ['scshot', '', 'wireframe', 'surface', 'creset', '', 'back_col', 'legend','axis', ]
@@ -272,7 +246,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                             'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
                             'wireframe', 'surface', 'edges', 'creset', 'scshot', '', 'exit'))
         ]
-        # populate menus and toolbar
+        self._populate_menu(menu_items, actions)
+
+    def _populate_menu(self, menu_items, actions):
+        """populate menus and toolbar"""
         for menu, items in menu_items:
             if menu is None:
                 continue
@@ -280,7 +257,54 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 if not i:
                     menu.addSeparator()
                 else:
-                    menu.addAction(actions[i] if isinstance(i, string_types) else i())
+                    if not isinstance(i, string_types):
+                        raise RuntimeError('what is this...action i() = %r' % i())
+
+                    action = actions[i] #if isinstance(i, string_types) else i()
+                    menu.addAction(action)
+
+    def _prepare_actions(self, icon_path, tools, checkables):
+        """
+        Prepare actions that will  be used in application in a way
+        that's independent of the  menus & toolbar
+        """
+        actions = {}
+        for (nam, txt, icon, shortcut, tip, func) in tools:
+            #print("name=%s txt=%s icon=%s short=%s tip=%s func=%s" % (nam, txt, icon, short, tip, func))
+            #if icon is None:
+                #print("missing_icon = %r!!!" % nam)
+                #icon = os.path.join(icon_path, 'no.png')
+
+            if icon is None:
+                print("missing_icon = %r!!!" % nam)
+                ico = None
+                #print(print_bad_path(icon))
+            #elif not "/" in icon:
+                #ico = QtGui.QIcon.fromTheme(icon)
+            else:
+                ico = QtGui.QIcon()
+                pth = os.path.join(icon_path, icon)
+                ico.addPixmap(QtGui.QPixmap(pth), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+
+            if nam in checkables:
+                actions[nam] = QtGui.QAction(ico, txt, self, checkable=True)
+                actions[nam].setChecked(True)
+            else:
+                actions[nam] = QtGui.QAction(ico, txt, self)
+
+            if shortcut:
+                actions[nam].setShortcut(shortcut)
+            if tip:
+                actions[nam].setStatusTip(tip)
+            if func:
+                actions[nam].triggered.connect(func)
+
+        actions['toolbar'] = self.toolbar.toggleViewAction()
+        actions['toolbar'].setStatusTip("Show/Hide application toolbar")
+
+        actions['reswidget'] = self.res_dock.toggleViewAction()
+        actions['reswidget'].setStatusTip("Show/Hide results selection")
+        return actions
 
     def logg_msg(self, typ, msg):
         """
@@ -996,3 +1020,27 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         #if key in ['y', 'z', 'X', 'Y', 'Z']:
             #self.update_camera(key)
+
+    def _finish_results_io(self, cases):  # same as Cart3d version
+        self.resultCases = cases
+        self.caseKeys = sorted(cases.keys())
+        #print("ncases =", len(cases))
+        #print("caseKeys =", self.caseKeys)
+
+        if len(self.caseKeys) > 1:
+            #print("finish_io case A")
+            self.iCase = -1
+            self.nCases = len(self.resultCases)  # number of keys in dictionary
+        elif len(self.caseKeys) == 1:
+            #print("finish_io case B")
+            self.iCase = -1
+            self.nCases = 1
+        else:
+            #print("finish_io case C")
+            self.iCase = -1
+            self.nCases = 0
+
+        self.cycleResults_explicit()  # start at nCase=0
+        if self.nCases:
+            self.scalarBar.VisibilityOn()
+            self.scalarBar.Modified()

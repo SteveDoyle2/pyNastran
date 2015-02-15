@@ -139,7 +139,7 @@ class Cart3dIO(object):
 
         #print("nElements = ",nElements)
         cases = self._fill_cart3d_case(cases, ID, nodes, elements, regions, loads)
-        self.finish_nastran_io(cases)
+        self._finish_results_io(cases)
 
     def clear_cart3d(self):
         pass
