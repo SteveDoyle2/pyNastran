@@ -105,7 +105,7 @@ class ShabpIO(object):
 
         self.log.debug("nNodes=%i nElements=%i" % (self.nNodes, self.nElements))
         cases = self.fillShabpGeometryCase(cases, ID, nodes, elements, patches, components, impact, shadow)
-        self.finish_nastran_io(cases)
+        self._finish_results_io(cases)
 
     def clear_shabp(self):
         del self.elements
@@ -180,7 +180,7 @@ class ShabpIO(object):
             #key = (1, 'Cp', 1, 'node', '%.3f')
             #self.resultCases[key] = Cp_array
             pass
-        self.finish_nastran_io(self.resultCases)
+        self._finish_results_io(self.resultCases)
 
 def main():
     def removeOldGeometry(self):

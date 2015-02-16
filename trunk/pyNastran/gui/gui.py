@@ -54,14 +54,12 @@ except:
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/help-hint.png
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/view-refresh-8.png
 
+
 # kills the program when you hit Cntl+C from the command line
+# doesn't save the current state as presumably there's been an error
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-
-class VTKWindow():
-    def __init__(self):
-        pass
 
 class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, Plot3d_io):
 
@@ -80,7 +78,6 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         Plot3d_io.__init__(self)
 
         self._setup_supported_formats()
-
 
         logo = os.path.join(icon_path, 'logo.png')
         self.set_logo(logo)
@@ -534,13 +531,14 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
 
     def closeEvent(self, event):
         """
-        Handling saving state before application when application is being closed.
+        Handling saving state before application when application is
+        being closed.
         """
         settings = QtCore.QSettings()
         settings.setValue("main_WindowGeometry", self.saveGeometry())
         settings.setValue("mainWindowState", self.saveState())
         settings.setValue("backgroundColor", self.background_col)
-
+        QtGui.qApp.quit()
 
 
 def main():

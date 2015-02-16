@@ -11,6 +11,7 @@ PyQt4 unique (PySide is broken)
    - zoom/rotate/snap to axis
    - screenshot
    - auto-reload
+   - preliminary results sidebar
 
  - auto-reload button.  Useful for:
     - modifying Panair file
@@ -55,6 +56,12 @@ PyQt4 unique (PySide is broken)
    - edges
    - nodal or centroidal
 
+ - results sidebar
+   - data is put in the same order as the cycleResults capability (Control+L)
+   - does multiple static nastran subcases work?***
+     - it should be put into a nested tree.  It's not.***
+     
+
 ----------------------------------------------------
 ---Format Specific---
 
@@ -62,8 +69,8 @@ Nastran
 =======
  - load geometry -> .bdf/nas/dat
    - shows CAERO panels
-   - change between sub-element and element using self.is_sub_panels and a script (Qt)
-   - display additional coordinate system IDs (Qt)
+   - change between sub-element and element using self.is_sub_panels and a script
+   - display additional coordinate system IDs
 
  - load results -> op2/f06
    - SOL 101
@@ -153,13 +160,15 @@ Usm3d
    - model_%i.flo will be found on load_geometry; where %i is the biggest number
      - supports autoreload
    - specific results file can be loaded with load results
- - ***Coordinate System
+ - ***Coordinate System (???)
 
 #-------------------------
 #BUGS
 
 Qt
 =======
+- cycling doesn't print out the COMMAND it used
+- probable bug in caclulation of iCase during cycling
 
 nastran
 =======
@@ -189,7 +198,6 @@ plot3d
 
 ----------------------------------------------------
 ---NOT DONE---
-
  - make both nodal/centroidal work regardless of flag
  - make vector results work
  - marker plots (arrows) & scale

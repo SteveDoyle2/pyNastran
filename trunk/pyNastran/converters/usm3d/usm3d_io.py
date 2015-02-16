@@ -198,7 +198,7 @@ class Usm3dIO(object):
         cases = {}
         #cases = self.resultCases
         self._fill_usm3d_results(cases, bcs, mapbc, bcmap_to_bc_name, loads)
-        self.finish_nastran_io(cases)
+        self._finish_results_io(cases)
 
     def clear_usm3d(self):
         pass

@@ -2,6 +2,7 @@ import sys
 
 import pyNastran
 from docopt import docopt
+#from gui.formats import format_string
 
 def run_arg_parse():
     msg  = "Usage:\n"

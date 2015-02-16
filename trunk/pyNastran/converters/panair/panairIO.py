@@ -104,7 +104,7 @@ class PanairIO(object):
         #print "nElements = ",nElements
         loads = []
         cases = self.fillPanairGeometryCase(cases, ID, nodes, elements, regions, loads)
-        self.finish_nastran_io(cases)
+        self._finish_results_io(cases)
 
     def clear_panair(self):
         del self.elements

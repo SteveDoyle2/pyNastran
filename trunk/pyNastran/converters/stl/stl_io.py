@@ -113,7 +113,7 @@ class STL_IO(object):
         ID = 1
 
         cases = self._fill_stl_case(cases, ID, elements)
-        self.finish_nastran_io(cases)
+        self._finish_results_io(cases)
 
     def _fill_stl_case(self, cases, ID, elements):
         return cases

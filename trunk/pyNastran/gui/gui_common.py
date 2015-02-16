@@ -17,6 +17,7 @@ import pyNastran
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.qt_legend import LegendPropertiesWindow
 from pyNastran.utils.log import SimpleLogger
+from pyNastran.gui.ex_tree import Sidebar
 
 
 class GuiCommon2(QtGui.QMainWindow, GuiCommon):
@@ -103,9 +104,17 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #=========== Results widget ===================
         self.res_dock = QtGui.QDockWidget("Results", self)
         self.res_dock.setObjectName("results_obj")
-        self.res_widget = QtGui.QTextEdit()
-        self.res_widget.setReadOnly(True)
+        #self.res_widget = QtGui.QTextEdit()
+        #self.res_widget.setReadOnly(True)
+        #self.res_dock.setWidget(self.res_widget)
+
+        self.res_widget = Sidebar(self)
+        self.res_widget.clear_data()
+        #self.res_widget.update_results(data)
+
+        #self.res_widget.setWidget(sidebar)
         self.res_dock.setWidget(self.res_widget)
+
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.res_dock)
         #=========== Logging widget ===================
         if self.html_logging:
@@ -149,7 +158,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             checkables = ['show_info', 'show_debug', 'show_gui', 'show_command']
         if tools is None:
             tools = [
-              ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', QtGui.qApp.quit),
+              ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', self.closeEvent), # QtGui.qApp.quit
               ('load_geometry', 'Load &Geometry', 'load_geometry.png', 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),  ## @todo no picture...
               ('load_results', 'Load &Results',   'load_results.png', 'Ctrl+R', 'Loads a results file', self.on_load_results),  ## @todo no picture...
               ('back_col', 'Change background color', 'tcolorpick.png', None, 'Choose a background color', self.change_background_col),
@@ -195,17 +204,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def add_tools(self, tools):
         self.tools += tools
 
-    def _build_menubar(self):
-        ## menubar
-        self.menubar = self.menuBar()
+    def _create_menu_items(self, actions):
         self.menu_file = self.menubar.addMenu('&File')
         self.menu_view = self.menubar.addMenu('&View')
         self.menu_window = self.menubar.addMenu('&Window')
         self.menu_help = self.menubar.addMenu('&Help')
-
-        ## toolbar
-        self.toolbar = self.addToolBar('Show toolbar')
-        self.toolbar.setObjectName('main_toolbar')
 
         if self._script_path is not None and os.path.exists(self._script_path):
             scripts = [script for script in os.listdir(self._script_path) if '.py' in script ]
@@ -224,8 +227,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 tools.append(tool)
         else:
             self.menu_scripts = None
-
-        actions = self._prepare_actions(self._icon_path, self.tools, self.checkables)
 
         menu_window = ['toolbar', 'reswidget']
         menu_view = ['scshot', '', 'wireframe', 'surface', 'creset', '', 'back_col', 'legend','axis', ]
@@ -246,6 +247,18 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                             'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
                             'wireframe', 'surface', 'edges', 'creset', 'scshot', '', 'exit'))
         ]
+        return menu_items
+
+    def _build_menubar(self):
+        ## toolbar
+        self.toolbar = self.addToolBar('Show toolbar')
+        self.toolbar.setObjectName('main_toolbar')
+
+        ## menubar
+        self.menubar = self.menuBar()
+
+        actions = self._prepare_actions(self._icon_path, self.tools, self.checkables)
+        menu_items = self._create_menu_items(actions)
         self._populate_menu(menu_items, actions)
 
     def _populate_menu(self, menu_items, actions):
@@ -330,7 +343,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         msg = '   fname=%-25s lineNo=%-4s   %s\n' % (fn, n, msg)
 
-        tim = datetime.datetime.now().strftime('[%d-%m-%Y %H:%M:%S]')
+        tim = datetime.datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
         msg = cgi.escape(msg)
         #message colors
         dark_orange = '#EB9100'
@@ -370,10 +383,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.background_col = col.getRgbF()[:3]
             self.rend.SetBackground(*self.background_col)
 
-    def create_coordinate_system(self, label='', origin=None, matrix_3x3=None, Type='xyz', add_to_ren=True):
+    def create_coordinate_system(self, label='', origin=None, matrix_3x3=None, Type='xyz'):
         """
         Creates a coordinate system
 
+        :param label:
+          the coord id or other unique label (default is empty to indicate the global frame)
         :param origin:
           the origin as (3,) ndarray/list/tuple
         :param matrix_3x3:
@@ -382,14 +397,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
           a string of 'xyz', 'Rtz', 'Rtp' (xyz, cylindrical, spherical)
           that changes the axis names
 
-        ..todo::
-          Type is not supported ('xyz' ONLY)
-        ..todo::
-          Can only set one coordinate system
+        ..todo::  Type is not supported ('xyz' ONLY)
+        ..todo::  Can only set one coordinate system
+
         ..seealso::
-          http://en.wikipedia.org/wiki/Homogeneous_coordinates
-          http://www3.cs.stonybrook.edu/~qin/courses/graphics/camera-coordinate-system.pdf
-          http://www.vtk.org/doc/nightly/html/classvtkTransform.html#ad58b847446d791391e32441b98eff151
+            http://en.wikipedia.org/wiki/Homogeneous_coordinates
+            http://www3.cs.stonybrook.edu/~qin/courses/graphics/camera-coordinate-system.pdf
+            http://www.vtk.org/doc/nightly/html/classvtkTransform.html#ad58b847446d791391e32441b98eff151
         """
         coord_id = self.coord_id
 
@@ -411,8 +425,16 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         axes = vtk.vtkAxesActor()
         axes.SetUserTransform(transform)
 
-        if Type != 'xyz':
-            if Type == 'Rtz':
+        if Type == 'xyz':
+            if label:
+                x = 'x%s' % label
+                y = 'y%s' % label
+                z = 'z%s' % label
+                axes.SetXAxisLabelText(x)
+                axes.SetYAxisLabelText(y)
+                axes.SetZAxisLabelText(z)
+        else:
+            if Type == 'Rtz':  # cylindrical
                 x = u'R'
                 y = u'?'
                 z = 'z'
@@ -421,7 +443,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 y = 'theta'
                 z = 'z'
 
-            elif Type == 'Rtp':
+            elif Type == 'Rtp':  # spherical
                 x = u'R'
                 #y = u'?'
                 #z = u'?'
@@ -438,27 +460,18 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             axes.SetXAxisLabelText(x)
             axes.SetYAxisLabelText(y)
             axes.SetZAxisLabelText(z)
-        else:
-            if label:
-                x = 'x%s' % label
-                y = 'y%s' % label
-                z = 'z%s' % label
-                axes.SetXAxisLabelText(x)
-                axes.SetYAxisLabelText(y)
-                axes.SetZAxisLabelText(z)
 
         self.transform[coord_id] = transform
         self.axes[coord_id] = axes
         self.coord_id += 1
-        if add_to_ren:
-            self.rend.AddActor(axes)
+        self.rend.AddActor(axes)
         return self.coord_id
 
     def create_global_axes(self):
         self.transform = {}
         self.axes = {}
         #self.create_coordinate_system(origin=None, matrix_3x3=None, Type='Rtp')
-        self.create_coordinate_system(label='', origin=None, matrix_3x3=None, Type='xyz', add_to_ren=False)
+        self.create_coordinate_system(label='', origin=None, matrix_3x3=None, Type='xyz')
 
     def on_show_hide_axes(self):
         # this method should handle all the coords when
@@ -472,6 +485,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self._is_axes_shown = not(self._is_axes_shown)
 
     def create_vtk_actors(self):
+        self.rend = vtk.vtkRenderer()
+
         # vtk actors
         self.grid = vtk.vtkUnstructuredGrid()
         #gridResult = vtk.vtkFloatArray()
@@ -506,15 +521,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.setCentralWidget(vtk_frame)
 
         #=============================================================
-        self.rend = vtk.vtkRenderer()
         self.vtk_interactor.GetRenderWindow().AddRenderer(self.rend)
         self.vtk_interactor.GetRenderWindow().Render()
         #self.load_nastran_geometry(None, None)
         self.textActors = {}
 
 
-        for cid, axes in self.axes.iteritems():
-            self.rend.AddActor(axes)
+        #for cid, axes in self.axes.iteritems():
+            #self.rend.AddActor(axes)
         self.addGeometry()
         self.addAltGeometry()
         self.rend.GetActiveCamera().ParallelProjectionOn()
@@ -1044,3 +1058,22 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if self.nCases:
             self.scalarBar.VisibilityOn()
             self.scalarBar.Modified()
+
+        #data = [
+        #    ('A',[]),
+        #    ('B',[]),
+        #    ('C',[]),
+        #]
+
+        #self.caseKeys= [(1, 'ElementID', 1, 'centroid', '%.0f'), (1, 'Region', 1, 'centroid', '%.0f')]
+        data = []
+        for key in self.caseKeys:
+            t = (key[1], [])
+            data.append(t)
+        #data = self.caseKeys
+        #print(data)
+        self.res_widget.update_results(data)
+        method = 'centroid' if self.is_centroidal else 'nodal'
+
+        data2 = [(method, [])]
+        self.res_widget.update_methods(data2)
