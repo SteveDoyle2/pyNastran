@@ -1,9 +1,10 @@
+raise NotImplementedError()
+
 from six import iteritems
 from six.moves import range
 import vtk
 from vtk import vtkQuad
 from pyNastran.converters.plot3d.plot3d import Plot3d
-
 
 class Plot3d_io(object):
     def __init__(self):

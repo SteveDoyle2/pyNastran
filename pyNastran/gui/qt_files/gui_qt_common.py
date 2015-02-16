@@ -63,56 +63,64 @@ class GuiCommon(object):
 
         foundCases = self.incrementCycle(result_name)
         if foundCases:
-            try:
-                key = self.caseKeys[self.iCase]
-            except:
-                print('icase=%s caseKeys=%s' % (self.iCase, str(self.caseKeys)))
-                raise
-            case = self.resultCases[key]
-            (subcaseID, resultType, vectorSize, location, data_format) = key
-
-            try:
-                caseName = self.iSubcaseNameMap[subcaseID]
-            except KeyError:
-                caseName = ('case=NA', 'label=NA')
-            (subtitle, label) = caseName
-
-            print("subcaseID=%s resultType=%r subtitle=%r label=%r" % (subcaseID, resultType, subtitle, label))
-
-            #================================================
-            gridResult = self.build_grid_result(vectorSize, location)
-            #================================================
-            if isinstance(case, ndarray):
-                max_value = case.max()
-                min_value = case.min()
-            else:
-                raise RuntimeError('list-based results have been disabled; use numpy.array')
-                print('resultType=%r should really use numpy arrays...' % resultType)
-                max_value = case[0]
-                min_value = case[0]
-                for value in case:
-                    max_value = max(value, max_value)
-                    min_value = min(value, min_value)
-
-            norm_value, nValueSet = self.set_grid_values(gridResult, case, vectorSize, min_value, max_value)
-            self.update_text_actors(case, subcaseID, subtitle, min_value, max_value, label)
-            self.UpdateScalarBar(resultType, min_value, max_value, norm_value, data_format, is_blue_to_red=True)
-            #self.scalarBar.SetNumberOfLabels(nValueSet)
-            #self.scalarBar.SetMaximumNumberOfColors(nValueSet)
-            #prop = self.scalarBar.GetLabelTextProperty()
-            #fontSize = prop.GetFontSize()
-            #print("fontSize = %s" % fontSize)
-            #prop.SetFontSize(40)
-
-            # TODO results can only go from centroid->node and not back to
-            ## centroid
-            #print(dir(self.grid))
-            #self.grid.Reset()
-            self.final_grid_update(gridResult, key, subtitle, label)
-            if explicit:
-                self.log_command('cycleResults(result_name=%r)' % resultType)
+            self._set_case(result_name, self.iCase, explicit=explicit, cycle=True)
         #else:
             #self.log_command(""didn't find case...")
+
+    def _set_case(self, result_name, iCase, explicit=False, cycle=False):
+        if not cycle and iCase == self.iCase:
+            #print('double...')
+            return  # don't click the button twice
+
+        try:
+            key = self.caseKeys[iCase]
+        except:
+            print('icase=%s caseKeys=%s' % (iCase, str(self.caseKeys)))
+            raise
+        self.iCase = iCase
+        case = self.resultCases[key]
+        (subcaseID, resultType, vectorSize, location, data_format) = key
+
+        try:
+            caseName = self.iSubcaseNameMap[subcaseID]
+        except KeyError:
+            caseName = ('case=NA', 'label=NA')
+        (subtitle, label) = caseName
+
+        print("subcaseID=%s resultType=%r subtitle=%r label=%r" % (subcaseID, resultType, subtitle, label))
+
+        #================================================
+        gridResult = self.build_grid_result(vectorSize, location)
+        #================================================
+        if isinstance(case, ndarray):
+            max_value = case.max()
+            min_value = case.min()
+        else:
+            raise RuntimeError('list-based results have been disabled; use numpy.array')
+            print('resultType=%r should really use numpy arrays...' % resultType)
+            max_value = case[0]
+            min_value = case[0]
+            for value in case:
+                max_value = max(value, max_value)
+                min_value = min(value, min_value)
+
+        norm_value, nValueSet = self.set_grid_values(gridResult, case, vectorSize, min_value, max_value)
+        self.update_text_actors(case, subcaseID, subtitle, min_value, max_value, label)
+        self.UpdateScalarBar(resultType, min_value, max_value, norm_value, data_format, is_blue_to_red=True)
+        #self.scalarBar.SetNumberOfLabels(nValueSet)
+        #self.scalarBar.SetMaximumNumberOfColors(nValueSet)
+        #prop = self.scalarBar.GetLabelTextProperty()
+        #fontSize = prop.GetFontSize()
+        #print("fontSize = %s" % fontSize)
+        #prop.SetFontSize(40)
+
+        # TODO results can only go from centroid->node and not back to
+        ## centroid
+        #print(dir(self.grid))
+        #self.grid.Reset()
+        self.final_grid_update(gridResult, key, subtitle, label)
+        if explicit:
+            self.log_command('cycleResults(result_name=%r)' % resultType)
 
     def set_grid_values(self, gridResult, case, vectorSize, min_value, max_value, is_blue_to_red=True):
         # flips sign to make colors go from blue -> red
@@ -171,13 +179,28 @@ class GuiCommon(object):
         self.grid.Modified()
         self.vtk_interactor.Render()
 
+    def _get_icase(self, result_name):
+        found_case = False
+        print(self.resultCases.keys())
+        i = 0
+        for icase, cases in sorted(iteritems(self.resultCases)):
+            #print(cases[1])
+            if result_name == icase[1]:
+                found_case = True
+                iCase = i
+                break
+            i += 1
+        assert found_case == True, 'result_name=%r' % result_name
+        #print('***icase = %s' % iCase)
+        return iCase
+
     def incrementCycle(self, result_name=False):
         found_case = False
         if result_name is not False and result_name is not None:
             for icase, cases in sorted(iteritems(self.resultCases)):
                 if result_name == cases[1]:
                     found_case = True
-                    self.iCase = icase
+                    self.iCase = icase  # no idea why this works...if it does...
 
         if not found_case:
             #print('iCase=%s nCases=%s' % (self.iCase, self.nCases))

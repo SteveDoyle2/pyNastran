@@ -47,12 +47,13 @@ except ImportError:
 try:
     from pyNastran.converters.plot3d.plot3d_io import Plot3d_io
     is_plot3d = True
-except ImportError:
+#except ImportError:
+except:
     class Plot3d_io(object):
         def __init__(self):
             pass
     is_plot3d = False
-    raise
+    #raise
 
 try:
     from pyNastran.converters.shabp.shabp_io import ShabpIO

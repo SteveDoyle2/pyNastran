@@ -191,13 +191,19 @@ class NastranIO(object):
                 xyz_cid0[i, :] = xyz
             self.xyz_cid0 = xyz_cid0
 
+        cid_types = {
+            'R' : 'xyz',
+            'C' : 'Rtz',
+            'S' : 'Rtp',
+        }
         for cid, coord in sorted(iteritems(model.coords)):
             if cid == 0:
                 continue
             if cid in self.show_cids:
                 origin = coord.origin
                 beta = coord.beta()
-                self.create_coordinate_system(label=cid, origin=origin, matrix_3x3=beta, Type='xyz', add_to_ren=True)
+                Type = cid_types[coord.Type]
+                self.create_coordinate_system(label=cid, origin=origin, matrix_3x3=beta, Type=Type)
             else:
                 print('skipping cid=%s; use a script and set self.show_cids=[%s] to view' % (cid, cid))
 
@@ -678,31 +684,7 @@ class NastranIO(object):
         self.log.info(cases.keys())
         #self.finish_io(cases)
 
-        self.finish_nastran_io(cases)
-
-    def finish_nastran_io(self, cases):  # same as Cart3d version
-        self.resultCases = cases
-        self.caseKeys = sorted(cases.keys())
-        print("ncases =", len(cases))
-        print("caseKeys =", self.caseKeys)
-
-        if len(self.caseKeys) > 1:
-            print("finish_io case A")
-            self.iCase = -1
-            self.nCases = len(self.resultCases)  # number of keys in dictionary
-        elif len(self.caseKeys) == 1:
-            print("finish_io case B")
-            self.iCase = -1
-            self.nCases = 1
-        else:
-            print("finish_io case C")
-            self.iCase = -1
-            self.nCases = 0
-
-        self.cycleResults_explicit()  # start at nCase=0
-        if self.nCases:
-            self.scalarBar.VisibilityOn()
-            self.scalarBar.Modified()
+        self._finish_results_io(cases)
 
     def _plot_pressures(self, model, cases):
         """
@@ -868,7 +850,7 @@ class NastranIO(object):
             cases = self.fill_oug_oqg_case(cases, model, subcaseID)
             cases = self.fill_stress_case(cases, model, subcaseID)
 
-        self.finish_nastran_io(cases)
+        self._finish_results_io(cases)
 
     def fill_oug_oqg_case(self, cases, model, subcaseID):
         if self.is_nodal: # nodal results don't work with centroidal ones

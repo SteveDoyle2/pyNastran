@@ -24,8 +24,12 @@ from pyNastran.gui.arg_handling import get_inputs
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.gui_common import GuiCommon2
 
+
+# kills the program when you hit Cntl+C from the command line
+# doesn't save the current state as presumably there's been an error
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
+
 
 if not is_cart3d:
     raise ImportError()
@@ -324,12 +328,14 @@ class MainWindow(GuiCommon2, Cart3dIO):
 
     def closeEvent(self, event):
         """
-        Handling saving state before application when application is being closed.
+        Handling saving state before application when application is
+        being closed.
         """
         settings = QtCore.QSettings()
         settings.setValue("main_WindowGeometry", self.saveGeometry())
         settings.setValue("mainWindowState", self.saveState())
         settings.setValue("backgroundColor", self.background_col)
+        QtGui.qApp.quit()
 
 def main():
     app = QtGui.QApplication(sys.argv)

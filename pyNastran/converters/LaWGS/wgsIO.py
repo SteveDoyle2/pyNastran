@@ -92,7 +92,7 @@ class LaWGS_IO(object):
 
         #print("nElements = %s" % nElements)
         #cases = self._fill_lawgs_case(cases, ID, regions, loads)
-        self.finish_nastran_io(cases)
+        self._finish_results_io(cases)
 
     def _fill_lawgs_case(self, cases, ID, regions, loads):
         pass

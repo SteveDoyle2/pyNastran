@@ -90,7 +90,7 @@ class Cart3dIO(object):
         nnodes, three = nodes.shape
 
         nid = 0
-        print("nnodes=%s" % nnodes)
+        #print("nnodes=%s" % nnodes)
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
