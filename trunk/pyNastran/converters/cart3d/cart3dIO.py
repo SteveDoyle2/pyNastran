@@ -138,8 +138,9 @@ class Cart3dIO(object):
         ID = 1
 
         #print("nElements = ",nElements)
-        cases = self._fill_cart3d_case(cases, ID, nodes, elements, regions, loads)
-        self._finish_results_io(cases)
+        form, cases = self._fill_cart3d_case(cases, ID, nodes, elements, regions, loads)
+        #self._finish_results_io(cases)
+        self._finish_results_io2(form, cases)
 
     def clear_cart3d(self):
         pass
@@ -169,15 +170,30 @@ class Cart3dIO(object):
 
     def _fill_cart3d_case(self, cases, ID, nodes, elements, regions, loads):
         print("is_centroidal=%s isNodal=%s" % (self.is_centroidal, self.is_nodal))
-        assert self.is_centroidal!= self.is_nodal
+        assert self.is_centroidal != self.is_nodal
 
         result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
-                                      'rhoU', 'rhoV', 'rhoW', 'rhoE']
+                        'rhoU', 'rhoV', 'rhoW', 'rhoE']
         nelements, three = elements.shape
         nnodes, three = nodes.shape
+
+        cases_new = []
+        new = False
+        results_form = []
         if self.is_centroidal:
-            cases[(ID, 'Region', 1, 'centroid', '%.0f')] = regions
-            cases[(ID, 'ElementID', 1, 'centroid', '%.0f')] = arange(1, nelements+1)
+            geometry_form = [
+                ('Region', 0, []),
+                ('ElementID', 1, []),
+            ]
+
+            eids = arange(1, nelements + 1)
+
+            if new:
+                cases_new[0] = (ID, regions, 'Region', 'centroid', '%.0f')
+                cases_new[1] = (ID, eids, 'ElementID', 'centroid', '%.0f')
+            else:
+                cases[(ID, 0, 'Region', 1, 'centroid', '%.0f')] = regions
+                cases[(ID, 1, 'ElementID', 1, 'centroid', '%.0f')] = eids
 
             if 0:
                 from pyNastran.converters.cart3d.cart3d_to_quad import get_normal_groups
@@ -188,22 +204,57 @@ class Cart3dIO(object):
                         continue
                     for ni in normal_group:
                         groups[ni] = igroup + 1
-                cases[(ID, 'Quad Group', 1, 'centroid', '%.0f')] = groups
+                cases[(ID, 2, 'Quad Group', 1, 'centroid', '%.0f')] = groups
+                geometry_form.append('Quad Group', 2, [])
+
 
             # these are actually nodal results, so we convert to the centroid
             # by averaging the data (e.g. the Cp data)
-            for key in result_names:
-                if key in loads:
-                    nodal_data = loads[key]
+            i = 2
+            for result_name in result_names:
+                if result_name in loads:
+                    nodal_data = loads[result_name]
                     n1 = elements[:, 0]
                     n2 = elements[:, 1]
                     n3 = elements[:, 2]
-                    elemental_result = (nodal_data[n1] + nodal_data[n2] + nodal_data[n3]) / 3.0
-                    cases[(ID, key, 1, 'centroid', '%.3f')] = elemental_result
+                    result = (nodal_data[n1] + nodal_data[n2] + nodal_data[n3]) / 3.0
+                    if new:
+                        cases_new[i] = (result, result_name, 1, 'centroid', '%.3f')
+                    else:
+                        cases[(ID, i, result_name, 1, 'centroid', '%.3f')] = result
+                    results_form.append((result_name, i, []))
+                    i += 1
+
         elif self.is_nodal:
-            cases[(ID, 'NodeID', 1, 'node', '%.0f')] = arange(1, nnodes+1)
-            for key in result_names:
-                if key in loads:
-                    nodal_data = loads[key]
-                    cases[(ID, key, 1, 'node', '%.3f')] = nodal_data
-        return cases
+            geometry_form = [
+                #('Region', 0, []),
+                ('NodeID', 0, []),
+            ]
+            nids = arange(1, nnodes+1)
+            if new:
+                #cases_new[0] = (regions, 'Region', 'centroid', '%.0f')
+                cases_new[0] = (ID, nids, 'NodeID', 'node', '%.0f')
+            else:
+                cases[(ID, 0, 'NodeID', 1, 'node', '%.0f')] = nids
+
+            i = 1
+            for result_name in result_names:
+                if result_name in loads:
+                    nodal_data = loads[result_name]
+                    if new:
+                        cases_new[i] = (result, result_name, 1, 'node', '%.3f')
+                    else:
+                        cases[(ID, i, result_name, 1, 'node', '%.3f')] = nodal_data
+                    results_form.append((result_name, i, []))
+                    i += 1
+
+        form = [
+            ('Geometry', None, geometry_form),
+        ]
+        if len(results_form):
+            form.append(('Results', None, results_form))
+        return form, cases
+        if new:
+            obj = Cart3dResultsObj(form, new_cases)
+            obj.get_result_index_by_form_key()
+            obj.get_result_by_index(1)
