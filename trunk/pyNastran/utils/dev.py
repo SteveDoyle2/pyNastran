@@ -75,7 +75,7 @@ def write_class(name, obj, nspaces=0, nbase=0):
     return msg
 
 
-def write_value(obj, nspaces, nbase=0, isClass=False):
+def write_object_attributes(attr, obj, nspaces, nbase=0, isClass=False):
     msg = ''
     if isinstance(obj, int) or isinstance(obj, float) or obj is None:
         msg += '%s' % (str(obj))
@@ -91,7 +91,7 @@ def write_value(obj, nspaces, nbase=0, isClass=False):
         msg += write_dict(obj, nspaces, nbase, isClass)
     else:
         objectType = type(obj)
-        raise RuntimeError('objectType=%s is not supported; value=%s' % (objectType, obj))
+        #raise RuntimeError('objectType=%s is not supported; value=%s' % (objectType, obj))
     return msg
 
 
