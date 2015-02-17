@@ -79,7 +79,10 @@ class GuiCommon(object):
             raise
         self.iCase = iCase
         case = self.resultCases[key]
-        (subcaseID, resultType, vectorSize, location, data_format) = key
+        if len(key) == 5:
+            (subcaseID, resultType, vectorSize, location, data_format) = key
+        else:
+            (subcaseID, j, resultType, vectorSize, location, data_format) = key
 
         try:
             caseName = self.iSubcaseNameMap[subcaseID]
@@ -115,7 +118,7 @@ class GuiCommon(object):
         #prop.SetFontSize(40)
 
         # TODO results can only go from centroid->node and not back to
-        ## centroid
+        # centroid
         #print(dir(self.grid))
         #self.grid.Reset()
         self.final_grid_update(gridResult, key, subtitle, label)
@@ -146,7 +149,10 @@ class GuiCommon(object):
         return norm_value, nValueSet
 
     def final_grid_update(self, gridResult, key, subtitle, label):
-        (subcaseID, resultType, vectorSize, location, data_format) = key
+        if len(key) == 5:
+            (subcaseID, resultType, vectorSize, location, data_format) = key
+        else:
+            (subcaseID, j, resultType, vectorSize, location, data_format) = key
         npoints = self.nPoints()
         ncells = self.nCells()
 

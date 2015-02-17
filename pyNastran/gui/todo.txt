@@ -46,8 +46,7 @@ PyQt4 unique (PySide is broken)
 
  - minor features
    - default filename for pictures
-   - pretty title that tells you your "format - infile - outfile"
-   - window title
+   - pretty window title that tells you your "format - infile - outfile"
 
  - zoom/rotate/snap buttons
  - command line
@@ -169,6 +168,8 @@ Qt
 =======
 - cycling doesn't print out the COMMAND it used
 - probable bug in caclulation of iCase during cycling
+- results selector window doesn't update on cycling
+- loading a new geometry over a result doesn't overwrite the old name
 
 nastran
 =======
@@ -204,7 +205,6 @@ plot3d
  - displacement plots & scale
  - cell picker to get element/node info
  - usm3d surface/boundary layer/incomplete volume
- - results selector window rather than cycling
  - load file from * with a specific file type
  - zoom/rotate/snap hotkeys
  - unbreak hotkeys (p, r, ???)

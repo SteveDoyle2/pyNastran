@@ -46,16 +46,18 @@ class QTreeView2(QTreeView):
         if self.single:
             return True, self.data[0]
 
-        keys = []
+        #keys = []
         data = deepcopy(self.data)
         for row in self.old_rows:
             key = data[row][0]
             #print('  %r' % key)
-            data = data[row][1]
-            keys.append(key)
+            irow = data[row][1]
+            data = data[row][2]
+            #keys.append(key)
+
         if data:
             return False, None
-        return True, keys
+        return True, irow
 
     def set_single(self, single):
         self.single = single
@@ -154,22 +156,23 @@ class Sidebar(QWidget):
     +--------------+
 
     """
-    def __init__(self, parent):
+    def __init__(self, parent, debug=False):
         QWidget.__init__(self)
         self.parent = parent
+        self.debug = debug
 
         data = []
         data = [
-            ("Alice", [
-                ("Keys", []),
-                ("Purse", [
-                    ("Cellphone", [])
+            ("Alice", None, [
+                ("Keys", 1, []),
+                ("Purse", 2, [
+                    ("Cellphone", 3, [])
                     ])
                 ]),
-            ("Bob", [
-                ("Wallet", [
-                    ("Credit card", []),
-                    ("Money", [])
+            ("Bob", None, [
+                ("Wallet", None, [
+                    ("Credit card", 4, []),
+                    ("Money", 5, [])
                     ])
                 ]),
             ]
@@ -177,9 +180,9 @@ class Sidebar(QWidget):
         self.result_case_window = ResultsWindow('Case/Results', data)
 
         data = [
-            ('A', []),
-            #('B', []),
-            #('C', []),
+            ('A', 1, []),
+            #('B', 2, []),
+            #('C', 3, []),
         ]
         self.result_data_window = ResultsWindow('Method', data)
 
@@ -222,22 +225,31 @@ class Sidebar(QWidget):
         data = self.result_data_window.data
         validB, keysB = self.result_data_window.treeView.get_row()
         if validA and validB:
-            #print('  rows1 = %s' % self.result_case_window.treeView.old_rows)
-            #print('        = %s' % str(keysA))
-            #print('  rows2 = %s' % self.result_data_window.treeView.old_rows)
-            #print('        = %s' % str(keysB))
-            self.update_vtk_window(keysA, keysB)
+            if self.debug:
+                print('  rows1 = %s' % self.result_case_window.treeView.old_rows)
+                print('        = %s' % str(keysA))
+                print('  rows2 = %s' % self.result_data_window.treeView.old_rows)
+                print('        = %s' % str(keysB))
+            else:
+                self.update_vtk_window(keysA, keysB)
 
     def update_vtk_window(self, keysA, keysB):
-        for i, key in enumerate(self.parent.caseKeys):
-            if key[1] == keysA[0]:
-                break
-        #print('i=%s key=%s' % (i, key[1]))
-        #self.parent.update_vtk_window_by_key(i)
-        result_name = key[1]
-        #self.parent.cycleResults_explicit(result_name=result_name, explicit=True)
-        j = self.parent._get_icase(result_name)
-        self.parent._set_case(result_name, j, explicit=True)
+        #print('update')
+        if 0:
+            #print('keysA = %s' % str(keysA))
+            for i, key in enumerate(self.parent.caseKeys):
+                #print('  i=%s key=%s' % (i, key))
+                if key[1] == keysA[0]:
+                    break
+            #print('*i=%s key=%s' % (i, str(key)))
+            #self.parent.update_vtk_window_by_key(i)
+            result_name = key[1]
+            #self.parent.cycleResults_explicit(result_name=result_name, explicit=True)
+            #j = self.parent._get_icase(result_name)
+            #j = i
+        i = keysA
+        result_name = 'cat'
+        self.parent._set_case(result_name, i, explicit=True)
 
 class ResultsWindow(QWidget):
 
@@ -276,7 +288,8 @@ class ResultsWindow(QWidget):
     def addItems(self, parent, elements, level=0, count_check=False):
         nelements = len(elements)
         redo = False
-        for text, children in elements:
+        #print(elements[0])
+        for text, i, children in elements:
             #print('text=%s' % text)
             item = QStandardItem(text)
             parent.appendRow(item)
@@ -307,7 +320,7 @@ class ResultsWindow(QWidget):
 
 def main():
     app = QApplication(sys.argv)
-    window = Sidebar(app)
+    window = Sidebar(app, debug=True)
     window.show()
     sys.exit(app.exec_())
 

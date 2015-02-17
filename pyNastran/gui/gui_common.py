@@ -576,7 +576,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             return
         key = self.caseKeys[self.iCase]
         case = self.resultCases[key]
-        (subcaseID, resultType, vectorSize, location, data_format) = key
+        if len(key) == 5:
+            (subcaseID, resultType, vectorSize, location, data_format) = key
+        else:
+            (subcaseID, i, resultType, vectorSize, location, data_format) = key
 
         data = {
             'name' : resultType,
@@ -1035,7 +1038,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #if key in ['y', 'z', 'X', 'Y', 'Z']:
             #self.update_camera(key)
 
-    def _finish_results_io(self, cases):  # same as Cart3d version
+    def _finish_results_io2(self, form, cases):
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
         #print("ncases =", len(cases))
@@ -1072,8 +1075,52 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             data.append(t)
         #data = self.caseKeys
         #print(data)
+        self.res_widget.update_results(form)
+        method = 'centroid' if self.is_centroidal else 'nodal'
+
+        data2 = [(method, None, [])]
+        self.res_widget.update_methods(data2)
+
+    def _finish_results_io(self, cases):
+        self.resultCases = cases
+        self.caseKeys = sorted(cases.keys())
+        #print("ncases =", len(cases))
+        #print("caseKeys =", self.caseKeys)
+
+        if len(self.caseKeys) > 1:
+            #print("finish_io case A")
+            self.iCase = -1
+            self.nCases = len(self.resultCases)  # number of keys in dictionary
+        elif len(self.caseKeys) == 1:
+            #print("finish_io case B")
+            self.iCase = -1
+            self.nCases = 1
+        else:
+            #print("finish_io case C")
+            self.iCase = -1
+            self.nCases = 0
+
+        self.cycleResults_explicit()  # start at nCase=0
+        if self.nCases:
+            self.scalarBar.VisibilityOn()
+            self.scalarBar.Modified()
+
+        #data = [
+        #    ('A',[]),
+        #    ('B',[]),
+        #    ('C',[]),
+        #]
+
+        #self.caseKeys= [(1, 'ElementID', 1, 'centroid', '%.0f'), (1, 'Region', 1, 'centroid', '%.0f')]
+        data = []
+        for i, key in enumerate(self.caseKeys):
+            t = (key[1], i, [])
+            data.append(t)
+            i += 1
+        #data = self.caseKeys
+        #print(data)
         self.res_widget.update_results(data)
         method = 'centroid' if self.is_centroidal else 'nodal'
 
-        data2 = [(method, [])]
+        data2 = [(method, None, [])]
         self.res_widget.update_methods(data2)
