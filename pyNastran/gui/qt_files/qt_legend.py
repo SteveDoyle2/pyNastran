@@ -3,6 +3,7 @@ from PyQt4 import QtCore, QtGui
 class LegendPropertiesWindow(QtGui.QDialog):
 
     def __init__(self, data, win_parent=None):
+        self.win_parent = win_parent
         #Init the base class
         self._default_name = data['name']
         self._default_min = data['min']
@@ -67,6 +68,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
         checkboxs2.addButton(self.checkbox_discrete)
 
         # closing
+        self.apply_button = QtGui.QPushButton("Apply")
         self.ok_button = QtGui.QPushButton("OK")
         self.cancel_button = QtGui.QPushButton("Cancel")
 
@@ -89,6 +91,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
         grid.addWidget(self.format_button, 3, 2)
 
         ok_cancel_box = QtGui.QHBoxLayout()
+        ok_cancel_box.addWidget(self.apply_button)
         ok_cancel_box.addWidget(self.ok_button)
         ok_cancel_box.addWidget(self.cancel_button)
 
@@ -136,6 +139,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self.connect(self.max_button, QtCore.SIGNAL('clicked()'), self.on_default_max)
         self.connect(self.format_button, QtCore.SIGNAL('clicked()'), self.on_default_format)
 
+        self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
         self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
         self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
 
@@ -235,6 +239,11 @@ class LegendPropertiesWindow(QtGui.QDialog):
             #print("format = %r" % self.format_edit.text())
             return True
         return False
+
+    def on_apply(self):
+        passed = self.on_validate()
+        if passed:
+            self.win_parent.apply_legend(self.out_data)
 
     def on_ok(self):
         passed = self.on_validate()

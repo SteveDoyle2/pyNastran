@@ -8,6 +8,7 @@ import sys
 import os.path
 import datetime
 import cgi #  html lib
+import traceback
 
 import vtk
 from PyQt4 import QtCore, QtGui
@@ -595,22 +596,28 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         legend.exec_()
 
         if data['clicked_ok']:
-            Title = data['name']
-            min_value = data['min']
-            max_value = data['max']
-            data_format = data['format']
-            is_blue_to_red = data['is_blue_to_red']
-            is_discrete = data['is_discrete']
-            self.on_update_legend(Title=Title, min_value=min_value, max_value=max_value,
-                                  data_format=data_format,
-                                  is_blue_to_red=is_blue_to_red,
-                                  is_discrete=is_discrete)
+            self.apply_legend(data)
+
+    def apply_legend(self, data):
+        Title = data['name']
+        min_value = data['min']
+        max_value = data['max']
+        data_format = data['format']
+        is_blue_to_red = data['is_blue_to_red']
+        is_discrete = data['is_discrete']
+        self.on_update_legend(Title=Title, min_value=min_value, max_value=max_value,
+                              data_format=data_format,
+                              is_blue_to_red=is_blue_to_red,
+                              is_discrete=is_discrete)
 
     def on_update_legend(self, Title='Title', min_value=0., max_value=1.,
                       data_format='%.0f', is_blue_to_red=True, is_discrete=True):
         key = self.caseKeys[self.iCase]
         case = self.resultCases[key]
-        (subcase_id, _resultType, vectorSize, location, _data_format) = key
+        if len(key) == 5:
+            (subcase_id, _resultType, vectorSize, location, _data_format) = key
+        else:
+            (subcase_id, i, _resultType, vectorSize, location, _data_format) = key
 
         try:
             caseName = self.iSubcaseNameMap[subcase_id]
