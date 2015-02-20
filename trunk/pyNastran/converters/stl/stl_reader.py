@@ -409,7 +409,7 @@ class STLReader(object):
         out.write(msg)
 
 
-    def read_ascii_stl(self):
+    def read_ascii_stl(self, stl_filename):
         self.infile = open(stl_filename, 'r')
         f = self.infile
         line = f.readline()
@@ -498,6 +498,15 @@ class STLReader(object):
             nodes[inode] = node
         self.nodes = nodes
 
+    def scale_nodes(self, xscale, yscale, zscale):
+        self.nodes[:, 0] *= xscale
+        self.nodes[:, 1] *= yscale
+        self.nodes[:, 2] *= zscale
+
+    def shift_nodes(self, xshift, yshift, zshift):
+        self.nodes[:, 0] += xshift
+        self.nodes[:, 1] += yshift
+        self.nodes[:, 2] += zshift
 
 def run_arg_parse():
     msg  = 'This program flips the normal of an STL model.\n'

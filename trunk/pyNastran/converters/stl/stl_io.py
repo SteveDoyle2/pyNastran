@@ -82,6 +82,11 @@ class STL_IO(object):
 
         assert nodes is not None
         nnodes, three = nodes.shape
+        xmax, ymax, zmax = nodes.max(axis=0)
+        xmin, ymin, zmin = nodes.min(axis=0)
+        self.log.info('xmax=%s xmin=%s' % (xmax, xmin))
+        self.log.info('ymax=%s ymin=%s' % (ymax, ymin))
+        self.log.info('zmax=%s zmin=%s' % (zmax, zmin))
 
         nid = 0
         print("nnodes=%s" % nnodes)
