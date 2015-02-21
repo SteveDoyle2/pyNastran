@@ -87,6 +87,9 @@ class STL_IO(object):
         self.log.info('xmax=%s xmin=%s' % (xmax, xmin))
         self.log.info('ymax=%s ymin=%s' % (ymax, ymin))
         self.log.info('zmax=%s zmin=%s' % (zmax, zmin))
+        dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
+        self.update_axes_length(dim_max)
+
 
         nid = 0
         print("nnodes=%s" % nnodes)
