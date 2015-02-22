@@ -5,27 +5,31 @@ import pyNastran
 from pyNastran.converters.stl.stl_reader import STLReader
 
 def main():
+    # --ascii <fmt> doesn't work for binary properly, so we set:
+    # --ascii False
     msg = ''
     msg += 'Usage:\n'
-    msg += '  stl_reshape <in_stl_filename> <out_stl_filename>\n'
-    msg += '  stl_reshape [--xy | --yz | --xz] [--scale S] <in_stl_filename> <out_stl_filename>\n'
-    msg += '  stl_reshape [--xscale X] [--yscale Y] [--zscale Z] <in_stl_filename> <out_stl_filename>\n'
-    msg += '  stl_reshape --delta <xshift> <yshift> <zshift> <in_stl_filename> <out_stl_filename>\n'
-    msg += '  stl_reshape --mirror <xyz> <tol> <in_stl_filename> <out_stl_filename>\n'
-    msg += '  stl_reshape --flip_normals <in_stl_filename> <out_stl_filename>\n'
-    msg += '  stl_reshape --stats <in_stl_filename>\n'
+    msg += '  stl_reshape [--ascii <fmt>] <in_stl_filename> <out_stl_filename>\n'
+    msg += '  stl_reshape [--ascii <fmt>] [--xy | --yz | --xz] [--scale S] <in_stl_filename> <out_stl_filename>\n'
+    msg += '  stl_reshape [--ascii <fmt>] [--xscale X] [--yscale Y] [--zscale Z] <in_stl_filename> <out_stl_filename>\n'
+    msg += '  stl_reshape [--ascii <fmt>] --delta <xshift> <yshift> <zshift> <in_stl_filename> <out_stl_filename>\n'
+    msg += '  stl_reshape [--ascii <fmt>] --mirror <xyz> <tol> <in_stl_filename> <out_stl_filename>\n'
+    msg += '  stl_reshape [--ascii <fmt>] --flip_normals <in_stl_filename> <out_stl_filename>\n'
+    msg += '  stl_reshape [--ascii <fmt>] --stats <in_stl_filename>\n'
     msg += '  stl_reshape -h | --help\n'
     msg += '  stl_reshape -v | --version\n'
     msg += '\n'
     msg += 'Options:\n'
     msg += '  -h, --help        show this help message and exit\n'
     msg += "  -v, --version     show program's version number and exit\n"
+    msg += '  --ascii           writes the model is ascii\n'
+    msg += '  fmt               the sscii format; False -> binary\n'
 
+    msg += '  --scale S         scale the xyz values by S\n'
     msg += '  --xy              flip the x and y axes (pick one)\n'
     msg += '  --yz              flip the y and z axes (pick one)\n'
     msg += '  --xz              flip the x and z axes (pick one)\n'
 
-    msg += '  --scale S         scale the xyz values by S\n'
     msg += '  --xscale X        scale the x values by X\n'
     msg += '  --yscale Y        scale the y values by Y\n'
     msg += '  --zscale Z        scale the z values by Z\n'
@@ -56,6 +60,13 @@ def main():
 
     stl = STLReader()
     stl.read_stl(in_stl_filename)
+
+    if data['<fmt>'] == 'False':
+        is_binary = True
+    else:
+        fmt = data['<fmt>']
+        is_binary = False
+    #print('is_binary=%s' % is_binary)
 
     if data['--xy'] or data['--yz'] or data['--xz']:
         scale = 1.
@@ -134,8 +145,7 @@ def main():
     else:
         raise RuntimeError('unsupported reshape...')
 
-
-    stl.write_stl(out_stl_filename, is_binary=False, float_fmt='%g')
+    stl.write_stl(out_stl_filename, is_binary=is_binary, float_fmt=fmt)
 
 if __name__ == '__main__':
     main()
