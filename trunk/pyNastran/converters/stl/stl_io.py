@@ -52,6 +52,13 @@ class STL_IO(object):
         model.read_stl(stl_filename)
         nodes = model.nodes
         elements = model.elements
+
+        if self.is_centroidal:
+            normals = model.get_normals(elements)
+        elif self.is_nodal:
+            normals = None
+            #normals = model.get_normals_at_nodes(elements)
+
         self.nNodes, three = nodes.shape
         self.nElements, three = elements.shape
 
@@ -118,29 +125,30 @@ class STL_IO(object):
         self.scalarBar.Modified()
 
         cases = {}
+        self.iSubcaseNameMap = {}
         ID = 1
 
-        cases = self._fill_stl_case(cases, ID, elements)
+        cases = self._fill_stl_case(cases, ID, elements, nodes, normals)
         self._finish_results_io(cases)
 
-    def _fill_stl_case(self, cases, ID, elements):
-        return cases
-        #print("regions**** = %s" % regions)
-        #nNodes = self.nNodes
-        #nElements = self.nElements
-
-        print("is_centroidal=%s isNodal=%s" % (self.is_centroidal, self.is_nodal))
+    def _fill_stl_case(self, cases, ID, elements, nodes, normals):
+        self.iSubcaseNameMap[ID] = ('STL', '')
+        #print("is_centroidal=%s isNodal=%s" % (self.is_centroidal, self.is_nodal))
         assert self.is_centroidal != self.is_nodal
 
         if self.is_centroidal:
             nelements, three = elements.shape
-            cases[(ID, 'Region', 1, 'centroid', '%.0f')] = regions
-            cases[(ID, 'Eids', 1, 'centroid', '%.0f')] = arange(1, nelements+1)
+            #cases[(ID, 'Region', 1, 'centroid', '%.0f')] = regions
+            cases[(ID, 'ElementID', 1, 'centroid', '%.0f')] = arange(1, nelements+1)
+            cases[(ID, 'NormalX', 1, 'centroid', '%.3f')] = normals[:, 0]
+            cases[(ID, 'NormalY', 1, 'centroid', '%.3f')] = normals[:, 1]
+            cases[(ID, 'NormalZ', 1, 'centroid', '%.3f')] = normals[:, 2]
 
         elif self.is_nodal:
-            #print("load.keys() = %s" % loads.keys())
-            for key in result_names:
-                if key in loads:
-                    nodal_data = loads[key]
-                    cases[(ID, key, 1, 'node', '%.3f')] = nodal_data
+            nnodes, three = nodes.shape
+            #cases[(ID, 'Region', 1, 'centroid', '%.0f')] = regions
+            cases[(ID, 'NodeID', 1, 'node', '%.0f')] = arange(1, nnodes+1)
+            #cases[(ID, 'NormalX', 1, 'node', '%.3f')] = normals[:, 0]
+            #cases[(ID, 'NormalY', 1, 'node', '%.3f')] = normals[:, 1]
+            #cases[(ID, 'NormalZ', 1, 'node', '%.3f')] = normals[:, 2]
         return cases

@@ -3,11 +3,12 @@ from six import iteritems
 from six.moves import zip, range
 import os
 import sys
+from copy import deepcopy
 #from struct import pack
 
 from docopt import docopt
 
-from numpy import array, zeros, ndarray, cross, where
+from numpy import array, zeros, ndarray, cross, where, vstack
 from numpy.linalg import norm
 
 from struct import unpack, Struct, pack
@@ -507,6 +508,62 @@ class STLReader(object):
         self.nodes[:, 0] += xshift
         self.nodes[:, 1] += yshift
         self.nodes[:, 2] += zshift
+
+    def create_mirror_model(self, xyz, tol):
+        """
+        Creates a mirror model.
+
+        :param xyz: the direction of symmetry
+        :param tol: the tolerance for symmetry plane nodes
+
+        ..note:: All elements on the symmetry plane will be removed
+        """
+        assert xyz in ['x', 'y', 'z'], 'xyz=%r' % xyz
+        assert tol >= 0.0, 'tol=%s' % tol
+
+        nnodes = self.nodes.shape[0]
+        #inodes = arange(nnodes)
+        if xyz == 'x':
+            xyzi = 0
+        elif xyz == 'y':
+            xyzi = 1
+        elif xyz == 'z':
+            xyzi = 2
+        else:
+            raise RuntimeError(xyz)
+
+        # the nodes on the symmetry plane
+        i = where(self.nodes[:, xyzi] < tol)[0]
+
+        # smash the symmetry nodes to 0.0
+        self.nodes[i, xyzi] = 0.
+        nodes_sym = deepcopy(self.nodes)
+        nodes_sym[:, xyzi] *= -1.
+
+        # we're lazy and duplicating all the nodes
+        # but will only write out a subset of them
+        nodes = vstack([self.nodes, nodes_sym])
+
+        # create the symmetrical elements
+        elements2 = []
+        elements3 = []
+        for element in self.elements:
+            epoints = nodes[element, xyzi][0]
+            je = where(epoints <= tol)[0]
+            if len(je) < 3:  # not a symmetry element, so we save it
+                elements2.append(element)
+
+                # duplicate the node if it's not on the symmetry plane
+                element3 = [elementi if elementi in i else (elementi + nnodes)
+                            for elementi in element]
+
+                # the normal is now backwards, so we flip it
+                element3.reverse()
+
+                elements3.append(element3)
+
+        self.nodes = nodes
+        self.elements = array(elements2 + elements3, dtype='int32')
 
 def run_arg_parse():
     msg  = 'This program flips the normal of an STL model.\n'
