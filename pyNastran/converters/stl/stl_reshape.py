@@ -11,6 +11,9 @@ def main():
     msg += '  stl_reshape [--xy | --yz | --xz] [--scale S] <in_stl_filename> <out_stl_filename>\n'
     msg += '  stl_reshape [--xscale X] [--yscale Y] [--zscale Z] <in_stl_filename> <out_stl_filename>\n'
     msg += '  stl_reshape --delta <xshift> <yshift> <zshift> <in_stl_filename> <out_stl_filename>\n'
+    msg += '  stl_reshape --mirror <xyz> <tol> <in_stl_filename> <out_stl_filename>\n'
+    msg += '  stl_reshape --flip_normals <in_stl_filename> <out_stl_filename>\n'
+    msg += '  stl_reshape --stats <in_stl_filename>\n'
     msg += '  stl_reshape -h | --help\n'
     msg += '  stl_reshape -v | --version\n'
     msg += '\n'
@@ -31,6 +34,14 @@ def main():
     msg += '  xshift            shift the model by xshift\n'
     msg += '  yshift            shift the model by yshift\n'
     msg += '  zshift            shift the model by zshift\n'
+
+    msg += '  --mirror          create a mirror model\n'
+    msg += '  xyz               the x, y, or z direction to mirror about'
+    msg += '  tol               the tolerance\n'
+
+    msg += '  --flip_normals    flip the normals of the elements'
+
+    msg += '  --stats           print the min/max locations\n'
 
     msg += '  in_stl_filename   the input filename\n'
     msg += '  out_stl_filename  the output filename\n'
@@ -106,6 +117,20 @@ def main():
     elif data['--scale'] :
         scale = float(data['--scale'])
         stl.nodes *= scale
+    elif data['--stats'] :
+        xmax, ymax, zmax = stl.nodes.max(axis=0)
+        xmin, ymin, zmin = stl.nodes.min(axis=0)
+        print('xyz_max = (%g, %g, %g)' % (xmax, ymax, zmax))
+        print('xyz_min = (%g, %g, %g)' % (xmin, ymin, zmin))
+        return
+    elif data['--mirror']:
+        #plane = data['plane']
+        #assert plane in ['xy', 'yz', 'xz'], 'plane=%r' % plane
+        xyz = data['<xyz>']
+        tol = float(data['<tol>'])
+        stl.create_mirror_model(xyz, tol)
+    elif data['--flip_normals']:
+        stl.model.flip_normals()
     else:
         raise RuntimeError('unsupported reshape...')
 
