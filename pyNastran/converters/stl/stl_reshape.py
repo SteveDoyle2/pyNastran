@@ -52,8 +52,40 @@ def main():
 
     ver = str(pyNastran.__version__)
     data = docopt(msg, version=ver)
-
     print data
+    stl_reshape(data)
+
+def stl_reshape(data):
+    if '--xy' not in data:
+        data['--xy'] = False
+    if '--yz' not in data:
+        data['--yz'] = False
+    if '--xz' not in data:
+        data['--xz'] = False
+    if '--scale' not in data:
+        data['--scale'] = None
+
+    if '--xscale' not in data:
+        data['--xscale'] = None
+    if '--yscale' not in data:
+        data['--yscale'] = None
+    if '--zscale' not in data:
+        data['--zscale'] = None
+
+    if '<xshift>' not in data:
+        data['<xshift>'] = None
+    if '<yshift>' not in data:
+        data['<yshift>'] = None
+    if '<zshift>' not in data:
+        data['<zshift>'] = None
+
+    if '--stats' not in data:
+        data['--stats'] = None
+    if '--mirror' not in data:
+        data['--mirror'] = None
+    if '--flip_normals' not in data:
+        data['--flip_normals'] = None
+
     in_stl_filename = data['<in_stl_filename>']
     out_stl_filename = data['<out_stl_filename>']
     assert in_stl_filename != out_stl_filename
@@ -61,12 +93,13 @@ def main():
     stl = STLReader()
     stl.read_stl(in_stl_filename)
 
-    if data['<fmt>'] == 'False':
+    if data['<fmt>'] in ['False', False]:
         is_binary = True
+        fmt = None
     else:
         fmt = data['<fmt>']
         is_binary = False
-    #print('is_binary=%s' % is_binary)
+    print('is_binary=%s' % is_binary)
 
     if data['--xy'] or data['--yz'] or data['--xz']:
         scale = 1.
@@ -76,25 +109,17 @@ def main():
         if data['--xy']:
             assert data['--yz'] is False
             assert data['--xz'] is False
-            x = deepcopy(stl.nodes[:, 0])
-            y = deepcopy(stl.nodes[:, 1])
-            stl.nodes[:, 0] = y * scale
-            stl.nodes[:, 1] = x * scale
-            #stl.scale_nodes(xscale, yscale, zscale)
+            axes = 'xy'
         elif data['--yz']:
             assert data['--xy'] is False
             assert data['--xz'] is False
-            y = deepcopy(stl.nodes[:, 1])
-            z = deepcopy(stl.nodes[:, 2])
-            stl.nodes[:, 1] = z * scale
-            stl.nodes[:, 2] = y * scale
+            axes = 'xy'
         elif data['--xz']:
             assert data['--xy'] is False
-            assert data['--yz']  is False
-            x = deepcopy(stl.nodes[:, 0])
-            z = deepcopy(stl.nodes[:, 2])
-            stl.nodes[:, 0] = z * scale
-            stl.nodes[:, 2] = x * scale
+            assert data['--yz'] is False
+            axes = 'yz'
+        stl.flip_axes(axes, scale)
+
     elif data['--xscale'] or data['--yscale'] or data['--zscale']:
         xscale = 1.
         yscale = 1.
@@ -143,7 +168,7 @@ def main():
     elif data['--flip_normals']:
         stl.model.flip_normals()
     else:
-        raise RuntimeError('unsupported reshape...')
+        raise RuntimeError('unsupported reshape...data=%s' % data)
 
     stl.write_stl(out_stl_filename, is_binary=is_binary, float_fmt=fmt)
 

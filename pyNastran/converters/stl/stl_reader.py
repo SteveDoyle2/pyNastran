@@ -38,7 +38,7 @@ class STLReader(object):
         assert len(self.nodes) > 0
         solid_name = 'dummy_name'
         if is_binary:
-            raise NotImplementedError('binary writing is not supported')
+            self._write_binary_stl(out_filename)
         else:
             self._write_stl_ascii(out_filename, solid_name, float_fmt=float_fmt)
 
@@ -76,8 +76,8 @@ class STLReader(object):
         p3 = self.nodes[elements[:, 2], :]
         a = p2 - p1
         b = p3 - p1
-        print(a)
-        print(b)
+        #print(a)
+        #print(b)
         n = cross(a, b)
         #n /= norm(n, axis=1)
         for element in elements:
@@ -419,7 +419,7 @@ class STLReader(object):
         nodes_dict = {}
         elements = []
         while line:
-            print("**line = %r" % line)
+            #print("**line = %r" % line)
             if 'solid' in line[:6]:
                 line = f.readline()  # facet
                 #print "line = %r" % line
@@ -508,6 +508,24 @@ class STLReader(object):
         self.nodes[:, 0] += xshift
         self.nodes[:, 1] += yshift
         self.nodes[:, 2] += zshift
+
+    def flip_axes(self, axes, scale):
+        if axes:
+            x = deepcopy(self.nodes[:, 0])
+            y = deepcopy(self.nodes[:, 1])
+            self.nodes[:, 0] = y * scale
+            self.nodes[:, 1] = x * scale
+            #stl.scale_nodes(xscale, yscale, zscale)
+        elif axes:
+            y = deepcopy(self.nodes[:, 1])
+            z = deepcopy(self.nodes[:, 2])
+            self.nodes[:, 1] = z * scale
+            self.nodes[:, 2] = y * scale
+        elif axes:
+            x = deepcopy(self.nodes[:, 0])
+            z = deepcopy(self.nodes[:, 2])
+            self.nodes[:, 0] = z * scale
+            self.nodes[:, 2] = x * scale
 
     def create_mirror_model(self, xyz, tol):
         """
