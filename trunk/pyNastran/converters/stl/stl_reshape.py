@@ -113,11 +113,13 @@ def stl_reshape(data):
         elif data['--yz']:
             assert data['--xy'] is False
             assert data['--xz'] is False
-            axes = 'xy'
+            axes = 'yz'
         elif data['--xz']:
             assert data['--xy'] is False
             assert data['--yz'] is False
-            axes = 'yz'
+            axes = 'xz'
+        #print('flip_axes = %r' % axes)
+        #print(data)
         stl.flip_axes(axes, scale)
 
     elif data['--xscale'] or data['--yscale'] or data['--zscale']:
@@ -166,7 +168,7 @@ def stl_reshape(data):
         tol = float(data['<tol>'])
         stl.create_mirror_model(xyz, tol)
     elif data['--flip_normals']:
-        stl.model.flip_normals()
+        stl.flip_normals()
     else:
         raise RuntimeError('unsupported reshape...data=%s' % data)
 

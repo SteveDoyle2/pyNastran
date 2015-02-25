@@ -161,20 +161,12 @@ class STLReader(object):
         v12 = p2 - p1
         v13 = p3 - p1
         v123 = cross(v12, v13)
-        #print v123
-        # verifies that y normals don't point down (into the model)
-        if min(v123[1]) < 0.0:
-            # flip the normals
-            iy_zero = where(v123[1] < 0)[0]
-            self.flip_normals(iy_zero)
-            v123[iy_zero, :] *= -1.0
-            #raise RuntimeError(iy_zero+1)
-        #print "v123", v123
+
         n = norm(v123, axis=1)
         inan = where(n==0)[0]
         n[inan] = array([1., 0., 0.])
-        #if len(inan) > 0:
-        #    raise RuntimeError(inan)
+        if len(inan) > 0:
+            raise RuntimeError(inan)
         #from numpy import divide
 
         # we need to divide our (n,3) array in 3 steps
@@ -510,18 +502,18 @@ class STLReader(object):
         self.nodes[:, 2] += zshift
 
     def flip_axes(self, axes, scale):
-        if axes:
+        if axes == 'xy':
             x = deepcopy(self.nodes[:, 0])
             y = deepcopy(self.nodes[:, 1])
             self.nodes[:, 0] = y * scale
             self.nodes[:, 1] = x * scale
             #stl.scale_nodes(xscale, yscale, zscale)
-        elif axes:
+        elif axes == 'yz':
             y = deepcopy(self.nodes[:, 1])
             z = deepcopy(self.nodes[:, 2])
             self.nodes[:, 1] = z * scale
             self.nodes[:, 2] = y * scale
-        elif axes:
+        elif axes == 'xz':
             x = deepcopy(self.nodes[:, 0])
             z = deepcopy(self.nodes[:, 2])
             self.nodes[:, 0] = z * scale
