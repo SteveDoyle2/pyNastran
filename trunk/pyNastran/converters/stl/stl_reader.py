@@ -14,7 +14,7 @@ from numpy.linalg import norm
 from struct import unpack, Struct, pack
 import pyNastran
 from pyNastran.bdf.fieldWriter import print_card
-from pyNastran.utils import is_binary
+from pyNastran.utils import is_binary as is_file_binary
 from pyNastran.utils.log import get_logger
 
 
@@ -33,20 +33,20 @@ class STLReader(object):
         #self.infilename = None
         #self.log = get_logger(log, 'debug' if debug else 'info')
 
-    def write_stl(self, out_filename, is_binary=False, float_fmt='%6.7f'):
+    def write_stl(self, out_filename, is_binary=False, float_fmt='%6.12f'):
         self.log.info("---writing STL file...%r---" % out_filename)
         assert len(self.nodes) > 0
         solid_name = 'dummy_name'
         if is_binary:
-            self._write_binary_stl(out_filename)
+            self.write_binary_stl(out_filename)
         else:
-            self._write_stl_ascii(out_filename, solid_name, float_fmt=float_fmt)
+            self.write_stl_ascii(out_filename, solid_name, float_fmt=float_fmt)
 
     def read_stl(self, stl_filename):
         self.infilename = stl_filename
         self.log.info("---starting reading STL file...%r---" % self.infilename)
 
-        if is_binary(stl_filename):
+        if is_file_binary(stl_filename):
             self.read_binary_stl(stl_filename)
         else:
             self.read_ascii_stl(stl_filename)
@@ -61,9 +61,12 @@ class STLReader(object):
         """Write an STL binary file."""
         f = open(stl_filename, "wb")
 
-        self.header.ljust(80, '\0')
-
-        f.write(self.header)
+        if hasattr(self, 'header'):
+            self.header.ljust(80, '\0')
+            f.write(self.header)
+        else:
+            header = '%-80s' % stl_filename
+            f.write(pack('80s', header))
         a = [0.,0.,0.]
         b = [0.,0.,0.]
         c = [0.,0.,0.]
@@ -101,18 +104,18 @@ class STLReader(object):
         data = self.infile.read()
         self.infile.close()
         self.header = data[:80]
-        nfacets, = unpack('i', data[80:84])
+        print('header = %r' % self.header.rstrip())
+        nelements, = unpack('i', data[80:84])
         j = 84
 
         inode = 0
-        ielement = 0
         nodes_dict = {}
-        elements = []
+        elements = zeros((nelements, 3), 'int32')
 
         s = Struct('12fH')
-        for ii in range(nfacets):
-            (nx, ny, nz, ax, ay, az, bx, by, bz, cx, cy, cz, i) = \
-                s.unpack(data[j:j+50])
+        for ielement in range(nelements):
+            (nx, ny, nz, ax, ay, az, bx, by, bz,
+             cx, cy, cz, i) = s.unpack(data[j:j+50])
 
             t1 = (ax, ay, az)
             t2 = (bx, by, bz)
@@ -137,13 +140,11 @@ class STLReader(object):
                 i3 = inode
                 nodes_dict[t3] = inode
                 inode += 1
-            element = [i1, i2, i3]
-            elements.append(element)
-            ielement += 1
+            elements[ielement] = [i1, i2, i3]
             j += 50
         assert inode > 0, inode
         nnodes = inode + 1 # accounting for indexing
-        self.elements = array(elements, 'int32')
+        self.elements = elements
         nodes = zeros((nnodes, 3), 'float64')
 
         for node, inode in iteritems(nodes_dict):
@@ -357,7 +358,7 @@ class STLReader(object):
         return nodes2, elements2
 
 
-    def _write_stl_ascii(self, out_filename, solid_name, float_fmt='%.6f'):
+    def write_stl_ascii(self, out_filename, solid_name, float_fmt='%.6f'):
         """
         facet normal -6.601157e-001 6.730213e-001 3.336009e-001
            outer loop
