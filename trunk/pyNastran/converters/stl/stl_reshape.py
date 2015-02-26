@@ -30,20 +30,20 @@ def main():
     msg += '  --yz              flip the y and z axes (pick one)\n'
     msg += '  --xz              flip the x and z axes (pick one)\n'
 
-    msg += '  --xscale X        scale the x values by X\n'
-    msg += '  --yscale Y        scale the y values by Y\n'
-    msg += '  --zscale Z        scale the z values by Z\n'
+    msg += '  --xscale X        scale the x values by X (use \'-1.0\' if < 0)\n'
+    msg += '  --yscale Y        scale the y values by Y (use \'-1.0\' if < 0)\n'
+    msg += '  --zscale Z        scale the z values by Z (use \'-1.0\' if < 0)\n'
 
     msg += '  --delta           shift the model some <xshift,yshift,shift>\n'
-    msg += '  xshift            shift the model by xshift\n'
-    msg += '  yshift            shift the model by yshift\n'
-    msg += '  zshift            shift the model by zshift\n'
+    msg += '  xshift            shift the model by xshift (use \'-1.0\' if < 0)\n'
+    msg += '  yshift            shift the model by yshift (use \'-1.0\' if < 0)\n'
+    msg += '  zshift            shift the model by zshift (use \'-1.0\' if < 0)\n'
 
     msg += '  --mirror          create a mirror model\n'
-    msg += '  xyz               the x, y, or z direction to mirror about'
+    msg += '  xyz               the x, y, or z direction to mirror about\n'
     msg += '  tol               the tolerance\n'
 
-    msg += '  --flip_normals    flip the normals of the elements'
+    msg += '  --flip_normals    flip the normals of the elements\n'
 
     msg += '  --stats           print the min/max locations\n'
 
@@ -127,11 +127,11 @@ def stl_reshape(data):
         yscale = 1.
         zscale = 1.
         if data['--xscale'] is not None:
-            xscale = float(data['--xscale'])
+            xscale = float(data['--xscale'].strip("'"))
         if data['--yscale'] is not None:
-            yscale = float(data['--yscale'])
+            yscale = float(data['--yscale'].strip("'"))
         if data['--zscale'] is not None:
-            zscale = float(data['--zscale'])
+            zscale = float(data['--zscale'].strip("'"))
         x = deepcopy(stl.nodes[:, 0])
         y = deepcopy(stl.nodes[:, 1])
         z = deepcopy(stl.nodes[:, 2])
@@ -143,11 +143,11 @@ def stl_reshape(data):
         yshift = 1.
         zshift = 1.
         if data['<xshift>'] is not None:
-            xshift = float(data['<xshift>'])
+            xshift = float(data['<xshift>'].strip("'"))
         if data['<yshift>'] is not None:
-            yshift = float(data['<yshift>'])
+            yshift = float(data['<yshift>'].strip("'"))
         if data['<zshift>'] is not None:
-            zshift = float(data['<zshift>'])
+            zshift = float(data['<zshift>'].strip("'"))
         print('delta = (%s, %s, %s)' % (xshift, yshift, zshift))
         stl.nodes[:, 0] += xshift
         stl.nodes[:, 1] += yshift
