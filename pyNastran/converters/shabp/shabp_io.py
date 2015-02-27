@@ -116,10 +116,10 @@ class ShabpIO(object):
 
         self.elements = elements
         if self.is_centroidal:
-            cases[(ID, 'Component', 1, 'centroid', '%.0f')] = components
-            cases[(ID, 'PatchID', 1, 'centroid', '%.0f')] = patches
-            cases[(ID, 'Impact', 1, 'centroid', '%.0f')] = impact
-            cases[(ID, 'Shadow', 1, 'centroid', '%.0f')] = shadow
+            cases[(ID, 'Component', 1, 'centroid', '%i')] = components
+            cases[(ID, 'PatchID', 1, 'centroid', '%i')] = patches
+            cases[(ID, 'Impact', 1, 'centroid', '%i')] = impact
+            cases[(ID, 'Shadow', 1, 'centroid', '%i')] = shadow
 
             XYZc = zeros((len(elements),3), dtype='float32')
             #Normal = zeros((len(elements),3), dtype='float32')

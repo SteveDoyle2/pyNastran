@@ -138,16 +138,16 @@ class STL_IO(object):
 
         if self.is_centroidal:
             nelements, three = elements.shape
-            #cases[(ID, 'Region', 1, 'centroid', '%.0f')] = regions
-            cases[(ID, 'ElementID', 1, 'centroid', '%.0f')] = arange(1, nelements+1)
+            #cases[(ID, 'Region', 1, 'centroid', '%i')] = regions
+            cases[(ID, 'ElementID', 1, 'centroid', '%i')] = arange(1, nelements+1)
             cases[(ID, 'NormalX', 1, 'centroid', '%.3f')] = normals[:, 0]
             cases[(ID, 'NormalY', 1, 'centroid', '%.3f')] = normals[:, 1]
             cases[(ID, 'NormalZ', 1, 'centroid', '%.3f')] = normals[:, 2]
 
         elif self.is_nodal:
             nnodes, three = nodes.shape
-            #cases[(ID, 'Region', 1, 'centroid', '%.0f')] = regions
-            cases[(ID, 'NodeID', 1, 'node', '%.0f')] = arange(1, nnodes+1)
+            #cases[(ID, 'Region', 1, 'centroid', '%i')] = regions
+            cases[(ID, 'NodeID', 1, 'node', '%i')] = arange(1, nnodes+1)
             #cases[(ID, 'NormalX', 1, 'node', '%.3f')] = normals[:, 0]
             #cases[(ID, 'NormalY', 1, 'node', '%.3f')] = normals[:, 1]
             #cases[(ID, 'NormalZ', 1, 'node', '%.3f')] = normals[:, 2]

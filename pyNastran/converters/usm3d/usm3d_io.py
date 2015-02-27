@@ -223,7 +223,7 @@ class Usm3dIO(object):
 
         ID = 1
         if bcs is not None and self.is_centroidal:
-            cases[(ID, 'Region', 1, 'centroid', '%.0f')] = bcs
+            cases[(ID, 'Region', 1, 'centroid', '%i')] = bcs
 
             mapbc_print = defaultdict(list)
             for region, bcnum in sorted(iteritems(mapbc)):

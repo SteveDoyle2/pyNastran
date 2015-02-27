@@ -189,11 +189,11 @@ class Cart3dIO(object):
             eids = arange(1, nelements + 1)
 
             if new:
-                cases_new[0] = (ID, regions, 'Region', 'centroid', '%.0f')
-                cases_new[1] = (ID, eids, 'ElementID', 'centroid', '%.0f')
+                cases_new[0] = (ID, regions, 'Region', 'centroid', '%i')
+                cases_new[1] = (ID, eids, 'ElementID', 'centroid', '%i')
             else:
-                cases[(ID, 0, 'Region', 1, 'centroid', '%.0f')] = regions
-                cases[(ID, 1, 'ElementID', 1, 'centroid', '%.0f')] = eids
+                cases[(ID, 0, 'Region', 1, 'centroid', '%i')] = regions
+                cases[(ID, 1, 'ElementID', 1, 'centroid', '%i')] = eids
 
             if 0:
                 from pyNastran.converters.cart3d.cart3d_to_quad import get_normal_groups
@@ -204,7 +204,7 @@ class Cart3dIO(object):
                         continue
                     for ni in normal_group:
                         groups[ni] = igroup + 1
-                cases[(ID, 2, 'Quad Group', 1, 'centroid', '%.0f')] = groups
+                cases[(ID, 2, 'Quad Group', 1, 'centroid', '%i')] = groups
                 geometry_form.append('Quad Group', 2, [])
 
 
@@ -232,10 +232,10 @@ class Cart3dIO(object):
             ]
             nids = arange(1, nnodes+1)
             if new:
-                #cases_new[0] = (regions, 'Region', 'centroid', '%.0f')
-                cases_new[0] = (ID, nids, 'NodeID', 'node', '%.0f')
+                #cases_new[0] = (regions, 'Region', 'centroid', '%i')
+                cases_new[0] = (ID, nids, 'NodeID', 'node', '%i')
             else:
-                cases[(ID, 0, 'NodeID', 1, 'node', '%.0f')] = nids
+                cases[(ID, 0, 'NodeID', 1, 'node', '%i')] = nids
 
             i = 1
             for result_name in result_names:
