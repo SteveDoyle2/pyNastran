@@ -48,6 +48,7 @@ class QTreeView2(QTreeView):
 
         #keys = []
         data = deepcopy(self.data)
+        irow = 0
         for row in self.old_rows:
             key = data[row][0]
             #print('  %r' % key)
