@@ -19,7 +19,4 @@ Also, for our own protection, we must make certain that everyone finds out that 
 The precise conditions of the license for pyNastran are found in the General Public License that accompanies the source code (see License). Further information about this license is available from the GNU Project webpage (see below). Detailed copyright information can be found in Copyright and credits.
 
 
-|| *Software Version* || *License* ||
-|| <v0.3 || [http://www.gnu.org/licenses/lgpl.html LGPL] ||
-
 The LGPL version allows you to import the package.  Your proprietary code remains proprietary, but any changes you make to pyNastran must be released under LGPL.
