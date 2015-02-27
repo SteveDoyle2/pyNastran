@@ -128,7 +128,7 @@ class GuiCommon(object):
     def set_grid_values(self, gridResult, case, vectorSize, min_value, max_value, is_blue_to_red=True):
         # flips sign to make colors go from blue -> red
         norm_value = float(max_value - min_value)
-        print('max_value=%s min_value=%r norm_value=%r' % (max_value, min_value, norm_value))
+        #print('max_value=%s min_value=%r norm_value=%r' % (max_value, min_value, norm_value))
         #print("case = ", case)
         #if norm_value == 0.: # avoids division by 0.
         #    norm_value = 1.
@@ -136,11 +136,19 @@ class GuiCommon(object):
         valueSet = set()
         if vectorSize == 1:
             if is_blue_to_red:
-                for i, value in enumerate(case):
-                    gridResult.InsertNextValue(1.0 - (value - min_value) / norm_value)
+                if norm_value == 0:
+                    for i, value in enumerate(case):
+                        gridResult.InsertNextValue(1 - min_value)
+                else:
+                    for i, value in enumerate(case):
+                        gridResult.InsertNextValue(1.0 - (value - min_value) / norm_value)
             else:
-                for i, value in enumerate(case):
-                    gridResult.InsertNextValue((value - min_value) / norm_value)
+                if norm_value == 0:
+                    for i, value in enumerate(case):
+                        gridResult.InsertNextValue(min_value)
+                else:
+                    for i, value in enumerate(case):
+                        gridResult.InsertNextValue((value - min_value) / norm_value)
         else:  # vectorSize=3
             for value in case:
                 gridResult.InsertNextTuple3(value)  # x,y,z
@@ -278,11 +286,20 @@ class GuiCommon(object):
 
         #self.scalarBar.SetLookupTable(self.colorFunction)
         self.scalarBar.SetTitle(Title)
-        self.scalarBar.SetLabelFormat(data_format)
 
         nvalues = 11
-        if (Title in ['ElementID', 'Eids', 'Region'] and norm_value < 11):
+        data_format_display = data_format
+        if data_format == '%i':
+            data_format_display = '%.0f'
             nvalues = int(max_value - min_value) + 1
+            if nvalues < 7:
+                nvalues = 7
+            elif nvalues > 30:
+                nvalues = 11
+        self.scalarBar.SetLabelFormat(data_format_display)
+
+        #if (Title in ['ElementID', 'Eids', 'Region'] and norm_value < 11):
+            #nvalues = int(max_value - min_value) + 1
             #print("need to adjust axes...max_value=%s" % max_value)
 
         if self.nvalues is not None:
