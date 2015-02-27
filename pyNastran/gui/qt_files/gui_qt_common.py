@@ -238,7 +238,8 @@ class GuiCommon(object):
                 #self.incrementCycle()
             foundCases = True
         else:
-            self.log_error("No Results found.  Many results are not supported in the GUI.\n")
+            result_type = 'centroidal' if self.is_centroidal else 'nodal'
+            self.log_error("No Results found.  Many results are not supported in the GUI.\nTry using %s results." % result_type)
             self.scalarBar.SetVisibility(False)
             foundCases = False
         #print("next iCase=%s key=%s" % (self.iCase, key))
