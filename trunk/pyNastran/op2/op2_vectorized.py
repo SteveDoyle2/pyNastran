@@ -119,7 +119,7 @@ class OP2_Vectorized(OP2):
             OP2.read_op2(self, op2_filename=op2_filename)
             return
             #raise NotImplementedError()
-        self.f.close()
+        #self.f.close()
         self.combine_results()
         self.log.info('finished reading op2')
 
