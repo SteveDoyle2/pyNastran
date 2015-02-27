@@ -20,7 +20,7 @@ from six.moves import zip
 
 import os
 from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, array
-from numpy import nan as NaN, searchsorted, sqrt
+from numpy import nan as NaN, searchsorted, sqrt, pi
 from numpy.linalg import norm
 
 import vtk
@@ -891,6 +891,9 @@ class NastranIO(object):
                     case = result[subcaseID]
                     if case.nonlinear_factor is not None: # transient
                         ntimes = len(case._times)
+                        code_name = case.data_code['name']
+                        has_cycle = hasattr(case, 'mode_cycle')
+
 
                         for itime in range(case.ntimes):
                             dt = case._times[itime]
@@ -899,9 +902,15 @@ class NastranIO(object):
                             t3 = case.data[itime, :, 2]
 
                             if isinstance(dt, float):
-                                header = ' %s = %.4E' % (case.data_code['name'], dt)
+                                header = ' %s = %.4E' % (code_name, dt)
                             else:
-                                header = ' %s = %i' % (case.data_code['name'], dt)
+                                header = ' %s = %i' % (code_name, dt)
+
+                            if has_cycle:
+                                freq = case.eigrs[itime]
+                                #msg.append('%16s = %13E\n' % ('EIGENVALUE', freq))
+                                cycle = sqrt(abs(freq))/(2. * pi)
+                                header += '; freq=%g' % cycle
 
                             form0 = (header, None, [])
                             formi2 = form0[2]
