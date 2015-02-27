@@ -803,30 +803,32 @@ class NastranIO(object):
         print("tring to read...", op2_filename)
         if '.op2' in op2_filename:  # TODO: do this based on lower & file extension
             model = OP2_Vectorized(log=self.log, debug=True)
-            model._saved_results = set([])
-            all_results = model.get_all_results()
-            if self.is_nodal:
-                desired_results = [
-                    'displacements', 'velocities', 'accelerations', 'temperatures',
-                    'constraint_forces', 'spcForces', 'mpcForces',
 
-                    #'gridPointForces',
-                    'stress', 'solidStress', 'plateStress', 'compositePlateStress', 'barStress', 'rodStress',
-                    #'strain','solidStrain', 'plateStrain', 'compositePlateStrain', 'barStrain', 'rodStrain',
+            if 0:
+                model._saved_results = set([])
+                all_results = model.get_all_results()
+                if self.is_nodal:
+                    desired_results = [
+                        'displacements', 'velocities', 'accelerations', 'temperatures',
+                        'constraint_forces', 'spcForces', 'mpcForces', 'eigenvectors',
 
-                    # untested
-                    'loadVectors',
-                    'appliedLoads',
-                    'forceVectors',
-                ]
-            else:
-                desired_results = [
-                    'stress', 'solidStress', 'plateStress', 'compositePlateStress', 'barStress', 'rodStress',
-                    #'strain','solidStrain', 'plateStrain', 'compositePlateStrain', 'barStrain', 'rodStrain',
-                ]
-            for result in desired_results:
-                if result in all_results:
-                    model._saved_results.add(result)
+                        #'gridPointForces',
+                        'stress', 'solidStress', 'plateStress', 'compositePlateStress', 'barStress', 'rodStress',
+                        #'strain','solidStrain', 'plateStrain', 'compositePlateStrain', 'barStrain', 'rodStrain',
+
+                        # untested
+                        'loadVectors',
+                        'appliedLoads',
+                        'forceVectors',
+                    ]
+                else:
+                    desired_results = [
+                        'stress', 'solidStress', 'plateStress', 'compositePlateStress', 'barStress', 'rodStress',
+                        #'strain','solidStrain', 'plateStrain', 'compositePlateStrain', 'barStrain', 'rodStrain',
+                    ]
+                for result in desired_results:
+                    if result in all_results:
+                        model._saved_results.add(result)
             model.read_op2(op2_filename)
 
         elif '.f06' in op2_filename:  # TODO: do this based on lower & file extension
@@ -837,6 +839,7 @@ class NastranIO(object):
             raise NotImplementedError(op2_filename)
 
         self.log.info(model.get_op2_stats())
+        print(model.get_op2_stats())
 
         #print(model.print_results())
 
@@ -869,6 +872,7 @@ class NastranIO(object):
                 (model.displacements, 'Displacement'),
                 (model.velocities,    'Velocity'),
                 (model.accelerations, 'Acceleration'),
+                (model.eigenvectors,  'Eigenvectors'),
                 (model.spcForces,     'SPC Forces'),
                 (model.mpcForces,     'MPC Forces'),
 
@@ -886,33 +890,60 @@ class NastranIO(object):
                 if subcaseID in result:
                     case = result[subcaseID]
                     if case.nonlinear_factor is not None: # transient
-                        continue
+                        ntimes = len(case._times)
 
-                    x_displacements = case.data[0, :, 0]
-                    y_displacements = case.data[0, :, 1]
-                    z_displacements = case.data[0, :, 2]
-                    xyz_displacements = norm(case.data[0, :, :3], axis=1)
+                        for itime in range(case.ntimes):
+                            dt = case._times[itime]
+                            t1 = case.data[itime, :, 0]
+                            t2 = case.data[itime, :, 1]
+                            t3 = case.data[itime, :, 2]
 
-                    #if x_displacements.min() != x_displacements.max():
-                    cases[(subcaseID, icase, name + 'X', 1, 'node', '%g')] = x_displacements
-                    formi.append((name + 'X', icase, []))
-                    icase += 1
+                            if isinstance(dt, float):
+                                header = ' %s = %.4E' % (case.data_code['name'], dt)
+                            else:
+                                header = ' %s = %i' % (case.data_code['name'], dt)
 
-                    #if y_displacements.min() != y_displacements.max():
-                    cases[(subcaseID, icase, name + 'Y', 1, 'node', '%g')] = y_displacements
-                    formi.append((name + 'Y', icase, []))
-                    icase += 1
+                            form0 = (header, None, [])
+                            formi2 = form0[2]
 
-                    #if z_displacements.min() != z_displacements.max():
-                    cases[(subcaseID, icase, name + 'Z', 1, 'node', '%g')] = z_displacements
-                    formi.append((name + 'Z', icase, []))
-                    icase += 1
+                            cases[(subcaseID, icase, name + 'X', 1, 'node', '%g')] = t1
+                            formi2.append((name + 'X', icase, []))
+                            icase += 1
 
-                    #if xyz_displacements.min() != xyz_displacements.max():
-                    cases[(subcaseID, icase, name + 'XYZ', 1, 'node', '%g')] = xyz_displacements
-                    formi.append((name + 'XYZ', icase, []))
-                    icase += 1
+                            cases[(subcaseID, icase, name + 'Y', 1, 'node', '%g')] = t2
+                            formi2.append((name + 'Y', icase, []))
+                            icase += 1
 
+                            cases[(subcaseID, icase, name + 'Z', 1, 'node', '%g')] = t3
+                            formi2.append((name + 'Z', icase, []))
+                            icase += 1
+
+                            formi.append(form0)
+                    else:
+                        x_displacements = case.data[0, :, 0]
+                        y_displacements = case.data[0, :, 1]
+                        z_displacements = case.data[0, :, 2]
+                        xyz_displacements = norm(case.data[0, :, :3], axis=1)
+
+                        #if x_displacements.min() != x_displacements.max():
+                        cases[(subcaseID, icase, name + 'X', 1, 'node', '%g')] = x_displacements
+                        formi.append((name + 'X', icase, []))
+                        icase += 1
+
+                        #if y_displacements.min() != y_displacements.max():
+                        cases[(subcaseID, icase, name + 'Y', 1, 'node', '%g')] = y_displacements
+                        formi.append((name + 'Y', icase, []))
+                        icase += 1
+
+                        #if z_displacements.min() != z_displacements.max():
+                        cases[(subcaseID, icase, name + 'Z', 1, 'node', '%g')] = z_displacements
+                        formi.append((name + 'Z', icase, []))
+                        icase += 1
+
+                        #if xyz_displacements.min() != xyz_displacements.max():
+                        cases[(subcaseID, icase, name + 'XYZ', 1, 'node', '%g')] = xyz_displacements
+                        formi.append((name + 'XYZ', icase, []))
+                        icase += 1
 
             for (result, name) in temperature_like:
                 if subcaseID in result:
