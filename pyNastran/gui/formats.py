@@ -9,7 +9,8 @@ except ImportError:
     is_cart3d = False
 
 try:
-    from pyNastran.converters.nastran.nastranIO import NastranIO
+    #from pyNastran.converters.nastran.nastranIO import NastranIO
+    from pyNastran.converters.nastran.nastranIOv import NastranIO
     is_nastran = True
 except ImportError:
     raise

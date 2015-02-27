@@ -1088,6 +1088,26 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         data2 = [(method, None, [])]
         self.res_widget.update_methods(data2)
 
+    def finish_io(self, cases):
+        self.resultCases = cases
+        self.caseKeys = sorted(cases.keys())
+        print("caseKeys = ",self.caseKeys)
+
+        if len(self.resultCases) == 0:
+            self.nCases = 1
+            self.iCase = 0
+        elif len(self.resultCases) == 1:
+            self.nCases = 1
+            self.iCase = 0
+        else:
+            self.nCases = len(self.resultCases) - 1  # number of keys in dictionary
+            self.iCase = -1
+        self.cycleResults()  # start at nCase=0
+
+        if self.nCases:
+            self.scalarBar.VisibilityOn()
+            self.scalarBar.Modified()
+
     def _finish_results_io(self, cases):
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
