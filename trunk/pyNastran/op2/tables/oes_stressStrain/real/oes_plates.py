@@ -79,7 +79,7 @@ class RealPlateArray(OES_Object):
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, int):
             dtype = 'int32'
-        self.times = zeros(self.ntimes, dtype=dtype)
+        self._times = zeros(self.ntimes, dtype=dtype)
         self.element_node = zeros((self.ntotal, 2), dtype='int32')
 
         #[fd, oxx, oyy, txy, angle, majorP, minorP, ovm]
@@ -96,7 +96,7 @@ class RealPlateArray(OES_Object):
         #print(msg)
 
         assert isinstance(eid, int)
-        self.times[self.itime] = dt
+        self._times[self.itime] = dt
         assert isinstance(nodeID, string_types), nodeID
         if isinstance(nodeID, string_types):
             nodeID = 0
@@ -211,7 +211,7 @@ class RealPlateArray(OES_Object):
 
         cen_word = 'CEN/%i' % nnodes
         for itime in range(ntimes):
-            dt = self.times[itime]  # TODO: rename this...
+            dt = self._times[itime]  # TODO: rename this...
             if self.nonlinear_factor is not None:
                 dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
                 header[1] = dtLine

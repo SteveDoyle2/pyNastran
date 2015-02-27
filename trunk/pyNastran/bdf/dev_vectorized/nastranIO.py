@@ -815,7 +815,7 @@ class NastranIO(NastranIO_xref):
             nids = model.grid.node_id
             #for (nid, nid2) in iteritems(self.nidMap):
             #    nids[nid2] = nid
-            cases[(0, 'Node_ID', 1, 'node', '%.0f')] = nids
+            cases[(0, 'Node_ID', 1, 'node', '%i')] = nids
             nidsSet = True
 
         # set to True to enable elementIDs as a result
@@ -826,13 +826,13 @@ class NastranIO(NastranIO_xref):
             #for (eid, eid2) in iteritems(self.eidMap):
             #    eids[eid2] = eid
             #eids = model.elements.element_id
-            cases[(0, 'Element_ID', 1, 'centroid', '%.0f')] = eids
+            cases[(0, 'Element_ID', 1, 'centroid', '%i')] = eids
             eidsSet = True
 
         # subcaseID, resultType, vectorSize, location, dataFormat
         if len(model.properties) and self.is_centroidal:
             #pids = model.elements.property_id
-            cases[(0, 'Pid', 1, 'centroid', '%.0f')] = pids
+            cases[(0, 'Property_ID', 1, 'centroid', '%i')] = pids
 
         #self._plot_pressures(model, cases)
         #self._plot_applied_loads(model, cases)
@@ -1513,7 +1513,7 @@ class NastranIO(NastranIO_xref):
 
         # subcaseID,resultType,vectorSize,location,dataFormat
         if isElementOn.min() != isElementOn.max():
-            cases[(1, 'isElementOn', 1, 'centroid', '%.0f')] = isElementOn
+            cases[(1, 'isElementOn', 1, 'centroid', '%i')] = isElementOn
         if oxx.min() != oxx.max():
             cases[(subcaseID, 'StressXX', 1, 'centroid', '%.3f')] = oxx
         if oyy.min() != oyy.max():
