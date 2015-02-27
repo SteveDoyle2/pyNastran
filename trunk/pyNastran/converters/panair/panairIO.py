@@ -113,7 +113,7 @@ class PanairIO(object):
         assert self.is_centroidal != self.is_nodal
 
         self.elements = elements
-        cases[(ID, 'Region', 1, 'centroid', '%.0f')] = regions
+        cases[(ID, 'Region', 1, 'centroid', '%i')] = regions
         if self.is_centroidal:
             Xc = zeros(len(elements), dtype='float32')
             Yc = zeros(len(elements), dtype='float32')

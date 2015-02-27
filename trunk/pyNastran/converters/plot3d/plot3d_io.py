@@ -141,7 +141,7 @@ class Plot3d_io(object):
         #if self.is_centroidal:
         #nelements, three = elements.shape
         #print regions
-        cases[(ID, 'Region', 1, 'centroid', '%.0f')] = regions
+        cases[(ID, 'Region', 1, 'centroid', '%i')] = regions
 
         from numpy import zeros, array, cross, dot
         from numpy.linalg import det, norm
