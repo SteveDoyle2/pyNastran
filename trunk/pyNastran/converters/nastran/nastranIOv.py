@@ -51,8 +51,26 @@ class NastranIO(object):
         #: coordinate systems can be messy, so this is the
         #: list of coords to show
         self.show_cids = []
-
         self.save_data = False
+        self.show_alt_actor = True  # show the caero mesh
+
+    def show_caero_mesh(self, is_shown=None):
+        """
+        :param is_shown: should the mesh be shown/hidden (default=None -> flip between shown/not shown)
+        """
+        if is_shown is None:
+            is_shown = not(self.show_alt_actor)
+
+        self.show_alt_actor = is_shown
+        if is_shown:
+            if not self.show_alt_actor:
+                return
+            self.alt_geometry_actor.VisibilityOn()
+        else:
+            if self.show_alt_actor:
+                return
+            self.alt_geometry_actor.VisibilityOff()
+
 
     def load_nastran_geometry(self, bdf_filename, dirname):
         self.eidMap = {}
@@ -149,6 +167,7 @@ class NastranIO(object):
         self.grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)
         self.grid2.Allocate(nCAeros + nCONM2, 1000)
+        self.show_caero_mesh(is_shown=self.show_alt_actor)
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nNodes)
@@ -656,6 +675,7 @@ class NastranIO(object):
             for (nid, nid2) in iteritems(self.nidMap):
                 nids[nid2] = nid
             cases[(0, 'Node_ID', 1, 'node', '%i')] = nids
+            self.node_ids = nids
             nidsSet = True
 
         # set to True to enable elementIDs as a result
@@ -886,6 +906,7 @@ class NastranIO(object):
             temperature_like = [
                 (model.temperatures, 'Temperature'),
             ]
+            nids = self.node_ids
 
             for (result, name) in displacement_like:
                 if subcaseID in result:
@@ -896,11 +917,28 @@ class NastranIO(object):
                         has_cycle = hasattr(case, 'mode_cycle')
 
 
+                        itime0 = 0
+                        t1 = case.data[itime0, :, 0]
+                        ndata, = t1.shape
+                        if nnodes != ndata:
+                            nidsi = case.node_gridtype[:, 0]
+                            j = searchsorted(nids, nidsi)
+
                         for itime in range(case.ntimes):
                             dt = case._times[itime]
                             t1 = case.data[itime, :, 0]
                             t2 = case.data[itime, :, 1]
                             t3 = case.data[itime, :, 2]
+                            if nnodes != ndata:
+                                t1i = zeros(nnodes, dtype='float32')
+                                t2i = zeros(nnodes, dtype='float32')
+                                t3i = zeros(nnodes, dtype='float32')
+                                t1i[j] = t1
+                                t2i[j] = t2
+                                t3i[j] = t3
+                                t1 = t1i
+                                t2 = t2i
+                                t3 = t3i
 
                             if isinstance(dt, float):
                                 header = ' %s = %.4E' % (code_name, dt)
@@ -930,28 +968,28 @@ class NastranIO(object):
 
                             formi.append(form0)
                     else:
-                        x_displacements = case.data[0, :, 0]
-                        y_displacements = case.data[0, :, 1]
-                        z_displacements = case.data[0, :, 2]
-                        xyz_displacements = norm(case.data[0, :, :3], axis=1)
+                        t1 = case.data[0, :, 0]
+                        t2 = case.data[0, :, 1]
+                        t3 = case.data[0, :, 2]
+                        t123 = norm(case.data[0, :, :3], axis=1)
 
                         #if x_displacements.min() != x_displacements.max():
-                        cases[(subcaseID, icase, name + 'X', 1, 'node', '%g')] = x_displacements
+                        cases[(subcaseID, icase, name + 'X', 1, 'node', '%g')] = t1
                         formi.append((name + 'X', icase, []))
                         icase += 1
 
                         #if y_displacements.min() != y_displacements.max():
-                        cases[(subcaseID, icase, name + 'Y', 1, 'node', '%g')] = y_displacements
+                        cases[(subcaseID, icase, name + 'Y', 1, 'node', '%g')] = t2
                         formi.append((name + 'Y', icase, []))
                         icase += 1
 
                         #if z_displacements.min() != z_displacements.max():
-                        cases[(subcaseID, icase, name + 'Z', 1, 'node', '%g')] = z_displacements
+                        cases[(subcaseID, icase, name + 'Z', 1, 'node', '%g')] = t3
                         formi.append((name + 'Z', icase, []))
                         icase += 1
 
                         #if xyz_displacements.min() != xyz_displacements.max():
-                        cases[(subcaseID, icase, name + 'XYZ', 1, 'node', '%g')] = xyz_displacements
+                        cases[(subcaseID, icase, name + 'XYZ', 1, 'node', '%g')] = t123
                         formi.append((name + 'XYZ', icase, []))
                         icase += 1
 
@@ -973,6 +1011,7 @@ class NastranIO(object):
         self.nidMap = {}
         self.eid_to_nid_map = {}
         self.element_ids = None
+        self.node_ids = None
 
     def fill_stress_case(self, cases, model, subcaseID, formi, icase):
         if self.is_centroidal:

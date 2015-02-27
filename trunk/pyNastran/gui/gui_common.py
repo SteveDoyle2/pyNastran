@@ -957,14 +957,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.aQuadMapper = vtk.vtkDataSetMapper()
         self.aQuadMapper.SetInput(self.grid2)
         #aQuadMapper.SetInput(Filter.GetOutput())
-        geometryActor = vtk.vtkActor()
-        geometryActor.SetMapper(self.aQuadMapper)
+        self.alt_geometry_actor = vtk.vtkActor()
+        self.alt_geometry_actor.SetMapper(self.aQuadMapper)
         #geometryActor.AddPosition(2, 0, 2)
         #geometryActor.GetProperty().SetDiffuseColor(0, 0, 1) # blue
-        geometryActor.GetProperty().SetDiffuseColor(1, 1, 0)  # green
-        geometryActor.GetProperty().SetLineWidth(5)
+        self.alt_geometry_actor.GetProperty().SetDiffuseColor(1, 1, 0)  # green
+        self.alt_geometry_actor.GetProperty().SetLineWidth(5)
 
-        self.rend.AddActor(geometryActor)
+        self.rend.AddActor(self.alt_geometry_actor)
         vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
 
     def on_update_scalar_bar(Title, min_value, max_value, data_format):

@@ -50,7 +50,10 @@ class QTreeView2(QTreeView):
         data = deepcopy(self.data)
         irow = 0
         for row in self.old_rows:
-            key = data[row][0]
+            try:
+                key = data[row][0]
+            except IndexError:
+                return False, irow
             #print('  %r' % key)
             irow = data[row][1]
             data = data[row][2]
