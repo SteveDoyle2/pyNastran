@@ -222,7 +222,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
         max_value, flag2 = self.check_float(self.max_edit)
         format_value, flag3 = self.check_format(self.format_edit)
         if 'i' in format_value:
-            format_value = '%.0f'
+            format_value = '%i'
 
         if flag0 and flag1 and flag2 and flag3:
             self.out_data['name'] = name_value
