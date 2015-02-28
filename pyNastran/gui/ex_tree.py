@@ -293,28 +293,35 @@ class ResultsWindow(QWidget):
         nelements = len(elements)
         redo = False
         #print(elements[0])
-        for text, i, children in elements:
-            #print('text=%s' % text)
-            item = QStandardItem(text)
-            parent.appendRow(item)
+        try:
+            for text, i, children in elements:
+                #print('text=%s' % text)
+                item = QStandardItem(text)
+                parent.appendRow(item)
 
-            # count_check and
-            if nelements == 1 and len(children)==0 and level==0:
-                #self.result_data_window.setEnabled(False)
-                item.setEnabled(False)
-                #print(dir(self.treeView))
-                #self.treeView.setCurrentItem(self, 0)
-                #item.mousePressEvent(None)
-                redo = True
-            else:
-                pass
-                #print('item=%s count_check=%s nelements=%s len(children)=%s' % (
-                    #text, count_check, nelements, len(children)))
-            if children:
-                #print('  children=%s' % children)
-                self.addItems(item, children, level + 1, count_check=count_check)
-        is_single = redo
-        return is_single
+                # count_check and
+                if nelements == 1 and len(children)==0 and level==0:
+                    #self.result_data_window.setEnabled(False)
+                    item.setEnabled(False)
+                    #print(dir(self.treeView))
+                    #self.treeView.setCurrentItem(self, 0)
+                    #item.mousePressEvent(None)
+                    redo = True
+                else:
+                    pass
+                    #print('item=%s count_check=%s nelements=%s len(children)=%s' % (
+                        #text, count_check, nelements, len(children)))
+                if children:
+                    #print('  children=%s' % children)
+                    self.addItems(item, children, level + 1, count_check=count_check)
+            is_single = redo
+            return is_single
+        except ValueError:
+            print(elements)
+            print('len(elements)=%s' % len(elements))
+            for e in elements:
+                print('  e = %s' % str(e))
+            raise
         #if redo:
         #    data = [
         #        ('A', []),
