@@ -42,6 +42,9 @@ class TableArray(ScalarObject):  # displacement style table
         #len(self.node_gridtype)
         nnodes, two = self.node_gridtype.shape
         ntimes, ntotal, six = self.data.shape
+        assert self.ntimes == ntimes, 'ntimes=%s expected=%s' % (self.ntimes, ntimes)
+        assert self.ntotal == ntotal, 'ntotal=%s expected=%s' % (self.ntimes, ntimes)
+
         if self.nonlinear_factor is not None:  # transient
             msg.append('  type=%s ntimes=%s nnodes=%s\n'
                        % (self.__class__.__name__, ntimes, nnodes))

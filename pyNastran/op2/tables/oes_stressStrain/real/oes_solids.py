@@ -29,6 +29,12 @@ class RealSolidArray(OES_Object):
         else:
             raise NotImplementedError('SORT2')
 
+    def is_real(self):
+        return True
+
+    def is_complex(self):
+        return False
+
     def _get_msgs(self):
         raise NotImplementedError()
 
@@ -60,7 +66,7 @@ class RealSolidArray(OES_Object):
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, int):
             dtype = 'int32'
-        self.times = zeros(self.ntimes, dtype=dtype)
+        self._times = zeros(self.ntimes, dtype=dtype)
         #self.element_types2 = array(self.nelements, dtype='|S8')
         self.element_types3 = zeros((self.nelements, 2), dtype='int32')
 
@@ -85,7 +91,7 @@ class RealSolidArray(OES_Object):
         assert eid >= 0
 
         #print "dt=%s eid=%s eType=%s" %(dt,eid,eType)
-        self.times[self.itime] = dt
+        self._times[self.itime] = dt
 
         self.eType[self.ielement] = eType
         self.element_node[self.itotal, :] = [eid, 0]  # 0 is center
@@ -180,7 +186,7 @@ class RealSolidArray(OES_Object):
         eids2 = self.element_node[:, 0]
         nodes = self.element_node[:, 1]
         for itime in range(ntimes):
-            dt = self.times[itime]  # TODO: rename this...
+            dt = self._times[itime]  # TODO: rename this...
             if self.nonlinear_factor is not None:
                 dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
                 header[1] = dtLine

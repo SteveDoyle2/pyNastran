@@ -11,16 +11,18 @@ class RealShearArray(OES_Object):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         self.eType = {}
         #self.code = [self.format_code, self.sort_code, self.s_code]
-
-        #self.ntimes = 0  # or frequency/mode
-        #self.ntotal = 0
         self.nelements = 0  # result specific
 
         if is_sort1:
-            #sort1
             self.add_new_eid = self.add_new_eid_sort1
         else:
             raise NotImplementedError('SORT2')
+
+    def is_real(self):
+        return True
+
+    def is_complex(self):
+        return False
 
     def _reset_indices(self):
         self.itotal = 0

@@ -33,6 +33,12 @@ class RealCompositePlateArray(OES_Object):
             #self.add_new_eid = self.add_new_eid_sort2
             #self.addNewNode = self.addNewNodeSort2
 
+    def is_real(self):
+        return True
+
+    def is_complex(self):
+        return False
+
     def _reset_indices(self):
         self.itotal = 0
         self.ielement = 0

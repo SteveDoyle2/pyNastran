@@ -34,6 +34,12 @@ class RealCelasStress(StressObject):
             #self.add = self.addSort2
             self.add_new_eid = self.add_new_eid_sort2
 
+    def is_real(self):
+        return True
+
+    def is_complex(self):
+        return False
+
     def get_stats(self):
         nelements = len(self.eType)
 

@@ -33,6 +33,12 @@ class RealPlateArray(OES_Object):
             #self.add_new_eid = self.add_new_eid_sort2
             #self.addNewNode = self.addNewNodeSort2
 
+    def is_real(self):
+        return True
+
+    def is_complex(self):
+        return False
+
     def _reset_indices(self):
         self.itotal = 0
         self.ielement = 0
@@ -47,11 +53,12 @@ class RealPlateArray(OES_Object):
         if self.element_type in [33, 74]:  # CQUAD4, CTRIA3
             return False
         elif self.element_type in [144]:  # CQUAD4
-            return False
-        raise NotImplementedError(self.element_type)
+            return True
+        else:
+            raise NotImplementedError(self.element_type)
 
     def build(self):
-        #print("self.ielement =", self.ielement)
+        #print("self.ielement = %s" % self.ielement)
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
@@ -60,10 +67,13 @@ class RealPlateArray(OES_Object):
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
         #self.names = []
-        if self.element_type == 74:
+        if self.element_type in [33, 74]:
             nnodes_per_element = 1
         elif self.element_type == 144:
             nnodes_per_element = 5
+        else:
+            raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
+
 
         self.nnodes = nnodes_per_element
         #self.nelements //= nnodes_per_element
@@ -94,12 +104,16 @@ class RealPlateArray(OES_Object):
         #msg = "i=%s eType=%s dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (
             #self.itotal,  eType, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
         #print(msg)
+        #msg = "i=%s dt=%s eid=%s nodeID=%s fd=%g oxx=%g ovmShear=%g" % (
+            #self.itotal, dt, eid, nodeID, fd, oxx, ovm)
+        #print(msg)
 
         assert isinstance(eid, int)
         self._times[self.itime] = dt
         assert isinstance(nodeID, string_types), nodeID
         if isinstance(nodeID, string_types):
             nodeID = 0
+        #assert self.itotal == 0, oxx
         self.element_node[self.itotal, :] = [eid, nodeID]
         self.data[self.itime, self.itotal, :] = [fd, oxx, oyy, txy, angle, majorP, minorP, ovm]
         self.itotal += 1
@@ -108,27 +122,24 @@ class RealPlateArray(OES_Object):
     def addNewNode(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
         if isinstance(nodeID, string_types):
             nodeID = 0
-        self.add_sort1(dt, eid, nodeID, fd, oxx, oyy, txy, angle,
-                            majorP, minorP, ovm)
-
+        self.add_sort1(dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
     def add(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        if isinstance(nodeID, string_types):
-            nodeID = 0
-        self.add_sort1(dt, eid, nodeID, fd, oxx, oyy, txy, angle,
-                            majorP, minorP, ovm)
+        #if isinstance(nodeID, string_types):
+            #nodeID = 0
+        self.add_sort1(dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
     def addNewNodeSort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
         if isinstance(nodeID, string_types):
             nodeID = 0
-        self.add_sort1(dt, eid, nodeID, fd, oxx, oyy, txy, angle,
-                            majorP, minorP, ovm)
+        self.add_sort1(dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
     def add_sort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #print('addNewNodeSort1')
         assert eid is not None
-        msg = "i=%s dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (
-            self.itotal, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
+        #msg = "i=%s dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (
+            #self.itotal, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
+        #msg = "i=%s dt=%s eid=%s nodeID=%s fd=%g oxx=%g ovmShear=%g" % (
+            #self.itotal, dt, eid, nodeID, fd, oxx, ovm)
         #print(msg)
         if isinstance(nodeID, string_types):
             nodeID = 0
@@ -240,7 +251,7 @@ class RealPlateArray(OES_Object):
                 #f.write([eidi, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi])
                 iLayer = i % 2
                 # tria3
-                if self.element_type == 74:
+                if self.element_type in [33, 74]:
                     if iLayer == 0:
                         f.write('0  %6i   %-13s     %-13s  %-13s  %-13s   %8.4f   %-13s   %-13s  %s\n' % (eid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
                     else:
@@ -304,26 +315,29 @@ class RealPlateStressArray(RealPlateArray, StressObject):
 
         #=============================
 
-        isBilinear = False
+        #isBilinear = False
         cquad4_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'] + triMsgTemp
         cquad8_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n'] + triMsgTemp
 
         ## TODO: can cquad8s be bilinear???
-        isBilinear = True
+        #isBilinear = True
         cquadr_bilinear_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quadMsgTemp
         cquad4_bilinear_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quadMsgTemp
 
-        isBilinear = False
+        #isBilinear = False
         cquad_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'] + triMsgTemp
         ctria3_msg = ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'] + triMsgTemp
         ctria6_msg = ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + triMsgTemp
         ctriar_msg = ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + triMsgTemp
 
+        is_bilinear = False
         if self.element_type == 74:
             msg = ctria3_msg
             nnodes = 3
-            is_bilinear = False
-        elif  self.element_type == 144:
+        elif self.element_type == 33:
+            msg = cquad4_msg
+            nnodes = 4
+        elif self.element_type == 144:
             msg = cquad4_bilinear_msg
             nnodes = 4
             is_bilinear = True
@@ -375,8 +389,8 @@ class RealPlateStrainArray(RealPlateArray, StrainObject):
         #=============================
 
         isBilinear = False
-        cquad4_msg = ['                         STRAINS   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'] + triMsgTemp
-        cquad8_msg = ['                         STRAINS   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n'] + triMsgTemp
+        cquad4_msg = ['                         S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'] + triMsgTemp
+        cquad8_msg = ['                         S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n'] + triMsgTemp
 
         ## TODO: can cquad8s be bilinear???
         isBilinear = True
@@ -384,7 +398,7 @@ class RealPlateStrainArray(RealPlateArray, StrainObject):
         cquad4_bilinear_msg = ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quadMsgTemp
 
         isBilinear = False
-        cquad_msg = ['                         STRAINS   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'] + triMsgTemp
+        cquad_msg = ['                         S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'] + triMsgTemp
         ctria3_msg = ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'] + triMsgTemp
         ctria6_msg = ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + triMsgTemp
         ctriar_msg = ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + triMsgTemp
@@ -393,7 +407,10 @@ class RealPlateStrainArray(RealPlateArray, StrainObject):
         if self.element_type == 74:
             msg = ctria3_msg
             nnodes = 3
-        elif  self.element_type == 144:
+        elif self.element_type == 33:
+            msg = cquad4_msg
+            nnodes = 4
+        elif self.element_type == 144:
             msg = cquad4_bilinear_msg
             nnodes = 4
             is_bilinear = True

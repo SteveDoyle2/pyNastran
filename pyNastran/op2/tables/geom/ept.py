@@ -118,7 +118,6 @@ class EPT(object):
         for i in range(nentries):
             eData = data[n:n+76]
             out = s.unpack(eData)
-            #print(out)
             (pid, mid, a, I1, I2, J, nsm, fe, c1, c2, d1, d2,
                 e1, e2, f1, f2, k1, k2, I12) = out
             prop = PBAR(None, out)
