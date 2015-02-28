@@ -13,7 +13,7 @@ class PanairIO(object):
     def __init__(self):
         pass
 
-    def load_panair_geometry(self, panairFileName, dirname):
+    def load_panair_geometry(self, panairFileName, dirname, plot=True):
         self.nidMap = {}
 
         #key = self.caseKeys[self.iCase]

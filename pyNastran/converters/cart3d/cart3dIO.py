@@ -46,7 +46,7 @@ class Cart3dIO(object):
         self.scalarBar.Modified()
         return skipReading
 
-    def load_cart3d_geometry(self, cart3d_filename, dirname):
+    def load_cart3d_geometry(self, cart3d_filename, dirname, plot=True):
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
 

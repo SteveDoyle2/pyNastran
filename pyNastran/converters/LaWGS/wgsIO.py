@@ -11,7 +11,7 @@ class LaWGS_IO(object):
 #    lawgs = LaWGS('tmx1242.wgs')
 #    lawgs.run()
 
-    def load_lawgs_geometry(self, lawgsFileName, dirname):
+    def load_lawgs_geometry(self, lawgsFileName, dirname, plot=True):
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]
 

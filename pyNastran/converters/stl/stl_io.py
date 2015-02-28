@@ -41,7 +41,7 @@ class STL_IO(object):
         self.scalarBar.Modified()
         return skipReading
 
-    def load_stl_geometry(self, stl_filename, dirname):
+    def load_stl_geometry(self, stl_filename, dirname, plot=True):
         print("load_stl_geometry...")
         skipReading = self.removeOldGeometry(stl_filename)
         if skipReading:

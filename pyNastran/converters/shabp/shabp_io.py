@@ -15,7 +15,7 @@ class ShabpIO(object):
     def __init__(self):
         pass
 
-    def load_shabp_geometry(self, shabpFilename, dirname):
+    def load_shabp_geometry(self, shabpFilename, dirname, plot=True):
         self.nidMap = {}
 
         #key = self.caseKeys[self.iCase]
