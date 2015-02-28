@@ -10,7 +10,8 @@ from struct import Struct
 from pyNastran.op2.op2_common import OP2Common
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
-from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStress, RealBarStrain
+from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import (RealBarStress, RealBarStrain,
+                                                                 RealBarStressArray, RealBarStrainArray)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import RealBeamStress, RealBeamStrain
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush import RealBushStress, RealBushStrain
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush1d import RealBush1DStress  # unused
@@ -638,22 +639,43 @@ class OES(OP2Common):
                 return self._not_implemented_or_skip(data, msg)
 
         elif self.element_type == 34: # CBAR
-            if self.read_mode == 1:
-                return len(data)
             if self.isStress():
                 result_name = 'barStress'
+                result_vector_name = 'bar_stress'
             else:
                 result_name = 'barStrain'
+                result_vector_name = 'bar_strain'
+            result_vector_name = result_name
+
+            if result_name not in self._saved_results:
+                return len(data)
             self._found_results.add(result_name)
 
             if self.format_code == 1 and self.num_wide == 16:  # real
-                ## TODO: fix to follow correct pattern
                 if self.isStress():
-                    self.create_transient_object(self.barStress, RealBarStress)
+                    slot = self.barStress
+                    obj_real = RealBarStress
+
+                    slot_vector = self.bar_stress
+                    obj_vector_real = RealBarStressArray
                 else:
-                    self.create_transient_object(self.barStrain, RealBarStrain)
+                    obj_real = RealBarStrain
+                    slot = self.barStrain
+
+                    obj_vector_real = RealBarStrainArray
+                    slot_vector = self.bar_strain
+
                 ntotal = 16 * 4
                 nelements = len(data) // ntotal
+
+                auto_return = self._create_oes_object2(nelements,
+                                                       result_name, result_vector_name,
+                                                       slot, slot_vector,
+                                                       obj_real, obj_vector_real)
+                if auto_return:
+                    #assert ntotal * nelements == len(data), 'ntotal=%s len(data)=%s' % (ntotal * nelements, len(data))
+                    return len(data)
+
                 if self.debug:
                     self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
                     #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
@@ -676,6 +698,9 @@ class OES(OP2Common):
                                          s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                                          s1b, s2b, s3b, s4b,        smaxb, sminb, MSc)
             elif self.format_code in [2, 3] and self.num_wide == 19:  # imag
+                if self.read_mode == 1:
+                    return len(data)
+
                 if self.isStress():
                     self.create_transient_object(self.barStress, ComplexBarStress)
                 else:
@@ -2421,7 +2446,7 @@ class OES(OP2Common):
         auto_return = False
         is_vectorized = False
         if self.is_vectorized:
-            if obj_vector is not None:
+            if obj_vector is not None and slot_vector is not None:
                 is_vectorized = True
                 #print "***vectorized..."
 
@@ -2436,7 +2461,9 @@ class OES(OP2Common):
                 auto_return = True
             elif self.read_mode == 2:
                 self.code = self._get_code()
-                #print "***code =", self.code
+                #self.log.info("***code = %s" % str(self.code))
+
+                # if this is failing, you probably set obj_vector to None...
                 self.obj = slot_vector[self.code]
                 #self.obj.update_data_code(self.data_code)
                 self.obj.build()
