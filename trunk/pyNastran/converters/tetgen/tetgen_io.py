@@ -12,7 +12,7 @@ class TetgenIO(object):
     def __init__(self):
         pass
 
-    def load_tetgen_geometry(self, smesh_filename, dirname):
+    def load_tetgen_geometry(self, smesh_filename, dirname, plot=True):
         print("load_tetgen_geometry...")
         skipReading = self.removeOldGeometry(smesh_filename)
         if skipReading:
