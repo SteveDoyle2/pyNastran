@@ -109,11 +109,12 @@ class RealRodForceArray(ScalarObject):
                        % (self.__class__.__name__, nelements))
             ntimes_word = 1
         msg.append('  eType\n')
-        #msg.append('  data.shape=%s' % str(self.data.shape))
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
-        msg.append('  element name: %s\n  ' % self.element_type)
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        #msg.append('  element type: %s\n' % self.element_type)
+        msg.append('  element name: %s\n  ' % self.element_name)
         msg += self.get_data_code()
         return msg
 
@@ -1221,10 +1222,10 @@ class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
                        % (self.__class__.__name__, nelements))
             ntimes_word = 1
         #msg.append('  eType\n')
-        #msg.append('  data.shape=%s' % str(self.data.shape))
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element types: %s\n  ' % ', '.join(self.element_names))
         msg += self.get_data_code()
         return msg

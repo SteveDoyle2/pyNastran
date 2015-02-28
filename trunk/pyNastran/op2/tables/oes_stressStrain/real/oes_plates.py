@@ -171,10 +171,10 @@ class RealPlateArray(OES_Object):
             msg.append('  type=%s nelements=%i nnodes_per_element=%i nlayers=%i ntotal=%i\n'
                        % (self.__class__.__name__, nelements, nnodes, nlayers, ntotal))
             ntimes_word = 1
-        #msg.append('  data.shape=%s' % str(self.data.shape))
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape=%s\n' % str(self.data.shape))
         msg.append('  element types: %s\n  ' % ', '.join(self.element_names))
         msg += self.get_data_code()
         return msg

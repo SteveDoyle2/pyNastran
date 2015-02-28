@@ -48,7 +48,7 @@ class RealRodArray(OES_Object):
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
         #self.names = []
-        #self.nelements //= self.ntimes
+        self.nelements //= self.ntimes
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
@@ -56,7 +56,7 @@ class RealRodArray(OES_Object):
         #self.nelements = 0
         self.is_built = True
 
-        print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, int):
             dtype = 'int32'
@@ -69,7 +69,7 @@ class RealRodArray(OES_Object):
     def add_new_eid_sort1(self, dt, eid, axial, SMa, torsion, SMt):
         self._times[self.itime] = dt
         #if self.itime == 0:
-        print('itime=%s eid=%s' % (self.itime, eid))
+        #print('itime=%s eid=%s' % (self.itime, eid))
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [axial, SMa, torsion, SMt]
         self.ielement += 1
@@ -95,11 +95,10 @@ class RealRodArray(OES_Object):
                        % (self.__class__.__name__, nelements))
             ntimes_word = 1
         msg.append('  eType\n')
-        #msg.append('  data.shape=%s' % str(self.data.shape))
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
-        msg.append('  data.shape=%s\n' % str(self.data.shape))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element types: %s\n  ' % ', '.join(self.element_names))
         msg += self.get_data_code()
         return msg

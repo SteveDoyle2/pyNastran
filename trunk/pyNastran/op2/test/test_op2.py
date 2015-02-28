@@ -212,7 +212,7 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
         op2.read_op2(op2FileName)
         print("---stats for %s---" % op2FileName)
         #op2.get_op2_stats()
-        #print(op2.get_op2_stats())
+        print(op2.get_op2_stats())
         if write_bdf and 0:
             op2.write_bdf('fem.bdf.out', interspersed=True)
         #tableNamesF06 = parse_table_names_from_F06(op2.f06FileName)
