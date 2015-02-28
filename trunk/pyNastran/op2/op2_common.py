@@ -687,7 +687,7 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
         else:
             code = (self.isubcase, self.subtitle)
         self.code = code
-        #print('code = ', self.code)
+        #self.log.debug('code = %s' % str(self.code))
         return self.code
 
     def _not_implemented_or_skip(self, data, msg=''):

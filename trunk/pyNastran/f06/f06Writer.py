@@ -290,6 +290,48 @@ class F06Writer(object):
         self.chexa_strain = {}
         #======================================================================
 
+        # bars/beams
+        self.bar_forces = {}
+        self.bar_stress = {}
+        self.bar_strain = {}
+
+        self.beam_forces = {}
+        self.beam_stress = {}
+        self.beam_strain = {}
+
+        #======================================================================
+        # shells
+        self.ctria3_force = {}
+        self.cquad4_force = {}
+        self.cshear_force = {}
+
+        self.ctria3_stress = {}
+        self.ctria6_stress = {}
+        self.cquad4_stress = {}
+        self.cquad8_stress = {}
+        self.cquadr_stress = {}
+        self.ctriar_stress = {}
+
+        self.ctria3_strain = {}
+        self.ctria6_strain = {}
+        self.cquad4_strain = {}
+        self.cquad8_strain = {}
+        self.cquadr_strain = {}
+        self.ctriar_strain = {}
+
+        self.cquad4_composite_stress = {}
+        self.cquad8_composite_stress = {}
+        self.ctria3_composite_stress = {}
+        self.ctria6_composite_stress = {}
+        self.cquad4_composite_strain = {}
+        self.cquad8_composite_strain = {}
+        self.ctria3_composite_strain = {}
+        self.ctria6_composite_strain = {}
+
+        self.cshear_stress = {}
+        self.cshear_strain = {}
+        #======================================================================
+
     def __objects_common_init__(self):
         #: the date the job was run on
         self.date = None
@@ -303,7 +345,6 @@ class F06Writer(object):
 
         #: ESE
         self.eigenvalues = {}
-
 
     def __objects_init__(self):
         """More variable declarations"""
@@ -370,14 +411,10 @@ class F06Writer(object):
         self.gapForces = {}
 
         self.plateForces = {}
-        self.ctria3_force = {}
-        self.cquad4_force = {}
-
         self.plateForces2 = {}
         self.compositePlateForces = {}
 
         self.shearForces = {}
-        self.cshear_force = {}
 
         self.solidPressureForces = {}
         self.springForces = {}
@@ -434,20 +471,8 @@ class F06Writer(object):
 
         #: OES - isotropic CTRIA3/CQUAD4 stress
         self.plateStress = {}
-        self.ctria3_stress = {}
-        self.ctria6_stress = {}
-        self.cquad4_stress = {}
-        self.cquad8_stress = {}
-        self.cquadr_stress = {}
-        self.ctriar_stress = {}
         #: OES - isotropic CTRIA3/CQUAD4 strain
         self.plateStrain = {}
-        self.ctria3_strain = {}
-        self.ctria6_strain = {}
-        self.cquad4_strain = {}
-        self.cquad8_strain = {}
-        self.cquadr_strain = {}
-        self.ctriar_strain = {}
 
         #: OESNLXR - CTRIA3/CQUAD4 stress
         self.nonlinearPlateStress = {}
@@ -464,32 +489,20 @@ class F06Writer(object):
 
         #: OES - composite CTRIA3/CQUAD4 stress
         self.compositePlateStress = {}
-        self.cquad4_composite_stress = {}
-        self.cquad8_composite_stress = {}
-        self.ctria3_composite_stress = {}
-        self.ctria6_composite_stress = {}
         #: OES - composite CTRIA3/CQUAD4 strain
         self.compositePlateStrain = {}
-        self.cquad4_composite_strain = {}
-        self.cquad8_composite_strain = {}
-        self.ctria3_composite_strain = {}
-        self.ctria6_composite_strain = {}
 
 
         #: OES - CSHEAR stress
         self.shearStress = {}
-        self.cshear_stress = {}
         #: OES - CSHEAR strain
         self.shearStrain = {}
-        self.cshear_strain = {}
-
         #: OES - CELAS1 224, CELAS3 225,
         self.nonlinearSpringStress = {}
         #: OES - GAPNL 86
         self.nonlinearGapStress = {}
         #: OES - CBUSH 226
         self.nolinearBushStress = {}
-
         # OQG - spc/mpc forces
         self.spcForces = {}  # tCode=3?
         self.mpcForces = {}  # tCode=39
@@ -580,23 +593,28 @@ class F06Writer(object):
             'conrod_strain',
             'ctube_strain',
 
-            # OES - isotropic CBAR stress
-            'barStress',
-            # OES - isotropic CBAR strain
+            # OES - isotropic CBAR stress/strain
+            'barStress',  # non-vectorized
             'barStrain',
-            # OES - isotropic CBEAM stress
-            'beamStress',
-            # OES - isotropic CBEAM strain
+            'bar_stress',  # vectorized
+            'bar_strain',
+
+            # OES - isotropic CBEAM stress/strain
+            'beamStress',  # non-vectorized
             'beamStrain',
+            'beam_stress',  # vectorized
+            'beam_strain',
+
+            # OES - isotropic CBEAM strain
 
             # OES - isotropic CTRIA3/CQUAD4 stress
-            'plateStress',
-            'ctria3_stress',
+            'plateStress',  # non-vectorized
+            'ctria3_stress',  # vectorized
             'cquad4_stress',
 
             # OES - isotropic CTRIA3/CQUAD4 strain
-            'plateStrain',
-            'ctria3_strain',
+            'plateStrain',  # non-vectorized
+            'ctria3_strain',  # vectorized
             'cquad4_strain',
 
             # OES - isotropic CTETRA/CHEXA/CPENTA stress
@@ -633,9 +651,9 @@ class F06Writer(object):
             'conrod_force',
             'ctube_force',
 
-            'barForces',
+            'barForces',  'bar_forces',
             'bar100Forces',
-            'beamForces',
+            'beamForces', 'beam_forces',
             'bendForces',
             'bushForces',
             'coneAxForces',

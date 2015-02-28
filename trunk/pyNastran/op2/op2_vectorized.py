@@ -165,18 +165,21 @@ class OP2_Vectorized(OP2):
             'rodForces',
             'crod_force', 'conrod_force', 'ctube_force',
             #=======================================================
-            'plateStress', 'plateStrain', 'plateForces', 'plateForces2',
+            #'plateStress', 'plateStrain',
+            'plateForces', 'plateForces2',
             'ctria3_stress', 'ctria3_strain', 'ctria3_force',
             'cquad4_stress', 'cquad4_strain', 'cquad4_force',
 
-            'compositePlateStress', 'compositePlateStrain',
+            #'compositePlateStress', 'compositePlateStrain',
             'cquad4_composite_stress', 'cquad4_composite_strain',
             'cquad8_composite_stress', 'cquad8_composite_strain',
             'ctria3_composite_stress', 'ctria3_composite_strain',
             'ctria6_composite_stress', 'ctria6_composite_strain',
             #=======================================================
-            'barStress', 'barStrain', 'beamForces',
-            'beamStress', 'beamStrain', 'barForces',
+            'bar_stress', 'bar_strain', 'bar_forces',
+
+            'beamStress', 'beamStrain', 'beamForces',
+            'beam_stress', 'beam_strain', 'beam_forces',
             #=======================================================
             'strainEnergy',
             #=======================================================

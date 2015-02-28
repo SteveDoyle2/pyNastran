@@ -819,6 +819,7 @@ class NastranIO(object):
         self.TurnTextOn()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
+        #self.show_caero_mesh()
 
         print("tring to read...", op2_filename)
         if '.op2' in op2_filename:  # TODO: do this based on lower & file extension
@@ -1465,34 +1466,45 @@ class NastranIO(object):
                 print('class_name = %s' % str(case))
             #if subcaseID in model.barStress:
                 #case = model.barStress[subcaseID]
-                if case.nonlinear_factor is not None:
-                    break
-                    #raise NotImplementedError('time bar stress/strain')
-                    #return
 
-                if is_stress:
-                    for eid in case.axial:
-                        eid2 = self.eidMap[eid]
-                        isElementOn[eid2] = 1.
+                #s1a = case.data[itime, :, 0]
+                #s2a = case.data[itime, :, 1]
+                #s3a = case.data[itime, :, 2]
+                #s4a = case.data[itime, :, 3]
 
-                        oxx[eid2] = case.axial[eid]
+                axial = case.data[itime, :, 4]
+                smaxa = case.data[itime, :, 5]
+                smina = case.data[itime, :, 6]
+                #MSt = case.data[itime, :, 7]
 
-                        o1[eid2] = max(case.smax[eid])
-                        o3[eid2] = min(case.smin[eid])
-                        ovm[eid2] = max(    max(case.smax[eid]),
-                                        abs(min(case.smin[eid])))
-                else:
-                    for eid in case.axial:
-                        eid2 = self.eidMap[eid]
-                        isElementOn[eid2] = 1.
+                #s1b = case.data[itime, :, 8]
+                #s2b = case.data[itime, :, 9]
+                #s3b = case.data[itime, :, 10]
+                #s4b = case.data[itime, :, 11]
 
-                        oxx[eid2] = case.axial[eid]
+                smaxb = case.data[itime, :, 12]
+                sminb = case.data[itime, :, 13]
+                #MSc   = case.data[itime, :, 14]
 
-                        o1[eid2] = max(case.emax[eid])
-                        o3[eid2] = min(case.emin[eid])
-                        ovm[eid2] = max(    max(case.emax[eid]),
-                                            abs(min(case.emin[eid])))
 
+                eidsi = case.element_node # [:, 0]
+
+                i = searchsorted(eids, eidsi)
+                print('ibar = %s' % i)
+
+                isElementOn[i] = 1.
+                oxx[i] = axial
+
+                amax = max(smaxa, smaxb)
+                amin = min(smina, sminb)
+                avm = max(abs([smina, sminb,
+                               smaxa, smaxb, axial]))
+
+                print('avm.shape', avm.shape)
+
+                o1[i] = amax
+                o3[i] = amin
+                ovm[i] = avm
 
             if 0 and subcaseID in model.beamStress:
                 case = model.beamStress[subcaseID]
@@ -1644,6 +1656,7 @@ class NastranIO(object):
             # subcaseID,resultType,vectorSize,location,dataFormat
             if is_stress and itime == 0:
                 if isElementOn.min() != isElementOn.max():
+                    #print('isElementOn =', isElementOn)
                     cases[(1, icase, 'isElementOn', 1, 'centroid', '%i')] = isElementOn
                     formi.append(('IsElementOn', icase, []))
                     icase += 1
