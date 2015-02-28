@@ -7,6 +7,7 @@ from six.moves import range
 import sys
 import os.path
 import traceback
+import inspect
 #import webbrowser
 #webbrowser.open("http://xkcd.com/353/")
 
@@ -249,7 +250,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
             else:
                 break
 
-    def on_load_geometry(self, infile_name=None, geometry_format=None):
+    def on_load_geometry(self, infile_name=None, geometry_format=None, plot=True):
         wildcard = ''
         is_failed = False
 
@@ -402,8 +403,16 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
                 except:
                     print("method %r does not exist" % name)
             self.log_info("reading %s file %r" % (geometry_format, infile_name))
+
+            args, varargs, keywords, defaults = inspect.getargspec(load_function)
+
             try:
-                has_results = load_function(infile_name, self.last_dir)
+                if args[-1] == 'plot':
+                    name = load_function.__name__
+                    self.log_error("'plot' needs to be added to %r"% name)
+                    has_results = load_function(infile_name, self.last_dir, plot=plot)
+                else:
+                    has_results = load_function(infile_name, self.last_dir)
             except Exception as e:
                 msg = traceback.format_exc()
                 self.log_error(msg)
