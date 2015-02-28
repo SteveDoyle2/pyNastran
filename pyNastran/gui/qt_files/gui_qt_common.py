@@ -79,17 +79,20 @@ class GuiCommon(object):
             raise
         self.iCase = iCase
         case = self.resultCases[key]
+        label2 = ''
         if len(key) == 5:
             (subcaseID, resultType, vectorSize, location, data_format) = key
-        else:
+        elif len(key) == 6:
             (subcaseID, j, resultType, vectorSize, location, data_format) = key
+        else:
+            (subcaseID, j, resultType, vectorSize, location, data_format, label2) = key
 
         try:
             caseName = self.iSubcaseNameMap[subcaseID]
         except KeyError:
             caseName = ('case=NA', 'label=NA')
         (subtitle, label) = caseName
-
+        label += label2
         print("subcaseID=%s resultType=%r subtitle=%r label=%r" % (subcaseID, resultType, subtitle, label))
 
         #================================================
@@ -159,8 +162,10 @@ class GuiCommon(object):
     def final_grid_update(self, gridResult, key, subtitle, label):
         if len(key) == 5:
             (subcaseID, resultType, vectorSize, location, data_format) = key
-        else:
+        elif len(key) == 6:
             (subcaseID, j, resultType, vectorSize, location, data_format) = key
+        else:
+            (subcaseID, j, resultType, vectorSize, location, data_format, label2) = key
         npoints = self.nPoints()
         ncells = self.nCells()
 

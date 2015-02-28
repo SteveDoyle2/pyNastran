@@ -583,8 +583,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         case = self.resultCases[key]
         if len(key) == 5:
             (subcaseID, resultType, vectorSize, location, data_format) = key
-        else:
+        elif len(key) == 6:
             (subcaseID, i, resultType, vectorSize, location, data_format) = key
+        else:
+            (subcaseID, i, resultType, vectorSize, location, data_format, label2) = key
 
         data = {
             'name' : resultType,
@@ -620,8 +622,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         case = self.resultCases[key]
         if len(key) == 5:
             (subcase_id, _resultType, vectorSize, location, _data_format) = key
-        else:
+        elif len(key) == 6:
             (subcase_id, i, _resultType, vectorSize, location, _data_format) = key
+        else:
+            (subcase_id, i, _resultType, vectorSize, location, _data_format, label2) = key
 
         try:
             caseName = self.iSubcaseNameMap[subcase_id]
