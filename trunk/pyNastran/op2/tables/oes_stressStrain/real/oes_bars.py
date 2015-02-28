@@ -24,13 +24,19 @@ class RealBarArray(OES_Object):
             if dt is not None:
                 self.add = self.add_sort1
                 self.add_new_eid = self.add_new_eid_sort1
-                self.addNewNode = self.addNewNodeSort1
+                #self.addNewNode = self.addNewNodeSort1
         else:
             raise NotImplementedError('SORT2')
             #assert dt is not None
             #self.add = self.addSort2
             #self.add_new_eid = self.add_new_eid_sort2
             #self.addNewNode = self.addNewNodeSort2
+
+    def is_real(self):
+        return True
+
+    def is_complex(self):
+        return False
 
     def _reset_indices(self):
         self.itotal = 0
@@ -140,26 +146,6 @@ class RealBarArray(OES_Object):
         msg.append('  element types: %s\n  ' % ', '.join(self.element_names))
         msg += self.get_data_code()
         return msg
-
-    def get_f06_header(self, is_mag_phase=True):
-        msg = self._get_msgs()
-        if 'CTRIA3' in self.element_name and self.element_type == 74:
-            msg = ctria3_msg
-            nnodes = 3
-        elif 'CQUAD4' in self.element_name and self.element_type == 33:
-            msg = cquad4_msg
-            nnodes = 4
-        elif 'CTRIA6' in self.element_name and self.element_type == 0:
-            msg = ctria6_msg
-            nnodes = 6
-        elif 'CQUAD8' in self.element_name and self.element_type == 0:
-            msg = cquad8_msg
-            nnodes = 8
-            raise RuntimeError('can these be bilinear???')
-        else:
-            raise NotImplementedError(self.element_name)
-
-        return self.element_name, nnodes, msg
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not

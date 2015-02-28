@@ -330,6 +330,8 @@ class OES(OP2Common):
             if self.format_code == 1 and self.num_wide == 5:  # real
                 ntotal = 5 * 4
                 nelements = len(data) // ntotal
+                if self.isStress():
+                    print('nelements = %s' % nelements)
                 auto_return = self._create_oes_object2(nelements,
                                                        result_name, result_vector_name,
                                                        slot, slot_vector,
@@ -947,23 +949,46 @@ class OES(OP2Common):
         # plates
         elif self.element_type in [33]:  # CQUAD4-centroidal
             # 33-QUAD4-centroidal
-            if self.read_mode == 1:
-                return len(data)
+
+            ComplexPlateStressArray = None
+            ComplexPlateStrainArray = None
             if self.isStress():
                 result_name = 'plateStress'
+                slot = self.plateStress
+                obj_real = RealPlateStress
+                obj_complex = ComplexPlateStress
+
+                obj_vector_real = RealPlateStressArray
+                obj_vector_complex = ComplexPlateStressArray
+                result_vector_name = 'cquad4_stress'
+                slot_vector = self.cquad4_stress
             else:
                 result_name = 'plateStrain'
-            self._found_results.add(result_name)
-            if self.format_code == 1 and self.num_wide == 17:  # real
-                if self.isStress():
-                    self.create_transient_object(self.plateStress, RealPlateStress)
-                else:
-                    self.create_transient_object(self.plateStrain, RealPlateStrain)
+                slot = self.plateStrain
+                obj_real = RealPlateStrain
+                obj_complex = ComplexPlateStrain
 
-                #return
+                obj_vector_real = RealPlateStrainArray
+                obj_vector_complex = ComplexPlateStrainArray
+                result_vector_name = 'cquad4_strain'
+                slot_vector = self.cquad4_strain
+
+            self._found_results.add(result_name)
+
+            if self.format_code == 1 and self.num_wide == 17:  # real
                 ntotal = 68  # 4*17
-                s = Struct(b'i16f')
                 nelements = len(data) // ntotal
+                nlayers = nelements * 2
+                #print('nlayers = %s' % nlayers)
+                auto_return = self._create_oes_object2(nlayers,
+                                                       result_name, result_vector_name,
+                                                       slot, slot_vector,
+                                                       obj_real, obj_vector_real)
+                if auto_return:
+                    self._data_factor = 2
+                    return nelements * ntotal
+
+                s = Struct(b'i16f')
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
@@ -982,6 +1007,9 @@ class OES(OP2Common):
                     #print "eid =", eid
                     n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 15:  # imag
+                if self.read_mode == 1:
+                    return len(data)
+
                 if self.isStress():
                     self.create_transient_object(self.plateStress, ComplexPlateStress)
                 else:
@@ -1098,7 +1126,7 @@ class OES(OP2Common):
                                                        obj_real, obj_vector_real)
                 if auto_return:
                     self._data_factor = 2
-                    return nelements * self.num_wide * 4
+                    return nelements * ntotal
 
                 s = Struct(b'i16f')
                 if self.debug:
@@ -2461,7 +2489,7 @@ class OES(OP2Common):
                 auto_return = True
             elif self.read_mode == 2:
                 self.code = self._get_code()
-                #self.log.info("***code = %s" % str(self.code))
+                self.log.info("***code = %s" % str(self.code))
 
                 # if this is failing, you probably set obj_vector to None...
                 self.obj = slot_vector[self.code]

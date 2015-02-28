@@ -33,6 +33,8 @@ class FortranFormat(object):
 
     def show_data(self, data, types='ifs'):
         """
+        Useful function for seeing what's going on locally when debugging.
+
         :param self:    the OP2 object pointer
         """
         n = len(data)
@@ -163,9 +165,20 @@ class FortranFormat(object):
         self.binary_debug.write('---markers = [-3, 1, 0]---\n')
         table_mapper = self._get_table_mapper()
 
+        # get the parsing functions (table3_parser, table4_parser)
+        # or find out we're going to be skipping the tables
+        #
+        # table3 - the table with the meta data (e.g. subcaseID, time, is_stress/strain)
+        # table4 - the actual results data
+        #
+        # we indicate table3/4 by isubtable, which starts from -3 (so table3) and counts
+        # down (yes down) to 4 to indicate table4.  If we count down again, we end up
+        # back at table 3 (with isubtable=-5), which will occur in the case of multiple
+        # times/element types/results in a single macro table (e.g. OUG, OES).
         if self.table_name in table_mapper:
             if self.read_mode in [0, 2]:
                 self.log.debug("table_name = %r" % self.table_name)
+
             table3_parser, table4_parser = table_mapper[self.table_name]
             passer = False
         else:
@@ -176,12 +189,18 @@ class FortranFormat(object):
             table4_parser = None
             passer = True
 
+        # we need to check the marker, so we read it and rewind, so we don't
+        # screw up our positioning in the file
         markers = self.get_nmarkers(1, rewind=True)
         self.binary_debug.write('---marker0 = %s---\n' % markers)
+
+        # while the table isn't done
         while markers[0] != 0:
+            # this is the length of the current record inside table3/table4
             record_len = self._get_record_length()
-            if record_len == 584:
-                self.data_code = {}  #'log': self.log,}  # resets the logger
+
+            if record_len == 584:  # table3 has a length of 584
+                self.data_code = {}
                 self.obj = None
                 data = self._read_record()
                 if not passer:
@@ -194,9 +213,18 @@ class FortranFormat(object):
                     data = self._skip_record()
                 else:
                     if hasattr(self, 'num_wide'):
+                        # num_wide is the result size, so having num_wide indicates
+                        # we are reading results
                         datai = b''
+
+                        # if reading the data
+                        # 0 - non-vectorized
+                        # 1 - 1st pass to size the array (vectorized)
+                        # 2 - 2nd pass to read the data  (vectorized)
                         if self.read_mode in [0, 2]:
                             self.ntotal = 0
+
+                            # we stream the record because we get it in partial blocks
                             for data in self._stream_record():
                                 data = datai + data
 
@@ -204,24 +232,58 @@ class FortranFormat(object):
                                 assert isinstance(n, int), self.table_name
                                 datai = data[n:]
 
+                            # PCOMPs are stupid, so we need an element flag
                             if hasattr(self, 'eid_old'):
                                 del self.eid_old
 
+                            # if reading the data
+                            # 0 - non-vectorized
+                            # 1 - 1st pass to size the array (vectorized)
+                            # 2 - 2nd pass to read the data  (vectorized)
                             if self.read_mode == 2:
+                                # vectorized objects are stored as self.obj
+                                # they have obj.itime which is their table3 counter
                                 if hasattr(self, 'obj') and hasattr(self.obj, 'itime'):
                                     #ntotal = record_len // (self.num_wide * 4) * self._data_factor
+
+                                    # we reset the itime counter when we fill up
+                                    # the total number of nodes/elements/layers
+                                    # in the result, where ntotal is the critical
+                                    # length of interest.  This let's us start back
+                                    # at the correct spot the next time we read table3
+                                    #
+                                    # For displacements, ntotal=nnodes
+                                    #
+                                    # For a CBAR, it's ntotal=nelements*2, where
+                                    # 2 is the number of nodes; points A/B
+                                    #
+                                    # For a CTRIA3 / linear CQUAD4, it's
+                                    # ntotal=nelements*2, where 2 is the number
+                                    # of layers (top/btm) and we only get a
+                                    # centroidal result.
+                                    #
+                                    # For a CQUAD4 bilinear, it's
+                                    # ntotal=nelements*(nnodes+1)*2, where 2 is
+                                    # the number of layers and nnodes is 4
+                                    # (we get an extra result at the centroid).
+                                    #
+                                    # For a PCOMP, it's ntotal=sum(nelements*nlayers),
+                                    # where each element can have a different
+                                    # number of layers
                                     if self.obj.ntotal == self.obj.data.shape[1]:
                                         self.obj._reset_indices()
                                         self.obj.words = self.words
                                         self.obj.itime += 1
                                     else:
-                                        print('self.obj.name=%r has itime', self.obj.__class__.__name__)
-                                        print('ntotal=%s shape=%s' % (self.obj.ntotal, str(self.obj.data.shape)))
+                                        print('self.obj.name=%r has itime' % self.obj.__class__.__name__)
+                                        print('ntotal=%s shape=%s shape[1]=%s' % (self.obj.ntotal, str(self.obj.data.shape), self.obj.data.shape[1]))
                                 #else:
                                     #print('self.obj.name=%r doesnt have itime' % self.obj.__class__.__name__)
 
 
                         elif self.read_mode == 1:
+                            # if we're checking the array size
+
                             #n = self._skip_record()
                             #n = table4_parser(datai, 300000)
                             if 1:
@@ -249,7 +311,7 @@ class FortranFormat(object):
                                         methods = '\ndir(obj)=%s' % ', '.join(sorted(dir(self.obj)))
                                         msg = 'is %s vectorized because its missing _reset_indices...%s' % (
                                             self.obj.__class__.__name__, methods)
-                                        break
+                                        #break  # was active...
                                         raise RuntimeError(msg)
                                     self.obj._reset_indices()
                                     self.obj.ntimes += 1
@@ -261,9 +323,16 @@ class FortranFormat(object):
                         n = table4_parser(data)
                     del n
 
+            # counting down...
             self.isubtable -= 1
+
+            # we'd better find the expected subtable or we'll crash...
             self.read_markers([self.isubtable, 1, 0])
+
+            # another round
             markers = self.get_nmarkers(1, rewind=True)
+
+        # we've finished reading all tables, but have one last marker to read
         self.read_markers([0])
         self.finish()
 
@@ -291,6 +360,11 @@ class FortranFormat(object):
         self.f.seek(n)
 
     def _get_record_length(self):
+        """
+        The record length helps us figure out data block size, which is used
+        to quickly size the arrays.  We just need a bit of meta data and can
+        jump around quickly.
+        """
         len_record = 0
         n0 = self.n
         markers0 = self.get_nmarkers(1, rewind=False)
@@ -326,6 +400,8 @@ class FortranFormat(object):
 
     def _stream_record(self, debug=True):
         """
+        Creates a "for" loop that keeps giving us records until we're done.
+
         :param self:    the OP2 object pointer
         """
         markers0 = self.get_nmarkers(1, rewind=False)

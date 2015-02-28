@@ -8,14 +8,13 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject,
 from pyNastran.f06.f06_formatting import writeFloats13E
 
 
+# there is a bug for mode_solid_shell_bar.op2 for multiple times
 class RealRodArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         self.eType = {}
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
-        #self.ntimes = 0  # or frequency/mode
-        #self.ntotal = 0
         self.nelements = 0  # result specific
 
         if is_sort1:
@@ -23,6 +22,12 @@ class RealRodArray(OES_Object):
             self.add_new_eid = self.add_new_eid_sort1
         else:
             raise NotImplementedError('SORT2')
+
+    def is_real(self):
+        return True
+
+    def is_complex(self):
+        return False
 
     def _reset_indices(self):
         self.itotal = 0
@@ -33,10 +38,6 @@ class RealRodArray(OES_Object):
 
     def get_headers(self):
         raise NotImplementedError()
-
-    def _reset_indices(self):
-        self.itotal = 0
-        self.ielement = 0
 
     def build(self):
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
@@ -55,18 +56,20 @@ class RealRodArray(OES_Object):
         #self.nelements = 0
         self.is_built = True
 
-        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, int):
             dtype = 'int32'
-        self.times = zeros(self.ntimes, dtype=dtype)
+        self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
 
         #[axial, torsion, SMa, SMt]
-        self.data = zeros((self.ntimes, self.ntotal, 4), dtype='float32')
+        self.data = zeros((self.ntimes, self.nelements, 4), dtype='float32')
 
     def add_new_eid_sort1(self, dt, eid, axial, SMa, torsion, SMt):
-        self.times[self.itime] = dt
+        self._times[self.itime] = dt
+        #if self.itime == 0:
+        print('itime=%s eid=%s' % (self.itime, eid))
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [axial, SMa, torsion, SMt]
         self.ielement += 1
@@ -78,9 +81,9 @@ class RealRodArray(OES_Object):
                     '  ntotal: %i\n' % self.ntotal,
                     ]
 
-        nelements = self.nelements
-        ntimes = self.ntimes
-        #ntotal = self.ntotal
+        ntimes, nelements, _ = self.data.shape
+        assert self.ntimes == ntimes, 'ntimes=%s expected=%s' % (self.ntimes, ntimes)
+        assert self.nelements == nelements, 'nelements=%s expected=%s' % (self.nelements, nelements)
 
         msg = []
         if self.nonlinear_factor is not None:  # transient
@@ -95,7 +98,8 @@ class RealRodArray(OES_Object):
         #msg.append('  data.shape=%s' % str(self.data.shape))
         headers = self.get_headers()
         n = len(headers)
-        msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape=%s\n' % str(self.data.shape))
         msg.append('  element types: %s\n  ' % ', '.join(self.element_names))
         msg += self.get_data_code()
         return msg
@@ -138,7 +142,7 @@ class RealRodArray(OES_Object):
             is_odd = True
 
         for itime in range(ntimes):
-            dt = self.times[itime]  # TODO: rename this...
+            dt = self._times[itime]
             if self.nonlinear_factor is not None:
                 dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
                 header[1] = dtLine
