@@ -737,7 +737,7 @@ class NastranIO(object):
 
         if plot:
             #self._finish_results_io(cases)
-            self._finish_results_io2(form, cases)
+            self._finish_results_io2([form], cases)
 
     def _plot_pressures(self, model, cases):
         """
