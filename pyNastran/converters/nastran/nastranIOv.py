@@ -912,6 +912,8 @@ class NastranIO(object):
             for (result, name) in displacement_like:
                 if subcaseID in result:
                     case = result[subcaseID]
+                    if not case.is_real():
+                        return icase
                     if case.nonlinear_factor is not None: # transient
                         ntimes = len(case._times)
                         code_name = case.data_code['name']
@@ -1280,9 +1282,9 @@ class NastranIO(object):
                 print('table_type=%s' % table_type)
                 case = table[isubcase]
                 if case.nonlinear_factor is not None:
-                    return True, True, is_real, case._times
+                    return True, True, case.is_real(), case._times
                 else:
-                    return True, False, is_real, None
+                    return True, False, case.is_real(), None
 
         return False, False, is_real, None
         #keys = model.__dict__.keys()

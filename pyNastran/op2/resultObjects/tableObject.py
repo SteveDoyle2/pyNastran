@@ -111,6 +111,12 @@ class RealTableArray(TableArray):  # displacement style table
     def __init__(self, data_code, is_sort1, isubcase, dt):
         TableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
+    def is_real(self):
+        return True
+
+    def is_complex(self):
+        return False
+
     def data_type(self):
         return 'float32'
 
@@ -275,6 +281,12 @@ class RealTableArray(TableArray):  # displacement style table
 class ComplexTableArray(TableArray):  # displacement style table
     def __init__(self, data_code, is_sort1, isubcase, dt):
         TableArray.__init__(self, data_code, is_sort1, isubcase, dt)
+
+    def is_real(self):
+        return False
+
+    def is_complex(self):
+        return True
 
     def data_type(self):
         return 'complex64'
