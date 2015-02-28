@@ -72,7 +72,7 @@ class NastranIO(object):
 
 
     def load_nastran_geometry(self, bdf_filename, dirname, plot=True):
-        print('plot=%s' % plot)
+        #print('plot=%s' % plot)
         self.eidMap = {}
         self.nidMap = {}
         #print('bdf_filename=%r' % bdf_filename)
@@ -634,7 +634,7 @@ class NastranIO(object):
 
         nelements = i
         self.nElements = nelements
-        print('nelements=%s pids=%s' % (nelements, list(pids)))
+        #print('nelements=%s pids=%s' % (nelements, list(pids)))
         pids = pids[:nelements]
         #print('len(pids) = ', len(pids))
         self.grid.SetPoints(points)
@@ -895,10 +895,6 @@ class NastranIO(object):
 
         #print(model.print_results())
 
-        #case = model.displacements[1]
-        #print("case = ",case)
-        #for nodeID,translation in sorted(iteritems(case.translations)):
-            #print("nodeID=%s t=%s" %(nodeID,translation))
         #self.iSubcaseNameMap[self.isubcase] = [Subtitle,Label]
 
         cases = {}
@@ -950,7 +946,6 @@ class NastranIO(object):
                         code_name = case.data_code['name']
                         has_cycle = hasattr(case, 'mode_cycle')
 
-
                         itime0 = 0
                         t1 = case.data[itime0, :, 0]
                         ndata, = t1.shape
@@ -992,15 +987,15 @@ class NastranIO(object):
                             form0 = (header, None, [])
                             formi2 = form0[2]
 
-                            cases[(subcaseID, icase, name + 'X', 1, 'node', '%g')] = t1
+                            cases[(subcaseID, icase, name + 'X', 1, 'node', '%g', header)] = t1
                             formi2.append((name + 'X', icase, []))
                             icase += 1
 
-                            cases[(subcaseID, icase, name + 'Y', 1, 'node', '%g')] = t2
+                            cases[(subcaseID, icase, name + 'Y', 1, 'node', '%g', header)] = t2
                             formi2.append((name + 'Y', icase, []))
                             icase += 1
 
-                            cases[(subcaseID, icase, name + 'Z', 1, 'node', '%g')] = t3
+                            cases[(subcaseID, icase, name + 'Z', 1, 'node', '%g', header)] = t3
                             formi2.append((name + 'Z', icase, []))
                             icase += 1
 
@@ -1057,16 +1052,14 @@ class NastranIO(object):
 
     def fill_stress_case(self, cases, model, subcaseID, formi, icase):
         if self.is_centroidal:
-            icase = self._fill_stress_case_centroidal(cases, model, subcaseID, formi, icase, is_stress=True)
-            icase = self._fill_stress_case_centroidal(cases, model, subcaseID, formi, icase, is_stress=False)
+            icase = self._fill_stress_case_centroidal(cases, model, subcaseID, formi, icase)
         elif self.is_nodal:
-            icase = self._fill_stress_case_nodal(cases, model, subcaseID, formi, icase, is_stress=True)
-            icase = self._fill_stress_case_nodal(cases, model, subcaseID, formi, icase, is_stress=False)
+            icase = self._fill_stress_case_nodal(cases, model, subcaseID, formi, icase)
         else:
             raise RuntimeError('this shouldnt happen...')
         return icase
 
-    def _fill_stress_case_nodal(self, cases, model, subcaseID, formi, icase, is_stress=True):
+    def _fill_stress_case_nodal(self, cases, model, subcaseID, formi, icase):
         oxx_dict = {}
         oyy_dict = {}
         ozz_dict = {}
@@ -1312,23 +1305,22 @@ class NastranIO(object):
         table_types = self._get_stress_table_types()
         msg = []
         is_real = True
+        is_data = False
         for table_type in table_types:
             if not hasattr(model, table_type):
                 print('no table_type=%s' % table_type)
                 continue
             table = getattr(model, table_type)
             if isubcase in table:
+                is_data = True
                 print('table_type=%s' % table_type)
                 case = table[isubcase]
                 if case.nonlinear_factor is not None:
-                    return True, True, case.is_real(), case._times
+                    return is_data, False, case.is_real(), case._times
                 else:
-                    return True, False, case.is_real(), None
+                    return is_data, True, case.is_real(), zeros(1, dtype='int32')
 
-        return False, False, is_real, None
-        #keys = model.__dict__.keys()
-        #print('keys = %s' % str(keys))
-        #raise RuntimeError('self._get_stress_times(...) failed')
+        return is_data, False, is_real, None
 
     def _get_stress_table_types(self):
         table_types = [
@@ -1430,340 +1422,470 @@ class NastranIO(object):
         ]
         return table_types
 
-    def _fill_stress_case_centroidal(self, cases, model, subcaseID, formi, icase, is_stress=True):
-        is_data, is_nonlinear, is_real, times = self._get_stress_times(model, subcaseID)
+    def _fill_stress_case_centroidal(self, cases, model, subcaseID, form, icase):
+        assert isinstance(subcaseID, int), type(subcaseID)
+        assert isinstance(icase, int), type(icase)
+        is_data, is_static, is_real, times = self._get_stress_times(model, subcaseID)
+
         if not is_data:
-            return
+            times = []
 
-        if is_nonlinear:
-            icase = self._get_nastran_time_centroidal_stress(cases, model, subcaseID, formi, icase, times, is_stress, is_real, is_static=False)
-        else:
-            times = zeros(1, dtype='int32')
-            icase = self._get_nastran_time_centroidal_stress(cases, model, subcaseID, formi, icase, times, is_stress, is_real, is_static=True)
-        return icase
-
-    def _get_nastran_time_centroidal_stress(self, cases, model, subcaseID, form, icase, times, is_stress=True, is_real=True, is_static=False):
-        eids = self.element_ids
-        nElements = self.nElements
-        isElementOn = zeros(nElements, dtype='int8')  # is the element supported
-
-        if not is_real:
-            return icase
-        for itime in times:
-            print('itime = %s' % itime)
+        #print('times = %s' % times)
+        for itime, dt in enumerate(times):
             if is_static:
                 formi = form
             else:
-                header_time = 'itime %s' % itime
-                form_time = (header_time, None, [])
-                form.append(form_time)
+                header = 'dummy'
+                form_time = [header, None, []]
                 formi = form_time[2]
+            is_form_time = False
 
-            oxx = zeros(nElements, dtype='float32')
-            oyy = zeros(nElements, dtype='float32')
-            ozz = zeros(nElements, dtype='float32')
-
-            txy = zeros(nElements, dtype='float32')
-            tyz = zeros(nElements, dtype='float32')
-            txz = zeros(nElements, dtype='float32')
-
-            o1 = zeros(nElements, dtype='float32')  # max
-            o2 = zeros(nElements, dtype='float32')  # mid
-            o3 = zeros(nElements, dtype='float32')  # min
-            ovm = zeros(nElements, dtype='float32')
-
-
-            vmWord = None
-
-            if is_stress:
-                rods = [model.crod_stress, model.conrod_stress, model.ctube_stress,]
-            else:
-                rods = [model.crod_strain, model.conrod_strain, model.ctube_strain,]
-
-            for result in rods:
-                if subcaseID not in result:
-                    continue
-
-                case = result[subcaseID]
-                eidsi = case.element
-                i = searchsorted(eids, eidsi)
-                if len(i) != len(unique(i)):
-                    msg = 'irod=%s is not unique\n' % str(i)
-                    print('eids = %s\n' % str(list(eids)))
-                    print('eidsi = %s\n' % str(list(eidsi)))
-                    raise RuntimeError(msg)
-
-                #print('irod = %s' % str(i))
-                isElementOn[i] = 1.
-
-                # data=[1, nnodes, 4] where 4=[axial, SMa, torsion, SMt]
-                oxx[i] = case.data[itime, :, 0]
-                txy[i] = case.data[itime, :, 2]
-                ovm[i] = sqrt(oxx[i]**2 + 3*txy[i]**2)
-                o1[i] = sqrt(oxx[i]**2 + txy[i]**2)
-                o3[i] = -o1[i]
-
-            if is_stress:
-                bars = model.bar_stress
-            else:
-                bars = model.bar_strain
-
-            if subcaseID in bars:  # vectorized....
-                case = bars[subcaseID]
-                print('class_name = %s' % str(case))
-
-                #s1a = case.data[itime, :, 0]
-                #s2a = case.data[itime, :, 1]
-                #s3a = case.data[itime, :, 2]
-                #s4a = case.data[itime, :, 3]
-
-                axial = case.data[itime, :, 4]
-                smaxa = case.data[itime, :, 5]
-                smina = case.data[itime, :, 6]
-                #MSt = case.data[itime, :, 7]
-
-                #s1b = case.data[itime, :, 8]
-                #s2b = case.data[itime, :, 9]
-                #s3b = case.data[itime, :, 10]
-                #s4b = case.data[itime, :, 11]
-
-                smaxb = case.data[itime, :, 12]
-                sminb = case.data[itime, :, 13]
-                #MSc   = case.data[itime, :, 14]
-
-                eidsi = case.element_node # [:, 0]
-
-                i = searchsorted(eids, eidsi)
-                #print('ibar = %s' % i)
-                assert len(i) == len(unique(i)), 'ibar=%s is not unique' % str(i)
-
-                isElementOn[i] = 1.
-                oxx[i] = axial
-
-                amax = max(smaxa, smaxb)
-                amin = min(smina, sminb)
-                avm = max(abs([smina, sminb,
-                               smaxa, smaxb, axial]))
-
-                print('avm.shape', avm.shape)
-
-                o1[i] = amax
-                o3[i] = amin
-                ovm[i] = avm
-
-            if 0 and subcaseID in model.beamStress:
-                case = model.beamStress[subcaseID]
-                if case.nonlinear_factor is not None: # transient
-                    asdf
-                    return
-                for eid in case.smax:
-                    eid2 = self.eidMap[eid]
-                    isElementOn[eid2] = 1.
-
-                    oxx[eid2] = max(max(case.sxc[eid]),
-                                    max(case.sxd[eid]),
-                                    max(case.sxe[eid]),
-                                    max(case.sxf[eid]))
-
-                    o1[eid2] = max(case.smax[eid])
-                    o3[eid2] = min(case.smin[eid])
-                    ovm[eid2] = max(    max(case.smax[eid]),
-                                    abs(min(case.smin[eid])))
-
-
-            if is_stress:
-                plates = [model.ctria3_stress, model.cquad4_stress,
-                          model.ctria6_stress, model.cquad8_stress]
-            else:
-                plates = [model.ctria3_strain, model.cquad4_strain,
-                          model.ctria6_strain, model.cquad8_strain]
-
-            for result in plates:
-                ## is tria6, quad8, bilinear quad handled?
-                if subcaseID not in result:
-                    continue
-
-                case = result[subcaseID]
-
-                if case.isVonMises():
-                    vmWord = 'vonMises'
+            # stress
+            icase, ncase, case, header, form0 = self._get_nastran_time_centroidal_stress(cases, model, subcaseID, form, icase, itime, dt,
+                                                             is_stress=True, is_real=is_real, is_static=is_static)
+            if ncase:
+                assert ncase > 0, ncase
+                if is_static:
+                    formi.append(form0)
                 else:
-                    vmWord = 'maxShear'
+                    form_time[0] = header
+                    form_time[2].append(form0)
+                    is_form_time = True
 
-                nnodes_per_element = case.nnodes * 2  # *2 for every other layer
-                eidsi = case.element_node[::nnodes_per_element, 0]  # ::2 is for layer skipping
-                #print('eidsi =', case.element_node[:, 0])
-
-                i = searchsorted(eids, eidsi)
-                assert len(i) == len(unique(i)), 'iplate=%s is not unique' % str(i)
-                #print('iplate = %s' % i)
-                #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
-                #                                         txy, angle,
-                #                                         majorP, minorP, ovm]
-                isElementOn[i] = 1.
-                ndt, ntotal, nresults = case.data.shape
-                if nnodes_per_element == 1:
-                    j = None
+            # strain
+            icase, ncase, case, header, form0 = self._get_nastran_time_centroidal_stress(cases, model, subcaseID, form, icase, itime, dt,
+                                                             is_stress=False, is_real=is_real, is_static=is_static)
+            if ncase:
+                assert ncase > 0, ncase
+                if is_static:
+                    formi.append(form0)
                 else:
-                    j = arange(ntotal)[::nnodes_per_element]
-                try:
-                    oxx[i] = case.data[itime, j, 1]
-                    oyy[i] = case.data[itime, j, 2]
-                    txy[i] = case.data[itime, j, 3]
-                    #txy[i] = case.data[itime, ::nnodes_per_element, 3]
-                    #ozz[i] = 0
-                    o1[i]  = case.data[itime, j, 5]
-                    #o2[i]  = case.data[itime, :, ???]
-                    o3[i]  = case.data[itime, j, 6]
-                    ovm[i] = case.data[itime, j, 7]
-                except:
-                    return
+                    form_time[0] = header
+                    form_time[2].append(form0)
+                    is_form_time = True
 
-            if subcaseID in model.compositePlateStress:
-                case = model.compositePlateStress[subcaseID]
-                if case.nonlinear_factor is not None: # transient
-                    return
-                if case.isVonMises():
-                    vmWord = 'vonMises'
+            # ese
+            icase, ncase, case, header, form0 = self._get_nastran_time_centroidal_strain_energy(cases, model, subcaseID, form, icase, itime, dt,
+                                                            is_real=is_real, is_static=is_static)
+            if ncase:
+                assert ncase > 0, ncase
+                if is_static:
+                    formi.append(form0)
                 else:
-                    vmWord = 'maxShear'
-                for eid in case.ovmShear:
-                    eid2 = self.eidMap[eid]
-                    isElementOn[eid2] = 1.
+                    #form_time[0] = header
+                    form_time[2].append(form0)
+                    is_form_time = True
 
-                    eType = case.eType[eid]
-                    oxxi = max(case.o11[eid])
-                    oyyi = max(case.o22[eid])
+            #--------------------------
+            if is_form_time:
+                form.append(form_time)
 
-                    o1i = max(case.majorP[eid])
-                    o3i = min(case.minorP[eid])
-                    ovmi = max(case.ovmShear[eid])
-
-                    oxx[eid2] = oxxi
-                    oyy[eid2] = oyyi
-
-                    o1[eid2] = o1i
-                    o3[eid2] = o3i
-                    ovm[eid2] = ovmi
-
-
-            if is_stress:
-                solids = [(5, model.ctetra_stress),
-                          (7, model.cpenta_stress),
-                          (11, model.chexa_stress),]
-            else:
-                solids = [(5, model.ctetra_strain),
-                          (7, model.cpenta_strain),
-                          (11, model.chexa_strain),]
-
-            for nnodes_per_element, result in solids:
-                if subcaseID not in result:
-                    continue
-
-                case = result[subcaseID]
-                if case.isVonMises():
-                    vmWord = 'vonMises'
-                else:
-                    vmWord = 'maxShear'
-
-                eidsi = case.element_cid[:, 0]
-                i = searchsorted(eids, eidsi)
-                assert len(i) == len(unique(i)), 'isolid=%s is not unique' % str(i)
-                #print('isolid = %s' % str(i))
-                isElementOn[i] = 1.
-                #self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz,
-                #                                         txy, tyz, txz,
-                #                                         o1, o2, o3, ovm]
-                oxx[i] = case.data[itime, ::nnodes_per_element, 0]
-                oyy[i] = case.data[itime, ::nnodes_per_element, 1]
-                ozz[i] = case.data[itime, ::nnodes_per_element, 2]
-                txy[i] = case.data[itime, ::nnodes_per_element, 3]
-                tyz[i] = case.data[itime, ::nnodes_per_element, 4]
-                txz[i] = case.data[itime, ::nnodes_per_element, 5]
-                o1[i]  = case.data[itime, ::nnodes_per_element, 6]
-                o2[i]  = case.data[itime, ::nnodes_per_element, 7]
-                o3[i]  = case.data[itime, ::nnodes_per_element, 8]
-                ovm[i] = case.data[itime, ::nnodes_per_element, 9]
-
-            if is_stress:
-                word = 'Stress'
-                fmt = '%.3f'
-            else:
-                word = 'Strain'
-                fmt = '%.4e'
-
-            # a form is the table of output...
-            # Subcase 1         <--- formi  - form_isubcase
-            #    Time 1
-            #        Stress     <--- form0  - the root level
-            #            oxx    <--- formis - form_itime_stress
-            #            oyy
-            #            ozz
-            form0 = (word, None, [])
-            formis = form0[2]
-            # subcaseID,resultType,vectorSize,location,dataFormat
-            if is_stress and itime == 0:
-                if isElementOn.min() != isElementOn.max():
-                    if isElementOn.min() == 0:
-                        ioff = where(isElementOn == 0)[0]
-                        print('eids_off = %s' % self.element_ids[ioff])
-                        self.log_error('eids_off = %s' % self.element_ids[ioff])
-                    cases[(1, icase, 'isElementOn', 1, 'centroid', '%i')] = isElementOn
-                    formi.append(('IsElementOn', icase, []))
-                    icase += 1
-
-            if oxx.min() != oxx.max():
-                cases[(subcaseID, icase, word + 'XX', 1, 'centroid', fmt)] = oxx
-                formis.append((word + 'XX', icase, []))
-                icase += 1
-            if oyy.min() != oyy.max():
-                cases[(subcaseID, icase, word + 'YY', 1, 'centroid', fmt)] = oyy
-                formis.append((word + 'YY', icase, []))
-                icase += 1
-            if ozz.min() != ozz.max():
-                cases[(subcaseID, icase, word + 'ZZ', 1, 'centroid', fmt)] = ozz
-                formis.append((word + 'ZZ', icase, []))
-                icase += 1
-
-            if txy.min() != txy.max():
-                cases[(subcaseID, icase, word + 'XY', 1, 'centroid', fmt)] = txy
-                formis.append((word + 'XY', icase, []))
-                icase += 1
-            if tyz.min() != tyz.max():
-                cases[(subcaseID, icase, word + 'YZ', 1, 'centroid', fmt)] = tyz
-                formis.append((word + 'YZ', icase, []))
-                icase += 1
-            if txz.min() != txz.max():
-                cases[(subcaseID, icase, word + 'XZ', 1, 'centroid', fmt)] = txz
-                formis.append((word + 'XZ', icase, []))
-                icase += 1
-
-            if o1.min() != o1.max():
-                cases[(subcaseID, icase, word + '1', 1, 'centroid', fmt)] = o1
-                formis.append((word + '1', icase, []))
-                icase += 1
-            if o2.min() != o2.max():
-                cases[(subcaseID, icase, word + '2', 1, 'centroid', fmt)] = o2
-                formis.append((word + '2', icase, []))
-                icase += 1
-            if o3.min() != o3.max():
-                cases[(subcaseID, icase, word + '3', 1, 'centroid', fmt)] = o3
-                formis.append((word + '3', icase, []))
-                icase += 1
-            if vmWord is not None:
-                if not is_stress:
-                    max_min = max(ovm.max(), abs(ovm.min()))
-                    if max_min > 100:
-                        print('vm strain = %s' % ovm)
-                cases[(subcaseID, icase, vmWord, 1, 'centroid', fmt)] = ovm
-                formis.append((vmWord, icase, []))
-                icase += 1
-            #print('formis = ', formis)
-            if len(formis):
-                form.append(form0)
-            #print(formi)
-        #print(form)
         return icase
+
+    def _get_nastran_header(self, case, dt, itime):
+        if case is None:
+            return None
+        code_name = case.data_code['name']
+        has_cycle = hasattr(case, 'mode_cycle')
+
+        if isinstance(dt, float):
+            header = ' %s = %.4E' % (code_name, dt)
+        else:
+            header = ' %s = %i' % (code_name, dt)
+
+        if hasattr(case, 'mode_cycle'):
+            freq = case.eigrs[itime]
+            #msg.append('%16s = %13E\n' % ('EIGENVALUE', freq))
+            cycle = sqrt(abs(freq)) / (2. * pi)
+            header += '; freq=%g' % cycle
+        elif hasattr(case, 'eigrs'):
+            freq = case.eigrs[itime]
+            #msg.append('%16s = %13E\n' % ('EIGENVALUE', freq))
+            cycle = sqrt(abs(freq)) / (2. * pi)
+            header += '; freq=%g' % cycle
+        return header
+
+    def _get_nastran_time_centroidal_strain_energy(self, cases, model, subcaseID, form, icase, itime, dt,
+                                                   is_real=True, is_static=False):
+        oxx = zeros(self.nElements, dtype='float32')
+        oyy = zeros(self.nElements, dtype='float32')
+        ozz = zeros(self.nElements, dtype='float32')
+        fmt = '%g'
+        header = ''
+        ncase = 0
+        form0 = ('Element Strain Energy', None, [])
+
+        #op2.strainEnergy[1]
+          #type=StrainEnergyObject ntimes=3 nelements=16
+          #energy, percent, density
+          #modes = [1, 2, 3]
+
+        ese = model.strainEnergy[subcaseID]
+        times = sorted(ese.energy.keys())  # TODO: not vectorized
+        assert times[itime] == dt, 'actual=%s expected=%s' % (times[itime], dt)
+
+        if is_static:
+            percent = ese.percent
+            energy = ese.energy
+            density = ese.density
+        else:
+            percent = ese.percent[dt]
+            energy = ese.energy[dt]
+            density = ese.density[dt]
+        for eid, p in sorted(iteritems(percent)):
+            if eid not in self.eidMap:
+                continue
+            i = self.eidMap[eid]
+            oxx[i] = energy[eid]
+            oyy[i] = p
+            ozz[i] = density[eid]
+
+        case = ese
+        fmt = '%.4f'
+        header = self._get_nastran_header(case, dt, itime)
+        cases[(subcaseID, icase, 'StrainEnergy', 1, 'centroid', fmt, header)] = oxx
+        form0[2].append(('StrainEnergy', icase, []))
+        icase += 1
+        ncase += 1
+
+        cases[(subcaseID, icase, 'PercentOfTotal', 1, 'centroid', fmt, header)] = oyy
+        form0[2].append(('PercentOfTotal', icase, []))
+        icase += 1
+        ncase += 1
+
+        cases[(subcaseID, icase, 'Density', 1, 'centroid', fmt, header)] = ozz
+        form0[2].append(('Density', icase, []))
+        icase += 1
+        ncase += 1
+
+        return icase, ncase, case, header, form0
+
+    def _get_nastran_time_centroidal_stress(self, cases, model, subcaseID, form, icase, itime, dt,
+                                            is_stress=True, is_real=True, is_static=False):
+        ncase = 0
+        case = None
+        assert isinstance(subcaseID, int), type(subcaseID)
+        assert isinstance(icase, int), icase
+        assert isinstance(itime, int), type(itime)
+        assert is_real in [True, False], is_real
+        assert is_stress in [True, False], is_stress
+        assert is_static in [True, False], is_static
+        eids = self.element_ids
+        nElements = self.nElements
+
+        isElementOn = zeros(nElements, dtype='int8')  # is the element supported
+        oxx = zeros(nElements, dtype='float32')
+        oyy = zeros(nElements, dtype='float32')
+        ozz = zeros(nElements, dtype='float32')
+
+        txy = zeros(nElements, dtype='float32')
+        tyz = zeros(nElements, dtype='float32')
+        txz = zeros(nElements, dtype='float32')
+
+        o1 = zeros(nElements, dtype='float32')  # max
+        o2 = zeros(nElements, dtype='float32')  # mid
+        o3 = zeros(nElements, dtype='float32')  # min
+        ovm = zeros(nElements, dtype='float32')
+
+        vmWord = None
+        if is_stress:
+            rods = [model.crod_stress, model.conrod_stress, model.ctube_stress,]
+        else:
+            rods = [model.crod_strain, model.conrod_strain, model.ctube_strain,]
+
+        for result in rods:
+            if subcaseID not in result:
+                continue
+
+            case = result[subcaseID]
+            eidsi = case.element
+            i = searchsorted(eids, eidsi)
+            if len(i) != len(unique(i)):
+                msg = 'irod=%s is not unique\n' % str(i)
+                print('eids = %s\n' % str(list(eids)))
+                print('eidsi = %s\n' % str(list(eidsi)))
+                raise RuntimeError(msg)
+
+            #print('irod = %s' % str(i))
+            isElementOn[i] = 1
+
+            # data=[1, nnodes, 4] where 4=[axial, SMa, torsion, SMt]
+            oxx[i] = case.data[itime, :, 0]
+            txy[i] = case.data[itime, :, 2]
+            ovm[i] = sqrt(oxx[i]**2 + 3*txy[i]**2)
+            o1[i] = sqrt(oxx[i]**2 + txy[i]**2)
+            o3[i] = -o1[i]
+
+        if is_stress:
+            bars = model.bar_stress
+        else:
+            bars = model.bar_strain
+
+        if subcaseID in bars:  # vectorized....
+            case = bars[subcaseID]
+            print('class_name = %s' % str(case))
+
+            #s1a = case.data[itime, :, 0]
+            #s2a = case.data[itime, :, 1]
+            #s3a = case.data[itime, :, 2]
+            #s4a = case.data[itime, :, 3]
+
+            axial = case.data[itime, :, 4]
+            smaxa = case.data[itime, :, 5]
+            smina = case.data[itime, :, 6]
+            #MSt = case.data[itime, :, 7]
+
+            #s1b = case.data[itime, :, 8]
+            #s2b = case.data[itime, :, 9]
+            #s3b = case.data[itime, :, 10]
+            #s4b = case.data[itime, :, 11]
+
+            smaxb = case.data[itime, :, 12]
+            sminb = case.data[itime, :, 13]
+            #MSc   = case.data[itime, :, 14]
+
+            eidsi = case.element_node # [:, 0]
+
+            i = searchsorted(eids, eidsi)
+            #print('ibar = %s' % i)
+            assert len(i) == len(unique(i)), 'ibar=%s is not unique' % str(i)
+
+            isElementOn[i] = 1.
+            oxx[i] = axial
+
+            amax = max(smaxa, smaxb)
+            amin = min(smina, sminb)
+            avm = max(abs([smina, sminb,
+                           smaxa, smaxb, axial]))
+
+            #print('avm.shape', avm.shape)
+
+            o1[i] = amax
+            o3[i] = amin
+            ovm[i] = avm
+
+        if 0 and subcaseID in model.beamStress:
+            case = model.beamStress[subcaseID]
+            for eid in case.smax:
+                eid2 = self.eidMap[eid]
+                isElementOn[eid2] = 1.
+
+                oxx[eid2] = max(max(case.sxc[eid]),
+                                max(case.sxd[eid]),
+                                max(case.sxe[eid]),
+                                max(case.sxf[eid]))
+
+                o1[eid2] = max(case.smax[eid])
+                o3[eid2] = min(case.smin[eid])
+                ovm[eid2] = max(    max(case.smax[eid]),
+                                abs(min(case.smin[eid])))
+
+
+        if is_stress:
+            plates = [model.ctria3_stress, model.cquad4_stress,
+                      model.ctria6_stress, model.cquad8_stress]
+        else:
+            plates = [model.ctria3_strain, model.cquad4_strain,
+                      model.ctria6_strain, model.cquad8_strain]
+
+        for result in plates:
+            ## is tria6, quad8, bilinear quad handled?
+            if subcaseID not in result:
+                continue
+
+            case = result[subcaseID]
+            if case.isVonMises():
+                vmWord = 'vonMises'
+            else:
+                vmWord = 'maxShear'
+
+            nnodes_per_element = case.nnodes * 2  # *2 for every other layer
+            eidsi = case.element_node[::nnodes_per_element, 0]  # ::2 is for layer skipping
+            #print('eidsi =', case.element_node[:, 0])
+
+            i = searchsorted(eids, eidsi)
+            assert len(i) == len(unique(i)), 'iplate=%s is not unique' % str(i)
+            #print('iplate = %s' % i)
+            #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
+            #                                         txy, angle,
+            #                                         majorP, minorP, ovm]
+            isElementOn[i] = 1.
+            ndt, ntotal, nresults = case.data.shape
+            if nnodes_per_element == 1:
+                j = None
+            else:
+                j = arange(ntotal)[::nnodes_per_element]
+
+            oxx[i] = case.data[itime, j, 1]
+            oyy[i] = case.data[itime, j, 2]
+            txy[i] = case.data[itime, j, 3]
+            #txy[i] = case.data[itime, ::nnodes_per_element, 3]
+            #ozz[i] = 0
+            o1[i]  = case.data[itime, j, 5]
+            #o2[i]  = case.data[itime, :, ???]
+            o3[i]  = case.data[itime, j, 6]
+            ovm[i] = case.data[itime, j, 7]
+
+        if subcaseID in model.compositePlateStress:
+            case = model.compositePlateStress[subcaseID]
+            asdf
+            if case.isVonMises():
+                vmWord = 'vonMises'
+            else:
+                vmWord = 'maxShear'
+            for eid in case.ovmShear:
+                eid2 = self.eidMap[eid]
+                isElementOn[eid2] = 1.
+
+                eType = case.eType[eid]
+                oxxi = max(case.o11[eid])
+                oyyi = max(case.o22[eid])
+
+                o1i = max(case.majorP[eid])
+                o3i = min(case.minorP[eid])
+                ovmi = max(case.ovmShear[eid])
+
+                oxx[eid2] = oxxi
+                oyy[eid2] = oyyi
+
+                o1[eid2] = o1i
+                o3[eid2] = o3i
+                ovm[eid2] = ovmi
+
+
+        if is_stress:
+            solids = [(5, model.ctetra_stress),
+                      (7, model.cpenta_stress),
+                      (11, model.chexa_stress),]
+        else:
+            solids = [(5, model.ctetra_strain),
+                      (7, model.cpenta_strain),
+                      (11, model.chexa_strain),]
+
+        for nnodes_per_element, result in solids:
+            if subcaseID not in result:
+                continue
+
+            case = result[subcaseID]
+            if case.isVonMises():
+                vmWord = 'vonMises'
+            else:
+                vmWord = 'maxShear'
+
+            eidsi = case.element_cid[:, 0]
+            i = searchsorted(eids, eidsi)
+            assert len(i) == len(unique(i)), 'isolid=%s is not unique' % str(i)
+            #print('isolid = %s' % str(i))
+            isElementOn[i] = 1
+            #self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz,
+            #                                         txy, tyz, txz,
+            #                                         o1, o2, o3, ovm]
+            oxx[i] = case.data[itime, ::nnodes_per_element, 0]
+            oyy[i] = case.data[itime, ::nnodes_per_element, 1]
+            ozz[i] = case.data[itime, ::nnodes_per_element, 2]
+            txy[i] = case.data[itime, ::nnodes_per_element, 3]
+            tyz[i] = case.data[itime, ::nnodes_per_element, 4]
+            txz[i] = case.data[itime, ::nnodes_per_element, 5]
+            o1[i]  = case.data[itime, ::nnodes_per_element, 6]
+            o2[i]  = case.data[itime, ::nnodes_per_element, 7]
+            o3[i]  = case.data[itime, ::nnodes_per_element, 8]
+            ovm[i] = case.data[itime, ::nnodes_per_element, 9]
+
+        if is_stress:
+            word = 'Stress'
+            fmt = '%.3f'
+        else:
+            word = 'Strain'
+            fmt = '%.4e'
+
+        # a form is the table of output...
+        # Subcase 1         <--- formi  - form_isubcase
+        #    Time 1
+        #        Stress     <--- form0  - the root level
+        #            oxx    <--- formis - form_itime_stress
+        #            oyy
+        #            ozz
+
+        header = ''
+        if not is_static:
+            #print('is_static = %s' % is_static)
+            if case is None:
+                return icase, ncase, case, formis
+            header = self._get_nastran_header(case, dt, itime)
+            #form_time[0] = header
+
+        form0 = (word, None, [])
+        formis = form0[2]
+        # subcaseID,resultType,vectorSize,location,dataFormat
+        if is_stress and itime == 0:
+            if isElementOn.min() != isElementOn.max():
+                if isElementOn.min() == 0:
+                    ioff = where(isElementOn == 0)[0]
+                    print('eids_off = %s' % self.element_ids[ioff])
+                    self.log_error('eids_off = %s' % self.element_ids[ioff])
+                cases[(1, icase, 'isElementOn', 1, 'centroid', '%i')] = isElementOn
+                form.append(('IsElementOn', icase, []))
+                icase += 1
+                ncase += 1
+
+        if oxx.min() != oxx.max():
+            cases[(subcaseID, icase, word + 'XX', 1, 'centroid', fmt, header)] = oxx
+            formis.append((word + 'XX', icase, []))
+            icase += 1
+            ncase += 1
+        if oyy.min() != oyy.max():
+            cases[(subcaseID, icase, word + 'YY', 1, 'centroid', fmt, header)] = oyy
+            formis.append((word + 'YY', icase, []))
+            icase += 1
+            ncase += 1
+        if ozz.min() != ozz.max():
+            cases[(subcaseID, icase, word + 'ZZ', 1, 'centroid', fmt, header)] = ozz
+            formis.append((word + 'ZZ', icase, []))
+            ncase += 1
+            icase += 1
+
+        if txy.min() != txy.max():
+            cases[(subcaseID, icase, word + 'XY', 1, 'centroid', fmt, header)] = txy
+            formis.append((word + 'XY', icase, []))
+            icase += 1
+            ncase += 1
+        if tyz.min() != tyz.max():
+            cases[(subcaseID, icase, word + 'YZ', 1, 'centroid', fmt, header)] = tyz
+            formis.append((word + 'YZ', icase, []))
+            icase += 1
+            ncase += 1
+        if txz.min() != txz.max():
+            cases[(subcaseID, icase, word + 'XZ', 1, 'centroid', fmt, header)] = txz
+            formis.append((word + 'XZ', icase, []))
+            icase += 1
+            ncase += 1
+
+        if o1.min() != o1.max():
+            cases[(subcaseID, icase, word + '1', 1, 'centroid', fmt, header)] = o1
+            formis.append((word + '1', icase, []))
+            icase += 1
+            ncase += 1
+        if o2.min() != o2.max():
+            cases[(subcaseID, icase, word + '2', 1, 'centroid', fmt, header)] = o2
+            formis.append((word + '2', icase, []))
+            icase += 1
+            ncase += 1
+        if o3.min() != o3.max():
+            cases[(subcaseID, icase, word + '3', 1, 'centroid', fmt, header)] = o3
+            formis.append((word + '3', icase, []))
+            icase += 1
+            ncase += 1
+        if vmWord is not None:
+            if not is_stress:
+                max_min = max(ovm.max(), abs(ovm.min()))
+                if max_min > 100:
+                    raise RuntimeError('vm strain = %s' % ovm)
+            cases[(subcaseID, icase, vmWord, 1, 'centroid', fmt, header)] = ovm
+            formis.append((vmWord, icase, []))
+            icase += 1
+            ncase += 1
+        #print('form0 = %s' % str(form0))
+        return icase, ncase, case, header, form0
 
 def main():
     from pyNastran.gui.testing_methods import add_dummy_gui_functions
