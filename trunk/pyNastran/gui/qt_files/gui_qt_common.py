@@ -170,7 +170,7 @@ class GuiCommon(object):
                 point_data = self.grid.GetPointData()
                 point_data.Reset()
             self.grid.GetCellData().SetScalars(gridResult)
-            self.log_info("***centroidal plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
+            self.log_info("centroidal plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
         elif location == 'node':
         #elif location == 'node' and self.is_nodal:
             if ncells:
@@ -178,10 +178,10 @@ class GuiCommon(object):
                 #print(dir(cell_data))
                 cell_data.Reset()
             if vectorSize == 1:
-                self.log_info("***node plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
+                self.log_info("node plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
                 self.grid.GetPointData().SetScalars(gridResult)
             elif vectorSize == 3:
-                self.log_info("***node plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
+                self.log_info("node plotting vector=%s - subcaseID=%s resultType=%s subtitle=%s label=%s" % (vectorSize, subcaseID, resultType, subtitle, label))
                 self.grid.GetPointData().SetScalars(gridResult)
             else:
                 #print("***node skipping - subcaseID=%s resultType=%s subtitle=%s label=%s" %(subcaseID, resultType, subtitle, label))

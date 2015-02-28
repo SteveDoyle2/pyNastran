@@ -140,7 +140,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         form = inputs['format'].lower()
         input = inputs['input']
         output = inputs['output']
-        is_failed = self.on_load_geometry(input, form)
+        plot = True
+        if output:
+            plot = False
+
+        is_failed = self.on_load_geometry(input, form, plot=plot)
         if is_failed:
             return
         if output:
