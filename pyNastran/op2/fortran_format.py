@@ -157,8 +157,9 @@ class FortranFormat(object):
         """
         :param self:    the OP2 object pointer
         """
-        # these parameters are used for numpy streaming
+        # this parameters is used for numpy streaming
         self._data_factor = 1
+
         nstart = self.n
         self.isubtable = -3
         self.read_markers([-3, 1, 0])
@@ -194,147 +195,151 @@ class FortranFormat(object):
         markers = self.get_nmarkers(1, rewind=True)
         self.binary_debug.write('---marker0 = %s---\n' % markers)
 
-        # while the table isn't done
+        # while the subtables aren't done
         while markers[0] != 0:
-            # this is the length of the current record inside table3/table4
-            record_len = self._get_record_length()
-
-            if record_len == 584:  # table3 has a length of 584
-                self.data_code = {}
-                self.obj = None
-                data = self._read_record()
-                if not passer:
-                    table3_parser(data)
-                    #if hasattr(self, 'isubcase'):
-                        #print("code = ", self._get_code())
-
-            else:
-                if passer or not self.is_valid_subcase():
-                    data = self._skip_record()
-                else:
-                    if hasattr(self, 'num_wide'):
-                        # num_wide is the result size, so having num_wide indicates
-                        # we are reading results
-                        datai = b''
-
-                        # if reading the data
-                        # 0 - non-vectorized
-                        # 1 - 1st pass to size the array (vectorized)
-                        # 2 - 2nd pass to read the data  (vectorized)
-                        if self.read_mode in [0, 2]:
-                            self.ntotal = 0
-
-                            # we stream the record because we get it in partial blocks
-                            for data in self._stream_record():
-                                data = datai + data
-
-                                n = table4_parser(data)
-                                assert isinstance(n, int), self.table_name
-                                datai = data[n:]
-
-                            # PCOMPs are stupid, so we need an element flag
-                            if hasattr(self, 'eid_old'):
-                                del self.eid_old
-
-                            # if reading the data
-                            # 0 - non-vectorized
-                            # 1 - 1st pass to size the array (vectorized)
-                            # 2 - 2nd pass to read the data  (vectorized)
-                            if self.read_mode == 2:
-                                # vectorized objects are stored as self.obj
-                                # they have obj.itime which is their table3 counter
-                                if hasattr(self, 'obj') and hasattr(self.obj, 'itime'):
-                                    #ntotal = record_len // (self.num_wide * 4) * self._data_factor
-
-                                    # we reset the itime counter when we fill up
-                                    # the total number of nodes/elements/layers
-                                    # in the result, where ntotal is the critical
-                                    # length of interest.  This let's us start back
-                                    # at the correct spot the next time we read table3
-                                    #
-                                    # For displacements, ntotal=nnodes
-                                    #
-                                    # For a CBAR, it's ntotal=nelements*2, where
-                                    # 2 is the number of nodes; points A/B
-                                    #
-                                    # For a CTRIA3 / linear CQUAD4, it's
-                                    # ntotal=nelements*2, where 2 is the number
-                                    # of layers (top/btm) and we only get a
-                                    # centroidal result.
-                                    #
-                                    # For a CQUAD4 bilinear, it's
-                                    # ntotal=nelements*(nnodes+1)*2, where 2 is
-                                    # the number of layers and nnodes is 4
-                                    # (we get an extra result at the centroid).
-                                    #
-                                    # For a PCOMP, it's ntotal=sum(nelements*nlayers),
-                                    # where each element can have a different
-                                    # number of layers
-                                    if self.obj.ntotal == self.obj.data.shape[1]:
-                                        self.obj._reset_indices()
-                                        self.obj.words = self.words
-                                        self.obj.itime += 1
-                                    else:
-                                        print('self.obj.name=%r has itime' % self.obj.__class__.__name__)
-                                        print('ntotal=%s shape=%s shape[1]=%s' % (self.obj.ntotal, str(self.obj.data.shape), self.obj.data.shape[1]))
-                                #else:
-                                    #print('self.obj.name=%r doesnt have itime' % self.obj.__class__.__name__)
-
-
-                        elif self.read_mode == 1:
-                            # if we're checking the array size
-
-                            #n = self._skip_record()
-                            #n = table4_parser(datai, 300000)
-                            if 1:
-                                self.ntotal = 0
-                                #n = self.n
-                                n = 0
-                                for i, data in enumerate(self._stream_record()):
-                                    #if i == 0:
-                                        data = datai + data
-                                        ndata = len(data)
-                                        n = table4_parser(data)
-                                        assert isinstance(n, int), self.table_name
-                                        datai = data[n:]
-                                        #if self.obj is not None:
-                                            #print("len(datai) =", len(datai), ndata / (self.num_wide * 4.))
-                                assert len(datai) == 0, len(datai)
-                                #n = record_len
-                                #break
-                            #self.goto(n)
-                            #n = self._skip_record()
-
-                            if hasattr(self, 'obj') and self.obj is not None:
-                                if hasattr(self.obj, 'ntimes'):
-                                    if not hasattr(self.obj, '_reset_indices'):
-                                        methods = '\ndir(obj)=%s' % ', '.join(sorted(dir(self.obj)))
-                                        msg = 'is %s vectorized because its missing _reset_indices...%s' % (
-                                            self.obj.__class__.__name__, methods)
-                                        #break  # was active...
-                                        raise RuntimeError(msg)
-                                    self.obj._reset_indices()
-                                    self.obj.ntimes += 1
-                                    self.obj.ntotal = record_len // (self.num_wide * 4) * self._data_factor
-                                else:
-                                    print('obj=%s doesnt have ntimes' % self.obj.__class__.__name__)
-                    else:
-                        data = self._read_record()
-                        n = table4_parser(data)
-                    del n
-
-            # counting down...
+            self._read_subtable_3_4(table3_parser, table4_parser, passer)
             self.isubtable -= 1
-
-            # we'd better find the expected subtable or we'll crash...
             self.read_markers([self.isubtable, 1, 0])
-
-            # another round
             markers = self.get_nmarkers(1, rewind=True)
 
-        # we've finished reading all tables, but have one last marker to read
+        # we've finished reading all subtables, but have one last marker to read
         self.read_markers([0])
         self.finish()
+
+    def _read_subtable_3_4(self, table3_parser, table4_parser, passer):
+        # this is the length of the current record inside table3/table4
+        record_len = self._get_record_length()
+
+        if record_len == 584:  # table3 has a length of 584
+            self.data_code = {}
+            self.obj = None
+            data = self._read_record()
+            if not passer:
+                table3_parser(data)
+                #if hasattr(self, 'isubcase'):
+                    #print("code = ", self._get_code())
+        else:
+            if passer or not self.is_valid_subcase():
+                data = self._skip_record()
+            else:
+                if hasattr(self, 'num_wide'):
+                    # num_wide is the result size and is usually found in
+                    # table3, but some B-list tables don't have it
+                    n = self._read_subtable_results(table4_parser, record_len)
+                else:
+                    data = self._read_record()
+                    n = table4_parser(data)
+                #del n
+
+    def _read_subtable_results(self, table4_parser, record_len):
+        """
+        # if reading the data
+        # 0 - non-vectorized
+        # 1 - 1st pass to size the array (vectorized)
+        # 2 - 2nd pass to read the data  (vectorized)
+        """
+        datai = b''
+        if self.read_mode in [0, 2]:
+            self.ntotal = 0
+
+            # we stream the record because we get it in partial blocks
+            for data in self._stream_record():
+                data = datai + data
+
+                n = table4_parser(data)
+                assert isinstance(n, int), self.table_name
+                datai = data[n:]
+
+            # PCOMPs are stupid, so we need an element flag
+            if hasattr(self, 'eid_old'):
+                del self.eid_old
+
+            # if reading the data
+            # 0 - non-vectorized
+            # 1 - 1st pass to size the array (vectorized)
+            # 2 - 2nd pass to read the data  (vectorized)
+            if self.read_mode == 2:
+                # vectorized objects are stored as self.obj
+                # they have obj.itime which is their table3 counter
+                if hasattr(self, 'obj') and hasattr(self.obj, 'itime'):
+                    #ntotal = record_len // (self.num_wide * 4) * self._data_factor
+
+                    # we reset the itime counter when we fill up the
+                    # total number of nodes/elements/layers in the
+                    # result, where ntotal is the critical length of
+                    # interest.  This let's us start back at the correct
+                    # spot the next time we read table3
+                    #
+                    # For displacements, ntotal=nnodes
+                    #
+                    # For a CBAR, it's ntotal=nelements*2, where 2 is
+                    # the number of nodes; points A/B
+                    #
+                    # For a CTRIA3 / linear CQUAD4, it's
+                    # ntotal=nelements*2, where 2 is the number of
+                    # layers (top/btm) and we only get a centroidal
+                    # result.
+                    #
+                    # For a CQUAD4 bilinear, it's
+                    # ntotal=nelements*(nnodes+1)*2, where 2 is the
+                    # number of layers and nnodes is 4 (we get an extra
+                    # result at the centroid).
+                    #
+                    # For a PCOMP, it's ntotal=sum(nelements*nlayers),
+                    # where each element can have a different number
+                    # of layers
+                    if self.obj.ntotal == self.obj.data.shape[1]:
+                        self.obj._reset_indices()
+                        self.obj.words = self.words
+                        self.obj.itime += 1
+                    else:
+                        print('self.obj.name=%r has itime' % self.obj.__class__.__name__)
+                        print('ntotal=%s shape=%s shape[1]=%s _data_factor=%s' % (
+                            self.obj.ntotal, str(self.obj.data.shape),
+                            self.obj.data.shape[1], self._data_factor))
+                #else:
+                    #print('self.obj.name=%r doesnt have itime' % self.obj.__class__.__name__)
+
+        elif self.read_mode == 1:
+            # if we're checking the array size
+
+            #n = self._skip_record()
+            #n = table4_parser(datai, 300000)
+            if 1:
+                self.ntotal = 0
+                #n = self.n
+                n = 0
+                for i, data in enumerate(self._stream_record()):
+                    #if i == 0:
+                        data = datai + data
+                        ndata = len(data)
+                        n = table4_parser(data)
+                        assert isinstance(n, int), self.table_name
+                        datai = data[n:]
+                        #if self.obj is not None:
+                            #print("len(datai) =", len(datai), ndata / (self.num_wide * 4.))
+                assert len(datai) == 0, len(datai)
+                #n = record_len
+                #break
+            #self.goto(n)
+            #n = self._skip_record()
+
+            if hasattr(self, 'obj') and self.obj is not None:
+                if hasattr(self.obj, 'ntimes'):
+                    if not hasattr(self.obj, '_reset_indices'):
+                        methods = '\ndir(obj)=%s' % ', '.join(sorted(dir(self.obj)))
+                        msg = 'is %s vectorized because its missing _reset_indices...%s' % (
+                            self.obj.__class__.__name__, methods)
+                        return None
+                        raise RuntimeError(msg)
+                    self.obj._reset_indices()
+                    self.obj.ntimes += 1
+                    self.obj.ntotal = record_len // (self.num_wide * 4) * self._data_factor
+                else:
+                    print('obj=%s doesnt have ntimes' % self.obj.__class__.__name__)
+        else:
+            raise RuntimeError(self.read_mode)
+        return n
 
     def is_valid_subcase(self):
         """

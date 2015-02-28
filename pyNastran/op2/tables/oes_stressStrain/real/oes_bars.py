@@ -22,7 +22,7 @@ class RealBarArray(OES_Object):
 
         if is_sort1:
             if dt is not None:
-                self.add = self.add_sort1
+                #self.add = self.add_sort1
                 self.add_new_eid = self.add_new_eid_sort1
                 #self.addNewNode = self.addNewNodeSort1
         else:
@@ -64,6 +64,8 @@ class RealBarArray(OES_Object):
             raise NotImplementedError(self.element_type)
 
         self.nnodes = nnodes_per_element
+        self.nelements //= self.ntimes
+        self.ntotal = self.nelements  #* 2  # for A/B
         #self.nelements //= nnodes_per_element
         self.itime = 0
         self.ielement = 0
@@ -102,17 +104,17 @@ class RealBarArray(OES_Object):
         self.itotal += 1
         self.ielement += 1
 
-    def add_sort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        assert eid is not None
-        msg = "i=%s dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (
-            self.itotal, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
-        #print(msg)
-        if isinstance(nodeID, string_types):
-            nodeID = 0
-        #assert isinstance(nodeID, int), nodeID
-        self.element_node[self.itotal, :] = [eid, nodeID]
-        self.data[self.itime, self.itotal, :] = [fd, oxx, oyy, txy, angle, majorP, minorP, ovm]
-        self.itotal += 1
+    #def add_sort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
+        #assert eid is not None
+        #msg = "i=%s dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (
+            #self.itotal, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
+        ##print(msg)
+        #if isinstance(nodeID, string_types):
+            #nodeID = 0
+        ##assert isinstance(nodeID, int), nodeID
+        #self.element_node[self.itotal, :] = [eid, nodeID]
+        #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy, txy, angle, majorP, minorP, ovm]
+        #self.itotal += 1
 
     def get_stats(self):
         if not self.is_built:
@@ -125,24 +127,24 @@ class RealBarArray(OES_Object):
         ntimes = self.ntimes
         nnodes = self.nnodes
         ntotal = self.ntotal
-        nlayers = 2
-        nelements = self.ntotal // self.nnodes // 2
+        #nlayers = 2
+        nelements = self.ntotal // self.nnodes  # // 2
 
         msg = []
         if self.nonlinear_factor is not None:  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i nnodes_per_element=%i nlayers=%i ntotal=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements, nnodes, nlayers, ntotal))
+            msg.append('  type=%s ntimes=%i nelements=%i nnodes_per_element=%i ntotal=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements, nnodes, ntotal))
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i nnodes_per_element=%i nlayers=%i ntotal=%i\n'
-                       % (self.__class__.__name__, nelements, nnodes, nlayers, ntotal))
+            msg.append('  type=%s nelements=%i nnodes_per_element=%i ntotal=%i\n'
+                       % (self.__class__.__name__, nelements, nnodes, ntotal))
             ntimes_word = 1
-        #msg.append('  data.shape=%s' % str(self.data.shape))
         headers = self.get_headers()
 
         n = len(headers)
         assert n == self.data.shape[2], 'nheaders=%s shape=%s' % (n, str(self.data.shape))
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element types: %s\n  ' % ', '.join(self.element_names))
         msg += self.get_data_code()
         return msg

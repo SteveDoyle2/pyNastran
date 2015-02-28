@@ -55,13 +55,15 @@ class OES(OP2Common):
         """
         reads OES1 subtable 3
         """
-        self.words = ['aCode', 'tCode', 'element_type', 'isubcase',
-                      '???', '???', '???', 'load_set'
-                      'format_code', 'num_wide', 's_code', '???',
-                      '???', '???', '???', '???',
-                      '???', '???', '???', '???',
-                      '???', '???', '???', '???',
-                      '???', 'Title', 'subtitle', 'label']
+        self._data_factor = 1
+        self.words = [
+            'aCode', 'tCode', 'element_type', 'isubcase',
+            '???', '???', '???', 'load_set'
+            'format_code', 'num_wide', 's_code', '???',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', 'Title', 'subtitle', 'label']
 
         self.parse_approach_code(data)  # 3
 
@@ -330,8 +332,7 @@ class OES(OP2Common):
             if self.format_code == 1 and self.num_wide == 5:  # real
                 ntotal = 5 * 4
                 nelements = len(data) // ntotal
-                if self.isStress():
-                    print('nelements = %s' % nelements)
+
                 auto_return = self._create_oes_object2(nelements,
                                                        result_name, result_vector_name,
                                                        slot, slot_vector,
@@ -2489,7 +2490,7 @@ class OES(OP2Common):
                 auto_return = True
             elif self.read_mode == 2:
                 self.code = self._get_code()
-                self.log.info("***code = %s" % str(self.code))
+                #self.log.info("***code = %s" % str(self.code))
 
                 # if this is failing, you probably set obj_vector to None...
                 self.obj = slot_vector[self.code]

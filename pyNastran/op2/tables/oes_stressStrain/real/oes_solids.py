@@ -54,7 +54,7 @@ class RealSolidArray(OES_Object):
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
         #self.names = []
-        #self.nelements //= self.ntimes
+        self.nelements //= self.ntimes
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
@@ -144,10 +144,10 @@ class RealSolidArray(OES_Object):
                        % (self.__class__.__name__, nelements, nnodes, nnodes_per_element))
             ntimes_word = 1
         msg.append('  eType, cid\n')
-        #msg.append('  data.shape=%s' % str(self.data.shape))
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nnodes, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element types: %s\n  ' % ', '.join(self.element_names))
         msg += self.get_data_code()
         return msg
