@@ -8,7 +8,6 @@ Release 0.7
 
  Completed
  ---------
- - bug fix wx gui
  - tests for op2 results request
  - cleanup outdated op2 table skipping
 

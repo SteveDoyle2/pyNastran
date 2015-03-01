@@ -51,8 +51,8 @@ class MainWindow(GuiCommon2, Cart3dIO):
         Cart3dIO.__init__(self)
         self.base_window_title = "pyCart3d v%s"  % pyNastran.__version__
 
-        self._setup_supported_formats()
-
+        fmt_order = ['cart3d']
+        self.build_fmts(fmt_order, stop_on_failure=True)
         logo = os.path.join(icon_path, 'logo.png')
         self.set_logo(logo)
         self.set_script_path(script_path)
@@ -60,14 +60,6 @@ class MainWindow(GuiCommon2, Cart3dIO):
 
         self.setup_gui()
         self.setup_post(inputs)
-
-    def _setup_supported_formats(self):
-        self.formats = {
-            'cart3d' : is_cart3d,
-        }
-        for (name, is_on) in sorted(iteritems(self.formats)):
-            if is_on:
-                self.supported_formats.append(name)
 
     def create_cell_picker(self):
         # cell picker
@@ -170,161 +162,6 @@ class MainWindow(GuiCommon2, Cart3dIO):
                 self.cycleResults(Title)
             else:
                 break
-
-    def on_load_geometry(self, infile_name=None, geometry_format=None):
-        wildcard = ''
-        is_failed = False
-
-        if geometry_format and geometry_format.lower() not in self.supported_formats:
-            is_failed = True
-            if geometry_format in self.formats:
-                msg = 'The import for the %r module failed.\n' % geometry_format
-            else:
-                msg = '%r is not a enabled format; enabled_formats=%s\n' % (geometry_format, self.supported_formats)
-                msg += str("formats = %s" % str(self.formats))
-            self.log_error(msg)
-            return is_failed
-
-        if infile_name:
-            geometry_format = geometry_format.lower()
-            print("geometry_format = %r" % geometry_format)
-            if geometry_format == 'cart3d' and is_cart3d:
-                has_results = True
-                load_function = self.load_cart3d_geometry
-            else:
-                self.log_error('---invalid format=%r' % geometry_format)
-                is_failed = True
-                return is_failed
-                raise NotImplementedError('on_load_geometry; infile_name=%r format=%r' % (infile_name, geometry_format))
-            formats = [geometry_format]
-            filter_index = 0
-        else:
-            formats = []
-            load_functions = []
-            has_results_list = []
-            wildcard_list = []
-            if is_cart3d:
-                wildcard_list.append("Cart3d (*.tri; *.triq)")
-                formats.append('Cart3d')
-                has_results_list.append(True)
-                load_functions.append(self.load_cart3d_geometry)
-
-            wildcard = ';;'.join(wildcard_list)
-
-            # get the filter index and filename
-            if infile_name is not None and geometry_format is not None:
-                filter_index = formats.index(geometry_format)
-            else:
-                Title = 'Choose a Geometry File to Load'
-                wildcard_index, infile_name = self._create_load_file_dialog(wildcard, Title)
-                if not infile_name:
-                    is_failed = True
-                    return is_failed # user clicked cancel
-                filter_index = wildcard_list.index(wildcard_index)
-
-            geometry_format = formats[filter_index]
-            load_function = load_functions[filter_index]
-            has_results = has_results_list[filter_index]
-
-        if load_function is not None:
-            self.last_dir = os.path.split(infile_name)[0]
-
-            self.grid.Reset()
-            self.grid.Modified()
-            self.grid2.Reset()
-            self.grid2.Modified()
-
-            if not os.path.exists(infile_name) and geometry_format:
-                msg = 'input file=%r does not exist' % infile_name
-                self.log_error(msg)
-                self.log_error(print_bad_path(infile_name))
-                return
-
-            if self.modelType is not None:
-                # clear out old data
-                name = 'clear_' + self.modelType
-
-                # call the clear method
-                try:
-                    dy_method = getattr(self, 'clear_' + self.modelType)
-                    dy_method()
-                except:
-                    print("method %r does not exist" % name)
-            self.log_info("reading %s file %r" % (geometry_format, infile_name))
-            try:
-                has_results = load_function(infile_name, self.last_dir)
-            except Exception as e:
-                msg = traceback.format_exc()
-                self.log_error(msg)
-                raise
-            self.rend.ResetCamera()
-
-        # the model has been loaded, so we enable load_results
-        if filter_index >= 0:
-            self.format = formats[filter_index].lower()
-            if has_results:
-                enable = True
-            else:
-                enable = False
-        else: # no file specified
-            return
-        self.infile_name = infile_name
-
-        if self.out_filename is not None:
-            msg = '%s - %s - %s' % (self.format, self.infile_name, self.out_filename)
-        else:
-            msg = '%s - %s' % (self.format, self.infile_name)
-        self.set_window_title(msg)
-        self.log_command("on_load_geometry(infile_name=%r, geometry_format=%r)" % (infile_name, self.format))
-
-    def on_load_results(self, out_filename=None):
-            geometry_format = self.format
-            if self.format is None:
-                msg ='on_load_results failed:  You need to load a file first...'
-                self.log_error(msg)
-                raise RuntimeError(msg)
-
-            if out_filename in [None, False]:
-                Title = 'Select a Results File for %s' % self.format
-                wildcard = None
-                if geometry_format == 'cart3d':
-                    has_results = True
-                    wildcard = "Cart3d (*.triq)"
-                    load_functions = [self.load_cart3d_results]
-                else:
-                    msg = 'format=%r is not supported' % geometry_format
-                    self.log_error(msg)
-                    raise RuntimeError(msg)
-
-                load_function = load_functions[0]
-                if wildcard is None:
-                    msg = 'format=%r has no method to load results' % geometry_format
-                    self.log_error(msg)
-                    return
-                wildcard_index, out_filename = self._create_load_file_dialog(wildcard, Title)
-            else:
-                if geometry_format == 'cart3d':
-                    load_function = self.load_cart3d_results
-                else:
-                    msg = 'format=%r is not supported.  Did you load a geometry model?' % geometry_format
-                    self.log_error(msg)
-                    raise RuntimeError(msg)
-
-            if out_filename == '':
-                return
-            if not os.path.exists(out_filename):
-                msg = 'result file=%r does not exist' % out_filename
-                self.log_error(msg)
-                return
-            self.last_dir = os.path.split(out_filename)[0]
-            load_function(out_filename, self.last_dir)
-
-            self.out_filename = out_filename
-            msg = '%s - %s - %s' % (self.format, self.infile_name, out_filename)
-            self.set_window_title(msg)
-            print("on_load_results(%r)" % out_filename)
-            self.out_filename = out_filename
-            self.log_command("on_load_results(%r)" % out_filename)
 
     def closeEvent(self, event):
         """
