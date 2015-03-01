@@ -125,18 +125,18 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
                 #self.picker_textActor.VisibilityOff()
                 pass
             else:
-                worldPosition = picker.GetPickPosition()
+                world_position = picker.GetPickPosition()
                 cell_id = picker.GetCellId()
                 #ds = picker.GetDataSet()
-                selPt = picker.GetSelectionPoint()
+                select_point = picker.GetSelectionPoint()
                 self.log_command("annotate_picker()")
-                self.log_info("worldPosition = %s" % str(worldPosition))
+                self.log_info("world_position = %s" % str(world_position))
                 self.log_info("cell_id = %s" % cell_id)
                 #self.log_info("data_set = %s" % ds)
-                self.log_info("selPt = %s" % str(selPt))
+                self.log_info("selPt = %s" % str(select_point))
 
                 #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
-                #self.picker_textActor.SetPosition(selPt[:2])
+                #self.picker_textActor.SetPosition(select_point[:2])
                 #self.picker_textActor.VisibilityOn()
 
         def annotate_point_picker(object, event):
@@ -146,18 +146,18 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
                 #self.picker_textActor.VisibilityOff()
                 pass
             else:
-                worldPosition = picker.GetPickPosition()
+                world_position = picker.GetPickPosition()
                 point_id = picker.GetPointId()
                 #ds = picker.GetDataSet()
-                selPt = picker.GetSelectionPoint()
+                select_point = picker.GetSelectionPoint()
                 self.log_command("annotate_picker()")
-                self.log_info("worldPosition = %s" % str(worldPosition))
+                self.log_info("world_position = %s" % str(world_position))
                 self.log_info("point_id = %s" % point_id)
                 #self.log_info("data_set = %s" % ds)
-                self.log_info("selPt = %s" % str(selPt))
+                self.log_info("select_point = %s" % str(select_point))
 
                 #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
-                #self.picker_textActor.SetPosition(selPt[:2])
+                #self.picker_textActor.SetPosition(select_point[:2])
                 #self.picker_textActor.VisibilityOn()
 
         self.cell_picker.AddObserver("EndPickEvent", annotate_cell_picker)
@@ -166,17 +166,24 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
     def on_cell_picker(self):
         self.log_command("on_cell_picker()")
         picker = self.cell_picker
-        worldPosition = picker.GetPickPosition()
+        world_position = picker.GetPickPosition()
         cell_id = picker.GetCellId()
         #ds = picker.GetDataSet()
-        selPt = picker.GetSelectionPoint()  # get x,y pixel coordinate
+        select_point = picker.GetSelectionPoint()  # get x,y pixel coordinate
 
-        self.log_info("worldPosition = %s" % str(worldPosition))
+        self.log_info("world_position = %s" % str(world_position))
         self.log_info("cell_id = %s" % cell_id)
-        self.log_info("selPt = %s" % str(selPt))
+        self.log_info("select_point = %s" % str(select_point))
         #self.log_info("data_set = %s" % ds)
 
     def _setup_supported_formats(self):
+        """
+        Maps the format name to whether a format was loaded properly.
+
+
+        TODO:  I don't like this function and the load geometry/results.
+               It could be a lot cleaner with less work.
+        """
         self.formats = {
             'nastran' : is_nastran,
             'panair' : is_panair,
@@ -234,13 +241,24 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         QtGui.QMessageBox.about(self, "About pyNastran GUI", "\n".join(about))
 
     def on_reload(self):
+        """
+        Runs the reload button.
+
+        Reload allows you to edit the input model and "reload" the data without
+        having to go to the pulldown menu.  For USM3D, we dynamically load the
+        latest CFD results time step, which is really handy when you're running
+        a job.
+        """
         Title = self.Title
         if self.format == 'usm3d':
             self.step_results_usm3d()
         else:
             self.on_load_geometry(self.infile_name, self.format)
 
-        msg = '%s - %s - %s' % (self.format, self.infile_name, self.out_filename)
+        if self.out_filename is None:
+            msg = '%s - %s' % (self.format, self.infile_name)
+        else:
+            msg = '%s - %s - %s' % (self.format, self.infile_name, self.out_filename)
         self.set_window_title(msg)
         self.log_command('on_reload()')
         #self.cycleResults(Title)
@@ -251,6 +269,15 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
                 break
 
     def on_load_geometry(self, infile_name=None, geometry_format=None, plot=True):
+        """
+        Loads a baseline geometry
+
+        :param infile_name: path to the filename (default=None -> popup)
+        :param geometry_format: the geometry format for programmatic loading
+        :param plot: Should the baseline geometry have results created and plotted/rendered?
+                     If you're calling the on_load_results method immediately after, set it to False
+                     (default=True)
+        """
         wildcard = ''
         is_failed = False
 
@@ -407,11 +434,11 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
             args, varargs, keywords, defaults = inspect.getargspec(load_function)
 
             try:
-                if args[-1] == 'plot':
-                    name = load_function.__name__
-                    self.log_error("'plot' needs to be added to %r"% name)
+                if args[-1] != 'plot':
                     has_results = load_function(infile_name, self.last_dir, plot=plot)
                 else:
+                    name = load_function.__name__
+                    self.log_error("'plot' needs to be added to %r"% name)
                     has_results = load_function(infile_name, self.last_dir)
             except Exception as e:
                 msg = traceback.format_exc()
@@ -434,109 +461,115 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         #print("on_load_geometry(infile_name=%r, geometry_format=None)" % infile_name)
         self.infile_name = infile_name
 
-        if self.out_filename is not None:
-            msg = '%s - %s - %s' % (self.format, self.infile_name, self.out_filename)
-        else:
-            msg = '%s - %s' % (self.format, self.infile_name)
+        self.out_filename = None
+        #if self.out_filename is not None:
+            #msg = '%s - %s - %s' % (self.format, self.infile_name, self.out_filename)
+        #else:
+        msg = '%s - %s' % (self.format, self.infile_name)
         self.set_window_title(msg)
         self.log_command("on_load_geometry(infile_name=%r, geometry_format=%r)" % (infile_name, self.format))
 
     def on_load_results(self, out_filename=None):
-            geometry_format = self.format
-            if self.format is None:
-                msg ='on_load_results failed:  You need to load a file first...'
+        """
+        Loads a results file.  Must have called on_load_geometry first.
+
+        :param out_filename: the path to the results file
+        """
+        geometry_format = self.format
+        if self.format is None:
+            msg = 'on_load_results failed:  You need to load a file first...'
+            self.log_error(msg)
+            raise RuntimeError(msg)
+
+        if out_filename in [None, False]:
+            Title = 'Select a Results File for %s' % self.format
+            wildcard = None
+            if geometry_format == 'nastran':
+                has_results = True
+                #wildcard = "Nastran OP2 (*.op2);;Nastran PCH (*.pch);;Nastran F06 (*.f06)"
+                wildcard = "Nastran OP2 (*.op2)"
+                load_functions = [self.load_nastran_results]
+            elif geometry_format == 'cart3d':
+                has_results = True
+                wildcard = "Cart3d (*.triq)"
+                load_functions = [self.load_cart3d_results]
+            elif geometry_format == 'panair':
+                has_results = False
+                wildcard = "Panair (*.agps);;Panair (*.out)"
+                load_functions = [self.load_panair_results]
+            elif geometry_format == 'shabp':
+                has_results = False
+                wildcard = "Shabp (*.out)"
+                load_functions = [self.load_shabp_results]
+            elif geometry_format == 'lawgs':
+                has_results = False
+                load_functions = [None]
+            elif geometry_format == 'stl':
+                has_results = False
+                load_functions = [None]
+            elif geometry_format == 'tetgen':
+                has_results = False
+                load_functions = [None]
+            elif geometry_format == 'usm3d':
+                wildcard = "Usm3d (*.flo)"
+                has_results = True
+                load_functions = [self.load_usm3d_results]
+            elif geometry_format == 'plot3d':
+                has_results = False
+                load_functions = [None]
+            else:
+                msg = 'format=%r is not supported' % geometry_format
+                self.log_error(msg)
+                raise RuntimeError(msg)
+            #scard = wildcard.split(';;')
+            #n = len(load_functions)
+            #wildcard = ';;'.join(scard[:n])
+            load_function = load_functions[0]
+            if wildcard is None:
+                msg = 'format=%r has no method to load results' % geometry_format
+                self.log_error(msg)
+                return
+            wildcard_index, out_filename = self._create_load_file_dialog(wildcard, Title)
+        else:
+            if geometry_format == 'nastran':
+                load_function = self.load_nastran_results
+            elif geometry_format == 'cart3d':
+                load_function = self.load_cart3d_results
+            elif geometry_format == 'panair':
+                load_function = self.load_panair_results
+            elif geometry_format == 'shabp':
+                load_function = self.load_shabp_results
+            #elif geometry_format == 'lawgs':
+                #load_function = None
+            #elif geometry_format == 'stl':
+                #load_function = None
+            #elif geometry_format == 'tetgen':
+                #load_function = None
+            elif geometry_format == 'usm3d':
+                load_function = self.load_usm3d_results
+            #elif geometry_format == 'plot3d':
+                #load_function = None
+            else:
+                msg = 'format=%r is not supported.  Did you load a geometry model?' % geometry_format
                 self.log_error(msg)
                 raise RuntimeError(msg)
 
-            if out_filename in [None, False]:
-                Title = 'Select a Results File for %s' % self.format
-                wildcard = None
-                if geometry_format == 'nastran':
-                    has_results = True
-                    #wildcard = "Nastran OP2 (*.op2);;Nastran PCH (*.pch);;Nastran F06 (*.f06)"
-                    wildcard = "Nastran OP2 (*.op2)"
-                    load_functions = [self.load_nastran_results]
-                elif geometry_format == 'cart3d':
-                    has_results = True
-                    wildcard = "Cart3d (*.triq)"
-                    load_functions = [self.load_cart3d_results]
-                elif geometry_format == 'panair':
-                    has_results = False
-                    wildcard = "Panair (*.agps);;Panair (*.out)"
-                    load_functions = [self.load_panair_results]
-                elif geometry_format == 'shabp':
-                    has_results = False
-                    wildcard = "Shabp (*.out)"
-                    load_functions = [self.load_shabp_results]
-                elif geometry_format == 'lawgs':
-                    has_results = False
-                    load_functions = [None]
-                elif geometry_format == 'stl':
-                    has_results = False
-                    load_functions = [None]
-                elif geometry_format == 'tetgen':
-                    has_results = False
-                    load_functions = [None]
-                elif geometry_format == 'usm3d':
-                    wildcard = "Usm3d (*.flo)"
-                    has_results = True
-                    load_functions = [self.load_usm3d_results]
-                elif geometry_format == 'plot3d':
-                    has_results = False
-                    load_functions = [None]
-                else:
-                    msg = 'format=%r is not supported' % geometry_format
-                    self.log_error(msg)
-                    raise RuntimeError(msg)
-                #scard = wildcard.split(';;')
-                #n = len(load_functions)
-                #wildcard = ';;'.join(scard[:n])
-                load_function = load_functions[0]
-                if wildcard is None:
-                    msg = 'format=%r has no method to load results' % geometry_format
-                    self.log_error(msg)
-                    return
-                wildcard_index, out_filename = self._create_load_file_dialog(wildcard, Title)
-            else:
-                if geometry_format == 'nastran':
-                    load_function = self.load_nastran_results
-                elif geometry_format == 'cart3d':
-                    load_function = self.load_cart3d_results
-                elif geometry_format == 'panair':
-                    load_function = self.load_panair_results
-                elif geometry_format == 'shabp':
-                    load_function = self.load_shabp_results
-                #elif geometry_format == 'lawgs':
-                    #load_function = None
-                #elif geometry_format == 'stl':
-                    #load_function = None
-                #elif geometry_format == 'tetgen':
-                    #load_function = None
-                elif geometry_format == 'usm3d':
-                    load_function = self.load_usm3d_results
-                #elif geometry_format == 'plot3d':
-                    #load_function = None
-                else:
-                    msg = 'format=%r is not supported.  Did you load a geometry model?' % geometry_format
-                    self.log_error(msg)
-                    raise RuntimeError(msg)
+        if out_filename == '':
+            return
+        if not os.path.exists(out_filename):
+            msg = 'result file=%r does not exist' % out_filename
+            self.log_error(msg)
+            return
+            #raise IOError(msg)
+        self.last_dir = os.path.split(out_filename)[0]
+        load_function(out_filename, self.last_dir)
 
-            if out_filename == '':
-                return
-            if not os.path.exists(out_filename):
-                msg = 'result file=%r does not exist' % out_filename
-                self.log_error(msg)
-                return
-                #raise IOError(msg)
-            self.last_dir = os.path.split(out_filename)[0]
-            load_function(out_filename, self.last_dir)
-
-            self.out_filename = out_filename
-            msg = '%s - %s - %s' % (self.format, self.infile_name, out_filename)
-            self.set_window_title(msg)
-            print("on_load_results(%r)" % out_filename)
-            self.out_filename = out_filename
-            self.log_command("on_load_results(%r)" % out_filename)
+        self.out_filename = out_filename
+        msg = '%s - %s - %s' % (self.format, self.infile_name, out_filename)
+        self.set_window_title(msg)
+        print("on_load_results(%r)" % out_filename)
+        self.out_filename = out_filename
+        self.log_command("on_load_results(%r)" % out_filename)
 
     def closeEvent(self, event):
         """

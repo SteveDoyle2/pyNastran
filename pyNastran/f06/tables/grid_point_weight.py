@@ -160,7 +160,7 @@ class GridPointWeight(object):
         assert lines[n] == 'DIRECTION', lines[n]
         n += 2
         for i in range(3):
-            line = lines[n + i][1:-1]  # get rid of the * characters
+            line = lines[n + i][1:]  # get rid of the * characters
             sline = line.split()
 
             self.mass[i] = sline[0]

@@ -957,7 +957,7 @@ class NastranIO(object):
     def fill_stress_case(self, cases, model, subcaseID):
         #return cases
         if self.is_centroidal:
-            self._fill_stress_case_centroidal(cases, model, subcaseID)
+            self._fill_stress_centroidal(cases, model, subcaseID)
         elif self.is_nodal:
             self._fill_stress_case_nodal(cases, model, subcaseID)
         else:
@@ -1180,7 +1180,7 @@ class NastranIO(object):
         if vmWord is not None:
             cases[(subcaseID, vmWord, 1, 'node', '%.3f')] = ovm
 
-    def _fill_stress_case_centroidal(self, cases, model, subcaseID):
+    def _fill_stress_centroidal(self, cases, model, subcaseID):
         nElements = self.nElements
         isElementOn = zeros(nElements)  # is the element supported
 

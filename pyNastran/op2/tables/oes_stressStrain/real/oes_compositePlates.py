@@ -91,8 +91,8 @@ class RealCompositePlateArray(OES_Object):
         #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
         self.data = zeros((self.ntimes, self.ntotal, 9), dtype='float32')
 
-    def add_new_eid(self, eType, dt, eid, nodeID, layer, o11, o22, t12, t1z, t2z, angle, major, minor, ovm):
-        self.add_new_eid_sort1(eType, dt, eid, nodeID, layer, o11, o22, t12, t1z, t2z, angle, major, minor, ovm)
+    def add_new_eid(self, eType, dt, eid, layer, o11, o22, t12, t1z, t2z, angle, major, minor, ovm):
+        self.add_new_eid_sort1(eType, dt, eid, layer, o11, o22, t12, t1z, t2z, angle, major, minor, ovm)
 
     def add_new_eid_sort1(self, eType, dt, eid, layer, o11, o22, t12, t1z, t2z, angle, major, minor, ovm):
         self.times[self.itime] = dt

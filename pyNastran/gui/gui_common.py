@@ -8,11 +8,13 @@ import sys
 import os.path
 import datetime
 import cgi #  html lib
-import traceback
+#import traceback
 
 import vtk
 from PyQt4 import QtCore, QtGui
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+
+from numpy import eye
 
 import pyNastran
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
@@ -163,45 +165,45 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             checkables = ['show_info', 'show_debug', 'show_gui', 'show_command']
         if tools is None:
             tools = [
-              ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', self.closeEvent), # QtGui.qApp.quit
-              ('load_geometry', 'Load &Geometry', 'load_geometry.png', 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),  ## @todo no picture...
-              ('load_results', 'Load &Results',   'load_results.png', 'Ctrl+R', 'Loads a results file', self.on_load_results),  ## @todo no picture...
-              ('back_col', 'Change background color', 'tcolorpick.png', None, 'Choose a background color', self.change_background_col),
-              ('legend', 'Modify legend', 'legend.png', None, 'Set Legend', self.set_legend),
-              ('axis', 'Show/Hide Axis', 'axis.png', None, 'Show/Hide Global Axis', self.on_show_hide_axes),
+                ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', self.closeEvent), # QtGui.qApp.quit
+                ('load_geometry', 'Load &Geometry', 'load_geometry.png', 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),  ## @todo no picture...
+                ('load_results', 'Load &Results', 'load_results.png', 'Ctrl+R', 'Loads a results file', self.on_load_results),  ## @todo no picture...
+                ('back_col', 'Change background color', 'tcolorpick.png', None, 'Choose a background color', self.change_background_col),
+                ('legend', 'Modify legend', 'legend.png', None, 'Set Legend', self.set_legend),
+                ('axis', 'Show/Hide Axis', 'axis.png', None, 'Show/Hide Global Axis', self.on_show_hide_axes),
 
-              ('wireframe', 'Wireframe Model', 'twireframe.png', 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
-              ('surface', 'Surface Model', 'tsolid.png', 's', 'Show Model as a Surface Model', self.on_surface),
-              ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edges),
+                ('wireframe', 'Wireframe Model', 'twireframe.png', 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
+                ('surface', 'Surface Model', 'tsolid.png', 's', 'Show Model as a Surface Model', self.on_surface),
+                ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edges),
 
-              ('show_info', 'Show INFO', 'show_info.png', None, 'Show "INFO" messages', self.on_show_info),
-              ('show_debug', 'Show DEBUG', 'show_debug.png', None, 'Show "DEBUG" messages', self.on_show_debug),
-              ('show_gui', 'Show GUI', 'show_gui.png', None, 'Show "GUI" messages', self.on_show_gui),
-              ('show_command', 'Show COMMAND', 'show_command.png', None, 'Show "COMMAND" messages', self.on_show_command),
+                ('show_info', 'Show INFO', 'show_info.png', None, 'Show "INFO" messages', self.on_show_info),
+                ('show_debug', 'Show DEBUG', 'show_debug.png', None, 'Show "DEBUG" messages', self.on_show_debug),
+                ('show_gui', 'Show GUI', 'show_gui.png', None, 'Show "GUI" messages', self.on_show_gui),
+                ('show_command', 'Show COMMAND', 'show_command.png', None, 'Show "COMMAND" messages', self.on_show_command),
 
-              ('magnify', 'Magnify', 'plus_zoom.png', 'M', 'Increase Magnfication', self.on_increase_magnification),
-              ('shrink', 'Shrink', 'minus_zoom.png', 'm', 'Decrease Magnfication', self.on_decrease_magnification),
+                ('magnify', 'Magnify', 'plus_zoom.png', 'M', 'Increase Magnfication', self.on_increase_magnification),
+                ('shrink', 'Shrink', 'minus_zoom.png', 'm', 'Decrease Magnfication', self.on_decrease_magnification),
 
-              ('cell_pick', 'Cell Pick', '', 'CTRL+K', 'PickTip', self.on_cell_picker),
+                ('cell_pick', 'Cell Pick', '', 'CTRL+K', 'PickTip', self.on_cell_picker),
 
-              ('rotate_clockwise', 'Rotate Clockwise', 'tclock.png', 'o', 'Rotate Clockwise', self.on_rotate_clockwise),
-              ('rotate_cclockwise', 'Rotate Counter-Clockwise', 'tcclock.png', 'O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
+                ('rotate_clockwise', 'Rotate Clockwise', 'tclock.png', 'o', 'Rotate Clockwise', self.on_rotate_clockwise),
+                ('rotate_cclockwise', 'Rotate Counter-Clockwise', 'tcclock.png', 'O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
 
-              ('scshot', 'Take a Screenshot', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.take_screenshot),
-              ('about', 'About pyNastran GUI', 'tabout.png', 'CTRL+H', 'About pyCart3d GUI and help on shortcuts', self.about_dialog),
-              ('creset', 'Reset camera view', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera),
-              ('reload', 'Reload model', 'treload.png', 'r', 'Reload the model', self.on_reload),
+                ('scshot', 'Take a Screenshot', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.take_screenshot),
+                ('about', 'About pyNastran GUI', 'tabout.png', 'CTRL+H', 'About pyCart3d GUI and help on shortcuts', self.about_dialog),
+                ('creset', 'Reset camera view', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera),
+                ('reload', 'Reload model', 'treload.png', 'r', 'Reload the model', self.on_reload),
 
-              ('cycle_res', 'Cycle Results', 'cycle_results.png', 'CTRL+L', 'Changes the result case', self.cycleResults),
+                ('cycle_res', 'Cycle Results', 'cycle_results.png', 'CTRL+L', 'Changes the result case', self.cycleResults),
 
-              ('x', 'Flips to +X Axis', 'plus_x.png', 'x', 'Flips to +X Axis', lambda: self.update_camera('+x')),
-              ('y', 'Flips to +Y Axis', 'plus_y.png', 'y', 'Flips to +Y Axis', lambda: self.update_camera('+y')),
-              ('z', 'Flips to +Z Axis', 'plus_z.png', 'z', 'Flips to +Z Axis', lambda: self.update_camera('+z')),
+                ('x', 'Flips to +X Axis', 'plus_x.png', 'x', 'Flips to +X Axis', lambda: self.update_camera('+x')),
+                ('y', 'Flips to +Y Axis', 'plus_y.png', 'y', 'Flips to +Y Axis', lambda: self.update_camera('+y')),
+                ('z', 'Flips to +Z Axis', 'plus_z.png', 'z', 'Flips to +Z Axis', lambda: self.update_camera('+z')),
 
-              ('X', 'Flips to -X Axis', 'minus_x.png', 'X', 'Flips to -X Axis', lambda: self.update_camera('-x')),
-              ('Y', 'Flips to -Y Axis', 'minus_y.png', 'Y', 'Flips to -Y Axis', lambda: self.update_camera('-y')),
-              ('Z', 'Flips to -Z Axis', 'minus_z.png', 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
-              ('script', 'Run Python script', 'python48.png', None, 'Runs pyCart3dGUI in batch mode', self.on_run_script),
+                ('X', 'Flips to -X Axis', 'minus_x.png', 'X', 'Flips to -X Axis', lambda: self.update_camera('-x')),
+                ('Y', 'Flips to -Y Axis', 'minus_y.png', 'Y', 'Flips to -Y Axis', lambda: self.update_camera('-y')),
+                ('Z', 'Flips to -Z Axis', 'minus_z.png', 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
+                ('script', 'Run Python script', 'python48.png', None, 'Runs pyCart3dGUI in batch mode', self.on_run_script),
             ]
         self.tools = tools
         self.checkables = checkables
@@ -216,22 +218,22 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.menu_help = self.menubar.addMenu('&Help')
 
         if self._script_path is not None and os.path.exists(self._script_path):
-            scripts = [script for script in os.listdir(self._script_path) if '.py' in script ]
+            scripts = [script for script in os.listdir(self._script_path) if '.py' in script]
         else:
             scripts = []
 
         scripts = tuple(scripts)
 
-        if 0:
-            print('script_path =', script_path)
-            print('scripts =', scripts)
-            self.menu_scripts = self.menubar.addMenu('&Scripts')
-            for script in scripts:
-                fname = os.path.join(script_path, script)
-                tool = (script, script, 'python48.png', None, '', lambda: self.on_run_script(fname) )
-                tools.append(tool)
-        else:
-            self.menu_scripts = None
+        #if 0:
+            #print('script_path =', script_path)
+            #print('scripts =', scripts)
+            #self.menu_scripts = self.menubar.addMenu('&Scripts')
+            #for script in scripts:
+                #fname = os.path.join(script_path, script)
+                #tool = (script, script, 'python48.png', None, '', lambda: self.on_run_script(fname) )
+                #tools.append(tool)
+        #else:
+        self.menu_scripts = None
 
         menu_window = ['toolbar', 'reswidget']
         menu_view = ['scshot', '', 'wireframe', 'surface', 'creset', '', 'back_col', 'legend','axis', ]
@@ -243,9 +245,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         menu_items = [
             (self.menu_file, ('load_geometry', 'load_results', 'script', '', 'exit')),
-            (self.menu_view,  tuple(menu_view)),
+            (self.menu_view, tuple(menu_view)),
             (self.menu_window, tuple(menu_window)),
-            (self.menu_help,  ('about',)),
+            (self.menu_help, ('about',)),
             (self.menu_scripts, scripts),
             (self.toolbar, ('cell_pick', 'reload', 'load_geometry', 'load_results', 'cycle_res',
                             'x', 'y', 'z', 'X', 'Y', 'Z',
@@ -333,7 +335,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if not self.html_logging:
             print(typ, msg)
             return
-        _fr =  sys._getframe(4)  # jump to get out of the logger code
+        _fr = sys._getframe(4)  # jump to get out of the logger code
         n = _fr.f_lineno
         fn = os.path.basename(_fr.f_globals['__file__'])
 
@@ -382,7 +384,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def change_background_col(self):
         """ Choose a background color """
-        c =  [int(255 * i) for i in self.background_col]
+        c = [int(255 * i) for i in self.background_col]
         col = QtGui.QColorDialog.getColor(QtGui.QColor(*c), self, "Choose a background color")
         if col.isValid():
             self.background_col = col.getRgbF()[:3]
@@ -432,39 +434,39 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         if Type == 'xyz':
             if label:
-                x = 'x%s' % label
-                y = 'y%s' % label
-                z = 'z%s' % label
-                axes.SetXAxisLabelText(x)
-                axes.SetYAxisLabelText(y)
-                axes.SetZAxisLabelText(z)
+                xlabel = 'x%s' % label
+                ylabel = 'y%s' % label
+                zlabel = 'z%s' % label
+                axes.SetXAxisLabelText(xlabel)
+                axes.SetYAxisLabelText(ylabel)
+                axes.SetZAxisLabelText(zlabel)
         else:
             if Type == 'Rtz':  # cylindrical
-                x = u'R'
-                y = u'?'
-                z = 'z'
+                xlabel = u'R'
+                ylabel = u'?'
+                zlabel = 'z'
 
-                x = 'R'
-                y = 'theta'
-                z = 'z'
+                xlabel = 'R'
+                ylabel = 'theta'
+                zlabel = 'z'
 
             elif Type == 'Rtp':  # spherical
-                x = u'R'
-                #y = u'?'
-                #z = u'?'
+                xlabel = u'R'
+                #ylabel = u'?'
+                #zlabel = u'?'
 
-                #x = 'R'
-                y = 'theta'
-                z = 'phi'
+                #xlabel = 'R'
+                ylabel = 'theta'
+                zlabel = 'phi'
             else:
                 raise RuntimeError('invalid axis type; Type=%r' % Type)
 
-            x = '%s%s' % (x, label)
-            y = '%s%s' % (y, label)
-            z = '%s%s' % (z, label)
-            axes.SetXAxisLabelText(x)
-            axes.SetYAxisLabelText(y)
-            axes.SetZAxisLabelText(z)
+            xlabel = '%s%s' % (x, label)
+            ylabel = '%s%s' % (y, label)
+            zlabel = '%s%s' % (z, label)
+            axes.SetXAxisLabelText(xlabel)
+            axes.SetYAxisLabelText(ylabel)
+            axes.SetZAxisLabelText(zlabel)
 
         self.transform[coord_id] = transform
         self.axes[coord_id] = axes
@@ -513,7 +515,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def build_vtk_frame(self):
         #Frame that VTK will render on
         vtk_frame = QtGui.QFrame()
-        vtk_hbox  = QtGui.QHBoxLayout()
+        vtk_hbox = QtGui.QHBoxLayout()
         vtk_hbox.setContentsMargins(2, 2, 2, 2)
 
         #Qt VTK RenderWindowInteractor
@@ -617,15 +619,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                               is_discrete=is_discrete)
 
     def on_update_legend(self, Title='Title', min_value=0., max_value=1.,
-                      data_format='%.0f', is_blue_to_red=True, is_discrete=True):
+                         data_format='%.0f', is_blue_to_red=True, is_discrete=True):
         key = self.caseKeys[self.iCase]
         case = self.resultCases[key]
         if len(key) == 5:
-            (subcase_id, _resultType, vectorSize, location, _data_format) = key
+            (subcase_id, _result_type, vector_size, location, _data_format) = key
         elif len(key) == 6:
-            (subcase_id, i, _resultType, vectorSize, location, _data_format) = key
+            (subcase_id, i, _result_type, vector_size, location, _data_format) = key
         else:
-            (subcase_id, i, _resultType, vectorSize, location, _data_format, label2) = key
+            (subcase_id, i, _result_type, vector_size, location, _data_format, label2) = key
 
         try:
             caseName = self.iSubcaseNameMap[subcase_id]
@@ -633,8 +635,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             caseName = ('case=NA', 'label=NA')
         (subtitle, label) = caseName
 
-        gridResult = self.build_grid_result(vectorSize, location)
-        norm_value, nValueSet = self.set_grid_values(gridResult, case, vectorSize, min_value, max_value, is_blue_to_red=is_blue_to_red)
+        gridResult = self.build_grid_result(vector_size, location)
+        norm_value, nValueSet = self.set_grid_values(gridResult, case, vector_size, min_value, max_value, is_blue_to_red=is_blue_to_red)
         self.UpdateScalarBar(Title, min_value, max_value, norm_value, data_format, is_blue_to_red=is_blue_to_red)
         self.final_grid_update(gridResult, key, subtitle, label)
         self.log_command('self.on_update_legend(Title=%r, min_value=%s, max_value=%s,\n'
@@ -656,16 +658,16 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.log_command('self.on_run_script(%r)' % python_file)
 
     def on_show_info(self):
-        self.show_info = not(self.show_info)
+        self.show_info = not self.show_info
 
     def on_show_debug(self):
-        self.show_debug = not(self.show_debug)
+        self.show_debug = not self.show_debug
 
     def on_show_gui(self):
-        self.show_gui = not(self.show_gui)
+        self.show_gui = not self.show_gui
 
     def on_show_command(self):
-        self.show_command = not(self.show_command)
+        self.show_command = not self.show_command
 
     def on_reset_camera(self):
         self.log_command('on_reset_camera()')
@@ -716,7 +718,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.zoom(1.0/1.1)
 
     def on_flip_edges(self):
-        self.is_edges = not(self.is_edges)
+        self.is_edges = not self.is_edges
         self.edgeActor.SetVisibility(self.is_edges)
         #self.edgeActor.GetProperty().SetColor(0, 0, 0)  # cart3d edge color isn't black...
         self.edgeActor.Modified()
@@ -865,9 +867,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         #-------------
         shots = inputs['shots']
-        format = inputs['format']  # the active format loaded into the gui
-        input = inputs['input']
-        output = inputs['output']
+        geometry_format = inputs['format']  # the active format loaded into the gui
+        fname_input = inputs['input']
+        fname_output = inputs['output']
         script = inputs['script']
         #-------------
 
@@ -905,11 +907,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 base, ext = os.path.splitext(os.path.basename(self.out_filename))
                 default_filename = Title + '_' + base
 
-            fname = str(QtGui.QFileDialog.getSaveFileName(self, ('Choose a filename '
-                        'and type'), default_filename, ('PNG Image *.png (*.png);; JPEG Image '
-                        '*.jpg *.jpeg (*.jpg, *.jpeg);; TIFF Image *.tif *.tiff '
-                        '(*.tif, *.tiff);; BMP Image *.bmp (*.bmp);; PostScript '
-                        'Document *.ps (*.ps)'), filt))
+            fname = str(QtGui.QFileDialog.getSaveFileName(self, (
+                'Choose a filename and type'), default_filename, (
+                    'PNG Image *.png (*.png);; '
+                    'JPEG Image *.jpg *.jpeg (*.jpg, *.jpeg);; '
+                    'TIFF Image *.tif *.tiff (*.tif, *.tiff);; '
+                    'BMP Image *.bmp (*.bmp);; '
+                    'PostScript Document *.ps (*.ps)'), filt))
             #print("fname=%r" % fname)
             if fname is None or fname == '':  # 2nd option
                 return
@@ -975,7 +979,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.rend.AddActor(self.alt_geometry_actor)
         vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
 
-    def on_update_scalar_bar(Title, min_value, max_value, data_format):
+    def on_update_scalar_bar(self, Title, min_value, max_value, data_format):
         self.Title = str(Title)
         self.min_value = float(min_value)
         self.max_value = float(max_value)
@@ -1099,7 +1103,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def finish_io(self, cases):
         self.resultCases = cases
         self.caseKeys = sorted(cases.keys())
-        print("caseKeys = ",self.caseKeys)
+        print("caseKeys = ", self.caseKeys)
 
         if len(self.resultCases) == 0:
             self.nCases = 1

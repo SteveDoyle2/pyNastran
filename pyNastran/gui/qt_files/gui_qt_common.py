@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 from six import iteritems
 import vtk
-from numpy import ndarray, asarray, array, hstack
+from numpy import ndarray, asarray, hstack
 
 class GuiCommon(object):
     def __init__(self):
@@ -61,8 +62,8 @@ class GuiCommon(object):
             #self.log_command('cycleResults(result_name=%r)' % result_name)
         print("is_nodal=%s is_centroidal=%s" % (self.is_nodal, self.is_centroidal))
 
-        foundCases = self.incrementCycle(result_name)
-        if foundCases:
+        found_cases = self.incrementCycle(result_name)
+        if found_cases:
             self._set_case(result_name, self.iCase, explicit=explicit, cycle=True)
         #else:
             #self.log_command(""didn't find case...")
@@ -81,38 +82,38 @@ class GuiCommon(object):
         case = self.resultCases[key]
         label2 = ''
         if len(key) == 5:
-            (subcaseID, resultType, vectorSize, location, data_format) = key
+            (subcase_id, result_type, vector_size, location, data_format) = key
         elif len(key) == 6:
-            (subcaseID, j, resultType, vectorSize, location, data_format) = key
+            (subcase_id, j, result_type, vector_size, location, data_format) = key
         else:
-            (subcaseID, j, resultType, vectorSize, location, data_format, label2) = key
+            (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
 
         try:
-            caseName = self.iSubcaseNameMap[subcaseID]
+            caseName = self.iSubcaseNameMap[subcase_id]
         except KeyError:
             caseName = ('case=NA', 'label=NA')
         (subtitle, label) = caseName
         label += label2
-        print("subcaseID=%s resultType=%r subtitle=%r label=%r" % (subcaseID, resultType, subtitle, label))
+        print("subcaseID=%s resultType=%r subtitle=%r label=%r" % (subcase_id, result_type, subtitle, label))
 
         #================================================
-        gridResult = self.build_grid_result(vectorSize, location)
+        grid_result = self.build_grid_result(vector_size, location)
         #================================================
         if isinstance(case, ndarray):
             max_value = case.max()
             min_value = case.min()
         else:
             raise RuntimeError('list-based results have been disabled; use numpy.array')
-            print('resultType=%r should really use numpy arrays...' % resultType)
+            print('resultType=%r should really use numpy arrays...' % result_type)
             max_value = case[0]
             min_value = case[0]
             for value in case:
                 max_value = max(value, max_value)
                 min_value = min(value, min_value)
 
-        norm_value, nValueSet = self.set_grid_values(gridResult, case, vectorSize, min_value, max_value)
-        self.update_text_actors(case, subcaseID, subtitle, min_value, max_value, label)
-        self.UpdateScalarBar(resultType, min_value, max_value, norm_value, data_format, is_blue_to_red=True)
+        norm_value, nValueSet = self.set_grid_values(grid_result, case, vector_size, min_value, max_value)
+        self.update_text_actors(case, subcase_id, subtitle, min_value, max_value, label)
+        self.UpdateScalarBar(result_type, min_value, max_value, norm_value, data_format, is_blue_to_red=True)
         #self.scalarBar.SetNumberOfLabels(nValueSet)
         #self.scalarBar.SetMaximumNumberOfColors(nValueSet)
         #prop = self.scalarBar.GetLabelTextProperty()
@@ -124,9 +125,9 @@ class GuiCommon(object):
         # centroid
         #print(dir(self.grid))
         #self.grid.Reset()
-        self.final_grid_update(gridResult, key, subtitle, label)
+        self.final_grid_update(grid_result, key, subtitle, label)
         if explicit:
-            self.log_command('cycleResults(result_name=%r)' % resultType)
+            self.log_command('cycleResults(result_name=%r)' % result_type)
 
     def set_grid_values(self, gridResult, case, vectorSize, min_value, max_value, is_blue_to_red=True):
         # flips sign to make colors go from blue -> red
@@ -398,6 +399,22 @@ class GuiCommon(object):
         else:
             self._group_coords[name] = set(coord_id)
 
+    def _create_grid_mapper(self, name):
+        self.grid = vtk.vtkUnstructuredGrid()
+        self.aQuadMapper = vtk.vtkDataSetMapper()
+        self.aQuadMapper.SetInput(self.grid)
+
+        geometryActor = vtk.vtkActor()
+        geometryActor.SetMapper(self.aQuadMapper)
+        geometryActor.GetProperty().SetDiffuseColor(1, 0, 0)  # red
+        self.rend.AddActor(geometryActor)
+
+class Groups(object):
+    def __init__(self):
+        self.nNodes = None
+        self.model = None
+        self.grid = None
+
     def add_to_group(self, Format, name, element_id=None, property_id=None, coord_id=None):
         assert name in self._group_elements
         element_id = self._check_add(Format, name,
@@ -421,8 +438,8 @@ class GuiCommon(object):
             self._create_nastran_group(name, self.model, element_id)
         elif Format == 'cart3d':
             self._create_cart3d_group(name, self.model, element_id)
-        elif Format == 'panair':
-            self._create_panair_group(name, self.model, element_id)
+        #elif Format == 'panair':
+            #self._create_panair_group(name, self.model, element_id)
 
     def _create_nastran_group(self, name, model, element_id):
         pass
@@ -456,14 +473,4 @@ class GuiCommon(object):
         self.grid[name].SetPoints(points)
         self.grid[name].Modified()
         self.grid[name].Update()
-
-    def _create_grid_mapper(self, name):
-        self.grid = vtk.vtkUnstructuredGrid()
-        self.aQuadMapper = vtk.vtkDataSetMapper()
-        self.aQuadMapper.SetInput(self.grid)
-
-        geometryActor = vtk.vtkActor()
-        geometryActor.SetMapper(self.aQuadMapper)
-        geometryActor.GetProperty().SetDiffuseColor(1, 0, 0)  # red
-        self.rend.AddActor(geometryActor)
 
