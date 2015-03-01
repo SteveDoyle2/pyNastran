@@ -8,6 +8,7 @@ import sys
 import os.path
 import datetime
 import cgi #  html lib
+import inspect
 #import traceback
 
 import vtk
@@ -842,9 +843,255 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             log = SimpleLogger('debug', lambda x, y: print(x, y))
         self.log = log
 
+    def build_fmts(self, fmt_order, stop_on_failure=False):
+        fmts = []
+        for fmt in fmt_order:
+            if hasattr(self, 'get_%s_wildcard_geometry_results_functions' % fmt):
+                func = 'get_%s_wildcard_geometry_results_functions' % fmt
+                data = getattr(self, func)()
+                msg = 'macro_name, geo_fmt, geo_func, res_fmt, res_func = data\n'
+                msg += 'data = %s'
+                assert len(data) == 5, msg % str(data)
+                macro_name, geo_fmt, geo_func, res_fmt, res_func = data
+                fmts.append((fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func))
+            #else:
+                #func = 'get_%s_wildcard_geometry_results_functions' % fmt
+                #raise RuntimeError(func)
+
+        if len(fmts) == 0:
+            RuntimeError('No formats...expected=%s' % fmt_order)
+        self.fmts = fmts
+
+        #fmts = [
+            ## results
+            #('nastran', 'Nastran', 'Nastran BDF (*.bdf; *.dat; *.nas)', self.load_nastran_geometry, 'Nastran OP2 (*.op2)', self.load_nastran_results),
+            #('cart3d', 'Cart3d', 'Cart3d (*.tri; *.triq)', self.load_cart3d_geometry, 'Cart3d (*.triq)', self.load_cart3d_results),
+            #('panair', 'Panair', 'Panair (*.inp)', self.load_panair_geometry, 'Panair (*.agps);;Panair (*.out)',  self.load_panair_results),
+            #('shabp', 'S/HABP', 'Shabp (*.geo; *.mk5; *.inp)', self.load_shabp_geometry, 'Shabp (*.out)', self.load_shabp_results),
+            #('usm3d', 'Usm3D', 'USM3D (*.cogsg; *.front)', self.load_usm3d_geometry, 'Usm3d (*.flo)', self.load_usm3d_results),
+
+            ## no results
+            #('lawgs', 'LaWGS', 'LaWGS (*.inp; *.wgs)', self.load_lawgs_geometry, None, None),
+            #('tetgen', 'Tetgen', 'Tetgen (*.smesh)', self.load_tetgen_geometry, None, None),
+            #('stl', 'STL', 'STereoLithography (*.STL)', self.load_stl_geometry, None, None),
+            ##('plot3d', 'Plot3D', 'Plot3D (*.p3d; *.p3da)', self.load_plot3d_geometry, None, None),
+        #]
+        #self.fmts = fmts
+        self.supported_formats = [fmt[0] for fmt in fmts]
+        print('supported_formats = %s' % self.supported_formats)
+        if len(fmts) == 0:
+            raise RuntimeError('no modules were loaded...')
+
+    def on_load_geometry(self, infile_name=None, geometry_format=None, plot=True):
+        """
+        Loads a baseline geometry
+
+        :param infile_name: path to the filename (default=None -> popup)
+        :param geometry_format: the geometry format for programmatic loading
+        :param plot: Should the baseline geometry have results created and plotted/rendered?
+                     If you're calling the on_load_results method immediately after, set it to False
+                     (default=True)
+        """
+        wildcard = ''
+        is_failed = False
+
+        if geometry_format and geometry_format.lower() not in self.supported_formats:
+            is_failed = True
+            #if geometry_format in self.formats:
+            msg = 'The import for the %r module failed.\n' % geometry_format
+            #else:
+                #msg = '%r is not a enabled format; enabled_formats=%s\n' % (geometry_format, self.supported_formats)
+                #msg += str("formats = %s" % str(self.formats))
+            self.log_error(msg)
+            return is_failed
+
+        if infile_name:
+            geometry_format = geometry_format.lower()
+            print("geometry_format = %r" % geometry_format)
+
+            for fmt in self.fmts:
+                fmt_name, _major_name, _geowild, _geofunc, _reswild, _resfunc = fmt
+                if geometry_format == fmt_name:
+                    load_function = _geofunc
+                    if _reswild is None:
+                        has_results = False
+                    else:
+                        has_results = True
+                    break
+            else:
+                self.log_error('---invalid format=%r' % geometry_format)
+                is_failed = True
+                return is_failed
+                raise NotImplementedError('on_load_geometry; infile_name=%r format=%r' % (infile_name, geometry_format))
+            formats = [geometry_format]
+            filter_index = 0
+        else:
+            formats = []
+            load_functions = []
+            has_results_list = []
+            wildcard_list = []
+
+            for fmt in self.fmts:
+                fmt_name, _major_name, _geowild, _geofunc, _reswild, _resfunc = fmt
+                formats.append(_major_name)
+                wildcard_list.append(_geowild)
+                load_functions.append(_geofunc)
+
+                if _reswild is None:
+                    has_results_list.append(False)
+                else:
+                    has_results_list.append(True)
+
+            wildcard = ';;'.join(wildcard_list)
+
+            # get the filter index and filename
+            if infile_name is not None and geometry_format is not None:
+                filter_index = formats.index(geometry_format)
+            else:
+                Title = 'Choose a Geometry File to Load'
+                wildcard_index, infile_name = self._create_load_file_dialog(wildcard, Title)
+                #print("infile_name = %r" % infile_name)
+                #print("wildcard_index = %r" % wildcard_index)
+                if not infile_name:
+                    is_failed = True
+                    return is_failed # user clicked cancel
+                filter_index = wildcard_list.index(wildcard_index)
+
+            geometry_format = formats[filter_index]
+            load_function = load_functions[filter_index]
+            has_results = has_results_list[filter_index]
+            #return is_failed
+
+        if load_function is not None:
+            self.last_dir = os.path.split(infile_name)[0]
+
+            self.grid.Reset()
+            self.grid.Modified()
+            self.grid2.Reset()
+            self.grid2.Modified()
+            #gridResult.Reset()
+            #gridResult.Modified()
+
+            if not os.path.exists(infile_name) and geometry_format:
+                msg = 'input file=%r does not exist' % infile_name
+                self.log_error(msg)
+                self.log_error(print_bad_path(infile_name))
+                return
+
+            # clear out old data
+            if self.modelType is not None:
+                clear_name = 'clear_' + self.modelType
+                try:
+                    dy_method = getattr(self, clear_name)  # 'self.clear_nastran()'
+                    dy_method()
+                except:
+                    print("method %r does not exist" % clear_name)
+            self.log_info("reading %s file %r" % (geometry_format, infile_name))
+
+            # inspect the load_geometry method to see what version it's using
+            args, varargs, keywords, defaults = inspect.getargspec(load_function)
+            try:
+                if args[-1] == 'plot':
+                    has_results = load_function(infile_name, self.last_dir, plot=plot)
+                else:
+                    name = load_function.__name__
+                    self.log_error(str(args))
+                    self.log_error("'plot' needs to be added to %r; args[-1]=%r" % (name, args[-1]))
+                    has_results = load_function(infile_name, self.last_dir)
+            except Exception as e:
+                msg = traceback.format_exc()
+                self.log_error(msg)
+                raise
+                #return
+            #self.vtk_panel.Update()
+            self.rend.ResetCamera()
+
+        # the model has been loaded, so we enable load_results
+        if filter_index >= 0:
+            self.format = formats[filter_index].lower()
+            if has_results:
+                enable = True
+            else:
+                enable = False
+            #self.load_results.Enable(enable)
+        else: # no file specified
+            return
+        #print("on_load_geometry(infile_name=%r, geometry_format=None)" % infile_name)
+        self.infile_name = infile_name
+
+        self.out_filename = None
+        #if self.out_filename is not None:
+            #msg = '%s - %s - %s' % (self.format, self.infile_name, self.out_filename)
+        #else:
+        msg = '%s - %s' % (self.format, self.infile_name)
+        self.set_window_title(msg)
+        self.log_command("on_load_geometry(infile_name=%r, geometry_format=%r)" % (infile_name, self.format))
+
+    def on_load_results(self, out_filename=None):
+        """
+        Loads a results file.  Must have called on_load_geometry first.
+
+        :param out_filename: the path to the results file
+        """
+        geometry_format = self.format
+        if self.format is None:
+            msg = 'on_load_results failed:  You need to load a file first...'
+            self.log_error(msg)
+            raise RuntimeError(msg)
+
+        if out_filename in [None, False]:
+            Title = 'Select a Results File for %s' % self.format
+            wildcard = None
+            load_function = None
+
+            for fmt in self.fmts:
+                fmt_name, _major_name, _geowild, _geofunc, _reswild, _resfunc = fmt
+                if geometry_format == fmt_name:
+                    wildcard = _reswild
+                    load_function = _resfunc
+                    break
+            else:
+                msg = 'format=%r is not supported' % geometry_format
+                self.log_error(msg)
+                raise RuntimeError(msg)
+
+            if wildcard is None:
+                msg = 'format=%r has no method to load results' % geometry_format
+                self.log_error(msg)
+                return
+            wildcard_index, out_filename = self._create_load_file_dialog(wildcard, Title)
+        else:
+
+            for fmt in self.fmts:
+                fmt_name, _major_name, _geowild, _geofunc, _reswild, _resfunc = fmt
+                print('fmt_name=%r geometry_format=%r' % (fmt_name, geometry_format))
+                if fmt_name == geometry_format:
+                    load_function = _resfunc
+                    break
+            else:
+                msg = 'format=%r is not supported.  Did you load a geometry model?' % geometry_format
+                self.log_error(msg)
+                raise RuntimeError(msg)
+
+        if out_filename == '':
+            return
+        if not os.path.exists(out_filename):
+            msg = 'result file=%r does not exist' % out_filename
+            self.log_error(msg)
+            return
+            #raise IOError(msg)
+        self.last_dir = os.path.split(out_filename)[0]
+        load_function(out_filename, self.last_dir)
+
+        self.out_filename = out_filename
+        msg = '%s - %s - %s' % (self.format, self.infile_name, out_filename)
+        self.set_window_title(msg)
+        print("on_load_results(%r)" % out_filename)
+        self.out_filename = out_filename
+        self.log_command("on_load_results(%r)" % out_filename)
+
     def setup_gui(self):
         assert self.fmts != [], 'supported_formats=%s' % self.supported_formats
-
         self.start_logging()
         settings = QtCore.QSettings()
         self.create_vtk_actors()
