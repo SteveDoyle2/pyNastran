@@ -19,8 +19,9 @@ from six.moves import zip
 #VTK_QUADRATIC_HEXAHEDRON = 25
 
 import os
-from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, array
-from numpy import nan as NaN, searchsorted, sqrt, pi, arange, unique
+from numpy import zeros, abs, mean, where, nan_to_num
+from numpy import searchsorted, sqrt, pi, arange, unique
+#from numpy import nan as NaN, amax, amin, array
 from numpy.linalg import norm
 
 import vtk
@@ -53,12 +54,23 @@ class NastranIO(object):
         self.save_data = False
         self.show_alt_actor = True  # show the caero mesh
 
+        self.element_ids = None
+        self.node_ids = None
+        self.nidMap = None
+        self.eidMap = None
+        self.nNodes = None
+        self.nElements = None
+        self.modelType = None
+        #self.is_centroidal = None
+        #self.is_nodal = None
+        self.iSubcaseNameMap = None
+
     def show_caero_mesh(self, is_shown=None):
         """
         :param is_shown: should the mesh be shown/hidden (default=None -> flip between shown/not shown)
         """
         if is_shown is None:
-            is_shown = not(self.show_alt_actor)
+            is_shown = not self.show_alt_actor
 
         self.show_alt_actor = is_shown
         if is_shown:
@@ -103,7 +115,7 @@ class NastranIO(object):
             self.resultCases = {}
             self.nCases = 0
         for i in ('caseKeys', 'iCase', 'iSubcaseNameMap'):
-            if hasattr(self, i):
+            if hasattr(self, i):  # TODO: is this correct???
                 del i
 
             #print(dir(self))
@@ -112,11 +124,12 @@ class NastranIO(object):
             self.scalarBar.Modified()
 
         fname_base, ext = os.path.splitext(bdf_filename)
+        ext = ext.lower()
         punch = False
-        if ext.lower() in '.pch':
+        if ext == '.pch':
             punch = True
 
-        #if bdf_filename.lower().endswith('.op2'):  # read the OP2; requires make_geom
+        #if ext == '.op2':  # read the OP2; requires make_geom
             #op2_filename = bdf_filename
             #model = OP2(# make_geom=True,
                        #debug=True, log=self.log)
@@ -127,14 +140,15 @@ class NastranIO(object):
         else:  # read the bdf/punch
             model = BDF(log=self.log, debug=True)
             self.modelType = model.modelType
-            model.read_bdf(bdf_filename, include_dir=dirname, punch=punch, xref=False)
+            model.read_bdf(bdf_filename, include_dir=dirname,
+                           punch=punch, xref=False)
             model.cross_reference(xref=True, xref_loads=False,
                                   xref_constraints=False)
 
-        nNodes = model.nNodes()
-        assert nNodes > 0
-        nElements = model.nElements()
-        assert nElements > 0
+        nnodes = model.nNodes()
+        assert nnodes > 0
+        nelements = model.nElements()
+        assert nelements > 0
 
         if self.is_sub_panels:
             nsub_elements_caeros = 0
@@ -146,14 +160,14 @@ class NastranIO(object):
                     nsub_points_caeros += nelements
                 else:
                     print('%r doesnt support panel_points_elements' % caero.type)
-            nCAeros = nsub_elements_caeros
-            nCAerosPoints = nsub_points_caeros
+            ncaeros = nsub_elements_caeros
+            ncaeros_points = nsub_points_caeros
         else:
-            nCAeros = model.nCAeros()
-            nCAerosPoints = nCAeros * 4
+            ncaeros = model.nCAeros()
+            ncaeros_points = ncaeros * 4
 
-        self.nNodes = nNodes
-        self.nElements = nElements  # approximate...
+        self.nNodes = nnodes
+        self.nElements = nelements  # approximate...
 
         self.log_info("nNodes=%i nElements=%i" % (self.nNodes, self.nElements))
         msg = model.get_bdf_stats(return_type='list')
@@ -169,7 +183,7 @@ class NastranIO(object):
             nCONM2 = 0
         self.grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)
-        self.grid2.Allocate(nCAeros + nCONM2, 1000)
+        self.grid2.Allocate(ncaeros + nCONM2, 1000)
         self.show_caero_mesh(is_shown=self.show_alt_actor)
 
         points = vtk.vtkPoints()
@@ -179,7 +193,7 @@ class NastranIO(object):
         #elem.SetNumberOfPoints(nNodes)
         if 0:
             i = 0
-            fraction = 1. / nNodes  # so you can color the nodes by ID
+            #fraction = 1. / nnodes  # so you can color the nodes by ID
             for (nid, node) in sorted(iteritems(model.nodes)):
                 point = node.Position()
                 points.InsertPoint(i, *point)
@@ -257,20 +271,19 @@ class NastranIO(object):
         nsprings = 0
         if 0:
             for (eid, element) in sorted(iteritems(model.elements)):
-                if (isinstance(element, LineElement) or
-                      isinstance(element, SpringElement) or
-                      element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
-                          'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                          'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):
-
-                        nodeIDs = element.nodeIDs()
-                        if None in nodeIDs:
+                if(isinstance(element, LineElement) or
+                   isinstance(element, SpringElement) or
+                   element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
+                                    'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                                    'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):
+                        node_ids = element.nodeIDs()
+                        if None in node_ids:
                             nsprings += 1
 
-        points2.SetNumberOfPoints(nCAerosPoints * 4 + nCONM2 + nsprings)
+        points2.SetNumberOfPoints(ncaeros_points * 4 + nCONM2 + nsprings)
         for (eid, element) in sorted(iteritems(model.caeros)):
-            if (isinstance(element, CAERO1) or isinstance(element, CAERO3) or
-                isinstance(element, CAERO4) or isinstance(element, CAERO5)):
+            if(isinstance(element, CAERO1) or isinstance(element, CAERO3) or
+               isinstance(element, CAERO4) or isinstance(element, CAERO5)):
                 if self.is_sub_panels:
                     pointsi, elementsi = element.panel_points_elements()
                     for ipoint, pointii in enumerate(pointsi):
@@ -278,7 +291,7 @@ class NastranIO(object):
 
                     elem = vtkQuad()
                     eType = elem.GetCellType()
-                    for ielement, elementsi in enumerate(elementsi):
+                    for elementsi in elementsi:
                         elem = vtkQuad()
                         elem.GetPointIds().SetId(0, j + elementsi[0])
                         elem.GetPointIds().SetId(1, j + elementsi[1])
@@ -561,8 +574,8 @@ class NastranIO(object):
             elif (isinstance(element, LineElement) or
                   isinstance(element, SpringElement) or
                   element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
-                      'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                      'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):
+                                   'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                                   'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):
 
                 # TODO: verify
                 # CBUSH, CBUSH1D, CFAST, CROD, CELAS1, CELAS3
@@ -590,14 +603,15 @@ class NastranIO(object):
                         # SPOINT
                         print('removing CELASx eid=%i -> SPOINT %i' % (eid, nid))
                         continue
-                    c = nidMap[nid]
+
+                    #c = nidMap[nid]
                     elem = vtk.vtkVertex()
                     elem.GetPointIds().SetId(0, j)
 
                     elem = vtk.vtkSphere()
-                    if d == 0.:
-                        d = sphere_size
-                    elem.SetRadius(d)
+                    #if d == 0.:
+                        #d = sphere_size
+                    elem.SetRadius(sphere_size)
                 else:
                     # 2 points
                     #d = norm(element.nodes[0].Position() - element.nodes[1].Position())
@@ -662,22 +676,8 @@ class NastranIO(object):
                 raise RuntimeError(msg)
         del pids_dict
 
-        #nxs = []
-        #nys = []
-        #nzs = []
-        #i = 0
-
-        #for eid, element in sorted(iteritems(model.elements)):
-            #if isinstance(element, ShellElement):
-                #(nx, ny, nz) = element.Normal()
-            #else:
-                #nx = ny = nz = 0.0
-            #nxs.append(nx)
-            #nys.append(ny)
-            #nzs.append(nz)
 
         self.iSubcaseNameMap = {1: ['Nastran', '']}
-
         #nelements = len(self.eidMap)
         icase = 0
         form = ['Geometry', None, []]
@@ -707,7 +707,7 @@ class NastranIO(object):
             self.element_ids = eids
             eidsSet = True
 
-        # subcaseID, resultType, vectorSize, location, dataFormat
+        # subcase_id, resultType, vectorSize, location, dataFormat
         if len(model.properties) and self.is_centroidal:
             cases[(0, icase, 'Property_ID', 1, 'centroid', '%i')] = pids
             form0.append(('Property_ID', icase, []))
@@ -717,20 +717,34 @@ class NastranIO(object):
         #self._plot_applied_loads(model, cases)
 
         if 0:
+            nxs = []
+            nys = []
+            nzs = []
+            i = 0
+
+            for eid, element in sorted(iteritems(model.elements)):
+                if isinstance(element, ShellElement):
+                    (nx, ny, nz) = element.Normal()
+                else:
+                    nx = ny = nz = 0.0
+                nxs.append(nx)
+                nys.append(ny)
+                nzs.append(nz)
+
             # if not a flat plate???
             #if min(nxs) == max(nxs) and min(nxs) != 0.0:
-                # subcaseID, resultType, vectorSize, location, dataFormat
-                cases[(0, icase, 'Normal_x', 1, 'centroid', '%.1f')] = nxs
-                form0.append(('Normal_x', icase, []))
-                icase += 1
+            # subcase_id, resultType, vectorSize, location, dataFormat
+            cases[(0, icase, 'Normal_x', 1, 'centroid', '%.1f')] = nxs
+            form0.append(('Normal_x', icase, []))
+            icase += 1
 
-                cases[(0, icase, 'Normal_y', 1, 'centroid', '%.1f')] = nys
-                form0.append(('Normal_y', icase, []))
-                icase += 1
+            cases[(0, icase, 'Normal_y', 1, 'centroid', '%.1f')] = nys
+            form0.append(('Normal_y', icase, []))
+            icase += 1
 
-                cases[(0, icase, 'Normal_z', 1, 'centroid', '%.1f')] = nzs
-                form0.append(('Normal_z', icase, []))
-                icase += 1
+            cases[(0, icase, 'Normal_z', 1, 'centroid', '%.1f')] = nzs
+            form0.append(('Normal_z', icase, []))
+            icase += 1
 
         self.log.info(cases.keys())
         #self.finish_io(cases)
@@ -746,10 +760,10 @@ class NastranIO(object):
         if not self.is_centroidal:
             return
         sucaseIDs = model.caseControlDeck.get_subcase_list()
-        for subcaseID in sucaseIDs:
-            if subcaseID == 0:
+        for subcase_id in sucaseIDs:
+            if subcase_id == 0:
                 continue
-            load_case_id, options = model.caseControlDeck.get_subcase_parameter(subcaseID, 'LOAD')
+            load_case_id, options = model.caseControlDeck.get_subcase_parameter(subcase_id, 'LOAD')
             loadCase = model.loads[load_case_id]
 
             # account for scale factors
@@ -788,17 +802,17 @@ class NastranIO(object):
 
             # if there is no applied pressure, don't make a plot
             if abs(pressures).max():
-                # subcaseID, resultType, vectorSize, location, dataFormat
-                cases[(0, 'Pressure Case=%i' % subcaseID, 1, 'centroid', '%.1f')] = pressures
+                # subcase_id, resultType, vectorSize, location, dataFormat
+                cases[(0, 'Pressure Case=%i' % subcase_id, 1, 'centroid', '%.1f')] = pressures
 
     def _plot_applied_loads(self, model, cases):
         if not self.is_nodal:
             return
         sucaseIDs = model.caseControlDeck.get_subcase_list()
-        for subcaseID in sucaseIDs:
-            if subcaseID == 0:
+        for subcase_id in sucaseIDs:
+            if subcase_id == 0:
                 continue
-            load_case_id, options = model.caseControlDeck.get_subcase_parameter(subcaseID, 'LOAD')
+            load_case_id, options = model.caseControlDeck.get_subcase_parameter(subcase_id, 'LOAD')
             loadCase = model.loads[load_case_id]
 
             # account for scale factors
@@ -824,26 +838,28 @@ class NastranIO(object):
                     nid = load.node
                     loads[nids.index(nid)] += load.xyz * scale2
                 elif load.type == 'PLOAD4':  # centrodial, skipping
-                    continue
-                    elem = load.eid
-                    if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',]:
-                        eid = elem.eid
-                        node_ids = elem.nodeIDs()
-                        k = load.pressures[0] * scale / 3.
-                        for nid in node_ids[3:]:
-                            pressures[eids.index(nid)] += k
-                    if elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
-                        eid = elem.eid
-                        node_ids = elem.nodeIDs()
-                        k = load.pressures[0] * scale / 4.
-                        for nid in node_ids[4:]:
-                            pressures[eids.index(nid)] += k
+                    continue  ## TODO: should be removed
+                    #elem = load.eid
+                    #if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',]:
+                        #eid = elem.eid
+                        #node_ids = elem.nodeIDs()
+                        #k = load.pressures[0] * scale / 3.
+                        ## TODO: doesn't consider load.eids for distributed pressures???
+                        #for nid in node_ids[3:]:
+                            #pressures[eids.index(nid)] += k
+                    #if elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
+                        #eid = elem.eid
+                        #node_ids = elem.nodeIDs()
+                        #k = load.pressures[0] * scale / 4.
+                        ## TODO: doesn't consider load.eids for distributed pressures???
+                        #for nid in node_ids[4:]:
+                            #pressures[eids.index(nid)] += k
             if loads[:, 0].min() != loads[:, 0].max():
-                cases[(subcaseID, 'LoadX Case=%i' % subcaseID, 1, 'node', '%.1f')] = loads[:,0]
+                cases[(subcase_id, 'LoadX Case=%i' % subcase_id, 1, 'node', '%.1f')] = loads[:, 0]
             if loads[:, 1].min() != loads[:, 1].max():
-                cases[(subcaseID, 'LoadY Case=%i' % subcaseID, 1, 'node', '%.1f')] = loads[:,1]
+                cases[(subcase_id, 'LoadY Case=%i' % subcase_id, 1, 'node', '%.1f')] = loads[:, 1]
             if loads[:, 2].min() != loads[:, 2].max():
-                cases[(subcaseID, 'LoadZ Case=%i' % subcaseID, 1, 'node', '%.1f')] = loads[:,2]
+                cases[(subcase_id, 'LoadZ Case=%i' % subcase_id, 1, 'node', '%.1f')] = loads[:, 2]
 
     def load_nastran_results(self, op2_filename, dirname):
         #gridResult.SetNumberOfComponents(self.nElements)
@@ -853,7 +869,10 @@ class NastranIO(object):
         #self.show_caero_mesh()
 
         print("tring to read...", op2_filename)
-        if '.op2' in op2_filename:  # TODO: do this based on lower & file extension
+        fname_base, ext = os.path.splitext(op2_filename)
+        ext = ext.lower()
+
+        if ext == '.op2':
             model = OP2_Vectorized(log=self.log, debug=True)
 
             if 0:
@@ -883,47 +902,49 @@ class NastranIO(object):
                         model._saved_results.add(result)
             model.read_op2(op2_filename)
 
-        elif '.f06' in op2_filename:  # TODO: do this based on lower & file extension
+            self.log.info(model.get_op2_stats())
+            print(model.get_op2_stats())
+
+        elif ext == '.pch':
+            raise NotImplementedError(op2_filename)
+        elif ext == '.f06':
             model = F06(log=self.log, debug=True)
             model.read_f06(op2_filename)
         else:
             print("error...")
             raise NotImplementedError(op2_filename)
 
-        self.log.info(model.get_op2_stats())
-        print(model.get_op2_stats())
-
         #print(model.print_results())
 
         #self.iSubcaseNameMap[self.isubcase] = [Subtitle,Label]
 
         cases = {}
-        subcaseIDs = model.iSubcaseNameMap.keys()
+        subcase_ids = model.iSubcaseNameMap.keys()
         self.iSubcaseNameMap = model.iSubcaseNameMap
 
         form = []
         icase = 0
-        for subcaseID in subcaseIDs:
-            subcase_name = 'Subcase %i' % subcaseID
+        for subcase_id in subcase_ids:
+            subcase_name = 'Subcase %i' % subcase_id
             form0 = (subcase_name, None, [])
             formi = form0[2]
-            icase = self.fill_oug_oqg_case(cases, model, subcaseID, formi, icase)
-            icase = self.fill_stress_case(cases, model, subcaseID, formi, icase)
+            icase = self.fill_oug_oqg(cases, model, subcase_id, formi, icase)
+            icase = self.fill_stress(cases, model, subcase_id, formi, icase)
             if len(formi):
                 form.append(form0)
 
         self._finish_results_io2(form, cases)
 
-    def fill_oug_oqg_case(self, cases, model, subcaseID, formi, icase):
+    def fill_oug_oqg(self, cases, model, subcase_id, formi, icase):
         nnodes = self.nNodes
         if self.is_nodal: # nodal results don't work with centroidal ones
             displacement_like = [
                 (model.displacements, 'Displacement'),
-                (model.velocities,    'Velocity'),
+                (model.velocities, 'Velocity'),
                 (model.accelerations, 'Acceleration'),
-                (model.eigenvectors,  'Eigenvectors'),
-                (model.spcForces,     'SPC Forces'),
-                (model.mpcForces,     'MPC Forces'),
+                (model.eigenvectors, 'Eigenvectors'),
+                (model.spcForces, 'SPC Forces'),
+                (model.mpcForces, 'MPC Forces'),
 
                 # untested
                 (model.loadVectors, 'loadVectors'),
@@ -937,12 +958,12 @@ class NastranIO(object):
             nids = self.node_ids
 
             for (result, name) in displacement_like:
-                if subcaseID in result:
-                    case = result[subcaseID]
+                if subcase_id in result:
+                    case = result[subcase_id]
                     if not case.is_real():
                         return icase
                     if case.nonlinear_factor is not None: # transient
-                        ntimes = len(case._times)
+                        #ntimes = len(case._times)
                         code_name = case.data_code['name']
                         has_cycle = hasattr(case, 'mode_cycle')
 
@@ -987,15 +1008,15 @@ class NastranIO(object):
                             form0 = (header, None, [])
                             formi2 = form0[2]
 
-                            cases[(subcaseID, icase, name + 'X', 1, 'node', '%g', header)] = t1
+                            cases[(subcase_id, icase, name + 'X', 1, 'node', '%g', header)] = t1
                             formi2.append((name + 'X', icase, []))
                             icase += 1
 
-                            cases[(subcaseID, icase, name + 'Y', 1, 'node', '%g', header)] = t2
+                            cases[(subcase_id, icase, name + 'Y', 1, 'node', '%g', header)] = t2
                             formi2.append((name + 'Y', icase, []))
                             icase += 1
 
-                            cases[(subcaseID, icase, name + 'Z', 1, 'node', '%g', header)] = t3
+                            cases[(subcase_id, icase, name + 'Z', 1, 'node', '%g', header)] = t3
                             formi2.append((name + 'Z', icase, []))
                             icase += 1
 
@@ -1011,32 +1032,32 @@ class NastranIO(object):
                            t3.min() == t3.max() and t123.min() == t123.max()):
                             continue
                         #if t1.min() != t1.max():
-                        cases[(subcaseID, icase, name + 'X', 1, 'node', '%g')] = t1
+                        cases[(subcase_id, icase, name + 'X', 1, 'node', '%g')] = t1
                         formi.append((name + 'X', icase, []))
                         icase += 1
 
                         #if t2.min() != t2.max():
-                        cases[(subcaseID, icase, name + 'Y', 1, 'node', '%g')] = t2
+                        cases[(subcase_id, icase, name + 'Y', 1, 'node', '%g')] = t2
                         formi.append((name + 'Y', icase, []))
                         icase += 1
 
                         #if t3.min() != t3.max():
-                        cases[(subcaseID, icase, name + 'Z', 1, 'node', '%g')] = t3
+                        cases[(subcase_id, icase, name + 'Z', 1, 'node', '%g')] = t3
                         formi.append((name + 'Z', icase, []))
                         icase += 1
 
                         #if t123.min() != t123.max():
-                        cases[(subcaseID, icase, name + 'XYZ', 1, 'node', '%g')] = t123
+                        cases[(subcase_id, icase, name + 'XYZ', 1, 'node', '%g')] = t123
                         formi.append((name + 'XYZ', icase, []))
                         icase += 1
 
             for (result, name) in temperature_like:
-                if subcaseID in result:
-                    case = result[subcaseID]
+                if subcase_id in result:
+                    case = result[subcase_id]
                     if case.nonlinear_factor is not None: # transient
                         continue
                     temperatures = case.data[0, :, 0]
-                    cases[(subcaseID, name, 1, 'node', '%g')] = temperatures
+                    cases[(subcase_id, name, 1, 'node', '%g')] = temperatures
                     formi.append((name, icase, []))
                     icase += 1
         else: # centroidal
@@ -1050,16 +1071,24 @@ class NastranIO(object):
         self.element_ids = None
         self.node_ids = None
 
-    def fill_stress_case(self, cases, model, subcaseID, formi, icase):
+    def fill_stress(self, cases, model, subcase_id, formi, icase):
         if self.is_centroidal:
-            icase = self._fill_stress_case_centroidal(cases, model, subcaseID, formi, icase)
+            icase = self._fill_stress_centroidal(cases, model, subcase_id, formi, icase)
         elif self.is_nodal:
-            icase = self._fill_stress_case_nodal(cases, model, subcaseID, formi, icase)
+            icase = self._fill_stress_nodal(cases, model, subcase_id, formi, icase)
         else:
             raise RuntimeError('this shouldnt happen...')
         return icase
 
-    def _fill_stress_case_nodal(self, cases, model, subcaseID, formi, icase):
+    def _fill_stress_nodal(self, cases, model, subcase_id, formi, icase):
+        return icase
+
+        is_stress = True
+        if is_stress:
+            word = 'Stress'
+        else:
+            word = 'Strain'
+
         oxx_dict = {}
         oyy_dict = {}
         ozz_dict = {}
@@ -1076,10 +1105,10 @@ class NastranIO(object):
             o2_dict[nid] = []
             o3_dict[nid] = []
             ovm_dict[nid] = []
-        return icase
-        vmWord = None
-        if subcaseID in model.rodStress:
-            case = model.rodStress[subcaseID]
+
+        vm_word = None
+        if subcase_id in model.rodStress:
+            case = model.rodStress[subcase_id]
             if case.nonlinear_factor is not None: # transient
                 return
             for eid in case.axial:
@@ -1101,8 +1130,8 @@ class NastranIO(object):
         else:
             bars = model.barStrain
 
-        if subcaseID in bars:
-            case = bars[subcaseID]
+        if subcase_id in bars:
+            case = bars[subcase_id]
             if case.nonlinear_factor is not None: # transient
                 return
             for eid in case.axial:
@@ -1110,7 +1139,7 @@ class NastranIO(object):
                 oxxi = case.axial[eid]
                 o1i = max(case.smax[eid])
                 o3i = min(case.smin[eid])
-                ovmi = max(    max(case.smax[eid]),
+                ovmi = max(abs(max(case.smax[eid])),
                            abs(min(case.smin[eid])))
                 for nid in node_ids:
                     oxx_dict[nid].append(oxxi)
@@ -1118,8 +1147,8 @@ class NastranIO(object):
                     o3_dict[nid].append(o3i)
                     ovm_dict[nid].append(ovmi)
 
-        if subcaseID in model.beamStress:
-            case = model.beamStress[subcaseID]
+        if subcase_id in model.beamStress:
+            case = model.beamStress[subcase_id]
             if case.nonlinear_factor is not None: # transient
                 return
             for eid in case.smax:
@@ -1129,23 +1158,23 @@ class NastranIO(object):
                            max(case.sxe[eid]),
                            max(case.sxf[eid]))
                 o1i = max(case.smax[eid])
-                o3i =min(case.smin[eid])
-                ovmi =max(    max(case.smax[eid]),
-                          abs(min(case.smin[eid])))
+                o3i = min(case.smin[eid])
+                ovmi = max(abs(max(case.smax[eid])),
+                           abs(min(case.smin[eid])))
                 for nid in node_ids:
                     oxx_dict[nid].append(oxxi)
                     o1_dict[nid].append(o1i)
                     o3_dict[nid].append(o3i)
                     ovm_dict[nid].append(ovmi)
 
-        if subcaseID in model.plateStress:
-            case = model.plateStress[subcaseID]
+        if subcase_id in model.plateStress:
+            case = model.plateStress[subcase_id]
             if case.nonlinear_factor is not None: # transient
                 return
             if case.isVonMises():
-                vmWord = 'vonMises'
+                vm_word = 'vonMises'
             else:
-                vmWord = 'maxShear'
+                vm_word = 'maxShear'
             for eid in case.ovmShear:
                 node_ids = self.eid_to_nid_map[eid]
 
@@ -1187,14 +1216,14 @@ class NastranIO(object):
                         o3_dict[nid].append(o3i)
                         ovm_dict[nid].append(ovmi)
 
-        if subcaseID in model.compositePlateStress:
-            case = model.compositePlateStress[subcaseID]
+        if subcase_id in model.compositePlateStress:
+            case = model.compositePlateStress[subcase_id]
             if case.nonlinear_factor is not None: # transient
                 return
             if case.isVonMises():
-                vmWord = 'vonMises'
+                vm_word = 'vonMises'
             else:
-                vmWord = 'maxShear'
+                vm_word = 'maxShear'
 
             for eid in case.ovmShear:
                 node_ids = self.eid_to_nid_map[eid]
@@ -1212,14 +1241,14 @@ class NastranIO(object):
                     o3_dict[nid].append(o3i)
                     ovm_dict[nid].append(ovmi)
 
-        if subcaseID in model.solidStress:
-            case = model.solidStress[subcaseID]
+        if subcase_id in model.solidStress:
+            case = model.solidStress[subcase_id]
             if case.nonlinear_factor is not None: # transient
                 return
             if case.isVonMises():
-                vmWord = 'vonMises'
+                vm_word = 'vonMises'
             else:
-                vmWord = 'maxShear'
+                vm_word = 'maxShear'
             for eid in case.ovmShear:
                 node_ids = self.eid_to_nid_map[eid]
                 for nid in node_ids:
@@ -1265,32 +1294,31 @@ class NastranIO(object):
         o3 = nan_to_num(o3)
         ovm = nan_to_num(ovm)
         if oxx.min() != oxx.max():
-            cases[(subcaseID, icase, word + 'XX', 1, 'node', '%.3f')] = oxx
+            cases[(subcase_id, icase, word + 'XX', 1, 'node', '%.3f')] = oxx
             icase += 1
         if oyy.min() != oyy.max():
-            cases[(subcaseID, icase, word + 'YY', 1, 'node', '%.3f')] = oyy
+            cases[(subcase_id, icase, word + 'YY', 1, 'node', '%.3f')] = oyy
             icase += 1
         if ozz.min() != ozz.max():
-            cases[(subcaseID, icase, word + 'ZZ', 1, 'node', '%.3f')] = ozz
+            cases[(subcase_id, icase, word + 'ZZ', 1, 'node', '%.3f')] = ozz
             icase += 1
 
         if o1.min() != o1.max():
-            cases[(subcaseID, icase, word + '1', 1, 'node', '%.3f')] = o1
+            cases[(subcase_id, icase, word + '1', 1, 'node', '%.3f')] = o1
             icase += 1
         if o2.min() != o2.max():
-            cases[(subcaseID, icase, word + '2', 1, 'node', '%.3f')] = o2
+            cases[(subcase_id, icase, word + '2', 1, 'node', '%.3f')] = o2
             icase += 1
         if o3.min() != o3.max():
-            cases[(subcaseID, icase, word + '3', 1, 'node', '%.3f')] = o3
+            cases[(subcase_id, icase, word + '3', 1, 'node', '%.3f')] = o3
             icase += 1
-        if vmWord is not None:
-            cases[(subcaseID, icase, vmWord, 1, 'node', '%.3f')] = ovm
+        if vm_word is not None:
+            cases[(subcase_id, icase, vm_word, 1, 'node', '%.3f')] = ovm
             icase += 1
         return icase
 
     def _is_nonlinear(self, model, isubcase):
         table_types = model.get_table_types()
-        msg = []
         for table_type in table_types:
             table = getattr(model, table_type)
             if isubcase in table:
@@ -1303,9 +1331,10 @@ class NastranIO(object):
 
     def _get_stress_times(self, model, isubcase):
         table_types = self._get_stress_table_types()
-        msg = []
         is_real = True
         is_data = False
+        is_static = False
+        times = None
         for table_type in table_types:
             if not hasattr(model, table_type):
                 print('no table_type=%s' % table_type)
@@ -1313,14 +1342,18 @@ class NastranIO(object):
             table = getattr(model, table_type)
             if isubcase in table:
                 is_data = True
-                print('table_type=%s' % table_type)
+                #print('table_type=%s' % table_type)
                 case = table[isubcase]
+                is_real = case.is_real()
                 if case.nonlinear_factor is not None:
-                    return is_data, False, case.is_real(), case._times
+                    times = case._times
+                    is_static = False
                 else:
-                    return is_data, True, case.is_real(), zeros(1, dtype='int32')
-
-        return is_data, False, is_real, None
+                    is_static = True
+                    times = zeros(1, dtype='int32')
+                break
+                #return is_data, is_static, is_real, times
+        return is_data, is_static, is_real, times
 
     def _get_stress_table_types(self):
         table_types = [
@@ -1422,10 +1455,10 @@ class NastranIO(object):
         ]
         return table_types
 
-    def _fill_stress_case_centroidal(self, cases, model, subcaseID, form, icase):
-        assert isinstance(subcaseID, int), type(subcaseID)
+    def _fill_stress_centroidal(self, cases, model, subcase_id, form, icase):
+        assert isinstance(subcase_id, int), type(subcase_id)
         assert isinstance(icase, int), type(icase)
-        is_data, is_static, is_real, times = self._get_stress_times(model, subcaseID)
+        is_data, is_static, is_real, times = self._get_stress_times(model, subcase_id)
 
         if not is_data:
             times = []
@@ -1441,8 +1474,9 @@ class NastranIO(object):
             is_form_time = False
 
             # stress
-            icase, ncase, case, header, form0 = self._get_nastran_time_centroidal_stress(cases, model, subcaseID, form, icase, itime, dt,
-                                                             is_stress=True, is_real=is_real, is_static=is_static)
+            icase, ncase, case, header, form0 = self._get_nastran_time_centroidal_stress(
+                cases, model, subcase_id, form, icase, itime, dt,
+                is_stress=True, is_real=is_real, is_static=is_static)
             if ncase:
                 assert ncase > 0, ncase
                 if is_static:
@@ -1453,8 +1487,9 @@ class NastranIO(object):
                     is_form_time = True
 
             # strain
-            icase, ncase, case, header, form0 = self._get_nastran_time_centroidal_stress(cases, model, subcaseID, form, icase, itime, dt,
-                                                             is_stress=False, is_real=is_real, is_static=is_static)
+            icase, ncase, case, header, form0 = self._get_nastran_time_centroidal_stress(
+                cases, model, subcase_id, form, icase, itime, dt,
+                is_stress=False, is_real=is_real, is_static=is_static)
             if ncase:
                 assert ncase > 0, ncase
                 if is_static:
@@ -1465,8 +1500,9 @@ class NastranIO(object):
                     is_form_time = True
 
             # ese
-            icase, ncase, case, header, form0 = self._get_nastran_time_centroidal_strain_energy(cases, model, subcaseID, form, icase, itime, dt,
-                                                            is_real=is_real, is_static=is_static)
+            icase, ncase, case, header, form0 = self._get_nastran_time_centroidal_strain_energy(
+                cases, model, subcase_id, form, icase, itime, dt,
+                is_real=is_real, is_static=is_static)
             if ncase:
                 assert ncase > 0, ncase
                 if is_static:
@@ -1486,7 +1522,6 @@ class NastranIO(object):
         if case is None:
             return None
         code_name = case.data_code['name']
-        has_cycle = hasattr(case, 'mode_cycle')
 
         if isinstance(dt, float):
             header = ' %s = %.4E' % (code_name, dt)
@@ -1505,7 +1540,7 @@ class NastranIO(object):
             header += '; freq=%g' % cycle
         return header
 
-    def _get_nastran_time_centroidal_strain_energy(self, cases, model, subcaseID, form, icase, itime, dt,
+    def _get_nastran_time_centroidal_strain_energy(self, cases, model, subcase_id, form, icase, itime, dt,
                                                    is_real=True, is_static=False):
         oxx = zeros(self.nElements, dtype='float32')
         oyy = zeros(self.nElements, dtype='float32')
@@ -1519,85 +1554,85 @@ class NastranIO(object):
           #type=StrainEnergyObject ntimes=3 nelements=16
           #energy, percent, density
           #modes = [1, 2, 3]
+        case = None
+        if subcase_id in model.strainEnergy:
+            ese = model.strainEnergy[subcase_id]
+            times = sorted(ese.energy.keys())  # TODO: not vectorized
+            assert times[itime] == dt, 'actual=%s expected=%s' % (times[itime], dt)
 
-        ese = model.strainEnergy[subcaseID]
-        times = sorted(ese.energy.keys())  # TODO: not vectorized
-        assert times[itime] == dt, 'actual=%s expected=%s' % (times[itime], dt)
+            if is_static:
+                percent = ese.percent
+                energy = ese.energy
+                density = ese.density
+            else:
+                percent = ese.percent[dt]
+                energy = ese.energy[dt]
+                density = ese.density[dt]
+            for eid, p in sorted(iteritems(percent)):
+                if eid not in self.eidMap:
+                    continue
+                i = self.eidMap[eid]
+                oxx[i] = energy[eid]
+                oyy[i] = p
+                ozz[i] = density[eid]
 
-        if is_static:
-            percent = ese.percent
-            energy = ese.energy
-            density = ese.density
-        else:
-            percent = ese.percent[dt]
-            energy = ese.energy[dt]
-            density = ese.density[dt]
-        for eid, p in sorted(iteritems(percent)):
-            if eid not in self.eidMap:
-                continue
-            i = self.eidMap[eid]
-            oxx[i] = energy[eid]
-            oyy[i] = p
-            ozz[i] = density[eid]
+            case = ese
+            fmt = '%.4f'
+            header = self._get_nastran_header(case, dt, itime)
+            cases[(subcase_id, icase, 'StrainEnergy', 1, 'centroid', fmt, header)] = oxx
+            form0[2].append(('StrainEnergy', icase, []))
+            icase += 1
+            ncase += 1
 
-        case = ese
-        fmt = '%.4f'
-        header = self._get_nastran_header(case, dt, itime)
-        cases[(subcaseID, icase, 'StrainEnergy', 1, 'centroid', fmt, header)] = oxx
-        form0[2].append(('StrainEnergy', icase, []))
-        icase += 1
-        ncase += 1
+            cases[(subcase_id, icase, 'PercentOfTotal', 1, 'centroid', fmt, header)] = oyy
+            form0[2].append(('PercentOfTotal', icase, []))
+            icase += 1
+            ncase += 1
 
-        cases[(subcaseID, icase, 'PercentOfTotal', 1, 'centroid', fmt, header)] = oyy
-        form0[2].append(('PercentOfTotal', icase, []))
-        icase += 1
-        ncase += 1
-
-        cases[(subcaseID, icase, 'Density', 1, 'centroid', fmt, header)] = ozz
-        form0[2].append(('Density', icase, []))
-        icase += 1
-        ncase += 1
-
+            cases[(subcase_id, icase, 'Density', 1, 'centroid', fmt, header)] = ozz
+            form0[2].append(('Density', icase, []))
+            icase += 1
+            ncase += 1
         return icase, ncase, case, header, form0
 
-    def _get_nastran_time_centroidal_stress(self, cases, model, subcaseID, form, icase, itime, dt,
+    def _get_nastran_time_centroidal_stress(self, cases, model, subcase_id, form, icase, itime, dt,
                                             is_stress=True, is_real=True, is_static=False):
         ncase = 0
         case = None
-        assert isinstance(subcaseID, int), type(subcaseID)
+        assert isinstance(subcase_id, int), type(subcase_id)
         assert isinstance(icase, int), icase
         assert isinstance(itime, int), type(itime)
         assert is_real in [True, False], is_real
         assert is_stress in [True, False], is_stress
         assert is_static in [True, False], is_static
         eids = self.element_ids
-        nElements = self.nElements
+        nelements = self.nElements
 
-        isElementOn = zeros(nElements, dtype='int8')  # is the element supported
-        oxx = zeros(nElements, dtype='float32')
-        oyy = zeros(nElements, dtype='float32')
-        ozz = zeros(nElements, dtype='float32')
+        isElementOn = zeros(nelements, dtype='int8')  # is the element supported
+        oxx = zeros(nelements, dtype='float32')
+        oyy = zeros(nelements, dtype='float32')
+        ozz = zeros(nelements, dtype='float32')
 
-        txy = zeros(nElements, dtype='float32')
-        tyz = zeros(nElements, dtype='float32')
-        txz = zeros(nElements, dtype='float32')
+        txy = zeros(nelements, dtype='float32')
+        tyz = zeros(nelements, dtype='float32')
+        txz = zeros(nelements, dtype='float32')
 
-        o1 = zeros(nElements, dtype='float32')  # max
-        o2 = zeros(nElements, dtype='float32')  # mid
-        o3 = zeros(nElements, dtype='float32')  # min
-        ovm = zeros(nElements, dtype='float32')
+        o1 = zeros(nelements, dtype='float32')  # max
+        o2 = zeros(nelements, dtype='float32')  # mid
+        o3 = zeros(nelements, dtype='float32')  # min
+        ovm = zeros(nelements, dtype='float32')
 
-        vmWord = None
+        vm_word = None
         if is_stress:
             rods = [model.crod_stress, model.conrod_stress, model.ctube_stress,]
         else:
             rods = [model.crod_strain, model.conrod_strain, model.ctube_strain,]
 
         for result in rods:
-            if subcaseID not in result:
+            if subcase_id not in result:
                 continue
 
-            case = result[subcaseID]
+            case = result[subcase_id]
             eidsi = case.element
             i = searchsorted(eids, eidsi)
             if len(i) != len(unique(i)):
@@ -1621,8 +1656,8 @@ class NastranIO(object):
         else:
             bars = model.bar_strain
 
-        if subcaseID in bars:  # vectorized....
-            case = bars[subcaseID]
+        if subcase_id in bars:  # vectorized....
+            case = bars[subcase_id]
             print('class_name = %s' % str(case))
 
             #s1a = case.data[itime, :, 0]
@@ -1653,19 +1688,19 @@ class NastranIO(object):
             isElementOn[i] = 1.
             oxx[i] = axial
 
-            amax = max(smaxa, smaxb)
-            amin = min(smina, sminb)
-            avm = max(abs([smina, sminb,
-                           smaxa, smaxb, axial]))
+            samax = max(smaxa, smaxb)
+            samin = min(smina, sminb)
+            savm = max(abs([smina, sminb,
+                            smaxa, smaxb, axial]))
 
             #print('avm.shape', avm.shape)
 
-            o1[i] = amax
-            o3[i] = amin
-            ovm[i] = avm
+            o1[i] = samax
+            o3[i] = samin
+            ovm[i] = savm
 
-        if 0 and subcaseID in model.beamStress:
-            case = model.beamStress[subcaseID]
+        if 0 and subcase_id in model.beamStress:
+            case = model.beamStress[subcase_id]
             for eid in case.smax:
                 eid2 = self.eidMap[eid]
                 isElementOn[eid2] = 1.
@@ -1677,7 +1712,7 @@ class NastranIO(object):
 
                 o1[eid2] = max(case.smax[eid])
                 o3[eid2] = min(case.smin[eid])
-                ovm[eid2] = max(    max(case.smax[eid]),
+                ovm[eid2] = max(abs(max(case.smax[eid])),
                                 abs(min(case.smin[eid])))
 
 
@@ -1690,14 +1725,14 @@ class NastranIO(object):
 
         for result in plates:
             ## is tria6, quad8, bilinear quad handled?
-            if subcaseID not in result:
+            if subcase_id not in result:
                 continue
 
-            case = result[subcaseID]
+            case = result[subcase_id]
             if case.isVonMises():
-                vmWord = 'vonMises'
+                vm_word = 'vonMises'
             else:
-                vmWord = 'maxShear'
+                vm_word = 'maxShear'
 
             nnodes_per_element = case.nnodes * 2  # *2 for every other layer
             eidsi = case.element_node[::nnodes_per_element, 0]  # ::2 is for layer skipping
@@ -1721,23 +1756,23 @@ class NastranIO(object):
             txy[i] = case.data[itime, j, 3]
             #txy[i] = case.data[itime, ::nnodes_per_element, 3]
             #ozz[i] = 0
-            o1[i]  = case.data[itime, j, 5]
-            #o2[i]  = case.data[itime, :, ???]
-            o3[i]  = case.data[itime, j, 6]
+            o1[i] = case.data[itime, j, 5]
+            #o2[i] = case.data[itime, :, ???]
+            o3[i] = case.data[itime, j, 6]
             ovm[i] = case.data[itime, j, 7]
 
-        if subcaseID in model.compositePlateStress:
-            case = model.compositePlateStress[subcaseID]
-            asdf
+        if subcase_id in model.compositePlateStress:
+            case = model.compositePlateStress[subcase_id]
+            raise NotImplementedError('compositePlateStress')
             if case.isVonMises():
-                vmWord = 'vonMises'
+                vm_word = 'vonMises'
             else:
-                vmWord = 'maxShear'
+                vm_word = 'maxShear'
             for eid in case.ovmShear:
                 eid2 = self.eidMap[eid]
                 isElementOn[eid2] = 1.
 
-                eType = case.eType[eid]
+                #etype = case.eType[eid]
                 oxxi = max(case.o11[eid])
                 oyyi = max(case.o22[eid])
 
@@ -1763,14 +1798,14 @@ class NastranIO(object):
                       (11, model.chexa_strain),]
 
         for nnodes_per_element, result in solids:
-            if subcaseID not in result:
+            if subcase_id not in result:
                 continue
 
-            case = result[subcaseID]
+            case = result[subcase_id]
             if case.isVonMises():
-                vmWord = 'vonMises'
+                vm_word = 'vonMises'
             else:
-                vmWord = 'maxShear'
+                vm_word = 'maxShear'
 
             eidsi = case.element_cid[:, 0]
             i = searchsorted(eids, eidsi)
@@ -1786,9 +1821,9 @@ class NastranIO(object):
             txy[i] = case.data[itime, ::nnodes_per_element, 3]
             tyz[i] = case.data[itime, ::nnodes_per_element, 4]
             txz[i] = case.data[itime, ::nnodes_per_element, 5]
-            o1[i]  = case.data[itime, ::nnodes_per_element, 6]
-            o2[i]  = case.data[itime, ::nnodes_per_element, 7]
-            o3[i]  = case.data[itime, ::nnodes_per_element, 8]
+            o1[i] = case.data[itime, ::nnodes_per_element, 6]
+            o2[i] = case.data[itime, ::nnodes_per_element, 7]
+            o3[i] = case.data[itime, ::nnodes_per_element, 8]
             ovm[i] = case.data[itime, ::nnodes_per_element, 9]
 
         if is_stress:
@@ -1810,13 +1845,14 @@ class NastranIO(object):
         if not is_static:
             #print('is_static = %s' % is_static)
             if case is None:
-                return icase, ncase, case, formis
+                formis = None
+                return icase, ncase, case, header, formis
             header = self._get_nastran_header(case, dt, itime)
             #form_time[0] = header
 
         form0 = (word, None, [])
         formis = form0[2]
-        # subcaseID,resultType,vectorSize,location,dataFormat
+        # subcase_id,resultType,vectorSize,location,dataFormat
         if is_stress and itime == 0:
             if isElementOn.min() != isElementOn.max():
                 if isElementOn.min() == 0:
@@ -1829,59 +1865,59 @@ class NastranIO(object):
                 ncase += 1
 
         if oxx.min() != oxx.max():
-            cases[(subcaseID, icase, word + 'XX', 1, 'centroid', fmt, header)] = oxx
+            cases[(subcase_id, icase, word + 'XX', 1, 'centroid', fmt, header)] = oxx
             formis.append((word + 'XX', icase, []))
             icase += 1
             ncase += 1
         if oyy.min() != oyy.max():
-            cases[(subcaseID, icase, word + 'YY', 1, 'centroid', fmt, header)] = oyy
+            cases[(subcase_id, icase, word + 'YY', 1, 'centroid', fmt, header)] = oyy
             formis.append((word + 'YY', icase, []))
             icase += 1
             ncase += 1
         if ozz.min() != ozz.max():
-            cases[(subcaseID, icase, word + 'ZZ', 1, 'centroid', fmt, header)] = ozz
+            cases[(subcase_id, icase, word + 'ZZ', 1, 'centroid', fmt, header)] = ozz
             formis.append((word + 'ZZ', icase, []))
             ncase += 1
             icase += 1
 
         if txy.min() != txy.max():
-            cases[(subcaseID, icase, word + 'XY', 1, 'centroid', fmt, header)] = txy
+            cases[(subcase_id, icase, word + 'XY', 1, 'centroid', fmt, header)] = txy
             formis.append((word + 'XY', icase, []))
             icase += 1
             ncase += 1
         if tyz.min() != tyz.max():
-            cases[(subcaseID, icase, word + 'YZ', 1, 'centroid', fmt, header)] = tyz
+            cases[(subcase_id, icase, word + 'YZ', 1, 'centroid', fmt, header)] = tyz
             formis.append((word + 'YZ', icase, []))
             icase += 1
             ncase += 1
         if txz.min() != txz.max():
-            cases[(subcaseID, icase, word + 'XZ', 1, 'centroid', fmt, header)] = txz
+            cases[(subcase_id, icase, word + 'XZ', 1, 'centroid', fmt, header)] = txz
             formis.append((word + 'XZ', icase, []))
             icase += 1
             ncase += 1
 
         if o1.min() != o1.max():
-            cases[(subcaseID, icase, word + '1', 1, 'centroid', fmt, header)] = o1
+            cases[(subcase_id, icase, word + '1', 1, 'centroid', fmt, header)] = o1
             formis.append((word + '1', icase, []))
             icase += 1
             ncase += 1
         if o2.min() != o2.max():
-            cases[(subcaseID, icase, word + '2', 1, 'centroid', fmt, header)] = o2
+            cases[(subcase_id, icase, word + '2', 1, 'centroid', fmt, header)] = o2
             formis.append((word + '2', icase, []))
             icase += 1
             ncase += 1
         if o3.min() != o3.max():
-            cases[(subcaseID, icase, word + '3', 1, 'centroid', fmt, header)] = o3
+            cases[(subcase_id, icase, word + '3', 1, 'centroid', fmt, header)] = o3
             formis.append((word + '3', icase, []))
             icase += 1
             ncase += 1
-        if vmWord is not None:
+        if vm_word is not None:
             if not is_stress:
                 max_min = max(ovm.max(), abs(ovm.min()))
                 if max_min > 100:
                     raise RuntimeError('vm strain = %s' % ovm)
-            cases[(subcaseID, icase, vmWord, 1, 'centroid', fmt, header)] = ovm
-            formis.append((vmWord, icase, []))
+            cases[(subcase_id, icase, vm_word, 1, 'centroid', fmt, header)] = ovm
+            formis.append((vm_word, icase, []))
             icase += 1
             ncase += 1
         #print('form0 = %s' % str(form0))
