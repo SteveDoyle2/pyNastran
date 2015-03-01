@@ -843,7 +843,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.log = log
 
     def setup_gui(self):
-        assert self.supported_formats != [], 'supported_formats=%s' % self.supported_formats
+        assert self.fmts != [], 'supported_formats=%s' % self.supported_formats
 
         self.start_logging()
         settings = QtCore.QSettings()

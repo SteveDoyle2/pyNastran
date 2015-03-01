@@ -65,6 +65,13 @@ class NastranIO(object):
         #self.is_nodal = None
         self.iSubcaseNameMap = None
 
+    def get_nastran_wildcard_geometry_results_functions(self):
+        data = (
+            'Nastran',
+            'Nastran BDF (*.bdf; *.dat; *.nas)', self.load_nastran_geometry,
+            'Nastran OP2 (*.op2)', self.load_nastran_results)
+        return data
+
     def show_caero_mesh(self, is_shown=None):
         """
         :param is_shown: should the mesh be shown/hidden (default=None -> flip between shown/not shown)

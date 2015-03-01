@@ -10,6 +10,12 @@ class Plot3d_io(object):
     def __init__(self):
         pass
 
+    def get_plot3d_wildcard_geometry_results_functions(self):
+        data = ('Plot3D',
+                'Plot3D (*.p3d; *.p3da)', self.load_plot3d_geometry,
+                None, None)
+        return data
+
     def load_plot3d_geometry(self, p3d_filename, dirname):
         print("load_plot3d_geometry")
         self.nidMap = {}

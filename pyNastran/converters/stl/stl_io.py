@@ -13,6 +13,13 @@ class STL_IO(object):
     def __init__(self):
         pass
 
+    def get_stl_wildcard_geometry_results_functions(self):
+        data = ('STL',
+                'STereoLithography (*.STL)', self.load_stl_geometry,
+                None, None)
+        return data
+
+
     def _removeOldGeometry(self, fileName):
         # unused...
         self.eidMap = {}

@@ -13,6 +13,12 @@ class PanairIO(object):
     def __init__(self):
         pass
 
+    def get_panair_wildcard_geometry_results_functions(self):
+        data = ('Panair',
+                'Panair (*.inp)', self.load_panair_geometry,
+                'Panair (*.agps);;Panair (*.out)',  self.load_panair_results)
+        return data
+
     def load_panair_geometry(self, panairFileName, dirname, plot=True):
         self.nidMap = {}
 

@@ -25,7 +25,6 @@ fmode = 1
 assert fmode in [1, 2]
 
 # 3rd party
-from numpy import ndarray, eye
 import vtk
 
 # pyNastran
@@ -78,7 +77,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         Usm3dIO.__init__(self)
         Plot3d_io.__init__(self)
 
-        self._setup_supported_formats()
+        self.build_fmts(fmt_order=None)
 
         logo = os.path.join(icon_path, 'logo.png')
         self.set_logo(logo)
@@ -87,6 +86,49 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
 
         self.setup_gui()
         self.setup_post(inputs)
+
+    def build_fmts(self, fmt_order=None):
+        fmt_order = [
+            'nastran', 'cart3d', 'panair', 'shabp', 'usm3d',  # results
+            'lawgs', 'tetgen', 'stl',  #'plot3d',  # no results
+        ]
+        fmts = []
+        for fmt in fmt_order:
+            if hasattr(self, 'get_%s_wildcard_geometry_results_functions' % fmt):
+                func = 'get_%s_wildcard_geometry_results_functions' % fmt
+                data = getattr(self, func)()
+                msg = 'macro_name, geo_fmt, geo_func, res_fmt, res_func = data\n'
+                msg += 'data = %s'
+                assert len(data) == 5, msg % str(data)
+                macro_name, geo_fmt, geo_func, res_fmt, res_func = data
+                fmts.append((fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func))
+            #else:
+                #func = 'get_%s_wildcard_geometry_results_functions' % fmt
+                #raise RuntimeError(func)
+
+        if len(fmts) == 0:
+            RuntimeError('No formats...expected=%s' % fmt_order)
+        self.fmts = fmts
+
+        #fmts = [
+            ## results
+            #('nastran', 'Nastran', 'Nastran BDF (*.bdf; *.dat; *.nas)', self.load_nastran_geometry, 'Nastran OP2 (*.op2)', self.load_nastran_results),
+            #('cart3d', 'Cart3d', 'Cart3d (*.tri; *.triq)', self.load_cart3d_geometry, 'Cart3d (*.triq)', self.load_cart3d_results),
+            #('panair', 'Panair', 'Panair (*.inp)', self.load_panair_geometry, 'Panair (*.agps);;Panair (*.out)',  self.load_panair_results),
+            #('shabp', 'S/HABP', 'Shabp (*.geo; *.mk5; *.inp)', self.load_shabp_geometry, 'Shabp (*.out)', self.load_shabp_results),
+            #('usm3d', 'Usm3D', 'USM3D (*.cogsg; *.front)', self.load_usm3d_geometry, 'Usm3d (*.flo)', self.load_usm3d_results),
+
+            ## no results
+            #('lawgs', 'LaWGS', 'LaWGS (*.inp; *.wgs)', self.load_lawgs_geometry, None, None),
+            #('tetgen', 'Tetgen', 'Tetgen (*.smesh)', self.load_tetgen_geometry, None, None),
+            #('stl', 'STL', 'STereoLithography (*.STL)', self.load_stl_geometry, None, None),
+            ##('plot3d', 'Plot3D', 'Plot3D (*.p3d; *.p3da)', self.load_plot3d_geometry, None, None),
+        #]
+        #self.fmts = fmts
+        self.supported_formats = [fmt[0] for fmt in fmts]
+        print('supported_formats = %s' % self.supported_formats)
+        if len(fmts) == 0:
+            raise RuntimeError('no modules were loaded...')
 
     def create_cell_picker(self):
         # cell picker
@@ -176,30 +218,6 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         self.log_info("select_point = %s" % str(select_point))
         #self.log_info("data_set = %s" % ds)
 
-    def _setup_supported_formats(self):
-        """
-        Maps the format name to whether a format was loaded properly.
-
-
-        TODO:  I don't like this function and the load geometry/results.
-               It could be a lot cleaner with less work.
-        """
-        self.formats = {
-            'nastran' : is_nastran,
-            'panair' : is_panair,
-            'cart3d' : is_cart3d,
-            'lawgs' : is_lawgs,
-            'plot3d' : is_plot3d,
-            'shabp' : is_shabp,
-            'stl' : is_stl,
-            'tecplot' : is_tecplot,
-            'usm3d' : is_usm3d,
-        }
-        for (name, is_on) in sorted(iteritems(self.formats)):
-            if is_on:
-                self.supported_formats.append(name)
-        print("formats =", self.supported_formats)
-
     def about_dialog(self):
         """ Display about dialog """
         if fmode == 1:  # PyQt
@@ -283,44 +301,27 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
 
         if geometry_format and geometry_format.lower() not in self.supported_formats:
             is_failed = True
-            if geometry_format in self.formats:
-                msg = 'The import for the %r module failed.\n' % geometry_format
-            else:
-                msg = '%r is not a enabled format; enabled_formats=%s\n' % (geometry_format, self.supported_formats)
-                msg += str("formats = %s" % str(self.formats))
+            #if geometry_format in self.formats:
+            msg = 'The import for the %r module failed.\n' % geometry_format
+            #else:
+                #msg = '%r is not a enabled format; enabled_formats=%s\n' % (geometry_format, self.supported_formats)
+                #msg += str("formats = %s" % str(self.formats))
             self.log_error(msg)
             return is_failed
 
         if infile_name:
             geometry_format = geometry_format.lower()
             print("geometry_format = %r" % geometry_format)
-            if geometry_format == 'nastran' and is_nastran:
-                has_results = True
-                load_function = self.load_nastran_geometry
-            elif geometry_format == 'cart3d' and is_cart3d:
-                has_results = True
-                load_function = self.load_cart3d_geometry
-            elif geometry_format == 'panair' and is_panair:
-                has_results = False
-                load_function = self.load_panair_geometry
-            elif geometry_format == 'shabp' and is_shabp:
-                has_results = False
-                load_function = self.load_shabp_geometry
-            elif geometry_format == 'lawgs' and is_lawgs:
-                has_results = False
-                load_function = self.load_lawgs_geometry
-            elif geometry_format == 'stl' and is_stl:
-                has_results = False
-                load_function = self.load_stl_geometry
-            elif geometry_format == 'tetgen' and is_tetgen:
-                has_results = False
-                load_function = self.load_tetgen_geometry
-            elif geometry_format == 'usm3d' and is_usm3d:
-                has_results = False
-                load_function = self.load_usm3d_geometry
-            elif geometry_format == 'plot3d' and is_plot3d:
-                has_results = False
-                load_function = self.load_plot3d_geometry
+
+            for fmt in self.fmts:
+                fmt_name, _major_name, _geowild, _geofunc, _reswild, _resfunc = fmt
+                if geometry_format == fmt_name:
+                    load_function = _geofunc
+                    if _reswild is None:
+                        has_results = False
+                    else:
+                        has_results = True
+                    break
             else:
                 self.log_error('---invalid format=%r' % geometry_format)
                 is_failed = True
@@ -333,52 +334,17 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
             load_functions = []
             has_results_list = []
             wildcard_list = []
-            if is_nastran:
-                wildcard_list.append("Nastran BDF (*.bdf; *.dat; *.nas)")
-                formats.append('Nastran')
-                has_results_list.append(True)
-                load_functions.append(self.load_nastran_geometry)
-                #load_functions.append(None)
-            if is_cart3d:
-                wildcard_list.append("Cart3d (*.tri; *.triq)")
-                formats.append('Cart3d')
-                has_results_list.append(True)
-                load_functions.append(self.load_cart3d_geometry)
-            if is_panair:
-                wildcard_list.append("Panair (*.inp)")
-                formats.append('Panair')
-                has_results_list.append(True)
-                load_functions.append(self.load_panair_geometry)
-            if is_shabp:
-                wildcard_list.append("Shabp (*.geo; *.mk5; *.inp)")
-                formats.append('Shabp')
-                has_results_list.append(True)
-                load_functions.append(self.load_shabp_geometry)
-            if is_lawgs:
-                wildcard_list.append("LaWGS (*.inp; *.wgs)")
-                formats.append('LaWGS')
-                has_results_list.append(False)
-                load_functions.append(None)
-            if is_stl:
-                wildcard_list.append("STereoLithography (*.STL)")
-                formats.append('STL')
-                has_results_list.append(False)
-                load_functions.append(None)
-            if is_tetgen:
-                wildcard_list.append("Tetgen (*.smesh)")
-                formats.append('STL')
-                has_results_list.append(False)
-                load_functions.append(self.load_tetgen_geometry)
-            if is_usm3d:
-                wildcard_list.append("USM3D (*.cogsg; *.front)")
-                formats.append('USM3D')
-                has_results_list.append(True)
-                load_functions.append(self.load_usm3d_geometry)
-            if is_plot3d:
-                wildcard_list.append("Plot3D (*.p3d; *.p3da)")
-                formats.append('Plot3D')
-                has_results_list.append(False)
-                load_functions.append(self.load_plot3d_geometry)
+
+            for fmt in self.fmts:
+                fmt_name, _major_name, _geowild, _geofunc, _reswild, _resfunc = fmt
+                formats.append(_major_name)
+                wildcard_list.append(_geowild)
+                load_functions.append(_geofunc)
+
+                if _reswild is None:
+                    has_results_list.append(False)
+                else:
+                    has_results_list.append(True)
 
             wildcard = ';;'.join(wildcard_list)
 
@@ -416,23 +382,18 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
                 self.log_error(print_bad_path(infile_name))
                 return
 
+            # clear out old data
             if self.modelType is not None:
-                # clear out old data
-                #'self.clear_nastran()'
-                #'self.clear_panair()'
-                #'self.clear_cart3d()'
-                name = 'clear_' + self.modelType
-
-                # call the clear method
+                clear_name = 'clear_' + self.modelType
                 try:
-                    dy_method = getattr(self, 'clear_' + self.modelType)
+                    dy_method = getattr(self, clear_name)  # 'self.clear_nastran()'
                     dy_method()
                 except:
-                    print("method %r does not exist" % name)
+                    print("method %r does not exist" % clear_name)
             self.log_info("reading %s file %r" % (geometry_format, infile_name))
 
+            # inspect the load_geometry method to see what version it's using
             args, varargs, keywords, defaults = inspect.getargspec(load_function)
-
             try:
                 if args[-1] != 'plot':
                     has_results = load_function(infile_name, self.last_dir, plot=plot)
@@ -484,75 +445,60 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         if out_filename in [None, False]:
             Title = 'Select a Results File for %s' % self.format
             wildcard = None
-            if geometry_format == 'nastran':
-                has_results = True
-                #wildcard = "Nastran OP2 (*.op2);;Nastran PCH (*.pch);;Nastran F06 (*.f06)"
-                wildcard = "Nastran OP2 (*.op2)"
-                load_functions = [self.load_nastran_results]
-            elif geometry_format == 'cart3d':
-                has_results = True
-                wildcard = "Cart3d (*.triq)"
-                load_functions = [self.load_cart3d_results]
-            elif geometry_format == 'panair':
-                has_results = False
-                wildcard = "Panair (*.agps);;Panair (*.out)"
-                load_functions = [self.load_panair_results]
-            elif geometry_format == 'shabp':
-                has_results = False
-                wildcard = "Shabp (*.out)"
-                load_functions = [self.load_shabp_results]
-            elif geometry_format == 'lawgs':
-                has_results = False
-                load_functions = [None]
-            elif geometry_format == 'stl':
-                has_results = False
-                load_functions = [None]
-            elif geometry_format == 'tetgen':
-                has_results = False
-                load_functions = [None]
-            elif geometry_format == 'usm3d':
-                wildcard = "Usm3d (*.flo)"
-                has_results = True
-                load_functions = [self.load_usm3d_results]
-            elif geometry_format == 'plot3d':
-                has_results = False
-                load_functions = [None]
+            load_function = None
+
+            for fmt in self.fmts:
+                fmt_name, _major_name, _geowild, _geofunc, _reswild, _resfunc = fmt
+                if geometry_format == fmt_name:
+                    wildcard = _reswild
+                    load_function = _resfunc
+                    break
             else:
                 msg = 'format=%r is not supported' % geometry_format
                 self.log_error(msg)
                 raise RuntimeError(msg)
-            #scard = wildcard.split(';;')
-            #n = len(load_functions)
-            #wildcard = ';;'.join(scard[:n])
-            load_function = load_functions[0]
+
             if wildcard is None:
                 msg = 'format=%r has no method to load results' % geometry_format
                 self.log_error(msg)
                 return
             wildcard_index, out_filename = self._create_load_file_dialog(wildcard, Title)
         else:
-            if geometry_format == 'nastran':
-                load_function = self.load_nastran_results
-            elif geometry_format == 'cart3d':
-                load_function = self.load_cart3d_results
-            elif geometry_format == 'panair':
-                load_function = self.load_panair_results
-            elif geometry_format == 'shabp':
-                load_function = self.load_shabp_results
-            #elif geometry_format == 'lawgs':
-                #load_function = None
-            #elif geometry_format == 'stl':
-                #load_function = None
-            #elif geometry_format == 'tetgen':
-                #load_function = None
-            elif geometry_format == 'usm3d':
-                load_function = self.load_usm3d_results
-            #elif geometry_format == 'plot3d':
-                #load_function = None
+
+            for fmt in self.fmts:
+                fmt_name, _major_name, _geowild, _geofunc, _reswild, _resfunc = fmt
+                print('fmt_name=%r geometry_format=%r' % (fmt_name, geometry_format))
+                if fmt_name == geometry_format:
+                    load_function = _resfunc
+                    break
             else:
                 msg = 'format=%r is not supported.  Did you load a geometry model?' % geometry_format
                 self.log_error(msg)
                 raise RuntimeError(msg)
+
+            if 0:
+                if geometry_format == 'nastran':
+                    load_function = self.load_nastran_results
+                elif geometry_format == 'cart3d':
+                    load_function = self.load_cart3d_results
+                elif geometry_format == 'panair':
+                    load_function = self.load_panair_results
+                elif geometry_format == 'shabp':
+                    load_function = self.load_shabp_results
+                #elif geometry_format == 'lawgs':
+                    #load_function = None
+                #elif geometry_format == 'stl':
+                    #load_function = None
+                #elif geometry_format == 'tetgen':
+                    #load_function = None
+                elif geometry_format == 'usm3d':
+                    load_function = self.load_usm3d_results
+                #elif geometry_format == 'plot3d':
+                    #load_function = None
+                else:
+                    msg = 'format=%r is not supported.  Did you load a geometry model?' % geometry_format
+                    self.log_error(msg)
+                    raise RuntimeError(msg)
 
         if out_filename == '':
             return

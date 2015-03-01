@@ -2,7 +2,8 @@
 from six.moves import zip
 
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacement, ComplexDisplacement
-from pyNastran.op2.tables.oug.oug_eigenvectors import Eigenvector  # ,ComplexEigenVector
+from pyNastran.op2.tables.oug.oug_eigenvectors import (Eigenvector,  # ,ComplexEigenVector
+                                                       RealEigenvectorArray)
 from pyNastran.op2.tables.oug.oug_temperatures import RealTemperature
 
 
@@ -76,12 +77,17 @@ class OUG(object):
 
         #print("cycle=%-8s eigen=%s" % (cycle, eigenvalue_real))
         #print "isubcase = %s" % isubcase
+        is_vectorized = True
         if isubcase in self.eigenvectors:
             self.eigenvectors[isubcase].read_f06_data(data_code, data)
         else:
             is_sort1 = True
-            self.eigenvectors[isubcase] = Eigenvector(data_code, is_sort1, isubcase, iMode)
-            self.eigenvectors[isubcase].read_f06_data(data_code, data)
+            if is_vectorized:
+                vector = Eigenvector(data_code, is_sort1, isubcase, iMode)
+            else:
+                vector = RealEigenvectorArray(data_code, is_sort1, isubcase, iMode)
+            vector.read_f06_data(data_code, data)
+            self.eigenvectors[isubcase] = vector
 
     def _complex_eigenvectors(self, marker):
         headers = self.skip(2)
