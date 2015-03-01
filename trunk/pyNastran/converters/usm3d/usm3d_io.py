@@ -14,6 +14,12 @@ class Usm3dIO(object):
     def __init__(self):
         pass
 
+    def get_usm3d_wildcard_geometry_results_functions(self):
+        data = ('Usm3D',
+                'USM3D (*.cogsg; *.front)', self.load_usm3d_geometry,
+                'Usm3d (*.flo)', self.load_usm3d_results)
+        return data
+
     def step_results_usm3d(self):
         # minimum is 1
         nstep = 100

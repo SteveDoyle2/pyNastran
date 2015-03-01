@@ -15,6 +15,12 @@ class ShabpIO(object):
     def __init__(self):
         pass
 
+    def get_shabp_wildcard_geometry_results_functions(self):
+        data = ('S/HABP',
+                'Shabp (*.geo; *.mk5; *.inp)', self.load_shabp_geometry,
+                'Shabp (*.out)', self.load_shabp_results)
+        return data
+
     def load_shabp_geometry(self, shabpFilename, dirname, plot=True):
         self.nidMap = {}
 

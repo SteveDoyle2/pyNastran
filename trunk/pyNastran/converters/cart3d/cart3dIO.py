@@ -13,6 +13,12 @@ class Cart3dIO(object):
     def __init__(self):
         pass
 
+    def get_cart3d_wildcard_geometry_results_functions(self):
+        data = ('Cart3d',
+                'Cart3d (*.tri; *.triq)', self.load_cart3d_geometry,
+                'Cart3d (*.triq)', self.load_cart3d_results)
+        return data
+
     def removeOldGeometry(self, fileName):
         self.eidMap = {}
         self.nidMap = {}

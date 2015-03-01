@@ -11,6 +11,12 @@ class LaWGS_IO(object):
 #    lawgs = LaWGS('tmx1242.wgs')
 #    lawgs.run()
 
+    def get_lawgs_wildcard_geometry_results_functions(self):
+        data = ('LaWGS',
+                'LaWGS (*.inp; *.wgs)', self.load_lawgs_geometry,
+                None, None)
+        return data
+
     def load_lawgs_geometry(self, lawgsFileName, dirname, plot=True):
         #key = self.caseKeys[self.iCase]
         #case = self.resultCases[key]

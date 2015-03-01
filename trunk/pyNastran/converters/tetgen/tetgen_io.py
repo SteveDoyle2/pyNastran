@@ -12,6 +12,12 @@ class TetgenIO(object):
     def __init__(self):
         pass
 
+    def get_tetgen_wildcard_geometry_results_functions(self):
+        data = ('Tetgen',
+                'Tetgen (*.smesh)', self.load_tetgen_geometry,
+                None, None)
+        return data
+
     def load_tetgen_geometry(self, smesh_filename, dirname, plot=True):
         print("load_tetgen_geometry...")
         skipReading = self.removeOldGeometry(smesh_filename)
