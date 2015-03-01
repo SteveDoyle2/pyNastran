@@ -53,6 +53,7 @@ Solver
 
 -----------------------v0.7.0 released 2013/05/??-----------------------
 Release notes:
+   - much improved Python 3 support
    - added large field BDF writing
    - more OP2/F06 results (e.g. mass properties)
    - OP2 reader is faster, more robust, and catches FatalErrors
@@ -62,6 +63,8 @@ Release notes:
 BDF:
    - MATS1, MATTx, TABLED4, TABDMP1, CAERO3, PAERO3 supported
    - fixed major PBEAM bug
+   - fixed bugs in PBUSHT, PDAMPT, PELST, TABRND1, PTUBE, EIGC
+   - imporved SET/SPOINT writing
    - improved messages when cross-referencing
    - readBDF is now gone, replaced by read_bdf (was previously deprecated)
    - large field format writing now supported
@@ -71,16 +74,17 @@ BDF:
    - fixed GRID Position bug when using referenced cylindrical/spherical
      coordinate systems
    - fixed CONM2 offset bug for coordinate systems
+   - added CAERO1/2 sub-element access methods for use in GUI
 
 OP2:
    - rewrite of the OP2 allows for increased robustness and speed
    - Most fatal errors caught
      - BDF input errors not caught
      - others???
-   - grid point weight table is now supported (see beam_modes demo)
+   - added grid point weight table (see beam_modes demo)
    - OP2 no longer defines the filename; use read_op2.
      readOP2 is now gone, replaced by read_op2 (was previously deprecated)
-   - OP2 class names updated to be more descriptive
+   - renamed OP2 class names to be more descriptive
      (e.g. DisplacementObject -> RealDisplacement)
    - starting OP2 vectorized support.  It's currently slower (1.2x-1.7x),
      which is due to array indexing being slower for non-vectorized operations.
