@@ -80,10 +80,14 @@ Nastran
      - (nodal) displacement, velocity, acceleration, spcForces, mpcForces, temperatures
    - Stress
      - rodStress, barStress, beamStress, plateStress, solidStress, compositePlateStress (centroidal only)
+ - transient-style results (need a results sidebar for that)
 
+ - ***rotate loads based on local coordinate system
+   - displacement (e.g. force, displacement, velocity)
+   - stress (y/z vs. hoop)
+     
  - ***multiple op2 files
  - ***show/hide elements based on picking
- - ***transient-style results (need a results sidebar for that)
  - ***different nodal averaging methods (e.g.derive/avg, avg/derive)
  - ***interface loads
  - ***show/hide nodes/elements/CAERO based on element ID for:

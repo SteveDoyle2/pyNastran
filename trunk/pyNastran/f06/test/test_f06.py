@@ -1,4 +1,6 @@
+from __future__ import print_function
 from six import iteritems
+
 import os
 import sys
 import time
@@ -19,17 +21,17 @@ def run_lots_of_files(files, debug=True, saveCases=True, skipFiles=[],
     nPassed = 0
     t0 = time.time()
     for i, f06file in enumerate(files[nStart:nStop], nStart):  # 149
-        baseName = os.path.basename(f06file)
-        #if baseName not in skipFiles and not baseName.startswith('acms') and i not in nSkip:
-        if baseName not in skipFiles:
+        base_name = os.path.basename(f06file)
+        #if baseName not in skipFiles and not base_name.startswith('acms') and i not in nSkip:
+        if base_name not in skipFiles:
             print("%" * 80)
             print('file=%s\n' % f06file)
             n = '%s ' % (i)
             sys.stderr.write('%sfile=%s\n' % (n, f06file))
             nTotal += 1
-            isPassed = run_f06(f06file, iSubcases=iSubcases, debug=debug,
-                               stopOnFailure=stopOnFailure)  # True/False
-            if not isPassed:
+            is_passed = run_f06(f06file, iSubcases=iSubcases, debug=debug,
+                                stopOnFailure=stopOnFailure)  # True/False
+            if not is_passed:
                 sys.stderr.write('**file=%s\n' % (f06file))
                 failedCases.append(f06file)
                 nFailed += 1
@@ -50,13 +52,14 @@ def run_lots_of_files(files, debug=True, saveCases=True, skipFiles=[],
     sys.exit('-----done with all models %s/%s=%.2f%%  nFailed=%s-----' % (nPassed, nTotal, 100. * nPassed / float(nTotal), nTotal - nPassed))
 
 
-def run_f06(f06_filename, iSubcases=[], write_f06=True, debug=False,
-            stopOnFailure=True):
+def run_f06(f06_filename, iSubcases=[], write_f06=True, is_vector=False,
+            debug=False, stopOnFailure=True):
     isPassed = False
     #stopOnFailure = False
     #debug = True
     try:
         f06 = F06(debug=debug)
+        f06.set_vectorization(is_vector)
         #f06.set_subcases(iSubcases)  # TODO not supported
 
         #f06.readBDF(f06.bdf_filename,includeDir=None,xref=False)
@@ -79,7 +82,7 @@ def run_f06(f06_filename, iSubcases=[], write_f06=True, debug=False,
     except KeyboardInterrupt:
         sys.stdout.flush()
         print_exc(file=sys.stdout)
-        sys.stderr.write('**file=%r\n' % f06file)
+        sys.stderr.write('**file=%r\n' % f06_filename)
         sys.exit('keyboard stop...')
     #except AddNewElementError:
     #    raise
@@ -132,16 +135,16 @@ def run_f06(f06_filename, iSubcases=[], write_f06=True, debug=False,
             raise
         else:
             isPassed = False
-    print("isPassed =", isPassed)
+    #print("isPassed = %s" % isPassed)
     return isPassed
 
 
 def main():
     from docopt import docopt
 
-    msg  = 'Tests to see if an F06 will work with pyNastran.\n'
+    msg = 'Tests to see if an F06 will work with pyNastran.\n'
     msg += 'Usage:\n'
-    msg += '  f06.py [-f] [-p] [-q] F06_FILENAME'
+    msg += '  f06.py [-f] [-p] [-q] [-t] F06_FILENAME'
     msg += '  f06.py -h | --help\n'
     msg += '  f06.py -v | --version\n'
     msg += '\n'
@@ -151,6 +154,7 @@ def main():
     msg += 'Options:\n'
     msg += '  -q, --quiet      prints debug messages (default=False)\n'
     msg += '  -f, --write_f06  writes the f06 to fem.f06.out (default=True)\n'
+    msg += "  -t, --vector     vectorizes the results (default=False)\n"
     msg += '  -h, --help       show this help message and exit\n'
     msg += "  -v, --version    show program's version number and exit\n"
 
@@ -172,6 +176,7 @@ def main():
     run_f06(data['F06_FILENAME'],
             write_f06 = data['--write_f06'],
             debug     = not(data['--quiet']),
+            is_vector = data['--vector'],
             stopOnFailure = True
     )
 

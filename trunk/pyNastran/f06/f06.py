@@ -26,6 +26,18 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
     def stop_after_reading_grid_point_weight(self, stop=True):
         self._stop_after_reading_mass = stop
 
+    def set_vectorization(self, is_vectorized):
+        self.is_vectorized = is_vectorized
+
+    def build_vectorization(self):
+        if self.is_vectorized:
+            table_types = self.get_table_types()
+            for table_type in table_types:
+                result = getattr(self, table_type)
+                for key, case in iteritems(result):
+                    if hasattr(case, 'build_f06_vectorization'):
+                        case.build_f06_vectorization()
+
     def __init__(self, debug=False, log=None):
         """
         Initializes the F06 object
@@ -49,6 +61,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         self._stop_after_reading_mass = False
         self.stored_lines = []
         self.i = 0
+        self.is_vectorized = False
 
         self.__init_data__(debug, log)
 
@@ -717,6 +730,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         self._process_f06()
         if hasattr(self, '_ieigenvalue'):
             del self._ieigenvalue
+        self.build_vectorization()
 
     def _process_f06(self):
         #data = [self.disp,self.SpcForces,self.stress,self.isoStress,self.barStress,self.solidStress,self.temperature]
