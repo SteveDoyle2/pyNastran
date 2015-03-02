@@ -577,6 +577,8 @@ class OP2(LAMA, ONR, OGPF,
                     self._read_gpl()
                 elif table_name in [b'MEFF', ]:
                     self._read_meff()
+                elif table_name in [b'INTMOD', ]:
+                    self._read_intmod()
                 elif table_name in [b'OMM2', ]:
                     self._read_omm2()
                 elif table_name in [b'DIT']:  # tables
@@ -605,7 +607,7 @@ class OP2(LAMA, ONR, OGPF,
                                     # ??? forces
                                     b'OQP1',
                                     # displacement/velocity/acceleration/eigenvector/temperature
-                                    b'OUG1', b'OUGV1',b'BOUGV1', b'OUPV1', b'OUGV1PAT',
+                                    b'OUG1', b'OUGV1',b'BOUGV1', b'OUPV1', b'OUGV1PAT', b'ROUGV1',
                                     # applied loads
                                     b'OPG1', b'OPGV1', b'OPNL1', #b'OPG2',
 
@@ -1003,7 +1005,6 @@ class OP2(LAMA, ONR, OGPF,
         """
         :param self:    the OP2 object pointer
         """
-        raise NotImplementedError(self.table_name)
         self.table_name = self.read_table_name(rewind=False)
         self.log.debug('table_name = %r' % self.table_name)
         if self.debug:
@@ -1021,14 +1022,55 @@ class OP2(LAMA, ONR, OGPF,
         for n in [-3, -4, -5, -6, -7, -8, ]:
             self.read_markers([n, 1, 1])
             markers = self.get_nmarkers(1, rewind=False)
-            print('markers =', markers)
-            self.f.read(markers[0]*4+12)
-            self.n += markers[0]*4+12
+            #print('markers =', markers)
+            nbytes = markers[0]*4 + 12
+            data = self.f.read(nbytes)
+            self.n += nbytes
 
         n = -9
         self.read_markers([n, 1, 0, 0])
         #data = self._read_record()
-        self.show(50)
+
+        #self.table_name = self.read_table_name(rewind=False)
+        #self.log.info('table_name2 = %r' % self.table_name)
+
+        #self.show(50)
+        #raise NotImplementedError(self.table_name)
+
+    def _read_intmod(self):
+        self.table_name = self.read_table_name(rewind=False)
+        #self.log.debug('table_name = %r' % self.table_name)
+        if self.debug:
+            self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
+        self.read_markers([-1])
+        if self.debug:
+            self.binary_debug.write('---markers = [-1]---\n')
+        data = self._read_record()
+        #print('intmod data1')
+        #self.show_data(data)
+
+        markers = self.get_nmarkers(1, rewind=True)
+        self.binary_debug.write('---marker0 = %s---\n' % markers)
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        #print('intmod data2')
+        #self.show_data(data)
+
+        for n in [-3, -4, -5, -6, -7,-8,]:
+            self.read_markers([n, 1, 1])
+            markers = self.get_nmarkers(1, rewind=False)
+            #print('markers =', markers)
+            nbytes = markers[0]*4 + 12
+            data = self.f.read(nbytes)
+            #print('intmod data%i' % n)
+            #self.show_data(data)
+            self.n += nbytes
+
+        n = -9
+        self.read_markers([n, 1, 0, 0])
+        #self.show(50)
+        #raise NotImplementedError(self.table_name)
+
 
     def get_marker_n(self, n):
         markers = []
@@ -1036,9 +1078,9 @@ class OP2(LAMA, ONR, OGPF,
         for i in range(n):
             block = self.f.read(12)
             marker = s.unpack(block)
-            print('markers =', marker)
+            #print('marker =', marker)
             markers.append(marker)
-        print("markers =", markers)
+        #print("markers =", markers)
         return markers
 
     def _read_geom_table(self):
