@@ -916,6 +916,7 @@ class NastranIO(object):
             raise NotImplementedError(op2_filename)
         elif ext == '.f06':
             model = F06(log=self.log, debug=True)
+            model.set_vectorization(True)
             model.read_f06(op2_filename)
         else:
             print("error...")
@@ -967,8 +968,10 @@ class NastranIO(object):
             for (result, name) in displacement_like:
                 if subcase_id in result:
                     case = result[subcase_id]
+                    if not hasattr(case, 'data'):
+                        continue
                     if not case.is_real():
-                        return icase
+                        continue
                     if case.nonlinear_factor is not None: # transient
                         #ntimes = len(case._times)
                         code_name = case.data_code['name']
@@ -1061,7 +1064,7 @@ class NastranIO(object):
             for (result, name) in temperature_like:
                 if subcase_id in result:
                     case = result[subcase_id]
-                    if case.nonlinear_factor is not None: # transient
+                    if not hasattr(case, 'data'):
                         continue
                     temperatures = case.data[0, :, 0]
                     cases[(subcase_id, name, 1, 'node', '%g')] = temperatures
@@ -1706,7 +1709,14 @@ class NastranIO(object):
             o3[i] = samin
             ovm[i] = savm
 
-        if 0 and subcase_id in model.beamStress:
+
+        if is_stress:
+            beams = model.beam_stress
+        else:
+            beams = model.beam_strain
+        beams = []
+        if subcase_id in beams:  # TODO: not-vectorized....
+            ## TODO: beams not handled
             case = model.beamStress[subcase_id]
             for eid in case.smax:
                 eid2 = self.eidMap[eid]
@@ -1731,7 +1741,7 @@ class NastranIO(object):
                       model.ctria6_strain, model.cquad8_strain]
 
         for result in plates:
-            ## is tria6, quad8, bilinear quad handled?
+            ## TODO: is tria6, quad8, bilinear quad handled?
             if subcase_id not in result:
                 continue
 

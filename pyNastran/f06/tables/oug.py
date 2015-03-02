@@ -77,15 +77,14 @@ class OUG(object):
 
         #print("cycle=%-8s eigen=%s" % (cycle, eigenvalue_real))
         #print "isubcase = %s" % isubcase
-        is_vectorized = True
         if isubcase in self.eigenvectors:
             self.eigenvectors[isubcase].read_f06_data(data_code, data)
         else:
             is_sort1 = True
-            if is_vectorized:
-                vector = Eigenvector(data_code, is_sort1, isubcase, iMode)
+            if self.is_vectorized:
+                vector = RealEigenvectorArray(data_code, is_sort1, isubcase, iMode, f06_flag=True)
             else:
-                vector = RealEigenvectorArray(data_code, is_sort1, isubcase, iMode)
+                vector = Eigenvector(data_code, is_sort1, isubcase, iMode)
             vector.read_f06_data(data_code, data)
             self.eigenvectors[isubcase] = vector
 
