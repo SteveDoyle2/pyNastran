@@ -1,9 +1,220 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import range
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject
+
+from numpy import zeros
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
+
+class ComplexPlateArray(OES_Object):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
+        #self.eType = {}
+        self.element_node = None
+        #self.code = [self.format_code, self.sort_code, self.s_code]
+
+        #self.ntimes = 0  # or frequency/mode
+        #self.ntotal = 0
+        self.itime = 0
+        self.nelements = 0  # result specific
+        #self.cid = {}  # gridGauss
+
+        if is_sort1:
+            #sort1
+            pass
+        else:
+            raise NotImplementedError('SORT2')
+
+
+    def _get_msgs(self, is_mag_phase):
+        raise NotImplementedError()
+
+    def _reset_indices(self):
+        #print('resetting...')
+        self.itotal = 0
+        self.ielement = 0
+
+    def get_nnodes(self):
+        if self.element_type in [64, 82, 144]:  # ???, ???, CQUAD4
+            nnodes = 4 # + 1 centroid
+        elif self.element_type in [70, 75]:   #???, CTRIA6
+            nnodes = 3 # + 1 centroid
+        else:
+            raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
+        return nnodes + 1  # + 1 centroid
+
+    def build(self):
+        #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (self.ntimes, self.nelements, self.ntotal, self.subtitle))
+        if self.is_built:
+            return
+        nnodes = self.get_nnodes()
+
+        #self.names = []
+        #self.nelements //= nnodes
+        self.nelements //= self.ntimes
+        self.ntotal = self.nelements * nnodes * 2
+        #self.ntotal
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        self.is_built = True
+        #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        self.times = zeros(self.ntimes, 'float32')
+        #self.element_types2 = array(self.nelements, dtype='|S8')
+        self.element_types3 = zeros((self.nelements, 2), dtype='int32')
+
+
+        #self.ntotal = self.nelements * nnodes
+
+        # TODO: could be more efficient by using nelements for cid
+        self.element_node = zeros((self.ntotal, 2), 'int32')
+        #self.element_cid = zeros((self.nelements, 2), 'int32')
+
+        # the number is messed up because of the offset for the element's properties
+
+        if not self.nelements * nnodes * 2 == self.ntotal:
+            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (self.ntimes,
+                                                                           self.nelements, nnodes,
+                                                                           self.nelements * nnodes,
+                                                                           self.ntotal)
+            raise RuntimeError(msg)
+
+
+        #self.fiberCurvature = {}
+        # [oxx, oyy, txy]
+        self.data = zeros((self.ntimes, self.ntotal, 3), 'complex64')
+
+    def add_new_eid(self, eType, dt, eid, nodeID, fd, oxx, oyy, txy):
+        self.add_eid_sort1(eType, dt, eid, nodeID, fd, oxx, oyy, txy)
+
+    def add(self, dt, eid, gridC, fd, oxx, oyy, txy):
+        self.add_eid_sort1(self.element_name, dt, eid, gridC, fd, oxx, oyy, txy)
+
+    def addNewNode(self, dt, eid, gridC, fd, oxx, oyy, txy):
+        self.add_eid_sort1(self.element_name, dt, eid, gridC, fd, oxx, oyy, txy)
+
+    def add_eid_sort1(self, eType, dt, eid, nodeID, fd, oxx, oyy, txy):
+        self.times[self.itime] = dt
+        #print(self.element_types2, element_type, self.element_types2.dtype)
+        #self.element_types2[self.ielement] = string_(element_type)   # TODO: save this...
+        #self.element_types2[self.ielement] = element_type
+
+        #try:
+        #if self.ielement < self.nelements:
+            #self.element_cid[self.ielement] = [eid, cid]
+            #self.element_types3[self.ielement, :] = [element_num, nodef]
+        #except IndexError:
+            #pass
+            #print('element_types3', self.element_types3)
+        #print('itotal=%s eType=%r dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, eType, dt, eid, nodeID, oxx))
+
+        if nodeID == 'CEN/6':
+            nodeID = 0
+        self.data[self.itime, self.itotal] = [oxx, oyy, txy]
+        #self.node_element_cid[self.itotal] = []
+        #self.element_node[self.itotal, :] = [eid, nodeID]  # 0 is center
+        #print("etype=%s ctype=%s nodef=%s" % (element_type, ctype, nodef))
+        #self.ielement += 1
+        self.itotal += 1
+
+    def get_stats(self):
+        if not self.is_built:
+            return ['<%s>\n' % self.__class__.__name__,
+                    '  ntimes: %i\n' % self.ntimes,
+                    '  ntotal: %i\n' % self.ntotal,
+                    ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        #ntotal = self.ntotal
+        nnodes = self.element_node.shape[0]
+        msg = []
+
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i nnodes=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements, nnodes))
+        else:
+            msg.append('  type=%s nelements=%i nnodes=%i\n' % (self.__class__.__name__, nelements, nnodes))
+        msg.append('  eType, cid\n')
+        msg.append('  data: [ntimes, nnodes, 6] where 6=[%s]\n' % str(', '.join(self.getHeaders())))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  %s\n  ' % self.element_name)
+        msg += self.get_data_code()
+        return msg
+
+    def get_f06_header(self, is_mag_phase=True):
+        tetra_msg, penta_msg, hexa_msg = self._get_msgs(is_mag_phase)
+        if 'CTETRA' in self.element_name:
+            return tetra_msg, 4
+        raise NotImplementedError(self.element_name)
+
+    def __repr__(self):
+        return 'cat'
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+        f.write('Not Implemented\n')
+        return page_num
+
+        (msg_temp, nnodes) = self.get_f06_header(is_mag_phase)
+
+        # write the f06
+        (ntimes, ntotal, six) = self.data.shape
+        for itime in range(ntimes):
+            dt = self.times[itime]  ## TODO: rename this...
+
+            #print('eids=', eids)
+
+            dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
+            header[1] = dtLine
+            msg = header + msg_temp
+            f.write('\n'.join(msg))
+
+            # TODO: can I get this without a reshape?
+            oxx = self.data[itime, :, 0]
+            oyy = self.data[itime, :, 1]
+            txy = self.data[itime, :, 2]
+
+            eids2 = self.element_node[:, 0]
+            nodes = self.element_node[:, 1]
+            #print('eids2 =', eids2, eids2.shape)
+            #print('nodes =', nodes, nodes.shape)
+            #print('oxx =', oxx)
+            # loop over all the elements and nodes
+            for deid, node, doxx, doyy, dtxy in zip(eids2, nodes, oxx, oyy txy):
+                # TODO: cid not supported
+                ([oxxr, oyyr, ozzr, txyr, tyzr, txzr,
+                  oxxi, oyyi, ozzi, txyi, tyzi, txzi,], is_all_zeros) = writeImagFloats13E([doxx, doyy, dozz,
+                                                                                            dtxy, dtyz, dtxz], is_mag_phase)
+                #print("node =", node)
+                if node == 0:  # CENTER
+                    f.write('0 %12i %11sGRID CS %2i GP\n' % (deid, 0, nnodes))
+                    f.write('0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('CENTER', oxxr, oyyr, ozzr, txyr, tyzr, txzr))
+                    f.write('    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('',       oxxi, oyyi, ozzi, txyi, tyzi, txzi))
+                else:
+                    f.write('0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % (node, oxxr, oyyr, ozzr, txyr, tyzr, txzr))
+                    f.write('    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('',   oxxi, oyyi, ozzi, txyi, tyzi, txzi))
+                    #self.element_types3[ielem]
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
+
+
+class ComplexPlateStressArray(ComplexPlateArray):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ComplexPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
+
+    def getHeaders(self):
+        return ['oxx', 'oyy', 'txy']
+
+class ComplexPlateStrainArray(ComplexPlateArray):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ComplexPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
+
+    def getHeaders(self):
+        return ['exx', 'eyy', 'exy']
 
 class ComplexPlateStress(StressObject):
     """

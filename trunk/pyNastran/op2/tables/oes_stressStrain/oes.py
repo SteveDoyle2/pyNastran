@@ -32,7 +32,8 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import RealTriaxStress
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStress, ComplexBarStrain
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush import ComplexBushStress, ComplexBushStrain
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexBush1DStress
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStress, ComplexPlateStrain
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import (ComplexPlateStress, ComplexPlateStrain,
+                                                                      ComplexPlateStressArray, ComplexPlateStrainArray)
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import (ComplexRodStress, ComplexRodStrain)
                                                                     #ComplexRodStressArray, ComplexRodStrainArray)
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShearStress, ComplexShearStrain
@@ -950,9 +951,6 @@ class OES(OP2Common):
         # plates
         elif self.element_type in [33]:  # CQUAD4-centroidal
             # 33-QUAD4-centroidal
-
-            ComplexPlateStressArray = None
-            ComplexPlateStrainArray = None
             if self.isStress():
                 result_name = 'plateStress'
                 slot = self.plateStress
@@ -1088,7 +1086,6 @@ class OES(OP2Common):
                 obj_complex = ComplexPlateStress
 
                 #result_vector_name
-                ComplexPlateStressArray = None
                 obj_vector_real = RealPlateStressArray
                 obj_vector_complex = ComplexPlateStressArray
                 if self.element_type == 74: # CTRIA3
@@ -1104,7 +1101,6 @@ class OES(OP2Common):
                 obj_complex = ComplexPlateStrain
 
                 #result_vector_name
-                ComplexPlateStrainArray = None
                 obj_vector_real = RealPlateStrainArray
                 obj_vector_complex = ComplexPlateStrainArray
                 if self.element_type == 74: # CTRIA3
@@ -1212,7 +1208,6 @@ class OES(OP2Common):
                 obj_complex = ComplexPlateStrain
 
                 #result_vector_name
-                ComplexPlateStressArray = None
                 obj_vector_real = RealPlateStressArray
                 obj_vector_complex = ComplexPlateStressArray
                 # 64-CQUAD8
@@ -1252,7 +1247,6 @@ class OES(OP2Common):
                 obj_complex = ComplexPlateStrain
 
                 #result_vector_name
-                ComplexPlateStrainArray = None
                 obj_vector_real = RealPlateStrainArray
                 obj_vector_complex = ComplexPlateStrainArray
                 if self.element_type == 64: # CQUAD8
