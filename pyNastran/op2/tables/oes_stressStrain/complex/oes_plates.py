@@ -183,7 +183,7 @@ class ComplexPlateArray(OES_Object):
             #print('nodes =', nodes, nodes.shape)
             #print('oxx =', oxx)
             # loop over all the elements and nodes
-            for deid, node, doxx, doyy, dtxy in zip(eids2, nodes, oxx, oyy txy):
+            for deid, node, doxx, doyy, dtxy in zip(eids2, nodes, oxx, oyy, txy):
                 # TODO: cid not supported
                 ([oxxr, oyyr, ozzr, txyr, tyzr, txzr,
                   oxxi, oyyi, ozzi, txyi, tyzi, txzi,], is_all_zeros) = writeImagFloats13E([doxx, doyy, dozz,
