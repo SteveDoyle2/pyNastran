@@ -610,12 +610,23 @@ class F06Writer(object):
             # OES - isotropic CTRIA3/CQUAD4 stress
             'plateStress',  # non-vectorized
             'ctria3_stress',  # vectorized
+            'ctriar_stress',
+            'ctria6_stress',
+
+            'cquadr_stress',
             'cquad4_stress',
+            'cquad8_stress',
 
             # OES - isotropic CTRIA3/CQUAD4 strain
             'plateStrain',  # non-vectorized
             'ctria3_strain',  # vectorized
+            'ctriar_strain',
+            'ctria6_strain',
+
+            'cquadr_strain',
             'cquad4_strain',
+            'cquad8_strain',
+
 
             # OES - isotropic CTETRA/CHEXA/CPENTA stress
             'solidStress',  # non-vectorized
