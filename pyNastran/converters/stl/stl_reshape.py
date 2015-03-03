@@ -143,11 +143,23 @@ def stl_reshape(data):
         yshift = 1.
         zshift = 1.
         if data['<xshift>'] is not None:
-            xshift = float(data['<xshift>'].strip("'"))
+            if isinstance(xshift, basestring):
+                xshift = float(data['<xshift>'].strip("'"))
+            else:
+                xshift = float(data['<xshift>'])
+
         if data['<yshift>'] is not None:
-            yshift = float(data['<yshift>'].strip("'"))
+            if isinstance(xshift, basestring):
+                yshift = float(data['<yshift>'].strip("'"))
+            else:
+                yshift = float(data['<yshift>'])
+
         if data['<zshift>'] is not None:
-            zshift = float(data['<zshift>'].strip("'"))
+            if isinstance(xshift, basestring):
+                zshift = float(data['<zshift>'].strip("'"))
+            else:
+                zshift = float(data['<zshift>'])
+
         print('delta = (%s, %s, %s)' % (xshift, yshift, zshift))
         stl.nodes[:, 0] += xshift
         stl.nodes[:, 1] += yshift
