@@ -166,8 +166,20 @@ class STLReader(object):
         n = norm(v123, axis=1)
         inan = where(n==0)[0]
         n[inan] = array([1., 0., 0.])
-        if len(inan) > 0:
-            raise RuntimeError(inan)
+
+        if 0:
+            msg = 'Failed Elements: %s\n' % inan
+            if len(inan) > 0:
+                for inani in inan:
+                    msg += '  eid=%s nodes=%s\n' % (inani, elements[inani, :])
+                    for ni in elements[inani]:
+                        msg += '    nid=%s node=%s\n' % (ni, nodes[ni, :])
+                raise RuntimeError(msg)
+        else:
+            inotnan = where(n!=0)[0]
+            elements = elements[inotnan, :]
+            n = n[inotnan]
+            v123 = v123[inotnan]
         #from numpy import divide
 
         # we need to divide our (n,3) array in 3 steps

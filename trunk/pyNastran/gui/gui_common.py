@@ -9,7 +9,7 @@ import os.path
 import datetime
 import cgi #  html lib
 import inspect
-#import traceback
+import traceback
 
 import vtk
 from PyQt4 import QtCore, QtGui
