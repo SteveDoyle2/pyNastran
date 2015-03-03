@@ -68,9 +68,11 @@ class WriteMesh(object):
             card_writer = print_card_8
         elif size == 16:
             assert is_double in [True, False], 'is_double=%r' % is_double
-            if is_double == 'single':
+            if is_double == False:
+                assert is_double == False, 'is_double=%r' % is_double
                 card_writer = print_card_16
             else:
+                assert is_double == True, 'is_double=%r' % is_double
                 card_writer = print_card_double
         else:
             assert size in [8, 16], size
