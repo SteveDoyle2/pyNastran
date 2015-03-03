@@ -16,6 +16,7 @@ def main():
     msg += '  stl_reshape [--ascii <fmt>] --mirror <xyz> <tol> <in_stl_filename> <out_stl_filename>\n'
     msg += '  stl_reshape [--ascii <fmt>] --flip_normals <in_stl_filename> <out_stl_filename>\n'
     msg += '  stl_reshape [--ascii <fmt>] --stats <in_stl_filename>\n'
+    #msg += '  stl_reshape [--ascii <fmt>] <in_stl_filename> <out_stl_filename>\n'
     msg += '  stl_reshape -h | --help\n'
     msg += '  stl_reshape -v | --version\n'
     msg += '\n'

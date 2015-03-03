@@ -26,12 +26,8 @@ class STLReader(object):
     def __init__(self, log=None, debug=False):
         self.log = get_logger(log, 'debug' if debug else 'info')
 
-        #self.cartType = None  # grid, results
-        #self.nPoints = None
-        #self.nElements = None
-        #self.infile = None
-        #self.infilename = None
-        #self.log = get_logger(log, 'debug' if debug else 'info')
+        self.nodes = None
+        self.elements = None
 
     def write_stl(self, out_filename, is_binary=False, float_fmt='%6.12f'):
         self.log.info("---writing STL file...%r---" % out_filename)
@@ -79,10 +75,10 @@ class STLReader(object):
         p3 = self.nodes[elements[:, 2], :]
         a = p2 - p1
         b = p3 - p1
-        #print(a)
-        #print(b)
         n = cross(a, b)
         #n /= norm(n, axis=1)
+
+        s = Struct('12fH')
         for element in elements:
             a = self.nodes[element[0], :]
             b = self.nodes[element[1], :]
@@ -92,9 +88,10 @@ class STLReader(object):
             n = [ab[1]*ac[2]-ab[2]*ac[1],
                  ab[2]*ac[0]-ab[0]*ac[2],
                  ab[0]*ac[1]-ab[1]*ac[0]]
-            data = pack('ffffffffffffH',
-                n[0],n[1],n[2],a[0],a[1],a[2],b[0],b[1],b[2],
-                c[0],c[1],c[2],0)
+            data = s.pack(n[0],n[1],n[2],
+                          a[0],a[1],a[2],
+                          b[0],b[1],b[2],
+                          c[0],c[1],c[2],0)
             f.write(data)
         f.close()
 
@@ -152,7 +149,10 @@ class STLReader(object):
         self.nodes = nodes
 
 
-    def get_normals(self, elements, nodes=None):
+    def _get_normals_inan(self, elements, nodes=None):
+        """
+        This is intended as a submethod to help handle the problem of bad normals
+        """
         if nodes is None:
             nodes = self.nodes
         self.log.debug("get_normals...elements.shape %s" % str(elements.shape))
@@ -165,9 +165,33 @@ class STLReader(object):
 
         n = norm(v123, axis=1)
         inan = where(n==0)[0]
-        n[inan] = array([1., 0., 0.])
+        return v123, n, inan
 
-        if 0:
+    def remove_elements_with_bad_normals(self, elements, nodes=None):
+        v123, n, inan = self._get_normals_inan(elements, nodes=nodes)
+        inotnan = where(n!=0)[0]
+        self.elements = elements[inotnan, :]
+        n = n[inotnan]
+        v123 = v123[inotnan]
+
+        normals = v123 # /n
+        normals[:, 0] /= n
+        normals[:, 1] /= n
+        normals[:, 2] /= n
+        return normals
+
+    def get_normals(self, elements, nodes=None, stop_on_failure=True):
+        """
+        :param elements: the elements to get the normals for
+        :param nodes: a subset of the nodes (default=None -> all)
+        :param stop_on_failure: True:  crash if there are coincident points (default=True)
+                                False: delete elements
+        """
+        if nodes is None:
+            nodes = self.nodes
+        v123, n, inan = self._get_normals_inan(elements, nodes=nodes)
+
+        if stop_on_failure:
             msg = 'Failed Elements: %s\n' % inan
             if len(inan) > 0:
                 for inani in inan:
@@ -177,16 +201,18 @@ class STLReader(object):
                 raise RuntimeError(msg)
         else:
             inotnan = where(n!=0)[0]
+            n[inan] = array([1., 0., 0.])
             elements = elements[inotnan, :]
             n = n[inotnan]
             v123 = v123[inotnan]
-        #from numpy import divide
 
         # we need to divide our (n,3) array in 3 steps
         normals = v123 # /n
         normals[:, 0] /= n
         normals[:, 1] /= n
         normals[:, 2] /= n
+
+        #from numpy import divide
         #divide(v123, n)
         return normals
 
@@ -372,29 +398,29 @@ class STLReader(object):
 
     def write_stl_ascii(self, out_filename, solid_name, float_fmt='%.6f'):
         """
-        facet normal -6.601157e-001 6.730213e-001 3.336009e-001
-           outer loop
-              vertex 8.232952e-002 2.722531e-001 1.190414e+001
-              vertex 8.279775e-002 2.717848e-001 1.190598e+001
-              vertex 8.557653e-002 2.745033e-001 1.190598e+001
-           endloop
-        endfacet
+        solid solid_name
+         facet normal -6.601157e-001 6.730213e-001 3.336009e-001
+          outer loop
+            vertex 8.232952e-002 2.722531e-001 1.190414e+001
+            vertex 8.279775e-002 2.717848e-001 1.190598e+001
+            vertex 8.557653e-002 2.745033e-001 1.190598e+001
+          endloop
+         endfacet
+        end solid
         """
         nodes = self.nodes
         elements = self.elements
         self.log.info("---_write_stl_ascii...%r---" % out_filename)
         msg = ''
-        nFormat = '  facet normal %s %s %s\n' % (float_fmt, float_fmt, float_fmt)
-        vFormat = '    vertex %s %s %s\n' % (float_fmt, float_fmt, float_fmt)
+        nFormat = ' facet normal %s %s %s\n' % (float_fmt, float_fmt, float_fmt)
+        vFormat = '     vertex %s %s %s\n' % (float_fmt, float_fmt, float_fmt)
         msg += 'solid %s\n' % solid_name
         out = open(out_filename, 'wb')
         out.write(msg)
 
         nelements, three = elements.shape
-        #print("write nelements=%s" % nelements)
         normals = self.get_normals(elements)
         for element, normal in zip(elements, normals):
-            #msg = ''
             try:
                 p1, p2, p3 = nodes[element]
             except IndexError:
@@ -403,12 +429,12 @@ class STLReader(object):
 
             #msg  += '  facet normal -6.601157e-001 6.730213e-001 3.336009e-001\n'
             msg = nFormat % tuple(normal)
-            msg += '    outer loop\n'
+            msg += '   outer loop\n'
             msg += vFormat % tuple(p1)
             msg += vFormat % tuple(p2)
             msg += vFormat % tuple(p3)
-            msg += '    endloop\n'
-            msg += '  endfacet\n'
+            msg += '   endloop\n'
+            msg += ' endfacet\n'
             #print(msg)
             out.write(msg)
         msg = 'endsolid\n'
@@ -424,10 +450,8 @@ class STLReader(object):
         nodes_dict = {}
         elements = []
         while line:
-            #print("**line = %r" % line)
             if 'solid' in line[:6]:
                 line = f.readline()  # facet
-                #print "line = %r" % line
                 while 'facet' in line.strip()[:5]:
                     #facet normal -6.665299e-001 6.795624e-001 3.064844e-001
                     #   outer loop
@@ -437,7 +461,6 @@ class STLReader(object):
                     #   endloop
                     #endfacet
 
-                    #f.readline() # facet
                     f.readline() # outer loop
                     L1 = f.readline().strip()
                     L2 = f.readline().strip()
@@ -448,17 +471,13 @@ class STLReader(object):
                     v3 = L3.split()[1:]
                     f.readline() # endloop
                     f.readline() # endfacet
-                    #v1 = array(v1)
-                    #v2 = array(v2)
-                    #v3 = array(v3)
                     t1 = tuple(v1)
                     t2 = tuple(v2)
                     t3 = tuple(v3)
-                    #print "%s\n%s\n%s" % (t1, t2, t3)
+
                     assert len(v1) == 3, '%r' % L1
                     assert len(v2) == 3, '%r' % L2
                     assert len(v3) == 3, '%r' % L3
-                    #print "--------------"
 
                     if t1 in nodes_dict:
                         i1 = nodes_dict[t1]
@@ -485,7 +504,6 @@ class STLReader(object):
                     ielement += 1
                     line = f.readline()  # facet
                 #print "end of solid..."
-                #print "*line = %r" % line
             elif 'endsolid' in line:
                 line = f.readline()
             else:
@@ -520,7 +538,6 @@ class STLReader(object):
             y = deepcopy(self.nodes[:, 1])
             self.nodes[:, 0] = y * scale
             self.nodes[:, 1] = x * scale
-            #stl.scale_nodes(xscale, yscale, zscale)
         elif axes == 'yz':
             y = deepcopy(self.nodes[:, 1])
             z = deepcopy(self.nodes[:, 2])
@@ -545,7 +562,6 @@ class STLReader(object):
         assert tol >= 0.0, 'tol=%s' % tol
 
         nnodes = self.nodes.shape[0]
-        #inodes = arange(nnodes)
         if xyz == 'x':
             xyzi = 0
         elif xyz == 'y':
