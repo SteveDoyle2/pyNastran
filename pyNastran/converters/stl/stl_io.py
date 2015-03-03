@@ -62,8 +62,10 @@ class STL_IO(object):
 
         if self.is_centroidal:
             normals = model.get_normals(elements)
+            areas = model.get_area(elements)
         elif self.is_nodal:
             normals = None
+            areas = None
             #normals = model.get_normals_at_nodes(elements)
 
         self.nNodes, three = nodes.shape
@@ -135,10 +137,10 @@ class STL_IO(object):
         self.iSubcaseNameMap = {}
         ID = 1
 
-        cases = self._fill_stl_case(cases, ID, elements, nodes, normals)
+        cases = self._fill_stl_case(cases, ID, elements, nodes, normals, areas)
         self._finish_results_io(cases)
 
-    def _fill_stl_case(self, cases, ID, elements, nodes, normals):
+    def _fill_stl_case(self, cases, ID, elements, nodes, normals, areas):
         self.iSubcaseNameMap[ID] = ('STL', '')
         #print("is_centroidal=%s isNodal=%s" % (self.is_centroidal, self.is_nodal))
         assert self.is_centroidal != self.is_nodal
@@ -150,6 +152,7 @@ class STL_IO(object):
             cases[(ID, 'NormalX', 1, 'centroid', '%.3f')] = normals[:, 0]
             cases[(ID, 'NormalY', 1, 'centroid', '%.3f')] = normals[:, 1]
             cases[(ID, 'NormalZ', 1, 'centroid', '%.3f')] = normals[:, 2]
+            cases[(ID, 'Area', 1, 'centroid', '%.4e')] = areas
 
         elif self.is_nodal:
             nnodes, three = nodes.shape
