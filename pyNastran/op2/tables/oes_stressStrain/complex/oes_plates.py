@@ -62,11 +62,7 @@ class ComplexPlateArray(OES_Object):
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        self.times = zeros(self.ntimes, 'float32')
-        #self.element_types2 = array(self.nelements, dtype='|S8')
-        self.element_types3 = zeros((self.nelements, 2), dtype='int32')
-
-
+        self._times = zeros(self.ntimes, 'float32')
         #self.ntotal = self.nelements * nnodes
 
         # TODO: could be more efficient by using nelements for cid
@@ -83,7 +79,7 @@ class ComplexPlateArray(OES_Object):
             raise RuntimeError(msg)
 
 
-        #self.fiberCurvature = {}
+        self.fiberCurvature = zeros((self.ntotal, 1), 'float32')
         # [oxx, oyy, txy]
         self.data = zeros((self.ntimes, self.ntotal, 3), 'complex64')
 
@@ -97,25 +93,16 @@ class ComplexPlateArray(OES_Object):
         self.add_eid_sort1(self.element_name, dt, eid, gridC, fd, oxx, oyy, txy)
 
     def add_eid_sort1(self, eType, dt, eid, nodeID, fd, oxx, oyy, txy):
-        self.times[self.itime] = dt
+        self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
-        #self.element_types2[self.ielement] = string_(element_type)   # TODO: save this...
-        #self.element_types2[self.ielement] = element_type
-
-        #try:
-        #if self.ielement < self.nelements:
-            #self.element_cid[self.ielement] = [eid, cid]
-            #self.element_types3[self.ielement, :] = [element_num, nodef]
-        #except IndexError:
-            #pass
-            #print('element_types3', self.element_types3)
         #print('itotal=%s eType=%r dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, eType, dt, eid, nodeID, oxx))
 
         if nodeID == 'CEN/6':
             nodeID = 0
         self.data[self.itime, self.itotal] = [oxx, oyy, txy]
         #self.node_element_cid[self.itotal] = []
-        #self.element_node[self.itotal, :] = [eid, nodeID]  # 0 is center
+        self.element_node[self.itotal, :] = [eid, nodeID]  # 0 is center
+        self.fiberCurvature[self.itotal] = fd
         #print("etype=%s ctype=%s nodef=%s" % (element_type, ctype, nodef))
         #self.ielement += 1
         self.itotal += 1
@@ -146,24 +133,106 @@ class ComplexPlateArray(OES_Object):
         return msg
 
     def get_f06_header(self, is_mag_phase=True):
-        tetra_msg, penta_msg, hexa_msg = self._get_msgs(is_mag_phase)
-        if 'CTETRA' in self.element_name:
-            return tetra_msg, 4
-        raise NotImplementedError(self.element_name)
+        if self.isVonMises():
+            vonMises = 'VON MISES'
+        else:
+            vonMises = 'MAX SHEAR'
 
-    def __repr__(self):
-        return 'cat'
+        if self.is_stress():
+            if self.isFiberDistance():
+                gridMsgTemp = ['    ELEMENT              FIBER                                  - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
+                               '      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
+                fiberMsgTemp = ['  ELEMENT       FIBRE                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
+                                '    ID.        DISTANCE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
+            else:
+                gridMsgTemp = ['    ELEMENT              FIBRE                                  - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
+                               '      ID      GRID-ID   CURVATURE                NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
+                fiberMsgTemp = ['  ELEMENT       FIBRE                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
+                                '    ID.       CURVATURE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
+        else:
+            if self.isFiberDistance():
+                gridMsgTemp = ['    ELEMENT              FIBER                                  - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
+                               '      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
+                fiberMsgTemp = ['  ELEMENT       FIBRE                                     - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
+                                '    ID.        DISTANCE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
+            else:
+                gridMsgTemp = ['    ELEMENT              FIBRE                                  - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
+                               '      ID      GRID-ID   CURVATURE                NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
+                fiberMsgTemp = ['  ELEMENT       FIBRE                                     - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
+                                '    ID.       CURVATURE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
+
+
+        if is_mag_phase:
+            magReal = ['                                                         (MAGNITUDE/PHASE)\n \n']
+        else:
+            magReal = ['                                                          (REAL/IMAGINARY)\n', ' \n']
+
+        #if self.isFiberDistance():
+            #quadMsgTemp = ['    ELEMENT              FIBRE                                  - STRESSES IN ELEMENT  COORDINATE SYSTEM -',
+                           #'      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY']
+        #else:
+            #pass
+
+    #'0       100    CEN/8  -2.500000E-02    0.0          /  0.0             0.0          /  0.0             0.0          /  0.0'
+    #'                       2.500000E-02    0.0          /  0.0             0.0          /  0.0             0.0          /  0.0'
+
+        #quadMsg  = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )'] + formWord + quadMsgTemp
+        #quadrMsg = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )'] + formWord + quadMsgTemp
+        #quad8Msg = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )'] + formWord + quadMsgTemp
+
+        ## TODO: validation on header formatting...
+        if self.is_stress():
+            cquad4_bilinear = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']
+            cquad4_linear   = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']
+            cquad8 = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n']
+            cquadr = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n']
+            ctria3 = ['                C O M P L E X   S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n']
+            ctria6 = ['                C O M P L E X   S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n']
+            ctriar = ['                C O M P L E X   S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n']
+        else:
+            cquad4_bilinear = ['                C O M P L E X   S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']
+            cquad4_linear   = ['                C O M P L E X   S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']
+            cquad8 = ['                C O M P L E X   S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n']
+            cquadr = ['                C O M P L E X   S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n']
+            ctria3 = ['                C O M P L E X   S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n']
+            ctria6 = ['                C O M P L E X   S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n']
+            ctriar = ['                C O M P L E X   S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n']
+
+        msg = []
+        if self.element_name == 'CQUAD4':
+            if self.element_type == 144:
+                isBilinear = True
+                msg += cquad4_linear + magReal + gridMsgTemp
+            elif self.element_type == 33:
+                isBilinear = False
+                msg += cquad4_bilinear + magReal + fiberMsgTemp
+        elif self.element_name == 'CQUAD8':
+            msg += cquad8 + magReal + gridMsgTemp
+        elif self.element_name == 'CQUADR':
+            msg += cquadr + magReal + gridMsgTemp
+
+        elif self.element_name == 'CTRIA3':
+            msg += ctria3 + fiberMsgTemp
+        elif self.element_name == 'CTRIA6':
+            msg += ctria6 + gridMsgTemp
+        elif self.element_name == 'CTRIAR':
+            msg += ctriar + gridMsgTemp
+        else:
+            raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
+
+        nnodes = self.get_nnodes()
+        return msg, nnodes
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        f.write('Not Implemented\n')
-        return page_num
+        #f.write('%s write_f06 not implemented...\n' % self.__class__.__name__)
+        #return page_num
 
         (msg_temp, nnodes) = self.get_f06_header(is_mag_phase)
 
         # write the f06
         (ntimes, ntotal, six) = self.data.shape
         for itime in range(ntimes):
-            dt = self.times[itime]  ## TODO: rename this...
+            dt = self._times[itime]
 
             #print('eids=', eids)
 
@@ -172,34 +241,81 @@ class ComplexPlateArray(OES_Object):
             msg = header + msg_temp
             f.write('\n'.join(msg))
 
-            # TODO: can I get this without a reshape?
-            oxx = self.data[itime, :, 0]
-            oyy = self.data[itime, :, 1]
-            txy = self.data[itime, :, 2]
-
-            eids2 = self.element_node[:, 0]
-            nodes = self.element_node[:, 1]
-            #print('eids2 =', eids2, eids2.shape)
-            #print('nodes =', nodes, nodes.shape)
-            #print('oxx =', oxx)
-            # loop over all the elements and nodes
-            for deid, node, doxx, doyy, dtxy in zip(eids2, nodes, oxx, oyy, txy):
-                # TODO: cid not supported
-                ([oxxr, oyyr, ozzr, txyr, tyzr, txzr,
-                  oxxi, oyyi, ozzi, txyi, tyzi, txzi,], is_all_zeros) = writeImagFloats13E([doxx, doyy, dozz,
-                                                                                            dtxy, dtyz, dtxz], is_mag_phase)
-                #print("node =", node)
-                if node == 0:  # CENTER
-                    f.write('0 %12i %11sGRID CS %2i GP\n' % (deid, 0, nnodes))
-                    f.write('0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('CENTER', oxxr, oyyr, ozzr, txyr, tyzr, txzr))
-                    f.write('    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('',       oxxi, oyyi, ozzi, txyi, tyzi, txzi))
+            if self.element_name == 'CQUAD4':
+                if isBilinear:
+                    self.writeF06_Quad4_BilinearTransient(f, itime, 4, is_mag_phase, 'CEN/4')
                 else:
-                    f.write('0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % (node, oxxr, oyyr, ozzr, txyr, tyzr, txzr))
-                    f.write('    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('',   oxxi, oyyi, ozzi, txyi, tyzi, txzi))
-                    #self.element_types3[ielem]
+                    self.writeF06_Tri3Transient(f, itime, 4, is_mag_phase)
+            elif self.element_name ==  'CTRIA3':
+                self.writeF06_Tri3Transient(f, itime, 3, is_mag_phase)
+            elif self.element_name ==  'CQUAD8':
+                self.writeF06_Quad4_BilinearTransient(f, itime, 5, is_mag_phase, 'CEN/8')
+            elif self.element_name ==  'CTRIAR':
+                self.writeF06_Quad4_BilinearTransient(f, itime, 3, is_mag_phase, 'CEN/3')
+            elif self.element_name ==  'CTRIA6':
+                self.writeF06_Quad4_BilinearTransient(f, itime, 3, is_mag_phase, 'CEN/6')
+            else:
+                raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
+
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
+
+    def writeF06_Tri3Transient(self, f, itime, n, is_magnitude_phase, cen):
+        """
+        CQUAD4 linear
+        CTRIA3
+        """
+        fds = self.fiberCurvature[:, 0]
+        oxx = self.data[itime, :, 0]
+        oyy = self.data[itime, :, 1]
+        txy = self.data[itime, :, 2]
+
+        eids2 = self.element_node[:, 0]
+        nodes = self.element_node[:, 1]
+
+        ilayer0 = True
+        for deid, node, fd, doxx, doyy, dtxy in zip(eids2, nodes, fds, oxx, oyy, txy):
+            vals, is_all_zeros = writeFloats13E([fd])
+            fd = vals[0]
+            ([oxxr, oyyr, txyr,
+              oxxi, oyyi, txyi,], is_all_zeros) = writeImagFloats13E([doxx, doyy, dtxy], is_magnitude_phase)
+
+            if ilayer0:    # TODO: assuming 2 layers?
+                f.write('0  %6i   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (eid, fd, oxxr, oxxi, oyyr, oyyi, oxyr, oxyi))
+            else:
+                f.write('   %6s   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % ('', fd, oxxr, oxxi, oyyr, oyyi, oxyr, oxyi))
+            ilayer0 = not ilayer0
+
+    def writeF06_Quad4_BilinearTransient(self, f, itime, n, is_magnitude_phase, cen):
+        """
+        CQUAD4 bilinear
+        CQUAD8
+        CTRIAR
+        CTRIA6
+        """
+        fds = self.fiberCurvature[:, 0]
+        oxx = self.data[itime, :, 0]
+        oyy = self.data[itime, :, 1]
+        txy = self.data[itime, :, 2]
+
+        eids = self.element_node[:, 0]
+        nodes = self.element_node[:, 1]
+
+        ilayer0 = True
+        for eid, node, fd, doxx, doyy, dtxy in zip(eids, nodes, fds, oxx, oyy, txy):
+            vals, is_all_zeros = writeFloats13E([fd])
+            fd = vals[0]
+            ([oxxr, oyyr, txyr,
+              oxxi, oyyi, txyi,], is_all_zeros) = writeImagFloats13E([doxx, doyy, dtxy], is_magnitude_phase)
+
+            if node == 0 and ilayer0:
+                f.write('0  %8i %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n' % (eid, cen, fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
+            elif ilayer0:    # TODO: assuming 2 layers?
+                f.write('   %8s %8i  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n' % ('', node, fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
+            else:
+                f.write('   %8s %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n\n' % ('', '', fd, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
+            ilayer0 = not ilayer0
 
 
 class ComplexPlateStressArray(ComplexPlateArray):
@@ -209,12 +325,25 @@ class ComplexPlateStressArray(ComplexPlateArray):
     def getHeaders(self):
         return ['oxx', 'oyy', 'txy']
 
+    def is_stress(self):
+        return True
+
+    def is_strain(self):
+        return False
+
 class ComplexPlateStrainArray(ComplexPlateArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def getHeaders(self):
         return ['exx', 'eyy', 'exy']
+
+    def is_stress(self):
+        return False
+
+    def is_strain(self):
+        return True
+
 
 class ComplexPlateStress(StressObject):
     """

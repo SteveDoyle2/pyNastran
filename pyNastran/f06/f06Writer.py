@@ -846,6 +846,22 @@ class F06Writer(object):
             self.page_num += 1
             #print(summary)
 
+    def _get_result_length(self, res_types, res_key):
+        res_length = 0
+        for res_type in res_types:
+            if res_key in res_type:
+                result = res_type[res_key]
+                res_length = max(len(result.__class__.__name__), res_length)
+                continue
+            elif len(res_type) != 0:
+                key0 = res_type.keys()[0]
+                result = res_type[key0]
+                class_name = result.__class__.__name__
+                print('%s - results not found...key=%s' % (class_name, res_key))
+            else:  # empty result
+                pass
+        return res_length
+
     def write_f06(self, f06_outname, is_mag_phase=False,
                   delete_objects=True, end_flag=False):
         """
@@ -1085,32 +1101,34 @@ class F06Writer(object):
 
         if 1:
             iSubcases = sorted(self.iSubcaseNameMap.keys())
-            #print("self.iSubcaseNameMap = %s" %(self.iSubcaseNameMap))
-            for isubcase in iSubcases:
-                title = self.Title
-                (subtitle, label) = self.iSubcaseNameMap[isubcase]
-                subtitle = subtitle.strip()
-                label = label.strip()
-                #print("label = %s" % label)
 
-                (subtitle, label) = self.iSubcaseNameMap[isubcase]
-                label = label.strip()
-                subtitle = subtitle.strip()
+            res_keys = []
+            for isubcase in iSubcases:
+                for subtitle in self.subtitles[isubcase]:
+                    res_keys.append((isubcase, subtitle))
+
+            for res_key in res_keys:
+                title = self.Title
+
+                isubcase = res_key[0]
+                subtitle = res_key[1]
+                label = self.labels[(isubcase, subtitle)]
+
+                is_compressed = len(self.subtitles[isubcase]) == 1
+                if is_compressed:
+                    res_key = isubcase
 
                 #header[0] = '     %-127s\n' % subtitle
                 #header[1] = '0    %-72s                                SUBCASE %-15i\n' % (label, isubcase)
                 #header[1] = '0    %-72s                                SUBCASE %-15i\n' % ('',isubcase)
 
-                res_length = 0
-                for res_type in res_types:
-                    if isubcase in res_type:
-                        result = res_type[isubcase]
-                        res_length = max(len(result.__class__.__name__), res_length)
-                        continue
+                res_length = self._get_result_length(res_types, res_key)
                 if res_length == 0:
-                    # skipped subcase
+                    # skipped subcase; no saved results
                     continue
+
                 res_format = '%%-%is SUBCASE=%%i%%s' % res_length
+                res_format_vectorized = '%%-%is SUBCASE=%%i SUBTITLE=%%s %%s' % res_length
 
                 for res_type in res_types:
                     #print("res_type ", res_type)
@@ -1119,17 +1137,21 @@ class F06Writer(object):
                     header[0] = '      %-126s\n' % subtitle
                     header[1] = '0     %-32s                                                                       SUBCASE %-15i\n \n' % (label, isubcase)
                     #print("res_type = %s" % res_type)
-                    if isubcase in res_type:
+
+                    if res_key in res_type:
                         #header = copy.deepcopy(headerOld)  # fixes bug in case
-                        #print("isubcase ", isubcase)
-                        result = res_type[isubcase]
+                        result = res_type[res_key]
                         if result.nonlinear_factor is not None:
                             header.append('')
                         try:
                             element_name = ''
                             if hasattr(result, 'element_name'):
                                 element_name = ' - ' + result.element_name
-                            print(res_format % (result.__class__.__name__, isubcase, element_name))
+
+                            if is_compressed:
+                                print(res_format % (result.__class__.__name__, isubcase, element_name))
+                            else:
+                                print(res_format_vectorized % (result.__class__.__name__, isubcase, subtitle, element_name))
                             self.page_num = result.write_f06(header, page_stamp, page_num=self.page_num, f=f06, is_mag_phase=False)
                             assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
                         except:

@@ -170,7 +170,7 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
 def run_op2(op2FileName, make_geom=False, write_bdf=False,
             write_f06=True, write_op2=False, is_mag_phase=False,
             is_vector=False, delete_f06=False,
-            iSubcases=[], exclude=[], debug=False, stopOnFailure=True):
+            iSubcases=[], exclude=[], debug=False, binary_debug=False, stopOnFailure=True):
     assert '.op2' in op2FileName.lower(), 'op2FileName=%s is not an OP2' % op2FileName
     isPassed = False
 
@@ -184,7 +184,7 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
     #debug = True
     try:
         debug_file = None
-        if write_op2:
+        if binary_debug or write_op2:
             debug_file = 'debug.out'
 
         if is_vector:
@@ -325,7 +325,7 @@ def main():
     #msg += "test_op2 [-q] [-f] [-z] [-t] [-s <sub>] OP2_FILENAME\n"
 
     # current
-    msg += "test_op2 [-q] [-g] [-w] [-f] [-o] [-z] [-t] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
+    msg += "test_op2 [-q] [-b] [-g] [-w] [-f] [-o] [-z] [-t] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
     msg += "  test_op2 -h | --help\n"
     msg += "  test_op2 -v | --version\n"
     msg += "\n"
@@ -335,6 +335,7 @@ def main():
     msg += "  OP2_FILENAME         Path to OP2 file\n"
     msg += "\n"
     msg += "Options:\n"
+    msg += "  -b, --binarydebug    Dumps the OP2 as a readable text file (default=False)\n"
     msg += "  -q, --quiet          Suppresses debug messages (default=False)\n"
     msg += "  -g, --geometry       Reads the OP2 for geometry, which can be written out (default=False)\n"
     msg += "  -w, --write_bdf      Writes the bdf to fem.test_op2.bdf (default=False)\n"
@@ -371,7 +372,8 @@ def main():
             is_vector     = data['--vector'],
             iSubcases     = data['--subcase'],
             exclude       = data['--exclude'],
-            debug         = not(data['--quiet']))
+            debug         = not(data['--quiet']),
+            binary_debug  = data['--binarydebug'])
     print("dt = %f" % (time.time() - t0))
 
 if __name__=='__main__':  # op2

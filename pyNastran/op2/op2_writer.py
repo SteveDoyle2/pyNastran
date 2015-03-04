@@ -4,13 +4,13 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import iteritems
 import sys
 import copy
-from struct import Struct
+from struct import Struct, pack
 from datetime import date
+from collections import defaultdict
 import warnings
 
 import pyNastran
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
-from struct import pack
 
 def make_stamp(Title, today=None):
     if 'Title' is None:
@@ -49,6 +49,8 @@ class OP2Writer(object):
         #: a dictionary that maps an integer of the subcaseName to the
         #: subcaseID
         self.iSubcaseNameMap = {}
+        self.subtitles = defaultdict(list)
+        self.labels = defaultdict(list)
 
         self.page_num = 1
 
