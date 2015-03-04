@@ -169,10 +169,12 @@ class STLReader(object):
 
     def remove_elements_with_bad_normals(self, elements, nodes=None):
         v123, n, inan = self._get_normals_inan(elements, nodes=nodes)
-        inotnan = where(n!=0)[0]
-        self.elements = elements[inotnan, :]
-        n = n[inotnan]
-        v123 = v123[inotnan]
+        if len(inan):
+            inotnan = where(n!=0)[0]
+            self.elements = elements[inotnan, :]
+            n = n[inotnan]
+            v123 = v123[inotnan]
+            self.log.info('removing %i elements with coincident nodes' % len(inan))
 
         normals = v123 # /n
         normals[:, 0] /= n
