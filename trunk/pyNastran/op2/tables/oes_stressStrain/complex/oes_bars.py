@@ -361,7 +361,7 @@ class ComplexBarStrain(StrainObject):
         #if nodeID==0: raise Exception(msg)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
-        f.write('ComplexBarStress write_f06 not implemented...\n')
+        f.write('%s write_f06 not implemented...\n' % self.__class__.__name__)
         return page_num
 
         if self.nonlinear_factor is not None:

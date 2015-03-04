@@ -764,7 +764,7 @@ class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, page_num, f)
-        f.write('ComplexPlate write_f06 not implemented...\n')
+        f.write('%s write_f06 not implemented...\n' % self.__class__.__name__)
         #raise NotImplementedError()
         #words = ['                                             A C C E L E R A T I O N   V E C T O R\n',
         #       ' \n',
@@ -773,7 +773,7 @@ class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         #return self._writeF06Block(words,header,pageStamp,page_num,f)
 
     def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
-        f.write('ComplexPlate _write_f06_transient not implemented...\n')
+        f.write('%s _write_f06_transient not implemented...\n' % self.__class__.__name__)
         return page_num
         #raise NotImplementedError()
 
