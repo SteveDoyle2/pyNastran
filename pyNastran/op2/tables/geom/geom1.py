@@ -18,6 +18,7 @@ class GEOM1(object):
     def _read_geom1_4(self, data):
         if self.read_mode == 1:
             return len(data)
+        print('geom1...')
         return self._read_geom_4(self._geom1_map, data)
 
     def __init__(self):
@@ -36,6 +37,7 @@ class GEOM1(object):
             (427, 4, 453): ['', self._readFake],  # record
 
             (1101,  11,  66): ['', self._readFake],  # record
+            (2101, 21, 8): ['', self._readFake],  # record
             (2201,  22,  10): ['', self._readFake],  # record
             (3901,  39,  50): ['', self._readFake],  # record
             (5501, 55, 297): ['', self._readFake],  # record
