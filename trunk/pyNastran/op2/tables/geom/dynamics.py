@@ -57,79 +57,79 @@ class DYNAMICS(object):
 
     def readDelay(self, data, n):
         """DELAY(37,18,183) - Record 3"""
-        self.skippedCardsFile.write('skipping DELAY in DYNAMICS\n')
+        self.binary_debug.write('skipping DELAY in DYNAMICS\n')
         return n
 
     def readDLoad(self, data, n):
         """DLOAD(57,5,123) - Record 4"""
-        self.skippedCardsFile.write('skipping DLOAD in DYNAMICS\n')
+        self.binary_debug.write('skipping DLOAD in DYNAMICS\n')
         return n
 
     def readDPhase(self, data, n):
         """DPHASE(77,19,184) - Record 5"""
-        self.skippedCardsFile.write('skipping DPHASE in DYNAMICS\n')
+        self.binary_debug.write('skipping DPHASE in DYNAMICS\n')
         return n
 
 #DYNRED(4807,48,306)
 
     def readEigb(self, data, n):
         """EIGB(107,1,86) - Record 7"""
-        self.skippedCardsFile.write('skipping EIGB in DYNAMICS\n')
+        self.binary_debug.write('skipping EIGB in DYNAMICS\n')
         return n
 
     def readEigc(self, data, n):
         """EIGC(207,2,87) - Record 8"""
-        self.skippedCardsFile.write('skipping EIGC in DYNAMICS\n')
+        self.binary_debug.write('skipping EIGC in DYNAMICS\n')
         return n
 
     def readEigp(self, data, n):
         """EIGP(257,4,158) - Record 9"""
-        self.skippedCardsFile.write('skipping EIGP in DYNAMICS\n')
+        self.binary_debug.write('skipping EIGP in DYNAMICS\n')
         return n
 
     def readEigr(self, data, n):
         """EIGR(307,3,85) - Record 10"""
-        self.skippedCardsFile.write('skipping EIGR in DYNAMICS\n')
+        self.binary_debug.write('skipping EIGR in DYNAMICS\n')
         return n
 
     def readEigrl(self, data, n):
         """EIGRL(308,8,348) - Record 11"""
-        self.skippedCardsFile.write('skipping EIGRL in DYNAMICS\n')
+        self.binary_debug.write('skipping EIGRL in DYNAMICS\n')
         return n
 
     def readEPoint(self, data, n):
         """EPOINT(707,7,124) - Record 12"""
-        self.skippedCardsFile.write('skipping EPOINT in DYNAMICS\n')
+        self.binary_debug.write('skipping EPOINT in DYNAMICS\n')
         return n
 
     def readFreq(self, data, n):
         """FREQ(1307,13,126) - Record 13"""
-        self.skippedCardsFile.write('skipping FREQ in DYNAMICS\n')
+        self.binary_debug.write('skipping FREQ in DYNAMICS\n')
         return n
 
     def readFreq1(self, data, n):
         """FREQ1(1007,10,125) - Record 14"""
-        self.skippedCardsFile.write('skipping FREQ1 in DYNAMICS\n')
+        self.binary_debug.write('skipping FREQ1 in DYNAMICS\n')
         return n
 
     def readFreq2(self, data, n):
         """FREQ2(1107,11,166) - Record 15"""
-        self.skippedCardsFile.write('skipping FREQ2 in DYNAMICS\n')
+        self.binary_debug.write('skipping FREQ2 in DYNAMICS\n')
         return n
 
     def readFreq3(self, data, n):
         """FREQ3(1407,14,39) - Record 16"""
-        self.skippedCardsFile.write('skipping FREQ3 in DYNAMICS\n')
+        self.binary_debug.write('skipping FREQ3 in DYNAMICS\n')
         return n
 
     def readFreq4(self, data, n):
         """FREQ4(1507,15,40) - Record 17"""
-        self.skippedCardsFile.write('skipping FREQ4 in DYNAMICS\n')
+        self.binary_debug.write('skipping FREQ4 in DYNAMICS\n')
         return n
 
     def readFreq5(self, data, n):
         """FREQ5(1607,16,41) - Record 18"""
-        self.skippedCardsFile.write('skipping FREQ5 in DYNAMICS\n')
+        self.binary_debug.write('skipping FREQ5 in DYNAMICS\n')
         return n
 
 #NLRSFD
@@ -142,12 +142,12 @@ class DYNAMICS(object):
 
     def readRLoad1(self, data, n):
         """RLOAD1(5107,51,131) - Record 26"""
-        self.skippedCardsFile.write('skipping RLOAD1 in DYNAMICS\n')
+        self.binary_debug.write('skipping RLOAD1 in DYNAMICS\n')
         return n
 
     def readRLoad2(self, data, n):
         """RLOAD2(5107,51,131) - Record 27"""
-        self.skippedCardsFile.write('skipping RLOAD2 in DYNAMICS\n')
+        self.binary_debug.write('skipping RLOAD2 in DYNAMICS\n')
         return n
 
 #
@@ -164,17 +164,17 @@ class DYNAMICS(object):
 
     def readTLoad1(self, data, n):
         """TLOAD1(7107,71,138) - Record 37"""
-        self.skippedCardsFile.write('skipping TLOAD1 in DYNAMICS\n')
+        self.binary_debug.write('skipping TLOAD1 in DYNAMICS\n')
         return n
 
     def readTLoad2(self, data, n):
         """TLOAD2(7207,72,139) - Record 37"""
-        self.skippedCardsFile.write('skipping TLOAD2 in DYNAMICS\n')
+        self.binary_debug.write('skipping TLOAD2 in DYNAMICS\n')
         return n
 
     def readTStep(self, data, n):
         """TSTEP(8307,83,142) - Record 38"""
-        self.skippedCardsFile.write('skipping TSTEP in DYNAMICS\n')
+        self.binary_debug.write('skipping TSTEP in DYNAMICS\n')
         return n
 
 #UNBALNC

@@ -452,20 +452,53 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
         keys = unpack('3i', data[n:n+12])
         n += 12
         if len(data) == 12:
-            self.binary_debug.write('  keys=%s -> pass\n' % str(keys))
-            pass
-        elif keys in mapper:
+            #print('*self.istream = %s' % self.istream)
+            #print('self.isubtable = %s' % self.isubtable)
+            self.istream -= 1
+            self.isubtable_old = self.isubtable
+            return n
+
+        #print('is_start_of_subtable=%s' % self.is_start_of_subtable)
+        #print('self.istream = %s' % self.istream)
+        if not hasattr(self, 'isubtable_old'):
+            self.isubtable_old = None
+        elif self.isubtable_old > self.isubtable:
+            self.isubtable_old = None
+
+        #self.binary_debug.write('isubtable=%s isubtable_old=%s\n' % (self.isubtable, self.isubtable_old))
+        ni = self.f.tell() - len(data) + 12
+        #self.binary_debug.write('**:  f.tell()=%s; n=%s:%s\n\n' % (self.f.tell(), ni, self.n))
+
+        if self.istream == 0 and keys in mapper:
             func = mapper[keys]
-            if isinstance(func, list):
-                name, func = func
-                self.binary_debug.write('  found keys=%s -> name=%s\n' % (str(keys), name))
-                print("  found keys=(%5s,%4s,%4s) name=%s" % (keys[0], keys[1], keys[2], name))
-            else:
-                self.binary_debug.write('  found keys=%s -> name=???\n' % str(keys))
-                print("  found keys=(%5s,%4s,%4s)" % (keys[0], keys[1], keys[2]))
-            n = func(data, n)  # gets all the grid/mat cards
+        elif self.isubtable_old == self.isubtable:
+            n = 0
+            keys = self.geom_keys
+            func = mapper[keys]
         else:
             raise NotImplementedError('keys=%s not found' % str(keys))
+
+        if isinstance(func, list):
+            name, func = func
+            self.binary_debug.write('  found keys=%s -> name=%s\n' % (str(keys), name))
+            print("  found keys=(%5s,%4s,%4s) name=%s" % (keys[0], keys[1], keys[2], name))
+        else:
+            self.binary_debug.write('  found keys=%s -> name=???\n' % str(keys))
+            #print("  found keys=(%5s,%4s,%4s)" % (keys[0], keys[1], keys[2]))
+        n = func(data, n)  # gets all the grid/mat cards
+
+        self.geom_keys = keys
+        #print("  geom_keys")
+        self.is_start_of_subtable = False
+        self.isubtable_old = self.isubtable
+        self.write_data(self.binary_debug, data[n:])
+        #self.binary_debug.write('data:  f.tell()=%s; n=:%s\n\n' % (self.f.tell(), self.n))
+
+        #self.show_data(data[n:])
+        #self.show_ndata(100)
+        dn = 120
+        self.write_ndata(self.binary_debug, dn)
+        #self.binary_debug.write('next:  f.tell()=%s; n=%s:%s\n\n' % (self.f.tell(), self.n, self.n+dn))
         #assert n == len(data), 'n=%s len(data)=%s' % (n, len(data))
         #self.show_data(data[n:])
         return n

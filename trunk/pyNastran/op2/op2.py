@@ -476,7 +476,6 @@ class OP2(LAMA, ONR, OGPF,
             raise NotImplementedError(markers)
 
         #table_name = self.read_table_name(rewind=False, stop_on_failure=False)
-        #asdf
         #=================
         table_name = self.read_table_name(rewind=True, stop_on_failure=False)
         if table_name is None:

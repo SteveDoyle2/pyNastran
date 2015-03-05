@@ -181,9 +181,6 @@ class GEOM2(object):
             (16900, 169, 9977): ['', self._readFake],  # record
         }
 
-    def _readFake(self, data, n):
-        raise RuntimeError('this should be overwritten')
-
     def add_element(self, elem, allowOverwrites=True):
         raise RuntimeError('this should be overwritten')
 

@@ -9,8 +9,6 @@ from pyNastran.bdf.cards.loads.staticLoads import (FORCE, FORCE1, FORCE2, GRAV,
 from pyNastran.bdf.cards.thermal.loads import QBDY1, QBDY2, QBDY3, TEMP, TEMPD
 
 class GEOM3(object):
-    def _readFake(self, data, n):
-        raise RuntimeError('this should be overwritten')
     def add_thermal_load(self, load):
         raise RuntimeError('this should be overwritten')
     def add_load(self, load):
@@ -188,14 +186,14 @@ class GEOM3(object):
         return n
 
     def _readLOADCYH(self, data, n):
-        self.skippedCardsFile.write('skipping LOADCYG in GEOM3\n')
+        self.binary_debug.write('skipping LOADCYG in GEOM3\n')
         return n
 
 # LOADCYN
 # LOADCYT
 
     def _readLSEQ(self, data, n):
-        self.skippedCardsFile.write('skipping LSEQ in GEOM3\n')
+        self.binary_debug.write('skipping LSEQ in GEOM3\n')
         return n
 
     def _readMOMENT(self, data, n):
@@ -204,7 +202,7 @@ class GEOM3(object):
         """
         #print("reading MOMENT")
         ntotal = 28
-        s = Struct(b'iiiffff')
+        s = Struct(b'3i4f')
         nEntries = (len(data) - n) // 28  # 7*4
         for i in range(nEntries):
             eData = data[n:n + 28]
@@ -344,7 +342,7 @@ class GEOM3(object):
 
 # PLOADX - obsolete
     def _readPLOADX1(self, data, n):
-        self.skippedCardsFile.write('skipping PLOADX1 in GEOM3\n')
+        self.binary_debug.write('skipping PLOADX1 in GEOM3\n')
         return n
 
 # PRESAX
@@ -448,11 +446,11 @@ class GEOM3(object):
 # QVOL
 
     def _readRFORCE(self, data, n):
-        self.skippedCardsFile.write('skipping RFORCE in GEOM3\n')
+        self.binary_debug.write('skipping RFORCE in GEOM3\n')
         return n
 
     def _readSLOAD(self, data, n):
-        self.skippedCardsFile.write('skipping SLOAD in GEOM3\n')
+        self.binary_debug.write('skipping SLOAD in GEOM3\n')
         return n
 
 # TEMP(5701,57,27) # 32
@@ -462,15 +460,15 @@ class GEOM3(object):
 # TEMP1C
 
     def _readTEMPP1(self, data, n):
-        self.skippedCardsFile.write('skipping TEMPP1 in GEOM3\n')
+        self.binary_debug.write('skipping TEMPP1 in GEOM3\n')
         return n
 
     def _readTEMPP2(self, data, n):
-        self.skippedCardsFile.write('skipping TEMPP2 in GEOM3\n')
+        self.binary_debug.write('skipping TEMPP2 in GEOM3\n')
         return n
 
     def _readTEMPP3(self, data, n):
-        self.skippedCardsFile.write('skipping TEMPP3 in GEOM3\n')
+        self.binary_debug.write('skipping TEMPP3 in GEOM3\n')
         return n
 
     def _readTEMPP4(self, data, n):
@@ -480,7 +478,7 @@ class GEOM3(object):
         return n
 
     def _readTEMPRB(self, data, n):
-        self.skippedCardsFile.write('skipping TEMPRB in GEOM3\n')
+        self.binary_debug.write('skipping TEMPRB in GEOM3\n')
         return n
 
 # PFACE
