@@ -15,8 +15,6 @@ from pyNastran.bdf.bdf import (NSM, PBAR, PBARL, PBEAM,
 class EPT(object):
     def add_property(self, card, allowOverwrites=True):
         raise RuntimeError('this should be overwritten')
-    def _readFake(self, data, n):
-        raise RuntimeError('this should be overwritten')
 
     def _read_ept_4(self, data):
         return self._read_geom_4(self._ept_map, data)

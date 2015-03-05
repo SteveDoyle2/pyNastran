@@ -13,7 +13,7 @@ class GEOM1(object):
     def add_coord(self, coord, allowOverwrites=True):
         raise RuntimeError('this should be overwritten')
     def _readFake(self, data, n):
-        raise RuntimeError('this should be overwritten')
+        return len(data)
 
     def _read_geom1_4(self, data):
         if self.read_mode == 1:
@@ -32,6 +32,8 @@ class GEOM1(object):
             (14301,143,651): ['CORD3G', self._readCord3G],  # record 7
             (4501,  45,  1): ['GRID',   self._readGrid],    # record 17 - slow, but works
             (5301,  53,  4): ['SEQGP',  self._readSEQGP],   # record 27 - not done
+
+            (427, 4, 453): ['', self._readFake],  # record
 
             (1101,  11,  66): ['', self._readFake],  # record
             (2201,  22,  10): ['', self._readFake],  # record
@@ -144,7 +146,7 @@ class GEOM1(object):
             assert two == 2, two
             dataIn = [cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3]
             #print("cid=%s one=%s two=%s rid=%s a1=%s a2=%s a3=%s b1=%s b2=%s b3=%s c1=%s c2=%s c3=%s" %(cid,one,two,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3))
-            self.debug_file.write('CORD2R=%s' % data)
+            self.binary_debug.write('  CORD2R=%s\n' % dataIn)
             coord = CORD2R(None, dataIn)
             self.add_coord(coord, allowOverwrites=True)
             n += 52

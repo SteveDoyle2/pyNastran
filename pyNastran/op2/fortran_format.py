@@ -1,5 +1,6 @@
 from __future__ import print_function
 from six.moves import range
+import sys
 from struct import unpack
 import copy
 
@@ -32,6 +33,9 @@ class FortranFormat(object):
         return strings, ints, floats
 
     def show_data(self, data, types='ifs'):
+        return self.write_data(sys.stdout, data, types)
+
+    def write_data(self, f, data, types='ifs'):
         """
         Useful function for seeing what's going on locally when debugging.
 
@@ -43,13 +47,27 @@ class FortranFormat(object):
         ints    = unpack(b'%ii' % nints, data)
         floats  = unpack(b'%if' % nints, data)
         if 's' in types:
-            print("strings =", strings)
+            f.write("strings = %s\n" % str(strings))
         if 'i' in types:
-            print("ints    =", ints)
+            f.write("ints    = %s\n" % str(ints))
         if 'f' in types:
-            print("floats  =", floats)
-        print('')
+            f.write("floats  = %s\n" % str(floats))
         return strings, ints, floats
+
+    def show_ndata(self, n, types='ifs'):
+        return self.write_ndata(sys.stdout, n, types=types)
+
+    def write_ndata(self, f, n, types='ifs'):
+        """
+        Useful function for seeing what's going on locally when debugging.
+
+        :param self:    the OP2 object pointer
+        """
+        nold = self.n
+        data = self.f.read(n)
+        self.n = nold
+        self.f.seek(self.n)
+        return self.write_data(f, data, types=types)
 
     def skip_block(self):
         """
@@ -163,6 +181,7 @@ class FortranFormat(object):
         nstart = self.n
         self.isubtable = -3
         self.read_markers([-3, 1, 0])
+        self.binary_debug.write('***isubtable = %i\n' % self.isubtable)
         self.binary_debug.write('---markers = [-3, 1, 0]---\n')
         table_mapper = self._get_table_mapper()
 
@@ -197,6 +216,8 @@ class FortranFormat(object):
 
         # while the subtables aren't done
         while markers[0] != 0:
+            self.is_start_of_subtable = True
+            self.binary_debug.write('***isubtable = %i\n' % self.isubtable)
             self._read_subtable_3_4(table3_parser, table4_parser, passer)
             self.isubtable -= 1
             self.read_markers([self.isubtable, 1, 0])
@@ -239,6 +260,7 @@ class FortranFormat(object):
         # 2 - 2nd pass to read the data  (vectorized)
         """
         datai = b''
+        n = 0
         if self.read_mode in [0, 2]:
             self.ntotal = 0
 
@@ -409,6 +431,7 @@ class FortranFormat(object):
 
         :param self:    the OP2 object pointer
         """
+        self.istream = 0
         markers0 = self.get_nmarkers(1, rewind=False)
         if self.debug and debug:
             self.binary_debug.write('_stream_record - marker = [4, %i, 4]\n' % markers0[0])
@@ -418,6 +441,7 @@ class FortranFormat(object):
             self.binary_debug.write('_stream_record - record = [%i, recordi, %i]\n' % (nrecord, nrecord))
         assert (markers0[0]*4) == len(record), 'markers0=%s*4 len(record)=%s' % (markers0[0]*4, len(record))
         yield record
+        self.istream += 1
 
         markers1 = self.get_nmarkers(1, rewind=True)
         if self.debug and debug:
@@ -432,6 +456,7 @@ class FortranFormat(object):
                     self.binary_debug.write('_stream_record - markers1 = [4, %s, 4]\n' % str(markers1))
                 record = self.read_block()
                 yield record
+                self.istream += 1
 
                 markers1 = self.get_nmarkers(1, rewind=True)
                 nloop += 1

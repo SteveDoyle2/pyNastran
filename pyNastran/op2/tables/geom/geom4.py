@@ -14,8 +14,6 @@ class GEOM4(object):
         raise RuntimeError('this should be overwritten')
     def add_suport(self, constraint):
         raise RuntimeError('this should be overwritten')
-    def _readFake(self, data, n):
-        raise RuntimeError('this should be overwritten')
 
     def _read_geom4_4(self, data):
         if self.read_mode == 1:
