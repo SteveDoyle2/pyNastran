@@ -1192,13 +1192,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     self.rejects.append([comment])
                 self.rejects.append(lines)
 
-    def _increase_card_count(self, card_name):
+    def _increase_card_count(self, card_name, n=1):
         """
         Used for testing to check that the number of cards going in is the
         same as each time the model is read verifies proper writing of cards
 
         :param self:      the BDF object
         :param card_name: the card_name -> 'GRID'
+        :param n:         the amount to increment by (default=1)
 
         >>> bdf.read_bdf(bdf_filename)
         >>> bdf.card_count['GRID']
@@ -1208,9 +1209,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             return
 
         if card_name in self.card_count:
-            self.card_count[card_name] += 1
+            self.card_count[card_name] += n
         else:
-            self.card_count[card_name] = 1
+            self.card_count[card_name] = n
 
     def _get_line(self):
         """
