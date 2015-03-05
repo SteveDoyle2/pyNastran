@@ -38,6 +38,7 @@ class EPT(object):
             (5402,  54, 262): ['PBEAM',   self._readPBEAM],   # record 14 - not done
             (9202,  92,  53): ['PBEAML',  self._readPBEAML],  # record 15 - not done
             (2502,  25, 248): ['PBEND',   self._readPBEND],   # record 16 - not done
+            (1402,  14,  37): ['PBUSH', self._readPBUSH],    # record 19 - not done
             (3101,  31, 219): ['PBUSH1D', self._readPBUSH1D], # record 20 - not done
             (152,   19, 147): ['PCONEAX', self._readPCONEAX], # record 24 - not done
             (11001,110, 411): ['PCONV',   self._readPCONV],   # record 25 - not done
@@ -48,7 +49,6 @@ class EPT(object):
             (1802,  18,  31): ['PVISC',   self._readPVISC],   # record 59
             (10201,102, 400): ['PVAL',   self._readPVAL],     # record 58 - not done
             (2606,  26, 289): ['VIEW',   self._readVIEW],     # record 62 - not done
-            (1402,   14,  37): ['', self._readFake],    # record
             (2706,   27, 287): ['', self._readFake],    # record
             (702,     7,  38): ['', self._readFake],    # record
             (10301, 103, 399): ['', self._readFake],
@@ -127,6 +127,7 @@ class EPT(object):
     def _readPBARL(self, data, n):
         """
         PBARL(9102,91,52) - the marker for Record 12
+        TODO: buggy
         """
         validTypes = {
             "ROD": 1,
@@ -149,32 +150,45 @@ class EPT(object):
             "HAT": 4,
             "HAT1": 5,
             "DBOX": 10,  # was 12
+            #'MLO TUBE' : 2,
         }  # for GROUP="MSCBML0"
 
         ntotal = 28  # 7*4 - ROD - shortest entry...could be buggy... # TODO fix this
         s = Struct(b'2i8s8sf')
-        nentries = (len(data) - n) // ntotal
-        for i in range(nentries):
+        #nentries = (len(data) - n) // ntotal
+        #print(self.show_ndata(80))
+        ndata = len(data)
+        while ndata - n > ntotal:
             eData = data[n:n+28]
+            n += 28
+
             out = s.unpack(eData)
             (pid, mid, group, Type, value) = out
             Type = Type.strip()
             dataIn = [pid, mid, group, Type, value]
-            #print("pid=%s mid=%s group=|%s| Type=|%s| value=%s" %(pid,mid,group,Type,value))
+            print("pid=%s mid=%s group=%r Type=%r value=%s" %(pid, mid, group, Type, value))
+            if pid > 100000000:
+                raise RuntimeError('bad parsing...')
             expectedLength = validTypes[Type]
             iFormat = b'%if' % expectedLength
-            dataIn += list(unpack(iFormat, data[:expectedLength * 4]))
 
+            ndelta = expectedLength * 4
+            dataIn += list(unpack(iFormat, data[n:n+ndelta]))
             # TODO why do i need the +4???
-            data = data[expectedLength * 4 + 4:]
+            #min_len =  expectedLength * 4 + 4
+            #if len(data)
+            #data = data[n + expectedLength * 4 + 4:]
+            n += ndelta
 
             #prin( "len(out) = ",len(out)))
-            #print("PBARL = ",dataIn)
-            prop = PBARL(None, dataIn)
+            #print("PBARL = %s" % dataIn)
+            prop = PBARL(None, dataIn)  # last value is nsm
             self.addOp2Property(prop)
-            #print(self.print_section(20))
-        self.card_count['PBARL'] = nentries
-        return n
+            #print(self.show_data(data[n-8:-100]))
+            break
+        self._increase_card_count('PBARL')
+        #assert len(data) == n
+        return len(data)
 
 # PBCOMP
 
@@ -193,8 +207,6 @@ class EPT(object):
             n += 20
             dataIn = list(s1.unpack(eData))
             self.binary_debug.write('  PBEAM=%s\n' % str(dataIn))
-            #print("len(out) = ",len(out))
-            #print(out)
             (pid, mid, nsegs, ccf, x) = dataIn
 
             for i in range(12):
@@ -205,7 +217,6 @@ class EPT(object):
                     d1, d2, e1, e2, f1, f2) = pack
                 dataIn.append(pack)
                 self.binary_debug.write('     %s\n' % str(pack))
-
             eData = data[n:n+44]
 
             dataIn = list(s3.unpack(eData))
@@ -218,27 +229,27 @@ class EPT(object):
         return n
 
     def _readPBEAML(self, data, n):
-        self.skippedCardsFile.write('skipping PBEAML in EPT\n')
-        return n
+        self.binary_debug.write('skipping PBEAML in EPT\n')
+        return len(data)
 
     def _readPBEND(self, data, n):
-        self.skippedCardsFile.write('skipping PBEND in EPT\n')
-        return n
+        self.binary_debug.write('skipping PBEND in EPT\n')
+        return len(data)
 
 # PBMSECT
 # PBRSECT
 
     def _readPBUSH(self, data, n):
-        self.skippedCardsFile.write('skipping PBUSH in EPT\n')
-        return n
+        self.binary_debug.write('skipping PBUSH in EPT\n')
+        return len(data)
 
     def _readPBUSH1D(self, data, n):
-        self.skippedCardsFile.write('skipping PBUSH1D in EPT\n')
-        return n
+        self.binary_debug.write('skipping PBUSH1D in EPT\n')
+        return len(data)
 
     def _readPBUSHT(self, data, n):
-        self.skippedCardsFile.write('skipping PBUSHT in EPT\n')
-        return n
+        self.binary_debug.write('skipping PBUSHT in EPT\n')
+        return len(data)
 
     def _readPCOMP(self, data, n):
         """
@@ -288,14 +299,17 @@ class EPT(object):
 
 # PCOMPA
     def _readPCONEAX(self, data, n):  # 24
-        self.skippedCardsFile.write('skipping PCONEAX\n')
+        self.binary_debug.write('skipping PCONEAX\n')
+        return len(data)
     def _readPCONV(self, data, n):  # 25
-        self.skippedCardsFile.write('skipping PCONV\n')
+        self.binary_debug.write('skipping PCONV\n')
+        return len(data)
     def _readPCONVM(self, data, n):  # 26
-        self.skippedCardsFile.write('skipping PCONVM\n')
+        self.binary_debug.write('skipping PCONVM\n')
+        return len(data)
     def _readPDAMP(self, data, n):
-        self.skippedCardsFile.write('skipping PDAMP\n')
-        return n
+        self.binary_debug.write('skipping PDAMP\n')
+        return len(data)
 
 # PDAMPT
 # PDAMP5
@@ -344,15 +358,15 @@ class EPT(object):
         return n
 
     def _readPHBDY(self, data, n):
-        return n
+        return len(data)
     def _readPINTC(self, data, n):
-        return n
+        return len(data)
     def _readPINTS(self, data, n):
-        return n
+        return len(data)
     def _readPLPLANE(self, data, n):
-        return n
+        return len(data)
     def _readPLSOLID(self, data, n):
-        return n
+        return len(data)
 
     def _readPMASS(self, data, n):
         """
@@ -375,7 +389,6 @@ class EPT(object):
         """
         PROD(902,9,29) - the marker for Record 49
         """
-        print('  nstart=%i' % n)
         ntotal = 24  # 6*4
         s = Struct(b'2i4f')
         nproperties = (len(data) - n) // ntotal
@@ -388,7 +401,6 @@ class EPT(object):
             self.addOp2Property(prop)
             n += ntotal
         self.card_count['PROD'] = nproperties
-        print('  nend=%i' % n)
         return n
 
     def _readPSHEAR(self, data, n):
@@ -475,9 +487,9 @@ class EPT(object):
         self.card_count['PTUBE'] = nproperties
 
     def _readPSET(self, data, n):
-        return n
+        return len(data)
     def _readPVAL(self, data, n):
-        return n
+        return len(data)
 
     def _readPVISC(self, data, n):
         """PVISC(1802,18,31) - the marker for Record 39"""
@@ -497,6 +509,6 @@ class EPT(object):
 # PWELD
 # PWSEAM
     def _readVIEW(self, data, n):
-        return n
+        return len(data)
     def _readVIEW3D(self, data, n):
-        return n
+        return len(data)

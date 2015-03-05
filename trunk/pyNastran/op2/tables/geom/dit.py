@@ -23,9 +23,9 @@ class DIT(object):
             (305, 3, 95): self.readTableM3,  # record 11
             #(405,4,96): self.readTableM4, # record 12
 
-            (15, 21, 162): self.readFake,
-            (56, 26, 303): self.readFake,
-            (3105, 31, 97): self.readFake,  # record 13 - TABLES1
+            (15, 21, 162): self._readFake,
+            (56, 26, 303): self._readFake,
+            (3105, 31, 97): self._readFake,  # record 13 - TABLES1
         }
 
     def readGust(self, data, n):

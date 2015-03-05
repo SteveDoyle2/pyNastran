@@ -481,8 +481,8 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
             raise NotImplementedError('keys=%s not found - %s' % (str(keys), self.table_name))
 
         name, func = mapper[keys]
-        self.binary_debug.write('  found keys=%s -> name=%s - %s\n' % (str(keys), name, self.table_name))
-        print("  found keys=(%5s,%4s,%4s) name=%s - %s" % (keys[0], keys[1], keys[2], name, self.table_name))
+        self.binary_debug.write('  found keys=%s -> name=%-6s - %s\n' % (str(keys), name, self.table_name))
+        print("  found keys=(%5s,%4s,%4s) name=%-6s - %s" % (keys[0], keys[1], keys[2], name, self.table_name))
 
         n = func(data, n)  # gets all the grid/mat cards
         assert n != None, name
@@ -490,16 +490,8 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
         self.geom_keys = keys
         self.is_start_of_subtable = False
         self.isubtable_old = self.isubtable
-        #self.write_data(self.binary_debug, data[n:])
-        #self.binary_debug.write('data:  f.tell()=%s; n=:%s\n\n' % (self.f.tell(), self.n))
 
-        #self.show_data(data[n:])
-        #self.show_ndata(100)
-        #dn = 120
-        #self.write_ndata(self.binary_debug, dn)
-        #self.binary_debug.write('next:  f.tell()=%s; n=%s:%s\n\n' % (self.f.tell(), self.n, self.n+dn))
         #assert n == len(data), 'n=%s len(data)=%s' % (n, len(data))
-        #self.show_data(data[n:])
         return n
 
     def _read_table(self, data, result_name, storage_obj,
