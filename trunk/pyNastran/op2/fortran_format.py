@@ -332,14 +332,11 @@ class FortranFormat(object):
                 #n = self.n
                 n = 0
                 for i, data in enumerate(self._stream_record()):
-                    #if i == 0:
-                        data = datai + data
-                        ndata = len(data)
-                        n = table4_parser(data)
-                        assert isinstance(n, int), self.table_name
-                        datai = data[n:]
-                        #if self.obj is not None:
-                            #print("len(datai) =", len(datai), ndata / (self.num_wide * 4.))
+                    data = datai + data
+                    ndata = len(data)
+                    n = table4_parser(data)
+                    assert isinstance(n, int), self.table_name
+                    datai = data[n:]
                 assert len(datai) == 0, len(datai)
                 #n = record_len
                 #break

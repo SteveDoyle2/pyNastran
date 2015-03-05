@@ -7,7 +7,7 @@ from traceback import print_exc
 import pyNastran
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.op2 import OP2
-from pyNastran.op2.op2_geom import OP2Geom
+from pyNastran.op2.op2_geom import OP2Geom, OP2Geom_Vectorized
 from pyNastran.op2.op2_vectorized import OP2_Vectorized as OP2V
 
 # we need to check the memory usage
@@ -188,7 +188,10 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
             debug_file = 'debug.out'
 
         if is_vector:
-            op2 = OP2V(make_geom=make_geom, debug=debug, debug_file=debug_file)
+            if make_geom:
+                op2 = OP2Geom_Vectorized(debug=debug, debug_file=debug_file)
+            else:
+                op2 = OP2V(make_geom=make_geom, debug=debug, debug_file=debug_file)
         else:
             if make_geom:
                 op2 = OP2Geom(make_geom=make_geom, debug=debug, debug_file=debug_file)

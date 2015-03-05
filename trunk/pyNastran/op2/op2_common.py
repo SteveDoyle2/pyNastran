@@ -478,11 +478,11 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
             n = 0
             keys = self.geom_keys
         else:
-            raise NotImplementedError('keys=%s not found' % str(keys))
+            raise NotImplementedError('keys=%s not found - %s' % (str(keys), self.table_name))
 
         name, func = mapper[keys]
-        self.binary_debug.write('  found keys=%s -> name=%s\n' % (str(keys), name))
-        print("  found keys=(%5s,%4s,%4s) name=%s" % (keys[0], keys[1], keys[2], name))
+        self.binary_debug.write('  found keys=%s -> name=%s - %s\n' % (str(keys), name, self.table_name))
+        print("  found keys=(%5s,%4s,%4s) name=%s - %s" % (keys[0], keys[1], keys[2], name, self.table_name))
 
         n = func(data, n)  # gets all the grid/mat cards
         assert n != None, name

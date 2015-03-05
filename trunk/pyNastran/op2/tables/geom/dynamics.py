@@ -58,79 +58,79 @@ class DYNAMICS(object):
     def readDelay(self, data, n):
         """DELAY(37,18,183) - Record 3"""
         self.binary_debug.write('skipping DELAY in DYNAMICS\n')
-        return n
+        return len(data)
 
     def readDLoad(self, data, n):
         """DLOAD(57,5,123) - Record 4"""
         self.binary_debug.write('skipping DLOAD in DYNAMICS\n')
-        return n
+        return len(data)
 
     def readDPhase(self, data, n):
         """DPHASE(77,19,184) - Record 5"""
         self.binary_debug.write('skipping DPHASE in DYNAMICS\n')
-        return n
+        return len(data)
 
 #DYNRED(4807,48,306)
 
     def readEigb(self, data, n):
         """EIGB(107,1,86) - Record 7"""
         self.binary_debug.write('skipping EIGB in DYNAMICS\n')
-        return n
+        return len(data)
 
     def readEigc(self, data, n):
         """EIGC(207,2,87) - Record 8"""
         self.binary_debug.write('skipping EIGC in DYNAMICS\n')
-        return n
+        return len(data)
 
     def readEigp(self, data, n):
         """EIGP(257,4,158) - Record 9"""
         self.binary_debug.write('skipping EIGP in DYNAMICS\n')
-        return n
+        return len(data)
 
     def readEigr(self, data, n):
         """EIGR(307,3,85) - Record 10"""
         self.binary_debug.write('skipping EIGR in DYNAMICS\n')
-        return n
+        return len(data)
 
     def readEigrl(self, data, n):
         """EIGRL(308,8,348) - Record 11"""
         self.binary_debug.write('skipping EIGRL in DYNAMICS\n')
-        return n
+        return len(data)
 
     def readEPoint(self, data, n):
         """EPOINT(707,7,124) - Record 12"""
         self.binary_debug.write('skipping EPOINT in DYNAMICS\n')
-        return n
+        return len(data)
 
     def readFreq(self, data, n):
         """FREQ(1307,13,126) - Record 13"""
         self.binary_debug.write('skipping FREQ in DYNAMICS\n')
-        return n
+        return len(data)
 
     def readFreq1(self, data, n):
         """FREQ1(1007,10,125) - Record 14"""
         self.binary_debug.write('skipping FREQ1 in DYNAMICS\n')
-        return n
+        return len(data)
 
     def readFreq2(self, data, n):
         """FREQ2(1107,11,166) - Record 15"""
         self.binary_debug.write('skipping FREQ2 in DYNAMICS\n')
-        return n
+        return len(data)
 
     def readFreq3(self, data, n):
         """FREQ3(1407,14,39) - Record 16"""
         self.binary_debug.write('skipping FREQ3 in DYNAMICS\n')
-        return n
+        return len(data)
 
     def readFreq4(self, data, n):
         """FREQ4(1507,15,40) - Record 17"""
         self.binary_debug.write('skipping FREQ4 in DYNAMICS\n')
-        return n
+        return len(data)
 
     def readFreq5(self, data, n):
         """FREQ5(1607,16,41) - Record 18"""
         self.binary_debug.write('skipping FREQ5 in DYNAMICS\n')
-        return n
+        return len(data)
 
 #NLRSFD
 #NOLIN1
@@ -143,12 +143,12 @@ class DYNAMICS(object):
     def readRLoad1(self, data, n):
         """RLOAD1(5107,51,131) - Record 26"""
         self.binary_debug.write('skipping RLOAD1 in DYNAMICS\n')
-        return n
+        return len(data)
 
     def readRLoad2(self, data, n):
         """RLOAD2(5107,51,131) - Record 27"""
         self.binary_debug.write('skipping RLOAD2 in DYNAMICS\n')
-        return n
+        return len(data)
 
 #
 #RLOAD2(5207,52,132)
@@ -165,16 +165,16 @@ class DYNAMICS(object):
     def readTLoad1(self, data, n):
         """TLOAD1(7107,71,138) - Record 37"""
         self.binary_debug.write('skipping TLOAD1 in DYNAMICS\n')
-        return n
+        return len(data)
 
     def readTLoad2(self, data, n):
         """TLOAD2(7207,72,139) - Record 37"""
         self.binary_debug.write('skipping TLOAD2 in DYNAMICS\n')
-        return n
+        return len(data)
 
     def readTStep(self, data, n):
         """TSTEP(8307,83,142) - Record 38"""
         self.binary_debug.write('skipping TSTEP in DYNAMICS\n')
-        return n
+        return len(data)
 
 #UNBALNC

@@ -11,11 +11,11 @@ from pyNastran.op2.tables.geom.dynamics import DYNAMICS
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
+from pyNastran.op2.op2_vectorized import OP2_Vectorized
 
 class OP2Geom(BDF,
               GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, DIT, DYNAMICS,
               OP2):
-
     def __init__(self, make_geom=True,
                  debug=False, log=None, debug_file=None):
         """
@@ -325,3 +325,19 @@ class OP2Geom(BDF,
             'AAA': [self._table_passer, self._table_passer],
         }
         return table_mapper
+
+class OP2Geom_Vectorized(OP2Geom, OP2_Vectorized):
+    def __init__(self, debug=False, log=None, debug_file=None):
+        """
+        Initializes the OP2 object
+
+        :param make_geom: reads the BDF tables (default=False)
+        :param debug: enables the debug log and sets the debug in the logger (default=False)
+        :param log: a logging object to write debug messages to
+         (.. seealso:: import logging)
+        :param debug_file: sets the filename that will be written to (default=None -> no debug)
+        """
+        # make_geom=False, debug=True, log=None, debug_file=None
+        OP2_Vectorized.__init__(self, debug=debug, log=log, debug_file=debug_file)
+        OP2Geom.__init__(self, debug=debug, log=log, debug_file=debug_file)
+        self.make_geom = True
