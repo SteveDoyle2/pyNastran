@@ -140,6 +140,7 @@ class MPT(object):
             self.addOp2Material(mat)
             n += 64
         self.card_count['MAT3'] = nmaterials
+        return n
 
     def _readMAT4(self, data, n):
         """
@@ -154,6 +155,7 @@ class MPT(object):
             self.add_thermal_material(MAT4(None, out), allowOverwrites=True)
             n += 44
         self.card_count['MAT4'] = nmaterials
+        return n
 
     def _readMAT5(self, data, n):
         """
@@ -168,6 +170,7 @@ class MPT(object):
             self.add_thermal_material(MAT5(None, out), allowOverwrites=True)
             n += 40
         self.card_count['MAT5'] = nmaterials
+        return n
 
     def _readMAT8(self, data, n):
         """
@@ -183,6 +186,7 @@ class MPT(object):
             self.addOp2Material(MAT8(None, out))
             n += 76
         self.card_count['MAT8'] = nmaterials
+        return n
 
     def _readMAT9(self, data, n):
         """
@@ -203,6 +207,7 @@ class MPT(object):
             self.addOp2Material(MAT9(None, dataIn))
             n += 140
         self.card_count['MAT9'] = nmaterials
+        return n
 
     def _readMAT10(self, data, n):
         """
@@ -218,6 +223,7 @@ class MPT(object):
             (mid, bulk, rho, c, ge) = out
             self.addOp2Material(MAT10(None, out))
         self.card_count['MAT10'] = nmaterials
+        return n
 
 # MAT11 - unused
 
@@ -249,6 +255,7 @@ class MPT(object):
             self.addOp2Material(MATHP(None, dataIn))
             nmaterials += 1
         self.card_count['MATHP'] = nmaterials
+        return n
 
     def _readMATS1(self, data, n):
         """
@@ -268,29 +275,29 @@ class MPT(object):
         return n
 
     def _readMATT1(self, data, n):
-        self.skippedCardsFile.write('skipping MATT1 in MPT\n')
-        return n
+        self.binary_debug.write('skipping MATT1 in MPT\n')
+        return len(data)
 
     def _readMATT2(self, data, n):
-        self.skippedCardsFile.write('skipping MATT2 in MPT\n')
-        return n
+        self.binary_debug.write('skipping MATT2 in MPT\n')
+        return len(data)
 
     def _readMATT3(self, data, n):
-        self.skippedCardsFile.write('skipping MATT3 in MPT\n')
-        return n
+        self.binary_debug.write('skipping MATT3 in MPT\n')
+        return len(data)
 
     def _readMATT4(self, data, n):
-        self.skippedCardsFile.write('skipping MATT4 in MPT\n')
-        return n
+        self.binary_debug.write('skipping MATT4 in MPT\n')
+        return len(data)
 
     def _readMATT5(self, data, n):
-        self.skippedCardsFile.write('skipping MATT5 in MPT\n')
-        return n
+        self.binary_debug.write('skipping MATT5 in MPT\n')
+        return len(data)
 
 # MATT8 - unused
     def _readMATT9(self, data, n):
-        self.skippedCardsFile.write('skipping MATT9 in MPT\n')
-        return n
+        self.binary_debug.write('skipping MATT9 in MPT\n')
+        return len(data)
 
 # MBOLT
 # MBOLTUS
@@ -328,6 +335,7 @@ class MPT(object):
 
             #mat = RADM(None, packs)
             #self.addOp2Material(mat)
+            return n
 
 # RADMT
 
@@ -350,14 +358,14 @@ class MPT(object):
         return n
 
     def _readNLPCI(self, data, n):
-        self.skippedCardsFile.write('skipping NLPCI in MPT\n')
-        return n
+        self.binary_debug.write('skipping NLPCI in MPT\n')
+        return len(data)
 
     def _readTSTEPNL(self, data, n):
         """
         TSTEPNL(3103,31,337) - record 29
         """
-        #print "reading TSTEPNL"
+        #print("reading TSTEPNL")
         ntotal = 88  # 19*4
         s = Struct(b'iif5i3f3if3i4f')
         nentries = (len(data) - n) // ntotal

@@ -18,7 +18,6 @@ class GEOM1(object):
     def _read_geom1_4(self, data):
         if self.read_mode == 1:
             return len(data)
-        print('geom1...')
         return self._read_geom_4(self._geom1_map, data)
 
     def __init__(self):
@@ -214,4 +213,4 @@ class GEOM1(object):
     def _readSEQGP(self, data, n):
         """(5301,53,4) - the marker for Record 27"""
         self.log.debug('skipping SEQGP in GEOM1\n')
-        return n
+        return len(data)
