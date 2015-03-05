@@ -41,7 +41,7 @@ class DIT(object):
             gust = GUST(None, out)
             self.add_GUST(gust)
             n += 20
-        data = data[n:]
+        return n
 
 #TABDMP1
 #TABLE3D
@@ -54,13 +54,16 @@ class DIT(object):
         return
         #print("reading TABLED1")
         func = TABLED1
-        self.readTable1(func, data, n)
+        n = self.readTable1(func, data, n)
+        return n
 
     def readTable1(self, func, data, n):
         #nEntries = len(data)//40 # 10*4
-        while len(data) >= 40:
+        n = 0
+        ndata = len(data)
+        while ndata - n >= 40:
             eData = data[n:n + 40]
-            out = unpack('iiiiiiiiff', eData)
+            out = unpack('8iff', eData)
             (sid, codeX, codeY, a, a, a, a, a, x, y) = out
             dataIn = [sid, codeX, codeY]
             n += 40
@@ -77,7 +80,7 @@ class DIT(object):
             dataIn += [x, y]
             table = func(None, out)
             self.add_table(table)
-        data = data[n:]
+        return n
 
     def readTableD2(self, data, n):
         """
@@ -85,10 +88,10 @@ class DIT(object):
         """
         #print("reading TABLED2")
         func = TABLED2
-        self.readTable2(func, data)
+        n = self.readTable2(func, data)
+        return n
 
     def readTable2(self, func, data):
-
         while len(data) >= 40:
             eData = data[n:n + 40]
             out = unpack('ifiiiiiiff', eData)
@@ -107,7 +110,7 @@ class DIT(object):
             dataIn += [x, y]
             table = func(None, out)
             self.add_table(table)
-        data = data[n:]
+        return len(data)
 
     def readTableD3(self, data, n):
         """
@@ -115,10 +118,13 @@ class DIT(object):
         """
         #print("reading TABLED3")
         func = TABLED3
-        self.readTable3(func, data)
+        n = self.readTable3(func, data)
+        return n
 
     def readTable3(self, func, data):
-        while len(data) >= 40:
+        n = 0
+        ndata = len(data)
+        while ndata - n >= 40:
             eData = data[n:n + 40]
             out = unpack('iffiiiiiff', eData)
             (sid, x1, x2, a, a, a, a, a, x, y) = out
@@ -136,7 +142,7 @@ class DIT(object):
             dataIn += [x, y]
             table = func(None, out)
             self.add_table(table)
-        data = data[n:]
+        return len(data)
 
 #TABLEDR
 
@@ -148,7 +154,8 @@ class DIT(object):
         return
         #print("reading TABLED1")
         func = TABLEM1
-        self.readTable1(func, data)
+        n = self.readTable1(func, data)
+        return n
 
     def readTableM2(self, data, n):
         """
@@ -156,7 +163,8 @@ class DIT(object):
         """
         #print("reading TABLEM2")
         func = TABLEM2
-        self.readTable2(func, data)
+        n = self.readTable2(func, data)
+        return n
 
     def readTableM3(self, data, n):
         """
@@ -164,7 +172,8 @@ class DIT(object):
         """
         #print("reading TABLED3")
         func = TABLEM3
-        self.readTable3(func, data)
+        n = self.readTable3(func, data)
+        return n
 
     def readTableM4(self, data, n):
         """
@@ -172,7 +181,8 @@ class DIT(object):
         """
         #print("reading TABLED3")
         func = TABLEM4
-        self.readTable4(func, data)
+        n = self.readTable4(func, data)
+        return n
 
 #TABLES1
 #TABLEST
