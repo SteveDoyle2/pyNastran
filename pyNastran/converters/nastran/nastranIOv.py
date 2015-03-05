@@ -38,6 +38,7 @@ from pyNastran.bdf.bdf import (BDF, CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
                                ShellElement, LineElement, SpringElement,
                                LOAD)
 from pyNastran.op2.op2_vectorized import OP2_Vectorized
+from pyNastran.op2.op2_geom import OP2Geom
 from pyNastran.f06.f06 import F06
 
 
@@ -142,8 +143,13 @@ class NastranIO(object):
                        #debug=True, log=self.log)
             #model.read_op2(op2_filename)
             #model.cross_reference(xref=True, xref_loads=False, xref_constraints=False)
-        if 0:
-            pass
+        if ext == '.op2':
+            model = OP2Geom(make_geom=True, debug=False, log=self.log,
+                           debug_file=None)
+            model._clear_results()
+            model.read_op2(op2_filename=bdf_filename)
+            model.cross_reference(xref=True, xref_loads=False,
+                                  xref_constraints=False)
         else:  # read the bdf/punch
             model = BDF(log=self.log, debug=True)
             self.modelType = model.modelType
@@ -672,6 +678,10 @@ class NastranIO(object):
 
         cases = {}
         #pids = array(pids, 'int32')
+        #print('eid_map')
+        #for key, value in sorted(iteritems(self.eidMap)):
+            #print('  %s %s' % (key, value))
+
         if 0:
             if not len(pids) == len(self.eidMap):
                 msg = 'ERROR:  len(pids)=%s len(eidMap)=%s\n' % (len(pids), len(self.eidMap))
