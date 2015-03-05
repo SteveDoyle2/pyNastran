@@ -469,35 +469,33 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
         ni = self.f.tell() - len(data) + 12
         #self.binary_debug.write('**:  f.tell()=%s; n=%s:%s\n\n' % (self.f.tell(), ni, self.n))
 
+        # we're only going to use the keys if istream=0 (so the beginning of the record)
         if self.istream == 0 and keys in mapper:
-            func = mapper[keys]
+            pass
         elif self.isubtable_old == self.isubtable:
+            # we didn't increment the record, so we fix the n+=12 statement we called before
+            # then we toss the keys and use the old geom_keys
             n = 0
             keys = self.geom_keys
-            func = mapper[keys]
         else:
             raise NotImplementedError('keys=%s not found' % str(keys))
 
-        if isinstance(func, list):
-            name, func = func
-            self.binary_debug.write('  found keys=%s -> name=%s\n' % (str(keys), name))
-            print("  found keys=(%5s,%4s,%4s) name=%s" % (keys[0], keys[1], keys[2], name))
-        else:
-            self.binary_debug.write('  found keys=%s -> name=???\n' % str(keys))
-            #print("  found keys=(%5s,%4s,%4s)" % (keys[0], keys[1], keys[2]))
+        name, func = mapper[keys]
+        self.binary_debug.write('  found keys=%s -> name=%s\n' % (str(keys), name))
+        print("  found keys=(%5s,%4s,%4s) name=%s" % (keys[0], keys[1], keys[2], name))
+
         n = func(data, n)  # gets all the grid/mat cards
 
         self.geom_keys = keys
-        #print("  geom_keys")
         self.is_start_of_subtable = False
         self.isubtable_old = self.isubtable
-        self.write_data(self.binary_debug, data[n:])
+        #self.write_data(self.binary_debug, data[n:])
         #self.binary_debug.write('data:  f.tell()=%s; n=:%s\n\n' % (self.f.tell(), self.n))
 
         #self.show_data(data[n:])
         #self.show_ndata(100)
-        dn = 120
-        self.write_ndata(self.binary_debug, dn)
+        #dn = 120
+        #self.write_ndata(self.binary_debug, dn)
         #self.binary_debug.write('next:  f.tell()=%s; n=%s:%s\n\n' % (self.f.tell(), self.n, self.n+dn))
         #assert n == len(data), 'n=%s len(data)=%s' % (n, len(data))
         #self.show_data(data[n:])
