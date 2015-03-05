@@ -33,8 +33,9 @@ class GEOM2(object):
             (2408,   24,  180): ['CBAR', self._readCBAR],       # record 8
             (4001,   40,  275): ['CBARAO', self._readCBARAO],   # record 9  - not done
             (5408,   54,  261): ['CBEAM', self._readCBEAM],     # record 10
-            (11401, 114, 9016): ['CBEAMP', self._readCBEAMP],# record 11 - not done
+            (11401, 114, 9016): ['CBEAMP', self._readCBEAMP],   # record 11 - not done
             (4601,   46,  298): ['CBEND', self._readCBEND],     # record 12 - not done
+            (2608,  26,   60): ['CBUSH', self._readCBUSH],      # record 13 - not done
             (5608,   56,  218): ['CBUSH1D', self._readCBUSH1D], # record 14 - not done
             (2315,   23,  146): ['CCONE', self._readCCONE],     # record 15 - not done
             (201,     2,   69): ['CDAMP1', self._readCDAMP1],      # record 16
@@ -129,7 +130,6 @@ class GEOM2(object):
             # record 117
             (5551,  49,  105): ['SPOINT', self._readSPOINT],   # record 118
             (11601,116, 9942): ['VUBEAM', self._readVUBEAM],  # record 119 - not done
-            (2608,  26,   60): ['', self._readFake],
             (2108, 21, 224): ['', self._readFake],
             (3101, 31, 61): ['', self._readFake],
             (4301, 43, 28): ['', self._readFake],
@@ -234,7 +234,7 @@ class GEOM2(object):
         """
         CBARAO(4001,40,275) - the marker for Record 9
         """
-        self.skippedCardsFile.write('skipping CBARAO in GEOM2\n')
+        self.binary_debug.write('skipping CBARAO in GEOM2\n')
         return n
 
     def _readCBEAM(self, data, n):
@@ -275,35 +275,35 @@ class GEOM2(object):
         """
         CBEAMP(11401,114,9016) - the marker for Record 11
         """
-        self.skippedCardsFile.write('skipping CBEAMP in GEOM2\n')
+        self.binary_debug.write('skipping CBEAMP in GEOM2\n')
         return n
 
     def _readCBEND(self, data, n):
         """
         CBEND(4601,46,298) - the marker for Record 12
         """
-        self.skippedCardsFile.write('skipping CBEND in GEOM2\n')
+        self.binary_debug.write('skipping CBEND in GEOM2\n')
         return n
 
     def _readCBUSH(self, data, n):
         """
         CBUSH(2608,26,60) - the marker for Record 13
         """
-        self.skippedCardsFile.write('skipping CBUSH in GEOM2\n')
+        self.binary_debug.write('skipping CBUSH in GEOM2\n')
         return n
 
     def _readCBUSH1D(self, data, n):
         """
         CBUSH1D(5608,56,218) - the marker for Record 14
         """
-        self.skippedCardsFile.write('skipping CBUSH1D in GEOM2\n')
+        self.binary_debug.write('skipping CBUSH1D in GEOM2\n')
         return n
 
     def _readCCONE(self, data, n):
         """
         CCONE(2315,23,0) - the marker for Record 15
         """
-        self.skippedCardsFile.write('skipping CCONE in GEOM2\n')
+        self.binary_debug.write('skipping CCONE in GEOM2\n')
         return n
 
     def _readCDAMP1(self, data, n):
@@ -543,7 +543,7 @@ class GEOM2(object):
             n += ntotal
 
     def _readCHBDYP(self, data, n):
-        self.skippedCardsFile.write('skipping CHBDYP in GEOM2\n')
+        self.binary_debug.write('skipping CHBDYP in GEOM2\n')
         return n
 
     def _readCHEXA(self, data, n):
@@ -649,7 +649,7 @@ class GEOM2(object):
         """
         CMFREE(2508,25,0) - the marker for Record 55
         """
-        self.skippedCardsFile.write('skipping CMFREE in GEOM2\n')
+        self.binary_debug.write('skipping CMFREE in GEOM2\n')
         return n
 
     def _readCONM1(self, data, n):
@@ -1026,13 +1026,13 @@ class GEOM2(object):
 # CTRIAP
 
     def _readCTRIAR(self, data, n):  # 98
-        self.skippedCardsFile.write('skipping CTRIAR in GEOM2\n')
+        self.binary_debug.write('skipping CTRIAR in GEOM2\n')
         return n
 
 # CTRIAX
 
     def _readCTRIAX6(self, data, n):  # 100
-        self.skippedCardsFile.write('skipping CTRIAX6 in GEOM2\n')
+        self.binary_debug.write('skipping CTRIAX6 in GEOM2\n')
         return n
 
 # CTRIX3FD
@@ -1071,15 +1071,15 @@ class GEOM2(object):
         return n
 
     def _readCWELD(self, data, n):  # 105
-        self.skippedCardsFile.write('skipping CWELD in GEOM2\n')
+        self.binary_debug.write('skipping CWELD in GEOM2\n')
         return n
 
     def _readCWELDC(self, data, n):  # 106
-        self.skippedCardsFile.write('skipping CWELDC in GEOM2\n')
+        self.binary_debug.write('skipping CWELDC in GEOM2\n')
         return n
 
     def _readCWELDG(self, data, n):  # 107
-        self.skippedCardsFile.write('skipping CWELDG in GEOM2\n')
+        self.binary_debug.write('skipping CWELDG in GEOM2\n')
         return n
 
 # CWSEAM
@@ -1089,7 +1089,7 @@ class GEOM2(object):
 # GMINTC
 # GMINTS
     def _readPLOTEL(self, data, n):  # 114
-        self.skippedCardsFile.write('skipping PLOTEL in GEOM2\n')
+        self.binary_debug.write('skipping PLOTEL in GEOM2\n')
         return n
 # RADBC
 # RADINT
@@ -1112,7 +1112,7 @@ class GEOM2(object):
         return n
 
     def _readVUBEAM(self, data, n):  # 119
-        self.skippedCardsFile.write('skipping VUBEAM in GEOM2\n')
+        self.binary_debug.write('skipping VUBEAM in GEOM2\n')
         return n
 
 # VUHEXA

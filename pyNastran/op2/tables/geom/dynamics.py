@@ -29,16 +29,16 @@ class DYNAMICS(object):
             (1507, 15, 40): ['FREQ4', self.readFreq4],  # 17
             (1607, 16, 41): ['FREQ5', self.readFreq5],  # 18
 
-            (3107, 31, 127): ['', self.readFake],
+            (3107, 31, 127): ['', self._readFake],
             (5107, 51, 131): ['RLOAD1', self.readRLoad1],  # 26
             (5207, 52, 132): ['RLOAD2', self.readRLoad2],  # 27
-            (6207, 62, 136): ['', self.readFake],
-            (6607, 66, 137): ['', self.readFake],
+            (6207, 62, 136): ['', self._readFake],
+            (6607, 66, 137): ['', self._readFake],
             (7107, 71, 138): ['TLOAD1', self.readTLoad1],  # 37
             (7207, 72, 139): ['TLOAD2', self.readTLoad2],  # 38
             (8307, 83, 142): ['TSTEP', self.readTStep],  # 39
-            (2107, 21, 195): ['', self.readFake],
-            (2207, 22, 196): ['', self.readFake],
+            (2107, 21, 195): ['', self._readFake],
+            (2207, 22, 196): ['', self._readFake],
         }
 
 #ACSRCE (5307,53,379)
@@ -46,13 +46,16 @@ class DYNAMICS(object):
     def readDArea(self, data, n):
         """DAREA(27,17,182) - the marker for Record 2"""
         #print("reading DAREA")
-        while len(data) >= 16:  # 4*4
-            eData = data[:16]
-            data = data[16:]
+        ntotal = 16
+        nentries = (len(data) - n) // ntotal
+        self._increase_card_count('DAREA', nentries)
+        for i in range(nentries):
+            eData = data[n:n+ntotal]
             out = unpack('iiff', eData)
             #(sid,p,c,a) = out
             darea = DAREA(data=out)
             self.add_DAREA(darea)
+            n += ntotal
         return n
 
     def readDelay(self, data, n):

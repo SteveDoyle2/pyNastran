@@ -33,25 +33,28 @@ class GEOM1(object):
             (4501,  45,  1): ['GRID',   self._readGrid],    # record 17 - slow, but works
             (5301,  53,  4): ['SEQGP',  self._readSEQGP],   # record 27 - not done
 
+            (2301,  23, 304): ['CSUPER',  self._readFake],  # record 8
+            (5501,  55, 297): ['CSUPEXT', self._readFake],  # record 9
+            (1627,  16, 463): ['EXTRN',   self._readFake],  # record 10
+            (6101,  61, 388): ['FEEDGE',  self._readFake],  # record 11
+            (6601,  66, 392): ['GMCURVE', self._readFake],  # record 12
+            (6201,  62, 389): ['FEFACE',  self._readFake],  # record 13
+            (6001,  60, 377): ['POINT',   self._readFake],  # record 14
+            (10101,101, 394): ['GMSURF',  self._readFake],  # record 15
+            (6401,  64, 402): ['GMCORD',  self._readFake],  # record 16
+
             (427, 4, 453): ['', self._readFake],  # record
 
-            (1101,  11,  66): ['', self._readFake],  # record
-            (2101, 21, 8): ['', self._readFake],  # record
-            (2201,  22,  10): ['', self._readFake],  # record
-            (3901,  39,  50): ['', self._readFake],  # record
-            (5501, 55, 297): ['', self._readFake],  # record
-            (5601, 56, 296): ['', self._readFake],  # record
-            (6001,  60, 377): ['', self._readFake],  # record
-            (6101,  61, 388): ['', self._readFake],  # record
-            (6601, 66, 392): ['', self._readFake],  # record
-            (7902,  79, 302): ['', self._readFake],  # record
+            (1101,   11,  66): ['', self._readFake],  # record
+            (2201,   22,  10): ['', self._readFake],  # record
+            (3901,   39,  50): ['', self._readFake],  # record
+            (5601,   56, 296): ['', self._readFake],  # record
+            (7902,   79, 302): ['', self._readFake],  # record
             (13301, 133, 509): ['', self._readFake],  # record
-            (1227, 12, 462): ['', self._readFake],  # record
-            (6201, 62, 389): ['', self._readFake],  # record
-            (10101, 101, 394): ['', self._readFake],  # record
-            (6401, 64, 402): ['', self._readFake],    # record
-            (1427, 14, 465): ['', self._readFake],  # record
-            (5678, 71, 475): ['', self._readFake],  # record
+            (1227,   12, 462): ['', self._readFake],  # record
+            (6201,   62, 389): ['', self._readFake],  # record
+            (1427,   14, 465): ['', self._readFake],  # record
+            (5678,   71, 475): ['', self._readFake],  # record
         }
 
     def _readCord1C(self, data, n):
@@ -71,7 +74,7 @@ class GEOM1(object):
             coord = CORD1C(None, None, dataIn)
             self.add_coord(coord)
             n += 24
-        self.card_count['CORD1C'] = nEntries
+        self._increase_card_count('CORD1C', nentries)
         return n
 
     def _readCord1R(self, data, n):
@@ -79,8 +82,8 @@ class GEOM1(object):
         (1801,18,5) - the marker for Record 2
         """
         s = Struct(b'6i')
-        nEntries = (len(data) - n) // 24
-        for i in range(nEntries):
+        nentries = (len(data) - n) // 24
+        for i in range(nentries):
             eData = data[n:n + 24]  # 6*4
             out = s.unpack(eData)
             (cid, one1, one2, g1, g2, g3) = out
@@ -91,7 +94,7 @@ class GEOM1(object):
             coord = CORD1R(None, None, dataIn)
             self.add_coord(coord)
             n += 24
-        self.card_count['CORD1R'] = nEntries
+        self._increase_card_count('CORD1R', nentries)
         return n
 
     def _readCord1S(self, data, n):
@@ -99,8 +102,8 @@ class GEOM1(object):
         (1901,19,7) - the marker for Record 3
         """
         s = Struct(b'6i')
-        nEntries = (len(data) - n) // 24
-        for i in range(nEntries):
+        nentries = (len(data) - n) // 24
+        for i in range(nentries):
             edata = data[n:n + 24]  # 6*4
             out = s.unpack(edata)
             (cid, three, one, g1, g2, g3) = out
@@ -111,7 +114,7 @@ class GEOM1(object):
             coord = CORD1S(None, dataIn)
             self.add_coord(coord, allowOverwrites=True)
             n += 24
-        self.card_count['CORD1S'] = nEntries
+        self._increase_card_count('CORD1S', nentries)
         return n
 
     def _readCord2C(self, data, n):
@@ -119,8 +122,8 @@ class GEOM1(object):
         (2001,20,9) - the marker for Record 4
         """
         s = Struct(b'4i9f')
-        nEntries = (len(data) - n) // 52
-        for i in range(nEntries):
+        nentries = (len(data) - n) // 52
+        for i in range(nentries):
             eData = data[n:n + 52]  # 13*4
             out = s.unpack(eData)
             (cid, two1, two2, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3) = out
@@ -131,27 +134,27 @@ class GEOM1(object):
             self.binary_debug.write('  CORD2C=%s\n' % str(out))
             self.add_coord(coord, allowOverwrites=True)
             n += 52
-        self.card_count['CORD2C'] = nEntries
+        self._increase_card_count('CORD2C', nentries)
         return n
 
     def _readCord2R(self, data, n):
         """
         (2101,21,8) - the marker for Record 5
         """
-        nEntries = (len(data) - n) // 52
-        for i in range(nEntries):
+        nentries = (len(data) - n) // 52
+        for i in range(nentries):
             eData = data[n:n + 52]  # 13*4
             (cid, one, two, rid, a1, a2, a3, b1, b2, b3, c1,
                 c2, c3) = unpack(b'4i9f', eData)
             assert one == 1, one
             assert two == 2, two
             dataIn = [cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3]
-            #print("cid=%s one=%s two=%s rid=%s a1=%s a2=%s a3=%s b1=%s b2=%s b3=%s c1=%s c2=%s c3=%s" %(cid,one,two,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3))
+            #print("cid=%s rid=%s a1=%s a2=%s a3=%s b1=%s b2=%s b3=%s c1=%s c2=%s c3=%s" %(cid,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3))
             self.binary_debug.write('  CORD2R=%s\n' % dataIn)
             coord = CORD2R(None, dataIn)
             self.add_coord(coord, allowOverwrites=True)
             n += 52
-        self.card_count['CORD2R'] = nEntries
+        self._increase_card_count('CORD2R', nentries)
         return n
 
     def _readCord2S(self, data, n):
@@ -159,8 +162,8 @@ class GEOM1(object):
         (2201,22,10) - the marker for Record 6
         """
         s = Struct(b'4i9f')
-        nEntries = (len(data) - n) // 52
-        for i in range(nEntries):
+        nentries = (len(data) - n) // 52
+        for i in range(nentries):
             eData = data[n:n + 52]  # 13*4
             out = s.unpack(eData)
             (cid, sixty5, eight, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3) = out
@@ -169,7 +172,7 @@ class GEOM1(object):
             coord = CORD2S(dataIn)
             self.add_coord(coord, allowOverwrites=True)
             n += 52
-        self.card_count['CORD2S'] = nEntries
+        self._increase_card_count('CORD2S', nentries)
         return n
 
     def _readCord3G(self, data, n):
@@ -178,8 +181,8 @@ class GEOM1(object):
         .. todo:: isnt this a CORD3G, not a CORD3R ???
         """
         s = Struct(b'4i')
-        nEntries = (len(data) - n) // 16
-        for i in range(nEntries):
+        nentries = (len(data) - n) // 16
+        for i in range(nentries):
             eData = data[n:n + 16]  # 4*4
             out = s.unpack(eData)
             (cid, n1, n2, n3) = out
@@ -187,7 +190,7 @@ class GEOM1(object):
             self.binary_debug.write('  CORD3G=%s\n' % str(out))
             self.add_coord(coord, allowOverwrites=True)
             n += 16
-        self.card_count['CORD3G'] = nEntries
+        self._increase_card_count('CORD3G', nentries)
         return n
 
     def _readGrid(self, data, n):  # 21.8 sec, 18.9
@@ -195,7 +198,7 @@ class GEOM1(object):
         s = Struct(b'ii3f3i')
         ntotal = 32
         nentries = (len(data) - n) // ntotal
-        print('reading nGRID=%i' % nentries)
+        self._increase_card_count('GRID', nentries)
         for i in range(nentries):
             edata = data[n:n + 32]
             out = s.unpack(edata)
@@ -207,7 +210,6 @@ class GEOM1(object):
             else:
                 self.log.debug("*nID=%s cp=%s x1=%-5.2f x2=%-5.2f x3=%-5.2f cd=%-2s ps=%s seid=%s" % (nID, cp, x1, x2, x3, cd, ps, seid))
             n += ntotal
-        self.card_count['GRID'] = nentries
         return n
 
     def _readSEQGP(self, data, n):

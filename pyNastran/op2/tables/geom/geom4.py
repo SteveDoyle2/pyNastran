@@ -49,6 +49,7 @@ class GEOM4(object):
             (5110,   51, 256): ['SPCD', self._readSPCD],        # record 47 - buggy
             (5601,   56,  14): ['SUPORT', self._readSUPORT],    # record 59 - not done
             (10100, 101, 472): ['SUPORT1', self._readSUPORT1],  # record 60 - not done
+            (2010,   20, 193) : ['USET', self._readUSET], # Record 62 -- USET(2010,20,193)
 
             (1310, 13,    247): ['', self._readFake],    # record
             (4901, 49, 420017): ['', self._readFake],    # record
@@ -58,7 +59,6 @@ class GEOM4(object):
             (5110, 51, 620256): ['', self._readFake],    # record
             (5501, 55, 620016): ['', self._readFake],    # record
             (5001, 50, 15): ['', self._readFake],    # record
-            (2010, 20, 193): ['', self._readFake],    # record
             (410, 4, 0): ['', self._readFake],    # record
             (110, 1, 584): ['', self._readFake],    # record
             (210, 2, 585): ['', self._readFake],    # record
@@ -326,6 +326,7 @@ class GEOM4(object):
 # TEMPBC
 
     def _readUSET(self, data, n):
+        """USET(2010,20,193) - Record 62"""
         self.log.debug('skipping USET in GEOM4\n')
         return n
 
