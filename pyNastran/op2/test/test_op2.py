@@ -174,6 +174,9 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
     assert '.op2' in op2FileName.lower(), 'op2FileName=%s is not an OP2' % op2FileName
     isPassed = False
 
+    fname_base, ext = os.path.splitext(op2FileName)
+    bdf_filename = fname_base + '.test_op2.bdf'
+
     if isinstance(iSubcases, string_types):
         if '_' in iSubcases:
             iSubcases = [int(i) for i in iSubcases.split('_')]
@@ -211,11 +214,12 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
             print("Memory usage start: %s (KB); %.2f (MB)" % (kb, mb))
 
         #op2.read_bdf(op2.bdfFileName,includeDir=None,xref=False)
-        #op2.write_bdf_as_patran()
         op2.read_op2(op2FileName)
         print("---stats for %s---" % op2FileName)
         #op2.get_op2_stats()
         print(op2.get_op2_stats())
+        if write_bdf:
+            op2.write_bdf(bdf_filename)
         if write_bdf and 0:
             op2.write_bdf('fem.bdf.out', interspersed=True)
         #tableNamesF06 = parse_table_names_from_F06(op2.f06FileName)
