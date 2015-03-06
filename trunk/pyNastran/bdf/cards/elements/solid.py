@@ -134,9 +134,9 @@ class SolidElement(Element):
 
     def write_bdf(self, size, card_writer):
         card = self.raw_fields()
-        msg1 = self.comment() + print_card_8(card)
         msg2 = self.write_bdf2()
-        assert msg1 == msg2, 'write_bdf != write_bdf2\n%s---\n%s\n%r\n%r' % (msg1, msg2, msg1, msg2)
+        #msg1 = self.comment() + print_card_8(card)
+        #assert msg1 == msg2, 'write_bdf != write_bdf2\n%s---\n%s\n%r\n%r' % (msg1, msg2, msg1, msg2)
         return msg2
 
 class CHEXA8(SolidElement):
