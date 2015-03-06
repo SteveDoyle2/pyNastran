@@ -22,6 +22,7 @@ from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.qt_legend import LegendPropertiesWindow
 from pyNastran.utils.log import SimpleLogger
 from pyNastran.gui.ex_tree import Sidebar
+from pyNastran.utils import print_bad_path
 
 
 class GuiCommon2(QtGui.QMainWindow, GuiCommon):
@@ -854,9 +855,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 assert len(data) == 5, msg % str(data)
                 macro_name, geo_fmt, geo_func, res_fmt, res_func = data
                 fmts.append((fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func))
-            #else:
-                #func = 'get_%s_wildcard_geometry_results_functions' % fmt
-                #raise RuntimeError(func)
+            else:
+                if stop_on_failure:
+                    func = 'get_%s_wildcard_geometry_results_functions does not exist' % fmt
+                    raise RuntimeError(func)
 
         if len(fmts) == 0:
             RuntimeError('No formats...expected=%s' % fmt_order)
