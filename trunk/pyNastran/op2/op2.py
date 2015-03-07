@@ -2,6 +2,8 @@
 """
 Defines the OP2 class.
 """
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
 from six import string_types, iteritems
 from six.moves import range
 import os
@@ -304,7 +306,9 @@ class OP2(LAMA, ONR, OGPF,
             'R1TABRG': [self._table_passer, self._table_passer],
             'CASECC': [self._table_passer, self._table_passer],  # case control deck
 
-            'HISADD': [self._table_passer, self._table_passer],  # optimization history (SOL200)
+            #'HISADD': [self._hisadd_3, self._hisadd_4],  # optimization history (SOL200)
+            'HISADD': [self._table_passer, self._table_passer],
+
             'EDTS': [self._table_passer, self._table_passer],
             'FOL': [self._table_passer, self._table_passer],
             'MONITOR': [self._table_passer, self._table_passer],  # monitor points
@@ -391,15 +395,24 @@ class OP2(LAMA, ONR, OGPF,
         }
         return table_mapper
 
+    def _hisadd_3(self, data):
+        """
+        table of design iteration history for current design cycle
+        HIS table
+        """
+        self.show_data(data, types='ifs')
+        asf
+
+    def _hisadd_4(self, data):
+        self.show_data(data, types='ifs')
+        asf
+
     def _not_available(self, data):
         if len(data) > 0:
             raise RuntimeError('this should never be called...table_name=%r len(data)=%s' % (self.table_name, len(data)))
 
     def _table_passer(self, data):
         return len(data)
-
-    def readFake(self, data, n):
-        return n
 
     def read_op2(self, op2_filename=None):
         """
@@ -413,7 +426,10 @@ class OP2(LAMA, ONR, OGPF,
         """
         sr = list(self._saved_results)
         sr.sort()
-        self.log.debug('_saved_results = %s' % str(sr))
+        if self.read_mode in [0, 1]:
+            #self.log.debug('_saved_results = %s' % str(sr))
+            self.log.info('_saved_results = %s' % str(sr))
+
         if op2_filename is None:
             from pyNastran.utils.gui_io import load_file_dialog
             wildcard_wx = "Nastran OP2 (*.op2)|*.op2|" \
@@ -578,6 +594,9 @@ class OP2(LAMA, ONR, OGPF,
                     self._read_meff()
                 elif table_name in [b'INTMOD', ]:
                     self._read_intmod()
+                #elif table_name in [b'HISADD', ]:
+                    #self._read_hisadd()
+
                 elif table_name in [b'OMM2', ]:
                     self._read_omm2()
                 elif table_name in [b'DIT']:  # tables
@@ -1070,6 +1089,66 @@ class OP2(LAMA, ONR, OGPF,
         #self.show(50)
         #raise NotImplementedError(self.table_name)
 
+
+    def _read_hisadd(self):
+        self.table_name = self.read_table_name(rewind=False)
+        #self.log.debug('table_name = %r' % self.table_name)
+        if self.debug:
+            self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
+        self.read_markers([-1])
+        if self.debug:
+            self.binary_debug.write('---markers = [-1]---\n')
+        data = self._read_record()
+        #print('hisadd data1')
+        self.show_data(data)
+
+        markers = self.get_nmarkers(1, rewind=True)
+        self.binary_debug.write('---marker0 = %s---\n' % markers)
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        print('hisadd data2')
+        self.show_data(data)
+
+        self.read_markers([-3, 1, 0])
+        markers = self.get_nmarkers(1, rewind=False)
+        print('markers =', markers)
+        nbytes = markers[0]*4 + 12
+        data = self.f.read(nbytes)
+        self.n += nbytes
+        self.show_data(data[4:-4])
+        #self.show(100)
+        data
+        datai = data[:-4]
+
+        irec = data[:32]
+        design_iter, iconvergence, conv_result, obj_intial, obj_final, constraint_max, row_constraint_max, desvar_value = unpack(b'3i3fif', irec)
+        if iconvergence == 1:
+            iconvergence = 'soft'
+        elif iconvergence == 2:
+            iconvergence = 'hard'
+
+        if conv_result == 0:
+             conv_result = 'no'
+        elif conv_result == 1:
+             conv_result = 'soft'
+        elif conv_result == 2:
+             conv_result = 'hard'
+
+        print('design_iter=%s iconvergence=%s conv_result=%s obj_intial=%s obj_final=%s constraint_max=%s row_constraint_max=%s desvar_value=%s' % (design_iter, iconvergence, conv_result, obj_intial, obj_final, constraint_max, row_constraint_max, desvar_value))
+        self.show_data(datai[32:])
+        asdf
+        for n in [-3, -4, -5, -6, -7,-8,]:
+            self.read_markers([n, 1, 1])
+            markers = self.get_nmarkers(1, rewind=False)
+            #print('markers =', markers)
+            nbytes = markers[0]*4 + 12
+            data = self.f.read(nbytes)
+            #print('intmod data%i' % n)
+            #self.show_data(data)
+            self.n += nbytes
+
+        n = -9
+        self.read_markers([n, 1, 0, 0])
 
     def get_marker_n(self, n):
         markers = []

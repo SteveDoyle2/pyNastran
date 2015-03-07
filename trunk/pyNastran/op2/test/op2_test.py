@@ -14,25 +14,25 @@ def parse_skipped_cards(fname):
     results = {}
     for line in lines:
         if 'OES' in line[0:3]:
-            (fore,aft) = line.strip().split('->')
-            (oes,form,elementTypeNum) = fore.strip().split(' ')
-            (element_type,eType) = elementTypeNum.strip().split('=')
+            (fore, aft) = line.strip().split('->')
+            (oes, form, elementTypeNum) = fore.strip().split(' ')
+            (element_type, eType) = elementTypeNum.strip().split('=')
             (msg,fpath) = aft.strip().split('-')
             #print("fpath=%r" % fpath)
             fpath = fpath.lstrip()[6:]
             eName = msg.split(' ')[0]
             #print "eName=%s eType=%s form=%s fpath=|%s|" %(eName,eType,form,fpath)
-            key = (eName,eType,form)
+            key = (eName, eType, form)
             if key not in results:
                 results[key] = fpath
 
     filesToAnalyze = []
-    for (key,value) in sorted(iteritems(results)):
+    for key, value in sorted(iteritems(results)):
         filesToAnalyze.append(value)
 
-    f = open('newElements.in','wb')
+    f = open('newElements.in', 'wb')
     for fname in filesToAnalyze:
-        f.write(fname+'\n')
+        f.write(fname + '\n')
     f.close()
     return filesToAnalyze
 

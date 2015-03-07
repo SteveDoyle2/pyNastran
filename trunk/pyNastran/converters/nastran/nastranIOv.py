@@ -1672,9 +1672,9 @@ class NastranIO(object):
             o3[i] = -o1[i]
 
         if is_stress:
-            bars = model.bar_stress
+            bars = model.cbar_stress
         else:
-            bars = model.bar_strain
+            bars = model.cbar_strain
 
         if subcase_id in bars:  # vectorized....
             case = bars[subcase_id]
@@ -1721,13 +1721,15 @@ class NastranIO(object):
 
 
         if is_stress:
-            beams = model.beam_stress
+            beams = model.cbeam_stress
         else:
-            beams = model.beam_strain
+            beams = model.cbeam_strain
+
         beams = []
         if subcase_id in beams:  # TODO: not-vectorized....
             ## TODO: beams not handled
-            case = model.beamStress[subcase_id]
+            case = beams[subcase_id]
+            asd
             for eid in case.smax:
                 eid2 = self.eidMap[eid]
                 isElementOn[eid2] = 1.

@@ -177,12 +177,13 @@ class OP2_Vectorized(OP2):
             'ctria3_composite_stress', 'ctria3_composite_strain',
             'ctria6_composite_stress', 'ctria6_composite_strain',
             #=======================================================
-            'bar_stress', 'bar_strain', 'bar_forces',
-            'barForces',  # not done
+            'cbar_stress', 'cbar_strain',
+            'barForces',  'cbar_force', # not done
 
 
             'beamStress', 'beamStrain', 'beamForces',
-            'beam_stress', 'beam_strain', 'beam_forces',  # not done
+            'cbeam_stress', 'cbeam_strain',
+            'cbeam_force',  # not done
             #=======================================================
             'strainEnergy',
             #=======================================================
