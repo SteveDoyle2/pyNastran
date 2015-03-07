@@ -5,11 +5,15 @@ Release 0.7
  - various BDF/OP2/F06 tests
  - sphinx documention on all relevant functions
  - move relevant mesh.py functions to bdf_methods.py
+ - integration of RealBeamArray and RealCompositePlateArray into gui
+ - fix RealPlateArrayStress in gui to consider all layers
 
  Completed
  ---------
  - tests for op2 results request
  - cleanup outdated op2 table skipping
+ - RealBeamStressArray / RealBeamStrainArray
+ - superelement op2 results
 
  Remove
  ------
@@ -19,7 +23,15 @@ Release 0.7
    - pch
    - applications
    - bdf_vectorized
-   - converters???
+   - converters
+     - calculix
+     - code_aster
+     - cgns
+     - iges
+     - plot3d
+     - obj
+     - sfepy
+     - su2
 
  - functions
    - 

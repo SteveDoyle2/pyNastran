@@ -12,7 +12,8 @@ from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import (RealBarStress, RealBarStrain,
                                                                  RealBarStressArray, RealBarStrainArray)
-from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import RealBeamStress, RealBeamStrain
+from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import (RealBeamStress, RealBeamStrain,
+                                                                  RealBeamStressArray, RealBeamStrainArray)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush import RealBushStress, RealBushStrain
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush1d import RealBush1DStress  # unused
 from pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates import (RealCompositePlateStress, RealCompositePlateStrain,
@@ -225,6 +226,10 @@ class OES(OP2Common):
             """
             try:
                 n = func(self, data)
+            except NameError:
+                raise
+            except AttributeError:
+                raise
             except:
                 print("----------")
                 print(self.obj)
@@ -274,7 +279,7 @@ class OES(OP2Common):
         else:
             result_name = 'strain'
 
-        if result_name not in self._saved_results:
+        if result_name not in self._saved_results and result_vector_name not in self._saved_results:
             return len(data)
 
         if self.element_type in [1, 3, 10]:  # rods
@@ -327,7 +332,7 @@ class OES(OP2Common):
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
 
-            if result_name not in self._saved_results:
+            if result_name not in self._saved_results and result_vector_name not in self._saved_results:
                 return len(data)
             self._found_results.add(result_name)
             if self.format_code == 1 and self.num_wide == 5:  # real
@@ -402,27 +407,47 @@ class OES(OP2Common):
         elif self.element_type == 2: # CBEAM
             # 2-CBEAM
             ## TODO: fix method to follow correct pattern...
-            if self.read_mode == 1:
-                return len(data)
 
             if self.isStress():
                 result_name = 'beamStress'
             else:
                 result_name = 'beamStrain'
-            if result_name not in self._saved_results:
-                return len(data)
+
             self._found_results.add(result_name)
 
             if self.format_code == 1 and self.num_wide == 111:  # real
                 ntotal = 444 # 44 + 10*40  (11 nodes)
-                if self.isStress():
-                    #result_name = 'beamStress'
-                    self.create_transient_object(self.beamStress, RealBeamStress)
-                else:
-                    #result_name = 'beamStrain'
-                    self.create_transient_object(self.beamStrain, RealBeamStrain)
 
+                if self.isStress():
+                    result_name = 'beamStress'
+                    slot = self.beamStress
+                    obj_real = RealBeamStress
+
+                    obj_vector_real = RealBeamStressArray
+                    result_vector_name = 'cbeam_stress'
+                    slot_vector = self.cbeam_stress
+                else:
+                    result_name = 'beamStrain'
+                    slot = self.beamStrain
+                    obj_real = RealBeamStrain
+
+                    obj_vector_real = RealBeamStrainArray
+                    result_vector_name = 'cbeam_strain'
+                    slot_vector = self.cbeam_strain
+
+                if result_name not in self._saved_results and result_vector_name not in self._saved_results:
+                    return len(data)
+                self._found_results.add(result_name)
                 nelements = len(data) // ntotal
+                nlayers = nelements * 11
+                auto_return = self._create_oes_object2(nlayers,
+                                                       result_name, result_vector_name,
+                                                       slot, slot_vector,
+                                                       obj_real, obj_vector_real)
+                if auto_return:
+                    self._data_factor = 11
+                    return nelements * self.num_wide * 4
+
                 s = Struct(b'i')
 
                 nnodes = 10  # 11-1
@@ -432,7 +457,8 @@ class OES(OP2Common):
                 n2 = 40
                 s1 = Struct(b'ii9f')
                 s2 = Struct(b'i9f')
-
+                #print(self.obj)
+                #assert self.obj is not None
                 nelements = len(data) // ntotal
                 for i in range(nelements):
                     edata = data[n:n+n1]
@@ -455,6 +481,12 @@ class OES(OP2Common):
                         self.obj.add(dt, eid, out)
                     #print "eid=%i axial=%i torsion=%i" % (eid, axial, torsion)
             elif self.format_code in [2, 3] and self.num_wide == 111:  # imag and random?
+                if self.read_mode == 1:
+                    return len(data)
+                if result_name not in self._saved_results and result_vector_name not in self._saved_results:
+                    return len(data)
+                self._found_results.add(result_name)
+
                 ntotal = 444 # 44 + 10*40  (11 nodes)
                 #if self.isStress():
                     #self.create_transient_object(self.beamStress, RealBeamStress)
@@ -526,7 +558,7 @@ class OES(OP2Common):
                 result_vector_name = 'cshear_strain'
                 slot_vector = self.cshear_strain
 
-            if result_name not in self._saved_results:
+            if result_name not in self._saved_results and result_vector_name not in self._saved_results:
                 return len(data)
             self._found_results.add(result_name)
             if self.format_code == 1 and self.num_wide == 4:  # real
@@ -589,8 +621,9 @@ class OES(OP2Common):
             # 14-CELAS4
             if self.read_mode == 1:
                 return len(data)
-            if result_name not in self._saved_results:
+            if result_name not in self._saved_results and result_vector_name not in self._saved_results:
                 return len(data)
+            self._found_results.add(result_name)
             if self.format_code == 1 and self.num_wide == 2:  # real
                 if self.isStress():
                     result_name = 'celasStress'
@@ -645,13 +678,13 @@ class OES(OP2Common):
         elif self.element_type == 34: # CBAR
             if self.isStress():
                 result_name = 'barStress'
-                result_vector_name = 'bar_stress'
+                result_vector_name = 'cbar_stress'
             else:
                 result_name = 'barStrain'
-                result_vector_name = 'bar_strain'
-            result_vector_name = result_name
+                result_vector_name = 'cbar_strain'
+            #result_vector_name = result_name
 
-            if result_name not in self._saved_results:
+            if result_name not in self._saved_results and result_vector_name not in self._saved_results:
                 return len(data)
             self._found_results.add(result_name)
 
@@ -660,14 +693,14 @@ class OES(OP2Common):
                     slot = self.barStress
                     obj_real = RealBarStress
 
-                    slot_vector = self.bar_stress
+                    slot_vector = self.cbar_stress
                     obj_vector_real = RealBarStressArray
                 else:
                     obj_real = RealBarStrain
                     slot = self.barStrain
 
                     obj_vector_real = RealBarStrainArray
-                    slot_vector = self.bar_strain
+                    slot_vector = self.cbar_strain
 
                 ntotal = 16 * 4
                 nelements = len(data) // ntotal
@@ -814,7 +847,7 @@ class OES(OP2Common):
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
 
-            if result_name not in self._saved_results:
+            if result_name not in self._saved_results and result_vector_name not in self._saved_results:
                 return len(data)
             self._found_results.add(result_name)
             numwide_real = 4 + 21 * nnodes_expected
@@ -1110,7 +1143,7 @@ class OES(OP2Common):
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
 
-            if result_name not in self._saved_results:
+            if result_name not in self._saved_results and result_vector_name not in self._saved_results:
                 return len(data)
             self._found_results.add(result_name)
             if self.format_code == 1 and self.num_wide == 17:  # real
@@ -1275,7 +1308,7 @@ class OES(OP2Common):
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
 
-            if result_name not in self._saved_results:
+            if result_name not in self._saved_results and result_vector_name not in self._saved_results:
                 return len(data)
             self._found_results.add(result_name)
             if self.element_type in [64, 82, 144]:
@@ -1296,7 +1329,7 @@ class OES(OP2Common):
                 ntotal = 4 * (2 + 17 * (nnodes + 1))
                 nelements = len(data) // ntotal
                 nlayers = 2 * nelements * (nnodes + 1)  # 2 layers per node
-                #print 'nlayers =', nlayers
+
                 self._data_factor = 10
                 auto_return = self._create_oes_object2(nlayers,
                                                        result_name, result_vector_name,
@@ -1563,7 +1596,7 @@ class OES(OP2Common):
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
 
-            if result_name not in self._saved_results:
+            if result_name not in self._saved_results and result_vector_name not in self._saved_results:
                 return len(data)
             self._found_results.add(result_name)
             etype = self.element_name
@@ -1640,15 +1673,10 @@ class OES(OP2Common):
                     #eid = (eid_device - self.device_code) // 10
 
                     if eid_device > 0:
-                        #print ""
-                        #print "eid =", eid_device
-                        #print "t =", t
                         out = s2.unpack(data[n+4:n+ntotal])
                     else:
                         out1 = s2.unpack(data[n+4:n+ntotal])
                         out = s3.unpack(data[n+4:n+ntotal])
-                        #print(out1)
-                    #print(out)
                     (theory, lamid, fp, fm, fb, fmax, fflag) = out
 
                     if self.debug4():
@@ -2451,13 +2479,23 @@ class OES(OP2Common):
         :type slot: slot_vector
         :param obj: a pointer to the non-vectorized class
         :param obj_vector: a pointer to the vectorized class
+
         :returns auto_return: a flag indicating a return n should be called
         :type auto_return: bool
+        :returns result_name: string of result_name or result_name_vector
+        :type result_name: string
 
         Since that's confusing, let's say we have real CTETRA stress data.
         We're going to fill self.solidStress with the class
         RealSolidStress.  If it were vectorized, we'd fill
         self.ctetra_stress. with RealSolidStressArray.  So we call:
+
+        if self._is_vectorized(RealSolidStressArray, self.ctetra_stress):
+            if result_vector_name not in self._saved_results:
+                return len(data)
+        else:
+            if result_name not in self._saved_results:
+                return len(data)
 
         auto_return = self._create_oes_object2(self, nelements,
                             'solidStress', 'ctetra_stress',
@@ -2467,17 +2505,12 @@ class OES(OP2Common):
             return nelements * ntotal
         """
         auto_return = False
-        is_vectorized = False
-        if self.is_vectorized:
-            if obj_vector is not None and slot_vector is not None:
-                is_vectorized = True
-                #print "***vectorized..."
-
+        is_vectorized = self._is_vectorized(obj_vector, slot_vector)
         if is_vectorized:
             #print("vectorized...read_mode=%s...%s" % (self.read_mode, result_vector_name))
             if self.read_mode == 1:
                 self.create_transient_object(slot_vector, obj_vector)
-                #print "read_mode 1", self.obj.ntimes
+                #print("read_mode 1; ntimes=%s" % self.obj.ntimes)
                 self.result_names.add(result_vector_name)
                 #print('self.obj =', self.obj)
                 self.obj.nelements += nelements
@@ -2487,7 +2520,13 @@ class OES(OP2Common):
                 #self.log.info("***code = %s" % str(self.code))
 
                 # if this is failing, you probably set obj_vector to None...
-                self.obj = slot_vector[self.code]
+                try:
+                    self.obj = slot_vector[self.code]
+                except KeyError:
+                    msg = 'Could not find key=%s in result=%r\n' % (self.code, result_name)
+                    msg += "There's probably an extra check for read_mode=1..."
+                    self.log.error(msg)
+                    raise
                 #self.obj.update_data_code(self.data_code)
                 self.obj.build()
 
@@ -2499,4 +2538,18 @@ class OES(OP2Common):
                 auto_return = True
             # pass = 0/2
             self.create_transient_object(slot, obj)
+
+        if auto_return and self.read_mode == 2:
+            raise RuntimeError('this should never happen...auto_return=True read_mode=2')
         return auto_return
+
+    def _is_vectorized(self, obj_vector, slot_vector):
+        is_vectorized = False
+        if self.is_vectorized:
+            if obj_vector is not None and slot_vector is not None:
+                is_vectorized = True
+                #print("***vectorized...")
+            #else:
+                #print("***not vectorized...")
+                #self.log.info('obj_vector=%s slot_vector=%s' % (obj_vector, slot_vector))
+        return is_vectorized

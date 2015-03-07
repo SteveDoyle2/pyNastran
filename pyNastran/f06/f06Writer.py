@@ -6,6 +6,7 @@ import sys
 import copy
 from datetime import date
 
+from numpy import unique
 import pyNastran
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 
@@ -291,19 +292,18 @@ class F06Writer(object):
         #======================================================================
 
         # bars/beams
-        self.bar_forces = {}
-        self.bar_stress = {}
-        self.bar_strain = {}
+        self.cbar_force = {}
+        self.cbar_stress = {}
+        self.cbar_strain = {}
 
-        self.beam_forces = {}
-        self.beam_stress = {}
-        self.beam_strain = {}
+        self.cbeam_force = {}
+        self.cbeam_stress = {}
+        self.cbeam_strain = {}
 
         #======================================================================
         # shells
         self.ctria3_force = {}
         self.cquad4_force = {}
-        self.cshear_force = {}
 
         self.ctria3_stress = {}
         self.ctria6_stress = {}
@@ -323,6 +323,7 @@ class F06Writer(object):
         self.cquad8_composite_stress = {}
         self.ctria3_composite_stress = {}
         self.ctria6_composite_stress = {}
+
         self.cquad4_composite_strain = {}
         self.cquad8_composite_strain = {}
         self.ctria3_composite_strain = {}
@@ -330,6 +331,7 @@ class F06Writer(object):
 
         self.cshear_stress = {}
         self.cshear_strain = {}
+        self.cshear_force = {}
         #======================================================================
 
     def __objects_common_init__(self):
@@ -596,14 +598,16 @@ class F06Writer(object):
             # OES - isotropic CBAR stress/strain
             'barStress',  # non-vectorized
             'barStrain',
-            'bar_stress',  # vectorized
-            'bar_strain',
+            'cbar_stress',  # vectorized
+            'cbar_strain',
+            'cbar_force',
 
             # OES - isotropic CBEAM stress/strain
             'beamStress',  # non-vectorized
             'beamStrain',
-            'beam_stress',  # vectorized
-            'beam_strain',
+            'cbeam_stress',  # vectorized
+            'cbeam_strain',
+            'cbeam_force',
 
             # OES - isotropic CBEAM strain
 
@@ -642,8 +646,10 @@ class F06Writer(object):
 
             # OES - CSHEAR stress
             'shearStress',
+            'cshear_stress',
             # OES - CSHEAR strain
             'shearStrain',
+            'cshear_strain',
             # OES - CEALS1 224, CELAS3 225
             'nonlinearSpringStress',
             # OES - GAPNL 86
@@ -662,9 +668,9 @@ class F06Writer(object):
             'conrod_force',
             'ctube_force',
 
-            'barForces',  'bar_forces',
+            'barForces',
             'bar100Forces',
-            'beamForces', 'beam_forces',
+            'beamForces',
             'bendForces',
             'bushForces',
             'coneAxForces',
@@ -733,6 +739,7 @@ class F06Writer(object):
             # OEE - strain energy density
             'strainEnergy',  # tCode=18
         ]
+        assert len(table_types) == len(unique(table_types))
         return table_types
 
     def make_f06_header(self):
@@ -963,13 +970,20 @@ class F06Writer(object):
             # alphabetical order...
             # bars
             self.barForces,
+            self.cbar_force,
 
             # beam
             self.beamForces,
             self.bar100Forces,
             self.bendForces,
+            self.cbeam_force,
 
             # alphabetical
+            self.celas1_force,
+            self.celas2_force,
+            self.celas3_force,
+            self.celas4_force,
+
             self.conrod_force,
             self.cquad4_force,
             self.plateForces,   # centroidal elements
@@ -1002,9 +1016,15 @@ class F06Writer(object):
 
             # springs,
             self.celasStrain,
+            self.celas1_strain,
+            self.celas2_strain,
+            self.celas3_strain,
+            self.celas4_strain,
 
             # bars/beams
             self.barStrain, self.beamStrain,
+            self.cbar_strain,
+            self.cbeam_strain,
 
             # plates
             self.plateStrain,
@@ -1051,6 +1071,8 @@ class F06Writer(object):
             # cbars/cbeams
             self.barStress,
             self.beamStress,
+            self.cbar_stress,
+            self.cbeam_stress,
 
             # bush
             self.bushStress, self.bush1dStressStrain,
@@ -1148,10 +1170,13 @@ class F06Writer(object):
                             if hasattr(result, 'element_name'):
                                 element_name = ' - ' + result.element_name
 
+                            star = '*'
+                            if hasattr(result, 'data'):
+                                star = ' '
                             if is_compressed:
-                                print(res_format % (result.__class__.__name__, isubcase, element_name))
+                                print(star + res_format % (result.__class__.__name__, isubcase, element_name))
                             else:
-                                print(res_format_vectorized % (result.__class__.__name__, isubcase, subtitle, element_name))
+                                print(star + res_format_vectorized % (result.__class__.__name__, isubcase, subtitle, element_name))
                             self.page_num = result.write_f06(header, page_stamp, page_num=self.page_num, f=f06, is_mag_phase=False)
                             assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
                         except:

@@ -165,7 +165,7 @@ class RealBarArray(OES_Object):
         msg = self._get_msgs()
         (ntimes, ntotal, four) = self.data.shape
         eids = self.element_node
-
+        #print('CBAR ntimes=%s ntotal=%s' % (ntimes, ntotal))
         for itime in range(ntimes):
             dt = self._times[itime]
             if self.nonlinear_factor is not None:
