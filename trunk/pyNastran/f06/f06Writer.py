@@ -933,7 +933,10 @@ class F06Writer(object):
             header[0] = '     %s\n' % subtitle
             header[1] = '0                                                                                                            SUBCASE %i\n' % (isubcase)
             #header[2] = complex/nonlinear
-            print('%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
+            if hasattr(self, 'data'):
+                print('*%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
+            else:
+                print(' %-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
             self.page_num = result.write_f06(header, page_stamp,
                                             self.page_num, f=f06, is_mag_phase=is_mag_phase)
             assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
