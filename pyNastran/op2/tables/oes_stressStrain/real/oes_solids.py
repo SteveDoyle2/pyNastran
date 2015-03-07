@@ -862,7 +862,7 @@ class RealSolidStrain(StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         StrainObject.__init__(self, data_code, isubcase)
         self.eType = {}
-        self.data = None
+        self._data = None
         self._f06_data = None
         self.code = [self.format_code, self.sort_code, self.s_code]
 
@@ -942,8 +942,8 @@ class RealSolidStrain(StrainObject):
             pack = []
             i = 0
             n = 0
-            while n < len(self.data):
-                line = self.data[n]
+            while n < len(self._data):
+                line = self._data[n]
 
                 eType = line[0]
                 eid = int(line[1])
@@ -962,11 +962,11 @@ class RealSolidStrain(StrainObject):
                 n += 1
                 for j in range(nNodes):
                     (blank, nodeID, x, exx, xy, exy, a, e1, lx, d1, d2, d3,
-                        pressure, evmShear) = self.data[n]
+                        pressure, evmShear) = self._data[n]
                     (blank, blank, y, eyy, yz, eyz, b, e2, ly, d1, d2, d3,
-                        blank, blank) = self.data[n + 1]
+                        blank, blank) = self._data[n + 1]
                     (blank, blank, z, ezz, zx, exz, c, e3, lz, d1, d2, d3,
-                        blank, blank) = self.data[n + 2]
+                        blank, blank) = self._data[n + 2]
                     if    nodeID.strip() == 'CENTER':
                         nodeID = 'CENTER'
                     else:
