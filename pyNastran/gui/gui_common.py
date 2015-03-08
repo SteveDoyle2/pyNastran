@@ -1003,6 +1003,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             except Exception as e:
                 msg = traceback.format_exc()
                 self.log_error(msg)
+                #return
                 raise
                 #return
             #self.vtk_panel.Update()
@@ -1083,7 +1084,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             return
             #raise IOError(msg)
         self.last_dir = os.path.split(out_filename)[0]
-        load_function(out_filename, self.last_dir)
+        try:
+            load_function(out_filename, self.last_dir)
+        except Exception as e:
+            msg = traceback.format_exc()
+            self.log_error(msg)
+            #return
+            raise
 
         self.out_filename = out_filename
         msg = '%s - %s - %s' % (self.format, self.infile_name, out_filename)

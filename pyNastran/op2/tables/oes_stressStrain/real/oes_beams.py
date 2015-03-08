@@ -83,21 +83,8 @@ class RealBeamArray(OES_Object):
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element_node = zeros((self.ntotal, 2), dtype='int32')
 
-        #[s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,
-        # s1b, s2b, s3b, s4b,        sminb, sminb, MS_compression]
-
-
-        #self.xxb = {}
-        #self.grids = {}
-        #self.smax = {}
-        #self.smin = {}
-        #self.MS_tension = {}
-        #self.MS_compression = {}
-
-        #self.sxc = {}
-        #self.sxd = {}
-        #self.sxe = {}
-        #self.sxf = {}
+        # sxc, sxd, sxe, sxf
+        # smax, smin, MSt, MSc
         self.xxb = zeros(self.ntotal, dtype='float32')
         self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
 
