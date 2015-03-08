@@ -1,7 +1,7 @@
 # pylint: disable=C0103,C0111,E1101
 from __future__ import print_function
 from six import iteritems
-from six.moves import zip
+from six.moves import zip, range
 
 #VTK_TRIANGLE = 5
 #VTK_QUADRATIC_TRIANGLE = 22
@@ -75,7 +75,8 @@ class NastranIO(object):
 
     def show_caero_mesh(self, is_shown=None):
         """
-        :param is_shown: should the mesh be shown/hidden (default=None -> flip between shown/not shown)
+        :param is_shown: should the mesh be shown/hidden
+                         (default=None -> flip between shown/not shown)
         """
         if is_shown is None:
             is_shown = not self.show_alt_actor
@@ -90,6 +91,23 @@ class NastranIO(object):
                 return
             self.alt_geometry_actor.VisibilityOff()
 
+
+    def _create_nastran_coords(self, model):
+        cid_types = {
+            'R' : 'xyz',
+            'C' : 'Rtz',
+            'S' : 'Rtp',
+        }
+        for cid, coord in sorted(iteritems(model.coords)):
+            if cid == 0:
+                continue
+            if cid in self.show_cids:
+                origin = coord.origin
+                beta = coord.beta()
+                Type = cid_types[coord.Type]
+                self.create_coordinate_system(label=cid, origin=origin, matrix_3x3=beta, Type=Type)
+            else:
+                print('skipping cid=%s; use a script and set self.show_cids=[%s] to view' % (cid, cid))
 
     def load_nastran_geometry(self, bdf_filename, dirname, plot=True):
         self.eidMap = {}
@@ -138,7 +156,7 @@ class NastranIO(object):
 
         if ext == '.op2' and 0:
             model = OP2Geom(make_geom=True, debug=False, log=self.log,
-                           debug_file=None)
+                            debug_file=None)
             model._clear_results()
             model.read_op2(op2_filename=bdf_filename)
             model.cross_reference(xref=True, xref_loads=False,
@@ -234,24 +252,9 @@ class NastranIO(object):
                 xyz_cid0[i, :] = xyz
             self.xyz_cid0 = xyz_cid0
 
-        cid_types = {
-            'R' : 'xyz',
-            'C' : 'Rtz',
-            'S' : 'Rtp',
-        }
-        for cid, coord in sorted(iteritems(model.coords)):
-            if cid == 0:
-                continue
-            if cid in self.show_cids:
-                origin = coord.origin
-                beta = coord.beta()
-                Type = cid_types[coord.Type]
-                self.create_coordinate_system(label=cid, origin=origin, matrix_3x3=beta, Type=Type)
-            else:
-                print('skipping cid=%s; use a script and set self.show_cids=[%s] to view' % (cid, cid))
+        self._create_nastran_coords(model)
 
         for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
-            point = node.Position()
             xmin = min(xmin, point[0])
             xmax = max(xmax, point[0])
 
@@ -667,7 +670,7 @@ class NastranIO(object):
         self.grid2.Modified()
         self.grid.Update()
         self.grid2.Update()
-        self.log_info("updated grid")
+        #self.log_info("updated grid")
 
         cases = {}
         #pids = array(pids, 'int32')
@@ -741,7 +744,7 @@ class NastranIO(object):
                 nys.append(ny)
                 nzs.append(nz)
 
-            # if not a flat plate???
+            # if not a flat plate
             #if min(nxs) == max(nxs) and min(nxs) != 0.0:
             # subcase_id, resultType, vectorSize, location, dataFormat
             cases[(0, icase, 'Normal_x', 1, 'centroid', '%.1f')] = nxs
@@ -756,11 +759,8 @@ class NastranIO(object):
             form0.append(('Normal_z', icase, []))
             icase += 1
 
-        self.log.info(cases.keys())
-        #self.finish_io(cases)
-
         if plot:
-            #self._finish_results_io(cases)
+            self.log.info(cases.keys())
             self._finish_results_io2([form], cases)
 
     def _plot_pressures(self, model, cases):
@@ -878,7 +878,7 @@ class NastranIO(object):
         self.scalarBar.Modified()
         #self.show_caero_mesh()
 
-        print("tring to read...", op2_filename)
+        print("tring to read...%s" % op2_filename)
         fname_base, ext = os.path.splitext(op2_filename)
         ext = ext.lower()
 
@@ -894,8 +894,10 @@ class NastranIO(object):
                         'constraint_forces', 'spcForces', 'mpcForces', 'eigenvectors',
 
                         #'gridPointForces',
-                        'stress', 'solidStress', 'plateStress', 'compositePlateStress', 'barStress', 'rodStress',
-                        #'strain','solidStrain', 'plateStrain', 'compositePlateStrain', 'barStrain', 'rodStrain',
+                        'stress', 'solidStress', 'plateStress', 'compositePlateStress',
+                        'barStress', 'rodStress',
+                        #'strain','solidStrain', 'plateStrain', 'compositePlateStrain',
+                        #'barStrain', 'rodStrain',
 
                         # untested
                         'loadVectors',
@@ -904,8 +906,10 @@ class NastranIO(object):
                     ]
                 else:
                     desired_results = [
-                        'stress', 'solidStress', 'plateStress', 'compositePlateStress', 'barStress', 'rodStress',
-                        #'strain','solidStrain', 'plateStrain', 'compositePlateStrain', 'barStrain', 'rodStrain',
+                        'stress', 'solidStress', 'plateStress',
+                        'compositePlateStress', 'barStress', 'rodStress',
+                        #'strain','solidStrain', 'plateStrain',
+                        #'compositePlateStrain', 'barStrain', 'rodStrain',
                     ]
                 for result in desired_results:
                     if result in all_results:
@@ -1553,7 +1557,8 @@ class NastranIO(object):
             header += '; freq=%g' % cycle
         return header
 
-    def _get_nastran_time_centroidal_strain_energy(self, cases, model, subcase_id, form, icase, itime, dt,
+    def _get_nastran_time_centroidal_strain_energy(self, cases, model,
+                                                   subcase_id, form, icase, itime, dt,
                                                    is_real=True, is_static=False):
         oxx = zeros(self.nElements, dtype='float32')
         oyy = zeros(self.nElements, dtype='float32')
@@ -1721,7 +1726,7 @@ class NastranIO(object):
 
         if subcase_id in beams:  # vectorized
             case = beams[subcase_id]
-            eidsi =  case.element_node[:, 0]
+            eidsi = case.element_node[:, 0]
             ueids = unique(eidsi)
             neids = len(ueids)
 
@@ -1754,15 +1759,17 @@ class NastranIO(object):
         del beams
 
         if is_stress:
-            plates = [model.ctria3_stress, model.cquad4_stress,
-                      model.ctria6_stress, model.cquad8_stress,
-                      model.ctriar_stress, model.cquadr_stress,
-                      ]
+            plates = [
+                model.ctria3_stress, model.cquad4_stress,
+                model.ctria6_stress, model.cquad8_stress,
+                model.ctriar_stress, model.cquadr_stress,
+            ]
         else:
-            plates = [model.ctria3_strain, model.cquad4_strain,
-                      model.ctria6_strain, model.cquad8_strain,
-                      model.ctriar_strain, model.cquadr_strain,
-                      ]
+            plates = [
+                model.ctria3_strain, model.cquad4_strain,
+                model.ctria6_strain, model.cquad8_strain,
+                model.ctriar_strain, model.cquadr_strain,
+            ]
 
         for result in plates:
             ## TODO: is tria6, quad8, bilinear quad handled?
@@ -1809,12 +1816,12 @@ class NastranIO(object):
 
             for inode in range(1, nlayers_per_element):
                 #print('%s - ilayer = %s' % (case.element_name, inode))
-                oxxi = amax(vstack([oxxi, case.data[itime, j+inode, 1]]), axis=0)
-                oyyi = amax(vstack([oyyi, case.data[itime, j+inode, 2]]), axis=0)
-                txyi = amax(vstack([txyi, case.data[itime, j+inode, 3]]), axis=0)
-                o1i  = amax(vstack([o1i,  case.data[itime, j+inode, 5]]), axis=0)
-                o3i  = amin(vstack([o3i,  case.data[itime, j+inode, 6]]), axis=0)
-                ovmi = amax(vstack([ovmi, case.data[itime, j+inode, 7]]), axis=0)
+                oxxi = amax(vstack([oxxi, case.data[itime, j + inode, 1]]), axis=0)
+                oyyi = amax(vstack([oyyi, case.data[itime, j + inode, 2]]), axis=0)
+                txyi = amax(vstack([txyi, case.data[itime, j + inode, 3]]), axis=0)
+                o1i = amax(vstack([o1i, case.data[itime, j + inode, 5]]), axis=0)
+                o3i = amin(vstack([o3i, case.data[itime, j + inode, 6]]), axis=0)
+                ovmi = amax(vstack([ovmi, case.data[itime, j + inode, 7]]), axis=0)
                 assert len(oxxi) == len(j)
 
             oxx[i] = oxxi
@@ -1825,18 +1832,18 @@ class NastranIO(object):
             ovm[i] = ovmi
 
         if is_stress:
-            cplates = [model.ctria3_composite_stress, model.cquad4_composite_stress,
-                       model.ctria6_composite_stress, model.cquad8_composite_stress,
-                       #model.ctriar_composite_stress, model.cquadr_composite_stress,
-                       ]
+            cplates = [
+                model.ctria3_composite_stress, model.cquad4_composite_stress,
+                model.ctria6_composite_stress, model.cquad8_composite_stress,
+                #model.ctriar_composite_stress, model.cquadr_composite_stress,
+            ]
         else:
-            cplates = [model.ctria3_composite_strain, model.cquad4_composite_strain,
-                       model.ctria6_composite_strain, model.cquad8_composite_strain,
-                       #model.ctriar_composite_strain, model.cquadr_composite_strain,
-                       ]
+            cplates = [
+                model.ctria3_composite_strain, model.cquad4_composite_strain,
+                model.ctria6_composite_strain, model.cquad8_composite_strain,
+                #model.ctriar_composite_strain, model.cquadr_composite_strain,
+            ]
 
-        cplates = [model.compositePlateStress]
-        cplates = []
         for result in cplates:
             if subcase_id not in result:
                 continue
@@ -1847,24 +1854,56 @@ class NastranIO(object):
             else:
                 vm_word = 'maxShear'
 
-            for eid in case.ovmShear:
+            eidsi = case.element_layer[:, 0]
+            layers = case.element_layer[:, 1]
+            ntotal = case.data.shape[1]
+
+            #[o11, o22, t12, t1z, t2z, angle, major, minor, max_shear]
+            oxxs = case.data[itime, :, 0]
+            oyys = case.data[itime, :, 1]
+            txys = case.data[itime, :, 2]
+            txzs = case.data[itime, :, 3]
+            tyzs = case.data[itime, :, 4]
+            # angle
+            omaxs = case.data[itime, :, 6]
+            omins = case.data[itime, :, 7]
+            ovms = case.data[itime, :, 8]
+
+            j = 0
+            for eid, layer in zip(eidsi, layers):
                 eid2 = self.eidMap[eid]
                 isElementOn[eid2] = 1.
 
-                #etype = case.eType[eid]
-                oxxi = max(case.o11[eid])
-                oyyi = max(case.o22[eid])
+                oxxi = 0.
+                oyyi = 0.
+                txyi = 0.
+                tyzi = 0.
+                txzi = 0.
+                omaxi = 0.
+                omini = 0.
+                ovmi = 0.
+                for ilayer in range(layer):
+                    oxxi = max(oxxs[j], oxxi)
+                    oyyi = max(oyys[j], oyyi)
+                    txyi = max(txys[j], txyi)
+                    tyzi = max(tyzs[j], tyzi)
+                    txzi = max(txzs[j], txzi)
 
-                o1i = max(case.majorP[eid])
-                o3i = min(case.minorP[eid])
-                ovmi = max(case.ovmShear[eid])
+                    omaxi = max(omaxs[j], omaxi)
+                    omini = min(omins[j], omini)
+                    ovmi = max(ovms[j], ovmi)
+                    j += 1
 
                 oxx[eid2] = oxxi
                 oyy[eid2] = oyyi
-
-                max_principal[eid2] = o1i
-                min_principal[eid2] = o3i
+                txy[eid2] = txyi
+                tyz[eid2] = tyzi
+                txz[eid2] = txzi
+                max_principal[eid2] = omaxi
+                min_principal[eid2] = omini
                 ovm[eid2] = ovmi
+            del oxxi, oyyi, txyi, tyzi, txzi, omaxi, omini, ovmi, eid2, j, layers, eidsi
+        del cplates
 
 
         if is_stress:
@@ -1922,17 +1961,17 @@ class NastranIO(object):
 
             for inode in range(1, nnodes_per_element):
                 #print('%s - inode = %s' % (case.element_name, inode))
-                oxxi = amax(vstack([oxxi, case.data[itime, j+inode, 0]]), axis=0)
-                oyyi = amax(vstack([oyyi, case.data[itime, j+inode, 1]]), axis=0)
-                ozzi = amax(vstack([ozzi, case.data[itime, j+inode, 2]]), axis=0)
-                txyi = amax(vstack([txyi, case.data[itime, j+inode, 3]]), axis=0)
-                tyzi = amax(vstack([tyzi, case.data[itime, j+inode, 4]]), axis=0)
-                txzi = amax(vstack([txzi, case.data[itime, j+inode, 2]]), axis=0)
+                oxxi = amax(vstack([oxxi, case.data[itime, j + inode, 0]]), axis=0)
+                oyyi = amax(vstack([oyyi, case.data[itime, j + inode, 1]]), axis=0)
+                ozzi = amax(vstack([ozzi, case.data[itime, j + inode, 2]]), axis=0)
+                txyi = amax(vstack([txyi, case.data[itime, j + inode, 3]]), axis=0)
+                tyzi = amax(vstack([tyzi, case.data[itime, j + inode, 4]]), axis=0)
+                txzi = amax(vstack([txzi, case.data[itime, j + inode, 2]]), axis=0)
 
-                o1i  = amax(vstack([o1i,  case.data[itime, j+inode, 6]]), axis=0)
-                o2i  = amax(vstack([o2i,  case.data[itime, j+inode, 7]]), axis=0)
-                o3i  = amin(vstack([o3i,  case.data[itime, j+inode, 8]]), axis=0)
-                ovmi = amax(vstack([ovmi, case.data[itime, j+inode, 9]]), axis=0)
+                o1i = amax(vstack([o1i, case.data[itime, j + inode, 6]]), axis=0)
+                o2i = amax(vstack([o2i, case.data[itime, j + inode, 7]]), axis=0)
+                o3i = amin(vstack([o3i, case.data[itime, j + inode, 8]]), axis=0)
+                ovmi = amax(vstack([ovmi, case.data[itime, j + inode, 9]]), axis=0)
                 assert len(oxxi) == len(j)
 
             oxx[i] = oxxi
@@ -1945,6 +1984,8 @@ class NastranIO(object):
             mid_principal[i] = o2i
             min_principal[i] = o3i
             ovm[i] = ovmi
+        del solids
+
 
         if is_stress:
             word = 'Stress'

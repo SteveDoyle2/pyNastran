@@ -23,15 +23,8 @@ class RealCompositePlateArray(OES_Object):
         if is_sort1:
             if dt is not None:
                 pass
-                #self.add = self.add_sort1
-                #self.add_new_eid = self.add_new_eid_sort1
-                ##self.addNewNode = self.addNewNodeSort1
         else:
             raise NotImplementedError('SORT2')
-            #assert dt is not None
-            #self.add = self.addSort2
-            #self.add_new_eid = self.add_new_eid_sort2
-            #self.addNewNode = self.addNewNodeSort2
 
     def is_real(self):
         return True
@@ -50,15 +43,13 @@ class RealCompositePlateArray(OES_Object):
         raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
 
     def build(self):
-        #print("self.ielement =", self.ielement)
-        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         if self.is_built:
             return
 
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
-        #self.names = []
+
         if self.element_type == 95:  # CQUAD4
             nnodes_per_element = 1
         elif self.element_type == 96:  # CQUAD8
@@ -71,20 +62,15 @@ class RealCompositePlateArray(OES_Object):
             raise NotImplementedError('element_name=%s element_type=%s' %(self.element_name, self.element_type))
 
         self.nnodes = nnodes_per_element
-        #self.nelements //= nnodes_per_element
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
-        #self.ntimes = 0
-        #self.nelements = 0
         self.is_built = True
 
-        #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
-            #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, int):
             dtype = 'int32'
-        self.times = zeros(self.ntimes, dtype=dtype)
+        self._times = zeros(self.ntimes, dtype=dtype)
 
         self.element_layer = zeros((self.ntotal, 2), dtype='int32')
 
@@ -95,7 +81,7 @@ class RealCompositePlateArray(OES_Object):
         self.add_new_eid_sort1(eType, dt, eid, layer, o11, o22, t12, t1z, t2z, angle, major, minor, ovm)
 
     def add_new_eid_sort1(self, eType, dt, eid, layer, o11, o22, t12, t1z, t2z, angle, major, minor, ovm):
-        self.times[self.itime] = dt
+        self._times[self.itime] = dt
         self.element_layer[self.itotal, :] = [eid, layer]
         self.data[self.itime, self.itotal, :] = [o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
         self.itotal += 1
@@ -108,14 +94,9 @@ class RealCompositePlateArray(OES_Object):
 
     def add_sort1(self, dt, eid, layer, o11, o22, t12, t1z, t2z, angle,
                  major, minor, ovm):
-        #print('addNewNodeSort1')
         assert eid is not None
-        #msg = "i=%s dt=%s eid=%s layer=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (
-            #self.itotal, dt, eid, layer, fd, oxx, oyy, txy, angle, major, minor, ovm)
-        #print(msg)
         #if isinstance(nodeID, string_types):
             #nodeID = 0
-        #assert isinstance(nodeID, int), nodeID
         self.element_layer[self.itotal, :] = [eid, layer]
         self.data[self.itime, self.itotal, :] = [o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
         self.itotal += 1
@@ -222,7 +203,7 @@ class RealCompositePlateArray(OES_Object):
         layers = self.element_layer[:, 1]
 
         for itime in range(ntimes):
-            dt = self.times[itime]  # TODO: rename this...
+            dt = self._times[itime]
             if self.nonlinear_factor is not None:
                 dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
                 header[1] = dtLine
@@ -264,6 +245,7 @@ class RealCompositePlateStressArray(RealCompositePlateArray, StressObject):
 
     def isStress(self):
         return True
+
     def isStrain(self):
         return False
 
@@ -283,6 +265,7 @@ class RealCompositePlateStrainArray(RealCompositePlateArray, StrainObject):
 
     def isStress(self):
         return False
+
     def isStrain(self):
         return True
 
@@ -319,13 +302,7 @@ class RealCompositePlateStress(StressObject):
         self.minorP = {}
         #self.fiberCurvature = {}
         self.ovmShear = {}
-        #print "self.data_code = ",self.data_code
         #if self.isVonMisesStress():
-        #if self.code == [1, 0, 0]:
-            #assert not self.isVonMises, 'isVonMises=%s' % (self.isVonMises())
-            ##self.isVonMises = True
-        #else:
-            #raise RuntimeError("Invalid Code: compositePlateStress - get the format/sort/stressCode=%s" % (self.code))
 
         self.dt = dt
         if is_sort1:
@@ -362,14 +339,9 @@ class RealCompositePlateStress(StressObject):
               151    1  -1.02406E+04  4.18348E+05  4.14359E+02   -8.62021E+00  1.86352E+04   89.94  4.18348E+05 -1.02410E+04  2.14295E+05
         """
         if transient is None:
-            #for line in data:
-                #print line
-            #sys.exit()
             for line in data:
-                #print line
                 if eType in ['CQUAD4', 'CTRIA3']:
                     (eid, iLayer, o11, o22, t12, t1z, t2z, angle, majorP, minorP, ovmShear) = line
-                    #if nid=='CEN/4': nid='C'
                     if eid not in self.eType:
                         self.eType[eid] = eType
                         self.o11[eid] = [o11]
@@ -395,8 +367,6 @@ class RealCompositePlateStress(StressObject):
                     msg = 'etype=%r is not supported...' % eType
                     raise NotImplementedError(msg)
             return
-        #for line in data:
-            #print line
         raise NotImplementedError('transient results not supported')
 
     def delete_transient(self, dt):
@@ -433,8 +403,6 @@ class RealCompositePlateStress(StressObject):
     def add_new_eid(self, eType, dt, eid, layer, o11, o22, t12, t1z, t2z, angle,
                     majorP, minorP, ovm):
         """all points are located at the centroid"""
-        #print "Composite Plate Strain add..."
-        #msg = "eid=%s eType=%s o11=%g o22=%g t12=%g t1z=%g t2z=%g \nangle=%g major=%g minor=%g vm=%g" % (eid, eType, o11, o22, t12, t1z, t2z, angle, majorP, minorP, ovm)
         if eid in self.o11:
             return self.add(dt, eid, layer, o11, o22, t12, t1z, t2z, angle, majorP, minorP, ovm)
         assert eid not in self.o11, msg + '\n  o11=%s eType=%s code=%s' % (
@@ -456,7 +424,6 @@ class RealCompositePlateStress(StressObject):
     def add_new_eid_sort1(self, eType, dt, eid, layer, o11, o22, t12, t1z, t2z, angle,
                           majorP, minorP, ovm):
         """all points are located at the centroid"""
-        #print "Composite Plate Strain add..."
 
         if dt not in self.o11:
             self.add_new_transient(dt)
@@ -475,16 +442,10 @@ class RealCompositePlateStress(StressObject):
         self.majorP[dt][eid] = [majorP]
         self.minorP[dt][eid] = [minorP]
         self.ovmShear[dt][eid] = [ovm]
-        #msg = "eid=%s o11=%g o22=%g t12=%g t1z=%g t2z=%g \nangle=%g major=%g minor=%g vm=%g" % (eid, o11, o22, t12, t1z, t2z, angle, majorP, minorP, ovm)
-        #print msg
         #if nodeID==0: raise Exception(msg)
 
     def add(self, dt, eid, layer, o11, o22, t12, t1z, t2z, angle,
             majorP, minorP, ovm):
-        #print "***add"
-        #msg = "eid=%s o11=%g o22=%g t12=%g t1z=%g t2z=%g \nangle=%g major=%g minor=%g vm=%g" % (eid, o11, o22, t12, t1z, t2z, angle, majorP, minorP, ovm)
-        #print msg
-        #print self.o11
         self.o11[eid].append(o11)
         self.o22[eid].append(o22)
         self.t12[eid].append(t12)
@@ -498,11 +459,6 @@ class RealCompositePlateStress(StressObject):
 
     def add_sort1(self, dt, eid, layer, o11, o22, t12, t1z, t2z, angle,
                  majorP, minorP, ovm):
-        #print "***add"
-        msg = "eid=%s o11=%g o22=%g t12=%g t1z=%g t2z=%g \nangle=%g major=%g minor=%g vm=%g" % (eid, o11, o22, t12, t1z, t2z, angle, majorP, minorP, ovm)
-        #print msg
-        #print self.o11
-
         self.o11[dt][eid].append(o11)
         self.o22[dt][eid].append(o22)
         self.t12[dt][eid].append(t12)
@@ -512,7 +468,6 @@ class RealCompositePlateStress(StressObject):
         self.majorP[dt][eid].append(majorP)
         self.minorP[dt][eid].append(minorP)
         self.ovmShear[dt][eid].append(ovm)
-        #if nodeID==0: raise Exception(msg)
 
     def getHeaders(self):
         headers = ['o11', 'o22', 't12', 't1z', 't2z']
@@ -574,7 +529,7 @@ class RealCompositePlateStress(StressObject):
             elif eType in ['CTRIA3', 'TRIA3LC']:
                 triMsg.append(out)
             #else:
-            #    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8LC
+                #raise NotImplementedError('eType = %r' % eType) # CQUAD8LC
 
         if isQuad:
             quadMsg.append(pageStamp % page_num)
@@ -647,7 +602,7 @@ class RealCompositePlateStress(StressObject):
                 elif eType in ['CTRIA3', 'TRIA3LC']:
                     triMsg.append(out)
                 #else:
-                #    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8LC
+                #    raise NotImplementedError('eType = %r' % eType) # CQUAD8LC
 
             if isQuad:
                 quadMsg.append(pageStamp % page_num)
@@ -722,14 +677,9 @@ class RealCompositePlateStrain(StrainObject):
               151    1  -1.02406E+04  4.18348E+05  4.14359E+02   -8.62021E+00  1.86352E+04   89.94  4.18348E+05 -1.02410E+04  2.14295E+05
         """
         if transient is None:
-            #for line in data:
-                #print line
-            #sys.exit()
             for line in data:
-                #print line
                 if eType in ['CQUAD4', 'CTRIA3']:
                     (eid, iLayer, e11, e22, e12, e1z, e2z, angle, majorP, minorP, evmShear) = line
-                    #if nid=='CEN/4': nid='C'
                     if eid not in self.eType:
                         self.eType[eid] = eType
                         self.e11[eid] = [e11]
@@ -755,8 +705,6 @@ class RealCompositePlateStrain(StrainObject):
                     msg = 'etype=%r is not supported...' % eType
                     raise NotImplementedError(msg)
             return
-        #for line in data:
-            #print line
         raise NotImplementedError('transient results not supported')
 
     def delete_transient(self, dt):
@@ -792,7 +740,6 @@ class RealCompositePlateStrain(StrainObject):
 
     def add_new_eid(self, eType, dt, eid, layer, e11, e22, e12, e1z, e2z, angle, majorP, minorP, evm):
         """all points are located at the centroid"""
-        #print "Composite Plate Strain add..."
         if eid in self.e11:
             return self.add(dt, eid, layer, e11, e22, e12, e1z, e2z, angle, majorP, minorP, evm)
         assert eid not in self.e11
@@ -813,8 +760,6 @@ class RealCompositePlateStrain(StrainObject):
 
     def add_new_eid_sort1(self, eType, dt, eid, layer, e11, e22, e12, e1z, e2z, angle, majorP, minorP, evm):
         """all points are located at the centroid"""
-        #print "Composite Plate Strain add..."
-
         if dt not in self.e11:
             self.add_new_transient(dt)
         assert eid not in self.e11[dt]
@@ -830,15 +775,8 @@ class RealCompositePlateStrain(StrainObject):
         self.majorP[dt][eid] = [majorP]
         self.minorP[dt][eid] = [minorP]
         self.evmShear[dt][eid] = [evm]
-        msg = "eid=%s e11=%g e22=%g e12=%g e1z=%g e2z=%g \nangle=%g major=%g minor=%g vm=%g" % (eid, e11, e22, e12, e1z, e2z, angle, majorP, minorP, evm)
-        #print msg
-        #if nodeID==0: raise Exception(msg)
 
     def add(self, dt, eid, layer, e11, e22, e12, e1z, e2z, angle, majorP, minorP, evm):
-        #print "***add"
-        msg = "eid=%s e11=%g e22=%g e12=%g e1z=%g e2z=%g \nangle=%g major=%g minor=%g vm=%g" % (eid, e11, e22, e12, e1z, e2z, angle, majorP, minorP, evm)
-        #print msg
-        #print self.o11
         self.e11[eid].append(e11)
         self.e22[eid].append(e22)
         self.e12[eid].append(e12)
@@ -851,10 +789,6 @@ class RealCompositePlateStrain(StrainObject):
         #if nodeID==0: raise Exception(msg)
 
     def add_sort1(self, dt, eid, layer, e11, e22, e12, e1z, e2z, angle, majorP, minorP, evm):
-        #print "***add"
-        #msg = "eid=%s e11=%g e22=%g e12=%g e1z=%g e2z=%g \nangle=%g major=%g minor=%g vm=%g" % (eid, e11, e22, e12, e1z, e2z, angle, majorP, minorP, evm)
-        #print msg
-        #print self.o11
         self.e11[dt][eid].append(e11)
         self.e22[dt][eid].append(e22)
         self.e12[dt][eid].append(e12)
@@ -928,7 +862,7 @@ class RealCompositePlateStrain(StrainObject):
             elif eType in ['CTRIA3', 'TRIA3LC']:
                 triMsg.append(out)
             #else:
-            #    raise NotImplementedError('eType = |%r|' %(eType)) # CQUAD8LC
+                #raise NotImplementedError('eType = %r' % eType) # CQUAD8LC
 
         if isQuad:
             quadMsg.append(pageStamp % page_num)
