@@ -5,17 +5,18 @@ Release 0.7
  - various BDF/OP2/F06 tests
  - sphinx documention on all relevant functions
  - move relevant mesh.py functions to bdf_methods.py
- - integration of RealCompositePlateArray into gui
 
  Completed
  ---------
+ - large/small field format & single/double precision writing
  - tests for op2 results request
  - cleanup outdated op2 table skipping
  - RealBeamStressArray / RealBeamStrainArray
  - superelement op2 results
- - RealPlateArrayStress/Strain in gui considers all nodes/layers
- - RealSolidArrayStress/Strain in gui considers all nodes
- - RealBeamArrayStress/Strain in gui considers all nodes
+ - RealPlateArrayStress/Strain in gui considers all nodes/layers in gui 
+ - RealSolidArrayStress/Strain in gui considers all nodes in gui 
+ - RealBeamArrayStress/Strain in gui considers all nodes in gui 
+ - RealCompositePlateArrayStress/Strain considers all layers in gui 
 
  Remove
  ------
