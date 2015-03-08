@@ -19,9 +19,9 @@ from six.moves import zip
 #VTK_QUADRATIC_HEXAHEDRON = 25
 
 import os
-from numpy import zeros, abs, mean, where, nan_to_num
+from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, vstack
 from numpy import searchsorted, sqrt, pi, arange, unique
-#from numpy import nan as NaN, amax, amin, array
+#from numpy import nan as NaN, array
 from numpy.linalg import norm
 
 import vtk
@@ -69,7 +69,7 @@ class NastranIO(object):
     def get_nastran_wildcard_geometry_results_functions(self):
         data = (
             'Nastran',
-            'Nastran BDF (*.bdf; *.dat; *.nas)', self.load_nastran_geometry,
+            'Nastran BDF (*.bdf; *.dat; *.nas, *.pch)', self.load_nastran_geometry,
             'Nastran OP2 (*.op2)', self.load_nastran_results)
         return data
 
@@ -92,7 +92,6 @@ class NastranIO(object):
 
 
     def load_nastran_geometry(self, bdf_filename, dirname, plot=True):
-        #print('plot=%s' % plot)
         self.eidMap = {}
         self.nidMap = {}
         #print('bdf_filename=%r' % bdf_filename)
@@ -137,13 +136,7 @@ class NastranIO(object):
         if ext == '.pch':
             punch = True
 
-        #if ext == '.op2':  # read the OP2; requires make_geom
-            #op2_filename = bdf_filename
-            #model = OP2(# make_geom=True,
-                       #debug=True, log=self.log)
-            #model.read_op2(op2_filename)
-            #model.cross_reference(xref=True, xref_loads=False, xref_constraints=False)
-        if ext == '.op2':
+        if ext == '.op2' and 0:
             model = OP2Geom(make_geom=True, debug=False, log=self.log,
                            debug_file=None)
             model._clear_results()
@@ -1637,9 +1630,9 @@ class NastranIO(object):
         tyz = zeros(nelements, dtype='float32')
         txz = zeros(nelements, dtype='float32')
 
-        o1 = zeros(nelements, dtype='float32')  # max
-        o2 = zeros(nelements, dtype='float32')  # mid
-        o3 = zeros(nelements, dtype='float32')  # min
+        max_principal = zeros(nelements, dtype='float32')  # max
+        mid_principal = zeros(nelements, dtype='float32')  # mid
+        min_principal = zeros(nelements, dtype='float32')  # min
         ovm = zeros(nelements, dtype='float32')
 
         vm_word = None
@@ -1661,15 +1654,15 @@ class NastranIO(object):
                 print('eidsi = %s\n' % str(list(eidsi)))
                 raise RuntimeError(msg)
 
-            #print('irod = %s' % str(i))
             isElementOn[i] = 1
 
             # data=[1, nnodes, 4] where 4=[axial, SMa, torsion, SMt]
             oxx[i] = case.data[itime, :, 0]
             txy[i] = case.data[itime, :, 2]
             ovm[i] = sqrt(oxx[i]**2 + 3*txy[i]**2)
-            o1[i] = sqrt(oxx[i]**2 + txy[i]**2)
-            o3[i] = -o1[i]
+            max_principal[i] = sqrt(oxx[i]**2 + txy[i]**2)
+            min_principal[i] = max_principal[i] - 2 * txy[i]
+        del rods
 
         if is_stress:
             bars = model.cbar_stress
@@ -1678,8 +1671,6 @@ class NastranIO(object):
 
         if subcase_id in bars:  # vectorized....
             case = bars[subcase_id]
-            print('class_name = %s' % str(case))
-
             #s1a = case.data[itime, :, 0]
             #s2a = case.data[itime, :, 1]
             #s3a = case.data[itime, :, 2]
@@ -1702,55 +1693,76 @@ class NastranIO(object):
             eidsi = case.element_node # [:, 0]
 
             i = searchsorted(eids, eidsi)
-            #print('ibar = %s' % i)
-            assert len(i) == len(unique(i)), 'ibar=%s is not unique' % str(i)
+            if len(i) != len(unique(i)):
+                print('ibar = %s' % i)
+                print('eids = %s' % eids)
+                msg = 'ibar=%s is not unique' % str(i)
+                raise RuntimeError(msg)
 
             isElementOn[i] = 1.
             oxx[i] = axial
 
+            ## TODO :not sure if this block is general for multiple CBAR elements
             samax = max(smaxa, smaxb)
             samin = min(smina, sminb)
             savm = max(abs([smina, sminb,
                             smaxa, smaxb, axial]))
 
-            #print('avm.shape', avm.shape)
-
-            o1[i] = samax
-            o3[i] = samin
+            max_principal[i] = samax
+            min_principal[i] = samin
             ovm[i] = savm
-
+            del axial, smaxa, smina, smaxb, sminb, eidsi, i, samax, samin, savm
+        del bars
 
         if is_stress:
             beams = model.cbeam_stress
         else:
             beams = model.cbeam_strain
 
-        beams = []
-        if subcase_id in beams:  # TODO: not-vectorized....
-            ## TODO: beams not handled
+        if subcase_id in beams:  # vectorized
             case = beams[subcase_id]
-            asd
-            for eid in case.smax:
+            eidsi =  case.element_node[:, 0]
+            ueids = unique(eidsi)
+            neids = len(ueids)
+
+            j = 0
+            # sxc, sxd, sxe, sxf
+            # smax, smin, MSt, MSc
+            sxc = case.data[itime, :, 0]
+            sxd = case.data[itime, :, 1]
+            sxe = case.data[itime, :, 2]
+            sxf = case.data[itime, :, 3]
+            smax = case.data[itime, :, 4]
+            smin = case.data[itime, :, 5]
+            for ieid, eid in enumerate(ueids):
+                oxxi = 0.
+                smaxi = 0.
+                smini = 0.
                 eid2 = self.eidMap[eid]
                 isElementOn[eid2] = 1.
-
-                oxx[eid2] = max(max(case.sxc[eid]),
-                                max(case.sxd[eid]),
-                                max(case.sxe[eid]),
-                                max(case.sxf[eid]))
-
-                o1[eid2] = max(case.smax[eid])
-                o3[eid2] = min(case.smin[eid])
-                ovm[eid2] = max(abs(max(case.smax[eid])),
-                                abs(min(case.smin[eid])))
-
+                for i in range(11):
+                    oxxi = max(sxc[j], sxd[j], sxe[j], sxf[j], oxxi)
+                    smaxi = max(smax[j], smaxi)
+                    smini = min(smin[j], smini)
+                    j += 1
+                ovmi = max(abs(smaxi), abs(smini))
+                oxxi = oxx[eid2]
+                max_principal[eid2] = smaxi
+                min_principal[eid2] = smini
+                ovm[eid2] = ovmi
+            del j, eidsi, ueids, sxc, sxd, sxe, sxf, smax, smin, oxxi, smaxi, smini, ovmi
+        del beams
 
         if is_stress:
             plates = [model.ctria3_stress, model.cquad4_stress,
-                      model.ctria6_stress, model.cquad8_stress]
+                      model.ctria6_stress, model.cquad8_stress,
+                      model.ctriar_stress, model.cquadr_stress,
+                      ]
         else:
             plates = [model.ctria3_strain, model.cquad4_strain,
-                      model.ctria6_strain, model.cquad8_strain]
+                      model.ctria6_strain, model.cquad8_strain,
+                      model.ctriar_strain, model.cquadr_strain,
+                      ]
 
         for result in plates:
             ## TODO: is tria6, quad8, bilinear quad handled?
@@ -1763,40 +1775,78 @@ class NastranIO(object):
             else:
                 vm_word = 'maxShear'
 
-            nnodes_per_element = case.nnodes * 2  # *2 for every other layer
-            eidsi = case.element_node[::nnodes_per_element, 0]  # ::2 is for layer skipping
-            #print('eidsi =', case.element_node[:, 0])
+            nnodes_per_element = case.nnodes
+            nlayers_per_element = nnodes_per_element * 2  # *2 for every other layer
+            eidsi = case.element_node[::nlayers_per_element, 0]  # ::2 is for layer skipping
 
             i = searchsorted(eids, eidsi)
-            assert len(i) == len(unique(i)), 'iplate=%s is not unique' % str(i)
-            #print('iplate = %s' % i)
+            if len(i) != len(unique(i)):
+                print('iplate = %s' % i)
+                print('eids = %s' % eids)
+                print('eidsiA = %s' % case.element_node[:, 0])
+                print('eidsiB = %s' % eidsi)
+                msg = 'iplate=%s is not unique' % str(i)
+                raise RuntimeError(msg)
             #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
             #                                         txy, angle,
             #                                         majorP, minorP, ovm]
             isElementOn[i] = 1.
             ndt, ntotal, nresults = case.data.shape
-            if nnodes_per_element == 1:
+            if nlayers_per_element == 1:
                 j = None
             else:
-                j = arange(ntotal)[::nnodes_per_element]
+                j = arange(ntotal)[::nlayers_per_element]
 
-            oxx[i] = case.data[itime, j, 1]
-            oyy[i] = case.data[itime, j, 2]
-            txy[i] = case.data[itime, j, 3]
-            #txy[i] = case.data[itime, ::nnodes_per_element, 3]
-            #ozz[i] = 0
-            o1[i] = case.data[itime, j, 5]
-            #o2[i] = case.data[itime, :, ???]
-            o3[i] = case.data[itime, j, 6]
-            ovm[i] = case.data[itime, j, 7]
+            #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
+            #                                         txy, angle,
+            #                                         majorP, minorP, ovm]
+            oxxi = case.data[itime, j, 1]
+            oyyi = case.data[itime, j, 2]
+            txyi = case.data[itime, j, 3]
+            o1i = case.data[itime, j, 5]
+            o3i = case.data[itime, j, 6]
+            ovmi = case.data[itime, j, 7]
 
-        if subcase_id in model.compositePlateStress:
-            case = model.compositePlateStress[subcase_id]
-            raise NotImplementedError('compositePlateStress')
+            for inode in range(1, nlayers_per_element):
+                #print('%s - ilayer = %s' % (case.element_name, inode))
+                oxxi = amax(vstack([oxxi, case.data[itime, j+inode, 1]]), axis=0)
+                oyyi = amax(vstack([oyyi, case.data[itime, j+inode, 2]]), axis=0)
+                txyi = amax(vstack([txyi, case.data[itime, j+inode, 3]]), axis=0)
+                o1i  = amax(vstack([o1i,  case.data[itime, j+inode, 5]]), axis=0)
+                o3i  = amin(vstack([o3i,  case.data[itime, j+inode, 6]]), axis=0)
+                ovmi = amax(vstack([ovmi, case.data[itime, j+inode, 7]]), axis=0)
+                assert len(oxxi) == len(j)
+
+            oxx[i] = oxxi
+            oyy[i] = oyyi
+            txy[i] = txyi
+            max_principal[i] = o1i
+            min_principal[i] = o3i
+            ovm[i] = ovmi
+
+        if is_stress:
+            cplates = [model.ctria3_composite_stress, model.cquad4_composite_stress,
+                       model.ctria6_composite_stress, model.cquad8_composite_stress,
+                       #model.ctriar_composite_stress, model.cquadr_composite_stress,
+                       ]
+        else:
+            cplates = [model.ctria3_composite_strain, model.cquad4_composite_strain,
+                       model.ctria6_composite_strain, model.cquad8_composite_strain,
+                       #model.ctriar_composite_strain, model.cquadr_composite_strain,
+                       ]
+
+        cplates = [model.compositePlateStress]
+        cplates = []
+        for result in cplates:
+            if subcase_id not in result:
+                continue
+
+            case = result[subcase_id]
             if case.isVonMises():
                 vm_word = 'vonMises'
             else:
                 vm_word = 'maxShear'
+
             for eid in case.ovmShear:
                 eid2 = self.eidMap[eid]
                 isElementOn[eid2] = 1.
@@ -1812,21 +1862,21 @@ class NastranIO(object):
                 oxx[eid2] = oxxi
                 oyy[eid2] = oyyi
 
-                o1[eid2] = o1i
-                o3[eid2] = o3i
+                max_principal[eid2] = o1i
+                min_principal[eid2] = o3i
                 ovm[eid2] = ovmi
 
 
         if is_stress:
-            solids = [(5, model.ctetra_stress),
-                      (7, model.cpenta_stress),
-                      (11, model.chexa_stress),]
+            solids = [(model.ctetra_stress),
+                      (model.cpenta_stress),
+                      (model.chexa_stress),]
         else:
-            solids = [(5, model.ctetra_strain),
-                      (7, model.cpenta_strain),
-                      (11, model.chexa_strain),]
+            solids = [(model.ctetra_strain),
+                      (model.cpenta_strain),
+                      (model.chexa_strain),]
 
-        for nnodes_per_element, result in solids:
+        for result in solids:
             if subcase_id not in result:
                 continue
 
@@ -1836,24 +1886,65 @@ class NastranIO(object):
             else:
                 vm_word = 'maxShear'
 
+            nnodes_per_element = case.nnodes
             eidsi = case.element_cid[:, 0]
+            ntotal = len(eidsi)  * nnodes_per_element
+
             i = searchsorted(eids, eidsi)
-            assert len(i) == len(unique(i)), 'isolid=%s is not unique' % str(i)
-            #print('isolid = %s' % str(i))
+            if len(i) != len(unique(i)):
+                print('isolid = %s' % str(i))
+                print('eids = %s' % eids)
+                print('eidsi = %s' % eidsi)
+                assert len(i) == len(unique(i)), 'isolid=%s is not unique' % str(i)
+
             isElementOn[i] = 1
             #self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz,
             #                                         txy, tyz, txz,
             #                                         o1, o2, o3, ovm]
-            oxx[i] = case.data[itime, ::nnodes_per_element, 0]
-            oyy[i] = case.data[itime, ::nnodes_per_element, 1]
-            ozz[i] = case.data[itime, ::nnodes_per_element, 2]
-            txy[i] = case.data[itime, ::nnodes_per_element, 3]
-            tyz[i] = case.data[itime, ::nnodes_per_element, 4]
-            txz[i] = case.data[itime, ::nnodes_per_element, 5]
-            o1[i] = case.data[itime, ::nnodes_per_element, 6]
-            o2[i] = case.data[itime, ::nnodes_per_element, 7]
-            o3[i] = case.data[itime, ::nnodes_per_element, 8]
-            ovm[i] = case.data[itime, ::nnodes_per_element, 9]
+
+            if nnodes_per_element == 1:
+                j = None
+            else:
+                j = arange(ntotal)[::nnodes_per_element]
+                ueidsi = unique(eidsi)
+                assert len(j) == len(ueidsi), 'j=%s ueidsi=%s' % (j, ueidsi)
+
+            oxxi = case.data[itime, j, 0]
+            oyyi = case.data[itime, j, 1]
+            ozzi = case.data[itime, j, 2]
+            txyi = case.data[itime, j, 3]
+            tyzi = case.data[itime, j, 4]
+            txzi = case.data[itime, j, 5]
+            o1i = case.data[itime, j, 6]
+            o2i = case.data[itime, j, 7]
+            o3i = case.data[itime, j, 8]
+            ovmi = case.data[itime, j, 9]
+
+            for inode in range(1, nnodes_per_element):
+                #print('%s - inode = %s' % (case.element_name, inode))
+                oxxi = amax(vstack([oxxi, case.data[itime, j+inode, 0]]), axis=0)
+                oyyi = amax(vstack([oyyi, case.data[itime, j+inode, 1]]), axis=0)
+                ozzi = amax(vstack([ozzi, case.data[itime, j+inode, 2]]), axis=0)
+                txyi = amax(vstack([txyi, case.data[itime, j+inode, 3]]), axis=0)
+                tyzi = amax(vstack([tyzi, case.data[itime, j+inode, 4]]), axis=0)
+                txzi = amax(vstack([txzi, case.data[itime, j+inode, 2]]), axis=0)
+
+                o1i  = amax(vstack([o1i,  case.data[itime, j+inode, 6]]), axis=0)
+                o2i  = amax(vstack([o2i,  case.data[itime, j+inode, 7]]), axis=0)
+                o3i  = amin(vstack([o3i,  case.data[itime, j+inode, 8]]), axis=0)
+                ovmi = amax(vstack([ovmi, case.data[itime, j+inode, 9]]), axis=0)
+                assert len(oxxi) == len(j)
+
+            oxx[i] = oxxi
+            oyy[i] = oyyi
+            ozz[i] = ozzi
+            txy[i] = txyi
+            tyz[i] = tyzi
+            txz[i] = txzi
+            max_principal[i] = o1i
+            mid_principal[i] = o2i
+            min_principal[i] = o3i
+            ovm[i] = ovmi
 
         if is_stress:
             word = 'Stress'
@@ -1881,13 +1972,12 @@ class NastranIO(object):
 
         form0 = (word, None, [])
         formis = form0[2]
-        # subcase_id,resultType,vectorSize,location,dataFormat
+        # subcase_id, icase, resultType, vectorSize, location, dataFormat
         if is_stress and itime == 0:
-            if isElementOn.min() != isElementOn.max():
-                if isElementOn.min() == 0:
-                    ioff = where(isElementOn == 0)[0]
-                    print('eids_off = %s' % self.element_ids[ioff])
-                    self.log_error('eids_off = %s' % self.element_ids[ioff])
+            if isElementOn.min() == 0:  # if all elements aren't on
+                ioff = where(isElementOn == 0)[0]
+                print('eids_off = %s' % self.element_ids[ioff])
+                self.log_error('eids_off = %s' % self.element_ids[ioff])
                 cases[(1, icase, 'isElementOn', 1, 'centroid', '%i')] = isElementOn
                 form.append(('IsElementOn', icase, []))
                 icase += 1
@@ -1925,19 +2015,19 @@ class NastranIO(object):
             icase += 1
             ncase += 1
 
-        if o1.min() != o1.max():
-            cases[(subcase_id, icase, word + '1', 1, 'centroid', fmt, header)] = o1
-            formis.append((word + '1', icase, []))
+        if max_principal.min() != max_principal.max():
+            cases[(subcase_id, icase, 'MaxPrincipal', 1, 'centroid', fmt, header)] = max_principal
+            formis.append(('Max Principal', icase, []))
             icase += 1
             ncase += 1
-        if o2.min() != o2.max():
-            cases[(subcase_id, icase, word + '2', 1, 'centroid', fmt, header)] = o2
-            formis.append((word + '2', icase, []))
+        if mid_principal.min() != mid_principal.max():
+            cases[(subcase_id, icase, 'MidPrincipal', 1, 'centroid', fmt, header)] = mid_principal
+            formis.append(('Mid Principal', icase, []))
             icase += 1
             ncase += 1
-        if o3.min() != o3.max():
-            cases[(subcase_id, icase, word + '3', 1, 'centroid', fmt, header)] = o3
-            formis.append((word + '3', icase, []))
+        if min_principal.min() != min_principal.max():
+            cases[(subcase_id, icase, 'MinPrincipal', 1, 'centroid', fmt, header)] = min_principal
+            formis.append(('Min Principal', icase, []))
             icase += 1
             ncase += 1
         if vm_word is not None:
@@ -1949,7 +2039,6 @@ class NastranIO(object):
             formis.append((vm_word, icase, []))
             icase += 1
             ncase += 1
-        #print('form0 = %s' % str(form0))
         return icase, ncase, case, header, form0
 
 def main():

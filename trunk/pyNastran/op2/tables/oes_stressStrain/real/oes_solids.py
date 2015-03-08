@@ -84,6 +84,7 @@ class RealSolidArray(OES_Object):
 
         #[oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovmShear]
         self.data = zeros((self.ntimes, self.ntotal, 10), 'float32')
+        self.nnodes = self.element_node.shape[0] // self.nelements
         #self.data = zeros((self.ntimes, self.nelements, nnodes+1, 10), 'float32')
 
     def add_eid_sort1(self, eType, cid, dt, eid, node_id, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
