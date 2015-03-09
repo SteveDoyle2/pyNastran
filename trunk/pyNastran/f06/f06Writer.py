@@ -927,16 +927,40 @@ class F06Writer(object):
 
         # then eigenvectors
         # has a special header
-        for isubcase, result in sorted(iteritems(self.eigenvectors)):
-            (subtitle, label) = self.iSubcaseNameMap[isubcase]
-            subtitle = subtitle.strip()
+        iSubcases = sorted(self.iSubcaseNameMap.keys())
+
+        res_keys = []
+        for isubcase in iSubcases:
+            for subtitle in self.subtitles[isubcase]:
+                res_keys.append((isubcase, subtitle))
+
+        for res_key in res_keys:
+            isubcase = res_key[0]
+            subtitle = res_key[1]
+            label = self.labels[(isubcase, subtitle)]
+
+            is_compressed = len(self.subtitles[isubcase]) == 1
+            if is_compressed:
+                res_key = isubcase
+
+            if res_key not in self.eigenvectors:
+                continue
+            result = self.eigenvectors[res_key]
             header[0] = '     %s\n' % subtitle
             header[1] = '0                                                                                                            SUBCASE %i\n' % (isubcase)
             #header[2] = complex/nonlinear
+            star = ' '
             if hasattr(self, 'data'):
-                print('*%-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
+                star = '*'
+
+            res_length = 18
+            res_format = '%%-%is SUBCASE=%%i' % res_length
+            res_format_vectorized = '%%-%is SUBCASE=%%i SUBTITLE=%%s' % res_length
+            if is_compressed:
+                print(star + res_format % (result.__class__.__name__, isubcase))
             else:
-                print(' %-18s SUBCASE=%i' % (result.__class__.__name__, isubcase))
+                print(star + res_format_vectorized % (result.__class__.__name__, isubcase, subtitle))
+
             self.page_num = result.write_f06(header, page_stamp,
                                             self.page_num, f=f06, is_mag_phase=is_mag_phase)
             assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
@@ -1125,13 +1149,6 @@ class F06Writer(object):
         ]
 
         if 1:
-            iSubcases = sorted(self.iSubcaseNameMap.keys())
-
-            res_keys = []
-            for isubcase in iSubcases:
-                for subtitle in self.subtitles[isubcase]:
-                    res_keys.append((isubcase, subtitle))
-
             for res_key in res_keys:
                 title = self.Title
 
