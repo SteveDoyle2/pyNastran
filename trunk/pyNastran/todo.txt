@@ -5,6 +5,8 @@ Release 0.7
  - various BDF/OP2/F06 tests
  - sphinx documention on all relevant functions
  - move relevant mesh.py functions to bdf_methods.py
+ - add f06.subtitles
+ - add f06.labels
 
  Completed
  ---------
