@@ -21,14 +21,14 @@ class FortranFormat(object):
         self.isAllSubcases = True
         self.valid_subcases = []
 
-    def show(self, n):
+    def show(self, n, types='ifs'):
         """
         :param self:    the OP2 object pointer
         """
         assert self.n == self.f.tell()
         nints = n // 4
         data = self.f.read(4 * n)
-        strings, ints, floats = self.show_data(data)
+        strings, ints, floats = self.show_data(data, types=types)
         self.f.seek(self.n)
         return strings, ints, floats
 
@@ -43,15 +43,33 @@ class FortranFormat(object):
         """
         n = len(data)
         nints = n // 4
-        strings = unpack(b'%is' % n, data)
-        ints    = unpack(b'%ii' % nints, data)
-        floats  = unpack(b'%if' % nints, data)
+        ndoubles = n // 8
+        strings = None
+        ints = None
+        floats = None
+        longs = None
         if 's' in types:
+            strings = unpack(b'%is' % n, data)
             f.write("strings = %s\n" % str(strings))
         if 'i' in types:
+            ints = unpack(b'%ii' % nints, data)
             f.write("ints    = %s\n" % str(ints))
         if 'f' in types:
+            floats = unpack(b'%if' % nints, data)
             f.write("floats  = %s\n" % str(floats))
+
+        if 'l' in types:
+            longs = unpack(b'%il' % nints, data)
+            f.write("long  = %s\n" % str(longs))
+        if 'I' in types:
+            ints2 = unpack(b'%iI' % nints, data)
+            f.write("unsigned int = %s\n" % str(ints2))
+        if 'L' in types:
+            longs2 = unpack(b'%iL' % nints, data)
+            f.write("unsigned long = %s\n" % str(longs2))
+        if 'q' in types:
+            longs = unpack(b'%iq' % ndoubles, data[:ndoubles*8])
+            f.write("long long = %s\n" % str(longs))
         return strings, ints, floats
 
     def show_ndata(self, n, types='ifs'):
