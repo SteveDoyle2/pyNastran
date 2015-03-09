@@ -55,7 +55,7 @@ class RealPlateArray(OES_Object):
         elif self.element_type in [144]:  # CQUAD4
             return True
         else:
-            raise NotImplementedError(self.element_type)
+            raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
 
     def build(self):
         #print("self.ielement = %s" % self.ielement)
@@ -71,9 +71,16 @@ class RealPlateArray(OES_Object):
             nnodes_per_element = 1
         elif self.element_type == 144:
             nnodes_per_element = 5
+        elif self.element_type == 64:  # CQUAD8
+            nnodes_per_element = 5
+        elif self.element_type == 82:  # CQUADR
+            nnodes_per_element = 5
+        elif self.element_type == 70:  # CTRIAR
+            nnodes_per_element = 4
+        elif self.element_type == 75:  # CTRIA6
+            nnodes_per_element = 4
         else:
             raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
-
 
         self.nnodes = nnodes_per_element
         #self.nelements //= nnodes_per_element
@@ -251,13 +258,14 @@ class RealPlateArray(OES_Object):
                 #f.write([eidi, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi])
                 iLayer = i % 2
                 # tria3
-                if self.element_type in [33, 74]:
+                if is_bilinear:
+                #if self.element_type in [33, 74]:
                     if iLayer == 0:
                         f.write('0  %6i   %-13s     %-13s  %-13s  %-13s   %8.4f   %-13s   %-13s  %s\n' % (eid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
                     else:
                         f.write('   %6s   %-13s     %-13s  %-13s  %-13s   %8.4f   %-13s   %-13s  %s\n' % ('', fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
 
-                elif self.element_type == 144:
+                else:  #elif self.element_type == 144:
                     # bilinear
                     if nid == 0 and iLayer == 0:  # CEN
                         f.write('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % (eid, cen_word, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
@@ -265,8 +273,8 @@ class RealPlateArray(OES_Object):
                         f.write('   %8s %8i  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % ('', nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
                     elif iLayer == 1:
                         f.write('   %8s %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n\n' % ('', '', fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
-                else:
-                    raise RuntimeError(self.element_type)
+                #else:
+                    #raise RuntimeError(self.element_type)
 
             f.write(page_stamp % page_num)
             page_num += 1
@@ -318,14 +326,14 @@ class RealPlateStressArray(RealPlateArray, StressObject):
         #isBilinear = False
         cquad4_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'] + triMsgTemp
         cquad8_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n'] + triMsgTemp
+        cquadr_msg = ['                        S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'] + triMsgTemp
 
         ## TODO: can cquad8s be bilinear???
         #isBilinear = True
-        cquadr_bilinear_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quadMsgTemp
+        #cquadr_bilinear_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quadMsgTemp
         cquad4_bilinear_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quadMsgTemp
 
         #isBilinear = False
-        cquad_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'] + triMsgTemp
         ctria3_msg = ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'] + triMsgTemp
         ctria6_msg = ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + triMsgTemp
         ctriar_msg = ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + triMsgTemp
@@ -341,8 +349,24 @@ class RealPlateStressArray(RealPlateArray, StressObject):
             msg = cquad4_bilinear_msg
             nnodes = 4
             is_bilinear = True
+        elif self.element_type == 82:  # CQUADR
+            msg = cquadr_msg
+            nnodes = 4
+            is_bilinear = True
+        elif self.element_type == 70:  # CTRIAR
+            msg = ctriar_msg
+            nnodes = 3
+            is_bilinear = True
+        elif self.element_type == 64:  # CQUAD8
+            msg = cquad8_msg
+            nnodes = 4
+            is_bilinear = True
+        elif self.element_type == 75:  # CTRIA5
+            msg = ctria6_msg
+            nnodes = 3
+            is_bilinear = True
         else:
-            raise NotImplementedError(self.element_type)
+            raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
         return msg, nnodes, is_bilinear
 
 
@@ -391,6 +415,7 @@ class RealPlateStrainArray(RealPlateArray, StrainObject):
         isBilinear = False
         cquad4_msg = ['                         S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'] + triMsgTemp
         cquad8_msg = ['                         S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n'] + triMsgTemp
+        cquadr_msg = ['                         S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'] + triMsgTemp
 
         ## TODO: can cquad8s be bilinear???
         isBilinear = True
@@ -414,8 +439,24 @@ class RealPlateStrainArray(RealPlateArray, StrainObject):
             msg = cquad4_bilinear_msg
             nnodes = 4
             is_bilinear = True
+        elif self.element_type == 82:  # CQUADR
+            msg = cquadr_msg
+            nnodes = 4
+            is_bilinear = True
+        elif self.element_type == 64:  # CQUAD8
+            msg = cquad8_msg
+            nnodes = 4
+            is_bilinear = True
+        elif self.element_type == 75:  # CTRIA6
+            msg = ctria6_msg
+            nnodes = 3
+            is_bilinear = True
+        elif self.element_type == 70:  # CTRIAR
+            msg = ctriar_msg
+            nnodes = 3
+            is_bilinear = True
         else:
-            raise NotImplementedError(self.element_type)
+            raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
         return msg, nnodes, is_bilinear
 
 class RealPlateStress(StressObject):

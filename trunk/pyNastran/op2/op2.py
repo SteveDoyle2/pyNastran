@@ -149,6 +149,17 @@ class OP2(LAMA, ONR, OGPF,
 
     def _get_table_mapper(self):
         table_mapper = {
+            #'HISADD': [self._hisadd_3, self._hisadd_4],  # optimization history (SOL200)
+            'HISADD': [self._table_passer, self._table_passer],
+            'R1TABRG': [self._table_passer, self._table_passer],
+
+            'MATPOOL': [self._table_passer, self._table_passer],
+            'CSTM':    [self._table_passer, self._table_passer],
+            'TOUGV1':  [self._table_passer, self._table_passer],
+            'AXIC':    [self._table_passer, self._table_passer],
+            'BOPHIG':  [self._table_passer, self._table_passer],
+            'HOEF1':  [self._table_passer, self._table_passer],
+            'ONRGY2':  [self._table_passer, self._table_passer],
             #=======================
             # OEF
             # element forces
@@ -303,11 +314,7 @@ class OP2(LAMA, ONR, OGPF,
             'PVT0': [self._table_passer, self._table_passer],
             'DESTAB': [self._table_passer, self._table_passer],
             'STDISP': [self._table_passer, self._table_passer],
-            'R1TABRG': [self._table_passer, self._table_passer],
             'CASECC': [self._table_passer, self._table_passer],  # case control deck
-
-            #'HISADD': [self._hisadd_3, self._hisadd_4],  # optimization history (SOL200)
-            'HISADD': [self._table_passer, self._table_passer],
 
             'EDTS': [self._table_passer, self._table_passer],
             'FOL': [self._table_passer, self._table_passer],
@@ -428,7 +435,8 @@ class OP2(LAMA, ONR, OGPF,
         sr.sort()
         if self.read_mode in [0, 1]:
             #self.log.debug('_saved_results = %s' % str(sr))
-            self.log.info('_saved_results = %s' % str(sr))
+            #self.log.info('_saved_results = %s' % str(sr))
+            pass
 
         if op2_filename is None:
             from pyNastran.utils.gui_io import load_file_dialog
@@ -648,6 +656,15 @@ class OP2(LAMA, ONR, OGPF,
                                     b'OCRUG',
                                     b'OCRPG',
                                     b'STDISP',
+
+                                    # autoskip
+                                    b'MATPOOL',
+                                    b'CSTM',
+                                    b'TOUGV1',
+                                    b'AXIC',
+                                    b'BOPHIG',
+                                    b'HOEF1',
+                                    b'ONRGY2',
                                     ]:
                     self._read_results_table()
                 else:

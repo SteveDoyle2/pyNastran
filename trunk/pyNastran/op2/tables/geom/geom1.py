@@ -18,6 +18,7 @@ class GEOM1(object):
     def _read_geom1_4(self, data):
         if self.read_mode == 1:
             return len(data)
+        self.log.info('GEOM1...read_mode=%s' % self.read_mode)
         return self._read_geom_4(self._geom1_map, data)
 
     def __init__(self):
@@ -30,7 +31,7 @@ class GEOM1(object):
             (2101,  21,  8): ['CORD2R', self._readCord2R],  # record 5
             (2201,  22, 10): ['CORD2S', self._readCord2S],  # record 6
             (14301,143,651): ['CORD3G', self._readCord3G],  # record 7
-            (4501,  45,  1): ['GRID',   self._readGrid],    # record 17 - slow, but works
+            (4501,  45,  1): ['GRID',   self._readGrid],    # record 17
             (5301,  53,  4): ['SEQGP',  self._readSEQGP],   # record 27 - not done
 
             (2301,  23, 304): ['CSUPER',  self._readFake],  # record 8

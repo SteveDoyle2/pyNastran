@@ -191,8 +191,19 @@ class RealCompositePlateArray(OES_Object):
                 msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
             else:
                 msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
-        #elif self.element_type == 98:  # CTRIA6
-            #nnodes_per_element = 1
+        elif self.element_type == 96:  # QUAD8
+            # good
+             if self.isStrain():
+                 msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 8 )\n'] + words
+             else:
+                 msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 8 )\n'] + words
+
+        elif self.element_type == 98:  # CTRIA6
+            # good
+             if self.isStrain():
+                 msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 6 )\n'] + words
+             else:
+                 msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 6 )\n'] + words
         else:
             raise NotImplementedError('element_name=%s element_type=%s' % (self.element_name, self.element_type))
 

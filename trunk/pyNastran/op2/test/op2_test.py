@@ -2,9 +2,10 @@ from six import iteritems
 import os
 import sys
 
+import pyNastran
 from pyNastran.op2.test.test_op2 import get_failed_files, run_lots_of_files
 from pyNastran.utils.dev import get_files_of_type
-
+pkg_path = pyNastran.__path__[0]
 
 def parse_skipped_cards(fname):
     f = open(fname,'r')
@@ -58,7 +59,7 @@ def main():
     # works
     files = get_files_of_type('tests', '.op2')
 
-    foldersFile = 'tests/foldersRead.txt'
+    foldersFile = os.path.join(pkg_path, 'bdf', 'test', 'tests', 'foldersRead.txt')
 
     iSubcases = []
     debug     = False
@@ -66,7 +67,7 @@ def main():
     write_bdf = False
     write_f06 = True
     write_op2 = False
-    is_vector = False
+    is_vector = [True, False]
 
     delete_f06 = True
     saveCases = True
