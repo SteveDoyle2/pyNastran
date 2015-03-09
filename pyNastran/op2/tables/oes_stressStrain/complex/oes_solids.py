@@ -12,7 +12,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject,
 from pyNastran.f06.f06_formatting import writeImagFloats13E
 
 
-class ComplexSolid(OES_Object):
+class ComplexSolidArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         self.eType = {}
@@ -185,16 +185,21 @@ class ComplexSolid(OES_Object):
     def get_f06_header(self, is_mag_phase=True):
         tetra_msg, penta_msg, hexa_msg = self._get_msgs(is_mag_phase)
 
-        if 'CTETRA' in self.element_name:
-            return tetra_msg, 4
+        #if 'CTETRA' in self.element_name:
+            #return tetra_msg, 4
 
+        #if 'CTETRA' == self.element_type:
+            #return tetra_msg, 4
+        if self.element_type == 67:  # CHEXA
+            return hexa_msg, 8
+        elif self.element_type == 68:  # CPENTA
+            return penta_msg, 6
         #if 'CTETRA' in Type or 'CPENTA' in Type:
             #nnodes = int(Type[6:])  # CTETRA4 / CTETRA10 / CPENTA6 / CPENTA15
         #elif 'CHEXA' in Type:
             #nnodes = int(Type[5:])  # CHEXA8 / CHEXA20
-        #else:
-            #raise NotImplementedError('complex solid stress/strain Type=%r' % Type)
-        raise NotImplementedError(self.element_name)
+        else:
+            raise NotImplementedError('complex solid stress/strain name=%r Type=%s' % (self.element_name, self.element_type))
 
     #def get_element_index(self, eids):
         ## elements are always sorted; nodes are not
@@ -273,9 +278,9 @@ class ComplexSolid(OES_Object):
         return page_num - 1
 
 
-class ComplexSolidStressArray(ComplexSolid, StressObject):
+class ComplexSolidStressArray(ComplexSolidArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ComplexSolid.__init__(self, data_code, is_sort1, isubcase, dt)
+        ComplexSolidArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
         #print(self.subtitle)
 
@@ -306,9 +311,9 @@ class ComplexSolidStressArray(ComplexSolid, StressObject):
         return tetra_msg, penta_msg, hexa_msg
 
 
-class ComplexSolidStrainArray(ComplexSolid, StressObject):
+class ComplexSolidStrainArray(ComplexSolidArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ComplexSolid.__init__(self, data_code, is_sort1, isubcase, dt)
+        ComplexSolidArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
     def getHeaders(self):

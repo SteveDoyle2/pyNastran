@@ -466,7 +466,7 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
             self.isubtable_old = None
 
         #self.binary_debug.write('isubtable=%s isubtable_old=%s\n' % (self.isubtable, self.isubtable_old))
-        ni = self.f.tell() - len(data) + 12
+        #ni = self.f.tell() - len(data) + 12
         #self.binary_debug.write('**:  f.tell()=%s; n=%s:%s\n\n' % (self.f.tell(), ni, self.n))
 
         # we're only going to use the keys if istream=0 (so the beginning of the record)
@@ -478,11 +478,11 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
             n = 0
             keys = self.geom_keys
         else:
-            raise NotImplementedError('keys=%s not found - %s' % (str(keys), self.table_name))
+            raise NotImplementedError('keys=%s not found - %s; istream=%s; isubtable=%s isubtable_old=%s' % (str(keys), self.table_name, self.istream, self.isubtable, self.isubtable_old))
 
         name, func = mapper[keys]
         self.binary_debug.write('  found keys=%s -> name=%-6s - %s\n' % (str(keys), name, self.table_name))
-        print("  found keys=(%5s,%4s,%4s) name=%-6s - %s" % (keys[0], keys[1], keys[2], name, self.table_name))
+        #print("  found keys=(%5s,%4s,%4s) name=%-6s - %s" % (keys[0], keys[1], keys[2], name, self.table_name))
 
         n = func(data, n)  # gets all the grid/mat cards
         assert n != None, name

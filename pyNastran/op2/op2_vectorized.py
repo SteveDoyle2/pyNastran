@@ -145,8 +145,16 @@ class OP2_Vectorized(OP2):
             return
         self.log.info('compress_results')
         result_types = [
-            'displacements', 'eigenvectors', 'spcForces', 'mpcForces',
-            'loadVectors',
+            'displacements', 'accelerations', 'velocities',
+            'temperatures',
+            'eigenvectors', 'spcForces', 'mpcForces',
+            'loadVectors', 'thermalLoadVectors',
+            #=======================================================
+            'thermalLoad_CHBDY', 'thermalLoad_1D', 'ctriaxStress',
+            'nonlinearRodStress', 'nonlinearGapStress', 'thermalLoad_2D_3D',
+            'solidPressureForces',
+
+
             #=======================================================
             'gridPointForces',
             #=======================================================
@@ -166,19 +174,25 @@ class OP2_Vectorized(OP2):
             'rodForces',  # not done
             'crod_force', 'conrod_force', 'ctube_force',
             #=======================================================
-            #'plateStress', 'plateStrain',
+            'plateStress', 'plateStrain',
             'plateForces', 'plateForces2',  # not done
             'ctria3_stress', 'ctria3_strain', 'ctria3_force',
+            'ctria6_stress', 'ctria6_strain',  #'ctria6_force',
+            'ctriar_stress', 'ctriar_strain',  #'ctriar_force',
             'cquad4_stress', 'cquad4_strain', 'cquad4_force',
+            'cquad8_stress', 'cquad8_strain',  #'cquad8_force',
+            'cquadr_stress', 'cquadr_strain',  #'cquadr_force',
 
-            #'compositePlateStress', 'compositePlateStrain',
+            'compositePlateStress', 'compositePlateStrain',
             'cquad4_composite_stress', 'cquad4_composite_strain',
             'cquad8_composite_stress', 'cquad8_composite_strain',
+            #'cquadr_composite_stress',  'cquadr_composite_strain',
             'ctria3_composite_stress', 'ctria3_composite_strain',
             'ctria6_composite_stress', 'ctria6_composite_strain',
+            #'ctriar_composite_stress',  'ctriar_composite_strain',
             #=======================================================
             'cbar_stress', 'cbar_strain',
-            'barForces',  'cbar_force', # not done
+            'barStress', 'barForces',  'cbar_force', # not done
 
 
             'beamStress', 'beamStrain', 'beamForces',

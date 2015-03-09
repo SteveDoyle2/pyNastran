@@ -119,6 +119,9 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
     assert make_geom in [True, False]
     assert write_bdf in [True, False]
     assert write_f06 in [True, False]
+    if is_vector in [True, False]:
+        is_vector = [is_vector]
+
     iSubcases = []
     failedCases = []
     nFailed = 0
@@ -134,19 +137,26 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
             n = '%s ' %(i)
             sys.stderr.write('%sfile=%s\n' %(n, op2file))
             nTotal += 1
-            isPassed = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
-                               write_f06=write_f06, write_op2=write_op2,
-                               is_mag_phase=False,
-                               is_vector=is_vector,
-                               delete_f06=delete_f06,
-                               iSubcases=iSubcases, debug=debug,
-                               stopOnFailure=stopOnFailure) # True/False
-            if not isPassed:
-                sys.stderr.write('**file=%s\n' % op2file)
+
+            is_passed = True
+            is_vector_failed = []
+            for vectori in is_vector:
+                is_passed_i = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
+                                      write_f06=write_f06, write_op2=write_op2,
+                                      is_mag_phase=False,
+                                      is_vector=vectori,
+                                      delete_f06=delete_f06,
+                                      iSubcases=iSubcases, debug=debug,
+                                      stopOnFailure=stopOnFailure) # True/False
+                if not is_passed_i:
+                   is_passed = False
+                   is_vector_failed.append(vectori)
+            if not is_passed:
+                sys.stderr.write('**file=%s vector_failed=%s\n' % (op2file, is_vector_failed))
                 failedCases.append(op2file)
-                nFailed +=1
+                nFailed += 1
             else:
-                nPassed +=1
+                nPassed += 1
             #sys.exit('end of test...test_op2.py')
 
     if saveCases:
