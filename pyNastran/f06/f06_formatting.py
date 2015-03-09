@@ -91,6 +91,8 @@ def writeFloats8p4F(vals):
     vals2 = []
     isAllZeros = True
     for v in vals:
+        if v >= 1000.0 or v <= -100.0:
+            raise RuntimeError(v)
         v2 = '%8.4f' % v
         if v2 == '  0.0000' or v2 == ' -0.0000':
             v2 = '  0.0   '

@@ -15,7 +15,7 @@ class TestFormatting(unittest.TestCase):
         self.check_float_8p4f(val, expected)
 
         val = 1e50
-        self.assertRaises(AssertionError, writeFloats8p4F, [val])
+        self.assertRaises(RuntimeError, writeFloats8p4F, [val])
 
         val = 89.83581
         expected = ' 89.8358'
@@ -35,7 +35,7 @@ class TestFormatting(unittest.TestCase):
 
         val = -101.23451
         expected = '-101.2345'
-        self.assertRaises(AssertionError, writeFloats8p4F, [val])
+        self.assertRaises(RuntimeError, writeFloats8p4F, [val])
 
         val = 101.23451
         expected = '101.2345'
