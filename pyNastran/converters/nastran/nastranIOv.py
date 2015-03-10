@@ -255,6 +255,7 @@ class NastranIO(object):
         self._create_nastran_coords(model)
 
         for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
+            point = node.Position()
             xmin = min(xmin, point[0])
             xmax = max(xmax, point[0])
 
