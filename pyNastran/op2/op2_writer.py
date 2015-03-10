@@ -50,7 +50,7 @@ class OP2Writer(object):
         #: subcaseID
         self.iSubcaseNameMap = {}
         self.subtitles = defaultdict(list)
-        self.labels = defaultdict(list)
+        self.labels = {}
 
         self.page_num = 1
 

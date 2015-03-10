@@ -321,13 +321,17 @@ class F06Writer(object):
 
         self.cquad4_composite_stress = {}
         self.cquad8_composite_stress = {}
+        self.cquadr_composite_stress = {}
         self.ctria3_composite_stress = {}
         self.ctria6_composite_stress = {}
+        self.ctriar_composite_stress = {}
 
         self.cquad4_composite_strain = {}
         self.cquad8_composite_strain = {}
+        self.cquadr_composite_strain = {}
         self.ctria3_composite_strain = {}
         self.ctria6_composite_strain = {}
+        self.ctriar_composite_strain = {}
 
         self.cshear_stress = {}
         self.cshear_strain = {}
@@ -1059,8 +1063,10 @@ class F06Writer(object):
             self.compositePlateStrain,
             self.cquad4_composite_strain,
             self.cquad8_composite_strain,
+            self.cquadr_composite_strain,
             self.ctria3_composite_strain,
             self.ctria6_composite_strain,
+            self.ctriar_composite_strain,
 
             self.nonlinearPlateStrain,
             self.ctriaxStrain, self.hyperelasticPlateStress,
@@ -1137,8 +1143,10 @@ class F06Writer(object):
             self.compositePlateStress,
             self.cquad4_composite_stress,
             self.cquad8_composite_stress,
+            self.cquadr_composite_stress,
             self.ctria3_composite_stress,
             self.ctria6_composite_stress,
+            self.ctriar_composite_stress,
 
             self.nonlinearPlateStress,
             self.ctriaxStress, self.hyperelasticPlateStrain,
@@ -1148,62 +1156,61 @@ class F06Writer(object):
             self.gridPointStresses, self.gridPointVolumeStresses, self.gridPointForces,
         ]
 
-        if 1:
-            for res_key in res_keys:
-                title = self.Title
+        for res_key in res_keys:
+            title = self.Title
 
-                isubcase = res_key[0]
-                subtitle = res_key[1]
-                label = self.labels[(isubcase, subtitle)]
+            isubcase = res_key[0]
+            subtitle = res_key[1]
+            label = self.labels[(isubcase, subtitle)]
 
-                is_compressed = len(self.subtitles[isubcase]) == 1
-                if is_compressed:
-                    res_key = isubcase
+            is_compressed = len(self.subtitles[isubcase]) == 1
+            if is_compressed:
+                res_key = isubcase
 
-                #header[0] = '     %-127s\n' % subtitle
-                #header[1] = '0    %-72s                                SUBCASE %-15i\n' % (label, isubcase)
-                #header[1] = '0    %-72s                                SUBCASE %-15i\n' % ('',isubcase)
+            #header[0] = '     %-127s\n' % subtitle
+            #header[1] = '0    %-72s                                SUBCASE %-15i\n' % (label, isubcase)
+            #header[1] = '0    %-72s                                SUBCASE %-15i\n' % ('',isubcase)
 
-                res_length = self._get_result_length(res_types, res_key)
-                if res_length == 0:
-                    # skipped subcase; no saved results
-                    continue
+            res_length = self._get_result_length(res_types, res_key)
+            if res_length == 0:
+                # skipped subcase; no saved results
+                continue
 
-                res_format = '%%-%is SUBCASE=%%i%%s' % res_length
-                res_format_vectorized = '%%-%is SUBCASE=%%i SUBTITLE=%%s %%s' % res_length
+            res_format = '%%-%is SUBCASE=%%i%%s' % res_length
+            res_format_vectorized = '%%-%is SUBCASE=%%i SUBTITLE=%%s %%s' % res_length
 
-                for res_type in res_types:
-                    #print("res_type ", res_type)
-                    header = ['', '']
-                    #header[0] = '     %s\n' % subtitle
-                    header[0] = '      %-126s\n' % subtitle
-                    header[1] = '0     %-32s                                                                       SUBCASE %-15i\n \n' % (label, isubcase)
-                    #print("res_type = %s" % res_type)
+            for res_type in res_types:
+                #print("res_type ", res_type)
+                header = ['', '']
+                #header[0] = '     %s\n' % subtitle
+                header[0] = '      %-126s\n' % subtitle
+                header[1] = '0     %-32s                                                                       SUBCASE %-15i\n \n' % (label, isubcase)
+                #print("res_type = %s" % res_type)
 
-                    if res_key in res_type:
-                        #header = copy.deepcopy(headerOld)  # fixes bug in case
-                        result = res_type[res_key]
-                        if result.nonlinear_factor is not None:
-                            header.append('')
-                        try:
-                            element_name = ''
-                            if hasattr(result, 'element_name'):
-                                element_name = ' - ' + result.element_name
+                if res_key in res_type:
+                    #header = copy.deepcopy(headerOld)  # fixes bug in case
+                    result = res_type[res_key]
+                    if result.nonlinear_factor is not None:
+                        header.append('')
+                    try:
+                        element_name = ''
+                        if hasattr(result, 'element_name'):
+                            element_name = ' - ' + result.element_name
 
-                            star = '*'
-                            if hasattr(result, 'data'):
-                                star = ' '
-                            if is_compressed:
-                                print(star + res_format % (result.__class__.__name__, isubcase, element_name))
-                            else:
-                                print(star + res_format_vectorized % (result.__class__.__name__, isubcase, subtitle, element_name))
-                            self.page_num = result.write_f06(header, page_stamp, page_num=self.page_num, f=f06, is_mag_phase=False)
-                            assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
-                        except:
-                            #print("result name = %r" % result.name())
-                            raise
-                        if delete_objects:
-                            del result
-                        self.page_num += 1
+                        star = '*'
+                        if hasattr(result, 'data'):
+                            star = ' '
+                        if is_compressed:
+                            print(star + res_format % (result.__class__.__name__, isubcase, element_name))
+                        else:
+                            print(star + res_format_vectorized % (result.__class__.__name__, isubcase, subtitle, element_name))
+                        self.page_num = result.write_f06(header, page_stamp, page_num=self.page_num, f=f06, is_mag_phase=False)
+                        assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
+                    except:
+                        #print("result name = %r" % result.name())
+                        raise
+                    if delete_objects:
+                        del result
+                    self.page_num += 1
         f06.write(make_end(end_flag))
         f06.close()

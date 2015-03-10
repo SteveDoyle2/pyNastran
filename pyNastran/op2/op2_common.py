@@ -424,7 +424,7 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
         if hasattr(self, 'subtitle') and hasattr(self, 'label'):
             if (self.isubcase, self.subtitle) not in self.labels:
                 self.subtitles[self.isubcase].append(self.subtitle)
-                self.labels[(self.isubcase, self.subtitle)].append(self.label)
+                self.labels[(self.isubcase, self.subtitle)] = self.label
 
     def _write_debug_bits(self):
         if self.debug:
