@@ -158,7 +158,7 @@ class OP2_Vectorized(OP2):
             #=======================================================
             'gridPointForces',
             #=======================================================
-            'celasStress',
+            'celasStrain', 'celasStress',
             'springForces',  # not done
             'celas1_stress', 'celas1_strain',
             'celas2_stress', 'celas2_strain',
@@ -171,7 +171,7 @@ class OP2_Vectorized(OP2):
             'crod_stress', 'conrod_stress', 'ctube_stress',
             'crod_strain', 'conrod_strain', 'ctube_strain',
 
-            'rodForces',  # not done
+            'rodStrain', 'rodStress', 'rodForces',  # not done
             'crod_force', 'conrod_force', 'ctube_force',
             #=======================================================
             'plateStress', 'plateStrain',
@@ -198,6 +198,9 @@ class OP2_Vectorized(OP2):
             'beamStress', 'beamStrain', 'beamForces',
             'cbeam_stress', 'cbeam_strain',
             'cbeam_force',  # not done
+
+            'bendForces', 'bushForces', 'damperForces', 'shearForces',
+
             #=======================================================
             'strainEnergy',
             #=======================================================

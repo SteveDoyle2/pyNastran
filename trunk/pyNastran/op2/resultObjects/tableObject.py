@@ -222,10 +222,10 @@ class RealTableArray(TableArray):  # displacement style table
             f.write(format_table4_2.pack(*header))
         #return n
 
-    def _write_f06_block(self, words, header, page_stamp, page_num, f):
-        words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+    def _write_f06_block(self, words, header, page_stamp, page_num, f, write_words=True):
+        if write_words:
+            words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         #words += self.getTableMarker()
-        msg = header + words
         f.write(''.join(header + words))
 
         node = self.node_gridtype[:, 0]
@@ -245,8 +245,9 @@ class RealTableArray(TableArray):  # displacement style table
         f.write(page_stamp % page_num)
         return page_num
 
-    def _write_f06_transient_block(self, words, header, page_stamp, page_num, f):
-        words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
+    def _write_f06_transient_block(self, words, header, page_stamp, page_num, f, write_words=True):
+        if write_words:
+            words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         #words += self.getTableMarker()
 
         if not len(header) >= 3:

@@ -9,19 +9,18 @@ class RealTemperatureArray(RealTableArray):
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
-        asdf
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, page_num, f)
-        words = ['                                             A C C E L E R A T I O N   V E C T O R\n',
+        words = ['                                              T E M P E R A T U R E   V E C T O R\n',
                  ' \n',
-                 '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        #words += self.get_table_marker()
-        return self._write_f06_block(words, header, pageStamp, page_num, f)
+                 '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']
+        return self._write_f06_block(words, header, pageStamp, page_num, f, write_words=False)
 
     def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
-        words = ['                                       C O M P L E X   A C C E L E R A T I O N   V E C T O R\n']
-        #words += self.get_table_marker()
-        return self._write_f06_transient_block(words, header, pageStamp, page_num, f)
+        words = ['                                              T E M P E R A T U R E   V E C T O R\n',
+                 ' \n',
+                 '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']
+        return self._write_f06_transient_block(words, header, pageStamp, page_num, f, write_words=False)
 
 
 class RealTemperature(ScalarObject):  # approach_code=1, sort_code=0, thermal=1
