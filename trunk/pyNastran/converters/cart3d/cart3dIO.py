@@ -144,7 +144,7 @@ class Cart3dIO(object):
         ID = 1
 
         #print("nElements = ",nElements)
-        form, cases = self._fill_cart3d_case(cases, ID, nodes, elements, regions, loads)
+        form, cases = self._fill_cart3d_case(cases, ID, nodes, elements, regions, loads, model)
         #self._finish_results_io(cases)
         self._finish_results_io2(form, cases)
 
@@ -174,7 +174,7 @@ class Cart3dIO(object):
         self.load_cart3d_geometry(cart3d_filename, dirname)
 
 
-    def _fill_cart3d_case(self, cases, ID, nodes, elements, regions, loads):
+    def _fill_cart3d_case(self, cases, ID, nodes, elements, regions, loads, model):
         print("is_centroidal=%s isNodal=%s" % (self.is_centroidal, self.is_nodal))
         assert self.is_centroidal != self.is_nodal
 
@@ -185,6 +185,8 @@ class Cart3dIO(object):
 
         cases_new = []
         new = False
+        is_normals = False
+
         results_form = []
         if self.is_centroidal:
             geometry_form = [
@@ -201,6 +203,7 @@ class Cart3dIO(object):
                 cases[(ID, 0, 'Region', 1, 'centroid', '%i')] = regions
                 cases[(ID, 1, 'ElementID', 1, 'centroid', '%i')] = eids
 
+            i = 2
             if 0:
                 from pyNastran.converters.cart3d.cart3d_to_quad import get_normal_groups
                 normal, normal_groups = get_normal_groups(nodes, elements)
@@ -214,9 +217,28 @@ class Cart3dIO(object):
                 geometry_form.append('Quad Group', 2, [])
 
 
+            if is_normals:
+                geometry_form.append( ('Normal X', i, []) )
+                geometry_form.append( ('Normal Y', i+1, []) )
+                geometry_form.append( ('Normal Z', i+2, []) )
+
+                cnormals = model.get_normals(nodes, elements)
+                cnnodes, three = cnormals.shape
+                assert three == 3, three
+                assert cnnodes == nelements, len(cnnodes)
+
+                if new:
+                    cases_new[i]   = (ID, cnormals[:, 0], 'Normal X', 'centroid', '%.3f')
+                    cases_new[i+1] = (ID, cnormals[:, 1], 'Normal Y', 'centroid', '%.3f')
+                    cases_new[i+2] = (ID, cnormals[:, 2], 'Normal Z', 'centroid', '%.3f')
+                else:
+                    cases[(ID, i,   'Normal X', 1, 'centroid', '%.3f')] = cnormals[:, 0]
+                    cases[(ID, i+1, 'Normal Y', 1, 'centroid', '%.3f')] = cnormals[:, 1]
+                    cases[(ID, i+2, 'Normal Z', 1, 'centroid', '%.3f')] = cnormals[:, 2]
+                i += 3
+
             # these are actually nodal results, so we convert to the centroid
             # by averaging the data (e.g. the Cp data)
-            i = 2
             for result_name in result_names:
                 if result_name in loads:
                     nodal_data = loads[result_name]
@@ -236,14 +258,33 @@ class Cart3dIO(object):
                 #('Region', 0, []),
                 ('NodeID', 0, []),
             ]
+            i = 0
             nids = arange(1, nnodes+1)
             if new:
                 #cases_new[0] = (regions, 'Region', 'centroid', '%i')
                 cases_new[0] = (ID, nids, 'NodeID', 'node', '%i')
             else:
                 cases[(ID, 0, 'NodeID', 1, 'node', '%i')] = nids
+            i += 1
 
-            i = 1
+            if is_normals:
+                geometry_form.append( ('Normal X', 1, []) )
+                geometry_form.append( ('Normal Y', 2, []) )
+                geometry_form.append( ('Normal Z', 3, []) )
+
+                cnormals = model.get_normals(nodes, elements)
+                nnormals = model.get_normals_at_nodes(nodes, elements, cnormals)
+
+                if new:
+                    cases_new[i]   = (ID, nnormals[:, 0], 'Normal X', 'node', '%.3f')
+                    cases_new[i+1] = (ID, nnormals[:, 1], 'Normal Y', 'node', '%.3f')
+                    cases_new[i+2] = (ID, nnormals[:, 2], 'Normal Z', 'node', '%.3f')
+                else:
+                    cases[(ID, i,   'Normal X', 1, 'node', '%.3f')] = nnormals[:, 0]
+                    cases[(ID, i+1, 'Normal Y', 1, 'node', '%.3f')] = nnormals[:, 1]
+                    cases[(ID, i+2, 'Normal Z', 1, 'node', '%.3f')] = nnormals[:, 2]
+                i += 3
+
             for result_name in result_names:
                 if result_name in loads:
                     nodal_data = loads[result_name]
