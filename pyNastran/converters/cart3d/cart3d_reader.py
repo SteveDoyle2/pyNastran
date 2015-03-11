@@ -3,13 +3,14 @@ from six import iteritems, PY2
 from six.moves import zip, range
 import os
 import sys
-from struct import pack
-from math import ceil#, sqrt
+from struct import Struct, pack, unpack
+from math import ceil
+from collections import defaultdict
 
 from numpy import array, zeros, where, savetxt, sqrt, abs, amax, amin
-from numpy import arange, searchsorted, vstack, unique, hstack, ravel
+from numpy import arange, searchsorted, vstack, unique, hstack, ravel, cross
+from numpy.linalg import norm
 
-from struct import Struct, unpack
 from pyNastran.bdf.fieldWriter import print_card
 from pyNastran.utils import is_binary
 from pyNastran.utils.log import get_logger
@@ -467,8 +468,8 @@ class Cart3DReader(object):
             savetxt(f, points, float_fmt)
 
     def write_elements(self, f, elements, is_binary, int_fmt='%6i'):
-        min_e = amin(elements)
-        #assert min_e == 1, 'min(elements)=%s' % min_e
+        min_e = elements.min()
+        assert min_e == 1, 'min(elements)=%s' % min_e
         if is_binary:
             four = pack('>i', 4)
             f.write(four)
@@ -1013,6 +1014,43 @@ class Cart3DReader(object):
     def read_results_binary(self, i, infile, result_names=None):
         pass
 
+    def get_normals(self, nodes, elements):
+        p1 = nodes[elements[:, 0], :]
+        p2 = nodes[elements[:, 1], :]
+        p3 = nodes[elements[:, 2], :]
+        #centroid = (p1 + p2 + p3) / 3.
+
+        ne, three = elements.shape
+        a = p2 - p1
+        b = p3 - p1
+        n = cross(a, b)
+        assert len(n) == ne, 'len(n)=%s ne=%s' % (len(n), ne)
+
+        ni = norm(n, axis=1)
+        assert len(ni) == ne, 'len(ni)=%s ne=%s' % (len(ni), ne)
+
+        assert ni.min() > 0, ni
+        n /= ni[:, None]  # normal vector
+        return n
+
+    def get_normals_at_nodes(self, nodes, elements, normals):
+        nnodes, three = nodes.shape
+        nid_to_eids = defaultdict(list)
+
+        # find the elements to consider for each node
+        for eid, element in enumerate(elements):
+            n1, n2, n3 = element
+            nid_to_eids[n1].append(eid)
+            nid_to_eids[n2].append(eid)
+            nid_to_eids[n3].append(eid)
+
+        nnormals = zeros((nnodes, 3), dtype='float64')
+        for nid in range(nnodes):
+            eids = nid_to_eids[nid]
+            neids = len(eids)
+            ni = normals[eids, :].mean(axis=0)
+            nnormals[nid] = ni
+        return nnormals
 
 if __name__ == '__main__':  # pragma: no cover
     import time
