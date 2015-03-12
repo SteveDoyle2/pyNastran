@@ -42,7 +42,7 @@ def comp2tri(self, in_filenames, out_filename,
     ne = 0
     np = 0
     nr = 0
-    model = Cart3dReader()
+    model = Cart3DReader()
     for infilename in in_filenames:
         point, element, region, load = model.read_cart3d(infilename)
         np, three = point.shape
@@ -68,134 +68,13 @@ class Cart3DReader(object):
     isOutwardNormals = True
 
     def __init__(self, log=None, debug=False):
-        self.isHalfModel = True
         self.readHalf = False
-
         self.cartType = None  # grid, results
         self.nPoints = None
         self.nElements = None
         self.infile = None
         self.infilename = None
         self.log = get_logger(log, 'debug' if debug else 'info')
-
-    def make_quads(self, nodes, elements):
-        raise NotImplementedError()
-        segments, lengths = self._get_segments(nodes, elements)
-        for eid, e in iteritems(elements):
-            a = tuple(sorted([e[0], e[1]]))  # segments of e
-            b = tuple(sorted([e[1], e[2]]))
-            c = tuple(sorted([e[2], e[0]]))
-            #a.sort()
-            #b.sort()
-            #c.sort()
-            print(eid, e)
-            print(segments[a])
-            print(lengths[a])
-            print(len(segments[a]))
-
-            eidA = self._get_segment(a, eid, segments)
-            eidB = self._get_segment(b, eid, segments)
-            eidC = self._get_segment(c, eid, segments)
-            print("eidA=%s eidB=%s eidC=%s" % (eidA, eidB, eidC))
-            if eidA:
-                i = 0
-                e2 = elements[eidA]
-                self.check_quad(nodes, eid, eidA, e, e2, a, b, c, i)
-                del segments[a]
-            if eidB:
-                i = 1
-                e2 = elements[eidB]
-                self.check_quad(nodes, eid, eidB, e, e2, a, b, c, i)
-                del segments[b]
-            if eidC:
-                i = 2
-                e2 = elements[eidC]
-                self.check_quad(nodes, eid, eidC, e, e2, a, b, c, i)
-                del segments[c]
-
-            print("------")
-            #break
-        #for segment in segments:
-        asdf
-
-    def _check_quad(self, nodes, eid, eidA, e, e2, a, b, c, i):
-        r"""
-        ::
-          A----B
-          | \ e|
-          |e2 \|
-          C----D
-
-        two tests
-           1.  folding angle A-B x A-C
-           2a. abs(A-C) - abs(B-D)  = 0  (abs to prevent 2L)
-           2b. abs(A-B) - abs(C-D)  = 0
-        """
-
-        iplus1 = i + 1
-        iplus2 = i + 2
-
-        if iplus1 > 2:
-            iplus1 -= 3
-        if iplus2 > 2:
-            iplus2 -= 3
-        print(i, iplus1)
-        print(iplus1, iplus2)
-        print(iplus2, i)
-        AD = nodes[e[i]] - nodes[e[iplus1]]
-        AB = nodes[e[iplus1]] - nodes[e[iplus2]]
-        BD = nodes[e[iplus2]] - nodes[e[i]]
-
-        print(AD)
-        print(AB)
-        print(BD)
-        print(e2)
-        j = e2.index(e[i])
-
-        jplus1 = j + 1
-        jplus2 = j + 2
-        if jplus1 > 2:
-            jplus1 -= 3
-        if jplus2 > 2:
-            jplus2 -= 3
-
-        print("DA = ", e[j], e[jplus1])
-        DA = nodes[e[j]] - nodes[e[jplus1]]
-        print(DA)
-
-        asdf
-
-    def _get_segment(self, a, eid, segments):
-        if a in segments:
-            aElems = segments[a]
-            print(aElems)
-            i = aElems.index(eid)
-            #print(i)
-            aElems.pop(i)
-            #print(aElems)
-            eidA = aElems[0]
-            #eidA = elements[a]
-            print("eidA = ", eidA)
-            return eidA
-        return None
-
-    def get_y0_nodes(self, nodes, ax):
-        raise RuntimeError('removed...')
-        assert ax is 1, 'ax=%s' % ax
-        yZeroNodes = {}
-        outerNodes = {}
-        isInnerNode = {}
-
-        nnodes, three = nodes.shape
-        for inode in range(nnodes):
-            node = nodes[inode, :]
-            if node[1] == 0:
-                yZeroNodes[inode+1] = node
-                isInnerNode[inode+1] = True
-            else:
-                outerNodes[inode+1] = [node[0], -node[1], node[2]]
-                isInnerNode[inode+1] = False
-        return (yZeroNodes, outerNodes, isInnerNode)
 
     def make_mirror_model(self, nodes, elements, regions, loads, axis='y', tol=0.000001):
         """
@@ -326,8 +205,6 @@ class Cart3DReader(object):
         nodes2 = nodes[inodes_save, :]
         nnodes2, three = nodes2.shape
         assert 0 < nnodes2 < nnodes, 'nnodes=%s nnodes2=%s'  % (nnodes, nnodes2)
-        #print('nnodes=%s nnodes2=%s'  % (nnodes, nnodes2))
-        #print('inodes_save=%s'  % (inodes_save), len(inodes_save))
 
         inodes_save += 1  # +1 is so we don't have to shift inode
         # ..todo:: still need to handle element's node id renumbering
@@ -335,14 +212,10 @@ class Cart3DReader(object):
         for ielement in range(nelements):
             save_element = True
             element = elements[ielement, :]
+
+            # could be faster...
             for inode in element:
-                # something like this should be faster since we know inodes_save is sorted
-                #if inode != inodes_save[searchsorted(inodes_save, inode)]:
-                    #print("bad...", ielement, element, inode)
-                    #save_element = False
-                    #break
                 if inode not in inodes_save:
-                    #print("bad...", ielement, element, inode)
                     save_element = False
                     break
 
@@ -361,7 +234,6 @@ class Cart3DReader(object):
 
         remap_nodes = False
         if amax(elements2) > len(inodes_save):
-            aa
             # build a dictionary of old node ids to new node ids
             nodes_map = {}
             for i in range(1, len(inodes_save) + 1):
@@ -379,34 +251,6 @@ class Cart3DReader(object):
 
         self.log.info('---finished make_half_model---')
         return (nodes2, elements2, regions2, loads2)
-
-    def renumber_mesh(self, nodes, elements, regions, loads):
-        raise NotImplementedError('disabled...')
-        iNodeCounter = 1
-        iElementCounter = 1
-
-        NodeOldToNew = {}
-        #ElementOldToNew = {}
-        nodes2 = {}
-        elements2 = {}
-        regions2 = {}
-
-        nnodes, three = nodes.shape
-        for inode in range(nnodes):
-            node = nodes[inode]
-            NodeOldToNew[inode] = iNodeCounter
-            nodes2[iNodeCounter] = node
-            iNodeCounter += 1
-
-        for (ielement, element) in sorted(iteritems(elements)):
-            element2 = []
-            for nID in element:
-                nID2 = NodeOldToNew[nID]
-                element2.append(nID2)
-            elements2[iElementCounter] = element2
-            regions2[iElementCounter] = regions[ielement]
-            iElementCounter += 1
-        return (nodes, elements, regions, loads)
 
     def write_cart3d(self, outfilename, points, elements, regions, loads=None, is_binary=False, float_fmt='%6.7f'):
         assert len(points) > 0, 'len(points)=%s' % len(points)
@@ -460,7 +304,8 @@ class Cart3DReader(object):
             f.write(four)
 
             npoints, three = points.shape
-            floats = pack('>%%%if' % (npoints*3), *ravel(points) )
+            fmt = '>%if' % (npoints * 3)
+            floats = pack(fmt, *ravel(points) )
 
             f.write(floats)
             f.write(four)
@@ -474,7 +319,8 @@ class Cart3DReader(object):
             four = pack('>i', 4)
             f.write(four)
             nelements, three = elements.shape
-            ints = pack('>%%%ii' % (nelements*3), *ravel(elements) )
+            fmt = '>%ii' % (nelements * 3)
+            ints = pack(fmt, *ravel(elements) )
 
             f.write(ints)
             f.write(four)
@@ -482,14 +328,13 @@ class Cart3DReader(object):
             savetxt(f, elements, int_fmt)
 
     def write_regions(self, f, regions, is_binary):
-        #print("is_binary=%s" % is_binary)
-        #print("regions.shape =", regions.shape)
         if is_binary:
             four = pack('>i', 4)
             f.write(four)
 
             nregions = len(regions)
-            ints = pack('>%%%ii' % (nregions), *regions)
+            fmt = '>%ii' % nregions
+            ints = pack(fmt, *regions)
             f.write(ints)
 
             f.write(four)
@@ -511,8 +356,6 @@ class Cart3DReader(object):
             fmt = '%s\n%s %s %s %s %s\n' % (float_fmt, float_fmt, float_fmt, float_fmt, float_fmt, float_fmt)
             for (cpi, rhoi, rhou, rhov, rhoe, e) in zip(Cp, rho, rhoU, rhoV, rhoW, E):
                 f.write(fmt % (cpi, rhoi, rhou, rhov, rhoe, e))
-            #fmt2 = '%s\n%s %s %s %s %s' % (float_fmt, float_fmt, float_fmt, float_fmt, float_fmt, float_fmt)
-            #savetxt(f, hstack([Cp, rho, rhoU, rhoV, rhoW, E], fmt2)
 
 
     def read_cart3d(self, infilename, result_names=None):
@@ -537,7 +380,7 @@ class Cart3DReader(object):
             loads = self.read_results_ascii(0, self.infile, result_names=result_names)
 
         self.infile.close()
-        self.log.info("nPoints=%s  nElements=%s" % (self.nPoints, self.nElements))
+        self.log.info("nPoints=%s nElements=%s" % (self.nPoints, self.nElements))
         self.log.info("---finished reading cart3d file...%r---" % self.infilename)
         assert self.nPoints > 0, 'nPoints=%s' % self.nPoints
         assert self.nElements > 0, 'nElements=%s' % self.nElements
@@ -698,7 +541,7 @@ class Cart3DReader(object):
                 #gamma = 1.4
                 #else:
                 #    p=0.
-            sline = self._get_list(sline)
+            sline = _get_list(sline)
 
             # Cp
             # rho       rhoU      rhoV      rhoW      E
@@ -807,73 +650,6 @@ class Cart3DReader(object):
         self.log.info('---finished read_results---')
         return loads
 
-    def _get_list(self, sline):
-        """Takes a list of strings and converts them to floats."""
-        try:
-            sline2 = convert_to_float(sline)
-        except ValueError:
-            print("sline = %s" % sline)
-            raise SyntaxError('cannot parse %s' % sline)
-        return sline2
-
-    def write_nastran(self, fname, points, elements, regions):
-        if PY2:
-            f = open(fname, 'wb')
-        else:
-            f = open(fname, 'w')
-        nnodes, three = points.shape
-        for nid in range(nnodes):
-            (x, y, z) = nodes[nid, :]
-            f.write(print_card(['GRID', nid + 1, '', x, y, z]))
-
-        e = 1e7
-        nu = 0.3
-        g = ''
-        thickness = 0.25
-        setRegions = list(set(regions))
-        for pidMid in setRegions:
-            f.write(print_card(['MAT1', pidMid, e, g, nu]))
-            f.write(print_card(['PSHELL', pidMid, pidMid, thickness]))
-
-        for eid, (nodes, region) in enumerate(1, zip(elements, regions)):
-            (n1, n2, n3) = nodes
-            f.write(print_card(['CTRIA3', eid, region, n1, n2, n3]))
-        f.close()
-
-    def _get_segments(self, nodes, elements):
-        segments = {}  # key=eid,
-        lengths = {}
-        for eid, e in iteritems(elements):
-            a = tuple(sorted([e[0], e[1]]))  # segments of e
-            b = tuple(sorted([e[1], e[2]]))
-            c = tuple(sorted([e[2], e[0]]))
-            print(eid, a, b, c)
-
-            #a.sort()
-            #b.sort()
-            #c.sort()
-            if a in segments:
-                segments[a].append(eid)
-            else:
-                segments[a] = [eid]
-                #print(a)
-                #print(nodes[1])
-                lengths[a] = nodes[a[1]] - nodes[a[0]]
-
-            if b in segments:
-                segments[b].append(eid)
-            else:
-                segments[b] = [eid]
-                lengths[b] = nodes[b[1]] - nodes[b[0]]
-
-            if c in segments:
-                segments[c].append(eid)
-            else:
-                segments[c] = [eid]
-                lengths[c] = nodes[c[1]] - nodes[c[0]]
-
-        return segments, lengths
-
     def read_header_binary(self):
         data = self.infile.read(4)
         size, = unpack(b'>i', data)
@@ -895,7 +671,6 @@ class Cart3DReader(object):
         return (nPoints, nElements)
 
     def read_points_binary(self, npoints):
-        #isBuffered = True
         size = npoints * 12  # 12=3*4 all the points
 
         n = 0
@@ -917,25 +692,15 @@ class Cart3DReader(object):
 
             nodeXYZs = unpack(Format, data)
             points[n:] = nodeXYZs
-            #size = 0
 
         points = points.reshape((npoints, 3))
 
-        #if isBuffered:
-            #pass
-        #else:
-            #raise RuntimeError('unBuffered')
-
-        #for nid in range(nPoints):
-            #assert nid in points, 'nid=%s not in points' % nid
         self.infile.read(8)  # end of second block, start of third block
-        #print("finished read_points")
         return points
 
     def read_elements_binary(self, nelements):
         self.nElementsRead = nelements
         self.nElementsSkip = 0
-        #isBuffered = True
         size = nelements * 12  # 12=3*4 all the elements
 
         elements = zeros(self.nElements*3, dtype='int32')
@@ -957,19 +722,11 @@ class Cart3DReader(object):
             nodes = unpack(Format, data)
             elements[n:] = nodes
 
-        #if isBuffered:
-            #pass
-        #else:
-            #raise RuntimeError('unBuffered')
         elements2 = elements.reshape((nelements, 3))
         self.infile.read(8)  # end of third (element) block, start of regions (fourth) block
-        #print("finished read_elements")
         return elements2
 
     def read_regions_binary(self, nelements):
-        #print("starting read_regions")
-        #print(self.infile.tell(), 'regions')
-        #isBuffered = True
         size = nelements * 4  # 12=3*4 all the elements
         s = Struct(b'>3000i')
 
@@ -984,7 +741,6 @@ class Cart3DReader(object):
                 print("len =", len(data))
                 raise
 
-            #r = nr + 3000
             delta = len(region_data)
             regions[nr:nr+delta] = region_data
             nr += delta
@@ -1008,19 +764,34 @@ class Cart3DReader(object):
             size = 0
 
         self.infile.read(4)  # end of regions (fourth) block
-        #print("finished read_regions")
         return regions
 
     def read_results_binary(self, i, infile, result_names=None):
         pass
 
-    def get_normals(self, nodes, elements):
-        p1 = nodes[elements[:, 0], :]
-        p2 = nodes[elements[:, 1], :]
-        p3 = nodes[elements[:, 2], :]
-        #centroid = (p1 + p2 + p3) / 3.
+    def get_normals(self, nodes, elements, shift_nodes=True):
+        """
+        Gets the centroidal normals
 
-        ne, three = elements.shape
+        :param self:  The reader object
+        :param nodes:  the ndarray of nodes
+        :param elements: the ndarray of triangles
+        :param shift_nodes: boolean to shift element IDs such that the
+                            node IDs start at 0 instead of 1
+                            True : nodes start at 1
+                            False : nodes start at 0
+        :retval cnormals:  the ndarray of normalized centroidal normal vectors
+        """
+        if shift_nodes:
+            p1 = nodes[elements[:, 0] - 1, :]
+            p2 = nodes[elements[:, 1] - 1, :]
+            p3 = nodes[elements[:, 2] - 1, :]
+        else:
+            p1 = nodes[elements[:, 0], :]
+            p2 = nodes[elements[:, 1], :]
+            p3 = nodes[elements[:, 2], :]
+
+        ne = elements.shape[0]
         a = p2 - p1
         b = p3 - p1
         n = cross(a, b)
@@ -1033,26 +804,65 @@ class Cart3DReader(object):
         n /= ni[:, None]  # normal vector
         return n
 
-    def get_normals_at_nodes(self, nodes, elements, normals):
-        nnodes, three = nodes.shape
+    def get_normals_at_nodes(self, nodes, elements, cnormals, shift_nodes=True):
+        """
+        Gets the nodal normals
+
+        :param self:  The reader object
+        :param nodes:  the ndarray of nodes
+        :param elements: the ndarray of triangles
+        :param cnormals:  the ndarray of normalized centroidal normal vectors
+        :param shift_nodes: boolean to shift element IDs such that the
+                            node IDs start at 0 instead of 1
+                            True : nodes start at 1
+                            False : nodes start at 0
+
+        :retval nnormals:  the ndarray of normalized nodal normal vectors
+        """
+        nnodes = nodes.shape[0]
         nid_to_eids = defaultdict(list)
 
-        # find the elements to consider for each node
-        for eid, element in enumerate(elements):
-            n1, n2, n3 = element
-            nid_to_eids[n1].append(eid)
-            nid_to_eids[n2].append(eid)
-            nid_to_eids[n3].append(eid)
+        if shift_nodes:
+            for eid, element in enumerate(elements - 1):
+                n1, n2, n3 = element
+                nid_to_eids[n1].append(eid)
+                nid_to_eids[n2].append(eid)
+                nid_to_eids[n3].append(eid)
+        else:
+            # find the elements to consider for each node
+            for eid, element in enumerate(elements):
+                n1, n2, n3 = element
+                nid_to_eids[n1].append(eid)
+                nid_to_eids[n2].append(eid)
+                nid_to_eids[n3].append(eid)
 
         nnormals = zeros((nnodes, 3), dtype='float64')
         for nid in range(nnodes):
             eids = nid_to_eids[nid]
-            neids = len(eids)
-            ni = normals[eids, :].mean(axis=0)
-            nnormals[nid] = ni
+            if len(eids) == 0:
+                raise RuntimeError('nid=%s is not used' % nid)
+            ni_avg = cnormals[eids, :]
+            nnormals[nid] = cnormals[eids, :].sum(axis=0)
+        ni = norm(nnormals, axis=1)
+        assert ni.min() > 0, ni
+        nnormals /= ni[:, None]  # normal vector
         return nnormals
 
-if __name__ == '__main__':  # pragma: no cover
+def _get_list(sline):
+    """Takes a list of strings and converts them to floats."""
+    try:
+        sline2 = convert_to_float(sline)
+    except ValueError:
+        print("sline = %s" % sline)
+        raise SyntaxError('cannot parse %s' % sline)
+    return sline2
+
+
+#class Cart3d_Mesher(Cart3DReader):
+    #def __init__(self, log=None, debug=False):
+        #Cart3DReader(self, log=log, debug=debug)
+
+def main():
     import time
     t0 = time.time()
 
@@ -1087,50 +897,53 @@ if __name__ == '__main__':  # pragma: no cover
     cart2 = Cart3DReader(log, debug)
     (points, elements, regions, loads) = cart2.read_cart3d(cart3dGeom)
     cart2.write_cart3d(outfilename, points, elements, regions)
-    #print(points)
 
 
-if 0:
-    basepath = os.getcwd()
-    configpath = os.path.join(basepath, 'inputs')
-    workpath = os.path.join(basepath, 'outputsFinal')
-    #bdfModel   = os.path.join(configpath,'aeroModel.bdf')
-    #assert os.path.exists(bdfModel),'%r doesnt exist' % bdfModel
-    os.chdir(workpath)
-    print("basepath", basepath)
+    if 0:
+        basepath = os.getcwd()
+        configpath = os.path.join(basepath, 'inputs')
+        workpath = os.path.join(basepath, 'outputsFinal')
+        #bdfModel   = os.path.join(configpath,'aeroModel.bdf')
+        #assert os.path.exists(bdfModel),'%r doesnt exist' % bdfModel
+        os.chdir(workpath)
+        print("basepath", basepath)
 
-    cart3dGeom = os.path.join(configpath, 'Cart3d_bwb2.i.tri')
-    cart3dGeom2 = os.path.join(workpath, 'Cart3d_half.i.tri')
-    cart3dGeom3 = os.path.join(workpath, 'Cart3d_full.i.tri')
-    #cart3dGeom4 = os.path.join(workpath,'Cart3d_full2.i.tri')
+        cart3dGeom = os.path.join(configpath, 'Cart3d_bwb2.i.tri')
+        cart3dGeom2 = os.path.join(workpath, 'Cart3d_half.i.tri')
+        cart3dGeom3 = os.path.join(workpath, 'Cart3d_full.i.tri')
+        #cart3dGeom4 = os.path.join(workpath,'Cart3d_full2.i.tri')
 
-    cart = Cart3DReader(log, debug)
-    (points, elements, regions, loads) = cart.read_cart3d(cart3dGeom)
-    (points, elements, regions, loads) = cart.make_half_model(points, elements, regions, loads, axis='y', remap_nodes=True)
-    (points, elements, regions, loads) = cart.make_mirror_model(points, elements, regions, loads, axis='y')
-    cart.write_cart3d(cart3dGeom2, points, elements, regions)
+        cart = Cart3DReader(log, debug)
+        (points, elements, regions, loads) = cart.read_cart3d(cart3dGeom)
+        (points, elements, regions, loads) = cart.make_half_model(points, elements, regions, loads, axis='y', remap_nodes=True)
+        (points, elements, regions, loads) = cart.make_mirror_model(points, elements, regions, loads, axis='y')
+        cart.write_cart3d(cart3dGeom2, points, elements, regions)
 
-    #cart = Cart3DAsciiReader(cart3dGeom)  # bJet.a.tri
-    #(cartPoints,elements,regions,loads) = cart.read()
-    #points2 = {}
-    #for (iPoint,point) in sorted(iteritems(points)):
-        #(x,y,z) = point
-        #print("p=%s x=%s y=%s z=%s  z2=%s" %(iPoint,x,y,z,z+x/10.))
-        #points2[iPoint] = [x,y,z+x/10.]
-    #(points, elements, regions, loads) = cart.make_mirror_model(points2, elements, regions, loads)
+        #cart = Cart3DAsciiReader(cart3dGeom)  # bJet.a.tri
+        #(cartPoints,elements,regions,loads) = cart.read()
+        #points2 = {}
+        #for (iPoint,point) in sorted(iteritems(points)):
+            #(x,y,z) = point
+            #print("p=%s x=%s y=%s z=%s  z2=%s" %(iPoint,x,y,z,z+x/10.))
+            #points2[iPoint] = [x,y,z+x/10.]
+        #(points, elements, regions, loads) = cart.make_mirror_model(points2, elements, regions, loads)
 
-    cart2 = Cart3DAsciiReader(cart3dGeom2)
-    (points, elements, regions, loads) = cart2.read_cart3d()
+        cart2 = Cart3DReader()
+        (points, elements, regions, loads) = cart2.read_cart3d(cart3dGeom2)
 
-    #makeFullModel
-    (points, elements, regions, loads) = cart2.make_mirror_model(points, elements, regions, loads)  # half model values going in
-    cart2.write_cart3d(cart3dGeom3, points, elements, regions)
+        #makeFullModel
+        (points, elements, regions, loads) = cart2.make_mirror_model(points, elements, regions, loads)  # half model values going in
+        cart2.write_cart3d(cart3dGeom3, points, elements, regions)
 
-    #cart3 = Cart3DAsciiReader(cart3dGeom2)
-    #(points, elements, regions, loads) = cart3.read_cart3d()
-    #(points, elements, regions, loads) = cart3.make_mirror_model(points, elements, regions, loads)
+        #cart3 = Cart3DReader(cart3dGeom2)
+        #(points, elements, regions, loads) = cart3.read_cart3d()
+        #(points, elements, regions, loads) = cart3.make_mirror_model(points, elements, regions, loads)
 
 
-    #print("loads = ",list_print(loads), len(loads))
-    #cartOutfile = os.path.join(workpath, 'bJet.a.tri_test')
-    #cart.writeInfile(cartOutfile, cartPoints, elements, regions)
+        #print("loads = ",list_print(loads), len(loads))
+        #cartOutfile = os.path.join(workpath, 'bJet.a.tri_test')
+        #cart.writeInfile(cartOutfile, cartPoints, elements, regions)
+
+if __name__ == '__main__':  # pragma: no cover
+    main()
+

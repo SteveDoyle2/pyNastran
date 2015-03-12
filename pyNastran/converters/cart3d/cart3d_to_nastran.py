@@ -5,6 +5,7 @@ from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.fieldWriter16 import print_card_16
 
+
 def cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=None, debug=False):
     """
     Converts a Cart3D file to STL format.
@@ -23,6 +24,7 @@ def cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=None, debug=Fa
     #bdf.write_bdf(bdf_filename)
     #return
     f = open(bdf_filename, 'wb')
+    f.write('CEND\n')
     f.write('BEGIN BULK\n')
     f.write('$Nodes\n')
 
