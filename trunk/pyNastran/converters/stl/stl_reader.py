@@ -18,6 +18,40 @@ from pyNastran.utils import is_binary as is_file_binary
 from pyNastran.utils.log import get_logger
 
 
+def combine_stls(stl_filenames, stl_out_filename=None, remove_bad_elements=False, is_binary=True, float_fmt='%6.12f'):
+    """
+    Combines multiple STLs into a single file
+
+    :param stl_filenames:        list of stl filenames
+    :param remove_bad_elements:  should elements with invalid normals be removed?  (default=False)
+    :param stl_out_filename:     string of stl output filename (default=None -> no writing)
+    :param is_binary:            should the output file be binary (default=True)
+    :param float_fmt:            the ascii float format (default='%6.12f')
+
+    :retval stl:  the stl object
+    """
+    nodes = []
+    elements = []
+
+    n0 = 0
+    for fname in stl_filenames:
+        stl = STLReader()
+        stl.read_stl(fname)
+        nnodes = stl.nodes.shape[0]
+        nodes.append(stl.nodes)
+        elements.append(stl.elements + n0)
+        n0 += nnodes
+
+    stl.nodes = vstack(nodes)
+    stl.elements = vstack(elements)
+
+    if remove_bad_elements:
+        stl.remove_elements_with_bad_normals(stl.elements, nodes=stl.nodes)
+
+    if stl_out_filename is not None:
+        stl.write_stl(stl_out_filename, is_binary=is_binary, float_fmt=float_fmt)
+    return stl
+
 class STLReader(object):
     #modelType = 'stl'
     #isStructured = False
@@ -76,22 +110,15 @@ class STLReader(object):
         a = p2 - p1
         b = p3 - p1
         n = cross(a, b)
+        del a, b
         #n /= norm(n, axis=1)
 
         s = Struct('12fH')
-        for element in elements:
-            a = self.nodes[element[0], :]
-            b = self.nodes[element[1], :]
-            c = self.nodes[element[2], :]
-            ab = [b[0]-a[0],b[1]-a[1],b[2]-a[2]]
-            ac = [c[0]-a[0],c[1]-a[1],c[2]-a[2]]
-            n = [ab[1]*ac[2]-ab[2]*ac[1],
-                 ab[2]*ac[0]-ab[0]*ac[2],
-                 ab[0]*ac[1]-ab[1]*ac[0]]
-            data = s.pack(n[0],n[1],n[2],
-                          a[0],a[1],a[2],
-                          b[0],b[1],b[2],
-                          c[0],c[1],c[2],0)
+        for eid, element in enumerate(elements):
+            data = s.pack(n[eid, 0], n[eid, 1], n[eid, 2],
+                          p1[eid, 0], p1[eid, 1], p1[eid, 2],
+                          p2[eid, 0], p2[eid, 1], p2[eid, 2],
+                          p3[eid, 0], p3[eid, 1], p3[eid, 2], 0)
             f.write(data)
         f.close()
 
