@@ -555,7 +555,7 @@ class STLReader(object):
                 #break
         self.infile.close()
 
-        assert inode > 0
+        assert inode > 0, inode
         nnodes = inode + 1 # accounting for indexing
         self.elements = array(elements, 'int32')
         nodes = zeros((nnodes, 3), 'float64')
@@ -640,67 +640,15 @@ class STLReader(object):
 
                 # the normal is now backwards, so we flip it
                 element3.reverse()
-
                 elements3.append(element3)
 
         self.nodes = nodes
         self.elements = array(elements2 + elements3, dtype='int32')
 
-def run_arg_parse():
-    msg  = 'This program flips the normal of an STL model.\n'
-    msg += 'Usage:\n'
-    msg += '  stl_reader INPUT [-o OUTPUT]\n'
-    msg += '             [-n] [-q]\n'
-    msg += '  stl_reader -h | --help\n'
-    msg += '  stl_reader -v | --version\n'
-    msg += "  INPUT      path to input file\n"
-    msg += "\n"
-    msg += "Options:\n"
-    msg += "  -h, --help                  show this help message and exit\n"
-    #msg += "  -f FORMAT, --format FORMAT  format type (panair, cart3d,\n"
-    #msg += "                                           nastran, lawgs, stl)\n"
-    msg += "  -o OUTPUT, --output OUTPUT  path to output file\n"
-    msg += "  -n, --normal                flip the element normals\n"
-    #msg += "  -r XYZ, --rotation XYZ      [x, y, z, -x, -y, -z] default is ???\n"
 
-    msg += "  -q, --quiet                 prints debug messages (default=True)\n"
-    msg += "  -v, --version               show program's version number and exit\n"
-
-    ver = str(pyNastran.__version__)
-    data = docopt(msg, version=ver)
-    #print data
-
-    #format  = data['--format']
-    input = data['INPUT']
-    print("input = %s" % input)
-    output = data['--output']
-    if output is None:
-        input_base, ext = os.path.splitext(input)
-        output = input_base + '_out.stl'
-
-    reverse_normals = data['--normal']
-    assert reverse_normals in [True, False]
-    quiet = data['--quiet']
-    return (input, output, reverse_normals, quiet)
-
-def main():
-    (stl_geom_in, stl_geom_out, reverse_normals, quiet) = run_arg_parse()
-    import time
-    t0 = time.time()
-    # binary
-    #stl_geom = None
-
-    # ascii
-    #stl_geom = 'spw_half.STL'
-
-    log = None
-    debug = False
-    model = STLReader(log, debug)  # ascii/binary
-
-    (nodes, elements) = model.read_stl(stl_geom_in)
-    if reverse_normals:
-        elements = model.flip_normals(elements)
-
+def _rotate_model(stl):  # pragma: no cover
+    nodes = stl.nodes
+    elements = stl.elements
     if 0:
         # rotate the model
         from numpy import where, arctan2, cos, sin, hstack, vstack, concatenate, transpose, pi
@@ -724,10 +672,13 @@ def main():
 
     if 0:
         # project the volume
-        (nodes2, elements2) = model.project_mesh(nodes_rotated, elements)
+        (nodes2, elements2) = stl.project_mesh(nodes_rotated, elements)
 
     # write the model
-    model._write_stl_ascii(stl_geom_out, 'sphere', nodes, elements)
+    stl._write_stl_ascii(stl_geom_out, 'sphere', nodes, elements)
+
 
 if __name__ == '__main__':  # pragma: no cover
+    from pyNastran.converters.stl.stl_reshape import main
     main()
+
