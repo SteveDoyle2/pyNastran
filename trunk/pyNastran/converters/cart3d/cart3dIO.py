@@ -93,7 +93,7 @@ class Cart3dIO(object):
                 #vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
 
         assert nodes is not None
-        nnodes, three = nodes.shape
+        nnodes = nodes.shape[0]
 
         nid = 0
         #print("nnodes=%s" % nnodes)
@@ -106,7 +106,7 @@ class Cart3dIO(object):
             points.InsertPoint(nid, nodes[i, :])
             nid += 1
 
-        nelements, three = elements.shape
+        nelements = elements.shape[0]
         elements -= 1
         for eid in range(nelements):
             elem = vtkTriangle()
@@ -153,24 +153,7 @@ class Cart3dIO(object):
 
     def load_cart3d_results(self, cart3d_filename, dirname):
         model = Cart3DReader(log=self.log, debug=False)
-        #self.modelType = model.modelType
-        #(nodes, elements, regions, loads) = model.read_cart3d(cart3dFileName)
 
-        model.infilename = cart3d_filename
-        if is_binary(infilename):
-            model.infile = open(cart3d_filename, 'rb')
-            (model.nPoints, model.nElements) = self.read_header_binary()
-            points = model.read_points_binary(self.nPoints)
-            elements = model.read_elements_binary(self.nElements)
-            regions = model.read_regions_binary(self.nElements)
-            #loads = {}
-        else:
-            model.infile = open(cart3d_filename, 'r')
-            model.read_header_ascii()
-            points = model.read_points_ascii(bypass=True)
-            elements = model.read_elements_ascii(bypass=True)
-            regions = model.read_regions_ascii(bypass=True)
-            loads = model.read_results_ascii(0, model.infile, result_names=result_names)
         self.load_cart3d_geometry(cart3d_filename, dirname)
 
 
@@ -180,12 +163,12 @@ class Cart3dIO(object):
 
         result_names = ['Cp', 'Mach', 'U', 'V', 'W', 'E', 'rho',
                         'rhoU', 'rhoV', 'rhoW', 'rhoE']
-        nelements, three = elements.shape
-        nnodes, three = nodes.shape
+        nelements = elements.shape[0]
+        nnodes = nodes.shape[0]
 
         cases_new = []
         new = False
-        is_normals = False
+        is_normals = True
 
         results_form = []
         if self.is_centroidal:
@@ -219,22 +202,21 @@ class Cart3dIO(object):
 
             if is_normals:
                 geometry_form.append( ('Normal X', i, []) )
-                geometry_form.append( ('Normal Y', i+1, []) )
-                geometry_form.append( ('Normal Z', i+2, []) )
+                geometry_form.append( ('Normal Y', i + 1, []) )
+                geometry_form.append( ('Normal Z', i + 2, []) )
 
-                cnormals = model.get_normals(nodes, elements)
-                cnnodes, three = cnormals.shape
-                assert three == 3, three
+                cnormals = model.get_normals(nodes, elements, shift_nodes=False)
+                cnnodes = cnormals.shape[0]
                 assert cnnodes == nelements, len(cnnodes)
 
                 if new:
-                    cases_new[i]   = (ID, cnormals[:, 0], 'Normal X', 'centroid', '%.3f')
-                    cases_new[i+1] = (ID, cnormals[:, 1], 'Normal Y', 'centroid', '%.3f')
-                    cases_new[i+2] = (ID, cnormals[:, 2], 'Normal Z', 'centroid', '%.3f')
+                    cases_new[i] = (ID, cnormals[:, 0], 'Normal X', 'centroid', '%.3f')
+                    cases_new[i + 1] = (ID, cnormals[:, 1], 'Normal Y', 'centroid', '%.3f')
+                    cases_new[i + 2] = (ID, cnormals[:, 2], 'Normal Z', 'centroid', '%.3f')
                 else:
-                    cases[(ID, i,   'Normal X', 1, 'centroid', '%.3f')] = cnormals[:, 0]
-                    cases[(ID, i+1, 'Normal Y', 1, 'centroid', '%.3f')] = cnormals[:, 1]
-                    cases[(ID, i+2, 'Normal Z', 1, 'centroid', '%.3f')] = cnormals[:, 2]
+                    cases[(ID, i, 'Normal X', 1, 'centroid', '%.3f')] = cnormals[:, 0]
+                    cases[(ID, i + 1, 'Normal Y', 1, 'centroid', '%.3f')] = cnormals[:, 1]
+                    cases[(ID, i + 2, 'Normal Z', 1, 'centroid', '%.3f')] = cnormals[:, 2]
                 i += 3
 
             # these are actually nodal results, so we convert to the centroid
@@ -272,17 +254,17 @@ class Cart3dIO(object):
                 geometry_form.append( ('Normal Y', 2, []) )
                 geometry_form.append( ('Normal Z', 3, []) )
 
-                cnormals = model.get_normals(nodes, elements)
-                nnormals = model.get_normals_at_nodes(nodes, elements, cnormals)
+                cnormals = model.get_normals(nodes, elements, shift_nodes=False)
+                nnormals = model.get_normals_at_nodes(nodes, elements, cnormals, shift_nodes=False)
 
                 if new:
-                    cases_new[i]   = (ID, nnormals[:, 0], 'Normal X', 'node', '%.3f')
-                    cases_new[i+1] = (ID, nnormals[:, 1], 'Normal Y', 'node', '%.3f')
-                    cases_new[i+2] = (ID, nnormals[:, 2], 'Normal Z', 'node', '%.3f')
+                    cases_new[i] = (ID, nnormals[:, 0], 'Normal X', 'node', '%.3f')
+                    cases_new[i + 1] = (ID, nnormals[:, 1], 'Normal Y', 'node', '%.3f')
+                    cases_new[i + 2] = (ID, nnormals[:, 2], 'Normal Z', 'node', '%.3f')
                 else:
-                    cases[(ID, i,   'Normal X', 1, 'node', '%.3f')] = nnormals[:, 0]
-                    cases[(ID, i+1, 'Normal Y', 1, 'node', '%.3f')] = nnormals[:, 1]
-                    cases[(ID, i+2, 'Normal Z', 1, 'node', '%.3f')] = nnormals[:, 2]
+                    cases[(ID, i, 'Normal X', 1, 'node', '%.3f')] = nnormals[:, 0]
+                    cases[(ID, i + 1, 'Normal Y', 1, 'node', '%.3f')] = nnormals[:, 1]
+                    cases[(ID, i + 2, 'Normal Z', 1, 'node', '%.3f')] = nnormals[:, 2]
                 i += 3
 
             for result_name in result_names:
