@@ -3,7 +3,7 @@ from numpy import real, imag, ndarray, where, arange
 from numpy import matrix as Matrix
 from scipy.sparse import coo_matrix
 
-from pyNastran.bdf.fieldWriter import print_card_8 #, print_card_16
+from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.field_writer_double import print_card_double
 
 

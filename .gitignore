@@ -1,0 +1,6 @@
+*.html
+*.doctree
+*inheritance*
+*_build*
+*.js
+*.css

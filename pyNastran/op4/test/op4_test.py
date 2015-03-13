@@ -4,11 +4,9 @@ import os
 from numpy import ndarray, eye, array_equal, complex64, complex128, zeros
 import unittest
 from pyNastran.op4.op4 import OP4
-#from pyNastran.op4.cop4 import OP4 as cOP4
 
 import pyNastran.op4.test
 op4Path = pyNastran.op4.test.__path__[0]
-#print(op4Path)
 
 
 def pass_test1():
@@ -245,10 +243,4 @@ class TestOP4(unittest.TestCase):
 
 
 if __name__ == '__main__':  # pragma: no cover
-    #failed_test1()
-    #print "*********"
-    #failed_test2()
-
-    #pass_test1()
-    #pass_test2()
     unittest.main()
