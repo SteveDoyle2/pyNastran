@@ -25,6 +25,8 @@ print "cwd", cwd
 print "pkg_path", pkg_path
 sys.stdout.flush()
 
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+
 sys.path.append(os.path.dirname(cwd))
 sys.path.append(os.path.dirname(pkg_path))
 sys.path.append(pkg_path)
