@@ -492,9 +492,9 @@ class STLReader(object):
         nodes_dict = {}
         elements = []
         while line:
-            if 'solid' in line[:6]:
+            if 'solid' in line[:6].lower():
                 line = f.readline()  # facet
-                while 'facet' in line.strip()[:5]:
+                while 'facet' in line.strip()[:5].lower():
                     #facet normal -6.665299e-001 6.795624e-001 3.064844e-001
                     #   outer loop
                     #      vertex 8.142845e-002 2.731541e-001 1.190024e+001
@@ -546,7 +546,7 @@ class STLReader(object):
                     ielement += 1
                     line = f.readline()  # facet
                 #print "end of solid..."
-            elif 'endsolid' in line:
+            elif 'endsolid' in line.lower():
                 line = f.readline()
             else:
                 self.log.error(line)
