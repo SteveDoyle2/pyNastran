@@ -21,7 +21,7 @@ def run_arg_parse():
     #msg += "  -r XYZ, --rotation XYZ      [x, y, z, -x, -y, -z] default is ???\n"
 
     #if mode != 'qt':
-    msg += "  -p SCRIPT, --pyscript SCIPRT  path to script file\n"
+    msg += "  -p SCRIPT, --pyscript SCRIPT  path to script file\n"
     msg += "  -s SHOT, --shots SHOT       path to screenshot (only 1 for now)\n"
     msg += "  -m MAGNIFY, --magnify       MAGNIFY how much should the resolution on a picture be magnified (default=1)\n"
 
