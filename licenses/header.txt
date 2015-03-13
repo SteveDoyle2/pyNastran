@@ -1,11 +1,12 @@
 ## GNU Lesser General Public License
 ## 
 ## Program pyNastran - a python interface to NASTRAN files
-## Copyright (C) 2011-2014  Steven Doyle, Al Danial
+## Copyright (C) 2011-2015  Steven Doyle, Al Danial, Marcin Gąsiorek
 ## 
 ## Authors and copyright holders of pyNastran
-## Steven Doyle <mesheb82@gmail.com>
-## Al Danial    <al.danial@gmail.com>
+## Steven Doyle
+## Al Danial
+## Marcin Gąsiorek
 ## 
 ## This file is part of pyNastran.
 ## 
