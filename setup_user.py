@@ -54,7 +54,7 @@ setup(name='pyNastran',
           'scipy >= 0.13.0',
           'docopt == 0.6.2',
           #'matplotlib >= 1.3.0',
-          #'vtk >= 5.10.0',   # should be installed, but not for the docs
+          'vtk >= 5.10.0',
           'pillow >= 2.0.0',
           'six >= 1.7.2',
           #'wx >= 2.8.12.0',
