@@ -53,7 +53,7 @@ MOCK_MODULES = [#'numpy', 'numpy.linalg','numpy.__version__',
                 'openmdao',
                 'openmdao.main.api',
                 'openmdao.util',
-                'openmdao.util.doctools'
+                'openmdao.util.doctools',
                 'openmdao.lib.datatypes.api',
                 'openmdao.lib.components',
                 'openmdao.lib.drivers.api',
