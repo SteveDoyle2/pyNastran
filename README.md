@@ -9,9 +9,15 @@ Additionally, a long awaited new release (v0.7) is coming soon.  The target is s
  * additional OP2 tables
  * improved F06 reader (the OP2 reader is still better)
  * 20 new BDF cards
+ * Large Field format writing
  * much improved GUI with transient support (real only), a results sidebar, logging, and scripting support
+ * additional readers/converters to/from various other formats (e.g. STL, Cart3d, Panair) as well as some GUI support
+ * Python 2/3 support with a single code base
 
 As always there are many bug fixes and many new tests.
+
+Additionally, there have also been many API changes.  It's a frustrating step, but pyNastran is adopting PEP-8.
+Where possible, old methods will be maintained until v0.8, but that is not always possible.
 
 ## Download Page
 Google Code no longer supports new downloads.  As such, the download page will now be located at  [Sourceforge](https://sourceforge.net/projects/pynastran/files/?source=navbar).  The much improved dev version of the [GUI](https://github.com/SteveDoyle2/pynastran/wiki/GUI) is located there.  v0.6.1 and earlier releases will still be located at Google Code (at least for now).
@@ -24,11 +30,8 @@ Marcin Gąsiorek participated in the latest pyNastran under the European Space A
 Also, if anyone knows how to setup a project with readthedocs.org, we can get pyNastran documentation setup online.
 
 ## Additional Info
-Note the wiki refers to the most current version.
-Make sure your accessing this site through https://github.com/SteveDoyle2/pynastran.
+Note the wiki refers to the most current released version (v0.6.1) unless noted.
 
-## Questions
-If you have a question about how to do something with pyNastran, create a new issue or post in the [forum](http://groups.google.com/group/pynastran-discuss) or the [developer forum](https://groups.google.com/group/pynastran-dev) for questions/discussion releated to the dev version.  Also, if you have any small test problems that have issues, please make a new issue and attach the file.
 
 # Overview
 The pyNastran software interfaces to Nastran's complicated input and output files and provides a simplified interface to read/edit/write the various files.  The software is compatible currently being used on Windows, Linux, and Mac.
@@ -52,7 +55,7 @@ A simple [GUI](https://github.com/SteveDoyle2/pynastran/wiki/GUI) has been devel
  * [GUI](https://github.com/SteveDoyle2/pynastran/wiki/GUI) for displaying a BDF and OP2 stresses
  * About 180 supported BDF cards; some with methods (e.g. mass, area, volume, centroid, thickness, length, nsm)
  * [install](https://github.com/SteveDoyle2/pynastran/wiki/InstallationGuide) script
- * automated [documentation](https://github.com/SteveDoyle2/pynastran/wiki/DeveloperDocs user]  using Doxygen
+ * automated [documentation](https://github.com/SteveDoyle2/pynastran/wiki/DeveloperDocs user)  using Doxygen
  * list of <A href="https://github.com/SteveDoyle2/pynastran/blob/v0.6/dev/bdf_readWrite.txt">BDF cards</A>
  * list of <A href="https://github.com/SteveDoyle2/pynastran/blob/v0.6/dev/op2_reading.txt">OP2 Tables</A> 
  * list of <A href="https://github.com/SteveDoyle2/pynastran/blob/v0.6/dev/f06_readWrite.txt">F06 Tables</A> 
