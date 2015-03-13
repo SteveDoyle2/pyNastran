@@ -21,14 +21,16 @@ class SU2Reader(object):
         quads = []
         for ne in range(nelem):
             # what's the 0th slot?
-            #Line   	3
-            #Triangle	5
-            #Quadrilateral	9
-            #Tetrahedral	10
-            #Hexahedral	12
-            #Wedge  	13
-            #Pyramid	14
-            Type, *nodes = f.readline().split()[1:-1]
+            #Line       3
+            #Triangle   5
+            #Quadrilateral  9
+            #Tetrahedral    10
+            #Hexahedral 12
+            #Wedge      13
+            #Pyramid    14
+            data = f.readline().split()[1:-1]
+            Type = data[0]
+            nodes = data[1:]
             if Type == '9':
                 quads.append(nodes)
             elif Type == '5':
@@ -51,9 +53,9 @@ class SU2Reader(object):
                 lines = zeros(nelements_mark, 2)
                 for ne in range(nelements_mark):
                     # what are the 3 slots?
-                    #Line          (2D) 	3
-                    #Triangle      (3D) 	5
-                    #Quadrilateral (3D) 	9
+                    #Line          (2D)     3
+                    #Triangle      (3D)     5
+                    #Quadrilateral (3D)     9
                     Type, n1, n2 = f.readline().split()
                     lines[ne] = [n1, n2]
 
@@ -71,7 +73,9 @@ class SU2Reader(object):
         wedges = []
         pyramids = []
         for ne in range(nelem):
-            Type, *nodes = f.readline().split()[1:-1]
+            data = f.readline().split()[1:-1]
+            Type = data[0]
+            nodes = data[1:]
             if Type == '10':
                 tets.append(nodes)
             elif Type == '12':
@@ -104,7 +108,9 @@ class SU2Reader(object):
             tris = []
             quads = []
             for ne in range(nelements_mark):
-                Type, *nodes = f.readline().split()[1:-1]
+                data = f.readline().split()[1:-1]
+                Type = data[0]
+                nodes = data[1:]
                 if Type == '9':
                     quads.append(nodes)
                 elif Type == '5':
@@ -139,13 +145,13 @@ class SU2Reader(object):
 
         f.write('NDIM = %i\n' % ndim)
         self.Type_nnodes_map = {
-            #Line   	3
-            #Triangle	5
-            #Quadrilateral	9
-            #Tetrahedral	10
-            #Hexahedral	12
-            #Wedge  	13
-            #Pyramid	14
+            #Line       3
+            #Triangle   5
+            #Quadrilateral  9
+            #Tetrahedral    10
+            #Hexahedral 12
+            #Wedge      13
+            #Pyramid    14
             3 : 2,
             5 : 3,
             9 : 4,
