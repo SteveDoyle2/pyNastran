@@ -47,7 +47,12 @@ MOCK_MODULES = [#'numpy', 'numpy.linalg','numpy.__version__',
                 #'vtk', 'wx', 'PyQt4', 'PySide',
                 'docopt',
                 #'numpydoc',
-                'openmdao',
+                'openmdao', 'openmdao.util', 'openmdao.main.api',
+                'openmdao.lib.datatypes.api',
+                'openmdao.lib.components',
+                'openmdao.lib.drivers.api',
+                'openmdao.lib.components.nastran.nastran',
+                'openmdao.examples.bar3simulation',
                 ]
 #MOCK_MODULES += ['pygtk', 'gtk', 'gobject', 'argparse', 'numpy', 'pandas']
 
