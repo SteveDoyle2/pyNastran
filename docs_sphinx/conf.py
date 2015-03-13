@@ -43,6 +43,8 @@ MOCK_MODULES = [#'numpy', 'numpy.linalg','numpy.__version__',
                 #'scipy', 'scipy.linalg', 'scipy.sparse', 'scipy.weave',
                 #'scipy.integrate', 'scipy.interpolate',
                 'pandas',
+                'numpy.distutils.core',
+                'numpy.distutils',
                 'matplotlib',
                 #'vtk', 'wx', 'PyQt4', 'PySide',
                 'docopt',
@@ -52,7 +54,14 @@ MOCK_MODULES = [#'numpy', 'numpy.linalg','numpy.__version__',
                 'openmdao.lib.components',
                 'openmdao.lib.drivers.api',
                 'openmdao.lib.components.nastran.nastran',
-                'openmdao.examples.bar3simulation',
+                'openmdao.examples.bar3simulation.bar3',
+                'openmdao.examples.bar3simulation.bar3_wrap_f',
+                'nastranwrapper.nastran',
+                'nastranwrapper',
+                'nastranwrapper.test.nastranwrapper_test_utils',
+
+
+
                 ]
 #MOCK_MODULES += ['pygtk', 'gtk', 'gobject', 'argparse', 'numpy', 'pandas']
 
