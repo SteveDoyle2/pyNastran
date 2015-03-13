@@ -3,7 +3,7 @@
 ## pyNastran is Moving (3/12/2015)
 Google Code is  [closing down](http://google-opensource.blogspot.com/2015/03/farewell-to-google-code.html) on January 25, 2016 and as such pyNastran is moving to [github](https://github.com/SteveDoyle2/pynastran).  New commits will be made there.
 
-Additionally, a long awaited new release (v0.7) is coming soon.  The target is sometime withing the next month.  There are many improvements such as:
+Additionally, a long awaited new release (v0.7) is coming soon.  The target is sometime within the next month.  There are many improvements such as:
  * OP2 superelement support
  * vectorized OP2 support (uses much less memory; not implemented for Element Forces)
  * additional OP2 tables
@@ -14,7 +14,7 @@ Additionally, a long awaited new release (v0.7) is coming soon.  The target is s
 As always there are many bug fixes and many new tests.
 
 ## Download Page
-Google Code no longer supports new downloads.  As such, the download page will now be located at  [Sourceforge](https://sourceforge.net/projects/pynastran/files/?source=navbar).  The much improved dev version of the [GUI](http://code.google.com/p/pynastran/wiki/GUI) is located there.  v0.6.1 and earlier releases will still be located here.
+Google Code no longer supports new downloads.  As such, the download page will now be located at  [Sourceforge](https://sourceforge.net/projects/pynastran/files/?source=navbar).  The much improved dev version of the [GUI](https://github.com/SteveDoyle2/pynastran/wiki/GUI) is located there.  v0.6.1 and earlier releases will still be located at Google Code (at least for now).
 
 ## Version 0.6.1 has been released
 **Version 0.6** improves BDF reading.  The reader is more robust and also requires proper BDF field formatting (e.g. a integer field can't be a float).  Additionally, cards also have a comment() method.
@@ -41,22 +41,22 @@ The **F06 reader** works for simple problems, but it's still preliminary.  At th
 
 The **Cython OP4 reader** supports ASCII and binary dense matrices.  The **Python OP4 reader** supports ASCII and binary sparse and dense matrices.
 
-A simple [GUI](http://code.google.com/p/pynastran/wiki/GUI) has been developed that can view BDF models and display static stress results from the OP2.
+A simple [GUI](https://github.com/SteveDoyle2/pynastran/wiki/GUI) has been developed that can view BDF models and display static stress results from the OP2.
 
 
 # Project Features
- * [BDF](http://code.google.com/p/pynastran/wiki/BDF) reading/editing/writing
- * [F06](http://code.google.com/p/pynastran/wiki/F06) reading/writing
- * [OP2](http://code.google.com/p/pynastran/wiki/OP2) reading, F06 writing
- * [OP4](http://code.google.com/p/pynastran/wiki/OP4) dense matrix reading
- * [GUI](http://code.google.com/p/pynastran/wiki/GUI) for displaying a BDF and OP2 stresses
+ * [BDF](https://github.com/SteveDoyle2/pynastran/wiki/BDF) reading/editing/writing
+ * [F06](https://github.com/SteveDoyle2/pynastran/wiki/F06) reading/writing
+ * [OP2](https://github.com/SteveDoyle2/pynastran/wiki/OP2) reading, F06 writing
+ * [OP4](https://github.com/SteveDoyle2/pynastran/wiki/OP4) dense matrix reading
+ * [GUI](https://github.com/SteveDoyle2/pynastran/wiki/GUI) for displaying a BDF and OP2 stresses
  * About 180 supported BDF cards; some with methods (e.g. mass, area, volume, centroid, thickness, length, nsm)
- * [install](http://code.google.com/p/pynastran/wiki/InstallationGuide) script
- * automated [documentation](http://code.google.com/p/pynastran/wiki/DeveloperDocs user]  using Doxygen
- * list of <A href="https://pynastran.googlecode.com/svn/tags/v0.5.0_py27/bdf_readWrite.txt">BDF cards</A>
- * list of <A href="https://pynastran.googlecode.com/svn/tags/v0.5.0_py27/op2_reading.txt">OP2 Tables</A> 
- * list of <A href="https://pynastran.googlecode.com/svn/tags/v0.5.0_py27/f06_readWrite.txt">F06 Tables</A> 
- * more technical version of features see the <A href="https://pynastran.googlecode.com/svn/tags/v0.5.0_py27/releaseNotes.txt"> Release Notes</A> 
+ * [install](https://github.com/SteveDoyle2/pynastran/wiki/InstallationGuide) script
+ * automated [documentation](https://github.com/SteveDoyle2/pynastran/wiki/DeveloperDocs user]  using Doxygen
+ * list of <A href="https://github.com/SteveDoyle2/pynastran/blob/v0.6/dev/bdf_readWrite.txt">BDF cards</A>
+ * list of <A href="https://github.com/SteveDoyle2/pynastran/blob/v0.6/dev/op2_reading.txt">OP2 Tables</A> 
+ * list of <A href="https://github.com/SteveDoyle2/pynastran/blob/v0.6/dev/f06_readWrite.txt">F06 Tables</A> 
+ * more technical version of features see the <A href="https://github.com/SteveDoyle2/pynastran/blob/v0.6/releaseNotes.txt"> Release Notes</A> 
 
 ## GUI Features
  * Tested on Windows & Linux
@@ -120,4 +120,4 @@ A simple [GUI](http://code.google.com/p/pynastran/wiki/GUI) has been developed t
 If anyone makes any specific requests I'll try to incorporate them.  They need to be specific, such as read these cards from the BDF, read these results from this OP2, or write these results to an OP2.  <b>Any sample problems that you have (to test the software with) would be appreciated.  I need small examples that are comprehensive that I can add as demo problems.</b>
 
 Check out the following if you're interested to see what's being worked on:
- * <A href="http://code.google.com/p/pynastran/source/browse/trunk/releaseNotes.txt">Release Notes</A>
+ * <A href="https://github.com/SteveDoyle2/pynastran/blob/master/releaseNotes.txt">Release Notes</A>

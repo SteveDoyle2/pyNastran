@@ -27,7 +27,6 @@ from numpy.linalg import norm
 
 from pyNastran.bdf.deprecated import BDFMethodsDeprecated
 from pyNastran.bdf.cards.loads.staticLoads import Moment, Force, LOAD
-#from pyNastran.bdf.cards.elements.shell import ShellElement
 
 
 def _mass_properties_mass_mp_func(element):
