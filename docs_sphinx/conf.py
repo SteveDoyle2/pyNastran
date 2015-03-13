@@ -46,7 +46,8 @@ MOCK_MODULES = [#'numpy', 'numpy.linalg','numpy.__version__',
                 'matplotlib',
                 #'vtk', 'wx', 'PyQt4', 'PySide',
                 'docopt',
-                #'numpydoc'
+                #'numpydoc',
+                'openmdao',
                 ]
 #MOCK_MODULES += ['pygtk', 'gtk', 'gobject', 'argparse', 'numpy', 'pandas']
 

@@ -1,10 +1,17 @@
+# HTML Junk
 *.html
 *.doctree
 *inheritance*
 *_build*
 *.js
 *.css
+
+# Other
 *.pyc
+*.log
+*.rar
+*.out
+*.log
 
 # C extensions
 *.so
@@ -36,3 +43,7 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+# WingIDE
+*.wpr
+*.wpu
