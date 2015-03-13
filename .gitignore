@@ -4,6 +4,7 @@
 *_build*
 *.js
 *.css
+*.pyc
 
 # C extensions
 *.so

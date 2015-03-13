@@ -39,32 +39,56 @@ sys.path.append(os.path.join(pkg_path, 'f06'))
 #sys.path.insert(0, os.path.abspath('.'))
 
 # ---3rd party modules don't work, so we hack them in --------------------------
-MOCK_MODULES = ['numpy', 'numpy.linalg','numpy.__version__',
-                'scipy', 'scipy.linalg', 'scipy.sparse', 'scipy.weave',
-                'scipy.integrate', 'scipy.interpolate',
+MOCK_MODULES = [#'numpy', 'numpy.linalg','numpy.__version__',
+                #'scipy', 'scipy.linalg', 'scipy.sparse', 'scipy.weave',
+                #'scipy.integrate', 'scipy.interpolate',
                 'pandas',
-                'matplotlib', 'vtk', 'wx', 'PyQt4', 'PySide', 'docopt']
+                'matplotlib',
+                #'vtk', 'wx', 'PyQt4', 'PySide',
+                'docopt',
+                #'numpydoc'
+                ]
+#MOCK_MODULES += ['pygtk', 'gtk', 'gobject', 'argparse', 'numpy', 'pandas']
 
-class Mock(object):
-    def __init__(self, *args, **kwargs):
-        pass
+# requires the mock module in Python 2.x
+# pip install mock
+from six import PY2
+if PY2:
+    from mock import MagicMock
+else:
+    from unittest.mock import MagicMock
 
-    def __call__(self, *args, **kwargs):
-        return Mock()
-
-    #def __len__(self):  # for numpy arrays
-    #    return 3 #  needs to be an integer
-
+class Mock(MagicMock):
     @classmethod
     def __getattr__(cls, name):
-        if name in ('__file__', '__path__'):
-            return '/dev/null'
-        elif name[0] == name[0].upper():
-            mockType = type(name, (), {})
-            mockType.__module__ = __name__
-            return mockType
-        else:
+            if name in ['__path__', 'pi', '_string', '__get__', '__set__']:
+                return Mock()
+            print('MOCK cls=%r name=%r' % (cls, name))
             return Mock()
+
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
+if 0:
+    class Mock(object):
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __call__(self, *args, **kwargs):
+            return Mock()
+
+        #def __len__(self):  # for numpy arrays
+        #    return 3 #  needs to be an integer
+
+        @classmethod
+        def __getattr__(cls, name):
+            if name in ('__file__', '__path__'):
+                return '/dev/null'
+            elif name[0] == name[0].upper():
+                mockType = type(name, (), {})
+                mockType.__module__ = __name__
+                return mockType
+            else:
+                return Mock()
 
 #for mod_name in MOCK_MODULES:
     #sys.modules[mod_name] = Mock()

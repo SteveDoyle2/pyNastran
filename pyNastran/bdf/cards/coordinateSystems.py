@@ -776,9 +776,9 @@ class Cord2x(Coord):
             self.e3 = array(data[8:11], dtype='float64')
             assert len(data) == 11, 'data = %s' % (data)
 
-        assert len(self.e1) == 3
-        assert len(self.e2) == 3
-        assert len(self.e3) == 3
+        assert len(self.e1) == 3, self.e1
+        assert len(self.e2) == 3, self.e2
+        assert len(self.e3) == 3, self.e3
 
         #: the global axes
         self.i = None
