@@ -1,13 +1,13 @@
-# News
-
-
-## Documentation Links
+# Documentation
    * [v0.6.1] (http://pynastran-git.readthedocs.org/en/v0.6/index.html)
    * v0.7
    * [Master/Trunk](http://pynastran-git.readthedocs.org/en/latest/index.html)
 
 <!--- http://pynastran-git.readthedocs.org/en/v0.6/index.html      doesnt work???...isn't this "stable" -->
 <!--- http://pynastran-git.readthedocs.org/en/stable/index.html    is not used yet...will be v0.7 later? -->
+
+
+# News
 
 
 ## pyNastran has Moved (3/12/2015)
