@@ -45,12 +45,12 @@ bdf Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`caseControlDeck2` Module
-------------------------------
+:mod:`deprecated` Module
+-----------------------
 
-.. inheritance-diagram:: pyNastran.bdf.caseControlDeck2
+.. inheritance-diagram:: pyNastran.bdf.deprecated
 
-.. automodule:: pyNastran.bdf.caseControlDeck2
+.. automodule:: pyNastran.bdf.deprecated
     :members:
     :private-members:
     :undoc-members:
@@ -111,17 +111,6 @@ bdf Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`writePath` Module
------------------------
-
-.. inheritance-diagram:: pyNastran.bdf.writePath
-
-.. automodule:: pyNastran.bdf.writePath
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
 Subpackages
 -----------
 
@@ -129,6 +118,5 @@ Subpackages
 
     pyNastran.bdf.bdfInterface
     pyNastran.bdf.cards
-    pyNastran.bdf.dev_vectorized
     pyNastran.bdf.test
 

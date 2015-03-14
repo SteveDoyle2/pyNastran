@@ -45,6 +45,17 @@ f06 Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`errors` Module
+----------------------------
+
+.. inheritance-diagram:: pyNastran.f06.errors
+
+.. automodule:: pyNastran.f06.errors
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 Subpackages
 -----------
 

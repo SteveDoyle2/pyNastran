@@ -1,23 +1,12 @@
 nastran Package
 ===============
 
-:mod:`bdf_to_p3d` Module
-------------------------
-
-.. inheritance-diagram:: pyNastran.converters.nastran.bdf_to_p3d
-
-.. automodule:: pyNastran.converters.nastran.bdf_to_p3d
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`nastranIO` Module
+:mod:`nastranIOv` Module
 -----------------------
 
-.. inheritance-diagram:: pyNastran.converters.nastran.nastranIO
+.. inheritance-diagram:: pyNastran.converters.nastran.nastranIOv
 
-.. automodule:: pyNastran.converters.nastran.nastranIO
+.. automodule:: pyNastran.converters.nastran.nastranIOv
     :members:
     :private-members:
     :undoc-members:
@@ -45,12 +34,12 @@ nastran Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`to_cart3d` Module
+:mod:`nastran_to_cart3d` Module
 -----------------------
 
-.. inheritance-diagram:: pyNastran.converters.nastran.to_cart3d
+.. inheritance-diagram:: pyNastran.converters.nastran.nastran_to_cart3d
 
-.. automodule:: pyNastran.converters.nastran.to_cart3d
+.. automodule:: pyNastran.converters.nastran.nastran_to_cart3d
     :members:
     :private-members:
     :undoc-members:
