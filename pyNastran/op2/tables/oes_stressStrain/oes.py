@@ -2047,40 +2047,38 @@ class OES(OP2Common):
 
             return len(data)
         elif self.element_type in [94]:
+            if self.read_mode == 1:
+                return len(data)
             # 94-BEAMNL
             numwide_real = 51
             numwide_random = 0
+
             if self.isStress():
-                result_name = 'nonlinearBeamStress'
+                result_name = 'nonlinear_cbeam_stress'
             else:
-                result_name = 'nonlinearBeamStrain'
+                result_name = 'nonlinear_cbeam_strain'
             self._found_results.add(result_name)
+
             if self.format_code == 1 and self.num_wide == numwide_real:
                 msg = result_name
-                return self._not_implemented_or_skip(data, msg)
+                #return self._not_implemented_or_skip(data, msg)
                 if self.isStress():
-                    raise NotImplementedError('Nonlinear CBEAM Stress')
+                    #raise NotImplementedError('Nonlinear CBEAM Stress')
                     # TODO: why does this use nonlinear gap stress???
-                    self.create_transient_object(self.nonlinearBeamStress, NonlinearGapStress)
+                    #self.create_transient_object(self.nonlinearBeamStress, NonlinearGapStress)
+                    pass
                 else:
                     self.create_transient_object(self.nonlinearBeamStrain, NonlinearGapStrain)  # undefined
                     raise NotImplementedError('Nonlinear CBEAM Strain')
 
                 ntotal = numwide_real * 4
-                # 2 + 6*4 = 26
-                # 26*4 = 104
-                #s1 = Struct(b'2i') # 2*4 = 8
-                #s2 = Struct(b'4s5f 4s5f 4s5f 4s5f 4s5f 4s5f 4s5f 4s5f')  # (8*6)*4
                 s = Struct(b'2i 4s5f 4s5f 4s5f 4s5f i 4s5f 4s5f 4s5f 4s5f')  # 2 + 6*8 + 1 = 51
                 # 204 = 51 * 4
                 nelements = len(data) // ntotal
-                for i in range(nelements):  # num_wide=51
-                    #edata = data[n:n + 8]
-                    #out1 = s1.unpack(edata)
-                    #n += 8
-                    #edata = data[n:n + 48*4]
-                    #out2 = s2.unpack(edata)
 
+                if self.debug4():
+                    self.binary_debug.write('nelements = %s\n' % nelements)
+                for i in range(nelements):  # num_wide=51
                     edata = data[n:n + 204]
                     out = s.unpack(edata)
                     n += 204
