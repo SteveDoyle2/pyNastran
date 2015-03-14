@@ -44,7 +44,7 @@ class TestReadWrite(unittest.TestCase):
         """
         Tests various read methods using various include files
         """
-        # fails
+        # fails correctly
         model = BDF(debug=False)
         bdf_name = os.path.join(test_path, 'test_include.bdf')
         self.assertRaises(IOError, model.read_bdf, bdf_name, include_dir=None, xref=True, punch=False)
@@ -107,7 +107,7 @@ class TestReadWrite(unittest.TestCase):
             os.remove(out_filename)
 
     def test_include_end(self):
-        """this test fails"""
+        """this test fails incorrectly"""
         f = open('a.bdf', 'wb')
         f.write('CEND\n')
         f.write('BEGIN BULK\n')
@@ -129,8 +129,8 @@ class TestReadWrite(unittest.TestCase):
 
         os.remove('a.bdf')
         os.remove('b.bdf')
+        os.remove('c.bdf')
         os.remove('a.out.bdf')
-        #print('nodes =', model.nodes)
         self.assertEquals(len(model.nodes), 3)
 
     def test_read_bad_01(self):
@@ -140,8 +140,4 @@ class TestReadWrite(unittest.TestCase):
             model._open_file('fake.file')
 
 if __name__ == '__main__':  # pragma: no cover
-    # passes if you're in the local folder, fails if you aren't
-    #model2 = BDF(debug=False)
-    #model2.read_bdf('test_include.bdf', include_dir='include_dir', xref=True, punch=False)
-
     unittest.main()
