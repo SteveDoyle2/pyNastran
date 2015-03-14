@@ -51,7 +51,7 @@ Solver
         solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
------------------------v0.7.0 released 2013/05/??-----------------------
+-----------------------v0.7.0 released 2015/04/??-----------------------
 Release notes:
    - much improved Python 3 support
    - added large field BDF writing
