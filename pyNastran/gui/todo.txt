@@ -80,7 +80,7 @@ Nastran
      - (nodal) displacement, velocity, acceleration, spcForces, mpcForces, temperatures
    - Stress
      - rodStress, barStress, beamStress, plateStress, solidStress, compositePlateStress (centroidal only)
- - transient-style results (need a results sidebar for that)
+ - transient-style results (no complex data)
 
  - ***rotate loads based on local coordinate system
    - displacement (e.g. force, displacement, velocity)
@@ -122,20 +122,6 @@ LaWGS
  - load geometry -> wgs
  - ***Coordinate System
 
-Plot3d
-======
- - ***plot3d input/output
- - ***show/hide panels based on menu/picking
-      (wakes can be confusing otherwise)
- - ***2d vs 3d
- - ***Coordinate System
-
-Tecplot
-=======
- - ***tecplot structured input/output
- - ***tecplot unstructured input/output
- - ***Coordinate System
-
 Tetgen
 ======
  - load geometry -> smesh
@@ -144,7 +130,7 @@ Tetgen
 STL
 ===
  - load geometry -> STL
- - ***Coordinate System
+ - Coordinate System
 
 SHABP
 =====
@@ -216,4 +202,4 @@ plot3d
  - load file from * with a specific file type
  - zoom/rotate/snap hotkeys
  - unbreak hotkeys (p, r, ???)
- - explcit pulldown for formats
+ - explcit pulldown for formats?
