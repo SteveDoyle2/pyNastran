@@ -74,7 +74,7 @@ class BDFMethods(BDFMethodsDeprecated):
 
         .. seealso:: http://en.wikipedia.org/wiki/Moment_of_inertia#Moment_of_inertia_tensor
 
-        ..note::
+        .. note::
            This doesn't use the mass matrix formulation like Nastran.
            It assumes m*r^2 is the dominant term.
            If you're trying to get the mass of a single element, it
@@ -389,13 +389,13 @@ class BDFMethods(BDFMethodsDeprecated):
         eids = [3]
         nids = [5]
 
-        ..note:: If you split the model into sections and sum the loads
-                 on each section, you may not get the same result as
-                 if you summed the loads on the total model.  This is
-                 due to the fact that nodal loads on the boundary are
-                 double/triple/etc. counted depending on how many breaks
-                 you have.
-        ..todo:: not done...
+        .. note:: If you split the model into sections and sum the loads
+                  on each section, you may not get the same result as
+                  if you summed the loads on the total model.  This is
+                  due to the fact that nodal loads on the boundary are
+                  double/triple/etc. counted depending on how many breaks
+                  you have.
+        .. todo:: not done...
         """
         if not isinstance(loadcase_id, int):
             raise RuntimeError('loadcase_id must be an integer; loadcase_id=%r' % loadcase_id)
@@ -745,8 +745,8 @@ class BDFMethods(BDFMethodsDeprecated):
         :type Moments:
           NUMPY.NDARRAY shape=(3,)
 
-        ..warning:: not validated
-        ..todo:: It's super slow for cid != 0.   We can speed this up a lot
+        .. warning:: not validated
+        .. todo:: It's super slow for cid != 0.   We can speed this up a lot
                  if we calculate the normal, area, centroid based on
                  precomputed node locations.
 

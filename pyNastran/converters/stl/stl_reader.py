@@ -598,7 +598,7 @@ class STLReader(object):
         :param xyz: the direction of symmetry
         :param tol: the tolerance for symmetry plane nodes
 
-        ..note:: All elements on the symmetry plane will be removed
+        .. note:: All elements on the symmetry plane will be removed
         """
         assert xyz in ['x', 'y', 'z'], 'xyz=%r' % xyz
         assert tol >= 0.0, 'tol=%s' % tol

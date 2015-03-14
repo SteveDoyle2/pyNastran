@@ -406,8 +406,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
           a string of 'xyz', 'Rtz', 'Rtp' (xyz, cylindrical, spherical)
           that changes the axis names
 
-        ..todo::  Type is not supported ('xyz' ONLY)
-        ..todo::  Can only set one coordinate system
+        .. todo::  Type is not supported ('xyz' ONLY)
+        .. todo::  Can only set one coordinate system
 
         ..seealso::
             http://en.wikipedia.org/wiki/Homogeneous_coordinates
@@ -731,7 +731,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def get_edges(self):
         """
-        ..todo:: For some reason, the edge color is set to the parent
+        .. todo:: For some reason, the edge color is set to the parent
         surface's color instead of black
         """
         edges = vtk.vtkExtractEdges()

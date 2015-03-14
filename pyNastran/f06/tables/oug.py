@@ -102,7 +102,7 @@ class OUG(object):
                              default=False
         :returns data:       the parsed data
 
-        ..todo:: support L, H, and R points
+        .. todo:: support L, H, and R points
         """
         field_length = 15  # width of each eigenvector field
         num_fields = 6     # the number of fields (T1, T2, T3, R1, R2, R3)

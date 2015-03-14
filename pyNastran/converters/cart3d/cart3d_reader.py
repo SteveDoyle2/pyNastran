@@ -33,7 +33,7 @@ def comp2tri(self, in_filenames, out_filename,
     :param is_binary: is the output filename binary (default=False)
     :param float_fmt: the format string to use for ascii writing (default='%6.7f')
 
-    ..note:: assumes loads is None
+    .. note:: assumes loads is None
     """
     points = []
     elements = []
@@ -176,7 +176,7 @@ class Cart3DReader(object):
         """
         Makes a half model from a full model
 
-        ...note:: Cp is really loads['Cp'] and was meant for loads analysis only
+        ... note:: Cp is really loads['Cp'] and was meant for loads analysis only
         """
         if loads is None:
             loads = {}
@@ -207,7 +207,7 @@ class Cart3DReader(object):
         assert 0 < nnodes2 < nnodes, 'nnodes=%s nnodes2=%s'  % (nnodes, nnodes2)
 
         inodes_save += 1  # +1 is so we don't have to shift inode
-        # ..todo:: still need to handle element's node id renumbering
+        # .. todo:: still need to handle element's node id renumbering
         ielements_save = set([])
         for ielement in range(nelements):
             save_element = True

@@ -763,7 +763,7 @@ def update_param_name(param_name):
 
     :param param_name: the parameter name to be standardized
                        (e.g. DISP vs. DIPLACEMENT)
-    ..todo:: not a complete list
+    .. todo:: not a complete list
     """
     if   param_name.startswith('ACCE'):
         param_name = 'ACCELERATION'

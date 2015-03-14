@@ -13,7 +13,7 @@ class OGPWG(OP2Common):
     def _read_ogpwg_3(self, data):
         """
         Grid Point Weight Generator
-        ..todo:: find the reference_point...
+        .. todo:: find the reference_point...
         """
         #self.show_data(data)
         self.words = [

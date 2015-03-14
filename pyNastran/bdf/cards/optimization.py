@@ -708,7 +708,7 @@ class DVPREL2(OptConstraint):
 
     def repr_fields(self):
         """
-        ..todo:: finish repr_fields for DVPREL2
+        .. todo:: finish repr_fields for DVPREL2
         """
         return self.raw_fields()
 

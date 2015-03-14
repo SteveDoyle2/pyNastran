@@ -1543,8 +1543,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 raise RuntimeError('this should never happen...')
                 #self.foundEndData = True
             else:
-                #: ..warning:: cards with = signs in them
-                #:             are not announced when they are rejected
+                #: .. warning:: cards with = signs in them
+                #:              are not announced when they are rejected
                 if '=' not in card[0]:
                     self.log.info('rejecting processed equal signed card %s' % card)
                 self.reject_cards.append(card)

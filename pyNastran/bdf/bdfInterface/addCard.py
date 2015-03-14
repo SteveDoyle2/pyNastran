@@ -109,7 +109,7 @@ class AddMethods(object):
         self.masses[key] = mass
 
     def add_damper(self, elem, allowOverwrites=False):
-        """..warning:: can dampers have the same ID as a standard element?"""
+        """.. warning:: can dampers have the same ID as a standard element?"""
         return self.add_element(elem, allowOverwrites)
         # key = elem.eid
         # if key in self.damperElements and not allowOverwrites:
@@ -269,8 +269,8 @@ class AddMethods(object):
     def add_creep_material(self, material, allowOverwrites=False):
         """
         Method add_creep_material:
-        ..note:: May be removed in the future.  Are CREEP cards materials?
-                 They have an MID, but reference structural materials.
+        .. note:: May be removed in the future.  Are CREEP cards materials?
+                  They have an MID, but reference structural materials.
         """
         key = material.mid
         if key in self.thermalMaterials and not allowOverwrites:

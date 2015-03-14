@@ -16,9 +16,9 @@ from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
 
 class OP4(object):
     """
-    todo:: add endian checking
-    todo:: test on big matrices
-    todo:: finish write_op4
+     todo:: add endian checking
+     todo:: test on big matrices
+     todo:: finish write_op4
     """
     def __init__(self, log=None):
         #FortranFile.__init__(self)
@@ -1087,7 +1087,7 @@ class OP4(object):
             'B' : (formB, matrixB),
         }
 
-        ..todo::  This method is not even close to being done
+        .. todo::  This method is not even close to being done
         """
         if not precision in ('single', 'double', 'default'):
             raise ValueError("precision=%r and must be 'single', 'double', or 'default'" % precision)
@@ -1106,7 +1106,7 @@ class OP4(object):
         elif isinstance(name_order, string_types):
             name_order = [name_order]
 
-        isBigMat = False  ## ..todo:: hardcoded
+        isBigMat = False  ## .. todo:: hardcoded
         for name in name_order:
             (form, matrix) = matrices[name]
             if not form in (1, 2, 3, 6, 8, 9):
@@ -1167,7 +1167,7 @@ class OP4(object):
 
     def _write_sparse_matrix_ascii(self, f, name, A, form=2, isBigMat=False, precision='default'):
         """
-        ..todo:: Does this work for complex matrices?
+        .. todo:: Does this work for complex matrices?
         """
         msg = ''
         assert isinstance(name, str), 'name=%s' % name
@@ -1285,7 +1285,7 @@ class OP4(object):
           - (5,6) name2
           6 words * 4 bytes/word = 24 bytes
 
-        ..todo:: support precision
+        .. todo:: support precision
         """
         A = matrix
         #print('A =', A)
@@ -1326,7 +1326,7 @@ class OP4(object):
                                          A[irow, icol].imag)
             f.write(msg)
         if Type in [1, 3]: # single precision
-            msg = pack(self.endian + '4if', 24, ncols + 1, 1, 1, 1.0)  # ..todo:: is this right???
+            msg = pack(self.endian + '4if', 24, ncols + 1, 1, 1, 1.0)  # .. todo:: is this right???
         else: # double precision
             msg = pack(self.endian + '4id', 24, ncols + 1, 1, 1, 1.0)
         f.write(msg)

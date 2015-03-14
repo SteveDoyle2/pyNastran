@@ -949,8 +949,8 @@ class GRID(Node, GridDeprecated):
         :param grdset: a GRDSET if available (default=None)
         :type grdset:  GRDSET() or None
 
-        ..note::  The gridset object will only update the fields that
-                  have not been set
+        .. note::  The gridset object will only update the fields that
+                   have not been set
         """
         if grdset:  # update using a gridset object
             if not self.cp:

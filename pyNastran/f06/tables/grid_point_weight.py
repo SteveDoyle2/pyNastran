@@ -103,7 +103,7 @@ class GridPointWeight(object):
                                * -8.850329E-02 -5.512702E-01 -8.296194E-01 *
                                *  9.954254E-01 -7.904533E-02 -5.366689E-02 *
 
-        ..note::
+        .. note::
             pyNastran's BDF mass_properties method uses the following (not
             totally correct as there technically isn't one xcg):
 

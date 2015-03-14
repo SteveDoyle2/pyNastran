@@ -909,9 +909,9 @@ class MAT8(OrthotropicMaterial):
             self._comment = comment
         if card:
             self.mid = integer(card, 1, 'mid')
-            self.e11 = double(card, 2, 'E11')    #: ..todo:: is this the correct default
-            self.e22 = double(card, 3, 'E22')    #: ..todo:: is this the correct default
-            self.nu12 = double(card, 4, 'nu12')  #: ..todo:: is this the correct default
+            self.e11 = double(card, 2, 'E11')    #: .. todo:: is this the correct default
+            self.e22 = double(card, 3, 'E22')    #: .. todo:: is this the correct default
+            self.nu12 = double(card, 4, 'nu12')  #: .. todo:: is this the correct default
 
             self.g12 = double_or_blank(card, 5, 'g12', 0.0)
             self.g1z = double_or_blank(card, 6, 'g1z', 1e8)

@@ -93,7 +93,7 @@ class ShellElement(Element, ShellElementDeprecated):
         """
         Returns the material
 
-        ..todo:: possibly remove this
+        .. todo:: possibly remove this
         """
         return self.pid.mid()
 
@@ -101,7 +101,7 @@ class ShellElement(Element, ShellElementDeprecated):
         """
         Returns the material ID
 
-        ..todo:: possibly remove this
+        .. todo:: possibly remove this
         """
         return self.pid.Mid()
 

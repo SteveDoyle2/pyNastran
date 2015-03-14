@@ -255,9 +255,9 @@ class Element(BaseCard, ElementDeprecated):
         """
         Gets the faces of the element
 
-        :returns: dictionary with face number as the keys and
-                  a list of nodes (integer pointers) as the values.
-        ..note::  The order of the nodes are consistent with ANSYS numbering.
+        :returns:  dictionary with face number as the keys and
+                   a list of nodes (integer pointers) as the values.
+        .. note::  The order of the nodes are consistent with ANSYS numbering.
 
         Example
         =======
@@ -308,7 +308,7 @@ class Element(BaseCard, ElementDeprecated):
         :param nodes:   list of nodes
         :returns faces: the face number as an integer
 
-        ..warning:: It's assumed you have the nodes in the proper order.
+        .. warning:: It's assumed you have the nodes in the proper order.
         """
         assert isinstance(nodes, list), 'nodes=%s' % str(nodes)
         face = None

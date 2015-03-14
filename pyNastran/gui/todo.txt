@@ -202,4 +202,4 @@ plot3d
  - load file from * with a specific file type
  - zoom/rotate/snap hotkeys
  - unbreak hotkeys (p, r, ???)
- - explcit pulldown for formats?
+ - explcit pulldown for formats

@@ -770,7 +770,7 @@ class OES(object):
 
     def make_stress_bits(self, isFiberDistance=False, isMaxShear=True, isStrain=True, isRodOrSolid=False):
         """
-        ..todo:: add explanation...
+        .. todo:: add explanation...
         """
         #print "isMaxShear=%s isFiberDistance=%s" %(isMaxShear, isFiberDistance)
 
