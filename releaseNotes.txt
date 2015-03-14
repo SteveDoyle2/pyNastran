@@ -15,43 +15,7 @@ This code was written entirely in Python and should install easily.
 
 *** Not done....
 
---------------------------------Future--------------------------------
-Overall Notes
-
-Added BDF
-   - *** SET2,PEALST,TIC,DMI,CONM1
-
-Overall OP2
-   - ***added support for SORT2
-
-BDF Bug Fixes
-BDF API Additions
-
-Removed BDF
-
-Overall OP2
-   - added plotting support for "standard" results (***complex)
-      - ***complex results may plot in real/imag or mag/phase or PSD
-        (power spectral density)
-      - ***no temperature, stress, element forces, energy
-
-
-Overall F06 Reader/Writer
-Added F06 Reader
-Added F06 Writer
-
-Solver
-   - not released
-   - rewriting pyNastran solver (SOL 101)
-      - improved support for 3D
-      - uses case control deck to identify loads/BCs
-      - still uses dense matricies, but layout will be easier to add sparse
-        matricies later
-      - still need to build Kgg/Fg/SPC/MPC matrices, partition matrices,
-        solve, calculate responses
-   - added D matricies for PSHELL, PCOMP, PSOLID
-
------------------------v0.7.0 released 2013/05/??-----------------------
+-----------------------v0.7.0 released 2015/04/??-----------------------
 Release notes:
    - much improved Python 3 support
    - added large field BDF writing
@@ -80,18 +44,15 @@ OP2:
    - rewrite of the OP2 allows for increased robustness and speed
    - Most fatal errors caught
      - BDF input errors not caught
-     - others???
    - added grid point weight table (see beam_modes demo)
    - OP2 no longer defines the filename; use read_op2.
      readOP2 is now gone, replaced by read_op2 (was previously deprecated)
    - renamed OP2 class names to be more descriptive
      (e.g. DisplacementObject -> RealDisplacement)
-   - starting OP2 vectorized support.  It's currently slower (1.2x-1.7x),
-     which is due to array indexing being slower for non-vectorized operations.
-     However, it takes up much less memory (~5x).  Note: the F06 writing cannot
-     be vectorized, so if you do vectorize your code, it may be much faster.
-     The API and data members are still in development and should be expected
-     to change.
+   - OP2 vectorized support.  It's slower, but it takes up much  less 
+     memory (~5x).  Note: the F06 writing cannot be vectorized, so if
+     you do vectorize your code, it may be much faster.  The API and data
+     members are still in development and should be expected to change.
 
 F06:
    - Most fatal errors caught
@@ -105,8 +66,23 @@ F06:
    - supports SPOINTs now
 
 GUI:
+ - added much improved qt GUI
+   - results sidebar
+   - controllable legend
+   - vectorized support for reduced memory usage
+   - color coded logging
+   - scripting capability
  - removed wx GUI
- - added qt GUI (see pyNastran/gui/todo.txt)
+
+Converters / Additional GUI Options
+ - pyNastran's code base makes it easy to develop other useful tools
+   that make use of common code.  As such, additional formats are supported
+   in terms of readers/writers/converters/viewing, but are not a main focus.
+   These include:
+   - Cart3d
+   - Panair
+   - STL
+   - Usm3D
 
 -----------------------v0.6.1 released 2013/06/13-----------------------
 BDF Bug Fixes
