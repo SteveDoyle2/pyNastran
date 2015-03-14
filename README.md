@@ -7,7 +7,7 @@ Also, check out the [Wiki](https://github.com/SteveDoyle2/pynastran/wiki) for mo
 
 <!--- http://pynastran-git.readthedocs.org/en/v0.6/index.html      doesnt work???...isn't this "stable" -->
 <!--- http://pynastran-git.readthedocs.org/en/stable/index.html    is not used yet...will be v0.7 later? -->
-
+<!--- http://stevedoyle2.github.io/pyNastran/ >
 
 # News
 

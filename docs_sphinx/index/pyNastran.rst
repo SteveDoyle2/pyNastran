@@ -1,6 +1,7 @@
 pyNastran Package
 =================
 
+This is the pyNastran.rst file
 
 .. toctree::
 

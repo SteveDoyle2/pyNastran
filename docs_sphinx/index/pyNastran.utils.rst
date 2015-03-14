@@ -1,6 +1,8 @@
 utils Package
 =============
 
+This is the pyNastran.utils.rst file.
+
 :mod:`gui_choices` Module
 -------------------------
 

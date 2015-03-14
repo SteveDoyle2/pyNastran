@@ -1,6 +1,8 @@
 f06 Package
 ===========
 
+This is the pyNastran.f06.rst file.
+
 :mod:`f06` Module
 -----------------
 
