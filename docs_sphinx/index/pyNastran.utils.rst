@@ -45,12 +45,12 @@ utils Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`__init__` Module
-----------------------
+:mod:`dev` Module
+-----------------
 
-.. inheritance-diagram:: pyNastran.utils.__init__
+.. inheritance-diagram:: pyNastran.utils.dev
 
-.. automodule:: pyNastran.utils.__init__
+.. automodule:: pyNastran.utils.dev
     :members:
     :private-members:
     :undoc-members:

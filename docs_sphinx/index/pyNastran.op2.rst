@@ -12,8 +12,8 @@ op2 Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`fortranFile` Module
--------------------------
+:mod:`fortran_format` Module
+----------------------------
 
 .. inheritance-diagram:: pyNastran.op2.fortran_format
 
