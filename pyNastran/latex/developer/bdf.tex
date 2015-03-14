@@ -1,6 +1,6 @@
 
 \title{pyNastran Developer Document \\
-\small http://code.google.com/p/pynastran/ }
+\small https://github.com/SteveDoyle2/pyNastran/ }
 \author{Steven P. Doyle\\
 {\small mesheb82@gmail.com}
 }
@@ -11,7 +11,7 @@
 This document is intended to be a reference guide for users.
 \end{abstract}
 
-Copyright \copyright\ Steve P. Doyle 2011-2012
+Copyright \copyright\ Steve P. Doyle 2011-2015
 \newpage
 
 \tableofcontents
@@ -26,7 +26,7 @@ Copyright \copyright\ Steve P. Doyle 2011-2012
   \subsection{Target Audience}
       pyNastran's target audience are users of Nastran and therefore are expected to be familiar with the software.  This has greatly reduced the necessity of documenting every variable exhasutively as users can easily reference existing Nastran documentation. The BDF file has roughly 700 cards availble to a user with 200 being currently supported by pyNastran.  The majority of the cards, defined as separate Python classes, are not documented.  However, the Quick Reference Guide (QRG) defines each input to the card.  A user with the QRG should have little effort in understanding what the various objects do.  However, for convenience, it's still good to document variables.
 
-     pyNastran's target audience largely uses MATLAB, a matrix based programming language, and typically has little experience with general programming.  There are also users that know Python, but have never used a class or a dictionary, which makes an API seems complicated.  Additionally, while not difficult to build, the Cython OP4 reader, which requires a C complier, has been a source of frustration for many users.  That said, most operations should be relatively easy to accomplish.
+     pyNastran's target audience largely uses MATLAB, a matrix based programming language, and typically has little experience with general programming.  There are also users that know Python, but have never used a class or a dictionary, which makes an API seems complicated.  That said, most operations should be relatively easy to accomplish.
 
 
 \section{Getting Started: Code Formatting}
@@ -63,21 +63,28 @@ Copyright \copyright\ Steve P. Doyle 2011-2012
      3.  When deprecating functions, throw a warning using the Python warnings module.  It's easier to make sure the rest of the code isn't using it this way.  This is not nearly as important if it's not a function the user is likely to interact with.
 
  \subsection{Documentation}
-     pyNastran uses Doxygen for docstrings.  Doxygen is nice because it allows LaTeX to be embedded in the documentation and HTML docs are easily generated.  Sphinx is another documentation format, but no investigation has been done into how the quality of the documentation would change.  It is known that Sphinx also allows LaTeX and that it is much more commonly used.
+     pyNastran uses Sphinx for docstrings.  Sphinx is nice because it allows LaTeX to be embedded in the documentation and HTML docs are easily generated.  Sphinx is another documentation format, but no investigation has been done into how the quality of the documentation would change.
 
-    Some guidelines for Doxygen:
+    Some guidelines for Sphinx:
 
-     1.  \@param  in\_variable\_name a description goes here
+     1.  :param  in\_variable\_name: a description goes here
 
-     2.  \@retval out\_variable\_name another description
+     2.  :returns out\_variable\_name: another description
 
-     3.  \@see    look at AsFollows class or as\_follows function
+     3.  .. see::    look at AsFollows class or as\_follows function
 
-     4.  \@note   a message
+     4.  \.\. note::   a message
 
-     5.  \@warning a warning
+     5.  \.\. warning:: a warning
 
-     6.  \@todo   something that's not done
+     6.  \.\. todo::   something that's not done
+     
+     7   Indented code is :: on line 1, and 2 spaces intended on lines 2-N.
+     
+     8.  Example
+         -------
+         ::
+           This is sphinx.
      
      
 
@@ -86,7 +93,7 @@ Copyright \copyright\ Steve P. Doyle 2011-2012
      {\tt bdf.py} controls the model object that is instantiated with      {\tt model=BDF()} the {\bf \tt \_\_init\_\_} method is called when {\tt model = BDF()} is run.  The file used to be very large and was split (in a non-standard way) into multiple files that allowed for simpler development.  The {\bf BDFReader}, {\bf GetMethods}, {\bf AddMethods}, {\bf WriteMesh},
      {\bf CardMethods}, and {\bf XrefMesh} classes are basically bags of functions for the "model" object.
      
-     The {\tt cardsToRead} variable limits the cards that pyNastran processes and     can be modified by the user in order to fix bugs or make their code run faster.
+     The {\tt cards_to_read} variable limits the cards that pyNastran processes and     can be modified by the user in order to fix bugs or make their code run faster.
      
      Moving onto {\bf \tt \_init\_solution} sets a series of alternate names for Nastran solution types.  For example, a solution 101 is a static solution (no acceleration) and will calculate the displacements of the system $[K]\{x\} = \{F\} $.  You can then extract stresses and strains.  Other solution numbers solve different equations.
      
@@ -188,3 +195,7 @@ Copyright \copyright\ Steve P. Doyle 2011-2012
  \subsection{{\tt writeMesh.py}: Writing the BDF}
      The BDF is written by looping through all the objects and calling the {\bf \tt card.\_\_repr\_\_()} method by typing {\bf \tt str(card)}.
      Currently, only small field format is supported for writing.  The list from {\bf \tt reprFields()} is passed into {\tt fieldWriter.py}'s function {\bf \tt printCard(listObj)} and it dynamically figures out how to write the card based on the data type.  For float values, the highest precision 8-character width field will be used even if it uses Nastran's strange syntax of "1.2345+8" to represent a more standard "1.2345e+08".
+     
+     Many cards also have a `write_bdf(...)` and `write_bdf2(...)` method.  This portion of the code is in flux and will change to more cleanly handle data precision.  The `BDF.write_bdf method(...)` is more stable.
+     
+     

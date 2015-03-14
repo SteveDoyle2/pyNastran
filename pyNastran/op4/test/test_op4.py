@@ -16,7 +16,7 @@ def run_lots_of_files(files, write_op4=True,
     iSubcases = []
     failedCases = []
     nFailed = 0
-    nTotal  = 0
+    nTotal = 0
     nPassed = 0
     t0 = time.time()
     for (i, op4file) in enumerate(files[nStart:nStop], nStart):  # 149
@@ -34,9 +34,9 @@ def run_lots_of_files(files, write_op4=True,
             if not isPassed:
                 sys.stderr.write('**file=%s\n' % op4file)
                 failedCases.append(op4file)
-                nFailed +=1
+                nFailed += 1
             else:
-                nPassed +=1
+                nPassed += 1
             #sys.exit('end of test...test_op4.py')
 
     if saveCases:
@@ -68,7 +68,7 @@ def run_op4(op4_filename, write_op4=True, debug=True):
         print('matrices =', matrices.keys())
 
         if write_op4:
-            (model, ext) = os.path.splitext(op4_filename)
+            model, ext = os.path.splitext(op4_filename)
             op4.write_op4(model+'.test_op4_ascii.op4', matrices, is_binary=False)
             op4.write_op4(model+'.test_op4_binary.op4', matrices, is_binary=True)
             if delete_op4:
@@ -121,7 +121,6 @@ def run_op4(op4_filename, write_op4=True, debug=True):
         else:
             print_exc(file=sys.stdout)
             isPassed = False
-
     return isPassed
 
 
@@ -161,8 +160,8 @@ def main():
     import time
     t0 = time.time()
     run_op4(data['OP4_FILENAME'],
-            write_op4     = data['--write_op4'],
-            debug         = not(data['--quiet']),
+            write_op4 = data['--write_op4'],
+            debug     = not(data['--quiet']),
     )
     print("dt = %f" % (time.time() - t0))
 
