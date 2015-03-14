@@ -17,6 +17,12 @@ Google Code is  [closing down](http://google-opensource.blogspot.com/2015/03/far
 on January 25, 2016 and as such pyNastran is moving to [github](https://github.com/SteveDoyle2/pynastran).
 New commits will now be made on github.  The wiki is currently in the process of being migrated to github.
 
+Git is harder to get used to, but gets rid of a lot of the pain of branching and merging.  Also,
+a lot of useful tools (e.g. readthedocs) just work with Github that don't work well with
+other hosting services.  Checkouts and updates are also many, many fimes faster.
+
+
+
 
 ## pyNastran v0.7
 

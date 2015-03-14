@@ -126,6 +126,10 @@ class TestReadWrite(unittest.TestCase):
         model = BDF(log=log, debug=False)
         model.read_bdf('a.bdf')
         model.write_bdf('a.out.bdf')
+
+        os.remove('a.bdf')
+        os.remove('b.bdf')
+        os.remove('a.out.bdf')
         #print('nodes =', model.nodes)
         self.assertEquals(len(model.nodes), 3)
 

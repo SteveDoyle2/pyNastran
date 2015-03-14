@@ -409,7 +409,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         .. todo::  Type is not supported ('xyz' ONLY)
         .. todo::  Can only set one coordinate system
 
-        ..seealso::
+        .. seealso::
             http://en.wikipedia.org/wiki/Homogeneous_coordinates
             http://www3.cs.stonybrook.edu/~qin/courses/graphics/camera-coordinate-system.pdf
             http://www.vtk.org/doc/nightly/html/classvtkTransform.html#ad58b847446d791391e32441b98eff151
