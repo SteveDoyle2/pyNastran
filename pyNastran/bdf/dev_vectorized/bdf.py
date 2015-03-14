@@ -977,19 +977,19 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         :param card_count: dictionary of {card_name : ncards}, where
           card_name is a string and ncards is an int
 
-        ..note::  Sometimes there are cards that have 2 cards per line.
-          Depending on the card (e.g. CELASx)
-        ..note::  Some cards (e.g. CTETRA4, CTETRA10) have a distinction
-          despite all being CTETRAs.  Card_count considers CTETRA4s and
-          CTETRA10s.
+        .. note::  Sometimes there are cards that have 2 cards per line.
+                   Depending on the card (e.g. CELASx)
+        .. note::  Some cards (e.g. CTETRA4, CTETRA10) have a distinction
+                    despite all being CTETRAs.  Card_count considers
+                    CTETRA4s and CTETRA10s.
 
-        ..note::  Not all cards require allocation (e.g. CORD1x), so we
-          can be a more lax about how we calculate the card_count.  The
-          CORD1x cards can have 2 cards per line, so not needing this
-          is convenient.
-        ..note::  In this method, we only allocate the macro groups.
-          For example, since a CTRIA3 is an element, it is set with the
-          other elements.
+        .. note::  Not all cards require allocation (e.g. CORD1x), so we
+           can be a more lax about how we calculate the card_count.  The
+           CORD1x cards can have 2 cards per line, so not needing this
+           is convenient.
+        .. note::  In this method, we only allocate the macro groups.
+           For example, since a CTRIA3 is an element, it is set with the
+           other elements.
         """
         self.grid.allocate(card_count)
         self.coords.allocate(card_count=card_count)
@@ -1107,9 +1107,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         >>> bdf,read_bdf(bdf_filename, xref=True)
         >>>
 
-        .. note:: Case sensitivity is supported.
-        .. note:: Variables should be 7 characters or less to fit in an
-                     8-character field.
+        ..  note:: Case sensitivity is supported.
+        ..  note:: Variables should be 7 characters or less to fit in an
+                   8-character field.
         .. warning:: Type matters!
         """
         self.dict_of_vars = {}
@@ -1547,10 +1547,10 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         :returns card:  a list of (typically) string fields that is
           properly sized
 
-        ..note:: If dynamic syntax is used, then the fields may be
-                 ints/floats.
+        .. note:: If dynamic syntax is used, then the fields may be
+                  ints/floats.
 
-        ..note:: a properly sized card's last field is a value (not None)
+        .. note:: a properly sized card's last field is a value (not None)
         """
         card_name = self._get_card_name(card_lines)
         fields = to_fields(card_lines, card_name)

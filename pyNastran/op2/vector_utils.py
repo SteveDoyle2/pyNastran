@@ -37,7 +37,7 @@ def abs_max_min_global(values):
       >>> values
       2.0
 
-    ..note:: [3.0,  2.0, -3.0] will return 3.0, and
+    .. note:: [3.0,  2.0, -3.0] will return 3.0, and
              [-3.0, 2.0,  3.0] will return 3.0
     """
     # support lists/tuples
@@ -88,8 +88,8 @@ def abs_max_min_vector(values):
        >>> values0
        [2.0, 2.0, -3.0]
 
-    ..note:: [3.0,  2.0, -3.0] will return 3.0, and
-             [-3.0, 2.0,  3.0] will return 3.0
+    .. note:: [3.0,  2.0, -3.0] will return 3.0, and
+              [-3.0, 2.0,  3.0] will return 3.0
     """
     # support lists/tuples
     values = asarray(values)

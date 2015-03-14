@@ -563,7 +563,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         Reads displacement, spc/mpc forces
 
         :self:   the object pointer
-        :Format: .. seealso:: parseLine
+        :Format: .. seealso:: self.parseLine
         """
         sline = True
         data = []

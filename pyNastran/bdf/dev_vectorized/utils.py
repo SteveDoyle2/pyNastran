@@ -57,10 +57,10 @@ def unique2d(a):
     :param a:   (n,2) ndarray
     :returns u: the unique values in a
 
-    ..note:: this is intended to be used to find unique rows of
-             element-id/property-id or property-id/material-id pairs
-    ..note:: it works by finding the unique complex numbers and doesn't
-             extend well to a 3 column pair
+    .. note:: this is intended to be used to find unique rows of
+              element-id/property-id or property-id/material-id pairs
+    .. note:: it works by finding the unique complex numbers and doesn't
+              extend well to a 3 column pair
     """
     x, y = a.T
     b = x + y*1.0j

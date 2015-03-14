@@ -334,19 +334,18 @@ def print_int_card_blocks(fields_blocks):
     :type msg:
       str
 
-    ..note::
-      Blanks are allowed in the False block.
+    .. note:: Blanks are allowed in the False block.
 
     Example
     -------
-    fields_blocks = [
-        'SET1',
-        [['a', 1.0, 3], False], # these are not all integers
-        [[1, 2, 3], True],      # these are all integers
-    ]
-    msg = print_int_card_blocks(fields_blocks)
-    print(msg)
-    >>> 'SET1           a      1.       3       1       2       3\n'
+      fields_blocks = [
+          'SET1',
+          [['a', 1.0, 3], False], # these are not all integers
+          [[1, 2, 3], True],      # these are all integers
+      ]
+      msg = print_int_card_blocks(fields_blocks)
+      print(msg)
+      >>> 'SET1           a      1.       3       1       2       3\n'
 
     """
     card_name = fields_blocks[0]

@@ -233,8 +233,8 @@ class Coord(BaseCard, CoordDeprecated):
         :param debug: debug flag (default=False; unused)
         :retval p3: the vector in the global frame
 
-        ..note:: Shifting the load application point of a force creates
-                 a moment, but the force will be the same.
+        .. note:: Shifting the load application point of a force creates
+                  a moment, but the force will be the same.
         """
         if self.cid == 0:
             return p
@@ -444,9 +444,9 @@ def define_spherical_cutting_plane(model, origin, rid, cids, thetas, phis):
     :param thetas:  list of thetas (in radians)
     :param phis:  list of phis (in radians)
 
-    ..note:: creates 1 CORD2S and ncid CORD2R coordinate systems
+    .. note:: creates 1 CORD2S and ncid CORD2R coordinate systems
 
-    TODO: hasn't been tested...
+    .. todo:: hasn't been tested...
     """
     if len(cids) != len(thetas):
         msg = 'len(cids)=%s len(thetas)=%s; must be equal' % (len(cids, len(thetas)))
@@ -492,10 +492,10 @@ def define_coord_e123(model, Type, cid, origin, rid=0,
     :param yaxis:  a (3,) ndarray defining the y axis (default=None)
     :param zaxis:  a (3,) ndarray defining the z axis (default=None)
 
-    ..note:: one axis (xaxis, yaxis, zaxis) and one plane
-             (xyplane, yzplane, xz plane) must be defined; the others
-             must be None
-    ..note:: the axes and planes are defined in the rid coordinate system
+    .. note:: one axis (xaxis, yaxis, zaxis) and one plane
+              (xyplane, yzplane, xz plane) must be defined; the others
+              must be None
+    .. note:: the axes and planes are defined in the rid coordinate system
 
     TODO: hasn't been tested...
     """

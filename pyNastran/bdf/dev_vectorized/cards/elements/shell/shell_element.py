@@ -54,8 +54,8 @@ class ShellElement(Element):
 
         :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
 
-        ..note:: If node_ids is None, the positions of all the GRID cards
-                 must be calculated
+        .. note:: If node_ids is None, the positions of all the GRID cards
+                  must be calculated
         """
         mass, _area, _normal = self._mass_area_normal(element_id=element_id,
             xyz_cid0=xyz_cid0,
@@ -78,8 +78,8 @@ class ShellElement(Element):
 
         :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
 
-        ..note:: If node_ids is None, the positions of all the GRID cards
-                 must be calculated
+        .. note:: If node_ids is None, the positions of all the GRID cards
+                  must be calculated
         """
         mass, _area, _normal = self._mass_area_normal(element_id=element_id,
             xyz_cid0=xyz_cid0,
@@ -97,8 +97,8 @@ class ShellElement(Element):
 
         :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
 
-        ..note:: If node_ids is None, the positions of all the GRID cards
-                 must be calculated
+        .. note:: If node_ids is None, the positions of all the GRID cards
+                  must be calculated
         """
         _mass, area, normal = self._mass_area_normal(element_id=element_id,
             xyz_cid0=xyz_cid0,
@@ -117,8 +117,8 @@ class ShellElement(Element):
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
         :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
 
-        ..note:: If node_ids is None, the positions of all the GRID cards
-                 must be calculated
+        .. note:: If node_ids is None, the positions of all the GRID cards
+                  must be calculated
         """
         _mass, area, _normal = self._mass_area_normal(element_id=element_id,
             xyz_cid0=xyz_cid0,

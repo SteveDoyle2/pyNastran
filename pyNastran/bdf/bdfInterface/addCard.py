@@ -269,8 +269,8 @@ class AddMethods(object):
     def add_creep_material(self, material, allowOverwrites=False):
         """
         Method add_creep_material:
-        ..note:: May be removed in the future.  Are CREEP cards materials?
-                 They have an MID, but reference structural materials.
+        .. note:: May be removed in the future.  Are CREEP cards materials?
+                  They have an MID, but reference structural materials.
         """
         key = material.mid
         if key in self.thermalMaterials and not allowOverwrites:

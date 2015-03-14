@@ -106,8 +106,8 @@ class CQUAD4(ShellElement):
         :param calculate_area: should the area be calculated (default=True)
         :param calculate_normal: should the normals be calculated (default=True)
 
-        ..note:: If node_ids is None, the positions of all the GRID cards
-                 must be calculated
+        .. note:: If node_ids is None, the positions of all the GRID cards
+                  must be calculated
         """
         if element_id is None:
             element_id = self.element_id

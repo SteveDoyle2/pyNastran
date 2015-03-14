@@ -84,8 +84,8 @@ class CPENTA15(SolidElement):
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the volume be summed (default=False)
 
-        ..note:: Volume for a CPENTA is the average area of two opposing faces
-        times the length between the centroids of those points
+        .. note:: Volume for a CPENTA is the average area of two opposing faces
+                  times the length between the centroids of those points
         """
         (A1, A2, c1, c2) = self._area_centroid(self, element_id, xyz_cid0)
         if total:

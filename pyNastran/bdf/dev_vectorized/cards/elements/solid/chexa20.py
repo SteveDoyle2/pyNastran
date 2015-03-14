@@ -201,8 +201,8 @@ class CHEXA20(SolidElement):
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the volume be summed (default=False)
 
-        ..note:: Volume for a CHEXA is the average area of two opposing faces
-        times the length between the centroids of those points
+        .. note:: Volume for a CHEXA is the average area of two opposing faces
+                  times the length between the centroids of those points
         """
         n1, n2, n3, n4, n5, n6, n7, n8 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
         volume = volume8(n1, n2, n3, n4, n5, n6, n7, n8)

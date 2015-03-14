@@ -84,8 +84,8 @@ class CSHEAR(Element):
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
         :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
 
-        ..note:: If node_ids is None, the positions of all the GRID cards
-                 must be calculated
+        .. note:: If node_ids is None, the positions of all the GRID cards
+                  must be calculated
         """
         mass, _area, _normal = self._mass_area_normal(eids=eids,
             node_ids=node_ids, grids_cid0=grids_cid0,
@@ -108,8 +108,8 @@ class CSHEAR(Element):
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
         :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
 
-        ..note:: If node_ids is None, the positions of all the GRID cards
-                 must be calculated
+        .. note:: If node_ids is None, the positions of all the GRID cards
+                  must be calculated
         """
         _mass, area, _normal = self._mass_area_normal(eids=eids,
             node_ids=node_ids, grids_cid0=grids_cid0,
@@ -131,8 +131,8 @@ class CSHEAR(Element):
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
         :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
 
-        ..note:: If node_ids is None, the positions of all the GRID cards
-                 must be calculated
+        .. note:: If node_ids is None, the positions of all the GRID cards
+                  must be calculated
         """
         _mass, area, normal = self._mass_area_normal(eids=eids,
             node_ids=node_ids, grids_cid0=grids_cid0,
@@ -161,8 +161,8 @@ class CSHEAR(Element):
         :param calculate_area: should the area be calculated (default=True)
         :param calculate_normal: should the normals be calculated (default=True)
 
-        ..note:: If node_ids is None, the positions of all the GRID cards
-                 must be calculated
+        .. note:: If node_ids is None, the positions of all the GRID cards
+                  must be calculated
         """
         if nodes_cid0 is None:
             node_ids = self.model.grid.node_ids

@@ -255,9 +255,9 @@ class Element(BaseCard, ElementDeprecated):
         """
         Gets the faces of the element
 
-        :returns: dictionary with face number as the keys and
-                  a list of nodes (integer pointers) as the values.
-        ..note::  The order of the nodes are consistent with ANSYS numbering.
+        :returns:  dictionary with face number as the keys and
+                   a list of nodes (integer pointers) as the values.
+        .. note::  The order of the nodes are consistent with ANSYS numbering.
 
         Example
         =======

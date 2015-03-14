@@ -94,7 +94,7 @@ def get_normal_groups(points, elements, rtol=1e-3, atol=1e-5):
     :param elements: the elements from the Cart3dReader
     :returns normal_groups: the list of list of ints of the element IDs
                             with the same normal that are touching
-    ..note:: modifies elements
+    .. note:: modifies elements
     """
     elements -= 1
     #npoints, three = points.shape
