@@ -80,7 +80,7 @@ Nastran
      - (nodal) displacement, velocity, acceleration, spcForces, mpcForces, temperatures
    - Stress
      - rodStress, barStress, beamStress, plateStress, solidStress, compositePlateStress (centroidal only)
- - transient-style results (need a results sidebar for that)
+ - transient-style results (no complex data)
 
  - ***rotate loads based on local coordinate system
    - displacement (e.g. force, displacement, velocity)
@@ -144,7 +144,7 @@ Tetgen
 STL
 ===
  - load geometry -> STL
- - ***Coordinate System
+ - Coordinate System
 
 SHABP
 =====
