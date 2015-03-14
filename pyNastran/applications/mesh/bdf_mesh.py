@@ -285,7 +285,7 @@ class MeshTools(BDF):
         :param xyz: dictionary of node locations by nodeID
         :param tol: the distance between nodes
 
-        ..warning:: doesn't handle SPOINTs
+        .. warning:: doesn't handle SPOINTs
         """
         if xyz is None:
             #xyz = {}

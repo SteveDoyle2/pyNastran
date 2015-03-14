@@ -692,7 +692,7 @@ class PBEAML(IntegratedLineProperty):
         return list_fields
 
     def write_bdf(self, size, card_writer):
-        """..todo:: having bug with PBEAML"""
+        """.. todo:: having bug with PBEAML"""
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)

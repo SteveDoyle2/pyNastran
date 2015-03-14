@@ -898,7 +898,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         :param xref:  should the bdf be cross referenced (default=True)
         :param punch: indicates whether the file is a punch file (default=False)
 
-        ..todo:: this is out of date
+        .. todo:: this is out of date
         >>> bdf = BDF()
         >>> bdf.read_bdf(bdf_filename, xref=True)
         >>> g1 = bdf.Node(1)
@@ -2541,7 +2541,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
     def mass_properties(self, total=False, sym_axis=None, scale=None):
         """
-        ..todo:: consider calling BDF.elements.mass_properties
+        .. todo:: consider calling BDF.elements.mass_properties
         """
         mass_types = self._get_mass_types()
         massi = []

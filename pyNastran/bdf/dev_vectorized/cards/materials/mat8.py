@@ -59,9 +59,9 @@ class MAT8(Material):
         #if comment:
         #    self._comment = comment
         self.material_id[i] = integer(card, 1, 'material_id')
-        self.e11[i] = double(card, 2, 'E11')    #: ..todo:: is this the correct default
-        self.e22[i] = double(card, 3, 'E22')    #: ..todo:: is this the correct default
-        self.nu12[i] = double(card, 4, 'nu12')  #: ..todo:: is this the correct default
+        self.e11[i] = double(card, 2, 'E11')    #: .. todo:: is this the correct default
+        self.e22[i] = double(card, 3, 'E22')    #: .. todo:: is this the correct default
+        self.nu12[i] = double(card, 4, 'nu12')  #: .. todo:: is this the correct default
 
         self.g12[i] = double_or_blank(card, 5, 'g12', 0.0)
         self.g1z[i] = double_or_blank(card, 6, 'g1z', 1e8)

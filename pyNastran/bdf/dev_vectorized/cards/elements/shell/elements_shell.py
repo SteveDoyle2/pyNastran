@@ -179,9 +179,9 @@ class ElementsShell(object):
             try:
                 mass = elems.get_mass_by_element_id()
                 massi[n0:n0 + elems.n] = elems.get_mass_by_element_id()
-            except TypeError:  # ..todo:: remove this
+            except TypeError:  # .. todo:: remove this
                  massi[n0] = 1.
-            except ValueError:  # ..todo:: remove this
+            except ValueError:  # .. todo:: remove this
                  massi[n0] = 1.
             n0 += elems.n
         assert massi.sum() > 0, elems.type

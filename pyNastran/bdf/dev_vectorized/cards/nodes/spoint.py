@@ -51,7 +51,7 @@ class SPOINT(object):
             self._comments = []
 
     def write_bdf(self, f, size=8, is_double=False):
-        #..todo:: collapse the IDs
+        #.. todo:: collapse the IDs
         if self.n:
             spoint = list(self.spoint)
             spoint.sort()

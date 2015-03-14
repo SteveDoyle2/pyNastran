@@ -194,7 +194,7 @@ class TestBeams(unittest.TestCase):
                  '+Z4     0.0     0.0',]
         card = bdf.process_card(lines)
         card = BDFCard(card)
-        with self.assertRaises(SyntaxError):  # ..todo:: is this correct?
+        with self.assertRaises(SyntaxError):  # .. todo:: is this correct?
             card2 = PBEAM(card)
 
         if 0:

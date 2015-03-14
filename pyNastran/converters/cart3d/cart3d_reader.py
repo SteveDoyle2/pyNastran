@@ -207,7 +207,7 @@ class Cart3DReader(object):
         assert 0 < nnodes2 < nnodes, 'nnodes=%s nnodes2=%s'  % (nnodes, nnodes2)
 
         inodes_save += 1  # +1 is so we don't have to shift inode
-        # ..todo:: still need to handle element's node id renumbering
+        # .. todo:: still need to handle element's node id renumbering
         ielements_save = set([])
         for ielement in range(nelements):
             save_element = True

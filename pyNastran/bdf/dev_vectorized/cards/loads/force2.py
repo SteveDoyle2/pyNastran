@@ -19,7 +19,7 @@ class FORCE2(VectorizedCard):
         :param self: the FORCE2 object
         :param model: the BDF object
 
-        ..todo:: collapse loads
+        .. todo:: collapse loads
         """
         VectorizedCard.__init__(self, model)
 

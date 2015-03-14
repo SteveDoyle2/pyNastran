@@ -395,7 +395,7 @@ class BDFMethods(BDFMethodsDeprecated):
                  due to the fact that nodal loads on the boundary are
                  double/triple/etc. counted depending on how many breaks
                  you have.
-        ..todo:: not done...
+        .. todo:: not done...
         """
         if not isinstance(loadcase_id, int):
             raise RuntimeError('loadcase_id must be an integer; loadcase_id=%r' % loadcase_id)
@@ -745,8 +745,8 @@ class BDFMethods(BDFMethodsDeprecated):
         :type Moments:
           NUMPY.NDARRAY shape=(3,)
 
-        ..warning:: not validated
-        ..todo:: It's super slow for cid != 0.   We can speed this up a lot
+        .. warning:: not validated
+        .. todo:: It's super slow for cid != 0.   We can speed this up a lot
                  if we calculate the normal, area, centroid based on
                  precomputed node locations.
 

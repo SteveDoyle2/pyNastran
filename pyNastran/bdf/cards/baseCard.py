@@ -308,7 +308,7 @@ class Element(BaseCard, ElementDeprecated):
         :param nodes:   list of nodes
         :returns faces: the face number as an integer
 
-        ..warning:: It's assumed you have the nodes in the proper order.
+        .. warning:: It's assumed you have the nodes in the proper order.
         """
         assert isinstance(nodes, list), 'nodes=%s' % str(nodes)
         face = None

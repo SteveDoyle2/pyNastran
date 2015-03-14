@@ -17,7 +17,7 @@ class GRAV(object):
         :param self: the GRAV object
         :param model: the BDF object
 
-        ..todo:: collapse loads
+        .. todo:: collapse loads
         """
         self.model = model
         self.n = 0

@@ -572,9 +572,9 @@ class Cord2x(Coord):
 
         :param self:  the coordinate system object
         :param model: the BDF object
-        ..warning:: Doesn't set rid to the coordinate system if it's in the
-                    global.  This isn't a problem, it's meant to speed up the
-                    code in order to resolve extra coordinate systems.
+        .. warning:: Doesn't set rid to the coordinate system if it's in the
+                     global.  This isn't a problem, it's meant to speed up the
+                     code in order to resolve extra coordinate systems.
         """
         if self.rid != 0:
             msg = ' which is required by %s cid=%s' % (self.type, self.cid)

@@ -743,7 +743,7 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
         #: used to create sort_bits
         self.sort_code = tCode // 1000
 
-        #: ..todo::  sort_code2 seems to be unused...
+        #: .. todo::  sort_code2 seems to be unused...
         self.sort_code2 = ((tCode // 1000) + 2) // 2
         self.data_code['sort_code'] = self.sort_code
 

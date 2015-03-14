@@ -17,7 +17,7 @@ def normalize(v):
     print(v)
     return v / norm(v, axis=0)
 
-# ..todo:: incomplete
+# .. todo:: incomplete
 
 class Coord(object):
     def get_global_position_by_node_id(self, node_id, cp):

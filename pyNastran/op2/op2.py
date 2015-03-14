@@ -734,7 +734,7 @@ class OP2(LAMA, ONR, OGPF,
 
     def _read_kelm(self):
         """
-        ..todo:: this table follows a totally different pattern...
+        .. todo:: this table follows a totally different pattern...
         The KELM table stores information about the K matrix???
         """
         self.log.debug("table_name = %r" % self.table_name)

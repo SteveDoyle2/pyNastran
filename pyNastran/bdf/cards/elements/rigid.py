@@ -549,7 +549,7 @@ class RBE3(RigidElement):
             fields2 = ['UM']
             for (gmi, cmi) in zip(self.Gmi, self.Cmi):
                 fields2 += [gmi, cmi]
-            list_fields += build_table_lines(fields2, i=1, j=1)  ## ..todo:: what's going on here with the arguments???
+            list_fields += build_table_lines(fields2, i=1, j=1)  ## .. todo:: what's going on here with the arguments???
 
         if self.Gmi:
             list_fields += ['UM']

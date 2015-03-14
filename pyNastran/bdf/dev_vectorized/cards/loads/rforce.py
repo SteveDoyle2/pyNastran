@@ -18,7 +18,7 @@ class RFORCE(object):
         :param self: the RFORCE object
         :param model: the BDF object
 
-        ..todo:: collapse loads
+        .. todo:: collapse loads
         """
         self.model = model
         self.n = 0

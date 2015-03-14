@@ -57,7 +57,7 @@ class PSHELL(Property):
         #: Material identification number for bending
         self.material_id2[i] = integer_or_blank(card, 4, 'material_id2', -1)
 
-        # ..todo:: poor name
+        # .. todo:: poor name
         #: ..math:: I = \frac{12I}{t^3} I_{plate}
         #: Scales the moment of interia of the element based on the
         #: moment of interia for a plate

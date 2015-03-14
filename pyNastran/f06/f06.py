@@ -178,7 +178,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
             'S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )' : self._strains_in_composite_cquad4_elements,
 
             #===
-            # ..todo:: not implemented
+            # .. todo:: not implemented
             'S T R E S S E S   I N   T R I A X 6   E L E M E N T S' : self._executive_control_echo,
             #====================================================================
             # OES 3-D
