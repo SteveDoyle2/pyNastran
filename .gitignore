@@ -47,3 +47,12 @@ nosetests.xml
 # WingIDE
 *.wpr
 *.wpu
+
+# Nastran
+*test_op2.bdf
+*test_op2.f06
+*test_op2.op2
+*test_f06.f06
+*test_f06.op2
+*.bdf_out
+*.dat_out

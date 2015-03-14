@@ -1,11 +1,12 @@
 from six.moves import range
 from struct import Struct
 
+from pyNastran.op2.op2_common import OP2Common
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import (
     RealGridPointForces, ComplexGridPointForces)
 
 
-class OGPF(object):
+class OGPF(OP2Common):
     def __init__(self):
         OP2Common.__init__(self)
 
