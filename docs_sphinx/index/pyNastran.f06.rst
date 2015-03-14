@@ -47,6 +47,17 @@ This is the pyNastran.f06.rst file.
     :undoc-members:
     :show-inheritance:
 
+:mod:`errors` Module
+----------------------------
+
+.. inheritance-diagram:: pyNastran.f06.errors
+
+.. automodule:: pyNastran.f06.errors
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 Subpackages
 -----------
 

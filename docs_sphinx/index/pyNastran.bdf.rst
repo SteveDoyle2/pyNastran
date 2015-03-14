@@ -47,12 +47,12 @@ This is the pyNastran.bdf.rst file.
     :undoc-members:
     :show-inheritance:
 
-:mod:`caseControlDeck2` Module
-------------------------------
+:mod:`deprecated` Module
+-----------------------
 
-.. inheritance-diagram:: pyNastran.bdf.caseControlDeck2
+.. inheritance-diagram:: pyNastran.bdf.deprecated
 
-.. automodule:: pyNastran.bdf.caseControlDeck2
+.. automodule:: pyNastran.bdf.deprecated
     :members:
     :private-members:
     :undoc-members:
@@ -97,17 +97,6 @@ This is the pyNastran.bdf.rst file.
 .. inheritance-diagram:: pyNastran.bdf.subcase
 
 .. automodule:: pyNastran.bdf.subcase
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`writePath` Module
------------------------
-
-.. inheritance-diagram:: pyNastran.bdf.writePath
-
-.. automodule:: pyNastran.bdf.writePath
     :members:
     :private-members:
     :undoc-members:
