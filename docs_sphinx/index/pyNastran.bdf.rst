@@ -100,12 +100,23 @@ bdf Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`writePath` Module
+:mod:`utils` Module
+---------------------
+
+.. inheritance-diagram:: pyNastran.bdf.utils
+
+.. automodule:: pyNastran.bdf.utils
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`write_path` Module
 -----------------------
 
-.. inheritance-diagram:: pyNastran.bdf.writePath
+.. inheritance-diagram:: pyNastran.bdf.write_path
 
-.. automodule:: pyNastran.bdf.writePath
+.. automodule:: pyNastran.bdf.write_path
     :members:
     :private-members:
     :undoc-members:

@@ -23,6 +23,28 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`bdf_sets` Module
+------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.bdf_sets
+
+.. automodule:: pyNastran.bdf.cards.bdf_sets
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`bdf_tables` Module
+--------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.bdf_tables
+
+.. automodule:: pyNastran.bdf.cards.bdf_tables
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`constraints` Module
 -------------------------
 
@@ -51,28 +73,6 @@ cards Package
 .. inheritance-diagram:: pyNastran.bdf.cards.coordinateSystems
 
 .. automodule:: pyNastran.bdf.cards.coordinateSystems
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`cquad4` Module
---------------------
-
-.. inheritance-diagram:: pyNastran.bdf.cards.cquad4
-
-.. automodule:: pyNastran.bdf.cards.cquad4
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`ctria3` Module
---------------------
-
-.. inheritance-diagram:: pyNastran.bdf.cards.ctria3
-
-.. automodule:: pyNastran.bdf.cards.ctria3
     :members:
     :private-members:
     :undoc-members:
@@ -144,17 +144,6 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`nodes2` Module
---------------------
-
-.. inheritance-diagram:: pyNastran.bdf.cards.nodes2
-
-.. automodule:: pyNastran.bdf.cards.nodes2
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`optimization` Module
 --------------------------
 
@@ -177,34 +166,12 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`sets` Module
-------------------
-
-.. inheritance-diagram:: pyNastran.bdf.cards.sets
-
-.. automodule:: pyNastran.bdf.cards.sets
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`tables` Module
+:mod:`utils` Module
 --------------------
 
-.. inheritance-diagram:: pyNastran.bdf.cards.tables
+.. inheritance-diagram:: pyNastran.bdf.cards.utils
 
-.. automodule:: pyNastran.bdf.cards.tables
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`tables` Module
---------------------
-
-.. inheritance-diagram:: pyNastran.bdf.cards.tables
-
-.. automodule:: pyNastran.bdf.cards.tables
+.. automodule:: pyNastran.bdf.cards.utils
     :members:
     :private-members:
     :undoc-members:
@@ -219,4 +186,6 @@ Subpackages
     pyNastran.bdf.cards.loads
     pyNastran.bdf.cards.properties
     pyNastran.bdf.cards.thermal
+    pyNastran.bdf.cards.test
+
 

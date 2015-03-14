@@ -34,17 +34,6 @@ bdfInterface Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`bdf_cardMethods` Module
------------------------------
-
-.. inheritance-diagram:: pyNastran.bdf.bdfInterface.bdf_cardMethods
-
-.. automodule:: pyNastran.bdf.bdfInterface.bdf_cardMethods
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`bdf_writeMesh` Module
 ---------------------------
 
