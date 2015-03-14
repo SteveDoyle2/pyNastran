@@ -6,7 +6,7 @@ from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import (
     RealGridPointForces, ComplexGridPointForces)
 
 
-class OGPF(object):
+class OGPF(OP2Common):
     def __init__(self):
         OP2Common.__init__(self)
 
