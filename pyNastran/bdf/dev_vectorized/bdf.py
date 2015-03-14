@@ -1579,7 +1579,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         Counts the cards that will be used in the allocate method.
         This is the inspect=False version of add_card.
 
-        ..seealso:: self.add_card
+        .. seealso:: self.add_card
         """
         if card_name in ['CTETRA', 'CPENTA', 'CHEXA']:
             card = self.process_card(card_lines)

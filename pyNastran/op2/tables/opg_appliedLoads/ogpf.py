@@ -5,9 +5,9 @@ from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import (
     RealGridPointForces, ComplexGridPointForces)
 
 
-class OGPF(object):
+class OGS(OP2Common):
     def __init__(self):
-        pass
+        OP2Common.__init__(self)
 
     def _read_ogpf1_3(self, data):
         self._read_opg1_3(data)  # TODO: this is wrong...

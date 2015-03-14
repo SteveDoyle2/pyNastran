@@ -14,7 +14,7 @@ def is_binary(filename):
     :returns: True if filename is a binary file (contains null byte)
               and False otherwise.
 
-    Based on the idea (..seealso:: http://bytes.com/topic/python/answers/21222-determine-file-type-binary-text)
+    Based on the idea (.. seealso:: http://bytes.com/topic/python/answers/21222-determine-file-type-binary-text)
     that file is binary if it contains null.
 
     .. warning:: this may not work for unicode."""

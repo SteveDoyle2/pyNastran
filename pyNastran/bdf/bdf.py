@@ -859,7 +859,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         :param self: the BDF object
         :param key:  the uppercased key
         :returns value: the dynamic value defined by dict_of_vars
-        .. seealso:: :func: `set_dynamic_syntax`
+        ..  seealso:: :func: `set_dynamic_syntax`
         """
         key = key[1:].strip()
         self.log.debug("dynamic key = %r" % key)
