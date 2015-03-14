@@ -47,28 +47,6 @@ This is the pyNastran.f06.rst file.
     :undoc-members:
     :show-inheritance:
 
-:mod:`matlabWriter` Module
---------------------------
-
-.. inheritance-diagram:: pyNastran.f06.matlabWriter
-
-.. automodule:: pyNastran.f06.matlabWriter
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`matlabWriter` Module
---------------------------
-
-.. inheritance-diagram:: pyNastran.f06.matlabWriter
-
-.. automodule:: pyNastran.f06.matlabWriter
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
 Subpackages
 -----------
 
