@@ -478,6 +478,8 @@ class F06Writer(OP2_F06_Common):
             self.spcForces,
             self.thermalLoadVectors,
 
+            self.strainEnergy,
+
 
             #------------------------------------------
             # OEF - forces

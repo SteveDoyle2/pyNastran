@@ -28,10 +28,6 @@ class RealPlateArray(OES_Object):
                 self.addNewNode = self.addNewNodeSort1
         else:
             raise NotImplementedError('SORT2')
-            #assert dt is not None
-            #self.add = self.addSort2
-            #self.add_new_eid = self.add_new_eid_sort2
-            #self.addNewNode = self.addNewNodeSort2
 
     def is_real(self):
         return True
@@ -106,14 +102,10 @@ class RealPlateArray(OES_Object):
         self.add_new_eid_sort1(eType, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
     def add_new_eid_sort1(self, eType, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #print("------------------")
-        #print("isStress =", self.isStress())
         #msg = "i=%s eType=%s dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (
             #self.itotal,  eType, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
-        #print(msg)
         #msg = "i=%s dt=%s eid=%s nodeID=%s fd=%g oxx=%g ovmShear=%g" % (
             #self.itotal, dt, eid, nodeID, fd, oxx, ovm)
-        #print(msg)
 
         assert isinstance(eid, int)
         self._times[self.itime] = dt
@@ -147,7 +139,6 @@ class RealPlateArray(OES_Object):
             #self.itotal, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
         #msg = "i=%s dt=%s eid=%s nodeID=%s fd=%g oxx=%g ovmShear=%g" % (
             #self.itotal, dt, eid, nodeID, fd, oxx, ovm)
-        #print(msg)
         if isinstance(nodeID, string_types):
             nodeID = 0
         #assert isinstance(nodeID, int), nodeID
@@ -229,7 +220,7 @@ class RealPlateArray(OES_Object):
 
         cen_word = 'CEN/%i' % nnodes
         for itime in range(ntimes):
-            dt = self._times[itime]  # TODO: rename this...
+            dt = self._times[itime]
             if self.nonlinear_factor is not None:
                 dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
                 header[1] = dtLine
@@ -237,7 +228,6 @@ class RealPlateArray(OES_Object):
                     header[2] = ' %14s = %12.6E\n' % ('EIGENVALUE', self.eigrs[itime])
             f.write(''.join(header + msg))
 
-            # TODO: can I get this without a reshape?
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
 
             #[fd, oxx, oyy, txy, angle, majorP, minorP, ovm]
@@ -255,7 +245,6 @@ class RealPlateArray(OES_Object):
                 count(), eids, nids, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
                 ([fdi, oxxi, oyyi, txyi, major, minor, ovmi],
                  is_all_zeros) = writeFloats13E([fdi, oxxi, oyyi, txyi, major, minor, ovmi])
-                #f.write([eidi, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi])
                 iLayer = i % 2
                 # tria3
                 if is_bilinear:
@@ -286,9 +275,10 @@ class RealPlateStressArray(RealPlateArray, StressObject):
         RealPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def isStress(self):
+    def is_stress(self):
         return True
-    def isStrain(self):
+
+    def is_strain(self):
         return False
 
     def get_headers(self):
@@ -375,9 +365,9 @@ class RealPlateStrainArray(RealPlateArray, StrainObject):
         RealPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def isStress(self):
+    def is_stress(self):
         return False
-    def isStrain(self):
+    def is_strain(self):
         return True
 
     def get_headers(self):
@@ -500,10 +490,6 @@ class RealPlateStress(StressObject):
                 self.addNewNode = self.addNewNodeSort1
         else:
             raise NotImplementedError('SORT2')
-            #assert dt is not None
-            #self.add = self.addSort2
-            #self.add_new_eid = self.add_new_eid_sort2
-            #self.addNewNode = self.addNewNodeSort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -696,19 +682,15 @@ class RealPlateStress(StressObject):
         self.minorP[eid] = {nodeID: [minorP]}
         self.ovmShear[eid] = {nodeID: [ovm]}
         msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" % (eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
-        #print msg
         if nodeID == 0:
             raise Exception(msg)
 
     def add_new_eid_sort1(self, eType, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #print('add_new_eid_sort1', msg)
-        #print(self.oxx)
         #msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g major=%g vm=%g" % (dt, eid, nodeID, fd, oxx, majorP, ovm)
-        #print msg
         #if eid in self.ovmShear[dt]:
         #    return self.add(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
 
-        if 0:
+        if 0: # this is caused by superelements
             if dt in self.oxx and eid in self.oxx[dt]:  # SOL200, erase the old result
                 #nid = nodeID
                 msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s major=%s vm=%s" %(dt,eid,nodeID,
@@ -716,7 +698,6 @@ class RealPlateStress(StressObject):
                                                                              str(self.oxx[dt][eid][nodeID]),
                                                                              str(self.majorP[dt][eid][nodeID]),
                                                                              str(self.ovmShear[dt][eid][nodeID]))
-                #print("************", msg)
                 self.delete_transient(dt)
                 self.add_new_transient(dt)
 
@@ -732,16 +713,12 @@ class RealPlateStress(StressObject):
         self.majorP[dt][eid] = {nodeID: [majorP]}
         self.minorP[dt][eid] = {nodeID: [minorP]}
         self.ovmShear[dt][eid] = {nodeID: [ovm]}
-        #print msg
         if nodeID == 0:
             msg = "dt=%s eid=%s nodeID=%s " % (dt, eid, nodeID) #fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
             raise ValueError(msg)
 
     def add(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
         msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
-        #print msg
-        #print self.oxx
-        #print self.fiberCurvature
         assert isinstance(eid, int)
         self.fiberCurvature[eid][nodeID].append(fd)
         self.oxx[eid][nodeID].append(oxx)
@@ -756,10 +733,6 @@ class RealPlateStress(StressObject):
 
     def add_sort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
         msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" % (dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
-        #print('add_sort1')
-        #print msg
-        #print self.oxx
-        #print self.fiberCurvatrure
         assert eid is not None
         self.fiberCurvature[eid][nodeID].append(fd)
         self.oxx[dt][eid][nodeID].append(oxx)
@@ -789,11 +762,8 @@ class RealPlateStress(StressObject):
             raise ValueError(msg)
 
     def addNewNodeSort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #print self.oxx
-        #print('addNewNodeSort1')
         assert eid is not None
         msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
-        #print(msg)
         #assert nodeID not in self.oxx[dt][eid]
         self.fiberCurvature[eid][nodeID] = [fd]
         self.oxx[dt][eid][nodeID] = [oxx]
@@ -886,10 +856,10 @@ class RealPlateStress(StressObject):
 
         validTypes = ['CTRIA3', 'CTRIA6', 'CTRIAR', 'CQUAD4',
                       'CQUAD8', 'CQUADR']
-        (typesOut, orderedETypes) = self.getOrderedETypes(validTypes)
+        (etypes, orderedETypes) = self.getOrderedETypes(validTypes)
 
         msg = []
-        for eType in typesOut:
+        for eType in etypes:
             eids = orderedETypes[eType]
             if eids:
                 eids.sort()
@@ -966,7 +936,6 @@ class RealPlateStress(StressObject):
         dt = dts[0]
         if 'CQUAD4' in eTypes:
             qkey = eTypes.index('CQUAD4')
-            #print(self.eType)
             kkey = self.eType.keys()[qkey]
             try:
                 ekey = self.oxx[dt][kkey].keys()
@@ -991,7 +960,7 @@ class RealPlateStress(StressObject):
             quadrMsg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quadMsgTemp
             if len(ekey) == 1:
                 isBilinear = False
-                quadMsg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'] + triMsgTemp
+                quadrMsg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'] + triMsgTemp
 
         if 'CTRIA3' in eTypes:
             triMsg = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'] + triMsgTemp
@@ -1011,7 +980,7 @@ class RealPlateStress(StressObject):
 
         validTypes = ['CTRIA3', 'CTRIA6', 'CTRIAR', 'CQUAD4',
                       'CQUAD8', 'CQUADR']
-        (typesOut, orderedETypes) = self.getOrderedETypes(validTypes)
+        (eTypes, orderedETypes) = self.getOrderedETypes(validTypes)
 
         msg = []
         dts = self.oxx.keys()
@@ -1020,10 +989,8 @@ class RealPlateStress(StressObject):
             dt_msg =  ' %s = %%-10i\n' % self.data_code['name']
         else:
             dt_msg =  ' %s = %%10.4E\n' % self.data_code['name']
-        for eType in typesOut:
-            #print "eType = ",eType
+        for eType in eTypes:
             eids = orderedETypes[eType]
-            #print "eids = ",eids
             if eids:
                 msgPack = msgPacks[eType]
                 eids.sort()
@@ -1242,13 +1209,8 @@ class RealPlateStrain(StrainObject):
                 self.add = self.add_sort1
                 self.add_new_eid = self.add_new_eid_sort1
                 self.addNewNode = self.addNewNodeSort1
-                #self.add = self.add_sort1
-                #self.add_new_eid = self.add_new_eid_sort1
         else:
             raise NotImplementedError('SORT2')
-            #assert dt is not None
-            #self.add = self.addSort2
-            #self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -1282,8 +1244,6 @@ class RealPlateStrain(StrainObject):
                     self.minorP[eid] = {'CEN/3': [e21, e22]}
                     self.evmShear[eid] = {'CEN/3': [evm1, evm2]}
                 elif eType == 'CQUAD4':
-                    #assert len(line)==19,'len(line)=%s' %(len(line))
-                    #print line
                     if len(line) == 19:  # Centroid - bilinear
                         (
                             eType, eid, nid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
@@ -1420,7 +1380,6 @@ class RealPlateStrain(StrainObject):
         """
         initializes the transient variables
         """
-        #self.fiberCurvature[dt] = {}
         self.exx[dt] = {}
         self.eyy[dt] = {}
         self.exy[dt] = {}
@@ -1430,7 +1389,6 @@ class RealPlateStrain(StrainObject):
         self.evmShear[dt] = {}
 
     def add_new_eid(self, eType, dt, eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
-        #print "Plate add..."
         msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
 
         #if nodeID != 'C':  # centroid
@@ -1448,12 +1406,10 @@ class RealPlateStrain(StrainObject):
         self.majorP[eid] = {nodeID: [majorP]}
         self.minorP[eid] = {nodeID: [minorP]}
         self.evmShear[eid] = {nodeID: [evm]}
-        #print msg
         if nodeID == 0:
             raise ValueError(msg)
 
     def add_new_eid_sort1(self, eType, dt, eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
-        #print "Plate add..."
         msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
         #print msg
 
@@ -1477,7 +1433,6 @@ class RealPlateStrain(StrainObject):
         self.majorP[dt][eid] = {nodeID: [majorP]}
         self.minorP[dt][eid] = {nodeID: [minorP]}
         self.evmShear[dt][eid] = {nodeID: [evm]}
-        #print msg
         if nodeID == 0:
             raise ValueError(msg)
 
@@ -1501,9 +1456,6 @@ class RealPlateStrain(StrainObject):
 
     def add_sort1(self, dt, eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
         msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
-        #print msg
-        #print self.oxx
-        #print self.fiberCurvature
         #if nodeID != 'C':  # centroid
             #assert 0 < nodeID < 1000000000, 'nodeID=%s' % (nodeID)
 
@@ -1519,7 +1471,6 @@ class RealPlateStrain(StrainObject):
             raise ValueError(msg)
 
     def addNewNode(self, dt, eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
-        #print self.oxx
         msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
         assert nodeID not in self.exx[eid], msg
         self.fiberCurvature[eid][nodeID] = [curvature]
@@ -1530,12 +1481,10 @@ class RealPlateStrain(StrainObject):
         self.majorP[eid][nodeID] = [majorP]
         self.minorP[eid][nodeID] = [minorP]
         self.evmShear[eid][nodeID] = [evm]
-        #print msg
         if nodeID == 0:
             raise ValueError(msg)
 
     def addNewNodeSort1(self, dt, eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
-        #print self.oxx
         msg = "eid=%s nodeID=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, nodeID, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
         #assert nodeID not in self.exx[eid], msg
         self.fiberCurvature[eid][nodeID] = [curvature]
@@ -1546,7 +1495,6 @@ class RealPlateStrain(StrainObject):
         self.majorP[dt][eid][nodeID] = [majorP]
         self.minorP[dt][eid][nodeID] = [minorP]
         self.evmShear[dt][eid][nodeID] = [evm]
-        #print msg
         if nodeID == 0:
             raise ValueError(msg)
 

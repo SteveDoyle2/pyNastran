@@ -56,14 +56,12 @@ class OES_Object(ScalarObject):
         for eType in valid_types:
             orderedETypes[eType] = []
         for eid, eType in sorted(iteritems(self.eType)):
-            #print "eType = ",eType
             assert eType in valid_types, 'unsupported eType=%r; valid_type=%s' % (eType, str(['%r' % str(t) for t in valid_types]))
             orderedETypes[eType].append(eid)
 
         minVals = []
         for eType in valid_types:
             vals = orderedETypes[eType]
-            #print "len(%s) = %s" %(eType,len(vals))
             if len(vals) == 0:
                 minVals.append(-1)
             else:
@@ -75,11 +73,6 @@ class OES_Object(ScalarObject):
         TypesOut = []
         for i in argList:
             TypesOut.append(valid_types[i])
-        #print "validTypes = %s" %(valid_types)
-        #print "minVals    = %s" %(minVals)
-        #print "argList    = %s" %(argList)
-        #print "TypesOut   = %s" %(TypesOut)
-        #print("orderedETypes.keys = %s" % orderedETypes.keys())
         return (TypesOut, orderedETypes)
 
 
@@ -100,9 +93,15 @@ class StressObject(OES_Object):
             self.add_new_transient(dt)
 
     def isStrain(self):
-        return True
+        return self.is_stress()
 
     def isStress(self):
+        return self.is_strain()
+
+    def is_strain(self):
+        return True
+
+    def is_stress(self):
         return False
 
 
@@ -120,8 +119,14 @@ class StrainObject(OES_Object):
             self.dt = dt
             self.add_new_transient(dt)
 
+    def isStrain(self):
+        return self.is_stress()
+
     def isStress(self):
+        return self.is_strain()
+
+    def is_strain(self):
         return False
 
-    def isStrain(self):
+    def is_stress(self):
         return True

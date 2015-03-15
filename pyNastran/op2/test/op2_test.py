@@ -68,7 +68,7 @@ def main():
     write_f06 = True
     write_op2 = False
     is_vector   = [True, False]
-    vector_stop = [True, False]  # corresponds to is_vector; stop if case fails=True
+    vector_stop = [True, True]  # corresponds to is_vector; stop if case fails=True
 
     delete_f06 = True
     saveCases = True

@@ -7,8 +7,13 @@ from traceback import print_exc
 import pyNastran
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.op2 import OP2
-from pyNastran.op2.op2_geom import OP2Geom, OP2Geom_Vectorized
 from pyNastran.op2.op2_vectorized import OP2_Vectorized as OP2V
+
+try:
+    from pyNastran.op2.op2_geom import OP2Geom, OP2Geom_Vectorized
+    is_geom = True
+except ImportError:
+    is_geom = False
 
 # we need to check the memory usage
 is_linux = None
@@ -197,12 +202,13 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
             iSubcases = [int(iSubcases)]
     print('iSubcases = %s' % iSubcases)
 
-    #debug = True
     try:
         debug_file = None
         if binary_debug or write_op2:
             debug_file = 'debug.out'
 
+        if make_geom and not is_geom:
+            raise RuntimeError('make_geom=%s is not supported' % make_geom)
         if is_vector:
             if make_geom:
                 op2 = OP2Geom_Vectorized(debug=debug, debug_file=debug_file)
@@ -226,7 +232,7 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
             #mbs.append(mb)
             print("Memory usage start: %s (KB); %.2f (MB)" % (kb, mb))
 
-        #op2.read_bdf(op2.bdfFileName,includeDir=None,xref=False)
+        #op2.read_bdf(op2.bdfFileName, includeDir=None, xref=False)
         op2.read_op2(op2FileName)
         print("---stats for %s---" % op2FileName)
         #op2.get_op2_stats()
@@ -248,20 +254,20 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
             print("Memory usage     end: %s (KB); %.2f (MB)" % (kb, mb))
 
         if write_f06:
-            (model, ext) = os.path.splitext(op2FileName)
-            op2.write_f06(model+'.test_op2.f06', is_mag_phase=is_mag_phase)
+            model, ext = os.path.splitext(op2FileName)
+            op2.write_f06(model + '.test_op2.f06', is_mag_phase=is_mag_phase)
             if delete_f06:
                 try:
-                    os.remove(model+'.test_op2.f06')
+                    os.remove(model + '.test_op2.f06')
                 except:
                     pass
 
         if write_op2:
-            (model, ext) = os.path.splitext(op2FileName)
-            op2.write_op2(model+'.test_op2.op2', is_mag_phase=is_mag_phase)
+            model, ext = os.path.splitext(op2FileName)
+            op2.write_op2(model + '.test_op2.op2', is_mag_phase=is_mag_phase)
             if delete_f06:
                 try:
-                    os.remove(model+'.test_op2.op2')
+                    os.remove(model + '.test_op2.op2')
                 except:
                     pass
 
@@ -288,16 +294,19 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
         print_exc(file=sys.stdout)
         sys.stderr.write('**file=%s\n' % op2FileName)
         sys.exit('keyboard stop...')
-    #except RuntimeError: # the op2 is bad, not my fault
-    #    isPassed = True
+    except RuntimeError: # the op2 is bad, not my fault
+        isPassed = True
     #    if stopOnFailure:
     #        raise
     #    else:
     #        isPassed = True
 
-    except IOError: # missing file
-        if stopOnFailure:
-            raise
+    #except IOError: # missing file
+        #if stopOnFailure:  #   this block should be commented
+            #raise
+        #isPassed = True
+    #except UnicodeDecodeError:    #   this block should be commented
+        #isPassed = True
     except FatalError:
         if stopOnFailure:
             raise

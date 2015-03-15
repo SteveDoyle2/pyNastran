@@ -223,11 +223,6 @@ class RealBarStressArray(RealBarArray, StressObject):
         RealBarArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def isStress(self):
-        return True
-    def isStrain(self):
-        return False
-
     def get_headers(self):
         headers = ['s1a', 's2a', 's3a', 's4a', 'axial', 'smaxa', 'smina', 'MS_tension',
                    's1b', 's2b', 's3b', 's4b',          'smaxb', 'sminb', 'MS_compression']
@@ -251,11 +246,6 @@ class RealBarStrainArray(RealBarArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealBarArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
-
-    def isStress(self):
-        return False
-    def isStrain(self):
-        return True
 
     def get_headers(self):
         headers = ['e1a', 'e2a', 'e3a', 'e4a', 'axial', 'emaxa', 'emina', 'MS_tension',
