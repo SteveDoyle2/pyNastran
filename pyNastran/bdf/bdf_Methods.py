@@ -70,6 +70,7 @@ class BDFMethods(BDFMethodsDeprecated):
         .. math:: I_{yz} = -m * dy * dz
 
         where:
+
         .. math:: dx = x_{element} - x_{ref}
 
         .. seealso:: http://en.wikipedia.org/wiki/Moment_of_inertia#Moment_of_inertia_tensor
@@ -725,27 +726,31 @@ class BDFMethods(BDFMethodsDeprecated):
 
         :param p0:
           the reference point
-        :param loadcase_id:
-          the LOAD=? ID to analyze
-        :param include_grav:
-          includes gravity in the summation (not supported)
-        :returns Forces:
-          the forces
-        :returns Moments:
-          the moments
-
         :type p0:
           NUMPY.NDARRAY shape=(3,) or integer (node ID)
-         :type loadcase_id:
+
+        :param loadcase_id:
+          the LOAD=ID to analyze
+        :type loadcase_id:
           integer
-         :type include_grav:
+
+        :param include_grav:
+          includes gravity in the summation (not supported)
+        :type include_grav:
           bool
+
+        :returns Forces:
+          the forces
         :type Forces:
           NUMPY.NDARRAY shape=(3,)
+
+        :returns Moments:
+          the moments
         :type Moments:
           NUMPY.NDARRAY shape=(3,)
 
-        .. warning:: not validated
+
+        .. warning:: not full validated
         .. todo:: It's super slow for cid != 0.   We can speed this up a lot
                  if we calculate the normal, area, centroid based on
                  precomputed node locations.
