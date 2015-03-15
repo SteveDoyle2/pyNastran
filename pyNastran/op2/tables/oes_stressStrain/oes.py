@@ -873,6 +873,12 @@ class OES(OP2Common):
 
                 struct1 = Struct(b'ii4si')
                 struct2 = Struct(b'i20f')
+                if self.debug4():
+                    msg  = '%s-%s nelements=%s nnodes=%s; C=[sxx, sxy, s1, a1, a2, a3, pressure, svm,\n' % (
+                        self.element_name, self.element_type, nelements, nnodes_expected)
+                    msg += '                                 syy, syz, s2, b1, b2, b3,\n'
+                    msg += '                                 szz, sxz, s3, c1, c2, c3]\n'
+                    self.binary_debug.write(msg)
                 for i in range(nelements):
                     edata = data[n:n+16]
                     out = struct1.unpack(edata)
@@ -894,7 +900,7 @@ class OES(OP2Common):
                                       szz, sxz, s3, c1, c2, c3) = out
 
                         if self.debug4():
-                            self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (eid, nodeID, ', '.join(['%r' % di for di in out]) ))
+                            self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (eid, grid_device, ', '.join(['%r' % di for di in out]) ))
 
                         if grid_device == 0:
                             grid = 'CENTER'

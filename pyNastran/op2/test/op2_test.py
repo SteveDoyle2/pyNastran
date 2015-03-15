@@ -67,7 +67,8 @@ def main():
     write_bdf = False
     write_f06 = True
     write_op2 = False
-    is_vector = [True, False]
+    is_vector   = [True, False]
+    vector_stop = [True, False]  # corresponds to is_vector; stop if case fails=True
 
     delete_f06 = True
     saveCases = True
@@ -100,7 +101,8 @@ def main():
     run_lots_of_files(files, make_geom=make_geom, write_bdf=write_bdf,
                    write_f06=write_f06, delete_f06=delete_f06,
                    write_op2=write_op2, debug=debug, saveCases=saveCases, skipFiles=skipFiles,
-                   stopOnFailure=stopOnFailure, is_vector=is_vector,
+                   stopOnFailure=stopOnFailure,
+                   is_vector=is_vector, vector_stop=vector_stop,
                    nStart=nStart, nStop=nStop)
     print("dt = %f" %(time.time() - t0))
     sys.exit('final stop...')

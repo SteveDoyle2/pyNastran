@@ -15,6 +15,8 @@ def get_files_of_type(dirname, extension='.txt', maxSize=100.):
     :param maxSize:   size in MB for max file size
     :returns: list of all the files with a given extension in the specified directory
     """
+    if not os.path.exists(dirname):
+        return []
     return [os.path.join(dirname, f) for f in os.listdir(dirname) if extension in
             os.path.splitext(f)[1] and os.path.getsize(os.path.join(dirname, f)) / (1048576.) <= maxSize]
 

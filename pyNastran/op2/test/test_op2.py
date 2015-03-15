@@ -112,7 +112,8 @@ def get_failed_files(filename):
 
 
 def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
-                   delete_f06=True, write_op2=False, is_vector=False,
+                   delete_f06=True, write_op2=False,
+                   is_vector=False, vector_stop=True,
                    debug=True, saveCases=True, skipFiles=[],
                    stopOnFailure=False, nStart=0, nStop=1000000000):
     n = ''
@@ -121,6 +122,7 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
     assert write_f06 in [True, False]
     if is_vector in [True, False]:
         is_vector = [is_vector]
+        vector_stop = [vector_stop]
 
     iSubcases = []
     failedCases = []
@@ -140,7 +142,7 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
 
             is_passed = True
             is_vector_failed = []
-            for vectori in is_vector:
+            for vectori, vector_stopi in zip(is_vector, vector_stop):
                 is_passed_i = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
                                       write_f06=write_f06, write_op2=write_op2,
                                       is_mag_phase=False,
@@ -148,8 +150,9 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
                                       delete_f06=delete_f06,
                                       iSubcases=iSubcases, debug=debug,
                                       stopOnFailure=stopOnFailure) # True/False
-                if not is_passed_i:
+                if not is_passed_i and vector_stopi:
                    is_passed = False
+                if not is_passed_i:
                    is_vector_failed.append(vectori)
             if not is_passed:
                 sys.stderr.write('**file=%s vector_failed=%s\n' % (op2file, is_vector_failed))

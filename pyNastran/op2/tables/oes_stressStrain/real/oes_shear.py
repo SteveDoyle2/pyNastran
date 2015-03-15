@@ -47,7 +47,7 @@ class RealShearArray(OES_Object):
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
         #self.names = []
-        #self.nelements //= self.ntimes
+        self.nelements //= self.ntimes
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
@@ -105,7 +105,7 @@ class RealShearArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def get_f06_header(self, is_mag_phase=True):
+    def get_f06_header(self):
         raise NotImplementedError('CSHEAR...')
 
     def get_element_index(self, eids):
@@ -121,7 +121,7 @@ class RealShearArray(OES_Object):
         return ind
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        (elem_name, msg_temp) = self.get_f06_header(is_mag_phase)
+        msg_temp = self.get_f06_header()
 
         # write the f06
         (ntimes, ntotal, three) = self.data.shape
