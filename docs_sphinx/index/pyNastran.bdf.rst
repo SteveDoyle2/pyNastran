@@ -102,12 +102,12 @@ This is the pyNastran.bdf.rst file.
     :undoc-members:
     :show-inheritance:
 
-:mod:`writePath` Module
+:mod:`write_path` Module
 -----------------------
 
-.. inheritance-diagram:: pyNastran.bdf.writePath
+.. inheritance-diagram:: pyNastran.bdf.write_path
 
-.. automodule:: pyNastran.bdf.writePath
+.. automodule:: pyNastran.bdf.write_path
     :members:
     :private-members:
     :undoc-members:
