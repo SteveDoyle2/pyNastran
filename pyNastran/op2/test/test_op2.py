@@ -6,11 +6,11 @@ from traceback import print_exc
 
 import pyNastran
 from pyNastran.f06.errors import FatalError
+from pyNastran.op2.op2_scalar import OP2_Scalar
 from pyNastran.op2.op2 import OP2
-from pyNastran.op2.op2_vectorized import OP2_Vectorized as OP2V
 
 try:
-    from pyNastran.op2.op2_geom import OP2Geom, OP2Geom_Vectorized
+    from pyNastran.op2.op2_geom import OP2Geom_Scalar, OP2Geom
     is_geom = True
 except ImportError:
     is_geom = False
@@ -211,14 +211,14 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
             raise RuntimeError('make_geom=%s is not supported' % make_geom)
         if is_vector:
             if make_geom:
-                op2 = OP2Geom_Vectorized(debug=debug, debug_file=debug_file)
-            else:
-                op2 = OP2V(make_geom=make_geom, debug=debug, debug_file=debug_file)
-        else:
-            if make_geom:
-                op2 = OP2Geom(make_geom=make_geom, debug=debug, debug_file=debug_file)
+                op2 = OP2Geom(debug=debug, debug_file=debug_file)
             else:
                 op2 = OP2(debug=debug, debug_file=debug_file)
+        else:
+            if make_geom:
+                op2 = OP2GeomOP2Geom_Scalar(make_geom=make_geom, debug=debug, debug_file=debug_file)
+            else:
+                op2 = OP2OP2Geom_Scalar(debug=debug, debug_file=debug_file)
 
         op2.set_subcases(iSubcases)
         op2.remove_results(exclude)
@@ -294,26 +294,26 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
         print_exc(file=sys.stdout)
         sys.stderr.write('**file=%s\n' % op2FileName)
         sys.exit('keyboard stop...')
-    except RuntimeError: # the op2 is bad, not my fault
-        isPassed = True
+    #except RuntimeError: # the op2 is bad, not my fault
+        #isPassed = True
     #    if stopOnFailure:
     #        raise
     #    else:
     #        isPassed = True
 
-    #except IOError: # missing file
-        #if stopOnFailure:  #   this block should be commented
+    except IOError: # missing file; this block should be commented
+        #if stopOnFailure:
             #raise
-        #isPassed = True
-    #except UnicodeDecodeError:    #   this block should be commented
-        #isPassed = True
-    except FatalError:
+        isPassed = True
+    except UnicodeDecodeError:  # this block should be commented
+        isPassed = True
+    except FatalError:  # this block should be commented
         if stopOnFailure:
             raise
         isPassed = True
     #except AssertionError:
     #    isPassed = True
-    #except RuntimeError: #invalid analysis code
+    #except RuntimeError: #invalid analysis code; this block should be commented
     #    isPassed = True
     except SystemExit:
         #print_exc(file=sys.stdout)
@@ -326,7 +326,7 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
     #        isPassed = True
     #except IndexError: # bad bdf
     #    isPassed = True
-    except SyntaxError: #Param Parse
+    except SyntaxError: #Param Parse; this block should be commented
         if stopOnFailure:
             raise
         isPassed = True

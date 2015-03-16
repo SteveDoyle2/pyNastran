@@ -1,3 +1,4 @@
+from six import iteritems
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 from collections import defaultdict
 from numpy import unique
