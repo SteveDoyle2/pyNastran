@@ -144,67 +144,7 @@ class OP2_Vectorized(OP2):
         if not combine:
             return
         self.log.info('compress_results')
-        result_types = [
-            'displacements', 'accelerations', 'velocities',
-            'temperatures',
-            'eigenvectors', 'spcForces', 'mpcForces',
-            'loadVectors', 'thermalLoadVectors',
-            #=======================================================
-            'thermalLoad_CHBDY', 'thermalLoad_1D', 'ctriaxStress',
-            'nonlinearRodStress', 'nonlinearGapStress', 'thermalLoad_2D_3D',
-            'solidPressureForces',
-
-
-            #=======================================================
-            'gridPointForces',
-            #=======================================================
-            'celasStrain', 'celasStress',
-            'springForces',  # not done
-            'celas1_stress', 'celas1_strain',
-            'celas2_stress', 'celas2_strain',
-            'celas3_stress', 'celas3_strain',
-            'celas4_stress', 'celas4_strain',
-            #=======================================================
-            'ctetra_stress', 'chexa_stress', 'cpenta_stress',
-            'ctetra_strain', 'chexa_strain', 'cpenta_strain',
-            #=======================================================
-            'crod_stress', 'conrod_stress', 'ctube_stress',
-            'crod_strain', 'conrod_strain', 'ctube_strain',
-
-            'rodStrain', 'rodStress', 'rodForces',  # not done
-            'crod_force', 'conrod_force', 'ctube_force',
-            #=======================================================
-            'plateStress', 'plateStrain',
-            'plateForces', 'plateForces2',  # not done
-            'ctria3_stress', 'ctria3_strain', 'ctria3_force',
-            'ctria6_stress', 'ctria6_strain',  #'ctria6_force',
-            'ctriar_stress', 'ctriar_strain',  #'ctriar_force',
-            'cquad4_stress', 'cquad4_strain', 'cquad4_force',
-            'cquad8_stress', 'cquad8_strain',  #'cquad8_force',
-            'cquadr_stress', 'cquadr_strain',  #'cquadr_force',
-
-            'compositePlateStress', 'compositePlateStrain',
-            'cquad4_composite_stress', 'cquad4_composite_strain',
-            'cquad8_composite_stress', 'cquad8_composite_strain',
-            #'cquadr_composite_stress',  'cquadr_composite_strain',
-            'ctria3_composite_stress', 'ctria3_composite_strain',
-            'ctria6_composite_stress', 'ctria6_composite_strain',
-            #'ctriar_composite_stress',  'ctriar_composite_strain',
-            #=======================================================
-            'cbar_stress', 'cbar_strain',
-            'barStress', 'barForces',  'cbar_force', # not done
-
-
-            'beamStress', 'beamStrain', 'beamForces',
-            'cbeam_stress', 'cbeam_strain',
-            'cbeam_force',  # not done
-
-            'bendForces', 'bushForces', 'damperForces', 'shearForces',
-
-            #=======================================================
-            'strainEnergy',
-            #=======================================================
-        ]
+        result_types = self.get_table_types()
 
         for result_type in result_types:
             result = getattr(self, result_type)

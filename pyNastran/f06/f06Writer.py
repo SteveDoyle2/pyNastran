@@ -589,8 +589,10 @@ class F06Writer(OP2_F06_Common):
             #------------------------------------------
             # cbars/cbeams
             self.barStress,
-            self.beamStress,
             self.cbar_stress,
+
+            self.nonlinear_cbeam_stress,
+            self.beamStress,
             self.cbeam_stress,
 
             # bush
@@ -603,7 +605,6 @@ class F06Writer(OP2_F06_Common):
 
             # rods
             self.rodStress, self.nonlinearRodStress,
-
 
             # shear
             # OES - stress

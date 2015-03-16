@@ -115,6 +115,9 @@ class OP2_F06_Common(object):
         self.cshear_stress = {}
         self.cshear_strain = {}
         self.cshear_force = {}
+
+        #: OES - CBEAM 94
+        self.nonlinear_cbeam_stress = {}
         #======================================================================
 
     def __objects_common_init__(self):
@@ -299,6 +302,7 @@ class OP2_F06_Common(object):
         self.nonlinearGapStress = {}
         #: OES - CBUSH 226
         self.nolinearBushStress = {}
+
         # OQG - spc/mpc forces
         self.spcForces = {}  # tCode=3?
         self.mpcForces = {}  # tCode=39

@@ -4,14 +4,11 @@ def writeFloats10E(vals):
     vals2 = []
     isAllZeros = True
     for v in vals:
-        if abs(v) > 1e-16:
-            v2 = '%10.3E' % v
-            if v2 == ' 0.000E+00' or v2 == '-0.000E+00':
-                v2 = ' 0.0'
-            else:
-                isAllZeros = False
-        else:
+        v2 = '%10.3E' % v
+        if v2 == ' 0.000E+00' or v2 == '-0.000E+00':
             v2 = ' 0.0'
+        else:
+            isAllZeros = False
         vals2.append(v2)
     return (vals2, isAllZeros)
 
@@ -20,14 +17,11 @@ def writeFloats12E(vals):
     vals2 = []
     isAllZeros = True
     for v in vals:
-        if abs(v) > 1e-16:
-            v2 = '%12.5E' % v
-            if v2 == ' 0.00000E+00' or v2 == '-0.00000E+00':
-                v2 = ' 0.0'
-            else:
-                isAllZeros = False
-        else:
+        v2 = '%12.5E' % v
+        if v2 == ' 0.00000E+00' or v2 == '-0.00000E+00':
             v2 = ' 0.0'
+        else:
+            isAllZeros = False
         vals2.append(v2)
     return (vals2, isAllZeros)
 
@@ -36,14 +30,11 @@ def writeFloats13E(vals):
     vals2 = []
     isAllZeros = True
     for v in vals:
-        if abs(v) > 1.0e-16:
-            v2 = '%13.6E' % v
-            if v2 == ' 0.000000E+00' or v2 == '-0.000000E+00':
-                v2 = ' 0.0'
-            else:
-                isAllZeros = False
-        else:
+        v2 = '%13.6E' % v
+        if v2 == ' 0.000000E+00' or v2 == '-0.000000E+00':
             v2 = ' 0.0'
+        else:
+            isAllZeros = False
         vals2.append(v2)
     return (vals2, isAllZeros)
 
