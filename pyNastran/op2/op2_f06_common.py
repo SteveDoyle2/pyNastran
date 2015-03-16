@@ -556,3 +556,25 @@ class OP2_F06_Common(object):
         assert len(table_types) == len(unique(table_types))
         return table_types
 
+    def get_f06_stats(self):
+        return self.get_op2_stats()
+
+    def get_op2_stats(self):
+        """
+        Gets info about the contents of the different attributes of the
+        OP2 class.
+        """
+        table_types = self.get_table_types()
+        msg = []
+        for table_type in table_types:
+            table = getattr(self, table_type)
+            for isubcase, subcase in sorted(iteritems(table)):
+                if hasattr(subcase, 'get_stats'):
+                    msg.append('op2.%s[%s]\n' % (table_type, isubcase))
+                    msg.extend(subcase.get_stats())
+                    msg.append('\n')
+                else:
+                    msg.append('skipping %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
+                    #raise RuntimeError('skipping %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
+        return ''.join(msg)
+

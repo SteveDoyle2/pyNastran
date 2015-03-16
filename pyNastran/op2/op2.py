@@ -31,8 +31,6 @@ from pyNastran.op2.tables.oug.oug import OUG
 from pyNastran.op2.tables.ogpwg import OGPWG
 from pyNastran.op2.fortran_format import FortranFormat
 
-#from pyNastran.bdf.bdf import BDF
-
 from pyNastran.utils import is_binary
 from pyNastran.utils.log import get_logger
 
@@ -51,18 +49,18 @@ class TrashWriter(object):
         pass
 
 
-class OP2(LAMA, ONR, OGPF,
-          OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
+class OP2_Scalar(LAMA, ONR, OGPF,
+                 OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
     """
     Defines an interface for the Nastran OP2 file.
     """
     def set_as_vectorized(self, vectorized=False, ask=False):
         if vectorized is True:
-            msg = 'OP2 class doesnt support vectorization.  Use OP2_Vectorized '
-            msg += 'from pyNastran.op2.dev_explicit.op2_vectorized instead.'
+            msg = 'OP2_Scalar class doesnt support vectorization.  Use OP2 '
+            msg += 'from pyNastran.op2.op2 instead.'
             raise RuntimeError(msg)
         if ask is True:
-            msg = 'OP2 class doesnt support ask.'
+            msg = 'OP2_Scalar class doesnt support ask.'
             raise RuntimeError(msg)
 
     def set_subcases(self, subcases=None):
@@ -103,7 +101,7 @@ class OP2(LAMA, ONR, OGPF,
 
     def __init__(self, debug=False, log=None, debug_file=None):
         """
-        Initializes the OP2 object
+        Initializes the OP2_Scalar object
 
         :param debug: enables the debug log and sets the debug in the logger (default=False)
         :param log: a logging object to write debug messages to
@@ -556,7 +554,6 @@ class OP2(LAMA, ONR, OGPF,
         """
         table_names = []
         while table_name is not None:
-            #print "----------------------------------"
             table_names.append(table_name)
 
             if self.debug:
@@ -671,12 +668,6 @@ class OP2(LAMA, ONR, OGPF,
                     raise NotImplementedError('%r' % table_name)
 
             table_name = self.read_table_name(rewind=True, stop_on_failure=False)
-            #if table_name is None:
-                #self.show(100)
-
-        #self.show_data(data)
-        #print "----------------"
-        #print "done..."
         return table_names
 
     def _skip_table(self, table_name):
@@ -939,7 +930,6 @@ class OP2(LAMA, ONR, OGPF,
                     raise FatalError('last table=%r' % self.table_name)
                 table_name = None
                 rewind = False  # we're done reading, so we're going to ignore the rewind
-        #print "table_name1 = %r" % table_name
 
         if rewind:
             self.n = ni
@@ -1173,9 +1163,7 @@ class OP2(LAMA, ONR, OGPF,
         for i in range(n):
             block = self.f.read(12)
             marker = s.unpack(block)
-            #print('marker =', marker)
             markers.append(marker)
-        #print("markers =", markers)
         return markers
 
     def _read_geom_table(self):
@@ -1304,24 +1292,6 @@ class OP2(LAMA, ONR, OGPF,
                     delattr(self, word)
         self.obj = None
 
-    def get_op2_stats(self):
-        """
-        Gets info about the contents of the different attributes of the
-        OP2 class.
-        """
-        table_types = self.get_table_types()
-        msg = []
-        for table_type in table_types:
-            table = getattr(self, table_type)
-            for isubcase, subcase in sorted(iteritems(table)):
-                if hasattr(subcase, 'get_stats'):
-                    msg.append('op2.%s[%s]\n' % (table_type, isubcase))
-                    msg.extend(subcase.get_stats())
-                    msg.append('\n')
-                else:
-                    msg.append('skipping %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
-                    #raise RuntimeError('skipping %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
-        return ''.join(msg)
 
 if __name__ == '__main__':  # pragma: no conver
     from pickle import dumps, dump, load, loads

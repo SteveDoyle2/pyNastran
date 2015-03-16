@@ -9,23 +9,22 @@ import sys
 from numpy import array, unique, where
 from pyNastran.op2.op2 import OP2
 
-class OP2_Vectorized(OP2):
+class OP2(OP2_Scalar):
 
-    def __init__(self, make_geom=False,
+    def __init__(self,
                  debug=True, log=None,
                  debug_file=None):
         """
         Initializes the OP2 object
 
-        :param make_geom: reads the BDF tables (default=False)
         :param debug: enables the debug log and sets the debug in the logger (default=False)
         :param log: a logging object to write debug messages to
          (.. seealso:: import logging)
         :param debug_file: sets the filename that will be written to (default=None -> no debug)
         """
-        debug = False
+        make_geom = False
         assert make_geom == False, make_geom
-        OP2.__init__(self, #make_geom=make_geom,
+        OP2_Scalar.__init__(self, #make_geom=make_geom,
                      debug=debug, log=log, debug_file=None)
         #print(self.binary_debug)
         #self.binary_debug = None
@@ -33,7 +32,7 @@ class OP2_Vectorized(OP2):
 
     def set_as_vectorized(self, ask=False):
         """
-        Enables vectorization (currently subject to change and break frequently)
+        Enables vectorization
 
         The code will degenerate to dictionary based results when
         a result does not support vectorization.
@@ -89,16 +88,15 @@ class OP2_Vectorized(OP2):
           3.   Scan the block to get the object types (read_mode=1), ask the user,
                build the object & fill it (read_mode=2)
           4.   Read the block to get the size, build the object & fill it (read_mode=0)
-
         """
         self.ask = ask
 
-    def read_op2(self, op2_filename=None):
+    def read_op2(self, op2_filename=None, vectorized=True):
         """
         Starts the OP2 file reading
         """
         assert self.ask in [True, False], self.ask
-        self.is_vectorized = True
+        self.is_vectorized = vectorized
         if self.is_vectorized:
             self.log.info('-------- reading the op2 with read_mode=1 --------')
             self.read_mode = 1
@@ -115,11 +113,10 @@ class OP2_Vectorized(OP2):
             self.log.info('-------- reading the op2 with read_mode=2 --------')
             OP2.read_op2(self, op2_filename=op2_filename)
         else:
-            #self.read_mode = 0
+            self.read_mode = 0
+            self._close_op2 = True
             OP2.read_op2(self, op2_filename=op2_filename)
             return
-            #raise NotImplementedError()
-        #self.f.close()
         self.combine_results()
         self.log.info('finished reading op2')
 
@@ -152,11 +149,7 @@ class OP2_Vectorized(OP2):
             isubcases = [isubcase for (isubcase, name) in case_keys]
             unique_isubcases = unique(isubcases)
 
-            #print(case_keys)
-            #print(isubcases)
-            #print(unique_isubcases)
             for isubcase in unique_isubcases:
-                #wherei = where(isubcases==isubcase)[0]
                 wherei = [i for i, isubcasei in enumerate(isubcases) if isubcasei == isubcase]
                 keys = [case_keys[i] for i in wherei]
                 if len(wherei) == 1:
@@ -166,8 +159,6 @@ class OP2_Vectorized(OP2):
                 else:
                     continue
                     # multiple results to combine
-                    #print('result_type=%s keys=%s isubcase=%s \nisubcases=%s case_keys=%s wherei=%s' % (
-                        #result_type, keys, isubcase, isubcases, case_keys, wherei))
                     res1 = result[keys[0]]
                     if not hasattr(res1, 'combine'):
                         print("res1=%s has no method combine" % res1.__class__.__name__)
@@ -186,8 +177,6 @@ class OP2_Vectorized(OP2):
                     # combined differently than displacements
                     res1.combine(results_list)
                     result[isubcase] = res1
-
-                #print(keys)
             setattr(self, result_type, result)
 
 
@@ -198,7 +187,7 @@ if __name__ == '__main__':  # pragma: no cover
     # we don't want the variable name to get picked up by the class
     _op2_filename = os.path.join(pkg_path, '..', 'models', 'sol_101_elements', 'solid_shell_bar.op2')
 
-    model = OP2_Vectorized()
+    model = OP2()
     model.set_as_vectorized(ask=False)
     model.read_op2(_op2_filename)
     isubcase = 1
