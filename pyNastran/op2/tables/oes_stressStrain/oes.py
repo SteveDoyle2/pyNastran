@@ -520,11 +520,13 @@ class OES(OP2Common):
                 obj_vector_real = RealShearStrainArray
                 obj_vector_complex = ComplexShearStrainArray
                 result_vector_name = 'cshear_strain'
-            slot_vector = getattr(self, result_vector_name)
 
             if result_name not in self._saved_results and result_vector_name not in self._saved_results:
                 return len(data)
             self._found_results.add(result_name)
+
+            slot_vector = getattr(self, result_vector_name)
+            slot = slot_vector
             if self.format_code == 1 and self.num_wide == 4:  # real
                 ntotal = 16  # 4*4
                 nelements = len(data) // ntotal

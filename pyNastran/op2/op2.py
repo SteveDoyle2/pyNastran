@@ -91,9 +91,15 @@ class OP2(OP2_Scalar):
         """
         self.ask = ask
 
-    def read_op2(self, op2_filename=None, vectorized=True):
+    def read_op2(self, op2_filename=None, vectorized=True, combine=True):
         """
         Starts the OP2 file reading
+        :param op2_filename: the op2_filename (default=None -> popup)
+        :param vectorized:   should the vectorized objects be used (default=True)
+        :param combine:      should objects be isubcase based (True) or
+                             (isubcase, subtitle) based (False)
+                             The second will be used for superelements regardless
+                             of the option (default=True)
         """
         assert self.ask in [True, False], self.ask
         self.is_vectorized = vectorized
@@ -117,7 +123,7 @@ class OP2(OP2_Scalar):
             self._close_op2 = True
             OP2_Scalar.read_op2(self, op2_filename=op2_filename)
             return
-        self.combine_results()
+        self.combine_results(combine=combine)
         self.log.info('finished reading op2')
 
     def combine_results(self, combine=True):
@@ -146,7 +152,9 @@ class OP2(OP2_Scalar):
         for result_type in result_types:
             result = getattr(self, result_type)
             case_keys = sorted(result.keys())
-            isubcases = [isubcase for (isubcase, name) in case_keys]
+            isubcases = [isubcase_name[0] if isinstance(isubcase_name, tuple) else isubcase_name
+                         for isubcase_name in case_keys]
+            #print('case_keys[%s]=%s; isubcases=%s' % (result_type, case_keys, isubcases))
             unique_isubcases = unique(isubcases)
 
             for isubcase in unique_isubcases:
