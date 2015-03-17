@@ -190,7 +190,7 @@ class BucklingEigenvalues(BaseScalarObject):
         return True
 
     def addF06Line(self, data):
-        print('data =', data)
+        #print('data =', data)
          #(iMode, order, eigen, omega, freq, mass, stiff)
         (rootNum, extractOrder, eigr, omega, freq, mass, stiff) = data
         self.extractionOrder[rootNum] = extractOrder

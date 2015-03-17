@@ -216,9 +216,9 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
                 op2 = OP2(debug=debug, debug_file=debug_file)
         else:
             if make_geom:
-                op2 = OP2GeomOP2Geom_Scalar(make_geom=make_geom, debug=debug, debug_file=debug_file)
+                op2 = OP2Geom_Scalar(make_geom=make_geom, debug=debug, debug_file=debug_file)
             else:
-                op2 = OP2OP2Geom_Scalar(debug=debug, debug_file=debug_file)
+                op2 = OP2_Scalar(debug=debug, debug_file=debug_file)
 
         op2.set_subcases(iSubcases)
         op2.remove_results(exclude)

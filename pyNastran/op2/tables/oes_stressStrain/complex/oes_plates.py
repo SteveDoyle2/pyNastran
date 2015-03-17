@@ -55,10 +55,10 @@ class ComplexPlateArray(OES_Object):
         return nnodes + 1  # + 1 centroid
 
     def build(self):
-        print('data_code = %s' % self.data_code)
+        #print('data_code = %s' % self.data_code)
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
-        print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (self.ntimes, self.nelements, self.ntotal, self.subtitle))
+        #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (self.ntimes, self.nelements, self.ntotal, self.subtitle))
         if self.is_built:
             return
         nnodes = self.get_nnodes()

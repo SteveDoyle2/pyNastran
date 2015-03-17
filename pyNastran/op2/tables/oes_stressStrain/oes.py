@@ -325,6 +325,7 @@ class OES(OP2Common):
             self._found_results.add(result_name)
 
             slot_vector = getattr(self, result_vector_name)
+            slot = slot_vector
             if self.format_code == 1 and self.num_wide == 5:  # real
                 ntotal = 5 * 4
                 nelements = len(data) // ntotal

@@ -281,9 +281,9 @@ class OP2_F06_Common(object):
         #self.plateStrain = {}
 
         #: OESNLXR - CTRIA3/CQUAD4 stress
-        self.nonlinearPlateStress = {}
+        #self.nonlinearPlateStress = {}
         #: OESNLXR - CTRIA3/CQUAD4 strain
-        self.nonlinearPlateStrain = {}
+        #self.nonlinearPlateStrain = {}
         self.hyperelasticPlateStress = {}
         self.hyperelasticPlateStrain = {}
 
@@ -295,8 +295,12 @@ class OP2_F06_Common(object):
 
         #: OES - composite CTRIA3/CQUAD4 stress
         #self.compositePlateStress = {}
+        self.nonlinear_cquad4_stress = {}
+        self.nonlinear_ctria3_stress = {}
         #: OES - composite CTRIA3/CQUAD4 strain
         #self.compositePlateStrain = {}
+        self.nonlinear_cquad4_strain = {}
+        self.nonlinear_ctria3_strain = {}
 
 
         #: OES - CELAS1 224, CELAS3 225,
@@ -540,8 +544,13 @@ class OP2_F06_Common(object):
             'nonlinear_conrod_strain',
 
             # OESNLXR - CTRIA3/CQUAD4 stress
-            'nonlinearPlateStress',
-            'nonlinearPlateStrain',
+            #'nonlinearPlateStress',
+            #'nonlinearPlateStrain',
+            'nonlinear_cquad4_stress',
+            'nonlinear_ctria3_stress',
+            'nonlinear_cquad4_strain',
+            'nonlinear_ctria3_strain',
+
             'hyperelasticPlateStress',
             'hyperelasticPlateStrain',
 

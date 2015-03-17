@@ -550,7 +550,9 @@ class F06Writer(OP2_F06_Common):
             self.ctria6_composite_strain,
             self.ctriar_composite_strain,
 
-            self.nonlinearPlateStrain,
+            #self.nonlinearPlateStrain,
+            self.nonlinear_ctria3_strain,
+            self.nonlinear_cquad4_strain,
             self.ctriaxStrain, self.hyperelasticPlateStress,
 
 
@@ -628,7 +630,9 @@ class F06Writer(OP2_F06_Common):
             self.ctria6_composite_stress,
             self.ctriar_composite_stress,
 
-            self.nonlinearPlateStress,
+            #self.nonlinearPlateStress,
+            self.nonlinear_ctria3_stress,
+            self.nonlinear_cquad4_stress,
             self.ctriaxStress, self.hyperelasticPlateStrain,
 
             #------------------------------------------
