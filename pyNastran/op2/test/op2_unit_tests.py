@@ -20,13 +20,17 @@ class TestOP2(Tester):
         op2 = OP2()
         op2.set_results('stress')
         op2.read_op2(op2_filename, vectorized=False)
-        self.assertEqual(len(op2.solidStress), 1), len(op2.solidStress)
+        self.assertEqual(len(op2.cpenta_stress), 0), len(op2.cpenta_stress)
+        self.assertEqual(len(op2.chexa_stress), 0), len(op2.chexa_stress)
+        self.assertEqual(len(op2.ctetra_stress), 1), len(op2.ctetra_stress)
         self.assertEqual(len(op2.displacements), 0), len(op2.displacements)
 
         op2 = OP2()
         op2.set_results(['stress', 'displacements'])
         op2.read_op2(op2_filename, vectorized=False)
-        self.assertEqual(len(op2.solidStress), 1), len(op2.solidStress)
+        self.assertEqual(len(op2.cpenta_stress), 0), len(op2.cpenta_stress)
+        self.assertEqual(len(op2.chexa_stress), 0), len(op2.chexa_stress)
+        self.assertEqual(len(op2.ctetra_stress), 1), len(op2.ctetra_stress)
         self.assertEqual(len(op2.displacements), 1), len(op2.displacements)
 
     def test_op2_01(self):
