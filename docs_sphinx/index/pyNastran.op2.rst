@@ -12,6 +12,17 @@ op2 Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`op2_scalar` Module
+-----------------
+
+.. inheritance-diagram:: pyNastran.op2.op2_scalar
+
+.. automodule:: pyNastran.op2.op2_scalar
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`fortran_format` Module
 ----------------------------
 
@@ -40,6 +51,17 @@ op2 Package
 .. inheritance-diagram:: pyNastran.op2.op2_helper
 
 .. automodule:: pyNastran.op2.op2_helper
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`op2_common` Module
+------------------------
+
+.. inheritance-diagram:: pyNastran.op2.op2_common
+
+.. automodule:: pyNastran.op2.op2_common
     :members:
     :private-members:
     :undoc-members:

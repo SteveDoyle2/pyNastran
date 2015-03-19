@@ -1,2 +1,0 @@
- - the API for op2.py as in v0.6 (the init is slightly different).
- - the op2_vectorized.py is still in development.  It's slow, buggy, and changing.
