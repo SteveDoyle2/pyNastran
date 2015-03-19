@@ -90,16 +90,15 @@ Copyright \copyright\ Steve P. Doyle 2011-2015
 
 \section{Getting Started: BDF Reading}
  \subsection{{\tt bdf.py}:  Introduction}
-     {\tt bdf.py} controls the model object that is instantiated with      {\tt model=BDF()} the {\bf \tt \_\_init\_\_} method is called when {\tt model = BDF()} is run.  The file used to be very large and was split (in a non-standard way) into multiple files that allowed for simpler development.  The {\bf BDFReader}, {\bf GetMethods}, {\bf AddMethods}, {\bf WriteMesh},
-     {\bf CardMethods}, and {\bf XrefMesh} classes are basically bags of functions for the "model" object.
+     {\tt bdf.py} controls the model object that is instantiated with      {\tt model=BDF()} the {\bf \tt \_\_init\_\_} method is called when {\tt model = BDF()} is run.  The file used to be very large and was split (in a non-standard way) into multiple files that allowed for simpler development.  The {\bf BDF}, {\bf GetMethods}, {\bf AddMethods}, {\bf WriteMesh}, {\bf BDFMethods}, and {\bf XrefMesh} classes are basically bags of functions for the "model" object.
      
-     The {\tt cards_to_read} variable limits the cards that pyNastran processes and     can be modified by the user in order to fix bugs or make their code run faster.
+     The {\tt cards_to_read} variable limits the cards that pyNastran processes and can be modified by the user in order to fix bugs or make their code run faster.
      
      Moving onto {\bf \tt \_init\_solution} sets a series of alternate names for Nastran solution types.  For example, a solution 101 is a static solution (no acceleration) and will calculate the displacements of the system $[K]\{x\} = \{F\} $.  You can then extract stresses and strains.  Other solution numbers solve different equations.
      
      In {\bf \tt \_init\_structural\_defaults}, {\bf \tt \_init\_aero\_defaults}, {\bf \tt \_init\_thermal\_defaults} the structural, aerodyanmic, and thermal card holders (e.g. model.materials) are defined as dictionaries.
 
-     Finally, the {\bf readBDF} method is defined.  There are three sections to a BDF/DAT/NAS file.  BDF (Bulk Data File) is the file format used by MSC Nastran and the DAT (data?) file is used by NX Nastran.  NAS (Nastran) is also used.
+     Finally, the {\bf read_bdf} method is defined.  There are three sections to a BDF/DAT/NAS file.  BDF (Bulk Data File) is the file format used by MSC Nastran and the DAT (data?) file is used by NX Nastran.  NAS (Nastran) is also used.
 
      The first section is the "Executive Control Deck" and contains a "SOL 101" or "SOL 103" or "SOL STATIC" depending on the solution type.  It ends when the "CEND" marker is found. Then the "Case Control Deck" is read.  Here, general solution information is listed, such  as what outputs do you want and what loads are applied (not all loads in the file are necessarily applied).  Finally this section defines one or more subcases, which are different load combinations.  The last section is the "Bulk Data Deck".  This section stores 99% of the file and this section introduces very specific formatting restrictions for "cards".
      
@@ -119,7 +118,7 @@ Copyright \copyright\ Steve P. Doyle 2011-2015
  \subsection{{\tt bdf.py}: Parsing}
      A basic card is a GRID card.  Once parsed, a standard grid card will have fields of {\tt ['GRID', nodeID, coord, x, y, z]}.  This section will discuss how a card is parsed.  
      
-     The {\bf readBDF} method must generalize the way files are opened because INCLUDE files may be used.  Once the Executive and Case Control Decks are read (using simple while loops), the {\bf \tt \_read\_bulk\_data\_deck} method is called.
+     The {\bf read_bdf} method must generalize the way files are opened because INCLUDE files may be used.  Once the Executive and Case Control Decks are read (using simple while loops), the {\bf \tt \_read\_bulk\_data\_deck} method is called.
      
      This method ({\bf \tt \_read\_bulk\_data\_deck}) keeps looping over the file as long as there are files opened (an INCLUDE file side effect) and calls:
      {\tt (rawCard, card, cardName) = self.\_get\_card(debug=False)}.  cardName is just the card's name, while rawCard is the full, unparsed card.  card is the card parsed into fields as a card object, which is basically a list of {\tt fields=['GRID', nodeID, coord, x, y, z]}.
@@ -140,13 +139,13 @@ Copyright \copyright\ Steve P. Doyle 2011-2015
      
      Once the format of the line is known, it's an easy process to split the card (see {\bf self.processCard} in {\tt bdf\_CardMethods.py}) and turn it into a {\bf BDFCard} object.  Note that the first field in any line beyond the first one must be blank and is ignored.  This prevents cards defined in small field and large field to have the same value defined in different positions of the list.
      
-     Finally, as Nastran is very specific in putting a decimal on float values, it's easy to parse field values into their proper type dynamically.  This is especially important when a field may be defined as an integer, float, a string, or be left blank and the variable is different depending on variable type.  Strings, must being with alphabetical characters (A, B, C) and are case insensitive, which is why a "GRID" card is called a "GRID" card and not a "grid" card.
+     As Nastran is very specific in putting a decimal on float values, it's necessary to wait until the card class in order to read the values instead of parsing the card proper dynamically.  This is important because a field may be defined as an integer, float, a string, or be left blank and the variable is different depending on variable type.  Strings, must being with alphabetical characters (A, B, C) and are case insensitive, which is why a "GRID" card is called a "GRID" card and not a "grid" card.  In order to handle the of overly strict requirement of floats having decimals and integers not having decimals, values are read using specific readers (eg. `integer_float_or_blank(...)`, `integer_or_blank(...)`, etc. methods).  By waiting, we can force this check in order to valdiate the BDF>
      
      
  \subsection{{\tt bdf.py}: Card Object}
      A {\bf BDFCard} object is basically a list of fields of {\tt ['GRID', nodeID, coord, x, y, z]}  with methods to get the 1st entry (nodeID) as card.field(1) instead of {\tt fields[1]} for a list.  A card object is useful for setting defaults.  The x, y, and z values on the GRID card have defaults of 0.0, so {\tt card.field(3,0.0)} may be used to get the x coordinate. Finally, {\tt card.fields(3,5,[0.,0.,0.])} may be used to get xyz and set the defaults in a single step.  Additionally, the card object is useful when parsing "continuation cards", but is typically disabled.  
      
-     After an excessively long branch of cardNames in readBDF, the card object is turned into a GRID, CTRIA3, CQUAD4, PSHELL, MAT1 or any of 200 other card types.  There are roughly as many nodes as there are elements, which make up roughly 95% of the cards in large models.  The difference in a large model and a small model, is the discritization and will change nodes, elements, loads, and constraints.  Loads and constraints are applied to only small portions of the model and (generally) only the boundary of a model.  The number of propertie and materials is very likely the same.
+     After an excessively long branch of cardNames in read_bdf, the card object is turned into a GRID, CTRIA3, CQUAD4, PSHELL, MAT1 or any of 200 other card types.  There are roughly as many nodes as there are elements, which make up roughly 95% of the cards in large models.  The difference in a large model and a small model, is the discritization and will change nodes, elements, loads, and constraints.  Loads and constraints are applied to only small portions of the model and (generally) only the boundary of a model.  The number of propertie and materials is very likely the same.
    
      Most cards are stored in a dictionary based on their integer ID.  IDs may be used only once, but if a card is exactly duplciated, it is still valid.
 
@@ -159,7 +158,7 @@ Copyright \copyright\ Steve P. Doyle 2011-2015
      
      The CQUAD4 class inherits from the {\bf QuadShell} class which defines common methods to the various QUAD-type cards.  There are additional QUAD element with different numbers of nodes (8-CQUAD8, 9-CQUAD) and the CQUADR and CQUADX are axi-symmetric versions of the CQUAD4, and CQUAD8 respectively.  However, the {\bf Area()}, {\bf Mass()}, {\bf Density()}, etc. methods are calculated in the the same way for each card (although the axi-symmetric cards return mass per unit theta).  The last thing to note is {\bf rawFields} and {\bf reprFields} are very important to how the code integrates.
      
-     {\bf rawFields} is used to check if a duplicated card is the same as another card and is also used for testing.  After reading and writing, reading back in, writing back out, reading back in, if the fields are the 
+     {\bf raw_fields} is used to check if a duplicated card is the same as another card and is also used for testing.  After reading and writing, reading back in, writing back out, reading back in, if the fields are the 
      same, then there's likely no error in reading a card (fields can still be missed while reading, so it's not perfect).  rawFields returns a list of the fields (similar to the list-esque card object from before).
      
      {\bf reprFields} is analogous to the {\bf \tt \_\_repr\_\_()} method, and is an abbreviated way to write the card.  For example, the T1, T2, T3, and T4 values (thickness at nodes 1, 2, 3, 4) are generally 0.0 and instead are set at an elemental level using the PSHELL card.  If these fields were printed, the CQUAD4 card would be a two line card instead of a one line card.  {\bf reprFields} is used instead of {\bf \tt \_\_repr\_\_()} in order to be able to write the card in large field or small field format.  Defaults are generally not written by the {\bf \tt \_\_repr\_\_()} method, but are written for certain fields (e.g. the xyz fields on the GRID card).
@@ -180,7 +179,6 @@ Copyright \copyright\ Steve P. Doyle 2011-2015
      {\begin{equation} m=A \left( t\rho + \frac{nsm}{A} \right) \end{equation} } for a PSHELL or:
 
      {\begin{equation} m=A \left( \sum_{i=0}^{i=1}{t\rho} + \frac{nsm}{A} \right)  \end{equation} } for a PCOMP.
-     
 
      By using classes and functions, it's easy to just call the {\tt element.MassPerArea()} method and get the proper data to apply the formula.  Similarly, the {\tt element.Area()} method calls the {\tt node.Position()} method to get the node in the global XYZ coordinate frame and can then find the area using vectors in a 3D space:
      {\begin{equation} A=\frac{1}{2} | (n_1-n_3) \times (n_2-n_4) | \end{equation} }
@@ -192,10 +190,17 @@ Copyright \copyright\ Steve P. Doyle 2011-2015
      
      Cross Referencing is performed by looping over the card objects and calling the {\bf \tt card.crossReference()} method.  This will setup all cross-referencing and a full list of the status of various cards is listed in {\tt bdf\_crossReferencing.txt}.
 
- \subsection{{\tt writeMesh.py}: Writing the BDF}
-     The BDF is written by looping through all the objects and calling the {\bf \tt card.\_\_repr\_\_()} method by typing {\bf \tt str(card)}.
-     Currently, only small field format is supported for writing.  The list from {\bf \tt reprFields()} is passed into {\tt fieldWriter.py}'s function {\bf \tt printCard(listObj)} and it dynamically figures out how to write the card based on the data type.  For float values, the highest precision 8-character width field will be used even if it uses Nastran's strange syntax of "1.2345+8" to represent a more standard "1.2345e+08".
+ \subsection{{\tt bdf_writeMesh.py}: Writing the BDF}
+     The BDF is written by looping through all the objects and calling the {\bf \tt card.\_\_write_bdf\_\_(nfields=8, is_double=False)}, but {\bf \tt str(card)} may also be used.  \bf \tt is_double=True} should only be used for {\bf \tt nfields=16}.
      
-     Many cards also have a `write_bdf(...)` and `write_bdf2(...)` method.  This portion of the code is in flux and will change to more cleanly handle data precision.  The `BDF.write_bdf method(...)` is more stable.
+     The list from {\bf \tt card = repr_fields()} is passed into {\tt fieldWriter.py}'s function {\bf \tt print_card_8(card), print_card_16(card)} or {\bf \tt print_card_double(card)}.  The methods dynamically figure out how to write the card based on the data type.  For float values, the highest precision 8-character width field will be used even if it uses Nastran's strange syntax of "1.2345+8" to represent a more standard "1.2345e+08".  Note that "1.2456e+8" (single-precision) is lower precision than "1.2456d+8".
+     
+     Note that the `bdf.write_bdf(...)` method has a different call signautre than the `write_bdf(...)` methods used for cards.
+     
+     `card = ['GRID', node_id, cp, x, y, z]`
+     `msg = print_card_double(card)
+     `print(msg)`
+
+     
      
      
