@@ -235,7 +235,12 @@ def parse_patran_syntax(node_sets):
                 new_set = list(range(nmin, nmax+1))
             elif len(ssnode) == 3:
                 nmin, nmax, delta = int(ssnode[0]), int(ssnode[1]), int(ssnode[2])
-                new_set = list(range(nmin, nmax+1, delta))
+
+                nmin, nmax, delta = int(ssnode[0]), int(ssnode[1]), int(ssnode[2])
+                if delta > 0:
+                    new_set = list(range(nmin, nmax+1, delta))
+                else:
+                    new_set = list(range(nmax, nmin+1, -delta))
             else:
                 raise NotImplementedError(snode)
             nodes += new_set
