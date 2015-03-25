@@ -83,25 +83,18 @@ class ComplexRodStress(StressObject):
         self.torsion[eid] = torsion
 
     def add_new_eid_sort1(self, dt, eid, axial, torsion):
-        #(axial, torsion) = out
-
         if dt not in self.axial:
             self.add_new_transient(dt)
         self.axial[dt][eid] = axial
         self.torsion[dt][eid] = torsion
 
     def add_new_eid_sort2(self, eid, dt, axial, torsion):
-        #(axial, torsion) = out
-
         if dt not in self.axial:
             self.add_new_transient(dt)
         self.axial[dt][eid] = axial
         self.torsion[dt][eid] = torsion
 
     def _write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
-        f.write('ComplexRodStress write_f06 not implemented...\n')
-        return page_num
-        raise NotImplementedError()
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, page_num, f, is_mag_phase)
 
@@ -134,8 +127,6 @@ class ComplexRodStress(StressObject):
         return page_num
 
     def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
-        return 'ComplexRodStress _write_f06_transient not implemented...', page_num
-        raise NotImplementedError()
         words = ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
                  '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
                  '         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN\n']
@@ -171,8 +162,6 @@ class ComplexRodStress(StressObject):
 
 
 class ComplexRodStrain(StrainObject):
-    """
-    """
     def __init__(self, data_code, is_sort1, isubcase, dt):
         StrainObject.__init__(self, data_code, isubcase)
         self.eType = 'CROD'  # {} # 'CROD/CONROD/CTUBE'
@@ -254,8 +243,6 @@ class ComplexRodStrain(StrainObject):
         self.torsion[dt][eid] = torsion
 
     def _write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
-        return 'ComplexRodStrain write_f06 not implemented...', page_num
-        raise NotImplementedError()
         if self.dt is not None:
             return self._write_f06_transient(header, pageStamp, page_num, f, is_mag_phase)
 
@@ -287,8 +274,6 @@ class ComplexRodStrain(StrainObject):
         return page_num
 
     def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
-        return 'ComplexRodStress _write_f06_transient not implemented...', page_num
-        raise NotImplementedError()
         words = ['                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )\n',
                  '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
                  '         ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN\n']

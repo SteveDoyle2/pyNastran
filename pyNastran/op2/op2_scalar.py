@@ -8,11 +8,11 @@ from six import string_types, iteritems
 from six.moves import range
 import os
 from struct import unpack, Struct
-#from struct import error as StructError
 
 from numpy import array
 
 from pyNastran.f06.errors import FatalError
+from pyNastran.op2.op2_common import SortCodeError
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 
 #============================

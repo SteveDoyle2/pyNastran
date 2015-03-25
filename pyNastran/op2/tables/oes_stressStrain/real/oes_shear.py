@@ -5,6 +5,7 @@ from six.moves import zip, range
 from numpy import zeros
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.f06.f06_formatting import _eigenvalue_header
 
 class RealShearArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -135,11 +136,7 @@ class RealShearArray(OES_Object):
 
         for itime in range(ntimes):
             dt = self.times[itime]  # TODO: rename this...
-            if self.nonlinear_factor is not None:
-                dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
-                header[1] = dtLine
-                if hasattr(self, 'eigr'):
-                    header[2] = ' %14s = %12.6E\n' % ('EIGENVALUE', self.eigrs[itime])
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
             # TODO: can I get this without a reshape?

@@ -5,7 +5,7 @@ from six import iteritems
 from itertools import count
 from numpy import zeros
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
+from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E, _eigenvalue_header
 
 
 class RealBarArray(OES_Object):
@@ -168,11 +168,7 @@ class RealBarArray(OES_Object):
         #print('CBAR ntimes=%s ntotal=%s' % (ntimes, ntotal))
         for itime in range(ntimes):
             dt = self._times[itime]
-            if self.nonlinear_factor is not None:
-                dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
-                header[1] = dtLine
-                if hasattr(self, 'eigr'):
-                    header[2] = ' %14s = %12.6E\n' % ('EIGENVALUE', self.eigrs[itime])
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg))
 
             s1a = self.data[itime, :, 0]
@@ -510,9 +506,7 @@ class RealBarStress(StressObject):
               ]
         i = 0
         for dt, S1s in sorted(iteritems(self.s1)):
-            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-            if hasattr(self, 'eigr'):
-                header[2] = ' %14s = %12.6E\n' % ('EIGENVALUE', self.eigrs[i])
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + words))
             for eid, S1 in sorted(iteritems(S1s)):
                 #eType = self.eType[eid]
@@ -757,9 +751,7 @@ class RealBarStrain(StrainObject):
         msg = []
         i = 0
         for dt, E1s in sorted(iteritems(self.e1)):
-            header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-            if hasattr(self, 'eigr'):
-                header[2] = ' %14s = %12.6E\n' % ('EIGENVALUE', self.eigrs[i])
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
             msg += header + words
             for eid, e1s in sorted(iteritems(E1s)):
                 #eType = self.eType[eid]

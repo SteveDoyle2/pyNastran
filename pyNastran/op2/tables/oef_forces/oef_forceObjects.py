@@ -6,8 +6,8 @@ from six.moves import zip, range
 from numpy import zeros, searchsorted
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats12E
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import _write_f06_springs
+from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats12E, _eigenvalue_header
 
 
 class RealRodForceArray(ScalarObject):
@@ -156,11 +156,7 @@ class RealRodForceArray(ScalarObject):
         #print('len(eids)=%s nwrite=%s is_odd=%s' % (len(eids), nwrite, is_odd))
         for itime in range(ntimes):
             dt = self.times[itime]  # TODO: rename this...
-            if self.nonlinear_factor is not None:
-                dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
-                header[1] = dtLine
-                if hasattr(self, 'eigr'):
-                    header[2] = ' %14s = %12.6E\n' % ('EIGENVALUE', self.eigrs[itime])
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
             # TODO: can I get this without a reshape?
@@ -1273,11 +1269,7 @@ class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         cen_word = 'CEN/%i' % nnodes
         for itime in range(ntimes):
             dt = self.times[itime]  # TODO: rename this...
-            if self.nonlinear_factor is not None:
-                dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
-                header[1] = dtLine
-                if hasattr(self, 'eigr'):
-                    header[2] = ' %14s = %12.6E\n' % ('EIGENVALUE', self.eigrs[itime])
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
             # TODO: can I get this without a reshape?

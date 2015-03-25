@@ -98,10 +98,8 @@ class ComplexBushStress(StressObject):
         self.translations[dt][eid] = [tx, ty, tz]
         self.rotations[dt][eid] = [rx, ry, rz]
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
-        f.write('NotImplementedError ComplexBushStressObject\n')
-        return page_num
-        #raise NotImplementedError('CBUSH')
+    def _write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+        raise NotImplementedError('CBUSH')
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, page_num, f, is_mag_phase)
 
@@ -262,10 +260,7 @@ class ComplexBushStrain(StrainObject):
         self.translations[dt][eid] = [tx, ty, tz]
         self.rotations[dt][eid] = [rx, ry, rz]
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
-        #raise NotImplementedError('CBUSH')
-        f.write('ComplexBarStress write_f06 not implemented...\n')
-        return page_num
+    def _write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, pageStamp, page_num, f, is_mag_phase)
 

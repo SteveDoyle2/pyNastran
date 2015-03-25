@@ -91,3 +91,18 @@ def writeFloats8p4F(vals):
             isAllZeros = False
         vals2.append(v2)
     return (vals2, isAllZeros)
+
+
+def _eigenvalue_header(obj, header, itime, ntimes, dt):
+    if obj.nonlinear_factor is not None:
+        dt_line = ' %14s = %12.5E\n' % (obj.data_code['name'], dt)
+        header[1] = dt_line
+        if hasattr(obj, 'eigr'):
+            try:
+                eigenvalue_real = obj.eigrs[itime]
+            except IndexError:
+                msg = 'eigrs[%s] not found; ntimes=%s; eigrs=%s' % (itime, ntimes, obj.eigrs)
+                raise IndexError(msg)
+            eigr_line = ' %14s = %12.6E\n' % ('EIGENVALUE', eigenvalue_real)
+            header[2] = eigr_line
+    return header

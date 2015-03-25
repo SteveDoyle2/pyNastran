@@ -9,6 +9,9 @@ import sys
 from numpy import array, unique, where
 from pyNastran.op2.op2_scalar import OP2_Scalar
 
+from pyNastran.f06.errors import FatalError
+from pyNastran.op2.op2_common import SortCodeError
+
 class OP2(OP2_Scalar):
 
     def __init__(self,

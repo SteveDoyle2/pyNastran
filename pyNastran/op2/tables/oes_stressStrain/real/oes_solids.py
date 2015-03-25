@@ -9,7 +9,7 @@ from numpy import array, sqrt, zeros, where, searchsorted, ravel, argwhere, uniq
 from numpy.linalg import eigh
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import writeFloats13E
+from pyNastran.f06.f06_formatting import writeFloats13E, _eigenvalue_header
 
 
 class RealSolidArray(OES_Object):
@@ -187,12 +187,8 @@ class RealSolidArray(OES_Object):
         eids2 = self.element_node[:, 0]
         nodes = self.element_node[:, 1]
         for itime in range(ntimes):
-            dt = self._times[itime]  # TODO: rename this...
-            if self.nonlinear_factor is not None:
-                dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
-                header[1] = dtLine
-                if hasattr(self, 'eigr'):
-                    header[2] = ' %14s = %12.6E\n' % ('EIGENVALUE', self.eigrs[itime])
+            dt = self._times[itime]
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
             # TODO: can I get this without a reshape?
