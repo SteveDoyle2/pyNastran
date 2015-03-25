@@ -45,7 +45,7 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexCel
 
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import NonlinearRod, NonlinearQuad, HyperelasticQuad
 
-
+from pyNastran.utils import object_attributes
 class OES(OP2Common):
     """
     Defines  the OES class that is used to read stress/strain data
@@ -54,6 +54,7 @@ class OES(OP2Common):
         OP2Common.__init__(self)
         self.ntotal = 0
 
+    #def _oes_cleanup():
     def _read_oes1_3(self, data):
         """
         reads OES1 subtable 3
