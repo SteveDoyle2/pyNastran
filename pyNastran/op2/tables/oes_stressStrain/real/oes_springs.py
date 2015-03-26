@@ -107,9 +107,9 @@ class RealCelasStress(StressObject):
             (eid, stressi) = datai
             self.stress[eid] = stressi
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f)
         msg = header + ['                              S T R E S S E S   I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
                         '      ELEMENT         STRESS           ELEMENT         STRESS           ELEMENT         STRESS           ELEMENT         STRESS\n',
                         '        ID.                              ID.                              ID.                              ID.\n',
@@ -118,7 +118,7 @@ class RealCelasStress(StressObject):
 
         _write_f06_springs(f, self.stress)
         #_write_f06_springs_transient(f, self.stress)
-        f.write(pageStamp % page_num)
+        f.write(page_stamp % page_num)
         return page_num
 
 def _write_f06_springs_transient(f, stress, header, words, name):
@@ -149,7 +149,7 @@ def _write_f06_springs_transient(f, stress, header, words, name):
                 line += '%10i  %13s    ' % (eid, stress)
             f.write(line.rstrip() + '\n')
 
-            msg.append(pageStamp % page_num)
+            msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             msg = ['']
         page_num += 1
@@ -243,16 +243,16 @@ class RealCelasStrain(StrainObject):
             (eid, straini) = datai
             self.strain[eid] = straini
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f)
         msg = header + ['                               S T R A I N S    I N   S C A L A R   S P R I N G S        ( C E L A S 2 )\n',
                         '      ELEMENT         STRAIN           ELEMENT         STRAIN           ELEMENT         STRAIN           ELEMENT         STRAIN\n',
                         '        ID.                              ID.                              ID.                              ID.\n',
                         ]
         f.write(''.join(msg))
         _write_f06_springs(f, self.strain)
-        f.write(pageStamp % page_num)
+        f.write(page_stamp % page_num)
         return page_num
 
 

@@ -5,7 +5,7 @@ from six.moves import zip, range
 from numpy import zeros
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import writeFloats13E
+from pyNastran.f06.f06_formatting import writeFloats13E, _eigenvalue_header
 
 
 # there is a bug for mode_solid_shell_bar.op2 for multiple times
@@ -142,11 +142,7 @@ class RealRodArray(OES_Object):
 
         for itime in range(ntimes):
             dt = self._times[itime]
-            if self.nonlinear_factor is not None:
-                dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
-                header[1] = dtLine
-                if hasattr(self, 'eigr'):
-                    header[2] = ' %14s = %12.6E\n' % ('EIGENVALUE', self.eigrs[itime])
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
             # TODO: can I get this without a reshape?
@@ -399,16 +395,16 @@ class RealRodStress(StressObject):
         self.torsion[dt][eid] = torsion
         self.MS_torsion[dt][eid] = SMt
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f)
 
         words = header + ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
                         '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
                         '         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN\n']
-        return self._write_f06(words, pageStamp, page_num, f)
+        return self._write_f06(words, page_stamp, page_num, f)
 
-    def _write_f06(self, msg, pageStamp, page_num=1, f=None):
+    def _write_f06(self, msg, page_stamp, page_num=1, f=None):
         out = []
         for eid in sorted(self.axial):
             axial = self.axial[eid]
@@ -432,11 +428,11 @@ class RealRodStress(StressObject):
             outLine = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (
                 tuple(out[-1]))
             msg.append(outLine)
-        msg.append(pageStamp % page_num)
+        msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
 
-    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
                  '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
                  '         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN\n']
@@ -467,7 +463,7 @@ class RealRodStress(StressObject):
             if nOut % 2 == 1:
                 outLine = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[-1]))
                 msg.append(outLine)
-            msg.append(pageStamp % page_num)
+            msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             page_num += 1
         return page_num - 1
@@ -610,16 +606,16 @@ class RealRodStrain(StrainObject):
         self.torsion[dt][eid] = torsion
         self.MS_torsion[dt][eid] = SMt
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.dt is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f)
 
         words = header + ['                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )\n',
                         '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
                         '         ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN\n']
-        return self._write_f06(words, pageStamp, page_num, f)
+        return self._write_f06(words, page_stamp, page_num, f)
 
-    def _write_f06(self, msg, pageStamp, page_num, f):
+    def _write_f06(self, msg, page_stamp, page_num, f):
         out = []
         for eid in sorted(self.axial):
             axial = self.axial[eid]
@@ -641,11 +637,11 @@ class RealRodStrain(StrainObject):
         if nOut % 2 == 1:
             outLine = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[-1]))
             msg.append(outLine)
-        msg.append(pageStamp % page_num)
+        msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
 
-    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )\n',
                  '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
                  '         ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN\n']
@@ -675,7 +671,7 @@ class RealRodStrain(StrainObject):
                 outLine = '      %8i   %13.6E  %10.4E %13.6E  %10.4E\n' % (
                     tuple(out[-1]))
                 msg.append(outLine)
-            msg.append(pageStamp % page_num)
+            msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             page_num += 1
         return page_num - 1
@@ -686,14 +682,14 @@ class ConrodStress(RealRodStress):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealRodStress.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f)
 
         words = header + ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C O N R O D )\n',
                         '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
                         '         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN\n']
-        return self._write_f06(words, pageStamp, page_num, f)
+        return self._write_f06(words, page_stamp, page_num, f)
 
 
 class CtubeStress(RealRodStress):
@@ -701,14 +697,14 @@ class CtubeStress(RealRodStress):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealRodStress.__init__(self, is_sort1, data_code, isubcase, dt)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f)
 
         words = header + ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C T U B E )\n',
                         '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
                         '         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN\n']
-        return self._write_f06(words, pageStamp, page_num, f)
+        return self._write_f06(words, page_stamp, page_num, f)
 
 
 class ConrodStrain(RealRodStrain):
@@ -716,25 +712,25 @@ class ConrodStrain(RealRodStrain):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealRodStrain.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f)
 
         words = ['                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C O N R O D )\n',
                  '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
                  '         ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN\n']
-        return self._write_f06(words, pageStamp, page_num, f)
+        return self._write_f06(words, page_stamp, page_num, f)
 
 class CtubeStrain(RealRodStrain):
     eType = 'CTUBE'
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealRodStrain.__init__(self, is_sort1, data_code, isubcase, dt)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f)
 
         words = ['                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C T U B E )\n',
                  '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
                  '         ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN\n']
-        return self._write_f06(words, pageStamp, page_num, f)
+        return self._write_f06(words, page_stamp, page_num, f)

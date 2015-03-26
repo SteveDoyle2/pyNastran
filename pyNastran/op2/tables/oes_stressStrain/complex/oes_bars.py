@@ -164,9 +164,9 @@ class ComplexBarStress(StressObject):
 
         #if nodeID==0: raise Exception(msg)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f, is_mag_phase)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase)
 
         msg = header + [
             '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
@@ -195,11 +195,11 @@ class ComplexBarStress(StressObject):
             msg.append(' %8s   %-13s  %-13s  %-13s  %s\n' % ('', s1br, s2br, s3br, s4br))
             msg.append(' %8s   %-13s  %-13s  %-13s  %s\n' % ('', s1bi, s2bi, s3bi, s4bi))
 
-        msg.append(pageStamp % page_num)
+        msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
 
-    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         words = [
             '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
             '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
@@ -229,7 +229,7 @@ class ComplexBarStress(StressObject):
                 msg.append(' %8s   %-13s  %-13s  %-13s  %s\n' % ('', s1br, s2br, s3br, s4br))
                 msg.append(' %8s   %-13s  %-13s  %-13s  %s\n' % ('', s1bi, s2bi, s3bi, s4bi))
 
-            msg.append(pageStamp % page_num)
+            msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             msg = ['']
             page_num += 1
@@ -360,12 +360,12 @@ class ComplexBarStrain(StrainObject):
         #print msg
         #if nodeID==0: raise Exception(msg)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         f.write('%s write_f06 not implemented...\n' % self.__class__.__name__)
         return page_num
 
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f, is_mag_phase)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase)
 
         msg = header + [
             '                                  S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )\n',
@@ -388,11 +388,11 @@ class ComplexBarStrain(StrainObject):
 
             msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n' % (eid, e10, e20, e30, e40, axial))
             msg.append(' %8s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n' % ('', e11, e21, e31, e41))
-        msg.append(pageStamp % page_num)
+        msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
 
-    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         words = [
             '                                  S T R A I N S    I N   B A R   E L E M E N T S           ( C B A R )\n',
             '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
@@ -418,7 +418,7 @@ class ComplexBarStrain(StrainObject):
 
                 msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n' % (eid, e10, e20, e30, e40, axial))
                 msg.append(' %8s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n' % ('', e11, e21, e31, e41))
-            msg.append(pageStamp % page_num)
+            msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             msg = ['']
             page_num += 1

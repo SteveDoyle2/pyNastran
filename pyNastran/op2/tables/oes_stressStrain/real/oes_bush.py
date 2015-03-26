@@ -33,7 +33,7 @@ class RealBushStress(StressObject):
                        % (self.__class__.__name__, ntimes, nelements))
         else:
             msg.append('  imaginary type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
+                                                               nelements))
         msg.append('  eType, translations, rotations\n')
         return msg
 
@@ -87,9 +87,9 @@ class RealBushStress(StressObject):
         self.translations[dt][eid] = [tx, ty, tz]
         self.rotations[dt][eid] = [rx, ry, rz]
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f, is_mag_phase)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase)
 
         msg = header + [
             '                                  S T R E S S E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n\n',
@@ -105,11 +105,11 @@ class RealBushStress(StressObject):
             [tx, ty, tz, rx, ry, rz] = vals2
             msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (eid, tx, ty, tz, rx, ry, rz))
 
-        msg.append(pageStamp % page_num)
+        msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
 
-    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         words = [
             '                                  S T R E S S E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n\n',
             '                  ELEMENT-ID        STRESS-TX     STRESS-TY     STRESS-TZ    STRESS-RX     STRESS-RY     STRESS-RZ \n',
@@ -127,7 +127,7 @@ class RealBushStress(StressObject):
                 [tx, ty, tz, rx, ry, rz] = vals2
                 msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (eid, tx, ty, tz, rx, ry, rz))
 
-            msg.append(pageStamp % page_num)
+            msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             page_num += 1
         return page_num - 1
@@ -213,14 +213,14 @@ class RealBushStrain(StrainObject):
         self.translations[dt][eid] = [tx, ty, tz]
         self.rotations[dt][eid] = [rx, ry, rz]
 
-    def _write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         raise NotImplementedError('CBUSH')
         f.write('%s write_f06 not implemented...\n' % self.__class__.__name__)
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f, is_mag_phase)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase)
         return page_num
 
-    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         f.write('%s _write_f06_transient not implemented...\n' % self.__class__.__name__)
         raise NotImplementedError('CBUSH')
         return page_num - 1

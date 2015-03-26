@@ -504,7 +504,7 @@ class RealTableObject(ScalarObject):  # displacement style table
             #    rotations2[nodeID]    = rotation
         return (translations2, rotations2)
 
-    def _write_f06_block(self, words, header, pageStamp, page_num=1, f=None):
+    def _write_f06_block(self, words, header, page_stamp, page_num=1, f=None):
         msg = words
         #assert f is not None # remove
         for nodeID, translation in sorted(iteritems(self.translations)):
@@ -519,11 +519,11 @@ class RealTableObject(ScalarObject):  # displacement style table
             (dx, dy, dz, rx, ry, rz) = vals2
             msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
                     % (nodeID, grid_type, dx, dy, dz, rx, ry, rz.rstrip()))
-        msg.append(pageStamp % page_num)
+        msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
 
-    def _write_f06_transient_block(self, words, header, pageStamp, page_num=1, f=None):
+    def _write_f06_transient_block(self, words, header, page_stamp, page_num=1, f=None):
         msg = []
         #assert f is not None # remove
         for dt, translations in sorted(iteritems(self.translations)):
@@ -546,7 +546,7 @@ class RealTableObject(ScalarObject):  # displacement style table
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
 
-            msg.append(pageStamp % page_num)
+            msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             msg = ['']
             page_num += 1
@@ -763,7 +763,7 @@ class ComplexTableObject(ScalarObject):
         self.translations[dt][nodeID] = array([v1, v2, v3], dtype='complex64')  # dx,dy,dz
         self.rotations[dt][nodeID] = array([v4, v5, v6], dtype='complex64')  # rx,ry,rz
 
-    def _write_f06_block(self, words, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_block(self, words, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         raise RuntimeError('is this function used???')
         #words += self.getTableMarker()
         if is_mag_phase:
@@ -790,11 +790,11 @@ class ComplexTableObject(ScalarObject):
                       % (node_id, grid_type, dxr, dyr, dzr, rxr, ryr, rzr,
                                     '', '', dxi, dyi, dzi, rxi, ryi, rzi))
 
-        f.write(pageStamp % page_num)
+        f.write(page_stamp % page_num)
         msg = ['']
         return page_num
 
-    def _write_f06_transient_block(self, words, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient_block(self, words, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if is_mag_phase:
             words += ['                                                         (MAGNITUDE/PHASE)\n', ]
         else:
@@ -825,7 +825,7 @@ class ComplexTableObject(ScalarObject):
                 msg.append('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, grid_type, dxr, dyr, dzr, rxr, ryr, rzr))
                 msg.append('  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % ('', '', dxi, dyi, dzi, rxi, ryi, rzi))
 
-            msg.append(pageStamp % page_num)
+            msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             msg = ['']
             page_num += 1

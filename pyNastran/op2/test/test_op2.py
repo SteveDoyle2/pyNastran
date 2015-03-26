@@ -7,7 +7,7 @@ from traceback import print_exc
 import pyNastran
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.op2_scalar import OP2_Scalar
-from pyNastran.op2.op2 import OP2
+from pyNastran.op2.op2 import OP2, FatalError, SortCodeError
 
 try:
     from pyNastran.op2.op2_geom import OP2Geom_Scalar, OP2Geom
@@ -294,12 +294,15 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
         print_exc(file=sys.stdout)
         sys.stderr.write('**file=%s\n' % op2FileName)
         sys.exit('keyboard stop...')
+    except SortCodeError: # inherits from Runtime; comment this
+        isPassed = True
+
     #except RuntimeError: # the op2 is bad, not my fault
         #isPassed = True
-    #    if stopOnFailure:
-    #        raise
-    #    else:
-    #        isPassed = True
+        #if stopOnFailure:
+            #raise
+        #else:
+            #isPassed = True
 
     except IOError: # missing file; this block should be commented
         #if stopOnFailure:

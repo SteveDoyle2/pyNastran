@@ -1,11 +1,13 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
+from six.moves import range, zip
 from itertools import count
 
 from numpy import zeros
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import writeFloats13E
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
+    StressObject, StrainObject, OES_Object)
+from pyNastran.f06.f06_formatting import writeFloats13E, _eigenvalue_header
 
 
 class RealBeamArray(OES_Object):
@@ -115,24 +117,13 @@ class RealBeamArray(OES_Object):
                                                  smax, smin, mst, msc]
         self.itotal += 1
 
-    #def add_sort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #assert eid is not None
-        #msg = "i=%s dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (
-            #self.itotal, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
-        ##print(msg)
-        #if isinstance(nodeID, string_types):
-            #nodeID = 0
-        ##assert isinstance(nodeID, int), nodeID
-        #self.element_node[self.itotal, :] = [eid, nodeID]
-        #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy, txy, angle, majorP, minorP, ovm]
-        #self.itotal += 1
-
     def get_stats(self):
         if not self.is_built:
-            return ['<%s>\n' % self.__class__.__name__,
-                    '  ntimes: %i\n' % self.ntimes,
-                    '  ntotal: %i\n' % self.ntotal,
-                    ]
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
 
         nelements = self.nelements
         ntimes = self.ntimes
@@ -174,7 +165,7 @@ class RealBeamArray(OES_Object):
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         msg = self._get_msgs()
-        (ntimes, ntotal, four) = self.data.shape
+        ntimes = self.data.shape[0]
 
         eids = self.element_node[:, 0]
         nids = self.element_node[:, 1]
@@ -182,11 +173,7 @@ class RealBeamArray(OES_Object):
         #print('CBEAM ntimes=%s ntotal=%s' % (ntimes, ntotal))
         for itime in range(ntimes):
             dt = self._times[itime]
-            if self.nonlinear_factor is not None:
-                dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
-                header[1] = dtLine
-                if hasattr(self, 'eigr'):
-                    header[2] = ' %14s = %12.6E\n' % ('EIGENVALUE', self.eigrs[itime])
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg))
 
             sxcs = self.data[itime, :, 0]
@@ -306,10 +293,11 @@ class RealNonlinearBeamArray(OES_Object):
 
     def get_stats(self):
         if not self.is_built:
-            return ['<%s>\n' % self.__class__.__name__,
-                    '  ntimes: %i\n' % self.ntimes,
-                    '  ntotal: %i\n' % self.ntotal,
-                    ]
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
 
         nelements = self.nelements
         ntimes = self.ntimes
@@ -350,7 +338,7 @@ class RealNonlinearBeamArray(OES_Object):
                 EB, long_EB, eqS_EB, tE_EB, eps_EB, ecs_EB,
                 FB, long_FB, eqS_FB, tE_FB, eps_FB, ecs_FB,) = out[1:]
 
-        self.element_node[self.itotal    ] = [eid, gridA, 0]
+        self.element_node[self.itotal] = [eid, gridA, 0]
         self.element_node[self.itotal + 1] = [eid, gridA, 1]
         self.element_node[self.itotal + 2] = [eid, gridA, 2]
         self.element_node[self.itotal + 3] = [eid, gridA, 3]
@@ -385,7 +373,7 @@ class RealNonlinearBeamArray(OES_Object):
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         msg = self._get_msgs()
-        (ntimes, ntotal, four) = self.data.shape
+        ntimes = self.data.shape[0]
 
         eids = self.element_node[:, 0]
         nids = self.element_node[:, 1]
@@ -396,18 +384,14 @@ class RealNonlinearBeamArray(OES_Object):
                    'C', 'D', 'E', 'F',]
         for itime in range(ntimes):
             dt = self._times[itime]
-            if self.nonlinear_factor is not None:
-                dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
-                header[1] = dtLine
-                if hasattr(self, 'eigr'):
-                    header[2] = ' %14s = %12.6E\n' % ('EIGENVALUE', self.eigrs[itime])
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg))
 
             longs = self.data[itime, :, 0]
-            eqSs  = self.data[itime, :, 1]
-            tEs   = self.data[itime, :, 2]
-            epss  = self.data[itime, :, 3]
-            ecss  = self.data[itime, :, 4]
+            eqSs = self.data[itime, :, 1]
+            tEs = self.data[itime, :, 2]
+            epss = self.data[itime, :, 3]
+            ecss = self.data[itime, :, 4]
 
             #msg = ['                        N O N L I N E A R   S T R E S S E S   I N   B E A M   E L E M E N T S     ( C B E A M )\n',
             #' \n',
@@ -425,7 +409,7 @@ class RealNonlinearBeamArray(OES_Object):
                 if loc == 0:
                     f.write('0  %14i  %8i  %4s       %13s     %13s     %13s %13s %s\n' % (eid, nid, 'C', longi, eqS, tE, eps, ecs.rstrip()))
                 elif loc == 4:
-                    f.write('   %14s  %8i  %4s       %13s     %13s     %13s %13s %s\n' % ('',  nid, 'C', longi, eqS, tE, eps, ecs.rstrip()))
+                    f.write('   %14s  %8i  %4s       %13s     %13s     %13s %13s %s\n' % ('', nid, 'C', longi, eqS, tE, eps, ecs.rstrip()))
                 else:
                     loci = loc_map[loc]
                     f.write('   %14s  %8s  %4s       %13s     %13s     %13s %13s %s\n' % ('', '', loci, longi, eqS, tE, eps, ecs.rstrip()))
@@ -456,9 +440,10 @@ class RealBeamStressArray(RealBeamArray, StressObject):
         else:
             raise NotImplementedError(self.element_type)
 
-        msg = ['                                  S T R E S S E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
-                        '                    STAT DIST/\n',
-                        '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
+        msg = [
+            '                                  S T R E S S E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
+            '                    STAT DIST/\n',
+            '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
         return msg
 
 
@@ -481,9 +466,10 @@ class RealBeamStrainArray(RealBeamArray, StrainObject):
         else:
             raise NotImplementedError(self.element_type)
 
-        msg = ['                                  S T R A I N S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
-                        '                    STAT DIST/\n',
-                        '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
+        msg = [
+            '                                  S T R A I N S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
+            '                    STAT DIST/\n',
+            '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
         return msg
 
 
@@ -506,9 +492,9 @@ class RealNonlinearBeamStressArray(RealNonlinearBeamArray, StressObject):
             raise NotImplementedError(self.element_type)
 
         msg = ['                        N O N L I N E A R   S T R E S S E S   I N   B E A M   E L E M E N T S     ( C B E A M )\n',
-        ' \n',
-        '          ELEMENT    GRID     POINT        STRESS          EQUIVALENT        TOTAL STRAIN      EFF. STRAIN       EFF. CREEP\n',
-        '             ID       ID                                     STRESS                          PLASTIC/NLELAST       STRAIN\n',]
+               ' \n',
+               '          ELEMENT    GRID     POINT        STRESS          EQUIVALENT        TOTAL STRAIN      EFF. STRAIN       EFF. CREEP\n',
+               '             ID       ID                                     STRESS                          PLASTIC/NLELAST       STRAIN\n',]
         #'0               1         1     C        1.738817E+03      1.738817E+03      5.796055E-05      0.0               0.0\n',
         #'                                D        1.229523E+03      1.229523E+03      4.098411E-05      0.0               0.0\n',
 
@@ -573,18 +559,6 @@ class RealBeamStress(StressObject):
         msg.append('  eType, xxb, grids, smax, smin, MS_tension, '
                    'MS_compression, sxc, sxd, sxe, sxf\n')
         return msg
-
-    def getLengthTotal(self):
-        asdf
-        return 444  # 44+10*40   (11 nodes)
-
-    def getLength1(self):
-        basdf
-        return (44, 'ifffffffff')
-
-    def getLength2(self):
-        asdf
-        return (40, 'ifffffffff')
 
     def delete_transient(self, dt):
         del self.sxc[dt]
@@ -707,9 +681,9 @@ class RealBeamStress(StressObject):
             self.MS_tension[dt][eid].append(mst)
             self.MS_compression[dt][eid].append(msc)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f)
 
         msg = header + ['                                  S T R E S S E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
                         '                    STAT DIST/\n',
@@ -731,11 +705,11 @@ class RealBeamStress(StressObject):
                 (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
                 msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc.strip()))
 
-        msg.append(pageStamp % page_num)
+        msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
 
-    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                  S T R E S S E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
                  '                    STAT DIST/\n',
                  '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
@@ -757,11 +731,11 @@ class RealBeamStress(StressObject):
                     SMt = self.MS_tension[dt][eid][i]
                     SMc = self.MS_compression[dt][eid][i]
                     (vals2, is_all_zeros) = writeFloats13E([sxc, sxd,
-                                                          sxe, sxf, sMax, sMin, SMt, SMc])
+                                                            sxe, sxf, sMax, sMin, SMt, SMc])
                     (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
                     msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc.strip()))
 
-            msg.append(pageStamp % page_num)
+            msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             msg = ['']
             page_num += 1
@@ -847,18 +821,6 @@ class RealBeamStrain(StrainObject):
         msg.append('  eType, xxb, grids, smax, smin, MS_tension, '
                    'MS_compression, sxc, sxd, sxe, sxf\n')
         return msg
-
-    def getLengthTotal(self):
-        asdf
-        return 444  # 44+10*40   (11 nodes)
-
-    def getLength1(self):
-        asdf
-        return (44, 'i9f')
-
-    def getLength2(self):
-        asf
-        return (40, 'i9f')
 
     def delete_transient(self, dt):
         del self.sxc[dt]
@@ -957,9 +919,9 @@ class RealBeamStrain(StrainObject):
             self.MS_tension[dt][eid].append(mst)
             self.MS_compression[dt][eid].append(msc)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f)
 
         msg = header + ['                                  S T R A I N S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
                         '                    STAT DIST/\n',
@@ -982,11 +944,11 @@ class RealBeamStrain(StrainObject):
                 (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
                 msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc))
 
-        msg.append(pageStamp % page_num)
+        msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
 
-    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                  S T R A I N S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
                  '                    STAT DIST/\n',
                  '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
@@ -995,7 +957,7 @@ class RealBeamStrain(StrainObject):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
             for eid, Smax in sorted(iteritems(SMaxs)):
-                msg.append('0  %8i\n' % (eid))
+                msg.append('0  %8i\n' % eid)
                 for i, nid in enumerate(self.grids[eid]):
                     xxb = self.xxb[eid][i]
                     sxc = self.sxc[dt][eid][i]
@@ -1007,11 +969,11 @@ class RealBeamStrain(StrainObject):
                     SMt = self.MS_tension[dt][eid][i]
                     SMc = self.MS_compression[dt][eid][i]
                     (vals2, is_all_zeros) = writeFloats13E([sxc, sxd, sxe, sxf,
-                                                          sMax, sMin, SMt, SMc])
+                                                            sMax, sMin, SMt, SMc])
                     (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
                     msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc))
 
-            msg.append(pageStamp % page_num)
+            msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             msg = ['']
             page_num += 1

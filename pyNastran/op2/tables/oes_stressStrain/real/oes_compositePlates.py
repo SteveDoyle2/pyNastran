@@ -5,7 +5,7 @@ from six.moves import zip, range
 from numpy import zeros, searchsorted, unique
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import writeFloats12E
+from pyNastran.f06.f06_formatting import writeFloats12E, _eigenvalue_header
 
 
 class RealCompositePlateArray(OES_Object):
@@ -215,11 +215,7 @@ class RealCompositePlateArray(OES_Object):
 
         for itime in range(ntimes):
             dt = self._times[itime]
-            if self.nonlinear_factor is not None:
-                dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
-                header[1] = dtLine
-                if hasattr(self, 'eigr'):
-                    header[2] = ' %14s = %12.6E\n' % ('EIGENVALUE', self.eigrs[itime])
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg))
 
             # TODO: can I get this without a reshape?
@@ -488,9 +484,9 @@ class RealCompositePlateStress(StressObject):
             headers.append('maxShear')
         return headers
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f)
 
         if self.isVonMises():
             von = 'VON'
@@ -543,16 +539,16 @@ class RealCompositePlateStress(StressObject):
                 #raise NotImplementedError('eType = %r' % eType) # CQUAD8LC
 
         if isQuad:
-            quadMsg.append(pageStamp % page_num)
+            quadMsg.append(page_stamp % page_num)
             page_num += 1
         if isTri:
-            triMsg.append(pageStamp % page_num)
+            triMsg.append(page_stamp % page_num)
             page_num += 1
 
         f.write(''.join(quadMsg + triMsg))
         return page_num
 
-    def _write_f06_transient(self, header, pageStamp,
+    def _write_f06_transient(self, header, page_stamp,
                              page_num=1, f=None, is_mag_phase=False):
         if self.isVonMises():
             von = 'VON'
@@ -616,11 +612,11 @@ class RealCompositePlateStress(StressObject):
                 #    raise NotImplementedError('eType = %r' % eType) # CQUAD8LC
 
             if isQuad:
-                quadMsg.append(pageStamp % page_num)
+                quadMsg.append(page_stamp % page_num)
                 f.write(''.join(quadMsg))
                 page_num += 1
             if isTri:
-                triMsg.append(pageStamp % page_num)
+                triMsg.append(page_stamp % page_num)
                 f.write(''.join(triMsg))
                 page_num += 1
         return page_num - 1
@@ -819,9 +815,9 @@ class RealCompositePlateStrain(StrainObject):
             headers.append('maxShear')
         return headers
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f)
 
         if self.isVonMises():
             von = 'VON'
@@ -876,16 +872,16 @@ class RealCompositePlateStrain(StrainObject):
                 #raise NotImplementedError('eType = %r' % eType) # CQUAD8LC
 
         if isQuad:
-            quadMsg.append(pageStamp % page_num)
+            quadMsg.append(page_stamp % page_num)
             page_num += 1
         if isTri:
-            triMsg.append(pageStamp % page_num)
+            triMsg.append(page_stamp % page_num)
             page_num += 1
 
         f.write(''.join(quadMsg + triMsg))
         return page_num
 
-    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.isVonMises():
             von = 'VON'
             mises = 'MISES'
@@ -947,12 +943,12 @@ class RealCompositePlateStrain(StrainObject):
                     raise NotImplementedError('eType = |%r|' % (eType))
 
             if isQuad:
-                quadMsg.append(pageStamp % page_num)
+                quadMsg.append(page_stamp % page_num)
                 page_num += 1
                 f.write(''.join(quadMsg))
 
             if isTri:
-                triMsg.append(pageStamp % page_num)
+                triMsg.append(page_stamp % page_num)
                 page_num += 1
                 f.write(''.join(triMsg))
         return page_num - 1

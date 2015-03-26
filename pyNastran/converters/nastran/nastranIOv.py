@@ -20,7 +20,7 @@ from six.moves import zip, range
 
 import os
 from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, vstack
-from numpy import searchsorted, sqrt, pi, arange, unique
+from numpy import searchsorted, sqrt, pi, arange, unique, allclose
 #from numpy import nan as NaN, array
 from numpy.linalg import norm
 
@@ -43,7 +43,6 @@ try:
     is_geom = True
 except ImportError:
     is_geom = False
-
 from pyNastran.f06.f06 import F06
 
 
@@ -674,8 +673,9 @@ class NastranIO(object):
         #self.grid.GetCellData().SetScalars(self.gridResult)
         self.grid.Modified()
         self.grid2.Modified()
-        self.grid.Update()
-        self.grid2.Update()
+        if hasattr(self.grid, 'Update'):
+            self.grid.Update()
+            self.grid2.Update()
         #self.log_info("updated grid")
 
         cases = {}
@@ -889,7 +889,7 @@ class NastranIO(object):
         ext = ext.lower()
 
         if ext == '.op2':
-            model = OP2_Vectorized(log=self.log, debug=True)
+            model = OP2(log=self.log, debug=True)
 
             if 0:
                 model._saved_results = set([])
@@ -992,10 +992,20 @@ class NastranIO(object):
 
                         itime0 = 0
                         t1 = case.data[itime0, :, 0]
-                        ndata, = t1.shape
+                        ndata = t1.shape[0]
                         if nnodes != ndata:
                             nidsi = case.node_gridtype[:, 0]
-                            j = searchsorted(nids, nidsi)
+                            assert len(nidsi) == nnodes
+                            j = searchsorted(nids, nidsi)  # searching for nidsi
+
+                            try:
+                                if not allclose(nids[j], nidsi):
+                                    msg = 'nids[j]=%s nidsi=%s' % (nids[j], nidsi)
+                                    raise RuntimeError(msg)
+                            except IndexError:
+                                msg = 'node_ids = %s\n' % list(nids)
+                                msg += 'nidsi in disp = %s\n' % list(nidsi)
+                                raise IndexError(msg)
 
                         for itime in range(case.ntimes):
                             dt = case._times[itime]

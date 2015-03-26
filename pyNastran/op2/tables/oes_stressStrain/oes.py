@@ -54,6 +54,7 @@ class OES(OP2Common):
         OP2Common.__init__(self)
         self.ntotal = 0
 
+    #def _oes_cleanup():
     def _read_oes1_3(self, data):
         """
         reads OES1 subtable 3
