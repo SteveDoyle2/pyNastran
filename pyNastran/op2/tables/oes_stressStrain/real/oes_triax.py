@@ -163,9 +163,9 @@ class RealTriaxStress(StressObject):
         self.oms[dt][eid][nid] = tmax
         self.ovm[dt][eid][nid] = octs
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f)
 
         msg = header + ['                                      S T R E S S E S   I N   T R I A X 6   E L E M E N T S\n',
                         '   ELEMENT  GRID ID       STRESSES  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
@@ -191,11 +191,11 @@ class RealTriaxStress(StressObject):
                 msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' % (Eid, nid, radial, azimuth, axial, shear, omax, oms, ovm.rstrip()))
             msg.append('\n')
 
-        msg.append(pageStamp % page_num)
+        msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
 
-    def _write_f06_transient(self, header, pageStamp,
+    def _write_f06_transient(self, header, page_stamp,
                           page_num=1, f=None, is_mag_phase=False):
         words = ['                                      S T R E S S E S   I N   T R I A X 6   E L E M E N T S\n',
                  '   ELEMENT  GRID ID       STRESSES  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
@@ -224,7 +224,7 @@ class RealTriaxStress(StressObject):
                     msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' % (Eid, nid, rad, azimuth, axial, shear, omax, oms, ovm.rstrip()))
                 msg.append('\n')
 
-            msg.append(pageStamp % page_num)
+            msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             msg = ['']
             page_num += 1
@@ -352,9 +352,9 @@ class RealTriaxStrain(StrainObject):
         self.ems[dt][eid][nid] = emax
         self.evm[dt][eid][nid] = ects
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f)
 
         msg = header + ['                                      S T R A I N S   I N   T R I A X 6   E L E M E N T S\n',
                         '   ELEMENT  GRID ID       STRAINS  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
@@ -380,11 +380,11 @@ class RealTriaxStrain(StrainObject):
                 msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' % (Eid, nid, radial, azimuth, axial, shear, emax, ems, evm.rstrip()))
             msg.append('\n')
 
-        msg.append(pageStamp % page_num)
+        msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
 
-    def _write_f06_transient(self, header, pageStamp,
+    def _write_f06_transient(self, header, page_stamp,
                           page_num=1, f=None, is_mag_phase=False):
         words = ['                                      S T R A I N S   I N   T R I A X 6   E L E M E N T S\n',
                  '   ELEMENT  GRID ID       STRAINS  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
@@ -415,7 +415,7 @@ class RealTriaxStrain(StrainObject):
                                   ems, evm.rstrip()))
                 msg.append('\n')
 
-            msg.append(pageStamp % page_num)
+            msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             msg = ['']
             page_num += 1

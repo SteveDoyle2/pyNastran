@@ -461,9 +461,9 @@ class RealBarStress(StressObject):
 
         #if nodeID==0: raise Exception(msg)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f)
 
         msg = header + [
                 '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
@@ -495,18 +495,19 @@ class RealBarStress(StressObject):
                     ' %8s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n'
                     % (eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                        '', s1b, s2b, s3b, s4b, '', smaxb, sminb, MSc))
-        f.write(pageStamp % page_num)
+        f.write(page_stamp % page_num)
         return page_num
 
-    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         words = [
                 '                                 S T R E S S E S   I N   B A R   E L E M E N T S          ( C B A R )\n',
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
                 '    ID.          SB1            SB2            SB3            SB4           STRESS         SB-MAX         SB-MIN     M.S.-C\n',
               ]
         i = 0
+        ntimes = len(self.s1)
         for dt, S1s in sorted(iteritems(self.s1)):
-            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            header = _eigenvalue_header(self, header, i, ntimes, dt)
             f.write(''.join(header + words))
             for eid, S1 in sorted(iteritems(S1s)):
                 #eType = self.eType[eid]
@@ -531,7 +532,7 @@ class RealBarStress(StressObject):
                         ' %8s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n'
                         % (eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                             '', s1b, s2b, s3b, s4b, '', smaxb, sminb, MSc))
-            f.write(pageStamp % page_num)
+            f.write(page_stamp % page_num)
             msg = ['']
             page_num += 1
             i += 1
@@ -706,9 +707,9 @@ class RealBarStrain(StrainObject):
         #print msg
         #if nodeID==0: raise Exception(msg)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f)
 
         msg = header + [
                 '                                  S T R A I N S    I N   B A R   E L E M E N T S          ( C B A R )\n',
@@ -738,11 +739,11 @@ class RealBarStrain(StrainObject):
             msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n' % (eid, e10, e20, e30, e40, axial, emax0, emin0, MSt))
             msg.append(' %8s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n' % ('', e11, e21, e31, e41, '', emax1, emin1, MSc))
 
-        msg.append(pageStamp % page_num)
+        msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
 
-    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         words = [
                 '                                  S T R A I N S    I N   B A R   E L E M E N T S           ( C B A R )\n',
                 '  ELEMENT        SA1            SA2            SA3            SA4           AXIAL          SA-MAX         SA-MIN     M.S.-T\n',
@@ -776,7 +777,7 @@ class RealBarStrain(StrainObject):
                 msg.append('0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n' % (eid, e10, e20, e30, e40, axial, emax0, emin0, MSt))
                 msg.append(' %8s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s %s\n' % ('', e11, e21, e31, e41, '', emax1, emin1, MSc))
 
-            msg.append(pageStamp % page_num)
+            msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             msg = ['']
             page_num += 1
