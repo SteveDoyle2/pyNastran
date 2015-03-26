@@ -1,4 +1,6 @@
 from numpy import angle
+from pyNastran.utils import object_attributes
+
 
 def writeFloats10E(vals):
     vals2 = []
@@ -10,7 +12,7 @@ def writeFloats10E(vals):
         else:
             isAllZeros = False
         vals2.append(v2)
-    return (vals2, isAllZeros)
+    return vals2, isAllZeros
 
 
 def writeFloats12E(vals):
@@ -23,7 +25,7 @@ def writeFloats12E(vals):
         else:
             isAllZeros = False
         vals2.append(v2)
-    return (vals2, isAllZeros)
+    return vals2, isAllZeros
 
 
 def writeFloats13E(vals):
@@ -36,7 +38,7 @@ def writeFloats13E(vals):
         else:
             isAllZeros = False
         vals2.append(v2)
-    return (vals2, isAllZeros)
+    return vals2, isAllZeros
 
 
 def writeImagFloats13E(vals, isMagPhase):
@@ -75,7 +77,7 @@ def writeImagFloats13E(vals, isMagPhase):
             else:
                 isAllZeros = False
             vals2.append(v3)
-    return (vals2, isAllZeros)
+    return vals2, isAllZeros
 
 
 def writeFloats8p4F(vals):
@@ -90,18 +92,29 @@ def writeFloats8p4F(vals):
         else:
             isAllZeros = False
         vals2.append(v2)
-    return (vals2, isAllZeros)
+    return vals2, isAllZeros
 
 
 def _eigenvalue_header(obj, header, itime, ntimes, dt):
     if obj.nonlinear_factor is not None:
-        dt_line = ' %14s = %12.5E\n' % (obj.data_code['name'], dt)
+        name = obj.data_code['name']
+        dt_line = ' %14s = %12.5E\n' % (name, dt)
         header[1] = dt_line
+        codes = getattr(obj, name + 's')
+        if not len(codes) == ntimes:
+            msg = '%ss in %s the wrong size; ntimes=%s; %ss=%s\n' % (name,
+                obj.__class__.__name__, ntimes, name, codes)
+            atts = object_attributes(obj)
+            msg += 'names=%s\n' % atts
+            msg += 'data_names=%s\n' % obj.dataNames
+            raise IndexError(msg)
+
         if hasattr(obj, 'eigr'):
             try:
                 eigenvalue_real = obj.eigrs[itime]
             except IndexError:
                 msg = 'eigrs[%s] not found; ntimes=%s; eigrs=%s' % (itime, ntimes, obj.eigrs)
+                msg += 'names=%s' % object_attributes(obj)
                 raise IndexError(msg)
             eigr_line = ' %14s = %12.6E\n' % ('EIGENVALUE', eigenvalue_real)
             header[2] = eigr_line

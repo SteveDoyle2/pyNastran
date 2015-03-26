@@ -81,15 +81,15 @@ class ComplexCelasStress(complexStressObject):
         self.eType[eid] = self.element_name
         self.stress[dt][eid] = stress
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         """
         .. todo:: doesnt write...
         """
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f, is_mag_phase)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase)
         f.write('ComplexCelasStress write_f06 not implemented...\n')
 
-    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         """
         .. todo:: improve formatting
         """
@@ -134,7 +134,7 @@ class ComplexCelasStress(complexStressObject):
                     msg.append('%14i %-13s / %-13s  %14i %-13s / %s\n' % (elementID1, stress1Real, stress1Imag, elementID2, stress2Real, stress2Imag))
                     i = -1
                 i += 1
-            msg.append(pageStamp % page_num)
+            msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             msg = ['']
             page_num += 1

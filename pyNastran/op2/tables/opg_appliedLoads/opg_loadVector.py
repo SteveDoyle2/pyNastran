@@ -8,21 +8,21 @@ class RealLoadVectorArray(RealTableArray):  # table_code=2, sort_code=0, thermal
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                                     L O A D   V E C T O R\n', ]
         #words += self.get_table_marker()
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient_block(words, header, pageStamp, page_num, f)
-        return self._write_f06_block(words, header, pageStamp, page_num, f)
+            return self._write_f06_transient_block(words, header, page_stamp, page_num, f)
+        return self._write_f06_block(words, header, page_stamp, page_num, f)
 
 
 class ComplexLoadVectorArray(ComplexTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                               C O M P L E X   L O A D   V E C T O R\n', ]
-        return self._write_f06_transient_block(words, header, pageStamp, page_num, f, is_mag_phase)
+        return self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase)
 
 
 class RealLoadVector(RealTableObject):  # table_code=2, sort_code=0, thermal=0
@@ -30,9 +30,9 @@ class RealLoadVector(RealTableObject):  # table_code=2, sort_code=0, thermal=0
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f)
         msg = header + ['                                                     L O A D   V E C T O R\n',
                         ' \n',
                         '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
@@ -48,10 +48,10 @@ class RealLoadVector(RealTableObject):  # table_code=2, sort_code=0, thermal=0
             #if not is_all_zeros:
             [dx, dy, dz, rx, ry, rz] = vals2
             f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
-        f.write(pageStamp % page_num)
+        f.write(page_stamp % page_num)
         return page_num
 
-    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                                     L O A D   V E C T O R\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
@@ -71,7 +71,7 @@ class RealLoadVector(RealTableObject):  # table_code=2, sort_code=0, thermal=0
                 #if not is_all_zeros:
                 [dx, dy, dz, rx, ry, rz] = vals2
                 f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
-            f.write(pageStamp % page_num)
+            f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
@@ -80,9 +80,9 @@ class ComplexLoadVector(ComplexTableObject):  # table_code=11, approach_code=???
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f, is_mag_phase)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase)
         msg = header + ['                                               C O M P L E X   L O A D   V E C T O R\n',
                         '                                                          (REAL/IMAGINARY)\n',
                         ' \n',
@@ -132,15 +132,15 @@ class ComplexLoadVector(ComplexTableObject):  # table_code=11, approach_code=???
                     '  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                       nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr,
                       '', '',            dxi, dyi, dzi, rxi, ryi, rzi))
-        f.write(pageStamp % page_num)
+        f.write(page_stamp % page_num)
         return page_num
 
-    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                               C O M P L E X   L O A D   V E C T O R\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        #return self.__write_f06_transient_block(words,header,pageStamp,page_num,f,is_mag_phase)
+        #return self.__write_f06_transient_block(words,header,page_stamp,page_num,f,is_mag_phase)
 
         for dt, translations in sorted(iteritems(self.translations)):
             header[2] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
@@ -192,7 +192,7 @@ class ComplexLoadVector(ComplexTableObject):  # table_code=11, approach_code=???
                             nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr,
                             '', '',            dxi, dyi, dzi, rxi, ryi, rzi))
 
-            f.write(pageStamp % page_num)
+            f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
@@ -201,9 +201,9 @@ class RealThermalVector(RealTableObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f)
         msg = header + ['                                              T E M P E R A T U R E   V E C T O R\n',
                         ' \n',
                         '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']
@@ -220,10 +220,10 @@ class RealThermalVector(RealTableObject):
             [dx, dy, dz, rx, ry, rz] = vals2
             f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
 
-        f.write(pageStamp % page_num)
+        f.write(page_stamp % page_num)
         return page_num
 
-    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                              T E M P E R A T U R E   V E C T O R\n',
                  ' \n',
                  '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']
@@ -244,7 +244,7 @@ class RealThermalVector(RealTableObject):
                     [dx, dy, dz, rx, ry, rz] = vals2
                     f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
 
-            f.write(pageStamp % page_num)
+            f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
