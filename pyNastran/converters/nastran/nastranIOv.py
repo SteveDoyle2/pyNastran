@@ -37,8 +37,12 @@ from pyNastran.bdf.bdf import (BDF, CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
                                CONM2,
                                ShellElement, LineElement, SpringElement,
                                LOAD)
-from pyNastran.op2.op2_vectorized import OP2_Vectorized
-from pyNastran.op2.op2_geom import OP2Geom
+from pyNastran.op2.op2 import OP2
+try:
+    from pyNastran.op2.op2_geom import OP2Geom
+    is_geom = True
+except ImportError:
+    is_geom = False
 from pyNastran.f06.f06 import F06
 
 
@@ -154,7 +158,7 @@ class NastranIO(object):
         if ext == '.pch':
             punch = True
 
-        if ext == '.op2' and 0:
+        if ext == '.op2' and 0 and is_geom:
             model = OP2Geom(make_geom=True, debug=False, log=self.log,
                             debug_file=None)
             model._clear_results()
@@ -884,7 +888,7 @@ class NastranIO(object):
         ext = ext.lower()
 
         if ext == '.op2':
-            model = OP2_Vectorized(log=self.log, debug=True)
+            model = OP2(log=self.log, debug=True)
 
             if 0:
                 model._saved_results = set([])
