@@ -118,6 +118,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #self.res_widget.update_results(data)
 
         #self.res_widget.setWidget(sidebar)
+
         self.res_dock.setWidget(self.res_widget)
 
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.res_dock)
@@ -350,7 +351,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         elif typ == 'COMMAND' and not self.show_command:
             return
 
-        msg = '   fname=%-25s lineNo=%-4s   %s\n' % (fn, n, msg)
+        if typ in ['GUI', 'COMMAND']:
+            msg = '   fname=%-25s lineNo=%-4s   %s\n' % (fn, n, msg)
 
         tim = datetime.datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
         msg = cgi.escape(msg)
@@ -735,8 +737,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         surface's color instead of black
         """
         edges = vtk.vtkExtractEdges()
-        edges.SetInput(self.grid)
-        self.edgeMapper.SetInput(edges.GetOutput())
+        if self.vtk_version[0] >= 6:
+            edges.SetInputData(self.grid)
+            self.edgeMapper.SetInputData(edges.GetOutput())
+        else:
+            edges.SetInput(self.grid)
+            self.edgeMapper.SetInput(edges.GetOutput())
 
         self.edgeActor.SetMapper(self.edgeMapper)
         self.edgeActor.GetProperty().SetColor(0, 0, 0)
@@ -1183,7 +1189,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         if fname:
             renderLarge = vtk.vtkRenderLargeImage()
-            renderLarge.SetInput(self.rend)
+            if self.vtk_version[0] >= 6:
+                renderLarge.SetInputData(self.rend)
+            else:
+                renderLarge.SetInput(self.rend)
             renderLarge.SetMagnification(self.magnify)
 
             nam, ext = os.path.splitext(fname)
@@ -1200,7 +1209,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 fname = fname if ext == '.png' else fname + '.png'
                 writer = vtk.vtkPNGWriter()
 
-            writer.SetInputConnection(renderLarge.GetOutputPort())
+            if self.vtk_version[0] >= 6:
+                writer.SetInputData(renderLarge.GetOutputPort())
+            else:
+                writer.SetInput(renderLarge.GetOutputPort())
             writer.SetFileName(fname)
             writer.Write()
             #self.log_info("Saved screenshot: " + fname)
@@ -1208,7 +1220,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def addGeometry(self):
         self.aQuadMapper = vtk.vtkDataSetMapper()
-        self.aQuadMapper.SetInput(self.grid)
+        if self.vtk_version[0] >= 6:
+            self.aQuadMapper.SetInputData(self.grid)
+        else:
+            self.aQuadMapper.SetInput(self.grid)
 
         #self.warpVector = vtk.vtkWarpVector()
         #self.warpVector.SetInput(self.aQuadMapper.GetUnstructuredGridOutput())
@@ -1223,7 +1238,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def addAltGeometry(self):
         self.aQuadMapper = vtk.vtkDataSetMapper()
-        self.aQuadMapper.SetInput(self.grid2)
+        if self.vtk_version[0] >= 6:
+            self.aQuadMapper.SetInputData(self.grid2)
+        else:
+            self.aQuadMapper.SetInput(self.grid2)
         #aQuadMapper.SetInput(Filter.GetOutput())
         self.alt_geometry_actor = vtk.vtkActor()
         self.alt_geometry_actor.SetMapper(self.aQuadMapper)

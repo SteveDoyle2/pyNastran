@@ -4,6 +4,7 @@ from six import iteritems
 import vtk
 from numpy import ndarray, asarray, hstack
 
+
 class GuiCommon(object):
     def __init__(self):
         self.nvalues = 9
@@ -11,6 +12,8 @@ class GuiCommon(object):
         self._group_elements = {}
         self._group_coords = {}
         self._group_shown = {}
+        self.vtk_version = [int(i) for i in vtk.VTK_VERSION.split('.')[:1]]
+        print('vtk_version = %s' % (self.vtk_version))
 
     def nCells(self):
         try:
