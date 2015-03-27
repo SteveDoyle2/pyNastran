@@ -356,6 +356,7 @@ class FortranFormat(object):
                     assert isinstance(n, int), self.table_name
                     datai = data[n:]
                 assert len(datai) == 0, len(datai)
+
                 #n = record_len
                 #break
             #self.goto(n)
@@ -478,7 +479,7 @@ class FortranFormat(object):
 
     def _read_record(self, stream=False, debug=True):
         """
-        :param self:    the OP2 object pointer
+        :param self:  the OP2 object pointer
         """
         markers0 = self.get_nmarkers(1, rewind=False)
         if self.debug and debug:
@@ -499,12 +500,12 @@ class FortranFormat(object):
             while markers1[0] > 0:
                 markers1 = self.get_nmarkers(1, rewind=False)
                 if self.debug and debug:
-                    self.binary_debug.write('read_record - markers1 = [4, %i, 4]\n' % markers1)
+                    self.binary_debug.write('read_record - markers1 = [4, %i, 4]\n' % markers1[0])
                 record = self.read_block()
                 records.append(record)
                 markers1 = self.get_nmarkers(1, rewind=True)
                 if self.debug and debug:
-                    self.binary_debug.write('read_record - markers1 = [4, %i, 4]\n' % markers1)
+                    self.binary_debug.write('read_record - markers1 = [4, %i, 4]\n' % markers1[0])
                 nloop += 1
 
             if nloop > 0:

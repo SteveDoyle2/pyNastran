@@ -122,20 +122,6 @@ LaWGS
  - load geometry -> wgs
  - ***Coordinate System
 
-Plot3d
-======
- - ***plot3d input/output
- - ***show/hide panels based on menu/picking
-      (wakes can be confusing otherwise)
- - ***2d vs 3d
- - ***Coordinate System
-
-Tecplot
-=======
- - ***tecplot structured input/output
- - ***tecplot unstructured input/output
- - ***Coordinate System
-
 Tetgen
 ======
  - load geometry -> smesh

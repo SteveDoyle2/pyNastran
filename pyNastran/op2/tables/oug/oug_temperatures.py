@@ -8,19 +8,19 @@ class RealTemperatureArray(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f)
         words = ['                                              T E M P E R A T U R E   V E C T O R\n',
                  ' \n',
                  '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']
-        return self._write_f06_block(words, header, pageStamp, page_num, f, write_words=False)
+        return self._write_f06_block(words, header, page_stamp, page_num, f, write_words=False)
 
-    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                              T E M P E R A T U R E   V E C T O R\n',
                  ' \n',
                  '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']
-        return self._write_f06_transient_block(words, header, pageStamp, page_num, f, write_words=False)
+        return self._write_f06_transient_block(words, header, page_stamp, page_num, f, write_words=False)
 
 
 class RealTemperature(ScalarObject):  # approach_code=1, sort_code=0, thermal=1
@@ -145,7 +145,7 @@ class RealTemperature(ScalarObject):  # approach_code=1, sort_code=0, thermal=1
    #             msg += pack('iffffff',grid,T,0,0,0,0,0)
    #     return msg
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                              T E M P E R A T U R E   V E C T O R\n',
                  ' \n',
                  '      POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE\n']
@@ -156,14 +156,14 @@ class RealTemperature(ScalarObject):  # approach_code=1, sort_code=0, thermal=1
                 header[2] = dtLine
                 msg += header + words
                 msg += self.print_temp_lines(temperatures)
-                msg.append(pageStamp % page_num)
+                msg.append(page_stamp % page_num)
                 f.write(''.join(msg))
                 msg = ['']
                 page_num += 1
             return page_num - 1  # transient
 
         msg += self.print_temp_lines(self.temperatures)
-        msg.append(pageStamp % page_num)
+        msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num  # static
 

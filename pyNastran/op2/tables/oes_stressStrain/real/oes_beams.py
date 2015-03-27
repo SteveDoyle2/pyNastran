@@ -1,11 +1,13 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
+from six.moves import range, zip
 from itertools import count
 
 from numpy import zeros
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import writeFloats13E
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
+    StressObject, StrainObject, OES_Object)
+from pyNastran.f06.f06_formatting import writeFloats13E, _eigenvalue_header
 
 
 class RealBeamArray(OES_Object):
@@ -115,24 +117,13 @@ class RealBeamArray(OES_Object):
                                                  smax, smin, mst, msc]
         self.itotal += 1
 
-    #def add_sort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #assert eid is not None
-        #msg = "i=%s dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (
-            #self.itotal, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
-        ##print(msg)
-        #if isinstance(nodeID, string_types):
-            #nodeID = 0
-        ##assert isinstance(nodeID, int), nodeID
-        #self.element_node[self.itotal, :] = [eid, nodeID]
-        #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy, txy, angle, majorP, minorP, ovm]
-        #self.itotal += 1
-
     def get_stats(self):
         if not self.is_built:
-            return ['<%s>\n' % self.__class__.__name__,
-                    '  ntimes: %i\n' % self.ntimes,
-                    '  ntotal: %i\n' % self.ntotal,
-                    ]
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
 
         nelements = self.nelements
         ntimes = self.ntimes
@@ -174,7 +165,7 @@ class RealBeamArray(OES_Object):
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         msg = self._get_msgs()
-        (ntimes, ntotal, four) = self.data.shape
+        ntimes = self.data.shape[0]
 
         eids = self.element_node[:, 0]
         nids = self.element_node[:, 1]
@@ -182,11 +173,7 @@ class RealBeamArray(OES_Object):
         #print('CBEAM ntimes=%s ntotal=%s' % (ntimes, ntotal))
         for itime in range(ntimes):
             dt = self._times[itime]
-            if self.nonlinear_factor is not None:
-                dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
-                header[1] = dtLine
-                if hasattr(self, 'eigr'):
-                    header[2] = ' %14s = %12.6E\n' % ('EIGENVALUE', self.eigrs[itime])
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg))
 
             sxcs = self.data[itime, :, 0]
@@ -226,15 +213,218 @@ class RealBeamArray(OES_Object):
         return page_num
 
 
+class RealNonlinearBeamArray(OES_Object):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
+        #self.eType = {}
+        #self.code = [self.format_code, self.sort_code, self.s_code]
+
+        #self.ntimes = 0  # or frequency/mode
+        #self.ntotal = 0
+        self.ielement = 0
+        self.nelements = 0  # result specific
+        self.nnodes = None
+
+        if is_sort1:
+            pass
+        else:
+            raise NotImplementedError('SORT2')
+
+    def is_real(self):
+        return True
+
+    def is_complex(self):
+        return False
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def _get_msgs(self):
+        raise NotImplementedError('%s needs to implement _get_msgs' % self.__class__.__name__)
+
+    def get_headers(self):
+        raise NotImplementedError('%s needs to implement get_headers' % self.__class__.__name__)
+
+    def build(self):
+        #print("self.ielement =", self.ielement)
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        #self.names = []
+        if self.element_type == 94:
+            nnodes_per_element = 10
+        else:
+            raise NotImplementedError(self.element_type)
+
+        self.nnodes = nnodes_per_element
+        self.nelements //= self.ntimes
+        self.ntotal = self.nelements  #* 2  # for A/B
+        #self.nelements //= nnodes_per_element
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
+            #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, int):
+            dtype = 'int32'
+        self._times = zeros(self.ntimes, dtype=dtype)
+        self.element_node = zeros((self.ntotal, 3), dtype='int32')
+
+        #gridA, CA, long_CA, eqS_CA, tE_CA, eps_CA, ecs_CA,
+        #       DA, long_DA, eqS_DA, tE_DA, eps_DA, ecs_DA,
+        #       EA, long_EA, eqS_EA, tE_EA, eps_EA, ecs_EA,
+        #       FA, long_FA, eqS_FA, tE_FA, eps_FA, ecs_FA,
+        #gridB, CB, long_CB, eqS_CB, tE_CB, eps_CB, ecs_CB,
+        #       DB, long_DB, eqS_DB, tE_DB, eps_DB, ecs_DB,
+        #       EB, long_EB, eqS_EB, tE_EB, eps_EB, ecs_EB,
+        #       FB, long_FB, eqS_FB, tE_FB, eps_FB, ecs_FB,
+        #self.xxb = zeros(self.ntotal, dtype='float32')
+        self.data = zeros((self.ntimes, self.ntotal, 5), dtype='float32')
+
+    def get_stats(self):
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        nnodes = self.nnodes
+        ntotal = self.ntotal
+        #nlayers = 2
+        nelements = self.ntotal // self.nnodes  # // 2
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i nnodes_per_element=%i ntotal=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements, nnodes, ntotal))
+            ntimes_word = 'ntimes'
+        else:
+            msg.append('  type=%s nelements=%i nnodes_per_element=%i ntotal=%i\n'
+                       % (self.__class__.__name__, nelements, nnodes, ntotal))
+            ntimes_word = 1
+        headers = self.get_headers()
+
+        n = len(headers)
+        assert n == self.data.shape[2], 'nheaders=%s shape=%s' % (n, str(self.data.shape))
+        msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element types: %s\n  ' % ', '.join(self.element_names))
+        msg += self.get_data_code()
+        return msg
+
+    def add_new_eid_sort1(self, dt, eid, out):
+        assert isinstance(eid, int), eid
+        assert eid >= 0, eid
+        self._times[self.itime] = dt
+        (gridA, CA, long_CA, eqS_CA, tE_CA, eps_CA, ecs_CA,
+                DA, long_DA, eqS_DA, tE_DA, eps_DA, ecs_DA,
+                EA, long_EA, eqS_EA, tE_EA, eps_EA, ecs_EA,
+                FA, long_FA, eqS_FA, tE_FA, eps_FA, ecs_FA,
+         gridB, CB, long_CB, eqS_CB, tE_CB, eps_CB, ecs_CB,
+                DB, long_DB, eqS_DB, tE_DB, eps_DB, ecs_DB,
+                EB, long_EB, eqS_EB, tE_EB, eps_EB, ecs_EB,
+                FB, long_FB, eqS_FB, tE_FB, eps_FB, ecs_FB,) = out[1:]
+
+        self.element_node[self.itotal] = [eid, gridA, 0]
+        self.element_node[self.itotal + 1] = [eid, gridA, 1]
+        self.element_node[self.itotal + 2] = [eid, gridA, 2]
+        self.element_node[self.itotal + 3] = [eid, gridA, 3]
+        self.element_node[self.itotal + 4] = [eid, gridB, 4]
+        self.element_node[self.itotal + 5] = [eid, gridB, 5]
+        self.element_node[self.itotal + 6] = [eid, gridB, 6]
+        self.element_node[self.itotal + 7] = [eid, gridB, 7]
+
+        self.data[self.itime, self.itotal, :] = [long_CA, eqS_CA, tE_CA, eps_CA, ecs_CA]
+        self.data[self.itime, self.itotal + 1, :] = [long_DA, eqS_DA, tE_DA, eps_DA, ecs_DA]
+        self.data[self.itime, self.itotal + 2, :] = [long_EA, eqS_EA, tE_EA, eps_EA, ecs_EA]
+        self.data[self.itime, self.itotal + 3, :] = [long_FA, eqS_FA, tE_FA, eps_FA, ecs_FA]
+        self.data[self.itime, self.itotal + 4, :] = [long_CB, eqS_CB, tE_CB, eps_CB, ecs_CB]
+        self.data[self.itime, self.itotal + 5, :] = [long_DB, eqS_DB, tE_DB, eps_DB, ecs_DB]
+        self.data[self.itime, self.itotal + 6, :] = [long_EB, eqS_EB, tE_EB, eps_EB, ecs_EB]
+        self.data[self.itime, self.itotal + 7, :] = [long_FB, eqS_FB, tE_FB, eps_FB, ecs_FB]
+        self.itotal += 8
+        #print('CBEAM-94:  out=%s' % str(out))
+        self.ielement += 1
+
+    #def get_element_index(self, eids):
+        # elements are always sorted; nodes are not
+        #itot = searchsorted(eids, self.element_node[:, 0])  #[0]
+        #return itot
+
+    #def eid_to_element_node_index(self, eids):
+        #ind = ravel([searchsorted(self.element_node[:, 0] == eid) for eid in eids])
+        #ind = searchsorted(eids, self.element)
+        #ind = ind.reshape(ind.size)
+        #ind.sort()
+        #return ind
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+        msg = self._get_msgs()
+        ntimes = self.data.shape[0]
+
+        eids = self.element_node[:, 0]
+        nids = self.element_node[:, 1]
+        locs = self.element_node[:, 2]
+        #xxbs = self.xxb
+        #print('CBEAM ntimes=%s ntotal=%s' % (ntimes, ntotal))
+        loc_map = ['C', 'D', 'E', 'F',
+                   'C', 'D', 'E', 'F',]
+        for itime in range(ntimes):
+            dt = self._times[itime]
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            f.write(''.join(header + msg))
+
+            longs = self.data[itime, :, 0]
+            eqSs = self.data[itime, :, 1]
+            tEs = self.data[itime, :, 2]
+            epss = self.data[itime, :, 3]
+            ecss = self.data[itime, :, 4]
+
+            #msg = ['                        N O N L I N E A R   S T R E S S E S   I N   B E A M   E L E M E N T S     ( C B E A M )\n',
+            #' \n',
+            #'          ELEMENT    GRID     POINT        STRESS          EQUIVALENT        TOTAL STRAIN      EFF. STRAIN       EFF. CREEP\n',
+            #'             ID       ID                                     STRESS                          PLASTIC/NLELAST       STRAIN\n',]
+            #'0               1         1     C        1.738817E+03      1.738817E+03      5.796055E-05      0.0               0.0\n',
+            #'                                D        1.229523E+03      1.229523E+03      4.098411E-05      0.0               0.0\n',
+            eid_old = None
+            for (i, eid, nid, loc, longi, eqS, tE, eps, ecs) in zip(
+                count(), eids, nids, locs, longs, eqSs, tEs, epss, ecss):
+
+                vals = [longi, eqS, tE, eps, ecs]
+                (vals2, is_all_zeros) = writeFloats13E(vals)
+                [longi, eqS, tE, eps, ecs] = vals2
+                if loc == 0:
+                    f.write('0  %14i  %8i  %4s       %13s     %13s     %13s %13s %s\n' % (eid, nid, 'C', longi, eqS, tE, eps, ecs.rstrip()))
+                elif loc == 4:
+                    f.write('   %14s  %8i  %4s       %13s     %13s     %13s %13s %s\n' % ('', nid, 'C', longi, eqS, tE, eps, ecs.rstrip()))
+                else:
+                    loci = loc_map[loc]
+                    f.write('   %14s  %8s  %4s       %13s     %13s     %13s %13s %s\n' % ('', '', loci, longi, eqS, tE, eps, ecs.rstrip()))
+            f.write(page_stamp % page_num)
+            page_num += 1
+
+        if self.nonlinear_factor is None:
+            page_num -= 1
+        return page_num
+
+
 class RealBeamStressArray(RealBeamArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealBeamArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
-
-    def isStress(self):
-        return True
-    def isStrain(self):
-        return False
 
     def get_headers(self):
         headers = [
@@ -250,9 +440,10 @@ class RealBeamStressArray(RealBeamArray, StressObject):
         else:
             raise NotImplementedError(self.element_type)
 
-        msg = ['                                  S T R E S S E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
-                        '                    STAT DIST/\n',
-                        '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
+        msg = [
+            '                                  S T R E S S E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
+            '                    STAT DIST/\n',
+            '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
         return msg
 
 
@@ -261,11 +452,6 @@ class RealBeamStrainArray(RealBeamArray, StrainObject):
         RealBeamArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def isStress(self):
-        return False
-    def isStrain(self):
-        return True
-
     def get_headers(self):
         headers = [
             #'grid', 'xxb',
@@ -279,12 +465,46 @@ class RealBeamStrainArray(RealBeamArray, StrainObject):
             pass
         else:
             raise NotImplementedError(self.element_type)
-        msg = ['                                  S T R A I N S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
-                        '                    STAT DIST/\n',
-                        '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
+
+        msg = [
+            '                                  S T R A I N S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
+            '                    STAT DIST/\n',
+            '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
         return msg
 
 
+class RealNonlinearBeamStressArray(RealNonlinearBeamArray, StressObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealNonlinearBeamArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        StressObject.__init__(self, data_code, isubcase)
+
+    def get_headers(self):
+        headers = [
+            'longitudinal_stress', 'equivalent_stress',
+            'total_strain', 'equivalent_plastic_strain', 'equivalent_creep_strain'
+        ]
+        return headers
+
+    def _get_msgs(self):
+        if self.element_type == 94:
+            pass
+        else:
+            raise NotImplementedError(self.element_type)
+
+        msg = ['                        N O N L I N E A R   S T R E S S E S   I N   B E A M   E L E M E N T S     ( C B E A M )\n',
+               ' \n',
+               '          ELEMENT    GRID     POINT        STRESS          EQUIVALENT        TOTAL STRAIN      EFF. STRAIN       EFF. CREEP\n',
+               '             ID       ID                                     STRESS                          PLASTIC/NLELAST       STRAIN\n',]
+        #'0               1         1     C        1.738817E+03      1.738817E+03      5.796055E-05      0.0               0.0\n',
+        #'                                D        1.229523E+03      1.229523E+03      4.098411E-05      0.0               0.0\n',
+
+        #msg = ['                                  S T R E S S E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
+        #                '                    STAT DIST/\n',
+        #                '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
+        return msg
+
+
+#=========================================================================
 class RealBeamStress(StressObject):
     """
     ::
@@ -340,15 +560,6 @@ class RealBeamStress(StressObject):
                    'MS_compression, sxc, sxd, sxe, sxf\n')
         return msg
 
-    def getLengthTotal(self):
-        return 444  # 44+10*40   (11 nodes)
-
-    def getLength1(self):
-        return (44, 'ifffffffff')
-
-    def getLength2(self):
-        return (40, 'ifffffffff')
-
     def delete_transient(self, dt):
         del self.sxc[dt]
         del self.sxd[dt]
@@ -368,7 +579,6 @@ class RealBeamStress(StressObject):
         """
         initializes the transient variables
         """
-        #print("addNewTransient_beam+1+0")
         self.dt = dt
         self.sxc[dt] = {}
         self.sxd[dt] = {}
@@ -380,9 +590,7 @@ class RealBeamStress(StressObject):
         self.MS_compression[dt] = {}
 
     def add_new_eid(self, dt, eid, out):
-        #print("Beam Stress add_new_eid...")
         (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
-        #print("eid=%s grid=%s" % (eid, grid))
         assert eid >= 0
         #assert isinstance(eid, int)
         #assert isinstance(grid, int)
@@ -427,7 +635,6 @@ class RealBeamStress(StressObject):
                 self.MS_compression[eid] = [msc]
 
     def add_new_eid_sort1(self, dt, eid, out):
-        #print "Beam Transient Stress add_new_eid..."
         (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
 
         assert eid >= 0
@@ -446,7 +653,6 @@ class RealBeamStress(StressObject):
         return eid
 
     def add(self, dt, eid, out):
-        #print "Beam Stress add..."
         (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
         if grid:
             self.grids[eid].append(grid)
@@ -461,7 +667,6 @@ class RealBeamStress(StressObject):
             self.MS_compression[eid].append(msc)
 
     def add_sort1(self, dt, eid, out):
-        #print "Beam Transient Stress add..."
         (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
         if grid:
             self.grids[eid].append(grid)
@@ -476,9 +681,9 @@ class RealBeamStress(StressObject):
             self.MS_tension[dt][eid].append(mst)
             self.MS_compression[dt][eid].append(msc)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f)
 
         msg = header + ['                                  S T R E S S E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
                         '                    STAT DIST/\n',
@@ -486,9 +691,7 @@ class RealBeamStress(StressObject):
 
         for eid in sorted(self.smax):
             msg.append('0  %8i\n' % (eid))
-            #print self.xxb[eid]
             for i, nid in enumerate(self.grids[eid]):
-                #print i,nid
                 xxb = self.xxb[eid][i]
                 sxc = self.sxc[eid][i]
                 sxd = self.sxd[eid][i]
@@ -502,11 +705,11 @@ class RealBeamStress(StressObject):
                 (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
                 msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc.strip()))
 
-        msg.append(pageStamp % page_num)
+        msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
 
-    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                  S T R E S S E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
                  '                    STAT DIST/\n',
                  '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
@@ -528,11 +731,11 @@ class RealBeamStress(StressObject):
                     SMt = self.MS_tension[dt][eid][i]
                     SMc = self.MS_compression[dt][eid][i]
                     (vals2, is_all_zeros) = writeFloats13E([sxc, sxd,
-                                                          sxe, sxf, sMax, sMin, SMt, SMc])
+                                                            sxe, sxf, sMax, sMin, SMt, SMc])
                     (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
                     msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc.strip()))
 
-            msg.append(pageStamp % page_num)
+            msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             msg = ['']
             page_num += 1
@@ -576,9 +779,7 @@ class RealBeamStrain(StrainObject):
         if dt is not None:
             raise NotImplementedError(dt)
         for datai in data:
-            #print('smax', self.smax)
             (eid, grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = datai
-            #print('(*')
             if eid in self.grids:
                 self.grids[eid].append(grid)
                 self.xxb[eid].append(sd)
@@ -621,15 +822,6 @@ class RealBeamStrain(StrainObject):
                    'MS_compression, sxc, sxd, sxe, sxf\n')
         return msg
 
-    def getLengthTotal(self):
-        return 444  # 44+10*40   (11 nodes)
-
-    def getLength1(self):
-        return (44, 'i9f')
-
-    def getLength2(self):
-        return (40, 'i9f')
-
     def delete_transient(self, dt):
         del self.sxc[dt]
         del self.sxd[dt]
@@ -650,7 +842,6 @@ class RealBeamStrain(StrainObject):
         initializes the transient variables
         .. note:: make sure you set self.dt first
         """
-        #print "addNewTransient_beam+1+0"
         self.dt = dt
         self.grids = {}
         self.xxb = {}
@@ -664,9 +855,7 @@ class RealBeamStrain(StrainObject):
         self.MS_compression[dt] = {}
 
     def add_new_eid(self, dt, eid, out):
-        #print "Beam Stress add_new_eid..."
         (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
-        #print "eid=%s grid=%s" %(eid,grid)
         assert eid >= 0
         #assert isinstance(eid,int)
         #assert isinstance(grid,int)
@@ -698,7 +887,6 @@ class RealBeamStrain(StrainObject):
             self.MS_compression[eid].append(msc)
 
     def add_new_eid_sort1(self, dt, eid, out):
-        #print "Beam Transient Stress add_new_eid..."
         (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
 
         assert eid >= 0
@@ -731,9 +919,9 @@ class RealBeamStrain(StrainObject):
             self.MS_tension[dt][eid].append(mst)
             self.MS_compression[dt][eid].append(msc)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f)
 
         msg = header + ['                                  S T R A I N S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
                         '                    STAT DIST/\n',
@@ -741,9 +929,6 @@ class RealBeamStrain(StrainObject):
 
         for eid in sorted(self.smax):
             msg.append('0  %8i\n' % eid)
-            #print self.xxb[eid]
-            #print("self.grids =", self.grids)
-            #print("eid =", eid)
             for i, nid in enumerate(self.grids[eid]):
                 xxb = self.xxb[eid][i]
                 sxc = self.sxc[eid][i]
@@ -759,11 +944,11 @@ class RealBeamStrain(StrainObject):
                 (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
                 msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc))
 
-        msg.append(pageStamp % page_num)
+        msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
 
-    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                  S T R A I N S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
                  '                    STAT DIST/\n',
                  '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
@@ -772,7 +957,7 @@ class RealBeamStrain(StrainObject):
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             msg += header + words
             for eid, Smax in sorted(iteritems(SMaxs)):
-                msg.append('0  %8i\n' % (eid))
+                msg.append('0  %8i\n' % eid)
                 for i, nid in enumerate(self.grids[eid]):
                     xxb = self.xxb[eid][i]
                     sxc = self.sxc[dt][eid][i]
@@ -784,11 +969,11 @@ class RealBeamStrain(StrainObject):
                     SMt = self.MS_tension[dt][eid][i]
                     SMc = self.MS_compression[dt][eid][i]
                     (vals2, is_all_zeros) = writeFloats13E([sxc, sxd, sxe, sxf,
-                                                          sMax, sMin, SMt, SMc])
+                                                            sMax, sMin, SMt, SMc])
                     (sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) = vals2
                     msg.append('%19s   %4.3f   %12s %12s %12s %12s %12s %12s %12s %s\n' % (nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc))
 
-            msg.append(pageStamp % page_num)
+            msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             msg = ['']
             page_num += 1

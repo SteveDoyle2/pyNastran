@@ -16,12 +16,11 @@ def nastran_to_stl_filename(bdf_filename, stl_filename, log=None):
     nodeid_to_i_map = {}
     for node_id, node in sorted(iteritems(model.nodes)):
         xyz = node.Position()
-        if xyz[0] < 0.001:
-            print(xyz, node_id)
         nodes[i, :] = xyz
         nodeid_to_i_map[node_id] = i
         i += 1
 
+    assert len(model.nodes) == i, 'model.nodes=%s i=%s' % (len(model.nodes), i)
     for eid, element in sorted(iteritems(model.elements)):
         if element.type in ['CQUADR']:
             continue
@@ -33,7 +32,7 @@ def nastran_to_stl_filename(bdf_filename, stl_filename, log=None):
             continue
         elif element.type in ['CQUAD4']:
             n1, n2, n3, n4 = element.nodeIDs()
-            i1, i2, i3, i4 = nodeid_to_i_map[n1], nodeid_to_i_map[n2], nodeid_to_i_map[n3], nodeid_to_i_map[n3]
+            i1, i2, i3, i4 = nodeid_to_i_map[n1], nodeid_to_i_map[n2], nodeid_to_i_map[n3], nodeid_to_i_map[n4]
             elements.append([i1, i2, i3])
             elements.append([i3, i4, i1])
         elif element.type in ['CTRIA3', 'CTRIAR']:

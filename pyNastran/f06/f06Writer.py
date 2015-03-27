@@ -478,6 +478,8 @@ class F06Writer(OP2_F06_Common):
             self.spcForces,
             self.thermalLoadVectors,
 
+            self.strainEnergy,
+
 
             #------------------------------------------
             # OEF - forces
@@ -530,21 +532,17 @@ class F06Writer(OP2_F06_Common):
             # 3.  crod/ctube/conrod
 
             # springs,
-            self.celasStrain,
             self.celas1_strain,
             self.celas2_strain,
             self.celas3_strain,
             self.celas4_strain,
 
             # bars/beams
-            self.barStrain, self.beamStrain,
             self.cbar_strain,
             self.cbeam_strain,
 
             # plates
-            self.plateStrain,
-            self.shearStrain,
-            self.compositePlateStrain,
+            #self.compositePlateStrain,
             self.cquad4_composite_strain,
             self.cquad8_composite_strain,
             self.cquadr_composite_strain,
@@ -552,15 +550,17 @@ class F06Writer(OP2_F06_Common):
             self.ctria6_composite_strain,
             self.ctriar_composite_strain,
 
-            self.nonlinearPlateStrain,
+            #self.nonlinearPlateStrain,
+            self.nonlinear_ctria3_strain,
+            self.nonlinear_cquad4_strain,
             self.ctriaxStrain, self.hyperelasticPlateStress,
 
 
-            # solids
-            self.solidStrain,
-
             # rods
-            self.rodStrain, self.nonlinearRodStrain,  # non-vectorized
+            #self.nonlinearRodStrain,  # non-vectorized
+            self.nonlinear_crod_strain,
+            self.nonlinear_ctube_strain,
+            self.nonlinear_conrod_strain,
 
 
             self.celas1_strain,
@@ -583,25 +583,23 @@ class F06Writer(OP2_F06_Common):
             self.ctube_strain,
 
             # bush
-            self.bushStrain,
+            self.cbush_strain,
+            self.nonlinear_cbush_stress,
+            self.cbush1d_stress_strain,
             #------------------------------------------
             # cbars/cbeams
-            self.barStress,
-            self.beamStress,
             self.cbar_stress,
+            self.nonlinear_cbeam_stress,
             self.cbeam_stress,
 
             # bush
-            self.bushStress, self.bush1dStressStrain,
-
-            self.celasStress,
-            self.shearStress,
-            self.plateStress,
-            self.solidStress,
+            self.cbush_stress,
 
             # rods
-            self.rodStress, self.nonlinearRodStress,
-
+            #self.nonlinearRodStress,
+            self.nonlinear_crod_stress,
+            self.nonlinear_ctube_stress,
+            self.nonlinear_conrod_stress,
 
             # shear
             # OES - stress
@@ -624,7 +622,7 @@ class F06Writer(OP2_F06_Common):
             self.ctriar_stress,
             self.ctube_stress,
 
-            self.compositePlateStress,
+            #self.compositePlateStress,
             self.cquad4_composite_stress,
             self.cquad8_composite_stress,
             self.cquadr_composite_stress,
@@ -632,7 +630,9 @@ class F06Writer(OP2_F06_Common):
             self.ctria6_composite_stress,
             self.ctriar_composite_stress,
 
-            self.nonlinearPlateStress,
+            #self.nonlinearPlateStress,
+            self.nonlinear_ctria3_stress,
+            self.nonlinear_cquad4_stress,
             self.ctriaxStress, self.hyperelasticPlateStrain,
 
             #------------------------------------------

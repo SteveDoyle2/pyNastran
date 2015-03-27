@@ -47,24 +47,27 @@ class ScalarObject(BaseScalarObject):
         self.ntotal = 0
         self.data_code = copy.deepcopy(data_code)
 
-        #print("***data_code =", self.data_code)
+        # if data code isn't being applied and you don't have
+        # parameters that were in data_code (e.g.
+        # self.element_name/self.element_type), you need to define
+        # your vectorized class as setting data_code
+        #
+        # see pyNastran.op2.oes_stressStrain.real.oes_bars for an example
+        # it's raelly subtle...
         if apply_data_code:
-            #print("adding data code...")
             self.apply_data_code()
             self.set_data_members()
-        #self.log.debug(self.code_information())
+        #print(self.code_information())
 
     def isImaginary(self):
         return bool(self.sort_bits[1])
 
     def apply_data_code(self):
-        #self.log = self.data_code['log']
         for key, value in sorted(iteritems(self.data_code)):
-            #if key is not 'log':
-                self.__setattr__(key, value)
-                #self.log.debug("  key=%s value=%s" %(key, value))
-                #print "  key=%s value=%s" %(key, value)
-        #self.log.debug("")
+            self.__setattr__(key, value)
+            #print("  key=%s value=%s" %(key, value))
+        #if self.table_name in ['OES1X', 'OES1X1']:
+            #asdf
 
     def get_data_code(self):
         msg = []

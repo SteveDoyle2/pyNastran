@@ -1,8 +1,10 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import string_types
 from six.moves import range
 
 from numpy import zeros
+
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
 
@@ -19,23 +21,27 @@ class ComplexPlateArray(OES_Object):
 
         #self.ntimes = 0  # or frequency/mode
         #self.ntotal = 0
-        self.itime = 0
+        #self.itime = 0
         self.nelements = 0  # result specific
         #self.cid = {}  # gridGauss
 
         if is_sort1:
-            #sort1
             pass
         else:
             raise NotImplementedError('SORT2')
 
+    def is_real(self):
+        return False
 
-    def _get_msgs(self, is_mag_phase):
-        raise NotImplementedError()
+    def is_complex(self):
+        return True
 
     def _reset_indices(self):
         self.itotal = 0
         self.ielement = 0
+
+    def _get_msgs(self, is_mag_phase):
+        raise NotImplementedError('%s needs to implement _get_msgs' % self.__class__.__name__)
 
     def get_nnodes(self):
         if self.element_type in [64, 82, 144]:  # ???, CQUADR, CQUAD4 bilinear
@@ -49,6 +55,9 @@ class ComplexPlateArray(OES_Object):
         return nnodes + 1  # + 1 centroid
 
     def build(self):
+        #print('data_code = %s' % self.data_code)
+        if not hasattr(self, 'subtitle'):
+            self.subtitle = self.data_code['subtitle']
         #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (self.ntimes, self.nelements, self.ntotal, self.subtitle))
         if self.is_built:
             return
@@ -101,7 +110,7 @@ class ComplexPlateArray(OES_Object):
         #print(self.element_types2, element_type, self.element_types2.dtype)
         #print('itotal=%s eType=%r dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, eType, dt, eid, nodeID, oxx))
 
-        if isinstance(nodeID, basestring):
+        if isinstance(nodeID, string_types):
             nodeID = 0
         self.data[self.itime, self.itotal] = [oxx, oyy, txy]
         self.element_node[self.itotal, :] = [eid, nodeID]  # 0 is center
@@ -118,10 +127,9 @@ class ComplexPlateArray(OES_Object):
 
         nelements = self.nelements
         ntimes = self.ntimes
-        #ntotal = self.ntotal
         nnodes = self.element_node.shape[0]
+        #ntotal = self.ntotal
         msg = []
-
         if self.nonlinear_factor is not None:  # transient
             msg.append('  type=%s ntimes=%i nelements=%i nnodes=%i\n'
                        % (self.__class__.__name__, ntimes, nelements, nnodes))
@@ -322,31 +330,33 @@ class ComplexPlateArray(OES_Object):
             ilayer0 = not ilayer0
 
 
-class ComplexPlateStressArray(ComplexPlateArray):
+class ComplexPlateStressArray(ComplexPlateArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        StressObject.__init__(self, data_code, isubcase)
+
+    #def is_stress(self):
+        #return True
+
+    #def is_strain(self):
+        #return False
 
     def getHeaders(self):
         return ['oxx', 'oyy', 'txy']
 
-    def is_stress(self):
-        return True
-
-    def is_strain(self):
-        return False
-
-class ComplexPlateStrainArray(ComplexPlateArray):
+class ComplexPlateStrainArray(ComplexPlateArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        StrainObject.__init__(self, data_code, isubcase)
 
     def getHeaders(self):
         return ['exx', 'eyy', 'exy']
 
-    def is_stress(self):
-        return False
+    #def is_stress(self):
+        #return False
 
-    def is_strain(self):
-        return True
+    #def is_strain(self):
+        #return True
 
 
 class ComplexPlateStress(StressObject):
@@ -473,7 +483,7 @@ class ComplexPlateStress(StressObject):
         #if eid in self.oxx[dt]:
         #    return self.add(eid,nodeID,fd,oxx,oyy,txy)
 
-        if 1: # this is caused by superelements
+        if 0: # this is caused by superelements
             if dt in self.oxx and eid in self.oxx[dt]:  # SOL200, erase the old result
                 #nid = nodeID
                 #msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s" %(dt,eid,nodeID,str(self.fiberCurvature[eid][nid]),str(self.oxx[dt][eid][nid])))
@@ -482,21 +492,18 @@ class ComplexPlateStress(StressObject):
 
         assert isinstance(eid, int)
         self.eType[eid] = eType
-
         if dt not in self.oxx:
             self.add_new_transient(dt)
         self.fiberCurvature[eid] = {nodeID: [fd]}
         self.oxx[dt][eid] = {nodeID: [oxx]}
         self.oyy[dt][eid] = {nodeID: [oyy]}
         self.txy[dt][eid] = {nodeID: [txy]}
-        #print msg
         if nodeID == 0:
             raise ValueError(msg)
 
     def add_sort1(self, dt, eid, nodeID, fd, oxx, oyy, txy):
         msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%s oyy=%s txy=%s" % (
             dt, eid, nodeID, fd, oxx, oyy, txy)
-        #print msg
         assert eid is not None
         self.fiberCurvature[eid][nodeID].append(fd)
         self.oxx[dt][eid][nodeID].append(oxx)
@@ -526,12 +533,12 @@ class ComplexPlateStress(StressObject):
         headers += ['oxx', 'oyy', 'txy']
         return headers
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         assert f is not None
         if len(self.eType) == 0:
             raise RuntimeError('The result object is empty')
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f, is_mag_phase)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase)
 
         if is_mag_phase:
             magReal = ['                                                         (MAGNITUDE/PHASE)\n \n']
@@ -607,14 +614,14 @@ class ComplexPlateStress(StressObject):
                         msg.append(out)
                 else:
                     raise NotImplementedError('eType = %r' % eType)  # CQUAD8, CTRIA6
-                msg.append(pageStamp % page_num)
+
+                msg.append(page_stamp % page_num)
                 f.write(''.join(msg))
                 msg = ['']
                 page_num += 1
-
         return page_num - 1
 
-    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if is_mag_phase:
             magReal = ['                                                         (MAGNITUDE/PHASE)\n \n']
         else:
@@ -653,13 +660,10 @@ class ComplexPlateStress(StressObject):
 
         eTypes = self.eType.values()
         dts = self.oxx.keys()
-        #print self.oxx
-        #print "dts = ",dts
         dt = dts[0]
         if 'CQUAD4' in eTypes:
             qkey = eTypes.index('CQUAD4')
             kkey = self.eType.keys()[qkey]
-            #print "qkey=%s kkey=%s" %(qkey,kkey)
             ekey = self.oxx[dt][kkey].keys()
             isBilinear = True
             quadMsg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + magReal + gridMsgTemp
@@ -710,7 +714,7 @@ class ComplexPlateStress(StressObject):
                             for eid in eids:
                                 out = self.writeF06_Quad4_BilinearTransient(dt, eid, 4, is_mag_phase, 'CEN/4')
                                 msg.append(out)
-                            msg.append(pageStamp % page_num)
+                            msg.append(page_stamp % page_num)
                             page_num += 1
                             f.write(''.join(msg))
                             msg = ['']
@@ -721,7 +725,7 @@ class ComplexPlateStress(StressObject):
                             for eid in eids:
                                 out = self.writeF06_Tri3Transient(dt, eid, 4, is_mag_phase)
                                 msg.append(out)
-                            msg.append(pageStamp % page_num)
+                            msg.append(page_stamp % page_num)
                             page_num += 1
                             f.write(''.join(msg))
                             msg = ['']
@@ -732,7 +736,7 @@ class ComplexPlateStress(StressObject):
                         for eid in eids:
                             out = self.writeF06_Tri3Transient(dt, eid, 3, is_mag_phase)
                             msg.append(out)
-                        msg.append(pageStamp % page_num)
+                        msg.append(page_stamp % page_num)
                         page_num += 1
                         f.write(''.join(msg))
                         msg = ['']
@@ -744,7 +748,7 @@ class ComplexPlateStress(StressObject):
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 3, is_mag_phase, 'CEN/3')
                             msg.append(out)
-                        msg.append(pageStamp % page_num)
+                        msg.append(page_stamp % page_num)
                         page_num += 1
                         f.write(''.join(msg))
                         msg = ['']
@@ -756,7 +760,7 @@ class ComplexPlateStress(StressObject):
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 3, is_mag_phase, 'CEN/6')
                             msg.append(out)
-                        msg.append(pageStamp % page_num)
+                        msg.append(page_stamp % page_num)
                         page_num += 1
                         f.write(''.join(msg))
                         msg = ['']
@@ -768,7 +772,7 @@ class ComplexPlateStress(StressObject):
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 8, is_mag_phase, 'CEN/8')
                             msg.append(out)
-                        msg.append(pageStamp % page_num)
+                        msg.append(page_stamp % page_num)
                         page_num += 1
                         f.write(''.join(msg))
                         msg = ['']
@@ -781,7 +785,7 @@ class ComplexPlateStress(StressObject):
                             for eid in eids:
                                 out = self.writeF06_Quad4_BilinearTransient(dt, eid, 4, is_mag_phase, 'CEN/4')
                                 msg.append(out)
-                            msg.append(pageStamp % page_num)
+                            msg.append(page_stamp % page_num)
                             page_num += 1
                             f.write(''.join(msg))
                             msg = ['']
@@ -792,7 +796,7 @@ class ComplexPlateStress(StressObject):
                             for eid in eids:
                                 out = self.writeF06_Tri3Transient(dt, eid, 4, is_mag_phase)
                                 msg.append(out)
-                            msg.append(pageStamp % page_num)
+                            msg.append(page_stamp % page_num)
                             page_num += 1
                             f.write(''.join(msg))
                             msg = ['']
@@ -801,7 +805,7 @@ class ComplexPlateStress(StressObject):
                     raise NotImplementedError('eType = %r' % eType)
                 f.write(''.join(msg))
                 msg = ['']
-
+                page_num += 1
         return page_num - 1
 
     def writeF06_Quad4_Bilinear(self, eid, n, is_mag_phase, cen):
@@ -1054,7 +1058,6 @@ class ComplexPlateStrain(StrainObject):
     def add_sort1(self, dt, eid, nodeID, curvature, exx, eyy, exy):
         msg = "eid=%s nodeID=%s curvature=%g exx=%s eyy=%s exy=%s" % (
             eid, nodeID, curvature, exx, eyy, exy)
-        #print(msg)
         #if nodeID != 'C':  # centroid
             #assert 0 < nodeID < 1000000000, 'nodeID=%s' % (nodeID)
 
@@ -1079,16 +1082,15 @@ class ComplexPlateStrain(StrainObject):
             headers.append('maxShear')
         return headers
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         assert f is not None
         if len(self.eType) == 0:
             raise RuntimeError('The result object is empty')
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f)
         raise RuntimeError('this can never happen')
 
-
-    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.isVonMises():
             vonMises = 'VON MISES'
         else:
@@ -1165,7 +1167,7 @@ class ComplexPlateStrain(StrainObject):
                             for eid in eids:
                                 out = self.writeF06_Quad4_BilinearTransient(dt, eid, 4, is_mag_phase, 'CEN/4')
                                 msg.append(out)
-                            msg.append(pageStamp % page_num)
+                            msg.append(page_stamp % page_num)
                             f.write(''.join(msg))
                             msg = ['']
                             page_num += 1
@@ -1176,7 +1178,7 @@ class ComplexPlateStrain(StrainObject):
                             for eid in eids:
                                 out = self.writeF06_Tri3Transient(dt, eid, 4, is_mag_phase)
                                 msg.append(out)
-                            msg.append(pageStamp % page_num)
+                            msg.append(page_stamp % page_num)
                             f.write(''.join(msg))
                             msg = ['']
                             page_num += 1
@@ -1187,7 +1189,7 @@ class ComplexPlateStrain(StrainObject):
                         for eid in eids:
                             out = self.writeF06_Tri3Transient(dt, eid, 3, is_mag_phase)
                             msg.append(out)
-                        msg.append(pageStamp % page_num)
+                        msg.append(page_stamp % page_num)
                         f.write(''.join(msg))
                         msg = ['']
                         page_num += 1
@@ -1198,7 +1200,7 @@ class ComplexPlateStrain(StrainObject):
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 5, is_mag_phase, 'CEN/8')
                             msg.append(out)
-                        msg.append(pageStamp % page_num)
+                        msg.append(page_stamp % page_num)
                         f.write(''.join(msg))
                         msg = ['']
                         page_num += 1
@@ -1209,7 +1211,7 @@ class ComplexPlateStrain(StrainObject):
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 3, is_mag_phase, 'CEN/3')
                             msg.append(out)
-                        msg.append(pageStamp % page_num)
+                        msg.append(page_stamp % page_num)
                         f.write(''.join(msg))
                         msg = ['']
                         page_num += 1
@@ -1220,13 +1222,12 @@ class ComplexPlateStrain(StrainObject):
                         for eid in eids:
                             out = self.writeF06_Quad4_BilinearTransient(dt, eid, 3, is_mag_phase, 'CEN/6')
                             msg.append(out)
-                        msg.append(pageStamp % page_num)
+                        msg.append(page_stamp % page_num)
                         f.write(''.join(msg))
                         msg = ['']
                         page_num += 1
                 else:
-                    raise NotImplementedError('eType = %r' %
-                                              eType)  # CQUAD8, CTRIA6
+                    raise NotImplementedError('eType = %r' % eType)  # CQUAD8, CTRIA6
         return page_num - 1
 
     def writeF06_Quad4_BilinearTransient(self, dt, eid, n, is_mag_phase, cen):

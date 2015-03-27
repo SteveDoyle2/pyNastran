@@ -8,21 +8,21 @@ class RealForceVectorArray(RealTableArray):  # table_code=2, sort_code=0, therma
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         msg = ['                                         N O N - L I N E A R - F O R C E   V E C T O R\n']
         #words += self.get_table_marker()
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient_block(words, header, pageStamp, page_num, f)
-        return self._write_f06_block(words, header, pageStamp, page_num, f)
+            return self._write_f06_transient_block(words, header, page_stamp, page_num, f)
+        return self._write_f06_block(words, header, page_stamp, page_num, f)
 
 
 class ComplexForceVectorArray(ComplexTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                       C O M P L E X   F O R C E   V E C T O R\n',]
-        return self._write_f06_transient_block(words, header, pageStamp, page_num, f, is_mag_phase)
+        return self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase)
 
 
 class RealForceVector(RealTableObject):  # table_code=12, sort_code=0, thermal=0
@@ -30,9 +30,9 @@ class RealForceVector(RealTableObject):  # table_code=12, sort_code=0, thermal=0
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f)
+            return self._write_f06_transient(header, page_stamp, page_num, f)
 
         msg = header + ['                                         N O N - L I N E A R - F O R C E   V E C T O R\n'
                         ' \n',
@@ -49,11 +49,11 @@ class RealForceVector(RealTableObject):  # table_code=12, sort_code=0, thermal=0
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
 
-        msg.append(pageStamp % page_num)
+        msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
 
-    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         msg = []
         words = ['                                         N O N - L I N E A R - F O R C E   V E C T O R\n'
                  ' \n',
@@ -75,7 +75,7 @@ class RealForceVector(RealTableObject):  # table_code=12, sort_code=0, thermal=0
                     [dx, dy, dz, rx, ry, rz] = vals2
                     msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
 
-            msg.append(pageStamp % page_num)
+            msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             msg = ['']
             page_num += 1
@@ -86,9 +86,9 @@ class ComplexForceVector(ComplexTableObject):  # table_code=12, approach_code=??
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, pageStamp, page_num, f, is_mag_phase=False)
+            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=False)
         msg = header + ['                                       C O M P L E X   F O R C E   V E C T O R\n',
                         '                                                          (REAL/IMAGINARY)\n',
                         ' \n',
@@ -120,11 +120,11 @@ class ComplexForceVector(ComplexTableObject):  # table_code=12, approach_code=??
             msg.append('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr))
             msg.append('  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % ('', '',            dxi, dyi, dzi, rxi, ryi, rzi))
 
-        msg.append(pageStamp % page_num)
+        msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
 
-    def _write_f06_transient(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                       C O M P L E X   F O R C E   V E C T O R\n',
                  '                                                          (REAL/IMAGINARY)\n',
                  ' \n',
@@ -160,7 +160,7 @@ class ComplexForceVector(ComplexTableObject):  # table_code=12, approach_code=??
                  dxi, dyi, dzi, rxi, ryi, rzi] = vals2
                 msg.append('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr))
                 msg.append('  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % ('', '',           dxi, dyi, dzi, rxi, ryi, rzi))
-            msg.append(pageStamp % page_num)
+            msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             msg = ['']
             page_num += 1

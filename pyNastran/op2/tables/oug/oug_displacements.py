@@ -68,38 +68,38 @@ class RealDisplacementArray(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                             D I S P L A C E M E N T   V E C T O R\n', ]
                  #' \n',
                  #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         #words += self.get_table_marker()
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient_block(words, header, pageStamp, page_num, f)
-        return self._write_f06_block(words, header, pageStamp, page_num, f)
+            return self._write_f06_transient_block(words, header, page_stamp, page_num, f)
+        return self._write_f06_block(words, header, page_stamp, page_num, f)
 
 
 class ComplexDisplacementArray(ComplexTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R\n']
-        return self._write_f06_transient_block(words, header, pageStamp, page_num, f, is_mag_phase)
+        return self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase)
 
 
 class RealDisplacement(RealTableObject):  # approach_code=1, thermal=0
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                             D I S P L A C E M E N T   V E C T O R\n',
                  ' \n',
                  '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         words += self.get_table_marker()
 
         if self.nonlinear_factor is not None:
-            return self._write_f06_transient_block(words, header, pageStamp, page_num, f)
-        return self._write_f06_block(words, header, pageStamp, page_num, f)
+            return self._write_f06_transient_block(words, header, page_stamp, page_num, f)
+        return self._write_f06_block(words, header, page_stamp, page_num, f)
 
     def _write_table_header(self, f, fascii):
         #get_nmarkers- [4, 0, 4]
@@ -218,6 +218,6 @@ class ComplexDisplacement(ComplexTableObject):  # approach_code=1, sort_code=0, 
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableObject.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         words = ['                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R\n']
-        return self._write_f06_transient_block(words, header, pageStamp, page_num, f, is_mag_phase)
+        return self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase)

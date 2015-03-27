@@ -6,9 +6,14 @@ from traceback import print_exc
 
 import pyNastran
 from pyNastran.f06.errors import FatalError
-from pyNastran.op2.op2 import OP2
-from pyNastran.op2.op2_geom import OP2Geom, OP2Geom_Vectorized
-from pyNastran.op2.op2_vectorized import OP2_Vectorized as OP2V
+from pyNastran.op2.op2_scalar import OP2_Scalar
+from pyNastran.op2.op2 import OP2, FatalError, SortCodeError
+
+try:
+    from pyNastran.op2.op2_geom import OP2Geom_Scalar, OP2Geom
+    is_geom = True
+except ImportError:
+    is_geom = False
 
 # we need to check the memory usage
 is_linux = None
@@ -112,7 +117,8 @@ def get_failed_files(filename):
 
 
 def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
-                   delete_f06=True, write_op2=False, is_vector=False,
+                   delete_f06=True, write_op2=False,
+                   is_vector=False, vector_stop=True,
                    debug=True, saveCases=True, skipFiles=[],
                    stopOnFailure=False, nStart=0, nStop=1000000000):
     n = ''
@@ -121,6 +127,7 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
     assert write_f06 in [True, False]
     if is_vector in [True, False]:
         is_vector = [is_vector]
+        vector_stop = [vector_stop]
 
     iSubcases = []
     failedCases = []
@@ -140,7 +147,7 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
 
             is_passed = True
             is_vector_failed = []
-            for vectori in is_vector:
+            for vectori, vector_stopi in zip(is_vector, vector_stop):
                 is_passed_i = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
                                       write_f06=write_f06, write_op2=write_op2,
                                       is_mag_phase=False,
@@ -148,8 +155,9 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
                                       delete_f06=delete_f06,
                                       iSubcases=iSubcases, debug=debug,
                                       stopOnFailure=stopOnFailure) # True/False
-                if not is_passed_i:
+                if not is_passed_i and vector_stopi:
                    is_passed = False
+                if not is_passed_i:
                    is_vector_failed.append(vectori)
             if not is_passed:
                 sys.stderr.write('**file=%s vector_failed=%s\n' % (op2file, is_vector_failed))
@@ -194,22 +202,23 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
             iSubcases = [int(iSubcases)]
     print('iSubcases = %s' % iSubcases)
 
-    #debug = True
     try:
         debug_file = None
         if binary_debug or write_op2:
             debug_file = 'debug.out'
 
+        if make_geom and not is_geom:
+            raise RuntimeError('make_geom=%s is not supported' % make_geom)
         if is_vector:
             if make_geom:
-                op2 = OP2Geom_Vectorized(debug=debug, debug_file=debug_file)
-            else:
-                op2 = OP2V(make_geom=make_geom, debug=debug, debug_file=debug_file)
-        else:
-            if make_geom:
-                op2 = OP2Geom(make_geom=make_geom, debug=debug, debug_file=debug_file)
+                op2 = OP2Geom(debug=debug, debug_file=debug_file)
             else:
                 op2 = OP2(debug=debug, debug_file=debug_file)
+        else:
+            if make_geom:
+                op2 = OP2Geom_Scalar(make_geom=make_geom, debug=debug, debug_file=debug_file)
+            else:
+                op2 = OP2_Scalar(debug=debug, debug_file=debug_file)
 
         op2.set_subcases(iSubcases)
         op2.remove_results(exclude)
@@ -223,7 +232,7 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
             #mbs.append(mb)
             print("Memory usage start: %s (KB); %.2f (MB)" % (kb, mb))
 
-        #op2.read_bdf(op2.bdfFileName,includeDir=None,xref=False)
+        #op2.read_bdf(op2.bdfFileName, includeDir=None, xref=False)
         op2.read_op2(op2FileName)
         print("---stats for %s---" % op2FileName)
         #op2.get_op2_stats()
@@ -245,20 +254,20 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
             print("Memory usage     end: %s (KB); %.2f (MB)" % (kb, mb))
 
         if write_f06:
-            (model, ext) = os.path.splitext(op2FileName)
-            op2.write_f06(model+'.test_op2.f06', is_mag_phase=is_mag_phase)
+            model, ext = os.path.splitext(op2FileName)
+            op2.write_f06(model + '.test_op2.f06', is_mag_phase=is_mag_phase)
             if delete_f06:
                 try:
-                    os.remove(model+'.test_op2.f06')
+                    os.remove(model + '.test_op2.f06')
                 except:
                     pass
 
         if write_op2:
-            (model, ext) = os.path.splitext(op2FileName)
-            op2.write_op2(model+'.test_op2.op2', is_mag_phase=is_mag_phase)
+            model, ext = os.path.splitext(op2FileName)
+            op2.write_op2(model + '.test_op2.op2', is_mag_phase=is_mag_phase)
             if delete_f06:
                 try:
-                    os.remove(model+'.test_op2.op2')
+                    os.remove(model + '.test_op2.op2')
                 except:
                     pass
 
@@ -285,23 +294,29 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
         print_exc(file=sys.stdout)
         sys.stderr.write('**file=%s\n' % op2FileName)
         sys.exit('keyboard stop...')
-    #except RuntimeError: # the op2 is bad, not my fault
-    #    isPassed = True
-    #    if stopOnFailure:
-    #        raise
-    #    else:
-    #        isPassed = True
+    except SortCodeError: # inherits from Runtime; comment this
+        isPassed = True
 
-    except IOError: # missing file
-        if stopOnFailure:
-            raise
-    except FatalError:
+    #except RuntimeError: # the op2 is bad, not my fault
+        #isPassed = True
+        #if stopOnFailure:
+            #raise
+        #else:
+            #isPassed = True
+
+    except IOError: # missing file; this block should be commented
+        #if stopOnFailure:
+            #raise
+        isPassed = True
+    except UnicodeDecodeError:  # this block should be commented
+        isPassed = True
+    except FatalError:  # this block should be commented
         if stopOnFailure:
             raise
         isPassed = True
     #except AssertionError:
     #    isPassed = True
-    #except RuntimeError: #invalid analysis code
+    #except RuntimeError: #invalid analysis code; this block should be commented
     #    isPassed = True
     except SystemExit:
         #print_exc(file=sys.stdout)
@@ -314,7 +329,7 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
     #        isPassed = True
     #except IndexError: # bad bdf
     #    isPassed = True
-    except SyntaxError: #Param Parse
+    except SyntaxError: #Param Parse; this block should be commented
         if stopOnFailure:
             raise
         isPassed = True

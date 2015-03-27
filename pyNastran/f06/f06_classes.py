@@ -10,7 +10,7 @@ class MaxDisplacement(object):
             self.translations[sid] = line[1:4]
             self.rotations[sid] = line[4:]
 
-    def write_f06(self, pageStamp='%i', pageNum=1):
+    def write_f06(self, page_stamp='%i', pageNum=1):
         msg = ['0                                                  MAXIMUM  DISPLACEMENTS',
                '  SUBCASE/',
                '  DAREA ID        T1             T2             T3             R1             R2             R3']
@@ -18,5 +18,5 @@ class MaxDisplacement(object):
             rot = self.rotations[sid]
             msg.append('0 %8i  %13.8E %13.8E %13.8E %13.8E %13.8E %13.8E' %
                        (tuple([sid] + trans + rot)))
-        msg.append(pageStamp % page_num)
+        msg.append(page_stamp % page_num)
         return '\n'.join(msg)

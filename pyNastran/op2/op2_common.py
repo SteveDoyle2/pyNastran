@@ -9,14 +9,16 @@ from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.utils import object_attributes
 
 from pyNastran.f06.f06Writer import F06Writer
-from pyNastran.op2.op2_writer import OP2Writer
 from pyNastran.op2.op2Codes import Op2Codes
 
-class OP2Common(Op2Codes, F06Writer, OP2Writer):
+
+class SortCodeError(RuntimeError):
+    pass
+
+class OP2Common(Op2Codes, F06Writer):
     def __init__(self):
         Op2Codes.__init__(self)
         F06Writer.__init__(self)
-        OP2Writer.__init__(self)
 
         #: flag for vectorization
         #: 0 - no vectorization
@@ -360,11 +362,9 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
 
     def add_data_parameter(self, data, var_name, Type, field_num,
                            applyNonlinearFactor=True, fixDeviceCode=False, add_to_dict=True):
-
         datai = data[4*(field_num-1) : 4*(field_num)]
         assert len(datai) == 4, len(datai)
         value, = unpack(Type, datai)
-        #print "%-12s = %r" % (var_name, value)
         if self.debug:
             self.binary_debug.write('  %-12s = %r\n' % (var_name, value))
         #setattr(self, var_name, value)  # set the parameter to the local namespace
@@ -818,8 +818,7 @@ class OP2Common(Op2Codes, F06Writer, OP2Writer):
         # are covered by these.  The ones that break are incredibly large.
         if self.sort_code not in [0, 1]:
             msg = 'Invalid sort_code=%s sort_code2=%s' % (self.sort_code, self.sort_code2)
-            raise RuntimeError(msg)
-
+            raise SortCodeError(msg)
         i = 2
         while sort_code > 0:
             value = sort_code % 2

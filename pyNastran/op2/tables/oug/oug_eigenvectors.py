@@ -81,7 +81,7 @@ class RealEigenvectorArray(RealTableArray):
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         #if self.nonlinear_factor is not None:
-            #return self._write_f06_transient(header, pageStamp, page_num, f)
+            #return self._write_f06_transient(header, page_stamp, page_num, f)
         # modes get added
         words = '                                         R E A L   E I G E N V E C T O R   N O . %10i\n \n' \
                 '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n'
@@ -193,7 +193,7 @@ class Eigenvector(RealTableObject):  # approach_code=2, sort_code=0, thermal=0
     def eigenvalues(self):
         return self.eigrs
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         """
         ::
 
@@ -237,7 +237,7 @@ class Eigenvector(RealTableObject):  # approach_code=2, sort_code=0, thermal=0
                 (vals2, is_all_zeros) = writeFloats13E(vals)
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
-            msg.append(pageStamp % page_num)
+            msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             msg = ['']
             page_num += 1
@@ -316,7 +316,7 @@ class RealEigenvector(ScalarObject):  # approach_code=2, sort_code=0, thermal=0
     def eigenvalues(self):
         return self.eigrs
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         """
         ::
 
@@ -346,7 +346,7 @@ class RealEigenvector(ScalarObject):  # approach_code=2, sort_code=0, thermal=0
                 (vals2, is_all_zeros) = writeFloats13E(vals)
                 [dx, dy, dz, rx, ry, rz] = vals2
                 msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dx, dy, dz, rx, ry, rz))
-            msg.append(pageStamp % page_num)
+            msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             msg = ['']
             page_num += 1
@@ -386,7 +386,7 @@ class ComplexEigenvector(ComplexTableObject):  # approach_code=2, sort_code=0, t
     def eigenvalues(self):
         return sorted(self.translations.keys())
 
-    def write_f06(self, header, pageStamp, page_num=1, f=None, is_mag_phase=False):
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         msg = []
         #print self.data_code
         hasCycle = hasattr(self, 'mode_cycle')
@@ -413,7 +413,7 @@ class ComplexEigenvector(ComplexTableObject):  # approach_code=2, sort_code=0, t
                 msg.append('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (nodeID, grid_type, dxr, dyr, dzr, rxr, ryr, rzr))
                 msg.append('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % ('', '', dxi, dyi, dzi, rxi, ryi, rzi))
 
-            msg.append(pageStamp % page_num)
+            msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             msg = ['']
             page_num += 1
