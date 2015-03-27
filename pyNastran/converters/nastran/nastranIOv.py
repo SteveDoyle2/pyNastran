@@ -82,6 +82,7 @@ class NastranIO(object):
         :param is_shown: should the mesh be shown/hidden
                          (default=None -> flip between shown/not shown)
         """
+        self.log.info('self.show_alt_actor=True/False and self.is_sub_panels=True/False may be used')
         if is_shown is None:
             is_shown = not self.show_alt_actor
 
@@ -105,7 +106,7 @@ class NastranIO(object):
         for cid, coord in sorted(iteritems(model.coords)):
             if cid == 0:
                 continue
-            if cid in self.show_cids:
+            if cid in self.show_cids:  # .. todo:: has issues in VTK 6 I think due to lack of self.grid.Update()
                 origin = coord.origin
                 beta = coord.beta()
                 Type = cid_types[coord.Type]
