@@ -214,8 +214,13 @@ class TestF06(unittest.TestCase):
         assert len(f06.displacements) == 1, len(f06.displacements)
         assert len(f06.spcForces) == 0, len(f06.spcForces) # 0 is correct
 
-        assert len(f06.solidStrain) == 0, len(f06.solidStrain)  # 1 is correct
-        assert len(f06.solidStress) == 0, len(f06.solidStress)  # 1 is correct
+        assert len(f06.ctetra_strain) == 0, len(f06.ctetra_strain)  # 1 is correct
+        assert len(f06.ctetra_stress) == 0, len(f06.ctetra_stress)  # 1 is correct
+        assert len(f06.cpenta_strain) == 0, len(f06.cpenta_strain)
+        assert len(f06.cpenta_stress) == 0, len(f06.cpenta_stress)
+        assert len(f06.chexa_strain) == 0, len(f06.chexa_strain)
+        assert len(f06.chexa_stress) == 0, len(f06.chexa_stress)
+
 
     def test_beam_modes_1(self):
         bdfname = os.path.join(model_path, 'beam_modes', 'beam_modes.dat')
@@ -277,11 +282,17 @@ class TestF06(unittest.TestCase):
             assert len(f06.spcForces) == 1, len(f06.spcForces)
 
             assert len(f06.rodForces) == 1, len(f06.rodForces)
-            assert len(f06.rodStrain) == 0, len(f06.rodStrain)  # 0 is correct
-            assert len(f06.rodStress) == 1, len(f06.rodStress)
+            assert len(f06.crod_strain) == 0, len(f06.crod_strain)  # 0 is correct
+            assert len(f06.crod_stress) == 1, len(f06.crod_stress)
 
-            assert len(f06.solidStrain) == 0, len(f06.solidStrain)  # 0 is correct
-            assert len(f06.solidStress) == 0, len(f06.solidStress)  # 0 is correct
+            # 0 is correct
+            assert len(f06.ctetra_strain) == 0, len(f06.ctetra_strain)
+            assert len(f06.ctetra_stress) == 0, len(f06.ctetra_stress)
+            assert len(f06.cpenta_strain) == 0, len(f06.cpenta_strain)
+            assert len(f06.cpenta_stress) == 0, len(f06.cpenta_stress)
+            assert len(f06.chexa_strain) == 0, len(f06.chexa_strain)
+            assert len(f06.chexa_stress) == 0, len(f06.chexa_stress)
+
 
     def test_fsi_1(self):
         bdfname = os.path.join(model_path, 'fsi', 'fsi.bdf')
@@ -321,8 +332,8 @@ class TestF06(unittest.TestCase):
         assert len(f06.gridPointForces) == 1, len(f06.gridPointForces)
 
         assert len(f06.rodForces) == 1, len(f06.rodForces)
-        assert len(f06.rodStrain) == 1, len(f06.rodStrain)
-        assert len(f06.rodStress) == 1, len(f06.rodStress)
+        assert len(f06.crod_strain) == 1, len(f06.crod_strain)
+        assert len(f06.crod_stress) == 1, len(f06.crod_stress)
 
         assert len(f06.plateForces) == 0, len(f06.plateForces)  # 0 is correct
         assert len(f06.plateForces2) == 1, len(f06.plateForces2)
@@ -338,13 +349,17 @@ class TestF06(unittest.TestCase):
         assert len(f06.cquad8_strain) == 0, len(f06.cquad8_strain)
 
         assert len(f06.beamForces) == 0, len(f06.beamForces)  # 1 is correct
-        assert len(f06.beamStrain) == 0, len(f06.beamStrain)  # 1 is correct
+        assert len(f06.cbeam_strain) == 0, len(f06.cbeam_strain)  # 1 is correct
 
-        assert len(f06.barStrain) == 1, len(f06.barStrain)
-        assert len(f06.barStress) == 1, len(f06.barStress)
+        assert len(f06.cbar_strain) == 1, len(f06.cbar_strain)
+        assert len(f06.cbar_stress) == 1, len(f06.cbar_stress)
 
-        assert len(f06.solidStrain) == 1, len(f06.solidStrain)
-        assert len(f06.solidStress) == 1, len(f06.solidStress)
+        assert len(f06.ctetra_strain) == 1, len(f06.ctetra_strain)
+        assert len(f06.ctetra_stress) == 1, len(f06.ctetra_stress)
+        assert len(f06.cpenta_strain) == 1, len(f06.cpenta_strain)
+        assert len(f06.cpenta_stress) == 1, len(f06.cpenta_stress)
+        assert len(f06.chexa_strain) == 1, len(f06.chexa_strain)
+        assert len(f06.chexa_stress) == 1, len(f06.chexa_stress)
 
     def test_solid_shell_bar_2(self):
         bdfname = os.path.join(model_path, 'sol_101_elements', 'mode_solid_shell_bar.bdf')
@@ -371,8 +386,8 @@ class TestF06(unittest.TestCase):
         assert len(f06.gridPointForces) == 0, len(f06.gridPointForces)  # 1 is correct
 
         assert len(f06.rodForces) == 1, len(f06.rodForces)
-        assert len(f06.rodStrain) == 1, len(f06.rodStrain)
-        assert len(f06.rodStress) == 1, len(f06.rodStress)
+        assert len(f06.crod_strain) == 1, len(f06.crod_strain)
+        assert len(f06.crod_stress) == 1, len(f06.crod_stress)
 
         assert len(f06.plateForces) == 0, len(f06.plateForces)  # 0 is correct
         assert len(f06.plateForces2) == 1, len(f06.plateForces2)
@@ -389,13 +404,17 @@ class TestF06(unittest.TestCase):
         assert len(f06.cquad8_strain) == 0, len(f06.cquad8_strain)
 
         assert len(f06.beamForces) == 0, len(f06.beamForces)  # 1 is correct
-        assert len(f06.beamStrain) == 0, len(f06.beamStrain)  # 1 is correct
+        assert len(f06.cbeam_strain) == 0, len(f06.cbeam_strain)  # 1 is correct
 
-        assert len(f06.barStrain) == 1, len(f06.barStrain)
-        assert len(f06.barStress) == 1, len(f06.barStress)
+        assert len(f06.cbar_strain) == 1, len(f06.cbar_strain)
+        assert len(f06.cbar_stress) == 1, len(f06.cbar_stress)
 
-        assert len(f06.solidStrain) == 1, len(f06.solidStrain)
-        assert len(f06.solidStress) == 1, len(f06.solidStress)
+        assert len(f06.ctetra_strain) == 1, len(f06.ctetra_strain)
+        assert len(f06.ctetra_stress) == 1, len(f06.ctetra_stress)
+        assert len(f06.cpenta_strain) == 1, len(f06.cpenta_strain)
+        assert len(f06.cpenta_stress) == 1, len(f06.cpenta_stress)
+        assert len(f06.chexa_strain) == 1, len(f06.chexa_strain)
+        assert len(f06.chexa_stress) == 1, len(f06.chexa_stress)
 
     def test_failure_index(self):
         bdfname = None
@@ -416,7 +435,8 @@ class TestF06(unittest.TestCase):
         assert len(f06.displacements) == 2, len(f06.displacements)
         assert len(f06.spcForces) == 2, len(f06.spcForces)
         assert len(f06.gridPointForces) == 2, len(f06.gridPointForces)
-        assert len(f06.compositePlateStress) == 2, len(f06.compositePlateStress)
+        assert len(f06.ctria3_composite_stress) == 0, len(f06.ctria3_composite_stress)
+        assert len(f06.cquad4_composite_stress) == 2, len(f06.cquad4_composite_stress)
         assert len(f06.plateForces2) == 2, len(f06.plateForces2)
         #disp = f06.displacements[isubcase]
         #frequency = .21
@@ -433,7 +453,6 @@ class TestF06(unittest.TestCase):
 
         assert len(f06.displacements) == 1, len(f06.displacements)
         assert len(f06.spcForces) == 1, len(f06.spcForces)
-        assert len(f06.plateStress) == 1, len(f06.plateStress)
 
         assert len(op2.displacements) == 1, len(op2.displacements)
         assert len(op2.spcForces) == 1, len(op2.spcForces)
@@ -444,7 +463,7 @@ class TestF06(unittest.TestCase):
         assert len(op2.ctria6_strain) == 0, len(op2.ctria6_strain)
 
         assert len(op2.cquad4_stress) == 1, len(op2.cquad4_stress)
-        assert len(op2.cquad4_strain) == 1, len(op2.cquad4_strain)
+        assert len(op2.cquad4_strain) == 0, len(op2.cquad4_strain)
         assert len(op2.cquad8_stress) == 0, len(op2.cquad8_stress)
         assert len(op2.cquad8_strain) == 0, len(op2.cquad8_strain)
 
@@ -454,7 +473,7 @@ class TestF06(unittest.TestCase):
         assert len(f06.ctria6_strain) == 0, len(f06.ctria6_strain)
 
         assert len(f06.cquad4_stress) == 1, len(f06.cquad4_stress)
-        assert len(f06.cquad4_strain) == 1, len(f06.cquad4_strain)
+        assert len(f06.cquad4_strain) == 0, len(f06.cquad4_strain)
         assert len(f06.cquad8_stress) == 0, len(f06.cquad8_stress)
         assert len(f06.cquad8_strain) == 0, len(f06.cquad8_strain)
 
@@ -540,7 +559,7 @@ class TestF06(unittest.TestCase):
         self.assertEquals(bdf.sol, 101, bdf.sol)
 
         cen = 'CEN/4'
-        for (loadcase, stress) in iteritems(f06.plateStress):
+        for (loadcase, stress) in iteritems(f06.cquad4_stress):
             #print("%3s %3s %6s %8s" % ('EID', 'NID', 'iLayer', 'VM_Stress'))
             # stress is a PlateStressObject
             if stress.isVonMises():

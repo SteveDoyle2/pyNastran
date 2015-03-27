@@ -935,6 +935,8 @@ class RealSolidStrain(StrainObject):
         """
         eMap = {'CTETRA': 5, 'CPENTA': 7, 'CHEXA': 9, 'HEXA': 9,
                 'PENTA': 7, 'TETRA': 5, }   # +1 for the centroid
+        if self._data is None:
+            return
         if self.nonlinear_factor is None:
             pack = []
             i = 0

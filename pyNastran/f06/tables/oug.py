@@ -11,11 +11,11 @@ class OUG(object):
     def _read_f06_table(self, data_types, debug=False):
         pass
     def __init__(self):
-        self.displacements = {}
-        self.temperatures = {}
-        self.eigenvectors = {}
-        self.accelerations = {}
-        self.velocities = {}
+        #self.displacements = {}
+        #self.temperatures = {}
+        #self.eigenvectors = {}
+        #self.accelerations = {}
+        #self.velocities = {}
         self.iSubcases = []
         self.i = 0
 
