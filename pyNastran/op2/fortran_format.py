@@ -356,7 +356,6 @@ class FortranFormat(object):
                     assert isinstance(n, int), self.table_name
                     datai = data[n:]
                 assert len(datai) == 0, len(datai)
-
                 #n = record_len
                 #break
             #self.goto(n)
@@ -377,6 +376,43 @@ class FortranFormat(object):
                     print('obj=%s doesnt have ntimes' % self.obj.__class__.__name__)
         else:
             raise RuntimeError(self.read_mode)
+        from pyNastran.utils import object_attributes
+        del_words = [
+            'words',
+            #'Title',
+            #'ID',
+            'analysis_code',
+            #'result_names',
+            #'labels',
+            #'dataNames',
+        ]
+        msg = ''
+        if hasattr(self, 'words'):
+            for word in self.words:
+                if word in ['???', 'Title']:
+                    continue
+                if not hasattr(self, word):
+                    continue
+                delattr(self, word)
+            self.words = []
+        if hasattr(self, 'analysis_code'):
+            del self.analysis_code
+        if hasattr(self, 'dataNames') and self.dataNames is not None:
+            print(object_attributes(self))
+            asf
+        if hasattr(self, 'data_code'):
+            del self.data_code
+
+        for word in del_words:
+            if hasattr(self, word):
+                val = getattr(self, word)
+                if isinstance(val, list) and len(val) == 0:
+                    continue
+                msg += '  %s=%s\n' % (word, val)
+        if msg:
+            print(object_attributes(self))
+            print(msg)
+        #asdf
         return n
 
     def is_valid_subcase(self):

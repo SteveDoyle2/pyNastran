@@ -734,7 +734,8 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
 
     def _process_f06(self):
         #data = [self.disp,self.SpcForces,self.stress,self.isoStress,self.barStress,self.solidStress,self.temperature]
-        data_pack = [self.solidStress]
+        data_pack = [self.ctetra_stress, self.cpenta_stress, self.chexa_stress,
+                     self.ctetra_strain, self.cpenta_strain, self.chexa_strain,]
         for data_set in data_pack:
             for key, data in iteritems(data_set):
                 data.processF06Data()
