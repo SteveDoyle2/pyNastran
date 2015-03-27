@@ -18,15 +18,11 @@ class OES(object):
         self.log = None
 
         self.iSubcases = []
-        #self.compositePlateStress = {}  # composite CTRIA3/CQUAD4
-        #self.compositePlateStrain = {}
 
         #-------------
         # not supported
         #self.celasStress = {}  # CELASi
         #self.celasStrain = {}
-        #self.beamStress = {}  # CBEAM
-        #self.beamStrain = {}
         #self.shearStress = {}  # CSHEAR
         #self.shearStrain = {}
         #self.nonlinearRodStress = {}  # CROD, CONROD, CTUBE

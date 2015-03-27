@@ -6,7 +6,8 @@ Release 0.7
  - sphinx documention on all relevant functions
    - make sure OP2/BDF classes are shown in ReadTheDocs
  - fix SetInput/SetInputData
- - 
+    - egdes are still broken
+ - test_op2 should be simplified b/c geometry doesn't work and op2 writing doesn't work
 
  Completed
  ---------

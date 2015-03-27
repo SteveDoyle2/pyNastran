@@ -7,8 +7,6 @@ class OQG(object):
     def _read_f06_table(self, data_types, debug=False):
         pass
     def __init__(self):
-        #self.spcForces = {}
-        #self.mpcForces = {}
         self.iSubcases = []
         self.i = 0
 
