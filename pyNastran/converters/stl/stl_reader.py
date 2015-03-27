@@ -236,10 +236,14 @@ class STLReader(object):
         if stop_on_failure:
             msg = 'Failed Elements: %s\n' % inan
             if len(inan) > 0:
-                for inani in inan:
+
+                for ifail, inani in enumerate(inan):
                     msg += '  eid=%s nodes=%s\n' % (inani, elements[inani, :])
                     for ni in elements[inani]:
                         msg += '    nid=%s node=%s\n' % (ni, nodes[ni, :])
+                    if ifail > 10:
+                        break
+                msg += 'Failed Elements: %s; n=%s\n' % (inan, len(inan))
                 raise RuntimeError(msg)
         else:
             inotnan = where(n!=0)[0]
@@ -481,6 +485,7 @@ class STLReader(object):
             out.write(msg)
         msg = 'endsolid\n'
         out.write(msg)
+        out.close()
 
 
     def read_ascii_stl(self, stl_filename):
