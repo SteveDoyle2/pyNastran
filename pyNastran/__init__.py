@@ -1,22 +1,4 @@
-dev = 2
-if dev == 1:
-    import os
-    import pysvn
-    import inspect
-
-    print(inspect.getfile(inspect.currentframe())) # script filename (usually with path)
-    curDir = os.path.dirname(inspect.getfile(inspect.currentframe())) # script directory
-
-    client = pysvn.Client()
-    #print(dir(client))
-    client.update(curDir)
-    revision = client.info(curDir).revision.number
-    print("revision = %s" %(revision))
-    changes = client.get_changelist(curDir)
-    print("changes = %s" %(changes))
-    #client.update('./examples/pysvn')
-elif dev == 2:
-    revision = 'dev'
+revision = 'dev'
 
 __author__  = 'Steven Doyle, Al Danials, Marcin Gasiorek'
 __email__   = 'mesheb82@gmail.com'
