@@ -5,7 +5,7 @@ import os
 import vtk
 from vtk import vtkTriangle, vtkTetra
 
-from pyNastran.converters.tetgen.tetgen_reader import TetgenReader
+from pyNastran.converters.dev.tetgen.tetgen_reader import TetgenReader
 
 
 class TetgenIO(object):
