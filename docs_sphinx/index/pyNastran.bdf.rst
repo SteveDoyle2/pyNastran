@@ -1,6 +1,8 @@
 bdf Package
 ===========
 
+This is the pyNastran.bdf.rst file.
+
 :mod:`bdf` Module
 -----------------
 

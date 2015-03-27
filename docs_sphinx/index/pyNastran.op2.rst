@@ -1,6 +1,9 @@
 op2 Package
 ===========
 
+This is the pyNastran.op2.rst file.
+
+
 :mod:`op2` Module
 -----------------
 
