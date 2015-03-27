@@ -28,7 +28,6 @@ from pyNastran.op4.op4 import OP4
 
 test_path = os.path.join(pyNastran.__path__[0], 'f06', 'test', 'tests')
 model_path = os.path.join(pyNastran.__path__[0], '..', 'models')
-#print("testpath =", testpath)
 
 class TestF06(unittest.TestCase):
     def run_model(self, bdf_name=None, f06_name=None, op2_name=None,
@@ -37,7 +36,6 @@ class TestF06(unittest.TestCase):
         if bdf_name:
             bdf = BDF(debug=False, log=None)
             if dynamic_vars is not None:
-                #print('dynamic')
                 bdf.set_dynamic_syntax(dynamic_vars)
             bdf.read_bdf(bdf_name)
             bdf.write_bdf(bdf_name+'.out', interspersed=False)
@@ -56,7 +54,7 @@ class TestF06(unittest.TestCase):
 
         if op2_name:
             op2 = OP2(debug=False)
-            op2.read_op2(op2_name)
+            op2.read_op2(op2_name, vectorized=False)
             op2.write_f06(op2_name[:-4] + '.test_op2.out')
             outputs.append(op2)
 
@@ -305,8 +303,8 @@ class TestF06(unittest.TestCase):
         assert len(f06.displacements) == 1, len(f06.displacements)
         assert len(f06.spcForces) == 1, len(f06.spcForces)
 
-        assert len(f06.bushStrain) == 0, len(f06.barStrain)  # 1 is correct
-        assert len(f06.bushStress) == 0, len(f06.barStress)  # 1 is correct
+        assert len(f06.cbush_strain) == 0, len(f06.cbush_strain)  # 1 is correct
+        assert len(f06.cbush_stress) == 0, len(f06.cbush_stress)  # 1 is correct
 
     def test_solid_shell_bar_1(self):
         bdfname = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.bdf')
@@ -328,8 +326,16 @@ class TestF06(unittest.TestCase):
 
         assert len(f06.plateForces) == 0, len(f06.plateForces)  # 0 is correct
         assert len(f06.plateForces2) == 1, len(f06.plateForces2)
-        assert len(f06.plateStress) == 1, len(f06.plateStress)
-        assert len(f06.plateStrain) == 1, len(f06.plateStrain)
+
+        assert len(f06.ctria3_stress) == 1, len(f06.ctria3_stress)
+        assert len(f06.ctria3_strain) == 1, len(f06.ctria3_strain)
+        assert len(f06.ctria6_stress) == 0, len(f06.ctria6_stress)
+        assert len(f06.ctria6_strain) == 0, len(f06.ctria6_strain)
+
+        assert len(f06.cquad4_stress) == 1, len(f06.cquad4_stress)
+        assert len(f06.cquad4_strain) == 1, len(f06.cquad4_strain)
+        assert len(f06.cquad8_stress) == 0, len(f06.cquad8_stress)
+        assert len(f06.cquad8_strain) == 0, len(f06.cquad8_strain)
 
         assert len(f06.beamForces) == 0, len(f06.beamForces)  # 1 is correct
         assert len(f06.beamStrain) == 0, len(f06.beamStrain)  # 1 is correct
@@ -370,8 +376,17 @@ class TestF06(unittest.TestCase):
 
         assert len(f06.plateForces) == 0, len(f06.plateForces)  # 0 is correct
         assert len(f06.plateForces2) == 1, len(f06.plateForces2)
-        assert len(f06.plateStress) == 1, len(f06.plateStress)
-        assert len(f06.plateStrain) == 1, len(f06.plateStrain)
+
+
+        assert len(f06.ctria3_stress) == 1, len(f06.ctria3_stress)
+        assert len(f06.ctria3_strain) == 1, len(f06.ctria3_strain)
+        assert len(f06.ctria6_stress) == 0, len(f06.ctria6_stress)
+        assert len(f06.ctria6_strain) == 0, len(f06.ctria6_strain)
+
+        assert len(f06.cquad4_stress) == 1, len(f06.cquad4_stress)
+        assert len(f06.cquad4_strain) == 1, len(f06.cquad4_strain)
+        assert len(f06.cquad8_stress) == 0, len(f06.cquad8_stress)
+        assert len(f06.cquad8_strain) == 0, len(f06.cquad8_strain)
 
         assert len(f06.beamForces) == 0, len(f06.beamForces)  # 1 is correct
         assert len(f06.beamStrain) == 0, len(f06.beamStrain)  # 1 is correct
@@ -422,7 +437,26 @@ class TestF06(unittest.TestCase):
 
         assert len(op2.displacements) == 1, len(op2.displacements)
         assert len(op2.spcForces) == 1, len(op2.spcForces)
-        assert len(op2.plateStress) == 1, len(op2.plateStress)
+
+        assert len(op2.ctria3_stress) == 0, len(op2.ctria3_stress)
+        assert len(op2.ctria3_strain) == 0, len(op2.ctria3_strain)
+        assert len(op2.ctria6_stress) == 0, len(op2.ctria6_stress)
+        assert len(op2.ctria6_strain) == 0, len(op2.ctria6_strain)
+
+        assert len(op2.cquad4_stress) == 1, len(op2.cquad4_stress)
+        assert len(op2.cquad4_strain) == 1, len(op2.cquad4_strain)
+        assert len(op2.cquad8_stress) == 0, len(op2.cquad8_stress)
+        assert len(op2.cquad8_strain) == 0, len(op2.cquad8_strain)
+
+        assert len(f06.ctria3_stress) == 0, len(f06.ctria3_stress)
+        assert len(f06.ctria3_strain) == 0, len(f06.ctria3_strain)
+        assert len(f06.ctria6_stress) == 0, len(f06.ctria6_stress)
+        assert len(f06.ctria6_strain) == 0, len(f06.ctria6_strain)
+
+        assert len(f06.cquad4_stress) == 1, len(f06.cquad4_stress)
+        assert len(f06.cquad4_strain) == 1, len(f06.cquad4_strain)
+        assert len(f06.cquad8_stress) == 0, len(f06.cquad8_stress)
+        assert len(f06.cquad8_strain) == 0, len(f06.cquad8_strain)
 
         dynamic_vars = {'t' : 42}
         with self.assertRaises(SyntaxError):
@@ -537,8 +571,11 @@ class TestF06(unittest.TestCase):
                             ovmii2 = sqrt(o1**2 - o1*o2 + o2**2 + 3*t12**2)
                             self.assertAlmostEqual(ovmii, ovmii2, places=3)
                             #print("%3s %3s %6s %8s" % (eid, nid, ilayer, ovmii2))
-        self.assertEquals(op2.plateStress[1].ovmShear[25][cen][0], 276.8023376464844)
-        self.assertEquals(f06.plateStress[1].ovmShear[25][cen][0], 276.8023)
+
+        assert len(op2.cquad4_stress.keys()) == 1, op2.cquad4_stress.keys()
+        assert len(f06.cquad4_stress.keys()) == 1, f06.cquad4_stress.keys()
+        self.assertEquals(op2.cquad4_stress[1].ovmShear[25][cen][0], 276.8023376464844)
+        self.assertEquals(f06.cquad4_stress[1].ovmShear[25][cen][0], 276.8023)
         #f06.print_stats()
         #op2.print_stats()
 
