@@ -7,11 +7,9 @@ class OEF(object):
 
     def _temperature_gradients_and_fluxes(self):
         (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
-        #print transient
         headers = self.skip(2)
         #print "headers = %s" % (headers)
         data = self._read_gradient_fluxes_table()
-        #print data
         return
         if isubcase in self.temperatureGrad:
             self.temperatureGrad[isubcase].addData(data)
