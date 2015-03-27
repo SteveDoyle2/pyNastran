@@ -343,27 +343,46 @@ class RBE2(RigidElement):
         self.gn = str(self.gn)
         self.cm = str(self.cm)
 
-    def convert_to_MPC(self, mpcID):
+    def convert_to_MPC(self, mpc_id):
         """
         .. math:: -A_i u_i + A_j u_j = 0
 
         where :math:`u_i` are the base DOFs (max=6)::
 
-          mpc sid   g1 c1 a1  g2 c2 a2
-          rbe2 eid  gn cm g1  g2 g3 g4
+         +------+------+----+----+-----+----+----+----+
+         | MPC  | sid  | g1 | c1 | a1  | g2 | c2 | a2 |
+         +------+------+----+----+-----+----+----+----+
+         | RBE2 | eid  | gn | cm | g1  | g2 | g3 | g4 |
+         +------+------+----+----+-----+----+----+----+
         """
-        #i = 0
         nCM = len(self.cm)
         Ai = nCM * len(self.Gmi) / len(self.gn)  # where nGN=1
 
-        card = ['MPC', mpcID]
-        for cm in self.cm:  # the minus sign is applied to the base node
+        card = ['MPC', mpc_id]
+        for cm in self.cm:
+            # the minus sign is applied to the base node
             card += [self.gn, cm, -Ai]
 
         for gm in self.Gmi:
             for cm in self.cm:
                 card += [gm, cm, Ai]
         return card
+
+    def convert_to_RBE3(self):
+        raise NotImplementedError()
+        eid = self.eid
+        ref_node = self.gn
+        dof = self.cm
+        wf = 1.0
+        sDof = 123  # this is probably wrong...
+        boundary_nodes = self.Gmi
+
+        # this is to get the farthest nodes for the UM card
+        boundary_nodes.sort()
+        rbe3_nodes = boundary_nodes
+
+        rbe3 = ['RBE3', eid, ref_node, dof, wf, sDof] + rbe3_nodes
+        return rbe3
 
     def write_code_aster(self):
         """

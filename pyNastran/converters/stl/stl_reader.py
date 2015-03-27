@@ -553,10 +553,12 @@ class STLReader(object):
                 #print "end of solid..."
             elif 'endsolid' in line.lower():
                 line = f.readline()
+            elif line.strip() == '':
+                line = f.readline()
             else:
                 self.log.error(line)
                 #line = f.readline()
-                raise NotImplementedError('multiple solids are not supported')
+                raise NotImplementedError('multiple solids are not supported; line=%r' % line)
                 #break
         self.infile.close()
 
