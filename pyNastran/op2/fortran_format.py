@@ -356,7 +356,6 @@ class FortranFormat(object):
                     assert isinstance(n, int), self.table_name
                     datai = data[n:]
                 assert len(datai) == 0, len(datai)
-
                 #n = record_len
                 #break
             #self.goto(n)

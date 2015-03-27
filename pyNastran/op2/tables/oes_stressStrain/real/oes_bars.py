@@ -751,8 +751,9 @@ class RealBarStrain(StrainObject):
               ]
         msg = []
         i = 0
+        ntimes = len(self.e1)
         for dt, E1s in sorted(iteritems(self.e1)):
-            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            header = _eigenvalue_header(self, header, i, ntimes, dt)
             msg += header + words
             for eid, e1s in sorted(iteritems(E1s)):
                 #eType = self.eType[eid]
