@@ -1,6 +1,6 @@
 # pylint: disable=C0103,C0111,E1101
 from __future__ import print_function
-from six import iteritems
+from six import iteritems, itervalues
 from six.moves import zip, range
 
 #VTK_TRIANGLE = 5
@@ -21,7 +21,6 @@ from six.moves import zip, range
 import os
 from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, vstack
 from numpy import searchsorted, sqrt, pi, arange, unique, allclose
-#from numpy import nan as NaN, array
 from numpy.linalg import norm
 
 import vtk
@@ -29,7 +28,9 @@ from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
                  vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
                  vtkQuadraticWedge, vtkQuadraticHexahedron)
 
-from pyNastran.bdf.bdf import (BDF, CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
+#from pyNastran import is_release
+from pyNastran.bdf.bdf import (BDF,
+                               CAERO1, CAERO3, CAERO4, CAERO5, # CAERO2,
                                CQUAD4, CQUAD8, CQUADR, CSHEAR,
                                CTRIA3, CTRIA6, CTRIAR, CTRIAX6,
                                CTETRA4, CTETRA10, CPENTA6, CPENTA15,
@@ -71,9 +72,14 @@ class NastranIO(object):
         self.iSubcaseNameMap = None
 
     def get_nastran_wildcard_geometry_results_functions(self):
+        if is_geom:
+            geom_methods = 'Nastran BDF (*.bdf; *.dat; *.nas, *.pch)'
+        else:
+            geom_methods = 'Nastran BDF (*.bdf; *.dat; *.nas, *.op2, *.pch)'
+
         data = (
             'Nastran',
-            'Nastran BDF (*.bdf; *.dat; *.nas, *.pch)', self.load_nastran_geometry,
+            geom_methods, self.load_nastran_geometry,
             'Nastran OP2 (*.op2)', self.load_nastran_results)
         return data
 
@@ -82,7 +88,8 @@ class NastranIO(object):
         :param is_shown: should the mesh be shown/hidden
                          (default=None -> flip between shown/not shown)
         """
-        self.log.info('self.show_alt_actor=True/False and self.is_sub_panels=True/False may be used')
+        msg = 'self.show_alt_actor=True/False and self.is_sub_panels=True/False may be used'
+        self.log.info(msg)
         if is_shown is None:
             is_shown = not self.show_alt_actor
 
@@ -153,8 +160,7 @@ class NastranIO(object):
             self.scalarBar.VisibilityOff()
             self.scalarBar.Modified()
 
-        fname_base, ext = os.path.splitext(bdf_filename)
-        ext = ext.lower()
+        ext = os.path.splitext(bdf_filename)[0].lower()
         punch = False
         if ext == '.pch':
             punch = True
@@ -182,7 +188,7 @@ class NastranIO(object):
         if self.is_sub_panels:
             nsub_elements_caeros = 0
             nsub_points_caeros = 0
-            for key, caero in iteritems(model.caeros):
+            for caero in itervalues(model.caeros):
                 if hasattr(caero, 'panel_points_elements'):
                     npoints, nelements = caero.get_npanel_points_elements()
                     nsub_elements_caeros += npoints
@@ -285,18 +291,18 @@ class NastranIO(object):
 
         nsprings = 0
         if 0:
-            for (eid, element) in sorted(iteritems(model.elements)):
+            for eid, element in sorted(iteritems(model.elements)):
                 if(isinstance(element, LineElement) or
                    isinstance(element, SpringElement) or
                    element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
                                     'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
                                     'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):
-                        node_ids = element.nodeIDs()
-                        if None in node_ids:
-                            nsprings += 1
+                    node_ids = element.nodeIDs()
+                    if None in node_ids:
+                        nsprings += 1
 
         points2.SetNumberOfPoints(ncaeros_points * 4 + nCONM2 + nsprings)
-        for (eid, element) in sorted(iteritems(model.caeros)):
+        for eid, element in sorted(iteritems(model.caeros)):
             if(isinstance(element, CAERO1) or isinstance(element, CAERO3) or
                isinstance(element, CAERO4) or isinstance(element, CAERO5)):
                 if self.is_sub_panels:
@@ -334,7 +340,7 @@ class NastranIO(object):
                 self.log_info("skipping %s" % element.type)
 
         sphere_size = self._get_sphere_size(dim_max)
-        for (eid, element) in sorted(iteritems(model.masses)):
+        for eid, element in sorted(iteritems(model.masses)):
             if isinstance(element, CONM2):
                 #del self.eidMap[eid]
 
@@ -844,7 +850,7 @@ class NastranIO(object):
                     scale_factors2.append(1.)
                     loads2.append(load)
 
-            eids = sorted(model.elements.keys())
+            #eids = sorted(model.elements.keys())
             nids = sorted(model.nodes.keys())
             loads = zeros((self.nNodes, 3), dtype='float32')
 
@@ -886,8 +892,7 @@ class NastranIO(object):
         #self.show_caero_mesh()
 
         print("tring to read...%s" % op2_filename)
-        fname_base, ext = os.path.splitext(op2_filename)
-        ext = ext.lower()
+        ext = os.path.splitext(op2_filename)[0].lower()
 
         if ext == '.op2':
             model = OP2(log=self.log, debug=True)
@@ -901,10 +906,7 @@ class NastranIO(object):
                         'constraint_forces', 'spcForces', 'mpcForces', 'eigenvectors',
 
                         #'gridPointForces',
-                        'stress', 'solidStress', 'plateStress', 'compositePlateStress',
-                        'barStress', 'rodStress',
-                        #'strain','solidStrain', 'plateStrain', 'compositePlateStrain',
-                        #'barStrain', 'rodStrain',
+                        #'stress',
 
                         # untested
                         'loadVectors',
@@ -913,10 +915,31 @@ class NastranIO(object):
                     ]
                 else:
                     desired_results = [
-                        'stress', 'solidStress', 'plateStress',
-                        'compositePlateStress', 'barStress', 'rodStress',
-                        #'strain','solidStrain', 'plateStrain',
-                        #'compositePlateStrain', 'barStrain', 'rodStrain',
+                        'stress',
+                        'chexa_stress', 'cpenta_stress', 'ctetra_stress',
+
+                        'ctria3_stress', 'ctria3_stress',
+                        'cquad8_stress''cquad4_stress',
+
+                        'ctria3_composite_stress', 'ctria3_composite_stress',
+                        'cquad8_composite_stress''cquad4_composite_stress',
+
+                        'cbar_stress', 'cbeam_stress',
+                        'crod_stress', 'conrod_stress', 'ctube_stress',
+                        'celas1_stress', 'celas2_stress', 'celas3_stress', 'celas4_stress',
+                        #=================================================
+                        'strain',
+                        'chexa_strain', 'cpenta_strain', 'ctetra_strein',
+
+                        'ctria3_strain', 'ctria3_strain',
+                        'cquad8_strain', 'cquad4_strain',
+
+                        'ctria3_composite_strain', 'ctria3_composite_strain',
+                        'cquad8_composite_strain', 'cquad4_composite_strain',
+
+                        'cbar_strain', 'cbeam_strain',
+                        'crod_strain', 'conrod_strain', 'ctube_strain',
+                        'celas1_strain', 'celas2_strain', 'celas3_strain', 'celas4_strain',
                     ]
                 for result in desired_results:
                     if result in all_results:
@@ -937,8 +960,7 @@ class NastranIO(object):
             raise NotImplementedError(op2_filename)
 
         #print(model.print_results())
-
-        #self.iSubcaseNameMap[self.isubcase] = [Subtitle,Label]
+        #self.iSubcaseNameMap[self.isubcase] = [Subtitle, Label]
 
         cases = {}
         subcase_ids = model.iSubcaseNameMap.keys()
@@ -1393,35 +1415,35 @@ class NastranIO(object):
         table_types = [
             # OES - tCode=5 thermal=0 s_code=0,1 (stress/strain)
             # OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
-            'celas1_stress',  # vectorized
+            'celas1_stress',
             'celas2_stress',
             'celas3_stress',
             'celas4_stress',
 
             # OES - CELAS1/CELAS2/CELAS3/CELAS4 strain
-            'celas1_strain',  # vectorized
+            'celas1_strain',
             'celas2_strain',
             'celas3_strain',
             'celas4_strain',
 
             # OES - isotropic CROD/CONROD/CTUBE stress
-            'crod_stress',  # vectorized
+            'crod_stress',
             'conrod_stress',
             'ctube_stress',
 
             # OES - isotropic CROD/CONROD/CTUBE strain
-            'crod_strain',  # vectorized
+            'crod_strain',
             'conrod_strain',
             'ctube_strain',
 
             # OES - isotropic CBAR stress
-            'barStress',
+            'cbar_stress',
             # OES - isotropic CBAR strain
-            'barStrain',
+            'cbar_strain',
             # OES - isotropic CBEAM stress
-            'beamStress',
+            'cbeam_stress',
             # OES - isotropic CBEAM strain
-            'beamStrain',
+            'cbeam_strain',
 
             # OES - isotropic CTRIA3/CQUAD4 stress
             'ctria3_stress',
@@ -1432,39 +1454,39 @@ class NastranIO(object):
             'cquad4_strain',
 
             # OES - isotropic CTETRA/CHEXA/CPENTA stress
-            'ctetra_stress',  # vectorized
+            'ctetra_stress',
             'chexa_stress',
             'cpenta_stress',
 
             # OES - isotropic CTETRA/CHEXA/CPENTA strain
-            'ctetra_strain',  # vectorized
+            'ctetra_strain',
             'chexa_strain',
             'cpenta_strain',
 
             # OES - CSHEAR stress
-            'shearStress',
+            'cshear_stress',
             # OES - CSHEAR strain
-            'shearStrain',
+            'cshear_strain',
             # OES - CEALS1 224, CELAS3 225
-            'nonlinearSpringStress',
+            'nonlinear_spring_stress',
             # OES - GAPNL 86
-            'nonlinearGapStress',
+            'nonlinear_cgap_stress',
             # OES - CBUSH 226
-            'nolinearBushStress',
+            'nolinear_cbush_stress',
         ]
 
         table_types += [
             # OES - CTRIAX6
-            'ctriaxStress',
-            'ctriaxStrain',
+            'ctriax_stress',
+            'ctriax_strain',
 
-            'bushStress',
-            'bushStrain',
-            'bush1dStressStrain',
+            'cbush_stress',
+            'cbush_strain',
+            'cbush1d_stress_strain',
 
             # OES - nonlinear CROD/CONROD/CTUBE stress
-            'nonlinearRodStress',
-            'nonlinearRodStrain',
+            'nonlinear_rod_stress',
+            'nonlinear_rod_strain',
 
             # OESNLXR - CTRIA3/CQUAD4 stress
             'nonlinearPlateStress',
@@ -1745,7 +1767,7 @@ class NastranIO(object):
             case = beams[subcase_id]
             eidsi = case.element_node[:, 0]
             ueids = unique(eidsi)
-            neids = len(ueids)
+            #neids = len(ueids)
 
             j = 0
             # sxc, sxd, sxe, sxf
@@ -1815,7 +1837,7 @@ class NastranIO(object):
             #                                         txy, angle,
             #                                         majorP, minorP, ovm]
             isElementOn[i] = 1.
-            ndt, ntotal, nresults = case.data.shape
+            ntotal = case.data.shape[1]  # (ndt, ntotal, nresults)
             if nlayers_per_element == 1:
                 j = None
             else:

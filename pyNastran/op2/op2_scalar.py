@@ -159,6 +159,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             'BOPHIG':  [self._table_passer, self._table_passer],
             'HOEF1':  [self._table_passer, self._table_passer],
             'ONRGY2':  [self._table_passer, self._table_passer],
+
+            'RSOUGV1': [self._table_passer, self._table_passer],
+            'RESOES1': [self._table_passer, self._table_passer],
+            'RESEF1' : [self._table_passer, self._table_passer],
             #=======================
             # OEF
             # element forces
@@ -631,7 +635,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                                     # ??? forces
                                     b'OQP1',
                                     # displacement/velocity/acceleration/eigenvector/temperature
-                                    b'OUG1', b'OUGV1',b'BOUGV1', b'OUPV1', b'OUGV1PAT', b'ROUGV1',
+                                    b'OUG1', b'OUGV1',b'BOUGV1', b'OUPV1', b'OUGV1PAT',
+
+                                    b'ROUGV1', b'TOUGV1', b'RSOUGV1', b'RESOES1', b'RESEF1',
                                     # applied loads
                                     b'OPG1', b'OPGV1', b'OPNL1', #b'OPG2',
 
@@ -658,7 +664,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                                     # autoskip
                                     b'MATPOOL',
                                     b'CSTM',
-                                    b'TOUGV1',
                                     b'AXIC',
                                     b'BOPHIG',
                                     b'HOEF1',
