@@ -115,7 +115,7 @@ class RealShearArray(OES_Object):
         return itot
 
     def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsortd(self.element_node[:, 0] == eid) for eid in eids])
+        #ind = ravel([searchsorted(self.element_node[:, 0] == eid) for eid in eids])
         ind = searchsorted(eids, self.element_node[:, 0])
         #ind = ind.reshape(ind.size)
         #ind.sort()

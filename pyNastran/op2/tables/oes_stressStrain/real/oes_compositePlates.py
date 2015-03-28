@@ -157,7 +157,7 @@ class RealCompositePlateArray(OES_Object):
         return itot
 
     def eid_to_element_node_index(self, eids):
-        ind = ravel([searchsortd(self.element_layer[:, 0] == eid) for eid in eids])
+        ind = ravel([searchsorted(self.element_layer[:, 0] == eid) for eid in eids])
         #ind = searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
@@ -317,9 +317,10 @@ class RealCompositePlateStress(StressObject):
                 self.add = self.add_sort1
                 self.add_new_eid = self.add_new_eid_sort1
         else:
-            assert dt is not None
-            self.add = self.addSort2
-            self.add_new_eid = self.add_new_eid_sort2
+            assert dt is not None, dt
+            raise NotImplementedError('SORT2')
+            #self.add = self.addSort2
+            #self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -412,8 +413,8 @@ class RealCompositePlateStress(StressObject):
         """all points are located at the centroid"""
         if eid in self.o11:
             return self.add(dt, eid, layer, o11, o22, t12, t1z, t2z, angle, majorP, minorP, ovm)
-        assert eid not in self.o11, msg + '\n  o11=%s eType=%s code=%s' % (
-            self.o11[eid], self.eType[eid], self.data_code)
+        assert eid not in self.o11, 'eid=%s o11=%s eType=%s code=%s' % (
+            eid, self.o11[eid], self.eType[eid], self.data_code)
 
         self.eType[eid] = eType
         self.o11[eid] = [o11]
@@ -431,7 +432,6 @@ class RealCompositePlateStress(StressObject):
     def add_new_eid_sort1(self, eType, dt, eid, layer, o11, o22, t12, t1z, t2z, angle,
                           majorP, minorP, ovm):
         """all points are located at the centroid"""
-
         if dt not in self.o11:
             self.add_new_transient(dt)
         if eid in self.o11[dt]:
@@ -656,9 +656,10 @@ class RealCompositePlateStrain(StrainObject):
                 self.add = self.add_sort1
                 self.add_new_eid = self.add_new_eid_sort1
         else:
-            assert dt is not None
-            self.add = self.addSort2
-            self.add_new_eid = self.add_new_eid_sort2
+            assert dt is not None, dt
+            raise NotImplementedError('SORT2')
+            #self.add = self.addSort2
+            #self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -749,8 +750,8 @@ class RealCompositePlateStrain(StrainObject):
         """all points are located at the centroid"""
         if eid in self.e11:
             return self.add(dt, eid, layer, e11, e22, e12, e1z, e2z, angle, majorP, minorP, evm)
-        assert eid not in self.e11
-        assert isinstance(eid, int)
+        assert eid not in self.e11, eid
+        assert isinstance(eid, int), eid
         self.eType[eid] = eType
         self.e11[eid] = [e11]
         self.e22[eid] = [e22]
@@ -769,8 +770,8 @@ class RealCompositePlateStrain(StrainObject):
         """all points are located at the centroid"""
         if dt not in self.e11:
             self.add_new_transient(dt)
-        assert eid not in self.e11[dt]
-        assert isinstance(eid, int)
+        assert eid not in self.e11[dt], eid
+        assert isinstance(eid, int), eid
 
         self.eType[eid] = eType
         self.e11[dt][eid] = [e11]

@@ -134,7 +134,7 @@ class RealRodForceArray(ScalarObject):
         return itot
 
     def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsortd(self.element == eid) for eid in eids])
+        #ind = ravel([searchsorted(self.element == eid) for eid in eids])
         ind = searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
@@ -1253,7 +1253,7 @@ class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         return itot
 
     def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsortd(self.element_node[:, 0] == eid) for eid in eids])
+        #ind = ravel([searchsorted(self.element_node[:, 0] == eid) for eid in eids])
         ind = searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
