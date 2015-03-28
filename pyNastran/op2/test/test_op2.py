@@ -205,7 +205,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
     debug_file = None
     if binary_debug or write_op2:
         debug_file = 'debug.out'
-    print('debug_file = %r' % debug_file, os.getcwd())
+    #print('debug_file = %r' % debug_file, os.getcwd())
 
     if make_geom and not is_geom:
         raise RuntimeError('make_geom=%s is not supported' % make_geom)
@@ -241,7 +241,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         if write_bdf:
             op2.write_bdf(bdf_filename)
         if write_bdf and 0:
-            op2.write_bdf('fem.bdf.out', interspersed=True)
+            op2.write_bdf('fem.test_op2.bdf', interspersed=True)
         #tableNamesF06 = parse_table_names_from_F06(op2.f06FileName)
         #tableNamesOP2 = op2.getTableNamesFromOP2()
 
@@ -350,15 +350,11 @@ def main():
     ver = str(pyNastran.__version__)
 
     msg  = "Usage:\n"
-
-    # all
-    #msg += "test_op2 [-q] [-g] [-w] [-f] [-o] [-z] [-t] [-s <sub>] OP2_FILENAME\n"
-
-    # release
     if is_release:
         msg += "test_op2 [-q] [-b] [-f] [-z] [-t] [-s <sub>]  [-x <arg>]... OP2_FILENAME\n"
     else:
         msg += "test_op2 [-q] [-b] [-g] [-w] [-f] [-o] [-z] [-t] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
+
     msg += "  test_op2 -h | --help\n"
     msg += "  test_op2 -v | --version\n"
     msg += "\n"

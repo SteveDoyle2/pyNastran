@@ -846,6 +846,7 @@ class OES(OP2Common):
                     msg += '                                 syy, syz, s2, b1, b2, b3,\n'
                     msg += '                                 szz, sxz, s3, c1, c2, c3]\n'
                     self.binary_debug.write(msg)
+
                 for i in range(nelements):
                     edata = data[n:n+16]
                     out = struct1.unpack(edata)
@@ -869,12 +870,13 @@ class OES(OP2Common):
                         if self.debug4():
                             self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (eid, grid_device, ', '.join(['%r' % di for di in out]) ))
 
-                        if grid_device == 0:
-                            grid = 'CENTER'
-                        else:
-                            #grid = (grid_device - device_code) // 10
-                            grid = grid_device
+                        #if grid_device == 0:
+                            #grid = 'CENTER'
+                        #else:
+                            ##grid = (grid_device - device_code) // 10
+                            #grid = grid_device
 
+                        grid = grid_device
                         aCos = [a1, a2, a3]
                         bCos = [b1, b2, b3]
                         cCos = [c1, c2, c3]
@@ -985,6 +987,7 @@ class OES(OP2Common):
                     return nelements * ntotal
 
                 s = Struct(b'i16f')
+                cen = 0 # CEN/4
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
@@ -996,9 +999,9 @@ class OES(OP2Common):
                     if self.debug4():
                         self.binary_debug.write('  eid=%i C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
 
-                    self.obj.add_new_eid('CQUAD4', dt, eid, 'CEN/4', fd1, sx1, sy1,
+                    self.obj.add_new_eid('CQUAD4', dt, eid, cen, fd1, sx1, sy1,
                                        txy1, angle1, major1, minor1, max_shear1)
-                    self.obj.add(dt, eid, 'CEN/4', fd2, sx2, sy2, txy2,
+                    self.obj.add(dt, eid, cen, fd2, sx2, sy2, txy2,
                                  angle2, major2, minor2, max_shear2)
                     n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 15:  # imag
@@ -1115,6 +1118,7 @@ class OES(OP2Common):
                     self.binary_debug.write('  #                        fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,]\n')
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
+                cen = 0 'CEN/3'
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = s.unpack(edata)
@@ -1126,9 +1130,9 @@ class OES(OP2Common):
                     if self.debug4():
                         self.binary_debug.write('  OES CTRIA3-74 - eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
 
-                    self.obj.add_new_eid('CTRIA3', dt, eid, 'CEN/3', fd1, sx1, sy1,
+                    self.obj.add_new_eid('CTRIA3', dt, eid, cen, fd1, sx1, sy1,
                                          txy1, angle1, major1, minor1, vm1)
-                    self.obj.add(dt, eid, 'CEN/3', fd2, sx2, sy2, txy2,
+                    self.obj.add(dt, eid, cen, fd2, sx2, sy2, txy2,
                                  angle2, major2, minor2, vm2)
                     n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 15:  # imag
@@ -1142,6 +1146,7 @@ class OES(OP2Common):
                     return nelements * self.num_wide * 4
 
                 s = Struct(b'i14f')
+                cen = 0 # CEN/3
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = s.unpack(edata)
@@ -1166,8 +1171,8 @@ class OES(OP2Common):
                         sy2 = complex(sy2r, sy2i)
                         txy1 = complex(txy1r, txy1i)
                         txy2 = complex(txy2r, txy2i)
-                    self.obj.add_new_eid('CTRIA3', dt, eid, 'CEN/3', fd1, sx1, sy1, txy1)
-                    self.obj.add(dt, eid, 'CEN/3', fd2, sx2, sy2, txy2)
+                    self.obj.add_new_eid('CTRIA3', dt, eid, cen, fd1, sx1, sy1, txy1)
+                    self.obj.add(dt, eid, cen, fd2, sx2, sy2, txy2)
                     n += ntotal
             else:
                 msg = 'num_wide=%s' % self.num_wide
@@ -1193,21 +1198,21 @@ class OES(OP2Common):
                 # 144-CQUAD4-bilinear
                 if self.element_type == 64: # CQUAD8
                     result_vector_name = 'cquad8_stress'
-                    gridC = 'CEN/8'
+                    #gridC = 'CEN/8'
                 elif self.element_type == 70:  # CTRIAR
                     result_vector_name = 'ctriar_stress'
-                    gridC = 'CEN/3'
+                    #gridC = 'CEN/3'
                 elif self.element_type == 75:  # CTRIA6
                     result_vector_name = 'ctria6_stress'
-                    gridC = 'CEN/6'
+                    #gridC = 'CEN/6'
                 elif self.element_type == 82:  # CTRIA6
                     result_vector_name = 'cquadr_stress'
-                    gridC = 'CEN/4'
+                    #gridC = 'CEN/4'
                 elif self.element_type == 144:  # CQUAD4-bilinear
                     # there's no nead to separate this with centroidal strain
                     # because you can only have one in a given OP2
                     result_vector_name = 'cquad4_stress'
-                    gridC = 'CEN/4'
+                    #gridC = 'CEN/4'
                 else:
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
@@ -1219,24 +1224,25 @@ class OES(OP2Common):
                 obj_vector_complex = ComplexPlateStrainArray
                 if self.element_type == 64: # CQUAD8
                     result_vector_name = 'cquad8_strain'
-                    gridC = 'CEN/8'
+                    #gridC = 'CEN/8'
                 elif self.element_type == 70:  # CTRIAR
                     result_vector_name = 'ctriar_strain'
-                    gridC = 'CEN/3'
+                    #gridC = 'CEN/3'
                 elif self.element_type == 75:  # CTRIA6
                     result_vector_name = 'ctria6_strain'
-                    gridC = 'CEN/6'
+                    #gridC = 'CEN/6'
                 elif self.element_type == 82: # CQUADR
                     result_vector_name = 'cquadr_strain'
-                    gridC = 'CEN/4'
+                    #gridC = 'CEN/4'
                 elif self.element_type == 144: # CQUAD4-bilinear
                     # there's no nead to separate this with centroidal strain
                     # because you can only have one in a given OP2
                     result_vector_name = 'cquad4_strain'
-                    gridC = 'CEN/4'
+                    #gridC = 'CEN/4'
                 else:
                     msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                     return self._not_implemented_or_skip(data, msg)
+            gridC = 0
             slot_vector = getattr(self, result_vector_name)
             result_name = result_vector_name
             slot = slot_vector

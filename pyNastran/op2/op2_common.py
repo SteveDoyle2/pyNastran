@@ -4,6 +4,7 @@ from six.moves import range
 import copy
 from struct import Struct, unpack
 
+from pyNastran import is_release
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.utils import object_attributes
 
@@ -719,7 +720,7 @@ class OP2Common(Op2Codes, F06Writer):
         return self.code
 
     def _not_implemented_or_skip(self, data, msg=''):
-        if isRelease:
+        if is_release:
             return len(data)
         else:
             raise NotImplementedError('table_name=%s table_code=%s %s\n%s' % (self.table_name, self.table_code, msg, self.code_information()))
