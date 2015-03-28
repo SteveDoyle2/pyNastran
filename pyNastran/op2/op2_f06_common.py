@@ -230,7 +230,11 @@ class OP2_F06_Common(object):
         self.compositePlateForces = {}
 
 
-        self.solidPressureForces = {}
+        #self.solidPressureForces = {}
+        self.chexa_pressure_force = {}
+        self.cpenta_pressure_force = {}
+        self.ctetra_pressure_force = {}
+
         self.cvisc_force = {}
 
         self.force_VU = {}
@@ -480,7 +484,9 @@ class OP2_F06_Common(object):
             'cshear_force',
             'compositePlateForces',
 
-            'solidPressureForces',
+            'chexa_pressure_force',
+            'cpenta_pressure_force',
+            'ctetra_pressure_force',
 
             'celas1_force',
             'celas2_force',

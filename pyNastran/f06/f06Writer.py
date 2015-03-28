@@ -526,7 +526,10 @@ class F06Writer(OP2_F06_Common):
             self.cbush_force,
             self.cgap_force,
             self.cvisc_force,
-            self.solidPressureForces,
+
+            self.chexa_pressure_force,
+            self.cpenta_pressure_force,
+            self.ctetra_pressure_force,
 
             #------------------------------------------
             # OES - strain
