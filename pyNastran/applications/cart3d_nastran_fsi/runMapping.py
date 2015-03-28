@@ -1,6 +1,7 @@
 import os
 import sys
-from six import  iteritems
+from six import iteritems
+from six.moves import range
 import copy
 import shutil
 from numpy import allclose
@@ -11,6 +12,7 @@ from runSpline import run_map_deflections
 from pyNastran.utils.log import get_logger
 debug = True
 log = get_logger(None, 'debug' if debug else 'info')
+
 
 def validate_inputs(inputs):
     Mach = inputs['Mach']
@@ -30,6 +32,7 @@ def validate_inputs(inputs):
     if not aero_format.lower() in ['cart3d']:
         raise RuntimeError("aero_format=%r is invalid; allowed='cart3d'")
     return True
+
 
 def load_inputs():
     basepath    = os.path.normpath(os.getcwd())
@@ -60,10 +63,9 @@ def load_inputs():
         #print key, value
     required_inputs['configpath'] = configpath
     required_inputs['workpath'] = workpath
-
-
     validate_inputs(required_inputs)
     return required_inputs
+
 
 def run_mapping():
     required_inputs = load_inputs()
@@ -166,6 +168,7 @@ def run_mapping():
     outfile.close()
     log.info('---finished runMapping.py---')
 
+
 def maxDict(dictA):
     k = dictA.keys()
     v = dictA.values()
@@ -173,6 +176,7 @@ def maxDict(dictA):
     i = v.index(max_value)
     max_key = k[i]
     return (max_key, max_value)
+
 
 def moveFile(a, b):
     assert a != b, 'a=b=True  a=%r b=%r' % (a, b)
@@ -182,6 +186,7 @@ def moveFile(a, b):
     shutil.move(a, b)
     assert os.path.exists(b), 'fileB=%r was not moved...' % b
 
+
 def copyFile(a, b):
     assert a!=b, 'a=b=True  a=%r b=%r' % (a, b)
     assert os.path.exists(a),'fileA=%r does not exist...' % a
@@ -189,6 +194,7 @@ def copyFile(a, b):
         os.remove(b)
     shutil.copyfile(a, b)
     assert os.path.exists(b), 'fileB=%r was not copied...' % b
+
 
 if __name__=='__main__':
     run_mapping()

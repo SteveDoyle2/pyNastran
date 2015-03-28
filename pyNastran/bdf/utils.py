@@ -52,7 +52,7 @@ def to_fields(card_lines, card_name):
     if '*' in line:  # large field
         if ',' in line:  # csv
             new_fields = line[:72].split(',')[:5]
-            for i in range(5-len(new_fields)):
+            for i in range(5 - len(new_fields)):
                 new_fields.append('')
         else:  # standard
             new_fields = [line[0:8], line[8:24], line[24:40], line[40:56],
@@ -232,15 +232,15 @@ def parse_patran_syntax(node_sets):
             ssnode = snode.split(':')
             if len(ssnode) == 2:
                 nmin, nmax = int(ssnode[0]), int(ssnode[1])
-                new_set = list(range(nmin, nmax+1))
+                new_set = list(range(nmin, nmax + 1))
             elif len(ssnode) == 3:
                 nmin, nmax, delta = int(ssnode[0]), int(ssnode[1]), int(ssnode[2])
 
                 nmin, nmax, delta = int(ssnode[0]), int(ssnode[1]), int(ssnode[2])
                 if delta > 0:
-                    new_set = list(range(nmin, nmax+1, delta))
+                    new_set = list(range(nmin, nmax + 1, delta))
                 else:
-                    new_set = list(range(nmax, nmin+1, -delta))
+                    new_set = list(range(nmax, nmin + 1, -delta))
             else:
                 raise NotImplementedError(snode)
             nodes += new_set
@@ -278,13 +278,13 @@ def parse_patran_syntax_dict(node_sets):
             ssnode = snode.split(':')
             if len(ssnode) == 2:
                 nmin, nmax = int(ssnode[0]), int(ssnode[1])
-                new_set = list(range(nmin, nmax+1))
+                new_set = list(range(nmin, nmax + 1))
             elif len(ssnode) == 3:
                 nmin, nmax, delta = int(ssnode[0]), int(ssnode[1]), int(ssnode[2])
                 if delta > 0:
-                    new_set = list(range(nmin, nmax+1, delta))
+                    new_set = list(range(nmin, nmax + 1, delta))
                 else:
-                    new_set = list(range(nmax, nmin+1, -delta))
+                    new_set = list(range(nmax, nmin + 1, -delta))
             else:
                 raise NotImplementedError(snode)
             if key is None:

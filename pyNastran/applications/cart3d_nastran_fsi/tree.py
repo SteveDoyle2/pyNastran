@@ -1,4 +1,5 @@
-from numpy import array,argsort
+from six.moves import range
+from numpy import array, argsort
 from numpy.linalg import norm
 from mathFunctions import distance
 
