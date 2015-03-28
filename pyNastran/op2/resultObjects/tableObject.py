@@ -96,6 +96,7 @@ class TableArray(ScalarObject):  # displacement style table
         #print(msg)
         #assert node_id == 1575, msg
         assert -1 < node_id < 1000000000, msg
+        assert isinstance(node_id, int), node_id
         #assert isinstance(nodeID, int), msg
         #assert nodeID not in self.translations[self.dt],'displacementObject - transient failure'
 

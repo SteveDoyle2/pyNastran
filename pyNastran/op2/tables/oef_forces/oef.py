@@ -1,13 +1,14 @@
-#pylint: disable=C0111,C0301,C0326,C0103
+#pylint: disable=C0111,C0301,C0103
+from __future__ import print_function
 from six.moves import range
 from struct import Struct
 
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_common import OP2Common
 
-from pyNastran.op2.tables.oef_forces.oef_thermalObjects import (HeatFlux_CHBDYx, HeatFlux_2D_3D, HeatFlux_1D,
-                                 HeatFlux_VU, HeatFlux_VUBEAM, HeatFlux_VU_3D,
-                                 HeatFlux_CONV)
+from pyNastran.op2.tables.oef_forces.oef_thermalObjects import (
+    HeatFlux_CHBDYx, HeatFlux_2D_3D, HeatFlux_1D, HeatFlux_VU,
+    HeatFlux_VUBEAM, HeatFlux_VU_3D, HeatFlux_CONV)
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
     RealRodForce, RealRodForceArray,
     RealCBeamForce, RealCShearForce,
@@ -149,24 +150,25 @@ class OEF(OP2Common):
         return (real, imag)
 
     def _read_oef1_3(self, data):
-        self.words = ['aCode',       'tCode',    'element_type', 'isubcase',
-                 '???',         '???',      '???',          '???',
-                 'format_code', 'num_wide', 'o_code',       '???',
-                 '???',         '???',      '???',          '???',
-                 '???',         '???',      '???',          '???',
-                 '???',         '???',      '???',          '???',
-                 '???', 'Title', 'subtitle', 'label']
+        self.words = [
+            'aCode', 'tCode', 'element_type', 'isubcase',
+            '???', '???', '???', '???',
+            'format_code', 'num_wide', 'o_code', '???',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', 'Title', 'subtitle', 'label']
 
         self.parse_approach_code(data)
 
         #: element type
-        self.element_type = self.add_data_parameter( data, 'element_type', 'i', 3, False)
+        self.element_type = self.add_data_parameter(data, 'element_type', 'i', 3, False)
 
         # dynamic load set ID/random code
         #self.dLoadID = self.add_data_parameter(data, 'dLoadID', 'i', 8, False)
 
         #: format code
-        self.format_code = self.add_data_parameter( data, 'format_code', 'i', 9, False)
+        self.format_code = self.add_data_parameter(data, 'format_code', 'i', 9, False)
 
         #: number of words per entry in record
         #: .. note: is this needed for this table ???
@@ -214,7 +216,7 @@ class OEF(OP2Common):
             #: load set ID number
             self.loadID = self.add_data_parameter(data, 'loadID', 'i', 5)
             #: real eigenvalue
-            self.eigr = self.add_data_parameter( data, 'eigr', 'f', 6, False)
+            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
             self.dataNames = self.apply_data_code_value('dataNames', ['loadID', 'eigr'])
         elif self.analysis_code == 9:  # complex eigenvalues
             #: mode number
@@ -565,8 +567,6 @@ class OEF(OP2Common):
             #1-CROD
             #3-CTUBE
             #10-CONROD
-            result_name = 'rodForces'
-            slot = self.rodForces
             obj_real = RealRodForce
             obj_complex = ComplexRodForce
 
@@ -584,6 +584,8 @@ class OEF(OP2Common):
             else:
                 msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                 return self._not_implemented_or_skip(data, msg)
+            result_name = result_vector_name
+            slot = slot_vector
 
             if self.format_code == 1 and self.num_wide == 3: # real
                 ntotal = 12 # 3 * 4
@@ -607,7 +609,7 @@ class OEF(OP2Common):
                     n += ntotal
 
             elif self.format_code in [2, 3] and self.num_wide == 5: # imag
-                self.create_transient_object(self.rodForces, ComplexRodForce)
+                self.create_transient_object(slot, ComplexRodForce)
 
                 s = Struct(b'i4f')
                 ntotal = 20 # 5*4
@@ -629,24 +631,22 @@ class OEF(OP2Common):
                     #print "%s" % (self.get_element_type(self.element_type)), data_in
                     self.obj.add(dt, data_in)
                     n += ntotal
-                #print self.rodForces
 
             else:
                 msg = 'num_wide=%s' % self.num_wide
                 return self._not_implemented_or_skip(data, msg)
-            #print self.rodForces
 
         elif self.element_type in [2]:  # cbeam
             #2-CBEAM
             if self.read_mode == 1:
                 return len(data)
 
-            result_name = 'beamForces'
+            result_name = 'cbeam_force'
             if result_name not in self._saved_results:
                 return len(data)
             self._found_results.add(result_name)
             if self.format_code == 1 and self.num_wide == 9:  # real centroid ???
-                self.create_transient_object(self.beamForces, RealCBeamForce)
+                self.create_transient_object(self.cbeam_force, RealCBeamForce)
                 s = Struct(b'i8f')  # 36
                 ntotal = 36
                 nelements = len(data) // ntotal
@@ -660,7 +660,7 @@ class OEF(OP2Common):
                     n += 36
 
             elif self.format_code == 1 and self.num_wide == 100:  # real
-                self.create_transient_object(self.beamForces, RealCBeamForce)
+                self.create_transient_object(self.cbeam_force, RealCBeamForce)
                 s1 = Struct(b'i')
                 s2 = Struct(b'i8f')  # 36
 
@@ -686,7 +686,7 @@ class OEF(OP2Common):
                             self.obj.add(dt, data_in)
                         n += 36
             elif self.format_code in [2, 3] and self.num_wide == 177: # imag
-                self.create_transient_object(self.beamForces, ComplexCBeamForce)
+                self.create_transient_object(self.cbeam_force, ComplexCBeamForce)
                 s1 = Struct(b'i')
                 s2 = Struct(b'i15f')
                 ntotal = 708  # (16*11+1)*4 = 177*4
@@ -702,8 +702,9 @@ class OEF(OP2Common):
                         n += 64
 
                         out = s2.unpack(edata)
-                        (nid, sd, bm1r, bm2r, ts1r, ts2r, afr, ttrqr, wtrqr,
-                                  bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi) = out
+                        (nid, sd,
+                         bm1r, bm2r, ts1r, ts2r, afr, ttrqr, wtrqr,
+                         bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi) = out
 
                         if is_magnitude_phase:
                             bm1 = polar_to_real_imag(bm1r, bm1i)
@@ -729,7 +730,7 @@ class OEF(OP2Common):
                             self.obj.add_new_element(dt, data_in)
                         elif sd > 0.:
                             data_in = [eid, nid, sd, bm1, bm2,
-                                      ts1, ts2, af, ttrq, wtrq]
+                                       ts1, ts2, af, ttrq, wtrq]
                             #print "%s cOld   " % (self.get_element_type(self.element_type)), data_in
                             self.obj.add(dt, data_in)
             else:
@@ -750,20 +751,51 @@ class OEF(OP2Common):
             # 21-CDAMP2
             # 22-CDAMP3
             # 23-CDAMP4
+            if self.element_type == 11:
+                slot = self.celas1_force
+                real_class_obj = RealSpringForce
+                complex_class_obj = ComplexSpringForce
+            elif self.element_type == 12:
+                slot = self.celas1_force
+                real_class_obj = RealSpringForce
+                complex_class_obj = ComplexSpringForce
+            elif self.element_type == 13:
+                slot = self.celas3_force
+                real_class_obj = RealSpringForce
+                complex_class_obj = ComplexSpringForce
+            elif self.element_type == 14:
+                slot = self.celas4_force
+                real_class_obj = RealSpringForce
+                complex_class_obj = ComplexSpringForce
+
+            elif self.element_type == 20:
+                slot = self.cdamp1_force
+                real_class_obj = RealDamperForce
+                complex_class_obj = ComplexDamperForce
+            elif self.element_type == 21:
+                slot = self.cdamp2_force
+                real_class_obj = RealDamperForce
+                complex_class_obj = ComplexDamperForce
+            elif self.element_type == 22:
+                slot = self.cdamp3_force
+                real_class_obj = RealDamperForce
+                complex_class_obj = ComplexDamperForce
+            elif self.element_type == 23:
+                slot = self.cdamp4_force
+                real_class_obj = RealDamperForce
+                complex_class_obj = ComplexDamperForce
+            else:
+                msg = self.element_type
+                return self._not_implemented_or_skip(data, msg)
+
             if self.format_code == 1 and self.num_wide == 2:  # real
-                if self.element_type in [11, 12, 13, 14]:
-                    self.create_transient_object(self.springForces, RealSpringForce)
-                elif self.element_type in [20, 21, 22, 23]:
-                    self.create_transient_object(self.damperForces, RealDamperForce)
-                else:
-                    msg = self.element_type
-                    return self._not_implemented_or_skip(data, msg)
+                self.create_transient_object(slot, real_class_obj)
 
                 s = Struct(b'if')  # 2
                 ntotal = 8  # 2*4
                 nelements = len(data) // ntotal
                 for i in range(nelements):
-                    edata = data[n:n+8]
+                    edata = data[n:n + 8]
 
                     out = s.unpack(edata)
                     if self.debug4():
@@ -776,20 +808,14 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
                     n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 3:  # imag
-                if self.element_type in [11, 12, 13, 14]:
-                    self.create_transient_object(self.springForces, ComplexSpringForce)
-                elif self.element_type in [20, 21, 22, 23]:
-                    self.create_transient_object(self.damperForces, ComplexDamperForce)
-                else:
-                    msg = self.element_type
-                    return self._not_implemented_or_skip(data, msg)
+                self.create_transient_object(slot, complex_class_obj)
 
                 s = Struct(b'i2f')
                 ntotal = 12  # 3*4
 
                 nelements = len(data) // ntotal
                 for i in range(nelements):
-                    edata = data[n:n+12]
+                    edata = data[n:n + 12]
                     out = s.unpack(edata)
                     (eid_device, force_real, force_imag) = out
                     eid = (eid_device - self.device_code) // 10
@@ -807,13 +833,12 @@ class OEF(OP2Common):
             else:
                 msg = self.element_type
                 return self._not_implemented_or_skip(data, msg)
-            #print self.springForces
 
         elif self.element_type in [24]:  # CVISC
             if self.read_mode == 1:
                 return len(data)
             if self.format_code == 1 and self.num_wide == 3: # real
-                self.create_transient_object(self.viscForces, RealViscForce)
+                self.create_transient_object(self.cvisc_force, RealViscForce)
                 s = Struct(b'iff')
                 ntotal = 12  # 3*4
                 nelements = len(data) // 12
@@ -832,7 +857,7 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
                     n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 5: # complex
-                self.create_transient_object(self.viscForces, ComplexViscForce)
+                self.create_transient_object(self.cvisc_force, ComplexViscForce)
                 s = Struct(b'i4f')  # 5
                 ntotal = 20  # 5*4
                 nelements = len(data) // ntotal
@@ -865,7 +890,7 @@ class OEF(OP2Common):
             if self.read_mode == 1:
                 return len(data)
             if self.format_code == 1 and self.num_wide == 9: # real
-                self.create_transient_object(self.barForces, RealCBarForce)
+                self.create_transient_object(self.cbar_force, RealCBarForce)
                 s = Struct(b'i8f')  # 9
                 ntotal = 36  # 9*4
                 nelements = len(data) // ntotal
@@ -884,7 +909,7 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
                     n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 17: # imag
-                self.create_transient_object(self.barForces, ComplexCBarForce)
+                self.create_transient_object(self.cbar_force, ComplexCBarForce)
                 s = Struct(b'i16f')
                 ntotal = 68  # 17*4
                 nelements = len(data) // ntotal
@@ -892,8 +917,9 @@ class OEF(OP2Common):
                     edata = data[n:n+68]
 
                     out = s.unpack(edata)
-                    (eid_device, bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr,
-                                 bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi) = out
+                    (eid_device,
+                     bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr,
+                     bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi) = out
                     eid = (eid_device - self.device_code) // 10
 
                     if is_magnitude_phase:
@@ -930,7 +956,7 @@ class OEF(OP2Common):
             if self.read_mode == 1:
                 return len(data)
             if self.format_code == 1 and self.num_wide == 8:  # real
-                self.create_transient_object(self.bar100Forces, RealCBar100Force)
+                self.create_transient_object(self.cbar100_force, RealCBar100Force)
 
                 s = Struct(b'i7f')
                 ntotal = 32  # 8*4
@@ -1014,8 +1040,9 @@ class OEF(OP2Common):
                 for i in range(nelements):
                     edata = data[n:n+68]
                     out = s.unpack(edata)
-                    (eid_device, mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
-                                 mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
+                    (eid_device,
+                     mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
+                     mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
                     eid = (eid_device - self.device_code) // 10
                     assert eid > 0
                     if self.debug4():
@@ -1148,8 +1175,9 @@ class OEF(OP2Common):
                     n += 76
 
                     out = s1.unpack(edata)
-                    (eid_device, term, nid, mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
-                                            mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
+                    (eid_device, term, nid,
+                     mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
+                     mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
                     #term = 'CEN\'
 
                     eid = (eid_device - self.device_code) // 10
@@ -1180,8 +1208,9 @@ class OEF(OP2Common):
                         edata = data[n:n+68]
                         n += 68
                         out = s2.unpack(edata)
-                        (nid, mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
-                              mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
+                        (nid,
+                         mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
+                         mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
                         if is_magnitude_phase:
                             mx = polar_to_real_imag(mxr, mxi)
                             my = polar_to_real_imag(myr, myi)
@@ -1276,10 +1305,10 @@ class OEF(OP2Common):
             # 53-CTRIAX6
             if self.read_mode == 1:
                 return len(data)
-            self._found_results.add('ctriaxForce')
+            self._found_results.add('ctriax_force')
             if self.format_code == 1 and self.num_wide == 0:  # real
                 pass
-                #self.create_transient_object(self.ctriaxForce, RealCTriaxForce)  # undefined
+                #self.create_transient_object(self.ctriax_force, RealCTriaxForce)  # undefined
             else:
                 msg = 'num_wide=%s' % self.num_wide
                 return self._not_implemented_or_skip(data, msg)
@@ -1288,9 +1317,9 @@ class OEF(OP2Common):
             # 4-CSHEAR
             if self.read_mode == 1:
                 return len(data)
-            self._found_results.add('shearForces')
+            self._found_results.add('shear_force')
             if self.format_code == 1 and self.num_wide == 17:  # real
-                self.create_transient_object(self.shearForces, RealCShearForce)
+                self.create_transient_object(self.cshear_force, RealCShearForce)
                 s = Struct(b'i16f')
                 ntotal = 68  # 17*4
                 nelements = len(data) // 68
@@ -1300,18 +1329,20 @@ class OEF(OP2Common):
                     out = s.unpack(edata)
                     if self.debug4():
                         self.binary_debug.write('OEF_Shear - %s\n' % (str(out)))
-                    (eid_device, f41, f21, f12, f32, f23, f43, f34, f14, kf1,
-                                 s12, kf2, s23, kf3, s34, kf4, s41) = out
+                    (eid_device,
+                     f41, f21, f12, f32, f23, f43, f34, f14, kf1,
+                     s12, kf2, s23, kf3, s34, kf4, s41) = out
                     eid = (eid_device - self.device_code) // 10
 
-                    data_in = [eid, f41, f21, f12, f32, f23, f43, f34,
+                    data_in = [eid,
+                               f41, f21, f12, f32, f23, f43, f34,
                                f14, kf1, s12, kf2, s23, kf3, s34, kf4, s41]
                     #print "%s" % (self.get_element_type(self.element_type)), data_in
                     self.obj.add(dt, data_in)
                     n += ntotal
 
             elif self.format_code in [2, 3] and self.num_wide == 33:  # imag
-                self.create_transient_object(self.shearForces, ComplexCShearForce)
+                self.create_transient_object(self.cshear_force, ComplexCShearForce)
                 s = Struct(b'i32f')
                 ntotal = 132  # 33*4
                 nelements = len(data) // ntotal
@@ -1361,10 +1392,9 @@ class OEF(OP2Common):
                         s41 = complex(s41r, s41i)
 
                     eid = (eid_device - self.device_code) // 10
-                    #print "eType=%s" % (eType)
-
-                    data_in = [eid, f41, f21, f12, f32, f23, f43, f34, f14,
-                                    kf1, s12, kf2, s23, kf3, s34, kf4, s41]
+                    data_in = [eid,
+                               f41, f21, f12, f32, f23, f43, f34, f14,
+                               kf1, s12, kf2, s23, kf3, s34, kf4, s41]
                     #print "%s" %(self.get_element_type(self.element_type)), data_in
                     self.obj.add(dt, data_in)
             else:
@@ -1376,9 +1406,9 @@ class OEF(OP2Common):
             if self.read_mode == 1:
                 return len(data)
 
-            self._found_results.add('coneAxForces')
+            self._found_results.add('coneax_force')
             if self.format_code == 1 and self.num_wide == 7:  # real
-                self.create_transient_object(self.coneAxForces, RealConeAxForce)
+                self.create_transient_object(self.coneax_force, RealConeAxForce)
                 ntotal = 28  # 7*4
                 s = Struct(b'i6f')
                 nelements = len(data) // ntotal
@@ -1404,9 +1434,9 @@ class OEF(OP2Common):
             # 38-GAP
             if self.read_mode == 1:
                 return len(data)
-            self._found_results.add('gapForces')
+            self._found_results.add('cgap_force')
             if self.format_code == 1 and self.num_wide == 9:  # real
-                self.create_transient_object(self.gapForces, RealCGapForce)
+                self.create_transient_object(self.cgap_force, RealCGapForce)
                 s = Struct(b'i8f')
                 ntotal = 36 # 9*4
                 nelements = len(data) // ntotal
@@ -1432,9 +1462,9 @@ class OEF(OP2Common):
             # 69-CBEND
             if self.read_mode == 1:
                 return len(data)
-            self._found_results.add('bendForces')
+            self._found_results.add('cbend_force')
             if self.format_code == 1 and self.num_wide == 15:  # real
-                self.create_transient_object(self.bendForces, RealBendForce)
+                self.create_transient_object(self.cbend_force, RealBendForce)
                 s = Struct(b'ii13f')
 
                 ntotal = 60  # 15*4
@@ -1445,19 +1475,19 @@ class OEF(OP2Common):
                     out = s.unpack(edata)
                     if self.debug4():
                         self.binary_debug.write('OEF_BEND-69 - %s\n' % (str(out)))
-                    (eid_device, nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
-                                 nidB, bm1B, bm2B, ts1B, ts2B, afB, trqB) = out
+                    (eid_device,
+                     nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
+                     nidB, bm1B, bm2B, ts1B, ts2B, afB, trqB) = out
                     eid = (eid_device - self.device_code) // 10
-                    #print "eType=%s" % (eType)
-
-                    data_in = [eid, nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
-                                    nidB, bm1B, bm2B, ts1B, ts2B, afB, trqB]
+                    data_in = [eid,
+                               nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
+                               nidB, bm1B, bm2B, ts1B, ts2B, afB, trqB]
                     #print "%s" %(self.get_element_type(self.element_type)), data_in
                     #eid = self.obj.add_new_eid(out)
                     self.obj.add(dt, data_in)
                     n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 27:  # imag
-                self.create_transient_object(self.bendForces, ComplexBendForce)
+                self.create_transient_object(self.cbend_force, ComplexBendForce)
                 s = Struct(b'ii25f')
 
                 ntotal = 108  # 27*4
@@ -1583,9 +1613,9 @@ class OEF(OP2Common):
             # 100-BARS
             if self.read_mode == 1:
                 return len(data)
-            self._found_results.add('bar100Forces')
+            self._found_results.add('cbar100_force')
             if self.format_code == 1 and self.num_wide == 8:
-                self.create_transient_object(self.bar100Forces, RealCBar100Force)
+                self.create_transient_object(self.cbar100_force, RealCBar100Force)
                 format1 = bytes(b'i7f')
 
                 s = Struct(format1)
@@ -1609,9 +1639,9 @@ class OEF(OP2Common):
                 return self._not_implemented_or_skip(data, msg)
         elif self.element_type in [102]:  # cbush
             # 102-CBUSH
-            self._found_results.add('bushForces')
+            self._found_results.add('cbush_force')
             if self.format_code == 1 and self.num_wide == 7:  # real
-                self.create_transient_object(self.bushForces, RealCBushForce)
+                self.create_transient_object(self.cbush_force, RealCBushForce)
                 s = Struct(b'i6f')
                 ntotal = 28 # 7*4
                 nelements = len(data) // ntotal
@@ -1628,7 +1658,7 @@ class OEF(OP2Common):
                     self.obj.add(dt, data_in)
                     n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 13:  # imag
-                self.create_transient_object(self.bushForces, ComplexCBushForce)
+                self.create_transient_object(self.cbush_force, ComplexCBushForce)
                 s = Struct(b'i12f')
 
                 ntotal = 52  # 13*4
@@ -1637,8 +1667,9 @@ class OEF(OP2Common):
                     edata = data[n:n+52]
 
                     out = s.unpack(edata)
-                    (eid_device, fxr, fyr, fzr, mxr, myr, mzr,
-                                 fxi, fyi, fzi, mxi, myi, mzi) = out
+                    (eid_device,
+                     fxr, fyr, fzr, mxr, myr, mzr,
+                     fxi, fyi, fzi, mxi, myi, mzi) = out
                     eid = (eid_device - self.device_code) // 10
                     assert eid > 0, eid
                     #print "eType=%s" % (eType)
@@ -1719,7 +1750,7 @@ class OEF(OP2Common):
                         if self.debug4():
                             self.binary_debug.write('%s\n' % (str(out)))
                         (vugrid, mfx, mfy, mfxy, a, b, c, bmx, bmy,
-                            bmxy, syz, szx, d) = out
+                         bmxy, syz, szx, d) = out
                         out2 = (vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx)
                         forces.append(out2)
                     dataIn.append(forces)

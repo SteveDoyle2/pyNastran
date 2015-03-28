@@ -1018,6 +1018,7 @@ class OES(OP2Common):
 
                 ntotal = 4 * (15 * (nnodes + 1))
                 nelements = len(data) // ntotal
+                cen = 0 # 'CEN/4'
                 for i in range(nelements):
                     edata = data[n:n+60]  # 4*15=60
                     n += 60
@@ -1044,8 +1045,8 @@ class OES(OP2Common):
                         txy1 = complex(txy1r, txy1i)
                         txy2 = complex(txy2r, txy2i)
 
-                    self.obj.add_new_eid('CQUAD4', dt, eid, 'CEN/4', fd1, sx1, sy1, txy1)
-                    self.obj.add(dt, eid, 'CEN/4', fd2, sx2, sy2, txy2)
+                    self.obj.add_new_eid('CQUAD4', dt, eid, cen, fd1, sx1, sy1, txy1)
+                    self.obj.add(dt, eid, cen, fd2, sx2, sy2, txy2)
 
                     for node_id in range(nnodes):  # nodes pts
                         edata = data[n:n+60]  # 4*15=60
@@ -1118,7 +1119,7 @@ class OES(OP2Common):
                     self.binary_debug.write('  #                        fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,]\n')
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                cen = 0 'CEN/3'
+                cen = 0 # 'CEN/3'
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = s.unpack(edata)
@@ -1622,15 +1623,15 @@ class OES(OP2Common):
             if self.read_mode == 1:
                 return len(data)
             if self.isStress():
-                result_name = 'ctriaxStress'
+                result_name = 'ctriax_stress'
             else:
-                result_name = 'ctriaxStrain'
+                result_name = 'ctriax_strain'
             self._found_results.add(result_name)
             if self.format_code == 1 and self.num_wide == 33: # real
                 if self.isStress():
-                    self.create_transient_object(self.ctriaxStress, RealTriaxStress)
+                    self.create_transient_object(self.ctriax_stress, RealTriaxStress)
                 else:
-                    self.create_transient_object(self.ctriaxStrain, RealTriaxStrain)
+                    self.create_transient_object(self.ctriax_strain, RealTriaxStrain)
 
                 ntotal = 132  # (1+8*4)*4 = 33*4 = 132
                 nelements = len(data) // ntotal
@@ -1659,10 +1660,10 @@ class OES(OP2Common):
                 #return self._not_implemented_or_skip(data, msg)
 
                 #if self.isStress():
-                    #self.create_transient_object(self.ctriaxStress, ComplexTriaxStress)  # undefined
+                    #self.create_transient_object(self.ctriax_stress, ComplexTriaxStress)  # undefined
                     #raise NotImplementedError('ComplexTriaxStress')
                 #else:
-                    #self.create_transient_object(self.ctriaxStrain, ComplexTriaxStrain)  # undefined
+                    #self.create_transient_object(self.ctriax_strain, ComplexTriaxStrain)  # undefined
                     #raise NotImplementedError('ComplexTriaxStrain')
                 s1 = Struct(b'ii8f')
                 s2 = Struct(b'i8f')
@@ -1956,15 +1957,15 @@ class OES(OP2Common):
             if self.read_mode == 1:
                 return len(data)
             if self.isStress():
-                result_name = 'nonlinearGapStress'
+                result_name = 'nonlinear_cgap_stress'
             else:
-                result_name = 'nonlinearGapStrain'
+                result_name = 'nonlinear_cgap_strain'
             self._found_results.add(result_name)
             if self.format_code == 1 and self.num_wide == 11:  # real?
                 if self.isStress():
-                    self.create_transient_object(self.nonlinearGapStress, NonlinearGapStress)
+                    self.create_transient_object(self.nonlinear_cgap_stress, NonlinearGapStress)
                 else:
-                    #self.create_transient_object(self.nonlinearGapStrain, NonlinearGapStrain)  # undefined
+                    #self.create_transient_object(self.nonlinear_cgap_strain, NonlinearGapStrain)  # undefined
                     raise NotImplementedError('NonlinearGapStrain')
                 ntotal = 44  # 4*11
                 s = Struct(b'i8f4s4s')

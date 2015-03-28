@@ -590,15 +590,13 @@ class RealSolidStress(StressObject):
         #self.cCos[dt][eid] = {node_id : cCos}
         #self.pressure[dt][eid] = {node_id : pressure}
         self.ovmShear[dt][eid] = {node_id : ovm}
-        if node_id == 0:
-            msg = "*eid=%s node_id=%s vm=%g" % (eid, node_id, ovm)
-            #print msg
-            raise ValueError(msg)
+        #if node_id == 0:
+            #msg = "eid=%s node_id=%s vm=%g" % (eid, node_id, ovm)
+            #raise RuntimeError(msg)
 
     def add_node(self, dt, eid, inode, node_id, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
         assert isinstance(node_id, int), node_id
         #msg = "eid=%s node_id=%s vm=%g" % (eid, node_id, ovm)
-        #print msg
         self.oxx[eid][node_id] = oxx
         self.oyy[eid][node_id] = oyy
         self.ozz[eid][node_id] = ozz
@@ -617,7 +615,7 @@ class RealSolidStress(StressObject):
         #self.pressure[eid][node_id] = pressure
         self.ovmShear[eid][node_id] = ovm
         #if node_id == 0:
-            #raise ValueError(msg)
+            #raise RuntimeError(msg)
 
     def add_node_sort1(self, dt, eid, inode, node_id, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
         assert isinstance(node_id, int), node_id
@@ -640,10 +638,9 @@ class RealSolidStress(StressObject):
         #self.cCos[dt][eid][node_id] = cCos
         #self.pressure[dt][eid][node_id] = pressure
         self.ovmShear[dt][eid][node_id] = ovm
-        if node_id == 0:
-            msg = "eid=%s node_id=%s vm=%g" % (eid, node_id, ovm)
-            #print msg
-            raise ValueError(msg)
+        #if node_id == 0:
+            #msg = "eid=%s node_id=%s vm=%g" % (eid, node_id, ovm)
+            #raise RuntimeError(msg)
 
     def getHeaders(self):
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz']
@@ -1109,7 +1106,6 @@ class RealSolidStrain(StrainObject):
         self.evmShear[eid] = {node_id : evm}
         #if node_id == 0:
             #msg = "*eid=%s node_id=%s evmShear=%g" % (eid, node_id, evm)
-            ##print msg
             #raise RuntimeError(msg)
 
     def add_eid_sort1(self, eType, cid, dt, eid, node_id, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
@@ -1137,9 +1133,8 @@ class RealSolidStrain(StrainObject):
         #self.pressure[dt][eid] = {node_id : pressure}
         self.evmShear[dt][eid] = {node_id : evm}
         #if node_id == 0:
-            #msg = "*eid=%s node_id=%s evmShear=%g" % (eid, node_id, evm)
-            ##print msg
-            #raise Exception(msg)
+            #msg = "eid=%s node_id=%s evmShear=%g" % (eid, node_id, evm)
+            #raise RuntimeError(msg)
 
     def add_node(self, dt, eid, inode, node_id, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
         assert isinstance(node_id, int), node_id
@@ -1161,7 +1156,6 @@ class RealSolidStrain(StrainObject):
         self.evmShear[eid][node_id] = evm
         #if node_id == 0:
             #msg = "eid=%s node_id=%s vm=%g" % (eid, node_id, evm)
-            ##print msg
             #raise RuntimeError(msg)
 
     def add_node_sort1(self, dt, eid, inode, node_id, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
@@ -1183,11 +1177,9 @@ class RealSolidStrain(StrainObject):
         #self.cCos[dt][eid][node_id] = cCos
         #self.pressure[dt][eid][node_id] = pressure
         self.evmShear[dt][eid][node_id] = evm
-
         #if node_id == 0:
             #msg = "eid=%s node_id=%s vm=%g" % (eid, node_id, evm)
-            ##print msg
-            #raise Exception(msg)
+            #raise RuntimeError(msg)
 
     def getHeaders(self):
         headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz']

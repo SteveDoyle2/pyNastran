@@ -204,30 +204,34 @@ class OP2_F06_Common(object):
         self.velocities = {}              # tCode=10 thermal=0
 
         #: OUG - acceleration
-        self.accelerations = {}           # tCode=11 thermal=0
+        self.accelerations = {}            # tCode=11 thermal=0
 
         # OEF - Forces - tCode=4 thermal=0
-        # rods
-        self.rodForces = {}
 
-        self.barForces = {}
-        self.bar100Forces = {}
-        self.beamForces = {}
-        self.bendForces = {}
-        self.bushForces = {}
-        self.coneAxForces = {}
-        self.damperForces = {}
-        self.gapForces = {}
+        self.cbar100_force = {}
+        self.cbend_force = {}
+        self.cbush_force = {}
+        self.coneax_force = {}
+
+        self.cdamp1_force = {}
+        self.cdamp2_force = {}
+        self.cdamp3_force = {}
+        self.cdamp4_force = {}
+
+        self.celas1_force = {}
+        self.celas2_force = {}
+        self.celas3_force = {}
+        self.celas4_force = {}
+
+        self.cgap_force = {}
 
         self.plateForces = {}
         self.plateForces2 = {}
         self.compositePlateForces = {}
 
-        self.shearForces = {}
 
         self.solidPressureForces = {}
-        self.springForces = {}
-        self.viscForces = {}
+        self.cvisc_force = {}
 
         self.force_VU = {}
         self.force_VU_2D = {}
@@ -243,21 +247,10 @@ class OP2_F06_Common(object):
         #self.temperatureForces = {}
 
         # OES - tCode=5 thermal=0 s_code=0,1 (stress/strain)
-        #: OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
-        #self.celasStress = {}
-
-        #: OES - CELAS1/CELAS2/CELAS3/CELAS4 strain
-        #self.celasStrain = {}
 
         #: OES - CTRIAX6
-        self.ctriaxStress = {}
-        self.ctriaxStrain = {}
-
-        #: OES - isotropic CROD/CONROD/CTUBE stress
-        #self.rodStress = {}
-
-        #: OES - isotropic CROD/CONROD/CTUBE strain
-        #self.rodStrain = {}
+        self.ctriax_stress = {}
+        self.ctriax_strain = {}
 
         #: OES - nonlinear CROD/CONROD/CTUBE stress/strain
         self.nonlinear_crod_stress = {}
@@ -269,16 +262,8 @@ class OP2_F06_Common(object):
         self.nonlinear_conrod_stress = {}
         self.nonlinear_conrod_strain = {}
 
-        #: OES - nonlinear CROD/CONROD/CTUBE strain
-        #self.nonlinearRodStress = {}
-        #self.nonlinearRodStrain = {}
          #: OES - isotropic CBUSH1D strain/strain
         #self.bush1dStressStrain = {}
-
-        #: OES - isotropic CTRIA3/CQUAD4 stress
-        #self.plateStress = {}
-        #: OES - isotropic CTRIA3/CQUAD4 strain
-        #self.plateStrain = {}
 
         #: OESNLXR - CTRIA3/CQUAD4 stress
         #self.nonlinearPlateStress = {}
@@ -286,12 +271,6 @@ class OP2_F06_Common(object):
         #self.nonlinearPlateStrain = {}
         self.hyperelasticPlateStress = {}
         self.hyperelasticPlateStrain = {}
-
-        #: OES - isotropic CTETRA/CHEXA/CPENTA stress
-        #self.solidStress = {}
-
-        #: OES - isotropic CTETRA/CHEXA/CPENTA strain
-        #self.solidStrain = {}
 
         #: OES - composite CTRIA3/CQUAD4 stress
         #self.compositePlateStress = {}
@@ -306,7 +285,8 @@ class OP2_F06_Common(object):
         #: OES - CELAS1 224, CELAS3 225,
         self.nonlinearSpringStress = {}
         #: OES - GAPNL 86
-        self.nonlinearGapStress = {}
+        #self.nonlinearGapStress = {}
+        self.nonlinear_cgap_stress = {}
 
         # OQG - spc/mpc forces
         self.spcForces = {}  # tCode=3?
@@ -396,31 +376,30 @@ class OP2_F06_Common(object):
             'celas4_stress',
 
             # OES - CELAS1/CELAS2/CELAS3/CELAS4 strain
-            #'celasStrain',  # non-vectorized
-            'celas1_strain',  # vectorized
+            'celas1_strain',
             'celas2_strain',
             'celas3_strain',
             'celas4_strain',
 
             # OES - isotropic CROD/CONROD/CTUBE stress
-            #'rodStress',  # non-vectorized
-            'crod_stress',  # vectorized
+            'crod_stress',
             'conrod_stress',
             'ctube_stress',
 
             # OES - isotropic CROD/CONROD/CTUBE strain
             #'rodStrain',  # non-vectorized
-            'crod_strain',  # vectorized
+            'crod_strain',
             'conrod_strain',
             'ctube_strain',
 
             # OES - isotropic CBAR stress/strain
-            'cbar_stress',  # vectorized
+            'cbar_stress',
             'cbar_strain',
             'cbar_force',
+            'cbar100_force',
 
             # OES - isotropic CBEAM stress/strain
-            'cbeam_stress',  # vectorized
+            'cbeam_stress',
             'cbeam_strain',
             'cbeam_force',
             'nonlinear_cbeam_stress',
@@ -429,7 +408,7 @@ class OP2_F06_Common(object):
 
             # OES - isotropic CTRIA3/CQUAD4 stress
             #'plateStress',  # non-vectorized
-            'ctria3_stress',  # vectorized
+            'ctria3_stress',
             'ctriar_stress',
             'ctria6_stress',
 
@@ -466,7 +445,7 @@ class OP2_F06_Common(object):
             # OES - CEALS1 224, CELAS3 225
             'nonlinearSpringStress',
             # OES - GAPNL 86
-            'nonlinearGapStress',
+            'nonlinear_cgap_stress',
             # OES - CBUSH 226
             'nonlinear_cbush_stress',
         ]
@@ -476,40 +455,39 @@ class OP2_F06_Common(object):
             'eigenvalues',
 
             # OEF - Forces - tCode=4 thermal=0
-            'rodForces',  # non-vectorized
-            'crod_force',  # vectorized
+            'crod_force',
             'conrod_force',
             'ctube_force',
 
             # bar/beam/bend
-            'barForces',
-            'bar100Forces',
-            'beamForces',
-            'bendForces',
+            #'bar100Force',
+            'cbend_force',
 
-            'bushForces',
-            'coneAxForces',
-            'damperForces',
-            'gapForces',
+            'cbush_force',
+            'coneax_force',
+            'cdamp1_force',
+            'cdamp2_force',
+            'cdamp3_force',
+            'cdamp4_force',
+            'cgap_force',
 
             'plateForces',
             'ctria3_force',
             'cquad4_force',
 
             'plateForces2',
-            'shearForces',
+            #'shearForces',
             'cshear_force',
             'compositePlateForces',
 
             'solidPressureForces',
 
-            'springForces',
             'celas1_force',
             'celas2_force',
             'celas3_force',
             'celas4_force',
 
-            'viscForces',
+            'cvisc_force',
 
             'force_VU',
             'force_VU_2D',
@@ -526,8 +504,8 @@ class OP2_F06_Common(object):
         ]
         table_types += [
             # OES - CTRIAX6
-            'ctriaxStress',
-            'ctriaxStrain',
+            'ctriax_stress',
+            'ctriax_strain',
 
             'cbush_stress',
             'cbush_strain',

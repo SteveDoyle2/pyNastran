@@ -148,6 +148,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
             is_passed = True
             is_vector_failed = []
             for vectori, vector_stopi in zip(is_vector, vector_stop):
+                print('------running is_vector=%s------' % vectori)
                 is_passed_i = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
                                       write_f06=write_f06, write_op2=write_op2,
                                       is_mag_phase=False,
