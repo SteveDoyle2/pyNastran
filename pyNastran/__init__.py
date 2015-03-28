@@ -11,4 +11,4 @@ __releaseDate2__ = 'APRIL xx, 2015'
 __version__     = '0.7.0_%s' % revision
 __website__     = 'https://github.com/SteveDoyle2/pyNastran'
 
-isRelease = True  ## turns on skipping of tables that aren't supported
+is_release = True  ## turns on skipping of tables that aren't supported

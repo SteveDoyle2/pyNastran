@@ -54,50 +54,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
     """
     Defines an interface for the Nastran OP2 file.
     """
-    def set_as_vectorized(self, vectorized=False, ask=False):
-        if vectorized is True:
-            msg = 'OP2_Scalar class doesnt support vectorization.  Use OP2 '
-            msg += 'from pyNastran.op2.op2 instead.'
-            raise RuntimeError(msg)
-        if ask is True:
-            msg = 'OP2_Scalar class doesnt support ask.'
-            raise RuntimeError(msg)
-
-    def set_subcases(self, subcases=None):
-        """
-        Allows you to read only the subcases in the list of iSubcases
-
-        :param subcases: list of [subcase1_ID,subcase2_ID]
-                         (default=None; all subcases)
-        """
-        #: stores the set of all subcases that are in the OP2
-        self.subcases = set()
-        if subcases is None or subcases == []:
-            #: stores if the user entered [] for iSubcases
-            self.isAllSubcases = True
-            self.valid_subcases = []
-        else:
-            #: should all the subcases be read (default=True)
-            self.isAllSubcases = False
-
-            #: the set of valid subcases -> set([1,2,3])
-            self.valid_subcases = set(subcases)
-        self.log.debug("set_subcases - subcases = %s" % self.valid_subcases)
-
-    def set_transient_times(self, times):  # TODO this name sucks...
-        """
-        Takes a dictionary of list of times in a transient case and
-        gets the output closest to those times.::
-
-          times = {subcaseID_1: [time1, time2],
-                   subcaseID_2: [time3, time4]}
-        """
-        expected_times = {}
-        for (isubcase, eTimes) in iteritems(times):
-            eTimes = list(times)
-            eTimes.sort()
-            expected_times[isubcase] = array(eTimes)
-        self.expected_times = expected_times
 
     def __init__(self, debug=False, log=None, debug_file=None):
         """
@@ -144,6 +100,51 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             assert isinstance(debug_file, string_types), debug_file
             self.debug_file = debug_file
         self.make_geom = False
+
+    def set_as_vectorized(self, vectorized=False, ask=False):
+        if vectorized is True:
+            msg = 'OP2_Scalar class doesnt support vectorization.  Use OP2 '
+            msg += 'from pyNastran.op2.op2 instead.'
+            raise RuntimeError(msg)
+        if ask is True:
+            msg = 'OP2_Scalar class doesnt support ask.'
+            raise RuntimeError(msg)
+
+    def set_subcases(self, subcases=None):
+        """
+        Allows you to read only the subcases in the list of iSubcases
+
+        :param subcases: list of [subcase1_ID,subcase2_ID]
+                         (default=None; all subcases)
+        """
+        #: stores the set of all subcases that are in the OP2
+        self.subcases = set()
+        if subcases is None or subcases == []:
+            #: stores if the user entered [] for iSubcases
+            self.isAllSubcases = True
+            self.valid_subcases = []
+        else:
+            #: should all the subcases be read (default=True)
+            self.isAllSubcases = False
+
+            #: the set of valid subcases -> set([1,2,3])
+            self.valid_subcases = set(subcases)
+        self.log.debug("set_subcases - subcases = %s" % self.valid_subcases)
+
+    def set_transient_times(self, times):  # TODO this name sucks...
+        """
+        Takes a dictionary of list of times in a transient case and
+        gets the output closest to those times.::
+
+          times = {subcaseID_1: [time1, time2],
+                   subcaseID_2: [time3, time4]}
+        """
+        expected_times = {}
+        for (isubcase, eTimes) in iteritems(times):
+            eTimes = list(times)
+            eTimes.sort()
+            expected_times[isubcase] = array(eTimes)
+        self.expected_times = expected_times
 
     def _get_table_mapper(self):
         table_mapper = {

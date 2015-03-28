@@ -5,6 +5,7 @@ import time
 from traceback import print_exc
 
 import pyNastran
+from pyNastran import is_release
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.op2_scalar import OP2_Scalar
 from pyNastran.op2.op2 import OP2, FatalError, SortCodeError
@@ -100,7 +101,6 @@ def parse_table_names_from_F06(f06Name):
         if marker in line:
             word = line.replace(marker,'').strip().strip('.')
             names.append(word)
-
     infile.close()
     return names
 
@@ -116,7 +116,7 @@ def get_failed_files(filename):
     return files
 
 
-def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
+def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                    delete_f06=True, write_op2=False,
                    is_vector=False, vector_stop=True,
                    debug=True, saveCases=True, skipFiles=[],
@@ -130,19 +130,19 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
         vector_stop = [vector_stop]
 
     iSubcases = []
-    failedCases = []
+    failed_cases = []
     nFailed = 0
     nTotal  = 0
     nPassed = 0
     t0 = time.time()
-    for (i, op2file) in enumerate(files[nStart:nStop], nStart):  # 149
-        baseName = os.path.basename(op2file)
+    for i, op2file in enumerate(files[nStart:nStop], nStart):  # 149
+        basename = os.path.basename(op2file)
         #if baseName not in skipFiles and not baseName.startswith('acms') and i not in nSkip:
-        if baseName not in skipFiles and '#' not in op2file:
-            print("%"*80)
+        if basename not in skipFiles and '#' not in op2file:
+            print("%" * 80)
             print('file=%s\n' % op2file)
-            n = '%s ' %(i)
-            sys.stderr.write('%sfile=%s\n' %(n, op2file))
+            n = '%s ' % i
+            sys.stderr.write('%sfile=%s\n' % (n, op2file))
             nTotal += 1
 
             is_passed = True
@@ -161,7 +161,7 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
                    is_vector_failed.append(vectori)
             if not is_passed:
                 sys.stderr.write('**file=%s vector_failed=%s\n' % (op2file, is_vector_failed))
-                failedCases.append(op2file)
+                failed_cases.append(op2file)
                 nFailed += 1
             else:
                 nPassed += 1
@@ -169,30 +169,30 @@ def run_lots_of_files(files ,make_geom=True, write_bdf=False, write_f06=True,
 
     if saveCases:
         f = open('failedCases.in','wb')
-        for op2file in failedCases:
+        for op2file in failed_cases:
             f.write('%s\n' % op2file)
         f.close()
 
-    seconds = time.time()-t0
-    minutes = seconds/60.
+    seconds = time.time() - t0
+    minutes = seconds / 60.
     print("dt = %s seconds = %s minutes" % (seconds, minutes))
 
-    #op2 = OP2('test_tet10_subcase_1.op2')
-    #op2.read_op2()
-
-    msg = '-----done with all models %s/%s=%.2f%%  nFailed=%s-----' %(nPassed,nTotal,100.*nPassed/float(nTotal),nTotal-nPassed)
+    msg = '-----done with all models %s/%s=%.2f%%  nFailed=%s-----' % (
+        nPassed, nTotal,
+        100. * nPassed / float(nTotal),
+        nTotal - nPassed)
     print(msg)
     sys.exit(msg)
 
 
-def run_op2(op2FileName, make_geom=False, write_bdf=False,
+def run_op2(op2_filename, make_geom=False, write_bdf=False,
             write_f06=True, write_op2=False, is_mag_phase=False,
             is_vector=False, delete_f06=False,
             iSubcases=[], exclude=[], debug=False, binary_debug=False, stopOnFailure=True):
-    assert '.op2' in op2FileName.lower(), 'op2FileName=%s is not an OP2' % op2FileName
+    assert '.op2' in op2_filename.lower(), 'op2FileName=%s is not an OP2' % op2_filename
     isPassed = False
 
-    fname_base, ext = os.path.splitext(op2FileName)
+    fname_base, ext = os.path.splitext(op2_filename)
     bdf_filename = fname_base + '.test_op2.bdf'
 
     if isinstance(iSubcases, string_types):
@@ -202,39 +202,40 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
             iSubcases = [int(iSubcases)]
     print('iSubcases = %s' % iSubcases)
 
-    try:
-        debug_file = None
-        if binary_debug or write_op2:
-            debug_file = 'debug.out'
+    debug_file = None
+    if binary_debug or write_op2:
+        debug_file = 'debug.out'
+    print('debug_file = %r' % debug_file, os.getcwd())
 
-        if make_geom and not is_geom:
-            raise RuntimeError('make_geom=%s is not supported' % make_geom)
-        if is_vector:
-            if make_geom:
-                op2 = OP2Geom(debug=debug, debug_file=debug_file)
-            else:
-                op2 = OP2(debug=debug, debug_file=debug_file)
+    if make_geom and not is_geom:
+        raise RuntimeError('make_geom=%s is not supported' % make_geom)
+    if is_vector:
+        if make_geom:
+            op2 = OP2Geom(debug=debug, debug_file=debug_file)
         else:
-            if make_geom:
-                op2 = OP2Geom_Scalar(make_geom=make_geom, debug=debug, debug_file=debug_file)
-            else:
-                op2 = OP2_Scalar(debug=debug, debug_file=debug_file)
+            op2 = OP2(debug=debug, debug_file=debug_file)
+    else:
+        if make_geom:
+            op2 = OP2Geom_Scalar(make_geom=make_geom, debug=debug, debug_file=debug_file)
+        else:
+            op2 = OP2_Scalar(debug=debug, debug_file=debug_file)
 
-        op2.set_subcases(iSubcases)
-        op2.remove_results(exclude)
+    op2.set_subcases(iSubcases)
+    op2.remove_results(exclude)
 
-        if is_memory:
-            if is_linux: # linux
-                kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-            else: # windows
-                kb = get_memory_usage() / 1024
-            mb = kb / 1024.
-            #mbs.append(mb)
-            print("Memory usage start: %s (KB); %.2f (MB)" % (kb, mb))
+    if is_memory:
+        if is_linux: # linux
+            kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        else: # windows
+            kb = get_memory_usage() / 1024
+        mb = kb / 1024.
+        #mbs.append(mb)
+        print("Memory usage start: %s (KB); %.2f (MB)" % (kb, mb))
 
+    try:
         #op2.read_bdf(op2.bdfFileName, includeDir=None, xref=False)
-        op2.read_op2(op2FileName)
-        print("---stats for %s---" % op2FileName)
+        op2.read_op2(op2_filename)
+        print("---stats for %s---" % op2_filename)
         #op2.get_op2_stats()
         print(op2.get_op2_stats())
         if write_bdf:
@@ -254,7 +255,7 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
             print("Memory usage     end: %s (KB); %.2f (MB)" % (kb, mb))
 
         if write_f06:
-            model, ext = os.path.splitext(op2FileName)
+            model, ext = os.path.splitext(op2_filename)
             op2.write_f06(model + '.test_op2.f06', is_mag_phase=is_mag_phase)
             if delete_f06:
                 try:
@@ -263,7 +264,7 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
                     pass
 
         if write_op2:
-            model, ext = os.path.splitext(op2FileName)
+            model, ext = os.path.splitext(op2_filename)
             op2.write_op2(model + '.test_op2.op2', is_mag_phase=is_mag_phase)
             if delete_f06:
                 try:
@@ -282,9 +283,9 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
             print("Memory usage cleanup: %s (KB); %.2f (MB)" % (kb, mb))
 
 
-        #print("subcases = ",op2.subcases)
+        #print("subcases = ", op2.subcases)
 
-        #assert tableNamesF06==tableNamesOP2,'tableNamesF06=%s tableNamesOP2=%s' %(tableNamesF06,tableNamesOP2)
+        #assert tableNamesF06==tableNamesOP2, 'tableNamesF06=%s tableNamesOP2=%s' % (tableNamesF06, tableNamesOP2)
         #op2.caseControlDeck.sol = op2.sol
         #print(op2.caseControlDeck.get_op2_data())
         #print(op2.caseControlDeck.get_op2_data())
@@ -292,7 +293,7 @@ def run_op2(op2FileName, make_geom=False, write_bdf=False,
     except KeyboardInterrupt:
         sys.stdout.flush()
         print_exc(file=sys.stdout)
-        sys.stderr.write('**file=%s\n' % op2FileName)
+        sys.stderr.write('**file=%s\n' % op2_filename)
         sys.exit('keyboard stop...')
     except SortCodeError: # inherits from Runtime; comment this
         isPassed = True
@@ -354,10 +355,10 @@ def main():
     #msg += "test_op2 [-q] [-g] [-w] [-f] [-o] [-z] [-t] [-s <sub>] OP2_FILENAME\n"
 
     # release
-    #msg += "test_op2 [-q] [-f] [-z] [-t] [-s <sub>] OP2_FILENAME\n"
-
-    # current
-    msg += "test_op2 [-q] [-b] [-g] [-w] [-f] [-o] [-z] [-t] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
+    if is_release:
+        msg += "test_op2 [-q] [-b] [-f] [-z] [-t] [-s <sub>]  [-x <arg>]... OP2_FILENAME\n"
+    else:
+        msg += "test_op2 [-q] [-b] [-g] [-w] [-f] [-o] [-z] [-t] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
     msg += "  test_op2 -h | --help\n"
     msg += "  test_op2 -v | --version\n"
     msg += "\n"
@@ -369,10 +370,12 @@ def main():
     msg += "Options:\n"
     msg += "  -b, --binarydebug    Dumps the OP2 as a readable text file (default=False)\n"
     msg += "  -q, --quiet          Suppresses debug messages (default=False)\n"
-    msg += "  -g, --geometry       Reads the OP2 for geometry, which can be written out (default=False)\n"
-    msg += "  -w, --write_bdf      Writes the bdf to fem.test_op2.bdf (default=False)\n"
+    if not is_release:
+        msg += "  -g, --geometry       Reads the OP2 for geometry, which can be written out (default=False)\n"
+        msg += "  -w, --write_bdf      Writes the bdf to fem.test_op2.bdf (default=False)\n"
     msg += "  -f, --write_f06      Writes the f06 to fem.test_op2.f06 (default=True)\n"
-    msg += "  -o, --write_op2      Writes the op2 to fem.test_op2.op2 (default=False)\n"
+    if not is_release:
+        msg += "  -o, --write_op2      Writes the op2 to fem.test_op2.op2 (default=False)\n"
     msg += "  -z, --is_mag_phase   F06 Writer writes Magnitude/Phase instead of\n"
     msg += "                       Real/Imaginary (still stores Real/Imag); (default=False)\n"
     msg += "  -s <sub>, --subcase  Specify one or more subcases to parse; (e.g. 2_5)\n"
@@ -385,6 +388,12 @@ def main():
         sys.exit(msg)
 
     data = docopt(msg, version=ver)
+    if '--geometry' not in data:
+        data['--geometry'] = False
+    if '--write_op2' not in data:
+        data['--write_op2'] = False
+    if '--write_bdf' not in data:
+        data['--write_bdf'] = False
     #print("data", data)
 
     for key, value in sorted(iteritems(data)):

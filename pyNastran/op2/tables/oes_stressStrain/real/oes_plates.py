@@ -95,55 +95,57 @@ class RealPlateArray(OES_Object):
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element_node = zeros((self.ntotal, 2), dtype='int32')
 
-        #[fd, oxx, oyy, txy, angle, majorP, minorP, ovm]
+        #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
         self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
 
-    def add_new_eid(self, etype, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        self.add_new_eid_sort1(eType, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
+    def add_new_eid(self, etype, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
+        self.add_new_eid_sort1(etype, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
-    def add_new_eid_sort1(self, etype, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #msg = "i=%s etype=%s dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (
-            #self.itotal,  etype, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
-        #msg = "i=%s dt=%s eid=%s nodeID=%s fd=%g oxx=%g ovmShear=%g" % (
-            #self.itotal, dt, eid, nodeID, fd, oxx, ovm)
+    def add_new_eid_sort1(self, etype, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
+        #msg = "i=%s etype=%s dt=%s eid=%s node_id=%s fiber_dist=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (
+            #self.itotal,  etype, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
+        #msg = "i=%s dt=%s eid=%s node_id=%s fiber_dist=%g oxx=%g ovmShear=%g" % (
+            #self.itotal, dt, eid, node_id, fiber_dist, oxx, ovm)
 
         assert isinstance(eid, int)
         self._times[self.itime] = dt
-        assert isinstance(nodeID, string_types), nodeID
-        if isinstance(nodeID, string_types):
-            nodeID = 0
+        assert isinstance(node_id, string_types), node_id
+        if isinstance(node_id, string_types):
+            node_id = 0
         #assert self.itotal == 0, oxx
-        self.element_node[self.itotal, :] = [eid, nodeID]
-        self.data[self.itime, self.itotal, :] = [fd, oxx, oyy, txy, angle, majorP, minorP, ovm]
+        self.element_node[self.itotal, :] = [eid, node_id]
+        self.data[self.itime, self.itotal, :] = [fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
         self.itotal += 1
         self.ielement += 1
 
-    def addNewNode(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        if isinstance(nodeID, string_types):
-            nodeID = 0
-        self.add_sort1(dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
+    def addNewNode(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
+        #if isinstance(node_id, string_types):
+            #node_id = 0
+        assert isinstance(node_id), int
+        self.add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
-    def add(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #if isinstance(nodeID, string_types):
-            #nodeID = 0
-        self.add_sort1(dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
+    def add(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
+        #if isinstance(node_id, string_types):
+            #node_id = 0
+        assert isinstance(node_id), int
+        self.add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
-    def addNewNodeSort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        if isinstance(nodeID, string_types):
-            nodeID = 0
-        self.add_sort1(dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
+    def addNewNodeSort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
+        if isinstance(node_id, string_types):
+            node_id = 0
+        self.add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
-    def add_sort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
+    def add_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
         assert eid is not None
-        #msg = "i=%s dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (
-            #self.itotal, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
-        #msg = "i=%s dt=%s eid=%s nodeID=%s fd=%g oxx=%g ovmShear=%g" % (
-            #self.itotal, dt, eid, nodeID, fd, oxx, ovm)
-        if isinstance(nodeID, string_types):
-            nodeID = 0
-        #assert isinstance(nodeID, int), nodeID
-        self.element_node[self.itotal, :] = [eid, nodeID]
-        self.data[self.itime, self.itotal, :] = [fd, oxx, oyy, txy, angle, majorP, minorP, ovm]
+        #msg = "i=%s dt=%s eid=%s node_id=%s fiber_dist=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (
+            #self.itotal, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
+        #msg = "i=%s dt=%s eid=%s node_id=%s fiber_dist=%g oxx=%g ovmShear=%g" % (
+            #self.itotal, dt, eid, node_id, fiber_dist, oxx, ovm)
+        if isinstance(node_id, string_types):
+            node_id = 0
+        #assert isinstance(node_id, int), node_id
+        self.element_node[self.itotal, :] = [eid, node_id]
+        self.data[self.itime, self.itotal, :] = [fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
         self.itotal += 1
 
     def get_stats(self):
@@ -226,8 +228,8 @@ class RealPlateArray(OES_Object):
 
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
 
-            #[fd, oxx, oyy, txy, angle, majorP, minorP, ovm]
-            fd = self.data[itime, :, 0]
+            #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
+            fiber_dist = self.data[itime, :, 0]
             oxx = self.data[itime, :, 1]
             oyy = self.data[itime, :, 2]
             txy = self.data[itime, :, 3]
@@ -238,25 +240,25 @@ class RealPlateArray(OES_Object):
 
             # loop over all the elements
             for (i, eid, nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi) in zip(
-                 count(), eids, nids, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
+                 count(), eids, nids, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
                 ([fdi, oxxi, oyyi, txyi, major, minor, ovmi],
                  is_all_zeros) = writeFloats13E([fdi, oxxi, oyyi, txyi, major, minor, ovmi])
-                iLayer = i % 2
+                ilayer = i % 2
                 # tria3
                 if is_bilinear:
                 #if self.element_type in [33, 74]:
-                    if iLayer == 0:
+                    if ilayer == 0:
                         f.write('0  %6i   %-13s     %-13s  %-13s  %-13s   %8.4f   %-13s   %-13s  %s\n' % (eid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
                     else:
                         f.write('   %6s   %-13s     %-13s  %-13s  %-13s   %8.4f   %-13s   %-13s  %s\n' % ('', fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
 
                 else:  #elif self.element_type == 144:
                     # bilinear
-                    if nid == 0 and iLayer == 0:  # CEN
+                    if nid == 0 and ilayer == 0:  # CEN
                         f.write('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % (eid, cen_word, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
-                    elif iLayer == 0:
+                    elif ilayer == 0:
                         f.write('   %8s %8i  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % ('', nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
-                    elif iLayer == 1:
+                    elif ilayer == 1:
                         f.write('   %8s %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n\n' % ('', '', fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
                 #else:
                     #raise RuntimeError(self.element_type)
@@ -279,15 +281,15 @@ class RealPlateStressArray(RealPlateArray, StressObject):
 
     def get_headers(self):
         if self.isFiberDistance():
-            fd = 'fiber_distance'
+            fiber_dist = 'fiber_distance'
         else:
-            fd = 'fiber_curvature'
+            fiber_dist = 'fiber_curvature'
 
         if self.isVonMises():
             ovm = 'von_mises'
         else:
             ovm = 'max_shear'
-        headers = [fd, 'oxx', 'oyy', 'txy', 'angle', 'omax', 'omin', ovm]
+        headers = [fiber_dist, 'oxx', 'oyy', 'txy', 'angle', 'omax', 'omin', ovm]
         return headers
 
     def _get_msgs(self):
@@ -368,15 +370,15 @@ class RealPlateStrainArray(RealPlateArray, StrainObject):
 
     def get_headers(self):
         if self.isFiberDistance():
-            fd = 'fiber_distance'
+            fiber_dist = 'fiber_distance'
         else:
-            fd = 'fiber_curvature'
+            fiber_dist = 'fiber_curvature'
 
         if self.isVonMises():
             ovm = 'von_mises'
         else:
             ovm = 'max_shear'
-        headers = [fd, 'exx', 'eyy', 'exy', 'angle', 'emax', 'emin', ovm]
+        headers = [fiber_dist, 'exx', 'eyy', 'exy', 'angle', 'emax', 'emin', ovm]
         return headers
 
     def _get_msgs(self):
@@ -498,7 +500,7 @@ class RealPlateStress(StressObject):
         else:
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
-        msg.append('  etype, fiberCurvature, oxx, oyy, txy, angle, '
+        msg.append('  eType, fiberCurvature, oxx, oyy, txy, angle, '
                    'majorP, minorP, ovmShear\n')
         return msg
 
@@ -508,10 +510,10 @@ class RealPlateStress(StressObject):
             for line in data:
                 if etype == 'CTRIA3':
                     cen = 'CEN/3'
-                    (eType, eid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
-                                 f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
+                    (etype, eid, fiber_dist1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
+                                 fiber_dist2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
                     self.eType[eid] = etype
-                    self.fiberCurvature[eid] = {cen : [f1, f2]}
+                    self.fiberCurvature[eid] = {cen : [fiber_dist1, fiber_dist2]}
                     self.oxx[eid] = {cen : [ox1, ox2]}
                     self.oyy[eid] = {cen : [oy1, oy2]}
                     self.txy[eid] = {cen : [txy1, txy2]}
@@ -522,10 +524,12 @@ class RealPlateStress(StressObject):
                 elif etype == 'CQUAD4':
                     #assert len(line)==19,'len(line)=%s' %(len(line))
                     if len(line) == 19:  # Centroid - bilinear
-                        (eType, eid, nid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
-                                          f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
+                        (etype, eid, nid,
+                         fiber_dist1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
+                         fiber_dist2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
+                        assert isinstance(nid, int), nid
                         self.eType[eid] = etype
-                        self.fiberCurvature[eid] = {nid: [f1, f2]}
+                        self.fiberCurvature[eid] = {nid: [fiber_dist1, fiber_dist2]}
                         self.oxx[eid] = {nid: [ox1, ox2]}
                         self.oyy[eid] = {nid: [oy1, oy2]}
                         self.txy[eid] = {nid: [txy1, txy2]}
@@ -534,11 +538,13 @@ class RealPlateStress(StressObject):
                         self.minorP[eid] = {nid: [o21, o22]}
                         self.ovmShear[eid] = {nid: [ovm1, ovm2]}
                     elif len(line) == 18:  # Centroid
-                        (eType, eid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
-                                     f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
-                        nid = 'CEN/4'
+                        (etype, eid,
+                         fiber_dist1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
+                         fiber_dist2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
+                        #nid = 'CEN/4'
+                        nid = 0
                         self.eType[eid] = etype
-                        self.fiberCurvature[eid] = {nid: [f1, f2]}
+                        self.fiberCurvature[eid] = {nid: [fiber_dist1, fiber_dist2]}
                         self.oxx[eid] = {nid: [ox1, ox2]}
                         self.oyy[eid] = {nid: [oy1, oy2]}
                         self.txy[eid] = {nid: [txy1, txy2]}
@@ -547,9 +553,11 @@ class RealPlateStress(StressObject):
                         self.minorP[eid] = {nid: [o21, o22]}
                         self.ovmShear[eid] = {nid: [ovm1, ovm2]}
                     elif len(line) == 17:  # Bilinear
-                        (nid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
-                              f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
-                        self.fiberCurvature[eid][nid] = [f1, f2]
+                        (nid,
+                         fiber_dist1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
+                         fiber_dist2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
+                        assert isinstance(nid, int), nid
+                        self.fiberCurvature[eid][nid] = [fiber_dist1, fiber_dist2]
                         self.oxx[eid][nid] = [ox1, ox2]
                         self.oyy[eid][nid] = [oy1, oy2]
                         self.txy[eid][nid] = [txy1, txy2]
@@ -579,12 +587,13 @@ class RealPlateStress(StressObject):
         etype = data[0][0]
         for line in data:
             if etype == 'CTRIA3':
-                (eType, eid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
-                             f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
+                (etype, eid,
+                 fiber_dist1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
+                 fiber_dist2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
                 self.eType[eid] = etype
                 #cen = 'CEN/3'
                 cen = 0
-                self.fiberCurvature[eid] = {cen : [f1, f2]}
+                self.fiberCurvature[eid] = {cen : [fiber_dist1, fiber_dist2]}
                 self.oxx[dt][eid] = {cen : [ox1, ox2]}
                 self.oyy[dt][eid] = {cen : [oy1, oy2]}
                 self.txy[dt][eid] = {cen : [txy1, txy2]}
@@ -595,26 +604,28 @@ class RealPlateStress(StressObject):
             elif etype == 'CQUAD4':
                 if len(line) == 18:
                     # Centroid
-                    (eType, eid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
-                                 f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
+                    (etype, eid,
+                     fiber_dist1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
+                     fiber_dist2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
                     #nid = 'CEN/4'
                     nid = 0
                     self.eType[eid] = etype
-                    self.fiberCurvature[eid] = {nid: [f1, f2]}
-                    self.oxx[dt][eid] = {nid: [ox1, ox2]}
-                    self.oyy[dt][eid] = {nid: [oy1, oy2]}
-                    self.txy[dt][eid] = {nid: [txy1, txy2]}
-                    self.angle[dt][eid] = {nid: [angle1, angle2]}
-                    self.majorP[dt][eid] = {nid: [o11, o12]}
-                    self.minorP[dt][eid] = {nid: [o21, o22]}
-                    self.ovmShear[dt][eid] = {nid: [ovm1, ovm2]}
+                    self.fiberCurvature[eid] = {nid : [fiber_dist1, fiber_dist2]}
+                    self.oxx[dt][eid] = {nid : [ox1, ox2]}
+                    self.oyy[dt][eid] = {nid : [oy1, oy2]}
+                    self.txy[dt][eid] = {nid : [txy1, txy2]}
+                    self.angle[dt][eid] = {nid : [angle1, angle2]}
+                    self.majorP[dt][eid] = {nid : [o11, o12]}
+                    self.minorP[dt][eid] = {nid : [o21, o22]}
+                    self.ovmShear[dt][eid] = {nid : [ovm1, ovm2]}
                 elif len(line) == 19:
                     # Centroid - bilinear
-                    (eType, eid, nid, f1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
-                                      f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
+                    (etype, eid, nid,
+                     fiber_dist1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
+                     fiber_dist2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
                     assert isinstance(nid, int), nid
                     self.eType[eid] = etype
-                    self.fiberCurvature[eid] = {nid: [f1, f2]}
+                    self.fiberCurvature[eid] = {nid: [fiber_dist1, fiber_dist2]}
                     self.oxx[dt][eid] = {nid: [ox1, ox2]}
                     self.oyy[dt][eid] = {nid: [oy1, oy2]}
                     self.txy[dt][eid] = {nid: [txy1, txy2]}
@@ -624,10 +635,11 @@ class RealPlateStress(StressObject):
                     self.ovmShear[dt][eid] = {nid: [ovm1, ovm2]}
                 elif len(line) == 17:
                     # Bilinear node
-                    (nid, f1, ox1, oy1, oxy1, angle1, o11, o21, ovm1,
-                          f2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
+                    (nid,
+                     fiber_dist1, ox1, oy1, oxy1, angle1, o11, o21, ovm1,
+                     fiber_dist2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
                     assert isinstance(nid, int), nid
-                    self.fiberCurvature[eid][nid] = [f1, f2]
+                    self.fiberCurvature[eid][nid] = [fiber_dist1, fiber_dist2]
                     self.oxx[dt][eid][nid] = [ox1, ox2]
                     self.oyy[dt][eid][nid] = [oy1, oy2]
                     self.txy[dt][eid][nid] = [oxy1, txy2]
@@ -671,117 +683,125 @@ class RealPlateStress(StressObject):
         self.minorP[dt] = {}
         self.ovmShear[dt] = {}
 
-    def add_new_eid(self, etype, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
+    def add_new_eid(self, etype, dt, eid, node_id,
+                    fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
         #if eid in self.oxx:
-            #return self.add(dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
+            #return self.add(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
         #assert eid not in self.oxx
         self.eType[eid] = etype
-        self.fiberCurvature[eid] = {nodeID: [fd]}
-        assert isinstance(eid, int)
-        self.oxx[eid] = {nodeID: [oxx]}
-        self.oyy[eid] = {nodeID: [oyy]}
-        self.txy[eid] = {nodeID: [txy]}
-        self.angle[eid] = {nodeID: [angle]}
-        self.majorP[eid] = {nodeID: [majorP]}
-        self.minorP[eid] = {nodeID: [minorP]}
-        self.ovmShear[eid] = {nodeID: [ovm]}
-        msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" % (eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
-        if nodeID == 0:
+        self.fiberCurvature[eid] = {node_id: [fiber_dist]}
+        assert isinstance(eid, int), eid
+        assert isinstance(node_id, int), node_id
+        self.oxx[eid] = {node_id: [oxx]}
+        self.oyy[eid] = {node_id: [oyy]}
+        self.txy[eid] = {node_id: [txy]}
+        self.angle[eid] = {node_id: [angle]}
+        self.majorP[eid] = {node_id: [majorP]}
+        self.minorP[eid] = {node_id: [minorP]}
+        self.ovmShear[eid] = {node_id: [ovm]}
+        msg = "eid=%s node_id=%s fiber_dist=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" % (
+            eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
+        if node_id == 0:
             raise Exception(msg)
 
-    def add_new_eid_sort1(self, etype, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g major=%g vm=%g" % (dt, eid, nodeID, fd, oxx, majorP, ovm)
+    def add_new_eid_sort1(self, etype, dt, eid, node_id, fiber_dist,
+                          oxx, oyy, txy, angle, majorP, minorP, ovm):
+        #msg = "dt=%s eid=%s node_id=%s fiber_dist=%g oxx=%g major=%g vm=%g" % (dt, eid, node_id, fiber_dist, oxx, majorP, ovm)
         #if eid in self.ovmShear[dt]:
-        #    return self.add(eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
+        #    return self.add(eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
         if 0: # this is caused by superelements
             if dt in self.oxx and eid in self.oxx[dt]:  # SOL200, erase the old result
-                #nid = nodeID
-                msg = "dt=%s eid=%s nodeID=%s fd=%s oxx=%s major=%s vm=%s" %(dt, eid, nodeID,
-                                                                             str(self.fiberCurvature[eid][nodeID]),
-                                                                             str(self.oxx[dt][eid][nodeID]),
-                                                                             str(self.majorP[dt][eid][nodeID]),
-                                                                             str(self.ovmShear[dt][eid][nodeID]))
+                #nid = node_id
+                msg = "dt=%s eid=%s node_id=%s fiber_dist=%s oxx=%s major=%s vm=%s" % (
+                    dt, eid, node_id,
+                    str(self.fiberCurvature[eid][node_id]),
+                    str(self.oxx[dt][eid][node_id]),
+                    str(self.majorP[dt][eid][node_id]),
+                    str(self.ovmShear[dt][eid][node_id]))
                 self.delete_transient(dt)
                 self.add_new_transient(dt)
 
-        assert isinstance(eid, int)
+        assert isinstance(eid, int), eid
+        assert isinstance(node_id, int), node_id
         self.eType[eid] = etype
         if dt not in self.oxx:
             self.add_new_transient(dt)
-        self.fiberCurvature[eid] = {nodeID: [fd]}
-        self.oxx[dt][eid] = {nodeID: [oxx]}
-        self.oyy[dt][eid] = {nodeID: [oyy]}
-        self.txy[dt][eid] = {nodeID: [txy]}
-        self.angle[dt][eid] = {nodeID: [angle]}
-        self.majorP[dt][eid] = {nodeID: [majorP]}
-        self.minorP[dt][eid] = {nodeID: [minorP]}
-        self.ovmShear[dt][eid] = {nodeID: [ovm]}
-        if nodeID == 0:
-            msg = "dt=%s eid=%s nodeID=%s " % (dt, eid, nodeID) #fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(dt,eid,nodeID,fd,oxx,oyy,txy,angle,majorP,minorP,ovm)
+        self.fiberCurvature[eid] = {node_id: [fiber_dist]}
+        self.oxx[dt][eid] = {node_id: [oxx]}
+        self.oyy[dt][eid] = {node_id: [oyy]}
+        self.txy[dt][eid] = {node_id: [txy]}
+        self.angle[dt][eid] = {node_id: [angle]}
+        self.majorP[dt][eid] = {node_id: [majorP]}
+        self.minorP[dt][eid] = {node_id: [minorP]}
+        self.ovmShear[dt][eid] = {node_id: [ovm]}
+        if node_id == 0:
+            msg = "dt=%s eid=%s node_id=%s " % (dt, eid, node_id) #fiber_dist=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" %(dt,eid,node_id,fiber_dist,oxx,oyy,txy,angle,majorP,minorP,ovm)
             raise ValueError(msg)
 
-    def add(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
+    def add(self, dt, eid, node_id,
+            fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
+        msg = "eid=%s node_id=%s fiber_dist=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (
+            eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
         assert isinstance(eid, int), eid
-        assert isinstance(nid, int), nid
-        self.fiberCurvature[eid][nodeID].append(fd)
-        self.oxx[eid][nodeID].append(oxx)
-        self.oyy[eid][nodeID].append(oyy)
-        self.txy[eid][nodeID].append(txy)
-        self.angle[eid][nodeID].append(angle)
-        self.majorP[eid][nodeID].append(majorP)
-        self.minorP[eid][nodeID].append(minorP)
-        self.ovmShear[eid][nodeID].append(ovm)
-        if nodeID == 0:
+        assert isinstance(node_id, int), node_id
+        self.fiberCurvature[eid][node_id].append(fiber_dist)
+        self.oxx[eid][node_id].append(oxx)
+        self.oyy[eid][node_id].append(oyy)
+        self.txy[eid][node_id].append(txy)
+        self.angle[eid][node_id].append(angle)
+        self.majorP[eid][node_id].append(majorP)
+        self.minorP[eid][node_id].append(minorP)
+        self.ovmShear[eid][node_id].append(ovm)
+        if node_id == 0:
             raise ValueError(msg)
 
-    def add_sort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" % (dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
+    def add_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
+        msg = "dt=%s eid=%s node_id=%s fiber_dist=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g vm=%g" % (dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
         assert eid is not None, eid
-        assert isinstance(nodeID, int), nodeID
-        self.fiberCurvature[eid][nodeID].append(fd)
-        self.oxx[dt][eid][nodeID].append(oxx)
-        self.oyy[dt][eid][nodeID].append(oyy)
-        self.txy[dt][eid][nodeID].append(txy)
-        self.angle[dt][eid][nodeID].append(angle)
-        self.majorP[dt][eid][nodeID].append(majorP)
-        self.minorP[dt][eid][nodeID].append(minorP)
-        self.ovmShear[dt][eid][nodeID].append(ovm)
-        if nodeID == 0:
+        assert isinstance(node_id, int), node_id
+        self.fiberCurvature[eid][node_id].append(fiber_dist)
+        self.oxx[dt][eid][node_id].append(oxx)
+        self.oyy[dt][eid][node_id].append(oyy)
+        self.txy[dt][eid][node_id].append(txy)
+        self.angle[dt][eid][node_id].append(angle)
+        self.majorP[dt][eid][node_id].append(majorP)
+        self.minorP[dt][eid][node_id].append(minorP)
+        self.ovmShear[dt][eid][node_id].append(ovm)
+        if node_id == 0:
             raise ValueError(msg)
 
-    def addNewNode(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
+    def addNewNode(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
         assert eid is not None, eid
-        assert isinstance(nodeID, int), nodeID
-        #assert nodeID not in self.oxx[eid]
-        self.fiberCurvature[eid][nodeID] = [fd]
-        self.oxx[eid][nodeID] = [oxx]
-        self.oyy[eid][nodeID] = [oyy]
-        self.txy[eid][nodeID] = [txy]
-        self.angle[eid][nodeID] = [angle]
-        self.majorP[eid][nodeID] = [majorP]
-        self.minorP[eid][nodeID] = [minorP]
-        self.ovmShear[eid][nodeID] = [ovm]
-        msg = "eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
+        assert isinstance(node_id, int), node_id
+        #assert node_id not in self.oxx[eid]
+        self.fiberCurvature[eid][node_id] = [fiber_dist]
+        self.oxx[eid][node_id] = [oxx]
+        self.oyy[eid][node_id] = [oyy]
+        self.txy[eid][node_id] = [txy]
+        self.angle[eid][node_id] = [angle]
+        self.majorP[eid][node_id] = [majorP]
+        self.minorP[eid][node_id] = [minorP]
+        self.ovmShear[eid][node_id] = [ovm]
+        msg = "eid=%s node_id=%s fiber_dist=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
         #print msg
-        if nodeID == 0:
+        if node_id == 0:
             raise ValueError(msg)
 
-    def addNewNodeSort1(self, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm):
+    def addNewNodeSort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
         assert eid is not None
-        msg = "dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
-        #assert nodeID not in self.oxx[dt][eid]
-        self.fiberCurvature[eid][nodeID] = [fd]
-        self.oxx[dt][eid][nodeID] = [oxx]
-        self.oyy[dt][eid][nodeID] = [oyy]
-        self.txy[dt][eid][nodeID] = [txy]
-        self.angle[dt][eid][nodeID] = [angle]
-        self.majorP[dt][eid][nodeID] = [majorP]
-        self.minorP[dt][eid][nodeID] = [minorP]
-        self.ovmShear[dt][eid][nodeID] = [ovm]
-        if nodeID == 0:
+        msg = "dt=%s eid=%s node_id=%s fiber_dist=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
+        #assert node_id not in self.oxx[dt][eid]
+        self.fiberCurvature[eid][node_id] = [fiber_dist]
+        self.oxx[dt][eid][node_id] = [oxx]
+        self.oyy[dt][eid][node_id] = [oyy]
+        self.txy[dt][eid][node_id] = [txy]
+        self.angle[dt][eid][node_id] = [angle]
+        self.majorP[dt][eid][node_id] = [majorP]
+        self.minorP[dt][eid][node_id] = [minorP]
+        self.ovmShear[dt][eid][node_id] = [ovm]
+        if node_id == 0:
             raise ValueError(msg)
 
     def getHeaders(self):
@@ -807,74 +827,75 @@ class RealPlateStress(StressObject):
 
         if self.isFiberDistance():
             quad_msg_temp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
-                           '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % (von_mises)]
+                             '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % (von_mises)]
             tri_msg_temp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
-                          '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % (von_mises)]
+                            '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % (von_mises)]
         else:
             quad_msg_temp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
-                           '      ID      GRID-ID  CURVATURE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % (von_mises)]
+                             '      ID      GRID-ID  CURVATURE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % (von_mises)]
             tri_msg_temp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
-                          '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % (von_mises)]
+                            '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % (von_mises)]
 
-        triMsg = None
-        tri6Msg = None
-        trirMsg = None
-        quadMsg = None
-        quad8Msg = None
-        quadrMsg = None
+        tria3_msg = None
+        tria6_msg = None
+        triar_msg = None
+        quad4_msg = None
+        quad8_msg = None
+        quadr_msg = None
         etypes = self.eType.values()
         if 'CQUAD4' in etypes:
             qkey = etypes.index('CQUAD4')
             kkey = self.eType.keys()[qkey]
             ekey = self.oxx[kkey].keys()
             is_bilinear = True
-            quadMsg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quad_msg_temp
+            quad4_msg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quad_msg_temp
             if len(ekey) == 1:
                 is_bilinear = False
-                quadMsg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'] + tri_msg_temp
+                quad4_msg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'] + tri_msg_temp
 
         if 'CQUAD8' in etypes:
-            quad8Msg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n'] + tri_msg_temp
+            quad8_msg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n'] + tri_msg_temp
 
         if 'CQUADR' in etypes:
             qkey = etypes.index('CQUADR')
             kkey = self.eType.keys()[qkey]
             ekey = self.oxx[kkey].keys()
             is_bilinear = True
-            quadrMsg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quad_msg_temp
+            quadr_msg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quad_msg_temp
             if len(ekey) == 1:
                 is_bilinear = False
-                quadMsg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'] + tri_msg_temp
+                quad4_msg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'] + tri_msg_temp
 
         if 'CTRIA3' in etypes:
-            triMsg = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'] + tri_msg_temp
+            tria3_msg = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'] + tri_msg_temp
 
         if 'CTRIA6' in etypes:
-            tri6Msg = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + tri_msg_temp
+            tria6_msg = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + tri_msg_temp
 
         if 'CTRIAR' in etypes:
-            trirMsg = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + tri_msg_temp
+            triar_msg = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + tri_msg_temp
 
-        msg_packs = {'CTRIA3': triMsg,
-                    'CTRIA6': tri6Msg,
-                    'CTRIAR': trirMsg,
-                    'CQUAD4': quadMsg,
-                    'CQUAD8': quad8Msg,
-                    'CQUADR': quadrMsg, }
+        msg_packs = {
+            'CTRIA3': tria3_msg,
+            'CTRIA6': tria6_msg,
+            'CTRIAR': triar_msg,
+            'CQUAD4': quad4_msg,
+            'CQUAD8': quad8_msg,
+            'CQUADR': quadr_msg, }
 
-        validTypes = ['CTRIA3', 'CTRIA6', 'CTRIAR', 'CQUAD4',
-                      'CQUAD8', 'CQUADR']
-        (etypes, orderedETypes) = self.getOrderedETypes(validTypes)
+        valid_types = ['CTRIA3', 'CTRIA6', 'CTRIAR',
+                       'CQUAD4', 'CQUAD8', 'CQUADR']
+        (etypes, ordered_etypes) = self.getOrderedETypes(valid_types)
 
         msg = []
         for etype in etypes:
-            eids = orderedETypes[eType]
+            eids = ordered_etypes[etype]
             if eids:
                 eids.sort()
-                #print "eType = ",eType
+                #print "eType = ",etype
                 #print "eids = ",eids
-                #print "eType = ",eType
-                msg_pack = msg_packs[eType]
+                #print "eType = ",etype
+                msg_pack = msg_packs[etype]
 
                 msg += header + msg_pack
                 if etype in ['CQUAD4']:
@@ -923,14 +944,14 @@ class RealPlateStress(StressObject):
 
         if self.isFiberDistance():
             quad_msg_temp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
-                           '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % (von_mises)]
+                             '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % (von_mises)]
             tri_msg_temp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
-                          '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % (von_mises)]
+                            '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % (von_mises)]
         else:
             quad_msg_temp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
-                           '      ID      GRID-ID  CURVATURE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % (von_mises)]
+                             '      ID      GRID-ID  CURVATURE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % (von_mises)]
             tri_msg_temp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
-                          '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % (von_mises)]
+                            '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % (von_mises)]
 
         tria3_msg = None
         tria6_msg = None
@@ -979,15 +1000,16 @@ class RealPlateStress(StressObject):
         if 'CTRIAR' in etypes:
             triar_msg = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + tri_msg_temp
 
-        msg_packs = {'CTRIA3': tria3_msg,
-                    'CTRIA6': tria6_msg,
-                    'CTRIAR': triar_msg,
-                    'CQUAD4': quad4_msg,
-                    'CQUAD8': quad8_msg,
-                    'CQUADR': quadr_msg, }
+        msg_packs = {
+            'CTRIA3': tria3_msg,
+            'CTRIA6': tria6_msg,
+            'CTRIAR': triar_msg,
+            'CQUAD4': quad4_msg,
+            'CQUAD8': quad8_msg,
+            'CQUADR': quadr_msg, }
 
-        valid_types = ['CTRIA3', 'CTRIA6', 'CTRIAR', 'CQUAD4',
-                      'CQUAD8', 'CQUADR']
+        valid_types = ['CTRIA3', 'CTRIA6', 'CTRIAR',
+                       'CQUAD4', 'CQUAD8', 'CQUADR']
         (etypes, ordered_etypes) = self.getOrderedETypes(valid_types)
 
         msg = []
@@ -998,9 +1020,9 @@ class RealPlateStress(StressObject):
         else:
             dt_msg = ' %s = %%10.4E\n' % self.data_code['name']
         for etype in etypes:
-            eids = ordered_etypes[eType]
+            eids = ordered_etypes[etype]
             if eids:
-                msg_pack = msg_packs[eType]
+                msg_pack = msg_packs[etype]
                 eids.sort()
                 if etype in ['CQUAD4']:
                     if is_bilinear:
@@ -1070,6 +1092,7 @@ class RealPlateStress(StressObject):
         return page_num - 1
 
     def _write_f06_quad4_bilinear(self, eid, n, cen):
+        """Writes the static CQUAD4 bilinear"""
         msg = ['']
         k = self.oxx[eid].keys()
         #cen = 'CEN/' + str(n)
@@ -1077,7 +1100,7 @@ class RealPlateStress(StressObject):
         k.sort()
         for nid in [cen] + k:
             for ilayer in range(len(self.oxx[eid][nid])):
-                fd = self.fiberCurvature[eid][nid][ilayer]
+                fiber_dist = self.fiberCurvature[eid][nid][ilayer]
                 oxx = self.oxx[eid][nid][ilayer]
                 oyy = self.oyy[eid][nid][ilayer]
                 txy = self.txy[eid][nid][ilayer]
@@ -1085,90 +1108,91 @@ class RealPlateStress(StressObject):
                 major = self.majorP[eid][nid][ilayer]
                 minor = self.minorP[eid][nid][ilayer]
                 ovm = self.ovmShear[eid][nid][ilayer]
-                ([fd, oxx, oyy, txy, major, minor, ovm], is_all_zeros) = writeFloats13E([fd, oxx, oyy, txy, major, minor, ovm])
+                ([fiber_dist, oxx, oyy, txy, major, minor, ovm], is_all_zeros) = writeFloats13E([fiber_dist, oxx, oyy, txy, major, minor, ovm])
                 ([angle], is_all_zeros) = writeFloats8p4F([angle])
 
                 if nid == cen and ilayer == 0:
-                    msg.append('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n' % (eid, cen, fd, oxx, oyy, txy, angle, major, minor, ovm))
+                    msg.append('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n' % (eid, cen, fiber_dist, oxx, oyy, txy, angle, major, minor, ovm))
                 elif ilayer == 0:
-                    msg.append('   %8s %8i  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n' % ('', nid, fd, oxx, oyy, txy, angle, major, minor, ovm))
+                    msg.append('   %8s %8i  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n' % ('', nid, fiber_dist, oxx, oyy, txy, angle, major, minor, ovm))
                 elif ilayer == 1:
-                    msg.append('   %8s %8s  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n\n' % ('', '', fd, oxx, oyy, txy, angle, major, minor, ovm))
+                    msg.append('   %8s %8s  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n\n' % ('', '', fiber_dist, oxx, oyy, txy, angle, major, minor, ovm))
                 else:
                     raise Exception('Invalid option for cquad4')
         return ''.join(msg)
 
     def _write_f06_quad4_bilinear_transient(self, dt, eid, n, cen):
+        """Writes the transient CQUAD4 bilinear"""
         msg = ['']
         k = self.oxx[dt][eid].keys()
         #cen = 'CEN/' + str(n)
         k.remove(cen)
         k.sort()
         for nid in [cen] + k:
-            for iLayer in range(len(self.oxx[dt][eid][nid])):
-                fd = self.fiberCurvature[eid][nid][iLayer]
-                oxx = self.oxx[dt][eid][nid][iLayer]
-                oyy = self.oyy[dt][eid][nid][iLayer]
-                txy = self.txy[dt][eid][nid][iLayer]
-                angle = self.angle[dt][eid][nid][iLayer]
-                major = self.majorP[dt][eid][nid][iLayer]
-                minor = self.minorP[dt][eid][nid][iLayer]
-                ovm = self.ovmShear[dt][eid][nid][iLayer]
-                ([fd, oxx, oyy, txy, major, minor, ovm], is_all_zeros) = writeFloats13E([fd, oxx, oyy, txy, major, minor, ovm])
+            for ilayer in range(len(self.oxx[dt][eid][nid])):
+                fiber_dist = self.fiberCurvature[eid][nid][ilayer]
+                oxx = self.oxx[dt][eid][nid][ilayer]
+                oyy = self.oyy[dt][eid][nid][ilayer]
+                txy = self.txy[dt][eid][nid][ilayer]
+                angle = self.angle[dt][eid][nid][ilayer]
+                major = self.majorP[dt][eid][nid][ilayer]
+                minor = self.minorP[dt][eid][nid][ilayer]
+                ovm = self.ovmShear[dt][eid][nid][ilayer]
+                ([fiber_dist, oxx, oyy, txy, major, minor, ovm], is_all_zeros) = writeFloats13E([fiber_dist, oxx, oyy, txy, major, minor, ovm])
                 ([angle], is_all_zeros) = writeFloats8p4F([angle])
 
-                if nid == cen and iLayer == 0:
-                    msg.append('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n' % (eid, cen, fd, oxx, oyy, txy, angle, major, minor, ovm))
-                elif iLayer == 0:
-                    msg.append('   %8s %8i  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n' % ('', nid, fd, oxx, oyy, txy, angle, major, minor, ovm))
-                elif iLayer == 1:
-                    msg.append('   %8s %8s  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n\n' % ('', '', fd, oxx, oyy, txy, angle, major, minor, ovm))
+                if nid == cen and ilayer == 0:
+                    msg.append('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n' % (eid, cen, fiber_dist, oxx, oyy, txy, angle, major, minor, ovm))
+                elif ilayer == 0:
+                    msg.append('   %8s %8i  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n' % ('', nid, fiber_dist, oxx, oyy, txy, angle, major, minor, ovm))
+                elif ilayer == 1:
+                    msg.append('   %8s %8s  %-13s  %-13s %-13s %-13s   %8s  %-13s %-13s %s\n\n' % ('', '', fiber_dist, oxx, oyy, txy, angle, major, minor, ovm))
                 else:
                     raise RuntimeError('Invalid option for cquad4')
         return ''.join(msg)
 
     def _write_f06_tri3(self, eid):
         msg = ['']
-        oxxNodes = self.oxx[eid].keys()
-        for nid in sorted(oxxNodes):
-            for iLayer in range(len(self.oxx[eid][nid])):
-                fd = self.fiberCurvature[eid][nid][iLayer]
-                oxx = self.oxx[eid][nid][iLayer]
-                oyy = self.oyy[eid][nid][iLayer]
-                txy = self.txy[eid][nid][iLayer]
-                angle = self.angle[eid][nid][iLayer]
-                major = self.majorP[eid][nid][iLayer]
-                minor = self.minorP[eid][nid][iLayer]
-                ovm = self.ovmShear[eid][nid][iLayer]
-                ([fd, oxx, oyy, txy, major, minor, ovm], is_all_zeros) = writeFloats13E([fd, oxx, oyy, txy, major, minor, ovm])
+        oxx_nodes = self.oxx[eid].keys()
+        for nid in sorted(oxx_nodes):
+            for ilayer in range(len(self.oxx[eid][nid])):
+                fiber_dist = self.fiberCurvature[eid][nid][ilayer]
+                oxx = self.oxx[eid][nid][ilayer]
+                oyy = self.oyy[eid][nid][ilayer]
+                txy = self.txy[eid][nid][ilayer]
+                angle = self.angle[eid][nid][ilayer]
+                major = self.majorP[eid][nid][ilayer]
+                minor = self.minorP[eid][nid][ilayer]
+                ovm = self.ovmShear[eid][nid][ilayer]
+                ([fiber_dist, oxx, oyy, txy, major, minor, ovm], is_all_zeros) = writeFloats13E([fiber_dist, oxx, oyy, txy, major, minor, ovm])
                 ([angle], is_all_zeros) = writeFloats8p4F([angle])
 
-                if iLayer == 0:
-                    msg.append('0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % (eid, fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip()))
+                if ilayer == 0:
+                    msg.append('0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % (eid, fiber_dist, oxx, oyy, txy, angle, major, minor, ovm.rstrip()))
                 else:
-                    msg.append('   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, oxx, oyy, txy, angle, major, minor, ovm.rstrip()))
+                    msg.append('   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fiber_dist, oxx, oyy, txy, angle, major, minor, ovm.rstrip()))
         return ''.join(msg)
 
     def _write_f06_tri3_transient(self, dt, eid):
         msg = ['']
-        oxxNodes = self.oxx[dt][eid].keys()
-        for nid in sorted(oxxNodes):
-            for iLayer in range(len(self.oxx[dt][eid][nid])):
-                fd = self.fiberCurvature[eid][nid][iLayer]
-                oxx = self.oxx[dt][eid][nid][iLayer]
-                oyy = self.oyy[dt][eid][nid][iLayer]
-                txy = self.txy[dt][eid][nid][iLayer]
-                angle = self.angle[dt][eid][nid][iLayer]
-                major = self.majorP[dt][eid][nid][iLayer]
-                minor = self.minorP[dt][eid][nid][iLayer]
-                ovm = self.ovmShear[dt][eid][nid][iLayer]
-                ([fd, oxx, oyy, txy, major, minor, ovm], is_all_zeros) = writeFloats13E([fd, oxx, oyy, txy, major, minor, ovm])
+        oxx_nodes = self.oxx[dt][eid].keys()
+        for nid in sorted(oxx_nodes):
+            for ilayer in range(len(self.oxx[dt][eid][nid])):
+                fiber_dist = self.fiberCurvature[eid][nid][ilayer]
+                oxx = self.oxx[dt][eid][nid][ilayer]
+                oyy = self.oyy[dt][eid][nid][ilayer]
+                txy = self.txy[dt][eid][nid][ilayer]
+                angle = self.angle[dt][eid][nid][ilayer]
+                major = self.majorP[dt][eid][nid][ilayer]
+                minor = self.minorP[dt][eid][nid][ilayer]
+                ovm = self.ovmShear[dt][eid][nid][ilayer]
+                ([fiber_dist, oxx, oyy, txy, major, minor, ovm], is_all_zeros) = writeFloats13E([fiber_dist, oxx, oyy, txy, major, minor, ovm])
                 ([angle], is_all_zeros) = writeFloats8p4F([angle])
 
-                if iLayer == 0:
-                    msg.append('0  %6i   %-13s     %-13s  %-13s  %-13s   %8s   %-13s   %-13s  %s\n' % (eid, fd, oxx, oyy, txy, angle, major, minor, ovm))
+                if ilayer == 0:
+                    msg.append('0  %6i   %-13s     %-13s  %-13s  %-13s   %8s   %-13s   %-13s  %s\n' % (eid, fiber_dist, oxx, oyy, txy, angle, major, minor, ovm))
                 else:
-                    msg.append('   %6s   %-13s     %-13s  %-13s  %-13s   %8s   %-13s   %-13s  %s\n' % ('', fd, oxx, oyy, txy, angle, major, minor, ovm))
+                    msg.append('   %6s   %-13s     %-13s  %-13s  %-13s   %8s   %-13s   %-13s  %s\n' % ('', fiber_dist, oxx, oyy, txy, angle, major, minor, ovm))
         return ''.join(msg)
 
 
@@ -1231,7 +1255,7 @@ class RealPlateStrain(StrainObject):
         else:
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
-        msg.append('  etype, fiberCurvature, exx, eyy, exy, angle, '
+        msg.append('  eType, fiberCurvature, exx, eyy, exy, angle, '
                    'majorP, minorP, evmShear\n')
         return msg
 
@@ -1241,10 +1265,11 @@ class RealPlateStrain(StrainObject):
             for line in data:
                 if etype == 'CTRIA3':
                     cen = 0
-                    (etype, eid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
-                                 f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
+                    (etype, eid,
+                     fiber_dist1, ex1, ey1, exy1, angle1, e11, e21, evm1,
+                     fiber_dist2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
                     self.eType[eid] = etype
-                    self.fiberCurvature[eid] = {cen : [f1, f2]}
+                    self.fiberCurvature[eid] = {cen : [fiber_dist1, fiber_dist2]}
                     self.exx[eid] = {cen : [ex1, ex2]}
                     self.eyy[eid] = {cen : [ey1, ey2]}
                     self.exy[eid] = {cen : [exy1, exy2]}
@@ -1254,11 +1279,12 @@ class RealPlateStrain(StrainObject):
                     self.evmShear[eid] = {cen : [evm1, evm2]}
                 elif etype == 'CQUAD4':
                     if len(line) == 19:  # Centroid - bilinear
-                        (etype, eid, nid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
-                                          f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
+                        (etype, eid, nid,
+                         fiber_dist1, ex1, ey1, exy1, angle1, e11, e21, evm1,
+                         fiber_dist2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
                         assert isinstance(nid, cen), nid
                         self.eType[eid] = etype
-                        self.fiberCurvature[eid] = {nid: [f1, f2]}
+                        self.fiberCurvature[eid] = {nid: [fiber_dist1, fiber_dist2]}
                         self.exx[eid] = {nid: [ex1, ex2]}
                         self.eyy[eid] = {nid: [ey1, ey2]}
                         self.exy[eid] = {nid: [exy1, exy2]}
@@ -1267,13 +1293,14 @@ class RealPlateStrain(StrainObject):
                         self.minorP[eid] = {nid: [e21, e22]}
                         self.evmShear[eid] = {nid: [evm1, evm2]}
                     elif len(line) == 18:  # Centroid
-                        (etype, eid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
-                                     f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
+                        (etype, eid,
+                         fiber_dist1, ex1, ey1, exy1, angle1, e11, e21, evm1,
+                         fiber_dist2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
                         nid = 'CEN/4'
                         nid = 0
                         assert isinstance(nid, cen), nid
                         self.eType[eid] = etype
-                        self.fiberCurvature[eid] = {nid: [f1, f2]}
+                        self.fiberCurvature[eid] = {nid: [fiber_dist1, fiber_dist2]}
                         self.exx[eid] = {nid: [ex1, ex2]}
                         self.eyy[eid] = {nid: [ey1, ey2]}
                         self.exy[eid] = {nid: [exy1, exy2]}
@@ -1282,10 +1309,11 @@ class RealPlateStrain(StrainObject):
                         self.minorP[eid] = {nid: [e21, e22]}
                         self.evmShear[eid] = {nid: [evm1, evm2]}
                     elif len(line) == 17:  # Bilinear node
-                        (nid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
-                              f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
+                        (nid,
+                         fiber_dist1, ex1, ey1, exy1, angle1, e11, e21, evm1,
+                         fiber_dist2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
                         assert isinstance(nid, cen), nid
-                        self.fiberCurvature[eid][nid] = [f1, f2]
+                        self.fiberCurvature[eid][nid] = [fiber_dist1, fiber_dist2]
                         self.exx[eid][nid] = [ex1, ex2]
                         self.eyy[eid][nid] = [ey1, ey2]
                         self.exy[eid][nid] = [exy1, exy2]
@@ -1318,10 +1346,11 @@ class RealPlateStrain(StrainObject):
             etype = data[0][0]
             if etype == 'CTRIA3':
                 cen = 'CEN/3'
-                (etype, eid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
-                             f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
+                (etype, eid,
+                 fiber_dist1, ex1, ey1, exy1, angle1, e11, e21, evm1,
+                 fiber_dist2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
                 self.eType[eid] = etype
-                self.fiberCurvature[eid] = {cen : [f1, f2]}
+                self.fiberCurvature[eid] = {cen : [fiber_dist1, fiber_dist2]}
                 self.exx[dt][eid] = {cen : [ex1, ex2]}
                 self.eyy[dt][eid] = {cen : [ey1, ey2]}
                 self.exy[dt][eid] = {cen : [exy1, exy2]}
@@ -1331,11 +1360,12 @@ class RealPlateStrain(StrainObject):
                 self.evmShear[dt][eid] = {cen : [evm1, evm2]}
             elif etype == 'CQUAD4':
                 if len(line) == 19:  # Centroid - bilinear
-                    (etype, eid, nid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
-                                      f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
+                    (etype, eid, nid,
+                     fiber_dist1, ex1, ey1, exy1, angle1, e11, e21, evm1,
+                     fiber_dist2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
                     assert isinstance(nid, int), nid
                     self.eType[eid] = etype
-                    self.fiberCurvature[eid] = {nid: [f1, f2]}
+                    self.fiberCurvature[eid] = {nid: [fiber_dist1, fiber_dist2]}
                     self.exx[dt][eid] = {nid: [ex1, ex2]}
                     self.eyy[dt][eid] = {nid: [ey1, ey2]}
                     self.exy[dt][eid] = {nid: [exy1, exy2]}
@@ -1344,11 +1374,12 @@ class RealPlateStrain(StrainObject):
                     self.minorP[dt][eid] = {nid: [e21, e22]}
                     self.evmShear[dt][eid] = {nid: [evm1, evm2]}
                 elif len(line) == 18:  # Centroid
-                    (etype, eid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
-                                 f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
+                    (etype, eid,
+                     fiber_dist1, ex1, ey1, exy1, angle1, e11, e21, evm1,
+                     fiber_dist2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
                     self.eType[eid] = etype
                     assert isinstance(nid, int), nid
-                    self.fiberCurvature[eid] = {nid: [f1, f2]}
+                    self.fiberCurvature[eid] = {nid: [fiber_dist1, fiber_dist2]}
                     self.exx[dt][eid] = {nid: [ex1, ex2]}
                     self.eyy[dt][eid] = {nid: [ey1, ey2]}
                     self.exy[dt][eid] = {nid: [exy1, exy2]}
@@ -1357,10 +1388,11 @@ class RealPlateStrain(StrainObject):
                     self.minorP[dt][eid] = {nid: [e21, e22]}
                     self.evmShear[dt][eid] = {nid: [evm1, evm2]}
                 elif len(line) == 17:  # Bilinear node
-                    (nid, f1, ex1, ey1, exy1, angle1, e11, e21, evm1,
-                          f2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
+                    (nid,
+                     fiber_dist1, ex1, ey1, exy1, angle1, e11, e21, evm1,
+                     fiber_dist2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
                     assert isinstance(nid, int), nid
-                    self.fiberCurvature[eid][nid] = [f1, f2]
+                    self.fiberCurvature[eid][nid] = [fiber_dist1, fiber_dist2]
                     self.exx[dt][eid][nid] = [ex1, ex2]
                     self.eyy[dt][eid][nid] = [ey1, ey2]
                     self.exy[dt][eid][nid] = [exy1, exy2]
@@ -1432,7 +1464,7 @@ class RealPlateStrain(StrainObject):
             self.add_new_transient(dt)
         #if eid in self.evmShear[dt]:  # SOL200, erase the old result
             #nid = node_id
-            #msg = "dt=%s eid=%s node_id=%s fd=%s oxx=%s major=%s vm=%s" %(dt, eid, node_id, str(self.fiberCurvature[eid][nid]), str(self.oxx[dt][eid][nid]),str(self.majorP[dt][eid][nid]),str(self.ovmShear[dt][eid][nid]))
+            #msg = "dt=%s eid=%s node_id=%s fiber_dist=%s oxx=%s major=%s vm=%s" %(dt, eid, node_id, str(self.fiberCurvature[eid][nid]), str(self.oxx[dt][eid][nid]),str(self.majorP[dt][eid][nid]),str(self.ovmShear[dt][eid][nid]))
             #self.delete_transient(dt)
             #self.add_new_transient()
 
@@ -1470,8 +1502,8 @@ class RealPlateStrain(StrainObject):
 
     def add_sort1(self, dt, eid, node_id, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
         msg = "eid=%s node_id=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, node_id, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
-        #if nodeID != 'C':  # centroid
-            #assert 0 < nodeID < 1000000000, 'nodeID=%s' % (nodeID)
+        #if node_id != 'C':  # centroid
+            #assert 0 < node_id < 1000000000, 'node_id=%s' % (node_id)
 
         assert isinstance(node_id, int), node_id
         self.fiberCurvature[eid][node_id].append(curvature)
@@ -1503,7 +1535,7 @@ class RealPlateStrain(StrainObject):
 
     def addNewNodeSort1(self, dt, eid, node_id, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
         msg = "eid=%s node_id=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, node_id, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
-        #assert nodeID not in self.exx[eid], msg
+        #assert node_id not in self.exx[eid], msg
         assert isinstance(node_id, int), node_id
         self.fiberCurvature[eid][node_id] = [curvature]
         self.exx[dt][eid][node_id] = [exx]
@@ -1610,11 +1642,9 @@ class RealPlateStrain(StrainObject):
 
         msg = []
         for etype in types_out:
-            eids = ordered_etypes[eType]
+            eids = ordered_etypes[etype]
             if eids:
-                #print "eids = ",eids
-                #print "eType = ",eType
-                msg_pack = msg_packs[eType]
+                msg_pack = msg_packs[etype]
                 eids.sort()
                 msg += header + msg_pack
                 if etype in ['CQUAD4']:
@@ -1739,15 +1769,15 @@ class RealPlateStrain(StrainObject):
         dts = self.exx.keys()
         dts.sort()
         if isinstance(dts[0], int):
-            dt_msg =  ' %s = %%-10i\n' % self.data_code['name']
+            dt_msg = ' %s = %%-10i\n' % self.data_code['name']
         else:
-            dt_msg =  ' %s = %%10.4E\n' % self.data_code['name']
+            dt_msg = ' %s = %%10.4E\n' % self.data_code['name']
 
         for etype in types_out:
-            eids = ordered_etypes[eType]
+            eids = ordered_etypes[etype]
             if eids:
                 msg = []
-                msg_pack = msg_packs[eType]
+                msg_pack = msg_packs[etype]
                 eids.sort()
                 if etype in ['CQUAD4']:
                     if is_bilinear:
@@ -1825,6 +1855,7 @@ class RealPlateStrain(StrainObject):
         return page_num - 1
 
     def _write_f06_quad4_bilinear(self, eid, n, cen):
+        """Writes the static CQUAD4 bilinear"""
         msg = ['']
         k = self.exx[eid].keys()
         #cen = 'CEN/' + str(n)
@@ -1832,7 +1863,7 @@ class RealPlateStrain(StrainObject):
         k.sort()
         for nid in [cen] + k:
             for ilayer in range(len(self.exx[eid][nid])):
-                fd = self.fiberCurvature[eid][nid][ilayer]
+                fiber_dist = self.fiberCurvature[eid][nid][ilayer]
                 exx = self.exx[eid][nid][ilayer]
                 eyy = self.eyy[eid][nid][ilayer]
                 exy = self.exy[eid][nid][ilayer]
@@ -1840,94 +1871,98 @@ class RealPlateStrain(StrainObject):
                 major = self.majorP[eid][nid][ilayer]
                 minor = self.minorP[eid][nid][ilayer]
                 evm = self.evmShear[eid][nid][ilayer]
-                ([fd, exx, eyy, exy, major, minor, evm], is_all_zeros) = writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
+                ([fiber_dist, exx, eyy, exy, major, minor, evm], is_all_zeros) = writeFloats13E([fiber_dist, exx, eyy, exy, major, minor, evm])
                 ([angle], is_all_zeros) = writeFloats8p4F([angle])
 
                 if nid == cen and ilayer == 0:
-                    msg.append('0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %s\n' % (eid, cen, fd, exx, eyy, exy, angle, major, minor, evm))
+                    msg.append('0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %s\n' % (eid, cen, fiber_dist, exx, eyy, exy, angle, major, minor, evm))
                 elif ilayer == 0:
-                    msg.append('   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %s\n' % ('', nid, fd, exx, eyy, exy, angle, major, minor, evm))
+                    msg.append('   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %s\n' % ('', nid, fiber_dist, exx, eyy, exy, angle, major, minor, evm))
                 elif ilayer == 1:
-                    msg.append('   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %s\n\n' % ('', '', fd, exx, eyy, exy, angle, major, minor, evm))
+                    msg.append('   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %s\n\n' % ('', '', fiber_dist, exx, eyy, exy, angle, major, minor, evm))
                 else:
                     raise RuntimeError('Invalid option for cquad4')
         return ''.join(msg)
 
     def _write_f06_quad4_bilinear_transient(self, dt, eid, n, cen):
+        """Writes the transient CQUAD4 bilinear"""
         msg = ['']
         k = self.exx[dt][eid].keys()
         #cen = 'CEN/' + str(n)
         k.remove(cen)
         k.sort()
         for nid in [cen] + k:
-            for iLayer in range(len(self.exx[dt][eid][nid])):
-                fd = self.fiberCurvature[eid][nid][iLayer]
-                exx = self.exx[dt][eid][nid][iLayer]
-                eyy = self.eyy[dt][eid][nid][iLayer]
-                exy = self.exy[dt][eid][nid][iLayer]
-                angle = self.angle[dt][eid][nid][iLayer]
-                major = self.majorP[dt][eid][nid][iLayer]
-                minor = self.minorP[dt][eid][nid][iLayer]
-                evm = self.evmShear[dt][eid][nid][iLayer]
+            for ilayer in range(len(self.exx[dt][eid][nid])):
+                fiber_dist = self.fiberCurvature[eid][nid][ilayer]
+                exx = self.exx[dt][eid][nid][ilayer]
+                eyy = self.eyy[dt][eid][nid][ilayer]
+                exy = self.exy[dt][eid][nid][ilayer]
+                angle = self.angle[dt][eid][nid][ilayer]
+                major = self.majorP[dt][eid][nid][ilayer]
+                minor = self.minorP[dt][eid][nid][ilayer]
+                evm = self.evmShear[dt][eid][nid][ilayer]
 
-                ([fd, exx, eyy, exy, major, minor, evm], is_all_zeros) = writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
+                ([fiber_dist, exx, eyy, exy, major, minor, evm], is_all_zeros) = writeFloats13E([fiber_dist, exx, eyy, exy, major, minor, evm])
                 ([angle], is_all_zeros) = writeFloats8p4F([angle])
 
-                if nid == cen and iLayer == 0:
-                    msg.append('0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, cen, fd, exx, eyy, exy, angle, major, minor, evm.rstrip()))
-                elif iLayer == 0:
-                    msg.append('   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % ('', nid, fd, exx, eyy, exy, angle, major, minor, evm.rstrip()))
-                elif iLayer == 1:
-                    msg.append('   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' % ('', '', fd, exx, eyy, exy, angle, major, minor, evm.rstrip()))
+                if nid == cen and ilayer == 0:
+                    msg.append('0  %8i %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % (eid, cen, fiber_dist, exx, eyy, exy, angle, major, minor, evm.rstrip()))
+                elif ilayer == 0:
+                    msg.append('   %8s %8i  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n' % ('', nid, fiber_dist, exx, eyy, exy, angle, major, minor, evm.rstrip()))
+                elif ilayer == 1:
+                    msg.append('   %8s %8s  %13s  %13s %13s %13s   %8s  %13s %13s %-s\n\n' % ('', '', fiber_dist, exx, eyy, exy, angle, major, minor, evm.rstrip()))
                 else:
                     raise RuntimeError('Invalid option for cquad4')
         return ''.join(msg)
 
     def _write_f06_tri3(self, eid):
+        """Writes the static CTRIA3/CQUAD4 linear"""
         msg = ['']
         k = self.exx[eid].keys()
         for nid in sorted(k):
-            for iLayer in range(len(self.exx[eid][nid])):
-                fd = self.fiberCurvature[eid][nid][iLayer]
-                exx = self.exx[eid][nid][iLayer]
-                eyy = self.eyy[eid][nid][iLayer]
-                exy = self.exy[eid][nid][iLayer]
-                angle = self.angle[eid][nid][iLayer]
-                major = self.majorP[eid][nid][iLayer]
-                minor = self.minorP[eid][nid][iLayer]
-                evm = self.evmShear[eid][nid][iLayer]
+            for ilayer in range(len(self.exx[eid][nid])):
+                fiber_dist = self.fiberCurvature[eid][nid][ilayer]
+                exx = self.exx[eid][nid][ilayer]
+                eyy = self.eyy[eid][nid][ilayer]
+                exy = self.exy[eid][nid][ilayer]
+                angle = self.angle[eid][nid][ilayer]
+                major = self.majorP[eid][nid][ilayer]
+                minor = self.minorP[eid][nid][ilayer]
+                evm = self.evmShear[eid][nid][ilayer]
 
-                ([fd, exx, eyy, exy, major, minor, evm], is_all_zeros) = writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
+                ([fiber_dist, exx, eyy, exy, major, minor, evm], is_all_zeros) = writeFloats13E([fiber_dist, exx, eyy, exy, major, minor, evm])
                 ([angle], is_all_zeros) = writeFloats8p4F([angle])
-                if iLayer == 0:
-                    msg.append('0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % (eid, fd, exx, eyy, exy, angle, major, minor, evm.rstrip()))
+                if ilayer == 0:
+                    msg.append('0  %6i   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % (eid, fiber_dist, exx, eyy, exy, angle, major, minor, evm.rstrip()))
                 else:
-                    msg.append('   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fd, exx, eyy, exy, angle, major, minor, evm.rstrip()))
+                    msg.append('   %6s   %13s     %13s  %13s  %13s   %8s   %13s   %13s  %-s\n' % ('', fiber_dist, exx, eyy, exy, angle, major, minor, evm.rstrip()))
         return ''.join(msg)
 
     def _write_f06_tri3_transient(self, dt, eid):
+        """Writes the transient CTRIA3/CQUAD4 linear"""
         msg = ['']
         exx_nodes = self.exx[dt][eid]
         #k = exxNodes.keys()
         for nid in sorted(exx_nodes):
-            for iLayer in range(len(self.exx[dt][eid][nid])):
-                fd = self.fiberCurvature[eid][nid][iLayer]
-                exx = self.exx[dt][eid][nid][iLayer]
-                eyy = self.eyy[dt][eid][nid][iLayer]
-                exy = self.exy[dt][eid][nid][iLayer]
-                angle = self.angle[dt][eid][nid][iLayer]
-                major = self.majorP[dt][eid][nid][iLayer]
-                minor = self.minorP[dt][eid][nid][iLayer]
-                evm = self.evmShear[dt][eid][nid][iLayer]
+            for ilayer in range(len(self.exx[dt][eid][nid])):
+                fiber_dist = self.fiberCurvature[eid][nid][ilayer]
+                exx = self.exx[dt][eid][nid][ilayer]
+                eyy = self.eyy[dt][eid][nid][ilayer]
+                exy = self.exy[dt][eid][nid][ilayer]
+                angle = self.angle[dt][eid][nid][ilayer]
+                major = self.majorP[dt][eid][nid][ilayer]
+                minor = self.minorP[dt][eid][nid][ilayer]
+                evm = self.evmShear[dt][eid][nid][ilayer]
 
-                ([fd, exx, eyy, exy, major, minor, evm], is_all_zeros) = writeFloats13E([fd, exx, eyy, exy, major, minor, evm])
+                ([fiber_dist, exx, eyy, exy, major, minor, evm], is_all_zeros) = writeFloats13E([fiber_dist, exx, eyy, exy, major, minor, evm])
                 ([angle], is_all_zeros) = writeFloats8p4F([angle])
-                if iLayer == 0:
-                    msg.append('0  %6i   %13s     %13s  %13s  %13s   %8s   '
-                               '%13s   %13s  %-s\n' % (eid, fd, exx, eyy, exy,
-                                                    angle, major, minor, evm))
+                if ilayer == 0:
+                    msg.append(
+                        '0  %6i   %13s     %13s  %13s  %13s   %8s   '
+                        '%13s   %13s  %-s\n' % (eid, fiber_dist, exx, eyy, exy,
+                                                angle, major, minor, evm))
                 else:
                     msg.append('   %6s   %13s     %13s  %13s  %13s   %8s   '
-                               '%13s   %13s  %-s\n' % ('', fd, exx, eyy, exy,
+                               '%13s   %13s  %-s\n' % ('', fiber_dist, exx, eyy, exy,
                                                     angle, major, minor, evm))
         return ''.join(msg)

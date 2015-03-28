@@ -28,9 +28,7 @@ class OP2(OP2_Scalar):
         make_geom = False
         assert make_geom == False, make_geom
         OP2_Scalar.__init__(self,
-                     debug=debug, log=log, debug_file=None)
-        #print(self.binary_debug)
-        #self.binary_debug = None
+                     debug=debug, log=log, debug_file=debug_file)
         self.ask = False
 
     def set_as_vectorized(self, ask=False):

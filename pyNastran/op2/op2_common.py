@@ -4,7 +4,6 @@ from six.moves import range
 import copy
 from struct import Struct, unpack
 
-from pyNastran import isRelease
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.utils import object_attributes
 
