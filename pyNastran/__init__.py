@@ -2,9 +2,10 @@ import subprocess
 def get_git_revision_short_hash():
     try:
         ghash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'])
+        ghas = ghash.decode('utf-8')
     except:
         ghash = 'no_checksum_error'
-    return 'dev-' + ghash
+    return 'dev-%s' % ghash
 
 revision = get_git_revision_short_hash()
 __author__  = 'Steven Doyle, Al Danials, Marcin Gasiorek'
