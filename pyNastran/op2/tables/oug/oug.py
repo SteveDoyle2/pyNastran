@@ -147,9 +147,9 @@ class OUG(OP2Common):
             raise NotImplementedError('SORT2!!!!!')
 
         if self.table_code == 1:   # Displacements
-            assert self.table_name in ['OUG1', 'BOUGV1', 'OUGV1', 'OUPV1', 'OUGV1PAT'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            assert self.table_name in [b'OUG1', b'BOUGV1', b'OUGV1', b'OUPV1', b'OUGV1PAT'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             is_cid = False
-            if self.table_name == 'OUGV1PAT':
+            if self.table_name == b'OUGV1PAT':
                 is_cid = True
             n = self._read_displacement(data, is_cid)
         elif self.table_code == 7:

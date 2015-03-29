@@ -119,3 +119,9 @@ def _eigenvalue_header(obj, header, itime, ntimes, dt):
             eigr_line = ' %14s = %12.6E\n' % ('EIGENVALUE', eigenvalue_real)
             header[2] = eigr_line
     return header
+
+
+def get_key0(adict):
+    """gets the "first" key in a dictionary"""
+    keys = list(sorted(adict.keys()))
+    return keys[0]

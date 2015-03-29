@@ -220,9 +220,9 @@ class FortranFormat(object):
             table3_parser, table4_parser = table_mapper[self.table_name]
             passer = False
         else:
-            #raise NotImplementedError(self.table_name)
             if self.read_mode in [0, 2]:
                 self.log.debug("skipping table_name = %r" % self.table_name)
+                #raise NotImplementedError(self.table_name)
             table3_parser = None
             table4_parser = None
             passer = True

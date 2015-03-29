@@ -69,7 +69,7 @@ class ScalarObject(BaseScalarObject):
         for key, value in sorted(iteritems(self.data_code)):
             self.__setattr__(key, value)
             #print("  key=%s value=%s" %(key, value))
-        #if self.table_name in ['OES1X', 'OES1X1']:
+        #if self.table_name in [b'OES1X', b'OES1X1']:
             #asdf
 
     def get_data_code(self):

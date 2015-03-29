@@ -7,7 +7,7 @@ from numpy import zeros, searchsorted
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import _write_f06_springs
-from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats12E, _eigenvalue_header
+from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats12E, _eigenvalue_header, get_key0
 
 
 class RealRodForceArray(ScalarObject):
@@ -205,7 +205,7 @@ class RealRodForce(ScalarObject):  # 1-ROD
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.torque)
-            time0 = self.torque.keys()[0]
+            time0 = get_key0(self.torque)
             nelements = len(self.torque[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -956,7 +956,7 @@ class RealViscForce(ScalarObject):  # 24-CVISC
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.torque)
-            time0 = self.torque.keys()[0]
+            time0 = get_key0(self.torque)
             nelements = len(self.torque[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -1551,7 +1551,7 @@ class RealCBarForce(ScalarObject):  # 34-CBAR
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.torque)
-            time0 = self.torque.keys()[0]
+            time0 = get_key0(self.torque)
             nelements = len(self.torque[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -1675,7 +1675,7 @@ class RealCBar100Force(ScalarObject):  # 100-CBAR
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.torque)
-            time0 = self.torque.keys()[0]
+            time0 = get_key0(self.torque)
             nelements = len(self.torque[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -1921,7 +1921,7 @@ class RealBendForce(ScalarObject):  # 69-CBEND
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.torque)
-            time0 = self.torque.keys()[0]
+            time0 = get_key0(self.torque)
             nelements = len(self.torque[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))

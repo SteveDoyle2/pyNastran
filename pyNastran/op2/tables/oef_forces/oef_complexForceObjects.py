@@ -2,7 +2,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
+from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E, get_key0
 
 
 class ComplexRodForce(ScalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
@@ -29,7 +29,7 @@ class ComplexRodForce(ScalarObject):  # 1-ROD, 3-TUBE, 10-CONROD
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.torque)
-            time0 = self.torque.keys()[0]
+            time0 = get_key0(self.torque)
             nelements = len(self.torque[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -485,7 +485,7 @@ class ComplexViscForce(ScalarObject):  # 24-CVISC
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.torque)
-            time0 = self.torque.keys()[0]
+            time0 = get_key0(self.torque)
             nelements = len(self.torque[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -800,7 +800,7 @@ class ComplexCBarForce(ScalarObject):  # 34-CBAR
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.torque)
-            time0 = self.torque.keys()[0]
+            time0 = get_key0(self.torque)
             nelements = len(self.torque[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -928,7 +928,7 @@ class ComplexBendForce(ScalarObject):  # 69-CBEND
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.torque)
-            time0 = self.torque.keys()[0]
+            time0 = get_key0(self.torque)
             nelements = len(self.torque[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))

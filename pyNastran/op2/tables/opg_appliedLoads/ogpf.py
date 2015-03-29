@@ -17,7 +17,7 @@ class OGPF(OP2Common):
         if self.read_mode == 1:
             return len(data)
         if self.table_code == 19:  # grid point force balance
-            assert self.table_name in ['OGPFB1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            assert self.table_name in [b'OGPFB1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_grid_point_forces(data)
         else:
             raise NotImplementedError(self.table_code)
