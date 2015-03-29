@@ -17,7 +17,7 @@ class OGPF(OP2Common):
         if self.read_mode == 1:
             return len(data)
         if self.table_code == 19:  # grid point force balance
-            assert self.table_name in ['OGPFB1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            assert self.table_name in [b'OGPFB1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_grid_point_forces(data)
         else:
             raise NotImplementedError(self.table_code)
@@ -39,6 +39,14 @@ class OGPF(OP2Common):
                 s = Struct(b'ii8s6f')
                 ntotal = 40
                 nnodes = len(data) // ntotal
+
+                if self.debug4():
+                    self.binary_debug.write('  GPFORCE\n')
+                    self.binary_debug.write('  [cap, gpforce1, gpforce2, ..., cap]\n')
+                    self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
+                    self.binary_debug.write('  gpforce1 = [ekey, eid, elemName, f1, f2, f3, m1, m2, m3]\n')
+                    self.binary_debug.write('  nnodes=%i\n' % nnodes)
+
                 for i in range(nnodes):
                     eData = data[n:n+ntotal]
                     out = s.unpack(eData)
@@ -46,6 +54,9 @@ class OGPF(OP2Common):
                     ekey = (ekey - self.device_code) // 10
                     elemName = elemName.strip()
                     #data = (eid, elemName, f1, f2, f3, m1, m2, m3)
+                    if self.debug4():
+                        self.binary_debug.write('  nid=%s - %s\n' % (ekey, str(out)))
+
                     self.obj.add(dt, ekey, eid, elemName, f1, f2, f3, m1, m2, m3)
                     #print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%g f2=%g f3=%g m1=%g m2=%g m3=%g" %(ekey,eid,elemName,f1,f2,f3,m1,m2,m3)
                     n += ntotal

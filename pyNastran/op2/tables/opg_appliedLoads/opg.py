@@ -131,7 +131,7 @@ class OPG(OP2Common):
 
     def _read_opg1_4(self, data):
         if self.table_code == 2:  # load vector
-            assert self.table_name in ['OPG1', 'OPGV1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            assert self.table_name in [b'OPG1', b'OPGV1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_load_vector(data)
         elif self.table_code == 12:  # ???
             n = self._read_force_vector(data)

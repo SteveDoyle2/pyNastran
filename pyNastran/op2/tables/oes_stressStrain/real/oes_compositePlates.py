@@ -157,7 +157,7 @@ class RealCompositePlateArray(OES_Object):
         return itot
 
     def eid_to_element_node_index(self, eids):
-        ind = ravel([searchsortd(self.element_layer[:, 0] == eid) for eid in eids])
+        ind = ravel([searchsorted(self.element_layer[:, 0] == eid) for eid in eids])
         #ind = searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
@@ -165,7 +165,7 @@ class RealCompositePlateArray(OES_Object):
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         #msg, nnodes, is_bilinear = self._get_msgs()
-        if self.isVonMises():
+        if self.is_von_mises():
             von = 'VON'
             mises = 'MISES'
         else:
@@ -257,7 +257,7 @@ class RealCompositePlateStressArray(RealCompositePlateArray, StressObject):
         return False
 
     def get_headers(self):
-        if self.isVonMises():
+        if self.is_von_mises():
             ovm = 'von_mises'
         else:
             ovm = 'max_shear'
@@ -277,7 +277,7 @@ class RealCompositePlateStrainArray(RealCompositePlateArray, StrainObject):
         return True
 
     def get_headers(self):
-        if self.isVonMises():
+        if self.is_von_mises():
             ovm = 'von_mises'
         else:
             ovm = 'max_shear'
@@ -309,7 +309,6 @@ class RealCompositePlateStress(StressObject):
         self.minorP = {}
         #self.fiberCurvature = {}
         self.ovmShear = {}
-        #if self.isVonMisesStress():
 
         self.dt = dt
         if is_sort1:
@@ -317,9 +316,10 @@ class RealCompositePlateStress(StressObject):
                 self.add = self.add_sort1
                 self.add_new_eid = self.add_new_eid_sort1
         else:
-            assert dt is not None
-            self.add = self.addSort2
-            self.add_new_eid = self.add_new_eid_sort2
+            assert dt is not None, dt
+            raise NotImplementedError('SORT2')
+            #self.add = self.addSort2
+            #self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -412,8 +412,8 @@ class RealCompositePlateStress(StressObject):
         """all points are located at the centroid"""
         if eid in self.o11:
             return self.add(dt, eid, layer, o11, o22, t12, t1z, t2z, angle, majorP, minorP, ovm)
-        assert eid not in self.o11, msg + '\n  o11=%s eType=%s code=%s' % (
-            self.o11[eid], self.eType[eid], self.data_code)
+        assert eid not in self.o11, 'eid=%s o11=%s eType=%s code=%s' % (
+            eid, self.o11[eid], self.eType[eid], self.data_code)
 
         self.eType[eid] = eType
         self.o11[eid] = [o11]
@@ -431,7 +431,6 @@ class RealCompositePlateStress(StressObject):
     def add_new_eid_sort1(self, eType, dt, eid, layer, o11, o22, t12, t1z, t2z, angle,
                           majorP, minorP, ovm):
         """all points are located at the centroid"""
-
         if dt not in self.o11:
             self.add_new_transient(dt)
         if eid in self.o11[dt]:
@@ -478,7 +477,7 @@ class RealCompositePlateStress(StressObject):
 
     def getHeaders(self):
         headers = ['o11', 'o22', 't12', 't1z', 't2z']
-        if self.isVonMises:
+        if self.is_von_mises():
             headers.append('oVonMises')
         else:
             headers.append('maxShear')
@@ -488,7 +487,7 @@ class RealCompositePlateStress(StressObject):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, page_stamp, page_num, f)
 
-        if self.isVonMises():
+        if self.is_von_mises():
             von = 'VON'
             mises = 'MISES'
         else:
@@ -498,15 +497,15 @@ class RealCompositePlateStress(StressObject):
         words = ['   ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      %s\n' % von,
                  '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n' % mises]
 
-        eTypes = self.eType.values()
-        if 'CQUAD4' in eTypes or 'QUAD4LC' in eTypes:
+        etypes = list(self.eType.values())
+        if 'CQUAD4' in etypes or 'QUAD4LC' in etypes:
             quadMsg = header + ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
             isQuad = True
         else:
             quadMsg = []
             isQuad = False
 
-        if 'CTRIA3' in eTypes or 'TRIA3LC' in eTypes:
+        if 'CTRIA3' in etypes or 'TRIA3LC' in etypes:
             isTri = True
             triMsg = header + ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
         else:
@@ -550,7 +549,7 @@ class RealCompositePlateStress(StressObject):
 
     def _write_f06_transient(self, header, page_stamp,
                              page_num=1, f=None, is_mag_phase=False):
-        if self.isVonMises():
+        if self.is_von_mises():
             von = 'VON'
             mises = 'MISES'
         else:
@@ -560,15 +559,15 @@ class RealCompositePlateStress(StressObject):
         words = ['   ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      %s\n' % von,
                  '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n' % mises]
 
-        eTypes = self.eType.values()
-        if 'CQUAD4' in eTypes or 'QUAD4LC' in eTypes:
+        etypes = list(self.eType.values())
+        if 'CQUAD4' in etypes or 'QUAD4LC' in etypes:
             quadWords = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
             isQuad = True
         else:
             quadWords = []
             isQuad = False
 
-        if 'CTRIA3' in eTypes or 'TRIA3LC' in eTypes:
+        if 'CTRIA3' in etypes or 'TRIA3LC' in etypes:
             isTri = True
             triWords = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
         else:
@@ -646,7 +645,7 @@ class RealCompositePlateStrain(StrainObject):
 
         if self.code == [1, 0, 14]:
             self.evmShear = {}
-            assert self.isVonMises() == False
+            assert self.is_von_mises() == False
         else:
             raise RuntimeError("Invalid Code: compositePlateStrain - get the format/sort/stressCode=%s" % (self.code))
 
@@ -656,9 +655,10 @@ class RealCompositePlateStrain(StrainObject):
                 self.add = self.add_sort1
                 self.add_new_eid = self.add_new_eid_sort1
         else:
-            assert dt is not None
-            self.add = self.addSort2
-            self.add_new_eid = self.add_new_eid_sort2
+            assert dt is not None, dt
+            raise NotImplementedError('SORT2')
+            #self.add = self.addSort2
+            #self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -749,8 +749,8 @@ class RealCompositePlateStrain(StrainObject):
         """all points are located at the centroid"""
         if eid in self.e11:
             return self.add(dt, eid, layer, e11, e22, e12, e1z, e2z, angle, majorP, minorP, evm)
-        assert eid not in self.e11
-        assert isinstance(eid, int)
+        assert eid not in self.e11, eid
+        assert isinstance(eid, int), eid
         self.eType[eid] = eType
         self.e11[eid] = [e11]
         self.e22[eid] = [e22]
@@ -769,8 +769,8 @@ class RealCompositePlateStrain(StrainObject):
         """all points are located at the centroid"""
         if dt not in self.e11:
             self.add_new_transient(dt)
-        assert eid not in self.e11[dt]
-        assert isinstance(eid, int)
+        assert eid not in self.e11[dt], eid
+        assert isinstance(eid, int), eid
 
         self.eType[eid] = eType
         self.e11[dt][eid] = [e11]
@@ -809,7 +809,7 @@ class RealCompositePlateStrain(StrainObject):
 
     def getHeaders(self):
         headers = ['e11', 'e22', 'e12', 'e1z', 'e2z']
-        if self.isVonMises:
+        if self.is_von_mises():
             headers.append('eVonMises')
         else:
             headers.append('maxShear')
@@ -819,7 +819,7 @@ class RealCompositePlateStrain(StrainObject):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, page_stamp, page_num, f)
 
-        if self.isVonMises():
+        if self.is_von_mises():
             von = 'VON'
             mises = 'MISES'
         else:
@@ -829,15 +829,15 @@ class RealCompositePlateStrain(StrainObject):
         words = ['   ELEMENT  PLY   STRAINS IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR   STRAINS  PRINCIPAL  STRAINS (ZERO SHEAR)      %s\n' % von,
                  '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n' % mises]
 
-        eTypes = self.eType.values()
-        if 'CQUAD4' in eTypes or 'QUAD4LC' in eTypes:
+        etypes = list(self.eType.values())
+        if 'CQUAD4' in etypes or 'QUAD4LC' in etypes:
             quadMsg = header + ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
             isQuad = True
         else:
             quadMsg = []
             isQuad = False
 
-        if 'CTRIA3' in eTypes or 'TRIA3LC' in eTypes:
+        if 'CTRIA3' in etypes or 'TRIA3LC' in etypes:
             isTri = True
             triMsg = header + ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
         else:
@@ -882,7 +882,7 @@ class RealCompositePlateStrain(StrainObject):
         return page_num
 
     def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        if self.isVonMises():
+        if self.is_von_mises():
             von = 'VON'
             mises = 'MISES'
         else:
@@ -892,29 +892,29 @@ class RealCompositePlateStrain(StrainObject):
         words = ['   ELEMENT  PLY   STRAINS IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR   STRAINS  PRINCIPAL  STRAINS (ZERO SHEAR)      %s\n' % von,
                  '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n' % mises]
 
-        eTypes = self.eType.values()
-        if 'CQUAD4' in eTypes or 'QUAD4LC' in eTypes:
-            quadWords = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
-            isQuad = True
+        etypes = set(self.eType.values())
+        if 'CQUAD4' in etypes or 'QUAD4LC' in etypes:
+            quad_words = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
+            is_quad = True
         else:
-            quadWords = []
-            isQuad = False
+            quad_words = []
+            is_quad = False
 
-        if 'CTRIA3' in eTypes or 'TRIA3LC' in eTypes:
-            isTri = True
-            triWords = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
+        if 'CTRIA3' in etypes or 'TRIA3LC' in etypes:
+            is_tria = True
+            tria_words = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
         else:
-            isTri = False
-            triWords = []
+            is_tria = False
+            tria_words = []
 
         for dt, e11s in sorted(iteritems(self.e11)):
-            quadMsg = []
-            triMsg = []
+            quad_msg = []
+            tria_msg = []
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-            if isQuad:
-                quadMsg = header + quadWords
-            if isTri:
-                triMsg = header + triWords
+            if is_quad:
+                quad_msg = header + quad_words
+            if is_tria:
+                tria_msg = header + tria_words
 
             for eid, e11s in sorted(iteritems(e11s)):
                 out = ''
@@ -936,19 +936,19 @@ class RealCompositePlateStrain(StrainObject):
                     out += '0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %-s\n' % (eid, iLayer + 1, e11, e22, e12, e1z, e2z, angle, major, minor, evm)
 
                 if eType in ['CQUAD4', 'QUAD4LC']:
-                    quadMsg.append(out)
+                    quad_msg.append(out)
                 elif eType in ['CTRIA3', 'TRIA3LC']:
-                    triMsg.append(out)
+                    tria_msg.append(out)
                 else:
                     raise NotImplementedError('eType = |%r|' % (eType))
 
-            if isQuad:
-                quadMsg.append(page_stamp % page_num)
+            if is_quad:
+                quad_msg.append(page_stamp % page_num)
                 page_num += 1
-                f.write(''.join(quadMsg))
+                f.write(''.join(quad_msg))
 
-            if isTri:
-                triMsg.append(page_stamp % page_num)
+            if is_tria:
+                tria_msg.append(page_stamp % page_num)
                 page_num += 1
-                f.write(''.join(triMsg))
+                f.write(''.join(tria_msg))
         return page_num - 1

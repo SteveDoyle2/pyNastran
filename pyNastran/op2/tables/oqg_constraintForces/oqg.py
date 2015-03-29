@@ -121,10 +121,10 @@ class OQG(OP2Common):
             return len(data)
 
         if self.table_code == 3:   # SPC Forces
-            assert self.table_name in ['OQG1', 'OQGV1', 'OQP1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            assert self.table_name in [b'OQG1', b'OQGV1', b'OQP1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_spc_forces(data)
         elif self.table_code == 39:  # MPC Forces
-            assert self.table_name in ['OQMG1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            assert self.table_name in [b'OQMG1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_mpc_forces(data)
         else:
             msg = 'table_code=%s' % self.table_code

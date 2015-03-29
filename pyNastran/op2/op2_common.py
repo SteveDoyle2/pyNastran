@@ -4,7 +4,7 @@ from six.moves import range
 import copy
 from struct import Struct, unpack
 
-from pyNastran import isRelease
+from pyNastran import is_release
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.utils import object_attributes
 
@@ -520,6 +520,7 @@ class OP2Common(Op2Codes, F06Writer):
             # complex_obj
             assert complex_obj is not None
             nnodes = len(data) // 56  # 14*4
+            self.binary_debug.write('nnodes=%s' % nnodes)
             auto_return = self._create_table_object(result_name, nnodes, storage_obj, complex_obj, complex_vector)
             if auto_return:
                 return len(data)
@@ -589,6 +590,8 @@ class OP2Common(Op2Codes, F06Writer):
         assert nnodes > 0
         #assert len(data) % ntotal == 0
 
+        if self.debug4():
+            self.binary_debug.write('  nnodes=%i\n' % (nnodes))
         for inode in range(nnodes):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
@@ -720,7 +723,7 @@ class OP2Common(Op2Codes, F06Writer):
         return self.code
 
     def _not_implemented_or_skip(self, data, msg=''):
-        if isRelease:
+        if is_release:
             return len(data)
         else:
             raise NotImplementedError('table_name=%s table_code=%s %s\n%s' % (self.table_name, self.table_code, msg, self.code_information()))

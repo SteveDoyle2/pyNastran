@@ -1,6 +1,7 @@
 #pylint: disable=C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from six import PY2
 import os
 import sys
 #import resource
@@ -81,7 +82,10 @@ if __name__ == '__main__':  # pragma: no cover
     npassed = ntotal - nfailed
     sys.stderr.write('%i/%i passed\n' % (npassed, ntotal))
     try:
-        f = open('failedCases.in', 'wb')
+        if PY2:
+            f = open('failedCases.in', 'wb')
+        else:
+            f = open('failedCases.in', 'w')
     except IOError:
         #fds = get_open_fds()
         #print(get_file_names_from_file_number(fds))

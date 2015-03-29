@@ -93,6 +93,7 @@ def load_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
     if dirname == '':
         dirname = os.getcwd()
 
+    wildcard_level = None
     if _gui_mode == 0: # wx
         app = wx.App(redirect=False)
         app.MainLoop()
@@ -113,15 +114,18 @@ def load_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
         form = QtDialog()
         form.show()
 
-        fname, wildcard_level = QtGui.QFileDialog.getOpenFileName(form, Title,
+        output = QtGui.QFileDialog.getOpenFileName(form, Title,
             dirname, qt_wildcard)
+        if len(output) == 1:
+            fname, wildcard_level = output
+        else:
+            fname = output
         app.exit()
-        #print("fname =%s" % fname)
     else:
         msg = 'Could not import wx, PySide, or PyQt4.  '\
             'Please specify the file explicitly.'
         raise ImportError(msg)
-    return fname
+    return fname, wildcard_level
 
 
 def _main():  # pragma: no conver

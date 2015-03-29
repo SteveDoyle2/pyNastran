@@ -7,7 +7,7 @@ from numpy import zeros, searchsorted
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import _write_f06_springs
-from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats12E, _eigenvalue_header
+from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats12E, _eigenvalue_header, get_key0
 
 
 class RealRodForceArray(ScalarObject):
@@ -134,7 +134,7 @@ class RealRodForceArray(ScalarObject):
         return itot
 
     def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsortd(self.element == eid) for eid in eids])
+        #ind = ravel([searchsorted(self.element == eid) for eid in eids])
         ind = searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
@@ -205,7 +205,7 @@ class RealRodForce(ScalarObject):  # 1-ROD
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.torque)
-            time0 = self.torque.keys()[0]
+            time0 = get_key0(self.torque)
             nelements = len(self.torque[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -341,7 +341,7 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.shear)
-            time0 = self.shear.keys()[0]
+            time0 = get_key0(self.shear)
             nelements = len(self.shear[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -536,7 +536,7 @@ class RealCShearForce(ScalarObject):  # 4-CSHEAR
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.shear12)
-            time0 = self.shear12.keys()[0]
+            time0 = get_key0(self.shear12)
             nelements = len(self.shear12[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -730,7 +730,7 @@ class RealSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CELAS4
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.force)
-            time0 = self.force.keys()[0]
+            time0 = get_key0(self.force)
             nelements = len(self.force[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -842,7 +842,7 @@ class RealDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAMP4
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.force)
-            time0 = self.force.keys()[0]
+            time0 = get_key0(self.force)
             nelements = len(self.force[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -956,7 +956,7 @@ class RealViscForce(ScalarObject):  # 24-CVISC
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.torque)
-            time0 = self.torque.keys()[0]
+            time0 = get_key0(self.torque)
             nelements = len(self.torque[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -1023,7 +1023,7 @@ class RealPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.mx)
-            time0 = self.mx.keys()[0]
+            time0 = get_key0(self.mx)
             nelements = len(self.mx[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -1253,7 +1253,7 @@ class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         return itot
 
     def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsortd(self.element_node[:, 0] == eid) for eid in eids])
+        #ind = ravel([searchsorted(self.element_node[:, 0] == eid) for eid in eids])
         ind = searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
@@ -1343,7 +1343,7 @@ class RealPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
             if ntimes == 0:
                 nelements = 0
             else:
-                time0 = self.mx.keys()[0]
+                time0 = get_key0(self.mx)
                 nelements = len(self.mx[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -1551,7 +1551,7 @@ class RealCBarForce(ScalarObject):  # 34-CBAR
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.torque)
-            time0 = self.torque.keys()[0]
+            time0 = get_key0(self.torque)
             nelements = len(self.torque[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -1675,7 +1675,7 @@ class RealCBar100Force(ScalarObject):  # 100-CBAR
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.torque)
-            time0 = self.torque.keys()[0]
+            time0 = get_key0(self.torque)
             nelements = len(self.torque[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -1748,7 +1748,7 @@ class RealConeAxForce(ScalarObject):  # 35-CCONEAX
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.hopa)
-            time0 = self.hopa.keys()[0]
+            time0 = get_key0(self.hopa)
             nelements = len(self.hopa[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -1831,7 +1831,7 @@ class RealCGapForce(ScalarObject):  # 38-CGAP
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.fx)
-            time0 = self.fx.keys()[0]
+            time0 = get_key0(self.fx)
             nelements = len(self.fx[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -1921,7 +1921,7 @@ class RealBendForce(ScalarObject):  # 69-CBEND
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.torque)
-            time0 = self.torque.keys()[0]
+            time0 = get_key0(self.torque)
             nelements = len(self.torque[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -2003,7 +2003,7 @@ class RealPentaPressureForce(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.acceleration)
-            time0 = self.acceleration.keys()[0]
+            time0 = get_key0(self.acceleration)
             nelements = len(self.acceleration[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -2101,7 +2101,7 @@ class RealCBushForce(ScalarObject):  # 102-CBUSH
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.force)
-            time0 = self.force.keys()[0]
+            time0 = get_key0(self.force)
             nelements = len(self.force[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))

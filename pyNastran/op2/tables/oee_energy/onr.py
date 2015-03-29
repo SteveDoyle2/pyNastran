@@ -128,7 +128,7 @@ class ONR(OP2Common):
             return len(data)
 
         if self.table_code == 18:  # element strain energy
-            assert self.table_name in ['ONRGY1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            assert self.table_name in [b'ONRGY1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_element_strain_energy(data)
         else:
             raise NotImplementedError(self.table_code)

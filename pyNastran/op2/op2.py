@@ -28,9 +28,7 @@ class OP2(OP2_Scalar):
         make_geom = False
         assert make_geom == False, make_geom
         OP2_Scalar.__init__(self,
-                     debug=debug, log=log, debug_file=None)
-        #print(self.binary_debug)
-        #self.binary_debug = None
+                     debug=debug, log=log, debug_file=debug_file)
         self.ask = False
 
     def set_as_vectorized(self, ask=False):
@@ -107,7 +105,7 @@ class OP2(OP2_Scalar):
         assert self.ask in [True, False], self.ask
         self.is_vectorized = vectorized
         if self.is_vectorized:
-            self.log.info('-------- reading the op2 with read_mode=1 --------')
+            self.log.info('-------- reading op2 with read_mode=1 --------')
             self.read_mode = 1
             self._close_op2 = False
 
@@ -119,8 +117,8 @@ class OP2(OP2_Scalar):
             # TODO: clear out objects the user doesn't want
             self.read_mode = 2
             self._close_op2 = True
-            self.log.info('-------- reading the op2 with read_mode=2 --------')
-            OP2_Scalar.read_op2(self, op2_filename=op2_filename)
+            self.log.info('-------- reading op2 with read_mode=2 --------')
+            OP2_Scalar.read_op2(self, op2_filename=self.op2_filename)
         else:
             self.read_mode = 0
             self._close_op2 = True

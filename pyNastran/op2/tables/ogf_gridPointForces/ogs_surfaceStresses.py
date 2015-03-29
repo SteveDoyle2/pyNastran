@@ -2,7 +2,7 @@ from six import iteritems
 from numpy import zeros
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats10E, writeFloats8p4F
+from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats10E, writeFloats8p4F, get_key0
 
 
 class GridPointStressesArray(ScalarObject):
@@ -34,7 +34,7 @@ class GridPointStressesArray(ScalarObject):
         msg = self.get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.nx)
-            times0 = self.nx.keys()[0]
+            times0 = get_key0(self.nx)
             nelements = len(self. nx[times0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -73,7 +73,7 @@ class GridPointStresses(ScalarObject):
         msg = self.get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.nx)
-            times0 = self.nx.keys()[0]
+            times0 = get_key0(self.nx)
             nelements = len(self. nx[times0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -271,7 +271,7 @@ class GridPointStressesVolume(ScalarObject):
         msg = self.get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.nx)
-            times0 = self.nx.keys()[0]
+            times0 = get_key0(self.nx)
             nelements = len(self. nx[times0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))

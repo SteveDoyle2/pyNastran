@@ -59,7 +59,7 @@ def get_nodal_averaged_stress(model, eid_to_nid_map, isubcase, options=None):
     }
     if isubcase in model.solidStress:
         case = model.solidStress[isubcase]
-        if case.isVonMises():
+        if case.is_von_mises():
             vmWord = 'vonMises'
         else:
             vmWord = 'maxShear'
@@ -98,7 +98,7 @@ def get_nodal_averaged_stress(model, eid_to_nid_map, isubcase, options=None):
         case = model.plateStress[isubcase]
         if case.nonlinear_factor is not None: # transient
             return
-        if case.isVonMises():
+        if case.is_von_mises():
             vmWord = 'vonMises'
         else:
             vmWord = 'maxShear'
@@ -163,7 +163,7 @@ def get_nodal_averaged_stress(model, eid_to_nid_map, isubcase, options=None):
         case = model.compositePlateStress[isubcase]
         if case.nonlinear_factor is not None: # transient
             return
-        if case.isVonMises():
+        if case.is_von_mises():
             vmWord = 'vonMises'
         else:
             vmWord = 'maxShear'

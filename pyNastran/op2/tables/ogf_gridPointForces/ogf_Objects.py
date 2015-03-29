@@ -6,11 +6,9 @@ from pyNastran.f06.f06_formatting import writeFloats13E
 
 
 class RealGridPointForces(ScalarObject):
-
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        self.forces = {}
-        self.moments = {}
+        self.force_moment = {}
         self.elemName = {}
         self.eids = {}
 
@@ -27,80 +25,69 @@ class RealGridPointForces(ScalarObject):
 
         msg = self.get_data_code()
         if self.dt is not None:  # transient
-            ntimes = len(self.forces)
+            ntimes = len(self.force_moment)
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
         else:
             msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
                                                      nelements))
-        msg.append('  forces, moments, elemName, eids\n')
+        msg.append('  force_moment, elemName, eids\n')
         return msg
 
     def add_new_transient(self, dt):  # eKey
         """initializes the transient variables"""
-        self.forces[dt] = {}
-        self.moments[dt] = {}
-        #self.elemName[dt] = {}
-        #self.eids[dt] = {}
-        #self.elemName[eKey] = []
-        #self.eids[eKey] = []
-        self.elemName = {}
-        self.eids = {}
+        self.force_moment[dt] = {}
+
+        # these can shockingly be different sizes, so we can't save space
+        self.elemName[dt] = {}
+        self.eids[dt] = {}
 
     def add(self, dt, eKey, eid, elemName, f1, f2, f3, m1, m2, m3):
-        if eKey not in self.forces:
+        if eKey not in self.force_moment:
             self.eids[eKey] = []
-            self.forces[eKey] = []
-            self.moments[eKey] = []
+            self.force_moment[eKey] = []
             self.elemName[eKey] = []
-        self.forces[eKey].append(array([f1, f2, f3], dtype='float32'))  # Fx,Fy,Fz
-        self.moments[eKey].append(array([m1, m2, m3], dtype='float32'))  # Mx,My,Mz
+        self.force_moment[eKey].append(array([f1, f2, f3, m1, m2, m3], dtype='float32'))  # Fx,Fy,Fz
         self.elemName[eKey].append(elemName)
         self.eids[eKey].append(eid)
 
     def add_f06_data(self, dt, data):
         if dt is None:
             for (nid, eid, source, f1, f2, f3, m1, m2, m3) in data:
-                if nid not in self.forces:
+                if nid not in self.force_moment:
                     self.eids[nid] = []
-                    self.forces[nid] = []
-                    self.moments[nid] = []
+                    self.force_moment[nid] = []
                     self.elemName[nid] = []
-                self.forces[nid].append(array([f1, f2, f3], dtype='float32'))  # Mx,My,Mz
-                self.moments[nid].append(array([m1, m2, m3], dtype='float32'))  # Fx,Fy,Fz
+                self.force_moment[nid].append(array([f1, f2, f3, m1, m2, m3], dtype='float32'))
                 self.elemName[nid].append(source)
                 self.eids[nid].append(eid)
 
         else:
-            if dt not in self.forces:
-                self.forces[dt] = {}
-                self.moments[dt] = {}
+            if dt not in self.force_moment:
+                self.force_moment[dt] = {}
             for (nid, eid, source, f1, f2, f3, m1, m2, m3) in data:
-                if nid not in self.forces[dt]:
+                if nid not in self.force_moment[dt]:
                     self.eids[nid] = []
-                    self.forces[dt][nid] = []
-                    self.moments[dt][nid] = []
-                    self.elemName[nid] = []
-                self.forces[dt][nid].append(array([f1, f2, f3], dtype='float32'))  # Mx,My,Mz
-                self.moments[dt][nid].append(array([m1, m2, m3], dtype='float32'))  # Fx,Fy,Fz
-                self.elemName[nid].append(source)
-                self.eids[nid].append(eid)
+                    self.force_moment[dt][nid] = []
+                    self.elemName[dt][nid] = []
+                    self.eids[dt][nid] = []
+                self.force_moment[dt][nid].append(array([f1, f2, f3, m1, m2, m3], dtype='float32'))
+                self.elemName[dt][nid].append(source)
+                self.eids[dt][nid].append(eid)
 
-    def add_sort1(self, dt, eKey, eid, elemName, f1, f2, f3, m1, m2, m3):
-        if dt not in self.forces:
+    def add_sort1(self, dt, ekey, eid, elemName, f1, f2, f3, m1, m2, m3):
+        if dt not in self.force_moment:
             #print "new transient"
             self.add_new_transient(dt)
 
-        #print "%s=%s eKey=%s eid=%s elemName=%s f1=%s" %(self.data_code['name'],dt,eKey,eid,elemName,f1)
-        if eKey not in self.forces[dt]:
-            self.eids[eKey] = []
-            self.forces[dt][eKey] = []
-            self.moments[dt][eKey] = []
-            self.elemName[eKey] = []
-        self.forces[dt][eKey].append(array([f1, f2, f3], dtype='float32'))  # Mx,My,Mz
-        self.moments[dt][eKey].append(array([m1, m2, m3], dtype='float32'))  # Fx,Fy,Fz
-        self.elemName[eKey].append(elemName)
-        self.eids[eKey].append(eid)
+        #print "%s=%s ekey=%s eid=%s elemName=%s f1=%s" %(self.data_code['name'], dt, ekey, eid, elemName, f1)
+        if ekey not in self.force_moment[dt]:
+            self.eids[dt][ekey] = []
+            self.force_moment[dt][ekey] = []
+            self.elemName[dt][ekey] = []
+        self.force_moment[dt][ekey].append(array([f1, f2, f3, m1, m2, m3], dtype='float32'))
+        self.elemName[dt][ekey].append(elemName)
+        self.eids[dt][ekey].append(eid)
 
     def update_dt(self, data_code, freq):
         self.data_code = data_code
@@ -111,12 +98,12 @@ class RealGridPointForces(ScalarObject):
             self.add_new_transient()
 
     def delete_transient(self, dt):
-        del self.forces[dt]
-        del self.moments[dt]
+        del self.force_moment[dt]
         del self.elemName[dt]
+        del self.eids[dt]
 
     def get_transients(self):
-        k = self.forces.keys()
+        k = self.force_moment.keys()
         k.sort()
         return k
 
@@ -136,10 +123,9 @@ class RealGridPointForces(ScalarObject):
               #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
               #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
         zero = ' '
-        for eKey, Force in sorted(iteritems(self.forces)):
+        for eKey, Force in sorted(iteritems(self.force_moment)):
             for iLoad, force in enumerate(Force):
-                (f1, f2, f3) = force
-                (m1, m2, m3) = self.moments[eKey][iLoad]
+                (f1, f2, f3, m1, m2, m3) = force
                 elemName = self.elemName[eKey][iLoad]
                 eid = self.eids[eKey][iLoad]
                 vals = [f1, f2, f3, m1, m2, m3]
@@ -162,14 +148,13 @@ class RealGridPointForces(ScalarObject):
               #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
               #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
               #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
-        for dt, Forces in sorted(iteritems(self.forces)):
+        for dt, Forces in sorted(iteritems(self.force_moment)):
             zero = ' '
             for eKey, Force in sorted(iteritems(Forces)):
                 for iLoad, force in enumerate(Force):
-                    (f1, f2, f3) = force
-                    (m1, m2, m3) = self.moments[dt][eKey][iLoad]
-                    (elemName) = self.elemName[eKey][iLoad]
-                    eid = self.eids[eKey][iLoad]
+                    (f1, f2, f3, m1, m2, m3) = force
+                    elemName = self.elemName[dt][eKey][iLoad]
+                    eid = self.eids[dt][eKey][iLoad]
 
                     vals = [f1, f2, f3, m1, m2, m3]
                     (vals2, is_all_zeros) = writeFloats13E(vals)

@@ -1,4 +1,5 @@
 from six import iteritems
+from six.moves import range
 from scipy.spatial import KDTree as scipyKDTree
 
 class Node(object):
@@ -27,6 +28,7 @@ class KdTree2(object):
         dists, i = self.tree.query(point, k=self.nclose)
         close_ids = self.node_ids[i]
         return close_ids, dists
+
 
 class KdTree(object):
     def __init__(self, treeType, pointsList, nClose=0):

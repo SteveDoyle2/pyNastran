@@ -1,4 +1,10 @@
-revision = 'dev'
+import subprocess
+def get_git_revision_short_hash():
+    try:
+        ghash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'])
+    except:
+        ghash = 'no_checksum_error'
+    return 'dev-' + ghash
 
 __author__  = 'Steven Doyle, Al Danials, Marcin Gasiorek'
 __email__   = 'mesheb82@gmail.com'
@@ -11,4 +17,4 @@ __releaseDate2__ = 'APRIL xx, 2015'
 __version__     = '0.8.0_%s' % revision
 __website__     = 'https://github.com/SteveDoyle2/pyNastran'
 
-isRelease = True  ## turns on skipping of tables that aren't supported
+is_release = True  ## turns on skipping of tables that aren't supported

@@ -9,6 +9,7 @@ from collections import defaultdict
 
 import pyNastran
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
+from pyNastran.f06.f06_formatting import get_key0_compare
 from pyNastran.op2.op2_f06_common import OP2_F06_Common
 
 
@@ -351,7 +352,7 @@ class F06Writer(OP2_F06_Common):
                 res_length = max(len(result.__class__.__name__), res_length)
                 continue
             elif len(res_type) != 0:
-                key0 = res_type.keys()[0]
+                key0 = get_key0_compare(res_type)
                 result = res_type[key0]
                 class_name = result.__class__.__name__
                 print('%s - results not found...key=%s' % (class_name, res_key))
@@ -486,13 +487,11 @@ class F06Writer(OP2_F06_Common):
 
             # alphabetical order...
             # bars
-            self.barForces,
             self.cbar_force,
+            self.cbar100_force,
 
             # beam
-            self.beamForces,
-            self.bar100Forces,
-            self.bendForces,
+            self.cbend_force,
             self.cbeam_force,
 
             # alphabetical
@@ -506,24 +505,32 @@ class F06Writer(OP2_F06_Common):
             self.plateForces,   # centroidal elements
             self.plateForces2,  # bilinear elements
 
+            self.conrod_force,
             self.crod_force,
             self.cshear_force,
             self.ctria3_force,
             self.ctube_force,
 
-            # rods
-            self.rodForces,
-
             # springs
-            self.springForces,
+            self.celas1_force,
+            self.celas2_force,
+            self.celas3_force,
+            self.celas4_force,
 
             # dampers
-            self.damperForces,
+            self.cdamp1_force,
+            self.cdamp2_force,
+            self.cdamp3_force,
+            self.cdamp4_force,
 
-            # cshear,
-            self.shearForces,
             # other
-            self.bushForces, self.gapForces, self.solidPressureForces,
+            self.cbush_force,
+            self.cgap_force,
+            self.cvisc_force,
+
+            self.chexa_pressure_force,
+            self.cpenta_pressure_force,
+            self.ctetra_pressure_force,
 
             #------------------------------------------
             # OES - strain
@@ -551,19 +558,13 @@ class F06Writer(OP2_F06_Common):
 
             self.nonlinear_ctria3_strain,
             self.nonlinear_cquad4_strain,
-            self.ctriaxStrain, self.hyperelasticPlateStress,
+            self.ctriax_strain, self.hyperelasticPlateStress,
 
 
             # rods
             self.nonlinear_crod_strain,
             self.nonlinear_ctube_strain,
             self.nonlinear_conrod_strain,
-
-
-            self.celas1_strain,
-            self.celas2_strain,
-            self.celas3_strain,
-            self.celas4_strain,
 
             self.chexa_strain,
             self.conrod_strain,
@@ -627,7 +628,7 @@ class F06Writer(OP2_F06_Common):
 
             self.nonlinear_ctria3_stress,
             self.nonlinear_cquad4_stress,
-            self.ctriaxStress, self.hyperelasticPlateStrain,
+            self.ctriax_stress, self.hyperelasticPlateStrain,
 
             #------------------------------------------
 

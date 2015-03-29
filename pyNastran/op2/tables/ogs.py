@@ -95,13 +95,13 @@ class OGS(OP2Common):
             return len(data)
 
         if self.table_code == 26:  # OGS1 - grid point stresses - surface
-            assert self.table_name in ['OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_ogs1_table26(data)
         elif self.table_code == 27:  # OGS1 - grid point stresses - volume direct
-            assert self.table_name in ['OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
             n = self._read_ogs1_table27(data)
         elif self.table_code == 28:  # OGS1- grid point stresses - principal
-            assert self.table_name in ['OGS1'],'table_name=%s table_code=%s' % (self.table_name,self.table_code)
+            assert self.table_name in [b'OGS1'],'table_name=%s table_code=%s' % (self.table_name,self.table_code)
             n = self._read_ogs1_table28(data)
         #elif self.table_code == 35:  # OGS - Grid point stress discontinuities (plane strain)
             #n = self._not_implemented_or_skip(data, msg)

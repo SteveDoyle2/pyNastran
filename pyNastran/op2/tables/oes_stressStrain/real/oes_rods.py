@@ -5,7 +5,7 @@ from six.moves import zip, range
 from numpy import zeros
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import writeFloats13E, _eigenvalue_header
+from pyNastran.f06.f06_formatting import writeFloats13E, _eigenvalue_header, get_key0
 
 
 # there is a bug for mode_solid_shell_bar.op2 for multiple times
@@ -121,7 +121,7 @@ class RealRodArray(OES_Object):
         return itot
 
     def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsortd(self.element_node[:, 0] == eid) for eid in eids])
+        #ind = ravel([searchsorted(self.element_node[:, 0] == eid) for eid in eids])
         ind = searchsorted(eids, self.element)
         #ind = ind.reshape(ind.size)
         #ind.sort()
@@ -248,7 +248,7 @@ class RodDamper(StressObject):
         eTypes = list(set(self.eType.values()))
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.axial)
-            a0 = self.stress.keys()[0]
+            a0 = get_key0(self.stress)
             nelements = len(self.axial[a0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -302,7 +302,7 @@ class RealRodStress(StressObject):
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.axial)
-            a0 = self.axial.keys()[0]
+            a0 = get_key0(self.axial)
             nelements = len(self.axial[a0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -512,7 +512,7 @@ class RealRodStrain(StrainObject):
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.axial)
-            a0 = self.axial.keys()[0]
+            a0 = get_key0(self.axial)
             nelements = len(self.axial[a0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))

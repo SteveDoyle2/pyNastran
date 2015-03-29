@@ -69,10 +69,11 @@ def main():
     write_op2 = False
     is_vector   = [True, False]
     vector_stop = [True, True]  # corresponds to is_vector; stop if case fails=True
+    binary_debug = False  # catch any errors
 
     delete_f06 = True
     saveCases = True
-    regenerate = False
+    regenerate = True
     stopOnFailure = False
     getSkipCards = False
 
@@ -103,7 +104,7 @@ def main():
                    write_op2=write_op2, debug=debug, saveCases=saveCases, skipFiles=skipFiles,
                    stopOnFailure=stopOnFailure,
                    is_vector=is_vector, vector_stop=vector_stop,
-                   nStart=nStart, nStop=nStop)
+                   nStart=nStart, nStop=nStop, binary_debug=binary_debug)
     print("dt = %f" %(time.time() - t0))
     sys.exit('final stop...')
 

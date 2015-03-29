@@ -220,9 +220,9 @@ class FortranFormat(object):
             table3_parser, table4_parser = table_mapper[self.table_name]
             passer = False
         else:
-            #raise NotImplementedError(self.table_name)
             if self.read_mode in [0, 2]:
                 self.log.debug("skipping table_name = %r" % self.table_name)
+                #raise NotImplementedError(self.table_name)
             table3_parser = None
             table4_parser = None
             passer = True
@@ -376,6 +376,43 @@ class FortranFormat(object):
                     print('obj=%s doesnt have ntimes' % self.obj.__class__.__name__)
         else:
             raise RuntimeError(self.read_mode)
+        from pyNastran.utils import object_attributes
+        del_words = [
+            'words',
+            #'Title',
+            #'ID',
+            'analysis_code',
+            #'result_names',
+            #'labels',
+            #'dataNames',
+        ]
+        msg = ''
+        if hasattr(self, 'words'):
+            for word in self.words:
+                if word in ['???', 'Title']:
+                    continue
+                if not hasattr(self, word):
+                    continue
+                delattr(self, word)
+            self.words = []
+        if hasattr(self, 'analysis_code'):
+            del self.analysis_code
+        if hasattr(self, 'dataNames') and self.dataNames is not None:
+            print(object_attributes(self))
+            asf
+        if hasattr(self, 'data_code'):
+            del self.data_code
+
+        for word in del_words:
+            if hasattr(self, word):
+                val = getattr(self, word)
+                if isinstance(val, list) and len(val) == 0:
+                    continue
+                msg += '  %s=%s\n' % (word, val)
+        if msg:
+            print(object_attributes(self))
+            print(msg)
+        #asdf
         return n
 
     def is_valid_subcase(self):
@@ -508,5 +545,5 @@ class FortranFormat(object):
                 nloop += 1
 
             if nloop > 0:
-                record = ''.join(records)
+                record = b''.join(records)
         return record

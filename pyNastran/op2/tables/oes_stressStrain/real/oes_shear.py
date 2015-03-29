@@ -5,7 +5,7 @@ from six.moves import zip, range
 from numpy import zeros
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import _eigenvalue_header
+from pyNastran.f06.f06_formatting import _eigenvalue_header, get_key0
 
 class RealShearArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -115,7 +115,7 @@ class RealShearArray(OES_Object):
         return itot
 
     def eid_to_element_node_index(self, eids):
-        #ind = ravel([searchsortd(self.element_node[:, 0] == eid) for eid in eids])
+        #ind = ravel([searchsorted(self.element_node[:, 0] == eid) for eid in eids])
         ind = searchsorted(eids, self.element_node[:, 0])
         #ind = ind.reshape(ind.size)
         #ind.sort()
@@ -242,7 +242,7 @@ class RealShearStress(StressObject):
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.maxShear)
-            s0 = self.maxShear.keys()[0]
+            s0 = get_key0(self.maxShear)
             nelements = len(self.maxShear[s0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -339,7 +339,7 @@ class RealShearStrain(StrainObject):
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.maxShear)
-            s0 = self.maxShear.keys()[0]
+            s0 = get_key0(self.maxShear)
             nelements = len(self.maxShear[s0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))

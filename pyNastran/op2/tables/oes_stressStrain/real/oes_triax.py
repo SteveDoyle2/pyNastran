@@ -2,7 +2,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject
-from pyNastran.f06.f06_formatting import writeFloats13E
+from pyNastran.f06.f06_formatting import writeFloats13E, get_key0
 
 
 class RealTriaxStress(StressObject):
@@ -49,7 +49,7 @@ class RealTriaxStress(StressObject):
         msg = self.get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.radial)
-            r0 = self.radial.keys()[0]
+            r0 = get_key0(self.radial)
             nelements = len(self.radial[r0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -269,7 +269,7 @@ class RealTriaxStrain(StrainObject):
         msg = self.get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.radial)
-            r0 = self.radial.keys()[0]
+            r0 = get_key0(self.radial)
             nelements = len(self.radial[r0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
