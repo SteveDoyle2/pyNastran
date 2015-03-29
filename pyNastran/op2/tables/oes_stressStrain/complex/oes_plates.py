@@ -6,7 +6,7 @@ from six.moves import range
 from numpy import zeros
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E
+from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E, get_key0
 
 
 class ComplexPlateArray(OES_Object):
@@ -1129,7 +1129,7 @@ class ComplexPlateStrain(StrainObject):
             eid = self.eType.keys()[ElemKey]
             #print "self.oxx = ",self.oxx
             #print "eid=%s" %(eid)
-            dt = self.exx.keys()[0]
+            dt = get_key0(self.exx)
             #print "dt=%s" %(dt)
             nLayers = len(self.exx[dt][eid])
             #print "elementKeys = ",elementKeys

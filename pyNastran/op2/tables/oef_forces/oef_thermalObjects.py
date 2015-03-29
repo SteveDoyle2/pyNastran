@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-
+from pyNastran.f06.f06_formatting import get_key0
 
 class HeatFlux_VU_3D(ScalarObject):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -374,7 +374,7 @@ class HeatFlux_CONV(ScalarObject):  # 110-CONV
         msg = self.get_data_code()
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.cntlNode)
-            times0 = self.cntlNode.keys()[0]
+            times0 = get_key0(self.cntlNode)
             nelements = len(self.cntlNode[times0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))

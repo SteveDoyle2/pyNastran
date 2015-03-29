@@ -7,7 +7,7 @@ from itertools import count
 from numpy import zeros
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
-from pyNastran.f06.f06_formatting import writeFloats13E, _eigenvalue_header
+from pyNastran.f06.f06_formatting import writeFloats13E, _eigenvalue_header, get_key0
 
 
 class RealBeamArray(OES_Object):
@@ -548,7 +548,7 @@ class RealBeamStress(StressObject):
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.smax)
-            s0 = self.smax.keys()[0]
+            s0 = get_key0(self.smax)
             nelements = len(self.smax[s0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -810,7 +810,7 @@ class RealBeamStrain(StrainObject):
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.smax)
-            s0 = self.smax.keys()[0]
+            s0 = get_key0(self.smax)
             nelements = len(self.smax[s0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))

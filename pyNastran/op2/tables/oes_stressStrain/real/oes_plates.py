@@ -7,7 +7,7 @@ from itertools import count
 from numpy import zeros, searchsorted, ravel
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats8p4F, _eigenvalue_header
+from pyNastran.f06.f06_formatting import writeFloats13E, writeFloats8p4F, _eigenvalue_header, get_key0
 
 class RealPlateArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -1727,7 +1727,7 @@ class RealPlateStrain(StrainObject):
             eid = self.eType.keys()[elem_key]
             #print "self.oxx = ",self.oxx
             #print "eid=%s" %(eid)
-            dt = self.exx.keys()[0]
+            dt = get_key0(self.exx)
             #print "dt=%s" %(dt)
             nlayers = len(self.exx[dt][eid])
             #print "elementKeys = ",elementKeys
@@ -1743,7 +1743,7 @@ class RealPlateStrain(StrainObject):
         if 'CQUADR' in etypes:
             qkey = etypes.index('CQUADR')
             kkey = self.eType.keys()[qkey]
-            dt = self.exx.keys()[0]
+            dt = get_key0(self.exx)
             ekey = self.exx[dt][kkey].keys()
             is_bilinear = True
             quadr_msg = header + ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quad_msg_temp

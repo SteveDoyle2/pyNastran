@@ -3,6 +3,7 @@ from collections import defaultdict
 from numpy import unique
 
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
+from pyNastran.f06.f06_formatting import get_key0
 from pyNastran.utils import object_attributes
 
 
@@ -323,7 +324,7 @@ class OP2_F06_Common(object):
                 res_length = max(len(result.__class__.__name__), res_length)
                 continue
             elif len(res_type) != 0:
-                key0 = res_type.keys()[0]
+                key0 = get_key0(res_type)
                 result = res_type[key0]
                 class_name = result.__class__.__name__
                 print('%s - results not found...key=%s' % (class_name, res_key))

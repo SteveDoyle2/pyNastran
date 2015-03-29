@@ -2,6 +2,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject
+from pyNastran.f06.f06_formatting import get_key0
 
 
 
@@ -39,7 +40,7 @@ class ComplexShearStress(StressObject):
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.maxShear)
-            s0 = self.maxShear.keys()[0]
+            s0 = get_key0(self.maxShear)
             nelements = len(self.maxShear[s0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -117,7 +118,7 @@ class ComplexShearStrain(StrainObject):
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.maxShear)
-            s0 = self.maxShear.keys()[0]
+            s0 = get_key0(self.maxShear)
             nelements = len(self.maxShear[s0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))

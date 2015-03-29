@@ -3,6 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from math import isnan
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
+from pyNastran.f06.f06_formatting import get_key0
 
 
 class StrainEnergyObject(ScalarObject):
@@ -39,7 +40,7 @@ class StrainEnergyObject(ScalarObject):
         msg = []
         if self.nonlinear_factor is not None:  # transient
             ntimes = len(self.energy)
-            time0 = self.energy.keys()[0]
+            time0 = get_key0(self.energy)
             nelements = len(self.energy[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))

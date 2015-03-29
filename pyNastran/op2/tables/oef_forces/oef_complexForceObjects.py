@@ -90,7 +90,7 @@ class ComplexCBeamForce(ScalarObject):  # 2-CBEAM
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.shear)
-            time0 = self.shear.keys()[0]
+            time0 = get_key0(self.shear)
             nelements = len(self.shear[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -205,7 +205,7 @@ class ComplexCShearForce(ScalarObject):  # 4-CSHEAR
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.shear12)
-            time0 = self.shear12.keys()[0]
+            time0 = get_key0(self.shear12)
             nelements = len(self.shear12[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -311,7 +311,7 @@ class ComplexSpringForce(ScalarObject):  # 11-CELAS1,12-CELAS2,13-CELAS3, 14-CEL
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.force)
-            time0 = self.force.keys()[0]
+            time0 = get_key0(self.force)
             nelements = len(self.force[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -428,7 +428,7 @@ class ComplexDamperForce(ScalarObject):  # 20-CDAMP1,21-CDAMP2,22-CDAMP3,23-CDAM
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.force)
-            time0 = self.force.keys()[0]
+            time0 = get_key0(self.force)
             nelements = len(self.force[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -552,7 +552,7 @@ class ComplexPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.mx)
-            time0 = self.mx.keys()[0]
+            time0 = get_key0(self.mx)
             nelements = len(self.mx[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -643,7 +643,7 @@ class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.mx)
-            time0 = self.mx.keys()[0]
+            time0 = get_key0(self.mx)
             nelements = len(self.mx[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -1012,7 +1012,7 @@ class ComplexPentaPressureForce(ScalarObject):  # 76-CHEXA_PR,77-PENTA_PR,78-TET
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.acceleration)
-            time0 = self.acceleration.keys()[0]
+            time0 = get_key0(self.acceleration)
             nelements = len(self.acceleration[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))
@@ -1077,7 +1077,7 @@ class ComplexCBushForce(ScalarObject):  # 102-CBUSH
         msg = self.get_data_code()
         if self.dt is not None:  # transient
             ntimes = len(self.force)
-            time0 = self.force.keys()[0]
+            time0 = get_key0(self.force)
             nelements = len(self.force[time0])
             msg.append('  type=%s ntimes=%s nelements=%s\n'
                        % (self.__class__.__name__, ntimes, nelements))

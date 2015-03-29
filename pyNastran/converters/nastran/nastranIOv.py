@@ -39,6 +39,7 @@ from pyNastran.bdf.bdf import (BDF,
                                ShellElement, LineElement, SpringElement,
                                LOAD)
 from pyNastran.op2.op2 import OP2
+from pyNastran.f06.f06_formatting import get_key0
 try:
     from pyNastran.op2.op2_geom import OP2Geom
     is_geom = True
@@ -244,7 +245,7 @@ class NastranIO(object):
                 i += 1
 
         # add the nodes
-        node0 = model.nodes.keys()[0]
+        node0 = get_key0(model.nodes)
         position0 = model.nodes[node0].Position()
         xmin = position0[0]
         xmax = position0[0]
