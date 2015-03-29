@@ -513,7 +513,7 @@ class RealPlateStress(StressObject):
             etype = data[0][0]
             for line in data:
                 if etype == 'CTRIA3':
-                    cen = 'CEN/3'
+                    cen = 0 # 'CEN/3'
                     (etype, eid,
                      fiber_dist1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
                      fiber_dist2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
@@ -532,6 +532,8 @@ class RealPlateStress(StressObject):
                         (etype, eid, nid,
                          fiber_dist1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
                          fiber_dist2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
+                        if nid == 'CEN/4':
+                            nid = 0
                         assert isinstance(nid, int), nid
                         self.eType[eid] = etype
                         self.fiberCurvature[eid] = {nid: [fiber_dist1, fiber_dist2]}
@@ -547,6 +549,9 @@ class RealPlateStress(StressObject):
                          fiber_dist1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
                          fiber_dist2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
                         #nid = 'CEN/4'
+                        #if nid == 'CEN/4':
+                            #nid = 0
+                        assert isinstance(nid, int), nid
                         nid = 0
                         self.eType[eid] = etype
                         self.fiberCurvature[eid] = {nid: [fiber_dist1, fiber_dist2]}
@@ -628,7 +633,9 @@ class RealPlateStress(StressObject):
                     (etype, eid, nid,
                      fiber_dist1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
                      fiber_dist2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
-                    assert isinstance(nid, int), nid
+                    if 'nid' == 'CEN/4':
+                        nid = 0
+                    #assert isinstance(nid, int), nid
                     self.eType[eid] = etype
                     self.fiberCurvature[eid] = {nid: [fiber_dist1, fiber_dist2]}
                     self.oxx[dt][eid] = {nid: [ox1, ox2]}
@@ -796,6 +803,7 @@ class RealPlateStress(StressObject):
 
     def addNewNodeSort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
         assert eid is not None
+        assert isinstance(node_id, int), node_id
         msg = "dt=%s eid=%s node_id=%s fiber_dist=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
         #assert node_id not in self.oxx[dt][eid]
         self.fiberCurvature[eid][node_id] = [fiber_dist]
@@ -1100,7 +1108,7 @@ class RealPlateStress(StressObject):
     def _write_f06_quad4_bilinear(self, eid, n, cen):
         """Writes the static CQUAD4 bilinear"""
         msg = ['']
-        k = self.oxx[eid].keys()
+        #k = self.oxx[eid].keys()
         #cen = 'CEN/' + str(n)
         #k.remove(cen)
         #k.sort()
@@ -1294,7 +1302,9 @@ class RealPlateStrain(StrainObject):
                         (etype, eid, nid,
                          fiber_dist1, ex1, ey1, exy1, angle1, e11, e21, evm1,
                          fiber_dist2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
-                        assert isinstance(nid, cen), nid
+                        if 'nid' == 'CEN/4':
+                            nid = 0
+                        #assert isinstance(nid, int), nid
                         self.eType[eid] = etype
                         self.fiberCurvature[eid] = {nid: [fiber_dist1, fiber_dist2]}
                         self.exx[eid] = {nid: [ex1, ex2]}
@@ -1308,8 +1318,7 @@ class RealPlateStrain(StrainObject):
                         (etype, eid,
                          fiber_dist1, ex1, ey1, exy1, angle1, e11, e21, evm1,
                          fiber_dist2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
-                        nid = 'CEN/4'
-                        nid = 0
+                        nid = 0 # CEN/4
                         assert isinstance(nid, cen), nid
                         self.eType[eid] = etype
                         self.fiberCurvature[eid] = {nid: [fiber_dist1, fiber_dist2]}
@@ -1324,7 +1333,7 @@ class RealPlateStrain(StrainObject):
                         (nid,
                          fiber_dist1, ex1, ey1, exy1, angle1, e11, e21, evm1,
                          fiber_dist2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
-                        assert isinstance(nid, cen), nid
+                        assert isinstance(nid, int), nid
                         self.fiberCurvature[eid][nid] = [fiber_dist1, fiber_dist2]
                         self.exx[eid][nid] = [ex1, ex2]
                         self.eyy[eid][nid] = [ey1, ey2]
@@ -1375,7 +1384,10 @@ class RealPlateStrain(StrainObject):
                     (etype, eid, nid,
                      fiber_dist1, ex1, ey1, exy1, angle1, e11, e21, evm1,
                      fiber_dist2, ex2, ey2, exy2, angle2, e12, e22, evm2) = line
-                    assert isinstance(nid, int), nid
+                    #assert isinstance(nid, int), nid
+                    if 'nid' == 'CEN/4':
+                        nid = 0
+
                     self.eType[eid] = etype
                     self.fiberCurvature[eid] = {nid: [fiber_dist1, fiber_dist2]}
                     self.exx[dt][eid] = {nid: [ex1, ex2]}
@@ -1448,6 +1460,7 @@ class RealPlateStrain(StrainObject):
 
     def add_new_eid(self, etype, dt, eid, node_id, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
         msg = "eid=%s node_id=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, node_id, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
+        assert isinstance(node_id, int), node_id
 
         #if node_id != 'C':  # centroid
             #assert 0 < node_id < 1000000000, 'node_id=%s %s' % (node_id, msg)
@@ -1467,6 +1480,7 @@ class RealPlateStrain(StrainObject):
 
     def add_new_eid_sort1(self, etype, dt, eid, node_id, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
         msg = "eid=%s node_id=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, node_id, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
+        assert isinstance(node_id, int), node_id
         #print msg
 
         #if node_id != 'C':  # centroid
@@ -1513,7 +1527,7 @@ class RealPlateStrain(StrainObject):
             #raise ValueError(msg)
 
     def add_sort1(self, dt, eid, node_id, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
-        msg = "eid=%s node_id=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, node_id, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
+        #msg = "eid=%s node_id=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, node_id, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
         #if node_id != 'C':  # centroid
             #assert 0 < node_id < 1000000000, 'node_id=%s' % (node_id)
 
@@ -1532,6 +1546,7 @@ class RealPlateStrain(StrainObject):
     def addNewNode(self, dt, eid, node_id, curvature, exx, eyy, exy, angle, majorP, minorP, evm):
         msg = "eid=%s node_id=%s curvature=%g exx=%g eyy=%g \nexy=%g angle=%g major=%g minor=%g vm=%g" % (eid, node_id, curvature, exx, eyy, exy, angle, majorP, minorP, evm)
         assert node_id not in self.exx[eid], msg
+        assert isinstance(node_id, int), node_id
 
         assert isinstance(node_id, int), node_id
         self.fiberCurvature[eid][node_id] = [curvature]

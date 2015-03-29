@@ -121,7 +121,6 @@ def load_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
         else:
             fname = output
         app.exit()
-        #print("fname =%s" % fname)
     else:
         msg = 'Could not import wx, PySide, or PyQt4.  '\
             'Please specify the file explicitly.'

@@ -70,11 +70,6 @@ setup(name='pyNastran',
                             'test_op2  = pyNastran.op2.test.test_op2:main',
                             'test_op4  = pyNastran.op2.test.test_op4:main',
                             'test_f06  = pyNastran.f06.test.test_f06:main',
-                            'pyNastran  = pyNastran.applications.pyNastranSolver:main',
-
-                            'test_bdf2 = pyNastran.bdf.dev_vectorized.test.test_bdf:main',
-                            'pyNastran2 = pyNastran.bdf.dev_vectorized.solver.solver:main',
-                           #'nastranToCodeAster = pyNastran.converters.toCodeAster:main',
                            ] + py2_gui_scripts
       },
       test_suite = 'pyNastran.all_tests',
