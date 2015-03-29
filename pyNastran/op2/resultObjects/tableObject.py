@@ -570,31 +570,31 @@ class RealTableObject(ScalarObject):  # displacement style table
 
     def isATO(self):
         """Auto-Correlation Function"""
-        if 'ATO' in self.table_name:
+        if b'ATO' in self.table_name:
             return True
         return False
 
     def isCRM(self):
         """Correlated Root-Mean Square"""
-        if 'CRM' in self.table_name:
+        if b'CRM' in self.table_name:
             return True
         return False
 
     def isPSD(self):
         """Power Spectral Density"""
-        if 'PSD' in self.table_name:
+        if b'PSD' in self.table_name:
             return True
         return False
 
     def isRMS(self):
         """Root-Mean Square"""
-        if 'RMS' in self.table_name:
+        if b'RMS' in self.table_name:
             return True
         return False
 
     def isZERO(self):
         """Zero Crossings"""
-        if 'NO' in self.table_name:
+        if b'NO' in self.table_name:
             return True
         return False
 

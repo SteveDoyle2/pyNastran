@@ -847,10 +847,11 @@ class RealPlateStress(StressObject):
         quad4_msg = None
         quad8_msg = None
         quadr_msg = None
-        etypes = self.eType.values()
+        etypes = list(self.eType.values())
         if 'CQUAD4' in etypes:
             qkey = etypes.index('CQUAD4')
-            kkey = self.eType.keys()[qkey]
+            etype_keys = list(self.eType.keys())
+            kkey = etype_keys[qkey]
             ekey = self.oxx[kkey].keys()
             is_bilinear = True
             quad4_msg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quad_msg_temp
@@ -863,7 +864,8 @@ class RealPlateStress(StressObject):
 
         if 'CQUADR' in etypes:
             qkey = etypes.index('CQUADR')
-            kkey = self.eType.keys()[qkey]
+            etype_keys = list(self.eType.keys())
+            kkey = etype_keys[qkey]
             ekey = self.oxx[kkey].keys()
             is_bilinear = True
             quadr_msg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quad_msg_temp
@@ -962,12 +964,13 @@ class RealPlateStress(StressObject):
         quad8_msg = None
         quadr_msg = None
 
-        etypes = self.eType.values()
-        dts = self.oxx.keys()
+        etypes = list(self.eType.values())
+        dts = list(self.oxx.keys())
         dt = dts[0]
         if 'CQUAD4' in etypes:
             qkey = etypes.index('CQUAD4')
-            kkey = self.eType.keys()[qkey]
+            etype_keys = list(self.eType.keys())
+            kkey = etype_keys[qkey]
             try:
                 ekey = self.oxx[dt][kkey].keys()
             except KeyError:
@@ -985,7 +988,8 @@ class RealPlateStress(StressObject):
 
         if 'CQUADR' in etypes:
             qkey = etypes.index('CQUADR')
-            kkey = self.eType.keys()[qkey]
+            etype_keys = list(self.eType.keys())
+            kkey = etype_keys[qkey]
             ekey = self.oxx[dt][kkey].keys()
             is_bilinear = True
             quadr_msg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quad_msg_temp
@@ -1015,7 +1019,7 @@ class RealPlateStress(StressObject):
         (etypes, ordered_etypes) = self.getOrderedETypes(valid_types)
 
         msg = []
-        dts = self.oxx.keys()
+        dts = list(self.oxx.keys())
         dts.sort()
         if isinstance(dts[0], int):
             dt_msg = ' %s = %%-10i\n' % self.data_code['name']
@@ -1101,8 +1105,9 @@ class RealPlateStress(StressObject):
         #k.remove(cen)
         #k.sort()
         #nids = [cen] + k
-        k.sort()
-        nids = k
+        #k.sort()
+        #nids = k
+        nids = sorted(self.oxx[eid].keys())
         for nid in nids:
             for ilayer in range(len(self.oxx[eid][nid])):
                 fiber_dist = self.fiberCurvature[eid][nid][ilayer]
@@ -1595,10 +1600,11 @@ class RealPlateStrain(StrainObject):
         tria6_msg = None
         triar_msg = None
 
-        etypes = self.eType.values()
+        etypes = list(self.eType.values())
         if 'CQUAD4' in etypes:
             qkey = etypes.index('CQUAD4')
-            kkey = self.eType.keys()[qkey]
+            etype_keys = list(self.eType.keys())
+            kkey = etype_keys[qkey]
             ekey = self.exx[kkey].keys()
             is_bilinear = True
             quad4_msg = header + ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quad_msg_temp
@@ -1608,7 +1614,8 @@ class RealPlateStrain(StrainObject):
 
         if 'CQUAD8' in etypes:
             qkey = etypes.index('CQUAD8')
-            kkey = self.eType.keys()[qkey]
+            etype_keys = list(self.eType.keys())
+            kkey = etype_keys[qkey]
             ekey = self.exx[kkey].keys()
             is_bilinear = True
             quad8_msg = header + ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )        OPTION = BILIN  \n \n'] + quad_msg_temp
@@ -1618,7 +1625,8 @@ class RealPlateStrain(StrainObject):
 
         if 'CQUADR' in etypes:
             qkey = etypes.index('CQUADR')
-            kkey = self.eType.keys()[qkey]
+            etype_keys = list(self.eType.keys())
+            kkey = etype_keys[qkey]
             ekey = self.exx[kkey].keys()
             is_bilinear = True
             quadr_msg = header + ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quad_msg_temp
@@ -1720,17 +1728,13 @@ class RealPlateStrain(StrainObject):
         tria6_msg = None
         trir_msg = None
 
-        etypes = self.eType.values()
+        etypes = list(self.eType.values())
         if 'CQUAD4' in etypes:
             elem_key = etypes.index('CQUAD4')
-            #print qkey
-            eid = self.eType.keys()[elem_key]
-            #print "self.oxx = ",self.oxx
-            #print "eid=%s" %(eid)
+            etype_keys = list(self.eType.keys())
+            eid = etype_keys[elem_key]
             dt = get_key0(self.exx)
-            #print "dt=%s" %(dt)
             nlayers = len(self.exx[dt][eid])
-            #print "elementKeys = ",elementKeys
             is_bilinear = True
             quad_msg = ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quad_msg_temp
             if nlayers == 1:
@@ -1742,7 +1746,8 @@ class RealPlateStrain(StrainObject):
 
         if 'CQUADR' in etypes:
             qkey = etypes.index('CQUADR')
-            kkey = self.eType.keys()[qkey]
+            etype_keys = list(self.eType.keys())
+            kkey = etype_keys[qkey]
             dt = get_key0(self.exx)
             ekey = self.exx[dt][kkey].keys()
             is_bilinear = True
@@ -1773,7 +1778,7 @@ class RealPlateStrain(StrainObject):
                        'CQUAD4', 'CQUAD8', 'CQUADR']
         types_out, ordered_etypes = self.getOrderedETypes(valid_types)
 
-        dts = self.exx.keys()
+        dts = list(self.exx.keys())
         dts.sort()
         if isinstance(dts[0], int):
             dt_msg = ' %s = %%-10i\n' % self.data_code['name']

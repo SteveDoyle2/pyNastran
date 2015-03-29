@@ -545,5 +545,5 @@ class FortranFormat(object):
                 nloop += 1
 
             if nloop > 0:
-                record = ''.join(records)
+                record = b''.join(records)
         return record

@@ -10,7 +10,7 @@ from numpy import (array, zeros, float32, float64, complex64, complex128,
                   allclose, ndarray)
 from scipy.sparse import coo_matrix
 
-from pyNastran.utils import is_binary
+from pyNastran.utils import is_binary as file_is_binary
 from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
 
 
@@ -105,7 +105,7 @@ class OP4(object):
             matrix_names = [matrix_names]
         #assert isinstance(matrix_names, list), 'type(matrix_names)=%s' % type(matrix_names)
 
-        if is_binary(op4_filename):
+        if file_is_binary(op4_filename):
             return self.read_op4_binary(op4_filename, matrix_names, precision)
         else:
             return self.read_op4_ascii(op4_filename, matrix_names, precision)
@@ -1097,7 +1097,10 @@ class OP4(object):
         #else:        op4_form = 2   # rectangular
 
         if isinstance(op4_filename, string_types):
-            f = open(op4_filename, 'wb')
+            if PY2 or is_binary:
+                f = open(op4_filename, 'wb')
+            else:
+                f = open(op4_filename, 'w')
         else:
             f = op4_filename
 

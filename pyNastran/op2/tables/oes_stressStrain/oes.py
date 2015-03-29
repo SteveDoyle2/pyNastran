@@ -2049,16 +2049,16 @@ class OES(OP2Common):
                     #       EB, long_EB, eqS_EB, tE_EB, eps_EB, ecs_EB,
                     #       FB, long_FB, eqS_FB, tE_FB, eps_FB, ecs_FB,
                     # A
-                    assert out[3-1] == '   C', out[3-1]
-                    assert out[9-1] == '   D', out[9-1]
-                    assert out[15-1] == '   E', out[15-1]
-                    assert out[21-1] == '   F', out[21-1]
+                    assert out[3-1] == b'   C', out[3-1]
+                    assert out[9-1] == b'   D', out[9-1]
+                    assert out[15-1] == b'   E', out[15-1]
+                    assert out[21-1] == b'   F', out[21-1]
 
                     # B
-                    assert out[28-1] == '   C', out[28-1]
-                    assert out[34-1] == '   D', out[34-1]
-                    assert out[40-1] == '   E', out[40-1]
-                    assert out[46-1] == '   F', out[46-1]
+                    assert out[28-1] == b'   C', out[28-1]
+                    assert out[34-1] == b'   D', out[34-1]
+                    assert out[40-1] == b'   E', out[40-1]
+                    assert out[46-1] == b'   F', out[46-1]
 
                     eid_device = out[0]
                     eid = (eid_device - self.device_code) // 10

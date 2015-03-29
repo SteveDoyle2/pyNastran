@@ -1,4 +1,4 @@
-from six import string_types, iteritems
+from six import string_types, iteritems, PY2
 import os
 import sys
 import time
@@ -120,7 +120,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                    delete_f06=True, write_op2=False,
                    is_vector=False, vector_stop=True,
                    debug=True, saveCases=True, skipFiles=[],
-                   stopOnFailure=False, nStart=0, nStop=1000000000):
+                   stopOnFailure=False, nStart=0, nStop=1000000000, binary_debug=False):
     n = ''
     assert make_geom in [True, False]
     assert write_bdf in [True, False]
@@ -155,11 +155,12 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                                       is_vector=vectori,
                                       delete_f06=delete_f06,
                                       iSubcases=iSubcases, debug=debug,
-                                      stopOnFailure=stopOnFailure) # True/False
+                                      stopOnFailure=stopOnFailure,
+                                      binary_debug=binary_debug) # True/False
                 if not is_passed_i and vector_stopi:
-                   is_passed = False
+                    is_passed = False
                 if not is_passed_i:
-                   is_vector_failed.append(vectori)
+                    is_vector_failed.append(vectori)
             if not is_passed:
                 sys.stderr.write('**file=%s vector_failed=%s\n' % (op2file, is_vector_failed))
                 failed_cases.append(op2file)
@@ -169,7 +170,10 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
             #sys.exit('end of test...test_op2.py')
 
     if saveCases:
-        f = open('failedCases.in','wb')
+        if PY2:
+            f = open('failedCases.in','wb')
+        else:
+            f = open('failedCases.in','w')
         for op2file in failed_cases:
             f.write('%s\n' % op2file)
         f.close()

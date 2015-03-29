@@ -498,15 +498,15 @@ class RealCompositePlateStress(StressObject):
         words = ['   ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      %s\n' % von,
                  '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n' % mises]
 
-        eTypes = self.eType.values()
-        if 'CQUAD4' in eTypes or 'QUAD4LC' in eTypes:
+        etypes = list(self.eType.values())
+        if 'CQUAD4' in etypes or 'QUAD4LC' in etypes:
             quadMsg = header + ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
             isQuad = True
         else:
             quadMsg = []
             isQuad = False
 
-        if 'CTRIA3' in eTypes or 'TRIA3LC' in eTypes:
+        if 'CTRIA3' in etypes or 'TRIA3LC' in etypes:
             isTri = True
             triMsg = header + ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
         else:
@@ -560,15 +560,15 @@ class RealCompositePlateStress(StressObject):
         words = ['   ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      %s\n' % von,
                  '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n' % mises]
 
-        eTypes = self.eType.values()
-        if 'CQUAD4' in eTypes or 'QUAD4LC' in eTypes:
+        etypes = list(self.eType.values())
+        if 'CQUAD4' in etypes or 'QUAD4LC' in etypes:
             quadWords = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
             isQuad = True
         else:
             quadWords = []
             isQuad = False
 
-        if 'CTRIA3' in eTypes or 'TRIA3LC' in eTypes:
+        if 'CTRIA3' in etypes or 'TRIA3LC' in etypes:
             isTri = True
             triWords = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
         else:
@@ -830,15 +830,15 @@ class RealCompositePlateStrain(StrainObject):
         words = ['   ELEMENT  PLY   STRAINS IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR   STRAINS  PRINCIPAL  STRAINS (ZERO SHEAR)      %s\n' % von,
                  '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n' % mises]
 
-        eTypes = self.eType.values()
-        if 'CQUAD4' in eTypes or 'QUAD4LC' in eTypes:
+        etypes = list(self.eType.values())
+        if 'CQUAD4' in etypes or 'QUAD4LC' in etypes:
             quadMsg = header + ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
             isQuad = True
         else:
             quadMsg = []
             isQuad = False
 
-        if 'CTRIA3' in eTypes or 'TRIA3LC' in eTypes:
+        if 'CTRIA3' in etypes or 'TRIA3LC' in etypes:
             isTri = True
             triMsg = header + ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
         else:
@@ -883,7 +883,7 @@ class RealCompositePlateStrain(StrainObject):
         return page_num
 
     def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        if self.isVonMises():
+        if self.is_von_mises():
             von = 'VON'
             mises = 'MISES'
         else:
@@ -893,29 +893,29 @@ class RealCompositePlateStrain(StrainObject):
         words = ['   ELEMENT  PLY   STRAINS IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR   STRAINS  PRINCIPAL  STRAINS (ZERO SHEAR)      %s\n' % von,
                  '     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n' % mises]
 
-        eTypes = self.eType.values()
-        if 'CQUAD4' in eTypes or 'QUAD4LC' in eTypes:
-            quadWords = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
-            isQuad = True
+        etypes = set(self.eType.values())
+        if 'CQUAD4' in etypes or 'QUAD4LC' in etypes:
+            quad_words = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
+            is_quad = True
         else:
-            quadWords = []
-            isQuad = False
+            quad_words = []
+            is_quad = False
 
-        if 'CTRIA3' in eTypes or 'TRIA3LC' in eTypes:
-            isTri = True
-            triWords = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
+        if 'CTRIA3' in etypes or 'TRIA3LC' in etypes:
+            is_tria = True
+            tria_words = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
         else:
-            isTri = False
-            triWords = []
+            is_tria = False
+            tria_words = []
 
         for dt, e11s in sorted(iteritems(self.e11)):
-            quadMsg = []
-            triMsg = []
+            quad_msg = []
+            tria_msg = []
             header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-            if isQuad:
-                quadMsg = header + quadWords
-            if isTri:
-                triMsg = header + triWords
+            if is_quad:
+                quad_msg = header + quad_words
+            if is_tria:
+                tria_msg = header + tria_words
 
             for eid, e11s in sorted(iteritems(e11s)):
                 out = ''
@@ -937,19 +937,19 @@ class RealCompositePlateStrain(StrainObject):
                     out += '0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %-s\n' % (eid, iLayer + 1, e11, e22, e12, e1z, e2z, angle, major, minor, evm)
 
                 if eType in ['CQUAD4', 'QUAD4LC']:
-                    quadMsg.append(out)
+                    quad_msg.append(out)
                 elif eType in ['CTRIA3', 'TRIA3LC']:
-                    triMsg.append(out)
+                    tria_msg.append(out)
                 else:
                     raise NotImplementedError('eType = |%r|' % (eType))
 
-            if isQuad:
-                quadMsg.append(page_stamp % page_num)
+            if is_quad:
+                quad_msg.append(page_stamp % page_num)
                 page_num += 1
-                f.write(''.join(quadMsg))
+                f.write(''.join(quad_msg))
 
-            if isTri:
-                triMsg.append(page_stamp % page_num)
+            if is_tria:
+                tria_msg.append(page_stamp % page_num)
                 page_num += 1
-                f.write(''.join(triMsg))
+                f.write(''.join(tria_msg))
         return page_num - 1

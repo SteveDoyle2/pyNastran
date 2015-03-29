@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, absolute_import,
                         print_function, unicode_literals)
-
+from six import PY2
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 from pyNastran.bdf.cards.utils import wipe_empty_fields
@@ -23,7 +23,10 @@ class BDFReplacer(BDF):
         return False
 
     def _start_writing(self):
-        self.bdf_out_file = open(self.bdf_out_filename, 'wb')
+        if PY2:
+            self.bdf_out_file = open(self.bdf_out_filename, 'wb')
+        else:
+            self.bdf_out_file = open(self.bdf_out_filename, 'w')
         self._write_header(self.bdf_out_file)
 
     def _read_bulk_data_deck(self):

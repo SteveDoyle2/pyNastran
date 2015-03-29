@@ -4,7 +4,7 @@ Defines the OP2 class.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, iteritems
+from six import string_types, iteritems, PY2
 from six.moves import range
 import os
 from struct import unpack, Struct
@@ -440,13 +440,17 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.binary_debug.close()
             del self.binary_debug
 
+        wb = 'w'
+        if PY2:
+            wb = 'wb'
+
         if self.debug_file is not None:
             #: an ASCII version of the op2 (creates lots of output)
-            self.binary_debug = open(self.debug_file, 'wb')
+            self.binary_debug = open(self.debug_file, wb)
             self.binary_debug.write(self.op2_filename + '\n')
         else:
-            self.binary_debug = open(os.devnull, 'wb')  #TemporaryFile()
-            self.binary_debug = TrashWriter('debug.out', 'wb')
+            self.binary_debug = open(os.devnull, wb)  #TemporaryFile()
+            self.binary_debug = TrashWriter('debug.out', wb)
 
     def read_op2(self, op2_filename=None):
         """
@@ -670,7 +674,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                                     b'OQMPSD2', b'OQMCRM2', b'OQMRMS2', b'OQMATO2', b'OQMNO2',
                                     b'OUGPSD2', b'OUGCRM2', b'OUGRMS2', b'OUGATO2', b'OUGNO2',
                                     b'OVGPSD2', b'OVGCRM2', b'OVGRMS2', b'OVGATO2', b'OVGNO2',
-                                    b'OSTRPSD2', b'OSTRCRM2', 'OSTRRMS2', b'OSTRATO2', b'OSTRNO2',
+                                    b'OSTRPSD2', b'OSTRCRM2', b'OSTRRMS2', b'OSTRATO2', b'OSTRNO2',
                                     b'OCRUG',
                                     b'OCRPG',
                                     b'STDISP',

@@ -1,6 +1,6 @@
 from six import iteritems
 from collections import defaultdict
-from numpy import unique
+from numpy import unique, int32
 
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 from pyNastran.f06.f06_formatting import get_key0
@@ -596,17 +596,28 @@ class OP2_F06_Common(object):
         Gets info about the contents of the different attributes of the
         OP2 class.
         """
+        def compare(key_value):
+            key, value = key_value
+            if isinstance(key, int) or isinstance(key, int32):
+                return key
+            else:
+                return key[0]
+
         table_types = self._get_table_types_testing()
         msg = []
         for table_type in table_types:
             table = getattr(self, table_type)
-            for isubcase, subcase in sorted(iteritems(table)):
-                if hasattr(subcase, 'get_stats'):
-                    msg.append('op2.%s[%s]\n' % (table_type, isubcase))
-                    msg.extend(subcase.get_stats())
-                    msg.append('\n')
-                else:
-                    msg.append('skipping %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
-                    #raise RuntimeError('skipping %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
+            try:
+                for isubcase, subcase in sorted(iteritems(table), key=compare):
+                    if hasattr(subcase, 'get_stats'):
+                        msg.append('op2.%s[%s]\n' % (table_type, isubcase))
+                        msg.extend(subcase.get_stats())
+                        msg.append('\n')
+                    else:
+                        msg.append('skipping %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
+                        #raise RuntimeError('skipping %s op2.%s[%s]\n\n' % (subcase.__class__.__name__, table_type, isubcase))
+            except:
+                print(table)
+                raise
         return ''.join(msg)
 

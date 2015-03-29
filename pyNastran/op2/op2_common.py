@@ -520,6 +520,7 @@ class OP2Common(Op2Codes, F06Writer):
             # complex_obj
             assert complex_obj is not None
             nnodes = len(data) // 56  # 14*4
+            self.binary_debug.write('nnodes=%s' % nnodes)
             auto_return = self._create_table_object(result_name, nnodes, storage_obj, complex_obj, complex_vector)
             if auto_return:
                 return len(data)
@@ -589,6 +590,8 @@ class OP2Common(Op2Codes, F06Writer):
         assert nnodes > 0
         #assert len(data) % ntotal == 0
 
+        if self.debug4():
+            self.binary_debug.write('  nnodes=%i\n' % (nnodes))
         for inode in range(nnodes):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
