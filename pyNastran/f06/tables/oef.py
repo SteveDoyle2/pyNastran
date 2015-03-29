@@ -109,10 +109,10 @@ class OEF(object):
         is_sort1 = True
         #ngrids = 4
         #print('isubcase =', isubcase)
-        if isubcase not in self.rodForces:
+        if isubcase not in self.crod_force:
             assert 'nonlinear_factor' in data_code
-            self.rodForces[isubcase] = RealRodForce(data_code, is_sort1, isubcase, transient)
-        self.rodForces[isubcase].add_f06_data(data, transient)
+            self.crod_force[isubcase] = RealRodForce(data_code, is_sort1, isubcase, transient)
+        self.crod_force[isubcase].add_f06_data(data, transient)
         self.iSubcases.append(isubcase)
 
     def _forces_in_cquad4s_bilinear(self):

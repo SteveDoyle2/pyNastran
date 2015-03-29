@@ -281,7 +281,7 @@ class TestF06(unittest.TestCase):
             assert len(f06.loadVectors) == 1, len(f06.loadVectors)
             assert len(f06.spcForces) == 1, len(f06.spcForces)
 
-            assert len(f06.rodForces) == 1, len(f06.rodForces)
+            assert len(f06.crod_force) == 1, len(f06.crod_force)
             assert len(f06.crod_strain) == 0, len(f06.crod_strain)  # 0 is correct
             assert len(f06.crod_stress) == 1, len(f06.crod_stress)
 
@@ -331,7 +331,7 @@ class TestF06(unittest.TestCase):
 
         assert len(f06.gridPointForces) == 1, len(f06.gridPointForces)
 
-        assert len(f06.rodForces) == 1, len(f06.rodForces)
+        assert len(f06.crod_force) == 1, len(f06.crod_force)
         assert len(f06.crod_strain) == 1, len(f06.crod_strain)
         assert len(f06.crod_stress) == 1, len(f06.crod_stress)
 
@@ -348,7 +348,7 @@ class TestF06(unittest.TestCase):
         assert len(f06.cquad8_stress) == 0, len(f06.cquad8_stress)
         assert len(f06.cquad8_strain) == 0, len(f06.cquad8_strain)
 
-        assert len(f06.beamForces) == 0, len(f06.beamForces)  # 1 is correct
+        assert len(f06.cbeam_force) == 0, len(f06.cbeam_force)  # 1 is correct
         assert len(f06.cbeam_strain) == 0, len(f06.cbeam_strain)  # 1 is correct
 
         assert len(f06.cbar_strain) == 1, len(f06.cbar_strain)
@@ -385,7 +385,7 @@ class TestF06(unittest.TestCase):
         assert len(f06.loadVectors) == 0, len(f06.loadVectors)
         assert len(f06.gridPointForces) == 0, len(f06.gridPointForces)  # 1 is correct
 
-        assert len(f06.rodForces) == 1, len(f06.rodForces)
+        assert len(f06.crod_force) == 1, len(f06.crod_force)
         assert len(f06.crod_strain) == 1, len(f06.crod_strain)
         assert len(f06.crod_stress) == 1, len(f06.crod_stress)
 
@@ -403,7 +403,7 @@ class TestF06(unittest.TestCase):
         assert len(f06.cquad8_stress) == 0, len(f06.cquad8_stress)
         assert len(f06.cquad8_strain) == 0, len(f06.cquad8_strain)
 
-        assert len(f06.beamForces) == 0, len(f06.beamForces)  # 1 is correct
+        assert len(f06.cbeam_force) == 0, len(f06.cbeam_force)  # 1 is correct
         assert len(f06.cbeam_strain) == 0, len(f06.cbeam_strain)  # 1 is correct
 
         assert len(f06.cbar_strain) == 1, len(f06.cbar_strain)
@@ -558,9 +558,9 @@ class TestF06(unittest.TestCase):
         self.assertEquals(len(bdf.params), 2, bdf.params)
         self.assertEquals(bdf.sol, 101, bdf.sol)
 
-        cen = 'CEN/4'
+        cen = 0 # 'CEN/4'
         for (loadcase, stress) in iteritems(f06.cquad4_stress):
-            #print("%3s %3s %6s %8s" % ('EID', 'NID', 'iLayer', 'VM_Stress'))
+            #print("%3s %3s %6s %8s" % ('eID', 'NID', 'iLayer', 'VM_Stress'))
             # stress is a PlateStressObject
             if stress.is_von_mises():
                 #vonMises = 'VON MISES'
@@ -578,6 +578,7 @@ class TestF06(unittest.TestCase):
                 #vonMises = 'MAX SHEAR'
                 for eid,ovm in sorted(iteritems(stress.ovmShear)):
                     ovmkeys = ovm.keys()
+                    #print('ovmkeys = %s' % ovmkeys)
                     ovmkeys.remove(cen)
                     ovmkeys.sort()
                     ovmkeys = [cen] + ovmkeys
