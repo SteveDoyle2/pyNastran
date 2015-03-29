@@ -6,6 +6,7 @@ def get_git_revision_short_hash():
         ghash = 'no_checksum_error'
     return 'dev-' + ghash
 
+revision = get_git_revision_short_hash()
 __author__  = 'Steven Doyle, Al Danials, Marcin Gasiorek'
 __email__   = 'mesheb82@gmail.com'
 __desc__    = 'Nastran BDF/F06/OP2/OP4 File reader/editor/writer/viewer'
