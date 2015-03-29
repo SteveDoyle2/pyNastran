@@ -1228,7 +1228,7 @@ class NastranIO(object):
             case = model.plateStress[subcase_id]
             if case.nonlinear_factor is not None: # transient
                 return
-            if case.isVonMises():
+            if case.is_von_mises():
                 vm_word = 'vonMises'
             else:
                 vm_word = 'maxShear'
@@ -1277,7 +1277,7 @@ class NastranIO(object):
             case = model.compositePlateStress[subcase_id]
             if case.nonlinear_factor is not None: # transient
                 return
-            if case.isVonMises():
+            if case.is_von_mises():
                 vm_word = 'vonMises'
             else:
                 vm_word = 'maxShear'
@@ -1302,7 +1302,7 @@ class NastranIO(object):
             case = model.solidStress[subcase_id]
             if case.nonlinear_factor is not None: # transient
                 return
-            if case.isVonMises():
+            if case.is_von_mises():
                 vm_word = 'vonMises'
             else:
                 vm_word = 'maxShear'
@@ -1817,7 +1817,7 @@ class NastranIO(object):
                 continue
 
             case = result[subcase_id]
-            if case.isVonMises():
+            if case.is_von_mises():
                 vm_word = 'vonMises'
             else:
                 vm_word = 'maxShear'
@@ -1889,7 +1889,7 @@ class NastranIO(object):
                 continue
 
             case = result[subcase_id]
-            if case.isVonMises():
+            if case.is_von_mises():
                 vm_word = 'vonMises'
             else:
                 vm_word = 'maxShear'
@@ -1960,7 +1960,7 @@ class NastranIO(object):
                 continue
 
             case = result[subcase_id]
-            if case.isVonMises():
+            if case.is_von_mises():
                 vm_word = 'vonMises'
             else:
                 vm_word = 'maxShear'

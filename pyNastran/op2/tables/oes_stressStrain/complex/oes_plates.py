@@ -143,13 +143,13 @@ class ComplexPlateArray(OES_Object):
         return msg
 
     def get_f06_header(self, is_mag_phase=True):
-        if self.isVonMises():
+        if self.is_von_mises():
             vonMises = 'VON MISES'
         else:
             vonMises = 'MAX SHEAR'
 
         if self.is_stress():
-            if self.isFiberDistance():
+            if self.is_fiber_distance():
                 gridMsgTemp = ['    ELEMENT              FIBER                                  - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
                                '      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
                 fiberMsgTemp = ['  ELEMENT       FIBRE                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
@@ -160,7 +160,7 @@ class ComplexPlateArray(OES_Object):
                 fiberMsgTemp = ['  ELEMENT       FIBRE                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
                                 '    ID.       CURVATURE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
         else:
-            if self.isFiberDistance():
+            if self.is_fiber_distance():
                 gridMsgTemp = ['    ELEMENT              FIBER                                  - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
                                '      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
                 fiberMsgTemp = ['  ELEMENT       FIBRE                                     - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
@@ -177,7 +177,7 @@ class ComplexPlateArray(OES_Object):
         else:
             magReal = ['                                                          (REAL/IMAGINARY)\n', ' \n']
 
-        #if self.isFiberDistance():
+        #if self.is_fiber_distance():
             #quadMsgTemp = ['    ELEMENT              FIBRE                                  - STRESSES IN ELEMENT  COORDINATE SYSTEM -',
                            #'      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY']
         #else:
@@ -548,7 +548,7 @@ class ComplexPlateStress(StressObject):
         else:
             magReal = ['                                                          (REAL/IMAGINARY)\n', ' \n']
 
-        if self.isFiberDistance():
+        if self.is_fiber_distance():
             quadMsgTemp = ['    ELEMENT              FIBRE                                  - STRESSES IN ELEMENT  COORDINATE SYSTEM -',
                            '      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY']
         else:
@@ -627,7 +627,7 @@ class ComplexPlateStress(StressObject):
         else:
             magReal = ['                                                          (REAL/IMAGINARY)\n \n']
 
-        if self.isFiberDistance():
+        if self.is_fiber_distance():
             gridMsgTemp = ['    ELEMENT              FIBRE                                  - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
                            '      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
             fiberMsgTemp = ['  ELEMENT       FIBRE                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
@@ -638,7 +638,7 @@ class ComplexPlateStress(StressObject):
             fiberMsgTemp = ['  ELEMENT       FIBRE                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
                             '    ID.       CURVATURE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
 
-        #if self.isFiberDistance():
+        #if self.is_fiber_distance():
             #quadMsgTemp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
             #               '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' %(vonMises)]
             #triMsgTemp = ['    ELEMENT              FIBRE                                  - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
@@ -1076,13 +1076,13 @@ class ComplexPlateStrain(StrainObject):
 
 
     def getHeaders(self):
-        if self.isFiberDistance():
+        if self.is_fiber_distance():
             headers = ['fiberDist']
         else:
             headers = ['curvature']
 
         headers += ['exx', 'eyy', 'exy']
-        if self.isVonMises():
+        if self.is_von_mises():
             headers.append('eVonMises')
         else:
             headers.append('maxShear')
@@ -1097,12 +1097,12 @@ class ComplexPlateStrain(StrainObject):
         raise RuntimeError('this can never happen')
 
     def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        if self.isVonMises():
+        if self.is_von_mises():
             vonMises = 'VON MISES'
         else:
             vonMises = 'MAX SHEAR'
 
-        if self.isFiberDistance():
+        if self.is_fiber_distance():
             quadMsgTemp = ['    ELEMENT              FIBER                STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)                 \n',
                            '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % (vonMises)]
             triMsgTemp = ['  ELEMENT      FIBER               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)                 \n',

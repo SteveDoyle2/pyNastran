@@ -284,12 +284,12 @@ class RealPlateStressArray(RealPlateArray, StressObject):
         return False
 
     def get_headers(self):
-        if self.isFiberDistance():
+        if self.is_fiber_distance():
             fiber_dist = 'fiber_distance'
         else:
             fiber_dist = 'fiber_curvature'
 
-        if self.isVonMises():
+        if self.is_von_mises():
             ovm = 'von_mises'
         else:
             ovm = 'max_shear'
@@ -297,12 +297,12 @@ class RealPlateStressArray(RealPlateArray, StressObject):
         return headers
 
     def _get_msgs(self):
-        if self.isVonMises():
+        if self.is_von_mises():
             von_mises = 'VON MISES'
         else:
             von_mises = 'MAX SHEAR'
 
-        if self.isFiberDistance():
+        if self.is_fiber_distance():
             quad_msg_temp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)               \n',
                              '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % von_mises]
             tri_msg_temp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
@@ -373,12 +373,12 @@ class RealPlateStrainArray(RealPlateArray, StrainObject):
         return True
 
     def get_headers(self):
-        if self.isFiberDistance():
+        if self.is_fiber_distance():
             fiber_dist = 'fiber_distance'
         else:
             fiber_dist = 'fiber_curvature'
 
-        if self.isVonMises():
+        if self.is_von_mises():
             ovm = 'von_mises'
         else:
             ovm = 'max_shear'
@@ -386,12 +386,12 @@ class RealPlateStrainArray(RealPlateArray, StrainObject):
         return headers
 
     def _get_msgs(self):
-        if self.isVonMises():
+        if self.is_von_mises():
             von_mises = 'VON MISES'
         else:
             von_mises = 'MAX SHEAR'
 
-        if self.isFiberDistance():
+        if self.is_fiber_distance():
             quad_msg_temp = ['    ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)               \n',
                              '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % von_mises]
             tri_msg_temp = ['  ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)                 \n',
@@ -810,7 +810,7 @@ class RealPlateStress(StressObject):
             #raise ValueError(msg)
 
     def getHeaders(self):
-        if self.isFiberDistance():
+        if self.is_fiber_distance():
             headers = ['fiberDist']
         else:
             headers = ['curvature']
@@ -941,12 +941,12 @@ class RealPlateStress(StressObject):
         return page_num - 1
 
     def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        if self.isVonMises():
+        if self.is_von_mises():
             von_mises = 'VON MISES'
         else:
             von_mises = 'MAX SHEAR'
 
-        if self.isFiberDistance():
+        if self.is_fiber_distance():
             quad_msg_temp = ['    ELEMENT              FIBER            STRESSES IN ELEMENT COORD SYSTEM         PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
                              '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % (von_mises)]
             tri_msg_temp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
@@ -1567,7 +1567,7 @@ class RealPlateStrain(StrainObject):
             headers = ['curvature']
 
         headers += ['exx', 'eyy', 'exy', 'eMajor', 'eMinor']
-        if self.isVonMises():
+        if self.is_von_mises():
             headers.append('eVonMises')
         else:
             headers.append('maxShear')

@@ -165,7 +165,7 @@ class RealCompositePlateArray(OES_Object):
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         #msg, nnodes, is_bilinear = self._get_msgs()
-        if self.isVonMises():
+        if self.is_von_mises():
             von = 'VON'
             mises = 'MISES'
         else:
@@ -257,7 +257,7 @@ class RealCompositePlateStressArray(RealCompositePlateArray, StressObject):
         return False
 
     def get_headers(self):
-        if self.isVonMises():
+        if self.is_von_mises():
             ovm = 'von_mises'
         else:
             ovm = 'max_shear'
@@ -277,7 +277,7 @@ class RealCompositePlateStrainArray(RealCompositePlateArray, StrainObject):
         return True
 
     def get_headers(self):
-        if self.isVonMises():
+        if self.is_von_mises():
             ovm = 'von_mises'
         else:
             ovm = 'max_shear'
@@ -309,7 +309,6 @@ class RealCompositePlateStress(StressObject):
         self.minorP = {}
         #self.fiberCurvature = {}
         self.ovmShear = {}
-        #if self.isVonMisesStress():
 
         self.dt = dt
         if is_sort1:
@@ -478,7 +477,7 @@ class RealCompositePlateStress(StressObject):
 
     def getHeaders(self):
         headers = ['o11', 'o22', 't12', 't1z', 't2z']
-        if self.isVonMises:
+        if self.is_von_mises():
             headers.append('oVonMises')
         else:
             headers.append('maxShear')
@@ -488,7 +487,7 @@ class RealCompositePlateStress(StressObject):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, page_stamp, page_num, f)
 
-        if self.isVonMises():
+        if self.is_von_mises():
             von = 'VON'
             mises = 'MISES'
         else:
@@ -550,7 +549,7 @@ class RealCompositePlateStress(StressObject):
 
     def _write_f06_transient(self, header, page_stamp,
                              page_num=1, f=None, is_mag_phase=False):
-        if self.isVonMises():
+        if self.is_von_mises():
             von = 'VON'
             mises = 'MISES'
         else:
@@ -646,7 +645,7 @@ class RealCompositePlateStrain(StrainObject):
 
         if self.code == [1, 0, 14]:
             self.evmShear = {}
-            assert self.isVonMises() == False
+            assert self.is_von_mises() == False
         else:
             raise RuntimeError("Invalid Code: compositePlateStrain - get the format/sort/stressCode=%s" % (self.code))
 
@@ -810,7 +809,7 @@ class RealCompositePlateStrain(StrainObject):
 
     def getHeaders(self):
         headers = ['e11', 'e22', 'e12', 'e1z', 'e2z']
-        if self.isVonMises:
+        if self.is_von_mises():
             headers.append('eVonMises')
         else:
             headers.append('maxShear')
@@ -820,7 +819,7 @@ class RealCompositePlateStrain(StrainObject):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, page_stamp, page_num, f)
 
-        if self.isVonMises():
+        if self.is_von_mises():
             von = 'VON'
             mises = 'MISES'
         else:

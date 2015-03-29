@@ -562,7 +562,7 @@ class TestF06(unittest.TestCase):
         for (loadcase, stress) in iteritems(f06.cquad4_stress):
             #print("%3s %3s %6s %8s" % ('EID', 'NID', 'iLayer', 'VM_Stress'))
             # stress is a PlateStressObject
-            if stress.isVonMises():
+            if stress.is_von_mises():
                 #vonMises = 'VON MISES'
                 for eid,ovm in sorted(iteritems(stress.ovmShear)):
                     ovmkeys = ovm.keys()

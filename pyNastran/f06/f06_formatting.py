@@ -121,7 +121,19 @@ def _eigenvalue_header(obj, header, itime, ntimes, dt):
     return header
 
 
+def get_key0_compare(adict):
+    """Gets the "first" key in a dictionary
+
+    The entry is kind of irrelevant.
+    """
+    keys = list(adict.keys())
+    return keys[0]
+
+
 def get_key0(adict):
-    """gets the "first" key in a dictionary"""
-    keys = list(sorted(adict.keys()))
+    """Gets the "first" key in a dictionary
+
+    The entry is kind of irrelevant.
+    """
+    keys = list(adict.keys())
     return keys[0]

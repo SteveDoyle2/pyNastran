@@ -248,7 +248,7 @@ class RealSolidStressArray(RealSolidArray, StressObject):
         StressObject.__init__(self, data_code, isubcase)
 
     def get_headers(self):
-        if self.isVonMises():
+        if self.is_von_mises():
             von_mises = 'von_mises'
         else:
             von_mises = 'max_shear'
@@ -256,7 +256,7 @@ class RealSolidStressArray(RealSolidArray, StressObject):
         return headers
 
     def _get_msgs(self):
-        if self.isVonMises():
+        if self.is_von_mises():
             von_mises = 'VON MISES'
         else:
             von_mises = 'MAX SHEAR'
@@ -280,7 +280,7 @@ class RealSolidStrainArray(RealSolidArray, StrainObject):
         StrainObject.__init__(self, data_code, isubcase)
 
     def get_headers(self):
-        if self.isVonMises():
+        if self.is_von_mises():
             von_mises = 'von_mises'
         else:
             von_mises = 'max_shear'
@@ -288,7 +288,7 @@ class RealSolidStrainArray(RealSolidArray, StrainObject):
         return headers
 
     def _get_msgs(self):
-        if self.isVonMises():
+        if self.is_von_mises():
             von_mises = 'VON MISES'
         else:
             von_mises = 'MAX SHEAR'
@@ -644,7 +644,7 @@ class RealSolidStress(StressObject):
 
     def getHeaders(self):
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz']
-        if self.isVonMises():
+        if self.is_von_mises():
             headers.append('oVonMises')
         else:
             headers.append('oMaxShear')
@@ -666,7 +666,7 @@ class RealSolidStress(StressObject):
         return v
 
     def getF06_Header(self):
-        if self.isVonMises():
+        if self.is_von_mises():
             vonMises = 'VON MISES'
         else:
             vonMises = 'MAX SHEAR'
@@ -1183,7 +1183,7 @@ class RealSolidStrain(StrainObject):
 
     def getHeaders(self):
         headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz']
-        if self.isVonMises():
+        if self.is_von_mises():
             headers.append('evm')
         else:
             headers.append('maxShear')
@@ -1223,7 +1223,7 @@ class RealSolidStrain(StrainObject):
         return v
 
     def getF06_Header(self):
-        if self.isVonMises():
+        if self.is_von_mises():
             vonMises = 'VON MISES'
         else:
             vonMises = 'MAX SHEAR'
