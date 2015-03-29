@@ -1,4 +1,12 @@
-revision = 'dev'
+import subprocess
+def get_git_revision_short_hash():
+    try:
+        ghash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'])
+    except:
+        ghash = 'no_checksum_error'
+    return 'dev-' + ghash
+
+revision = get_git_revision_short_hash()
 
 __author__  = 'Steven Doyle, Al Danials, Marcin Gasiorek'
 __email__   = 'mesheb82@gmail.com'
