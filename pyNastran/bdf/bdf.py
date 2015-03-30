@@ -104,6 +104,7 @@ from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 from pyNastran.bdf.bdfInterface.bdf_writeMesh import WriteMesh
 from pyNastran.bdf.bdfInterface.crossReference import XrefMesh
 from pyNastran.bdf.cards.utils import wipe_empty_fields
+from pyNastran.bdf.utils import CardParseSyntaxError
 
 
 class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
@@ -1139,7 +1140,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         if ' ' in card_name or len(card_name) == 0:
             msg = 'card_name=%r\nline=%r in filename=%r is invalid' \
                   % (card_name, lines[0], self.active_filename)
-            raise RuntimeError(msg)
+            raise CardParseSyntaxError(msg)
         return card_name.upper()
 
     def _read_bulk_data_deck(self):

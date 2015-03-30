@@ -27,6 +27,10 @@ def _clean_comment(comment, end=-1):
     return comment
 
 
+class CardParseSyntaxError(SyntaxError):
+    pass
+
+
 def to_fields(card_lines, card_name):
     """
     Converts a series of lines in a card into string versions of the field.
@@ -40,14 +44,14 @@ def to_fields(card_lines, card_name):
     # first line
     line = card_lines.pop(0)
     if '=' in line:
-        raise SyntaxError('card_name=%r\nequal signs are not supported...'
-                          'line=%r' % (card_name, line))
+        msg = 'card_name=%r\nequal signs are not supported...line=%r' % (card_name, line)
+        raise CardParseSyntaxError(msg)
 
     if '\t' in line:
         line = line.expandtabs()
         if ',' in line:
-            raise SyntaxError('tabs and commas in the same line are '
-                              'not supported...line=%r' % line)
+            msg = 'tabs and commas in the same line are not supported...line=%r' % line
+            raise CardParseSyntaxError(msg)
 
     if '*' in line:  # large field
         if ',' in line:  # csv
@@ -77,13 +81,13 @@ def to_fields(card_lines, card_name):
         #        raise RuntimeError('j=%s field[%s] is a +' % (j,i))
 
         if '=' in line and card_name != 'EIGRL':
-            raise SyntaxError('card_name=%r\nequal signs are not supported...'
-                              'line=%r' % (card_name, line))
+            msg = 'card_name=%r\nequal signs are not supported...line=%r' % (card_name, line)
+            raise CardParseSyntaxError(msg)
         if '\t' in line:
             line = line.expandtabs()
             if ',' in line:
-                raise SyntaxError('tabs and commas in the same line are '
-                                  'not supported...line=%r' % line)
+                msg = 'tabs and commas in the same line are not supported...line=%r' % line
+                raise CardParseSyntaxError(msg)
 
         if '*' in line:  # large field
             if ',' in line:  # csv

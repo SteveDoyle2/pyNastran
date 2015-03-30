@@ -14,7 +14,7 @@ import traceback
 
 from pyNastran.op2.op2 import OP2
 from pyNastran.utils import print_bad_path
-from pyNastran.bdf.bdf import BDF, NastranMatrix
+from pyNastran.bdf.bdf import BDF, NastranMatrix, CardParseSyntaxError
 from pyNastran.bdf.bdf_replacer import BDFReplacer
 from pyNastran.bdf.test.compare_card_content import compare_card_content
 
@@ -176,6 +176,8 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
     except KeyboardInterrupt:
         sys.exit('KeyboardInterrupt...sys.exit()')
     except IOError:
+        pass
+    except CardParseSyntaxError:  # only temporarily uncomment this when running lots of tests
         pass
     #except AttributeError:  # only temporarily uncomment this when running lots of tests
         #pass
