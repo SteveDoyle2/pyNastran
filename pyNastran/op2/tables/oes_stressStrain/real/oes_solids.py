@@ -187,6 +187,10 @@ class RealSolidArray(OES_Object):
 
         eids2 = self.element_node[:, 0]
         nodes = self.element_node[:, 1]
+
+        eids3 = self.element_cid[:, 0]
+        cids3 = self.element_cid[:, 1]
+
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
@@ -211,6 +215,8 @@ class RealSolidArray(OES_Object):
             for i, deid, node_id, doxx, doyy, dozz, dtxy, dtyz, dtxz, do1, do2, do3, dp, dovm in zip(
                 count(), eids2, nodes, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm):
 
+                j = where(eids3 == deid)[0]
+                cid = cids3[j]
                 # TODO: cid not supported
                 A = [[doxx, dtxy, dtxz],
                      [dtxy, doyy, dtyz],
@@ -222,7 +228,7 @@ class RealSolidArray(OES_Object):
                                                  do1, do2, do3, dp, dovm])
 
                 if i % cnnodes == 0:
-                    f.write('0  %8s           0GRID CS  %i GP\n' % (deid, nnodes))
+                    f.write('0  %8s    %8iGRID CS  %i GP\n' % (deid, cid, nnodes))
                     f.write('0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
                             '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
                             '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n'
@@ -430,7 +436,7 @@ class RealSolidStress(StressObject):
                     (blank, blank, y, oyy, yz, tyz, b, o2, ly, d1, d2, d3, blank, blank) = self._f06_data[n+1]
                     (blank, blank, z, ozz, zx, txz, c, o3, lz, d1, d2, d3, blank, blank) = self._f06_data[n+2]
                     if node_id.strip() == 'CENTER':
-                        node_id = 'CENTER'
+                        node_id = 0
                     else:
                         node_id = int(node_id)
 
@@ -707,71 +713,60 @@ class RealSolidStress(StressObject):
             return self._write_f06_transient(header, page_stamp, page_num, f)
 
         (tetraMsg, pentaMsg, hexaMsg,
-         TETRA, PENTA, HEXA) = self.getF06_Header()
-        #nnodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
-        keys = [int(key) for key in TETRA.keys()]
-        for key in sorted(keys):
-            eids = TETRA[str(key)]
-            self._write_element('CTETRA'+str(key), key, eids, header, tetraMsg, f)
-            f.write(page_stamp % page_num)
-            page_num += 1
-
-        keys = [int(key) for key in PENTA.keys()]
-        for key in sorted(keys):
-            eids = PENTA[str(key)]
-            self._write_element('CPENTA'+str(key), key, eids, header, pentaMsg, f)
-            f.write(page_stamp % page_num)
-            page_num += 1
-
-        keys = [int(key) for key in HEXA.keys()]
-        for key in sorted(keys):
-            eids = HEXA[str(key)]
-            self._write_element('CHEXA'+str(key), key, eids, header, hexaMsg, f)
-            f.write(page_stamp % page_num)
-            page_num += 1
-        return page_num - 1
+         TETRA, HEXA, PENTA) = self.getF06_Header()
+        keys = self.oxx.keys()
+        eids = keys
+        if self.element_type == 39: # CTETRA
+            nnodes = 4
+            self._write_element('CTETRA4', nnodes, eids, header, tetraMsg, f)
+        elif self.element_type == 68: # CPENTA
+            nnodes = 6
+            self._write_element('CPENTA6', nnodes, eids, header, pentaMsg, f)
+        elif self.element_type == 67: # CHEXA
+            nnodes = 8
+            self._write_element('CHEXA8', nnodes, eids, header, hexaMsg, f)
+        else:
+            raise NotImplementedError('element_name=%r type=%s' % (self.element_name, self.element_type))
+        f.write(page_stamp % page_num)
+        page_num += 1
+        return page_num
 
     def _write_f06_transient(self, header, page_stamp, page_num, f):
         (tetraMsg, pentaMsg, hexaMsg,
          TETRA, HEXA, PENTA) = self.getF06_Header()
-        dts = self.oxx.keys()
-        for dt in dts:
-            keys = [int(key) for key in TETRA.keys()]
-            for key in sorted(keys):
-                eids = TETRA[str(key)]
-                self._write_element_transient('CTETRA'+str(key), key, eids, dt, header, tetraMsg, f)
+
+        if self.element_type == 39: # CTETRA
+            for dt, oxx in sorted(iteritems(self.oxx)):
+                eids = sorted(oxx.keys())
+                nnodes = 4
+                self._write_element_transient('CTETRA4', nnodes, eids, dt, header, tetraMsg, f)
                 f.write(page_stamp % page_num)
                 page_num += 1
-
-            keys = [int(key) for key in PENTA.keys()]
-            for key in sorted(keys):
-                eids = PENTA[str(key)]
-                self._write_element_transient('CPENTA'+str(key), key, eids, dt, header, pentaMsg, f)
+        elif self.element_type == 68: # CPENTA
+            for dt, oxx in sorted(iteritems(self.oxx)):
+                eids = sorted(oxx.keys())
+                nnodes = 6
+                self._write_element_transient('CPENTA6', nnodes, eids, dt, header, pentaMsg, f)
                 f.write(page_stamp % page_num)
                 page_num += 1
-
-            keys = [int(key) for key in HEXA.keys()]
-            for key in sorted(keys):
-                eids = HEXA[str(key)]
-                self._write_element_transient('CHEXA'+str(key), key, eids, dt, header, hexaMsg, f)
+        elif self.element_type == 67: # CHEXA
+            for dt, oxx in sorted(iteritems(self.oxx)):
+                eids = sorted(oxx.keys())
+                nnodes = 8
+                self._write_element_transient('CHEXA8', nnodes, eids, dt, header, hexaMsg, f)
                 f.write(page_stamp % page_num)
                 page_num += 1
-
+        else:
+            raise NotImplementedError('element_name=%r type=%s' % (self.element_name, self.element_type))
         return page_num - 1
 
     def _write_element(self, eType, nnodes, eids, header, tetraMsg, f):
         f.write(''.join(header + tetraMsg))
         for eid in eids:
-            #eType = self.eType[eid]
-
-            #k = self.oxx[eid].keys()
-            #cen = 'CENTER'
-            #k.remove(cen)
-            #k.sort()
-            #nids = [cen] + k
             nids = sorted(self.oxx[eid].keys())
+            cid = self.cid[eid]
 
-            f.write('0  %8s           0GRID CS  %i GP\n' % (eid, nnodes))
+            f.write('0  %8s    %8iGRID CS  %i GP\n' % (eid, cid, nnodes))
             for nid in nids:
                 oxx = self.oxx[eid][nid]
                 oyy = self.oyy[eid][nid]
@@ -793,6 +788,8 @@ class RealSolidStress(StressObject):
 
                 ([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm], is_all_zeros) = writeFloats13E([
                   oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm])
+                if nid == 0:
+                    nid = 'CENTER'
                 f.write('0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
                         '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
                         '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n' % (
@@ -804,14 +801,15 @@ class RealSolidStress(StressObject):
         dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
         header[1] = dtLine
         f.write(''.join(header + tetraMsg))
-        cen = 'CENTER'
+        #cen = 'CENTER'
         for eid in eids:
             #k = self.oxx[dt][eid].keys()
             #k.remove(cen)
             #k.sort()
             #nids = [cen] + k
+            cid = self.cid[eid]
             nids = sorted(self.oxx[dt][eid].keys())
-            f.write('0  %8s           0GRID CS  %i GP\n' % (eid, nnodes))
+            f.write('0  %8s    %8iGRID CS  %i GP\n' % (eid, cid, nnodes))
             for nid in nids:
                 oxx = self.oxx[dt][eid][nid]
                 oyy = self.oyy[dt][eid][nid]
@@ -834,6 +832,8 @@ class RealSolidStress(StressObject):
 
                 ([oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm], is_all_zeros) = writeFloats13E([
                   oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm])
+                if nid == 0:
+                    nid = 'CENTER'
                 f.write('0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
                         '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
                         '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n'
@@ -974,7 +974,6 @@ class RealSolidStrain(StrainObject):
                     (blank, blank, z, ezz, zx, exz, c, e3, lz, d1, d2, d3,
                      blank, blank) = self._data[n + 2]
                     if node_id.strip() == 'CENTER':
-                        #node_id = 'CENTER'
                         node_id = 0
                     else:
                         node_id = int(node_id)
@@ -1266,67 +1265,62 @@ class RealSolidStrain(StrainObject):
         (tetraMsg, pentaMsg, hexaMsg,
          TETRA, PENTA, HEXA) = self.getF06_Header()
         #nnodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
-        keys = [int(key) for key in TETRA.keys()]
-        for key in sorted(keys):
-            eids = TETRA[str(key)]
-            self._write_element('CTETRA'+str(key), key, eids, header, tetraMsg, f)
-            f.write(page_stamp % page_num)
-            page_num += 1
-
-        keys = [int(key) for key in PENTA.keys()]
-        for key in sorted(keys):
-            eids = PENTA[str(key)]
-            self._write_element('CPENTA'+str(key), key, eids, header, pentaMsg, f)
-            f.write(page_stamp % page_num)
-            page_num += 1
-
-        keys = [int(key) for key in HEXA.keys()]
-        for key in sorted(keys):
-            eids = HEXA[str(key)]
-            self._write_element('CHEXA'+str(key), key, eids, header, hexaMsg, f)
-            f.write(page_stamp % page_num)
-            page_num += 1
-        return page_num - 1
+        keys = self.exx.keys()
+        eids = keys
+        if self.element_type == 39: # CTETRA
+            nnodes = 4
+            self._write_element('CTETRA4', nnodes, eids, header, tetraMsg, f)
+        elif self.element_type == 68: # CPENTA
+            nnodes = 6
+            self._write_element('CPENTA6', nnodes, eids, header, pentaMsg, f)
+        elif self.element_type == 67: # CHEXA
+            nnodes = 8
+            self._write_element('CHEXA8', nnodes, eids, header, hexaMsg, f)
+        else:
+            raise NotImplementedError('element_name=%r type=%s' % (self.element_name, self.element_type))
+        f.write(page_stamp % page_num)
+        return page_num
 
     def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         msg = []
         (tetraMsg, pentaMsg, hexaMsg,
          TETRA, PENTA, HEXA) = self.getF06_Header()
-        dts = self.exx.keys()
-        for dt in dts:
-            keys = [int(key) for key in TETRA.keys()]
-            for key in sorted(keys):
-                eids = TETRA[str(key)]
-                self._write_element_transient('CTETRA' + str(key), key, eids, dt, header, tetraMsg, f)
+        if self.element_type == 39: # CTETRA
+            for dt, oxx in sorted(iteritems(self.exx)):
+                eids = sorted(oxx.keys())
+                nnodes = 4
+                self._write_element_transient('CTETRA4', nnodes, eids, dt, header, tetraMsg, f)
                 f.write(page_stamp % page_num)
                 page_num += 1
-
-            keys = [int(key) for key in PENTA.keys()]
-            for key in sorted(keys):
-                eids = PENTA[str(key)]
-                self._write_element_transient('CPENTA' + str(key), key, eids, dt, header, pentaMsg, f)
+        elif self.element_type == 68: # CPENTA
+            for dt, oxx in sorted(iteritems(self.exx)):
+                eids = sorted(oxx.keys())
+                nnodes = 6
+                self._write_element_transient('CPENTA6', nnodes, eids, dt, header, pentaMsg, f)
                 f.write(page_stamp % page_num)
                 page_num += 1
-
-            keys = [int(key) for key in HEXA.keys()]
-            for key in sorted(keys):
-                eids = HEXA[str(key)]
-                self._write_element_transient('CHEXA' + str(key), key, eids, dt, header, hexaMsg, f)
+        elif self.element_type == 67: # CHEXA
+            for dt, oxx in sorted(iteritems(self.exx)):
+                eids = sorted(oxx.keys())
+                nnodes = 8
+                self._write_element_transient('CHEXA8', nnodes, eids, dt, header, hexaMsg, f)
                 f.write(page_stamp % page_num)
                 page_num += 1
-
+        else:
+            raise NotImplementedError('element_name=%r type=%s' % (self.element_name, self.element_type))
         return page_num - 1
 
     def _write_element(self, eType, nnodes, eids, header, tetraMsg, f):
         f.write(''.join(header + tetraMsg))
-        cen = 'CENTER'
+        #cen = 'CENTER'
         for eid in eids:
             #k = self.exx[eid].keys()
             #k.remove(cen)
             #k.sort()
             #nids = [cen] + k
             nids = sorted(self.exx[eid].keys())
-            f.write('0  %8s           0GRID CS  %i GP\n' % (eid, nnodes))
+            cid = self.cid[eid]
+            f.write('0  %8s    %8iGRID CS  %i GP\n' % (eid, cid, nnodes))
             for nid in nids:
                 exx = self.exx[eid][nid]
                 eyy = self.eyy[eid][nid]
@@ -1348,6 +1342,8 @@ class RealSolidStrain(StrainObject):
 
                 ([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm], is_all_zeros) = writeFloats13E([
                   exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm])
+                if nid == 0:
+                    nid = 'CENTER'
                 f.write('0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
                         '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
                         '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n'
@@ -1359,13 +1355,14 @@ class RealSolidStrain(StrainObject):
         dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
         header[1] = dtLine
         f.write(''.join(header + tetraMsg))
-        cen = 'CENTER'
+        #cen = 'CENTER'
         for eid in eids:
             #k = self.exx[dt][eid].keys()
             #k.remove(cen)
             #k.sort()
             #nids = [cen] + k
-            f.write('0  %8s           0GRID CS  %i GP\n' % (eid, nnodes))
+            cid = self.cid[eid]
+            f.write('0  %8s    %8iGRID CS  %i GP\n' % (eid, cid, nnodes))
             nids = sorted(self.exx[dt][eid].keys())
             for nid in nids:
                 exx = self.exx[dt][eid][nid]
@@ -1388,6 +1385,8 @@ class RealSolidStrain(StrainObject):
 
                 ([exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm], is_all_zeros) = writeFloats13E([
                   exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, p, evm])
+                if nid == 0:
+                    nid = 'CENTER'
                 f.write('0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
                          '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
                          '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n' % (
