@@ -452,6 +452,9 @@ class ACCEL(BaseCard):
             return self.cid
         return self.cid.cid
 
+    def getLoads(self):
+        return [self]
+
     def raw_fields(self):
         list_fields = ['ACCEL', self.sid, self.Cid(),
                   self.N[0], self.N[1], self.N[2], self.dir, None, None,
@@ -519,6 +522,9 @@ class ACCEL1(BaseCard):
             nodeIDs = [node.nid for node in nodes]
         assert 0 not in nodeIDs, 'nodeIDs = %s' % (nodeIDs)
         return nodeIDs
+
+    def getLoads(self):
+        return [self]
 
     def raw_fields(self):
         list_fields = ['ACCEL1', self.sid, self.Cid(), self.scale,

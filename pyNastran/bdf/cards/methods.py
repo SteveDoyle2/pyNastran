@@ -51,9 +51,10 @@ class EIGB(Method):
 
             #: Method of eigenvalue extraction. (Character: 'INV' for inverse
             #: power method or 'SINV' for enhanced inverse power method.)
-            self.method = string(card, 2, 'method')
+            #: apparently it can also be blank...
+            self.method = string_or_blank(card, 2, 'method')
 
-            if self.method not in ['INV', 'SINV']:
+            if self.method not in ['INV', 'SINV', None]:
                 msg = 'method must be INV or SINV.  method=|%s|' % self.method
                 raise RuntimeError(msg)
 
@@ -225,7 +226,7 @@ class EIGC(Method):
             self.omegaBjs.append(
                 double_or_blank(card, i + 3, 'omegaB' + str(iRow), alphaOmega_default))
             self.LJs.append(
-                double_or_blank(i + 4, LJ_default))
+                double_or_blank(card, i + 4, 'LJ' + str(iRow), LJ_default))
             self.NEJs.append(
                 integer(card, i + 5, 'NEJ' + str(iRow)))
             self.NDJs.append(

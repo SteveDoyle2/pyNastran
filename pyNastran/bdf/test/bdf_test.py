@@ -45,7 +45,7 @@ if __name__ == '__main__':  # pragma: no cover
     debug = False
 
     saveCases = True
-    regenerate = True
+    regenerate = False
     stopOnFailure = False
     nastran = r'C:\MSC.Software\MSC.Nastran\bin\nastran.exe scr=yes bat=no old=no '
     nastran = ''
@@ -60,6 +60,8 @@ if __name__ == '__main__':  # pragma: no cover
         files2 = get_failed_files('failedCases.in')
 
     files = remove_marc_files(files2)
+    files = [fname for fname in files
+             if not os.path.basename(fname).startswith('out_')]  # removing test output files
 
     skipFiles = []  # giant
 
