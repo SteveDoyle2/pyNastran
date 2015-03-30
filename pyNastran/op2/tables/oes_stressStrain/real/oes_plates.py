@@ -102,17 +102,9 @@ class RealPlateArray(OES_Object):
         self.add_new_eid_sort1(etype, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
     def add_new_eid_sort1(self, etype, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #msg = "i=%s etype=%s dt=%s eid=%s node_id=%s fiber_dist=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (
-            #self.itotal,  etype, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
-        #msg = "i=%s dt=%s eid=%s node_id=%s fiber_dist=%g oxx=%g ovmShear=%g" % (
-            #self.itotal, dt, eid, node_id, fiber_dist, oxx, ovm)
-
         assert isinstance(eid, int), eid
         assert isinstance(node_id, int), node_id
         self._times[self.itime] = dt
-        #assert isinstance(node_id, string_types), node_id
-        #if isinstance(node_id, string_types):
-            #node_id = 0
         #assert self.itotal == 0, oxx
         self.element_node[self.itotal, :] = [eid, node_id]
         self.data[self.itime, self.itotal, :] = [fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
@@ -120,30 +112,18 @@ class RealPlateArray(OES_Object):
         self.ielement += 1
 
     def addNewNode(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #if isinstance(node_id, string_types):
-            #node_id = 0
         assert isinstance(node_id, int), node_id
         self.add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
     def add(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #if isinstance(node_id, string_types):
-            #node_id = 0
         assert isinstance(node_id, int), node_id
         self.add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
     def addNewNodeSort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #if isinstance(node_id, string_types):
-            #node_id = 0
         self.add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
     def add_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
         assert eid is not None
-        #msg = "i=%s dt=%s eid=%s node_id=%s fiber_dist=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (
-            #self.itotal, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
-        #msg = "i=%s dt=%s eid=%s node_id=%s fiber_dist=%g oxx=%g ovmShear=%g" % (
-            #self.itotal, dt, eid, node_id, fiber_dist, oxx, ovm)
-        #if isinstance(node_id, string_types):
-            #node_id = 0
         assert isinstance(node_id, int), node_id
         self.element_node[self.itotal, :] = [eid, node_id]
         self.data[self.itime, self.itotal, :] = [fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
@@ -249,13 +229,13 @@ class RealPlateArray(OES_Object):
                  is_all_zeros) = writeFloats13E([fdi, oxxi, oyyi, txyi, major, minor, ovmi])
                 ilayer = i % 2
                 # tria3
-                if self.element_type in [33, 74]:
+                if self.element_type in [33, 74]:  # CQUAD4, CTRIA3
                     if ilayer == 0:
                         f.write('0  %6i   %-13s     %-13s  %-13s  %-13s   %8.4f   %-13s   %-13s  %s\n' % (eid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
                     else:
                         f.write('   %6s   %-13s     %-13s  %-13s  %-13s   %8.4f   %-13s   %-13s  %s\n' % ('', fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
 
-                elif self.element_type == 144:
+                elif self.element_type in [64, 82, 144]:  # CQUAD8, CQUADR, CQUAD4
                     # bilinear
                     if nid == 0 and ilayer == 0:  # CEN
                         f.write('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % (eid, cen_word, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
@@ -263,8 +243,10 @@ class RealPlateArray(OES_Object):
                         f.write('   %8s %8i  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % ('', nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
                     elif ilayer == 1:
                         f.write('   %8s %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n\n' % ('', '', fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
+
+# CTRIA6 self.element_type=75
                 else:
-                    raise RuntimeError(self.element_type)
+                    raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))
 
             f.write(page_stamp % page_num)
             page_num += 1
@@ -352,7 +334,7 @@ class RealPlateStressArray(RealPlateArray, StressObject):
             msg = cquad8_msg
             nnodes = 4
             is_bilinear = True
-        elif self.element_type == 75:  # CTRIA5
+        elif self.element_type == 75:  # CTRIA6
             msg = ctria6_msg
             nnodes = 3
             is_bilinear = True
@@ -526,7 +508,6 @@ class RealPlateStress(StressObject):
                     self.minorP[eid] = {cen : [o21, o22]}
                     self.ovmShear[eid] = {cen : [ovm1, ovm2]}
                 elif etype == 'CQUAD4':
-                    #assert len(line)==19,'len(line)=%s' %(len(line))
                     if len(line) == 19:  # Centroid - bilinear
                         (etype, eid, nid,
                          fiber_dist1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
@@ -547,11 +528,8 @@ class RealPlateStress(StressObject):
                         (etype, eid,
                          fiber_dist1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
                          fiber_dist2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
-                        #nid = 'CEN/4'
-                        #if nid == 'CEN/4':
-                            #nid = 0
                         assert isinstance(nid, int), nid
-                        nid = 0
+                        nid = 0 # CEN/4
                         self.eType[eid] = etype
                         self.fiberCurvature[eid] = {nid: [fiber_dist1, fiber_dist2]}
                         self.oxx[eid] = {nid: [ox1, ox2]}
@@ -630,7 +608,7 @@ class RealPlateStress(StressObject):
                     (etype, eid, nid,
                      fiber_dist1, ox1, oy1, txy1, angle1, o11, o21, ovm1,
                      fiber_dist2, ox2, oy2, txy2, angle2, o12, o22, ovm2) = line
-                    if 'nid' == 'CEN/4':
+                    if nid == 'CEN/4':
                         nid = 0
                     #assert isinstance(nid, int), nid
                     self.eType[eid] = etype
@@ -719,17 +697,6 @@ class RealPlateStress(StressObject):
         #msg = "dt=%s eid=%s node_id=%s fiber_dist=%g oxx=%g major=%g vm=%g" % (dt, eid, node_id, fiber_dist, oxx, majorP, ovm)
         #if eid in self.ovmShear[dt]:
         #    return self.add(eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
-
-        if 0: # this is caused by superelements
-            if dt in self.oxx and eid in self.oxx[dt]:  # SOL200, erase the old result
-                msg = "dt=%s eid=%s node_id=%s fiber_dist=%s oxx=%s major=%s vm=%s" % (
-                    dt, eid, node_id,
-                    str(self.fiberCurvature[eid][node_id]),
-                    str(self.oxx[dt][eid][node_id]),
-                    str(self.majorP[dt][eid][node_id]),
-                    str(self.ovmShear[dt][eid][node_id]))
-                self.delete_transient(dt)
-                self.add_new_transient(dt)
 
         assert isinstance(eid, int), eid
         assert isinstance(node_id, int), node_id
@@ -845,103 +812,84 @@ class RealPlateStress(StressObject):
             tri_msg_temp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
                             '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % (von_mises)]
 
-        tria3_msg = None
-        tria6_msg = None
-        triar_msg = None
-        quad4_msg = None
-        quad8_msg = None
-        quadr_msg = None
-        etypes = list(self.eType.values())
-        if 'CQUAD4' in etypes:
-            qkey = etypes.index('CQUAD4')
-            etype_keys = list(self.eType.keys())
-            kkey = etype_keys[qkey]
-            ekey = self.oxx[kkey].keys()
+
+        if self.element_type == 74:
+            msg_pack = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'] + tri_msg_temp
+            nnodes = 3
+        elif self.element_type == 33:
+            msg_pack = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'] + tri_msg_temp
+            nnodes = 4
+        elif self.element_type == 144:
+            msg_pack = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quad_msg_temp
+            nnodes = 4
             is_bilinear = True
-            quad4_msg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quad_msg_temp
-            if len(ekey) == 1:
-                is_bilinear = False
-                quad4_msg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'] + tri_msg_temp
-
-        if 'CQUAD8' in etypes:
-            quad8_msg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n'] + tri_msg_temp
-
-        if 'CQUADR' in etypes:
-            qkey = etypes.index('CQUADR')
-            etype_keys = list(self.eType.keys())
-            kkey = etype_keys[qkey]
-            ekey = self.oxx[kkey].keys()
+        elif self.element_type == 82:  # CQUADR
+            msg_pack = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quad_msg_temp
+            nnodes = 4
             is_bilinear = True
-            quadr_msg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quad_msg_temp
-            if len(ekey) == 1:
-                is_bilinear = False
-                quad4_msg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'] + tri_msg_temp
+        elif self.element_type == 70:  # CTRIAR
+            msg_pack = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + tri_msg_temp
+            nnodes = 3
+            is_bilinear = True
+        elif self.element_type == 64:  # CQUAD8
+            msg_pack = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n'] + tri_msg_temp
+            nnodes = 4
+            is_bilinear = True
+        elif self.element_type == 75:  # CTRIA6
+            msg_pack = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + tri_msg_temp
+            nnodes = 3
+            is_bilinear = True
+        elif self.element_type == 75:  # CQUADR
+            msg_pack = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + tri_msg_temp
+            nnodes = 4
+            is_bilinear = True
+        else:
+            raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
 
-        if 'CTRIA3' in etypes:
-            tria3_msg = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'] + tri_msg_temp
-
-        if 'CTRIA6' in etypes:
-            tria6_msg = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + tri_msg_temp
-
-        if 'CTRIAR' in etypes:
-            triar_msg = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + tri_msg_temp
-
-        msg_packs = {
-            'CTRIA3': tria3_msg,
-            'CTRIA6': tria6_msg,
-            'CTRIAR': triar_msg,
-            'CQUAD4': quad4_msg,
-            'CQUAD8': quad8_msg,
-            'CQUADR': quadr_msg, }
-
-        valid_types = ['CTRIA3', 'CTRIA6', 'CTRIAR',
-                       'CQUAD4', 'CQUAD8', 'CQUADR']
-        etypes, ordered_etypes = self.getOrderedETypes(valid_types)
+        #if 'CQUADR' in etypes:
+            #qkey = etypes.index('CQUADR')
+            #etype_keys = list(self.eType.keys())
+            #kkey = etype_keys[qkey]
+            #ekey = self.oxx[kkey].keys()
+            #is_bilinear = True
+            #quadr_msg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quad_msg_temp
+            #if len(ekey) == 1:
+                #is_bilinear = False
+                #quad4_msg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'] + tri_msg_temp
 
         msg = []
-        for etype in etypes:
-            eids = ordered_etypes[etype]
-            if eids:
-                eids.sort()
-                msg_pack = msg_packs[etype]
+        msg += header + msg_pack
+        eids = sorted(self.oxx.keys())
 
-                msg += header + msg_pack
-                if etype == 'CQUAD4':
-                    if is_bilinear:
-                        for eid in eids:
-                            out = self._write_f06_quad4_bilinear(eid, 4, 'CEN/4')
-                            msg.append(out)
-                    else:
-                        for eid in eids:
-                            out = self._write_f06_tri3(eid)
-                            msg.append(out)
-                elif etype == 'CTRIA3':
-                    for eid in eids:
-                        out = self._write_f06_tri3(eid)
-                        msg.append(out)
-                elif etype == 'CQUAD8':
-                    for eid in eids:
-                        out = self._write_f06_quad4_bilinear(eid, 4, 'CEN/8')
-                        msg.append(out)
-                elif etype == 'CQUADR':
-                    for eid in eids:
-                        out = self._write_f06_quad4_bilinear(eid, 4, 'CEN/4')
-                        msg.append(out)
-                elif etype == 'CTRIAR':
-                    for eid in eids:
-                        out = self._write_f06_quad4_bilinear(eid, 3, 'CEN/3')
-                        msg.append(out)
-                elif etype == 'CTRIA6':
-                    for eid in eids:
-                        out = self._write_f06_quad4_bilinear(eid, 3, 'CEN/6')
-                        msg.append(out)
-                else:
-                    raise NotImplementedError('eType = %r' % etype)
+        if self.element_type == 144:
+            for eid in eids:
+                out = self._write_f06_quad4_bilinear(eid, 4, 'CEN/4')
+                msg.append(out)
+        elif self.element_type == 33:
+            for eid in eids:
+                out = self._write_f06_tri3(eid)
+        elif self.element_type == 74:
+            for eid in eids:
+                out = self._write_f06_tri3(eid)
 
-                msg.append(page_stamp % page_num)
-                f.write(''.join(msg))
-                msg = ['']
-                page_num += 1
+        elif self.element_type == 70: # CTRIAR
+            for eid in eids:
+                out = self._write_f06_quad4_bilinear(eid, 3, 'CEN/3')
+        elif self.element_type == 75: # CTRIA6
+            for eid in eids:
+                out = self._write_f06_quad4_bilinear(eid, 3, 'CEN/6')
+        elif self.element_type == 82: # CQUADR
+            for eid in eids:
+                out = self._write_f06_quad4_bilinear(eid, 4, 'CEN/4')
+        elif self.element_type == 64:  # CQUAD8
+            for eid in eids:
+                out = self._write_f06_quad4_bilinear(eid, 4, 'CEN/8')
+        else:
+            raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))
+
+        msg.append(page_stamp % page_num)
+        f.write(''.join(msg))
+        msg = ['']
         return page_num - 1
 
     def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
@@ -961,9 +909,6 @@ class RealPlateStress(StressObject):
             tri_msg_temp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
                             '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % (von_mises)]
 
-        #if 'CQUAD8' in etypes:
-            #quad8_msg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n'] + tri_msg_temp
-
         #if 'CQUADR' in etypes:
             #qkey = etypes.index('CQUADR')
             #etype_keys = list(self.eType.keys())
@@ -975,12 +920,6 @@ class RealPlateStress(StressObject):
                 #is_bilinear = False
                 #quadr_msg = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'] + tri_msg_temp
 
-        #if 'CTRIA6' in etypes:
-            #tria6_msg = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + tri_msg_temp
-
-        #if 'CTRIAR' in etypes:
-            #triar_msg = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + tri_msg_temp
-
         if self.element_type == 144:  # CQUAD4 bilinear
             is_bilinear = True
             msg_pack = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quad_msg_temp
@@ -989,6 +928,15 @@ class RealPlateStress(StressObject):
             msg_pack = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'] + tri_msg_temp
         elif self.element_type == 74:  # CTRIA3
             msg_pack = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'] + tri_msg_temp
+        elif self.element_type == 64:  # CQUAD8
+            msg_pack = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n'] + tri_msg_temp
+
+        elif self.element_type == 75:  # CTRIA6
+            msg_pack = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + tri_msg_temp
+        elif self.element_type == 82: # CQUADR
+            msg_pack = header + ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quad_msg_temp
+        elif self.element_type == 70: # CTRIAR
+            msg_pack = header + ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + tri_msg_temp
         else:
             raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))
 
@@ -1012,6 +960,28 @@ class RealPlateStress(StressObject):
                 f.write(''.join(msg))
                 msg = ['']
                 page_num += 1
+        elif self.element_type == 64:  # CQUAD8
+            for dt, oxx in sorted(iteritems(self.oxx)):
+                header[1] = dt_msg % dt
+                msg.append('\n'.join(header + msg_pack))
+                for eid in sorted(oxx.keys()):
+                    out = self._write_f06_quad4_bilinear_transient(dt, eid, 5, 'CEN/8')
+                    msg.append(out)
+                msg.append(page_stamp % page_num)
+                f.write(''.join(msg))
+                msg = ['']
+                page_num += 1
+        elif self.element_type == 75:  # CTRIA6
+            for dt, oxx in sorted(iteritems(self.oxx)):
+                header[1] = dt_msg % dt
+                msg.append('\n'.join(header + msg_pack))
+                for eid in sorted(oxx.keys()):
+                    out = self._write_f06_quad4_bilinear_transient(dt, eid, 3, 'CEN/6')
+                    msg.append(out)
+                msg.append(page_stamp % page_num)
+                f.write(''.join(msg))
+                msg = ['']
+                page_num += 1
         elif self.element_type in [33, 74]:
             for dt, oxx in sorted(iteritems(self.oxx)):
                 header[1] = dt_msg % dt
@@ -1023,48 +993,30 @@ class RealPlateStress(StressObject):
                 f.write(''.join(msg))
                 msg = ['']
                 page_num += 1
+        elif self.element_type == 82: # CQUADR
+            for dt, oxx in sorted(iteritems(self.oxx)):
+                header[1] = dt_msg % dt
+                msg.append('\n'.join(header + msg_pack))
+                for eid in sorted(oxx.keys()):
+                    out = self._write_f06_quad4_bilinear_transient(dt, eid, 4, 'CEN/4')
+                    msg.append(out)
+                msg.append(page_stamp % page_num)
+                f.write(''.join(msg))
+                msg = ['']
+                page_num += 1
+        elif self.element_type == 70: # CTRIAR
+            for dt, oxx in sorted(iteritems(self.oxx)):
+                header[1] = dt_msg % dt
+                msg.append('\n'.join(header + msg_pack))
+                for eid in sorted(oxx.keys()):
+                    out = self._write_f06_quad4_bilinear_transient(dt, eid, 3, 'CEN/6')
+                    msg.append(out)
+                msg.append(page_stamp % page_num)
+                f.write(''.join(msg))
+                msg = ['']
+                page_num += 1
         else:
             raise NotImplementedError('etype = %r' % etype)  # CQUAD8, CTRIA6
-
-
-
-
-        #elif etype == 'CTRIAR':
-            #for dt in dts:
-                #header[1] = dt_msg % dt
-                #msg += header + msg_pack
-                #for eid in eids:
-                    #out = self._write_f06_quad4_bilinear_transient(dt, eid, 3, 'CEN/3')
-                    #msg.append(out)
-        #elif etype == 'CTRIA6':
-            #for dt in dts:
-                #header[1] = dt_msg % dt
-                #msg += header + msg_pack
-                #for eid in eids:
-                    #out = self._write_f06_quad4_bilinear_transient(dt, eid, 3, 'CEN/6')
-                    #msg.append(out)
-        #elif etype == 'CQUAD8':
-            #for dt in dts:
-                #header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-                #msg += header + msg_pack
-                #for eid in eids:
-                    #out = self._write_f06_quad4_bilinear_transient(dt, eid, 5, 'CEN/8')
-                    #msg.append(out)
-        #elif etype == 'CQUADR':
-            #if is_bilinear:
-                #for dt in dts:
-                    #header[1] = dt_msg % dt
-                    #msg += header + msg_pack
-                    #for eid in eids:
-                        #out = self._write_f06_quad4_bilinear_transient(dt, eid, 4, 'CEN/4')
-                        #msg.append(out)
-            #else:
-                #for dt in dts:
-                    #header[1] = dt_msg % dt
-                    #msg += header + msg_pack
-                    #for eid in eids:
-                        #out = self._write_f06_tri3_transient(dt, eid)
-                        #msg.append(out)
         return page_num - 1
 
     def _write_f06_quad4_bilinear(self, eid, n, cen):
