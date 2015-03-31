@@ -176,7 +176,7 @@ class STLReader(object):
         self.nodes = nodes
 
 
-    def _get_normals_inan(self, elements, nodes=None):
+    def _get_normals_data(self, elements, nodes=None):
         """
         This is intended as a submethod to help handle the problem of bad normals
         """
@@ -189,13 +189,12 @@ class STLReader(object):
         v12 = p2 - p1
         v13 = p3 - p1
         v123 = cross(v12, v13)
-
         n = norm(v123, axis=1)
         inan = where(n==0)[0]
         return v123, n, inan
 
     def remove_elements_with_bad_normals(self, elements, nodes=None):
-        v123, n, inan = self._get_normals_inan(elements, nodes=nodes)
+        v123, n, inan = self._get_normals_data(elements, nodes=nodes)
         if len(inan):
             inotnan = where(n!=0)[0]
             self.elements = elements[inotnan, :]
@@ -203,14 +202,14 @@ class STLReader(object):
             v123 = v123[inotnan]
             self.log.info('removing %i elements with coincident nodes' % len(inan))
 
-        normals = v123 # /n
+        normals = v123
         normals[:, 0] /= n
         normals[:, 1] /= n
         normals[:, 2] /= n
         return normals
 
     def get_area(self, elements, stop_on_failure=True):
-        v123, n, inan = self._get_normals_inan(elements, nodes=self.nodes)
+        v123, n, inan = self._get_normals_data(elements, nodes=self.nodes)
 
         if stop_on_failure:
             msg = 'Failed Elements: %s\n' % inan
@@ -231,7 +230,7 @@ class STLReader(object):
         """
         if nodes is None:
             nodes = self.nodes
-        v123, n, inan = self._get_normals_inan(elements, nodes=nodes)
+        v123, n, inan = self._get_normals_data(elements, nodes=nodes)
 
         if stop_on_failure:
             msg = 'Failed Elements: %s\n' % inan
@@ -257,9 +256,6 @@ class STLReader(object):
         normals[:, 0] /= n
         normals[:, 1] /= n
         normals[:, 2] /= n
-
-        #from numpy import divide
-        #divide(v123, n)
         return normals
 
     def flip_normals(self, i=None):
@@ -320,6 +316,39 @@ class STLReader(object):
             normals_at_nodes[nid] = m/norm(m)
             eid += 1
         return normals_at_nodes
+
+    def equivalence_nodes(self, tol=1e-5):
+        nnodes = self.nodes.shape[0]
+
+        # build the kdtree
+        kdt = scipy.spatial.KDTree(self.nodes)
+
+        # find the node ids of interest
+        nids_new = unique(self.elements.ravel())
+        nids_new.sort()
+
+        # check the closest 10 nodes for equality
+        deq, ieq = kdt.query(self.nodes[nids_new, :], k=10, distance_upper_bound=tol)
+
+        # get the ids of the duplicate nodes
+        slots = where(ieq[:, 1:] < nnodes)
+        replacer = unique(ieq[slots])
+
+        # update the duplcated node id with it's partner
+        # we'll pick the minimum ID
+        for r in replacer:
+            ip = where(ieq[r, :] < nnodes)[0]
+            possible = ieq[r, ip]
+
+            # node 11 can become node 10, but node 10 cannot become node 11
+            ip2 = where(r > possible)[0]
+
+            if len(ip2):
+                # replace the node ids
+                possible2 = possible[ip2]
+                r_new_nid = possible2.min()
+                ireplace = where(self.elements == r)
+                self.elements[ireplace] = r_new_nid
 
     def project_boundary_layer(self, nodes, elements, volume_bdfname):
         """
