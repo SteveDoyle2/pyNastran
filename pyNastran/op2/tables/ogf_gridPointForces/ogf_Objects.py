@@ -2,7 +2,7 @@ from six import iteritems
 from numpy import array
 from struct import pack
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.f06.f06_formatting import writeFloats13E
+from pyNastran.f06.f06_formatting import writeFloats13E, eigenvalue_header
 
 
 class RealGridPointForces(ScalarObject):
@@ -142,14 +142,19 @@ class RealGridPointForces(ScalarObject):
         return page_num
 
     def _write_f06_transient(self, header, page_stamp, page_num=1, f=None):
-        msg = header + ['                                          G R I D   P O I N T   F O R C E   B A L A N C E\n',
-                        ' \n',
-                        '   POINT-ID    ELEMENT-ID     SOURCE             T1             T2             T3             R1             R2             R3\n', ]
+        msg_pack = ['                                          G R I D   P O I N T   F O R C E   B A L A N C E\n',
+                    ' \n',
+                    '   POINT-ID    ELEMENT-ID     SOURCE             T1             T2             T3             R1             R2             R3\n', ]
               #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
               #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
               #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
+        ntimes = len(self.force_moment)
+        itime = 0
+        msg = ['']
         for dt, Forces in sorted(iteritems(self.force_moment)):
             zero = ' '
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            msg += header + msg_pack
             for eKey, Force in sorted(iteritems(Forces)):
                 for iLoad, force in enumerate(Force):
                     (f1, f2, f3, m1, m2, m3) = force
@@ -161,7 +166,7 @@ class RealGridPointForces(ScalarObject):
                     [f1, f2, f3, m1, m2, m3] = vals2
                     if eid == 0:
                         eid = ''
-                    msg.append('%s  %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (zero, eKey, eid, elemName,
+                    msg.append('%s  %8s    %10s    %-8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (zero, eKey, eid, elemName,
                                                                                                         f1, f2, f3, m1, m2, m3))
                     zero = ' '
                 zero = '0'
@@ -169,6 +174,7 @@ class RealGridPointForces(ScalarObject):
             msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             msg = ['']
+            itime += 1
             page_num += 1
         return page_num - 1
 

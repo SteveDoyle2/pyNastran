@@ -131,7 +131,7 @@ class RealRodArray(OES_Object):
         (elem_name, msg_temp) = self.get_f06_header(is_mag_phase)
 
         # write the f06
-        (ntimes, ntotal, four) = self.data.shape
+        ntimes = self.data.shape[0]
 
         eids = self.element
         is_odd = False
@@ -155,15 +155,15 @@ class RealRodArray(OES_Object):
             # loop over all the elements
             out = []
             for eid, axiali, SMai, torsioni, SMti in zip(eids, axial, SMa, torsion, SMt):
-                #([axiali, torsioni, SMai, SMti],
-                #is_all_zeros) = writeFloats13E([axiali, torsioni, SMai, SMti])
+                ([axiali, torsioni, SMai, SMti],
+                is_all_zeros) = writeFloats13E([axiali, torsioni, SMai, SMti])
                 out.append([eid, axiali, SMai, torsioni, SMti])
 
             for i in range(0, nwrite, 2):
-                outLine = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[i] + out[i + 1]))
+                outLine = '      %8i %-13s  %-13s %-13s  %-13s %-8i   %-13s  %-13s %-13s  %-s\n' % (tuple(out[i] + out[i + 1]))
                 f.write(outLine)
             if is_odd:
-                outLine = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[-1]))
+                outLine = '      %8i %-13s  %-13s %-13s  %13s\n' % (tuple(out[-1]))
                 f.write(outLine)
             f.write(page_stamp % page_num)
             page_num += 1

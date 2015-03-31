@@ -245,8 +245,6 @@ class ComplexPlateArray(OES_Object):
         for itime in range(ntimes):
             dt = self._times[itime]
 
-            #print('eids=', eids)
-
             dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
             header[1] = dtLine
             msg = header + msg_temp

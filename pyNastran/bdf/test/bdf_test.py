@@ -36,7 +36,7 @@ def get_file_names_from_file_number(fds):
         names.append(os.readlink('/proc/self/fd/%d' % fd))
     return names
 
-if __name__ == '__main__':  # pragma: no cover
+def main():
     files = get_files_of_type('tests', '.bdf')
     files += get_files_of_type('tests', '.dat')
     foldersFile = 'tests/foldersRead.txt'
@@ -96,3 +96,6 @@ if __name__ == '__main__':  # pragma: no cover
         f.write('%s\n' % fname)
     f.close()
     sys.exit('finished...')
+
+if __name__ == '__main__':  # pragma: no cover
+    main()

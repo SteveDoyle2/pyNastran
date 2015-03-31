@@ -20,7 +20,6 @@ from pyNastran.bdf.test.compare_card_content import compare_card_content
 
 import pyNastran.bdf.test
 test_path = pyNastran.bdf.test.__path__[0]
-#print "test_path = ",test_path
 
 
 def run_all_files_in_folder(folder, debug=False, xref=True, check=True,
@@ -47,15 +46,15 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
     failedFiles = []
     n = 1
     for filename in filenames2:
-        absFilename = os.path.abspath(os.path.join(folder, filename))
+        abs_filename = os.path.abspath(os.path.join(folder, filename))
         if folder != '':
-            print("filename = %s" % absFilename)
+            print("filename = %s" % abs_filename)
         isPassed = False
         try:
-            (fem1, fem2, diffCards2) = run_bdf(folder, filename, debug=debug,
-                                               xref=xref, check=check, punch=punch,
-                                               cid=cid, isFolder=True, dynamic_vars={},
-                                               nastran=nastran)
+            fem1, fem2, diffCards2 = run_bdf(folder, filename, debug=debug,
+                                             xref=xref, check=check, punch=punch,
+                                             cid=cid, isFolder=True, dynamic_vars={},
+                                             nastran=nastran)
             del fem1
             del fem2
             diffCards += diffCards
@@ -78,11 +77,11 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
         print('-' * 80)
 
         if isPassed:
-            sys.stderr.write('%i %s' % (n, absFilename))
+            sys.stderr.write('%i %s' % (n, abs_filename))
             n += 1
         else:
-            sys.stderr.write('*' + absFilename)
-            failedFiles.append(absFilename)
+            sys.stderr.write('*' + abs_filename)
+            failedFiles.append(abs_filename)
         sys.stderr.write('\n')
 
     print('*' * 80)
@@ -134,9 +133,9 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
     fem2 = None
     diffCards = []
     try:
-        (outModel) = run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, precision, cid)
-        (fem2)     = run_fem2(      bdfModel, outModel, xref, punch, sum_load, size, precision, reject, debug=debug, log=None)
-        (diffCards) = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
+        outModel = run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, precision, cid)
+        fem2 =     run_fem2(      bdfModel, outModel, xref, punch, sum_load, size, precision, reject, debug=debug, log=None)
+        diffCards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
         nastran = 'nastran scr=yes bat=no old=no '
         if nastran and 0:
             dirname = os.path.dirname(bdfModel)
@@ -175,10 +174,10 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
 
     except KeyboardInterrupt:
         sys.exit('KeyboardInterrupt...sys.exit()')
-    except IOError:
-        pass
-    except CardParseSyntaxError:  # only temporarily uncomment this when running lots of tests
-        pass
+    #except IOError:
+        #pass
+    #except CardParseSyntaxError:  # only temporarily uncomment this when running lots of tests
+        #pass
     #except AttributeError:  # only temporarily uncomment this when running lots of tests
         #pass
     #except SyntaxError:  # only temporarily uncomment this when running lots of tests
