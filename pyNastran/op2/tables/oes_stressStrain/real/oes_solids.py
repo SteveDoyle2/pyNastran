@@ -67,8 +67,6 @@ class RealSolidArray(OES_Object):
         if isinstance(self.nonlinear_factor, int):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
-        #self.element_types2 = array(self.nelements, dtype='|S8')
-        self.element_types3 = zeros((self.nelements, 2), dtype='int32')
 
         # TODO: could be more efficient by using nelements for cid
         self.element_node = zeros((self.ntotal, 2), dtype='int32')
@@ -156,16 +154,18 @@ class RealSolidArray(OES_Object):
 
     def get_f06_header(self, is_mag_phase=True):
         tetra_msg, penta_msg, hexa_msg = self._get_msgs()
-        if 'CTETRA' in self.element_name:
+        if self.element_type == 39: # CTETRA
             msg = tetra_msg
             nnodes = 4
-        elif 'CHEXA' in self.element_name:
+        elif self.element_type == 67: # CHEXA
             msg = hexa_msg
             nnodes = 8
-        elif 'CPENTA' in self.element_name:
+        elif self.element_type == 68: # CPENTA
             msg = penta_msg
             nnodes = 6
-        return self.element_name, nnodes, msg
+        else:
+            raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))
+        return nnodes, msg
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
@@ -180,10 +180,10 @@ class RealSolidArray(OES_Object):
         return ind
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        (elem_name, nnodes, msg_temp) = self.get_f06_header(is_mag_phase)
+        nnodes, msg_temp = self.get_f06_header(is_mag_phase)
 
         # write the f06
-        (ntimes, ntotal, six) = self.data.shape
+        ntimes = self.data.shape[0]
 
         eids2 = self.element_node[:, 0]
         nodes = self.element_node[:, 1]
@@ -217,7 +217,6 @@ class RealSolidArray(OES_Object):
 
                 j = where(eids3 == deid)[0]
                 cid = cids3[j]
-                # TODO: cid not supported
                 A = [[doxx, dtxy, dtxz],
                      [dtxy, doyy, dtyz],
                      [dtxz, dtyz, dozz]]
@@ -269,9 +268,7 @@ class RealSolidStressArray(RealSolidArray, StressObject):
 
         base_msg = [
             '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
-            '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % von_mises,
-        ]
-
+            '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % von_mises]
         tetra_msg = ['                   S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n', ]
         penta_msg = ['                    S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n', ]
         hexa_msg = ['                      S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n', ]
@@ -360,8 +357,6 @@ class RealSolidStress(StressObject):
         else:
             assert dt is not None, dt
             raise NotImplementedError('SORT2')
-            #self.add = self.addSort2
-            #self.add_eid = self.add_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -432,9 +427,9 @@ class RealSolidStress(StressObject):
                 self.ovmShear[eid] = {}
                 n += 1
                 for j in range(nnodes):
-                    (blank, node_id, x, oxx, xy, txy, a, o1, lx, d1, d2, d3, pressure, ovmShear) = self._f06_data[n]
-                    (blank, blank, y, oyy, yz, tyz, b, o2, ly, d1, d2, d3, blank, blank) = self._f06_data[n+1]
-                    (blank, blank, z, ozz, zx, txz, c, o3, lz, d1, d2, d3, blank, blank) = self._f06_data[n+2]
+                    (blank, node_id, x, oxx, txy, txy, a, o1, lx, d1, d2, d3, pressure, ovmShear) = self._f06_data[n]
+                    (blank, blank, y, oyy, tyz, tyz, b, o2, ly, d1, d2, d3, blank, blank) = self._f06_data[n+1]
+                    (blank, blank, z, ozz, tzx, txz, c, o3, lz, d1, d2, d3, blank, blank) = self._f06_data[n+2]
                     if node_id.strip() == 'CENTER':
                         node_id = 0
                     else:
@@ -564,10 +559,8 @@ class RealSolidStress(StressObject):
         #self.cCos[eid] = {node_id : cCos}
         #self.pressure[eid] = {node_id : pressure}
         self.ovmShear[eid] = {node_id : ovm}
-        msg = "*eid=%s node_id=%s vm=%g" % (eid, node_id, ovm)
+        #msg = "*eid=%s node_id=%s vm=%g" % (eid, node_id, ovm)
         #print msg
-        #if node_id == 0:
-            #raise ValueError(msg)
 
     def add_eid_sort1(self, eType, cid, dt, eid, node_id, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
         assert cid >= 0
@@ -596,9 +589,6 @@ class RealSolidStress(StressObject):
         #self.cCos[dt][eid] = {node_id : cCos}
         #self.pressure[dt][eid] = {node_id : pressure}
         self.ovmShear[dt][eid] = {node_id : ovm}
-        #if node_id == 0:
-            #msg = "eid=%s node_id=%s vm=%g" % (eid, node_id, ovm)
-            #raise RuntimeError(msg)
 
     def add_node(self, dt, eid, inode, node_id, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
         assert isinstance(node_id, int), node_id
@@ -620,8 +610,6 @@ class RealSolidStress(StressObject):
         #self.cCos[eid][node_id] = cCos
         #self.pressure[eid][node_id] = pressure
         self.ovmShear[eid][node_id] = ovm
-        #if node_id == 0:
-            #raise RuntimeError(msg)
 
     def add_node_sort1(self, dt, eid, inode, node_id, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
         assert isinstance(node_id, int), node_id
@@ -644,9 +632,6 @@ class RealSolidStress(StressObject):
         #self.cCos[dt][eid][node_id] = cCos
         #self.pressure[dt][eid][node_id] = pressure
         self.ovmShear[dt][eid][node_id] = ovm
-        #if node_id == 0:
-            #msg = "eid=%s node_id=%s vm=%g" % (eid, node_id, ovm)
-            #raise RuntimeError(msg)
 
     def getHeaders(self):
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz']
@@ -689,33 +674,15 @@ class RealSolidStress(StressObject):
                    '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (vonMises)]
 
-        #nnodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
-        TETRA = defaultdict(list)
-        HEXA = defaultdict(list)
-        PENTA = defaultdict(list)
-
-        for eid, eType in sorted(iteritems(self.eType)):
-            if 'CTETRA' in eType:
-                TETRA[eType[6:]].append(eid)
-            elif 'CHEXA' in eType:
-                HEXA[eType[5:]].append(eid)
-            elif 'CPENTA' in eType:
-                PENTA[eType[6:]].append(eid)
-            else:
-                raise NotImplementedError('eType=%r' % eType)
-
-        return (tetraMsg, pentaMsg, hexaMsg,
-                TETRA, PENTA, HEXA)
+        return (tetraMsg, pentaMsg, hexaMsg)
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         assert f is not None
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, page_stamp, page_num, f)
 
-        (tetraMsg, pentaMsg, hexaMsg,
-         TETRA, HEXA, PENTA) = self.getF06_Header()
-        keys = self.oxx.keys()
-        eids = keys
+        tetraMsg, pentaMsg, hexaMsg = self.getF06_Header()
+        eids = self.oxx.keys()
         if self.element_type == 39: # CTETRA
             nnodes = 4
             self._write_element('CTETRA4', nnodes, eids, header, tetraMsg, f)
@@ -728,31 +695,29 @@ class RealSolidStress(StressObject):
         else:
             raise NotImplementedError('element_name=%r type=%s' % (self.element_name, self.element_type))
         f.write(page_stamp % page_num)
-        page_num += 1
         return page_num
 
     def _write_f06_transient(self, header, page_stamp, page_num, f):
-        (tetraMsg, pentaMsg, hexaMsg,
-         TETRA, HEXA, PENTA) = self.getF06_Header()
+        tetraMsg, pentaMsg, hexaMsg = self.getF06_Header()
 
         if self.element_type == 39: # CTETRA
+            nnodes = 4
             for dt, oxx in sorted(iteritems(self.oxx)):
                 eids = sorted(oxx.keys())
-                nnodes = 4
                 self._write_element_transient('CTETRA4', nnodes, eids, dt, header, tetraMsg, f)
                 f.write(page_stamp % page_num)
                 page_num += 1
         elif self.element_type == 68: # CPENTA
+            nnodes = 6
             for dt, oxx in sorted(iteritems(self.oxx)):
                 eids = sorted(oxx.keys())
-                nnodes = 6
                 self._write_element_transient('CPENTA6', nnodes, eids, dt, header, pentaMsg, f)
                 f.write(page_stamp % page_num)
                 page_num += 1
         elif self.element_type == 67: # CHEXA
+            nnodes = 8
             for dt, oxx in sorted(iteritems(self.oxx)):
                 eids = sorted(oxx.keys())
-                nnodes = 8
                 self._write_element_transient('CHEXA8', nnodes, eids, dt, header, hexaMsg, f)
                 f.write(page_stamp % page_num)
                 page_num += 1
@@ -801,12 +766,7 @@ class RealSolidStress(StressObject):
         dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
         header[1] = dtLine
         f.write(''.join(header + tetraMsg))
-        #cen = 'CENTER'
         for eid in eids:
-            #k = self.oxx[dt][eid].keys()
-            #k.remove(cen)
-            #k.sort()
-            #nids = [cen] + k
             cid = self.cid[eid]
             nids = sorted(self.oxx[dt][eid].keys())
             f.write('0  %8s    %8iGRID CS  %i GP\n' % (eid, cid, nnodes))
@@ -940,8 +900,8 @@ class RealSolidStrain(StrainObject):
                                  Y  -1.825509E+03  YZ  -1.415218E+03   B  -2.080181E+03  LY-0.12 0.69-0.71
                                  Z   1.000023E+04  ZX  -1.415218E+03   C  -1.906232E+03  LZ 0.99 0.16 0.00
         """
-        eMap = {'CTETRA': 5, 'CPENTA': 7, 'CHEXA': 9, 'HEXA': 9,
-                'PENTA': 7, 'TETRA': 5, }   # +1 for the centroid
+        eMap = {'CTETRA': 5, 'CPENTA': 7, 'CHEXA': 9,
+                'TETRA': 5, 'PENTA': 7, 'HEXA': 9, }   # +1 for the centroid
         if self._data is None:
             return
         if self.nonlinear_factor is None:
@@ -967,12 +927,9 @@ class RealSolidStrain(StrainObject):
                 self.evmShear[eid] = {}
                 n += 1
                 for j in range(nnodes):
-                    (blank, node_id, x, exx, xy, exy, a, e1, lx, d1, d2, d3,
-                     pressure, evmShear) = self._data[n]
-                    (blank, blank, y, eyy, yz, eyz, b, e2, ly, d1, d2, d3,
-                     blank, blank) = self._data[n + 1]
-                    (blank, blank, z, ezz, zx, exz, c, e3, lz, d1, d2, d3,
-                     blank, blank) = self._data[n + 2]
+                    (blank, node_id, x, exx, exy, exy, a, e1, lx, d1, d2, d3, pressure, evmShear) = self._data[n]
+                    (blank, blank,   y, eyy, eyz, eyz, b, e2, ly, d1, d2, d3, blank, blank) = self._data[n + 1]
+                    (blank, blank,   z, ezz, ezx, ezz, c, e3, lz, d1, d2, d3, blank, blank) = self._data[n + 2]
                     if node_id.strip() == 'CENTER':
                         node_id = 0
                     else:
@@ -1025,11 +982,11 @@ class RealSolidStrain(StrainObject):
                 self.evmShear[dt][eid] = {}
                 n += 1
                 for j in range(nnodes):
-                    (blank, node_id, x, oxx, xy, txy, a, o1, lx, d1, d2, d3, pressure, ovmShear) = f06_data[n]
-                    (blank, blank, y, oyy, yz, tyz, b, o2, ly, d1, d2, d3, blank, blank) = f06_data[n+1]
-                    (blank, blank, z, ozz, zx, txz, c, o3, lz, d1, d2, d3, blank, blank) = f06_data[n+2]
+                    (blank, node_id, x, oxx, txy, txy, a, o1, lx, d1, d2, d3, pressure, ovmShear) = f06_data[n]
+                    (blank, blank, y, oyy, tyz, tyz, b, o2, ly, d1, d2, d3, blank, blank) = f06_data[n+1]
+                    (blank, blank, z, ozz, tzx, txz, c, o3, lz, d1, d2, d3, blank, blank) = f06_data[n+2]
                     if node_id.strip() == 'CENTER':
-                        node_id = 'CENTER'
+                        node_id = 0
                     else:
                         node_id = int(node_id)
 
@@ -1103,9 +1060,6 @@ class RealSolidStrain(StrainObject):
         #self.cCos[eid] = {node_id : cCos}
         #self.pressure[eid] = {node_id : pressure}
         self.evmShear[eid] = {node_id : evm}
-        #if node_id == 0:
-            #msg = "*eid=%s node_id=%s evmShear=%g" % (eid, node_id, evm)
-            #raise RuntimeError(msg)
 
     def add_eid_sort1(self, eType, cid, dt, eid, node_id, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
         assert cid >= 0
@@ -1131,9 +1085,6 @@ class RealSolidStrain(StrainObject):
         #self.cCos[dt][eid] = {node_id : cCos}
         #self.pressure[dt][eid] = {node_id : pressure}
         self.evmShear[dt][eid] = {node_id : evm}
-        #if node_id == 0:
-            #msg = "eid=%s node_id=%s evmShear=%g" % (eid, node_id, evm)
-            #raise RuntimeError(msg)
 
     def add_node(self, dt, eid, inode, node_id, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
         assert isinstance(node_id, int), node_id
@@ -1153,9 +1104,6 @@ class RealSolidStrain(StrainObject):
         #self.cCos[eid][node_id] = cCos
         #self.pressure[eid][node_id] = pressure
         self.evmShear[eid][node_id] = evm
-        #if node_id == 0:
-            #msg = "eid=%s node_id=%s vm=%g" % (eid, node_id, evm)
-            #raise RuntimeError(msg)
 
     def add_node_sort1(self, dt, eid, inode, node_id, exx, eyy, ezz, exy, eyz, exz, e1, e2, e3, aCos, bCos, cCos, pressure, evm):
         assert isinstance(node_id, int), node_id
@@ -1176,9 +1124,6 @@ class RealSolidStrain(StrainObject):
         #self.cCos[dt][eid][node_id] = cCos
         #self.pressure[dt][eid][node_id] = pressure
         self.evmShear[dt][eid][node_id] = evm
-        #if node_id == 0:
-            #msg = "eid=%s node_id=%s vm=%g" % (eid, node_id, evm)
-            #raise RuntimeError(msg)
 
     def getHeaders(self):
         headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz']
@@ -1195,11 +1140,6 @@ class RealSolidStrain(StrainObject):
                      (o11 - o33) ** 2 +
                      6 * (o23 ** 2 + o13 ** 2 + o12 ** 2))
         return ovm
-
-    #def ovmPlane(self,o11,o22,o12):
-        #"""http://en.wikipedia.org/wiki/Von_Mises_yield_criterion"""
-        #ovm = sqrt(o11**2+o22**2-o1*o2+3*o12**2)
-        #return ovm
 
     def octahedral(self, o11, o22, o33, o12, o13, o23):
         """http://en.wikipedia.org/wiki/Von_Mises_yield_criterion"""
@@ -1239,34 +1179,15 @@ class RealSolidStrain(StrainObject):
                    '0                CORNER        ------CENTER AND CORNER POINT  STRAINS---------      DIR.  COSINES       MEAN\n',
                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (vonMises)]
 
-        #nnodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
-        TETRA = defaultdict(list)
-        HEXA = defaultdict(list)
-        PENTA = defaultdict(list)
-
-        for eid, eType in sorted(iteritems(self.eType)):
-            if 'CTETRA' in eType:
-                TETRA[eType[6:]].append(eid)
-            elif 'CHEXA' in eType:
-                HEXA[eType[5:]].append(eid)
-            elif 'CPENTA' in eType:
-                PENTA[eType[6:]].append(eid)
-            else:
-                raise NotImplementedError('eType=%r' % eType)
-
-        return (tetraMsg, pentaMsg, hexaMsg,
-                TETRA, PENTA, HEXA)
+        return tetraMsg, pentaMsg, hexaMsg
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         assert f is not None
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, page_stamp, page_num, f)
 
-        (tetraMsg, pentaMsg, hexaMsg,
-         TETRA, PENTA, HEXA) = self.getF06_Header()
-        #nnodes = {'CTETRA':4,'CPENTA':6,'CHEXA':8,'HEXA':8,'PENTA':6,'TETRA':4,}
-        keys = self.exx.keys()
-        eids = keys
+        tetraMsg, pentaMsg, hexaMsg = self.getF06_Header()
+        eids = self.exx.keys()
         if self.element_type == 39: # CTETRA
             nnodes = 4
             self._write_element('CTETRA4', nnodes, eids, header, tetraMsg, f)
@@ -1282,27 +1203,25 @@ class RealSolidStrain(StrainObject):
         return page_num
 
     def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        msg = []
-        (tetraMsg, pentaMsg, hexaMsg,
-         TETRA, PENTA, HEXA) = self.getF06_Header()
+        tetraMsg, pentaMsg, hexaMsg = self.getF06_Header()
         if self.element_type == 39: # CTETRA
+            nnodes = 4
             for dt, oxx in sorted(iteritems(self.exx)):
                 eids = sorted(oxx.keys())
-                nnodes = 4
                 self._write_element_transient('CTETRA4', nnodes, eids, dt, header, tetraMsg, f)
                 f.write(page_stamp % page_num)
                 page_num += 1
         elif self.element_type == 68: # CPENTA
+            nnodes = 6
             for dt, oxx in sorted(iteritems(self.exx)):
                 eids = sorted(oxx.keys())
-                nnodes = 6
                 self._write_element_transient('CPENTA6', nnodes, eids, dt, header, pentaMsg, f)
                 f.write(page_stamp % page_num)
                 page_num += 1
         elif self.element_type == 67: # CHEXA
+            nnodes = 8
             for dt, oxx in sorted(iteritems(self.exx)):
                 eids = sorted(oxx.keys())
-                nnodes = 8
                 self._write_element_transient('CHEXA8', nnodes, eids, dt, header, hexaMsg, f)
                 f.write(page_stamp % page_num)
                 page_num += 1
@@ -1312,12 +1231,7 @@ class RealSolidStrain(StrainObject):
 
     def _write_element(self, eType, nnodes, eids, header, tetraMsg, f):
         f.write(''.join(header + tetraMsg))
-        #cen = 'CENTER'
         for eid in eids:
-            #k = self.exx[eid].keys()
-            #k.remove(cen)
-            #k.sort()
-            #nids = [cen] + k
             nids = sorted(self.exx[eid].keys())
             cid = self.cid[eid]
             f.write('0  %8s    %8iGRID CS  %i GP\n' % (eid, cid, nnodes))
@@ -1355,12 +1269,7 @@ class RealSolidStrain(StrainObject):
         dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
         header[1] = dtLine
         f.write(''.join(header + tetraMsg))
-        #cen = 'CENTER'
         for eid in eids:
-            #k = self.exx[dt][eid].keys()
-            #k.remove(cen)
-            #k.sort()
-            #nids = [cen] + k
             cid = self.cid[eid]
             f.write('0  %8s    %8iGRID CS  %i GP\n' % (eid, cid, nnodes))
             nids = sorted(self.exx[dt][eid].keys())

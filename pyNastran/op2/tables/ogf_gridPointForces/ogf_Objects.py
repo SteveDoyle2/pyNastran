@@ -2,7 +2,7 @@ from six import iteritems
 from numpy import array
 from struct import pack
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.f06.f06_formatting import writeFloats13E, eigenvalue_header
+from pyNastran.f06.f06_formatting import writeFloats13E, _eigenvalue_header
 
 
 class RealGridPointForces(ScalarObject):
