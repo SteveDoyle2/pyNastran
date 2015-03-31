@@ -201,9 +201,9 @@ class DOPTPRM(OptConstraint):
         if comment:
             self._comment = comment
 
-        nFields = len(card) - 1
+        nfields = len(card) - 1
         self.params = {}
-        for i in range(0, nFields, 2):
+        for i in range(0, nfields, 2):
             param = string_or_blank(card, i + 1, 'param')
             default_value = None
             if param is None:
@@ -471,16 +471,16 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         self.coeffs = []
         endFields = [interpret_value(field) for field in card[9:] ]
         #print "endFields = ",endFields
-        nFields = len(endFields) - 1
-        if nFields % 2 == 1:
+        nfields = len(endFields) - 1
+        if nfields % 2 == 1:
             endFields.append(None)
-            nFields += 1
+            nfields += 1
 
         i = 0
-        for i in range(0, nFields, 2):
+        for i in range(0, nfields, 2):
             self.dvids.append(endFields[i])
             self.coeffs.append(endFields[i + 1])
-        if nFields % 2 == 1:
+        if nfields % 2 == 1:
             print(card)
             print("dvids = %s" % (self.dvids))
             print("coeffs = %s" % (self.coeffs))
@@ -545,15 +545,15 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         self.coeffs = []
         endFields = [interpret_value(field) for field in card[9:] ]
 
-        nFields = len(endFields) - 1
-        if nFields % 2 == 1:
+        nfields = len(endFields) - 1
+        if nfields % 2 == 1:
             endFields.append(None)
-            nFields += 1
+            nfields += 1
         i = 0
-        for i in range(0, nFields, 2):
+        for i in range(0, nfields, 2):
             self.dvids.append(endFields[i])
             self.coeffs.append(endFields[i + 1])
-        if nFields % 2 == 1:
+        if nfields % 2 == 1:
             print(card)
             print("dvids = %s" % (self.dvids))
             print("coeffs = %s" % (self.coeffs))

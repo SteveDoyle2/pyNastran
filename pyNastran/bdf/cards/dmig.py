@@ -184,7 +184,7 @@ class NastranMatrix(BaseCard, DeprecatedNastranMatrix):
         nloops = (nfields - 5) // 4
         if (nfields - 5) % 4 == 3:
             nloops += 1
-        #assert nFields <= 8,'nFields=%s' % nFields
+        #assert nfields <= 8,'nfields=%s' % nfields
 
         #print("nloops   = ",nloops)
         for i in range(nloops):

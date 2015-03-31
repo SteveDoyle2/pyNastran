@@ -1043,9 +1043,7 @@ class MOMENT2(Moment):
             self.g2 = integer(card, 5, 'g2')
             self.g3 = integer(card, 6, 'g3')
             self.g4 = integer(card, 7, 'g4')
-            xyz = array([double_or_blank(card, 5, 'X1', 0.0),
-                         double_or_blank(card, 6, 'X2', 0.0),
-                         double_or_blank(card, 7, 'X3', 0.0)])
+            self.xyz = None
             assert len(card) <= 8, 'len(MOMENT2 card) = %i' % len(card)
         else:
             self.sid = data[0]

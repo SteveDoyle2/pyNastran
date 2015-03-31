@@ -2113,10 +2113,10 @@ class MKAERO2(BaseCard):
             self._comment = comment
         if card:
             fields = card.fields(1)
-            nFields = len(fields)
+            nfields = len(fields)
             self.machs = []
             self.rFreqs = []
-            for i in range(1, 1 + nFields, 2):
+            for i in range(1, 1 + nfields, 2):
                 self.machs.append(double(card, i, 'mach'))
                 self.rFreqs.append(double(card, i + 1, 'rFreq'))
         else:
@@ -2310,8 +2310,8 @@ class PAERO2(BaseCard):
             self.thi = []
             self.thn = []
             fields = [interpret_value(field) for field in card[9:] ]
-            nFields = len(fields)
-            for i in range(9, 9 + nFields, 2):
+            nfields = len(fields)
+            for i in range(9, 9 + nfields, 2):
                 self.thi.append(integer(card, i, 'lth'))
                 self.thn.append(integer(card, i + 1, 'thn'))
         else:
