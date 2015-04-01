@@ -1,6 +1,7 @@
 # this needs some serious TLC
 
 import sys
+from six.moves import range
 from six import iteritems
 from numpy import where, array, vstack, savetxt, loadtxt
 
@@ -10,7 +11,7 @@ def rainflow(icase, stress_in):
     Does rainflow counting based on stress (not nominal stress).
     Works with a non-minimum first value.
     """
-    stress = reorganizeLoad(icase, stress_in)
+    stress = reorganize_load(icase, stress_in)
     #print('stress[%i] = %s' % (icase, stress))
     stress, cycles = ASTM_E1049_rainflow(stress)
     max_stress = []
@@ -22,7 +23,7 @@ def rainflow(icase, stress_in):
     return (max_stress, min_stress)
 
 
-def reorganizeLoad(icase, stress_in):
+def reorganize_load(icase, stress_in):
     """
     Reorganize Order History - ASTM E1049 5.4.5.2 (1)
 
@@ -104,7 +105,7 @@ def ASTM_E1049_rainflow(stress_in):
             if x < y:
                 goto = 2
             else:
-                goto=5
+                goto = 5
         elif goto == 5:
             cycles[icyc] = [min(stress[i-1], stress[i-2]),
                             max(stress[i-1], stress[i-2]), y]
@@ -120,8 +121,8 @@ def ASTM_E1049_rainflow(stress_in):
 
 
 def rainflow_from_csv(input_csv, casenames, features,
-                       write_csvs=True, delimiter=',',
-                       xmax=None, legend_alpha=1.0):
+                      write_csvs=True, delimiter=',',
+                      xmax=None, legend_alpha=1.0):
     """
     Rainflow counts from csv files.
 
@@ -130,7 +131,9 @@ def rainflow_from_csv(input_csv, casenames, features,
     :param fname:        a file as described below
     :param casenames:    allows for case splitting
     :param features:     columns to parse
+
     :param xmax:         the max value for the x (cycle) axis; helps to change the legend
+    :param delimiter:    the delimiter for the output file (doesn't apply to input); default=','
     :param legend_alpha: the transparency (1=solid, 0=transparent; default=1.0)
     :returns files:      filenames are of the form icase_icase_name.csv
 
@@ -143,8 +146,9 @@ def rainflow_from_csv(input_csv, casenames, features,
       etc.
       0.00, 0.0 # case 0
     casenames = (
-       ('normal',  [0,  62]),
-       ('impulse', [63, 65]),
+       # (casename, irow_start, irow_stop)
+       ('normal',  0,  62),
+       ('impulse', 63, 65),
        etc.
     )
     features = {  # the indicies are column numbers
@@ -173,17 +177,19 @@ def rainflow_from_csv(input_csv, casenames, features,
     for ifeature, feature_name in sorted(iteritems(features)):
         plt.figure(ifeature)
         legend = []
-        for case_name, min_max in casenames:
+        for case_name, min_index, max_index in casenames:
             csv_out = 'feature%i_%s_%s.csv'  %(ifeature, case_name, feature_name)
             print(csv_out)
 
-            min_index, max_index = min_max
             stress_case = A[min_index:max_index, ifeature]
             min_stress, max_stress = rainflow(icase, stress_case)
+            if len(min_stress) == 0:
+                min_stress = [A[min_index, ifeature]]
+                max_stress = [A[max_index - 1, ifeature]]
 
             B = vstack([min_stress, max_stress]).T
             f = open(csv_out, 'wb')
-            f.write('# min stress%smax_stress\n' % delimiter)
+            f.write('# max stress%smin_stress\n' % delimiter)
             savetxt(f, B, delimiter=delimiter)
             plt.plot(range(min_index, max_index), stress_case)
             legend.append(case_name)
@@ -287,7 +293,7 @@ def rainflow_from_csv2(input_csv, names, write_csvs=True):
             print(A)
             fname = 'icase_%s_%s.out'% (icase, name)
             f = open(fname, 'wb')
-            f.write('# min stress,max_stress\n')
+            f.write('# max stress,min_stress\n')
             savetxt(f, A, delimiter=',')
         out_stress[name] = A
     return out_stress
