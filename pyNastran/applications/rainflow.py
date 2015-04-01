@@ -4,6 +4,7 @@ import sys
 from six import iteritems
 from numpy import where, array, vstack, savetxt, loadtxt
 
+
 def rainflow(icase, stress_in):
     """
     Does rainflow counting based on stress (not nominal stress).
@@ -31,9 +32,11 @@ def reorganizeLoad(icase, stress_in):
     data = array(stress_in)
     imin = where(data == data.min())[0]
     imin0 = imin[0]
+
+    # .. todo:: the double type conversion (list & array) is less than ideal
+    x = list(stress_in)
     if imin0 != 0:
-        x = stress_in[imin0:] + stress_in[:imin0]
-    x = stress_in
+        x = x[imin0:] + x[:imin0]
 
     # remove repeats
     i = 0
@@ -45,7 +48,7 @@ def reorganizeLoad(icase, stress_in):
 
     # handles single-cycle impulse loading
     if y[0] != y[-1]:
-        print('y[0]=%s y[-1]=%s; adding y[0]' % (y[0], y[-1]))
+        print('  y[0]=%s y[-1]=%s; adding y[0]' % (y[0], y[-1]))
         y.append(y[0])
     return y
 
@@ -116,15 +119,103 @@ def ASTM_E1049_rainflow(stress_in):
     return (stress, cycles)
 
 
-def rainflow_from_csv(input_csv, names, write_csvs=True):
+def rainflow_from_csv(input_csv, casenames, features,
+                       write_csvs=True, delimiter=',',
+                       xmax=None, legend_alpha=1.0):
+    """
+    Rainflow counts from csv files.
+
+    This supports multiple features as separate columns.
+
+    :param fname:        a file as described below
+    :param casenames:    allows for case splitting
+    :param features:     columns to parse
+    :param xmax:         the max value for the x (cycle) axis; helps to change the legend
+    :param legend_alpha: the transparency (1=solid, 0=transparent; default=1.0)
+    :returns files:      filenames are of the form icase_icase_name.csv
+
+    Input_csv
+    ---------
+      # name1_stress, name2_stress, ...
+      0.00, 0.0 # case 0 - line 1
+      20.0, 1.0 # case 1
+      50.0, 2.0 # case 2
+      etc.
+      0.00, 0.0 # case 0
+    casenames = (
+       ('normal',  [0,  62]),
+       ('impulse', [63, 65]),
+       etc.
+    )
+    features = {  # the indicies are column numbers
+        0 : 'fillet',
+        1 : 'groove',
+    }
+    features = ['feature1', 'feature2']
+    so we get:
+       feature0_normal_fillet.csv
+       feature0_impulse_fillet.csv
+       feature1_normal_groove.csv
+       feature1_impulse_groove.csv
+
+    We'll also get corresponding png files. of the form:
+       fillet.png
+       groove.png
+
+    that show our cycling.
+    """
+    import matplotlib.pyplot as plt
+    A = loadtxt(input_csv, delimiter=',', skiprows=1)
+    if len(A.shape) == 1:
+        A = A.reshape(len(A), 1)
+    icase = 0
+
+    for ifeature, feature_name in sorted(iteritems(features)):
+        plt.figure(ifeature)
+        legend = []
+        for case_name, min_max in casenames:
+            csv_out = 'feature%i_%s_%s.csv'  %(ifeature, case_name, feature_name)
+            print(csv_out)
+
+            min_index, max_index = min_max
+            stress_case = A[min_index:max_index, ifeature]
+            min_stress, max_stress = rainflow(icase, stress_case)
+
+            B = vstack([min_stress, max_stress]).T
+            f = open(csv_out, 'wb')
+            f.write('# min stress%smax_stress\n' % delimiter)
+            savetxt(f, B, delimiter=delimiter)
+            plt.plot(range(min_index, max_index), stress_case)
+            legend.append(case_name)
+            icase += 1
+        # add the legend in the middle of the plot
+        leg = plt.legend(legend, fancybox=True)
+        # set the alpha value of the legend: it will be translucent
+        leg.get_frame().set_alpha(legend_alpha)
+
+        plt.title(feature_name)
+        if xmax:
+            plt.xlim([0, xmax])
+        plt.xlabel('Cycle Number')
+        plt.ylabel('Stress (ksi)')
+        plt.grid(True)
+        plt.savefig('%s.png' % feature_name)
+    #plt.show()
+
+
+def rainflow_from_csv2(input_csv, names, write_csvs=True):
     """
     Rainflow counts from csv files
 
-    :param fname:   a file as follows:
+    :param fname:   a file as described below
     :param names:   data to append to the filename
     :retval out_stress: dictionary of name:[N, 2] where
                         2=[min_stress, max_stress] and N=nMinMax
     :returns files: of the form icase_icase_name.csv
+
+    .. note:: This is not the ideal method as it only handles one case,
+              and the input has to be hand created with min/max stress
+              for each row, so it will be removed at some point.
 
     Input_csv
     ---------
@@ -165,7 +256,7 @@ def rainflow_from_csv(input_csv, names, write_csvs=True):
         else:
             if row_id_old is not None:
                 if min(case) == max(case):
-                    print('case[%i] = %s'  %(row_id_old, case))
+                    print('  case[%i] = %s'  %(row_id_old, case))
                 else:
                     if row_id_old in cases:
                         raise KeyError('row_id=%s exists' % row_id_old)
@@ -177,24 +268,23 @@ def rainflow_from_csv(input_csv, names, write_csvs=True):
             row_id_old = int(row[0])
             #print(row_id_old)
     if min(case) == max(case):
-        print('case[%i] = %s'  %(row_id_old, case))
+        print('  case[%i] = %s'  %(row_id_old, case))
     else:
         if row_id_old in cases:
             raise KeyError('row_id=%s already exists' % row_id_old)
         cases[row_id_old] = case
 
-
     out_stress = {}
     for icase, case in sorted(iteritems(cases)):
         name = names[icase]
-        max_stress, min_stress =  rainflow(icase, case)
+        max_stress, min_stress = rainflow(icase, case)
         A = vstack([min_stress, max_stress]).T
 
         if write_csvs:
-            print('max[%i] = %s' % (icase, max_stress))
-            print('min[%i] = %s\n' % (icase, min_stress))
+            print('  max[%i] = %s' % (icase, max_stress))
+            print('  min[%i] = %s\n' % (icase, min_stress))
 
-            print A
+            print(A)
             fname = 'icase_%s_%s.out'% (icase, name)
             f = open(fname, 'wb')
             f.write('# min stress,max_stress\n')
