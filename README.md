@@ -7,6 +7,7 @@ Also, check out the:
   * [Wiki](https://github.com/SteveDoyle2/pynastran/wiki)
   * [Discussion forum](http://groups.google.com/group/pynastran-discuss)
   * [Developer forum](http://groups.google.com/group/pynastran-dev)
+
 for more detailed information.
 
 <!--- http://pynastran-git.readthedocs.org/en/v0.6/index.html      doesnt work???...isn't this "stable" -->
