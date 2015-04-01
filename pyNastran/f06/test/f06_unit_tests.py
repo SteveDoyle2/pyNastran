@@ -212,7 +212,7 @@ class TestF06(unittest.TestCase):
         bdf, f06, op2 = self.run_model(bdfname, f06name, op2name, f06_has_weight=False)
 
         assert len(f06.displacements) == 1, len(f06.displacements)
-        assert len(f06.spcForces) == 0, len(f06.spcForces) # 0 is correct
+        assert len(f06.spc_forces) == 0, len(f06.spc_forces) # 0 is correct
 
         assert len(f06.ctetra_strain) == 0, len(f06.ctetra_strain)  # 1 is correct
         assert len(f06.ctetra_stress) == 0, len(f06.ctetra_stress)  # 1 is correct
@@ -276,10 +276,10 @@ class TestF06(unittest.TestCase):
             assert subtitle_label[1] == label, 'i=%i label=%r expected=%r' % (i, subtitle_label[1], label)
 
             assert len(f06.displacements) == 1, len(f06.displacements)
-            assert len(f06.spcForces) == 1, len(f06.spcForces)
-            assert len(f06.appliedLoads) == 0, len(f06.appliedLoads)  # 0 is correct
-            assert len(f06.loadVectors) == 1, len(f06.loadVectors)
-            assert len(f06.spcForces) == 1, len(f06.spcForces)
+            assert len(f06.spc_forces) == 1, len(f06.spc_forces)
+            assert len(f06.applied_loads) == 0, len(f06.applied_loads)  # 0 is correct
+            assert len(f06.load_vectors) == 1, len(f06.load_vectors)
+            assert len(f06.spc_forces) == 1, len(f06.spc_forces)
 
             assert len(f06.crod_force) == 1, len(f06.crod_force)
             assert len(f06.crod_strain) == 0, len(f06.crod_strain)  # 0 is correct
@@ -312,7 +312,7 @@ class TestF06(unittest.TestCase):
         bdf, f06, op2 = self.run_model(bdfname, f06name, op2name, f06_has_weight=False)
 
         assert len(f06.displacements) == 1, len(f06.displacements)
-        assert len(f06.spcForces) == 1, len(f06.spcForces)
+        assert len(f06.spc_forces) == 1, len(f06.spc_forces)
 
         assert len(f06.cbush_strain) == 0, len(f06.cbush_strain)  # 1 is correct
         assert len(f06.cbush_stress) == 0, len(f06.cbush_stress)  # 1 is correct
@@ -326,17 +326,20 @@ class TestF06(unittest.TestCase):
         bdf, f06, op2 = self.run_model(bdfname, f06name, op2name, f06_has_weight=False)
 
         assert len(f06.displacements) == 1, len(f06.displacements)
-        assert len(f06.spcForces) == 1, len(f06.spcForces)
-        assert len(f06.loadVectors) == 1, len(f06.loadVectors)
+        assert len(f06.spc_forces) == 1, len(f06.spc_forces)
+        assert len(f06.load_vectors) == 1, len(f06.load_vectors)
 
-        assert len(f06.gridPointForces) == 1, len(f06.gridPointForces)
+        assert len(f06.grid_point_forces) == 1, len(f06.grid_point_forces)
 
         assert len(f06.crod_force) == 1, len(f06.crod_force)
         assert len(f06.crod_strain) == 1, len(f06.crod_strain)
         assert len(f06.crod_stress) == 1, len(f06.crod_stress)
 
-        assert len(f06.plateForces) == 0, len(f06.plateForces)  # 0 is correct
-        assert len(f06.plateForces2) == 1, len(f06.plateForces2)
+        assert len(f06.cquad4_force) == 1, len(f06.cquad4_force)  # ??? is correct
+        assert len(f06.ctria3_force) == 0, len(f06.ctria3_force)  # ??? is correct
+
+        #assert len(f06.plateForces) == 0, len(f06.plateForces)  # 0 is correct
+        #assert len(f06.plateForces2) == 1, len(f06.plateForces2)
 
         assert len(f06.ctria3_stress) == 1, len(f06.ctria3_stress)
         assert len(f06.ctria3_strain) == 1, len(f06.ctria3_strain)
@@ -381,16 +384,16 @@ class TestF06(unittest.TestCase):
         assert subtitle_label[1] == 'SUBCASE 1', subtitle_label
 
         assert len(f06.displacements) == 0, len(f06.displacements)  # 0 is correct
-        assert len(f06.spcForces) == 1, len(f06.spcForces)
-        assert len(f06.loadVectors) == 0, len(f06.loadVectors)
-        assert len(f06.gridPointForces) == 0, len(f06.gridPointForces)  # 1 is correct
+        assert len(f06.spc_forces) == 1, len(f06.spc_forces)
+        assert len(f06.load_vectors) == 0, len(f06.load_vectors)
+        assert len(f06.grid_point_forces) == 0, len(f06.grid_point_forces)  # 1 is correct
 
         assert len(f06.crod_force) == 1, len(f06.crod_force)
         assert len(f06.crod_strain) == 1, len(f06.crod_strain)
         assert len(f06.crod_stress) == 1, len(f06.crod_stress)
 
-        assert len(f06.plateForces) == 0, len(f06.plateForces)  # 0 is correct
-        assert len(f06.plateForces2) == 1, len(f06.plateForces2)
+        assert len(f06.cquad4_force) == 1, len(f06.cquad4_force)  # 1 is correct
+        assert len(f06.ctria3_force) == 0, len(f06.ctria3_force)  # ??? is correct
 
 
         assert len(f06.ctria3_stress) == 1, len(f06.ctria3_stress)
@@ -430,14 +433,19 @@ class TestF06(unittest.TestCase):
         #0           21      G      9.121415E-18   5.869901E-15  -1.456074E+02   0.0            2.171751E+02   2.631261E-13
         #                           4.977449E-19   3.364763E-15  -6.035482E+00   0.0            2.480264E+01   2.345500E-14
         isubcase = 1
-        assert len(f06.plateForces) == 0, len(f06.plateForces)  # 0 is correct
+        assert len(f06.cquad4_force) == 2, len(f06.cquad4_force)  # ??? is correct
+        assert len(f06.ctria3_force) == 0, len(f06.ctria3_force)  # ??? is correct
 
         assert len(f06.displacements) == 2, len(f06.displacements)
-        assert len(f06.spcForces) == 2, len(f06.spcForces)
-        assert len(f06.gridPointForces) == 2, len(f06.gridPointForces)
+        assert len(f06.spc_forces) == 2, len(f06.spc_forces)
+        assert len(f06.grid_point_forces) == 2, len(f06.grid_point_forces)
         assert len(f06.ctria3_composite_stress) == 0, len(f06.ctria3_composite_stress)
         assert len(f06.cquad4_composite_stress) == 2, len(f06.cquad4_composite_stress)
-        assert len(f06.plateForces2) == 2, len(f06.plateForces2)
+
+        assert len(f06.cquad4_force) == 2, len(f06.cquad4_force)  # ??? is correct
+        assert len(f06.ctria3_force) == 0, len(f06.ctria3_force)  # ??? is correct
+        #assert len(f06.plateForces2) == 2, len(f06.plateForces2)
+
         #disp = f06.displacements[isubcase]
         #frequency = .21
         #T3 = disp.translations[frequency][21][2]
@@ -452,10 +460,10 @@ class TestF06(unittest.TestCase):
         self.assertEquals(bdf.properties[1].t, 42., 't=%s' % bdf.properties[1].t)
 
         assert len(f06.displacements) == 1, len(f06.displacements)
-        assert len(f06.spcForces) == 1, len(f06.spcForces)
+        assert len(f06.spc_forces) == 1, len(f06.spc_forces)
 
         assert len(op2.displacements) == 1, len(op2.displacements)
-        assert len(op2.spcForces) == 1, len(op2.spcForces)
+        assert len(op2.spc_forces) == 1, len(op2.spc_forces)
 
         assert len(op2.ctria3_stress) == 0, len(op2.ctria3_stress)
         assert len(op2.ctria3_strain) == 0, len(op2.ctria3_strain)

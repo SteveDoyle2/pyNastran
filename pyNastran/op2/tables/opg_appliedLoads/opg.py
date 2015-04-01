@@ -146,8 +146,8 @@ class OPG(OP2Common):
         table_code = 2
         """
         if self.thermal == 0:
-            result_name = 'loadVectors'
-            storage_obj = self.loadVectors
+            result_name = 'load_vectors'
+            storage_obj = self.load_vectors
             if result_name not in self._saved_results:
                 return len(data)
             self._found_results.add(result_name)
@@ -156,8 +156,8 @@ class OPG(OP2Common):
                                  RealLoadVectorArray, ComplexLoadVectorArray,
                                  'node', random_code=self.random_code)
         elif self.thermal == 1:
-            result_name = 'thermalLoadVectors'
-            storage_obj = self.thermalLoadVectors
+            result_name = 'thermal_load_vectors'
+            storage_obj = self.thermal_load_vectors
 
             RealThermalLoadVectorArray = None
             RealThermalLoadVectorVector = None
@@ -179,8 +179,8 @@ class OPG(OP2Common):
         table_code = 12
         """
         if self.thermal == 0:
-            result_name = 'forceVectors'
-            storage_obj = self.forceVectors
+            result_name = 'force_vectors'
+            storage_obj = self.force_vectors
             ForceVectorVector = None
             ComplexForceVectorArray = None
             RealForceVectorArray = None
@@ -192,8 +192,8 @@ class OPG(OP2Common):
                                  RealForceVectorArray, ComplexForceVectorArray,
                                  'node', random_code=self.random_code)
         #elif self.thermal == 1:
-            #result_name = 'thermalForceVectors'
-            #storage_obj = self.thermalForceVectors
+            #result_name = 'thermal_force_vectors'
+            #storage_obj = self.thermal_force_vectors
             #RealThermalForceVector = None
             #ComplexThermalForceVector = None
             #RealThermalForceVectorVector = None

@@ -1914,13 +1914,19 @@ class OES(OP2Common):
             if self.read_mode == 1:
                 return len(data)
             if self.isStress():
-                result_name = 'nonlinearSpringStress'
+                if self.element_type == 224:
+                    result_name = 'nonlinear_celas1_stress'
+                    slot = self.nonlinear_celas1_stress
+                elif self.element_type == 225:
+                    result_name = 'nonlinear_celas3_stress'
+                    slot = self.nonlinear_celas3_stress
             else:
-                result_name = 'nonlinearSpringStrain'
+                raise NotImplementedError('NonlinearSpringStrain')
+
             self._found_results.add(result_name)
             if self.num_wide == numwide_real:
                 if self.isStress():
-                    self.create_transient_object(self.nonlinearSpringStress, NonlinearSpringStress)
+                    self.create_transient_object(slot, NonlinearSpringStress)
                 else:
                     #self.create_transient_object(self.nonlinearSpringStrain, NonlinearSpringStrain)  # undefined
                     raise NotImplementedError('NonlinearSpringStrain')

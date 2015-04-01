@@ -661,7 +661,7 @@ class ComplexSolidStrain(StrainObject):
         dts = list(self.exx.keys())
         dts.sort()
         dt0 = dts[0]
-        eids = sorted(self.exx.keys())
+        eids = sorted(self.exx[dt0].keys())
 
         for dt in dts:
             if self.element_type == 39:  # CTETRA
@@ -686,9 +686,10 @@ class ComplexSolidStrain(StrainObject):
         msg = header + msg
 
         f.write('\n'.join(msg))
+        cid = 0
         for eid in eids:
             node_ids = sorted(self.exx[dt][eid].keys())
-            cid = 0
+
             f.write('0 %12i %11sGRID CS %2i GP\n' % (eid, cid, nnodes))  ## TODO: cid
             for inode in node_ids:
                 oxx = self.exx[dt][eid][inode]

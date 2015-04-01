@@ -208,7 +208,7 @@ class F06Writer(OP2_F06_Common):
                 self._saved_results.add('stress')
             elif 'strain' in result.lower():
                 self._saved_results.add('strain')
-            elif 'spcForces' == result or 'mpcForces' == result or 'constraint_forces' == result:
+            elif 'spc_forces' == result or 'mpc_forces' == result or 'constraint_forces' == result:
                 self._saved_results.add('constraint_forces')
             elif 'force' in result.lower(): # could use more validation...
                 self._saved_results.add('element_forces')
@@ -344,22 +344,6 @@ class F06Writer(OP2_F06_Common):
             f06.write(page_stamp % self.page_num)
             self.page_num += 1
 
-    def _get_result_length(self, res_types, res_key):
-        res_length = 0
-        for res_type in res_types:
-            if res_key in res_type:
-                result = res_type[res_key]
-                res_length = max(len(result.__class__.__name__), res_length)
-                continue
-            elif len(res_type) != 0:
-                key0 = get_key0_compare(res_type)
-                result = res_type[key0]
-                class_name = result.__class__.__name__
-                print('%s - results not found...key=%s' % (class_name, res_key))
-            else:  # empty result
-                pass
-        return res_length
-
     def write_f06(self, f06_outname, is_mag_phase=False,
                   delete_objects=True, end_flag=False):
         """
@@ -470,16 +454,16 @@ class F06Writer(OP2_F06_Common):
             self.displacements, self.displacementsPSD, self.displacementsATO, self.displacementsRMS,
             self.scaledDisplacements,  # ???
 
-            self.forceVectors,
-            self.loadVectors,
+            self.force_vectors,
+            self.load_vectors,
             self.temperatures,
             self.velocities, #self.eigenvectors,
 
-            self.mpcForces,
-            self.spcForces,
-            self.thermalLoadVectors,
+            self.mpc_forces,
+            self.spc_forces,
+            self.thermal_load_vectors,
 
-            self.strainEnergy,
+            self.strain_energy,
 
 
             #------------------------------------------
@@ -501,14 +485,17 @@ class F06Writer(OP2_F06_Common):
             self.celas4_force,
 
             self.conrod_force,
+
             self.cquad4_force,
-            self.plateForces,   # centroidal elements
-            self.plateForces2,  # bilinear elements
+            self.cquad8_force,
+            self.cquadr_force,
 
             self.conrod_force,
             self.crod_force,
             self.cshear_force,
             self.ctria3_force,
+            self.ctria6_force,
+            self.ctriar_force,
             self.ctube_force,
 
             # springs
@@ -544,6 +531,9 @@ class F06Writer(OP2_F06_Common):
             self.celas3_strain,
             self.celas4_strain,
 
+            self.nonlinear_celas1_stress,
+            self.nonlinear_celas3_stress,
+
             # bars/beams
             self.cbar_strain,
             self.cbeam_strain,
@@ -558,8 +548,7 @@ class F06Writer(OP2_F06_Common):
 
             self.nonlinear_ctria3_strain,
             self.nonlinear_cquad4_strain,
-            self.ctriax_strain, self.hyperelasticPlateStress,
-
+            self.ctriax_strain, self.hyperelastic_plate_stress,
 
             # rods
             self.nonlinear_crod_strain,
@@ -628,11 +617,11 @@ class F06Writer(OP2_F06_Common):
 
             self.nonlinear_ctria3_stress,
             self.nonlinear_cquad4_stress,
-            self.ctriax_stress, self.hyperelasticPlateStrain,
+            self.ctriax_stress, self.hyperelastic_plate_strain,
 
             #------------------------------------------
 
-            self.gridPointStresses, self.gridPointVolumeStresses, self.gridPointForces,
+            self.grid_point_stresses, self.grid_point_volume_stresses, self.grid_point_forces,
         ]
 
         for res_key in res_keys:
