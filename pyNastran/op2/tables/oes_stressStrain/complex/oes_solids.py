@@ -1,12 +1,10 @@
-#pylint: disable=C0301,C0111,R0921
+#pylint: disable=C0301,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
 from six.moves import zip, range
-from collections import defaultdict
 
-from numpy import zeros, array, concatenate, string_, searchsorted, where, argwhere, ravel, abs
-from numpy.linalg import eig, eigvalsh
+from numpy import zeros, array, concatenate, abs
+from numpy.linalg import eig
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import writeImagFloats13E
@@ -55,22 +53,17 @@ class ComplexSolidArray(OES_Object):
         self.data = concatenate(data, axis=1)
 
         self.data = concatenate(data, axis=1)
-        #print('data.shape2 =', self.data.shape)
-
-    def _get_msgs(self, is_mag_phase):
-        raise NotImplementedError()
 
     def _reset_indices(self):
-        #print('resetting...')
         self.itotal = 0
         self.ielement = 0
 
     def get_nnodes(self):
-        if self.element_name == 'CTETRA':
+        if self.element_type == 39: # CTETRA
             nnodes = 5
-        elif self.element_name == 'CPENTA':
+        elif self.element_type == 68: # CPENTA
             nnodes = 7
-        elif self.element_name == 'CHEXA':
+        elif self.element_type == 67: # CHEXA
             nnodes = 9
         else:
             raise NotImplementedError(self.element_name)
@@ -93,7 +86,7 @@ class ComplexSolidArray(OES_Object):
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        self.times = zeros(self.ntimes, 'float32')
+        self._times = zeros(self.ntimes, 'float32')
         #self.element_types2 = array(self.nelements, dtype='|S8')
         self.element_types3 = zeros((self.nelements, 2), dtype='int32')
 
@@ -121,7 +114,7 @@ class ComplexSolidArray(OES_Object):
             self.data = zeros((self.ntimes, self.ntotal, 1), 'complex64')
 
     def add_eid_sort1(self, element_num, element_type, dt, eid, cid, ctype, nodef):
-        self.times[self.itime] = dt
+        self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
         #self.element_types2[self.ielement] = string_(element_type)   # TODO: save this...
         #self.element_types2[self.ielement] = element_type
@@ -141,7 +134,7 @@ class ComplexSolidArray(OES_Object):
         #self.itotal += 1
 
     def add_node_sort1(self, dt, eid, grid, inode, ex, ey, ez, etxy, etyz, etzx):
-        ielem = self.ielement-1
+        #ielem = self.ielement - 1
         #print('eid=%i grid=%i exx=%s' % (eid, grid, str(ex)))
         #print('data[%s, %s, :] = %s dt=%s' % (self.itime, self.itotal, ex, dt))
         #if dt != 0.0:
@@ -158,10 +151,11 @@ class ComplexSolidArray(OES_Object):
 
     def get_stats(self):
         if not self.is_built:
-            return ['<%s>\n' % self.__class__.__name__,
-                    '  ntimes: %i\n' % self.ntimes,
-                    '  ntotal: %i\n' % self.ntotal,
-                    ]
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
 
         nelements = self.nelements
         ntimes = self.ntimes
@@ -175,7 +169,7 @@ class ComplexSolidArray(OES_Object):
         else:
             msg.append('  type=%s nelements=%i nnodes=%i\n' % (self.__class__.__name__, nelements, nnodes))
         msg.append('  eType, cid\n')
-        msg.append('  data: [ntimes, nnodes, 6] where 6=[%s]\n' % str(', '.join(self.getHeaders())))
+        msg.append('  data: [ntimes, nnodes, 6] where 6=[%s]\n' % str(', '.join(self.get_headers())))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
 
         msg.append(', '.join(set(self.eType.values())))
@@ -183,64 +177,33 @@ class ComplexSolidArray(OES_Object):
         return msg
 
     def get_f06_header(self, is_mag_phase=True):
-        tetra_msg, penta_msg, hexa_msg = self._get_msgs(is_mag_phase)
+        tetra_msg, penta_msg, hexa_msg = _get_msgs(self, is_mag_phase)
 
-        #if 'CTETRA' in self.element_name:
-            #return tetra_msg, 4
-
-        #if 'CTETRA' == self.element_type:
-            #return tetra_msg, 4
-        if self.element_type == 67:  # CHEXA
+        if self.element_type == 39:  # CTETRA
+            return tetra_msg, 4
+        elif self.element_type == 67:  # CHEXA
             return hexa_msg, 8
         elif self.element_type == 68:  # CPENTA
             return penta_msg, 6
-        #if 'CTETRA' in Type or 'CPENTA' in Type:
-            #nnodes = int(Type[6:])  # CTETRA4 / CTETRA10 / CPENTA6 / CPENTA15
-        #elif 'CHEXA' in Type:
-            #nnodes = int(Type[5:])  # CHEXA8 / CHEXA20
         else:
             raise NotImplementedError('complex solid stress/strain name=%r Type=%s' % (self.element_name, self.element_type))
 
-    #def get_element_index(self, eids):
-        ## elements are always sorted; nodes are not
-        #itot = searchsorted(eids, self.element_node[:, 0])  #[0]
-        #return itot
-
-    #def eid_to_element_node_index(self, eids):
-        #ind = ravel([argwhere(self.element_node[:, 0]==eid) for eid in eids])
-        ##ind.sort()
-        #return ind
-
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        (msg_temp, nnodes) = self.get_f06_header(is_mag_phase)
+        msg_temp, nnodes = self.get_f06_header(is_mag_phase)
 
         # write the f06
-        (ntimes, ntotal, six) = self.data.shape
+        ntimes = self.data.shape[0]
+
+        cid = 0
         for itime in range(ntimes):
-            dt = self.times[itime]  ## TODO: rename this...
+            dt = self._times[itime]
 
             #print('eids=', eids)
 
-            dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
-            header[1] = dtLine
+            dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
+            header[1] = dt_line
             msg = header + msg_temp
             f.write('\n'.join(msg))
-
-            # we know all the CTETRA eids, so let's
-            # get all the CTETRA indicies that we're going to write
-            #ieids = ieids_map[Type]  # faster way...
-            #ieids = self.eid_to_element_node_index(eids)
-
-            #ieids = self.get_element_index(eids)
-            #eid = self.element_node[:, 0]
-            #grid = self.element_node[:, 1]
-            #print('ieids=', ieids)
-            #print('eid=', eid)
-            #print('grid=', grid)
-            #print('**', self.element_node[ieids, 0])
-            #oxx, oyy, ozz, txy, tyz, txz = self.data[itime, ieids, :]
-            #n = len(ieids)
-            #print('itime=', itime)
 
             # TODO: can I get this without a reshape?
             oxx = self.data[itime, :, 0]
@@ -252,27 +215,20 @@ class ComplexSolidArray(OES_Object):
 
             eids2 = self.element_node[:, 0]
             nodes = self.element_node[:, 1]
-            #print('eids2 =', eids2, eids2.shape)
-            #print('nodes =', nodes, nodes.shape)
-            #print('oxx =', oxx)
+
             # loop over all the elements and nodes
             for deid, node, doxx, doyy, dozz, dtxy, dtyz, dtxz in zip(eids2, nodes, oxx, oyy, ozz, txy, tyz, txz):
-                #print("oxx =", oxx)
-                #print("oxx.shape =", oxx.shape)
-
                 # TODO: cid not supported
                 ([oxxr, oyyr, ozzr, txyr, tyzr, txzr,
                   oxxi, oyyi, ozzi, txyi, tyzi, txzi,], is_all_zeros) = writeImagFloats13E([doxx, doyy, dozz,
-                                                                                          dtxy, dtyz, dtxz], is_mag_phase)
-                #print("node =", node)
+                                                                                            dtxy, dtyz, dtxz], is_mag_phase)
                 if node == 0:  # CENTER
-                    f.write('0 %12i %11sGRID CS %2i GP\n' % (deid, 0, nnodes))
+                    f.write('0 %12i %11sGRID CS %2i GP\n' % (deid, cid, nnodes))
                     f.write('0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('CENTER', oxxr, oyyr, ozzr, txyr, tyzr, txzr))
-                    f.write('    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('',       oxxi, oyyi, ozzi, txyi, tyzi, txzi))
+                    f.write('    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('', oxxi, oyyi, ozzi, txyi, tyzi, txzi))
                 else:
                     f.write('0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % (node, oxxr, oyyr, ozzr, txyr, tyzr, txzr))
-                    f.write('    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('',   oxxi, oyyi, ozzi, txyi, tyzi, txzi))
-                    #self.element_types3[ielem]
+                    f.write('    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('', oxxi, oyyi, ozzi, txyi, tyzi, txzi))
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
@@ -282,33 +238,40 @@ class ComplexSolidStressArray(ComplexSolidArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexSolidArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
-        #print(self.subtitle)
 
-    def getHeaders(self):
+    def get_headers(self):
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz']
         return headers
 
-    def _get_msgs(self, is_mag_phase):
-        if is_mag_phase:
-            base_msg = [
-                '                                                          (MAGNITUDE/PHASE)',
-                '0                   CORNER      --------------------------CENTER AND CORNER POINT STRESSES---------------------------',
-                '     ELEMENT-ID    GRID-ID      NORMAL-X       NORMAL-Y       NORMAL-Z         SHEAR-XY       SHEAR-YZ       SHEAR-ZX',
-                '', ]
+def _get_msgs(self, is_mag_phase):
+    if is_mag_phase:
+        mag_phase = '                                                          (MAGNITUDE/PHASE)'
+    else:
+        mag_phase = '                                                          (REAL/IMAGINARY)'
 
-        else:
-            base_msg = [
-            '                                                          (REAL/IMAGINARY)',
+    if self.is_stress():
+        base_msg = [
+            mag_phase,
             '0                   CORNER      --------------------------CENTER AND CORNER POINT STRESSES---------------------------',
             '     ELEMENT-ID    GRID-ID      NORMAL-X       NORMAL-Y       NORMAL-Z         SHEAR-XY       SHEAR-YZ       SHEAR-ZX',
             '', ]
         tetra_msg = ['                 C O M P L E X   S T R E S S E S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )', ]
-        hexa_msg  = ['                 C O M P L E X   S T R E S S E S   I N   H E X A H E D R O N   E L E M E N T S   ( C H E X A )', ]
+        hexa_msg = ['                 C O M P L E X   S T R E S S E S   I N   H E X A H E D R O N   E L E M E N T S   ( C H E X A )', ]
         penta_msg = ['                 C O M P L E X   S T R E S S E S   I N   P E N T A H E D R O N   E L E M E N T S   ( C P E N T A )', ]
-        tetra_msg += base_msg
-        penta_msg += base_msg
-        hexa_msg += base_msg
-        return tetra_msg, penta_msg, hexa_msg
+    else:
+        base_msg = [
+            mag_phase,
+            '0                   CORNER      --------------------------CENTER AND CORNER POINT  STRAINS---------------------------',
+            '     ELEMENT-ID    GRID-ID      NORMAL-X       NORMAL-Y       NORMAL-Z         SHEAR-XY       SHEAR-YZ       SHEAR-ZX',
+            '', ]
+        tetra_msg = ['                 C O M P L E X     S T R A I N S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )',]
+        hexa_msg = ['                 C O M P L E X     S T R A I N S   I N   H E X A H E D R O N   E L E M E N T S   ( C H E X A )',]
+        penta_msg = ['                 C O M P L E X     S T R A I N S   I N   P E N T A H E D R O N   E L E M E N T S   ( C P E N T A )',]
+
+    tetra_msg += base_msg
+    penta_msg += base_msg
+    hexa_msg += base_msg
+    return tetra_msg, penta_msg, hexa_msg
 
 
 class ComplexSolidStrainArray(ComplexSolidArray, StressObject):
@@ -316,32 +279,11 @@ class ComplexSolidStrainArray(ComplexSolidArray, StressObject):
         ComplexSolidArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def getHeaders(self):
+    def get_headers(self):
         headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz']
         return headers
 
-    def _get_msgs(self, is_mag_phase):
-        if is_mag_phase:
-            base_msg = [
-                '                                                          (MAGNITUDE/PHASE)',
-                '0                   CORNER      --------------------------CENTER AND CORNER POINT  STRAINS---------------------------',
-                '     ELEMENT-ID    GRID-ID      NORMAL-X       NORMAL-Y       NORMAL-Z         SHEAR-XY       SHEAR-YZ       SHEAR-ZX',
-                '',
-            ]
-        else:
-            base_msg = [
-                '                                                          (REAL/IMAGINARY)',
-                '0                   CORNER      --------------------------CENTER AND CORNER POINT  STRAINS---------------------------',
-                '     ELEMENT-ID    GRID-ID      NORMAL-X       NORMAL-Y       NORMAL-Z         SHEAR-XY       SHEAR-YZ       SHEAR-ZX',
-                '',
-            ]
-        tetra_msg = ['                 C O M P L E X     S T R A I N S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )',]
-        hexa_msg  = ['                 C O M P L E X     S T R A I N S   I N   H E X A H E D R O N   E L E M E N T S   ( C H E X A )',]
-        penta_msg = ['                 C O M P L E X     S T R A I N S   I N   P E N T A H E D R O N   E L E M E N T S   ( C P E N T A )',]
-        tetra_msg += base_msg
-        penta_msg += base_msg
-        hexa_msg += base_msg
-        return tetra_msg, penta_msg, hexa_msg
+
 
 
 class ComplexSolidStress(StressObject):
@@ -461,184 +403,120 @@ class ComplexSolidStress(StressObject):
                 self.add_new_transient(dt)
             assert eid not in self.wmax[dt], self.wmax[dt]
             self.wmax[dt][eid] = {}
+        #msg = "*eid=%s node_id=%s vm=%g" % (eid, node_id, ovm)
 
-        #msg = "*eid=%s nodeID=%s vm=%g" % (eid, nodeID, ovm)
-        #print msg
-        #if nodeID == 0:
-            #raise ValueError(msg)
-
-    def add_node_sort1(self, dt, eid, nodeID, inode, oxx, oyy, ozz, txy, tyz, tzx):
-        #msg = "eid=%s nodeID=%s vm=%g" % (eid, nodeID, ovm)
+    def add_node_sort1(self, dt, eid, node_id, inode, oxx, oyy, ozz, txy, tyz, tzx):
+        #msg = "eid=%s node_id=%s vm=%g" % (eid, node_id, ovm)
         #print msg
 
-        if nodeID == 0:
-            nodeID = 'CENTER'
+        assert isinstance(node_id, int), node_id
 
         if self.result_flag == 1:
-            self.wmax[dt][eid][nodeID] = oxx
+            self.wmax[dt][eid][node_id] = oxx
             return
 
             tensor = zeros((3, 3), dtype='complex64')
-            tensor[0,0] = oxx
-            tensor[1,1] = oyy
-            tensor[2,2] = ozz
-            tensor[0,1] = txy
-            tensor[1,2] = tyz
-            tensor[0,2] = tzx
-            tensor[1,0] = tensor[0,1]
-            tensor[2,1] = tensor[1,2]
-            tensor[2,0] = tensor[0,2]
+            tensor[0, 0] = oxx
+            tensor[1, 1] = oyy
+            tensor[2, 2] = ozz
+            tensor[0, 1] = txy
+            tensor[1, 2] = tyz
+            tensor[0, 2] = tzx
+            tensor[1, 0] = tensor[0, 1]
+            tensor[2, 1] = tensor[1, 2]
+            tensor[2, 0] = tensor[0, 2]
 
             wr, v = eig(tensor.real)
             wi, v = eig(tensor.imag)
-            self.wmax[dt][eid][nodeID] = abs(wr+1j*wi).max()   #close...
+            self.wmax[dt][eid][node_id] = abs(wr + 1j * wi).max()   #close...
             return
 
-            w, v = eig(tensor)
-            self.wmax[dt][eid][nodeID] = abs(w).max()
-            return
+            #w, v = eig(tensor)
+            #self.wmax[dt][eid][node_id] = abs(w).max()
+            #return
 
-            w, v = eig(abs(tensor))  #  close for freq=343
-            self.wmax[dt][eid][nodeID] = abs(w).max()
-            return
+            #w, v = eig(abs(tensor))  #  close for freq=343
+            #self.wmax[dt][eid][node_id] = abs(w).max()
+            #return
 
-            w, v = eig(abs(tensor.real))
-            self.wmax[dt][eid][nodeID] = w.max()
-            return
-            w, v = eig(tensor)
-            abs_w = abs(w)
-            iw = list(abs_w).index(abs_w.max())
-            self.wmax[dt][eid][nodeID] = w[iw]
-            return
+            #w, v = eig(abs(tensor.real))
+            #self.wmax[dt][eid][node_id] = w.max()
+            #return
+            #w, v = eig(tensor)
+            #abs_w = abs(w)
+            #iw = list(abs_w).index(abs_w.max())
+            #self.wmax[dt][eid][node_id] = w[iw]
+            #return
 
-            wreal = eigvalsh(tensor.real)
-            wimag = eigvalsh(tensor.imag)
-            wmaxr = 0.
-            wmaxi = 0.
-            for ii in range(3):
-                if abs(wreal[ii]) > abs(wmaxr):
-                    wmaxr = wreal[ii]
-                if abs(wimag[ii]) > abs(wmaxi):
-                    wmaxi = wimag[ii]
-            wmax = wmaxr + 1j*wmaxi
-            self.wmax[dt][eid][nodeID] = wmax
+            #wreal = eigvalsh(tensor.real)
+            #wimag = eigvalsh(tensor.imag)
+            #wmaxr = 0.
+            #wmaxi = 0.
+            #for ii in range(3):
+                #if abs(wreal[ii]) > abs(wmaxr):
+                    #wmaxr = wreal[ii]
+                #if abs(wimag[ii]) > abs(wmaxi):
+                    #wmaxi = wimag[ii]
+            #wmax = wmaxr + 1j * wmaxi
+            #self.wmax[dt][eid][node_id] = wmax
         else:
-            #print("eid=%s nid=%s oyy=%s" %(eid,nodeID, oyy))
-            self.oxx[dt][eid][nodeID] = oxx
-            self.oyy[dt][eid][nodeID] = oyy
-            self.ozz[dt][eid][nodeID] = ozz
+            #print("eid=%s nid=%s oyy=%s" %(eid, node_id, oyy))
+            self.oxx[dt][eid][node_id] = oxx
+            self.oyy[dt][eid][node_id] = oyy
+            self.ozz[dt][eid][node_id] = ozz
 
-            self.txy[dt][eid][nodeID] = txy
-            self.tyz[dt][eid][nodeID] = tyz
-            self.txz[dt][eid][nodeID] = tzx
+            self.txy[dt][eid][node_id] = txy
+            self.tyz[dt][eid][node_id] = tyz
+            self.txz[dt][eid][node_id] = tzx
 
-    def getHeaders(self):
+    def get_headers(self):
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz']
         return headers
 
-    def directionalVectors(self, oxx, oyy, ozz, txy, tyz, txz):
+    def directional_vectors(self, oxx, oyy, ozz, txy, tyz, txz):
         A = [[oxx, txy, txz],
              [txy, oyy, tyz],
              [txz, tyz, ozz]]
         (Lambda, v) = eig(A)  # we can't use a hermitian matrix
         return v
 
-    def getF06_Header(self, is_mag_phase):
-        if is_mag_phase:
-            base_msg = [
-                '                                                          (MAGNITUDE/PHASE)',
-                '0                   CORNER      --------------------------CENTER AND CORNER POINT STRESSES---------------------------',
-                '     ELEMENT-ID    GRID-ID      NORMAL-X       NORMAL-Y       NORMAL-Z         SHEAR-XY       SHEAR-YZ       SHEAR-ZX',
-                '', ]
-
-        else:
-            base_msg = [
-            '                                                          (REAL/IMAGINARY)',
-            '0                   CORNER      --------------------------CENTER AND CORNER POINT STRESSES---------------------------',
-            '     ELEMENT-ID    GRID-ID      NORMAL-X       NORMAL-Y       NORMAL-Z         SHEAR-XY       SHEAR-YZ       SHEAR-ZX',
-            '', ]
-        tetra_msg = ['                 C O M P L E X   S T R E S S E S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )', ]
-        hexa_msg  = ['                 C O M P L E X   S T R E S S E S   I N   H E X A H E D R O N   E L E M E N T S   ( C H E X A )', ]
-        penta_msg = ['                 C O M P L E X   S T R E S S E S   I N   P E N T A H E D R O N   E L E M E N T S   ( C P E N T A )', ]
-        tetra_msg += base_msg
-        penta_msg += base_msg
-        hexa_msg += base_msg
-
-        tetra_eids = []
-        hexa_eids = []
-        penta_eids = []
-
-        tetra10_eids = []
-        hexa20_eids = []
-        penta15_eids = []
-        for eid, eType in sorted(iteritems(self.eType)):
-            if eType in ['CTETRA4']:
-                tetra_eids.append(eid)
-            elif eType in ['CTETRA10']:
-                tetra10_eids.append(eid)
-
-            elif eType in ['CPENTA6']:
-                penta_eids.append(eid)
-            elif eType in ['CPENTA15']:
-                penta15_eids.append(eid)
-
-            elif eType in ['CHEXA8']:
-                hexa_eids.append(eid)
-            elif eType in ['CHEXA20']:
-                hexa20_eids.append(eid)
-            else:
-                raise NotImplementedError('eType=%r' % eType)
-        return (tetra_msg, hexa_msg, penta_msg,
-                tetra_eids, hexa_eids, penta_eids,
-                tetra10_eids, hexa20_eids, penta15_eids)
-
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        (tetra_msg, hexa_msg, penta_msg,
-         tetra_eids, hexa_eids, penta_eids,
-         tetra10_eids, hexa20_eids, penta15_eids) = self.getF06_Header(is_mag_phase)
-        dts = self.oxx.keys()
-        for dt in sorted(dts):
-            if tetra_eids:
-                self.write_element_transient('CTETRA', 4, tetra_eids, dt, header, tetra_msg, f, is_mag_phase)
-                f.write(page_stamp % page_num)
-                page_num += 1
-            if tetra10_eids:
-                self.write_element_transient('CTETRA', 10, tetra10_eids, dt, header, tetra_msg, f, is_mag_phase)
-                f.write(page_stamp % page_num)
-                page_num += 1
+        tetra_msg, penta_msg, hexa_msg = _get_msgs(self, is_mag_phase)
+        dts = list(self.oxx.keys())
+        dts.sort()
+        dt0 = dts[0]
+        eids = sorted(self.oxx[dt0].keys())
 
-            if hexa_eids:
-                self.write_element_transient('CHEXA',  8,  hexa_eids, dt, header, hexa_msg, f, is_mag_phase)
+        if self.element_type == 39:  # CTETRA
+            for dt in dts:
+                self._write_element_transient('CTETRA', 4, eids, dt, header, tetra_msg, f, is_mag_phase)
                 f.write(page_stamp % page_num)
                 page_num += 1
-            if hexa20_eids:
-                self.write_element_transient('CHEXA',  20,  hexa20_eids, dt, header, hexa_msg, f,is_mag_phase)
+        elif self.element_type == 67:  # CHEXA
+            for dt in dts:
+                self._write_element_transient('CHEXA', 8, eids, dt, header, hexa_msg, f, is_mag_phase)
                 f.write(page_stamp % page_num)
                 page_num += 1
-
-            if penta_eids:
-                self.write_element_transient('CPENTA', 6, penta_eids, dt, header, penta_msg, f, is_mag_phase)
+        elif self.element_type == 68:  # CPENTA
+            for dt in dts:
+                self._write_element_transient('CPENTA', 6, eids, dt, header, penta_msg, f, is_mag_phase)
                 f.write(page_stamp % page_num)
                 page_num += 1
-            if penta15_eids:
-                self.write_element_transient('CPENTA', 15, penta15_eids, dt, header, penta_msg, f,is_mag_phase)
-                f.write(page_stamp % page_num)
-                page_num += 1
+        else:
+            raise NotImplementedError('complex solid stress/strain name=%r Type=%s' % (self.element_name, self.element_type))
         return page_num - 1
 
-    def write_element_transient(self, element_name, nnodes, eids, dt, header, msg, f, is_mag_phase):
-        dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
-        header[1] = dtLine
+    def _write_element_transient(self, element_name, nnodes, eids, dt, header, msg, f, is_mag_phase):
+        dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
+        header[1] = dt_line
         msg = header + msg
 
+        cid = 0
         f.write('\n'.join(msg))
         for eid in eids:
-            node_ids = self.oxx[dt][eid].keys()
-            node_ids.remove('CENTER')
-            cid = 10
-            f.write('0 %12i %11sGRID CS %2i GP\n' % (eid, 0, nnodes))
-            for inode in ['CENTER'] + sorted(node_ids):
-                # cid
+            node_ids = sorted(self.oxx[dt][eid].keys())
+            f.write('0 %12i %11sGRID CS %2i GP\n' % (eid, cid, nnodes))
+            for inode in node_ids:
                 oxx = self.oxx[dt][eid][inode]
                 oyy = self.oyy[dt][eid][inode]
                 ozz = self.ozz[dt][eid][inode]
@@ -647,10 +525,10 @@ class ComplexSolidStress(StressObject):
                 txz = self.txz[dt][eid][inode]
                 ([oxxr, oyyr, ozzr, txyr, tyzr, txzr,
                   oxxi, oyyi, ozzi, txyi, tyzi, txzi,], is_all_zeros) = writeImagFloats13E([oxx, oyy, ozz,
-                                                                                          txy, tyz, txz], is_mag_phase)
+                                                                                            txy, tyz, txz], is_mag_phase)
 
                 f.write('0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % (inode, oxxr, oyyr, ozzr, txyr, tyzr, txzr))
-                f.write('    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('',    oxxi, oyyi, ozzi, txyi, tyzi, txzi))
+                f.write('    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('', oxxi, oyyi, ozzi, txyi, tyzi, txzi))
 
 
 class ComplexSolidStrain(StrainObject):
@@ -672,13 +550,9 @@ class ComplexSolidStrain(StrainObject):
         if is_sort1:
             if dt is not None:
                 pass
-                #self.add = self.add_sort1
-                #self.add_new_eid = self.add_new_eid_sort1
         else:
             assert dt is not None
             raise NotImplementedError('SORT2')
-            #self.add = self.add_sort2
-            #self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -754,18 +628,13 @@ class ComplexSolidStrain(StrainObject):
         self.eyz[dt][eid] = {}
         self.exz[dt][eid] = {}
 
-        #msg = "*eid=%s nodeID=%s vm=%g" % (eid, nodeID, ovm)
+        #msg = "*eid=%s node_id=%s vm=%g" % (eid, node_id, ovm)
         #print msg
-        #if nodeID == 0:
-            #raise ValueError(msg)
 
     def add_node_sort1(self, dt, eid, node_id, inode, ex, ey, ez, etxy, etyz, etzx):
-        #msg = "eid=%s nodeID=%s vm=%g" % (eid, nodeID, evm)
-        assert eid != 'C'
-        if node_id == 0:
-            node_id = 'CENTER'
-        assert node_id != 0, 'CENTER'
-        #print "eid=%s nid=%s exx=%s" %(eid, nodeID, exx)
+        #msg = "eid=%s node_id=%s vm=%g" % (eid, node_id, evm)
+        assert isinstance(node_id, int), node_id
+        #print "eid=%s nid=%s exx=%s" %(eid, node_id, exx)
         self.exx[dt][eid][node_id] = ex
         self.eyy[dt][eid][node_id] = ey
         self.ezz[dt][eid][node_id] = ez
@@ -774,115 +643,53 @@ class ComplexSolidStrain(StrainObject):
         self.eyz[dt][eid][node_id] = etyz
         self.exz[dt][eid][node_id] = etzx
 
-    def getHeaders(self):
+    def get_headers(self):
         headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz']
         return headers
 
-    def directionalVectors(self, exx, eyy, ezz, exy, eyz, exz):
+    def directional_vectors(self, exx, eyy, ezz, exy, eyz, exz):
         A = [[exx, exy, exz],
              [exy, eyy, eyz],
              [exz, eyz, ezz]]
         (Lambda, v) = eig(A)  # we can't use a hermitian matrix
         return v
 
-    def getF06_Header(self, is_mag_phase):
-        if is_mag_phase:
-            base_msg = [
-                '                                                          (MAGNITUDE/PHASE)',
-                '0                   CORNER      --------------------------CENTER AND CORNER POINT  STRAINS---------------------------',
-                '     ELEMENT-ID    GRID-ID      NORMAL-X       NORMAL-Y       NORMAL-Z         SHEAR-XY       SHEAR-YZ       SHEAR-ZX',
-                '',
-            ]
-        else:
-            base_msg = [
-                '                                                          (REAL/IMAGINARY)',
-                '0                   CORNER      --------------------------CENTER AND CORNER POINT  STRAINS---------------------------',
-                '     ELEMENT-ID    GRID-ID      NORMAL-X       NORMAL-Y       NORMAL-Z         SHEAR-XY       SHEAR-YZ       SHEAR-ZX',
-                '',
-            ]
-        tetra_msg = ['                 C O M P L E X     S T R A I N S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )',]
-        hexa_msg  = ['                 C O M P L E X     S T R A I N S   I N   H E X A H E D R O N   E L E M E N T S   ( C H E X A )',]
-        penta_msg = ['                 C O M P L E X     S T R A I N S   I N   P E N T A H E D R O N   E L E M E N T S   ( C P E N T A )',]
-        tetra_msg += base_msg
-        penta_msg += base_msg
-        hexa_msg += base_msg
-
-        tetra_eids = []
-        hexa_eids = []
-        penta_eids = []
-
-        tetra10_eids = []
-        hexa20_eids = []
-        penta15_eids = []
-        for eid, eType in sorted(iteritems(self.eType)):
-            if eType in ['CTETRA4']:
-                tetra_eids.append(eid)
-            elif eType in ['CTETRA10']:
-                tetra10_eids.append(eid)
-
-            elif eType in ['CPENTA6']:
-                penta_eids.append(eid)
-            elif eType in ['CPENTA15']:
-                penta15_eids.append(eid)
-
-            elif eType in ['CHEXA8']:
-                hexa_eids.append(eid)
-            elif eType in ['CHEXA20']:
-                hexa20_eids.append(eid)
-
-            else:
-                raise NotImplementedError('eType=%r' % eType)
-        return (tetra_msg, hexa_msg, penta_msg,
-                tetra_eids, hexa_eids, penta_eids,
-                tetra10_eids, hexa20_eids, penta15_eids)
-
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        (tetra_msg, hexa_msg, penta_msg,
-         tetra_eids, hexa_eids, penta_eids,
-         tetra10_eids, hexa20_eids, penta15_eids) = self.getF06_Header(is_mag_phase)
-        dts = self.exx.keys()
-        for dt in sorted(dts):
-            if tetra_eids:
-                self.write_element_transient('CTETRA', 4, tetra_eids, dt, header, tetra_msg, f, is_mag_phase)
-                f.write(page_stamp % page_num)
-                page_num += 1
-            if tetra10_eids:
-                self.write_element_transient('CTETRA', 10, tetra10_eids, dt, header, tetra_msg, f, is_mag_phase)
-                f.write(page_stamp % page_num)
-                page_num += 1
+        tetra_msg, hexa_msg, penta_msg = _get_msgs(self, is_mag_phase)
 
-            if hexa_eids:
-                self.write_element_transient('CHEXA',  8,  hexa_eids, dt, header, hexa_msg, f, is_mag_phase)
-                f.write(page_stamp % page_num)
-                page_num += 1
-            if hexa20_eids:
-                self.write_element_transient('CHEXA',  20,  hexa20_eids, dt, header, hexa_msg, f,is_mag_phase)
-                f.write(page_stamp % page_num)
-                page_num += 1
+        dts = list(self.exx.keys())
+        dts.sort()
+        dt0 = dts[0]
+        eids = sorted(self.exx.keys())
 
-            if penta_eids:
-                self.write_element_transient('CPENTA', 6, penta_eids, dt, header, penta_msg, f, is_mag_phase)
+        for dt in dts:
+            if self.element_type == 39:  # CTETRA
+                self._write_element_transient('CTETRA', 4, eids, dt, header, tetra_msg, f, is_mag_phase)
                 f.write(page_stamp % page_num)
                 page_num += 1
-            if penta15_eids:
-                self.write_element_transient('CPENTA', 15, penta15_eids, dt, header, penta_msg, f,is_mag_phase)
+            elif self.element_type == 68:  # CPENTA
+                self._write_element_transient('CPENTA', 6, eids, dt, header, penta_msg, f, is_mag_phase)
                 f.write(page_stamp % page_num)
                 page_num += 1
+            elif self.element_type == 67:  # CHEXA
+                self._write_element_transient('CHEXA', 8, eids, dt, header, hexa_msg, f, is_mag_phase)
+                f.write(page_stamp % page_num)
+                page_num += 1
+            else:
+                raise NotImplementedError('complex solid stress/strain name=%r Type=%s' % (self.element_name, self.element_type))
         return page_num - 1
 
-    def write_element_transient(self, element_name, nnodes, eids, dt, header, msg, f, is_mag_phase):
-        dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
-        header[1] = dtLine
+    def _write_element_transient(self, element_name, nnodes, eids, dt, header, msg, f, is_mag_phase):
+        dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
+        header[1] = dt_line
         msg = header + msg
 
         f.write('\n'.join(msg))
         for eid in eids:
-            node_ids = self.exx[dt][eid].keys()
-            node_ids.remove('CENTER')
-            cid = 10
-            f.write('0 %12i %11sGRID CS %2i GP\n' % (eid, 0, nnodes))
-            for inode in ['CENTER'] + sorted(node_ids):
-                # cid
+            node_ids = sorted(self.exx[dt][eid].keys())
+            cid = 0
+            f.write('0 %12i %11sGRID CS %2i GP\n' % (eid, cid, nnodes))  ## TODO: cid
+            for inode in node_ids:
                 oxx = self.exx[dt][eid][inode]
                 oyy = self.eyy[dt][eid][inode]
                 ozz = self.ezz[dt][eid][inode]
@@ -891,7 +698,7 @@ class ComplexSolidStrain(StrainObject):
                 txz = self.exz[dt][eid][inode]
                 ([oxxr, oyyr, ozzr, txyr, tyzr, txzr,
                   oxxi, oyyi, ozzi, txyi, tyzi, txzi,], is_all_zeros) = writeImagFloats13E([oxx, oyy, ozz,
-                                                                                          txy, tyz, txz], is_mag_phase)
+                                                                                            txy, tyz, txz], is_mag_phase)
 
                 f.write('0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % (inode, oxxr, oyyr, ozzr, txyr, tyzr, txzr))
-                f.write('    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('',    oxxi, oyyi, ozzi, txyi, tyzi, txzi))
+                f.write('    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('', oxxi, oyyi, ozzi, txyi, tyzi, txzi))

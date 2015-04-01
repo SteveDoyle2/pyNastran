@@ -486,8 +486,6 @@ class ComplexPlateStress(StressObject):
         self.oxx[dt][eid][node_id].append(oxx)
         self.oyy[dt][eid][node_id].append(oyy)
         self.txy[dt][eid][node_id].append(txy)
-        #if node_id == 0:
-            #raise ValueError(msg)
 
     def addNewNodeSort1(self, dt, eid, node_id, fdr, oxx, oyy, txy):
         assert eid is not None
@@ -959,7 +957,7 @@ class ComplexPlateStrain(StrainObject):
                 elif ilayer == 1:
                     msg += '   %8s %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s /   %s\n\n' % ('', '', fdr, exxr, exxi, eyyr, eyyi, exyr, exyi)
                 else:
-                    raise Exception('Invalid option for cquad4')
+                    raise RuntimeError('Invalid option for cquad4')
         return msg
 
     def _write_f06_tri3_transient(self, dt, eid, n, is_mag_phase):

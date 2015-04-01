@@ -3,9 +3,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
 from six.moves import zip, range
-from collections import defaultdict
 from itertools import count
-from numpy import array, sqrt, zeros, where, searchsorted, ravel, unique, arange
+from numpy import sqrt, zeros, where, searchsorted
 from numpy.linalg import eigh
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
@@ -34,9 +33,6 @@ class RealSolidArray(OES_Object):
 
     def is_complex(self):
         return False
-
-    def _get_msgs(self):
-        raise NotImplementedError()
 
     def get_headers(self):
         raise NotImplementedError()
@@ -153,7 +149,7 @@ class RealSolidArray(OES_Object):
         return msg
 
     def get_f06_header(self, is_mag_phase=True):
-        tetra_msg, penta_msg, hexa_msg = self._get_msgs()
+        tetra_msg, penta_msg, hexa_msg = _get_solid_msgs(self)
         if self.element_type == 39: # CTETRA
             msg = tetra_msg
             nnodes = 4
@@ -260,22 +256,6 @@ class RealSolidStressArray(RealSolidArray, StressObject):
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz', 'o1', 'o2', 'o3', von_mises]
         return headers
 
-    def _get_msgs(self):
-        if self.is_von_mises():
-            von_mises = 'VON MISES'
-        else:
-            von_mises = 'MAX SHEAR'
-
-        base_msg = [
-            '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
-            '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % von_mises]
-        tetra_msg = ['                   S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n', ]
-        penta_msg = ['                    S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n', ]
-        hexa_msg = ['                      S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n', ]
-        tetra_msg += base_msg
-        penta_msg += base_msg
-        hexa_msg += base_msg
-        return tetra_msg, penta_msg, hexa_msg
 
 class RealSolidStrainArray(RealSolidArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -290,22 +270,64 @@ class RealSolidStrainArray(RealSolidArray, StrainObject):
         headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz', 'e1', 'e2', 'e3', von_mises]
         return headers
 
-    def _get_msgs(self):
-        if self.is_von_mises():
-            von_mises = 'VON MISES'
-        else:
-            von_mises = 'MAX SHEAR'
+def _get_solid_msgs(self):
+    if self.is_von_mises():
+        von_mises = 'VON MISES'
+    else:
+        von_mises = 'MAX SHEAR'
 
+    if self.is_stress():
+
+        base_msg = [
+            '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
+            '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % von_mises]
+        tetra_msg = ['                   S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n', ]
+        penta_msg = ['                    S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n', ]
+        hexa_msg = ['                      S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n', ]
+    else:
         base_msg = [
             '0                CORNER        ------CENTER AND CORNER POINT  STRAINS---------       DIR.  COSINES       MEAN                   \n',
             '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % von_mises]
         tetra_msg = ['                     S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n', ]
         penta_msg = ['                      S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n', ]
         hexa_msg = ['                        S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n', ]
-        tetra_msg += base_msg
-        penta_msg += base_msg
-        hexa_msg += base_msg
-        return tetra_msg, penta_msg, hexa_msg
+    tetra_msg += base_msg
+    penta_msg += base_msg
+    hexa_msg += base_msg
+    return tetra_msg, penta_msg, hexa_msg
+
+def get_f06_header(self):
+    if self.is_von_mises():
+        von_mises = 'VON MISES'
+    else:
+        von_mises = 'MAX SHEAR'
+
+    if self.is_stress():
+        tetra_msg = ['                   S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n',
+                     '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
+                     '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (von_mises)]
+
+        penta_msg = ['                    S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n',
+                     '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
+                     '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (von_mises)]
+
+        hexa_msg = ['                      S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n',
+                    '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
+                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (von_mises)]
+    else:
+        tetra_msg = ['                     S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n',
+                     '0                CORNER        ------CENTER AND CORNER POINT  STRAINS---------      DIR.  COSINES       MEAN\n',
+                     '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (von_mises)]
+
+        penta_msg = ['                      S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n',
+                     '0                CORNER        ------CENTER AND CORNER POINT  STRAINS---------      DIR.  COSINES       MEAN\n',
+                     '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (von_mises)]
+
+        hexa_msg = ['                      S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n',
+                    '0                CORNER        ------CENTER AND CORNER POINT  STRAINS---------      DIR.  COSINES       MEAN\n',
+                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (von_mises)]
+
+    return tetra_msg, penta_msg, hexa_msg
 
 
 class RealSolidStress(StressObject):
@@ -402,8 +424,9 @@ class RealSolidStress(StressObject):
                                  Z   1.000023E+04  ZX  -1.415218E+03   C  -1.906232E+03  LZ 0.99 0.16 0.00
         """
         eMap = {
-            'CTETRA4': 5, 'CPENTA6': 7, 'CHEXA8': 9, 'HEXA20': 9,
-            'PENTA15': 7, 'TETRA10': 5, }   # +1 for the centroid
+            'CTETRA4': 5, 'CPENTA6': 7, 'CHEXA8': 9,
+            'TETRA10': 5, 'PENTA15': 7, 'HEXA20': 9,
+        }   # +1 for the centroid
         if self.nonlinear_factor is None:
             ipack = []
             i = 0
@@ -633,7 +656,7 @@ class RealSolidStress(StressObject):
         #self.pressure[dt][eid][node_id] = pressure
         self.ovmShear[dt][eid][node_id] = ovm
 
-    def getHeaders(self):
+    def get_headers(self):
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz']
         if self.is_von_mises():
             headers.append('oVonMises')
@@ -649,39 +672,19 @@ class RealSolidStress(StressObject):
         """
         return (o1 + o2 + o3) / -3.
 
-    def directionalVectors(self, oxx, oyy, ozz, txy, tyz, txz):
+    def directional_vectors(self, oxx, oyy, ozz, txy, tyz, txz):
         A = [[oxx, txy, txz],
              [txy, oyy, tyz],
              [txz, tyz, ozz]]
         (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
         return v
 
-    def getF06_Header(self):
-        if self.is_von_mises():
-            vonMises = 'VON MISES'
-        else:
-            vonMises = 'MAX SHEAR'
-
-        tetraMsg = ['                   S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n',
-                    '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
-                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (vonMises)]
-
-        pentaMsg = ['                    S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n',
-                    '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
-                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (vonMises)]
-
-        hexaMsg = ['                      S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n',
-                   '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
-                   '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (vonMises)]
-
-        return (tetraMsg, pentaMsg, hexaMsg)
-
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         assert f is not None
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, page_stamp, page_num, f)
 
-        tetraMsg, pentaMsg, hexaMsg = self.getF06_Header()
+        tetraMsg, pentaMsg, hexaMsg = get_f06_header(self)
         eids = self.oxx.keys()
         if self.element_type == 39: # CTETRA
             nnodes = 4
@@ -698,7 +701,7 @@ class RealSolidStress(StressObject):
         return page_num
 
     def _write_f06_transient(self, header, page_stamp, page_num, f):
-        tetraMsg, pentaMsg, hexaMsg = self.getF06_Header()
+        tetraMsg, pentaMsg, hexaMsg = get_f06_header(self)
 
         if self.element_type == 39: # CTETRA
             nnodes = 4
@@ -784,7 +787,6 @@ class RealSolidStress(StressObject):
                 ovm = self.ovmShear[dt][eid][nid]
                 p = (o1 + o2 + o3) / -3.
 
-                #print "nid = |%r|" %(nid)
                 A = [[oxx, txy, txz],
                      [txy, oyy, tyz],
                      [txz, tyz, ozz]]
@@ -854,8 +856,6 @@ class RealSolidStrain(StrainObject):
                 self.add_eid = self.add_eid_sort1
         else:
             assert dt is not None
-            self.add_node = self.add_node_sort2
-            self.add_eid = self.add_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -927,9 +927,9 @@ class RealSolidStrain(StrainObject):
                 self.evmShear[eid] = {}
                 n += 1
                 for j in range(nnodes):
-                    (blank, node_id, x, exx, exy, exy, a, e1, lx, d1, d2, d3, pressure, evmShear) = self._data[n]
-                    (blank, blank,   y, eyy, eyz, eyz, b, e2, ly, d1, d2, d3, blank, blank) = self._data[n + 1]
-                    (blank, blank,   z, ezz, ezx, ezz, c, e3, lz, d1, d2, d3, blank, blank) = self._data[n + 2]
+                    (blank, node_id, x, exx, exy, exz, a, e1, lx, d1, d2, d3, pressure, evmShear) = self._data[n]
+                    (blank, blank, y, eyy, eyz, eyz, b, e2, ly, d1, d2, d3, blank, blank) = self._data[n + 1]
+                    (blank, blank, z, ezz, ezx, ezz, c, e3, lz, d1, d2, d3, blank, blank) = self._data[n + 2]
                     if node_id.strip() == 'CENTER':
                         node_id = 0
                     else:
@@ -1125,7 +1125,7 @@ class RealSolidStrain(StrainObject):
         #self.pressure[dt][eid][node_id] = pressure
         self.evmShear[dt][eid][node_id] = evm
 
-    def getHeaders(self):
+    def get_headers(self):
         headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz']
         if self.is_von_mises():
             headers.append('evm')
@@ -1161,32 +1161,12 @@ class RealSolidStrain(StrainObject):
         (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
         return v
 
-    def getF06_Header(self):
-        if self.is_von_mises():
-            vonMises = 'VON MISES'
-        else:
-            vonMises = 'MAX SHEAR'
-
-        tetraMsg = ['                     S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n',
-                    '0                CORNER        ------CENTER AND CORNER POINT  STRAINS---------      DIR.  COSINES       MEAN\n',
-                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (vonMises)]
-
-        pentaMsg = ['                      S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n',
-                    '0                CORNER        ------CENTER AND CORNER POINT  STRAINS---------      DIR.  COSINES       MEAN\n',
-                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (vonMises)]
-
-        hexaMsg = ['                      S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n',
-                   '0                CORNER        ------CENTER AND CORNER POINT  STRAINS---------      DIR.  COSINES       MEAN\n',
-                   '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (vonMises)]
-
-        return tetraMsg, pentaMsg, hexaMsg
-
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         assert f is not None
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, page_stamp, page_num, f)
 
-        tetraMsg, pentaMsg, hexaMsg = self.getF06_Header()
+        tetraMsg, pentaMsg, hexaMsg = get_f06_header(self)
         eids = self.exx.keys()
         if self.element_type == 39: # CTETRA
             nnodes = 4
@@ -1203,7 +1183,7 @@ class RealSolidStrain(StrainObject):
         return page_num
 
     def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        tetraMsg, pentaMsg, hexaMsg = self.getF06_Header()
+        tetraMsg, pentaMsg, hexaMsg = get_f06_header(self)
         if self.element_type == 39: # CTETRA
             nnodes = 4
             for dt, oxx in sorted(iteritems(self.exx)):
@@ -1297,8 +1277,8 @@ class RealSolidStrain(StrainObject):
                 if nid == 0:
                     nid = 'CENTER'
                 f.write('0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
-                         '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
-                         '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n' % (
-                             nid, exx, exy, e1, v[0, 1], v[0, 2], v[0, 0], p, evm,
-                             '', eyy, eyz, e2, v[1, 1], v[1, 2], v[1, 0],
-                             '', ezz, exz, e3, v[2, 1], v[2, 2], v[2, 0]))
+                        '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
+                        '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n' % (
+                            nid, exx, exy, e1, v[0, 1], v[0, 2], v[0, 0], p, evm,
+                            '', eyy, eyz, e2, v[1, 1], v[1, 2], v[1, 0],
+                            '', ezz, exz, e3, v[2, 1], v[2, 2], v[2, 0]))
