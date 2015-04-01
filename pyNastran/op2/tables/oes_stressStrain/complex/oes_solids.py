@@ -176,20 +176,8 @@ class ComplexSolidArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def get_f06_header(self, is_mag_phase=True):
-        tetra_msg, penta_msg, hexa_msg = _get_msgs(self, is_mag_phase)
-
-        if self.element_type == 39:  # CTETRA
-            return tetra_msg, 4
-        elif self.element_type == 67:  # CHEXA
-            return hexa_msg, 8
-        elif self.element_type == 68:  # CPENTA
-            return penta_msg, 6
-        else:
-            raise NotImplementedError('complex solid stress/strain name=%r Type=%s' % (self.element_name, self.element_type))
-
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        msg_temp, nnodes = self.get_f06_header(is_mag_phase)
+        msg_temp, nnodes = get_f06_header(self, is_mag_phase)
 
         # write the f06
         ntimes = self.data.shape[0]
@@ -272,6 +260,19 @@ def _get_msgs(self, is_mag_phase):
     penta_msg += base_msg
     hexa_msg += base_msg
     return tetra_msg, penta_msg, hexa_msg
+
+
+def get_f06_header(self, is_mag_phase=True):
+    tetra_msg, penta_msg, hexa_msg = _get_msgs(self, is_mag_phase)
+
+    if self.element_type == 39:  # CTETRA
+        return tetra_msg, 4
+    elif self.element_type == 67:  # CHEXA
+        return hexa_msg, 8
+    elif self.element_type == 68:  # CPENTA
+        return penta_msg, 6
+    else:
+        raise NotImplementedError('complex solid stress/strain name=%r Type=%s' % (self.element_name, self.element_type))
 
 
 class ComplexSolidStrainArray(ComplexSolidArray, StressObject):

@@ -148,20 +148,6 @@ class RealSolidArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def get_f06_header(self, is_mag_phase=True):
-        tetra_msg, penta_msg, hexa_msg = _get_solid_msgs(self)
-        if self.element_type == 39: # CTETRA
-            msg = tetra_msg
-            nnodes = 4
-        elif self.element_type == 67: # CHEXA
-            msg = hexa_msg
-            nnodes = 8
-        elif self.element_type == 68: # CPENTA
-            msg = penta_msg
-            nnodes = 6
-        else:
-            raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))
-        return nnodes, msg
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
@@ -176,7 +162,7 @@ class RealSolidArray(OES_Object):
         return ind
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        nnodes, msg_temp = self.get_f06_header(is_mag_phase)
+        nnodes, msg_temp = _get_f06_header_nnodes(self, is_mag_phase)
 
         # write the f06
         ntimes = self.data.shape[0]
@@ -296,39 +282,20 @@ def _get_solid_msgs(self):
     hexa_msg += base_msg
     return tetra_msg, penta_msg, hexa_msg
 
-def get_f06_header(self):
-    if self.is_von_mises():
-        von_mises = 'VON MISES'
+def _get_f06_header_nnodes(self, is_mag_phase=True):
+    tetra_msg, penta_msg, hexa_msg = _get_solid_msgs(self)
+    if self.element_type == 39: # CTETRA
+        msg = tetra_msg
+        nnodes = 4
+    elif self.element_type == 67: # CHEXA
+        msg = hexa_msg
+        nnodes = 8
+    elif self.element_type == 68: # CPENTA
+        msg = penta_msg
+        nnodes = 6
     else:
-        von_mises = 'MAX SHEAR'
-
-    if self.is_stress():
-        tetra_msg = ['                   S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n',
-                     '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
-                     '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (von_mises)]
-
-        penta_msg = ['                    S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n',
-                     '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
-                     '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (von_mises)]
-
-        hexa_msg = ['                      S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n',
-                    '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
-                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (von_mises)]
-    else:
-        tetra_msg = ['                     S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n',
-                     '0                CORNER        ------CENTER AND CORNER POINT  STRAINS---------      DIR.  COSINES       MEAN\n',
-                     '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (von_mises)]
-
-        penta_msg = ['                      S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n',
-                     '0                CORNER        ------CENTER AND CORNER POINT  STRAINS---------      DIR.  COSINES       MEAN\n',
-                     '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (von_mises)]
-
-        hexa_msg = ['                      S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n',
-                    '0                CORNER        ------CENTER AND CORNER POINT  STRAINS---------      DIR.  COSINES       MEAN\n',
-                    '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % (von_mises)]
-
-    return tetra_msg, penta_msg, hexa_msg
-
+        raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))
+    return nnodes, msg
 
 class RealSolidStress(StressObject):
     """
@@ -684,7 +651,7 @@ class RealSolidStress(StressObject):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, page_stamp, page_num, f)
 
-        tetraMsg, pentaMsg, hexaMsg = get_f06_header(self)
+        tetraMsg, pentaMsg, hexaMsg = _get_solid_msgs(self)
         eids = self.oxx.keys()
         if self.element_type == 39: # CTETRA
             nnodes = 4
@@ -701,7 +668,7 @@ class RealSolidStress(StressObject):
         return page_num
 
     def _write_f06_transient(self, header, page_stamp, page_num, f):
-        tetraMsg, pentaMsg, hexaMsg = get_f06_header(self)
+        tetraMsg, pentaMsg, hexaMsg = _get_solid_msgs(self)
 
         if self.element_type == 39: # CTETRA
             nnodes = 4
@@ -1166,8 +1133,8 @@ class RealSolidStrain(StrainObject):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, page_stamp, page_num, f)
 
-        tetraMsg, pentaMsg, hexaMsg = get_f06_header(self)
-        eids = self.exx.keys()
+        tetraMsg, pentaMsg, hexaMsg = _get_solid_msgs(self)
+        eids = sorted(self.exx.keys())
         if self.element_type == 39: # CTETRA
             nnodes = 4
             self._write_element('CTETRA4', nnodes, eids, header, tetraMsg, f)
@@ -1183,7 +1150,7 @@ class RealSolidStrain(StrainObject):
         return page_num
 
     def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        tetraMsg, pentaMsg, hexaMsg = get_f06_header(self)
+        tetraMsg, pentaMsg, hexaMsg = _get_solid_msgs(self)
         if self.element_type == 39: # CTETRA
             nnodes = 4
             for dt, oxx in sorted(iteritems(self.exx)):
