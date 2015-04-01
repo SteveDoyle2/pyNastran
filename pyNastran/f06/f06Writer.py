@@ -548,7 +548,7 @@ class F06Writer(OP2_F06_Common):
 
             self.nonlinear_ctria3_strain,
             self.nonlinear_cquad4_strain,
-            self.ctriax_strain, self.hyperelastic_plate_stress,
+            self.ctriax_strain,
 
             # rods
             self.nonlinear_crod_strain,
@@ -617,7 +617,9 @@ class F06Writer(OP2_F06_Common):
 
             self.nonlinear_ctria3_stress,
             self.nonlinear_cquad4_stress,
-            self.ctriax_stress, self.hyperelastic_plate_strain,
+            self.ctriax_stress,
+
+            self.hyperelastic_cquad4_strain,
 
             #------------------------------------------
 

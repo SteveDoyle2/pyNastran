@@ -1799,7 +1799,7 @@ class OES(OP2Common):
                     self.create_transient_object(self.cbush1d_stress_strain, RealBush1DStress)  # undefined
                 else:
                     #self.create_transient_object(self.cbush1d_stress_strain, Bush1DStrain)  # undefined
-                    raise NotImplementedError('self.bush1dStressStrain; numwide=8')
+                    raise NotImplementedError('cbush1d_stress_strain; numwide=8')
 
                 ntotal = 32  # 4*8
                 s = Struct(b'i6fi')
@@ -1819,8 +1819,8 @@ class OES(OP2Common):
                 if self.isStress():
                     self.create_transient_object(self.cbush1d_stress_strain, ComplexBush1DStress)  # undefined
                 else:
-                    #self.create_transient_object(self.bush1dStressStrain, ComplexBush1DStress)  # undefined
-                    raise NotImplementedError('self.bush1dStressStrain; complex strain')
+                    #self.create_transient_object(self.cbush1d_stress_strain, ComplexBush1DStress)  # undefined
+                    raise NotImplementedError('self.cbush1d_stress_strain; complex strain')
 
                 ntotal = 36  # 4*9
                 s = Struct(b'i8f')
@@ -1898,7 +1898,7 @@ class OES(OP2Common):
                         effCreepStrain, linearTorsionalStresss) = out
                     eid = (eid_device - self.device_code) // 10
                     if self.debug4():
-                        self.binary_debug.write('CRODNL-%s - %s\n' % (name, str(out)))
+                        self.binary_debug.write('%s - %s\n' % (name, str(out)))
                     indata = (eid, axial, equivStress, totalStrain, effPlasticCreepStrain, effCreepStrain, linearTorsionalStresss)
                     self.obj.add(self.element_type, dt, indata)
                     n += ntotal
@@ -2224,8 +2224,8 @@ class OES(OP2Common):
                 return len(data)
             if self.num_wide == 30:
                 if self.isStress():
-                    self.create_transient_object(self.hyperelasticPlateStrain, HyperelasticQuad)
-                    result_name = 'hyperelasticPlateStrain'
+                    self.create_transient_object(self.hyperelastic_cquad4_strain, HyperelasticQuad)
+                    result_name = 'hyperelastic_cquad4_strain'
                 else:
                     msg = 'HyperelasticQuad???'
                     return self._not_implemented_or_skip(data, msg)
@@ -2487,8 +2487,10 @@ class OES(OP2Common):
                 self.obj.build()
 
         else:  # not vectorized
+            self.code = self._get_code()
             self.result_names.add(result_name)
             #print("not vectorized...read_mode=%s...%s" % (self.read_mode, result_name))
+            #self.log.info("code = %s" % str(self.code))
             if self.read_mode == 1:
                 self.result_names.add(result_name)
                 auto_return = True

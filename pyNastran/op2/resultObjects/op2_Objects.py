@@ -18,6 +18,8 @@ class BaseScalarObject(Op2Codes):
         return self.__class__.__name__
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+        if self.nonlinear_factor is not None:
+            return self._write_f06_transient(header, page_stamp, page_num=page_num, f=f, is_mag_phase=is_mag_phase)
         msg = 'write_f06 is not implemented in %s\n' % self.__class__.__name__
         f.write(msg)
         print(msg[:-1])

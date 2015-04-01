@@ -1492,8 +1492,8 @@ class NastranIO(object):
             # OESNLXR - CTRIA3/CQUAD4 stress
             'nonlinear_plate_stress',
             'nonlinear_plate_strain',
-            'hyperelastic_plate_stress',
-            'hyperelastic_plate_strain',
+            #'hyperelastic_plate_stress',
+            'hyperelastic_cquad4_strain',
 
             # OES - composite CTRIA3/CQUAD4 stress
             'cquad4_composite_stress',

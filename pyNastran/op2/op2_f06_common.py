@@ -232,11 +232,6 @@ class OP2_F06_Common(object):
 
         self.cgap_force = {}
 
-        #self.plateForces = {}
-        #self.plateForces2 = {}
-        #self.compositePlateForces = {}
-
-
         #self.solidPressureForces = {}
         self.chexa_pressure_force = {}
         self.cpenta_pressure_force = {}
@@ -277,15 +272,12 @@ class OP2_F06_Common(object):
         #self.nonlinearPlateStress = {}
         #: OESNLXR - CTRIA3/CQUAD4 strain
         #self.nonlinearPlateStrain = {}
-        self.hyperelastic_plate_stress = {}
-        self.hyperelastic_plate_strain = {}
+        #self.hyperelastic_plate_stress = {}
+        self.hyperelastic_cquad4_strain = {}
 
-        #: OES - composite CTRIA3/CQUAD4 stress
-        #self.compositePlateStress = {}
         self.nonlinear_cquad4_stress = {}
         self.nonlinear_ctria3_stress = {}
-        #: OES - composite CTRIA3/CQUAD4 strain
-        #self.compositePlateStrain = {}
+
         self.nonlinear_cquad4_strain = {}
         self.nonlinear_ctria3_strain = {}
 
@@ -295,7 +287,6 @@ class OP2_F06_Common(object):
         self.nonlinear_celas3_stress = {}
 
         #: OES - GAPNL 86
-        #self.nonlinearGapStress = {}
         self.nonlinear_cgap_stress = {}
 
         # OQG - spc/mpc forces
@@ -484,7 +475,12 @@ class OP2_F06_Common(object):
             'ctriar_force',
 
             'cshear_force',
-            #'compositePlateForces',
+            #'cquad4_composite_force',
+            #'cquad8_composite_force',
+            #'cquadr_composite_force',
+            #'ctria3_composite_force',
+            #'ctria6_composite_force',
+            #'ctriar_composite_force',
 
             'chexa_pressure_force',
             'cpenta_pressure_force',
@@ -535,12 +531,12 @@ class OP2_F06_Common(object):
             'nonlinear_cquad4_strain',
             'nonlinear_ctria3_strain',
 
+            #'hyperelastic_plate_stress',
+            'hyperelastic_cquad4_strain',
+
             # OES - CEALS1 224, CELAS3 225
             'nonlinear_celas1_stress',
             'nonlinear_celas3_stress',
-
-            'hyperelastic_plate_stress',
-            'hyperelastic_plate_strain',
 
             # OES - composite CTRIA3/CQUAD4 stress
             'cquad4_composite_stress',

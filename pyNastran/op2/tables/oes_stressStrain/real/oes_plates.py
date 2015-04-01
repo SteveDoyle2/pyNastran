@@ -1278,7 +1278,6 @@ class RealPlateStrain(StrainObject):
 
     def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         msg_pack, nnodes, cen = _get_plate_msg(self)
-        print('self.element_type=%s name=%s' % (self.element_type, self.element_name))
 
         dts = list(self.exx.keys())
         dts.sort()

@@ -1,5 +1,5 @@
 from six.moves import zip
-from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealPlateForce, RealPlate2Force, RealRodForce
+from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealPlateForce, RealPlateBilinearForce, RealRodForce
 
 class OEF(object):
     def __init__(self):
@@ -192,7 +192,7 @@ class OEF(object):
 
         if isubcase not in slot:
             assert 'nonlinear_factor' in data_code
-            slot[isubcase] = RealPlate2Force(data_code, is_sort1, isubcase, transient)
+            slot[isubcase] = RealPlateBilinearForce(data_code, is_sort1, isubcase, transient)
         slot[isubcase].add_f06_data(transient, data, element_name, ngrids)
         self.iSubcases.append(isubcase)
 

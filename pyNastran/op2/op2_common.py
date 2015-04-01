@@ -714,10 +714,7 @@ class OP2Common(Op2Codes, F06Writer):
 
     def _get_code(self):
         code = self.isubcase
-        if self.read_mode == 0:
-            code = self.isubcase
-        else:
-            code = (self.isubcase, self.subtitle)
+        code = (self.isubcase, self.subtitle)
         self.code = code
         #self.log.debug('code = %s' % str(self.code))
         return self.code

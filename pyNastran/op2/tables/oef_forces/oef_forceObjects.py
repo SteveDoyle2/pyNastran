@@ -1310,7 +1310,7 @@ class RealPlateForceArray(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
             page_num += 1
         return page_num - 1
 
-class RealPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
+class RealPlateBilinearForce(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
         #self.eType = {}

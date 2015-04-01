@@ -568,29 +568,20 @@ class TestF06(unittest.TestCase):
 
         cen = 0 # 'CEN/4'
         for (loadcase, stress) in iteritems(f06.cquad4_stress):
-            #print("%3s %3s %6s %8s" % ('eID', 'NID', 'iLayer', 'VM_Stress'))
             # stress is a PlateStressObject
             if stress.is_von_mises():
+                #print("%3s %3s %6s %8s" % ('eID', 'NID', 'iLayer', 'VM_Stress'))
                 #vonMises = 'VON MISES'
                 for eid,ovm in sorted(iteritems(stress.ovmShear)):
-                    ovmkeys = ovm.keys()
-                    ovmkeys.remove(cen)
-                    ovmkeys.sort()
-                    ovmkeys = [cen] + ovmkeys
-                    for nid in ovmkeys:
-                        ovmi = ovm[nid]
+                    for nid, ovmi in sorted(iteritems(ovm)):
                         for ilayer, ovmii in enumerate(ovmi):
-                            #print("%8s %8s %6s %8s" % (eid, nid, ilayer, ovmii))
+                            print("%8s %8s %6s %8s" % (eid, nid, ilayer, ovmii))
                             pass
             else:
+                #print("%3s %3s %6s %8s" % ('eID', 'NID', 'iLayer', 'MaxShear'))
                 #vonMises = 'MAX SHEAR'
                 for eid,ovm in sorted(iteritems(stress.ovmShear)):
-                    ovmkeys = ovm.keys()
-                    #print('ovmkeys = %s' % ovmkeys)
-                    ovmkeys.remove(cen)
-                    ovmkeys.sort()
-                    ovmkeys = [cen] + ovmkeys
-                    for nid in ovmkeys:
+                    for nid, ovmi in sorted(iteritems(ovm)):
                         ovmi = ovm[nid]
                         for ilayer, ovmii in enumerate(ovmi):
                             o1 = stress.oxx[eid][nid][ilayer]
@@ -600,8 +591,11 @@ class TestF06(unittest.TestCase):
                             self.assertAlmostEqual(ovmii, ovmii2, places=3)
                             #print("%3s %3s %6s %8s" % (eid, nid, ilayer, ovmii2))
 
+        assert cen == 0, cen
         assert len(op2.cquad4_stress.keys()) == 1, op2.cquad4_stress.keys()
         assert len(f06.cquad4_stress.keys()) == 1, f06.cquad4_stress.keys()
+        assert list(op2.cquad4_stress.keys()) == [1], list(op2.cquad4_stress.keys())
+        assert list(f06.cquad4_stress.keys()) == [1], list(f06.cquad4_stress.keys())
         self.assertEquals(op2.cquad4_stress[1].ovmShear[25][cen][0], 276.8023376464844)
         self.assertEquals(f06.cquad4_stress[1].ovmShear[25][cen][0], 276.8023)
         #f06.print_stats()

@@ -102,6 +102,7 @@ class OP2(OP2_Scalar):
                              The second will be used for superelements regardless
                              of the option (default=True)
         """
+        self.log.info('vectorized=%s combine=%s' % (vectorized, combine))
         assert self.ask in [True, False], self.ask
         self.is_vectorized = vectorized
         if self.is_vectorized:
@@ -123,7 +124,7 @@ class OP2(OP2_Scalar):
             self.read_mode = 0
             self._close_op2 = True
             OP2_Scalar.read_op2(self, op2_filename=op2_filename)
-            return
+
         self.combine_results(combine=combine)
         self.log.info('finished reading op2')
 

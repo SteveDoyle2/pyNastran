@@ -14,7 +14,7 @@ from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
     RealCBeamForce, RealCShearForce,
     RealSpringForce, RealDamperForce, RealViscForce,
     RealPlateForce, RealPlateForceArray,
-    RealConeAxForce, RealPlate2Force,
+    RealConeAxForce, RealPlateBilinearForce,
     RealCBar100Force, RealCGapForce, RealBendForce,
     RealPentaPressureForce, RealCBushForce,
     RealForce_VU_2D, RealCBarForce, RealForce_VU)
@@ -1110,7 +1110,7 @@ class OEF(OP2Common):
             numwide_imag = 2 + (nnodes + 1) * 17
 
             if 0:
-                obj_real = RealPlate2Force
+                obj_real = RealPlateBilinearForce
                 obj_complex = ComplexPlate2Force
 
                 RealPlateForce2Array = None
@@ -1125,7 +1125,7 @@ class OEF(OP2Common):
                 if self.read_mode == 1:
                     return len(data)
 
-                self.create_transient_object(slot, RealPlate2Force)
+                self.create_transient_object(slot, RealPlateBilinearForce)
                 ntotal = 8 + (nnodes+1) * 36 # centroidal node is the + 1
                 assert ntotal == self.num_wide * 4, 'ntotal=%s numwide=%s' % (ntotal, self.num_wide * 4)
                 nelements = len(data) // ntotal
