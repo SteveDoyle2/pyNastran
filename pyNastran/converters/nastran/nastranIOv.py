@@ -893,7 +893,7 @@ class NastranIO(object):
         #self.show_caero_mesh()
 
         print("tring to read...%s" % op2_filename)
-        ext = os.path.splitext(op2_filename)[0].lower()
+        ext = os.path.splitext(op2_filename)[1].lower()
 
         if ext == '.op2':
             model = OP2(log=self.log, debug=True)
@@ -904,15 +904,15 @@ class NastranIO(object):
                 if self.is_nodal:
                     desired_results = [
                         'displacements', 'velocities', 'accelerations', 'temperatures',
-                        'constraint_forces', 'spcForces', 'mpcForces', 'eigenvectors',
+                        'constraint_forces', 'spc_forces', 'mpc_forces', 'eigenvectors',
 
                         #'gridPointForces',
                         #'stress',
 
                         # untested
-                        'loadVectors',
-                        'appliedLoads',
-                        'forceVectors',
+                        'load_vectors',
+                        'applied_loads',
+                        'force_vectors',
                     ]
                 else:
                     desired_results = [
@@ -951,14 +951,14 @@ class NastranIO(object):
             print(model.get_op2_stats())
 
         elif ext == '.pch':
-            raise NotImplementedError(op2_filename)
+            raise NotImplementedError('*.pch is not implemented; filename=%r' % op2_filename)
         elif ext == '.f06':
             model = F06(log=self.log, debug=True)
             model.set_vectorization(True)
             model.read_f06(op2_filename)
         else:
             print("error...")
-            raise NotImplementedError(op2_filename)
+            raise NotImplementedError('extension=%r is not supported; filename=%r' % (ext, op2_filename))
 
         #print(model.print_results())
         #self.iSubcaseNameMap[self.isubcase] = [Subtitle, Label]
@@ -988,14 +988,14 @@ class NastranIO(object):
                 (model.velocities, 'Velocity'),
                 (model.accelerations, 'Acceleration'),
                 (model.eigenvectors, 'Eigenvectors'),
-                (model.spcForces, 'SPC Forces'),
-                (model.mpcForces, 'MPC Forces'),
+                (model.spc_forces, 'SPC Forces'),
+                (model.mpc_forces, 'MPC Forces'),
 
                 # untested
-                (model.loadVectors, 'loadVectors'),
-                (model.appliedLoads, 'appliedLoads'),
-                (model.forceVectors, 'forceVectors'),
-                #[model.gridPointForces, 'GridPointForces'],  # TODO: this is buggy...
+                (model.load_vectors, 'LoadVectors'),
+                (model.applied_loads, 'AppliedLoads'),
+                (model.force_vectors, 'ForceVectors'),
+                #[model.grid_point_forces, 'GridPointForces'],  # TODO: this is buggy...
             ]
             temperature_like = [
                 (model.temperatures, 'Temperature'),
@@ -1490,10 +1490,10 @@ class NastranIO(object):
             'nonlinear_rod_strain',
 
             # OESNLXR - CTRIA3/CQUAD4 stress
-            'nonlinearPlateStress',
-            'nonlinearPlateStrain',
-            'hyperelasticPlateStress',
-            'hyperelasticPlateStrain',
+            'nonlinear_plate_stress',
+            'nonlinear_plate_strain',
+            #'hyperelastic_plate_stress',
+            'hyperelastic_cquad4_strain',
 
             # OES - composite CTRIA3/CQUAD4 stress
             'cquad4_composite_stress',
@@ -1507,8 +1507,8 @@ class NastranIO(object):
             'ctria6_composite_strain',
 
             # OGS1 - grid point stresses
-            'gridPointStresses',        # tCode=26
-            'gridPointVolumeStresses',  # tCode=27
+            'grid_point_stresses',        # tCode=26
+            'grid_point_volume_stresses',  # tCode=27
         ]
         return table_types
 
@@ -1608,13 +1608,13 @@ class NastranIO(object):
         ncase = 0
         form0 = ('Element Strain Energy', None, [])
 
-        #op2.strainEnergy[1]
+        #op2.strain_energy[1]
           #type=StrainEnergyObject ntimes=3 nelements=16
           #energy, percent, density
           #modes = [1, 2, 3]
         case = None
-        if subcase_id in model.strainEnergy:
-            ese = model.strainEnergy[subcase_id]
+        if subcase_id in model.strain_energy:
+            ese = model.strain_energy[subcase_id]
             times = sorted(ese.energy.keys())  # TODO: not vectorized
             assert times[itime] == dt, 'actual=%s expected=%s' % (times[itime], dt)
 

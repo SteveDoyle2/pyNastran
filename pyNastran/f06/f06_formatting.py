@@ -98,7 +98,10 @@ def writeFloats8p4F(vals):
 def _eigenvalue_header(obj, header, itime, ntimes, dt):
     if obj.nonlinear_factor is not None:
         name = obj.data_code['name']
-        dt_line = ' %14s = %12.5E\n' % (name, dt)
+        if isinstance(dt, int):
+            dt_line = ' %14s = %i\n' % (name.upper(), dt)
+        else:
+            dt_line = ' %14s = %12.5E\n' % (name, dt)
         header[1] = dt_line
         codes = getattr(obj, name + 's')
         if not len(codes) == ntimes:

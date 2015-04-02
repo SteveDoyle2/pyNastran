@@ -59,10 +59,10 @@ class PBUSH(BushingProperty):
             #: Property ID
             self.pid = integer(card, 1, 'pid')
 
-            nFields = card.nFields()
+            nfields = card.nFields()
             self.vars = []
             iStart = 2
-            while iStart < nFields:
+            while iStart < nfields:
                 pname = string(card, iStart, 'pname')
                 if   pname == 'K':
                     self.getK(card, iStart)
@@ -214,10 +214,10 @@ class PBUSH1D(BushingProperty):
             self.sa = double_or_blank(card, 6, 'sa', 0.0)
             self.se = double_or_blank(card, 7, 'se', 0.0)
 
-            nFields = card.nFields()
+            nfields = card.nFields()
             self.vars = []
             iStart = 9
-            while iStart < nFields:
+            while iStart < nfields:
                 pname = string(card, iStart, 'pname')
                 if   pname == 'SHOCKA':
                     iStart = self.getShockA(card, iStart)

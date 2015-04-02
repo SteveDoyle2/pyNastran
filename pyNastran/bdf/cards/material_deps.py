@@ -68,11 +68,17 @@ class MATS1(MaterialDependence):
             if self.Type not in ['NLELAST', 'PLASTIC']:
                 raise ValueError('MATS1 Type must be [NLELAST, PLASTIC]; Type=%r' % self.Type)
             if self.Type == 'NLELAST':
-                self.h = blank(card, 4, 'h')
-                self.hr = blank(card, 6, 'hr')
-                self.yf = blank(card, 5, 'yf')
-                self.limit1 = blank(card, 7, 'yf')
-                self.limit2 = blank(card, 8, 'yf')
+                # should we even read these?
+                self.h = None
+                self.hr = None
+                self.yf = None
+                self.limit1 = None
+                self.limit2 = None
+                #self.h = blank(card, 4, 'h')
+                #self.hr = blank(card, 6, 'hr')
+                #self.yf = blank(card, 5, 'yf')
+                #self.limit1 = blank(card, 7, 'yf')
+                #self.limit2 = blank(card, 8, 'yf')
             else:
                 #: Work hardening slope (slope of stress versus plastic strain)
                 #: in units of stress. For elastic-perfectly plastic cases,

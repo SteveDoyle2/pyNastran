@@ -6,7 +6,7 @@ from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import get_key0
 
 
-class StrainEnergyObject(ScalarObject):
+class RealStrainEnergy(ScalarObject):
     """
     ::
 

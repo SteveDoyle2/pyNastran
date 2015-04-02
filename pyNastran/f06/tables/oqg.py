@@ -32,13 +32,13 @@ class OQG(object):
                     'lsdvmn': 1,
                     }
 
-        if isubcase in self.loadVectors:
-            self.loadVectors[isubcase].add_f06_data(data, transient)
+        if isubcase in self.load_vectors:
+            self.load_vectors[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
             spc = RealLoadVector(data_code, is_sort1, isubcase, dt)
             spc.add_f06_data(data, transient)
-            self.loadVectors[isubcase] = spc
+            self.load_vectors[isubcase] = spc
         self.iSubcases.append(isubcase)
 
     def _forces_of_single_point_constraints(self):
@@ -58,13 +58,13 @@ class OQG(object):
                     'lsdvmn': 1,
                     }
 
-        if isubcase in self.spcForces:
-            self.spcForces[isubcase].add_f06_data(data, transient)
+        if isubcase in self.spc_forces:
+            self.spc_forces[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
             spc = RealSPCForces(data_code, is_sort1, isubcase, dt)
             spc.add_f06_data(data, transient)
-            self.spcForces[isubcase] = spc
+            self.spc_forces[isubcase] = spc
         self.iSubcases.append(isubcase)
 
     def _forces_of_multi_point_constraints(self):
@@ -80,11 +80,11 @@ class OQG(object):
                     'table_name': 'OQG', 'nonlinear_factor': dt,
                     'dataNames':['lsdvmn']}
 
-        if isubcase in self.mpcForces:
-            self.mpcForces[isubcase].add_f06_data(data, transient)
+        if isubcase in self.mpc_forces:
+            self.mpc_forces[isubcase].add_f06_data(data, transient)
         else:
             is_sort1 = True
             mpc = RealMPCForces(data_code, is_sort1, isubcase, dt)
             mpc.add_f06_data(data, transient)
-            self.mpcForces[isubcase] = mpc
+            self.mpc_forces[isubcase] = mpc
         self.iSubcases.append(isubcase)

@@ -11,6 +11,7 @@ from struct import unpack, Struct
 
 from numpy import array
 
+from pyNastran import is_release
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.op2_common import SortCodeError
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
@@ -582,6 +583,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             if self.debug:
                 self.binary_debug.write('-' * 80 + '\n')
                 self.binary_debug.write('table_name = %r; f.tell()=%s\n' % (table_name, self.f.tell()))
+
+            if is_release:
+                self.log.info('  table_name=%r' % table_name)
 
             self.table_name = table_name
             if 0:

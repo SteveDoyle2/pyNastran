@@ -7,9 +7,9 @@ Main BDF class.  Defines:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types, iteritems, itervalues, next
-from pyNastran.utils import (object_attributes, print_bad_path)
 from pyNastran.bdf.utils import (to_fields, get_include_filename,
-    parse_executive_control_deck, clean_empty_lines, _clean_comment)
+                                 parse_executive_control_deck,
+                                 clean_empty_lines, _clean_comment)
 
 #from codecs import open as codec_open
 import io
@@ -22,28 +22,28 @@ from pyNastran.utils.dev import list_print
 from pyNastran.utils.log import get_logger2
 
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
-    integer_or_string, string)
+                                                    integer_or_string, string)
 
 from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D
 from pyNastran.bdf.cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
-                                          PRAC2D, PRAC3D, PCONEAX)
+                                                       PRAC2D, PRAC3D, PCONEAX)
 
 from pyNastran.bdf.cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4,
-                                     SpringElement)
+                                                  SpringElement)
 from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
 from pyNastran.bdf.cards.elements.solid import (CTETRA4, CTETRA10, CPENTA6, CPENTA15,
-                                   CHEXA8, CHEXA20, SolidElement)
+                                                CHEXA8, CHEXA20, SolidElement)
 from pyNastran.bdf.cards.elements.rigid import (RBAR, RBAR1, RBE1, RBE2, RBE3, RigidElement)
 
 from pyNastran.bdf.cards.elements.shell import (CQUAD, CQUAD4, CQUAD8, CQUADR, CQUADX,
-                                   CSHEAR, CTRIA3, CTRIA6, CTRIAX,
-                                   CTRIAX6, CTRIAR, ShellElement)
+                                                CSHEAR, CTRIA3, CTRIA6, CTRIAX,
+                                                CTRIAX6, CTRIAR, ShellElement)
 from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE
 from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
 from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D
 from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
-                                    CDAMP5, DamperElement)
+                                                 CDAMP5, DamperElement)
 from pyNastran.bdf.cards.properties.damper import (PVISC, PDAMP, PDAMP5, PDAMPT)
 from pyNastran.bdf.cards.elements.rods import CROD, CONROD, CTUBE, RodElement
 from pyNastran.bdf.cards.elements.bars import CBAR, CBEND, LineElement, CBEAM3
@@ -52,48 +52,48 @@ from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
 from pyNastran.bdf.cards.properties.bars import (PBAR, PBARL, )  # PBEND
 from pyNastran.bdf.cards.properties.beam import  PBEAM, PBEAML, PBCOMP
 from pyNastran.bdf.cards.elements.mass import (CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4,
-                                  PointElement, PointMassElement)  # CMASS5
+                                               PointElement, PointMassElement)  # CMASS5
 from pyNastran.bdf.cards.properties.mass import (PMASS, NSM)
 from pyNastran.bdf.cards.aero import (AEFACT, AELINK, AELIST, AEPARM, AESTAT, AESURF,
-                         AESURFS, AERO, AEROS, CSSCHD,
-                         CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
-                         PAERO1, PAERO2, PAERO3,
-                         FLFACT, FLUTTER, GUST, MKAERO1,
-                         MKAERO2, SPLINE1, SPLINE2, SPLINE4,
-                         SPLINE5, TRIM)
+                                      AESURFS, AERO, AEROS, CSSCHD,
+                                      CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
+                                      PAERO1, PAERO2, PAERO3,
+                                      FLFACT, FLUTTER, GUST, MKAERO1,
+                                      MKAERO2, SPLINE1, SPLINE2, SPLINE4,
+                                      SPLINE5, TRIM)
 from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCD, SPCAX, SPC1,
-                                MPC, MPCADD, SUPORT1, SUPORT,
-                                ConstraintObject)
+                                             MPC, MPCADD, SUPORT1, SUPORT,
+                                             ConstraintObject)
 from pyNastran.bdf.cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
-                                      CORD2R, CORD2C, CORD2S, CORD3G)
+                                                   CORD2R, CORD2C, CORD2S, CORD3G)
 from pyNastran.bdf.cards.dmig import (DEQATN, DMIG, DMI, DMIJ, DMIK, DMIJI, NastranMatrix)
 from pyNastran.bdf.cards.dynamic import (FREQ, FREQ1, FREQ2, FREQ4, TSTEP, TSTEPNL, NLPARM,
-                            NLPCI)
+                                         NLPCI)
 from pyNastran.bdf.cards.loads.loads import (LSEQ, SLOAD, DLOAD, DAREA, TLOAD1, TLOAD2,
-                                RLOAD1, RLOAD2, RANDPS, RFORCE)
+                                             RLOAD1, RLOAD2, RANDPS, RFORCE)
 from pyNastran.bdf.cards.loads.staticLoads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
-                                      FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
-                                      PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1)
+                                                   FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
+                                                   PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1)
 
 from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
-                              MAT8, MAT9, MAT10, MAT11,
-                              MATHP, CREEP, EQUIV)
+                                           MAT8, MAT9, MAT10, MAT11,
+                                           MATHP, CREEP, EQUIV)
 from pyNastran.bdf.cards.material_deps import (MATT1, MATT2, MATT4, MATT5, MATS1)  # TODO: add MATT3, MATT8, MATT9
 
 from pyNastran.bdf.cards.methods import (EIGB, EIGC, EIGR, EIGP, EIGRL)
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs
 from pyNastran.bdf.cards.optimization import (DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
-                                 DRESP1, DRESP2, DVMREL1, DVPREL1, DVPREL2)
+                                              DRESP1, DRESP2, DVMREL1, DVPREL1, DVPREL2)
 from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.cards.bdf_sets import (ASET, BSET, CSET, QSET,
-                         ASET1, BSET1, CSET1, QSET1,
-                         SET1, SET3, SESET, SEQSEP, RADSET)
+                                          ASET1, BSET1, CSET1, QSET1,
+                                          SET1, SET3, SESET, SEQSEP, RADSET)
 from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD)
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
-                                    PHBDY, CONV, RADM, RADBC,)
+                                                 PHBDY, CONV, RADM, RADBC,)
 from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
-                           TABLEM1, TABLEM2, TABLEM3, TABLEM4,
-                           TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG, TIC)
+                                            TABLEM1, TABLEM2, TABLEM3, TABLEM4,
+                                            TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG, TIC)
 from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA
 from pyNastran.bdf.caseControlDeck import CaseControlDeck
 from pyNastran.bdf.bdf_Methods import BDFMethods
@@ -104,6 +104,7 @@ from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 from pyNastran.bdf.bdfInterface.bdf_writeMesh import WriteMesh
 from pyNastran.bdf.bdfInterface.crossReference import XrefMesh
 from pyNastran.bdf.cards.utils import wipe_empty_fields
+from pyNastran.bdf.utils import CardParseSyntaxError
 
 
 class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
@@ -258,7 +259,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'AERO', 'AEROS', 'GUST', 'FLUTTER', 'FLFACT', 'MKAERO1', 'MKAERO2',
             'AEFACT', 'AELINK', 'AELIST', 'AEPARAM', 'AESTAT', 'AESURF',
             'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', # 'CAERO5',
-            'PAERO1', 'PAERO2',  'PAERO3', # 'PAERO4', 'PAERO5',
+            'PAERO1', 'PAERO2', 'PAERO3', # 'PAERO4', 'PAERO5',
             'SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',
             #'SPLINE3', 'SPLINE6', 'SPLINE7',
             'TRIM',
@@ -340,12 +341,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         disableSet = set(cards)
         self.cards_to_read.difference(disableSet)
-
-    #def _is_special_card(self, cardName):
-        #"""These cards are listed in the case control and the bulk data deck"""
-        #if cardName in self.specialCards:
-            #return True
-        #return False
 
     def __init_attributes(self):
         """
@@ -703,7 +698,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         etc.
         """
         #self._encoding = encoding
-
         if bdf_filename is None:
             from pyNastran.utils.gui_io import load_file_dialog
             wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas; *.pch)|" \
@@ -711,7 +705,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 "All files (*.*)|*.*"
             wildcard_qt = "Nastran BDF (*.bdf *.dat *.nas *.pch);;All files (*)"
             title = 'Please select a BDF/DAT/PCH to load'
-            bdf_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)
+            bdf_filename, wildcard_level = load_file_dialog(title, wildcard_wx, wildcard_qt)
             assert bdf_filename is not None, bdf_filename
 
         #: the active filename (string)
@@ -1075,7 +1069,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             lines2 = []
             comments2 = []
             while len(line) == 0 or line[0] in [' ', '*', '+', ',', '\t']:
-                in_loop = True
                 if len(line):
                     if Is2:
                         Is += Is2
@@ -1139,7 +1132,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         if ' ' in card_name or len(card_name) == 0:
             msg = 'card_name=%r\nline=%r in filename=%r is invalid' \
                   % (card_name, lines[0], self.active_filename)
-            raise RuntimeError(msg)
+            raise CardParseSyntaxError(msg)
         return card_name.upper()
 
     def _read_bulk_data_deck(self):
@@ -1356,64 +1349,64 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             # 'PCOMPG':  # hasnt been verified
             # 'MAT8':  # note there is no MAT6 or MAT7
             _cards = {
-             'add_node': ['GRID'],
-             'add_mass': ['CONM1', 'CONM2', 'CMASS1',
-                          'CMASS2', 'CMASS3', 'CMASS4', ],
-             'add_element': ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CQUADX',
-                             'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
-                             'CBAR', 'CBEAM', 'CBEAM3', 'CROD', 'CONROD',
-                             'CTUBE', 'CBEND', 'CELAS1', 'CELAS2', 'CELAS3',
-                             'CELAS4', 'CVISC', 'CSHEAR', 'CGAP',
-                             'CRAC2D', 'CRAC3D'],
-             'add_damper': ['CBUSH', 'CBUSH1D', 'CFAST', 'CDAMP1',
-                            'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5'],
-             'add_rigid_element': ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3'],
-             'add_property': ['PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR', 'PSOLID',
-                              'PBAR', 'PBARL', 'PBEAM', 'PBCOMP', 'PBEAML',
-                              'PROD', 'PTUBE', 'PLSOLID', 'PBUSH1D', 'PBUSH',
-                              'PFAST', 'PDAMP5', 'PGAP', 'PRAC2D', 'PRAC3D',
-                              'PLPLANE',],
+                'add_node' : ['GRID'],
+                'add_mass' : ['CONM1', 'CONM2', 'CMASS1',
+                              'CMASS2', 'CMASS3', 'CMASS4', ],
+                'add_element' : ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CQUADX',
+                                 'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
+                                 'CBAR', 'CBEAM', 'CBEAM3', 'CROD', 'CONROD',
+                                 'CTUBE', 'CBEND', 'CELAS1', 'CELAS2', 'CELAS3',
+                                 'CELAS4', 'CVISC', 'CSHEAR', 'CGAP',
+                                 'CRAC2D', 'CRAC3D'],
+                'add_damper' : ['CBUSH', 'CBUSH1D', 'CFAST', 'CDAMP1',
+                                'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5'],
+                'add_rigid_element': ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3'],
+                'add_property' : ['PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR', 'PSOLID',
+                                  'PBAR', 'PBARL', 'PBEAM', 'PBCOMP', 'PBEAML',
+                                  'PROD', 'PTUBE', 'PLSOLID', 'PBUSH1D', 'PBUSH',
+                                  'PFAST', 'PDAMP5', 'PGAP', 'PRAC2D', 'PRAC3D',
+                                  'PLPLANE',],
 
-             # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
-             'add_creep_material': ['CREEP'],
-             'add_structural_material': ['MAT1', 'MAT2', 'MAT3', 'MAT8',
-                                         'MAT9', 'MAT10', 'MAT11',
-                                         'EQUIV'],
-             'add_hyperelastic_material': ['MATHE', 'MATHP',],
-             'add_thermal_material': ['MAT4', 'MAT5'],
-             'add_material_dependence': ['MATS1', 'MATS3', 'MATS8',
-                                         'MATT1', 'MATT2', 'MATT3', 'MATT4',
-                                         'MATT5', 'MATT8', 'MATT9'],
-             'add_load': ['FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1',
-                          'MOMENT2', 'GRAV', 'ACCEL', 'ACCEL1', 'LOAD', 'PLOAD',
+                # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
+                'add_creep_material': ['CREEP'],
+                'add_structural_material' : ['MAT1', 'MAT2', 'MAT3', 'MAT8',
+                                             'MAT9', 'MAT10', 'MAT11',
+                                             'EQUIV'],
+                'add_hyperelastic_material' : ['MATHE', 'MATHP',],
+                'add_thermal_material'  : ['MAT4', 'MAT5'],
+                'add_material_dependence' : ['MATS1', 'MATS3', 'MATS8',
+                                             'MATT1', 'MATT2', 'MATT3', 'MATT4',
+                                             'MATT5', 'MATT8', 'MATT9'],
+                'add_load' : ['FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1',
+                              'MOMENT2', 'GRAV', 'ACCEL', 'ACCEL1', 'LOAD', 'PLOAD',
                               'PLOAD1', 'PLOAD2', 'PLOAD4', 'PLOADX1',
                               'RFORCE', 'DLOAD', 'SLOAD', 'TLOAD1', 'TLOAD2',
                               'RLOAD1', 'RLOAD2', 'RANDPS'],
-             'add_thermal_load': ['TEMP', 'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY'],
-             'add_thermal_element': ['CHBDYE', 'CHBDYG', 'CHBDYP'],
-             'add_convection_property': ['PCONV', 'PCONVM'],
-             'add_constraint_MPC': ['MPC', 'MPCADD'],
-             'add_constraint_SPC': ['SPC', 'SPC1', 'SPCAX', 'SPCD', 'SPCADD'],
-             'add_suport': ['SUPORT'],  # pseudo-constraint
-             'add_constraint': ['SUPORT1'],  # pseudo-constraint
-             'add_SPLINE': ['SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5'],
-             'add_CAERO': ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5'],
-             'add_PAERO': ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5'],
-             'add_MKAERO': ['MKAERO1', 'MKAERO2'],
-             'add_FREQ': ['FREQ', 'FREQ1', 'FREQ2'],
-             'add_ASET': ['ASET', 'ASET1'], 'add_BSET': ['BSET', 'BSET1'],
-             'add_CSET': ['CSET', 'CSET1'], 'add_QSET': ['QSET', 'QSET1'],
-             'add_SET': ['SET1', 'SET3'],
-             'add_DRESP': ['DRESP1', 'DRESP2'],
-             'add_DVPREL': ['DVPREL1', 'DVPREL2'],
-             'add_coord': ['CORD2R', 'CORD2C', 'CORD2S'],
-             'add_table': ['TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',
-                           'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
-                           'TABLES1', 'TABLEST', 'TABDMP1'],
-             'add_random_table': ['TABRND1', 'TABRNDG'],
-             'add_method': ['EIGB', 'EIGR', 'EIGRL'],
-             'add_cmethod': ['EIGC', 'EIGP'],
-             'add_DVMREL': ['DVMREL1'],
+                'add_thermal_load' : ['TEMP', 'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY'],
+                'add_thermal_element' : ['CHBDYE', 'CHBDYG', 'CHBDYP'],
+                'add_convection_property' : ['PCONV', 'PCONVM'],
+                'add_constraint_MPC' : ['MPC', 'MPCADD'],
+                'add_constraint_SPC' : ['SPC', 'SPC1', 'SPCAX', 'SPCD', 'SPCADD'],
+                'add_suport' : ['SUPORT'],  # pseudo-constraint
+                'add_constraint' : ['SUPORT1'],  # pseudo-constraint
+                'add_SPLINE' : ['SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5'],
+                'add_CAERO' : ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5'],
+                'add_PAERO' : ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5'],
+                'add_MKAERO' : ['MKAERO1', 'MKAERO2'],
+                'add_FREQ' : ['FREQ', 'FREQ1', 'FREQ2'],
+                'add_ASET' : ['ASET', 'ASET1'], 'add_BSET' : ['BSET', 'BSET1'],
+                'add_CSET' : ['CSET', 'CSET1'], 'add_QSET' : ['QSET', 'QSET1'],
+                'add_SET' : ['SET1', 'SET3'],
+                'add_DRESP' : ['DRESP1', 'DRESP2'],
+                'add_DVPREL' : ['DVPREL1', 'DVPREL2'],
+                'add_coord' : ['CORD2R', 'CORD2C', 'CORD2S'],
+                'add_table' : ['TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',
+                               'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
+                               'TABLES1', 'TABLEST', 'TABDMP1'],
+                'add_random_table' : ['TABRND1', 'TABRNDG'],
+                'add_method' : ['EIGB', 'EIGR', 'EIGRL'],
+                'add_cmethod': ['EIGC', 'EIGP'],
+                'add_DVMREL' : ['DVMREL1'],
             }
 
             for func, names in iteritems(_cards):
@@ -1428,8 +1421,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     return card_obj
 
             # card that requires more careful processing, elements
-            _dct = {'CTETRA': (7, CTETRA4, CTETRA10), 'CHEXA': (11, CHEXA8,
-                    CHEXA20), 'CPENTA': (9, CPENTA6, CPENTA15)}
+            _dct = {'CTETRA' : (7, CTETRA4, CTETRA10),
+                    'CHEXA' : (11, CHEXA8, CHEXA20),
+                    'CPENTA' : (9, CPENTA6, CPENTA15)}
             if card_name in _dct:
                 d = _dct[card_name]
                 self.add_element((d[1] if card_obj.nFields() == d[0]

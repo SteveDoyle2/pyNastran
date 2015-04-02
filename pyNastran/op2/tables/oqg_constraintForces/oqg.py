@@ -138,8 +138,8 @@ class OQG(OP2Common):
         table_code = 3
         """
         if self.thermal == 0:
-            result_name = 'spcForces'
-            storage_obj = self.spcForces
+            result_name = 'spc_forces'
+            storage_obj = self.spc_forces
             if result_name not in self._saved_results:
                 return len(data)
             self._found_results.add(result_name)
@@ -147,8 +147,8 @@ class OQG(OP2Common):
                                  RealSPCForces, ComplexSPCForces,
                                  RealSPCForcesArray, ComplexSPCForcesArray, 'node', random_code=self.random_code)
         elif self.thermal == 1:
-            result_name = 'thermalGradientAndFlux' #'finite element temperature gradients and fluxes'
-            storage_obj =  self.thermalGradientAndFlux
+            result_name = 'thermal_gradient_and_flux' #'finite element temperature gradients and fluxes'
+            storage_obj =  self.thermal_gradient_and_flux
             if result_name not in self._saved_results:
                 return len(data)
             self._found_results.add(result_name)
@@ -164,8 +164,8 @@ class OQG(OP2Common):
         """
         table_code = 39
         """
-        result_name = 'mpcForces'
-        storage_obj = self.mpcForces
+        result_name = 'mpc_forces'
+        storage_obj = self.mpc_forces
         if self.thermal == 0:
             if result_name not in self._saved_results:
                 return len(data)

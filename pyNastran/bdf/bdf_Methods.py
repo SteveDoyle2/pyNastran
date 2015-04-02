@@ -21,7 +21,7 @@ from six import iteritems
 from six.moves import zip, range
 import multiprocessing as mp
 
-from numpy import array, cross, zeros, dot, allclose
+from numpy import array, cross, zeros, dot
 from numpy.linalg import norm
 
 

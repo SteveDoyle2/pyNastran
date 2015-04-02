@@ -95,8 +95,8 @@ class OP4(object):
                 "All files (*.*)|*.*"
             wildcard_qt = "Nastran OP4 (*.op4);;All files (*)"
             title = 'Please select a OP4 to load'
-            op4_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)
-            assert op2_filename is not None, op2_filename
+            op4_filename, wildcard_level = load_file_dialog(title, wildcard_wx, wildcard_qt)
+            assert op4_filename is not None, op4_filename
 
         if not os.path.exists(op4_filename):
             raise IOError('cannot find op4_filename=%r' % op4_filename)

@@ -167,7 +167,6 @@ class Element(BaseCard, ElementDeprecated):
         assert card is None or data is None
         #: the list of node IDs for an element (default=None)
         self.nodes = None
-        #self.nids = []
 
     def Pid(self):
         """
@@ -226,13 +225,13 @@ class Element(BaseCard, ElementDeprecated):
                     #else:
                         #nodeIDs = [node.nid for node in nodes]
                 except:
-                    print("type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s" % (
+                    print('type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s' % (
                           self.type, nodes, allowEmptyNodes, msg))
                     raise
                 assert 0 not in nodeIDs, 'nodeIDs = %s' % nodeIDs
                 return nodeIDs
         except:
-            print("type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s" % (
+            print('type=%s nodes=%s allowEmptyNodes=%s\nmsg=%s' % (
                   self.type, nodes, allowEmptyNodes, msg))
             raise
 
@@ -261,7 +260,7 @@ class Element(BaseCard, ElementDeprecated):
 
         Example
         =======
-        >>> print element.faces  # TODO: is this right???
+        >>> print element.faces
         """
         faces = {}
         nodes = self.nodeIDs()
@@ -337,9 +336,9 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
     if len(fields) == 1:
         return [int(fields[0])]
     out = []
-    nFields = len(fields)
+    nfields = len(fields)
     i = 0
-    while(i < nFields):
+    while i < nfields:
         if fields[i] == 'THRU':
             istart = int(fields[i - 1])
             iend = int(fields[i + 1])
@@ -377,24 +376,24 @@ def expand_thru_by(fields, set_fields=True, sort_fields=False):
     if len(fields) == 1:
         return [interpret_value(fields[0])]
     out = []
-    nFields = len(fields)
+    nfields = len(fields)
     i = 0
     by = 1
-    while(i < nFields):
+    while i < nfields:
         if fields[i] == 'THRU':
             by = 1
             byCase = False
-            if i + 2 < nFields and fields[i + 2] == 'BY':
+            if i + 2 < nfields and fields[i + 2] == 'BY':
                 by = interpret_value(fields[i + 3])
             else:
                 by = 1
                 byCase = True
-            minValue = interpret_value(fields[i - 1])
-            maxValue = interpret_value(fields[i + 1])
-            maxR = int((maxValue - minValue) // by + 1)  # max range value
+            min_value = interpret_value(fields[i - 1])
+            max_value = interpret_value(fields[i + 1])
+            maxR = int((max_value - min_value) // by + 1)  # max range value
 
             for j in range(0, maxR):  # +1 is to include final point
-                value = minValue + by * j
+                value = min_value + by * j
                 out.append(value)
 
             if byCase:  # null/standard case
@@ -423,24 +422,24 @@ def expand_thru_exclude(self, fields):
     fields = [interpret_value(field.upper())
               if isinstance(field, string_types) else field for field in fields]
 
-    fieldsOut = []
-    nFields = len(fields)
-    for i in range(nFields):
+    fields_out = []
+    nfields = len(fields)
+    for i in range(nfields):
         if fields[i] == 'THRU':
-            storedList = []
+            sorted_list = []
             for j in range(fields[i - 1], fields[i + 1]):
-                storedList.append(fields[j])
+                sorted_list.append(fields[j])
 
         elif fields[i] == 'EXCLUDE':
-            storedSet = set(storedList)
-            while fields[i] < max(storedList):
-                storedSet.remove(fields[i])
-            storedList = list(storedSet)
+            stored_set = set(sorted_list)
+            while fields[i] < max(sorted_list):
+                stored_set.remove(fields[i])
+            sorted_list = list(stored_set)
         else:
-            if storedList:
-                fieldsOut += storedList
-            fieldsOut.append(fields[i])
-    return fieldsOut
+            if sorted_list:
+                fields_out += sorted_list
+            fields_out.append(fields[i])
+    return fields_out
 
 
 def collapse_thru_by(fields, get_packs=False):
@@ -490,50 +489,50 @@ def collapse_thru_packs(fields):
     return singles, doubles
 
 
-def condense(valueList):
+def condense(value_list):
     """
     Builds a list of packs (list of 3 values representing the first, last,
     and delta values for condensing a SET card.
 
     .. seealso:: build_thru
     """
-    if len(valueList) == 0:
+    if len(value_list) == 0:
         return []
-    if len(valueList) == 1:
-        return [[valueList[0], valueList[0], 1]]
-    valueList.sort()
+    if len(value_list) == 1:
+        return [[value_list[0], value_list[0], 1]]
+    value_list.sort()
     packs = []
 
-    dvOld = None
-    firstVal = valueList[0]
+    dv_old = None
+    firstVal = value_list[0]
     lastVal = firstVal
 
-    for val in valueList[1:]:
+    for val in value_list[1:]:
         try:
             dv = val - lastVal
         except TypeError:
             print("lastVal=%r val=%r" % (lastVal, val))
-            print("valueList=%r" % valueList)
+            print("valueList=%r" % value_list)
             raise
 
         # sets up the first item of the pack
-        if dvOld is None:
-            dvOld = dv
+        if dv_old is None:
+            dv_old = dv
 
         # fill up the pack
-        if dvOld == dv:
+        if dv_old == dv:
             lastVal = val
         else:
-            packs.append([firstVal, lastVal, dvOld])
+            packs.append([firstVal, lastVal, dv_old])
             lastVal = val
-            dvOld = None
+            dv_old = None
             firstVal = val
 
     # fills the last pack
-    if dvOld == dv:
+    if dv_old == dv:
         packs.append([firstVal, val, dv])
     else:
-        packs.append([firstVal, val, dvOld])
+        packs.append([firstVal, val, dv_old])
     return packs
 
 
@@ -553,19 +552,19 @@ def build_thru_packs(packs, maxDV=1):
     """
     singles = []
     doubles = []
-    for (firstVal, lastVal, by) in packs:
-        if firstVal == lastVal:
-            singles.append(firstVal)
+    for (first_val, last_val, by) in packs:
+        if first_val == last_val:
+            singles.append(first_val)
         else:
             if by == 1:
-                if lastVal - firstVal < 3: # dont make extra THRU cards
-                    for val in range(firstVal, lastVal + 1):
+                if last_val - first_val < 3: # dont make extra THRU cards
+                    for val in range(first_val, last_val + 1):
                         singles.append(val)
                 else:
-                    double = [firstVal, 'THRU', lastVal]
+                    double = [first_val, 'THRU', last_val]
                     doubles.append(double)
             else:
-                for val in range(firstVal, lastVal + 1, by):
+                for val in range(first_val, last_val + 1, by):
                     singles.append(val)
     return singles, doubles
 
@@ -582,34 +581,34 @@ def build_thru(packs, maxDV=None):
             (default=None; no limit)
     """
     fields = []
-    for (firstVal, lastVal, dv) in packs:
-        if firstVal == lastVal:
-            fields.append(firstVal)
+    for (first_val, last_val, dv) in packs:
+        if first_val == last_val:
+            fields.append(first_val)
         elif dv == 1:
-            if lastVal - firstVal > 2:
-                fields.append(firstVal)
+            if last_val - first_val > 2:
+                fields.append(first_val)
                 fields.append('THRU')
-                fields.append(lastVal)
-            elif lastVal - firstVal == 2:
-                fields.append(firstVal)
-                fields.append(firstVal + 1)
-                fields.append(lastVal)
+                fields.append(last_val)
+            elif last_val - first_val == 2:
+                fields.append(first_val)
+                fields.append(first_val + 1)
+                fields.append(last_val)
             else:
-                fields.append(firstVal)
-                fields.append(lastVal)
+                fields.append(first_val)
+                fields.append(last_val)
         else:
             if maxDV is None:
-                if lastVal - firstVal > 4 * dv:
-                    fields.append(firstVal)
+                if last_val - first_val > 4 * dv:
+                    fields.append(first_val)
                     fields.append('THRU')
-                    fields.append(lastVal)
+                    fields.append(last_val)
                     fields.append('BY')
                     fields.append(dv)
                 else:
-                    for v in range(firstVal, lastVal + dv, dv):
+                    for v in range(first_val, last_val + dv, dv):
                         fields.append(v)
             else:
-                for v in range(firstVal, lastVal + dv, dv):
+                for v in range(first_val, last_val + dv, dv):
                     fields.append(v)
     return fields
 
@@ -626,16 +625,16 @@ def build_thru_float(packs, maxDV=None):
                   (default=None; no limit)
     """
     fields = []
-    for (firstVal, lastVal, dv) in packs:
-        if lastVal - firstVal > 4 * dv:
-            fields.append(firstVal)
+    for (first_val, last_val, dv) in packs:
+        if last_val - first_val > 4 * dv:
+            fields.append(first_val)
             fields.append('THRU')
-            fields.append(lastVal)
+            fields.append(last_val)
             fields.append('BY')
             fields.append(dv)
         else:
-            nv = int(round((lastVal - firstVal) / dv)) + 1
+            nv = int(round((last_val - first_val) / dv)) + 1
             for i in range(nv):
-                v = firstVal + i * dv
+                v = first_val + i * dv
                 fields.append(v)
     return fields

@@ -2,7 +2,7 @@
 from six.moves import range
 from struct import Struct, unpack
 
-from pyNastran.op2.tables.oee_energy.oee_objects import StrainEnergyObject
+from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergy
 from pyNastran.op2.op2_common import OP2Common
 
 class ONR(OP2Common):
@@ -140,13 +140,13 @@ class ONR(OP2Common):
         """
         dt = self.nonlinear_factor
         n = 0
-        result_name = 'strainEnergy'
+        result_name = 'strain_energy'
         if self.read_mode == 1:
             return len(data)
         self._found_results.add(result_name)
 
         if self.num_wide == 4:
-            self.create_transient_object(self.strainEnergy, StrainEnergyObject)
+            self.create_transient_object(self.strain_energy, RealStrainEnergy)
             s = Struct(b'i3f')
 
             ntotal = 16
@@ -164,7 +164,7 @@ class ONR(OP2Common):
                 self.obj.add(dt, data_in)
                 n += ntotal
         elif self.num_wide == 5:
-            self.create_transient_object(self.strainEnergy, StrainEnergyObject)  # why is this not different?
+            self.create_transient_object(self.strain_energy, RealStrainEnergy)  # why is this not different?
             ntotal = 20
             s = Struct(b'8s3f')
             nnodes = len(data) // ntotal
@@ -182,7 +182,7 @@ class ONR(OP2Common):
                 self.obj.add(dt, data_in)
                 n += ntotal
         elif self.num_wide == 6:  ## TODO: figure this out...
-            self.create_transient_object(self.strainEnergy, StrainEnergyObject)  # TODO: why is this not different?
+            self.create_transient_object(self.strain_energy, RealStrainEnergy)  # TODO: why is this not different?
             ntotal = 24
             s = Struct(b'i8s3f')
             nnodes = len(data) // ntotal

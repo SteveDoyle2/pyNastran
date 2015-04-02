@@ -157,23 +157,21 @@ class BDFCard(object):
         fields_old = self.old_card.fields()
 
         max_length = max(self.nFields(), self.old_card.nFields())
-        minLength = min(self.nFields(), self.old_card.nFields())
+        min_length = min(self.nFields(), self.old_card.nFields())
 
         card_built = [fields_old[0]]
 
-        for i in range(1, minLength):
+        for i in range(1, min_length):
             field_old = fields_old[i]
             field_new = fields_new[i]
 
             a = "|%s|" % (field_new)
             if '*' in field_new:
                 new_char = '+%s*' % (card_count + 1)
-                field_new = self._replace_expression(field_new, field_old,
-                                                  '*', new_char)
+                field_new = self._replace_expression(field_new, field_old, '*', new_char)
             elif '/' in field_new:
                 new_char = '-%s*' % (card_count + 1)
-                field_new = self._replace_expression(field_new, field_old,
-                                                  '/', new_char)
+                field_new = self._replace_expression(field_new, field_old, '/', new_char)
             elif '==' == field_new:
                 #break
                 field_new = field_old

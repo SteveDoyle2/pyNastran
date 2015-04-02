@@ -14,7 +14,7 @@ from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
     RealCBeamForce, RealCShearForce,
     RealSpringForce, RealDamperForce, RealViscForce,
     RealPlateForce, RealPlateForceArray,
-    RealConeAxForce, RealPlate2Force,
+    RealConeAxForce, RealPlateBilinearForce,
     RealCBar100Force, RealCGapForce, RealBendForce,
     RealPentaPressureForce, RealCBushForce,
     RealForce_VU_2D, RealCBarForce, RealForce_VU)
@@ -983,25 +983,24 @@ class OEF(OP2Common):
         elif self.element_type in [33, 74]: # centroidal shells
             # 33-CQUAD4
             # 74-CTRIA3
-            result_name = 'plateForces'
-            slot = self.plateForces
-            obj_real = RealPlateForce
-            obj_complex = ComplexPlateForce
-
-            #result_vector_name
-            ComplexPlateForceArray = None
-            obj_vector_real = RealPlateForceArray
-            obj_vector_complex = ComplexPlateForceArray
-            if self.element_type == 33: # CQUAD4
-                result_vector_name = 'cquad4_force'
-                slot_vector = self.cquad4_force
-            elif self.element_type == 74: # CTRIA3
-                result_vector_name = 'ctria3_force'
-                slot_vector = self.ctria3_force
+            if self.element_type == 33:
+                result_name = 'cquad4_force'
+                slot = self.cquad4_force
+            elif self.element_type == 74:
+                result_name = 'ctria3_force'
+                slot = self.ctria3_force
             else:
                 msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                 return self._not_implemented_or_skip(data, msg)
+            slot_vector = slot
+            result_vector_name = result_name
 
+            obj_real = RealPlateForce
+            obj_complex = ComplexPlateForce
+
+            ComplexPlateForceArray = None
+            obj_vector_real = RealPlateForceArray
+            obj_vector_complex = ComplexPlateForceArray
 
             if self.format_code == 1 and self.num_wide == 9:  # real
                 ntotal = 36 # 9*4
@@ -1031,7 +1030,7 @@ class OEF(OP2Common):
             elif self.format_code in [2, 3] and self.num_wide == 17:  # imag
                 if self.read_mode == 1:
                     return len(data)
-                self.create_transient_object(self.plateForces, ComplexPlateForce)
+                self.create_transient_object(slot, ComplexPlateForce)
                 s = Struct(b'i16f')
 
                 ntotal = 68
@@ -1071,14 +1070,34 @@ class OEF(OP2Common):
             else:
                 msg = 'num_wide=%s' % self.num_wide
                 return self._not_implemented_or_skip(data, msg)
-            #print self.plateForces
 
         elif self.element_type in [64, 70, 75, 82, 144]: # bilinear shells
             # 64-CQUAD8
             # 70-CTRIAR
             # 75-CTRIA6
-            # 82-CQUAD8
+            # 82-CQUADR
             # 144-CQUAD4-bilinear
+            if self.element_type == 64:
+                result_name = 'cquad8_force'
+                slot = self.cquad8_force
+            elif self.element_type == 70:
+                result_name = 'ctriar_force'
+                slot = self.ctriar_force
+            elif self.element_type == 75:
+                result_name = 'ctria6_force'
+                slot = self.ctria6_force
+            elif self.element_type == 82:
+                result_name = 'cquadr_force'
+                slot = self.cquad8_force
+            elif self.element_type == 144:
+                result_name = 'cquad4_force'
+                slot = self.cquad4_force
+            else:
+                msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
+                return self._not_implemented_or_skip(data, msg)
+            slot_vector = slot
+            result_vector_name = result_name
+
             if self.element_type in [70, 75]:  # CTRIAR,CTRIA6
                 nnodes = 3
             elif self.element_type in [64, 82, 144]:  # CQUAD8,CQUADR,CQUAD4-bilinear
@@ -1091,27 +1110,14 @@ class OEF(OP2Common):
             numwide_imag = 2 + (nnodes + 1) * 17
 
             if 0:
-                result_name = 'plateForces2'
-                slot = self.plateForces2
-                obj_real = RealPlate2Force
+                obj_real = RealPlateBilinearForce
                 obj_complex = ComplexPlate2Force
 
-                #result_vector_name
                 RealPlateForce2Array = None
                 ComplexPlateForce2Array = None
                 obj_vector_real = RealPlateForce2Array
                 obj_vector_complex = ComplexPlateForce2Array
-                if self.element_type == 144: # CQUAD4
-                    result_vector_name = 'cquad4_force'
-                    slot_vector = self.cquad4_force
-                #elif self.element_type == 74: # CTRIA3
-                    #result_vector_name = 'ctria3_force'
-                    #slot_vector = self.ctria3_force
-                else:
-                    msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
-                    return self._not_implemented_or_skip(data, msg)
 
-            result_name = 'plateForces2'
             if result_name not in self._saved_results:
                 return len(data)
             self._found_results.add(result_name)
@@ -1119,7 +1125,7 @@ class OEF(OP2Common):
                 if self.read_mode == 1:
                     return len(data)
 
-                self.create_transient_object(self.plateForces2, RealPlate2Force)
+                self.create_transient_object(slot, RealPlateBilinearForce)
                 ntotal = 8 + (nnodes+1) * 36 # centroidal node is the + 1
                 assert ntotal == self.num_wide * 4, 'ntotal=%s numwide=%s' % (ntotal, self.num_wide * 4)
                 nelements = len(data) // ntotal
@@ -1164,13 +1170,13 @@ class OEF(OP2Common):
                 if self.read_mode == 1:
                     return len(data)
 
-                self.create_transient_object(self.plateForces2, ComplexPlate2Force)
+                self.create_transient_object(slot, ComplexPlate2Force)
                 s1 = Struct(b'i4s17f')  # 2+17=19 * 4 = 76
                 s2 = Struct(b'i16f')  # 17 * 4 = 68
-                ntotal = 8 + (nnodes+1) * 68
+                ntotal = 8 + (nnodes + 1) * 68
                 nelements = len(data) // ntotal
                 for i in range(nelements):
-                    edata = data[n:n+76]
+                    edata = data[n:n + 76]
                     n += 76
 
                     out = s1.unpack(edata)
@@ -1316,7 +1322,7 @@ class OEF(OP2Common):
             # 4-CSHEAR
             if self.read_mode == 1:
                 return len(data)
-            self._found_results.add('shear_force')
+            self._found_results.add('cshear_force')
             if self.format_code == 1 and self.num_wide == 17:  # real
                 self.create_transient_object(self.cshear_force, RealCShearForce)
                 s = Struct(b'i16f')

@@ -14,25 +14,10 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealCelasStre
 class OES(object):
     def _parse_line_blanks(self, sline, data_types, debug=False):
         pass
+
     def __init__(self):
         self.log = None
-
         self.iSubcases = []
-
-        #-------------
-        # not supported
-        #self.celasStress = {}  # CELASi
-        #self.celasStrain = {}
-        #self.shearStress = {}  # CSHEAR
-        #self.shearStrain = {}
-        #self.nonlinearRodStress = {}  # CROD, CONROD, CTUBE
-        #self.nonlinearRodStrain = {}
-        #self.nonlinearPlateStress = {}  # CTRIA3, CTRIA6, CQUAD4, CQUAD8
-        #self.nonlinearPlateStrain = {}
-        #self.ctriaxStress = {}  # CTRIAX6
-        #self.ctriaxStrain = {}
-        #self.hyperelasticPlateStress = {}  # CTRIA3, CTRIA6, CQUAD4, CQUAD8
-        #self.hyperelasticPlateStrain = {}
 
     def _stresses_in_crod_elements(self):
         """

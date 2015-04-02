@@ -2,6 +2,7 @@ from six import iteritems
 from collections import defaultdict
 from numpy import unique, int32
 
+from pyNastran import is_release
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 from pyNastran.f06.f06_formatting import get_key0
 from pyNastran.utils import object_attributes
@@ -86,7 +87,12 @@ class OP2_F06_Common(object):
         #======================================================================
         # shells
         self.ctria3_force = {}
+        self.ctria6_force = {}
+        self.ctriar_force = {}
+
         self.cquad4_force = {}
+        self.cquad8_force = {}
+        self.cquadr_force = {}
 
         self.ctria3_stress = {}
         self.ctria6_stress = {}
@@ -226,11 +232,6 @@ class OP2_F06_Common(object):
 
         self.cgap_force = {}
 
-        self.plateForces = {}
-        self.plateForces2 = {}
-        self.compositePlateForces = {}
-
-
         #self.solidPressureForces = {}
         self.chexa_pressure_force = {}
         self.cpenta_pressure_force = {}
@@ -267,54 +268,49 @@ class OP2_F06_Common(object):
         self.nonlinear_conrod_stress = {}
         self.nonlinear_conrod_strain = {}
 
-         #: OES - isotropic CBUSH1D strain/strain
-        #self.bush1dStressStrain = {}
-
         #: OESNLXR - CTRIA3/CQUAD4 stress
         #self.nonlinearPlateStress = {}
         #: OESNLXR - CTRIA3/CQUAD4 strain
         #self.nonlinearPlateStrain = {}
-        self.hyperelasticPlateStress = {}
-        self.hyperelasticPlateStrain = {}
+        #self.hyperelastic_plate_stress = {}
+        self.hyperelastic_cquad4_strain = {}
 
-        #: OES - composite CTRIA3/CQUAD4 stress
-        #self.compositePlateStress = {}
         self.nonlinear_cquad4_stress = {}
         self.nonlinear_ctria3_stress = {}
-        #: OES - composite CTRIA3/CQUAD4 strain
-        #self.compositePlateStrain = {}
+
         self.nonlinear_cquad4_strain = {}
         self.nonlinear_ctria3_strain = {}
 
 
         #: OES - CELAS1 224, CELAS3 225,
-        self.nonlinearSpringStress = {}
+        self.nonlinear_celas1_stress = {}
+        self.nonlinear_celas3_stress = {}
+
         #: OES - GAPNL 86
-        #self.nonlinearGapStress = {}
         self.nonlinear_cgap_stress = {}
 
         # OQG - spc/mpc forces
-        self.spcForces = {}  # tCode=3?
-        self.mpcForces = {}  # tCode=39
+        self.spc_forces = {}  # tCode=3?
+        self.mpc_forces = {}  # tCode=39
 
         # OQG - thermal forces
-        self.thermalGradientAndFlux = {}
+        self.thermal_gradient_and_flux = {}
 
         #: OGF - grid point forces
-        self.gridPointForces = {}  # tCode=19
+        self.grid_point_forces = {}  # tCode=19
 
         #: OGS1 - grid point stresses
-        self.gridPointStresses = {}       # tCode=26
-        self.gridPointVolumeStresses = {}  # tCode=27
+        self.grid_point_stresses = {}       # tCode=26
+        self.grid_point_volume_stresses = {}  # tCode=27
 
         #: OPG - summation of loads for each element
-        self.loadVectors = {}       # tCode=2  thermal=0
-        self.thermalLoadVectors = {}  # tCode=2  thermal=1
-        self.appliedLoads = {}       # tCode=19 thermal=0
-        self.forceVectors = {}       # tCode=12 thermal=0
+        self.load_vectors = {}       # tCode=2  thermal=0
+        self.thermal_load_vectors = {}  # tCode=2  thermal=1
+        self.applied_loads = {}       # tCode=19 thermal=0
+        self.force_vectors = {}       # tCode=12 thermal=0
 
         #: OEE - strain energy density
-        self.strainEnergy = {}  # tCode=18
+        self.strain_energy = {}  # tCode=18
 
     def _get_result_length(self, res_types, res_key):
         res_length = 0
@@ -327,7 +323,8 @@ class OP2_F06_Common(object):
                 key0 = get_key0(res_type)
                 result = res_type[key0]
                 class_name = result.__class__.__name__
-                print('%s - results not found...key=%s' % (class_name, res_key))
+                if not is_release:
+                    print('%s - results not found...key=%s' % (class_name, res_key))
             else:  # empty result
                 pass
         return res_length
@@ -359,23 +356,22 @@ class OP2_F06_Common(object):
             'accelerations',
 
             # OQG - spc/mpc forces
-            'spcForces',
-            'mpcForces',
-            'thermalGradientAndFlux',
+            'spc_forces',
+            'mpc_forces',
+            'thermal_gradient_and_flux',
 
             # OGF - grid point forces
-            'gridPointForces',
+            'grid_point_forces',
 
             # OPG - summation of loads for each element
-            'loadVectors',
-            'thermalLoadVectors',
-            'appliedLoads',
-            'forceVectors',
+            'load_vectors',
+            'thermal_load_vectors',
+            'applied_loads',
+            'force_vectors',
 
             # OES - tCode=5 thermal=0 s_code=0,1 (stress/strain)
             # OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
-            #'celasStress',  # non-vectorized
-            'celas1_stress',  # vectorized
+            'celas1_stress',
             'celas2_stress',
             'celas3_stress',
             'celas4_stress',
@@ -392,7 +388,6 @@ class OP2_F06_Common(object):
             'ctube_stress',
 
             # OES - isotropic CROD/CONROD/CTUBE strain
-            #'rodStrain',  # non-vectorized
             'crod_strain',
             'conrod_strain',
             'ctube_strain',
@@ -412,7 +407,6 @@ class OP2_F06_Common(object):
 
 
             # OES - isotropic CTRIA3/CQUAD4 stress
-            #'plateStress',  # non-vectorized
             'ctria3_stress',
             'ctriar_stress',
             'ctria6_stress',
@@ -422,8 +416,7 @@ class OP2_F06_Common(object):
             'cquad8_stress',
 
             # OES - isotropic CTRIA3/CQUAD4 strain
-            #'plateStrain',  # non-vectorized
-            'ctria3_strain',  # vectorized
+            'ctria3_strain',
             'ctriar_strain',
             'ctria6_strain',
 
@@ -433,22 +426,19 @@ class OP2_F06_Common(object):
 
 
             # OES - isotropic CTETRA/CHEXA/CPENTA stress
-            #'solidStress',  # non-vectorized
-            'ctetra_stress',  # vectorized
+            'ctetra_stress',
             'chexa_stress',
             'cpenta_stress',
 
             # OES - isotropic CTETRA/CHEXA/CPENTA strain
-            #'solidStrain',  # non-vectorized
-            'ctetra_strain',  # vectorized
+            'ctetra_strain',
             'chexa_strain',
             'cpenta_strain',
 
             # OES - CSHEAR stress/strain
             'cshear_stress',
             'cshear_strain',
-            # OES - CEALS1 224, CELAS3 225
-            'nonlinearSpringStress',
+
             # OES - GAPNL 86
             'nonlinear_cgap_stress',
             # OES - CBUSH 226
@@ -476,14 +466,21 @@ class OP2_F06_Common(object):
             'cdamp4_force',
             'cgap_force',
 
-            'plateForces',
-            'ctria3_force',
             'cquad4_force',
+            'cquad8_force',
+            'cquadr_force',
 
-            'plateForces2',
-            #'shearForces',
+            'ctria3_force',
+            'ctria6_force',
+            'ctriar_force',
+
             'cshear_force',
-            'compositePlateForces',
+            #'cquad4_composite_force',
+            #'cquad8_composite_force',
+            #'cquadr_composite_force',
+            #'ctria3_composite_force',
+            #'ctria6_composite_force',
+            #'ctriar_composite_force',
 
             'chexa_pressure_force',
             'cpenta_pressure_force',
@@ -529,18 +526,19 @@ class OP2_F06_Common(object):
             'nonlinear_conrod_strain',
 
             # OESNLXR - CTRIA3/CQUAD4 stress
-            #'nonlinearPlateStress',
-            #'nonlinearPlateStrain',
             'nonlinear_cquad4_stress',
             'nonlinear_ctria3_stress',
             'nonlinear_cquad4_strain',
             'nonlinear_ctria3_strain',
 
-            'hyperelasticPlateStress',
-            'hyperelasticPlateStrain',
+            #'hyperelastic_plate_stress',
+            'hyperelastic_cquad4_strain',
+
+            # OES - CEALS1 224, CELAS3 225
+            'nonlinear_celas1_stress',
+            'nonlinear_celas3_stress',
 
             # OES - composite CTRIA3/CQUAD4 stress
-            #'compositePlateStress',
             'cquad4_composite_stress',
             'cquad8_composite_stress',
             'cquadr_composite_stress',
@@ -548,7 +546,6 @@ class OP2_F06_Common(object):
             'ctria6_composite_stress',
             'ctriar_composite_stress',
 
-            #'compositePlateStrain',
             'cquad4_composite_strain',
             'cquad8_composite_strain',
             'cquadr_composite_strain',
@@ -557,11 +554,11 @@ class OP2_F06_Common(object):
             'ctriar_composite_strain',
 
             # OGS1 - grid point stresses
-            'gridPointStresses',        # tCode=26
-            'gridPointVolumeStresses',  # tCode=27
+            'grid_point_stresses', # tCode=26
+            'grid_point_volume_stresses',  # tCode=27
 
             # OEE - strain energy density
-            'strainEnergy',  # tCode=18
+            'strain_energy',  # tCode=18
 
             # unused?
             'displacement_scaled_response_spectra_NRL',

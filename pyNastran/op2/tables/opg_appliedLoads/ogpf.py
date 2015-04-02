@@ -67,8 +67,8 @@ class OGPF(OP2Common):
 
             #self._read_table(data, storage_obj, real_obj, complex_obj, 'node')
         #elif self.thermal == 1:
-            #result_name = 'thermalLoadVectors'
-            #storage_obj = self.thermalLoadVectors
+            #result_name = 'thermal_load_vectors'
+            #storage_obj = self.thermal_load_vectors
             #real_obj = ThermalLoadVectorObject
             #complex_obj = None
             #self._read_table(data, storage_obj, real_obj, complex_obj, 'node')

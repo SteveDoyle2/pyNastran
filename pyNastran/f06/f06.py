@@ -553,9 +553,9 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
                         'lsdvmn': 1,
                         }
         is_sort1 = True
-        if isubcase not in self.gridPointForces:
-            self.gridPointForces[isubcase] = RealGridPointForces(data_code, is_sort1, isubcase, dt)
-        self.gridPointForces[isubcase].add_f06_data(dt, data)
+        if isubcase not in self.grid_point_forces:
+            self.grid_point_forces[isubcase] = RealGridPointForces(data_code, is_sort1, isubcase, dt)
+        self.grid_point_forces[isubcase].add_f06_data(dt, data)
         self.iSubcases.append(isubcase)
 
     def _read_f06_table(self, Format, debug=False):
