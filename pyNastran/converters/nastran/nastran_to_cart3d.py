@@ -17,17 +17,17 @@ def nastran_to_cart3d(bdf, log=None, debug=False):
     """
     cart3d = Cart3DReader(log=log, debug=debug)
 
-    nnodes = len(model.nodes)
-    nelements = len(model.elements)
+    nnodes = len(bdf.nodes)
+    nelements = len(bdf.elements)
 
     nodes = zeros((nnodes, 3), 'float64')
     elements = zeros((nelements, 3), 'int32')
     regions = zeros(nelements, 'int32')
 
     i = 0
-    for node_id, node in sorted(iteritems(model.nodes)):
+    for node_id, node in sorted(iteritems(bdf.nodes)):
         elements[i, :] = node.Position()
-    for element_id, element in sorted(iteritems(model.elements)):
+    for element_id, element in sorted(iteritems(bdf.elements)):
         if element.type == 'CTRIA3':
             elements[i, :] = element.NodeIDs()
             regions[i] = element.Mid()

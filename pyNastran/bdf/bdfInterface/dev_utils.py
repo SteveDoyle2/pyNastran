@@ -1,3 +1,4 @@
+from six.moves import iteritems
 import scipy
 from pyNastran.bdf.bdf import BDF
 from numpy import array, zeros, unique, where, arange, hstack, vstack, searchsorted
@@ -109,7 +110,7 @@ def _write_nodes(self, outfile, size, is_double):
         if self.gridSet:
             msg.append(self.gridSet.print_card(size))
         for (nid, node) in sorted(iteritems(self.nodes)):
-            if nid not in model.remove_nodes:
+            if nid not in self.remove_nodes:
                 msg.append(node.write_bdf(size, is_double))
         outfile.write(''.join(msg))
     #if 0:  # not finished

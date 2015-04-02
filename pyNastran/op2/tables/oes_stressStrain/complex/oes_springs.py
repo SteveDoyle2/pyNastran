@@ -118,7 +118,7 @@ class ComplexCelasStress(complexStressObject):
             for elementID, stress in sorted(iteritems(Stress)):
 
                 if is_mag_phase:
-                    stressr = abs(stressr)
+                    stressr = abs(stress)
                     stressi = angle(stress, deg=True)
                 else:
                     stressr = stress.real
@@ -157,7 +157,7 @@ class ComplexCelasStrain(complexStrainObject):
         else:
             assert dt is not None
             #self.add = self.addSort2
-            self.add_new_eid = self.add_new_eid_sort2
+            #self.add_new_eid = self.add_new_eid_sort2
 
     def delete_transient(self, dt):
         del self.strain[dt]

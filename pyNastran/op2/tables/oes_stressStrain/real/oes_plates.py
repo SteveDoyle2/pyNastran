@@ -1306,7 +1306,7 @@ class RealPlateStrain(StrainObject):
                 msg.append(page_stamp % page_num)
                 page_num += 1
         else:
-            raise NotImplementedError('eType = %r' % etype)  # CQUAD8, CTRIA6
+            raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))
         f.write(''.join(msg))
         return page_num - 1
 

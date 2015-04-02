@@ -28,9 +28,9 @@ class DeflectionReader(object):
         log.info('---starting deflectionReader.init of %s---' % op2_filename)
         op2 = OP2()
         op2.set_results('displacements')
-        op2.read_op2(infilename)
+        op2.read_op2(op2_filename)
         self.deflections = op2.displacements.translations
-        log.info('---finished deflectionReader.init of %s---' % infilename)
+        log.info('---finished deflectionReader.init of %s---' % op2_filename)
 
     def get_deflections(self, ID, n0, n1, n2, n3):
         defs = [
@@ -438,7 +438,7 @@ if __name__=='__main__':
     #model = 'test_tet10' # bdf, op2, triq, tri
 
     sys.exit('finished mapDeflections.py')
-    #iteration = [1,2,3]
+    iteration = [1, 2, 3]
     defMapper = DeflectionMapper(aeroModel, structuralModel)
     for i in iteration:
         defMapper.setStructuralOutfile('fem.f06')

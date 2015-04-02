@@ -68,6 +68,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         assert isinstance(debug, bool), 'debug=%r' % debug
 
         self.log = get_logger(log, 'debug' if debug else 'info')
+        self.op2_filename = None
+        self.bdf_filename = None
+        self.f06_filename = None
 
         LAMA.__init__(self)
         ONR.__init__(self)
@@ -399,24 +402,24 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OQMNO2': [self._table_passer, self._table_passer],
             b'OQMCRM2': [self._table_passer, self._table_passer],
 
-            b'AAA': [self._table_passer, self._table_passer],
-            b'AAA': [self._table_passer, self._table_passer],
-            b'AAA': [self._table_passer, self._table_passer],
-            b'AAA': [self._table_passer, self._table_passer],
+            #b'AAA': [self._table_passer, self._table_passer],
+            #b'AAA': [self._table_passer, self._table_passer],
+            #b'AAA': [self._table_passer, self._table_passer],
+            #b'AAA': [self._table_passer, self._table_passer],
         }
         return table_mapper
 
-    def _hisadd_3(self, data):
-        """
-        table of design iteration history for current design cycle
-        HIS table
-        """
-        self.show_data(data, types='ifs')
-        asf
+    #def _hisadd_3(self, data):
+        #"""
+        #table of design iteration history for current design cycle
+        #HIS table
+        #"""
+        #self.show_data(data, types='ifs')
+        #asf
 
-    def _hisadd_4(self, data):
-        self.show_data(data, types='ifs')
-        asf
+    #def _hisadd_4(self, data):
+        #self.show_data(data, types='ifs')
+        #asf
 
     def _not_available(self, data):
         if len(data) > 0:
@@ -539,22 +542,22 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #self.remove_unpickable_data()
         return table_names
 
-    def create_unpickable_data(self):
-        raise NotImplementedError()
-        #==== not needed ====
-        #self.f
-        #self.binary_debug
+    #def create_unpickable_data(self):
+        #raise NotImplementedError()
+        ##==== not needed ====
+        ##self.f
+        ##self.binary_debug
 
-        # needed
-        self._geom1_map
-        self._geom2_map
-        self._geom3_map
-        self._geom4_map
-        self._dit_map
-        self._dynamics_map
-        self._ept_map
-        self._mpt_map
-        self._table_mapper
+        ## needed
+        #self._geom1_map
+        #self._geom2_map
+        #self._geom3_map
+        #self._geom4_map
+        #self._dit_map
+        #self._dynamics_map
+        #self._ept_map
+        #self._mpt_map
+        #self._table_mapper
 
     def remove_unpickable_data(self):
         del self.f

@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import iteritems
 
 from itertools import count
-from numpy import zeros
+from numpy import zeros, searchsorted, ravel
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import writeFloats13E, writeImagFloats13E, _eigenvalue_header
 
@@ -299,7 +299,7 @@ class RealBarStress(StressObject):
         else:
             assert dt is not None
             #self.add = self.addSort2
-            self.add_new_eid = self.add_new_eid_sort2
+            #self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -397,7 +397,7 @@ class RealBarStress(StressObject):
         #print "Bar Stress add..."
         self.eType[eid] = 'CBAR'  # eType
 
-        if self.eid in self.s1:
+        if eid in self.s1:
             self.s1[eid].append(s1)
             self.s2[eid].append(s2)
             self.s3[eid].append(s3)
@@ -642,7 +642,7 @@ class RealBarStrain(StrainObject):
         del self.e2[dt]
         del self.e3[dt]
         del self.e4[dt]
-        del self.exial[dt]
+        del self.axial[dt]
         del self.emax[dt]
         del self.emin[dt]
 

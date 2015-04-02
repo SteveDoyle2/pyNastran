@@ -537,39 +537,6 @@ class CELAS4(SpringElement):
         list_fields = ['CELAS4', self.eid, self.k, self.s1, self.s2]
         return list_fields
 
-    def Stiffness(self, model, node_ids, index0s, fnorm):
-        ki = self.k
-        k = ki * array([[1, -1,],
-                        [-1, 1]])
-
-        s1, s2 = node_ids
-
-        nIJV = [
-            (s1, 0),
-            (s2, 0),
-        ]
-        dofs = nIJV
-        return (K, dofs, nIJV)
-
-    def displacement_stress(self, model, q, dofs):
-        #print("**dofs =", dofs)
-        n11 = dofs[(self.s1, 0)]
-        n21 = dofs[(self.s2, 0)]
-
-        u = array([
-            q[n11],
-            q[n21],
-        ])
-        du = u[0] - u[1]
-
-        s = 0.0
-        axial_strain = du * s
-
-        ki = self.k
-        axial_force = ki * du
-        axial_stress = axial_force * s
-        return (axial_strain, axial_stress, axial_force)
-
     #def repr_fields(self):
         #s1 = set_blank_if_default(self.s1, 0)
         #s2 = set_blank_if_default(self.s2, 0)

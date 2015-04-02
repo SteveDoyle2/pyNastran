@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 import unittest
-from pyNastran.f06.f06_formatting import *
+from pyNastran.f06.f06_formatting import writeFloats8p4F
 
 class TestFormatting(unittest.TestCase):
 

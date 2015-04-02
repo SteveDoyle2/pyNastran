@@ -284,8 +284,8 @@ class TestOpenMDAO(unittest.TestCase):
         model.set_dynamic_syntax(params_good)
         val = model._parse_dynamic_syntax('cat')
         self.assertEqual('10', val)
-        with self.assertRaises(KeyError):
-            self._parse_dynamic_syntax(key)
+        #with self.assertRaises(KeyError):
+            #self._parse_dynamic_syntax(key)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

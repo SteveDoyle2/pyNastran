@@ -101,7 +101,7 @@ def _check_add(self, Format, name, element_id=None, property_id=None, coord_id=N
     if coord_id is not None and Format != 'nastran':
         raise RuntimeError('coord_id must be None for format=%r' % Format)
 
-    element_id = as_array(element_id)
+    element_id = asarray(element_id)
     return element_id
 
 def _add_coord_id(self, name, coord_id):

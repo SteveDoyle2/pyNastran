@@ -278,7 +278,7 @@ class OES(OP2Common):
         else:
             result_name = 'strain'
 
-        if result_name not in self._saved_results and result_vector_name not in self._saved_results:
+        if result_name not in self._saved_results:
             return len(data)
 
         if self.element_type in [1, 3, 10]:  # rods

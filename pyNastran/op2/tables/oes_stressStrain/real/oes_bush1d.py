@@ -38,7 +38,7 @@ class RealBush1DStress(StressObject):
         else:
             assert dt is not None
             #self.add = self.addSort2
-            self.add_new_eid = self.add_new_eid_sort2
+            #self.add_new_eid = self.add_new_eid_sort2
 
     def get_stats(self):
         nelements = len(self.eType)
@@ -135,7 +135,7 @@ class RealBush1DStress(StressObject):
         self.plastic_strain[dt][eid] = ep
         self.is_failed[dt][eid] = fail
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def _write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase)
 

@@ -16,142 +16,142 @@ class ShellPropertyBackup(Property):
     def __init__(self):
         pass
 
-    def ABD(self):
-        raise NotImplementedError('ABD is not implemented')
-        z = self.get_z_locations()
-        z0 = z[:-1]
-        z1 = z[1:]
-        dz = z1-z0
-        dz2 = (z1**2 - z0**2)/2
-        dz3 = (z1**3 - z0**3)/3
-        #Qb = self.Qbar()
+    #def ABD(self):
+        #raise NotImplementedError('ABD is not implemented')
+        #z = self.get_z_locations()
+        #z0 = z[:-1]
+        #z1 = z[1:]
+        #dz = z1-z0
+        #dz2 = (z1**2 - z0**2)/2
+        #dz3 = (z1**3 - z0**3)/3
+        ##Qb = self.Qbar()
 
-        A = zeros((3, 3), dtype='float64')
-        B = A
-        D = A
+        #A = zeros((3, 3), dtype='float64')
+        #B = A
+        #D = A
 
-        Q = zeros(3,3)
+        #Q = zeros(3,3)
 
-        #T = array([ [cc, ss,  2*s*c],
-        #            [ss, cc, -2*s*c],
-        #            [-sc, sc, cc-ss]], dtype='float64')
-        #Q = array([ [Q11, Q12, 0.],
-        #            [Q12, Q22, 0.],
-        #            [0., 0., Q66]], dtype='float64')
-        #iT = T.inv()
-        #Qbar = dot(dot(iT, Q), transpose(iT))
-        #Q45 = array([ [Q44, 0.],
-        #              [0., Q55]], dtype='float64')
+        ##T = array([ [cc, ss,  2*s*c],
+        ##            [ss, cc, -2*s*c],
+        ##            [-sc, sc, cc-ss]], dtype='float64')
+        ##Q = array([ [Q11, Q12, 0.],
+        ##            [Q12, Q22, 0.],
+        ##            [0., 0., Q66]], dtype='float64')
+        ##iT = T.inv()
+        ##Qbar = dot(dot(iT, Q), transpose(iT))
+        ##Q45 = array([ [Q44, 0.],
+        ##              [0., Q55]], dtype='float64')
 
 
-        #S11 = 1/E1
-        #S12 = -nu12/E1
-        #S22 = 1/E2
-        #S66 = 1/G12
-        #S = array([ [S11, S12, 0.],
-        #            [S12, S22, 0.],
-        #            [0., 0., S66]], dtype='float64')
-        #Sbar = dot(dot(iT, S), transpose(iT))
-        #Sb11 = S11*cccc + (2*S12*S66)*ss*cc + S22*ssss
-        #Sb22 = S11*ssss + (2*S12*S66)*ss*cc + S22*cccc
-        #Sb66 = 2*(2*S11+2*S22+4*S12-S66)*ss*cc+S66*(ssss+cccc)
-        #Sb12 = S12*(ssss+cccc) + (S11+S22-S66)*ss*cc
-        #Sb16 = (2*S11-2*S12-S66)*s*ccc - (2*S22-2*S12-S66)*sss*c
-        #Sb26 = (2*S11-2*S12-S66)*sss*c - (2*S22-2*S12-S66)*s*ccc
+        ##S11 = 1/E1
+        ##S12 = -nu12/E1
+        ##S22 = 1/E2
+        ##S66 = 1/G12
+        ##S = array([ [S11, S12, 0.],
+        ##            [S12, S22, 0.],
+        ##            [0., 0., S66]], dtype='float64')
+        ##Sbar = dot(dot(iT, S), transpose(iT))
+        ##Sb11 = S11*cccc + (2*S12*S66)*ss*cc + S22*ssss
+        ##Sb22 = S11*ssss + (2*S12*S66)*ss*cc + S22*cccc
+        ##Sb66 = 2*(2*S11+2*S22+4*S12-S66)*ss*cc+S66*(ssss+cccc)
+        ##Sb12 = S12*(ssss+cccc) + (S11+S22-S66)*ss*cc
+        ##Sb16 = (2*S11-2*S12-S66)*s*ccc - (2*S22-2*S12-S66)*sss*c
+        ##Sb26 = (2*S11-2*S12-S66)*sss*c - (2*S22-2*S12-S66)*s*ccc
 
-        #Qb16 = 0. # for isotropic
-        #Qb26 = 0. # for isotropic
+        ##Qb16 = 0. # for isotropic
+        ##Qb26 = 0. # for isotropic
 
-        for iply in range(self.nPlies()):
-            theta = radians(self.Theta(iply))
-            s = sin(theta)
-            c = cos(theta)
-            ss = s * s
-            sss = ss * s
-            ssss = ss * ss
-            cc = c * c
-            ccc = cc * c
-            cccc = cc * cc
+        #for iply in range(self.nPlies()):
+            #theta = radians(self.Theta(iply))
+            #s = sin(theta)
+            #c = cos(theta)
+            #ss = s * s
+            #sss = ss * s
+            #ssss = ss * ss
+            #cc = c * c
+            #ccc = cc * c
+            #cccc = cc * cc
 
-            mat = self.Material(iply)
-            E = mat.E()
-            G = mat.G()
-            nu = mat.Nu()
+            #mat = self.Material(iply)
+            #E = mat.E()
+            #G = mat.G()
+            #nu = mat.Nu()
 
-            E11 = E
-            E22 = E
-            G12 = G
-            G23 = G
-            G31 = 0.01
-            nu12 = nu
-            nu21 = E2/E1 * nu12
+            #E11 = E
+            #E22 = E
+            #G12 = G
+            #G23 = G
+            #G31 = 0.01
+            #nu12 = nu
+            #nu21 = E2/E1 * nu12
 
-            Q11 = E1     /(1-nu12*nu21)
-            Q12 = nu21*E1/(1-nu12*nu21)
-            Q22 = E2     /(1-nu12*nu21)
-            Q44 = G23
-            Q55 = G31
-            Q66 = G12
+            #Q11 = E1     /(1-nu12*nu21)
+            #Q12 = nu21*E1/(1-nu12*nu21)
+            #Q22 = E2     /(1-nu12*nu21)
+            #Q44 = G23
+            #Q55 = G31
+            #Q66 = G12
 
-            Qb11 = Q11*cccc + 2*(Q12+2*Q66)*ss*cc + Q22*ssss
-            Qb22 = Q11*ssss + 2*(Q12+2*Q66)*ss*cc + Q22*cccc
-            Qb66 = (Q11 + Q22 - 2*Q12 - 2*Q66) * ss*cc + Q66*(ssss + cccc)
+            #Qb11 = Q11*cccc + 2*(Q12+2*Q66)*ss*cc + Q22*ssss
+            #Qb22 = Q11*ssss + 2*(Q12+2*Q66)*ss*cc + Q22*cccc
+            #Qb66 = (Q11 + Q22 - 2*Q12 - 2*Q66) * ss*cc + Q66*(ssss + cccc)
 
-            Qb12 = (Q11 - Q12 - 4*Q66)*ss*cc + Q12*(ssss+cccc)
-            Qb16 = (Q11 - Q12 - 2*Q66)*s*ccc + (Q12-Q22-2*Q66)*sss*c
-            Qb26 = (Q11 - Q12 - 2*Q66)*sss*c + (Q12-Q22-2*Q66)*s*ccc
+            #Qb12 = (Q11 - Q12 - 4*Q66)*ss*cc + Q12*(ssss+cccc)
+            #Qb16 = (Q11 - Q12 - 2*Q66)*s*ccc + (Q12-Q22-2*Q66)*sss*c
+            #Qb26 = (Q11 - Q12 - 2*Q66)*sss*c + (Q12-Q22-2*Q66)*s*ccc
 
-            Qb44 = Q44*cc + Q55*ss
-            Qb55 = Q44*ss + Q55*cc
-            Qb45 = (Q55-Q44)*ss*cc
-            Qb = array([ [Qb11, Qb12, Qb16],
-                         [Qb12, Qb22, Qb26],
-                         [Qb16, Qb26, Qb66]], dtype='float64')
-            Qb45 = array([ [Q44, 0.],
-                          [0., Q55]], dtype='float64')
+            #Qb44 = Q44*cc + Q55*ss
+            #Qb55 = Q44*ss + Q55*cc
+            #Qb45 = (Q55-Q44)*ss*cc
+            #Qb = array([ [Qb11, Qb12, Qb16],
+                         #[Qb12, Qb22, Qb26],
+                         #[Qb16, Qb26, Qb66]], dtype='float64')
+            #Qb45 = array([ [Q44, 0.],
+                          #[0., Q55]], dtype='float64')
 
-            A += Qb * dz[iply]
-            B += Qb * dz2[iply]
-            D += Qb * dz3[iply]
+            #A += Qb * dz[iply]
+            #B += Qb * dz2[iply]
+            #D += Qb * dz3[iply]
 
-            A45 += Qb45 * dz[iply]
-            B45 += Qb45 * dz2[iply]
-            D45 += Qb45 * dz3[iply]
-            #N += Q * alpha * dz
-            #M += 1/2. * Q * alpha * dz2
+            #A45 += Qb45 * dz[iply]
+            #B45 += Qb45 * dz2[iply]
+            #D45 += Qb45 * dz3[iply]
+            ##N += Q * alpha * dz
+            ##M += 1/2. * Q * alpha * dz2
 
-        if self.isSymmetrical():
-            B = zeros(Q.shape)
-            B45 = zeros(Q.shape)
-        return A, B, D, A45, B45, C45
+        #if self.isSymmetrical():
+            #B = zeros(Q.shape)
+            #B45 = zeros(Q.shape)
+        #return A, B, D, A45, B45, C45
 
-    def FGH(self):
-        raise NotImplementedError('FGH is not implemented')
-        (A, B, D, A45, B45, C45) = self.ABD()
-        A = matrix(A)
-        B = matrix(B)
-        D = matrix(D)
+    #def FGH(self):
+        #raise NotImplementedError('FGH is not implemented')
+        #(A, B, D, A45, B45, C45) = self.ABD()
+        #A = matrix(A)
+        #B = matrix(B)
+        #D = matrix(D)
 
-        iD = D.inv()
-        iA = A.inv()
-        if max(B) == min(B) and B[0,0] == 0.0:
-            F = iA
-            G = B
-            H = iD
-        else:
-            F = inv(A - B * iD * B)
-            DBiAB = D - B * iA * B
-            iDBiAB = DBiAB.inv()
-            G = -iA * B * iDBiAB
-            H = iDBiAB
-        return F, G, H
+        #iD = D.inv()
+        #iA = A.inv()
+        #if max(B) == min(B) and B[0,0] == 0.0:
+            #F = iA
+            #G = B
+            #H = iD
+        #else:
+            #F = inv(A - B * iD * B)
+            #DBiAB = D - B * iA * B
+            #iDBiAB = DBiAB.inv()
+            #G = -iA * B * iDBiAB
+            #H = iDBiAB
+        #return F, G, H
 
-    def S(self):
-        r"""
-        Calculates the compliance matrix for a lamina
-        \f[ [Q] = [S]^{-1}  \f]
-        """
-        return self.Q().inv()
+    #def S(self):
+        #r"""
+        #Calculates the compliance matrix for a lamina
+        #\f[ [Q] = [S]^{-1}  \f]
+        #"""
+        #return self.Q().inv()
 
     def ABDH(self):
         r"""
@@ -219,59 +219,59 @@ class ShellPropertyBackup(Property):
         D = D / 3.
         H = H * 5. / 4.
 
-    def Qall(self, thetad):
-        r"""
-        Caculates the laminate tranformation  stiffness \f$ [Q]_{all} \f$
-        \f[ [Q]_{all} = [T]^{-1} [Q] [R][T][R]^{-1}  \f]
-        \f[ [Q]_{all} = [T]^{-1} [Q] [T]^{-T}        \f]
+    #def Qall(self, thetad):
+        #r"""
+        #Caculates the laminate tranformation  stiffness \f$ [Q]_{all} \f$
+        #\f[ [Q]_{all} = [T]^{-1} [Q] [R][T][R]^{-1}  \f]
+        #\f[ [Q]_{all} = [T]^{-1} [Q] [T]^{-T}        \f]
 
-        p. 123 of "Introduction to Composite Material Design"
-        """
-        raise NotImplementedError()
-        theta = radians(thetad)
-        ct = cos(theta)
-        c2t = ct * ct
-        c3t = ct * c2t
-        c4t = c2t * c2t
+        #p. 123 of "Introduction to Composite Material Design"
+        #"""
+        #raise NotImplementedError()
+        #theta = radians(thetad)
+        #ct = cos(theta)
+        #c2t = ct * ct
+        #c3t = ct * c2t
+        #c4t = c2t * c2t
 
-        st = sin(theta)
-        s2t = st * st
-        s3t = st * s2t
-        s4t = s2t * s2t
+        #st = sin(theta)
+        #s2t = st * st
+        #s3t = st * s2t
+        #s4t = s2t * s2t
 
-        s2c2t = s2t * c2t
-        #s4tpc4t = s4t+c4t
+        #s2c2t = s2t * c2t
+        ##s4tpc4t = s4t+c4t
 
-        Q11a = Q11 * c4t + 2 * (Q12 + 2 * Q66) * s2c2t + Q22 * s4t
-        Q12a = (Q11 + Q22 - 4 * Q66) * s2c2t + Q12(s4t + c4t)
-        Q22a = Q11 * s4t + 2 * (Q12 + 2 * Q66) * s2c2t + Q22 * c4t
-        Q16a = (Q11-Q12-2*Q66)*st*c3t + (Q12-Q22+2*Q66)*s3t*ct
-        Q26a = (Q11-Q12-2*Q66)*s3t*ct + (Q12-Q22+2*Q66)*st*c3t
-        Q66a = (Q11 + Q22 - 2 * Q12 - 2 * Q66) * s2c2t + Q66(s4t + c4t)
-        Q44a = Q44 * c2t + Q55 * s2t
-        Q55a = Q44 * s2t + Q55 * c2t
-        Q45a = (Q55 - Q44) * st * ct
-        return array([Q11a, Q12a, Q22a, Q16a, Q26a, Q66a, Q44a, Q55a, Q45a])
+        #Q11a = Q11 * c4t + 2 * (Q12 + 2 * Q66) * s2c2t + Q22 * s4t
+        #Q12a = (Q11 + Q22 - 4 * Q66) * s2c2t + Q12(s4t + c4t)
+        #Q22a = Q11 * s4t + 2 * (Q12 + 2 * Q66) * s2c2t + Q22 * c4t
+        #Q16a = (Q11-Q12-2*Q66)*st*c3t + (Q12-Q22+2*Q66)*s3t*ct
+        #Q26a = (Q11-Q12-2*Q66)*s3t*ct + (Q12-Q22+2*Q66)*st*c3t
+        #Q66a = (Q11 + Q22 - 2 * Q12 - 2 * Q66) * s2c2t + Q66(s4t + c4t)
+        #Q44a = Q44 * c2t + Q55 * s2t
+        #Q55a = Q44 * s2t + Q55 * c2t
+        #Q45a = (Q55 - Q44) * st * ct
+        #return array([Q11a, Q12a, Q22a, Q16a, Q26a, Q66a, Q44a, Q55a, Q45a])
 
-    def Q(self):
-        r"""
-        Calculates the stiffness matrix \f$ [Q] \f$ for a lamina
-        .. todo:: is this done?
-        p. 114 "Introduction to Composite Material Design"
-        """
-        raise NotImplementedError()
-        nu12 = self.nu12
-        E1 = self.E1()
-        E2 = self.E2()
-        delta = 1 - nu12 * nu21
-        Q11 = E1 / delta
-        Q12 = nu12 * E2 / delta
-        Q22 = E2 / delta
-        Q66 = G12
-        Q44 = G23
-        Q55 = G13
-        Qout = (Q11, Q22, Q12, Q44, Q55, Q66)
-        return Qout
+    #def Q(self):
+        #r"""
+        #Calculates the stiffness matrix \f$ [Q] \f$ for a lamina
+        #.. todo:: is this done?
+        #p. 114 "Introduction to Composite Material Design"
+        #"""
+        #raise NotImplementedError()
+        #nu12 = self.nu12
+        #E1 = self.E1()
+        #E2 = self.E2()
+        #delta = 1 - nu12 * nu21
+        #Q11 = E1 / delta
+        #Q12 = nu12 * E2 / delta
+        #Q22 = E2 / delta
+        #Q66 = G12
+        #Q44 = G23
+        #Q55 = G13
+        #Qout = (Q11, Q22, Q12, Q44, Q55, Q66)
+        #return Qout
 
     def T(self, theta):
         r"""

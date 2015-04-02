@@ -105,8 +105,8 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         else:
             self.iren.mousePressEvent(ev)
 
-    def LeftButtonPressEvent(self, ev):
-        asfd
+    #def LeftButtonPressEvent(self, ev):
+        #asfd
 
     def mouseReleaseEvent(self, ev):
         print('release x,y = (%s, %s)' % (ev.x(), ev.y()))

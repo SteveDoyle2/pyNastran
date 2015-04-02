@@ -14,18 +14,18 @@ class TestNodes(unittest.TestCase):
         n1 = GRID(data=datai)
         #print n1
 
-        msg = n1.write_bdf2(size=8)
+        msg = n1.write_bdf(size=8)
         #print(msg)
-        msg = n1.write_bdf2(size=16)
+        msg = n1.write_bdf(size=16)
         #print(msg)
-        msg = n1.write_bdf2(size=16, is_double=True)
+        msg = n1.write_bdf(size=16, is_double=True)
         #print(msg)
         if 0:
             msg = n1.write_bdf2(size=8)
             #print('%r' % msg)
             # small field
             self.assertEqual(msg, 'GRID           1       2      0.      0.      0.                        \n')
-            msg = n1.write_bdf2(size=16)
+            msg = n1.write_bdf(size=16)
 
             # large field
             card = ('GRID*                  1               2             .-0             .-0\n'

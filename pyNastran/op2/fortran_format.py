@@ -397,9 +397,9 @@ class FortranFormat(object):
             self.words = []
         if hasattr(self, 'analysis_code'):
             del self.analysis_code
-        if hasattr(self, 'dataNames') and self.dataNames is not None:
-            print(object_attributes(self))
-            asf
+        #if hasattr(self, 'dataNames') and self.dataNames is not None:
+            #print(object_attributes(self))
+
         if hasattr(self, 'data_code'):
             del self.data_code
 

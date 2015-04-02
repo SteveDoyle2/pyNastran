@@ -15,6 +15,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, i
     double_string_or_blank, interpret_value)
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.cards.utils import build_table_lines
 
 

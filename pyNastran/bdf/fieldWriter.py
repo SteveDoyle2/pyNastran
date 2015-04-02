@@ -8,6 +8,7 @@ from six import string_types
 from six.moves import range
 import sys
 from numpy import allclose, isinf, float32
+from fieldWriter16 import print_card_16
 
 def set_string8_blank_if_default(value, default):
     val = set_blank_if_default(value, default)

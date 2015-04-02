@@ -478,7 +478,8 @@ class EPT(object):
         nproperties = (len(data) - n) // 20
         for i in range(nproperties):
             eData = data[n:n+20]  # or 24???
-            (pid, mid, OD, t, nsm) = s.unpack(eData)
+            out = s.unpack(eData)
+            (pid, mid, OD, t, nsm) = out
             dataIn = [pid, mid, OD, t, nsm]
             self.binary_debug.write('  PTUBE=%s\n' % str(out))
             prop = PTUBE(None, dataIn)

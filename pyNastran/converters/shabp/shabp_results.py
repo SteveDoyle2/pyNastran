@@ -87,6 +87,7 @@ class ShabpOut(object):
         #self._read_viscous2(line, i)
 
     def read_viscous2(self, f, i):
+        line = ''
         while '*** SKIN FRICTION FORCE PROGRAM' not in line:
             line, i = self.readline(f, i)
         line, i = self.readline_n(f, i, 2)
@@ -110,7 +111,7 @@ class ShabpOut(object):
             streamlines.append(streamline)
         return streamlines
 
-    def _read_inviscid_pressure(f, i):
+    def _read_inviscid_pressure(self, f, i):
         npatches = 44
         #6
         #0ELEMENT DATA   MACH=  6.000  ALT =  50000.  S REF =196272.0  SPAN =  669.6  IMPACT =  1  IMPACI =  3

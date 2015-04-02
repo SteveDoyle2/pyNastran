@@ -49,7 +49,7 @@ class ComplexRodStress(StressObject):
         (dtName, dt) = transient
         self.dt = dt
         self.data_code['name'] = dtName
-        if dt not in self.s1:
+        if dt not in self.axial:
             self.update_dt(self.data_code, dt)
 
         for line in data:
@@ -169,7 +169,7 @@ class ComplexRodStrain(StrainObject):
         (dtName, dt) = transient
         self.dt = dt
         self.data_code['name'] = dtName
-        if dt not in self.s1:
+        if dt not in self.axial:
             self.update_dt(self.data_code, dt)
 
         for line in data:

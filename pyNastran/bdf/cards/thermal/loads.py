@@ -6,6 +6,7 @@ from six.moves import range
 
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.thermal.thermal import ThermalCard
 from pyNastran.bdf.fieldWriter import set_blank_if_default

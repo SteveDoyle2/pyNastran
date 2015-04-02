@@ -132,12 +132,12 @@ class SolidElement(Element):
         list_fields = [self.type, self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
 
-    def write_bdf(self, size=8, is_double=False):
-        card = self.raw_fields()
-        msg2 = self.write_bdf2()
-        #msg1 = self.comment() + print_card_8(card)
-        #assert msg1 == msg2, 'write_bdf != write_bdf2\n%s---\n%s\n%r\n%r' % (msg1, msg2, msg1, msg2)
-        return msg2
+    #def write_bdf(self, size=8, is_double=False):
+        #card = self.raw_fields()
+        #msg2 = self.write_bdf2()
+        ##msg1 = self.comment() + print_card_8(card)
+        ##assert msg1 == msg2, 'write_bdf != write_bdf2\n%s---\n%s\n%r\n%r' % (msg1, msg2, msg1, msg2)
+        #return msg2
 
 class CHEXA8(SolidElement):
     """

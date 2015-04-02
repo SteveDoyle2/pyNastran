@@ -354,7 +354,7 @@ class GetMethods(GetMethodsDeprecated):
             return self.properties_mass[pid]
         except KeyError:
             raise KeyError('pid=%s not found%s.  Allowed Mass Pids=%s'
-                           % (pid, msg, self.mass_property,keys() ))
+                           % (pid, msg, self.mass_property.keys() ))
 
     def Phbdy(self, pid, msg=''):
         try:

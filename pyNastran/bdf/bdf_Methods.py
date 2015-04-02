@@ -346,10 +346,10 @@ class BDFMethods(BDFMethodsDeprecated):
             4.  multiply by the gravity vector
         """
 
-        gravity_i = model.loads[2][0]  ## TODO: hardcoded
+        gravity_i = self.loads[2][0]  ## TODO: hardcoded
         gi = gravity_i.N * gravity_i.scale
         p0 = array([0., 0., 0.])  ## TODO: hardcoded
-        mass, cg, I = model.mass_properties(reference_point=p0, sym_axis=None,
+        mass, cg, I = self.mass_properties(reference_point=p0, sym_axis=None,
                                             num_cpus=6)
 
     def sum_forces_moments_elements(self, p0, loadcase_id, eids, nids,
@@ -630,7 +630,7 @@ class BDFMethods(BDFMethodsDeprecated):
                         n = elem.Normal()
                         A = elem.Area()
                         f = pressure * n * A
-                        r = elm.Centroid() - p
+                        r = elem.Centroid() - p
                         m = cross(r, f)
                         F += f
                         M += m
@@ -968,7 +968,7 @@ class BDFMethods(BDFMethodsDeprecated):
                         n = elem.Normal()
                         A = elem.Area()
                         f = pressure * n * A
-                        r = elm.Centroid() - p
+                        r = elem.Centroid() - p
                         m = cross(r, f)
                         F += f
                         M += m

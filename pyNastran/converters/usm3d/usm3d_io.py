@@ -54,21 +54,21 @@ class Usm3dIO(object):
 
         print("done stepping...")
 
-    def _get_next_n(self, base):
-        n = int(n)
-        # get the max N value
-        nmax = -1
-        for flo_filename in flo_filenames:
-            base, ext = os.path.splitext(flo_filename)
-            if ext == '.flo':
-                n = base.split('_')[-1]
-                try: # get the incrementation index
-                    n = int(n)
-                    if n > nold:
-                        return n
-                except:
-                    asdf
-        return None
+    #def _get_next_n(self, base):
+        #n = int(n)
+        ## get the max N value
+        #nmax = -1
+        #for flo_filename in flo_filenames:
+            #base, ext = os.path.splitext(flo_filename)
+            #if ext == '.flo':
+                #n = base.split('_')[-1]
+                #try: # get the incrementation index
+                    #n = int(n)
+                    #if n > nold:
+                        #return n
+                #except:
+                    #asdf
+        #return None
 
     def load_usm3d_results(self, flo_filename, dirname):
         model = Usm3dReader(log=self.log, debug=False)

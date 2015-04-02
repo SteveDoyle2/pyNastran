@@ -156,7 +156,7 @@ def main():
     dirname = r'W:\usm3d\usm3d\spw4'
     model_name = 'spw4'
     node_ids = [517]
-    loads = run(dirname, model_name, node_ids)
+    loads = run_time_acc(dirname, model_name, node_ids)
     write_loads('usm3d.csv', loads)
 
 

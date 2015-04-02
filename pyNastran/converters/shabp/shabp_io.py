@@ -57,7 +57,7 @@ class ShabpIO(object):
         if 0:
             fraction = 1. / nNodes  # so you can color the nodes by ID
             for nid, node in sorted(iteritems(nodes)):
-                points.InsertPoint(nid - 1, *point)
+                points.InsertPoint(nid - 1, *node)
                 self.gridResult.InsertNextValue(nid * fraction)
                 #print str(element)
 

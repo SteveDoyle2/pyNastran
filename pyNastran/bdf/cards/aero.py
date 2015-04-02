@@ -25,6 +25,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six.moves import zip, range
 from itertools import count
 from numpy import array, pi, linspace, zeros, arange, repeat, dot
+from numpy.linalg import norm
 
 from pyNastran.bdf.deprecated import AeroDeprecated, CAERO1Deprecated, CAERO2Deprecated
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -814,7 +815,7 @@ class CAERO1(BaseCard, CAERO1Deprecated):
         elif n == 15:
             return self.p4[2]
         else:
-            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+            raise KeyError('Field %r is an invalid %s entry.' % (n, self.type))
 
     def _update_field_helper(self, n, value):
         """

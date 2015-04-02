@@ -8,8 +8,9 @@ from copy import deepcopy
 
 from docopt import docopt
 
-from numpy import array, zeros, ndarray, cross, where, vstack
+from numpy import array, zeros, ndarray, cross, where, vstack, unique
 from numpy.linalg import norm
+import scipy
 
 from struct import unpack, Struct, pack
 import pyNastran
