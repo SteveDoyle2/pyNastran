@@ -220,7 +220,7 @@ class RealBushStrain(StrainObject):
             return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase)
         return page_num
 
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def __write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         f.write('%s _write_f06_transient not implemented...\n' % self.__class__.__name__)
         raise NotImplementedError('CBUSH')
         return page_num - 1

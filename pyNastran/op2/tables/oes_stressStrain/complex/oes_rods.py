@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import iteritems
 from six.moves import range
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject
-
+from pyNastran.f06.f06_formatting import writeImagFloats13E, get_key0
 
 class ComplexRodDamper(StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -16,8 +16,7 @@ class ComplexRodDamper(StressObject):
 
 
 class ComplexRodStress(StressObject):
-    """
-    """
+
     def __init__(self, data_code, is_sort1, isubcase, dt):
         StressObject.__init__(self, data_code, isubcase)
         self.eType = 'CROD'
@@ -97,39 +96,30 @@ class ComplexRodStress(StressObject):
     def _write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase)
-
-        msg = header + ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
-                        '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
-                        '         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN\n']
-        out = []
-        for eid in sorted(self.axial):
-            axial = self.axial[eid]
-            torsion = self.torsion[eid]
-            (vals2, is_all_zeros) = writeFloatsImag13E([axial, torsion])
-            (axial, torsion) = vals2
-            out.append([eid, axial, torsion])
-
-        nOut = len(out)
-        nWrite = nOut
-        if nOut % 2 == 1:
-            nWrite = nOut - 1
-        for i in range(0, nWrite, 2):
-            #print i,out[i:]
-            outLine = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[i] + out[i + 1]))
-            msg.append(outLine)
-
-        if nOut % 2 == 1:
-            outLine = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (
-                tuple(out[-1]))
-            msg.append(outLine)
-        msg.append(page_stamp % page_num)
-        f.write(''.join(msg))
-        return page_num
+        raise RuntimeError('this should never happen')
 
     def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
-        words = ['                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
-                 '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
-                 '         ID.        STRESS       MARGIN        STRESS      MARGIN         ID.        STRESS       MARGIN        STRESS      MARGIN\n']
+        if self.element_type == 1:
+            element_header = '                           C O M P L E X   S T R E S S E S   I N   R O D   E L E M E N T S   ( C R O D )\n'
+        elif self.element_type == 3:
+            element_header = '                          C O M P L E X   S T R E S S E S   I N   R O D   E L E M E N T S   ( C T U B E )\n'
+        elif self.element_type == 10:
+            element_header = '                         C O M P L E X   S T R E S S E S   I N   R O D   E L E M E N T S   ( C O N R O D )\n'
+        else:
+            raise NotImplementedError('element_name=%r element_type=%s' % (self.element_name, self.element_type))
+
+        if is_mag_phase:
+            mag_phase = '                                                          (MAG/PHASE)\n'  # not tested
+        else:
+            mag_phase = '                                                          (REAL/IMAGINARY)\n'
+
+        words = [element_header,
+                    mag_phase,
+                    ' \n',
+                    '                 ELEMENT                             AXIAL                                         TORQUE\n',
+                    '                   ID.                               FORCE\n',]
+                    #'                       1                 -2.459512E+05 /  3.377728E+04                  0.0          /  0.0\n',]
+
         msg = []
         for dt, axials in sorted(iteritems(self.axial)):
             dtLine = '%14s = %12.5E\n' % (self.data_code['name'], dt)
@@ -139,22 +129,9 @@ class ComplexRodStress(StressObject):
             for eid in sorted(axials):
                 axial = self.axial[dt][eid]
                 torsion = self.torsion[dt][eid]
+                ([axialr, torsionr, axiali, torsioni], is_all_zeros) = writeImagFloats13E([axial, torsion], is_mag_phase)
+                f.write('                %8i                 %-13s / %-13s                 %-13s / %s\n' % (eid, axialr, axiali, torsionr, torsioni))
 
-                (vals2, is_all_zeros) = writeFloatsImag13E([axial, torsion])
-                (axial, torsion) = vals2
-                out.append([eid, axial, MSa, torsion, MSt])
-
-            nOut = len(out)
-            nWrite = nOut
-            if nOut % 2 == 1:
-                nWrite = nOut - 1
-            for i in range(0, nWrite, 2):
-                outLine = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[i] + out[i + 1]))
-                msg.append(outLine)
-
-            if nOut % 2 == 1:
-                outLine = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[-1]))
-                msg.append(outLine)
             msg.append(page_stamp % page_num)
             f.write(''.join(msg))
             page_num += 1
@@ -245,35 +222,29 @@ class ComplexRodStrain(StrainObject):
     def _write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         if self.dt is not None:
             return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase)
-
-        msg = header + ['                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )\n',
-                        '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
-                        '         ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN\n']
-        out = []
-        for eid in sorted(self.axial):
-            axial = self.axial[eid]
-            torsion = self.torsion[eid]
-            (vals2, is_all_zeros) = writeFloatsImag13E([axial, torsion])
-            (axial, torsion) = vals2
-            out.append([eid, axial, torsion])
-
-        nOut = len(out)
-        nWrite = nOut
-        if nOut % 2 == 1:
-            nWrite = nOut - 1
-        for i in range(0, nWrite, 2):
-            outLine = '      %8i   %13s  %10.4E %13s  %10.4E   %8i   %13s  %10.4E %13s  %10.4E\n' % (tuple(out[i] + out[i + 1]))
-            msg.append(outLine)
-
-        if nOut % 2 == 1:
-            outLine = '      %8i   %13s  %10.4E %13s  %10.4E\n' % (
-                tuple(out[-1]))
-            msg.append(outLine)
-        msg.append(page_stamp % page_num)
-        f.write(''.join(msg))
-        return page_num
+        raise RuntimeError('this should never happen')
 
     def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+        if self.element_type == 1:
+            element_header = '                           C O M P L E X    S T R A I N S    I N   R O D   E L E M E N T S   ( C R O D )\n'
+        elif self.element_type == 3:
+            element_header = '                          C O M P L E X    S T R A I N S    I N   R O D   E L E M E N T S   ( C T U B E )\n'
+        elif self.element_type == 10:
+            element_header = '                         C O M P L E X    S T R A I N S    I N   R O D   E L E M E N T S   ( C O N R O D )\n'
+        else:
+            raise NotImplementedError('element_name=%r element_type=%s' % (self.element_name, self.element_type))
+
+        if is_mag_phase:
+            mag_phase = '                                                          (MAG/PHASE)\n'  # not tested
+        else:
+            mag_phase = '                                                          (REAL/IMAGINARY)\n'
+
+        words = [element_header,
+                    mag_phase,
+                    ' \n',
+                    '                 ELEMENT                             AXIAL                                         TORQUE\n',
+                    '                   ID.                               FORCE\n',
+                    '                       1                 -2.459512E+05 /  3.377728E+04                  0.0          /  0.0\n',]
         words = ['                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )\n',
                  '       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY       ELEMENT       AXIAL       SAFETY      TORSIONAL     SAFETY\n',
                  '         ID.        STRAIN       MARGIN        STRAIN      MARGIN         ID.        STRAIN       MARGIN        STRAIN      MARGIN\n']
@@ -286,21 +257,8 @@ class ComplexRodStrain(StrainObject):
             for eid in sorted(axials):
                 axial = self.axial[dt][eid]
                 torsion = self.torsion[dt][eid]
-
-                out.append([eid, axial, torsion])
-
-            nOut = len(out)
-            nWrite = nOut
-            if nOut % 2 == 1:
-                nWrite = nOut - 1
-            for i in range(0, nWrite, 2):
-                outLine = '      %8i   %13.6E  %10.4E %13.6E  %10.4E   %8i   %13.6E  %10.4E %13.6E  %10.4E\n' % (tuple(out[i] + out[i + 1]))
-                msg.append(outLine)
-
-            if nOut % 2 == 1:
-                outLine = '      %8i   %13.6E  %10.4E %13.6E  %10.4E\n' % (
-                    tuple(out[-1]))
-                msg.append(outLine)
+                ([axialr, torsionr, axiali, torsioni], is_all_zeros) = writeImagFloats13E([axial, torsion], is_mag_phase)
+                f.write('                %8i                 %-13s / %-13s                 %-13s / %s\n' % (eid, axialr, axiali, torsionr, torsioni))
             msg.append(page_stamp % page_num)
             page_num += 1
             f.write(''.join(msg))
