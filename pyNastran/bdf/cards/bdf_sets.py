@@ -35,7 +35,7 @@ class Set(BaseCard):
     def __repr__(self):
         return self.comment() + print_card_8(self.repr_fields())
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size, is_double):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -357,7 +357,7 @@ class SET1(Set):
 
         return ['SET1', self.sid] + skin + self.IDs
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size, is_double):
         skin = []
         if self.isSkin:
             skin = ['SKIN']
@@ -414,6 +414,11 @@ class SET3(Set):
         IDs = fields(integer_or_string, card, 'ID', i=3, j=len(card))
         self.IDs = expand_thru(IDs)
         self.cleanIDs()
+
+    def symmetric_difference(self, set1):
+        s1 = set(self.IDs)
+        s2 = set(set1.IDs)
+        return s1.symmetric_difference(s2)
 
     def IsGrid(self):
         if self.desc == 'GRID':

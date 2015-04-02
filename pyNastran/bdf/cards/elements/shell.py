@@ -2177,7 +2177,7 @@ class CQUADX(QuadShell):
 
     def write_bdf2(self, size=8, double=False):
         nodes = self.nodeIDs()
-        data = [eid, self.Pid()] + nodes[:4]
+        data = [self.eid, self.Pid()] + nodes[:4]
         row2 = ['        ' if node is None else '%8i' % node for node in nodes[4:]]
         msg = ('CQUADX  %8i%8i %8i%8i%8i%8i%8s%8s\n'
                '        %8s%8s' % tuple(data + row2))

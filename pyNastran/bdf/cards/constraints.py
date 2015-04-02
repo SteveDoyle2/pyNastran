@@ -27,8 +27,8 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank,
     components, components_or_blank)
 from pyNastran.bdf.fieldWriter import print_card_8, print_float_8
-from pyNastran.bdf.fieldWriter16 import print_float_16
-from pyNastran.bdf.field_writer_double import print_scientific_double
+from pyNastran.bdf.fieldWriter16 import print_float_16, print_card_16
+from pyNastran.bdf.field_writer_double import print_scientific_double, print_card_double
 
 
 class ConstraintObject(object):
@@ -205,7 +205,7 @@ class SUPORT1(Constraint):
             fields += [ID, c]
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size, is_double):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -254,7 +254,7 @@ class SUPORT(Constraint):
             fields += [ID, c]
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size, is_double):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -331,7 +331,7 @@ class MPC(Constraint):
                 fields.append(None)
         return fields
 
-    def write_bdf2(self, size=8, double=False):
+    def write_bdf(self, size=8, double=False):
         if size == 8:
             msg = 'MPC     %8s' % self.conid
             for (i, grid, component, enforced) in zip(count(), self.gids,
@@ -356,9 +356,13 @@ class MPC(Constraint):
                         msg += '\n%8s%16s' % ('*', '')
         return self.comment() + msg.rstrip() + '\n'
 
-    def write_bdf(self, size, card_writer):
-        card = self.raw_fields()
-        return self.comment() + card_writer(card)
+    #def write_bdf(self, size=8, is_double=False):
+        #card = self.raw_fields()
+        #if size == 8:
+            #return self.comment() + print_card_8(card)
+        #if is_double:
+            #return self.comment() + print_card_double(card)
+        #return self.comment() + print_card_16(card)
 
 
 class SPC(Constraint):
@@ -427,7 +431,7 @@ class SPC(Constraint):
             fields += [gid, constraint, enforced]
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size, is_double):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -459,7 +463,7 @@ class SPCD(SPC):
             fields += [gid, constraint, enforced]
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size, is_double):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -506,7 +510,7 @@ class SPCAX(Constraint):
         fields = ['SPCAX', self.conid, self.rid, self.hid, self.c, self.d]
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size, is_double):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -565,7 +569,7 @@ class SPC1(Constraint):
         fields = ['SPC1', self.conid, self.constraints] + nodes
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size, is_double):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -647,7 +651,7 @@ class SPCADD(ConstraintADD):
         return fields
         #return self._reprSpcMpcAdd(fields)
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size, is_double):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -685,6 +689,6 @@ class MPCADD(ConstraintADD):
         return fields
         #return self._reprSpcMpcAdd(fields)
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size, is_double):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)

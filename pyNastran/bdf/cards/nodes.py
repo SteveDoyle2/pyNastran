@@ -999,7 +999,7 @@ class GRID(Node, GridDeprecated):
                                                                  seid]
         return list_fields
 
-    def write_bdf2(self, size=8, is_double=False):
+    def write_bdf(self, size=8, is_double=False):
         """
         The writer method used by BDF.write_bdf
 
@@ -1047,24 +1047,6 @@ class GRID(Node, GridDeprecated):
                         print_float_16(xyz[2]),
                         cd, self.ps, seid))
         return self.comment() + msg.rstrip() + '\n'
-
-    def write_bdf(self, size, card_writer):
-        """
-        The writer method used by BDF.write_bdf
-
-        :param self:
-          the GRID object pointer
-        :param size:
-          the size of the card (8/16)
-        :type size:
-          int
-        :param card_writer:
-          a writer method for large field cards
-        :type card_writer:
-          function
-        """
-        card = self.repr_fields()
-        return self.comment() + card_writer(card)
 
 
 class POINT(Node, PointDeprecated):

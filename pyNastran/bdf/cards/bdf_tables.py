@@ -44,12 +44,13 @@ class Table(BaseCard):
     def parse_fields(self, xy, nrepeated, isData=False):
         self.table = TableObj(xy, nrepeated, isData)
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        #if size == 8:
-            #return self.comment() + print_card_8(card)
-        #return self.comment() + print_card_16(card)
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class TableObj(object):
