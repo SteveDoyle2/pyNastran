@@ -893,7 +893,7 @@ class NastranIO(object):
         #self.show_caero_mesh()
 
         print("tring to read...%s" % op2_filename)
-        ext = os.path.splitext(op2_filename)[0].lower()
+        ext = os.path.splitext(op2_filename)[1].lower()
 
         if ext == '.op2':
             model = OP2(log=self.log, debug=True)
@@ -911,7 +911,7 @@ class NastranIO(object):
 
                         # untested
                         'load_vectors',
-                        'appliedLoads',
+                        'applied_loads',
                         'force_vectors',
                     ]
                 else:
@@ -951,14 +951,14 @@ class NastranIO(object):
             print(model.get_op2_stats())
 
         elif ext == '.pch':
-            raise NotImplementedError(op2_filename)
+            raise NotImplementedError('*.pch is not implemented; filename=%r' % op2_filename)
         elif ext == '.f06':
             model = F06(log=self.log, debug=True)
             model.set_vectorization(True)
             model.read_f06(op2_filename)
         else:
             print("error...")
-            raise NotImplementedError(op2_filename)
+            raise NotImplementedError('extension=%r is not supported; filename=%r' % (ext, op2_filename))
 
         #print(model.print_results())
         #self.iSubcaseNameMap[self.isubcase] = [Subtitle, Label]
@@ -993,7 +993,7 @@ class NastranIO(object):
 
                 # untested
                 (model.load_vectors, 'LoadVectors'),
-                (model.appliedLoads, 'AppliedLoads'),
+                (model.applied_loads, 'AppliedLoads'),
                 (model.force_vectors, 'ForceVectors'),
                 #[model.grid_point_forces, 'GridPointForces'],  # TODO: this is buggy...
             ]
