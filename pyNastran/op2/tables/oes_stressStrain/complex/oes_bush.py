@@ -288,7 +288,7 @@ class ComplexBushStrain(StrainObject):
         f.write(''.join(msg))
         return page_num
 
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
+    def __write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False):
         raise NotImplementedError('CBUSH')
         words = [
             '                                  S T R A I N S    I N   B A R   E L E M E N T S           ( C B A R )\n',
