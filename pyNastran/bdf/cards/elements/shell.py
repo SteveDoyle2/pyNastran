@@ -566,7 +566,7 @@ class CTRIA3(TriShell):
                '                %8s%8s%8s%8s\n' % tuple(data))
         return self.comment() + msg.rstrip() + '\n'
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = wipe_empty_fields(self.repr_fields())
         if size == 8 or len(card) == 6: # to last node
             msg = self.comment() + print_card_8(card)
@@ -739,7 +739,7 @@ class CTRIA6(TriShell):
                   [thetaMcid, zOffset, None] + [None, TFlag, T1, T2, T3])
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = wipe_empty_fields(self.repr_fields())
         if size == 8 or len(card) == 8: # to last node
             msg = self.comment() + print_card_8(card)
@@ -872,7 +872,7 @@ class CTRIAR(TriShell):
                   [thetaMcid, zOffset, None, None, TFlag, T1, T2, T3])
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = wipe_empty_fields(self.repr_fields())
         if size == 8 or len(card) == 5: # to last node
             msg = self.comment() + print_card_8(card)
@@ -954,7 +954,7 @@ class CTRIAX(TriShell):
         list_fields = ['CTRIAX', self.eid, self.Pid()] + nodeIDs + [thetaMcid]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = wipe_empty_fields(self.repr_fields())
         if size == 8 or len(card) == 8: # to last node
             msg = self.comment() + print_card_8(card)
@@ -1100,7 +1100,7 @@ class CTRIAX6(TriShell):
         list_fields = ['CTRIAX6', self.eid, self.Mid()] + self.nodeIDs() + [theta]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = wipe_empty_fields(self.repr_fields())
         if size == 8 or len(card) == 8: # to last node
             msg = self.comment() + print_card_8(card)
@@ -1387,7 +1387,7 @@ class CSHEAR(QuadShell):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         msg = self.comment() + print_card_8(card)
         #msg2 = self.write_bdf2(size)
@@ -1741,7 +1741,7 @@ class CQUAD4(QuadShell):
                '                %8s%8s%8s%8s%8s\n' % tuple(data))
         return self.comment() + msg.rstrip() + '\n'
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = wipe_empty_fields(self.repr_fields())
         if size == 8 or len(card) == 7: # to last node
             msg = self.comment() + print_card_8(card)
@@ -1862,7 +1862,7 @@ class CQUADR(QuadShell):
                   [thetaMcid, zOffset, None, TFlag, T1, T2, T3, T4])
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8 or len(card) == 7: # to last node
             msg = self.comment() + print_card_8(card)
@@ -1939,7 +1939,7 @@ class CQUAD(QuadShell):
                '        %8s%8s%8s\n' % tuple(data))
         return self.comment() + msg.rstrip() + '\n'
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         msg = self.comment() + print_card_8(card)
         msg2 = self.write_bdf2(size)
@@ -2106,7 +2106,7 @@ class CQUAD8(QuadShell):
             T1, T2, T3, T4, thetaMcid, zOffset, TFlag])
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8 or len(card) == 11: # to last node
             return self.comment() + print_card_8(card)
@@ -2183,7 +2183,7 @@ class CQUADX(QuadShell):
                '        %8s%8s' % tuple(data + row2))
         return self.comment() + msg.rstrip() + '\n'
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         msg = self.comment() + print_card_8(card)
         msg2 = self.write_bdf2(size)

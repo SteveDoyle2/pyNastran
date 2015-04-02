@@ -100,7 +100,7 @@ class RINGAX(Ring):
                   None, self.ps]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         """
         The writer method used by BDF.write_bdf
 
@@ -660,7 +660,7 @@ class GRIDB(Node):
                        idf]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         """
         The writer method used by BDF.write_bdf
 
@@ -1272,7 +1272,7 @@ class POINT(Node, PointDeprecated):
         list_fields = ['POINT', self.nid, cp] + list(self.xyz)
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         """
         The writer method used by BDF.write_bdf
 

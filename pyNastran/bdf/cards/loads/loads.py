@@ -211,7 +211,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -233,7 +233,7 @@ class DLOAD(LoadCombination):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -270,7 +270,7 @@ class DAREA(BaseCard):
         list_fields = ['DAREA', self.sid, self.p, self.c, self.scale]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -338,7 +338,7 @@ class SLOAD(Load):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -431,7 +431,7 @@ class TLOAD1(TabularLoad):
                   self.Tid(), us0, vs0]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + card_writer(card)
 
@@ -532,7 +532,7 @@ class TLOAD2(TabularLoad):
                   self.T1, self.T2, frequency, phase, c, b, us0, vs0]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + card_writer(card)
 
@@ -596,7 +596,7 @@ class RFORCE(Load):
                   mb, idrf]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
@@ -686,7 +686,7 @@ class RLOAD1(TabularLoad):
                   self.Tc(), self.Td(), Type]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + card_writer(card)
 
@@ -775,7 +775,7 @@ class RLOAD2(TabularLoad):
                   self.Tb(), self.Tp(), Type]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + card_writer(card)
 
@@ -845,6 +845,6 @@ class RANDPS(RandomLoad):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + card_writer(card)

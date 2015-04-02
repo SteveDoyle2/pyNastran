@@ -335,7 +335,7 @@ class NastranMatrix(BaseCard, DeprecatedNastranMatrix):
                 msg += print_card(list_fields)
         return msg
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         """
         .. todo:: support double precision
         """
@@ -716,7 +716,7 @@ class DMI(NastranMatrix):
                 list_fields += ['DMI', self.name, GCj, GCi, reali]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         msg = '\n$' + '-' * 80
         msg += '\n$ %s Matrix %s\n' % ('DMI', self.name)
         list_fields = ['DMI', self.name, 0, self.form, self.tin,

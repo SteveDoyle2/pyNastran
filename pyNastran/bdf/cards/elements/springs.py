@@ -203,7 +203,7 @@ class CELAS1(SpringElement):
 
         return (axial_strain, axial_stress, axial_force)
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -389,7 +389,7 @@ class CELAS2(SpringElement):
 
         return (axial_strain, axial_stress, axial_force)
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -483,7 +483,7 @@ class CELAS3(SpringElement):
         #list_fields = ['CELAS3',self.eid,self.Pid(),s1,s2]
         #return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -576,6 +576,6 @@ class CELAS4(SpringElement):
         #list_fields = ['CELAS4',self.eid,self.Pid(),s1,s2]
         #return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)

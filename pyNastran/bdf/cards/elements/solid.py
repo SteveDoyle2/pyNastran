@@ -132,7 +132,7 @@ class SolidElement(Element):
         list_fields = [self.type, self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         msg2 = self.write_bdf2()
         #msg1 = self.comment() + print_card_8(card)

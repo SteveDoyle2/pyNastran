@@ -127,7 +127,7 @@ class CDAMP1(LineDamper):
                   nodes[1], self.c2]
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -203,7 +203,7 @@ class CDAMP2(LineDamper):
                   nodes[1], self.c2]
         return fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -271,7 +271,7 @@ class CDAMP3(LineDamper):
         list_fields = ['CDAMP3', self.eid, self.pid, nodes[0], nodes[1]]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -335,7 +335,7 @@ class CDAMP4(LineDamper):
         list_fields = ['CDAMP4', self.eid, self.b, nodes[0], nodes[1]]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -404,7 +404,7 @@ class CDAMP5(LineDamper):
         list_fields = ['CDAMP5', self.eid, self.Pid(), nodes[0], nodes[1]]
         return list_fields
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -469,6 +469,6 @@ class CVISC(LineDamper):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size, card_writer):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
