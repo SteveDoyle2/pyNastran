@@ -91,7 +91,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol):
     model.write_bdf(bdf_filename_out)
 
 
-def _write_nodes(self, outfile, size, card_writer, is_double):
+def _write_nodes(self, outfile, size, is_double):
     """
     Writes the NODE-type cards
 
@@ -100,7 +100,7 @@ def _write_nodes(self, outfile, size, card_writer, is_double):
     if self.spoints:
         msg = []
         msg.append('$SPOINTS\n')
-        msg.append(self.spoints.write_bdf2(size, is_double))
+        msg.append(self.spoints.write_bdf(size, is_double))
         outfile.write(''.join(msg))
 
     if self.nodes:
@@ -110,10 +110,9 @@ def _write_nodes(self, outfile, size, card_writer, is_double):
             msg.append(self.gridSet.print_card(size))
         for (nid, node) in sorted(iteritems(self.nodes)):
             if nid not in model.remove_nodes:
-            msg.append(node.write_bdf2(size, is_double))
+                msg.append(node.write_bdf(size, is_double))
         outfile.write(''.join(msg))
     #if 0:  # not finished
-        #self._write_nodes_associated(outfile, size, card_writer)
 
 
 def main():

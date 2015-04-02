@@ -701,7 +701,6 @@ class CBAR(LineElement):
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
-        #return self.comment() + card_writer(card)
 
 
 class CBEAM3(CBAR):

@@ -433,7 +433,11 @@ class TLOAD1(TabularLoad):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class TLOAD2(TabularLoad):
@@ -534,7 +538,11 @@ class TLOAD2(TabularLoad):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class RFORCE(Load):
@@ -600,8 +608,9 @@ class RFORCE(Load):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
         return self.comment() + print_card_16(card)
-        #return self.comment() + card_writer(card)
 
 
 class RLOAD1(TabularLoad):
@@ -688,7 +697,11 @@ class RLOAD1(TabularLoad):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class RLOAD2(TabularLoad):
@@ -777,7 +790,11 @@ class RLOAD2(TabularLoad):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class RandomLoad(BaseCard):
@@ -847,4 +864,8 @@ class RANDPS(RandomLoad):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)

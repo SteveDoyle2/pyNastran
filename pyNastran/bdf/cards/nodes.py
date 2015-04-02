@@ -110,13 +110,11 @@ class RINGAX(Ring):
           the size of the card (8/16)
         :type size:
           int
-        :param card_writer:
-          a writer method for large field cards
-        :type card_writer:
-          function
         """
         card = self.repr_fields()
-        f.write(card_writer(card))
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class SPOINT(Node):
@@ -539,10 +537,6 @@ class GRDSET(Node):
           the size of the card (8/16)
         :type size:
           int
-        :param card_writer:
-          a writer method for large field cards
-        :type card_writer:
-          function
         """
         card = self.repr_fields()
         f.write(print_card_8(card))
@@ -670,13 +664,11 @@ class GRIDB(Node):
           the size of the card (8/16)
         :type size:
           int
-        :param card_writer:
-          a writer method for large field cards
-        :type card_writer:
-          function
         """
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class GRID(Node, GridDeprecated):
@@ -1282,10 +1274,10 @@ class POINT(Node, PointDeprecated):
           the size of the card (8/16)
         :type size:
           int
-        :param card_writer:
-          a writer method for large field cards
-        :type card_writer:
-          function
         """
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)

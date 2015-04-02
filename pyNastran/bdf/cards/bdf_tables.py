@@ -24,7 +24,10 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import string_types
 from six.moves import range
 
-from pyNastran.bdf.fieldWriter import set_blank_if_default
+from pyNastran.bdf.fieldWriter import set_blank_if_default, print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_double import print_card_double
+
 from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.utils.dev import list_print
 from pyNastran.bdf.bdfInterface.assign_type import (integer,

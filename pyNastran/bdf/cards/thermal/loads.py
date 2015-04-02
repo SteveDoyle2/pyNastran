@@ -4,6 +4,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import  iteritems
 from six.moves import range
 
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.thermal.thermal import ThermalCard
 from pyNastran.bdf.fieldWriter import set_blank_if_default
@@ -87,7 +89,11 @@ class QBDY1(ThermalLoad):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class QBDY2(ThermalLoad):  # not tested
@@ -147,7 +153,11 @@ class QBDY2(ThermalLoad):  # not tested
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class QBDY3(ThermalLoad):
@@ -216,7 +226,11 @@ class QBDY3(ThermalLoad):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class QHBDY(ThermalLoad):
@@ -273,7 +287,11 @@ class QHBDY(ThermalLoad):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class TEMP(ThermalLoad):
@@ -340,7 +358,11 @@ class TEMP(ThermalLoad):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 # Loads
 #-------------------------------------------------------
@@ -393,4 +415,8 @@ class TEMPD(ThermalLoadDefault):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)

@@ -108,7 +108,9 @@ class EIGB(Method):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class EIGC(Method):
@@ -290,7 +292,9 @@ class EIGC(Method):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class EIGP(Method):
@@ -340,7 +344,9 @@ class EIGP(Method):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class EIGR(Method):
@@ -416,7 +422,9 @@ class EIGR(Method):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class EIGRL(Method):
@@ -508,4 +516,3 @@ class EIGRL(Method):
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
-        #return self.comment() + card_writer(card)

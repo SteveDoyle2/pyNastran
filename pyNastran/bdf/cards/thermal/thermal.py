@@ -3,7 +3,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import range
 
-from pyNastran.bdf.fieldWriter import set_blank_if_default
+from pyNastran.bdf.fieldWriter import set_blank_if_default, print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by,
                                           collapse_thru_by)
 from pyNastran.bdf.bdfInterface.assign_type import (fields, integer,
@@ -159,7 +160,9 @@ class CHBDYE(ThermalElement):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class CHBDYG(ThermalElement):
@@ -247,7 +250,9 @@ class CHBDYG(ThermalElement):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class CHBDYP(ThermalElement):
@@ -354,7 +359,9 @@ class CHBDYP(ThermalElement):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 # Elements
 #-------------------------------------------------------
@@ -437,7 +444,9 @@ class PCONV(ThermalProperty):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class PCONVM(ThermalProperty):
@@ -503,7 +512,9 @@ class PCONVM(ThermalProperty):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class PHBDY(ThermalProperty):
@@ -550,7 +561,9 @@ class PHBDY(ThermalProperty):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 # Properties
@@ -631,7 +644,9 @@ class CONV(ThermalBC):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class CONVM(ThermalBC):
@@ -688,7 +703,9 @@ class CONVM(ThermalBC):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class RADM(ThermalBC):
@@ -727,7 +744,9 @@ class RADM(ThermalBC):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class RADBC(ThermalBC):
@@ -797,7 +816,9 @@ class RADBC(ThermalBC):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 # Boundary Conditions
 #-------------------------------------------------------

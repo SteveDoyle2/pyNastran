@@ -170,7 +170,6 @@ class MATS1(MaterialDependence):
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
-        #return self.comment() + card_writer(card) # is this valid?
 
 
 class MATT1(MaterialDependence):
@@ -282,7 +281,6 @@ class MATT1(MaterialDependence):
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
-        #return self.comment() + card_writer(card)  # is this valid?
 
 class MATT2(MaterialDependence):
     """
@@ -407,7 +405,6 @@ class MATT2(MaterialDependence):
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
-        #return self.comment() + card_writer(card)  # is this valid?
 
 #MATT3 - CTRIAX6 only
 
@@ -485,7 +482,6 @@ class MATT4(MaterialDependence):
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
-        #return self.comment() + card_writer(card)  # is this valid?
 
 class MATT5(MaterialDependence):
     """
@@ -578,7 +574,6 @@ class MATT5(MaterialDependence):
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
-        #return self.comment() + card_writer(card)  # is this valid?
 
 #MATT8
 #MATT9

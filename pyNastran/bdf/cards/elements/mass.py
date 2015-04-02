@@ -158,7 +158,11 @@ class CMASS1(PointMassElement):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class CMASS2(PointMassElement):
@@ -272,7 +276,11 @@ class CMASS2(PointMassElement):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class CMASS3(PointMassElement):
@@ -332,7 +340,11 @@ class CMASS3(PointMassElement):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class CMASS4(PointMassElement):
@@ -391,7 +403,11 @@ class CMASS4(PointMassElement):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class CONM1(PointMassElement):
@@ -578,7 +594,11 @@ class CONM1(PointMassElement):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class CONM2(PointMassElement):

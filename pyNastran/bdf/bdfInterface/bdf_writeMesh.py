@@ -610,17 +610,17 @@ class WriteMesh(object):
         if self.properties:
             msg = ['$PROPERTIES\n']
             for (unused_pid, prop) in sorted(iteritems(self.properties)):
-                msg.append(prop.write_bdf(size, size, is_double))
+                msg.append(prop.write_bdf(size, is_double))
 
             for card in sorted(itervalues(self.pbusht)):
-                msg.append(card.write_bdf(size, size, is_double))
+                msg.append(card.write_bdf(size, is_double))
             for card in sorted(itervalues(self.pdampt)):
-                msg.append(card.write_bdf(size, size, is_double))
+                msg.append(card.write_bdf(size, is_double))
             for card in sorted(itervalues(self.pelast)):
-                msg.append(card.write_bdf(size, size, is_double))
+                msg.append(card.write_bdf(size, is_double))
             outfile.write(''.join(msg))
 
-    def _write_rejects(self, outfile, size):
+    def _write_rejects(self, outfile, size, is_double):
         """
         Writes the rejected (processed) cards and the rejected unprocessed
         cardLines

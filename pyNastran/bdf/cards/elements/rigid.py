@@ -106,7 +106,9 @@ class RBAR(RigidElement):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class RBAR1(RigidElement):
@@ -147,7 +149,9 @@ class RBAR1(RigidElement):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class RBE1(RigidElement):  # maybe not done, needs testing
@@ -258,7 +262,9 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class RBE2(RigidElement):

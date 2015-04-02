@@ -70,7 +70,6 @@ class NSM(PointProperty):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        #return self.comment() + card_writer(card)  #is this allowed???
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
@@ -113,7 +112,6 @@ class PMASS(PointProperty):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        #return self.comment() + card_writer(card)  #is this allowed???
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)

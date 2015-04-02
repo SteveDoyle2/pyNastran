@@ -59,7 +59,11 @@ class DCONSTR(OptConstraint):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class DESVAR(OptConstraint):
@@ -97,7 +101,6 @@ class DESVAR(OptConstraint):
         if size == 8:
             return self.comment() + print_card_8(card)
         return self.comment() + print_card_16(card)
-        #return self.comment() + card_writer(card)
 
 
 class DDVAL(OptConstraint):
@@ -126,7 +129,11 @@ class DDVAL(OptConstraint):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class DOPTPRM(OptConstraint):
@@ -221,7 +228,11 @@ class DOPTPRM(OptConstraint):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class DLINK(OptConstraint):
@@ -270,7 +281,11 @@ class DLINK(OptConstraint):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class DRESP1(OptConstraint):
@@ -313,7 +328,11 @@ class DRESP1(OptConstraint):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class DRESP2(OptConstraint):
@@ -409,7 +428,11 @@ class DRESP2(OptConstraint):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class DSCREEN(OptConstraint):
@@ -439,7 +462,11 @@ class DSCREEN(OptConstraint):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class DVMREL1(OptConstraint):  # similar to DVPREL1
@@ -515,7 +542,11 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        if is_double:
+            return self.comment() + print_card_double(card)
+        return self.comment() + print_card_16(card)
 
 
 class DVPREL1(OptConstraint):  # similar to DVMREL1
@@ -714,4 +745,6 @@ class DVPREL2(OptConstraint):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)

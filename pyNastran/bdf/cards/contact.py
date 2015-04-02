@@ -20,6 +20,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (fields,
     integer_or_string, double_string_or_blank,
     blank)
 from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 
 
 class BSURF(BaseCard):
@@ -224,7 +225,9 @@ class BCTSET(BaseCard):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class BCRPARA(BaseCard):
@@ -267,7 +270,9 @@ class BCRPARA(BaseCard):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class BCTPARA(BaseCard):
@@ -350,7 +355,9 @@ class BCTPARA(BaseCard):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
 
 
 class BCTADD(BaseCard):
@@ -399,4 +406,6 @@ class BCTADD(BaseCard):
 
     def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment() + card_writer(card)
+        if size == 8:
+            return self.comment() + print_card_8(card)
+        return self.comment() + print_card_16(card)
