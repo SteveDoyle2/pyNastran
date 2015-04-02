@@ -204,8 +204,8 @@ class BCTSET(BaseCard):
                 self.tids.append(integer(card, i + 1, 'tid%s' % j))
                 self.frictions.append(double_or_blank(card, i + 2, 'fric%s' % j, 0.0))
                 if sol == 101:
-                    self.min_distances.append(double(card, i + 3, 'mind%s' % j))
-                    self.max_distances.append(double(card, i + 4, 'maxd%s' % j))
+                    self.min_distances.append(double_or_blank(card, i + 3, 'mind%s' % j, 0.0))
+                    self.max_distances.append(double_or_blank(card, i + 4, 'maxd%s' % j, 0.0))
                 else:
                     self.min_distances.append(None)
                     self.max_distances.append(None)
@@ -291,26 +291,26 @@ class BCTPARA(BaseCard):
                 param = string(card, i, 'param%s' % j)
                 i += 1
                 if param == 'TYPE':
-                    value = integer(card, i, 'value%s' % j, 0)
-                    assert value in [0, 1, 2], 'TYPE must be [0, 1, 2]'
+                    value = integer_or_blank(card, i, 'value%s' % j, 0)
+                    assert value in [0, 1, 2], 'TYPE must be [0, 1, 2]; TYPE=%r' % value
                 elif param == 'NSIDE':
                     value = integer_or_blank(card, i, 'value%s' % j, 1)
-                    assert value in [1, 2], 'NSIDE must be [1, 2]'
+                    assert value in [1, 2], 'NSIDE must be [1, 2]; NSIDE=%r' % value
                 elif param == 'TBIRTH':
                     value = double_or_blank(card, i, 'value%s' % j, 0.0)
                 elif param == 'TDEATH':
                     value = double_or_blank(card, i, 'value%s' % j, 0.0)
                 elif param == 'INIPENE':
                     value = integer_or_blank(card, i, 'value%s' % j, 0)
-                    assert value in [0, 1, 2], 'INIPENE must be [0, 1, 2]'
+                    assert value in [0, 1, 2], 'INIPENE must be [0, 1, 2]; INIPENE=%r' % value
                 elif param == 'PDEPTH':
                     value = double_or_blank(card, i, 'value%s' % j, 0.0)
                 elif param == 'SEGNORM':
                     value = integer_or_blank(card, i, 'value%s' % j, 0)
-                    assert value in [-1, 0, 1], 'SEGNORM must be [-1, 0, 1]'
+                    assert value in [-1, 0, 1], 'SEGNORM must be [-1, 0, 1]; SEGNORM=%r' % value
                 elif param == 'OFFTYPE':
                     value = integer_or_blank(card, i, 'value%s' % j, 0)
-                    assert value in [0, 1, 2], 'SEGNORM must be [0, 1, 2]'
+                    assert value in [0, 1, 2], 'SEGNORM must be [0, 1, 2]; SEGNORM=%r' % value
                 elif param == 'OFFSET':
                     value = double_or_blank(card, i, 'value%s' % j, 0.0)
                 elif param == 'TZPENE':
@@ -318,15 +318,15 @@ class BCTPARA(BaseCard):
 
                 elif param == 'CSTIFF':
                     value = integer_or_blank(card, i, 'value%s' % j, 0)
-                    assert value in [0, 1], 'CSTIFF must be [0, 1]'
+                    assert value in [0, 1], 'CSTIFF must be [0, 1]; CSTIFF=%r' % value
                 elif param == 'TIED':
                     value = integer_or_blank(card, i, 'value%s' % j, 0)
-                    assert value in [0, 1], 'TIED must be [0, 1]'
+                    assert value in [0, 1], 'TIED must be [0, 1]; TIED=%r' % value
                 elif param == 'TIEDTOL':
                     value = double_or_blank(card, i, 'value%s' % j, 0.0)
                 elif param == 'EXTFAC':
                     value = double_or_blank(card, i, 'value%s' % j, 0.0)
-                    assert 1.0E-6 < value < 0.1, 'EXTFAC must be 1.0E-6 < EXTFAC < 0.1'
+                    assert 1.0E-6 < value < 0.1, 'EXTFAC must be 1.0E-6 < EXTFAC < 0.1; EXTFAC=%r' % value
                 else:
                     # FRICMOD, FPARA1/2/3/4/5, EPSN, EPST, CFACTOR1, PENETOL
                     # NCMOD, TCMOD, RFORCE, LFORCE, RTPCHECK, RTPMAX, XTYPE

@@ -11,6 +11,15 @@ F:\work\pyNastran\large_freq\raw
 F:\work\pyNastran\large_freq\sort2
 F:\work\pyNastran\pyNastran_v0.7\models\nxlignes
 
+F:\Program Files (x86)\FEMAPv1101\nastran\Support\nast\demo
+F:\Program Files (x86)\FEMAPv1101\nastran\Support\nast\misc\doc\advdynamics
+F:\Program Files (x86)\FEMAPv1101\nastran\Support\nast\misc\doc\desopt
+F:\Program Files (x86)\FEMAPv1101\nastran\Support\nast\misc\doc\dynamics
+F:\Program Files (x86)\FEMAPv1101\nastran\Support\nast\misc\doc\linstat
+F:\Program Files (x86)\FEMAPv1101\nastran\Support\nast\misc\doc\thermal
+F:\Program Files (x86)\FEMAPv1101\nastran\Support\nast\misc\sssalter
+F:\Program Files (x86)\FEMAPv1101\nastran\Support\nast\misc\sssalter\IA
+F:\Program Files (x86)\FEMAPv1101\nastran\Support\nast\tpl
 
 # desktop2
 C:\Users\sdoyle\Dropbox\pyNastran_examples\move_tpl
