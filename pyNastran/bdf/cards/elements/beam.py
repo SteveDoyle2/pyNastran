@@ -590,7 +590,7 @@ class CBEAM(CBAR):
                   w1b, w2b, w3b, sa, sb]
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment() + print_card_8(card)

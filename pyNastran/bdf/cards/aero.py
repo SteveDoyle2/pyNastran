@@ -86,7 +86,7 @@ class AEFACT(BaseCard):
         fields = ['AEFACT', self.sid] + list(self.Di)
         return fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -150,7 +150,7 @@ class AELINK(BaseCard):
             fields += [ivar, ival]
         return fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -216,7 +216,7 @@ class AELIST(BaseCard):
         list_fields = ['AELIST', self.sid] + self.elements
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -266,7 +266,7 @@ class AEPARM(BaseCard):
         list_fields = ['AEPARM', self.id, self.label, self.units]
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -313,7 +313,7 @@ class AESTAT(BaseCard):
         list_fields = ['AESTAT', self.id, self.label]
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -432,7 +432,7 @@ class AESURF(BaseCard):
                   self.tqulim]
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -487,7 +487,7 @@ class AESURFS(BaseCard):  # not integrated
                   self.list2]
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.raw_fields()
         return self.comment() + print_card_8(card)
 
@@ -599,7 +599,7 @@ class AERO(Aero):
                   self.rhoRef, symXZ, symXY]
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -678,7 +678,7 @@ class AEROS(Aero):
                   self.bRef, self.Sref, symXZ, symXY]
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -766,7 +766,7 @@ class CSSCHD(BaseCard):
                   self.LMach(), self.LSchd()]
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -1051,7 +1051,7 @@ class CAERO1(BaseCard, CAERO1Deprecated):
                   [self.x12] + list(self.p4) + [self.x43])
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -1245,7 +1245,7 @@ class CAERO2(BaseCard, CAERO2Deprecated):
                   [self.x12])
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -1337,7 +1337,7 @@ class CAERO3(BaseCard):
                    list(self.p4) + [self.x43])
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -1434,7 +1434,7 @@ class CAERO4(BaseCard):
                         list(self.p4) + [self.x43])
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -1597,7 +1597,7 @@ class CAERO5(BaseCard):
                         list(self.p4) + [self.x43])
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -1782,7 +1782,7 @@ class FLFACT(BaseCard):
         list_fields = ['FLFACT', self.sid] + self.factors
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -1958,7 +1958,7 @@ class FLUTTER(BaseCard):
         #          self.get_rfreq_vel(), imethod, nValue, self.epsilon]
         #return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -2017,7 +2017,7 @@ class GUST(BaseCard):
         list_fields = ['GUST', self.sid, self.dload, self.wg, self.x0, self.V]
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -2090,7 +2090,7 @@ class MKAERO1(BaseCard):
     def getMach_rFreqs(self):
         return self.machs, self.rFreqs
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -2149,7 +2149,7 @@ class MKAERO2(BaseCard):
     def getMach_rFreqs(self):
         return self.machs, self.rFreqs
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -2223,7 +2223,7 @@ class PAERO1(BaseCard):
         list_fields = ['PAERO1', self.pid] + self.Bi
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -2335,7 +2335,7 @@ class PAERO2(BaseCard):
             list_fields += [thi, thn]
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -2430,7 +2430,7 @@ class PAERO3(BaseCard):
             list_fields += [x, y]
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -2546,7 +2546,7 @@ class SPLINE1(Spline):
         list_fields = wipe_empty_fields(list_fields)
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -2650,7 +2650,7 @@ class SPLINE2(Spline):
                   None, usage]
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -2763,7 +2763,7 @@ class SPLINE4(Spline):
         list_fields = wipe_empty_fields(list_fields)
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -2867,7 +2867,7 @@ class SPLINE5(Spline):
                   None, usage]
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -2993,6 +2993,6 @@ class TRIM(BaseCard):
                 list_fields += [self.aeqr]
         return list_fields
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)

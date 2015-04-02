@@ -35,7 +35,7 @@ class Set(BaseCard):
     def __repr__(self):
         return self.comment() + print_card_8(self.repr_fields())
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment() + print_card_8(card)
 
@@ -357,7 +357,7 @@ class SET1(Set):
 
         return ['SET1', self.sid] + skin + self.IDs
 
-    def write_bdf(self, size, is_double):
+    def write_bdf(self, size=8, is_double=False):
         skin = []
         if self.isSkin:
             skin = ['SKIN']
