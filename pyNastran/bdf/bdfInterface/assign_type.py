@@ -2,56 +2,56 @@ from __future__ import print_function
 from six import string_types
 from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 
-def components(card, n, fieldname):
+def components(card, ifield, fieldname):
     """
     :param card:      BDF card as a list
-    :param n:         field number
+    :param ifield:    field number
     :param fieldname: name of field
     """
     assert isinstance(card, BDFCard), type(card)
-    assert isinstance(n, int), type(n)
+    assert isinstance(ifield, int), type(ifield)
     assert isinstance(fieldname, string_types), type(fieldname)
-    svalue = card.field(n)
+    svalue = card.field(ifield)
     if isinstance(svalue, int):
         pass
     elif svalue is None or '.' in svalue:
         dtype = _get_dtype(svalue)
-        msg = '%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card)
+        msg = '%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card)
         raise SyntaxError(msg)
 
     try:
         value = int(svalue)
     except:
         dtype = _get_dtype(svalue)
-        msg = '%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card)
+        msg = '%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card)
         raise SyntaxError(msg)
     if value > 0 and isinstance(svalue, string_types):
         if '0' in svalue:
             value2 = str(svalue).replace('0', '')
-            msg = '%s = %r (field #%s) on card must contain 0 or %s (not both).\ncard=%s' % (fieldname, svalue, n, value2, card)
+            msg = '%s = %r (field #%s) on card must contain 0 or %s (not both).\ncard=%s' % (fieldname, svalue, ifield, value2, card)
             raise SyntaxError(msg)
     svalue2 = str(value)
     svalue3 = ''.join(sorted(svalue2))
     for i, v in enumerate(svalue3):
         if v not in '0123456':
-            msg = '%s = %r (field #%s) on card contains an invalid component %r.\ncard=%s' % (fieldname, svalue, n, v, card)
+            msg = '%s = %r (field #%s) on card contains an invalid component %r.\ncard=%s' % (fieldname, svalue, ifield, v, card)
             raise SyntaxError(msg)
         if v in svalue3[i + 1:]:
-            msg = '%s = %r (field #%s) on card must not contain duplicate entries.\ncard=%s' % (fieldname, svalue, n, card)
+            msg = '%s = %r (field #%s) on card must not contain duplicate entries.\ncard=%s' % (fieldname, svalue, ifield, card)
             raise SyntaxError(msg)
     return svalue3
 
-def components_or_blank(card, n, fieldname, default=None):
+def components_or_blank(card, ifield, fieldname, default=None):
     """
     :param card:      BDF card as a list
-    :param n:         field number
+    :param ifield:    field number
     :param fieldname: name of field
     :param default:   the default value for the field (default=None)
     """
     assert isinstance(card, BDFCard), type(card)
-    assert isinstance(n, int), type(n)
+    assert isinstance(ifield, int), type(ifield)
     assert isinstance(fieldname, string_types), type(fieldname)
-    svalue = card.field(n)
+    svalue = card.field(ifield)
     if svalue is None:
         return default
     elif isinstance(svalue, int):
@@ -60,21 +60,21 @@ def components_or_blank(card, n, fieldname, default=None):
         svalue = svalue.strip()
 
     if svalue:
-        return components(card, n, fieldname)
+        return components(card, ifield, fieldname)
     else:
         return default
 
-def blank(card, n, fieldname, default=None):
+def blank(card, ifield, fieldname, default=None):
     """
     :param card:      BDF card as a list
-    :param n:         field number
+    :param ifield:    field number
     :param fieldname: name of field
     :param default:   the default value for the field (default=None)
     """
     assert isinstance(card, BDFCard), type(card)
-    assert isinstance(n, int), type(n)
+    assert isinstance(ifield, int), type(ifield)
     assert isinstance(fieldname, string_types), type(fieldname)
-    svalue = card.field(n)
+    svalue = card.field(ifield)
     if svalue is None:
         return default
 
@@ -83,33 +83,33 @@ def blank(card, n, fieldname, default=None):
         if len(svalue) == 0:
            return default
     dtype = _get_dtype(svalue)
-    raise SyntaxError('%s = %r (field #%s) on card must be blank (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+    raise SyntaxError('%s = %r (field #%s) on card must be blank (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
 
-def field(card, n, fieldname):
+def field(card, ifield, fieldname):
     """
     :param card:      BDF card as a list
-    :param n:         field number
+    :param ifield:    field number
     :param fieldname: name of field
     """
     assert isinstance(card, BDFCard), type(card)
-    assert isinstance(n, int), type(n)
+    assert isinstance(ifield, int), type(ifield)
     assert isinstance(fieldname, string_types), type(fieldname)
-    return integer_double_string_or_blank(card, n, fieldname, default=None)
+    return integer_double_string_or_blank(card, ifield, fieldname, default=None)
 
-def integer_double_string_or_blank(card, n, fieldname, default=None):
+def integer_double_string_or_blank(card, ifield, fieldname, default=None):
     """
     :param card:      BDF card as a list
-    :param n:         field number
+    :param ifield:    field number
     :param fieldname: name of field
     :param default:   the default value for the field (default=None)
     """
     assert isinstance(card, BDFCard), type(card)
-    assert isinstance(n, int), type(n)
+    assert isinstance(ifield, int), type(ifield)
     assert isinstance(fieldname, string_types), type(fieldname)
     #try:
-    svalue = card.field(n)
+    svalue = card.field(ifield)
     #except IndexError:
-    #raise SyntaxError('%s (field #%s) on card must be an integer, float, string, or blank.\ncard=%s' % (fieldname, n, card))
+    #raise SyntaxError('%s (field #%s) on card must be an integer, float, string, or blank.\ncard=%s' % (fieldname, ifield, card))
 
     if isinstance(svalue, int):
         return svalue
@@ -123,20 +123,20 @@ def integer_double_string_or_blank(card, n, fieldname, default=None):
         # integer/float/string
         if '.' in svalue:
             # float
-            value = double(card, n, fieldname)
+            value = double(card, ifield, fieldname)
         elif svalue.isdigit():
             # int
             try:
                 value = int(svalue)
             except ValueError:
                 dtype = _get_dtype(svalue)
-                raise SyntaxError('%s = %r (field #%s) on card must be an integer, float, or string (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+                raise SyntaxError('%s = %r (field #%s) on card must be an integer, float, or string (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
         else:
             value = svalue
         return value
     return default
 
-#def assert_int_bounded_range(card, n, fieldname, lower=None, upper=None):
+#def assert_int_bounded_range(card, ifield, fieldname, lower=None, upper=None):
 
 def fields(f, card, fieldname, i, j=None):
     """
@@ -163,42 +163,42 @@ def fields(f, card, fieldname, i, j=None):
         #fs.append(f(card, ii + i, fieldname + str(ii), default))
     #return fs
 
-def integer(card, n, fieldname):
+def integer(card, ifield, fieldname):
     """
     :param card:      BDF card as a list
-    :param n:         field number
+    :param ifield:    field number
     :param fieldname: name of field
     """
     assert isinstance(card, BDFCard), 'type=%s card=%s' % (type(card), card)
-    assert isinstance(n, int), type(n)
+    assert isinstance(ifield, int), type(ifield)
     assert isinstance(fieldname, string_types), type(fieldname)
     try:
-        svalue = card.field(n)
+        svalue = card.field(ifield)
     except IndexError:
-        raise SyntaxError('%s (field #%s) on card must be an integer, but doesnt exist.' % (fieldname, n))
+        raise SyntaxError('%s (field #%s) on card must be an integer, but doesnt exist.' % (fieldname, ifield))
 
     if isinstance(svalue, float):
         dtype = _get_dtype(svalue)
-        raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+        raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
 
     try:
         return int(svalue)
     except:
         dtype = _get_dtype(svalue)
-        raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+        raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
 
-def integer_or_blank(card, n, fieldname, default=None):
+def integer_or_blank(card, ifield, fieldname, default=None):
     """
     :param card:      BDF card as a list
-    :param n:         field number
+    :param ifield:    field number
     :param fieldname: name of field
     :param default:   the default value for the field (default=None)
     """
     assert isinstance(card, BDFCard), type(card)
-    assert isinstance(n, int), type(n)
+    assert isinstance(ifield, int), type(ifield)
     assert isinstance(fieldname, string_types), type(fieldname)
     #try:
-    svalue = card.field(n)
+    svalue = card.field(ifield)
     #except IndexError:
     #    return default
 
@@ -211,44 +211,44 @@ def integer_or_blank(card, n, fieldname, default=None):
             return default
         elif '.' in svalue:
             dtype = _get_dtype(svalue)
-            raise SyntaxError('%s = %r (field #%s) on card must be an integer or blank (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+            raise SyntaxError('%s = %r (field #%s) on card must be an integer or blank (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
 
         try:
             return int(svalue)
         except:
             dtype = _get_dtype(svalue)
-            raise SyntaxError('%s = %r (field #%s) on card must be an integer or blank (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+            raise SyntaxError('%s = %r (field #%s) on card must be an integer or blank (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
 
     dtype = _get_dtype(svalue)
-    raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+    raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
 
-def double(card, n, fieldname):
+def double(card, ifield, fieldname):
     """
     :param card:      BDF card as a list
-    :param n:         field number
+    :param ifield:    field number
     :param fieldname: name of field
     """
     assert isinstance(card, BDFCard), type(card)
-    assert isinstance(n, int), type(n)
+    assert isinstance(ifield, int), type(ifield)
     assert isinstance(fieldname, string_types), type(fieldname)
     try:
-        svalue = card.field(n)
+        svalue = card.field(ifield)
     except IndexError:
-        raise SyntaxError('%s (field #%s) on card must be a float, but doesnt exist..\ncard=%s' % (fieldname, n, card))
+        raise SyntaxError('%s (field #%s) on card must be a float, but doesnt exist..\ncard=%s' % (fieldname, ifield, card))
 
     if isinstance(svalue, float):
         return svalue
     elif isinstance(svalue, int):
         dtype = _get_dtype(svalue)
-        raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+        raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
     elif svalue is None or len(svalue) == 0:  ## None
         dtype = _get_dtype(svalue)
-        raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+        raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
 
     if svalue.isdigit():
         # if only int
         dtype = _get_dtype(int(svalue))
-        raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+        raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
 
     #svalue = svalue.strip()
     try:
@@ -256,7 +256,7 @@ def double(card, n, fieldname):
         value = float(svalue)
     except TypeError:
         dtype = _get_dtype(svalue)
-        raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+        raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
     except ValueError:
         # 1D+3, 1D-3, 1-3
         try:
@@ -279,21 +279,21 @@ def double(card, n, fieldname):
             value = float(svalue)
         except ValueError:
             dtype = _get_dtype(svalue)
-            raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+            raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
     return value
 
-def double_or_blank(card, n, fieldname, default=None):
+def double_or_blank(card, ifield, fieldname, default=None):
     """
     :param card:      BDF card as a list
-    :param n:         field number
+    :param ifield:    field number
     :param fieldname: name of field
     :param default:   the default value for the field (default=None)
     """
     assert isinstance(card, BDFCard), type(card)
-    assert isinstance(n, int), type(n)
+    assert isinstance(ifield, int), type(ifield)
     assert isinstance(fieldname, string_types), type(fieldname)
     #try:
-    svalue = card.field(n)
+    svalue = card.field(ifield)
     #except IndexError:
         #return default
 
@@ -301,47 +301,47 @@ def double_or_blank(card, n, fieldname, default=None):
         return svalue
     elif isinstance(svalue, int):
         dtype = _get_dtype(svalue)
-        raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+        raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
     elif isinstance(svalue, string_types):
         svalue = svalue.strip().upper()
         if not svalue:
             return default
         try:
-            return double(card, n, fieldname)
+            return double(card, ifield, fieldname)
         except:
             dtype = _get_dtype(svalue)
-            raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+            raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
     return default
 
-def double_or_string(card, n, fieldname):
+def double_or_string(card, ifield, fieldname):
     """
     :param card:      BDF card as a list
-    :param n:         field number
+    :param ifield:    field number
     :param fieldname: name of field
     """
     assert isinstance(card, BDFCard), type(card)
-    assert isinstance(n, int), type(n)
+    assert isinstance(ifield, int), type(ifield)
     assert isinstance(fieldname, string_types), type(fieldname)
     #try:
-    svalue = card.field(n)
+    svalue = card.field(ifield)
     #except IndexError:
-        #raise SyntaxError('%s (field #%s) on card must be a float or string (not blank).\ncard=%s' % (fieldname, n, card))
+        #raise SyntaxError('%s (field #%s) on card must be a float or string (not blank).\ncard=%s' % (fieldname, ifield, card))
 
     if isinstance(svalue, float):
         return svalue
     elif svalue is None or isinstance(svalue, int):
         dtype = _get_dtype(svalue)
-        raise SyntaxError('%s = %r (field #%s) on card must be an float or string (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+        raise SyntaxError('%s = %r (field #%s) on card must be an float or string (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
     elif isinstance(svalue, string_types):
         svalue = svalue.strip().upper()
 
     if '.' in svalue:
         # float
         try:
-            return double(card, n, fieldname)
+            return double(card, ifield, fieldname)
         except:
             dtype = _get_dtype(svalue)
-            raise SyntaxError('%s = %r (field #%s) on card must be an float or string (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+            raise SyntaxError('%s = %r (field #%s) on card must be an float or string (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
     elif svalue.isdigit():
         # fail
         pass
@@ -349,23 +349,23 @@ def double_or_string(card, n, fieldname):
         # string
         return str(svalue)
     dtype = _get_dtype(svalue)
-    raise SyntaxError('%s = %r (field #%s) on card must be an float or string (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+    raise SyntaxError('%s = %r (field #%s) on card must be an float or string (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
 
 
-def double_string_or_blank(card, n, fieldname, default=None):
+def double_string_or_blank(card, ifield, fieldname, default=None):
     """
     :param card:      BDF card as a list
-    :param n:         field number
+    :param ifield:    field number
     :param fieldname: name of field
     :param default:   the default value for the field (default=None)
     :returns value:   a double, string, or default value
     :raises SyntaxError: if there is an invalid type
     """
     assert isinstance(card, BDFCard), type(card)
-    assert isinstance(n, int), type(n)
+    assert isinstance(ifield, int), type(ifield)
     assert isinstance(fieldname, string_types), type(fieldname)
     #try:
-    svalue = card.field(n)
+    svalue = card.field(ifield)
     #except IndexError:
         #return default
     if isinstance(svalue, float):
@@ -376,51 +376,51 @@ def double_string_or_blank(card, n, fieldname, default=None):
         svalue = svalue.strip().upper()
     elif isinstance(svalue, int):
         dtype = _get_dtype(svalue)
-        raise SyntaxError('%s = %r (field #%s) on card must be an float, string, or blank (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+        raise SyntaxError('%s = %r (field #%s) on card must be an float, string, or blank (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
 
     if '.' in svalue:
         try:
-            return double(card, n, fieldname)
+            return double(card, ifield, fieldname)
         except:
             dtype = _get_dtype(svalue)
-            msg = '%s = %r (field #%s) on card must be a float, string or blank (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card)
+            msg = '%s = %r (field #%s) on card must be a float, string or blank (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card)
             raise SyntaxError(msg)
     elif svalue.isdigit():
         dtype = _get_dtype(svalue)
-        raise SyntaxError('%s = %r (field #%s) on card must be a float, string or blank (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+        raise SyntaxError('%s = %r (field #%s) on card must be a float, string or blank (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
     elif svalue == '':
         return default
     return svalue
 
-def integer_or_double(card, n, fieldname):
+def integer_or_double(card, ifield, fieldname):
     """
     :param card:      BDF card as a list
-    :param n:         field number
+    :param ifield:    field number
     :param fieldname: name of field
     :returns value:   the value with the proper type
     :raises SyntaxError: if there's an invalid type
     """
     assert isinstance(card, BDFCard), type(card)
-    assert isinstance(n, int), type(n)
+    assert isinstance(ifield, int), type(ifield)
     assert isinstance(fieldname, string_types), type(fieldname)
     #try:
-    svalue = card.field(n)
+    svalue = card.field(ifield)
     #except IndexError:
-        #raise SyntaxError('%s (field #%s) on card must be an integer or float.\ncard=%s' % (fieldname, n, card) )
+        #raise SyntaxError('%s (field #%s) on card must be an integer or float.\ncard=%s' % (fieldname, ifield, card) )
 
     if isinstance(svalue, int) or isinstance(svalue, float):
         return svalue
     elif svalue is None:
         dtype = _get_dtype(svalue)
-        raise SyntaxError('%s = %r (field #%s) on card must be an integer or float (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+        raise SyntaxError('%s = %r (field #%s) on card must be an integer or float (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
 
     if '.' in svalue:
         # float/exponent
         try:
-            value = double(card, n, fieldname)
+            value = double(card, ifield, fieldname)
         except ValueError:
             dtype = _get_dtype(svalue)
-            raise SyntaxError('%s = %r (field #%s) on card must be a integer or a float (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+            raise SyntaxError('%s = %r (field #%s) on card must be a integer or a float (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
     else:
         # int
         try:
@@ -430,21 +430,21 @@ def integer_or_double(card, n, fieldname):
             if isinstance(value, int) or isinstance(value, float):
                 return value
             dtype = _get_dtype(svalue)
-            raise SyntaxError('%s = %r (field #%s) on card must be an integer or a float (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+            raise SyntaxError('%s = %r (field #%s) on card must be an integer or a float (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
     return value
 
-def integer_double_or_blank(card, n, fieldname, default=None):
+def integer_double_or_blank(card, ifield, fieldname, default=None):
     """
     :param card:      BDF card as a list
-    :param n:         field number
+    :param ifield:    field number
     :param fieldname: name of field
     :param default:   the default value for the field (default=None)
     """
     assert isinstance(card, BDFCard), type(card)
-    assert isinstance(n, int), type(n)
+    assert isinstance(ifield, int), type(ifield)
     assert isinstance(fieldname, string_types), type(fieldname)
     #try:
-    svalue = card.field(n)
+    svalue = card.field(ifield)
     #except IndexError:
     #    return default
 
@@ -456,34 +456,34 @@ def integer_double_or_blank(card, n, fieldname, default=None):
     if svalue:
         # integer/float
         try:
-            return integer_or_double(card, n, fieldname)
+            return integer_or_double(card, ifield, fieldname)
         except:
             dtype = _get_dtype(svalue)
-            raise SyntaxError('%s = %r (field #%s) on card must be an integer, float, or blank (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+            raise SyntaxError('%s = %r (field #%s) on card must be an integer, float, or blank (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
     return default
 
-def integer_or_string(card, n, fieldname):
+def integer_or_string(card, ifield, fieldname):
     """
     :param card:      BDF card as a list
-    :param n:         field number
+    :param ifield:    field number
     :param fieldname: name of field
     :param default:   the default value for the field (default=None)
     """
     assert isinstance(card, BDFCard), type(card)
-    assert isinstance(n, int), type(n)
+    assert isinstance(ifield, int), type(ifield)
     assert isinstance(fieldname, string_types), type(fieldname)
     #try:
-    svalue = card.field(n)
+    svalue = card.field(ifield)
     #except IndexError:
-        #raise SyntaxError('%s (field #%s) on card must be an integer or string.\ncard=%s' % (fieldname, n, card))
+        #raise SyntaxError('%s (field #%s) on card must be an integer or string.\ncard=%s' % (fieldname, ifield, card))
     if isinstance(svalue, int):
         return svalue
     elif isinstance(svalue, float):
         dtype = _get_dtype(svalue)
-        raise SyntaxError('%s = %r (field #%s) on card must be an integer or string (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+        raise SyntaxError('%s = %r (field #%s) on card must be an integer or string (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
     elif svalue is None:
         dtype = _get_dtype(svalue)
-        raise SyntaxError('%s = %r (field #%s) on card must be an integer or string (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+        raise SyntaxError('%s = %r (field #%s) on card must be an integer or string (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
 
     if svalue.isdigit():
         # int
@@ -491,32 +491,32 @@ def integer_or_string(card, n, fieldname):
             value = int(svalue)
         except ValueError:
             dtype = _get_dtype(svalue)
-            raise SyntaxError('%s = %r (field #%s) on card must be an integer or string (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+            raise SyntaxError('%s = %r (field #%s) on card must be an integer or string (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
     elif isinstance(svalue, float):
         dtype = _get_dtype(svalue)
-        raise SyntaxError('%s = %r (field #%s) on card must be an integer or string (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+        raise SyntaxError('%s = %r (field #%s) on card must be an integer or string (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
     else:
         # string
-        value = double_or_string(card, n, fieldname)
+        value = double_or_string(card, ifield, fieldname)
         if isinstance(value, float):
             dtype = _get_dtype(svalue)
-            raise SyntaxError('%s = %r (field #%s) on card must be an integer or string (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+            raise SyntaxError('%s = %r (field #%s) on card must be an integer or string (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
 
         return str(svalue.upper())
     return value
 
-def integer_string_or_blank(card, n, fieldname, default=None):
+def integer_string_or_blank(card, ifield, fieldname, default=None):
     """
     :param card:      BDF card as a list
-    :param n:         field number
+    :param ifield:    field number
     :param fieldname: name of field
     :param default:   the default value for the field (default=None)
     """
     assert isinstance(card, BDFCard), type(card)
-    assert isinstance(n, int), type(n)
+    assert isinstance(ifield, int), type(ifield)
     assert isinstance(fieldname, string_types), type(fieldname)
     #try:
-    svalue = card.field(n)
+    svalue = card.field(ifield)
     #except IndexError:
         #return default
     if isinstance(svalue, int):
@@ -525,15 +525,15 @@ def integer_string_or_blank(card, n, fieldname, default=None):
         return default
     elif isinstance(svalue, float):
         dtype = _get_dtype(svalue)
-        raise SyntaxError('%s = %r (field #%s) on card must be an integer or string (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+        raise SyntaxError('%s = %r (field #%s) on card must be an integer or string (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
 
     if svalue.strip():
         # integer/string
         try:
-            return integer_or_string(card, n, fieldname)
+            return integer_or_string(card, ifield, fieldname)
         except:
             dtype = _get_dtype(svalue)
-            raise SyntaxError('%s = %r (field #%s) on card must be an integer, string, or blank (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+            raise SyntaxError('%s = %r (field #%s) on card must be an integer, string, or blank (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
     return default
 
 def _get_dtype(value):
@@ -542,7 +542,6 @@ def _get_dtype(value):
 
     :param value: the value to get the type of
     """
-    #print('dtype value=%s' % value)
     try:
         value = interpret_value(value)
     except:
@@ -560,19 +559,19 @@ def _get_dtype(value):
     return dtype
 
 
-def integer_double_or_string(card, n, fieldname):
+def integer_double_or_string(card, ifield, fieldname):
     """
     :param card:      BDF card as a list
-    :param n:         field number
+    :param ifield:    field number
     :param fieldname: name of field
     """
     assert isinstance(card, BDFCard), type(card)
-    assert isinstance(n, int), type(n)
+    assert isinstance(ifield, int), type(ifield)
     assert isinstance(fieldname, string_types), type(fieldname)
     try:
-        svalue = card.field(n)
+        svalue = card.field(ifield)
     except IndexError:
-        raise SyntaxError('%s (field #%s) on card must be an integer, float, or string, but doesnt exist.\ncard=%s' % (fieldname, n, card))
+        raise SyntaxError('%s (field #%s) on card must be an integer, float, or string, but doesnt exist.\ncard=%s' % (fieldname, ifield, card))
 
     if isinstance(svalue, int) or isinstance(svalue, float):
         return svalue
@@ -581,71 +580,71 @@ def integer_double_or_string(card, n, fieldname):
     if svalue:  # integer/float/string
         if '.' in svalue:
             # float
-            value = double(card, n, fieldname)
+            value = double(card, ifield, fieldname)
         elif svalue.isdigit():
             # int
             try:
                 value = int(svalue)
             except ValueError:
-                raise SyntaxError('%s = %r (field #%s) on card must be an integer, float, or string (not blank).\ncard=%s' % (fieldname, svalue, n, card))
+                raise SyntaxError('%s = %r (field #%s) on card must be an integer, float, or string (not blank).\ncard=%s' % (fieldname, svalue, ifield, card))
         else:
             value = interpret_value(svalue)
         return value
     dtype = _get_dtype(svalue)
-    raise SyntaxError('%s = %r (field #%s) on card must be an integer, float, or string (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+    raise SyntaxError('%s = %r (field #%s) on card must be an integer, float, or string (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
 
 
-def string(card, n, fieldname):
+def string(card, ifield, fieldname):
     """
     :param card:      BDF card as a list
-    :param n:         field number
+    :param ifield:    field number
     :param fieldname: name of field
     """
     assert isinstance(card, BDFCard), type(card)
-    assert isinstance(n, int), type(n)
+    assert isinstance(ifield, int), type(ifield)
     assert isinstance(fieldname, string_types), type(fieldname)
-    svalue = card.field(n)
+    svalue = card.field(ifield)
     if isinstance(svalue, string_types):
         svalue = svalue.strip()
     else:
         dtype = _get_dtype(svalue)
-        raise SyntaxError('%s = %r (field #%s) on card must be an string (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+        raise SyntaxError('%s = %r (field #%s) on card must be an string (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
 
     if svalue.isdigit() or '.' in svalue:
-        value = integer_or_double(card, n, fieldname)
+        value = integer_or_double(card, ifield, fieldname)
         dtype = _get_dtype(value)
-        raise SyntaxError('%s = %r (field #%s) on card must be an string with a character (not %s).\ncard=%s' % (fieldname, value, n, dtype, card))
+        raise SyntaxError('%s = %r (field #%s) on card must be an string with a character (not %s).\ncard=%s' % (fieldname, value, ifield, dtype, card))
 
     if svalue:  # string
         return str(svalue.upper())
     dtype = _get_dtype(svalue)
-    msg = '%s = %r (field #%s) on card must be an string (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card)
+    msg = '%s = %r (field #%s) on card must be an string (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card)
     raise SyntaxError(msg)
 
 
-def string_or_blank(card, n, fieldname, default=None):
+def string_or_blank(card, ifield, fieldname, default=None):
     """
     :param card:      BDF card as a list
-    :param n:         field number
+    :param ifield:    field number
     :param fieldname: name of field
     :param default:   the default value for the field (default=None)
     """
     assert isinstance(card, BDFCard), type(card)
-    assert isinstance(n, int), type(n)
+    assert isinstance(ifield, int), type(ifield)
     assert isinstance(fieldname, string_types), type(fieldname)
-    svalue = card.field(n)
+    svalue = card.field(ifield)
     if svalue is None:
         return default
     elif isinstance(svalue, string_types):
         svalue = svalue.strip().upper()
     else:
         dtype = _get_dtype(svalue)
-        raise SyntaxError('%s = %r (field #%s) on card must be an string (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+        raise SyntaxError('%s = %r (field #%s) on card must be an string (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
 
     svalue = svalue.strip()
     if svalue.isdigit() or '.' in svalue:
         dtype = _get_dtype(svalue)
-        raise SyntaxError('%s = %r (field #%s) on card must be an string or blank (not %s).\ncard=%s' % (fieldname, svalue, n, dtype, card))
+        raise SyntaxError('%s = %r (field #%s) on card must be an string or blank (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
 
     if svalue:  # string
         return str(svalue.upper())
