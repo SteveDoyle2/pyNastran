@@ -356,7 +356,7 @@ class WriteMesh(object):
                 msg.append(bsurfsi.write_bdf(size, is_double))
             outfile.write(''.join(msg))
 
-    def _write_coords(self, outfile, size, size=8, is_double=False):
+    def _write_coords(self, outfile, size=8, is_double=False):
         """Writes the coordinate cards in a sorted order"""
         msg = []
         if len(self.coords) > 1:
@@ -639,7 +639,7 @@ class WriteMesh(object):
                     msg.append(str(reject2) + '\n')
         outfile.write(''.join(msg))
 
-    def _write_rigid_elements(self, outfile, size, size=8, is_double=False):
+    def _write_rigid_elements(self, outfile, size=8, is_double=False):
         """Writes the rigid elements in a sorted order"""
         if self.rigidElements:
             msg = ['$RIGID ELEMENTS\n']

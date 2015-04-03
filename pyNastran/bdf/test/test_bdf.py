@@ -104,16 +104,9 @@ def memory_usage_psutil():
     mem = process.get_memory_info()[0] / float(2 ** 20)
     return mem
 
-def get_double_from_precision(precision):
-    if precision == 'single':
-        double = False
-    elif precision == 'double':
-        precision = True
-    return double
-
 def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False,
             cid=None, meshForm='combined', isFolder=False, print_stats=False,
-            sum_load=False, size=8, precision='single',
+            sum_load=False, size=8, is_double=False,
             reject=False, nastran='', dynamic_vars={}):
     bdfModel = str(bdfFilename)
     print("bdfModel = %s" % bdfModel)
@@ -133,9 +126,10 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
     sys.stdout.flush()
     fem2 = None
     diffCards = []
+
     try:
-        outModel = run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, precision, cid)
-        fem2 =     run_fem2(      bdfModel, outModel, xref, punch, sum_load, size, precision, reject, debug=debug, log=None)
+        outModel = run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, cid)
+        fem2 =     run_fem2(      bdfModel, outModel, xref, punch, sum_load, size, is_double, reject, debug=debug, log=None)
         diffCards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
         nastran = 'nastran scr=yes bat=no old=no '
         if nastran and 0:
@@ -199,7 +193,7 @@ def run_bdf(folder, bdfFilename, debug=False, xref=True, check=True, punch=False
     return (fem1, fem2, diffCards)
 
 
-def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, precision, cid):
+def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, is_double, cid):
     assert os.path.exists(bdfModel), print_bad_path(bdfModel)
     try:
         if '.pch' in bdfModel:
@@ -211,7 +205,6 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, precision, c
         raise
     #fem1.sumForces()
 
-    double = get_double_from_precision(precision)
     if fem1._auto_reject:
         outModel = bdfModel + '.rej'
     else:
@@ -219,9 +212,9 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, precision, c
         if cid is not None and xref:
             fem1.resolveGrids(cid=cid)
         if meshForm == 'combined':
-            fem1.write_bdf(outModel, interspersed=False, size=size, is_double=double)
+            fem1.write_bdf(outModel, interspersed=False, size=size, is_double=is_double)
         elif meshForm == 'separate':
-            fem1.write_bdf(outModel, interspersed=False, size=size, is_double=double)
+            fem1.write_bdf(outModel, interspersed=False, size=size, is_double=is_double)
         else:
             msg = "meshForm=%r; allowedForms=['combined','separate']" % meshForm
             raise NotImplementedError(msg)
@@ -230,12 +223,11 @@ def run_fem1(fem1, bdfModel, meshForm, xref, punch, sum_load, size, precision, c
 
 
 def run_fem2(bdfModel, outModel, xref, punch,
-             sum_load, size, precision,
+             sum_load, size, is_double,
              reject, debug=False, log=None):
     assert os.path.exists(bdfModel), bdfModel
     assert os.path.exists(outModel), outModel
 
-    double = get_double_from_precision(precision)
     if reject:
         fem2 = BDFReplacer(bdfModel + '.rej', debug=debug, log=None)
     else:
@@ -257,7 +249,7 @@ def run_fem2(bdfModel, outModel, xref, punch,
             loadcase_id, options = fem2.caseControlDeck.get_subcase_parameter(isubcase, 'LOAD')
             F, M = fem2.sum_forces_moments(p0, loadcase_id, include_grav=False)
             print('  isubcase=%i F=%s M=%s' % (isubcase, F, M))
-    fem2.write_bdf(outModel2, interspersed=False, size=size, is_double=double)
+    fem2.write_bdf(outModel2, interspersed=False, size=size, is_double=is_double)
     #fem2.writeAsCTRIA3(outModel2)
     os.remove(outModel2)
     return (fem2)
@@ -501,15 +493,14 @@ def main():
     import time
     t0 = time.time()
 
-    if data['--large']:
+    is_double = False
+    if data['--double']:
         size = 16
-        if data['--double']:
-            precision = 'double'
-        else:
-            precision = 'single'
+        is_double = True
+    elif data['--large']:
+        size = 16
     else:
         size = 8
-        precision = 'single'
 
     run_bdf('.', data['BDF_FILENAME'],
                  debug=not(data['--quiet']),
@@ -518,7 +509,7 @@ def main():
                  punch=data['--punch'],
                  reject=data['--reject'],
                  size=size,
-                 precision=precision,
+                 is_double=is_double,
                  sum_load=data['--loads']
     )
     print("total time:  %.2f sec" % (time.time() - t0))

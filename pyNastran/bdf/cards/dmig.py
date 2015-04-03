@@ -401,11 +401,11 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
 
     j = 0
     cols = {}
-    colsReversed = {}
+    cols_reversed = {}
     for GCj in self.GCj:
         if GCj not in cols:
             cols[GCj] = j
-            colsReversed[j] = GCj
+            cols_reversed[j] = GCj
             j += 1
     #nCols = len(cols2)
 
@@ -496,7 +496,7 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
                     M[i, j] = reali
 
     #print(M)
-    return (M, rows_reversed, colsReversed)
+    return (M, rows_reversed, cols_reversed)
 
 
 
