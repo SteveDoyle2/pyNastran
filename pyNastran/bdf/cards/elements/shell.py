@@ -785,27 +785,23 @@ class CTRIAR(TriShell):
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
-    def _verify(self, xref=False):
-        eid = self.Eid()
-        pid = self.Pid()
-        nids = self.nodeIDs()
+    #def _verify(self, xref=False):
+        #eid = self.Eid()
+        #pid = self.Pid()
+        #nids = self.nodeIDs()
 
-        assert isinstance(eid, int)
-        assert isinstance(pid, int)
-        for i,nid in enumerate(nids):
-            assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
+        #assert isinstance(eid, int)
+        #assert isinstance(pid, int)
+        #for i,nid in enumerate(nids):
+            #assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
 
-        if xref:
-            assert self.pid.type in ['PSHELL', 'PCOMP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
-            t = self.Thickness()
-            a,c,n = self.AreaCentroidNormal()
-            assert isinstance(t, float), 'thickness=%r' % t
-            assert isinstance(a, float), 'Area=%r' % a
-            for i in range(3):
-                assert isinstance(c[i], float)
-                assert isinstance(n[i], float)
-            mass = self.Mass()
-            assert isinstance(mass, float), 'mass=%r' % mass
+        #if xref:
+            #assert self.pid.type in ['PSHELL', 'PCOMP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
+            #t = self.Thickness()
+            #a,c,n = self.AreaCentroidNormal()
+            #for i in range(3):
+                #assert isinstance(c[i], float)
+                #assert isinstance(n[i], float)
 
     def Thickness(self):
         """

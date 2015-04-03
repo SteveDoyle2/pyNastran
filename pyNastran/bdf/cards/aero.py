@@ -28,7 +28,7 @@ from numpy import array, pi, linspace, zeros, arange, repeat, dot
 from numpy.linalg import norm
 
 from pyNastran.bdf.deprecated import AeroDeprecated, CAERO1Deprecated, CAERO2Deprecated
-from pyNastran.bdf.fieldWriter import set_blank_if_default
+from pyNastran.bdf.fieldWriter import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
 from pyNastran.bdf.bdfInterface.assign_type import (fields,
     integer, integer_or_blank,
@@ -36,7 +36,6 @@ from pyNastran.bdf.bdfInterface.assign_type import (fields,
     string, string_or_blank,
     integer_or_string, double_string_or_blank,
     blank, interpret_value)
-from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 class AEFACT(BaseCard):
@@ -1646,7 +1645,7 @@ def points_elements_from_quad_points(p1, p2, p3, p4, x, y):
 
 
 class PAERO5(object):
-    def __init__(self):
+    def __init__(self, card=None, data=None):
         """
         +--------+-------+--------+--------+---------+-------+-------+-------+
         | PAERO5 | PID   | NALPHA | LALPHA | NXIS    | LXIS  | NTAUS | LTAUS |
@@ -1660,56 +1659,59 @@ class PAERO5(object):
                  |  0.0  |  0.0   |  5.25  | 3.99375 |  0.0  |
         +--------+-------+--------+--------+---------+-------+
         """
-        self.pid = integer(card, 1, 'property_id')
-        self.nalpha = integer_or_blank(card, 2, 'nalpha', default=0)
-        self.lalpha = integer_or_blank(card, 3, 'lalpha', default=0)
+        if card:
+            self.pid = integer(card, 1, 'property_id')
+            self.nalpha = integer_or_blank(card, 2, 'nalpha', default=0)
+            self.lalpha = integer_or_blank(card, 3, 'lalpha', default=0)
 
-        # number of dimensionless chord coordinates in zeta ()
-        self.nxis = integer_or_blank(card, 4, 'nxis', default=0)
+            # number of dimensionless chord coordinates in zeta ()
+            self.nxis = integer_or_blank(card, 4, 'nxis', default=0)
 
-        # ID of AEFACT that lists zeta
-        self.lxis = integer_or_blank(card, 5, 'lxis', default=0)
+            # ID of AEFACT that lists zeta
+            self.lxis = integer_or_blank(card, 5, 'lxis', default=0)
 
-        # number of dimensionless thickess coordinates in tau
-        self.ntaus = integer_or_blank(card, 6, 'ntaus', default=0)
+            # number of dimensionless thickess coordinates in tau
+            self.ntaus = integer_or_blank(card, 6, 'ntaus', default=0)
 
-        # ID of AEFACT that lists thickness ratios (t/c)
-        self.ltaus = integer_or_blank(card, 7, 'ltaus', default=0)
+            # ID of AEFACT that lists thickness ratios (t/c)
+            self.ltaus = integer_or_blank(card, 7, 'ltaus', default=0)
 
-        # ca/c - control surface chord / strip chord
-        caoci = []
-        j = 0
-        for n, i in enumerate(range(9, len(card))):
-            ca = double(card, i, 'ca/ci_%i' % (n+1))
-            caoci.append(ca)
-        self.caoci = array(caoci, dtype='float64')
+            # ca/c - control surface chord / strip chord
+            caoci = []
+            j = 0
+            for n, i in enumerate(range(9, len(card))):
+                ca = double(card, i, 'ca/ci_%i' % (n+1))
+                caoci.append(ca)
+            self.caoci = array(caoci, dtype='float64')
+        else:
+            raise NotImplementedError('data')
 
-    def integrals(self):
-        # chord location
-        x = self.lxis.Di
+    #def integrals(self):
+        ## chord location
+        #x = self.lxis.Di
 
-        # thickness
-        y = self.ltaus.Di
+        ## thickness
+        #y = self.ltaus.Di
 
-        # slope of airfoil semi-thickness
-        yp = derivative1(y/2, x)
+        ## slope of airfoil semi-thickness
+        #yp = derivative1(y/2, x)
 
-        # x hinge
-        for xh in self.caoci:
-            I1 = integrate(yp, x, 0., 1.)
-            I2 = integrate(x * yp, x, 0., 1.)
-            I3 = integrate(x**2*yp, x, 0., 1.)
-            I4 = integrate(yp**2, x, 0., 1.)
-            I5 = integrate(x**2 * yp**2, x, 0., 1.)
+        ## x hinge
+        #for xh in self.caoci:
+            #I1 = integrate(yp, x, 0., 1.)
+            #I2 = integrate(x * yp, x, 0., 1.)
+            #I3 = integrate(x**2*yp, x, 0., 1.)
+            #I4 = integrate(yp**2, x, 0., 1.)
+            #I5 = integrate(x**2 * yp**2, x, 0., 1.)
 
-            J1 = integrate(yp, x, xh, 1.)
-            J2 = integrate(x * yp, x, xh, 1.)
-            J3 = integrate(x**2*yp, x, xh, 1.)
-            J4 = integrate(yp**2, x, xh, 1.)
-            J5 = integrate(x**2 * yp**2, x, xh, 1.)
+            #J1 = integrate(yp, x, xh, 1.)
+            #J2 = integrate(x * yp, x, xh, 1.)
+            #J3 = integrate(x**2*yp, x, xh, 1.)
+            #J4 = integrate(yp**2, x, xh, 1.)
+            #J5 = integrate(x**2 * yp**2, x, xh, 1.)
 
-        return(I1, I2, I3, I4, I5,
-               J1, J2, J3, J4, J5)
+        #return(I1, I2, I3, I4, I5,
+               #J1, J2, J3, J4, J5)
 
 
 

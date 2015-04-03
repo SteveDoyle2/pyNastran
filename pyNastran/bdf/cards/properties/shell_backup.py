@@ -346,19 +346,19 @@ class ShellPropertyBackup(Property):
         return (Tinv, TinvT)
 
 
-class PCOMP_backup(Property):
-    def __init__(self):
-        pass
+#class PCOMP_backup(Property):
+    #def __init__(self):
+        #pass
 
-    def D(self):
-        D = zeros([3, 3])
-        #isSym = self.isSymmetrical()
-        for iply in range(len(self.plies)):
-            theta = self.Theta(iply)
-            #t    = self.Thickness(iply)
-            mat = self.Material(iply)
-            Di = mat.Dplate()
-            transform = self.T(theta)
-            D += Di * transform
-        return D
+    #def D(self):
+        #D = zeros([3, 3])
+        ##isSym = self.isSymmetrical()
+        #for iply in range(len(self.plies)):
+            #theta = self.Theta(iply)
+            ##t    = self.Thickness(iply)
+            #mat = self.Material(iply)
+            #Di = mat.Dplate()
+            #transform = self.T(theta)
+            #D += Di * transform
+        #return D
 

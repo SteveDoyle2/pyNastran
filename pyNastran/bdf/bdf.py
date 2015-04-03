@@ -9,7 +9,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import string_types, iteritems, itervalues, next
 from pyNastran.bdf.utils import (to_fields, get_include_filename,
                                  parse_executive_control_deck,
-                                 clean_empty_lines, _clean_comment)
+                                 clean_empty_lines, _clean_comment, CardParseSyntaxError)
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 #from codecs import open as codec_open
 import io
@@ -103,8 +105,6 @@ from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 from pyNastran.bdf.bdfInterface.bdf_writeMesh import WriteMesh
 from pyNastran.bdf.bdfInterface.crossReference import XrefMesh
-from pyNastran.bdf.cards.utils import wipe_empty_fields
-from pyNastran.bdf.utils import CardParseSyntaxError
 
 
 class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
@@ -1314,7 +1314,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             return
 
         if self.echo:
-            from pyNastran.bdf.fieldWriter import print_card_8
             print(print_card_8(card_obj).rstrip())
 
         # function that gets by name the initialized object (from global scope)

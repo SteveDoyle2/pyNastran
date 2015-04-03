@@ -197,18 +197,18 @@ class TestBeams(unittest.TestCase):
         with self.assertRaises(SyntaxError):  # .. todo:: is this correct?
             card2 = PBEAM(card)
 
-        if 0:
-            fields = card2.raw_fields()
-            msg = print_card(fields)
+        #if 0:
+            #fields = card2.raw_fields()
+            #msg = print_card(fields)
 
-            lines_actual = msg.rstrip().split('\n')
-            msg = '\n%s\n\n%s' % ('\n'.join(lines_expected), msg)
-            msg += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
-            self.assertEqual(len(lines_actual), len(lines_expected), msg)
-            for actual, expected in zip(lines_actual, lines_expected):
-                msg =  '\nactual   = %r\n' % actual
-                msg += 'expected = %r' % expected
-                self.assertEqual(actual, expected, msg)
+            #lines_actual = msg.rstrip().split('\n')
+            #msg = '\n%s\n\n%s' % ('\n'.join(lines_expected), msg)
+            #msg += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
+            #self.assertEqual(len(lines_actual), len(lines_expected), msg)
+            #for actual, expected in zip(lines_actual, lines_expected):
+                #msg =  '\nactual   = %r\n' % actual
+                #msg += 'expected = %r' % expected
+                #self.assertEqual(actual, expected, msg)
 
     def test_pbeam_08(self):  # should fail...
         lines = [

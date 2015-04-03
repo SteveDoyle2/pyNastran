@@ -95,7 +95,6 @@ class BDFMethods(BDFMethodsDeprecated):
 
         #num_cpus = 1
         if num_cpus > 1:
-            # doesn't support calculate_cg = False
             # must use num_cpus = 1
             mass, cg, I = self._mass_properties_mp(num_cpus, elements, masses,
                                                    nelements,
@@ -336,7 +335,7 @@ class BDFMethods(BDFMethodsDeprecated):
             p2 = coord.transformToLocal(p, matrix, debug=debug)
             self.nodes[nid].UpdatePosition(self, p2, coord.cid)
 
-    def __gravity_load(loadcase_id):
+    def __gravity_load(self, loadcase_id):
         """
         TODO:
             1.  resolve the load case
@@ -401,7 +400,7 @@ class BDFMethods(BDFMethodsDeprecated):
         if not isinstance(loadcase_id, int):
             raise RuntimeError('loadcase_id must be an integer; loadcase_id=%r' % loadcase_id)
         if isinstance(p0, int):
-            p = self.model.nodes[p0].Position()
+            p = self.nodes[p0].Position()
         else:
             p = array(p0)
 

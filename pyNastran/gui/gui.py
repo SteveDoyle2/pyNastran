@@ -6,7 +6,7 @@ from six.moves import range
 # standard library
 import sys
 import os.path
-import traceback
+#import traceback
 #import webbrowser
 #webbrowser.open("http://xkcd.com/353/")
 

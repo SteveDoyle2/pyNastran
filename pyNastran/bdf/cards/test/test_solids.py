@@ -18,9 +18,9 @@ class TestSolids(unittest.TestCase):
         card.write_bdf(size, 'dummy')
         card.raw_fields()
 
-    def test_solid_02(self):
-        """checks nonlinear static solid material"""
-        pass
+    #def test_solid_02(self):
+        #"""checks nonlinear static solid material"""
+        #pass
 
     def test_solid_01(self):
         """checks linear static solid material"""
@@ -182,7 +182,7 @@ class TestSolids(unittest.TestCase):
             model.add_card(fields, fields[0], is_list=True)
         model.cross_reference()
 
-    def test_solid_03(self):
+    def test_solid_04(self):
         """checks linear static solid material"""
         mid = 2
         pid = 4

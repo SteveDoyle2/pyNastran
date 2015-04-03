@@ -34,6 +34,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     integer_string_or_blank)
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_double import print_card_double
 
 
 class LOAD(LoadCombination):
@@ -622,7 +623,7 @@ class Moment(Load):
             normXYZ = norm(self.xyz)
             #mag = self.mag*normXYZ
             self.mag *= normXYZ
-            self.xyz = self.xyz / normXYZ
+            self.xyz /= normXYZ
 
     def transformLoad(self):
         #print("self.xyz = ",self.xyz)
@@ -1558,8 +1559,7 @@ class PLOAD4(Load):
         if self.g1 and self.g34:  # solid elements
             nid = self.g1.nid
             nidOpposite = self.g34.nid
-            (faceNodeIDs, Area) = self.eid.getFaceNodesAndArea(self, nid,
-                                                               nidOpposite)
+            (faceNodeIDs, Area) = self.eid.getFaceNodesAndArea(self, nid, nidOpposite)
         else:
             faceNodeIDs = self.eid.nodeIDs()
             Area = self.eid.Area()

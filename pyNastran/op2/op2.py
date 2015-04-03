@@ -5,7 +5,6 @@ Main OP2 class
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
-import sys
 from numpy import array, unique, where
 from pyNastran.op2.op2_scalar import OP2_Scalar
 

@@ -427,9 +427,6 @@ class CPENTA6(SolidElement):
             p3 = self.nodes[n3i].Position()
             a = p1 - p2
             b = p1 - p3
-            normal = cross(a, b)
-            n = norm(normal)
-            A = 0.5 * n
             centroid = (p1 + p2 + p3) / 3.
         else:
             (n1, n2, n3, n4) = pack2
@@ -444,10 +441,10 @@ class CPENTA6(SolidElement):
             p4 = self.nodes[n4i].Position()
             a = p1 - p3
             b = p2 - p4
-            normal = cross(a, b)
-            n = norm(normal)
-            A = 0.5 * n
             centroid = (p1 + p2 + p3 + p4) / 4.
+        normal = cross(a, b)
+        n = norm(normal)
+        area = 0.5 * n
         return area, centroid, normal / n
 
     def getFaceNodesAndArea(self, nidOpposite, nid):

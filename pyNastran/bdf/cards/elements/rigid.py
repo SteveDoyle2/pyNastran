@@ -17,13 +17,13 @@ from six.moves import zip, range
 import sys
 from itertools import count
 
-from pyNastran.bdf.fieldWriter import set_blank_if_default
+from pyNastran.bdf.fieldWriter import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
     integer_or_double, integer_double_or_blank, integer_or_blank,
     double_or_blank, integer_double_or_string, components, components_or_blank,
     blank, fields, string, interpret_value)
-from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.cards.utils import build_table_lines
 
 
@@ -281,7 +281,6 @@ class RBE2(RigidElement):
         :param value: the value for the appropriate field
         :type field:  varies
         """
-        list_fields = ['RBE2', self.eid, self.gn, self.cm] + self.Gmi + [alpha]
         if n > 3 and n <= 3 + len(self.Gmi):
             self.Gmi[n-4] = value
         elif n == 4 + len(self.Gmi):
@@ -289,6 +288,7 @@ class RBE2(RigidElement):
         else:
             raise KeyError('Field %r is an invalid %s entry.' % (n, self.type))
         return value
+
     def __init__(self, card=None, data=None, comment=''):
         """
         +-------+-----+-----+-----+------+-------+-----+-----+-----+

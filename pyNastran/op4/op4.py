@@ -757,12 +757,12 @@ class OP4(object):
 
                 recordLength -= nValues * NBW
                 data = data[nValues * NBW:]
-                if 0:
-                    print("recordLength=%s NBW=%s len(data)=%s" %
-                          (recordLength, NBW, len(data)))
-                    #print(A)
-                    print("********")  # ,data
-                    print(self.print_block(data))
+                #if 0:
+                    #print("recordLength=%s NBW=%s len(data)=%s" %
+                          #(recordLength, NBW, len(data)))
+                    ##print(A)
+                    #print("********")  # ,data
+                    #print(self.print_block(data))
                 i += 1
             #print "-------------------------------"
 

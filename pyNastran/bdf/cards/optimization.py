@@ -405,8 +405,7 @@ class DRESP2(OptConstraint):
             try:
                 (i, j) = packLength[key]
             except KeyError:
-                msg = 'INVALID DRESP2 key=|%s| fields=%s ID=%s' % (
-                    key, valueList, self.oid)
+                msg = 'INVALID DRESP2 key=%r fields=%s ID=%s' % (key, valueList, self.oid)
                 raise KeyError(msg)
             list_fields += build_table_lines(fields2, nStart=i, nEnd=j)
         return list_fields
@@ -448,7 +447,7 @@ class DSCREEN(OptConstraint):
         self.trs = double_or_blank(card, 2, 'trs', -0.5)
         #: Maximum number of constraints to be retained per region per load
         #: case. (Integer > 0; Default = 20)
-        self.nstr = integer(card, 3, 'nstr', 20)
+        self.nstr = integer_or_blank(card, 3, 'nstr', 20)
         assert len(card) == 4, 'len(DSCREEN card) = %i' % len(card)
 
     def raw_fields(self):

@@ -26,7 +26,7 @@ try:
     from pyNastran.converters.LaWGS.wgsIO import LaWGS_IO
     is_lawgs = True
 except ImportError:
-    raise
+    #raise
     class LaWGS_IO(object):
         def __init__(self):
             pass
@@ -39,7 +39,7 @@ try:
     from pyNastran.converters.panair.panairIO import PanairIO
     is_panair = True
 except ImportError:
-    raise
+    #raise
     class PanairIO(object):
         def __init__(self):
             pass
@@ -60,7 +60,7 @@ try:
     from pyNastran.converters.shabp.shabp_io import ShabpIO
     is_shabp = True
 except ImportError:
-    raise
+    #raise
     class ShabpIO(object):
         def __init__(self):
             pass
@@ -70,7 +70,7 @@ try:
     from pyNastran.converters.stl.stl_io import STL_IO
     is_stl = True
 except ImportError:
-    raise
+    #raise
     class STL_IO(object):
         def __init__(self):
             pass
@@ -91,7 +91,7 @@ try:
     from pyNastran.converters.tetgen.tetgen_io import TetgenIO
     is_tetgen = True
 except ImportError:
-    raise
+    #raise
     class TetgenIO(object):
         def __init__(self):
             pass
@@ -101,7 +101,7 @@ try:
     from pyNastran.converters.usm3d.usm3d_io import Usm3dIO
     is_usm3d = True
 except ImportError:
-    raise
+    #raise
     class Usm3dIO(object):
         def __init__(self):
             pass
