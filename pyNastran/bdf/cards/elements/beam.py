@@ -1,14 +1,12 @@
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
 from six import string_types
-from numpy import matrix, zeros, array, transpose, dot, ones
-from numpy import eye, allclose, cross
+from numpy import array, cross
 from numpy.linalg import norm
 
 
 from pyNastran.bdf.cards.elements.bars import CBAR, LineElement
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    integer_double_or_blank, double, double_or_blank,
-    string_or_blank, integer_double_string_or_blank, integer_or_double)
+    double_or_blank, integer_double_string_or_blank)
 from pyNastran.bdf.fieldWriter import set_blank_if_default
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.fieldWriter16 import print_card_16
@@ -201,7 +199,7 @@ class CBEAM(CBAR):
         else:
             self.g0_vector = self.x
 
-    def Rmatrix(self, model, n1, n2, debug=True):
+    def Rmatrix(self, model, n1, n2):
         p1 = model.Node(n1).Position()
         p2 = model.Node(n2).Position()
         v1 = p2 - p1

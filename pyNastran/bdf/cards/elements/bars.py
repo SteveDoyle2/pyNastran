@@ -3,16 +3,14 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types
 
-from numpy import matrix, zeros, array, transpose, dot, ones
-from numpy import eye, allclose, cross
+from numpy import array
 from numpy.linalg import norm
 
-from pyNastran.utils.dev import list_print
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import Element #, Mid
+from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    integer_double_or_blank, double, double_or_blank,
-    string_or_blank, integer_double_string_or_blank, integer_or_double)
+    integer_double_or_blank, double_or_blank,
+    string_or_blank)
 from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.fieldWriter16 import print_card_16
 
@@ -20,10 +18,6 @@ from pyNastran.bdf.fieldWriter16 import print_card_16
 class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
     def __init__(self, card, data):
         Element.__init__(self, card, data)
-
-    def Lambda(self, model, debug=True):
-        (n1, n2) = self.nodeIDs()
-        return _Lambda(model, n1, n2, debug=debug)
 
     def C(self):
         """torsional constant"""
@@ -133,89 +127,6 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         L = norm(self.nodes[1].Position() - self.nodes[0].Position())
         return L
 
-    # def k_Axial(self):
-    #     r"""
-    #     Returns the axial stiffness matrix.
-    #
-    #     \f[ \large   k_{Axial} = \frac{AE}{2L}
-    #       \left[
-    #       \begin{array}{cc}
-    #           1 & -1 \\
-    #          -1 &  1
-    #       \end{array} \right]
-    #     \f]
-    #     """
-    #     raise NotImplementedError()
-    #     L = self.Length()
-    #     E = self.E()
-    #     A = self.Area()
-    #     kMag = A * E / (2 * L)
-    #     K = ones(1, 1)
-    #     K[0, 1] = K[1, 0] = -1
-    #     return kMag * K
-
-    # def k_Torsion(self):  # not done
-    #     r"""
-    #     Returns the torsional stiffness matrix.
-    #
-    #     \f[ \large   k_{Axial} = \frac{L}{GJ}
-    #       \left[
-    #       \begin{array}{cc}
-    #           1 & -1 \\
-    #          -1 &  1
-    #       \end{array} \right]
-    #     \f]
-    #     .. warning:: formula not verified
-    #     """
-    #     raise NotImplementedError()
-    #     L = self.Length()
-    #     G = self.G()
-    #     J = self.J()
-    #     #A = self.Area()
-    #     #kMag = A*E/(2*L)
-    #     kMag = L / (G * J)
-    #     K = ones(1, 1)
-    #     K[0, 1] = K[1, 0] = -1
-    #     return kMag * K
-
-    # def k_Bending(self):
-    #     r"""
-    #     Returns the bending stiffness matrix.
-    #
-    #     \f[ \large  k_{Bending} = \frac{EI}{L^3}
-    #       \left[
-    #       \begin{array}{cccc}
-    #          12 &  6L   & -12 &  6L    \\
-    #          6L &  4L^2 & -6L &  2L^2  \\
-    #         -12 & -6L   &  12 & -6L    \\
-    #          6L &  2L^2 & -6L &  4L^2
-    #       \end{array} \right]
-    #     \f]
-    #     """
-    #     raise NotImplementedError()
-    #     L = self.Length()
-    #     E = self.E()
-    #     I = self.I()
-    #     LL = L * L
-    #     LLL = L * LL
-    #     sL = 6 * L
-    #     tLL = 2 * LL
-    #     fLL = 4 * LL
-    #     kMag = E * I / LLL
-    #
-    #     #K = Matrix(zeros(4,4))
-    #     K = matrix([[12., sL, -12, sL],
-    #                 [sL, fLL, -sL, tLL],
-    #                 [-12, -sL, 12., -sL],
-    #                 [sL, tLL, -sL, fLL]])
-    #     #M[1,0] = sL
-    #     #M[2,0] = -12.
-    #     #M[3,0] = sL
-    #
-    #     #M[2,4] =  -sL
-    #     #M[1,1] = M[3,3] = fLL
-    #     return kMag * K
-
 
 class CBAROR(object):
     type = 'CBAROR'
@@ -231,7 +142,6 @@ class CBAROR(object):
 
         self.property_id = integer_or_blank(card, 2, 'pid')
 
-        #---------------------------------------------------------
         # x / g0
         field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
         if isinstance(field5, int):
@@ -242,8 +152,8 @@ class CBAROR(object):
             self.is_g0 = False
             self.g0 = None
             self.x = array([field5,
-                       double_or_blank(card, 6, 'x2', 0.0),
-                       double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
+                            double_or_blank(card, 6, 'x2', 0.0),
+                            double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
         self.offt = string_or_blank(card, 8, 'offt', 'GGG')
         assert len(card) <= 9, 'len(CBAROR card) = %i' % len(card)
 
@@ -458,12 +368,6 @@ class CBAR(LineElement):
         self.gb = model.Node(self.gb, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
 
-    #def updateNodes(self,nodes):
-    #    """
-    #    .. todo:: maybe improve
-    #    """
-    #    self.cross_reference(self,nodes)
-
     def Ga(self):
         if isinstance(self.ga, int):
             return self.ga
@@ -496,179 +400,6 @@ class CBAR(LineElement):
     def nodeIDs(self):
         return [self.Ga(), self.Gb()]
 
-    def Stiffness(self, model, grav, is3D=False):  # CBAR
-        #print("----------------")
-        Lambda = self.Lambda(model, is3D=is3D)
-        Lambda_beam = self.Lambda_beam(model)
-        #print("Lambda = \n"+str(Lambda))
-
-        #k_beam = self.Stiffness1D(model)
-        #k_unit = array([[1.0, -1.0],
-        #                [-1.0, 1.0]], dtype='float64')
-        #print(R)
-        #print(k)
-        #print("Lambda.shape = ", Lambda.shape)
-        #K_unit = dot(dot(transpose(Lambda), k_unit), Lambda)
-
-        A = self.Area()
-        E = self.E()
-        G = self.G()
-        J = self.J()
-        L = self.L()
-
-        I1 = self.I1()
-        I2 = self.I2()
-
-        #k_axial = A * E / L
-        #k_torsion = G * J / L
-        #k_bend = A * E / L**3
-
-        #K_axial = k_axial * K_unit
-        #K_torsion = k_torsion * K_unit
-        #K_beam = dot(dot(transpose(Lambda_beam), k_beam), Lambda)
-
-        Lambda_beam2 = Lambda_beam
-        K_beam = dot(Lambda_beam2, k_beam)
-        K_beam = dot(dot(transpose(Lambda_beam2), k_beam), Lambda_beam2)
-        K = K_beam
-        #Fg = dot(dot(transpose(Lambda),grav),Lambda)
-
-        #print('size(grav) =',grav.shape)
-        mass = self.Mass()
-        mg = -grav * mass
-        if is3D:
-            Fg = [mg[0], mg[1], mg[2], mg[0], mg[1], mg[2]]
-        else:
-            Fg = [mg[0], mg[1], mg[0], mg[1]]
-        #print("Fg = ",Fg)
-        #print("mass = ", mass)
-        #print("Fg = \n", Fg)
-        #print(K)
-        #print("K[%s] = \n%s\n" % (self.eid, K/10*6))
-        #print("Fg[%s] = %s\n" %(self.eid,Fg))
-
-        n0, n1 = self.nodeIDs()
-                 # u1          v1          theta1         u2,v2,w2
-
-        nIJV = [
-                 (n0, 1), (n0, 2), (n0, 5),  (n1, 1), (n1, 2), (n1, 5),  # X1
-                 (n0, 1), (n0, 2), (n0, 5),  (n1, 1), (n1, 2), (n1, 5),  # Y1
-                 (n0, 1), (n0, 2), (n0, 5),  (n1, 1), (n1, 2), (n1, 5),  # M1
-
-                 (n0, 1), (n0, 2), (n0, 5),  (n1, 1), (n1, 2), (n1, 5),  # X2
-                 (n0, 1), (n0, 2), (n0, 5),  (n1, 1), (n1, 2), (n1, 5),  # Y2
-                 (n0, 1), (n0, 2), (n0, 5),  (n1, 1), (n1, 2), (n1, 5),  # M2
-                ]
-        #print("nIJV = ",nIJV)
-        nGrav = [(n0, 1), (n0, 2), (n0, 3),
-                 (n1, 1), (n1, 2), (n1, 3)]
-
-        return(K, nIJV, Fg, nGrav)
-
-    def Stiffness1D(self, model):  # CBAR
-        #L = norm(r)
-        (n1, n2) = self.nodeIDs()
-        #node1 = model.Node(n1)
-        #node2 = model.Node(n2)
-
-        p1 = model.Node(n1).xyz
-        p2 = model.Node(n2).xyz
-        #print("node1 = ", node1)
-        #print("node2 = ", node2)
-        L = norm(p1 - p2)
-
-        if L == 0.0:
-            msg = 'invalid CBAR length=0.0\n%s' % (self.__repr__())
-            raise ZeroDivisionError(msg)
-
-        A = self.Area()
-        #mat = self.mid
-        E = self.E()
-        I1 = self.I1()
-        I2 = self.I2()
-        #print("A  = ", A)
-        #print("E  = ", E)
-        #print("L  = ", L)
-        #print("I1 = ", I1)
-        #print("I2 = ", I2)
-        #ki = 1.
-        #ki = A*E/L
-        #K = ki*matrix([[1.,-1.],[-1.,1.]]) # rod
-        #P = 10.416666667
-        P = 1.
-        k1 = A * E / L
-        k2 = P * L ** 3 / (E * I1)
-        #print("A=%g E=%g L=%g I1=%g I2=%G AE/L=%g L^3/E*Iz=%g" % (
-        #    A, E, L, I1, I2, k1, k2))
-        #print("K = \n",K)
-        #return K
-
-        L = self.Length()
-        E = self.E()
-        #I = self.I1()
-
-        LL = L * L
-        #LLL = L*LL
-        #kMag = E*I/LLL
-        sL = 6 * L
-        tLL = 2 * LL
-        fLL = 4 * LL
-
-        #K = zeros(4,4))
-        K = array([[0., 12., sL, 0., -12, sL],
-                   [0., sL, fLL, 0., -sL, tLL],
-                   [0., 0, 0, 0., 0, 0],
-                   [0., -12, -sL, 0., 12., -sL],
-                   [0., sL, tLL, 0., -sL, fLL],
-                   [0., 0, 0, 0., 0, 0],
-                   ])
-        #print("k =\n" + str(K))
-        return K, None
-
-    def Lambda(self, model, debug=True):  # CBAR
-        """
-        2d  [l,m,0,0,  l,m,0,0]
-            [0,0,l,m,  0,0,l,m] L*k = 2x4*W4x4
-
-        3d  [l,m,n,0,0,0,  l,m,n,0,0,0]
-            [0,0,0,l,m,n,  0,0,0,l,m,n]
-        """
-        is3D = False
-        #R = self.Rmatrix(model,is3D)
-
-        (n1, n2) = self.nodeIDs()
-        p1 = model.Node(n1).Position()
-        p2 = model.Node(n2).Position()
-        v1 = p2 - p1
-        if debug:
-            print("v1=%s" % v1)
-        v1 = v1 / norm(v1)
-        #v2 = v2/norm(v2)
-        #v3 = v3/norm(v3)
-        (l, m, n) = v1
-        #(o,p,q) = v2
-        #(r,s,t) = v3
-        print("l=%s m=%s n=%s" % (l, m, n))
-        if is3D:
-            Lambda = matrix([[l, m, n, 0, 0, 0, ],
-                             [m, l, n, 0, 0, 0, ],
-                             [0, 0, 1, 0, 0, 0, ],
-                             [0, 0, 0, l, m, n, ],
-                             [0, 0, 0, m, l, n, ],
-                             [0, 0, 0, 0, 0, 1, ],
-                             ])
-        else:
-            Lambda = matrix([[l, m, n, 0, 0, 0, ],
-                             [m, l, n, 0, 0, 0, ],
-                             [0, 0, 1, 0, 0, 0, ],
-                             [0, 0, 0, l, m, n, ],
-                             [0, 0, 0, m, l, n, ],
-                             [0, 0, 0, 0, 0, 1, ],
-                             ])
-        if debug:
-            print("Lambda* = \n" + str(Lambda))
-        return Lambda
-
     def raw_fields(self):
         """
         .. todo:: not perfectly accurate b/c ???
@@ -676,7 +407,7 @@ class CBAR(LineElement):
         (x1, x2, x3) = self.getX_G0_defaults()
         offt = set_blank_if_default(self.offt, 'GGG')
         list_fields = ['CBAR', self.eid, self.Pid(), self.Ga(), self.Gb(), x1, x2,
-                  x3, offt, self.pa, self.pb] + list(self.wa) + list(self.wb)
+                       x3, offt, self.pa, self.pb] + list(self.wa) + list(self.wb)
         return list_fields
 
     def repr_fields(self):
@@ -693,7 +424,7 @@ class CBAR(LineElement):
         (x1, x2, x3) = self.getX_G0_defaults()
         offt = set_blank_if_default(self.offt, 'GGG')
         list_fields = ['CBAR', self.eid, self.Pid(), self.Ga(), self.Gb(), x1, x2,
-                  x3, offt, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b]
+                       x3, offt, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b]
         return list_fields
 
     def write_bdf(self, size=8, is_double=False):
@@ -784,8 +515,8 @@ class CBEAM3(CBAR):
         (x1, x2, x3) = self.getX_G0_defaults()
         (ga, gb, gc) = self.nodeIDs()
         list_fields = ['CBEAM3', self.eid, self.Pid(), ga, gb, gc, x1, x2, x3,
-                  w1a, w2a, w3a, w1b, w2b, w3b, w1c, w2c, w3c,
-                  twa, twb, twc, self.s[0], self.s[1], self.s[2]]
+                       w1a, w2a, w3a, w1b, w2b, w3b, w1c, w2c, w3c,
+                       twa, twb, twc, self.s[0], self.s[1], self.s[2]]
         return list_fields
 
     def write_bdf(self, size=8, is_double=False):
@@ -861,7 +592,7 @@ class CBEND(LineElement):
     def raw_fields(self):
         (x1, x2, x3) = self.getX_G0_defaults()
         list_fields = ['CBEND', self.eid, self.Pid(), self.Ga(), self.Gb(),
-                  x1, x2, x3, self.geom]
+                       x1, x2, x3, self.geom]
         return list_fields
 
     def repr_fields(self):

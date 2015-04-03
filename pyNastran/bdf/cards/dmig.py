@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import zip, range
@@ -10,6 +10,11 @@ from numpy import zeros, abs  # average
 from scipy.sparse import coo_matrix
 
 from pyNastran.bdf.cards.baseCard import BaseCard
+
+from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.field_writer_double import print_card_double
+
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, string, blank, components, interpret_value)
 
@@ -70,21 +75,16 @@ class DEQATN(BaseCard):  # needs work...
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-        newCard = ''
-        foundNone = False
+        new_card = ''
+        found_none = False
         for field in card.card:
-            if foundNone is False and field is not None:
-                newCard += field + ','
-                foundNone = True
-            elif foundNone is True and field is not None:
-                newCard += field
+            if found_none is False and field is not None:
+                new_card += field + ','
+                found_none = True
+            elif found_none is True and field is not None:
+                new_card += field
 
-        #if len(card.card)>1:
-            #print("card.card = ", card.card)
-            #line0 = ','.join(card.card)
-        #else:
-            #line0 = ''.join(card.card)
-        line0 = newCard
+        line0 = new_card
         self.eqID = line0[8:16]
 
         assert len(self.eqID) == 8, 'len(eqID)==%s' % (len(self.eqID))
@@ -100,14 +100,14 @@ class DEQATN(BaseCard):  # needs work...
 
     def __repr__(self):
         eq = self.name + '=' + self.eq
-        eqLine = eq[0:56]
+        equation_line = eq[0:56]
         eq = eq[56:]
-        list_fields = ['DEQATN  ', '%8s' % (self.eqID), eqLine]
+        list_fields = ['DEQATN  ', '%8s' % (self.eqID), equation_line]
 
         if len(eq):
-            eqLine = eq[0:72]
+            equation_line = eq[0:72]
             eq = eq[72:]
-            list_fields += ['        ' + eqLine]
+            list_fields += ['        ' + equation_line]
         return ''.join(list_fields)
 
 
@@ -297,25 +297,27 @@ class NastranMatrix(BaseCard):
             return False
         elif self.polar == 1: # mag, phase
             return True
-        raise ValueError('Matrix %r must have a value of POLAR = [0, 1].\nPOLAR defines the type (real/imag or mag/phase) complex) of the matrix.  POLAR=%r.' % (self.name, self.polar))
+        msg = 'Matrix %r must have a value of POLAR = [0, 1].\n' % self.name
+        msg += 'POLAR defines the type (real/imag or mag/phase) complex) of the matrix.  POLAR=%r.' % self.polar
+        raise ValueError(msg)
 
     def getDType(self, Type):
         if Type == 1:
-            dType = 'float32'
+            dtype = 'float32'
         elif Type == 2:
-            dType = 'float64'
+            dtype = 'float64'
         elif Type == 3:
-            dType = 'complex64'
+            dtype = 'complex64'
         elif Type == 4:
-            dType = 'complex128'
+            dtype = 'complex128'
         elif Type == 0:
             if self.is_complex():
-                dType = 'complex128'
+                dtype = 'complex128'
             else:
-                dType = 'float64'
+                dtype = 'float64'
         else:
             raise RuntimeError("invalid option for matrix format")
-        return dType
+        return dtype
 
     def __repr__(self):
         return self.write_bdf(size=8, is_double=False)
@@ -327,8 +329,11 @@ class NastranMatrix(BaseCard):
         msg = '\n$' + '-' * 80
         msg += '\n$ %s Matrix %s\n' % (self.type, self.name)
         list_fields = [self.type, self.name, 0, self.ifo, self.tin,
-                  self.tout, self.polar, None, self.ncol]
-        msg += print_card(list_fields)
+                       self.tout, self.polar, None, self.ncol]
+        if size == 8:
+            msg += print_card_8(list_fields)
+        else:
+            msg += print_card_16(list_fields)
 
         if self.is_complex():
             if self.is_polar():
@@ -339,18 +344,33 @@ class NastranMatrix(BaseCard):
                     else:
                         phasei = degrees(atan2(complexi, reali))
                     list_fields = [self.type, self.name, GCj[0], GCj[1],
-                              None, GCi[0], GCi[1], magi, phasei]
-                    msg += print_card(list_fields)
+                                   None, GCi[0], GCi[1], magi, phasei]
+                    if size == 8:
+                        msg += print_card_8(list_fields)
+                    elif is_double:
+                        msg += print_card_double(list_fields)
+                    else:
+                        msg += print_card_16(list_fields)
             else:
                 for (GCi, GCj, reali, complexi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
                     list_fields = [self.type, self.name, GCj[0], GCj[1],
-                              None, GCi[0], GCi[1], reali, complexi]
-                    msg += print_card(list_fields)
+                                   None, GCi[0], GCi[1], reali, complexi]
+                    if size == 8:
+                        msg += print_card_8(list_fields)
+                    elif is_double:
+                        msg += print_card_double(list_fields)
+                    else:
+                        msg += print_card_16(list_fields)
         else:
             for (GCi, GCj, reali) in zip(self.GCi, self.GCj, self.Real):
                 list_fields = [self.type, self.name, GCj[0], GCj[1],
-                          None, GCi[0], GCi[1], reali, None]
-                msg += print_card(list_fields)
+                               None, GCi[0], GCi[1], reali, None]
+                if size == 8:
+                    msg += print_card_8(list_fields)
+                elif is_double:
+                    msg += print_card_double(list_fields)
+                else:
+                    msg += print_card_16(list_fields)
         return msg
 
 
@@ -371,11 +391,11 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
     """
     i = 0
     rows = {}
-    rowsReversed = {}
+    rows_reversed = {}
     for GCi in self.GCi:
         if GCi not in rows:
             rows[GCi] = i
-            rowsReversed[i] = GCi
+            rows_reversed[i] = GCi
             i += 1
     #nRows = len(rows2)
 
@@ -476,7 +496,7 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
                     M[i, j] = reali
 
     #print(M)
-    return (M, rowsReversed, colsReversed)
+    return (M, rows_reversed, colsReversed)
 
 
 
@@ -611,41 +631,33 @@ class DMI(NastranMatrix):
 
         # counter
         i = 0
-        fields = [interpret_value(field) for field in card[3:] ]
+        fields = [interpret_value(field) for field in card[3:]]
 
         # Real, starts at A(i1,j), goes to A(i2,j) in a column
         while i < len(fields):
             i1 = fields[i]
-            #print("i1 = ",i1)
             if isinstance(i1, int):
                 i += 1
-                isDoneReadingFloats = False
-                while not isDoneReadingFloats and i < len(fields):
-                    #print("i=%s len(fields)=%s" %(i,len(fields)))
-                    realValue = fields[i]
-                    if isinstance(realValue, int):
-                        isDoneReadingFloats = True
-                    elif isinstance(realValue, float):
+                is_done_reading_floats = False
+                while not is_done_reading_floats and i < len(fields):
+                    real_value = fields[i]
+                    if isinstance(real_value, int):
+                        is_done_reading_floats = True
+                    elif isinstance(real_value, float):
                         self.GCj.append(j)
                         self.GCi.append(i1)
-                        self.Real.append(realValue)
-                        #print("i=%s j=%s value=%s" %(i1,j,realValue)
+                        self.Real.append(real_value)
                         i += 1
                     else:
-                        #print("*i=%s j=%s value=%s type=%s" %(i1,j,realValue,type(realValue)))
-                        realValue = self.Real[-1]
-                        #print("*i=%s j=%s value=%s" %(i1,j,realValue))
+                        real_value = self.Real[-1]
                         endI = fields[i + 1]
-                        #print("*i=%s endI=%s j=%s value=%s" %(i1,endI,j,realValue))
                         for ii in range(i1, endI + 1):
                             self.GCj.append(j)
                             self.GCi.append(ii)
-                            self.Real.append(realValue)
+                            self.Real.append(real_value)
 
-                        #print("i = ",3+i)
-                        #print('field i=',fields[i])
                         i += 1
-                        isDoneReadingFloats = True
+                        is_done_reading_floats = True
 
     # def _read_complex(self, card):
     #     msg = 'complex matrices not supported in the DMI reader...'
@@ -691,7 +703,7 @@ class DMI(NastranMatrix):
 
     def raw_fields(self):
         list_fields = ['DMI', self.name, 0, self.form, self.tin,
-                  self.tout, None, self.nRows, self.nCols]
+                       self.tout, None, self.nRows, self.nCols]
 
         if self.is_complex():
             for (GCi, GCj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
@@ -705,18 +717,33 @@ class DMI(NastranMatrix):
         msg = '\n$' + '-' * 80
         msg += '\n$ %s Matrix %s\n' % ('DMI', self.name)
         list_fields = ['DMI', self.name, 0, self.form, self.tin,
-                  self.tout, None, self.nRows, self.nCols]
-        msg += print_card(list_fields)
+                       self.tout, None, self.nRows, self.nCols]
+        if size == 8:
+            msg += print_card_8(list_fields)
+        #elif is_double:
+            #msg += print_card_double(list_fields)
+        else:
+            msg += print_card_16(list_fields)
         #msg += self.print_card(list_fields,size=16,isD=False)
 
         if self.is_complex():
             for (GCi, GCj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
                 list_fields = ['DMI', self.name, GCj, GCi, reali, imagi]
-                msg += print_card(list_fields)
+                if size == 8:
+                    msg += print_card_8(list_fields)
+                elif is_double:
+                    msg += print_card_double(list_fields)
+                else:
+                    msg += print_card_16(list_fields)
         else:
             for (GCi, GCj, reali) in zip(self.GCi, self.GCj, self.Real):
                 list_fields = ['DMI', self.name, GCj, GCi, reali]
-                msg += print_card(list_fields)
+                if size == 8:
+                    msg += print_card_8(list_fields)
+                elif is_double:
+                    msg += print_card_double(list_fields)
+                else:
+                    msg += print_card_16(list_fields)
         return msg
 
     def __repr__(self):

@@ -20,14 +20,13 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import range
 
-from numpy import array, eye, cross, allclose, dot, transpose, zeros
+from numpy import array, eye, cross, allclose
 from numpy.linalg import det, norm  # inv
 
 from pyNastran.bdf.deprecated import ShellElementDeprecated
 from pyNastran.bdf.fieldWriter import (set_blank_if_default,
                                        set_default_if_blank)
 from pyNastran.bdf.cards.baseCard import Element
-from pyNastran.utils.dev import list_print
 from pyNastran.utils.mathematics import Area, norm, centroid_triangle
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, blank)
@@ -946,7 +945,7 @@ class CTRIAX6(TriShell):
 
     def raw_fields(self):
         list_fields = (['CTRIAX6', self.eid, self.Mid(), self.Pid()] +
-                  self.nodeIDs() +  [self.theta])
+                       self.nodeIDs() +  [self.theta])
         return list_fields
 
     def repr_fields(self):
@@ -1193,7 +1192,7 @@ class CSHEAR(QuadShell):
 
         assert isinstance(eid, int)
         assert isinstance(pid, int)
-        for i,nid in enumerate(nids):
+        for i, nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:

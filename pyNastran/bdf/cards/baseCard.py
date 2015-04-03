@@ -75,10 +75,10 @@ class BaseCard(BaseCardDeprecated):
         fields2 = card.raw_fields()
         return self._is_same_fields(fields1, fields2)
 
-    def print_raw_fields(self, size=8):
+    def print_raw_fields(self, size=8, is_double=False):
         """A card's raw fields include all defaults for all fields"""
         list_fields = self.raw_fields()
-        return print_card(list_fields, size=size)
+        return print_card(list_fields, size=size, is_double=False)
 
     def repr_fields(self):
         """gets the card's fields"""

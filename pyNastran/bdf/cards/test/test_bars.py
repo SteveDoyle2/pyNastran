@@ -5,15 +5,15 @@ from itertools import count
 
 from pyNastran.bdf.bdf import BDF, BDFCard, PBAR #, GRID, MAT1
 
-#from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
 
 bdf = BDF(debug=False)
 class TestBars(unittest.TestCase):
     def test_pbar_01(self):
         fields = [u'PBAR', 1510998, 1520998, 0.0, 4.9000000000000006e-14, 4.9000000000000006e-14, 0.0, 0.0, None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None, 0.0]
-        card = print_card(fields)
+        card = print_card_8(fields)
         #print(card)
-        card = print_card(fields)
+        card = print_card_8(fields)
         lines = card.split('\n')
         card = bdf.process_card(lines)
         card2 = BDFCard(card)
@@ -38,7 +38,7 @@ class TestBars(unittest.TestCase):
         fields = ['PBAR', pid, mid, A, I1, I2, J, nsm, None,
                           c1, c2, d1, d2, e1, e2, f1, f2,
                           k1, k2, i12]
-        card = print_card(fields)
+        card = print_card_8(fields)
         lines = card.split('\n')
         card = bdf.process_card(lines)
         card2 = BDFCard(card)
@@ -73,7 +73,7 @@ class TestBars(unittest.TestCase):
         fields = ['PBAR', pid, mid, A, I1, I2, J, nsm, None,
                           c1, c2, d1, d2, e1, e2, f1, f2,
                           k1, k2, i12]
-        card = print_card(fields)
+        card = print_card_8(fields)
         lines = card.split('\n')
         card = bdf.process_card(lines)
         card3 = BDFCard(card)

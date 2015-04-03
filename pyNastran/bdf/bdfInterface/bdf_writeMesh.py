@@ -13,8 +13,6 @@ import warnings
 from pyNastran.bdf.utils import print_filename
 from pyNastran.utils.gui_io import save_file_dialog
 from pyNastran.bdf.fieldWriter import print_card_8
-from pyNastran.bdf.fieldWriter16 import print_card_16
-from pyNastran.bdf.field_writer_double import print_card_double
 
 
 class WriteMesh(object):
@@ -92,9 +90,10 @@ class WriteMesh(object):
               slightly longer than if interspersed=False, but makes it
               much easier to compare to a Patran-formatted bdf and is
               more clear. (default=True)
-        :param size:  the field size (8 is recommended)
-        :param enddata:  Flag to enable/disable writing ENDDATA
-                         (default=None -> depends on input BDF)
+        :param size:      the field size (8 is recommended)
+        :param is_double: small field (False) or large field (True); default=False
+        :param enddata:   Flag to enable/disable writing ENDDATA
+                          (default=None -> depends on input BDF)
         """
         out_filename = self._output_helper(out_filename,
                                            interspersed, size, is_double)
@@ -161,7 +160,7 @@ class WriteMesh(object):
             assert 'BEGIN BULK' in msg, msg
             outfile.write(''.join(msg))
 
-    def _write_elements(self, outfile, size, is_double):
+    def _write_elements(self, outfile, size=8, is_double=False):
         """
         Writes the elements in a sorted order
 
@@ -177,7 +176,7 @@ class WriteMesh(object):
                           'type=%s eid=%s' % (element.type, eid))
                     raise
 
-    def _write_elements_properties(self, outfile, size, is_double):
+    def _write_elements_properties(self, outfile, size=8, is_double=False):
         """
         Writes the elements and properties in and interspersed order
         """
@@ -237,7 +236,7 @@ class WriteMesh(object):
                 msg.append(card)
             outfile.write(''.join(msg))
 
-    def _write_aero(self, outfile, size, is_double):
+    def _write_aero(self, outfile, size=8, is_double=False):
         """Writes the aero cards"""
         if(self.aero or self.aeros or self.gusts or self.caeros
            or self.paeros or self.trims):
@@ -260,7 +259,7 @@ class WriteMesh(object):
                 msg.append(gust.write_bdf(size, is_double))
             outfile.write(''.join(msg))
 
-    def _write_aero_control(self, outfile, size, is_double):
+    def _write_aero_control(self, outfile, size=8, is_double=False):
         """Writes the aero control surface cards"""
         if(self.aefacts or self.aeparams or self.aelinks or self.aelists or
            self.aestats or self.aesurfs):
@@ -281,7 +280,7 @@ class WriteMesh(object):
                 msg.append(aefact.write_bdf(size, is_double))
             outfile.write(''.join(msg))
 
-    def _write_common(self, outfile, size, is_double):
+    def _write_common(self, outfile, size=8, is_double=False):
         """
         Write the common outputs so none get missed...
 
@@ -306,7 +305,7 @@ class WriteMesh(object):
         self._write_rejects(outfile, size, is_double)
         self._write_coords(outfile, size, is_double)
 
-    def _write_constraints(self, outfile, size, is_double):
+    def _write_constraints(self, outfile, size=8, is_double=False):
         """Writes the constraint cards sorted by ID"""
         if self.suports:
             msg = ['$CONSTRAINTS\n']
@@ -337,7 +336,7 @@ class WriteMesh(object):
             outfile.write(''.join(msg))
 
 
-    def _write_contact(self, outfile, size, is_double):
+    def _write_contact(self, outfile, size=8, is_double=False):
         """Writes the contact cards sorted by ID"""
         if(self.bcrparas or self.bctadds or self.bctparas or self.bctsets
            or self.bsurf or self.bsurfs):
@@ -357,7 +356,7 @@ class WriteMesh(object):
                 msg.append(bsurfsi.write_bdf(size, is_double))
             outfile.write(''.join(msg))
 
-    def _write_coords(self, outfile, size, is_double):
+    def _write_coords(self, outfile, size, size=8, is_double=False):
         """Writes the coordinate cards in a sorted order"""
         msg = []
         if len(self.coords) > 1:
@@ -367,7 +366,7 @@ class WriteMesh(object):
                 msg.append(coord.write_bdf(size, is_double))
         outfile.write(''.join(msg))
 
-    def _write_dmigs(self, outfile, size, is_double):
+    def _write_dmigs(self, outfile, size=8, is_double=False):
         """
         Writes the DMIG cards
 
@@ -388,7 +387,7 @@ class WriteMesh(object):
             msg.append(dmik.write_bdf(size, is_double))
         outfile.write(''.join(msg))
 
-    def _write_dynamic(self, outfile, size, is_double):
+    def _write_dynamic(self, outfile, size=8, is_double=False):
         """Writes the dynamic cards sorted by ID"""
         if(self.dareas or self.nlparms or self.frequencies or self.methods or
            self.cMethods or self.tsteps or self.tstepnls):
@@ -411,7 +410,7 @@ class WriteMesh(object):
                 msg.append(freq.write_bdf(size, is_double))
             outfile.write(''.join(msg))
 
-    def _write_flutter(self, outfile, size, is_double):
+    def _write_flutter(self, outfile, size=8, is_double=False):
         """Writes the flutter cards"""
         if self.flfacts or self.flutters or self.mkaeros:
             msg = ['$FLUTTER\n']
@@ -424,7 +423,7 @@ class WriteMesh(object):
                 msg.append(mkaero.write_bdf(size, is_double))
             outfile.write(''.join(msg))
 
-    def _write_loads(self, outfile, size, is_double):
+    def _write_loads(self, outfile, size=8, is_double=False):
         """Writes the load cards sorted by ID"""
         if self.loads:
             msg = ['$LOADS\n']
@@ -438,7 +437,7 @@ class WriteMesh(object):
                         raise
             outfile.write(''.join(msg))
 
-    def _write_masses(self, outfile, size, is_double):
+    def _write_masses(self, outfile, size=8, is_double=False):
         if self.properties_mass:
             outfile.write('$PROPERTIES_MASS\n')
             for (pid, mass) in sorted(iteritems(self.properties_mass)):
@@ -459,7 +458,7 @@ class WriteMesh(object):
                           'type=%s eid=%s' % (mass.type, eid))
                     raise
 
-    def _write_materials(self, outfile, size, is_double):
+    def _write_materials(self, outfile, size=8, is_double=False):
         """Writes the materials in a sorted order"""
         if(self.materials or self.hyperelasticMaterials or self.creepMaterials or
            self.MATS1 or self.MATS3 or self.MATS8 or self.MATT1 or
@@ -496,7 +495,7 @@ class WriteMesh(object):
                 msg.append(material.write_bdf(size, is_double))
             outfile.write(''.join(msg))
 
-    def _write_nodes(self, outfile, size, is_double):
+    def _write_nodes(self, outfile, size=8, is_double=False):
         """
         Writes the NODE-type cards
 
@@ -516,48 +515,48 @@ class WriteMesh(object):
             for (nid, node) in sorted(iteritems(self.nodes)):
                 msg.append(node.write_bdf(size, is_double))
             outfile.write(''.join(msg))
-        if 0:  # not finished
-            self._write_nodes_associated(outfile, size, is_double)
+        #if 0:  # not finished
+            #self._write_nodes_associated(outfile, size, is_double)
 
-    def _write_nodes_associated(self, outfile, size, is_double):
-        """
-        Writes the NODE-type in associated and unassociated groups.
+    #def _write_nodes_associated(self, outfile, size=8, is_double=False):
+        #"""
+        #Writes the NODE-type in associated and unassociated groups.
 
-        :param self: the BDF object
-        .. warning:: Sometimes crashes, probably on invalid BDFs.
-        """
-        msg = []
-        associated_nodes = set([])
-        for (eid, element) in iteritems(self.elements):
-            associated_nodes = associated_nodes.union(set(element.nodeIDs()))
+        #:param self: the BDF object
+        #.. warning:: Sometimes crashes, probably on invalid BDFs.
+        #"""
+        #msg = []
+        #associated_nodes = set([])
+        #for (eid, element) in iteritems(self.elements):
+            #associated_nodes = associated_nodes.union(set(element.nodeIDs()))
 
-        all_nodes = set(self.nodes.keys())
-        unassociated_nodes = list(all_nodes.difference(associated_nodes))
-        #missing_nodes = all_nodes.difference(
+        #all_nodes = set(self.nodes.keys())
+        #unassociated_nodes = list(all_nodes.difference(associated_nodes))
+        ##missing_nodes = all_nodes.difference(
 
-        # TODO: this really shouldn't be a list...???
-        associated_nodes = list(associated_nodes)
+        ## TODO: this really shouldn't be a list...???
+        #associated_nodes = list(associated_nodes)
 
-        if associated_nodes:
-            msg += ['$ASSOCIATED NODES\n']
-            if self.gridSet:
-                msg.append(self.gridSet.write_bdf(size, is_double))
-            # TODO: this really shouldn't be a dictionary...???
-            for key, node in sorted(iteritems(associated_nodes)):
-                msg.append(node.write_bdf(size, is_double))
+        #if associated_nodes:
+            #msg += ['$ASSOCIATED NODES\n']
+            #if self.gridSet:
+                #msg.append(self.gridSet.write_bdf(size, is_double))
+            ## TODO: this really shouldn't be a dictionary...???
+            #for key, node in sorted(iteritems(associated_nodes)):
+                #msg.append(node.write_bdf(size, is_double))
 
-        if unassociated_nodes:
-            msg.append('$UNASSOCIATED NODES\n')
-            if self.gridSet and not associated_nodes:
-                msg.append(self.gridSet.write_bdf(size, is_double))
-            for key, node in sorted(iteritems(unassociated_nodes)):
-                if key in self.nodes:
-                    msg.append(node.write_bdf(size, is_double))
-                else:
-                    msg.append('$ Missing NodeID=%s' % key)
-        outfile.write(''.join(msg))
+        #if unassociated_nodes:
+            #msg.append('$UNASSOCIATED NODES\n')
+            #if self.gridSet and not associated_nodes:
+                #msg.append(self.gridSet.write_bdf(size, is_double))
+            #for key, node in sorted(iteritems(unassociated_nodes)):
+                #if key in self.nodes:
+                    #msg.append(node.write_bdf(size, is_double))
+                #else:
+                    #msg.append('$ Missing NodeID=%s' % key)
+        #outfile.write(''.join(msg))
 
-    def _write_optimization(self, outfile, size, is_double):
+    def _write_optimization(self, outfile, size=8, is_double=False):
         """Writes the optimization cards sorted by ID"""
         if(self.dconstrs or self.desvars or self.ddvals or self.dresps
            or self.dvprels or self.dvmrels or self.doptprm or self.dlinks
@@ -583,7 +582,7 @@ class WriteMesh(object):
                 msg.append(self.doptprm.write_bdf(size, is_double))
             outfile.write(''.join(msg))
 
-    def _write_params(self, outfile, size, is_double):
+    def _write_params(self, outfile, size=8, is_double=False):
         """
         Writes the PARAM cards
 
@@ -592,10 +591,10 @@ class WriteMesh(object):
         if self.params:
             msg = ['$PARAMS\n']
             for (unused_key, param) in sorted(iteritems(self.params)):
-                msg.append(param.write_bdf(size, size))
+                msg.append(param.write_bdf(size, is_double))
             outfile.write(''.join(msg))
 
-    def _write_properties(self, outfile, size, is_double):
+    def _write_properties(self, outfile, size=8, is_double=False):
         """Writes the properties in a sorted order"""
         if self.properties:
             msg = ['$PROPERTIES\n']
@@ -610,7 +609,7 @@ class WriteMesh(object):
                 msg.append(card.write_bdf(size, is_double))
             outfile.write(''.join(msg))
 
-    def _write_rejects(self, outfile, size, is_double):
+    def _write_rejects(self, outfile, size=8, is_double=False):
         """
         Writes the rejected (processed) cards and the rejected unprocessed
         cardLines
@@ -640,7 +639,7 @@ class WriteMesh(object):
                     msg.append(str(reject2) + '\n')
         outfile.write(''.join(msg))
 
-    def _write_rigid_elements(self, outfile, size, is_double):
+    def _write_rigid_elements(self, outfile, size, size=8, is_double=False):
         """Writes the rigid elements in a sorted order"""
         if self.rigidElements:
             msg = ['$RIGID ELEMENTS\n']
@@ -653,7 +652,7 @@ class WriteMesh(object):
                     raise
             outfile.write(''.join(msg))
 
-    def _write_sets(self, outfile, size, is_double):
+    def _write_sets(self, outfile, size=8, is_double=False):
         """Writes the SETx cards sorted by ID"""
         if(self.sets or self.setsSuper or self.asets or self.bsets or
            self.csets or self.qsets):
@@ -672,7 +671,7 @@ class WriteMesh(object):
                 msg.append(set_obj.write_bdf(size, is_double))
             outfile.write(''.join(msg))
 
-    def _write_tables(self, outfile, size, is_double):
+    def _write_tables(self, outfile, size=8, is_double=False):
         """Writes the TABLEx cards sorted by ID"""
         if self.tables:
             msg = ['$TABLES\n']
@@ -686,7 +685,7 @@ class WriteMesh(object):
                 msg.append(table.write_bdf(size, is_double))
             outfile.write(''.join(msg))
 
-    def _write_thermal(self, outfile, size, is_double):
+    def _write_thermal(self, outfile, size=8, is_double=False):
         """Writes the thermal cards"""
         # PHBDY
         if self.phbdys or self.convectionProperties or self.bcs:
@@ -707,7 +706,7 @@ class WriteMesh(object):
                     msg.append(bc.write_bdf(size, is_double))
             outfile.write(''.join(msg))
 
-    def _write_thermal_materials(self, outfile, size, is_double):
+    def _write_thermal_materials(self, outfile, size=8, is_double=False):
         """Writes the thermal materials in a sorted order"""
         if self.thermalMaterials:
             msg = ['$THERMAL MATERIALS\n']

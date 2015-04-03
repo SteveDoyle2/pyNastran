@@ -7,7 +7,7 @@ from pyNastran.bdf.bdf import BDF, BDFCard, PBEAM, PBAR, CBEAM, GRID, MAT1
 from pyNastran.bdf.bdf import CROD, CONROD
 from pyNastran.bdf.bdf import PELAS
 
-#from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
 
 bdf = BDF(debug=False)
 class TestBeams(unittest.TestCase):
@@ -19,7 +19,7 @@ class TestBeams(unittest.TestCase):
                 '     ,   ,   ,1.1,    ,2.1,,0.21',
                 '     ,   ,   ,   ,    ,0.5,,0.0',]
         card = bdf.process_card(lines)
-        #print(print_card(card))
+        #print(print_card_8(card))
         card = BDFCard(card)
         card2 = PBEAM(card)
         fields = card2.raw_fields()
@@ -33,7 +33,7 @@ class TestBeams(unittest.TestCase):
         self._compare(fields, lines_expected)
 
     def _compare(self, fields, lines_expected):
-        msg = print_card(fields).rstrip()
+        msg = print_card_8(fields).rstrip()
         lines_actual = msg.rstrip().split('\n')
         msgA = '\n%s\n\n%s\n' % ('\n'.join(lines_expected), msg)
         msgA += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
@@ -116,11 +116,11 @@ class TestBeams(unittest.TestCase):
                 '     ,  , ,2.0,-4.0',]
 
         card = bdf.process_card(lines)
-        #print(print_card(card))
+        #print(print_card_8(card))
         card = BDFCard(card)
         card2 = PBEAM(card)
         fields = card2.raw_fields()
-        msg = print_card(fields)
+        msg = print_card_8(fields)
 
         lines_expected = ['PBEAM         39       6     2.9     3.5    5.97      0.      0.      0.',
                           '              0.      0.      2.     -4.      0.      0.      0.      0.',
@@ -199,7 +199,7 @@ class TestBeams(unittest.TestCase):
 
         #if 0:
             #fields = card2.raw_fields()
-            #msg = print_card(fields)
+            #msg = print_card_8(fields)
 
             #lines_actual = msg.rstrip().split('\n')
             #msg = '\n%s\n\n%s' % ('\n'.join(lines_expected), msg)
@@ -243,7 +243,7 @@ class TestBeams(unittest.TestCase):
 
         if 1:
             fields = card2.raw_fields()
-            msg = print_card(fields)
+            msg = print_card_8(fields)
             size = 16
             msg = card2.write_bdf(size, 'dummy')
 
@@ -265,9 +265,9 @@ class TestBeams(unittest.TestCase):
             None, 0.0008889, 6.4444e-07, -0.04, -0.75, 0.04, -0.75, 0.04,
             0.75, -0.04, 0.853433, 0.849842]
         #fields = [u'PBAR', 1510998, 1520998, 0.0, 4.9000000000000006e-14, 4.9000000000000006e-14, 0.0, 0.0, None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None, 0.0]
-        card = print_card(fields)
+        card = print_card_8(fields)
         #print(card)
-        card = print_card(fields)
+        card = print_card_8(fields)
         lines = card.split('\n')
         card = bdf.process_card(lines)
         card2 = BDFCard(card)
