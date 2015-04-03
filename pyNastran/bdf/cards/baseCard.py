@@ -90,9 +90,9 @@ class BaseCard(BaseCardDeprecated):
         list_fields = self.repr_fields()
         return self.comment() + print_card(list_fields, size=size)
 
-    def repr_card(self, size=8):
-        list_fields = self.repr_fields()
-        return print_card(list_fields, size=size)
+    #def repr_card(self, size=8):
+        #list_fields = self.repr_fields()
+        #return print_card(list_fields, size=size)
 
     def __repr__(self):
         """

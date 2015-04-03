@@ -183,7 +183,7 @@ class SPOINT(Node):
                     lists_fields.append(list_fields)
         return lists_fields
 
-    def write_bdf2(self, size=8, is_double=False):
+    def write_bdf(self, size=8, is_double=False):
         """
         The writer method used by BDF.write_bdf
 
@@ -339,7 +339,7 @@ class SPOINTs(Node):
                 lists_fields.append(list_fields)
         return lists_fields
 
-    def write_bdf2(self, size=8, is_double=False):
+    def write_bdf(self, size=8, is_double=False):
         """
         The writer method used by BDF.write_bdf
 
@@ -527,7 +527,7 @@ class GRDSET(Node):
         list_fields = ['GRDSET', None, cp, None, None, None, cd, ps, seid]
         return list_fields
 
-    def write_bdf2(self, f, size, is_double):
+    def write_bdf(self, f, size, is_double):
         """
         The writer method used by BDF.write_bdf
 

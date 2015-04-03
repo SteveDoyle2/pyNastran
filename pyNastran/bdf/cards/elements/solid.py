@@ -134,9 +134,9 @@ class SolidElement(Element):
 
     #def write_bdf(self, size=8, is_double=False):
         #card = self.raw_fields()
-        #msg2 = self.write_bdf2()
+        #msg2 = self.write_bdf()
         ##msg1 = self.comment() + print_card_8(card)
-        ##assert msg1 == msg2, 'write_bdf != write_bdf2\n%s---\n%s\n%r\n%r' % (msg1, msg2, msg1, msg2)
+        ##assert msg1 == msg2, 'write_bdf != write_bdf\n%s---\n%s\n%r\n%r' % (msg1, msg2, msg1, msg2)
         #return msg2
 
 class CHEXA8(SolidElement):
@@ -150,7 +150,7 @@ class CHEXA8(SolidElement):
     asterType = 'HEXA8'
     calculixType = 'C3D8'
 
-    def write_bdf2(self, size=8, double=False):
+    def write_bdf(self, size=8, double=False):
         nodes = self.nodeIDs()
         data = [self.eid, self.Pid()] + nodes
         msg = ('CHEXA   %8i%8i%8i%8i%8i%8i%8i%8i\n'
@@ -240,7 +240,7 @@ class CHEXA20(SolidElement):
     asterType = 'HEXA20'
     calculixType = 'C3D20'
 
-    def write_bdf2(self, size=8, double=False):
+    def write_bdf(self, size=8, double=False):
         nodes = self.nodeIDs()
         nodes2 = ['' if node is None else '%8i' % node for node in nodes[8:]]
 
@@ -351,7 +351,7 @@ class CPENTA6(SolidElement):
     asterType = 'PENTA6'
     calculixType = 'C3D6'
 
-    def write_bdf2(self, size=8, double=False):
+    def write_bdf(self, size=8, double=False):
         nodes = self.nodeIDs()
         data = [self.eid, self.Pid()] + nodes
         msg = 'CPENTA  %8i%8i%8i%8i%8i%8i%8i%8i\n' % tuple(data)
@@ -554,7 +554,7 @@ class CPENTA15(SolidElement):
     asterType = 'PENTA15'
     calculixType = 'C3D15'
 
-    def write_bdf2(self, size=8, double=False):
+    def write_bdf(self, size=8, double=False):
         nodes = self.nodeIDs()
         nodes2 = ['' if node is None else '%8i' % node for node in nodes[6:]]
         data = [self.eid, self.Pid()] + nodes[:6] + nodes2
@@ -660,7 +660,7 @@ class CTETRA4(SolidElement):
     asterType = 'TETRA4'
     calculixType = 'C3D4'
 
-    def write_bdf2(self, size=8, double=False):
+    def write_bdf(self, size=8, double=False):
         nodes = self.nodeIDs()
         data = [self.eid, self.Pid()] + nodes
         msg = 'CTETRA  %8i%8i%8i%8i%8i%8i\n' % tuple(data)
@@ -827,7 +827,7 @@ class CTETRA10(SolidElement):
     asterType = 'TETRA10'
     calculixType = 'C3D10'
 
-    def write_bdf2(self, size=8, double=False):
+    def write_bdf(self, size=8, double=False):
         nodes = self.nodeIDs()
         nodes2 = ['' if node is None else '%8i' % node for node in nodes[4:]]
 

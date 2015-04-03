@@ -451,7 +451,7 @@ class SET3(Set):
             [[self.sid, self.desc], False], # these are not all integers
             [self.SetIDs(), True], # these are all integers
         ]
-        return self.comment() + print_int_card_blocks(fields_blocks )
+        return self.comment() + print_int_card_blocks(fields_blocks)
 
 
 class SESET(SetSuper):
@@ -482,24 +482,18 @@ class SESET(SetSuper):
 
     def __repr__(self):
         thruFields = collapse_thru(self.IDs)
-
         #list_fields = ['SESET', self.seid]
 
-        #i = 0
         cards = []
-        #print("thruFields", thruFields)
         while 'THRU' in thruFields:
-            #print("thruFields", thruFields)
             iThru = thruFields.index('THRU')
             card = print_card_8(['SESET', self.seid] +
                                 thruFields[iThru - 1:iThru + 2])
             cards.append(card)
             thruFields = thruFields[0:iThru - 1]+thruFields[iThru + 2:]
-        #print("thruFields", thruFields)
         if thruFields:
             card = print_card_8(['SESET', self.seid] + thruFields)
             cards.append(card)
-        #print("cards",cards)
         return ''.join(cards)
 
 class SEBSET(Set):

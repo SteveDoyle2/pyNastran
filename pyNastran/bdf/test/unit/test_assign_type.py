@@ -6,7 +6,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     string, string_or_blank,
     integer_or_string, integer_string_or_blank, integer_double_or_string,
     double_or_string, double_string_or_blank,
-    blank, components, components_or_blank, _get_type, interpret_value)
+    blank, components, components_or_blank, _get_dtype, interpret_value)
 
 class ExtendedTestCase(unittest.TestCase):
 
@@ -551,7 +551,7 @@ class Test(ExtendedTestCase):
         self.assertEquals(val, 'default')
 
     def test_bad(self):
-        val = _get_type('1.000000000D+00')
+        val = _get_dtype('1.000000000D+00')
         #print "val = ", val
         val = interpret_value('1.000000000D+00')
         #print "val = ", val

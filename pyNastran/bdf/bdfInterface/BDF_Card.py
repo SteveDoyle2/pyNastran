@@ -9,12 +9,10 @@ import copy
 
 
 class BDFCard(object):
-    def __init__(self, card=None, oldCardObj=None, debug=False):
+    def __init__(self, card=None, debug=False):
         self.debug = debug
         if card:
             self.card = wipe_empty_fields(card)
-            #self.card = card
-            #self.old_card = oldCardObj
             self.nfields = len(self.card)
         else:
             self.old_card = None

@@ -515,7 +515,7 @@ class WriteMesh(object):
         if self.spoints:
             msg = []
             msg.append('$SPOINTS\n')
-            msg.append(self.spoints.write_bdf2(size, is_double))
+            msg.append(self.spoints.write_bdf(size, is_double))
             outfile.write(''.join(msg))
 
         if self.nodes:

@@ -24,7 +24,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import zip, range
 from itertools import count
-from numpy import array, pi, linspace, zeros, arange, repeat, dot
+from numpy import array, pi, linspace, zeros, arange, repeat, dot, cos, arcsin
 from numpy.linalg import norm
 
 from pyNastran.bdf.deprecated import AeroDeprecated, CAERO1Deprecated, CAERO2Deprecated
@@ -1440,6 +1440,7 @@ class CAERO4(BaseCard):
 
 
 class CAERO5(BaseCard):
+    type = 'CAERO5'
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
@@ -1559,7 +1560,7 @@ class CAERO5(BaseCard):
             ci = p4[0] - p1[0]
 
             # sweep angle
-            Lambda = asin(ci / L)
+            Lambda = arcsin(ci / L)
 
             secL = 1 / cos(Lambda)
             secL2 = secL ** 2

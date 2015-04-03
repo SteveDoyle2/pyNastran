@@ -90,17 +90,17 @@ class ConstraintObject(object):
         # some of the ADDConstraint keys are MPCADDs/SPCADDs, some are not
         for key, add_constraint in sorted(iteritems(self.add_constraints)):
             constraints = []
-            for i, spcID in enumerate(add_constraint.sets):
+            for i, spc_id in enumerate(add_constraint.sets):
                 constraintIDs = add_constraint.getConstraintIDs()
-                constraints[spcID] = constraintIDs
+                constraints[spc_id] = constraintIDs
                 constraints += constraintIDs
-                #constraints.append(spcID)
-                constraints2[key] = [spcID]
+                #constraints.append(spc_id)
+                constraints2[key] = [spc_id]
 
             constraints2[key] = constraints
 
         # not needed b/c there are no MPCADD/SPCADD
-        #for key,constraints in sorted(iteritems(self.constraints)):
+        #for key, constraints in sorted(iteritems(self.constraints)):
             #for constraint in constraints:
                 #conID = constraint.ConID()
                 #constraints2[conID]

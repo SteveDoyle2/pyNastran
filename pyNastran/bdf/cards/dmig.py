@@ -2,11 +2,11 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import zip, range
-from math import log, sin, cos, radians, atan2
+from math import log, sin, cos, radians, atan2, sqrt, degrees
 #from math import (sin,sinh,cos,cosh,tan,tanh,sqrt,atan,atan2,acosh,acos,asin,
 #                  asinh,atanh) #,atanh2   # going to be used by DEQATN
 
-from numpy import zeros  # average
+from numpy import zeros, abs  # average
 from scipy.sparse import coo_matrix
 
 from pyNastran.bdf.deprecated import DeprecatedNastranMatrix
@@ -112,7 +112,7 @@ class DEQATN(BaseCard):  # needs work...
         return ''.join(list_fields)
 
 
-class NastranMatrix(BaseCard, DeprecatedNastranMatrix):
+class NastranMatrix(BaseCard):
     """
     Base class for the DMIG, DMIJ, DMIJI, DMIK matrices
     """
@@ -253,6 +253,22 @@ class NastranMatrix(BaseCard, DeprecatedNastranMatrix):
     def rename(self, new_name):
         self.name = new_name
 
+    def isComplex(self):
+        # deprecated
+        return self.is_complex()
+
+    def isReal(self):
+        # deprecated
+        return self.is_real()
+
+    def isPolar(self):
+        # deprecated
+        return self.is_polar()
+
+    def getMatrix(self, isSparse=False, applySymmetry=True):
+        # deprecated
+        return self.get_matrix(is_sparse=isSparse, apply_symmetry=applySymmetry)
+
     def is_real(self):
         return not self.is_complex()
 
@@ -303,37 +319,7 @@ class NastranMatrix(BaseCard, DeprecatedNastranMatrix):
         return dType
 
     def __repr__(self):
-        """
-        .. todo:: support double precision
-        """
-        msg = '\n$' + '-' * 80
-        msg += '\n$ %s Matrix %s\n' % (self.type, self.name)
-        list_fields = [self.type, self.name, 0, self.ifo, self.tin,
-                  self.tout, self.polar, None, self.ncol]
-        msg += print_card(list_fields)
-
-        if self.is_complex():
-            if self.is_polar():
-                for (GCi, GCj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
-                    magi = sqrt(reali**2 + complexi**2)
-                    if reali == 0.0:
-                        phasei = 0.0
-                    else:
-                        phasei = degrees(atan2(complexi, reali))
-                    list_fields = [self.type, self.name, GCj[0], GCj[1],
-                              None, GCi[0], GCi[1], magi, phasei]
-                    msg += print_card(list_fields)
-            else:
-                for (GCi, GCj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
-                    list_fields = [self.type, self.name, GCj[0], GCj[1],
-                              None, GCi[0], GCi[1], reali, imagi]
-                    msg += print_card(list_fields)
-        else:
-            for (GCi, GCj, reali) in zip(self.GCi, self.GCj, self.Real):
-                list_fields = [self.type, self.name, GCj[0], GCj[1],
-                          None, GCi[0], GCi[1], reali, None]
-                msg += print_card(list_fields)
-        return msg
+        return self.write_bdf(size=8, is_double=False)
 
     def write_bdf(self, size=8, is_double=False):
         """
@@ -347,7 +333,7 @@ class NastranMatrix(BaseCard, DeprecatedNastranMatrix):
 
         if self.is_complex():
             if self.is_polar():
-                for (GCi, GCj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
+                for (GCi, GCj, reali, complexi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
                     magi = sqrt(reali**2 + complexi**2)
                     if reali == 0.0:
                         phasei = 0.0
@@ -357,9 +343,9 @@ class NastranMatrix(BaseCard, DeprecatedNastranMatrix):
                               None, GCi[0], GCi[1], magi, phasei]
                     msg += print_card(list_fields)
             else:
-                for (GCi, GCj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
+                for (GCi, GCj, reali, complexi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
                     list_fields = [self.type, self.name, GCj[0], GCj[1],
-                              None, GCi[0], GCi[1], reali, imagi]
+                              None, GCi[0], GCi[1], reali, complexi]
                     msg += print_card(list_fields)
         else:
             for (GCi, GCj, reali) in zip(self.GCi, self.GCj, self.Real):
@@ -737,22 +723,6 @@ class DMI(NastranMatrix):
     def __repr__(self):
         """
         .. todo:: support shortened output format.  There's a stupidly low 1000
-        DMI cap, I assume this is entries and not matrices.
-        .. todo:: support double precision
+                  DMI cap, I assume this is entries and not matrices.
         """
-        msg = '\n$' + '-' * 80
-        msg += '\n$ %s Matrix %s\n' % (self.type, self.name)
-        list_fields = [self.type, self.name, 0, self.form, self.tin,
-                  self.tout, None, self.nRows, self.nCols]
-        msg += self.print_card(list_fields)
-        #msg += self.print_card(list_fields,size=16,isD=False)
-
-        if self.is_complex():
-            for (GCi, GCj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
-                list_fields = [self.type, self.name, GCj, GCi, reali, imagi]
-                msg += self.print_card(list_fields)
-        else:
-            for (GCi, GCj, reali) in zip(self.GCi, self.GCj, self.Real):
-                list_fields = [self.type, self.name, GCj, GCi, reali]
-                msg += self.print_card(list_fields)
-        return msg
+        return self.write_bdf(size=8, is_double=False)
