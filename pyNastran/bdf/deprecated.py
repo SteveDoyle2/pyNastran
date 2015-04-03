@@ -318,9 +318,6 @@ class GridDeprecated(object):
     def UpdatePosition(self, model, xyz, cid=0):
         return self.set_position(model, xyz, cid=cid)
 
-    def nDOF(self):
-        return self.get_ndof()
-
 
 class PointDeprecated(object):
     def Position(self, debug=False):
@@ -331,9 +328,6 @@ class PointDeprecated(object):
 
     def UpdatePosition(self, model, xyz, cid=0):
         return self.set_position(model, xyz, cid=cid)
-
-    def nDOF(self):
-        return self.get_ndof()
 
 
 class SPOINTsDeprecated(object):

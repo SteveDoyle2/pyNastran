@@ -12,7 +12,7 @@ import warnings
 
 from pyNastran.bdf.utils import print_filename
 from pyNastran.utils.gui_io import save_file_dialog
-from pyNastran.bdf.fieldWriter import print_card, print_card_8
+from pyNastran.bdf.fieldWriter import print_card_8
 from pyNastran.bdf.fieldWriter16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
@@ -80,7 +80,7 @@ class WriteMesh(object):
         return out_filename
 
     def write_bdf(self, out_filename=None, interspersed=True,
-                  size=8, precision=None, is_double=False, enddata=None):
+                  size=8, is_double=False, enddata=None):
         """
         Writes the BDF.
 
@@ -93,19 +93,9 @@ class WriteMesh(object):
               much easier to compare to a Patran-formatted bdf and is
               more clear. (default=True)
         :param size:  the field size (8 is recommended)
-        :param precision:  'single', 'double', None (None -> )
         :param enddata:  Flag to enable/disable writing ENDDATA
                          (default=None -> depends on input BDF)
         """
-        if precision is not None:
-            if precision == 'double':
-                is_double = True
-            elif precision == 'single':
-                is_double = False
-            else:
-                raise ValueError('invalid precision=%r' % precision)
-            warnings.warn("'precision' has been replaced by 'is_double'; 'single' -> False, 'double' -> True")
-
         out_filename = self._output_helper(out_filename,
                                            interspersed, size, is_double)
 

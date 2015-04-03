@@ -1,11 +1,7 @@
-# pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
-from six import string_types
 from six.moves import range
-import sys
-import copy
 
 
 class BDFCard(object):
@@ -106,116 +102,7 @@ class BDFCard(object):
 
         :returns value: the value on the ith field
         """
-        if(i < self.nfields and self.card[i] is not None and self.card[i] is not ''):
+        if i < self.nfields and self.card[i] is not None and self.card[i] is not '':
             return self.card[i]
         else:
             return default
-
-    def _replace_expression(self, field_new, field_old, replace_char='=',
-                          replace_char2=''):
-        """Used for nastran = format"""
-        field_new = field_new.replace(replace_char, str(field_old) + replace_char2)
-        typeOld = type(field_old)
-        if isinstance(field_old, int) or isinstance(field_old, float):
-            field_new = typeOld(eval(field_new))
-        else:
-            field_new = str(field_new)
-        return field_new
-
-    def _is_same_name(self):
-        """Used for nastran = format"""
-        if '=' in self.card[0]:
-            return True
-        return False
-
-    def _apply_old_fields(self, card_count=0):
-        """Used for nastran = format"""
-        if not self._is_same_name():
-            return
-
-        self.cardCount = card_count
-        stop = False
-        self.card_text_old = self.card
-        if self.nfields == 1 and self.old_card.nfields > 1:
-            #self.nfields = self.oldCard.nfields
-            #self._apply_old_fields(self, card_count=1)
-            card_count = self.old_card.cardCount + card_count
-            if self.debug:
-                print("newCount = %s" % (card_count))
-            self.card = copy.deepcopy(self.old_card.card_text_old)
-            self.nfields = len(self.card)
-            self.old_card.nfields = len(self.old_card.card)
-
-            if self.debug:
-                print("oldCard = %s" % (self.old_card))
-                print("selfCard = %s" % (self.card))
-            #stop = True
-
-        fields_new = self.fields()
-        fields_old = self.old_card.fields()
-
-        max_length = max(self.nFields(), self.old_card.nFields())
-        min_length = min(self.nFields(), self.old_card.nFields())
-
-        card_built = [fields_old[0]]
-
-        for i in range(1, min_length):
-            field_old = fields_old[i]
-            field_new = fields_new[i]
-
-            a = "|%s|" % (field_new)
-            if '*' in field_new:
-                new_char = '+%s*' % (card_count + 1)
-                field_new = self._replace_expression(field_new, field_old, '*', new_char)
-            elif '/' in field_new:
-                new_char = '-%s*' % (card_count + 1)
-                field_new = self._replace_expression(field_new, field_old, '/', new_char)
-            elif '==' == field_new:
-                #break
-                field_new = field_old
-            elif '=' in field_new:
-                if field_new == '=':
-                    field_new = field_old
-                elif field_new == '==':  # handle this in the max length section
-                    pass
-                else:  # replace = with str(expression)
-                    field_new = self._replace_expression(field_new, field_old)
-
-            elif '' == field_new:
-                field_new = field_old
-            else:
-                b = "|%s|" % field_new
-                c = "|%s|" % field_old
-                print("i=%s field_start %-10s field_new %-10s field_old %-10s" %
-                     (i, a, b, c))
-                raise RuntimeError('unhandled case...')
-            if self.debug:
-                b = "|%s|" % field_new
-                c = "|%s|" % field_old
-                print("i=%s field_start %-10s field_new %-10s field_old %-10s" %
-                     (i, a, b, c))
-            card_built.append(field_new)
-            i += 1
-
-        if max_length < len(card_built):
-            # the new card is longer than card_built
-            for i in range(self.nfields, max_length):
-                card_built.append(self.card[i])
-        elif len(card_built) < self.old_card.nfields:
-            # card_built is shorter than the old card
-            for i in range(self.nfields, max_length):
-                card_built.append(self.old_card.field(i))
-        #else: # same length
-            #pass
-
-        if self.debug:
-            print("cardBuilt = %s" % card_built)
-        self.card = card_built
-        self.nfields = len(self.card)
-
-        if stop:
-            sys.exit("stopping in _apply_old_fields")
-
-    def get_old_field(self, i):
-        """Used for nastran = format"""
-        return self.old_card.field(i)

@@ -30,6 +30,7 @@ from pyNastran.bdf.cards.loads.staticLoads import Moment, Force, LOAD
 
 
 def _mass_properties_mass_mp_func(element):
+    """helper method for mass properties multiprocessing"""
     try:
         cg = element.Centroid()
         mass = element.Mass()
@@ -101,7 +102,7 @@ class BDFMethods(BDFMethodsDeprecated):
                                                    reference_point=reference_point)
         else:
             mass, cg, I = self._mass_properties_sp(elements, masses,
-                            reference_point=reference_point)
+                                                   reference_point=reference_point)
 
         mass, cg, I = self._apply_mass_symmetry(sym_axis, scale, mass, cg, I)
         return (mass, cg, I)
@@ -219,7 +220,7 @@ class BDFMethods(BDFMethodsDeprecated):
 
 
     def _mass_properties_mp(self, num_cpus, elements, masses, nelements,
-        reference_point=None):
+                            reference_point=None):
         """
         Caclulates mass properties in the global system about the
         reference point.
@@ -246,24 +247,23 @@ class BDFMethods(BDFMethodsDeprecated):
                            if element.type not in ['CBUSH', 'CBUSH1D',
                                'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
                                'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-                           ]])
-        result2 = pool.imap(_mass_properties_mass_mp_func, [(element) for element in masses ])
+                            ]])
+        result2 = pool.imap(_mass_properties_mass_mp_func, [(element) for element in masses])
 
         mass = zeros((nelements), 'float64')
         xyz = zeros((nelements, 3), 'float64')
-        j = 0
-        for j, return_values in enumerate(result):
-            #self.log.info("%.3f %% Processed" % (j*100./nelements))
-            mass[j] = return_values[0]
-            xyz[j, :] = return_values[1]
+        i = 0
+        for i, return_values in enumerate(result):
+            #self.log.info("%.3f %% Processed" % (i*100./nelements))
+            mass[i] = return_values[0]
+            xyz[i, :] = return_values[1]
         pool.close()
         pool.join()
 
         pool = mp.Pool(num_cpus)
-        for j2, return_values in enumerate(result2):
-            #self.log.info("%.3f %% Processed" % (j*100./nelements))
-            mass[j+j2] = return_values[0]
-            xyz[j+j2, :] = return_values[1]
+        for i2, return_values in enumerate(result2):
+            mass[i+i2] = return_values[0]
+            xyz[i+i2, :] = return_values[1]
         pool.close()
         pool.join()
 
@@ -310,6 +310,7 @@ class BDFMethods(BDFMethodsDeprecated):
 
         :param self: the object pointer
         :param cid:  the cid to resolve the nodes to (default=0)
+
         .. note:: loses association with previous coordinate systems so to go
                   back requires another fem
         """
@@ -326,6 +327,7 @@ class BDFMethods(BDFMethodsDeprecated):
         :param self:      the object pointer
         :param model_old: the old model that hasnt lost it's connection to
                           the node cids
+
         .. warning:: hasnt been tested well...
         """
         debug = False
@@ -349,7 +351,7 @@ class BDFMethods(BDFMethodsDeprecated):
         gi = gravity_i.N * gravity_i.scale
         p0 = array([0., 0., 0.])  ## TODO: hardcoded
         mass, cg, I = self.mass_properties(reference_point=p0, sym_axis=None,
-                                            num_cpus=6)
+                                           num_cpus=6)
 
     def sum_forces_moments_elements(self, p0, loadcase_id, eids, nids,
                                     include_grav=False):
@@ -627,8 +629,8 @@ class BDFMethods(BDFMethodsDeprecated):
                     if elem.type in ['CTRIA3',
                                      'CQUAD4', 'CSHEAR']:
                         n = elem.Normal()
-                        A = elem.Area()
-                        f = pressure * n * A
+                        area = elem.Area()
+                        f = pressure * n * area
                         r = elem.Centroid() - p
                         m = cross(r, f)
                         F += f
@@ -651,7 +653,7 @@ class BDFMethods(BDFMethodsDeprecated):
                         n1, n2, n3 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]]
                         axb = cross(n1 - n2, n1 - n3)
                         nunit = norm(axb)
-                        A = 0.5 * nunit
+                        area = 0.5 * nunit
                         try:
                             n = axb / nunit
                         except FloatingPointError:
@@ -668,7 +670,7 @@ class BDFMethods(BDFMethodsDeprecated):
                         n1, n2, n3, n4 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]], xyz[nodes[3]]
                         axb = cross(n1 - n3, n2 - n4)
                         nunit = norm(axb)
-                        A = 0.5 * nunit
+                        area = 0.5 * nunit
                         try:
                             n = axb / nunit
                         except FloatingPointError:
@@ -686,7 +688,7 @@ class BDFMethods(BDFMethodsDeprecated):
                         self.log.debug('case=%s eid=%s etype=%r loadtype=%r not supported' % (loadcase_id, eid, elem.type, load.type))
                         continue
                     r = centroid - p
-                    f = pressure * A * n
+                    f = pressure * area * n
                     #load.cid.transformToGlobal()
                     m = cross(r, f)
                     F += f
@@ -763,14 +765,14 @@ class BDFMethods(BDFMethodsDeprecated):
         else:
             p = array(p0)
 
-        loadCase = self.loads[loadcase_id]
-        #for (key, loadCase) in iteritems(self.loads):
+        load_case = self.loads[loadcase_id]
+        #for (key, load_case) in iteritems(self.loads):
             #if key != loadcase_id:
                 #continue
 
         scale_factors2 = []
         loads2 = []
-        for load in loadCase:
+        for load in load_case:
             if isinstance(load, LOAD):
                 scale_factors, loads = load.getReducedLoads()
                 scale_factors2 += scale_factors
@@ -813,7 +815,7 @@ class BDFMethods(BDFMethodsDeprecated):
                     raise RuntimeError('invalid number of nodes on PLOAD card; nodes=%s' % str(nodes))
 
                 nunit = norm(axb)
-                A = 0.5 * nunit
+                area = 0.5 * nunit
                 try:
                     n = axb / nunit
                 except FloatingPointError:
@@ -824,14 +826,13 @@ class BDFMethods(BDFMethodsDeprecated):
                     msg += 'nunit = %s\n' % nunit
                     raise FloatingPointError(msg)
                 r = centroid - p
-                f = load.p * A * n * scale
+                f = load.p * area * n * scale
                 m = cross(r, f)
 
                 F += f
                 M += m
 
             elif load.type == 'PLOAD1':
-                #elem = self.elements[load.eid]
                 elem = load.eid
 
                 p1 = load.p1 * scale
@@ -876,14 +877,7 @@ class BDFMethods(BDFMethodsDeprecated):
                 j = cross(k, i)
 
                 if load.Type in ['FX', 'FY', 'FZ']:
-                    #deltaL = n2 - n1
                     r = (1 - x1) * n1 + x1 * n2
-                    #print('    r =', r)
-                    #print('    n1 =', n1)
-                    #print('    n2 =', n2)
-                    #print('    x1 =', x1)
-                    #print('    1-x1 =', 1-x1)
-                    #print('    deltaL =', deltaL)
                     if load.Type == 'FX':
                         if x1 == x2:
                             Fdir = array([1., 0., 0.])
@@ -908,14 +902,6 @@ class BDFMethods(BDFMethodsDeprecated):
                     M += p1 * Mdir
                 elif load.Type in ['FXE', 'FYE', 'FZE']:
                     r = (1 - x1) * n1 + x1 * n2
-                    #print('\n    r =', r)
-                    #print('    n1 =', n1)
-                    #print('    n2 =', n2)
-                    #print('    x1 =', x1)
-                    #print('    1-x1 =', 1-x1)
-                    #print('    i    =', i)
-                    #print('    j    =', j)
-                    #print('    k    =', k)
                     if load.Type == 'FXE':
                         if x1 == x2:
                             Fdir = i
@@ -965,8 +951,8 @@ class BDFMethods(BDFMethodsDeprecated):
                     if elem.type in ['CTRIA3',
                                      'CQUAD4', 'CSHEAR']:
                         n = elem.Normal()
-                        A = elem.Area()
-                        f = pressure * n * A
+                        area = elem.Area()
+                        f = pressure * n * area
                         r = elem.Centroid() - p
                         m = cross(r, f)
                         F += f
@@ -987,13 +973,13 @@ class BDFMethods(BDFMethodsDeprecated):
                         n1, n2, n3 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]]
                         axb = cross(n1 - n2, n1 - n3)
                         nunit = norm(axb)
-                        A = 0.5 * nunit
+                        area = 0.5 * nunit
                         try:
                             n = axb / nunit
                         except FloatingPointError:
                             msg = ''
                             for i, nid in enumerate(nodes):
-                                msg += 'nid%i=%i node=%s\n' % (i+1, nid, xyz[nodes[i]])
+                                msg += 'nid%i=%i node=%s\n' % (i + 1, nid, xyz[nodes[i]])
                             msg += 'a x b = %s\n' % axb
                             msg += 'nunit = %s\n' % nunit
                             raise FloatingPointError(msg)
@@ -1004,7 +990,7 @@ class BDFMethods(BDFMethodsDeprecated):
                         n1, n2, n3, n4 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]], xyz[nodes[3]]
                         axb = cross(n1 - n3, n2 - n4)
                         nunit = norm(axb)
-                        A = 0.5 * nunit
+                        area = 0.5 * nunit
                         try:
                             n = axb / nunit
                         except FloatingPointError:
@@ -1017,12 +1003,12 @@ class BDFMethods(BDFMethodsDeprecated):
 
                         centroid = (n1 + n2 + n3 + n4) / 4.
                     elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
-                        A, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
+                        area, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
                     else:
                         self.log.debug('case=%s eid=%s etype=%r loadtype=%r not supported' % (loadcase_id, eid, elem.type, load.type))
                         continue
                     r = centroid - p
-                    f = pressure * A * n
+                    f = pressure * area * n
                     #load.cid.transformToGlobal()
                     m = cross(r, f)
                     F += f

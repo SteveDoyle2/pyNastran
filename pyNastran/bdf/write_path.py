@@ -1,4 +1,6 @@
+from __future__ import print_function
 import os
+
 
 def split_path(abspath):
     """
@@ -31,16 +33,18 @@ def write_include(filename, is_windows=True):
     :param filename: the filename to write
     :param is_windows: Windows has a special format for writing INCLUDE files
                        so the format for a BDF that will run on Linux and
-                       Windows is different.
+                       Windows is different.  We could check the platform,
+                       but since you might need to change platforms, it's an
+                       option (default=True)
 
     Example (Linux)
     ---------------
-    fname = r'/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
+    fname = r'/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/model.inc'
     write_include(fname, is_windows=False)
 
     returns...
     INCLUDE /opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/
-            pyNastran/bdf/writePath.py
+            pyNastran/bdf/model.inc
     """
     msg = 'INCLUDE '  # len=8
     #nmax = 72 - 8 # 64
@@ -70,14 +74,14 @@ def write_include(filename, is_windows=True):
 
 
 if __name__ == '__main__':  ## pragma: no cover
-    fname = r'C:\NASA\formats\pynastran_v0.6\pyNastran\bdf\writePath.py'
-    print('%s' % write_include(fname, is_windows=True))
+    include_name = r'C:\NASA\formats\pynastran_v0.6\pyNastran\bdf\writePath.py'
+    print('%s' % write_include(include_name, is_windows=True))
 
-    fname = r'/opt/NASA/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
-    print('%s' % write_include(fname, is_windows=False))
+    include_name = r'/opt/NASA/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
+    print('%s' % write_include(include_name, is_windows=False))
 
-    fname = r'/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
-    print('%s' % write_include(fname, is_windows=False))
+    include_name = r'/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
+    print('%s' % write_include(include_name, is_windows=False))
 
-    fname = r'/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
-    print('%s' % write_include(fname, is_windows=True))
+    include_name = r'/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
+    print('%s' % write_include(include_name, is_windows=True))

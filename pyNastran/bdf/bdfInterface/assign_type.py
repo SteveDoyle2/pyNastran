@@ -81,7 +81,7 @@ def blank(card, ifield, fieldname, default=None):
     if isinstance(svalue, string_types):
         svalue = svalue.strip().upper()
         if len(svalue) == 0:
-           return default
+            return default
     dtype = _get_dtype(svalue)
     raise SyntaxError('%s = %r (field #%s) on card must be blank (not %s).\ncard=%s' % (fieldname, svalue, ifield, dtype, card))
 
