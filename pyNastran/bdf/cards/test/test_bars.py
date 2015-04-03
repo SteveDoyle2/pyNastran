@@ -5,7 +5,7 @@ from itertools import count
 
 from pyNastran.bdf.bdf import BDF, BDFCard, PBAR #, GRID, MAT1
 
-from pyNastran.bdf.fieldWriter import print_card
+#from pyNastran.bdf.fieldWriter import print_card
 
 bdf = BDF(debug=False)
 class TestBars(unittest.TestCase):

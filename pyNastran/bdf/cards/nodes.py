@@ -9,7 +9,7 @@ from pyNastran.bdf.fieldWriter import set_string8_blank_if_default
 from pyNastran.bdf.fieldWriter16 import set_string16_blank_if_default
 
 from pyNastran.bdf.fieldWriter import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru, collapse_thru_packs
+from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, collapse_thru_packs
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, blank, integer_or_string)
 from pyNastran.bdf.fieldWriter import print_card_8, print_float_8, print_int_card
@@ -97,7 +97,7 @@ class RINGAX(Ring):
           LIST
         """
         list_fields = ['RINGAX', self.nid, None, self.R, self.z, None,
-                  None, self.ps]
+                       None, self.ps]
         return list_fields
 
     def write_bdf(self, size=8, is_double=False):
@@ -506,7 +506,7 @@ class GRDSET(Node):
           LIST
         """
         list_fields = ['GRDSET', None, self.Cp(), None, None, None,
-                  self.Cd(), self.ps, self.SEid()]
+                       self.Cd(), self.ps, self.SEid()]
         return list_fields
 
     def repr_fields(self):
@@ -632,7 +632,7 @@ class GRIDB(Node):
           LIST
         """
         list_fields = ['GRIDB', self.nid, None, None, self.phi, None,
-                  self.Cd(), self.ps, self.idf]
+                       self.Cd(), self.ps, self.idf]
         return list_fields
 
     def repr_fields(self):
@@ -1147,16 +1147,6 @@ class POINT(Node, PointDeprecated):
 
         assert self.nid > 0, 'nid=%s' % (self.nid)
         assert self.cp >= 0, 'cp=%s' % (self.cp)
-
-    def get_ndof(self):
-        """
-        Gets the number of degrees of freedom for the POINT
-
-        :param self:  the POINT object pointer
-        :returns six: the value 6
-        :type six:    int
-        """
-        return 6
 
     def set_position(self, model, xyz, cid=0):
         """

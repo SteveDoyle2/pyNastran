@@ -4,9 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import string_types
 from six.moves import zip, range
 
-from pyNastran.bdf.fieldWriter import print_card, is_same
-                               #print_card_8, set_default_if_blank, print_card
-#from pyNastran.bdf.fieldWriter16 import print_card_16
+from pyNastran.bdf.fieldWriter import print_card_8, is_same
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value
 from pyNastran.bdf.deprecated import BaseCardDeprecated, ElementDeprecated
 
@@ -86,13 +84,17 @@ class BaseCard(BaseCardDeprecated):
         """gets the card's fields"""
         return self.raw_fields()
 
-    def print_card(self, size=8):
+    def print_card(self, size=8, is_double=False):
         list_fields = self.repr_fields()
-        return self.comment() + print_card(list_fields, size=size)
+        if size == 8:
+            return self.comment() + print_card_8(list_fields)
+        elif is_double:
+            return self.comment() + print_card_double(list_fields)
+        return self.comment() + print_card_16(list_fields)
 
     #def repr_card(self, size=8):
         #list_fields = self.repr_fields()
-        #return print_card(list_fields, size=size)
+        #return print_card_8(list_fields, size=size)
 
     def __repr__(self):
         """

@@ -331,7 +331,7 @@ class MPC(Constraint):
                 fields.append(None)
         return fields
 
-    def write_bdf(self, size=8, double=False):
+    def write_bdf(self, size=8, is_double=False):
         if size == 8:
             msg = 'MPC     %8s' % self.conid
             for (i, grid, component, enforced) in zip(count(), self.gids,

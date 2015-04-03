@@ -1,6 +1,6 @@
 import unittest
 from pyNastran.bdf.bdf import BDF, BDFCard, TABDMP1
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
 
 bdf = BDF(debug=False)
 class TestTables(unittest.TestCase):
@@ -13,7 +13,7 @@ class TestTables(unittest.TestCase):
         #print(card)
         card2 = TABDMP1(card)
         fields = card2.raw_fields()
-        msg = print_card(fields).rstrip()
+        msg = print_card_8(fields).rstrip()
         #print(msg)
         lines_expected = ['TABDMP1      100       G',
                            #2345678#2345678#2345678#2345678#2345678

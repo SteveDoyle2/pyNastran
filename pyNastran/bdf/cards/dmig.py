@@ -9,8 +9,7 @@ from math import log, sin, cos, radians, atan2, sqrt, degrees
 from numpy import zeros, abs  # average
 from scipy.sparse import coo_matrix
 
-from pyNastran.bdf.deprecated import DeprecatedNastranMatrix
-from pyNastran.bdf.cards.baseCard import BaseCard, print_card
+from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, string, blank, components, interpret_value)
 

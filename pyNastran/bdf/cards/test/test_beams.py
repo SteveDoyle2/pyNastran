@@ -7,7 +7,7 @@ from pyNastran.bdf.bdf import BDF, BDFCard, PBEAM, PBAR, CBEAM, GRID, MAT1
 from pyNastran.bdf.bdf import CROD, CONROD
 from pyNastran.bdf.bdf import PELAS
 
-from pyNastran.bdf.fieldWriter import print_card
+#from pyNastran.bdf.fieldWriter import print_card
 
 bdf = BDF(debug=False)
 class TestBeams(unittest.TestCase):

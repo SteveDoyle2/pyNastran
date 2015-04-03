@@ -1,7 +1,7 @@
 import unittest
 
 from pyNastran.bdf.bdf import BDF, BDFCard, MAT1, MAT8, MAT11
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.fieldWriter import print_card_8
 
 bdf = BDF(debug=False)
 
@@ -63,14 +63,14 @@ class TestMaterials(unittest.TestCase):
         ]
 
         card = bdf.process_card(lines)
-        #print(print_card(card))
+        #print(print_card_8(card))
         card = BDFCard(card)
         #print("card =", card)
         #with self.assertRaises(RuntimeError):  # temporary RuntimeError
         card2 = MAT8(card)
 
         fields = card2.raw_fields()
-        msg = print_card(fields)
+        msg = print_card_8(fields)
         #f = StringIO.StringIO()
         size = 16
         msg = card2.write_bdf(size, 'dummy')
@@ -101,7 +101,7 @@ class TestMaterials(unittest.TestCase):
         card2 = MAT11(card)
 
         fields = card2.raw_fields()
-        msg = print_card(fields)
+        msg = print_card_8(fields)
         #f = StringIO.StringIO()
         size = 8
         msg = card2.write_bdf(size, 'dummy')

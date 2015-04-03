@@ -291,148 +291,6 @@ class CTRIA3(TriShell):
         self.prepareNodeIDs(nids)
         assert len(self.nodes) == 3
 
-    def displacement_stress(self, model, q, dofs):
-        n1, n2, n3 = self.nodes
-        p1 = n1.Position()
-        p2 = n2.Position()
-        p3 = n3.Position()
-        x1, y1, z1 = p1
-        x2, y2, z2 = p2
-        x3, y3, z3 = p3
-
-        v1 = p2 - p1
-        v13 = p3 - p1
-
-        v3 = cross(v1, v13)
-        A = 0.5 * norm(v3)
-
-        # constant strain triangle - PSHELL
-        a1 = x2*y3 - x3*y2
-        a2 = x3*y1 - x1*y3
-        a3 = x1*y2 - x2*y1
-
-        b1 = y2 - y3
-        b2 = y3 - y1
-        b3 = y1 - y2
-
-        g1 = -x2 + x3
-        g2 = -x3 + x1
-        g3 = -x1 + x2
-        B = array([
-            [b1,  0, b2,  0, b3,  0],
-            [0,  g1,  0, g2,  0, g3],
-            [g1, b1, g2, b2, g3, b3],
-        ])
-
-        mat = self.pid.mid1
-        nu = mat.Nu()
-        E = mat.E() / (1-nu**2)
-        G = mat.G()
-
-        Ep = array([
-            [E,      nu * E, 0.],
-            [nu * E, E,      0.],
-            [0.,     0.,      G],
-        ])
-        #===========
-        # new stuff
-
-        n1, n2, n3 = self.nodeIDs()
-        n11 = dofs[(n1, 1)]
-        n21 = dofs[(n2, 1)]
-        n31 = dofs[(n3, 1)]
-
-        n12 = dofs[(n1, 2)]
-        n22 = dofs[(n2, 2)]
-        n32 = dofs[(n3, 2)]
-
-        q2 = array([
-            q[n11], q[n12],  # 0, 1
-            q[n21], q[n22],  # 2, 3
-            q[n31], q[n32],  # 4, 5
-        ])
-        dx = q[2] - q[0]
-        dy = q[4] - q[0]
-
-        strain = dot(B, q2)
-        stress = dot(Ep, dot(B, q2))
-        F = stress * A
-
-        return stress, strain, F
-
-    def Stiffness(self, model, node_ids, index0s, gravLoad, is3D, fnorm):
-        assert is3D == True
-
-        #print("node_ids =", node_ids)
-        n1, n2, n3 = self.nodes
-        p1 = n1.Position()
-        p2 = n2.Position()
-        p3 = n3.Position()
-
-        v1 = p2 - p1
-        v13 = p3 - p1
-
-        v3 = cross(v1, v13)
-        A = 0.5 * norm(v3)
-        #A = 0.5 * norm(cross(v1, v13))
-
-        mat = self.pid.mid1
-
-        nu = mat.Nu()
-        E = mat.E() / (1-nu**2)
-        G = mat.G()
-
-        x1, y1, z1 = p1
-        x2, y2, z2 = p2
-        x3, y3, z3 = p3
-
-        # constant strain triangle - PSHELL
-        a1 = x2*y3 - x3*y2
-        a2 = x3*y1 - x1*y3
-        a3 = x1*y2 - x2*y1
-
-        b1 = y2 - y3
-        b2 = y3 - y1
-        b3 = y1 - y2
-
-        g1 = -x2 + x3
-        g2 = -x3 + x1
-        g3 = -x1 + x2
-        B = array([
-            [b1,  0, b2,  0, b3,  0],
-            [0,  g1,  0, g2,  0, g3],
-            [g1, b1, g2, b2, g3, b3],
-        ])
-        Ep = array([
-            [E,      nu * E, 0.],
-            [nu * E, E,      0.],
-            [0.,     0.,      G],
-        ])
-
-        t = self.Thickness()
-        ki = t / (4 * A)
-        K = ki * dot(transpose(B), dot(Ep, B))
-
-        n1, n2, n3 = node_ids
-        dofs = [
-            (n1, 1), (n1, 2),
-            (n2, 1), (n2, 2),
-            (n3, 1), (n3, 2),
-        ]
-        nIJV = dofs
-        #nIJV = []
-
-        v1 /= norm(v1)
-        v3 /= norm(v3)
-
-        v2 = cross(v1, v3)
-        R = array([v1, v2, v3])
-        assert R.shape == (3,3), 'R=%s' % R
-
-        Fg = []
-        nGrav = []
-        return (K, dofs, nIJV, Fg, nGrav)
-
     def cross_reference(self, model):
         msg = ' which is required by CTRIA3 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, msg=msg)
@@ -445,7 +303,7 @@ class CTRIA3(TriShell):
 
         assert isinstance(eid, int)
         assert isinstance(pid, int)
-        for i,nid in enumerate(nids):
+        for i, nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
@@ -455,7 +313,7 @@ class CTRIA3(TriShell):
                 assert isinstance(t, float), 'thickness=%r' % t
                 mass = self.Mass()
                 assert isinstance(mass, float), 'mass=%r' % mass
-            a,c,n = self.AreaCentroidNormal()
+            a, c, n = self.AreaCentroidNormal()
             assert isinstance(a, float), 'Area=%r' % a
             for i in range(3):
                 assert isinstance(c[i], float)
@@ -537,17 +395,17 @@ class CTRIA3(TriShell):
 
     def raw_fields(self):
         list_fields = (['CTRIA3', self.eid, self.Pid()] + self.nodeIDs() +
-                  [self.thetaMcid, self.zOffset, None] + [None, self.TFlag,
-                   self.T1, self.T2, self.T3])
+                       [self.thetaMcid, self.zOffset, None] + [None, self.TFlag,
+                        self.T1, self.T2, self.T3])
         return list_fields
 
     def repr_fields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3) = self.getReprDefaults()
         list_fields = ([self.type, self.eid, self.Pid()] + self.nodeIDs() +
-                  [thetaMcid, zOffset, None] + [None, TFlag, T1, T2, T3])
+                       [thetaMcid, zOffset, None] + [None, TFlag, T1, T2, T3])
         return list_fields
 
-    def write_bdf(self, size=8, double=False):
+    def write_bdf(self, size=8, is_double=False):
         zOffset = set_blank_if_default(self.zOffset, 0.0)
         TFlag = set_blank_if_default(self.TFlag, 0)
         thetaMcid = set_blank_if_default(self.thetaMcid, 0.0)
@@ -559,22 +417,22 @@ class CTRIA3(TriShell):
         #return self.write_bdf(size, double)
         nodes = self.nodeIDs()
         row2_data = [thetaMcid, zOffset,
-            TFlag, T1, T2, T3]
+                     TFlag, T1, T2, T3]
         row2 = [print_field_8(field) for field in row2_data]
         data = [self.eid, self.Pid()] + nodes + row2
         msg = ('CTRIA3  %8i%8i%8i%8i%8i%8s%8s\n'
                '                %8s%8s%8s%8s\n' % tuple(data))
         return self.comment() + msg.rstrip() + '\n'
 
-    def write_bdf(self, size=8, is_double=False):
-        card = wipe_empty_fields(self.repr_fields())
-        if size == 8 or len(card) == 6: # to last node
-            msg = self.comment() + print_card_8(card)
-        else:
-            msg = self.comment() + print_card_16(card)
-        msg2 = self.write_bdf(size)
-        assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
-        return msg
+    #def write_bdf(self, size=8, is_double=False):
+        #card = wipe_empty_fields(self.repr_fields())
+        #if size == 8 or len(card) == 6: # to last node
+            #msg = self.comment() + print_card_8(card)
+        #else:
+            #msg = self.comment() + print_card_16(card)
+        #msg2 = self.write_bdf(size)
+        #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
+        #return msg
 
 class CTRIA6(TriShell):
     type = 'CTRIA6'
@@ -647,7 +505,7 @@ class CTRIA6(TriShell):
                 assert isinstance(t, float), 'thickness=%r' % t
                 mass = self.Mass()
                 assert isinstance(mass, float), 'mass=%r' % mass
-            a,c,n = self.AreaCentroidNormal()
+            a, c, n = self.AreaCentroidNormal()
             assert isinstance(a, float), 'Area=%r' % a
             for i in range(3):
                 assert isinstance(c[i], float)
@@ -729,14 +587,14 @@ class CTRIA6(TriShell):
 
     def raw_fields(self):
         list_fields = (['CTRIA6', self.eid, self.Pid()] + self.nodeIDs() +
-                  [self.thetaMcid, self.zOffset, None] + [None, self.TFlag,
-                  self.T1, self.T2, self.T3])
+                       [self.thetaMcid, self.zOffset, None] + [None, self.TFlag,
+                                                               self.T1, self.T2, self.T3])
         return list_fields
 
     def repr_fields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3) = self.getReprDefaults()
         list_fields = (['CTRIA6', self.eid, self.Pid()] + self.nodeIDs() +
-                  [thetaMcid, zOffset, None] + [None, TFlag, T1, T2, T3])
+                       [thetaMcid, zOffset, None] + [None, TFlag, T1, T2, T3])
         return list_fields
 
     def write_bdf(self, size=8, is_double=False):
@@ -845,7 +703,7 @@ class CTRIAR(TriShell):
             # PSHELL/PCOMP
             assert self.pid.type in ['PSHELL'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
             t = self.Thickness()
-            a,c,n = self.AreaCentroidNormal()
+            a, c, n = self.AreaCentroidNormal()
             assert isinstance(t, float), 'thickness=%r' % t
             assert isinstance(a, float), 'Area=%r' % a
             for i in range(3):
@@ -865,7 +723,7 @@ class CTRIAR(TriShell):
     def repr_fields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3) = self.getReprDefaults()
         list_fields = (['CTRIAR', self.eid, self.Pid()] + self.nodeIDs() +
-                  [thetaMcid, zOffset, None, None, TFlag, T1, T2, T3])
+                       [thetaMcid, zOffset, None, None, TFlag, T1, T2, T3])
         return list_fields
 
     def write_bdf(self, size=8, is_double=False):
@@ -925,7 +783,7 @@ class CTRIAX(TriShell):
                 assert isinstance(t, float), 'thickness=%r' % t
                 mass = self.Mass()
                 assert isinstance(mass, float), 'mass=%r' % mass
-            a,c,n = self.AreaCentroidNormal()
+            a, c, n = self.AreaCentroidNormal()
             assert isinstance(a, float), 'Area=%r' % a
             for i in range(3):
                 assert isinstance(c[i], float)
@@ -1010,7 +868,7 @@ class CTRIAX6(TriShell):
         assert self.pid == 0, 'pid = %s' % self.pid
         assert isinstance(eid, int)
         #assert isinstance(pid, int)
-        for i,nid in enumerate(nids):
+        for i, nid in enumerate(nids):
             assert nid is None or isinstance(nid, int), 'nid%i is not an integer or blank; nid=%s' %(i, nid)
 
         if xref:
@@ -1021,7 +879,7 @@ class CTRIAX6(TriShell):
                 #assert isinstance(t, float), 'thickness=%r' % t
                 #mass = self.Mass()
                 #assert isinstance(mass, float), 'mass=%r' % mass
-            a,c,n = self.AreaCentroidNormal()
+            a, c, n = self.AreaCentroidNormal()
             assert isinstance(a, float), 'Area=%r' % a
             for i in range(3):
                 assert isinstance(c[i], float)
@@ -1115,11 +973,12 @@ class QuadShell(ShellElement):
         """
         Returns the edges
         """
-        return [(self.nodes[0], self.nodes[1]),
-                (self.nodes[1], self.nodes[2]),
-                (self.nodes[2], self.nodes[3]),
-                (self.nodes[3], self.nodes[0]),
-                ]
+        return [
+            (self.nodes[0], self.nodes[1]),
+            (self.nodes[1], self.nodes[2]),
+            (self.nodes[2], self.nodes[3]),
+            (self.nodes[3], self.nodes[0]),
+        ]
 
     def Thickness(self):
         """
@@ -1146,7 +1005,7 @@ class QuadShell(ShellElement):
         return (area, centroid, normal)
 
     def AreaCentroid(self):
-        """
+        r"""
         ::
           1-----2
           |    /|
@@ -1344,7 +1203,7 @@ class CSHEAR(QuadShell):
                 assert isinstance(t, float), 'thickness=%r' % t
                 mass = self.Mass()
                 assert isinstance(mass, float), 'mass=%r' % mass
-            a,c,n = self.AreaCentroidNormal()
+            a, c, n = self.AreaCentroidNormal()
             assert isinstance(a, float), 'Area=%r' % a
             for i in range(3):
                 assert isinstance(c[i], float)
@@ -1396,195 +1255,6 @@ class CSHEAR(QuadShell):
     def Thickness(self):
         return self.pid.t
 
-    def Stiffness(self, model, node_ids, index0s, fnorm):
-        n1, n2, n3, n4 = self.nodeIDs()
-
-        (p1, p2, p3, p4) = self.nodePositions()
-        v1 = p2 - p1
-        v1b = p3 - p4
-
-        v2 = p4 - p1
-        v2b = p3 - p2
-        # average of lengths & widths
-        a = (norm(v1) + norm(v1b)) / 2.
-        b = (norm(v2) + norm(v2b)) / 2.
-        v1 /= a
-        v2 /= b
-        assert a > 0
-        assert b > 0
-        Lambda = array([v1, v2])
-        assert Lambda.shape == (2, 3), 'shape=%s' % (Lambda.shape)
-        Lambda2 = LambdaN(Lambda, 4) # n=4 points
-
-        G = self.G()
-        t = self.Thickness()
-
-        ki = G * t / 4.0
-        K = ki * array([
-            [a/b, 1, a/b, -1, -a/b, -1, -a/b, 1],
-            [1, b/a, 1, -b/a, -1, -b/a, -1, b/a],
-            [a/b, 1, a/b, -1, -a/b, -1, -a/b, 1],  # row 0
-            [-1, -b/a, -1, b/a, 1, b/a, 1, -b/a],  # -row 1
-            [-a/b, -1, -a/b, 1, a/b, 1, a/b, -1],  # -row 0
-            [-1, -b/a, -1, b/a, 1, b/a, 1, -b/a],  # -row 1
-            [-a/b, -1, -a/b, 1, a/b, 1, a/b, -1],  # -row 0
-            [1, b/a, 1, -b/a, -1, -b/a, -1, b/a],  # row 1
-        ])
-        K2 = dot(transpose(Lambda2), dot(K, Lambda2))
-
-        dofs = []
-        nIJV = [
-            (n1, 1), (n1, 2), (n1, 3),
-            (n2, 1), (n2, 2), (n2, 3),
-            (n3, 1), (n3, 2), (n3, 3),
-            (n4, 1), (n4, 2), (n4, 3),
-        ]
-        return (K2, dofs, nIJV)
-
-    def displacement_stress(self, model, q, dofs):
-        n1, n2, n3, n4 = self.nodeIDs()
-        n = array([
-           dofs[(n1, 1)],
-           dofs[(n1, 2)],
-           dofs[(n1, 3)],
-
-           dofs[(n2, 1)],
-           dofs[(n2, 2)],
-           dofs[(n2, 3)],
-
-           dofs[(n3, 1)],
-           dofs[(n3, 2)],
-           dofs[(n3, 3)],
-
-           dofs[(n4, 1)],
-           dofs[(n4, 2)],
-           dofs[(n4, 3)]
-        ])
-        u = q[n]
-
-        #=========
-        (p1, p2, p3, p4) = self.nodePositions()
-        v1 = p2 - p1
-        v1b = p3 - p4
-
-        v2 = p4 - p1
-        v2b = p3 - p2
-        # average of lengths & widths
-        a = (norm(v1) + norm(v1b)) / 2.
-        b = (norm(v2) + norm(v2b)) / 2.
-        v1 /= a
-        v2 /= b
-        assert a > 0
-        assert b > 0
-        Lambda = array([v1, v2])
-        assert Lambda.shape == (2, 3), 'shape=%s' % (Lambda.shape)
-        Lambda2 = LambdaN(Lambda, 4) # n=4 points
-        #=========
-        G = self.G()
-        t = self.Thickness()
-
-        u2 = dot(Lambda2, u)
-
-        ki = G * t / 4.
-        K = ki * array([
-            [a/b, 1, a/b, -1, -a/b, -1, -a/b, 1],
-            [1, b/a, 1, -b/a, -1, -b/a, -1, b/a],
-            [a/b, 1, a/b, -1, -a/b, -1, -a/b, 1],  # row 0
-            [-1, -b/a, -1, b/a, 1, b/a, 1, -b/a],  # -row 1
-            [-a/b, -1, -a/b, 1, a/b, 1, a/b, -1],  # -row 0
-            [-1, -b/a, -1, b/a, 1, b/a, 1, -b/a],  # -row 1
-            [-a/b, -1, -a/b, 1, a/b, 1, a/b, -1],  # -row 0
-            [1, b/a, 1, -b/a, -1, -b/a, -1, b/a],  # row 1
-        ])
-        K2 = dot(transpose(Lambda2), dot(K, Lambda2))
-        F = dot(K2, u)
-
-        kit = G / (a * b * t)
-        #Kt = kit * array([-a, -b, -a, b,  a, b,  a, -b])
-        #tau_xy = Kt * u2
-
-        Fx = F[ [0, 3, 6, 9] ]
-        Fy = F[ [1, 4, 7, 10] ]
-
-        # ^ b
-        # |
-        # 4----3
-        # |    |
-        # |    |
-        # 1----2 ---> a
-        F1x = Fx[0] + Fx[1]  # 1-2
-        F2y = Fy[1] + Fy[2]  # 2-3
-        F3x = Fx[2] + Fx[3]  # 3-4
-        F4y = Fy[0] + Fy[3]  # 4-1
-
-        tau41 = F1x / a
-        tau12 = F2y / b
-        tau23 = F3x / a
-        tau34 = F4y / b
-
-        tau14 = tau41
-
-        ss = self.pid.mid.Ss  # shear stress
-        exy = tau41 / G
-        if ss:
-            margin = tau41 / ss
-        else:
-            margin = 0.0
-        shear12 = 0.0
-        shear23 = 0.0
-
-#        ====== POINT  1 ======      ====== POINT  2 ======      ====== POINT  3 ======      ====== POINT  4 ======
-#        ELEMENT        F-FROM-4      F-FROM-2      F-FROM-1      F-FROM-3      F-FROM-2      F-FROM-4      F-FROM-3      F-FROM-1
-#              ID       KICK-1       SHEAR-12       KICK-2       SHEAR-23       KICK-3       SHEAR-34       KICK-4       SHEAR-41
-        #f14 = Fy[3] - Fy[0] # F4 - F1
-        #f12 = Fx[1] - Fx[0] # F2 - F1
-
-        #f21 = -f12
-        #f23 = Fy[2] - Fy[1]  # F3 - F2
-
-        #f32 = -f23
-        #f34 = Fx[3] - Fx[2] # F4 - F3
-
-        #f41 = -f14
-        #f43 = Fx[2] - Fx[3] # F3 - F4
-
-        #==========================
-        f14 = Fy[0]
-        f12 = Fx[0]
-
-        f21 = Fx[1]
-        f23 = Fy[2]
-
-        f32 = Fy[2]
-        f34 = Fx[2]
-
-        f41 = Fy[3]
-        f43 = Fx[3]
-
-        kick1 = 0.0
-        kick2 = 0.0
-        kick3 = 0.0
-        kick4 = 0.0
-
-        F = [
-            f41, f21, tau12, kick1,
-            f12, f32, tau23, kick2,
-            f23, f43, tau34, kick3,
-            f14, f34, tau41, kick4,
-             ]
-        return ([tau14, tau14, margin], [exy, exy, margin/G], F)
-
-
-def LambdaN(L, n):
-    nx, ny = L.shape
-    N = zeros((nx*n, ny*n), 'float64')
-    for i in range(n):
-        ix0 = i * nx
-        iy0 = i * ny
-        ix = (i + 1) * nx
-        iy = (i + 1) * ny
-        N[ix0:ix, iy0:iy] = L
-    return N
 
 class CQUAD4(QuadShell):
     type = 'CQUAD4'
@@ -1661,7 +1331,7 @@ class CQUAD4(QuadShell):
         nids = self.nodeIDs()
         assert isinstance(eid, int)
         assert isinstance(pid, int)
-        for i,nid in enumerate(nids):
+        for i, nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
 
         if xref:
@@ -1671,7 +1341,7 @@ class CQUAD4(QuadShell):
                 assert isinstance(t, float), 'thickness=%r' % t
                 mass = self.Mass()
                 assert isinstance(mass, float), 'mass=%r' % mass
-            a,c,n = self.AreaCentroidNormal()
+            a, c, n = self.AreaCentroidNormal()
             assert isinstance(a, float), 'Area=%r' % a
             for i in range(3):
                 assert isinstance(c[i], float)
@@ -1707,18 +1377,18 @@ class CQUAD4(QuadShell):
         return self.print_card(fields1) + self.print_card(fields2)
 
     def raw_fields(self):
-        list_fields = ([self.type, self.eid, self.Pid()] + self.nodeIDs() +
-                  [self.thetaMcid, self.zOffset, self.TFlag, self.T1, self.T2,
-                   self.T3, self.T4])
+        list_fields = (['CQUAD4', self.eid, self.Pid()] + self.nodeIDs() +
+                       [self.thetaMcid, self.zOffset, self.TFlag, self.T1, self.T2,
+                        self.T3, self.T4])
         return list_fields
 
     def repr_fields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3, T4) = self.getReprDefaults()
         list_fields = (['CQUAD4', self.eid, self.Pid()] + self.nodeIDs() +
-                  [thetaMcid, zOffset, None, TFlag, T1, T2, T3, T4])
+                       [thetaMcid, zOffset, None, TFlag, T1, T2, T3, T4])
         return list_fields
 
-    def write_bdf(self, size=8, double=False):
+    def write_bdf(self, size=8, is_double=False):
         zOffset = set_blank_if_default(self.zOffset, 0.0)
         TFlag = set_blank_if_default(self.TFlag, 0)
         thetaMcid = set_blank_if_default(self.thetaMcid, 0.0)
@@ -1730,7 +1400,7 @@ class CQUAD4(QuadShell):
 
         nodes = self.nodeIDs()
         row2_data = [thetaMcid, zOffset,
-                TFlag, T1, T2, T3, T4]
+                     TFlag, T1, T2, T3, T4]
         row2 = [print_field_8(field) for field in row2_data]
         data = [self.eid, self.Pid()] + nodes + row2
         msg = ('CQUAD4  %8i%8i%8i%8i%8i%8i%8s%8s\n'
@@ -1816,7 +1486,7 @@ class CQUADR(QuadShell):
         if xref:
             assert self.pid.type in ['PSHELL', 'PCOMP', 'PCOMPG'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
             t = self.Thickness()
-            a,c,n = self.AreaCentroidNormal()
+            a, c, n = self.AreaCentroidNormal()
             assert isinstance(t, float), 'thickness=%r' % t
             assert isinstance(a, float), 'Area=%r' % a
             for i in range(3):
@@ -1848,14 +1518,14 @@ class CQUADR(QuadShell):
 
     def raw_fields(self):
         list_fields = (['CQUADR', self.eid, self.Pid()] + self.nodeIDs() +
-                  [self.thetaMcid, self.zOffset, None, self.TFlag, self.T1,
-                   self.T2, self.T3, self.T4])
+                       [self.thetaMcid, self.zOffset, None, self.TFlag, self.T1,
+                        self.T2, self.T3, self.T4])
         return list_fields
 
     def repr_fields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3, T4) = self.getReprDefaults()
         list_fields = (['CQUADR', self.eid, self.Pid()] + self.nodeIDs() +
-                  [thetaMcid, zOffset, None, TFlag, T1, T2, T3, T4])
+                       [thetaMcid, zOffset, None, TFlag, T1, T2, T3, T4])
         return list_fields
 
     def write_bdf(self, size=8, is_double=False):
@@ -1929,7 +1599,7 @@ class CQUAD(QuadShell):
         list_fields = ['CQUAD', self.eid, self.Pid()] + self.nodeIDs()
         return list_fields
 
-    def write_bdf(self, size=8, double=False):
+    def write_bdf(self, size=8, is_double=False):
         data = [self.eid, self.Pid()] + self.nodeIDs()
         msg = ('CQUAD   %8i%8i%8i%8i%8i%8i%8s%8s\n'  # 6 nodes
                '        %8s%8s%8s\n' % tuple(data))
@@ -2012,7 +1682,7 @@ class CQUAD8(QuadShell):
         if xref:
             assert self.pid.type in ['PSHELL', 'PCOMP'], 'pid=%i self.pid.type=%s' % (pid, self.pid.type)
             t = self.Thickness()
-            a,c,n = self.AreaCentroidNormal()
+            a, c, n = self.AreaCentroidNormal()
             assert isinstance(t, float), 'thickness=%r' % t
             assert isinstance(a, float), 'Area=%r' % a
             for i in range(3):
@@ -2171,7 +1841,7 @@ class CQUADX(QuadShell):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_bdf(self, size=8, double=False):
+    def write_bdf(self, size=8, is_double=False):
         nodes = self.nodeIDs()
         data = [self.eid, self.Pid()] + nodes[:4]
         row2 = ['        ' if node is None else '%8i' % node for node in nodes[4:]]
